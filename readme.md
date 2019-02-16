@@ -4,6 +4,13 @@
 
 See 'ap.ipynb'
 
+```
+abf = bLoadFile('data/171116sh_0018.abf')
+sweepNumber = 15
+spikeTimes = bSpikeDetect(abf, sweepNumber, dVthresholdPos=15)
+bPlotSweep(abf, sweepNumber, spikeTimes=spikeTimes)
+```
+
 <IMG SRC="img/example1.png" width=600>
 
 ## Analyze action potentials
