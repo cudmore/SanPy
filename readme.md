@@ -4,7 +4,7 @@
 
 See 'ap.ipynb'
 
-<IMG SRC="img/example1.png" width=400>
+<IMG SRC="img/example1.png" width=600>
 
 ## Analyze action potentials
 
