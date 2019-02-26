@@ -92,10 +92,11 @@ class bAnalysis:
 		#
 		# if there are doubles, throw-out the second one
 		if 1:
-			refractory_ms = 10
-			lastGood = 0 # index [i] of last good, first crossing will always be good
+			refractory_ms = 10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
+			lastGood = 0 # first spike [0] will always be good, there is no spike [i-1]
 			for i in range(len(self.spikeTimes)):
 				if i==0:
+					# first spike is always good
 					continue
 				dPoints = self.spikeTimes[i] - self.spikeTimes[lastGood]
 				if dPoints < self.abf.dataPointsPerMs*refractory_ms:
