@@ -2,7 +2,9 @@
 
 ## Detect action potentials
 
-See 'ap.ipynb'
+See
+ - bBrowser.ipynb
+ - ap.ipynb
 
 ```
 abf = bLoadFile('data/171116sh_0018.abf')
@@ -20,6 +22,10 @@ Coming soon, will plot current versus a number of AP parameters including: numbe
 ## Passive properties
 
 Coming soon, will analyze and plot resting membrane potential, whole cell capacitance.
+
+## ParamAP
+
+[Github repository][paramap]
 
 ## Install Python 3.7.x and required libraries
 
@@ -91,3 +97,4 @@ ipython3 notebook
 [python3]: https://www.python.org/downloads/
 [pip3]: https://pip.pypa.io/en/stable/installing/
 [pyabf]: https://github.com/swharden/pyABF
+[paramap]: https://github.com/christianrickert/ParamAP
