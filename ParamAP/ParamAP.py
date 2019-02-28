@@ -664,6 +664,8 @@ for ATFFILE in ATFFILES:  # iterate through files
 					# determine "AP duration 50: Time interval at 50% of maximum repolarization" (APD50) (ms)
 					apd50_l = (pp - 0.50*apa)  # threshold value
 					apd50_i = functools.reduce(np.intersect1d, (np.argwhere(avgf_y > apd50_l), np.argwhere(avg_x >= mdp1_x), np.argwhere(avg_x <= mdp2_x)))
+					#
+					# abb this is the line with error ???
 					apd50_x = (avg_x[apd50_i[0]-1], avg_x[apd50_i[-1]+1])  # equal or smaller than apd50_l
 					apd50_y = (avgf_y[apd50_i[0]-1], avgf_y[apd50_i[-1]+1])
 					apd50 = float(apd50_x[-1] - apd50_x[0])

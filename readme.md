@@ -23,10 +23,6 @@ Coming soon, will plot current versus a number of AP parameters including: numbe
 
 Coming soon, will analyze and plot resting membrane potential, whole cell capacitance.
 
-## ParamAP
-
-[Github repository][paramap]
-
 ## Install Python 3.7.x and required libraries
 
 Requires
@@ -34,6 +30,7 @@ Requires
  - Python >= 3.7
  - numpy
  - matplotlib
+ - pandas
  - plotly
  - pyabf - download from https://github.com/swharden/pyABF
 
@@ -57,6 +54,7 @@ Install jupyter, numpy, matplotlib, plotly
 pip3 install jupyter
 pip3 install numpy
 pip3 install matplotlib
+pip3 install pandas
 pip3 install plotly
 ```
 
@@ -88,6 +86,10 @@ jupyter notebook
 #or
 ipython3 notebook
 ```
+
+## ParamAP
+
+[Github repository][paramap]
 
 ## Change log
 
