@@ -29,9 +29,9 @@ Requires
 
  - Python >= 3.7
  - numpy
- - matplotlib
  - pandas
- - plotly
+ - matplotlib
+ - scipy
  - pyabf - download from https://github.com/swharden/pyABF
 
 
