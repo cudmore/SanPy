@@ -120,6 +120,16 @@ class bAnalysis:
 		#
 		# make sure all spikes are on upslope
 		
+		#
+		# todo
+		# for each threshold crossing, search backwards for 10% of maximum (about 10 ms)
+		'''
+		max = 
+		tenPercentMax = 
+		for spikeTime in spikeTimes0:
+			preClip = [spikeTime - pre_ms:spikeTime]
+		'''
+		
 		return spikeTimes0, vm, sweepDeriv
 		
 	def spikeDetect(self, dVthresholdPos=100, medianFilter=0, halfHeights=[20, 50, 80]):
@@ -232,7 +242,9 @@ class bAnalysis:
 				
 				#
 				# minima in dv/dt after spike
-				postRange = dvdt[self.spikeTimes[i]:postMinPnt]
+				#postRange = dvdt[self.spikeTimes[i]:postMinPnt]
+				postSpike_ms = self.spikeTimes[i] + 10
+				postRange = dvdt[self.spikeTimes[i]:self.spikeTimes[i]+postSpike_ms] # fixed window after spike
 				postSpike_dvdt_min_pnt = np.argmin(postRange)
 				postSpike_dvdt_min_pnt += self.spikeTimes[i]
 				#print('i:', i, 'postSpike_dvdt_min_pnt:', postSpike_dvdt_min_pnt)
@@ -436,6 +448,7 @@ class bAnalysis:
 		preLinearFitVal1List = [spikeDict['preLinearFitVal1'] for spikeDict in self.spikeDict if spikeDict['preLinearFitVal1'] is not None]
 		ax.plot(self.abf.sweepX[preLinearFitPnt1List], preLinearFitVal1List, 'og')
 
+		
 		#
 		# plot the maximum upswing of a spike
 		preSpike_dvdt_max_pnt_list = [spikeDict['preSpike_dvdt_max_pnt'] for spikeDict in self.spikeDict if spikeDict['preSpike_dvdt_max_pnt'] is not None]
@@ -455,6 +468,11 @@ class bAnalysis:
 			
 			#ax.plot(self.abf.sweepX[spikeDict['preMinPnt']], spikeDict['preMinVal'], 'og')
 		
+			#
+			# line for pre spike slope
+			ax.plot([self.abf.sweepX[spikeDict['preLinearFitPnt0']], self.abf.sweepX[spikeDict['preLinearFitPnt1']]], [spikeDict['preLinearFitVal0'], spikeDict['preLinearFitVal1']], color='b', linestyle='-', linewidth=2)
+
+			#
 			# plot all widths
 			for j,widthDict in enumerate(spikeDict['widths']):
 				#print('j:', j)
