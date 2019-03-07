@@ -4,7 +4,6 @@
 
 See
  - bBrowser.ipynb
- - ap.ipynb
 
 ```
 abf = bLoadFile('data/171116sh_0018.abf')
