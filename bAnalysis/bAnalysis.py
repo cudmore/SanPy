@@ -135,12 +135,16 @@ class bAnalysis:
 			peakVal = sweepDeriv[peakPnt]
 
 			# look for 10% of max
-			tenPercentMax = peakVal * 0.15
-			preDerivClip = np.flip(preDerivClip) # backwards
-			threshPnt2 = np.where(preDerivClip<tenPercentMax)[0][0]
-			threshPnt2 = (spikeTime) - threshPnt2
-			print('i:', i, 'spikeTime:', spikeTime, 'peakPnt:', peakPnt, 'threshPnt2:', threshPnt2)
-			spikeTimes1.append(threshPnt2)
+			try:
+				tenPercentMax = peakVal * 0.15
+				preDerivClip = np.flip(preDerivClip) # backwards
+				threshPnt2 = np.where(preDerivClip<tenPercentMax)[0][0]
+				threshPnt2 = (spikeTime) - threshPnt2
+				print('i:', i, 'spikeTime:', spikeTime, 'peakPnt:', peakPnt, 'threshPnt2:', threshPnt2)
+				spikeTimes1.append(threshPnt2)
+			except (IndexError) as e:
+				print('IndexError spike', i, spikeTime)
+				spikeTimes1.append(spikeTime)
 
 		return spikeTimes1, vm, sweepDeriv
 
@@ -248,9 +252,12 @@ class bAnalysis:
 
 				# search forward from spike to find when vm reaches postMinVal (avg)
 				postRange = vm[self.spikeTimes[i]:postMinPnt]
-				postMinPnt2 = np.where(postRange<postMinVal)[0][0]
-				postMinPnt = self.spikeTimes[i] + postMinPnt2
-				#print('i:', i, 'postMinPnt:', postMinPnt)
+				try:
+					postMinPnt2 = np.where(postRange<postMinVal)[0][0]
+					postMinPnt = self.spikeTimes[i] + postMinPnt2
+					#print('i:', i, 'postMinPnt:', postMinPnt)
+				except (IndexError) as e:
+					print('error postMinPnt')
 
 				#
 				# minima in dv/dt after spike
