@@ -240,18 +240,21 @@ def readfile(inputfile='name'):
 		print('inp_xy[0,0:5]', inp_xy[0,0:10])
 		print('inp_xy[1,0:5]', inp_xy[1,0:10])
 
-	fileDir = os.path.dirname(os.path.realpath(inputfile)) # get the folder that inputfile is in
-	abfFile = os.path.join(fileDir, '19114001.abf')
-	print('loading abf file:', abfFile)
-	abf = pyabf.ABF(abfFile)
-	numPnts = abf.sweepX.shape[0] # rows?
-	print('numPnts:', numPnts)
-	inp_xy = np.zeros((2,numPnts)) # transpose to columns
-	inp_xy[0,:] = abf.sweepX
-	inp_xy[1,:] = abf.sweepY
-	inpunits = True
-	inpux = 's'
-	inpuy = 'mV'
+	# abb
+	if 0:
+		fileDir = os.path.dirname(os.path.realpath(inputfile)) # get the folder that inputfile is in
+		abfFile = os.path.join(fileDir, '19114001.abf')
+		print('loading abf file:', abfFile)
+		abf = pyabf.ABF(abfFile)
+		numPnts = abf.sweepX.shape[0] # rows?
+		print('numPnts:', numPnts)
+		inp_xy = np.zeros((2,numPnts)) # transpose to columns
+		inp_xy[0,:] = abf.sweepX
+		inp_xy[1,:] = abf.sweepY
+		inpunits = True
+		inpux = 's'
+		inpuy = 'mV'
+
 	return inp_xy, inpunits, inpux, inpuy
 
 
@@ -325,6 +328,7 @@ for ATFFILE in ATFFILES:  # iterate through files
 	tomv = 1000.0 if UNIT_Y == "V" else 1.0
 	RAW_XY[1] *= tomv  # full Y-axis, UNIT_Y = "mV"
 	raw_y = RAW_XY[1]  # partial Y-axis for time series analysis
+
 	runavg = getrunavg(RAW_XY[0])  # used for filtering and peak detection
 	ipg_t = RAW_XY[0][1]-RAW_XY[0][0]  # time increment for interpolation grid
 	if not APMODE:  # avoid noise artifacts in beat detection mode

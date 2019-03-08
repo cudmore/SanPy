@@ -35,9 +35,9 @@ class bAnalysis:
 	def __init__(self, file=None):
 		self.file = file
 		self._abf = None
-		
+
 		self.spikeDict = [] # a list of dict
-		
+
 		self.spikeTimes = [] # created in self.spikeDetect()
 		self.spikeClips = [] # created in self.spikeDetect()
 
@@ -46,7 +46,7 @@ class bAnalysis:
 			return None
 
 		self._abf = pyabf.ABF(file)
-		
+
 		self.currentSweep = None
 		self.setSweep(0)
 
@@ -60,7 +60,7 @@ class bAnalysis:
 	@property
 	def dataPointsPerMs(self):
 		return self.abf.dataPointsPerMs
-		
+
 	def setSweep(self, sweepNumber):
 		#todo: check that sweepNumber is in self.abf.sweepList
 		if sweepNumber not in self.abf.sweepList:
@@ -116,34 +116,46 @@ class bAnalysis:
 		# spikeTimes[i] that were set to 0 above (they were too close to the previous spike)
 		# will not pass 'if spikeTime', as 'if 0' evaluates to False
 		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if spikeTime]
-	
+
 		#
 		# make sure all spikes are on upslope
-		
+
 		#
 		# todo
 		# for each threshold crossing, search backwards for 10% of maximum (about 10 ms)
-		'''
-		max = 
-		tenPercentMax = 
-		for spikeTime in spikeTimes0:
-			preClip = [spikeTime - pre_ms:spikeTime]
-		'''
-		
-		return spikeTimes0, vm, sweepDeriv
-		
+		window_ms = 2
+		window_pnts = window_ms * self.dataPointsPerMs
+		spikeTimes1 = []
+		for i, spikeTime in enumerate(spikeTimes0):
+			# get max in derivative
+			preDerivClip = sweepDeriv[spikeTime-window_pnts:spikeTime] # backwards
+			#preDerivClip = np.flip(preDerivClip)
+			peakPnt = np.argmax(preDerivClip)
+			peakPnt += spikeTime-window_pnts
+			peakVal = sweepDeriv[peakPnt]
+
+			# look for 10% of max
+			tenPercentMax = peakVal * 0.15
+			preDerivClip = np.flip(preDerivClip) # backwards
+			threshPnt2 = np.where(preDerivClip<tenPercentMax)[0][0]
+			threshPnt2 = (spikeTime) - threshPnt2
+			print('i:', i, 'spikeTime:', spikeTime, 'peakPnt:', peakPnt, 'threshPnt2:', threshPnt2)
+			spikeTimes1.append(threshPnt2)
+
+		return spikeTimes1, vm, sweepDeriv
+
 	def spikeDetect(self, dVthresholdPos=100, medianFilter=0, halfHeights=[20, 50, 80]):
 		'''
 		spike detect the current sweep and put results into spikeTime[currentSweep]
-		
+
 		todo: remember values of halfHeights
 		'''
-		
+
 		startSeconds = time.time()
-		
+
 		# spike detect
 		self.spikeTimes, vm, dvdt = self.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter)
-		
+
 		#
 		# look in a window after each threshold crossing to get AP peak
 		# get minima before/after spike
@@ -157,7 +169,7 @@ class bAnalysis:
 			peakPnt += spikeTime
 			peakVal = np.max(vm[spikeTime:spikeTime+peakWindow_pnts])
 
-			spikeDict = collections.OrderedDict() # use OrderedDict so Pandas output is in the correct order			
+			spikeDict = collections.OrderedDict() # use OrderedDict so Pandas output is in the correct order
 			spikeDict['file'] = self.file
 			spikeDict['spikeNumber'] = i
 			spikeDict['thresholdPnt'] = spikeTime
@@ -167,7 +179,7 @@ class bAnalysis:
 			spikeDict['peakVal'] = peakVal
 
 			self.spikeDict.append(spikeDict)
-			
+
 			# get pre/post spike minima
 			self.spikeDict[i]['preMinPnt'] = None
 			self.spikeDict[i]['preMinVal'] = None
@@ -195,14 +207,14 @@ class bAnalysis:
 				# the pre min is actually an average around the real minima
 				avgRange = vm[preMinPnt-avgWindow_pnts:preMinPnt+avgWindow_pnts]
 				preMinVal = np.average(avgRange)
-				
+
 				# search backward from spike to find when vm reaches preMinVal (avg)
 				preRange = vm[preMinPnt:self.spikeTimes[i]]
 				preRange = np.flip(preRange) # we want to search backwards from peak
 				#tmp = np.where(preRange<preMinVal)
 				preMinPnt2 = np.where(preRange<preMinVal)[0][0]
 				preMinPnt = self.spikeTimes[i] - preMinPnt2
-				
+
 				#
 				# linear fit on 10% - 50% of the time from preMinPnt to self.spikeTimes[i]
 				startLinearFit = 0.1 # percent of time between pre spike min and AP peak
@@ -215,7 +227,7 @@ class bAnalysis:
 				preLinearFitPnt1 = preMinPnt + math.floor(timeInterval_pnts * stopLinearFit)
 				preLinearFitVal0 = vm[preLinearFitPnt0]
 				preLinearFitVal1 = vm[preLinearFitPnt1]
-				
+
 				#
 				# maxima in dv/dt before spike
 				preRange = dvdt[preMinPnt:self.spikeTimes[i]]
@@ -224,7 +236,7 @@ class bAnalysis:
 				#print('i:', i, 'preSpike_dvdt_max_pnt:', preSpike_dvdt_max_pnt)
 				self.spikeDict[i]['preSpike_dvdt_max_pnt'] = preSpike_dvdt_max_pnt
 				self.spikeDict[i]['preSpike_dvdt_max_val'] = vm[preSpike_dvdt_max_pnt]
-				
+
 				#
 				# post spike min
 				postRange = vm[self.spikeTimes[i]:self.spikeTimes[i+1]]
@@ -233,13 +245,13 @@ class bAnalysis:
 				# the post min is actually an average around the real minima
 				avgRange = vm[postMinPnt-avgWindow_pnts:postMinPnt+avgWindow_pnts]
 				postMinVal = np.average(avgRange)
-				
+
 				# search forward from spike to find when vm reaches postMinVal (avg)
 				postRange = vm[self.spikeTimes[i]:postMinPnt]
 				postMinPnt2 = np.where(postRange<postMinVal)[0][0]
 				postMinPnt = self.spikeTimes[i] + postMinPnt2
 				#print('i:', i, 'postMinPnt:', postMinPnt)
-				
+
 				#
 				# minima in dv/dt after spike
 				#postRange = dvdt[self.spikeTimes[i]:postMinPnt]
@@ -260,7 +272,7 @@ class bAnalysis:
 				self.spikeDict[i]['preLinearFitPnt1'] = preLinearFitPnt1
 				self.spikeDict[i]['preLinearFitVal0'] = preLinearFitVal0
 				self.spikeDict[i]['preLinearFitVal1'] = preLinearFitVal1
-				
+
 				# get 1/2 height (actually, any number of height measurements)
 				# action potential duration using peak and post min
 				self.spikeDict[i]['widths'] = []
@@ -289,13 +301,13 @@ class bAnalysis:
 						fallingPnt = np.where(postRange<thisVm)[0][0] # less than
 						fallingPnt += peakPnt
 						fallingVal = vm[fallingPnt]
-					
+
 						# use the post/falling to find pre/rising
 						preRange = vm[preMinPnt:peakPnt]
 						risingPnt = np.where(preRange>fallingVal)[0][0] # greater than
 						risingPnt += preMinPnt
 						risingVal = vm[risingPnt]
-	
+
 						# width (pnts)
 						widthPnts = fallingPnt - risingPnt
 						# assign
@@ -311,14 +323,14 @@ class bAnalysis:
 						print('error: spike', i, 'half height', halfHeight)
 						#print(e)
 					self.spikeDict[i]['widths'].append(widthDict)
-					
-			
+
+
 		#
 		# look between threshold crossing to get minima
 		# we will ignore the first and last spike
-		
-		
-		
+
+
+
 		#
 		# build a list of spike clips
 		clipWidth_ms = 500
@@ -335,7 +347,7 @@ class bAnalysis:
 
 		stopSeconds = time.time()
 		print('bAnalysis.spikeDetect() for file', self.file, 'detected', len(self.spikeTimes), 'spikes in', round(stopSeconds-startSeconds,2), 'seconds')
-		
+
 	@property
 	def numSpikes(self):
 		'''
@@ -349,13 +361,13 @@ class bAnalysis:
 	def plotDeriv(self, medianFilter=0, dVthresholdPos=100):
 		'''
 		Plot both Vm and the derivative of Vm (dV/dt).
-		
+
 		Parameters:
 			medianFilter:	0 is no filtering
 							Integer greater than 0 specifies the number of points
 		'''
 
-		spikeTimes, vm = self.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter)
+		spikeTimes, vm, sweepDeriv = self.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter)
 
 		if medianFilter > 0:
 			yAxisLabel = 'filtered '
@@ -363,9 +375,9 @@ class bAnalysis:
 			yAxisLabel = ''
 
 		sweepDeriv = np.diff(vm) # first derivative
-		
+
 		#sweepDeriv = scipy.signal.medfilt(sweepDeriv)
-		
+
 		sweepDeriv = np.concatenate(([0],sweepDeriv))
 
 		# add an initial point so it is the same length as raw data in abf.sweepY
@@ -401,9 +413,9 @@ class bAnalysis:
 		ax2.plot(self.abf.sweepX[spikeTimes], sweepDeriv[spikeTimes], 'or')
 
 		print('detected', len(spikeTimes), 'spikes')
-		
+
 		return fig
-		
+
 	def plotSpikes(self, all=True, oneSpikeNumber=None, ax=None):
 		'''
 		Plot Vm with all spike analysis
@@ -413,7 +425,7 @@ class bAnalysis:
 
 			fig = plt.figure(figsize=(10, 8))
 			ax = fig.add_subplot(grid[0, 0:]) #Vm, entire sweep
-				
+
 		# plot vm
 		ax.plot(self.abf.sweepX, self.abf.sweepY, 'k')
 
@@ -427,47 +439,47 @@ class bAnalysis:
 		# plot the peak
 		peakPntList = [spikeDict['peakPnt'] for spikeDict in self.spikeDict]
 		ax.plot(self.abf.sweepX[peakPntList], self.abf.sweepY[peakPntList], 'or')
-		
+
 		# plot the pre min (avg)
 		preMinPntList = [spikeDict['preMinPnt'] for spikeDict in self.spikeDict if spikeDict['preMinPnt'] is not None]
 		preMinValList = [spikeDict['preMinVal'] for spikeDict in self.spikeDict if spikeDict['preMinVal'] is not None]
 		ax.plot(self.abf.sweepX[preMinPntList], preMinValList, 'or')
-		
+
 		# plot the post min (avg)
 		postMinPntList = [spikeDict['postMinPnt'] for spikeDict in self.spikeDict if spikeDict['postMinPnt'] is not None]
 		postMinValList = [spikeDict['postMinVal'] for spikeDict in self.spikeDict if spikeDict['postMinVal'] is not None]
 		ax.plot(self.abf.sweepX[postMinPntList], postMinValList, 'og')
-		
+
 		#
 		# plot the pre spike slope
 		preLinearFitPnt0List = [spikeDict['preLinearFitPnt0'] for spikeDict in self.spikeDict if spikeDict['preLinearFitPnt0'] is not None]
 		preLinearFitVal0List = [spikeDict['preLinearFitVal0'] for spikeDict in self.spikeDict if spikeDict['preLinearFitVal0'] is not None]
 		ax.plot(self.abf.sweepX[preLinearFitPnt0List], preLinearFitVal0List, 'oy')
-		
+
 		preLinearFitPnt1List = [spikeDict['preLinearFitPnt1'] for spikeDict in self.spikeDict if spikeDict['preLinearFitPnt1'] is not None]
 		preLinearFitVal1List = [spikeDict['preLinearFitVal1'] for spikeDict in self.spikeDict if spikeDict['preLinearFitVal1'] is not None]
 		ax.plot(self.abf.sweepX[preLinearFitPnt1List], preLinearFitVal1List, 'og')
 
-		
+
 		#
 		# plot the maximum upswing of a spike
 		preSpike_dvdt_max_pnt_list = [spikeDict['preSpike_dvdt_max_pnt'] for spikeDict in self.spikeDict if spikeDict['preSpike_dvdt_max_pnt'] is not None]
 		preSpike_dvdt_max_val_list = [spikeDict['preSpike_dvdt_max_val'] for spikeDict in self.spikeDict if spikeDict['preSpike_dvdt_max_val'] is not None]
 		ax.plot(self.abf.sweepX[preSpike_dvdt_max_pnt_list], preSpike_dvdt_max_val_list, 'xr')
-		
+
 		#
 		# plot the minima downswing of a spike
 		postSpike_dvdt_min_pnt_list = [spikeDict['postSpike_dvdt_min_pnt'] for spikeDict in self.spikeDict if spikeDict['postSpike_dvdt_min_pnt'] is not None]
 		postSpike_dvdt_min_val_list = [spikeDict['postSpike_dvdt_min_val'] for spikeDict in self.spikeDict if spikeDict['postSpike_dvdt_min_val'] is not None]
 		ax.plot(self.abf.sweepX[postSpike_dvdt_min_pnt_list], postSpike_dvdt_min_val_list, 'xg')
-		
+
 		for i,spikeDict in enumerate(self.spikeDict):
 			#ax.plot(self.abf.sweepX[spikeDict['peakPnt']], self.abf.sweepY[spikeDict['peakPnt']], 'or')
 			if i==0 or i==len(self.spikeTimes)-1:
 				continue
-			
+
 			#ax.plot(self.abf.sweepX[spikeDict['preMinPnt']], spikeDict['preMinVal'], 'og')
-		
+
 			#
 			# line for pre spike slope
 			ax.plot([self.abf.sweepX[spikeDict['preLinearFitPnt0']], self.abf.sweepX[spikeDict['preLinearFitPnt1']]], [spikeDict['preLinearFitVal0'], spikeDict['preLinearFitVal1']], color='b', linestyle='-', linewidth=2)
@@ -489,7 +501,7 @@ class bAnalysis:
 				ax.plot(self.abf.sweepX[widthDict['fallingPnt']], self.abf.sweepY[widthDict['fallingPnt']], 'ob')
 				# line between rising and falling is ([x1, y1], [x2, y2])
 				ax.plot([risingPntX, fallingPntX], [risingPntY, fallingPntY], color='b', linestyle='-', linewidth=2)
-		
+
 		#
 		# plot one spike time as a yellow circle
 		line = None
@@ -513,7 +525,7 @@ class bAnalysis:
 		if stat == 'halfWidth':
 			yStatName = 'widthPnts'
 			yStatLabel = 'Spike Half Width (ms)'
-			
+
 		#
 		# pull
 		statX = []
@@ -527,7 +539,7 @@ class bAnalysis:
 					statVal.append(spike['widths'][halfWidthIdx]['widthMs'])
 				else:
 					statVal.append(spike[yStatName])
-					
+
 		#
 		# plot
 		if ax is None:
@@ -535,14 +547,14 @@ class bAnalysis:
 
 			fig = plt.figure(figsize=(10, 8))
 			ax = fig.add_subplot(grid[0, 0:]) #Vm, entire sweep
-				
+
 		ax.plot(statX, statVal, 'o-k')
 
 		ax.set_ylabel(yStatLabel)
 		ax.set_xlabel('Time (sec)')
-		
+
 		return statVal
-		
+
 	def plotISI(self, ax=None):
 		""" Plot the inter-spike-interval (sec) between each spike threshold"""
 		#
@@ -550,7 +562,7 @@ class bAnalysis:
 		spikeTimes_sec = [x/self.abf.dataPointsPerMs/1000 for x in self.spikeTimes]
 		isi = np.diff(spikeTimes_sec)
 		isi_x = spikeTimes_sec[0:-1]
-		
+
 		#
 		# plot
 		if ax is None:
@@ -558,12 +570,12 @@ class bAnalysis:
 
 			fig = plt.figure(figsize=(10, 8))
 			ax = fig.add_subplot(grid[0, 0:]) #Vm, entire sweep
-				
+
 		ax.plot(isi_x, isi, 'o-k')
 
 		ax.set_ylabel('Inter-Spike-Interval (sec)')
 		ax.set_xlabel('Time (sec)')
-				
+
 	def plotClips(self, oneSpikeNumber=None, ax=None):
 		'''
 		Plot clips of all detected spikes
@@ -581,7 +593,7 @@ class bAnalysis:
 				ax.plot(self.spikeClips_x, self.spikeClips[i], 'k')
 			except (ValueError) as e:
 				print('exception in bAnalysis.plotClips() while plotting clips', i)
-				
+
 		#
 		# plot current clip
 		line = None
@@ -608,10 +620,10 @@ class bAnalysis:
 		# add an initial point so it is the same length as raw data in abf.sweepY
 		dvdt = np.concatenate(([0],dvdt))
 		line, = ax.plot(filteredClip, dvdt, 'y')
-		
+
 		ax.set_ylabel('filtered dV/dt')
 		ax.set_xlabel('filtered Vm (mV)')
-	
+
 		return line
 
 	############################################################
@@ -622,7 +634,7 @@ class bAnalysis:
 		# limit columns
 		df = df[['file', 'spikeNumber', 'thresholdSec', 'peakSec', 'preMinVal', 'postMinVal', 'widths']]
 		return df
-		
+
 	############################################################
 	# utility
 	############################################################
@@ -633,5 +645,3 @@ class bAnalysis:
 if __name__ == '__main__':
 	ba = bAnalysis('../data/19114001.abf')
 	print(ba.dataPointsPerMs)
-	
-	
