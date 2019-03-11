@@ -140,10 +140,10 @@ class bAnalysis:
 				preDerivClip = np.flip(preDerivClip) # backwards
 				threshPnt2 = np.where(preDerivClip<tenPercentMax)[0][0]
 				threshPnt2 = (spikeTime) - threshPnt2
-				print('i:', i, 'spikeTime:', spikeTime, 'peakPnt:', peakPnt, 'threshPnt2:', threshPnt2)
+				#print('i:', i, 'spikeTime:', spikeTime, 'peakPnt:', peakPnt, 'threshPnt2:', threshPnt2)
 				spikeTimes1.append(threshPnt2)
 			except (IndexError) as e:
-				print('IndexError spike', i, spikeTime)
+				print('error: IndexError spike', i, spikeTime, 'tenPercentMax:', tenPercentMax)
 				spikeTimes1.append(spikeTime)
 
 		return spikeTimes1, vm, sweepDeriv
@@ -257,7 +257,7 @@ class bAnalysis:
 					postMinPnt = self.spikeTimes[i] + postMinPnt2
 					#print('i:', i, 'postMinPnt:', postMinPnt)
 				except (IndexError) as e:
-					print('error postMinPnt')
+					print('error: spike', i, 'searching for postMinVal:', postMinVal, 'postRange:', postRange)
 
 				#
 				# minima in dv/dt after spike
@@ -365,7 +365,7 @@ class bAnalysis:
 	#############################
 	# plot functions
 	#############################
-	def plotDeriv(self, medianFilter=0, dVthresholdPos=100):
+	def plotDeriv(self, medianFilter=0, dVthresholdPos=100, fig=None):
 		'''
 		Plot both Vm and the derivative of Vm (dV/dt).
 
@@ -399,13 +399,14 @@ class bAnalysis:
 
 		grid = plt.GridSpec(2, 1, wspace=0.2, hspace=0.4)
 
-		fig = plt.figure(figsize=(10, 8))
+		if fig is None:
+			fig = plt.figure(figsize=(10, 8))
 		ax1 = fig.add_subplot(grid[0,0])
 		ax2 = fig.add_subplot(grid[1,0], sharex=ax1)
 		#ax3 = fig.add_subplot(grid[2,0], sharex=ax1)
 
 
-		ax1.plot(self.abf.sweepX, vm)
+		ax1.plot(self.abf.sweepX, vm, label='filtered Vm (mV)')
 		ax1.set_ylabel(yAxisLabel + 'Vm (mV)')
 
 		ax2.plot(self.abf.sweepX, sweepDeriv)
@@ -416,10 +417,10 @@ class bAnalysis:
 		#ax3.set_ylabel('dV/dt (2)')
 
 		# spike detect and append
-		ax1.plot(self.abf.sweepX[spikeTimes], vm[spikeTimes], 'or')
+		ax1.plot(self.abf.sweepX[spikeTimes], vm[spikeTimes], 'or', label='threshold')
 		ax2.plot(self.abf.sweepX[spikeTimes], sweepDeriv[spikeTimes], 'or')
 
-		print('detected', len(spikeTimes), 'spikes')
+		print('detected', len(spikeTimes), 'spikes medianFilter:', medianFilter, 'dVthresholdPos:', dVthresholdPos)
 
 		return fig
 
