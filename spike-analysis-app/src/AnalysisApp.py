@@ -23,12 +23,16 @@ __version__ = '20190312'
 LARGE_FONT= ("Verdana", 12)
 
 #####################################################################################
+# raw
 class PageThree(ttk.Frame):
 
-	def __init__(self, parent, controller):
+	def __init__(self, parent, controller, showToolbar=False):
+		print('PageThree.__init__')
+		
 		ttk.Frame.__init__(self, parent)
 
 		self.grid_rowconfigure(0, weight=1)
+		#self.grid_rowconfigure(1, weight=1)
 		self.grid_columnconfigure(0, weight=1)
 		
 		'''
@@ -42,33 +46,47 @@ class PageThree(ttk.Frame):
 		button1.pack()
 		'''
 		
-		fig = matplotlib.figure.Figure(figsize=(5,5), dpi=100)
-		ax = fig.add_subplot(111)
-		#self.line, = ax.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5]) # REMEMBER ',' ON LHS
-		self.line, = ax.plot([],[]) # REMEMBER ',' ON LHS
+		self.fig = matplotlib.figure.Figure(figsize=(5,5), dpi=100)
+		self.axes = self.fig.add_subplot(111)
 
-		self.fig = fig
-		self.axes = ax
+		self.line, = self.axes.plot([],[], 'k') # REMEMBER ',' ON LHS
+		self.spikeTimesLine, = self.axes.plot([],[], 'or') # REMEMBER ',' ON LHS
 
-		#canvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(f, self)
-		self.canvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(fig, parent)
-		#canvas.show()
-		self.canvas.draw()
-		#canvas.get_tk_widget().pack(side=ttk.BOTTOM, fill=ttk.BOTH, expand=True)
-		#self.canvas.get_tk_widget().pack(side="bottom", fill="both", expand=True)
+
+		print('1')
 		
+		self.canvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(self.fig, parent)
+		self.canvas.draw()
+		
+
+		self.canvas.get_tk_widget().grid_rowconfigure(0, weight=1)
+		#self.canvas.get_tk_widget().grid_rowconfigure(1, weight=1)
+		self.canvas.get_tk_widget().grid_columnconfigure(0, weight=1)
+
 		# this kinda works
 		self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 
 		# use NavigationToolbar2Tk
+		if showToolbar:
+			toolbar = matplotlib.backends.backend_tkagg.NavigationToolbar2Tk(self.canvas, parent)
+			toolbar.update()
 		#toolbar = matplotlib.backends.backend_tkagg.NavigationToolbar2Tk(canvas, controller.root)
 		#toolbar.update()
 		#canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+		# this kinda works
+		print('2')
+		#self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
 		
-	def plot(self, ba):
+	def plotRaw(self, ba):
+		start = 0
+		stop = len(ba.abf.sweepX) - 1
+		step = 10
+		subSetOfPnts = range(start, stop, step)
+		
 		#ba.plotDeriv(fig=self.fig)
-		self.line.set_ydata(ba.abf.sweepY)
-		self.line.set_xdata(ba.abf.sweepX)
+		self.line.set_ydata(ba.abf.sweepY[subSetOfPnts])
+		self.line.set_xdata(ba.abf.sweepX[subSetOfPnts])
 		
 		xMin = min(ba.abf.sweepX)
 		xMax = max(ba.abf.sweepX)
@@ -80,6 +98,32 @@ class PageThree(ttk.Frame):
 		
 		self.canvas.draw()
 		
+	def plotDeriv(self, ba, dVthresholdPos=50, medianFilter=3):
+		#ba.plotDeriv(fig=self.fig)
+		
+		start = 0
+		stop = len(ba.abf.sweepX) - 1
+		step = 10
+		subSetOfPnts = range(start, stop, step)
+
+		spikeTimes, vm, sweepDeriv = ba.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter)
+		
+		self.line.set_ydata(sweepDeriv[subSetOfPnts])
+		self.line.set_xdata(ba.abf.sweepX[subSetOfPnts])
+		
+		xMin = min(ba.abf.sweepX)
+		xMax = max(ba.abf.sweepX)
+		self.axes.set_xlim(xMin, xMax)
+		
+		yMin = min(sweepDeriv)
+		yMax = max(sweepDeriv)
+		self.axes.set_ylim(yMin, yMax)
+		
+		self.spikeTimesLine.set_ydata(sweepDeriv[spikeTimes])
+		self.spikeTimesLine.set_xdata(ba.abf.sweepX[spikeTimes])
+
+		self.canvas.draw()
+
 #####################################################################################
 class AnalysisApp:
 
@@ -96,8 +140,8 @@ class AnalysisApp:
 		# position root window
 		x = 100 #self.configDict['appWindowGeometry_x']
 		y = 100 #self.configDict['appWindowGeometry_y']
-		w = 500 #self.configDict['appWindowGeometry_w']
-		h = 300# self.configDict['appWindowGeometry_h']
+		w = 800 #self.configDict['appWindowGeometry_w']
+		h = 800# self.configDict['appWindowGeometry_h']
 		self.root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
 		self.buildInterface()
@@ -142,7 +186,19 @@ class AnalysisApp:
 		lower_frame.grid_columnconfigure(0, weight=1)
 		self.vPane.add(lower_frame)
 		
-		self.rawPlot = PageThree(lower_frame, self)
+		self.rawPlot = PageThree(lower_frame, self, showToolbar=False)
+		#self.rawPlot.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
+		
+		#
+		# deriv data
+		print('4')
+		deriv_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
+		deriv_frame.grid(row=0, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
+		deriv_frame.grid_rowconfigure(0, weight=1)
+		deriv_frame.grid_columnconfigure(0, weight=1)
+		self.vPane.add(deriv_frame)
+		
+		self.derivPlot = PageThree(deriv_frame, self)
 		#self.rawPlot.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
 		
 	def loadFolder(self, path=''):
@@ -174,7 +230,8 @@ class AnalysisApp:
 		ba = bAnalysis(file=videoPath)
 		#print(ba)
 
-		self.rawPlot.plot(ba)
+		self.rawPlot.plotRaw(ba)
+		self.derivPlot.plotDeriv(ba)
 		
 	def onClose(self, event=None):
 		print("VideoApp.onClose()")
