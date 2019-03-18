@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Author: Robert H Cudmore
+# Date: 20181203
+#
+# Build a stand-alone app using pyinstaller
+
+rm -rf build dist
+pyinstaller --windowed --icon=icons/videoapp.icns -n SpikeAnalysis AnalysisApp.py

@@ -8,7 +8,10 @@ Manager a list of video files
 import os
 from collections import OrderedDict 
 
-gVideoFileColumns = ('index', 'path', 'file', 'width', 'height', 'frames', 'fps', 'seconds', 'minutes', 'numevents', 'note')
+from bAnalysis import bAnalysis
+
+#gVideoFileColumns = ('index', 'path', 'file', 'width', 'height', 'frames', 'fps', 'seconds', 'minutes', 'numevents', 'note')
+gVideoFileColumns = ('Index', 'Path', 'File', 'kHz', 'Duration (sec)', 'Sweeps')
 
 #############################################################
 class bFileList:
@@ -56,6 +59,8 @@ class bVideoFile:
 		path: (str) full path to .mp4 video file
 		"""
 		
+		#print('bVideoFile() index:', index, 'path:', path)
+		
 		if not os.path.isfile(path):
 			print('error: bVideoFile() could not open file path:', path)
 			return
@@ -81,6 +86,16 @@ class bVideoFile:
 		self.dict['path'] = path
 		self.dict['file'] = videoFileName
 		
+		# load abf file and grab parameters
+		ba = bAnalysis(file=path)
+		pntsPerMS = ba.dataPointsPerMs
+		numSweeps = len(ba.sweepList)
+		durationSec = max(ba.abf.sweepX)
+		
+		self.dict['kHz'] = pntsPerMS
+		self.dict['durationSec'] = int(round(durationSec))
+		self.dict['numSweeps'] = numSweeps
+
 		'''
 		self.dict['width'] = width
 		self.dict['height'] = height

@@ -200,7 +200,7 @@ class bFileTree(bTree):
 			
 			# configure columns
 			self.treeview['columns'] = videoFileColumns
-			hideColumns = ['path'] # hide some columns
+			hideColumns = ['Path'] # hide some columns
 			displaycolumns = [] # build a list of columns not in hideColumns
 			for column in videoFileColumns:
 				self.treeview.column(column, width=10)
@@ -209,13 +209,19 @@ class bFileTree(bTree):
 					displaycolumns.append(column)
 
 			# set some column widths, width is in pixels?
-			self.treeview.column('index', width=5)
+			self.treeview.column('Index', width=5)
 			
 			# set some column widths, width is in pixels?
 			#gVideoFileColumns = ('index', 'path', 'file', 'width', 'height', 'frames', 'fps', 'seconds', 'numevents', 'note')
-			defaultWidth = 80
-			self.treeview.column('index', minwidth=50, width=50, stretch="no")
-			self.treeview.column('file', width=150)
+			defaultWidth = 120
+			self.treeview.column('Index', minwidth=50, width=50, stretch="no")
+			self.treeview.column('File', width=300)
+
+			self.treeview.column('kHz', minwidth=defaultWidth, width=defaultWidth, stretch="no")
+			self.treeview.column('Duration (sec)', minwidth=defaultWidth, width=defaultWidth, stretch="no")
+			self.treeview.column('Sweeps', minwidth=defaultWidth, width=defaultWidth, stretch="no")
+
+			'''
 			self.treeview.column('width', minwidth=defaultWidth, width=defaultWidth, stretch="no")
 			self.treeview.column('height', minwidth=defaultWidth, width=defaultWidth, stretch="no")
 			self.treeview.column('frames', minwidth=defaultWidth, width=defaultWidth, stretch="no")
@@ -223,6 +229,7 @@ class bFileTree(bTree):
 			self.treeview.column('seconds', minwidth=defaultWidth, width=defaultWidth, stretch="no")
 			self.treeview.column('minutes', minwidth=defaultWidth, width=defaultWidth, stretch="no")
 			self.treeview.column('numevents', minwidth=defaultWidth, width=defaultWidth, stretch="no")
+			'''
 			
 			# hide some columns
 			self.treeview["displaycolumns"] = displaycolumns
@@ -231,12 +238,14 @@ class bFileTree(bTree):
 
 			# right-click popup
 			# see: https://stackoverflow.com/questions/12014210/tkinter-app-adding-a-right-click-context-menu
+			'''
 			self.popup_menu = tkinter.Menu(self.treeview, tearoff=0)
 			self.popup_menu.add_command(label="Set Note",
 										command=self.setNote)
 			self.treeview.bind("<Button-2>", self.popup)
 			self.treeview.bind("<Button-3>", self.popup) # Button-2 on Aqua
-		
+			'''
+			
 		# first delete entries
 		for i in self.treeview.get_children():
 			self.treeview.delete(i)
@@ -250,7 +259,7 @@ class bFileTree(bTree):
 		print('=== bVideoFileTree.single_click()')		
 		
 		# get video file path
-		path, item = self._getTreeViewSelection('path')
+		path, item = self._getTreeViewSelection('Path')
 		#print('   path:', path)
 
 		if path is None:
