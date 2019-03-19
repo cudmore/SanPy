@@ -141,11 +141,11 @@ class bAnalysis:
 		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if spikeTime]
 
 		#
-		# make sure all spikes are on upslope
+		# todo: make sure all spikes are on upslope
 
 		#
-		# todo
-		# for each threshold crossing, search backwards for 10% of maximum (about 10 ms)
+		# for each threshold crossing, search backwards in dV/dt for a % of maximum (about 10 ms)
+		dvdt_percentOfMax = 0.15
 		window_ms = 2
 		window_pnts = window_ms * self.dataPointsPerMs
 		spikeTimes1 = []
@@ -157,16 +157,16 @@ class bAnalysis:
 			peakPnt += spikeTime-window_pnts
 			peakVal = self.filteredDeriv[peakPnt]
 
-			# look for 10% of max
+			# look for % of max
 			try:
-				tenPercentMax = peakVal * 0.15
+				percentMaxVal = peakVal * dvdt_percentOfMax # value we are looking for in dv/dt
 				preDerivClip = np.flip(preDerivClip) # backwards
-				threshPnt2 = np.where(preDerivClip<tenPercentMax)[0][0]
+				threshPnt2 = np.where(preDerivClip<percentMaxVal)[0][0]
 				threshPnt2 = (spikeTime) - threshPnt2
 				#print('i:', i, 'spikeTime:', spikeTime, 'peakPnt:', peakPnt, 'threshPnt2:', threshPnt2)
 				spikeTimes1.append(threshPnt2)
 			except (IndexError) as e:
-				print('error: IndexError spike', i, spikeTime, 'tenPercentMax:', tenPercentMax)
+				print('error: IndexError spike', i, spikeTime, 'percentMaxVal:', percentMaxVal)
 				spikeTimes1.append(spikeTime)
 
 		self.spikeTimes = spikeTimes1
@@ -223,6 +223,7 @@ class bAnalysis:
 			self.spikeDict[i]['postMinPnt'] = None
 			self.spikeDict[i]['postMinVal'] = None
 
+			# 0.1 to 0.5 of time between pre spike min and spike time
 			self.spikeDict[i]['preLinearFitPnt0'] = None
 			self.spikeDict[i]['preLinearFitPnt1'] = None
 			self.spikeDict[i]['preLinearFitVal0'] = None

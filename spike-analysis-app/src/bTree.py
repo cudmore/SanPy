@@ -16,23 +16,26 @@ import bDialog
 ###################################################################################
 class bTree(ttk.Frame):
 	def __init__(self, parent, parentApp, *args, **kwargs):
-		ttk.Frame.__init__(self, parent)
+		ttk.Frame.__init__(self, parent, *args, **kwargs)
 		
 		self.myParentApp = parentApp
 		self.myParent = parent
 		
 		myPadding = 5
 
+		# put this back in
 		self.grid_rowconfigure(0, weight=1)
 		self.grid_columnconfigure(0, weight=1)
-
+		
 		self.treeview = ttk.Treeview(self, selectmode="browse", show=['headings'], *args, **kwargs)
+		# put this back in
 		self.treeview.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-
+		
+		# put this back in
 		self.scrollbar = ttk.Scrollbar(self, orient="vertical", command = self.treeview.yview)
 		self.scrollbar.grid(row=0, column=0, sticky='nse', padx=myPadding, pady=myPadding)
 		self.treeview.configure(yscrollcommand=self.scrollbar.set)
-
+		
 	def sort_column(self, col, reverse):
 		print('=== bTree.sort_column()()', 'col:', col, 'reverse:', reverse)
 

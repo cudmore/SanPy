@@ -143,18 +143,20 @@ class AnalysisApp:
 		
 		self.root.grid_rowconfigure(0, weight=1)
 		self.root.grid_columnconfigure(0, weight=1)
-
+		
 		#
 		# vertical pane to hold everything
 		self.vPane = ttk.PanedWindow(self.root, orient="vertical") #, showhandle=True)
 		self.vPane.grid(row=0, column=0, sticky="nsew")
-
+		
 		#
 		# status frame
 		status_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
+		'''
 		status_frame.grid(row=0, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
 		status_frame.grid_rowconfigure(0, weight=1)
 		status_frame.grid_columnconfigure(0, weight=1)
+		'''
 		self.vPane.add(status_frame)
 
 		# status, see self.setStatus()
@@ -163,22 +165,138 @@ class AnalysisApp:
 		self.setStatus('Idle')
 		
 		#
+		#
+		# WHY IS THIS ALWAYS SO FUCKING COMPLICATED !!!!!!!!!!!!!!!!!!!!!!!!!!!
+		#
+		#
+		# horizontal pane for file list and detection
+		self.hPane = ttk.PanedWindow(self.vPane, orient="horizontal") #, showhandle=True)
+		#self.hPane.grid_rowconfigure(0, weight=1)
+		#self.hPane.grid_columnconfigure(0, weight=1)
+		
+		# file list frame
+		fileList_frame = ttk.Frame(self.hPane, borderwidth=myBorderWidth, relief="sunken", width=500)
+		fileList_frame['width'] = 500
+		self.fileListTree = bTree.bFileTree(fileList_frame, self, videoFileList='')
+		self.fileListTree.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
+		'''
+		#fileList_frame = ttk.Frame(self.hPane, borderwidth=myBorderWidth, relief="sunken")
+		self.fileListTree = bTree.bFileTree(self.hPane, self, videoFileList='')
+		#self.fileListTree.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
+		'''
+		
+		# detection frame
+		detection_frame = ttk.Frame(self.hPane, borderwidth=myBorderWidth, relief="sunken")
+		'''
+		tmpButton = ttk.Button(detection_frame, text='xxx')
+		tmpButton.grid(row=0, column=1, sticky="nsew", padx=myPadding, pady=myPadding)
+		'''
+		
+		##
+		# ADDING
+		##
+		# detect button
+		row = 0
+		
+		detectButton = ttk.Button(detection_frame, text='Detect Spikes', command=lambda name='detectButton': self.button_Callback(name))
+		detectButton.grid(row=row, column=0, sticky="w")
+		row += 1
+		
+		# time range
+		labelDir = ttk.Label(detection_frame, text='From (Sec)')
+		labelDir.grid(row=row, column=0, sticky="w")
+
+		self.startSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000)
+		self.startSecondsSpinbox.insert(0,0) # default is 0
+		self.startSecondsSpinbox.grid(row=row, column=1, sticky="w")
+
+		labelDir = ttk.Label(detection_frame, text='To (Sec)')
+		labelDir.grid(row=row, column=2, sticky="w")
+
+		self.stopSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000)
+		self.stopSecondsSpinbox.insert(0,float('inf')) # default is inf
+		self.stopSecondsSpinbox.grid(row=row, column=3, sticky="w")
+
+		row += 1
+
+		# threshold
+		labelDir = ttk.Label(detection_frame, text='dV/dt Threshold')
+		labelDir.grid(row=row, column=0, sticky="w")
+
+		dvdtThreshold = self.configDict['detection']['dvdtThreshold']
+		self.thresholdSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000)
+		self.thresholdSpinbox.insert(0,dvdtThreshold) # default is 100
+		self.thresholdSpinbox.grid(row=row, column=1, sticky="w")
+		
+		row += 1
+
+		# median filter
+		labelDir = ttk.Label(detection_frame, text='Median Filter (pnts)')
+		labelDir.grid(row=row, column=0, sticky="w")
+
+		medianFilter = self.configDict['detection']['medianFilter']
+		print('type(medianFilter):', type(medianFilter))
+		self.filterSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000)
+		self.filterSpinbox.insert(0,medianFilter) # default is 5
+		self.filterSpinbox.grid(row=row, column=1, sticky="w")
+		
+		row += 1
+
+		# report button
+		reportButton = ttk.Button(detection_frame, text='Save Spike Report', command=lambda name='reportButton': self.button_Callback(name))
+		reportButton.grid(row=row, column=0, sticky="w")
+		
+		##
+		# end ADDING
+		#
+		
+		####################
+		# for some reason file list frame is not resizing to proper width during its creation !!!!!!!!!!!!!!!!
+		# if I reverse (1) and (2) the button shows up with the correct with ?????????????????????
+		####################
+		# (1)
+		self.hPane.pack(fill="both", expand=True)
+		self.hPane.add(fileList_frame)
+		#self.hPane.add(self.fileListTree)
+		# (2)
+		self.hPane.add(detection_frame)
+		self.hPane.sashpos(0, 500)
+	
+		self.vPane.add(self.hPane)
+
+		#
 		# file list
+		'''
 		upper_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
+		'''
+		'''
 		upper_frame.grid(row=0, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
 		upper_frame.grid_rowconfigure(0, weight=1)
 		upper_frame.grid_columnconfigure(0, weight=1)
+		'''
+		'''
 		self.vPane.add(upper_frame)
-
+		'''
+		
+		# maybe put back in
+		'''
 		self.fileListTree = bTree.bFileTree(upper_frame, self, videoFileList='')
 		self.fileListTree.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-
+		'''
+		
 		#
 		# detection params
 		buttonFrame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
+		'''
 		buttonFrame.grid(row=1, column=0, sticky="nw", padx=myPadding, pady=myPadding)
+		'''
 		self.vPane.add(buttonFrame)
 
+		##
+		# remove
+		##
+		
+		'''
 		col = 0
 
 		# detect button
@@ -234,6 +352,11 @@ class AnalysisApp:
 		col += 1
 
 		'''
+		##
+		# end remove
+		##
+		
+		'''
 		# status, see self.setStatus()
 		self.statusLabel = ttk.Label(buttonFrame)
 		self.statusLabel.grid(row=0, column=col, sticky="w")
@@ -244,7 +367,9 @@ class AnalysisApp:
 		#
 		# plot options (checkboxes)
 		plotOptionsFrame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
+		'''
 		plotOptionsFrame.grid(row=1, column=0, sticky="nw", padx=myPadding, pady=myPadding)
+		'''
 		self.vPane.add(plotOptionsFrame)
 
 		# reset axes button
@@ -277,9 +402,11 @@ class AnalysisApp:
 		#
 		# raw data
 		lower_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
+		'''
 		lower_frame.grid(row=2, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
 		lower_frame.grid_rowconfigure(0, weight=1)
 		lower_frame.grid_columnconfigure(0, weight=1)
+		'''
 		self.vPane.add(lower_frame)
 		
 		self.rawPlot = bPlotFrame(lower_frame, self, showToolbar=True, analysisList=self.analysisList, figHeight=3)
@@ -288,9 +415,11 @@ class AnalysisApp:
 		#
 		# deriv data
 		deriv_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
+		'''
 		deriv_frame.grid(row=3, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
 		deriv_frame.grid_rowconfigure(0, weight=1)
 		deriv_frame.grid_columnconfigure(0, weight=1)
+		'''
 		self.vPane.add(deriv_frame)
 		
 		self.derivPlot = bPlotFrame(deriv_frame, self, showToolbar=False, analysisList=self.analysisList,figHeight=1)
@@ -299,9 +428,11 @@ class AnalysisApp:
 		#
 		# spike clips
 		clips_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
+		'''
 		clips_frame.grid(row=4, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
 		clips_frame.grid_rowconfigure(0, weight=1)
 		clips_frame.grid_columnconfigure(0, weight=1)
+		'''
 		self.vPane.add(clips_frame)
 		
 		self.clipsPlot = bPlotFrame(clips_frame, self, showToolbar=False, analysisList=self.analysisList, figHeight=3, allowSpan=False)
@@ -310,9 +441,11 @@ class AnalysisApp:
 		#
 		# meta analysis
 		meta_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
+		'''
 		meta_frame.grid(row=5, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
 		meta_frame.grid_rowconfigure(0, weight=1)
 		meta_frame.grid_columnconfigure(0, weight=1)
+		'''
 		self.vPane.add(meta_frame)
 		
 		self.metaPlot = bPlotFrame(meta_frame, self, showToolbar=False, figHeight=3, allowSpan=False)
