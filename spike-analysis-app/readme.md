@@ -4,7 +4,7 @@ Python 3.7.x
 
 ## Install
 
-pip install -r requirements.txt
+    pip install -r requirements.txt
 
 ## Run
 
@@ -18,5 +18,5 @@ Install pyinstaller
 
 Make the app
 
-  cd src
-  ./makeapp
+    cd src
+    ./makeapp
