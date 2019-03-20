@@ -29,24 +29,8 @@ class AnalysisApp:
 
 	def __init__(self, path=None):
 
-		if getattr(sys, 'frozen', False):
-			# we are running in a bundle (frozen)
-			bundle_dir = sys._MEIPASS
-		else:
-			# we are running in a normal Python environment
-			bundle_dir = os.path.dirname(os.path.abspath(__file__))
-
-		# load preferences
-		self.optionsFile = os.path.join(bundle_dir, 'AnalysisApp.json')
-
-		if os.path.isfile(self.optionsFile):
-			print('    loading options file:', self.optionsFile)
-			with open(self.optionsFile) as f:
-				self.configDict = json.load(f)
-		else:
-			print('    using program provided default options')
-			self.preferencesDefaults()
-
+		self.loadPreferences()
+		
 		self.root = tkinter.Tk()
 		self.root.title('Analysis App')
 		
@@ -56,16 +40,19 @@ class AnalysisApp:
 		self.root.unbind_class("Button", "<Key-space>")
 
 		# position root window
-		x = self.configDict['windowGeometry']['x'] #100 #self.configDict['appWindowGeometry_x']
-		y = self.configDict['windowGeometry']['y'] #100 #self.configDict['appWindowGeometry_y']
-		w = self.configDict['windowGeometry']['width'] #2000 #self.configDict['appWindowGeometry_w']
-		h = self.configDict['windowGeometry']['height'] #1000# self.configDict['appWindowGeometry_h']
+		x = self.configDict['windowGeometry']['x']
+		y = self.configDict['windowGeometry']['y']
+		w = self.configDict['windowGeometry']['width']
+		h = self.configDict['windowGeometry']['height']
 		self.root.geometry('%dx%d+%d+%d' % (w, h, x, y))
 
 		self.currentFilePath = ''
 		self.ba = None
 		
-		self.buildInterface()
+		self.myPadding = 10
+		self.myBorderWidth = 5
+		
+		self.buildInterface2()
 		
 		self.myMenus = bMenus.bMenus(self)
 
@@ -74,53 +61,6 @@ class AnalysisApp:
 			
 		# this will not return until we quit
 		self.root.mainloop()
-
-	def preferencesDefaults(self):
-		self.configDict = {}
-		
-		self.configDict['windowGeometry'] = {}
-		self.configDict['windowGeometry']['x'] = 100
-		self.configDict['windowGeometry']['y'] = 100
-		self.configDict['windowGeometry']['width'] = 1000
-		self.configDict['windowGeometry']['height'] = 700
-
-		self.configDict['detection'] = {}
-		self.configDict['detection']['dvdtThreshold'] = 100
-		self.configDict['detection']['medianFilter'] = 5
-		
-		self.configDict['display'] = {}
-		self.configDict['display']['showEveryPoint'] = 10
-
-	def savePreferences(self):
-		print('=== AnalysisApp.savePreferences() file:', self.optionsFile)
-
-		x = self.root.winfo_x()
-		y = self.root.winfo_y()
-		width = self.root.winfo_width()
-		height = self.root.winfo_height()
-
-		self.configDict['windowGeometry']['x'] = x
-		self.configDict['windowGeometry']['y'] = x
-		self.configDict['windowGeometry']['width'] = width
-		self.configDict['windowGeometry']['height'] = height
-
-		#
-		# detection
-		dvdtThreshold = int(self.thresholdSpinbox.get())
-		self.configDict['detection']['dvdtThreshold'] = dvdtThreshold
-		
-		medianFilter = int(self.filterSpinbox.get())
-		self.configDict['detection']['medianFilter'] = medianFilter
-		
-		#
-		# display
-		plotEveryPoint = int(self.plotEverySpinbox.get())
-		self.configDict['display']['plotEveryPoint'] = plotEveryPoint
-
-		#
-		# save
-		with open(self.optionsFile, 'w') as outfile:
-			json.dump(self.configDict, outfile, indent=4, sort_keys=True)
 
 	def setStatus(self, str='Idle'):
 		print('AnalysisApp.setStatus() str:', str)
@@ -134,69 +74,46 @@ class AnalysisApp:
 		#self.statusLabel.update_idletasks()
 		self.statusLabel.update()
 		
-	def buildInterface(self):
-		myPadding = 5
-		myBorderWidth = 2
-
-		self.lastResizeWidth = None
-		self.lastResizeHeight = None
+	def buildInterface_Left(self):
+		"""
+		Populate left vertical frame with user interface controls.
+		Including: tree view, buttons, spin boxes, checkboxes
+		"""
 		
-		self.root.grid_rowconfigure(0, weight=1)
-		self.root.grid_columnconfigure(0, weight=1)
-		
-		#
-		# vertical pane to hold everything
-		self.vPane = ttk.PanedWindow(self.root, orient="vertical") #, showhandle=True)
-		self.vPane.grid(row=0, column=0, sticky="nsew")
+		# width=600 will set the initial width
+		self.leftVPane = ttk.PanedWindow(self.hPane, orient="vertical", width=600)
 		
 		#
-		# status frame
-		status_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
-		'''
-		status_frame.grid(row=0, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-		status_frame.grid_rowconfigure(0, weight=1)
-		status_frame.grid_columnconfigure(0, weight=1)
-		'''
-		self.vPane.add(status_frame)
+		# status frame, see self.setStatus()
+		status_frame = ttk.Frame(self.leftVPane, borderwidth=self.myBorderWidth, relief="sunken")
+		self.leftVPane.add(status_frame)
 
-		# status, see self.setStatus()
 		self.statusLabel = ttk.Label(status_frame)
 		self.statusLabel.grid(row=0, column=0, sticky="w")
-		self.setStatus('Idle')
-		
+		self.setStatus('Building Interface')
+
 		#
-		#
-		# WHY IS THIS ALWAYS SO FUCKING COMPLICATED !!!!!!!!!!!!!!!!!!!!!!!!!!!
-		#
-		#
-		# horizontal pane for file list and detection
-		self.hPane = ttk.PanedWindow(self.vPane, orient="horizontal") #, showhandle=True)
-		#self.hPane.grid_rowconfigure(0, weight=1)
-		#self.hPane.grid_columnconfigure(0, weight=1)
-		
 		# file list frame
-		fileList_frame = ttk.Frame(self.hPane, borderwidth=myBorderWidth, relief="sunken", width=500)
-		fileList_frame['width'] = 500
+		fileList_frame = ttk.Frame(self.leftVPane, borderwidth=self.myBorderWidth, relief="sunken")
+		self.leftVPane.add(fileList_frame)
+
+		fileListFrameLabel = ttk.Label(fileList_frame)
+		fileListFrameLabel.grid(row=0, column=0, sticky="w")
+		fileListFrameLabel.configure(text='File List')
+
 		self.fileListTree = bTree.bFileTree(fileList_frame, self, videoFileList='')
-		self.fileListTree.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-		'''
-		#fileList_frame = ttk.Frame(self.hPane, borderwidth=myBorderWidth, relief="sunken")
-		self.fileListTree = bTree.bFileTree(self.hPane, self, videoFileList='')
-		#self.fileListTree.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-		'''
-		
+		self.fileListTree.grid(row=1,column=0, sticky="nsew")
+
+		#
 		# detection frame
-		detection_frame = ttk.Frame(self.hPane, borderwidth=myBorderWidth, relief="sunken")
-		'''
-		tmpButton = ttk.Button(detection_frame, text='xxx')
-		tmpButton.grid(row=0, column=1, sticky="nsew", padx=myPadding, pady=myPadding)
-		'''
-		
-		##
-		# ADDING
-		##
-		# detect button
-		row = 0
+		detection_frame = ttk.Frame(self.leftVPane, borderwidth=self.myBorderWidth, relief="sunken")
+		self.leftVPane.add(detection_frame)
+
+		detectionFrameLabel = ttk.Label(detection_frame)
+		detectionFrameLabel.grid(row=0, column=0, sticky="w")
+		detectionFrameLabel.configure(text='Spike Detection')
+
+		row = 1
 		
 		detectButton = ttk.Button(detection_frame, text='Detect Spikes', command=lambda name='detectButton': self.button_Callback(name))
 		detectButton.grid(row=row, column=0, sticky="w")
@@ -206,14 +123,14 @@ class AnalysisApp:
 		labelDir = ttk.Label(detection_frame, text='From (Sec)')
 		labelDir.grid(row=row, column=0, sticky="w")
 
-		self.startSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000)
+		self.startSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
 		self.startSecondsSpinbox.insert(0,0) # default is 0
 		self.startSecondsSpinbox.grid(row=row, column=1, sticky="w")
 
 		labelDir = ttk.Label(detection_frame, text='To (Sec)')
 		labelDir.grid(row=row, column=2, sticky="w")
 
-		self.stopSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000)
+		self.stopSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
 		self.stopSecondsSpinbox.insert(0,float('inf')) # default is inf
 		self.stopSecondsSpinbox.grid(row=row, column=3, sticky="w")
 
@@ -224,7 +141,7 @@ class AnalysisApp:
 		labelDir.grid(row=row, column=0, sticky="w")
 
 		dvdtThreshold = self.configDict['detection']['dvdtThreshold']
-		self.thresholdSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000)
+		self.thresholdSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
 		self.thresholdSpinbox.insert(0,dvdtThreshold) # default is 100
 		self.thresholdSpinbox.grid(row=row, column=1, sticky="w")
 		
@@ -235,143 +152,22 @@ class AnalysisApp:
 		labelDir.grid(row=row, column=0, sticky="w")
 
 		medianFilter = self.configDict['detection']['medianFilter']
-		print('type(medianFilter):', type(medianFilter))
-		self.filterSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000)
+		self.filterSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=3)
 		self.filterSpinbox.insert(0,medianFilter) # default is 5
 		self.filterSpinbox.grid(row=row, column=1, sticky="w")
 		
 		row += 1
 
-		# report button
+		# save spike report button
 		reportButton = ttk.Button(detection_frame, text='Save Spike Report', command=lambda name='reportButton': self.button_Callback(name))
 		reportButton.grid(row=row, column=0, sticky="w")
-		
-		##
-		# end ADDING
-		#
-		
-		####################
-		# for some reason file list frame is not resizing to proper width during its creation !!!!!!!!!!!!!!!!
-		# if I reverse (1) and (2) the button shows up with the correct with ?????????????????????
-		####################
-		# (1)
-		self.hPane.pack(fill="both", expand=True)
-		self.hPane.add(fileList_frame)
-		#self.hPane.add(self.fileListTree)
-		# (2)
-		self.hPane.add(detection_frame)
-		self.hPane.sashpos(0, 500)
-	
-		self.vPane.add(self.hPane)
 
 		#
-		# file list
-		'''
-		upper_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
-		'''
-		'''
-		upper_frame.grid(row=0, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-		upper_frame.grid_rowconfigure(0, weight=1)
-		upper_frame.grid_columnconfigure(0, weight=1)
-		'''
-		'''
-		self.vPane.add(upper_frame)
-		'''
+		# plot options frame (checkboxes)
+		plotOptionsFrame = ttk.Frame(self.leftVPane, borderwidth=self.myBorderWidth, relief="sunken")
+		self.leftVPane.add(plotOptionsFrame)
+
 		
-		# maybe put back in
-		'''
-		self.fileListTree = bTree.bFileTree(upper_frame, self, videoFileList='')
-		self.fileListTree.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-		'''
-		
-		#
-		# detection params
-		buttonFrame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
-		'''
-		buttonFrame.grid(row=1, column=0, sticky="nw", padx=myPadding, pady=myPadding)
-		'''
-		self.vPane.add(buttonFrame)
-
-		##
-		# remove
-		##
-		
-		'''
-		col = 0
-
-		# detect button
-		detectButton = ttk.Button(buttonFrame, text='Detect Spikes', command=lambda name='detectButton': self.button_Callback(name))
-		detectButton.grid(row=0, column=col, sticky="w")
-		col += 1
-		
-		# time range
-		labelDir = ttk.Label(buttonFrame, text='From (Sec)')
-		labelDir.grid(row=0, column=col, sticky="w")
-		col += 1
-
-		self.startSecondsSpinbox = ttk.Spinbox(buttonFrame, from_=0, to=1000)
-		self.startSecondsSpinbox.insert(0,0) # default is 0
-		self.startSecondsSpinbox.grid(row=0, column=col, sticky="w")
-		col += 1
-
-		labelDir = ttk.Label(buttonFrame, text='To (Sec)')
-		labelDir.grid(row=0, column=col, sticky="w")
-		col += 1
-
-		self.stopSecondsSpinbox = ttk.Spinbox(buttonFrame, from_=0, to=1000)
-		self.stopSecondsSpinbox.insert(0,float('inf')) # default is inf
-		self.stopSecondsSpinbox.grid(row=0, column=col, sticky="w")
-		col += 1
-
-		# threshold
-		labelDir = ttk.Label(buttonFrame, text='dV/dt Threshold')
-		labelDir.grid(row=0, column=col, sticky="w")
-		col += 1
-
-		dvdtThreshold = self.configDict['detection']['dvdtThreshold']
-		self.thresholdSpinbox = ttk.Spinbox(buttonFrame, from_=0, to=1000)
-		self.thresholdSpinbox.insert(0,dvdtThreshold) # default is 100
-		self.thresholdSpinbox.grid(row=0, column=col, sticky="w")
-		col += 1
-		
-		# median filter
-		labelDir = ttk.Label(buttonFrame, text='Median Filter (pnts)')
-		labelDir.grid(row=0, column=col, sticky="w")
-		col += 1
-
-		medianFilter = self.configDict['detection']['medianFilter']
-		print('type(medianFilter):', type(medianFilter))
-		self.filterSpinbox = ttk.Spinbox(buttonFrame, from_=0, to=1000)
-		self.filterSpinbox.insert(0,medianFilter) # default is 5
-		self.filterSpinbox.grid(row=0, column=col, sticky="w")
-		col += 1
-		
-		# report button
-		reportButton = ttk.Button(buttonFrame, text='Save Spike Report', command=lambda name='reportButton': self.button_Callback(name))
-		reportButton.grid(row=0, column=col, sticky="w")
-		col += 1
-
-		'''
-		##
-		# end remove
-		##
-		
-		'''
-		# status, see self.setStatus()
-		self.statusLabel = ttk.Label(buttonFrame)
-		self.statusLabel.grid(row=0, column=col, sticky="w")
-		self.setStatus('Idle')
-		col += 1
-		'''
-		
-		#
-		# plot options (checkboxes)
-		plotOptionsFrame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
-		'''
-		plotOptionsFrame.grid(row=1, column=0, sticky="nw", padx=myPadding, pady=myPadding)
-		'''
-		self.vPane.add(plotOptionsFrame)
-
 		# reset axes button
 		resetAxesButton = ttk.Button(plotOptionsFrame, text='Reset Axes', command=lambda name='fullAxisButton': self.button_Callback(name))
 		resetAxesButton.grid(row=0, column=0, sticky="w")
@@ -381,11 +177,11 @@ class AnalysisApp:
 		labelDir.grid(row=0, column=1, sticky="w")
 
 		plotEveryPoint = self.configDict['display']['plotEveryPoint']
-		self.plotEverySpinbox = ttk.Spinbox(plotOptionsFrame, from_=1, to=1000, validate="focusout", validatecommand=lambda name='plotEverySpinbox': self.spinBox_Callback(name))
+		self.plotEverySpinbox = ttk.Spinbox(plotOptionsFrame, from_=1, to=1000, width=5, validate="focusout", validatecommand=lambda name='plotEverySpinbox': self.spinBox_Callback(name))
 		self.plotEverySpinbox.insert(0,plotEveryPoint) # default is 10
 		self.plotEverySpinbox.grid(row=0, column=2, sticky="w")
 
-		numCols = 3
+		row = 1
 		
 		# plot checkboxes
 		self.analysisList = ['peak', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
@@ -396,61 +192,65 @@ class AnalysisApp:
 			self.varList.append(var)
 			check = ttk.Checkbutton(plotOptionsFrame, text=analysisItem, var=var, command=lambda name=analysisItem, var=var: self.check_Callback(name, var))
 			#check['foreground'] = 'red'
-			check.grid(row=0, column=i+numCols, sticky="w") # +2 for resetAxesButton
+			check.grid(row=row+i, column=0, sticky="w")
 			self.checkList.append(check)
-				
+
 		#
+		# meta plot frame
+		metaPlotFrame = ttk.Frame(self.leftVPane, borderwidth=self.myBorderWidth, relief="sunken")
+		self.leftVPane.add(metaPlotFrame)
+
+		row = 0 
+		for i, analysisItem in enumerate(self.analysisList):
+			button = ttk.Button(metaPlotFrame, text=analysisItem, command=lambda name=analysisItem+'_button': self.button_Callback(name))
+			button.grid(row=row+i, column=0, sticky="w") 
+					
+	def buildInterface_Right(self):
+		#
+		# populate right v pane with plots
+		#
+		self.rightVPane = ttk.PanedWindow(self.hPane, orient="vertical")
+
 		# raw data
-		lower_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
-		'''
-		lower_frame.grid(row=2, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-		lower_frame.grid_rowconfigure(0, weight=1)
-		lower_frame.grid_columnconfigure(0, weight=1)
-		'''
-		self.vPane.add(lower_frame)
+		rawFrame = ttk.Frame(self.rightVPane, borderwidth=self.myBorderWidth, relief="sunken")
+		self.rightVPane.add(rawFrame)
 		
-		self.rawPlot = bPlotFrame(lower_frame, self, showToolbar=True, analysisList=self.analysisList, figHeight=3)
-		#self.rawPlot.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
+		self.rawPlot = bPlotFrame(rawFrame, self, showToolbar=True, analysisList=self.analysisList, figHeight=3)
 		
-		#
 		# deriv data
-		deriv_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
-		'''
-		deriv_frame.grid(row=3, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-		deriv_frame.grid_rowconfigure(0, weight=1)
-		deriv_frame.grid_columnconfigure(0, weight=1)
-		'''
-		self.vPane.add(deriv_frame)
+		derivFrame = ttk.Frame(self.rightVPane, borderwidth=self.myBorderWidth, relief="sunken")
+		self.rightVPane.add(derivFrame)
 		
-		self.derivPlot = bPlotFrame(deriv_frame, self, showToolbar=False, analysisList=self.analysisList,figHeight=1)
-		#self.derivPlot.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
+		self.derivPlot = bPlotFrame(derivFrame, self, showToolbar=False, analysisList=self.analysisList,figHeight=1)
 		
-		#
 		# spike clips
-		clips_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
-		'''
-		clips_frame.grid(row=4, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-		clips_frame.grid_rowconfigure(0, weight=1)
-		clips_frame.grid_columnconfigure(0, weight=1)
-		'''
-		self.vPane.add(clips_frame)
+		spikeClipsFrame = ttk.Frame(self.rightVPane, borderwidth=self.myBorderWidth, relief="sunken")
+		self.rightVPane.add(spikeClipsFrame)
 		
-		self.clipsPlot = bPlotFrame(clips_frame, self, showToolbar=False, analysisList=self.analysisList, figHeight=3, allowSpan=False)
-		#self.clipsPlot.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
+		self.clipsPlot = bPlotFrame(spikeClipsFrame, self, showToolbar=False, analysisList=self.analysisList, figHeight=3, allowSpan=False)
 		
-		#
 		# meta analysis
-		meta_frame = ttk.Frame(self.vPane, borderwidth=myBorderWidth, relief="sunken")
-		'''
-		meta_frame.grid(row=5, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-		meta_frame.grid_rowconfigure(0, weight=1)
-		meta_frame.grid_columnconfigure(0, weight=1)
-		'''
-		self.vPane.add(meta_frame)
+		metaAnalysisFrame = ttk.Frame(self.rightVPane, borderwidth=self.myBorderWidth, relief="sunken")
+		self.rightVPane.add(metaAnalysisFrame)
 		
-		self.metaPlot = bPlotFrame(meta_frame, self, showToolbar=False, figHeight=3, allowSpan=False)
-		#self.clipsPlot.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
+		self.metaPlot = bPlotFrame(metaAnalysisFrame, self, showToolbar=False, figHeight=3, allowSpan=False)
 		
+	def buildInterface2(self):
+		self.root.grid_rowconfigure(0, weight=1)
+		self.root.grid_columnconfigure(0, weight=1)
+
+		self.hPane = ttk.PanedWindow(self.root, orient="horizontal")
+		self.hPane.grid(row=0, column=0, sticky="nsew")
+
+		self.buildInterface_Left() # for controls, creates self.leftVPane
+		self.hPane.add(self.leftVPane)
+
+		self.buildInterface_Right() # for plots, , creates self.rightVPane
+		self.hPane.add(self.rightVPane)
+
+		# finish
+		self.setStatus('Idle')
+
 	def spinBox_Callback(self, name):
 		print('spinBox_Callback:', name)
 		plotEveryPoint = int(self.plotEverySpinbox.get())
@@ -461,8 +261,8 @@ class AnalysisApp:
 		
 	def button_Callback(self, buttonName):
 		print('button_Callback() buttonName:', buttonName)
-		print('   self.thresholdSpinbox:', self.thresholdSpinbox.get())
-		print('   self.filterSpinbox:', self.filterSpinbox.get())
+		#print('   self.thresholdSpinbox:', self.thresholdSpinbox.get())
+		#print('   self.filterSpinbox:', self.filterSpinbox.get())
 
 		if buttonName == 'detectButton':
 			self.detectSpikes()
@@ -493,6 +293,18 @@ class AnalysisApp:
 		if buttonName == 'reportButton':
 			self.report()
 			
+		#
+		# respond to meta plot
+		if buttonName == 'peak_button':
+			statName = 'peak'
+			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
+		if buttonName == 'preMin_button':
+			statName = 'preMin'
+			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
+		if buttonName == 'postMin_button':
+			statName = 'postMin'
+			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
+
 	def check_Callback(self, name, var):
 		print("check_Callback() name:", name, "var:", var.get())
 		onoff = var.get()
@@ -645,6 +457,78 @@ class AnalysisApp:
 			tree.insert("" , position, text=str(index+1), values=rowTuple)
 		'''
 		
+	#################################################################################
+	# preferences
+	#################################################################################
+	def loadPreferences(self):
+		if getattr(sys, 'frozen', False):
+			# we are running in a bundle (frozen)
+			bundle_dir = sys._MEIPASS
+		else:
+			# we are running in a normal Python environment
+			bundle_dir = os.path.dirname(os.path.abspath(__file__))
+
+		# load preferences
+		self.optionsFile = os.path.join(bundle_dir, 'AnalysisApp.json')
+
+		if os.path.isfile(self.optionsFile):
+			print('    loading options file:', self.optionsFile)
+			with open(self.optionsFile) as f:
+				self.configDict = json.load(f)
+		else:
+			print('    using program provided default options')
+			self.preferencesDefaults()
+	
+	def preferencesDefaults(self):
+		self.configDict = {}
+		
+		self.configDict['windowGeometry'] = {}
+		self.configDict['windowGeometry']['x'] = 100
+		self.configDict['windowGeometry']['y'] = 100
+		self.configDict['windowGeometry']['width'] = 1000
+		self.configDict['windowGeometry']['height'] = 700
+
+		self.configDict['detection'] = {}
+		self.configDict['detection']['dvdtThreshold'] = 100
+		self.configDict['detection']['medianFilter'] = 5
+		
+		self.configDict['display'] = {}
+		self.configDict['display']['showEveryPoint'] = 10
+
+	def savePreferences(self):
+		print('=== AnalysisApp.savePreferences() file:', self.optionsFile)
+
+		x = self.root.winfo_x()
+		y = self.root.winfo_y()
+		width = self.root.winfo_width()
+		height = self.root.winfo_height()
+
+		self.configDict['windowGeometry']['x'] = x
+		self.configDict['windowGeometry']['y'] = x
+		self.configDict['windowGeometry']['width'] = width
+		self.configDict['windowGeometry']['height'] = height
+
+		#
+		# detection
+		dvdtThreshold = int(self.thresholdSpinbox.get())
+		self.configDict['detection']['dvdtThreshold'] = dvdtThreshold
+		
+		medianFilter = int(self.filterSpinbox.get())
+		self.configDict['detection']['medianFilter'] = medianFilter
+		
+		#
+		# display
+		plotEveryPoint = int(self.plotEverySpinbox.get())
+		self.configDict['display']['plotEveryPoint'] = plotEveryPoint
+
+		#
+		# save
+		with open(self.optionsFile, 'w') as outfile:
+			json.dump(self.configDict, outfile, indent=4, sort_keys=True)
+
+	#################################################################################
+	# cleanup on quit
+	#################################################################################
 	def onClose(self, event=None):
 		print("VideoApp.onClose()")
 		'''

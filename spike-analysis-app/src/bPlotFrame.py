@@ -348,9 +348,15 @@ class bPlotFrame(ttk.Frame):
 			xLabel = 'Seconds'
 			yLabel = 'AP Peak (mV)'
 		if statName == 'preMin':
-			pnt = [x['preMinPnt'] for x in self.controller.ba.spikeDict]
+			pnt = [x['preMinPnt'] for x in self.controller.ba.spikeDict if x['preMinPnt'] is not None]
 			pnt = self.controller.ba.abf.sweepX[pnt]
-			val = [x['preMinVal'] for x in self.controller.ba.spikeDict]
+			val = [x['preMinVal'] for x in self.controller.ba.spikeDict if x['preMinVal'] is not None]
+			xLabel = 'Seconds'
+			yLabel = statName
+		if statName == 'postMin':
+			pnt = [x['postMinPnt'] for x in self.controller.ba.spikeDict if x['postMinPnt'] is not None]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['postMinVal'] for x in self.controller.ba.spikeDict if x['postMinVal'] is not None]
 			xLabel = 'Seconds'
 			yLabel = statName
 			

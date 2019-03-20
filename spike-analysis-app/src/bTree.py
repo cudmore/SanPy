@@ -21,17 +21,14 @@ class bTree(ttk.Frame):
 		self.myParentApp = parentApp
 		self.myParent = parent
 		
-		myPadding = 5
+		myPadding = 0
 
-		# put this back in
 		self.grid_rowconfigure(0, weight=1)
 		self.grid_columnconfigure(0, weight=1)
 		
 		self.treeview = ttk.Treeview(self, selectmode="browse", show=['headings'], *args, **kwargs)
-		# put this back in
 		self.treeview.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
 		
-		# put this back in
 		self.scrollbar = ttk.Scrollbar(self, orient="vertical", command = self.treeview.yview)
 		self.scrollbar.grid(row=0, column=0, sticky='nse', padx=myPadding, pady=myPadding)
 		self.treeview.configure(yscrollcommand=self.scrollbar.set)
@@ -216,23 +213,13 @@ class bFileTree(bTree):
 			
 			# set some column widths, width is in pixels?
 			#gVideoFileColumns = ('index', 'path', 'file', 'width', 'height', 'frames', 'fps', 'seconds', 'numevents', 'note')
-			defaultWidth = 120
+			defaultWidth = 60
 			self.treeview.column('Index', minwidth=50, width=50, stretch="no")
 			self.treeview.column('File', width=300)
 
 			self.treeview.column('kHz', minwidth=defaultWidth, width=defaultWidth, stretch="no")
 			self.treeview.column('Duration (sec)', minwidth=defaultWidth, width=defaultWidth, stretch="no")
 			self.treeview.column('Sweeps', minwidth=defaultWidth, width=defaultWidth, stretch="no")
-
-			'''
-			self.treeview.column('width', minwidth=defaultWidth, width=defaultWidth, stretch="no")
-			self.treeview.column('height', minwidth=defaultWidth, width=defaultWidth, stretch="no")
-			self.treeview.column('frames', minwidth=defaultWidth, width=defaultWidth, stretch="no")
-			self.treeview.column('fps', minwidth=defaultWidth, width=defaultWidth, stretch="no")
-			self.treeview.column('seconds', minwidth=defaultWidth, width=defaultWidth, stretch="no")
-			self.treeview.column('minutes', minwidth=defaultWidth, width=defaultWidth, stretch="no")
-			self.treeview.column('numevents', minwidth=defaultWidth, width=defaultWidth, stretch="no")
-			'''
 			
 			# hide some columns
 			self.treeview["displaycolumns"] = displaycolumns
