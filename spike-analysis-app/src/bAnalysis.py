@@ -145,7 +145,7 @@ class bAnalysis:
 
 		#
 		# for each threshold crossing, search backwards in dV/dt for a % of maximum (about 10 ms)
-		dvdt_percentOfMax = 0.15
+		dvdt_percentOfMax = 0.1
 		window_ms = 2
 		window_pnts = window_ms * self.dataPointsPerMs
 		spikeTimes1 = []
@@ -210,6 +210,7 @@ class bAnalysis:
 			spikeDict['halfHeights'] = halfHeights
 			
 			spikeDict['thresholdPnt'] = spikeTime
+			spikeDict['thresholdVal'] = vm[spikeTime]
 			spikeDict['thresholdSec'] = (spikeTime / self.abf.dataPointsPerMs) / 1000
 			spikeDict['peakPnt'] = peakPnt
 			spikeDict['peakSec'] = (peakPnt / self.abf.dataPointsPerMs) / 1000

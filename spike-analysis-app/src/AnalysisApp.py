@@ -184,7 +184,7 @@ class AnalysisApp:
 		row = 1
 		
 		# plot checkboxes
-		self.analysisList = ['peak', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
+		self.analysisList = ['threshold', 'peak', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
 		self.varList = []
 		self.checkList = []
 		for i, analysisItem in enumerate(self.analysisList):
@@ -295,6 +295,9 @@ class AnalysisApp:
 			
 		#
 		# respond to meta plot
+		if buttonName == 'threshold_button':
+			statName = 'threshold'
+			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
 		if buttonName == 'peak_button':
 			statName = 'peak'
 			self.metaPlot.plotMeta(self.ba, statName, doInit=True)

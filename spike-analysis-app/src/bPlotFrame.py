@@ -91,6 +91,10 @@ class bPlotFrame(ttk.Frame):
 		
 		pnt = []
 		val = []
+		if name == 'threshold':
+			pnt = [x['thresholdPnt'] for x in self.controller.ba.spikeDict]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['thresholdVal'] for x in self.controller.ba.spikeDict]
 		if name == 'peak':
 			pnt = [x['peakPnt'] for x in self.controller.ba.spikeDict]
 			pnt = self.controller.ba.abf.sweepX[pnt]
@@ -341,6 +345,12 @@ class bPlotFrame(ttk.Frame):
 		if doInit:
 			self.metaLines, = self.axes.plot([],[], 'ok') # REMEMBER ',' ON LHS
 
+		if statName == 'threshold':
+			pnt = [x['thresholdPnt'] for x in self.controller.ba.spikeDict]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['thresholdVal'] for x in self.controller.ba.spikeDict]
+			xLabel = 'Seconds'
+			yLabel = 'AP Threshold (mV)'
 		if statName == 'peak':
 			pnt = [x['peakPnt'] for x in self.controller.ba.spikeDict]
 			pnt = self.controller.ba.abf.sweepX[pnt]
@@ -373,7 +383,9 @@ class bPlotFrame(ttk.Frame):
 		
 		yMin = min(val)
 		yMax = max(val)
-		self.axes.set_ylim(yMin, yMax)
+		yRange = abs(yMax-yMin)
+		tenPercentRange = yRange * 0.1
+		self.axes.set_ylim(yMin-tenPercentRange, yMax+tenPercentRange)
 	
 		self.axes.set_ylabel(yLabel)
 		self.axes.set_xlabel(xLabel)
