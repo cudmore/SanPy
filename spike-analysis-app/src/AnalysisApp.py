@@ -52,7 +52,11 @@ class AnalysisApp:
 		self.myPadding = 10
 		self.myBorderWidth = 5
 		
-		self.buildInterface2()
+		self.analysisList = ['threshold', 'peak', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
+		self.metaAnalysisList = self.analysisList + ['isi (sec)', 'Phase Plot']
+		
+		#self.buildInterface2()
+		self.buildInterface3()
 		
 		self.myMenus = bMenus.bMenus(self)
 
@@ -74,49 +78,25 @@ class AnalysisApp:
 		#self.statusLabel.update_idletasks()
 		self.statusLabel.update()
 		
-	def buildInterface_Left(self):
-		"""
-		Populate left vertical frame with user interface controls.
-		Including: tree view, buttons, spin boxes, checkboxes
-		"""
-		
-		# width=600 will set the initial width
-		self.leftVPane = ttk.PanedWindow(self.hPane, orient="vertical", width=600)
-		
-		#
-		# status frame, see self.setStatus()
-		status_frame = ttk.Frame(self.leftVPane, borderwidth=self.myBorderWidth, relief="sunken")
-		self.leftVPane.add(status_frame)
-
-		self.statusLabel = ttk.Label(status_frame)
-		self.statusLabel.grid(row=0, column=0, sticky="w")
-		self.setStatus('Building Interface')
-
-		#
-		# file list frame
-		fileList_frame = ttk.Frame(self.leftVPane, borderwidth=self.myBorderWidth, relief="sunken")
-		self.leftVPane.add(fileList_frame)
-
-		fileListFrameLabel = ttk.Label(fileList_frame)
-		fileListFrameLabel.grid(row=0, column=0, sticky="w")
-		fileListFrameLabel.configure(text='File List')
-
-		self.fileListTree = bTree.bFileTree(fileList_frame, self, videoFileList='')
-		self.fileListTree.grid(row=1,column=0, sticky="nsew")
-
+	def buildDetectionFrame(self, container):
 		#
 		# detection frame
-		detection_frame = ttk.Frame(self.leftVPane, borderwidth=self.myBorderWidth, relief="sunken")
-		self.leftVPane.add(detection_frame)
+		detection_frame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
 
-		detectionFrameLabel = ttk.Label(detection_frame)
-		detectionFrameLabel.grid(row=0, column=0, sticky="w")
-		detectionFrameLabel.configure(text='Spike Detection')
-
-		row = 1
+		row = 0
 		
 		detectButton = ttk.Button(detection_frame, text='Detect Spikes', command=lambda name='detectButton': self.button_Callback(name))
 		detectButton.grid(row=row, column=0, sticky="w")
+
+		# threshold
+		labelDir = ttk.Label(detection_frame, text='dV/dt Threshold')
+		labelDir.grid(row=row, column=1, sticky="w")
+
+		dvdtThreshold = self.configDict['detection']['dvdtThreshold']
+		self.thresholdSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
+		self.thresholdSpinbox.insert(0,dvdtThreshold) # default is 100
+		self.thresholdSpinbox.grid(row=row, column=2, sticky="w")
+
 		row += 1
 		
 		# time range
@@ -133,17 +113,6 @@ class AnalysisApp:
 		self.stopSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
 		self.stopSecondsSpinbox.insert(0,float('inf')) # default is inf
 		self.stopSecondsSpinbox.grid(row=row, column=3, sticky="w")
-
-		row += 1
-
-		# threshold
-		labelDir = ttk.Label(detection_frame, text='dV/dt Threshold')
-		labelDir.grid(row=row, column=0, sticky="w")
-
-		dvdtThreshold = self.configDict['detection']['dvdtThreshold']
-		self.thresholdSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
-		self.thresholdSpinbox.insert(0,dvdtThreshold) # default is 100
-		self.thresholdSpinbox.grid(row=row, column=1, sticky="w")
 		
 		row += 1
 
@@ -161,11 +130,13 @@ class AnalysisApp:
 		# save spike report button
 		reportButton = ttk.Button(detection_frame, text='Save Spike Report', command=lambda name='reportButton': self.button_Callback(name))
 		reportButton.grid(row=row, column=0, sticky="w")
-
+	
+		return detection_frame
+	
+	def buildPlotOptionsFrame(self, container):
 		#
 		# plot options frame (checkboxes)
-		plotOptionsFrame = ttk.Frame(self.leftVPane, borderwidth=self.myBorderWidth, relief="sunken")
-		self.leftVPane.add(plotOptionsFrame)
+		plotOptionsFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
 
 		
 		# reset axes button
@@ -184,72 +155,149 @@ class AnalysisApp:
 		row = 1
 		
 		# plot checkboxes
-		self.analysisList = ['threshold', 'peak', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
+		#self.analysisList = ['threshold', 'peak', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
 		self.varList = []
 		self.checkList = []
+		myStyle = ttk.Style()
 		for i, analysisItem in enumerate(self.analysisList):
+			styleStr = analysisItem + '.TCheckbutton'
+			foreground = 'black'
+			if analysisItem == 'peak':
+				foreground = 'red2'
+			if analysisItem == 'preMin':
+				foreground = 'red2'
+			if analysisItem == 'postMin':
+				foreground = 'green2'
+			if analysisItem == 'preLinearFit':
+				foreground = 'blue'
+			if analysisItem == 'preSpike_dvdt_max':
+				foreground = 'yellow3'
+			if analysisItem == 'postSpike_dvdt_min':
+				foreground = 'yellow3'
+			if analysisItem == 'halfWidth':
+				foreground = 'blue'
+			myStyle.configure(styleStr, foreground=foreground)
+
 			var = tkinter.BooleanVar(value=False)
 			self.varList.append(var)
-			check = ttk.Checkbutton(plotOptionsFrame, text=analysisItem, var=var, command=lambda name=analysisItem, var=var: self.check_Callback(name, var))
-			#check['foreground'] = 'red'
+			check = ttk.Checkbutton(plotOptionsFrame, text=analysisItem, var=var, style=styleStr, command=lambda name=analysisItem, var=var: self.check_Callback(name, var))
 			check.grid(row=row+i, column=0, sticky="w")
 			self.checkList.append(check)
 
+		return plotOptionsFrame
+	
+	def buildClipsOptionsFrame(self, container):
+		metaPlotFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
+		return metaPlotFrame
+		
+	def buildMetaOptionsFrame(self, container):
 		#
 		# meta plot frame
-		metaPlotFrame = ttk.Frame(self.leftVPane, borderwidth=self.myBorderWidth, relief="sunken")
-		self.leftVPane.add(metaPlotFrame)
+		metaPlotFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
+		metaPlotFrame.grid(row=0, column=0, sticky="nsew")
 
 		row = 0 
-		for i, analysisItem in enumerate(self.analysisList):
+		for i, analysisItem in enumerate(self.metaAnalysisList):
 			button = ttk.Button(metaPlotFrame, text=analysisItem, command=lambda name=analysisItem+'_button': self.button_Callback(name))
 			button.grid(row=row+i, column=0, sticky="w") 
-					
-	def buildInterface_Right(self):
-		#
-		# populate right v pane with plots
-		#
-		self.rightVPane = ttk.PanedWindow(self.hPane, orient="vertical")
-
-		# raw data
-		rawFrame = ttk.Frame(self.rightVPane, borderwidth=self.myBorderWidth, relief="sunken")
-		self.rightVPane.add(rawFrame)
+	
+		return metaPlotFrame
 		
-		self.rawPlot = bPlotFrame(rawFrame, self, showToolbar=True, analysisList=self.analysisList, figHeight=3)
+	def buildInterface3(self):
+		horizontalSashPos = 500
 		
-		# deriv data
-		derivFrame = ttk.Frame(self.rightVPane, borderwidth=self.myBorderWidth, relief="sunken")
-		self.rightVPane.add(derivFrame)
-		
-		self.derivPlot = bPlotFrame(derivFrame, self, showToolbar=False, analysisList=self.analysisList,figHeight=1)
-		
-		# spike clips
-		spikeClipsFrame = ttk.Frame(self.rightVPane, borderwidth=self.myBorderWidth, relief="sunken")
-		self.rightVPane.add(spikeClipsFrame)
-		
-		self.clipsPlot = bPlotFrame(spikeClipsFrame, self, showToolbar=False, analysisList=self.analysisList, figHeight=3, allowSpan=False)
-		
-		# meta analysis
-		metaAnalysisFrame = ttk.Frame(self.rightVPane, borderwidth=self.myBorderWidth, relief="sunken")
-		self.rightVPane.add(metaAnalysisFrame)
-		
-		self.metaPlot = bPlotFrame(metaAnalysisFrame, self, showToolbar=False, figHeight=3, allowSpan=False)
-		
-	def buildInterface2(self):
 		self.root.grid_rowconfigure(0, weight=1)
 		self.root.grid_columnconfigure(0, weight=1)
 
-		self.hPane = ttk.PanedWindow(self.root, orient="horizontal")
-		self.hPane.grid(row=0, column=0, sticky="nsew")
+		self.vPane = ttk.PanedWindow(self.root, orient="vertical")
+		self.vPane.grid(row=0, column=0, sticky="nsew")
+	
+		#
+		# status frame, see self.setStatus()
+		status_frame = ttk.Frame(self.vPane, borderwidth=self.myBorderWidth, relief="sunken")
+		self.vPane.add(status_frame)
 
-		self.buildInterface_Left() # for controls, creates self.leftVPane
-		self.hPane.add(self.leftVPane)
+		self.statusLabel = ttk.Label(status_frame)
+		self.statusLabel.grid(row=0, column=0, sticky="w")
+		self.setStatus('Building Interface')
 
-		self.buildInterface_Right() # for plots, , creates self.rightVPane
-		self.hPane.add(self.rightVPane)
+		#
+		# file list frame
+		fileList_frame = ttk.Frame(self.vPane, borderwidth=self.myBorderWidth, relief="sunken")
+		self.vPane.add(fileList_frame)
 
-		# finish
-		self.setStatus('Idle')
+		fileListFrameLabel = ttk.Label(fileList_frame)
+		fileListFrameLabel.grid(row=0, column=0, sticky="w")
+		fileListFrameLabel.configure(text='File List')
+
+		self.fileListTree = bTree.bFileTree(fileList_frame, self, videoFileList='')
+		self.fileListTree.grid(row=1,column=0, sticky="nsew")
+
+		#
+		# horizontal pane for detection options and dv/dt plot
+		hPane_detection = ttk.PanedWindow(self.vPane, orient="horizontal")
+		#self.vPane.grid(row=0, column=0, sticky="nsew")
+		self.vPane.add(hPane_detection)
+		
+		detectionFrame = self.buildDetectionFrame(hPane_detection)
+		hPane_detection.add(detectionFrame)
+		
+		# dvdt plot
+		derivFrame = ttk.Frame(hPane_detection, borderwidth=self.myBorderWidth, relief="sunken")
+		hPane_detection.add(derivFrame)
+		
+		self.derivPlot = bPlotFrame(derivFrame, self, showToolbar=False, analysisList=self.analysisList)
+		
+		hPane_detection.sashpos(0, horizontalSashPos)
+
+		#
+		# horizontal pane for plot options and raw data
+		hPane_plot = ttk.PanedWindow(self.vPane, orient="horizontal")
+		self.vPane.add(hPane_plot)
+
+		plotOptionsFrame = self.buildPlotOptionsFrame(hPane_plot)
+		hPane_plot.add(plotOptionsFrame)
+
+		# vm plot
+		rawFrame = ttk.Frame(hPane_plot, borderwidth=self.myBorderWidth, relief="sunken")
+		hPane_plot.add(rawFrame)
+		
+		self.rawPlot = bPlotFrame(rawFrame, self, showToolbar=True, analysisList=self.analysisList)
+
+		hPane_plot.sashpos(0, horizontalSashPos)
+
+		#
+		# horizontal pane for spike clips (only one column
+		# spike clips
+		hPane_clips = ttk.PanedWindow(self.vPane, orient="horizontal")
+		self.vPane.add(hPane_clips)
+
+		spikeClipsOptionsFrame = self.buildClipsOptionsFrame(hPane_clips)
+		hPane_clips.add(spikeClipsOptionsFrame)
+
+		# spike clips plot
+		spikeClipsFrame = ttk.Frame(hPane_clips, borderwidth=self.myBorderWidth, relief="sunken")
+		hPane_clips.add(spikeClipsFrame)
+		
+		self.clipsPlot = bPlotFrame(spikeClipsFrame, self, showToolbar=False, analysisList=self.analysisList, allowSpan=False)
+
+		hPane_clips.sashpos(0, horizontalSashPos)
+
+		#
+		# horizontal pane for meta plot interface an actual meta plot
+		hPane_meta = ttk.PanedWindow(self.vPane, orient="horizontal")
+		self.vPane.add(hPane_meta)
+
+		metaFrame = self.buildMetaOptionsFrame(hPane_meta)
+		hPane_meta.add(metaFrame)
+
+		# meta plot
+		metaAnalysisFrame = ttk.Frame(hPane_meta, borderwidth=self.myBorderWidth, relief="sunken")
+		hPane_meta.add(metaAnalysisFrame)
+		
+		self.metaPlot = bPlotFrame(metaAnalysisFrame, self, showToolbar=False, allowSpan=False)
+
+		hPane_meta.sashpos(0, horizontalSashPos)
 
 	def spinBox_Callback(self, name):
 		print('spinBox_Callback:', name)
@@ -260,7 +308,7 @@ class AnalysisApp:
 		return True
 		
 	def button_Callback(self, buttonName):
-		print('button_Callback() buttonName:', buttonName)
+		print('AnalysisApp.button_Callback() buttonName:', buttonName)
 		#print('   self.thresholdSpinbox:', self.thresholdSpinbox.get())
 		#print('   self.filterSpinbox:', self.filterSpinbox.get())
 
@@ -307,6 +355,20 @@ class AnalysisApp:
 		if buttonName == 'postMin_button':
 			statName = 'postMin'
 			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
+		if buttonName == 'preLinearFit_button':
+			print('   not implemented')
+		if buttonName == 'preSpike_dvdt_max_button':
+			statName = 'preSpike_dvdt_max'
+			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
+		if buttonName == 'postSpike_dvdt_min_button':
+			statName = 'postSpike_dvdt_min'
+			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
+		if buttonName == 'isi (sec)_button':
+			statName = 'isi (sec)'
+			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
+		if buttonName == 'Phase Plot_button':
+			statName = 'Phase Plot'
+			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
 
 	def check_Callback(self, name, var):
 		print("check_Callback() name:", name, "var:", var.get())
@@ -318,6 +380,7 @@ class AnalysisApp:
 			self.setStatus('Please load an abf file')
 			return False
 			
+		print('AnalysisApp.detectSpikes()')
 		self.setStatus('Detecting Spikes')
 			
 		plotEveryPoint = int(self.plotEverySpinbox.get()) # used in plot, not in detection
@@ -352,6 +415,10 @@ class AnalysisApp:
 			onoff = self.varList[i].get()
 			self.rawPlot.plotStat(analysis, onoff)
 
+		# refresh meta plot
+		statName = 'peak'
+		self.metaPlot.plotMeta(self.ba, statName, doInit=True)
+		
 		self.setStatus()
 	
 	def loadFolder(self, path=''):
@@ -405,6 +472,7 @@ class AnalysisApp:
 		self.derivPlot.setXAxis(theMin, theMax)
 		
 		self.clipsPlot.plotClips_updateSelection(self.ba, theMin, theMax)
+		self.metaPlot.plotMeta_updateSelection(self.ba, theMin, theMax)
 		
 	def report(self):
 		df = self.ba.report()

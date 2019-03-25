@@ -1,6 +1,9 @@
 # Author: Robert Cudmore
 # Date: 20190312
 
+import numpy as np
+import scipy.signal
+
 from tkinter import ttk
 
 # required to import bAnalysis which does 'import matplotlib.pyplot as plt'
@@ -30,15 +33,21 @@ class bPlotFrame(ttk.Frame):
 
 		self.line, = self.axes.plot([],[], 'k') # REMEMBER ',' ON LHS
 		self.spikeTimesLine, = self.axes.plot([],[], 'or') # REMEMBER ',' ON LHS
+		self.thresholdCrossingsLine, = self.axes.plot([],[], 'og') # REMEMBER ',' ON LHS
 		
 		#self.clipsLine, = self.axes.plot([],[], 'or') # REMEMBER ',' ON LHS
 		self.clipLines = None
 		self.clipLines_selection = None
 		
+		self.plotMeta_selection = None
+		
 		self.canvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(self.fig, parent)
 		#self.canvas.get_tk_widget().pack(side="bottom", fill="both", expand=True)
 		self.canvas.get_tk_widget().pack(side="bottom", fill="both")
 		self.canvas.draw()
+
+		cid1 = self.canvas.mpl_connect('button_press_event', self.onclick)
+		cid2 = self.canvas.mpl_connect('pick_event', self.onpick)
 
 		if showToolbar:
 			toolbar = matplotlib.backends.backend_tkagg.NavigationToolbar2Tk(self.canvas, parent)
@@ -86,6 +95,30 @@ class bPlotFrame(ttk.Frame):
 			analysisLine, = self.axes.plot([],[], marker + markerColor) # REMEMBER ',' ON LHS
 			self.analysisLines[analysis] = analysisLine
 			
+		self.metaLines, = self.axes.plot([],[], 'ok', picker=5) # REMEMBER ',' ON LHS
+		
+		self.metax = []
+		self.metay = []
+		
+	def onclick(self, event):
+		print('onclick() %s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+			('double' if event.dblclick else 'single', event.button,
+			event.x, event.y, event.xdata, event.ydata))
+
+	def onpick(self, event):
+		print('onpick() event:', event)
+		print('   event.ind:', event.ind)
+		thisline = event.artist
+		xdata = thisline.get_xdata()
+		ydata = thisline.get_ydata()
+		ind = event.ind
+		#print('xdata:', xdata)
+		print('   xdata[ind]:', xdata[ind])
+		#print('ydata:', ydata)
+		print('   ydata[ind]:', ydata[ind])
+		points = tuple(zip(xdata[ind], ydata[ind]))
+		print('   onpick() points:', points)
+
 	def plotStat(self, name, onoff):
 		#print("=== bPlotFrame.plotStat() name:", name, "onoff:", onoff)
 		
@@ -220,6 +253,10 @@ class bPlotFrame(ttk.Frame):
 		"""
 		respond to horizontal selection from self.span
 		"""
+		if xMin == xMax:
+			return
+		if abs(xMax-xMin) < 0.001:
+			return
 		print('bPlotFrame.onselect() xMin:', xMin, 'xMax:', xMax)
 		#self.axes.set_xlim(xMin, xMax)
 		self.controller.setXAxis(xMin, xMax)
@@ -245,7 +282,7 @@ class bPlotFrame(ttk.Frame):
 			yMin = min(ba.abf.sweepY)
 			yMax = max(ba.abf.sweepY)
 			# increase y-axis by 5 percent
-			fivePercent = abs(yMax-yMin) * 0.05
+			fivePercent = abs(yMax-yMin) * 0.1
 			yMin -= fivePercent
 			yMax += fivePercent
 			self.axes.set_ylim(yMin, yMax)
@@ -277,8 +314,14 @@ class bPlotFrame(ttk.Frame):
 			self.axes.set_ylabel('dV/dt (mv/ms)')
 			self.axes.set_xlabel('Time (sec)')
 
+		# final spike time
 		self.spikeTimesLine.set_ydata(ba.filteredDeriv[ba.spikeTimes])
 		self.spikeTimesLine.set_xdata(ba.abf.sweepX[ba.spikeTimes])
+
+		# final spike time
+		print('ba.thresholdTimes[0]:', ba.thresholdTimes[0])
+		self.thresholdCrossingsLine.set_ydata(ba.filteredDeriv[ba.thresholdTimes])
+		self.thresholdCrossingsLine.set_xdata(ba.abf.sweepX[ba.thresholdTimes])
 
 		self.canvas.draw()
 
@@ -293,6 +336,7 @@ class bPlotFrame(ttk.Frame):
 		
 		self.clipLines = []
 		
+		"""
 		for i in range(len(ba.spikeClips)):
 			try:
 				#ax.plot(self.spikeClips_x, self.spikeClips[i], 'k')
@@ -305,7 +349,8 @@ class bPlotFrame(ttk.Frame):
 				
 			except (ValueError) as e:
 				print('exception in bPlotFrame.plotClips() while plotting clips', i)
-
+		"""
+		
 		self.canvas.draw()
 
 	def plotClips_updateSelection(self, ba, xMin, xMax):
@@ -334,7 +379,8 @@ class bPlotFrame(ttk.Frame):
 		
 	def plotMeta(self, ba, statName, doInit=False):
 		
-		#
+		print('plotMeta() statName:', statName)
+		
 		# fill in based on statName
 		pnt = [] # x
 		val = [] # y
@@ -342,8 +388,11 @@ class bPlotFrame(ttk.Frame):
 		yLabel = ''
 		xLabel = ''
 		
+		# clear existing
+		self.metaLines.remove()
+
 		if doInit:
-			self.metaLines, = self.axes.plot([],[], 'ok') # REMEMBER ',' ON LHS
+			self.metaLines, = self.axes.plot([],[], 'ok', picker=5) # REMEMBER ',' ON LHS
 
 		if statName == 'threshold':
 			pnt = [x['thresholdPnt'] for x in self.controller.ba.spikeDict]
@@ -352,9 +401,9 @@ class bPlotFrame(ttk.Frame):
 			xLabel = 'Seconds'
 			yLabel = 'AP Threshold (mV)'
 		if statName == 'peak':
-			pnt = [x['peakPnt'] for x in self.controller.ba.spikeDict]
+			pnt = [x['peakPnt'] for x in self.controller.ba.spikeDict if x['peakPnt'] is not None]
 			pnt = self.controller.ba.abf.sweepX[pnt]
-			val = [x['peakVal'] for x in self.controller.ba.spikeDict]
+			val = [x['peakVal'] for x in self.controller.ba.spikeDict if x['peakVal'] is not None]
 			xLabel = 'Seconds'
 			yLabel = 'AP Peak (mV)'
 		if statName == 'preMin':
@@ -369,7 +418,33 @@ class bPlotFrame(ttk.Frame):
 			val = [x['postMinVal'] for x in self.controller.ba.spikeDict if x['postMinVal'] is not None]
 			xLabel = 'Seconds'
 			yLabel = statName
-			
+		if statName == 'preLinearFit':
+			print(statName, 'not implemented')
+			return 0
+		if statName == 'preSpike_dvdt_max':
+			pnt = [x['preSpike_dvdt_max_pnt'] for x in self.controller.ba.spikeDict if x['preSpike_dvdt_max_pnt'] is not None]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['preSpike_dvdt_max_val'] for x in self.controller.ba.spikeDict if x['preSpike_dvdt_max_val'] is not None]
+			xLabel = 'Seconds'
+			yLabel = statName
+		if statName == 'postSpike_dvdt_min':
+			pnt = [x['postSpike_dvdt_min_pnt'] for x in self.controller.ba.spikeDict if x['postSpike_dvdt_min_pnt'] is not None]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['postSpike_dvdt_min_val'] for x in self.controller.ba.spikeDict if x['postSpike_dvdt_min_val'] is not None]
+			xLabel = 'Seconds'
+			yLabel = statName
+		if statName == 'isi (sec)':
+			spikeTimes_sec = [x/self.controller.ba.abf.dataPointsPerMs/1000 for x in self.controller.ba.spikeTimes]
+			val = np.diff(spikeTimes_sec)
+			pnt = spikeTimes_sec[0:-1]
+			xLabel = 'Seconds'
+			yLabel = statName
+		if statName == 'Phase Plot':
+			#pnt = scipy.signal.medfilt(self.controller.ba.spikeClips[oneSpikeNumber],3)
+			pnt = scipy.signal.medfilt(self.controller.ba.spikeClips,3)
+			val = np.diff(pnt)
+			val = np.concatenate(([0],val)) # add an initial point so it is the same length as raw data in abf.sweepY
+
 		#
 		# replot
 		self.metaLines.set_ydata(val)
@@ -377,8 +452,13 @@ class bPlotFrame(ttk.Frame):
 
 		#
 		# set axis
+		'''
 		xMin = min(pnt)
 		xMax = max(pnt)
+		self.axes.set_xlim(xMin, xMax)
+		'''
+		xMin = min(ba.abf.sweepX)
+		xMax = max(ba.abf.sweepX)
 		self.axes.set_xlim(xMin, xMax)
 		
 		yMin = min(val)
@@ -390,7 +470,35 @@ class bPlotFrame(ttk.Frame):
 		self.axes.set_ylabel(yLabel)
 		self.axes.set_xlabel(xLabel)
 
+		self.metax = pnt
+		self.metay = val
+		
 		self.canvas.draw()
+
+	def plotMeta_updateSelection(self, ba, xMin, xMax):
+		"""
+		plot the spike clips within min/max
+		"""
+				
+		print('bPlotFrame.plotMeta_updateSelection() xMin:', xMin, 'xMax:', xMax)
+		
+		# clear existing
+		if self.plotMeta_selection is not None:
+			for line in self.plotMeta_selection:
+				line.remove()
+		
+		self.plotMeta_selection = []
+		
+		for i, spikeTime in enumerate(ba.spikeTimes):
+			spikeSeconds = spikeTime / ba.dataPointsPerMs / 1000 # pnts to seconds
+			#print(spikeSeconds)
+			if spikeSeconds >= xMin and spikeSeconds <= xMax:
+				#print(spikeTime)
+				line, = self.axes.plot(self.metax[i], self.metay[i], 'oy')
+				self.plotMeta_selection.append(line)
+
+		self.canvas.draw()
+		
 	
 		
 

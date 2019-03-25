@@ -169,9 +169,10 @@ class bAnalysis:
 				print('error: IndexError spike', i, spikeTime, 'percentMaxVal:', percentMaxVal)
 				spikeTimes1.append(spikeTime)
 
+		self.thresholdTimes = spikeTimes0
 		self.spikeTimes = spikeTimes1
 		
-		return self.spikeTimes, self.filteredVm, self.filteredDeriv
+		return self.spikeTimes, self.thresholdTimes, self.filteredVm, self.filteredDeriv
 
 	def spikeDetect(self, dVthresholdPos=100, medianFilter=0, halfHeights=[20, 50, 80], startSeconds=None, stopSeconds=None):
 		'''
@@ -185,7 +186,7 @@ class bAnalysis:
 		self.spikeDict = [] # we are filling this in, one entry for each spike
 		
 		# spike detect
-		self.spikeTimes, vm, dvdt = self.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter, startSeconds=startSeconds, stopSeconds=stopSeconds)
+		self.spikeTimes, self.thresholdTimes, vm, dvdt = self.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter, startSeconds=startSeconds, stopSeconds=stopSeconds)
 
 		#
 		# look in a window after each threshold crossing to get AP peak
@@ -203,6 +204,9 @@ class bAnalysis:
 			spikeDict = collections.OrderedDict() # use OrderedDict so Pandas output is in the correct order
 			spikeDict['file'] = self.file
 			spikeDict['spikeNumber'] = i
+			
+			spikeDict['numError'] = 0
+			spikeDict['error'] = []
 			
 			# detection params
 			spikeDict['dVthreshold'] = dVthresholdPos
@@ -269,9 +273,9 @@ class bAnalysis:
 
 				#
 				# maxima in dv/dt before spike
-				preRange = dvdt[preMinPnt:self.spikeTimes[i]]
+				preRange = dvdt[self.spikeTimes[i]:peakPnt]
 				preSpike_dvdt_max_pnt = np.argmax(preRange)
-				preSpike_dvdt_max_pnt += preMinPnt
+				preSpike_dvdt_max_pnt += self.spikeTimes[i]
 				#print('i:', i, 'preSpike_dvdt_max_pnt:', preSpike_dvdt_max_pnt)
 				self.spikeDict[i]['preSpike_dvdt_max_pnt'] = preSpike_dvdt_max_pnt
 				self.spikeDict[i]['preSpike_dvdt_max_val'] = vm[preSpike_dvdt_max_pnt]
@@ -292,15 +296,27 @@ class bAnalysis:
 					postMinPnt = self.spikeTimes[i] + postMinPnt2
 					#print('i:', i, 'postMinPnt:', postMinPnt)
 				except (IndexError) as e:
-					print('error: spike', i, 'searching for postMinVal:', postMinVal, 'postRange:', postRange)
+					spikeDict['numError'] = spikeDict['numError'] + 1
+					errorStr = 'spike', i, 'searching for postMinVal:', postMinVal, 'postRange:', postRange
+					spikeDict['error'].append(errorStr)
 
 				#
 				# minima in dv/dt after spike
 				#postRange = dvdt[self.spikeTimes[i]:postMinPnt]
-				postSpike_ms = self.spikeTimes[i] + 10
-				postRange = dvdt[self.spikeTimes[i]:self.spikeTimes[i]+postSpike_ms] # fixed window after spike
+				postSpike_ms = 10
+				postSpike_pnts = self.abf.dataPointsPerMs * postSpike_ms
+				#postRange = dvdt[self.spikeTimes[i]:self.spikeTimes[i]+postSpike_pnts] # fixed window after spike
+				postRange = dvdt[peakPnt:peakPnt+postSpike_pnts] # fixed window after spike
+				
+				'''
+				try:
+					postSpike_dvdt_min_pnt = np.where(postRange<0)[0][0]
+				except:
+					print('error: spike', i, 'searhing for post spike min in dv/dt')
+				'''
 				postSpike_dvdt_min_pnt = np.argmin(postRange)
-				postSpike_dvdt_min_pnt += self.spikeTimes[i]
+				#postSpike_dvdt_min_pnt += self.spikeTimes[i]
+				postSpike_dvdt_min_pnt += peakPnt
 				#print('i:', i, 'postSpike_dvdt_min_pnt:', postSpike_dvdt_min_pnt)
 				self.spikeDict[i]['postSpike_dvdt_min_pnt'] = postSpike_dvdt_min_pnt
 				self.spikeDict[i]['postSpike_dvdt_min_val'] = vm[postSpike_dvdt_min_pnt]
@@ -407,7 +423,7 @@ class bAnalysis:
 							Integer greater than 0 specifies the number of points
 		'''
 
-		spikeTimes, vm, sweepDeriv = self.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter)
+		spikeTimes, thresholdTimes, vm, sweepDeriv = self.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter)
 
 		if medianFilter > 0:
 			yAxisLabel = 'filtered '

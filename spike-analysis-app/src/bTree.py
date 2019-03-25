@@ -213,7 +213,7 @@ class bFileTree(bTree):
 			
 			# set some column widths, width is in pixels?
 			#gVideoFileColumns = ('index', 'path', 'file', 'width', 'height', 'frames', 'fps', 'seconds', 'numevents', 'note')
-			defaultWidth = 60
+			defaultWidth = 100
 			self.treeview.column('Index', minwidth=50, width=50, stretch="no")
 			self.treeview.column('File', width=300)
 
