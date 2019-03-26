@@ -43,7 +43,11 @@ class bPlotFrame(ttk.Frame):
 		
 		self.canvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(self.fig, parent)
 		#self.canvas.get_tk_widget().pack(side="bottom", fill="both", expand=True)
-		self.canvas.get_tk_widget().pack(side="bottom", fill="both")
+
+		#here
+		self.canvas.get_tk_widget().pack(side="bottom", fill="both", expand=1)
+		#self.canvas.get_tk_widget().grid(row=1, column=0, sticky="nsew")
+
 		self.canvas.draw()
 
 		cid1 = self.canvas.mpl_connect('button_press_event', self.onclick)

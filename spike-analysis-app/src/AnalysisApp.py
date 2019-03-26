@@ -60,6 +60,8 @@ class AnalysisApp:
 		
 		self.myMenus = bMenus.bMenus(self)
 
+		self.metaWindow()
+		
 		if path is not None:
 			self.loadFolder(path=path)
 			
@@ -194,7 +196,7 @@ class AnalysisApp:
 		#
 		# meta plot frame
 		metaPlotFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
-		metaPlotFrame.grid(row=0, column=0, sticky="nsew")
+		#metaPlotFrame.grid(row=0, column=0, sticky="nsew")
 
 		row = 0 
 		for i, analysisItem in enumerate(self.metaAnalysisList):
@@ -299,6 +301,41 @@ class AnalysisApp:
 
 		hPane_meta.sashpos(0, horizontalSashPos)
 
+	def metaWindow(self):
+		horizontalSashPos = 300
+
+		newWindow = tkinter.Toplevel(self.root)
+		newWindow.wm_title('Meta Analysis')
+
+		w=500
+		h = 500
+		x = 200
+		y = 200
+		newWindow.geometry('%dx%d+%d+%d' % (w, h, x, y))
+
+		newWindow.grid_rowconfigure(0, weight=1)
+		newWindow.grid_columnconfigure(0, weight=1)
+
+		myPadding = 5
+
+		hPane_meta = ttk.PanedWindow(newWindow, orient="horizontal")
+		hPane_meta.grid(row=0, column=0, sticky="nsew")
+
+		metaFrame = self.buildMetaOptionsFrame(hPane_meta)
+		# DO NOT GRID A FRAME WHEN PLACED INTO PANNED WINDOW
+		#metaFrame.grid(row=1, column=0, sticky="nsew")
+		hPane_meta.add(metaFrame)
+
+		# meta plot
+		metaAnalysisFrame = ttk.Frame(hPane_meta, borderwidth=self.myBorderWidth, relief="sunken")
+		# DO NOT GRID A FRAME WHEN PLACED INTO PANNED WINDOW
+		#metaFrame.grid(row=1, column=0, sticky="nsew")
+		hPane_meta.add(metaAnalysisFrame)
+		
+		self.metaPlot = bPlotFrame(metaAnalysisFrame, self, showToolbar=False, allowSpan=False)
+
+		hPane_meta.sashpos(0, horizontalSashPos)
+		
 	def spinBox_Callback(self, name):
 		print('spinBox_Callback:', name)
 		plotEveryPoint = int(self.plotEverySpinbox.get())
