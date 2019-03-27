@@ -1,5 +1,9 @@
 ## Whole cell recording analysis
 
+## Desktop application
+
+<IMG SRC="img/spike-app.png" width=600>
+
 ## Detect action potentials
 
 See

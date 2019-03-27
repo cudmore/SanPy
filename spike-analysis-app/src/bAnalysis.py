@@ -53,7 +53,7 @@ class bAnalysis:
 		self.filteredVm = []
 		self.filteredDeriv = []
 		self.spikeTimes = []
-		
+
 	############################################################
 	# access to underlying pyabf object (self.abf)
 	############################################################
@@ -82,9 +82,9 @@ class bAnalysis:
 	############################################################
 	def spikeDetect0(self, dVthresholdPos=100, medianFilter=0, startSeconds=None, stopSeconds=None):
 		# check dvdt to select threshold for an action-potential
-		
+
 		print('spikeDetect0() dVthresholdPos:', dVthresholdPos, 'medianFilter:', medianFilter, 'startSeconds:', startSeconds, 'stopSeconds:', stopSeconds)
-		
+
 		startPnt = 0
 		stopPnt = len(self.abf.sweepX) - 1
 		secondsOffset = 0
@@ -93,7 +93,7 @@ class bAnalysis:
 			stopPnt = self.dataPointsPerMs * (stopSeconds*1000) # seconds to pnt
 		print('   startSeconds:', startSeconds, 'stopSeconds:', stopSeconds)
 		print('   startPnt:', startPnt, 'stopPnt:', stopPnt)
-		
+
 		if medianFilter > 0:
 			self.filteredVm = scipy.signal.medfilt(self.abf.sweepY,medianFilter)
 		else:
@@ -119,7 +119,7 @@ class bAnalysis:
 		print('before stripping len(spikeTimes0):', len(spikeTimes0))
 		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if (spikeTime>=startPnt and spikeTime<=stopPnt)]
 		print('after stripping len(spikeTimes0):', len(spikeTimes0))
-		
+
 		#
 		# if there are doubles, throw-out the second one
 		refractory_ms = 10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
@@ -171,12 +171,12 @@ class bAnalysis:
 
 		self.thresholdTimes = spikeTimes0
 		self.spikeTimes = spikeTimes1
-		
+
 		return self.spikeTimes, self.thresholdTimes, self.filteredVm, self.filteredDeriv
 
 	def pnt2Sec_(self, pnt):
 		return pnt / self.abf.dataPointsPerMs / 1000
-	
+
 	def spikeDetect(self, dVthresholdPos=100, medianFilter=0, halfHeights=[20, 50, 80], startSeconds=None, stopSeconds=None):
 		'''
 		spike detect the current sweep and put results into spikeTime[currentSweep]
@@ -187,7 +187,7 @@ class bAnalysis:
 		startTime = time.time()
 
 		self.spikeDict = [] # we are filling this in, one entry for each spike
-		
+
 		# spike detect
 		self.spikeTimes, self.thresholdTimes, vm, dvdt = self.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter, startSeconds=startSeconds, stopSeconds=stopSeconds)
 
@@ -207,15 +207,15 @@ class bAnalysis:
 			spikeDict = collections.OrderedDict() # use OrderedDict so Pandas output is in the correct order
 			spikeDict['file'] = self.file
 			spikeDict['spikeNumber'] = i
-			
+
 			spikeDict['numError'] = 0
 			spikeDict['error'] = []
-			
+
 			# detection params
 			spikeDict['dVthreshold'] = dVthresholdPos
 			spikeDict['medianFilter'] = medianFilter
 			spikeDict['halfHeights'] = halfHeights
-			
+
 			spikeDict['thresholdPnt'] = spikeTime
 			spikeDict['thresholdVal'] = vm[spikeTime]
 			spikeDict['thresholdSec'] = (spikeTime / self.abf.dataPointsPerMs) / 1000
@@ -252,7 +252,7 @@ class bAnalysis:
 			# Action potential duration (APD) was defined as the interval between the TOP and the subsequent MDP
 			self.spikeDict[i]['apDuration'] = None
 			self.spikeDict[i]['diastolicDuration'] = None
-			
+
 			if i==0 or i==len(self.spikeTimes)-1:
 				continue
 			else:
@@ -322,7 +322,7 @@ class bAnalysis:
 				postSpike_pnts = self.abf.dataPointsPerMs * postSpike_ms
 				#postRange = dvdt[self.spikeTimes[i]:self.spikeTimes[i]+postSpike_pnts] # fixed window after spike
 				postRange = dvdt[peakPnt:peakPnt+postSpike_pnts] # fixed window after spike
-				
+
 				'''
 				try:
 					postSpike_dvdt_min_pnt = np.where(postRange<0)[0][0]
@@ -358,7 +358,7 @@ class bAnalysis:
 					self.spikeDict[i]['isi_sec'] = self.spikeDict[i]['thresholdSec'] - self.spikeDict[i-1]['thresholdSec']
 					self.spikeDict[i]['cycleLength_sec'] = self.spikeDict[i]['postMinPnt'] - self.spikeDict[i-1]['postMinPnt']
 					self.spikeDict[i]['cycleLength_sec'] = self.spikeDict[i]['cycleLength_sec'] / self.abf.dataPointsPerMs / 1000 # pnt interval to seconds
-				
+
 				# get 1/2 height (actually, any number of height measurements)
 				# action potential duration using peak and post min
 				self.spikeDict[i]['widths'] = []
@@ -718,6 +718,28 @@ class bAnalysis:
 		df = pd.DataFrame(self.spikeDict)
 		# limit columns
 		#df = df[['file', 'spikeNumber', 'thresholdSec', 'peakSec', 'preMinVal', 'postMinVal', 'widths']]
+		return df
+
+	def report2(self):
+		newList = []
+		for spike in self.spikeDict:
+			spikeDict = {}
+			spikeDict['thresholdSec'] = spike['thresholdSec']
+			spikeDict['thresholdVal'] = spike['thresholdVal']
+			spikeDict['peakSec'] = spike['peakSec']
+			spikeDict['peakVal'] = spike['peakVal']
+			spikeDict['preMinVal'] = spike['preMinVal']
+			spikeDict['postMinVal'] = spike['postMinVal']
+			#
+			spikeDict['apDuration'] = spike['apDuration']
+			spikeDict['diastolicDuration'] = spike['diastolicDuration']
+			#
+			spikeDict['isi_sec'] = spike['isi_sec']
+			spikeDict['cycleLength_sec'] = spike['cycleLength_sec']
+
+			newList.append(spikeDict)
+
+		df = pd.DataFrame(newList)
 		return df
 
 	############################################################
