@@ -24,3 +24,14 @@ Make the app
 
     cd src
     ./makeapp
+
+## To Do
+
+### 20190326
+
+ - Save analysis csv file and reload when loading folder. Don't always require re-analysis. Will break when format of csv file changes, make sure to include a file version.
+ - Implement all stats used by Larson ... Proenza (2013) paper.
+ - Show average spike clip in red
+ - Export average spike clip
+ - Take all stats on average spike clip. Is it different from taking average across all spikes?
+ 

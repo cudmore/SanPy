@@ -55,12 +55,24 @@ class AnalysisApp:
 		self.analysisList = ['threshold', 'peak', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
 		self.metaAnalysisList = self.analysisList + ['isi (sec)', 'Phase Plot']
 		
+		self.metaAnalysisList2 = ['AP Peak (mV)',
+								'MDP (mV)',
+								'Take Off Potential (mV)',
+								'Cycle Length (sec)',
+								'Max Upstroke (dV/dt)',
+								'Max Repolarization (dV/dt)',
+								'AP Duration (sec)',
+								'Diastolic Duration (sec)',
+								'Early Diastolic Depolarization Rate (slope of Vm)',
+								'Early Diastolic Duration (sec)',
+								'Late Diastolic Duration (sec)']
+								
 		#self.buildInterface2()
 		self.buildInterface3()
 		
 		self.myMenus = bMenus.bMenus(self)
 
-		self.metaWindow()
+		#self.metaWindow()
 		
 		if path is not None:
 			self.loadFolder(path=path)
@@ -199,14 +211,21 @@ class AnalysisApp:
 		#metaPlotFrame.grid(row=0, column=0, sticky="nsew")
 
 		row = 0 
+		col = 0 
 		for i, analysisItem in enumerate(self.metaAnalysisList):
 			button = ttk.Button(metaPlotFrame, text=analysisItem, command=lambda name=analysisItem+'_button': self.button_Callback(name))
-			button.grid(row=row+i, column=0, sticky="w") 
+			button.grid(row=row+i, column=col, sticky="w") 
+	
+		row = 0 
+		col = 1
+		for i, analysisItem in enumerate(self.metaAnalysisList2):
+			button = ttk.Button(metaPlotFrame, text=analysisItem, command=lambda name=analysisItem: self.button_Callback2(name))
+			button.grid(row=row+i, column=col, sticky="w") 
 	
 		return metaPlotFrame
 		
 	def buildInterface3(self):
-		horizontalSashPos = 500
+		horizontalSashPos = 400
 		
 		self.root.grid_rowconfigure(0, weight=1)
 		self.root.grid_columnconfigure(0, weight=1)
@@ -344,6 +363,11 @@ class AnalysisApp:
 		self.derivPlot.plotDeriv(self.ba, plotEveryPoint=plotEveryPoint)
 		return True
 		
+	def button_Callback2(self, buttonName):
+		print('button_Callback2() buttonName:', buttonName)
+	
+		self.metaPlot.plotMeta(self.ba, buttonName, doInit=True)
+		
 	def button_Callback(self, buttonName):
 		print('AnalysisApp.button_Callback() buttonName:', buttonName)
 		#print('   self.thresholdSpinbox:', self.thresholdSpinbox.get())
@@ -372,8 +396,9 @@ class AnalysisApp:
 			'''
 			
 		if buttonName == 'fullAxisButton':
-			self.rawPlot.setFullAxis()
-			self.derivPlot.setFullAxis()
+			self.setXAxis_full()
+			#self.rawPlot.setFullAxis()
+			#self.derivPlot.setFullAxis()
 			
 		if buttonName == 'reportButton':
 			self.report()
@@ -504,12 +529,23 @@ class AnalysisApp:
 
 		self.setStatus()
 		
+	def setXAxis_full(self):
+		self.rawPlot.setFullAxis()
+		self.derivPlot.setFullAxis()
+
+		self.clipsPlot.plotClips_updateSelection(self.ba, xMin=None, xMax=None)
+		self.metaPlot.plotMeta_updateSelection(self.ba, xMin=None, xMax=None)
+
 	def setXAxis(self, theMin, theMax):
 		self.rawPlot.setXAxis(theMin, theMax)
 		self.derivPlot.setXAxis(theMin, theMax)
 		
 		self.clipsPlot.plotClips_updateSelection(self.ba, theMin, theMax)
 		self.metaPlot.plotMeta_updateSelection(self.ba, theMin, theMax)
+		
+	def selectSpike(self, spikeNumber):
+		print('AnalysisApp.selectSpike() spikeNumber:', spikeNumber)
+		self.rawPlot.selectSpike(self.ba, spikeNumber)
 		
 	def report(self):
 		df = self.ba.report()

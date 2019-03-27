@@ -50,7 +50,7 @@ class bPlotFrame(ttk.Frame):
 
 		self.canvas.draw()
 
-		cid1 = self.canvas.mpl_connect('button_press_event', self.onclick)
+		#cid1 = self.canvas.mpl_connect('button_press_event', self.onclick)
 		cid2 = self.canvas.mpl_connect('pick_event', self.onpick)
 
 		if showToolbar:
@@ -103,26 +103,32 @@ class bPlotFrame(ttk.Frame):
 		
 		self.metax = []
 		self.metay = []
+
+		self.singleSpikeSelection, = self.axes.plot([],[], 'oy') # REMEMBER ',' ON LHS
 		
 	def onclick(self, event):
-		print('onclick() %s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
+		print('bPlotFrame.onclick()')
+		'''
+		print('bPlotFrame.onclick() %s click: button=%d, x=%d, y=%d, xdata=%f, ydata=%f' %
 			('double' if event.dblclick else 'single', event.button,
 			event.x, event.y, event.xdata, event.ydata))
-
+		'''
+		
 	def onpick(self, event):
-		print('onpick() event:', event)
-		print('   event.ind:', event.ind)
+		print('bPlotFrame.onpick() event:', event)
+		#print('   event.ind:', event.ind)
 		thisline = event.artist
 		xdata = thisline.get_xdata()
-		ydata = thisline.get_ydata()
+		#ydata = thisline.get_ydata()
 		ind = event.ind
+		print('ind:', ind)
 		#print('xdata:', xdata)
 		print('   xdata[ind]:', xdata[ind])
-		#print('ydata:', ydata)
-		print('   ydata[ind]:', ydata[ind])
-		points = tuple(zip(xdata[ind], ydata[ind]))
-		print('   onpick() points:', points)
 
+		# select spike 'ind' in raw data
+		ind = int(ind[0])
+		self.controller.selectSpike(ind)
+		
 	def plotStat(self, name, onoff):
 		#print("=== bPlotFrame.plotStat() name:", name, "onoff:", onoff)
 		
@@ -296,6 +302,15 @@ class bPlotFrame(ttk.Frame):
 
 		self.canvas.draw()
 		
+	def selectSpike(self, ba, spikeNumber):
+		""" Select a single spike in raw trace """
+		spikeVm = ba.abf.sweepY[ba.spikeTimes[spikeNumber]]
+		spikeSeconds = ba.abf.sweepX[ba.spikeTimes[spikeNumber]]
+		self.singleSpikeSelection.set_ydata(spikeVm)
+		self.singleSpikeSelection.set_xdata(spikeSeconds)
+
+		self.canvas.draw()
+		
 	def plotDeriv(self, ba, plotEveryPoint=10, doInit=False):
 		#ba.plotDeriv(fig=self.fig)
 		
@@ -371,14 +386,15 @@ class bPlotFrame(ttk.Frame):
 		
 		self.clipLines_selection = []
 		
-		for i, spikeTime in enumerate(ba.spikeTimes):
-			spikeSeconds = spikeTime / ba.dataPointsPerMs / 1000 # pnts to seconds
-			#print(spikeSeconds)
-			if spikeSeconds >= xMin and spikeSeconds <= xMax:
-				#print(spikeTime)
-				line, = self.axes.plot(ba.spikeClips_x, ba.spikeClips[i], 'y')
-				self.clipLines_selection.append(line)
-
+		if xMin is not None and xMax is not None:
+			for i, spikeTime in enumerate(ba.spikeTimes):
+				spikeSeconds = spikeTime / ba.dataPointsPerMs / 1000 # pnts to seconds
+				#print(spikeSeconds)
+				if spikeSeconds >= xMin and spikeSeconds <= xMax:
+					#print(spikeTime)
+					line, = self.axes.plot(ba.spikeClips_x, ba.spikeClips[i], 'y')
+					self.clipLines_selection.append(line)
+	
 		self.canvas.draw()
 		
 	def plotMeta(self, ba, statName, doInit=False):
@@ -450,6 +466,91 @@ class bPlotFrame(ttk.Frame):
 			val = np.concatenate(([0],val)) # add an initial point so it is the same length as raw data in abf.sweepY
 
 		#
+		# Larson ... Proenza (2013) paper
+		if statName == 'AP Peak (mV)':
+			pnt = [x['peakPnt'] for x in self.controller.ba.spikeDict if x['peakPnt'] is not None]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['peakVal'] for x in self.controller.ba.spikeDict if x['peakVal'] is not None]
+			xLabel = 'Seconds'
+			yLabel = statName
+		
+		if statName == 'MDP (mV)':
+			pnt = [x['postMinPnt'] for x in self.controller.ba.spikeDict if x['postMinPnt'] is not None]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['postMinVal'] for x in self.controller.ba.spikeDict if x['postMinVal'] is not None]
+			xLabel = 'Seconds'
+			yLabel = statName
+
+		if statName == 'Take Off Potential (mV)':
+			pnt = [x['thresholdPnt'] for x in self.controller.ba.spikeDict]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['thresholdVal'] for x in self.controller.ba.spikeDict]
+			xLabel = 'Seconds'
+			yLabel = statName #'AP Threshold (mV)'
+				
+		if statName == 'Cycle Length (sec)':
+			#todo: fix this, 'cycleLength_sec' is only calculated for spike # > 1
+			pnt = [x['postMinPnt'] for x in self.controller.ba.spikeDict if x['postMinPnt'] is not None and x['cycleLength_sec'] is not None]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['cycleLength_sec'] for x in self.controller.ba.spikeDict if x['cycleLength_sec'] is not None]
+			xLabel = 'Seconds'
+			yLabel = statName
+
+		if statName == 'Max Upstroke (dV/dt)':
+			pnt = [x['preSpike_dvdt_max_pnt'] for x in self.controller.ba.spikeDict if x['preSpike_dvdt_max_pnt']]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['preSpike_dvdt_max_val2'] for x in self.controller.ba.spikeDict if x['preSpike_dvdt_max_val2']]
+			xLabel = 'Seconds'
+			yLabel = statName
+		
+		if statName == 'Max Repolarization (dV/dt)':
+			pnt = [x['preSpike_dvdt_max_pnt'] for x in self.controller.ba.spikeDict if x['preSpike_dvdt_max_pnt']]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['postSpike_dvdt_min_val2'] for x in self.controller.ba.spikeDict if x['postSpike_dvdt_min_val2']]
+			xLabel = 'Seconds'
+			yLabel = statName
+			
+		if statName == 'AP Duration (sec)':
+			#todo: fix this, 'apDuration' is only calculated for spike # > 0
+			# could use 'thresholdSec' and not index sweepX[]
+			pnt = [x['thresholdPnt'] for x in self.controller.ba.spikeDict if x['thresholdPnt'] is not None and x['apDuration'] is not None]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['apDuration'] for x in self.controller.ba.spikeDict if x['apDuration']]
+			xLabel = 'Seconds'
+			yLabel = statName
+		
+		if statName == 'Diastolic Duration (sec)':
+			# in general, any time we plot threshold versus a stat (like diastolicDuration)
+			# we need this extra 'is not None' because we are only calculating stats (like diastolicDuration)
+			# for spike >1 and <len(spikes)
+			pnt = [x['thresholdPnt'] for x in self.controller.ba.spikeDict if x['thresholdPnt'] is not None and x['diastolicDuration'] is not None]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['diastolicDuration'] for x in self.controller.ba.spikeDict if x['diastolicDuration']]
+			xLabel = 'Seconds'
+			yLabel = statName
+		
+		if statName == 'Early Diastolic Depolarization Rate (slope of Vm)':
+			print('Not implemented')
+			pnt = [0]
+			val = [0]
+			xLabel = 'Not Implemented'
+			yLabel = statName
+			
+		if statName == 'Early Diastolic Duration (sec)':
+			pnt = [x['preLinearFitPnt0'] for x in self.controller.ba.spikeDict if x['preLinearFitPnt0'] is not None]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['earlyDiastolicDuration'] for x in self.controller.ba.spikeDict if x['earlyDiastolicDuration']]
+			xLabel = 'Seconds'
+			yLabel = statName
+			
+		if statName == 'Late Diastolic Duration (sec)':
+			print('Not implemented')
+			pnt = [0]
+			val = [0]
+			xLabel = 'Not Implemented'
+			yLabel = statName
+		
+		#
 		# replot
 		self.metaLines.set_ydata(val)
 		self.metaLines.set_xdata(pnt)
@@ -493,13 +594,14 @@ class bPlotFrame(ttk.Frame):
 		
 		self.plotMeta_selection = []
 		
-		for i, spikeTime in enumerate(ba.spikeTimes):
-			spikeSeconds = spikeTime / ba.dataPointsPerMs / 1000 # pnts to seconds
-			#print(spikeSeconds)
-			if spikeSeconds >= xMin and spikeSeconds <= xMax:
-				#print(spikeTime)
-				line, = self.axes.plot(self.metax[i], self.metay[i], 'oy')
-				self.plotMeta_selection.append(line)
+		if xMin is not None and xMax is not None:
+			for i, spikeTime in enumerate(ba.spikeTimes):
+				spikeSeconds = spikeTime / ba.dataPointsPerMs / 1000 # pnts to seconds
+				#print(spikeSeconds)
+				if spikeSeconds >= xMin and spikeSeconds <= xMax:
+					#print(spikeTime)
+					line, = self.axes.plot(self.metax[i], self.metay[i], 'oy')
+					self.plotMeta_selection.append(line)
 
 		self.canvas.draw()
 		

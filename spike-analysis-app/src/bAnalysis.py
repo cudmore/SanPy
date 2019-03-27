@@ -174,6 +174,9 @@ class bAnalysis:
 		
 		return self.spikeTimes, self.thresholdTimes, self.filteredVm, self.filteredDeriv
 
+	def pnt2Sec_(self, pnt):
+		return pnt / self.abf.dataPointsPerMs / 1000
+	
 	def spikeDetect(self, dVthresholdPos=100, medianFilter=0, halfHeights=[20, 50, 80], startSeconds=None, stopSeconds=None):
 		'''
 		spike detect the current sweep and put results into spikeTime[currentSweep]
@@ -228,17 +231,28 @@ class bAnalysis:
 			self.spikeDict[i]['postMinPnt'] = None
 			self.spikeDict[i]['postMinVal'] = None
 
+			# early diastolic duration
 			# 0.1 to 0.5 of time between pre spike min and spike time
 			self.spikeDict[i]['preLinearFitPnt0'] = None
 			self.spikeDict[i]['preLinearFitPnt1'] = None
+			self.spikeDict[i]['earlyDiastolicDuration'] = None # seconds between preLinearFitPnt0 and preLinearFitPnt1
 			self.spikeDict[i]['preLinearFitVal0'] = None
 			self.spikeDict[i]['preLinearFitVal1'] = None
 
 			self.spikeDict[i]['preSpike_dvdt_max_pnt'] = None
-			self.spikeDict[i]['preSpike_dvdt_max_val'] = None
+			self.spikeDict[i]['preSpike_dvdt_max_val'] = None # in units mV
+			self.spikeDict[i]['preSpike_dvdt_max_val2'] = None # in units dv/dt
 			self.spikeDict[i]['postSpike_dvdt_min_pnt'] = None
-			self.spikeDict[i]['postSpike_dvdt_min_val'] = None
+			self.spikeDict[i]['postSpike_dvdt_min_val'] = None # in units mV
+			self.spikeDict[i]['postSpike_dvdt_min_val2'] = None # in units dv/dt
 
+			self.spikeDict[i]['isi_sec'] = None # time between successive AP thresholds (thresholdSec)
+			self.spikeDict[i]['cycleLength_sec'] = None # time between successive MDPs
+
+			# Action potential duration (APD) was defined as the interval between the TOP and the subsequent MDP
+			self.spikeDict[i]['apDuration'] = None
+			self.spikeDict[i]['diastolicDuration'] = None
+			
 			if i==0 or i==len(self.spikeTimes)-1:
 				continue
 			else:
@@ -278,7 +292,8 @@ class bAnalysis:
 				preSpike_dvdt_max_pnt += self.spikeTimes[i]
 				#print('i:', i, 'preSpike_dvdt_max_pnt:', preSpike_dvdt_max_pnt)
 				self.spikeDict[i]['preSpike_dvdt_max_pnt'] = preSpike_dvdt_max_pnt
-				self.spikeDict[i]['preSpike_dvdt_max_val'] = vm[preSpike_dvdt_max_pnt]
+				self.spikeDict[i]['preSpike_dvdt_max_val'] = vm[preSpike_dvdt_max_pnt] # in units mV
+				self.spikeDict[i]['preSpike_dvdt_max_val2'] = dvdt[preSpike_dvdt_max_pnt] # in units mV
 
 				#
 				# post spike min
@@ -320,6 +335,7 @@ class bAnalysis:
 				#print('i:', i, 'postSpike_dvdt_min_pnt:', postSpike_dvdt_min_pnt)
 				self.spikeDict[i]['postSpike_dvdt_min_pnt'] = postSpike_dvdt_min_pnt
 				self.spikeDict[i]['postSpike_dvdt_min_val'] = vm[postSpike_dvdt_min_pnt]
+				self.spikeDict[i]['postSpike_dvdt_min_val2'] = dvdt[postSpike_dvdt_min_pnt]
 
 				self.spikeDict[i]['preMinPnt'] = preMinPnt
 				self.spikeDict[i]['preMinVal'] = preMinVal
@@ -328,9 +344,21 @@ class bAnalysis:
 				# linear fit before spike
 				self.spikeDict[i]['preLinearFitPnt0'] = preLinearFitPnt0
 				self.spikeDict[i]['preLinearFitPnt1'] = preLinearFitPnt1
+				self.spikeDict[i]['earlyDiastolicDuration'] = self.pnt2Sec_(preLinearFitPnt1) - self.pnt2Sec_(preLinearFitPnt0)
 				self.spikeDict[i]['preLinearFitVal0'] = preLinearFitVal0
 				self.spikeDict[i]['preLinearFitVal1'] = preLinearFitVal1
 
+				# Action potential duration (APD) was defined as the interval between the TOP and the subsequent MDP
+				self.spikeDict[i]['apDuration'] = self.pnt2Sec_(postMinPnt) - spikeDict['thresholdSec']
+
+				# diastolic duration was defined as the interval between MDP and TOP
+				self.spikeDict[i]['diastolicDuration'] = self.pnt2Sec_(spikeTime) - self.pnt2Sec_(preMinPnt)
+
+				if i>1:
+					self.spikeDict[i]['isi_sec'] = self.spikeDict[i]['thresholdSec'] - self.spikeDict[i-1]['thresholdSec']
+					self.spikeDict[i]['cycleLength_sec'] = self.spikeDict[i]['postMinPnt'] - self.spikeDict[i-1]['postMinPnt']
+					self.spikeDict[i]['cycleLength_sec'] = self.spikeDict[i]['cycleLength_sec'] / self.abf.dataPointsPerMs / 1000 # pnt interval to seconds
+				
 				# get 1/2 height (actually, any number of height measurements)
 				# action potential duration using peak and post min
 				self.spikeDict[i]['widths'] = []
