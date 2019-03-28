@@ -20,9 +20,11 @@ git clone https://github.com/cudmore/bAnalysis.git
 # change into the cloned bAnalysis folder
 cd bAnalysis
 
-# create a Python3 virtual environment in 'bAnalysis_env' and activate it
+# create a Python3 virtual environment in 'bAnalysis_env'
 mkdir bAnalysis_env
 virtualenv -p python3 --no-site-packages bAnalysis_env
+
+# activate the virtual environment in bAnalysis_env
 source bAnalysis_env/bin/activate
 
 # install the required python packages (into the activated virtual environment)
@@ -32,6 +34,10 @@ pip install -r requirements.txt
 ## Running the graphical-user-interface
 
 ```
+# activate the virtual environment in bAnalysis_env
+source bAnalysis_env/bin/activate
+
+# run the graphical-user-interface
 python src/AnalysisApp.py
 ```
 
@@ -135,7 +141,7 @@ Make the app
     cd src
     ./makeapp
 
- 
+
 
 [python3]: https://www.python.org/downloads/
 [pip]: https://pip.pypa.io/en/stable/

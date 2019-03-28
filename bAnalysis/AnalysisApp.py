@@ -15,7 +15,7 @@ from tkinter import filedialog
 import matplotlib
 matplotlib.use("TkAgg")
 
-from bAnalysis import bAnalysis
+from bAnalysisApp import bAnalysis
 import bMenus
 import bFileList
 import bTree
@@ -164,9 +164,9 @@ class AnalysisApp:
 		self.plotEverySpinbox = ttk.Spinbox(plotOptionsFrame, from_=1, to=1000, width=5, validate="focusout", validatecommand=lambda name='plotEverySpinbox': self.spinBox_Callback(name))
 		self.plotEverySpinbox.insert(0,plotEveryPoint) # default is 10
 		self.plotEverySpinbox.grid(row=0, column=2, sticky="w")
-	
+
 		return plotOptionsFrame
-		
+
 	def buildPlotOptionsFrame(self, container):
 		#
 		# plot options frame (checkboxes)
@@ -268,7 +268,7 @@ class AnalysisApp:
 		hPane_top = ttk.PanedWindow(self.vPane, orient="horizontal")
 		self.vPane.add(hPane_top)
 		'''
-		
+
 		#
 		# file list frame
 		fileList_frame = ttk.Frame(self.vPane, borderwidth=self.myBorderWidth, relief="sunken")
@@ -277,13 +277,13 @@ class AnalysisApp:
 		fileList_frame = ttk.Frame(hPane_top, borderwidth=self.myBorderWidth, relief="sunken")
 		hPane_top.add(fileList_frame)
 		'''
-		
+
 		'''
 		fileListFrameLabel = ttk.Label(fileList_frame)
 		fileListFrameLabel.grid(row=0, column=0, sticky="w")
 		fileListFrameLabel.configure(text='File List')
 		'''
-		
+
 		self.fileListTree = bTree.bFileTree(fileList_frame, self, videoFileList='')
 		self.fileListTree.grid(row=1,column=0, sticky="nsew")
 
@@ -341,7 +341,7 @@ class AnalysisApp:
 		hPane_clips.add(spikeClipsFrame)
 
 		self.clipsPlot = bPlotFrame(spikeClipsFrame, self, showToolbar=False, analysisList=self.analysisList, allowSpan=False)
-		
+
 		hPane_clips.sashpos(0, horizontalSashPos)
 
 		#
@@ -605,7 +605,7 @@ class AnalysisApp:
 
 		df = pd.DataFrame(self.clipsPlot.meanClip)
 		df.to_excel(writer, sheet_name='Avg Spike')
-		
+
 		writer.save()
 
 		self.setStatus('Saved ' + excelFilePath)
