@@ -1,13 +1,37 @@
 ## Whole cell recording analysis
 
-## Desktop application
+This repository has code to perform action potential analysis. It is primarily designed to analyze spontaneous action potentials from cardiac myocytes.
 
-<IMG SRC="img/spike-app.png" width=600>
+## Install
 
-## Detect action potentials
+We assume you have Python 3.7.x and pip installed.
 
-See
- - bBrowser.ipynb
+```
+# clone the repository
+git clone https://github.com/cudmore/bAnalysis.git
+
+# change into the downloaded folder
+cd bAnalysis
+
+# create a Python3 virtual environment and activate it
+mkdir bAnalysis_env
+virtualenv -p python3 --no-site-packages bAnalysis_env
+source bAnalysis_env/bin/activate
+
+# install the required python packages
+pip install -r requirements.txt
+		
+# run the graphical-user-interface
+python spike-analysis-app/src/AnalysisApp.py
+```
+
+## Application
+
+<IMG SRC="img/spike-app.png" width=700>
+
+## Writing your own Python scripts
+
+See `bBrowser.ipynb`
 
 ```
 abf = bLoadFile('data/171116sh_0018.abf')
@@ -17,14 +41,6 @@ bPlotSweep(abf, sweepNumber, spikeTimes=spikeTimes)
 ```
 
 <IMG SRC="img/example1.png" width=600>
-
-## Analyze action potentials
-
-Coming soon, will plot current versus a number of AP parameters including: number, instantaneous frequency, spike threshold, ...
-
-## Passive properties
-
-Coming soon, will analyze and plot resting membrane potential, whole cell capacitance.
 
 ## Install Python 3.7.x and required libraries
 

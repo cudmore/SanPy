@@ -50,8 +50,8 @@ class AnalysisApp:
 		self.currentFilePath = ''
 		self.ba = None
 
-		self.myPadding = 10
-		self.myBorderWidth = 5
+		self.myPadding = 5
+		self.myBorderWidth = 2
 
 		self.analysisList = ['threshold', 'peak', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
 		self.metaAnalysisList = self.analysisList + ['isi (sec)', 'Phase Plot']
@@ -148,6 +148,25 @@ class AnalysisApp:
 
 		return detection_frame
 
+	def buildGlobalOptionsFrame(self, container):
+		plotOptionsFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
+
+
+		# reset axes button
+		resetAxesButton = ttk.Button(plotOptionsFrame, text='Reset Axes', command=lambda name='fullAxisButton': self.button_Callback(name))
+		resetAxesButton.grid(row=0, column=0, sticky="w")
+
+		# plot a subset of points
+		labelDir = ttk.Label(plotOptionsFrame, text='Plot Every (pnt)')
+		labelDir.grid(row=0, column=1, sticky="w")
+
+		plotEveryPoint = self.configDict['display']['plotEveryPoint']
+		self.plotEverySpinbox = ttk.Spinbox(plotOptionsFrame, from_=1, to=1000, width=5, validate="focusout", validatecommand=lambda name='plotEverySpinbox': self.spinBox_Callback(name))
+		self.plotEverySpinbox.insert(0,plotEveryPoint) # default is 10
+		self.plotEverySpinbox.grid(row=0, column=2, sticky="w")
+	
+		return plotOptionsFrame
+		
 	def buildPlotOptionsFrame(self, container):
 		#
 		# plot options frame (checkboxes)
@@ -244,16 +263,36 @@ class AnalysisApp:
 		self.setStatus('Building Interface')
 
 		#
+		# horizontal pane for file list and global plot options
+		'''
+		hPane_top = ttk.PanedWindow(self.vPane, orient="horizontal")
+		self.vPane.add(hPane_top)
+		'''
+		
+		#
 		# file list frame
 		fileList_frame = ttk.Frame(self.vPane, borderwidth=self.myBorderWidth, relief="sunken")
 		self.vPane.add(fileList_frame)
-
+		'''
+		fileList_frame = ttk.Frame(hPane_top, borderwidth=self.myBorderWidth, relief="sunken")
+		hPane_top.add(fileList_frame)
+		'''
+		
+		'''
 		fileListFrameLabel = ttk.Label(fileList_frame)
 		fileListFrameLabel.grid(row=0, column=0, sticky="w")
 		fileListFrameLabel.configure(text='File List')
-
+		'''
+		
 		self.fileListTree = bTree.bFileTree(fileList_frame, self, videoFileList='')
 		self.fileListTree.grid(row=1,column=0, sticky="nsew")
+
+		'''
+		globalOptionsFrame = self.buildGlobalOptionsFrame(hPane_top)
+		hPane_top.add(globalOptionsFrame)
+
+		hPane_top.sashpos(0, 500)
+		'''
 
 		#
 		# horizontal pane for detection options and dv/dt plot
@@ -302,7 +341,7 @@ class AnalysisApp:
 		hPane_clips.add(spikeClipsFrame)
 
 		self.clipsPlot = bPlotFrame(spikeClipsFrame, self, showToolbar=False, analysisList=self.analysisList, allowSpan=False)
-
+		
 		hPane_clips.sashpos(0, horizontalSashPos)
 
 		#
@@ -352,7 +391,7 @@ class AnalysisApp:
 		#metaFrame.grid(row=1, column=0, sticky="nsew")
 		hPane_meta.add(metaAnalysisFrame)
 
-		self.metaPlot = bPlotFrame(metaAnalysisFrame, self, showToolbar=False, allowSpan=False)
+		metaPlot = bPlotFrame(metaAnalysisFrame, self, showToolbar=False, allowSpan=False)
 
 		hPane_meta.sashpos(0, horizontalSashPos)
 
@@ -528,6 +567,8 @@ class AnalysisApp:
 		statName = 'peak'
 		self.metaPlot.plotMeta(self.ba, statName, doInit=True)
 
+		self.clipsPlot.plotClips_updateSelection(self.ba, xMin=None, xMax=None)
+
 		self.setStatus()
 
 	def setXAxis_full(self):
@@ -562,10 +603,15 @@ class AnalysisApp:
 		df = self.ba.report() # report() is my own verbiage
 		df.to_excel(writer, sheet_name='Sheet2')
 
+		df = pd.DataFrame(self.clipsPlot.meanClip)
+		df.to_excel(writer, sheet_name='Avg Spike')
+		
 		writer.save()
 
 		self.setStatus('Saved ' + excelFilePath)
 
+		#
+		# save a text file
 		textFilePath = os.path.join(filePath, fileBaseName + '.txt')
 		df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
 

@@ -39,7 +39,8 @@ class bPlotFrame(ttk.Frame):
 		self.clipLines = None
 		self.clipLines_selection = None
 		self.clipLines_mean = None
-
+		self.meanClip = []
+		
 		self.plotMeta_selection = None
 
 		self.canvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(self.fig, parent)
@@ -252,11 +253,13 @@ class bPlotFrame(ttk.Frame):
 
 		xMin = min(self.line.get_xdata())
 		xMax = max(self.line.get_xdata())
+		self.axes.set_xlim(xMin, xMax)
+
+		'''
 		yMin = min(self.line.get_ydata())
 		yMax = max(self.line.get_ydata())
-
-		self.axes.set_xlim(xMin, xMax)
 		self.axes.set_ylim(yMin, yMax)
+		'''
 
 		self.canvas.draw()
 
@@ -391,20 +394,21 @@ class bPlotFrame(ttk.Frame):
 				line.remove()
 		self.clipLines_mean = []
 
+		if xMin is None and xMax is None:
+			xMin = 0
+			xMax = len(self.controller.ba.abf.sweepX) / ba.dataPointsPerMs / 1000 # pnts to seconds
+			
 		tmpClips = [] # for mean clip
-		if xMin is not None and xMax is not None:
-			for i, spikeTime in enumerate(ba.spikeTimes):
-				spikeSeconds = spikeTime / ba.dataPointsPerMs / 1000 # pnts to seconds
-				#print(spikeSeconds)
-				if spikeSeconds >= xMin and spikeSeconds <= xMax:
-					#print(spikeTime)
-					line, = self.axes.plot(ba.spikeClips_x, ba.spikeClips[i], 'y')
-					self.clipLines_selection.append(line)
-					tmpClips.append(ba.spikeClips[i]) # for mean clip
+		for i, spikeTime in enumerate(ba.spikeTimes):
+			spikeSeconds = spikeTime / ba.dataPointsPerMs / 1000 # pnts to seconds
+			if spikeSeconds >= xMin and spikeSeconds <= xMax:
+				line, = self.axes.plot(ba.spikeClips_x, ba.spikeClips[i], 'k')
+				self.clipLines_selection.append(line)
+				tmpClips.append(ba.spikeClips[i]) # for mean clip
 
-			meanClip = np.mean(tmpClips, axis=0)
-			line, = self.axes.plot(ba.spikeClips_x, meanClip, 'r')
-			self.clipLines_mean.append(line)
+		self.meanClip = np.mean(tmpClips, axis=0)
+		line, = self.axes.plot(ba.spikeClips_x, self.meanClip, 'r')
+		self.clipLines_mean.append(line)
 
 		self.canvas.draw()
 
