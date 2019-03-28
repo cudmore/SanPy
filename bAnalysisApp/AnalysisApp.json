@@ -1,0 +1,18 @@
+{
+    "defaultFolder": "",
+    "detection": {
+        "dvdtThreshold": 100,
+        "medianFilter": 5
+    },
+    "display": {
+        "plotEveryPoint": 10
+    },
+    "lastPath": "/Users/cudmore/Sites/bAnalysis/data",
+    "versionNumber": 0.1,
+    "windowGeometry": {
+        "height": 1200,
+        "width": 2000,
+        "x": 100,
+        "y": 100
+    }
+}
