@@ -112,8 +112,6 @@ You need virtualenv
 virtualenv --version
 ```
 
-
-
 ## Change log
 
 20190216, created the code and implemented ap detection
@@ -130,7 +128,7 @@ virtualenv --version
 
 ## Advanced
 
-#### Building a standalong app (macOS)
+#### Building a stand alone app (macOS)
 
 Install pyinstaller
 
@@ -138,8 +136,14 @@ Install pyinstaller
 
 Make the app
 
-    cd src
+    cd bAnalysisApp
     ./makeapp
+
+You can find the app in `dist/SpikeAnalysis.app`.
+
+#### Download the AnalysisApp (This link will normally be broken)
+
+    https://www.dropbox.com/l/scl/AAA2ECakLelv0xuo3YE74lFiH-9hdROEwkw
 
 
 
