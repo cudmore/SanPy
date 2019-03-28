@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Author: Robert H Cudmore
+# Date: 20181203
+#
+# Build a stand-alone app using pyinstaller
+
+rm -rf build dist
+pyinstaller --windowed --icon=icons/videoapp.icns -n SpikeAnalysis AnalysisApp.py
+
+# see: https://github.com/pyinstaller/pyinstaller/issues/3753
+cd dist/SpikeAnalysis.app/Contents/MacOs
+mkdir tcl tk
+cp -R /Library/Frameworks/Python.framework/Versions/3.7/lib/tcl* tcl/
+cp -R /Library/Frameworks/Python.framework/Versions/3.7/lib/tk* tk/
+cp -R /Library/Frameworks/Python.framework/Versions/3.7/lib/Tk* tk/
