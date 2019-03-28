@@ -38,7 +38,7 @@ pip install -r requirements.txt
 source bAnalysis_env/bin/activate
 
 # run the graphical-user-interface
-python src/AnalysisApp.py
+python bAnalysisApp/AnalysisApp.py
 ```
 
 Once the interface is up, select a folder with .abf files using the main 'File - Open Folder...' menu.
