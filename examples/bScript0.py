@@ -1,3 +1,11 @@
+import sys
+sys.path.append("..") # Adds higher directory to python modules path.
+
+import matplotlib
+matplotlib.use("TkAgg")
+
+from bAnalysis import bAnalysis
+
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Cursor
@@ -6,12 +14,11 @@ from matplotlib.widgets import CheckButtons
 from matplotlib.widgets import TextBox
 from matplotlib.widgets import Button
 
-from bAnalysis import bAnalysis
 
 file = 'data/19114001.abf'
 file = 'data/SAN-AP-example.abf'
 file = 'data/SAN-AP-sample-Rs-change.abf'
-file = 'data/SAN-AP-example-Rs-change.abf'
+file = '../data/SAN-AP-example-Rs-change.abf'
 
 ba = bAnalysis.bAnalysis(file)
 

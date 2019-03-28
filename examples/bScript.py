@@ -1,8 +1,14 @@
+import sys
+sys.path.append("..") # Adds higher directory to python modules path.
+
+import matplotlib
+matplotlib.use("TkAgg")
+
 import matplotlib.pyplot as plt
 
 from bAnalysis import bAnalysis
 
-file = 'data/19114001.abf'
+file = '../data/19114001.abf'
 ba = bAnalysis.bAnalysis(file)
 
 myThreshold = 100
