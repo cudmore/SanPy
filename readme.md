@@ -9,7 +9,6 @@ We assume you have the following
  - [Python 3.7.x][python3]
  - [pip][pip]
  - [git][git]
- - [virtualenv][virtualenv].
 
 #### Option 1) Install using ./install
 
@@ -130,12 +129,6 @@ You need git
 
 ```
 git --version
-```
-
-You need virtualenv
-
-```
-virtualenv --version
 ```
 
 ## Change log
