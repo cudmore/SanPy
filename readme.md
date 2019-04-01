@@ -4,14 +4,14 @@ This repository has code to perform action potential analysis. It is primarily d
 
 ## Install
 
-#### 1) We assume you have the following
+We assume you have the following
 
  - [Python 3.7.x][python3]
  - [pip][pip]
  - [git][git]
  - [virtualenv][virtualenv].
 
-#### 2.1) Install using ./install
+#### Option 1) Install using ./install
 
 ```
 # clone the github repository (this will create a bAnalysis folder)
@@ -27,7 +27,7 @@ cd bAnalysis
 ./run
 ```
 
-#### 2.2) Install manually
+#### Option 2) Install manually
 
 ```
 # clone the github repository (this will create a bAnalysis folder)
@@ -49,13 +49,13 @@ pip install -r requirements.txt
 
 ## Running the graphical-user-interface
 
-#### Using ./run
+#### Option 1) Using ./run
 
 ```
 ./run
 ```
 
-#### Manually
+#### Option 2) Manually
 
 ```
 # activate the virtual environment in bAnalysis_env
@@ -65,7 +65,7 @@ source bAnalysis_env/bin/activate
 python bAnalysisApp/AnalysisApp.py
 ```
 
-## USing the interface
+## Using the interface
 
 Once the interface is up, select a folder with .abf files using the main 'File - Open Folder...' menu.
 
