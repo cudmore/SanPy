@@ -11,7 +11,21 @@ This repository has code to perform action potential analysis. It is primarily d
  - [git][git]
  - [virtualenv][virtualenv].
 
-#### 2) Run the following commands in a terminal window
+#### 2.1) Install using ./install
+
+# clone the github repository (this will create a bAnalysis folder)
+git clone https://github.com/cudmore/bAnalysis.git
+
+# change into the cloned bAnalysis folder
+cd bAnalysis
+
+# install
+./install
+
+# run
+./run
+
+#### 2.2) Install manually
 
 ```
 # clone the github repository (this will create a bAnalysis folder)
@@ -33,6 +47,12 @@ pip install -r requirements.txt
 
 ## Running the graphical-user-interface
 
+#### Using ./run
+
+./run
+
+#### Manually
+
 ```
 # activate the virtual environment in bAnalysis_env
 source bAnalysis_env/bin/activate
@@ -40,6 +60,8 @@ source bAnalysis_env/bin/activate
 # run the graphical-user-interface
 python bAnalysisApp/AnalysisApp.py
 ```
+
+## USing the interface
 
 Once the interface is up, select a folder with .abf files using the main 'File - Open Folder...' menu.
 
@@ -134,7 +156,7 @@ Done:
  - Excel file column width are now (sanely) wider
  - Added max upstroke and min downstroke dV/dt to excel report
  - Added spike errors to excel report
- 
+
 To Do:
  - Convert ALL reported units to milli-seconds
  - Add new window to plot stats on x/y. For example, peak AP amplitude (mV) versus spike width (ms).
@@ -164,7 +186,7 @@ Once you have the .zip file ...
 
 When you run the app you will see a dialog telling you 'Can't be opened because it is from an unidentified developer'.
 
-You need to go into your 'Apple Menu - System Preferences - Security & Privacy' 
+You need to go into your 'Apple Menu - System Preferences - Security & Privacy'
 
 Find the part that says "SpikeAnalysis... was blocked from opening because it is not from an identified developer" and click "Open Anyway"
 
