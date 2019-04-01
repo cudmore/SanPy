@@ -59,3 +59,8 @@ echo '==='
 echo "=== install-bAnalysisApp: Installing required python libraries with 'pip install -r requirements.txt'"
 echo '==='
 pip install -r requirements.txt
+
+deactivate
+
+echo "${GREEN}Install successful${NC}. Run the Analysis app with"
+echo "./run"
