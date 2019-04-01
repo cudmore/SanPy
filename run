@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# Author: Robert H Cudmore
+# Date: 20190401
+#
+# Purpose: Bash script to run bAnalysisApp
+#	1) Make sure virtual environment exists in bAnalysis_env/
+#	2) activate bAnalysis_env
+# 3) run 'python bAnalysisApp/AnalysisApp.py'
+#
+# Usage:
+#	./install
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+if [ ! -d "bAnalysis_env/" ]; then
+	echo '==='
+	echo "=== ${RED}ERROR${NC}: virtual environment does not exist in $PWD/bAnalysis_env"
+	echo "=== please run './install' and try again"
+  echo '=== and try again'
+fi
+
+
+
+if [ -f "bAnalysis_env/bin/activate" ]; then
+	echo '==='
+	echo "=== install-bAnalysisApp: Activating Python 3 virtual environment with 'source bAnalysis_env/bin/activate'"
+	echo '==='
+	source bAnalysis_env/bin/activate
+else
+	echo -e "${RED}ERROR${NC}: Python 3 virtual environment $PWD/bAnalysis_env does not exist?"
+	echo "Make sure virtualenv is installed and try installing again"
+	exit 1
+fi
+
+echo "running 'python bAnalysisApp/Analysis.AnalysisApp.py', interface should appear shortly"
+python bAnalysisApp/AnalysisApp.py
