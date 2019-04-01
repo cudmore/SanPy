@@ -13,6 +13,7 @@ This repository has code to perform action potential analysis. It is primarily d
 
 #### 2.1) Install using ./install
 
+```
 # clone the github repository (this will create a bAnalysis folder)
 git clone https://github.com/cudmore/bAnalysis.git
 
@@ -24,6 +25,7 @@ cd bAnalysis
 
 # run
 ./run
+```
 
 #### 2.2) Install manually
 
@@ -49,7 +51,9 @@ pip install -r requirements.txt
 
 #### Using ./run
 
+```
 ./run
+```
 
 #### Manually
 
