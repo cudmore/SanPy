@@ -190,8 +190,8 @@ class bFileTree(bTree):
 		
 		self.videoFileList = videoFileList # bVideoList object
 
-	def populateVideoFiles(self, videoFileList, doInit=False):
-		print('bVideoFileTree.populateVideoFiles()')
+	def populateFiles(self, videoFileList, doInit=False):
+		print('bFileTree.populateFiles()')
 		
 		self.videoFileList = videoFileList # bVideoList object
 
@@ -250,14 +250,13 @@ class bFileTree(bTree):
 		
 		# get video file path
 		path, item = self._getTreeViewSelection('Path')
-		#print('   path:', path)
 
 		if path is None:
 			# when heading is clicked
 			pass
 		else:
 			# switch video stream
-			self.myParentApp.switchvideo(path, paused=True, gotoFrame=0)
+			self.myParentApp.switchFile(path)
 		
 		"""
 		# switch event list
@@ -274,6 +273,61 @@ class bFileTree(bTree):
 		self.video_frame_slider['to'] = self.vs.streamParams['numFrames']
 		"""
 
+	def setNote(self):
+		print('bVideoFileTree.setNote() not implemented')
+		#self.selection_set(0, 'end')
+
+	def popup(self, event):
+		print('popup()')
+		try:
+			self.popup_menu.tk_popup(event.x_root, event.y_root) #, 0)
+		finally:
+			self.popup_menu.grab_release()
+		
+###################################################################################
+class bMetaTree(bTree):
+	def __init__(self, parent, parentApp, statList, *args, **kwargs):
+		bTree.__init__(self, parent, parentApp, *args, **kwargs)
+		
+		self.statList = statList 
+
+		columns = ['Index', 'Stat']
+		self.treeview['columns'] = columns
+		self.treeview["displaycolumns"] = columns
+		
+		self.treeview.column('Index', minwidth=50, width=50, stretch="no")
+		self.treeview.column('Stat', minwidth=50, width=200, stretch="no")
+		
+		for idx, stat in enumerate(statList):
+			position = "end"
+			#print('bMetaTree() inserting:', idx, stat)
+			self.treeview.insert("" , position, text=str(idx+1), values=(idx, stat))
+			'''
+			self.treeview.column('Index', width=5)
+			self.treeview.column('Stat', width=5)
+			'''
+			
+		self.treeview.bind("<ButtonRelease-1>", self.single_click)
+
+	def single_click(self, event):
+		""" display events """
+		print('=== bMetaTree.single_click()')		
+		
+		# get video file path
+		'''
+		path, item = self._getTreeViewSelection('Path')
+
+		if path is None:
+			# when heading is clicked
+			pass
+		else:
+			# switch video stream
+			self.myParentApp.switchFile(path)
+		'''
+		stat, item = self._getTreeViewSelection('Stat')
+		print('bMetaTree.single_click() stat:', stat)
+		self.myParentApp.plotMeta3()
+		
 	def setNote(self):
 		print('bVideoFileTree.setNote() not implemented')
 		#self.selection_set(0, 'end')

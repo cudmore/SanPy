@@ -63,6 +63,8 @@ class bMenus:
 
 		# window
 		self.windowmenu = tkinter.Menu(menubar, tearoff=0)
+		self.windowmenu.add_command(label="Meta Window", command=self.open_meta_window)
+		
 		"""
 		# put this concept back in
 		self.windowmenu.add_checkbutton(label="Video Files", onvalue=1, offvalue=False, variable=self.showVideoFilesBool, command=self.togglevideofiles)
@@ -89,3 +91,6 @@ class bMenus:
 		#path =  filedialog.askdirectory()
 		#print('path:', path)
 		self.app.loadFolder(path)
+
+	def open_meta_window(self):
+		self.app.metaWindow3()

@@ -49,13 +49,13 @@ Once you load a folder and select a file, it should look something like this.
 
 ## Writing your own Python scripts
 
-See `bBrowser.ipynb`
+See the `examples` folder.
 
 ```
-abf = bLoadFile('data/171116sh_0018.abf')
-sweepNumber = 15
-spikeTimes = bSpikeDetect(abf, sweepNumber, dVthresholdPos=15)
-bPlotSweep(abf, sweepNumber, spikeTimes=spikeTimes)
+from bAnalysis import bAnalysis
+ba = bAnalysis.bAnalysis('data/19114001.abf')
+ba.spikeDetect(dVthresholdPos=100, medianFilter=3, halfHeights=[20,50,80])
+ba.plotSpikes()
 ```
 
 <IMG SRC="img/example1.png" width=600>
@@ -126,6 +126,19 @@ virtualenv --version
  - Export average spike clip
  - Take all stats on average spike clip. Is it different from taking average across all spikes?
 
+### 20190329
+
+Done:
+ - 'Save Spike Report' now prompts for a file name
+ - Added checkbox option to hide/show spike clips. It was getting too slow to always show spike clips when there are a ton of spikes. When you want to see them, you just turn it on.
+ - Excel file column width are now (sanely) wider
+ - Added max upstroke and min downstroke dV/dt to excel report
+ - Added spike errors to excel report
+ 
+To Do:
+ - Convert ALL reported units to milli-seconds
+ - Add new window to plot stats on x/y. For example, peak AP amplitude (mV) versus spike width (ms).
+
 ## Advanced
 
 #### Building a stand alone app (macOS)
@@ -145,7 +158,17 @@ You can find the app in `dist/SpikeAnalysis.app`.
 
     https://www.dropbox.com/l/scl/AAA2ECakLelv0xuo3YE74lFiH-9hdROEwkw
 
+Be sure to download the .zip file by clicking the triple tilde '...' on the top-right of the page and select download.
 
+Once you have the .zip file ...
+
+When you run the app you will see a dialog telling you 'Can't be opened because it is from an unidentified developer'.
+
+You need to go into your 'Apple Menu - System Preferences - Security & Privacy' 
+
+Find the part that says "SpikeAnalysis... was blocked from opening because it is not from an identified developer" and click "Open Anyway"
+
+After that, you are good to go!
 
 [python3]: https://www.python.org/downloads/
 [pip]: https://pip.pypa.io/en/stable/

@@ -1,5 +1,9 @@
-# Author: Robert Cudmore
-# Date: 20190312
+'''
+Author: Robert Cudmore
+Date: 20190312
+
+switchFile(): called when user clicks on file in file list
+'''
 
 import sys, os, json
 
@@ -9,6 +13,7 @@ import pandas as pd
 import tkinter
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter.filedialog import asksaveasfilename
 
 # required to import bAnalysis which does 'import matplotlib.pyplot as plt'
 # without this, tkinter crashes
@@ -23,20 +28,27 @@ import bTree
 from bPlotFrame import bPlotFrame
 
 #__version__ = '20190312'
-__version__ = '20190316'
+#__version__ = '20190316'
+__version__ = '20190328'
 
 #####################################################################################
 class AnalysisApp:
 
 	def __init__(self, path=None):
 
-		self.loadPreferences()
+		self.preferencesLoad()
 
 		self.root = tkinter.Tk()
 		self.root.title('Analysis App')
 
 		self.root.wm_protocol("WM_DELETE_WINDOW", self.onClose)
 		self.root.bind('<Command-q>', self.onClose)
+		
+		'''
+		self._after_id = None
+		self.root.bind("<Configure>", self.schedule_redraw)
+		'''
+		
 		# remove the default behavior of invoking the button with the space key
 		self.root.unbind_class("Button", "<Key-space>")
 
@@ -54,26 +66,27 @@ class AnalysisApp:
 		self.myBorderWidth = 2
 
 		self.analysisList = ['threshold', 'peak', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
-		self.metaAnalysisList = self.analysisList + ['isi (sec)', 'Phase Plot']
+		self.metaAnalysisList = self.analysisList + ['isi (ms)', 'Phase Plot']
 
 		self.metaAnalysisList2 = ['AP Peak (mV)',
 								'MDP (mV)',
 								'Take Off Potential (mV)',
-								'Cycle Length (sec)',
+								'Cycle Length (ms)',
 								'Max Upstroke (dV/dt)',
 								'Max Repolarization (dV/dt)',
-								'AP Duration (sec)',
-								'Diastolic Duration (sec)',
+								'AP Duration (ms)',
+								'Diastolic Duration (ms)',
 								'Early Diastolic Depolarization Rate (slope of Vm)',
-								'Early Diastolic Duration (sec)',
-								'Late Diastolic Duration (sec)']
+								'Early Diastolic Duration (ms)',
+								'Late Diastolic Duration (ms)']
 
 		#self.buildInterface2()
 		self.buildInterface3()
 
 		self.myMenus = bMenus.bMenus(self)
 
-		#self.metaWindow()
+		self.metaWindow = None
+		self.metaWindow3()
 
 		if path is not None:
 			self.loadFolder(path=path)
@@ -81,21 +94,33 @@ class AnalysisApp:
 		# this will not return until we quit
 		self.root.mainloop()
 
+	"""
+	def schedule_redraw(self, event):
+		print('schedule_redraw() event:', event)
+		'''
+		if self._after_id:
+			self.root.after_cancel(self._after_id)
+		self._after_id = self.root.after(2000, self.root.redraw)
+		'''
+	"""
+	
 	def setStatus(self, str='Idle'):
-		print('AnalysisApp.setStatus() str:', str)
-		#self.statusLabel['text'] = 'Status: ', str
+		"""
+		Set program status at top of window
+		"""
+		#print('AnalysisApp.setStatus() str:', str)
 		self.statusLabel.configure(text='Status: ' + str)
 		if str == 'Idle':
 			self.statusLabel['foreground'] = 'black'
 		else:
 			self.statusLabel['foreground'] = 'red'
-		# force tkinter to update
-		#self.statusLabel.update_idletasks()
+		# force label to update
 		self.statusLabel.update()
 
 	def buildDetectionFrame(self, container):
-		#
-		# detection frame
+		"""
+		Detection parameters, in particular dV/dt threshold
+		"""
 		detection_frame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
 
 		row = 0
@@ -106,7 +131,7 @@ class AnalysisApp:
 		# threshold
 		labelDir = ttk.Label(detection_frame, text='dV/dt Threshold')
 		labelDir.grid(row=row, column=1, sticky="w")
-
+		
 		dvdtThreshold = self.configDict['detection']['dvdtThreshold']
 		self.thresholdSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
 		self.thresholdSpinbox.insert(0,dvdtThreshold) # default is 100
@@ -146,11 +171,27 @@ class AnalysisApp:
 		reportButton = ttk.Button(detection_frame, text='Save Spike Report', command=lambda name='reportButton': self.button_Callback(name))
 		reportButton.grid(row=row, column=0, sticky="w")
 
+		row += 1
+
+		#
+		# feedback frame (columnspan = 3)
+		feedback_frame = ttk.Frame(detection_frame, borderwidth=self.myBorderWidth, relief="sunken")
+		feedback_frame.grid(row=row, column=0, sticky="w", columnspan=3)
+		
+
+		# number of detected spikes
+		self.numSpikesLabel = ttk.Label(feedback_frame, text='Number of spikes detected: None')
+		self.numSpikesLabel.grid(row=0, column=0, sticky="w")
+
+		# number of errors during spike detection
+		self.numErrorsLabel = ttk.Label(feedback_frame, text='Number of spike errors: None')
+		self.numErrorsLabel.grid(row=1, column=0, sticky="w")
+
 		return detection_frame
 
+	# not used
 	def buildGlobalOptionsFrame(self, container):
 		plotOptionsFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
-
 
 		# reset axes button
 		resetAxesButton = ttk.Button(plotOptionsFrame, text='Reset Axes', command=lambda name='fullAxisButton': self.button_Callback(name))
@@ -171,7 +212,6 @@ class AnalysisApp:
 		#
 		# plot options frame (checkboxes)
 		plotOptionsFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
-
 
 		# reset axes button
 		resetAxesButton = ttk.Button(plotOptionsFrame, text='Reset Axes', command=lambda name='fullAxisButton': self.button_Callback(name))
@@ -221,8 +261,17 @@ class AnalysisApp:
 		return plotOptionsFrame
 
 	def buildClipsOptionsFrame(self, container):
-		metaPlotFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
-		return metaPlotFrame
+		clipOptionsFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
+
+		# number of detected spikes
+		self.numClipsLabel = ttk.Label(clipOptionsFrame, text='Number of spike clips: None')
+		self.numClipsLabel.grid(row=0, column=0, sticky="w")
+
+		self.showClips = tkinter.BooleanVar(value=False)
+		check = ttk.Checkbutton(clipOptionsFrame, text='Show clips', var=self.showClips, command=lambda name='showClips', var=self.showClips: self.check_Callback(name, var))
+		check.grid(row=1, column=0, sticky="w")
+
+		return clipOptionsFrame
 
 	def buildMetaOptionsFrame(self, container):
 		#
@@ -360,41 +409,6 @@ class AnalysisApp:
 
 		hPane_meta.sashpos(0, horizontalSashPos)
 
-	def metaWindow(self):
-		horizontalSashPos = 300
-
-		newWindow = tkinter.Toplevel(self.root)
-		newWindow.wm_title('Meta Analysis')
-
-		w=500
-		h = 500
-		x = 200
-		y = 200
-		newWindow.geometry('%dx%d+%d+%d' % (w, h, x, y))
-
-		newWindow.grid_rowconfigure(0, weight=1)
-		newWindow.grid_columnconfigure(0, weight=1)
-
-		myPadding = 5
-
-		hPane_meta = ttk.PanedWindow(newWindow, orient="horizontal")
-		hPane_meta.grid(row=0, column=0, sticky="nsew")
-
-		metaFrame = self.buildMetaOptionsFrame(hPane_meta)
-		# DO NOT GRID A FRAME WHEN PLACED INTO PANNED WINDOW
-		#metaFrame.grid(row=1, column=0, sticky="nsew")
-		hPane_meta.add(metaFrame)
-
-		# meta plot
-		metaAnalysisFrame = ttk.Frame(hPane_meta, borderwidth=self.myBorderWidth, relief="sunken")
-		# DO NOT GRID A FRAME WHEN PLACED INTO PANNED WINDOW
-		#metaFrame.grid(row=1, column=0, sticky="nsew")
-		hPane_meta.add(metaAnalysisFrame)
-
-		metaPlot = bPlotFrame(metaAnalysisFrame, self, showToolbar=False, allowSpan=False)
-
-		hPane_meta.sashpos(0, horizontalSashPos)
-
 	def spinBox_Callback(self, name):
 		print('spinBox_Callback:', name)
 		plotEveryPoint = int(self.plotEverySpinbox.get())
@@ -404,12 +418,12 @@ class AnalysisApp:
 		return True
 
 	def button_Callback2(self, buttonName):
-		print('button_Callback2() buttonName:', buttonName)
+		print('AnalysisApp.button_Callback2() buttonName:', buttonName)
 
 		self.metaPlot.plotMeta(self.ba, buttonName, doInit=True)
 
 	def button_Callback(self, buttonName):
-		print('AnalysisApp.button_Callback() buttonName:', buttonName)
+		print('=== AnalysisApp.button_Callback() buttonName:', buttonName)
 		#print('   self.thresholdSpinbox:', self.thresholdSpinbox.get())
 		#print('   self.filterSpinbox:', self.filterSpinbox.get())
 
@@ -475,7 +489,19 @@ class AnalysisApp:
 	def check_Callback(self, name, var):
 		print("check_Callback() name:", name, "var:", var.get())
 		onoff = var.get()
-		self.rawPlot.plotStat(name, onoff)
+		
+		if name == 'showClips':
+			if onoff:
+				print('turn clips on')
+				#todo: need to get x-axis range of raw data plot
+				numDisplayedClips = self.clipsPlot.plotClips_updateSelection(self.ba, xMin=None, xMax=None)
+				self.numClipsLabel['text'] = 'Number of spike clips: ' + str(numDisplayedClips) # todo: this is case where I want signalling infrastructure to update interface
+			else:
+				print('turn clips off')
+				numDisplayedClips = self.clipsPlot.plotClips_updateSelection(self.ba, xMin=0, xMax=0)
+				self.numClipsLabel['text'] = 'Number of spike clips: ' + str(numDisplayedClips) # todo: this is case where I want signalling infrastructure to update interface
+		else:
+			self.rawPlot.plotStat(name, onoff)
 
 	def detectSpikes(self):
 		if self.ba is None:
@@ -503,13 +529,19 @@ class AnalysisApp:
 		#self.ba.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter, startSeconds=startSeconds, stopSeconds=stopSeconds)
 		self.ba.spikeDetect(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter, startSeconds=startSeconds, stopSeconds=stopSeconds) # calls spikeDetect0()
 
+		# refresh number of spikes
+		self.numSpikesLabel['text'] = 'Number of spikes detected: ' + str(self.ba.numSpikes)
+		
+		# refresh number of detection errors
+		self.numErrorsLabel['text'] = 'Number of spike errors: ' + str(self.ba.numSpikeErrors)
+		
 		# refresh raw
 		self.rawPlot.plotRaw(self.ba, plotEveryPoint=plotEveryPoint)
 
 		# refresh deriv
 		self.derivPlot.plotDeriv(self.ba, plotEveryPoint=plotEveryPoint)
 
-		# refresh deriv
+		# refresh clips
 		self.clipsPlot.plotClips(self.ba, plotEveryPoint=plotEveryPoint)
 
 		# refresh all stat plots
@@ -531,13 +563,13 @@ class AnalysisApp:
 			print('error: did not find path:', path)
 			return
 
-		self.setStatus('Loading folder')
+		self.setStatus('Loading folder ' + path)
 
 		self.path = path
 		self.configDict['lastPath'] = path
 
 		self.fileList = bFileList.bFileList(path)
-		self.fileListTree.populateVideoFiles(self.fileList, doInit=True)
+		self.fileListTree.populateFiles(self.fileList, doInit=True)
 
 		# initialize with first video in path
 		firstVideoPath = ''
@@ -546,28 +578,38 @@ class AnalysisApp:
 
 		self.setStatus()
 
-	def switchvideo(self, videoPath, paused=False, gotoFrame=None):
-		print('=== VideoApp.switchvideo() videoPath:', videoPath, 'paused:', paused, 'gotoFrame:', gotoFrame)
+	def switchFile(self, filePath):
+		"""
+		Switch interface to a different file
+		Called by bFileTree.single_click()
+		"""
+		print('=== AnalysisApp.switchFile() filePath:', filePath)
 
-		print('   videoPath:', videoPath)
+		self.currentFilePath = filePath
 
-		self.currentFilePath = videoPath
-
-		self.setStatus('Loading file ' + videoPath)
-		self.ba = bAnalysis(file=videoPath)
+		self.setStatus('Loading file ' + filePath)
+		self.ba = bAnalysis(file=filePath)
 
 		self.detectSpikes()
 
 		self.setStatus('Plotting Results')
 		plotEveryPoint = int(self.plotEverySpinbox.get())
+		
+		# plot raw
 		self.rawPlot.plotRaw(self.ba, plotEveryPoint=plotEveryPoint, doInit=True)
+		
+		# plot deriv
 		self.derivPlot.plotDeriv(self.ba, plotEveryPoint=plotEveryPoint, doInit=True)
 
-		# just for testing
+		# plot clips
+		showClips = self.showClips.get()
+		if showClips:
+			numDisplayedClips = self.clipsPlot.plotClips_updateSelection(self.ba, xMin=None, xMax=None)
+			self.numClipsLabel['text'] = 'Number of spike clips: ' + str(numDisplayedClips) # todo: this is case where I want signalling infrastructure to update interface
+		
+		# plot meta
 		statName = 'peak'
 		self.metaPlot.plotMeta(self.ba, statName, doInit=True)
-
-		self.clipsPlot.plotClips_updateSelection(self.ba, xMin=None, xMax=None)
 
 		self.setStatus()
 
@@ -575,15 +617,27 @@ class AnalysisApp:
 		self.rawPlot.setFullAxis()
 		self.derivPlot.setFullAxis()
 
-		self.clipsPlot.plotClips_updateSelection(self.ba, xMin=None, xMax=None)
+		showClips = self.showClips.get()
+		if showClips:
+			numDisplayedClips = self.clipsPlot.plotClips_updateSelection(self.ba, xMin=None, xMax=None)
+			self.numClipsLabel['text'] = 'Number of spike clips: ' + str(numDisplayedClips) # todo: this is case where I want signalling infrastructure to update interface
+
 		self.metaPlot.plotMeta_updateSelection(self.ba, xMin=None, xMax=None)
+		if self.metaPlot3 is not None:
+			self.metaPlot3.plotMeta_updateSelection(self.ba, xMin=None, xMax=None)
 
 	def setXAxis(self, theMin, theMax):
 		self.rawPlot.setXAxis(theMin, theMax)
 		self.derivPlot.setXAxis(theMin, theMax)
 
-		self.clipsPlot.plotClips_updateSelection(self.ba, theMin, theMax)
+		showClips = self.showClips.get()
+		if showClips:
+			numDisplayedClips = self.clipsPlot.plotClips_updateSelection(self.ba, theMin, theMax)
+			self.numClipsLabel['text'] = 'Number of spike clips: ' + str(numDisplayedClips) # todo: this is case where I want signalling infrastructure to update interface
+
 		self.metaPlot.plotMeta_updateSelection(self.ba, theMin, theMax)
+		if self.metaPlot3 is not None:
+			self.metaPlot3.plotMeta_updateSelection(self.ba, theMin, theMax)
 
 	def selectSpike(self, spikeNumber):
 		print('AnalysisApp.selectSpike() spikeNumber:', spikeNumber)
@@ -593,73 +647,62 @@ class AnalysisApp:
 		filePath, fileName = os.path.split(os.path.abspath(self.currentFilePath))
 		fileBaseName, extension = os.path.splitext(fileName)
 		excelFilePath = os.path.join(filePath, fileBaseName + '.xlsx')
-		print('AnalysisApp.report() saving', excelFilePath)
+		
+		#print('AnalysisApp.report() saving', excelFilePath)
+		print('Asking user for file name to save...')
 
-		writer = pd.ExcelWriter(excelFilePath, engine='xlsxwriter')
+		#savefile will be full path to user specified file
+		savefile = asksaveasfilename(filetypes=(("Excel files", "*.xlsx"),
+									("All files", "*.*") ),
+									initialdir=filePath,
+									initialfile=fileBaseName + '.xlsx')			   
+														 
+		# always grab a df to the entire analysis (not sure what I will do with this)
+		df = self.ba.report() # report() is my own 'bob' verbiage
 
-		df2 = self.ba.report2() # report2 is more 'cardiac'
-		df2.to_excel(writer, sheet_name='Sheet1')
+		if savefile:
+			print('Saving user specified file:', savefile)
+			excelFilePath = savefile
+			writer = pd.ExcelWriter(excelFilePath, engine='xlsxwriter')
+	
+			#
+			# cardiac style analysis to sheet 'cardiac'
+			df2 = self.ba.report2() # report2 is more 'cardiac'
+			df2.to_excel(writer, sheet_name='cardiac')
 
-		df = self.ba.report() # report() is my own verbiage
-		df.to_excel(writer, sheet_name='Sheet2')
+			# set the column widths in excel sheet 'cardiac'
+			columnWidth = 20
+			worksheet = writer.sheets['cardiac']  # pull worksheet object
+			for idx, col in enumerate(df2):  # loop through all columns
+				worksheet.set_column(idx, idx, columnWidth)  # set column width
 
-		df = pd.DataFrame(self.clipsPlot.meanClip)
-		df.to_excel(writer, sheet_name='Avg Spike')
+	
+			#
+			# entire (verbose) analysis to sheet 'bob'
+			df.to_excel(writer, sheet_name='bob')
 
-		writer.save()
+			#
+			# mean spike clip
+			df = pd.DataFrame(self.clipsPlot.meanClip)
+			df.to_excel(writer, sheet_name='Avg Spike')
+	
+			writer.save()
+	
+			#
+			# always save a text file
+			textFilePath = os.path.join(filePath, fileBaseName + '.txt')
+			print('Always saving .txt file:', textFilePath)
+			df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
 
-		self.setStatus('Saved ' + excelFilePath)
-
-		#
-		# save a text file
-		textFilePath = os.path.join(filePath, fileBaseName + '.txt')
-		df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
-
-		'''
-		# display all stats in a window
-		df_col = df.columns.values # df_col is numpy.ndarray
-		#df_col = np.insert(df_col, 0, 'index')
-		df_col = tuple(df_col)
-		print('df_col:', df_col)
-
-		# create a window
-		newWindow = tkinter.Toplevel(self.root)
-		newWindow.wm_title('Spike Report')
-
-		newWindow.grid_rowconfigure(0, weight=1)
-		newWindow.grid_columnconfigure(0, weight=1)
-
-		myPadding = 5
-
-		# self.treeview = ttk.Treeview(self, selectmode="browse", show=['headings'], *args, **kwargs)
-		tree = ttk.Treeview(newWindow, selectmode="browse", show=['headings'])
-		tree.grid(row=0,column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-
-		myScrollbar = ttk.Scrollbar(newWindow, orient="vertical", command = tree.yview)
-		myScrollbar.grid(row=0, column=0, sticky='nse', padx=myPadding, pady=myPadding)
-		tree.configure(yscrollcommand=myScrollbar.set)
-
-		myScrollbar_h = ttk.Scrollbar(newWindow, orient="horizontal", command = tree.xview)
-		myScrollbar_h.grid(row=0, column=0, sticky='nse', padx=myPadding, pady=myPadding)
-		tree.configure(xscrollcommand=myScrollbar_h.set)
-
-		tree["columns"] = df_col # rhs is tuple
-		for idx, column in enumerate(df_col):
-			tree.column(column, width=10)
-			#tree.heading(column, text=column, command=lambda c=column: self.sort_column(c, False))
-			tree.heading(column, text=column)
-
-		for index, row in df.iterrows():
-			#print('index:', index, 'row:', row.values)
-			rowTuple = tuple(row.values)
-			position = "end"
-			tree.insert("" , position, text=str(index+1), values=rowTuple)
-		'''
+			self.setStatus('Saved ' + excelFilePath)
+		else:
+			print('Save aborted by user')
+			
 
 	#################################################################################
 	# preferences
 	#################################################################################
-	def loadPreferences(self):
+	def preferencesLoad(self):
 		if getattr(sys, 'frozen', False):
 			# we are running in a bundle (frozen)
 			bundle_dir = sys._MEIPASS
@@ -671,11 +714,11 @@ class AnalysisApp:
 		self.optionsFile = os.path.join(bundle_dir, 'AnalysisApp.json')
 
 		if os.path.isfile(self.optionsFile):
-			print('    loading options file:', self.optionsFile)
+			print('	preferencesLoad() loading options file:', self.optionsFile)
 			with open(self.optionsFile) as f:
 				self.configDict = json.load(f)
 		else:
-			print('    using program provided default options')
+			print('	preferencesLoad() using program provided default options')
 			self.preferencesDefaults()
 
 	def preferencesDefaults(self):
@@ -694,8 +737,8 @@ class AnalysisApp:
 		self.configDict['display'] = {}
 		self.configDict['display']['plotEveryPoint'] = 10
 
-	def savePreferences(self):
-		print('=== AnalysisApp.savePreferences() file:', self.optionsFile)
+	def preferencesSave(self):
+		print('=== AnalysisApp.preferencesSave() file:', self.optionsFile)
 
 		x = self.root.winfo_x()
 		y = self.root.winfo_y()
@@ -734,9 +777,89 @@ class AnalysisApp:
 		self.isRunning = False
 		self.vs.stop()
 		'''
-		self.savePreferences()
+		self.preferencesSave()
 		self.root.quit()
 
+	#################################################################################
+	# meta window
+	#################################################################################
+	'''
+	def button_Callback3(self, buttonName):
+		print('AnalysisApp.button_Callback3() buttonName:', buttonName)
+
+		if self.metaPlot3 is not None:
+			self.metaPlot3.plotMeta(self.ba, buttonName, doInit=True)
+	'''
+	
+	def buildMetaOptionsFrame3(self, container):
+
+		statList = self.metaAnalysisList + self.metaAnalysisList2
+		statList = ['Time (sec)'] + statList
+		
+		metaStatFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
+		metaStatFrame.grid(row=0, column=0, sticky="nsew")
+
+		metaStatFrame.grid_rowconfigure(0, weight=1)
+		metaStatFrame.grid_columnconfigure(0, weight=1)
+		metaStatFrame.grid_columnconfigure(1, weight=1)
+		metaStatFrame.grid_columnconfigure(2, weight=1)
+
+		#
+		# y
+		#
+
+		self.metaTree_y = bTree.bMetaTree(metaStatFrame, self, statList=statList)
+		self.metaTree_y.grid(row=0,column=0, sticky="nsew")
+
+		#
+		# x
+		#
+		self.metaTree_x = bTree.bMetaTree(metaStatFrame, self, statList=statList)
+		self.metaTree_x.grid(row=0,column=1, sticky="nsew")
+
+
+		metaPlotFrame = ttk.Frame(metaStatFrame, borderwidth=self.myBorderWidth, relief="sunken")
+		metaPlotFrame.grid(row=0, column=2, sticky="nsew")
+		
+		self.metaPlot3 = bPlotFrame(metaPlotFrame, self, showToolbar=True, allowSpan=False)
+	
+		return self.metaPlot3
+
+	def plotMeta3(self):
+		yStat, item = self.metaTree_y._getTreeViewSelection('Stat')
+		xStat, item = self.metaTree_x._getTreeViewSelection('Stat')
+		print('AnalysisApp.plotMeta3() yStat:', yStat, 'xStat:', xStat)
+		self.metaPlot3.plotMeta3(xStat, yStat)
+		
+		
+	def onClose3(self, event=None):
+		print('onClose3()')
+		self.metaWindow.destroy()
+		self.metaWindow = None
+		self.metaPlot3 = None
+		
+	def metaWindow3(self):
+		if self.metaWindow is None:
+			horizontalSashPos = 300
+
+			self.metaWindow = tkinter.Toplevel(self.root)
+			self.metaWindow.wm_title('Meta Analysis')
+
+			self.metaWindow.wm_protocol("WM_DELETE_WINDOW", self.onClose3)
+
+			w=1500
+			h = 1000
+			x = 200
+			y = 10
+			self.metaWindow.geometry('%dx%d+%d+%d' % (w, h, x, y))
+
+			self.metaWindow.grid_rowconfigure(0, weight=1)
+			self.metaWindow.grid_columnconfigure(0, weight=1)
+
+			self.metaPlot3 = self.buildMetaOptionsFrame3(self.metaWindow)
+		else:
+			print('meta window 3 is already open?')
+					
 if __name__ == '__main__':
 
 	print('starting AnalysisApp __main__')
