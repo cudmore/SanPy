@@ -17,23 +17,21 @@ NC='\033[0m' # No Color
 
 if [ ! -d "bAnalysis_env/" ]; then
 	echo '==='
-	echo "=== ${RED}ERROR${NC}: virtual environment does not exist in $PWD/bAnalysis_env"
-	echo "=== please run './install' and try again"
-  echo '=== and try again'
+	echo -e "=== ${RED}ERROR${NC}: virtual environment does not exist in $PWD/bAnalysis_env"
+	echo "=== please install with './install' and try again"
+  echo '==='
+	exit 1
 fi
 
 
 
 if [ -f "bAnalysis_env/bin/activate" ]; then
 	echo '==='
-	echo "=== install-bAnalysisApp: Activating Python 3 virtual environment with 'source bAnalysis_env/bin/activate'"
-	echo '==='
+	echo "=== run bAnalysisApp: Activating Python 3 virtual environment with 'source bAnalysis_env/bin/activate'"
 	source bAnalysis_env/bin/activate
-else
-	echo -e "${RED}ERROR${NC}: Python 3 virtual environment $PWD/bAnalysis_env does not exist?"
-	echo "Make sure virtualenv is installed and try installing again"
-	exit 1
 fi
 
-echo "running 'python bAnalysisApp/Analysis.AnalysisApp.py', interface should appear shortly"
+echo "=== run bAnalysisApp: running 'python bAnalysisApp/Analysis.AnalysisApp.py'"
+echo "=== run bAnalysisApp: interface should appear shortly"
+echo '==='
 python bAnalysisApp/AnalysisApp.py

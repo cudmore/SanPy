@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 
 if ! type "virtualenv" > /dev/null; then
 	echo '==='
-	echo "=== install-bAnalysisApp: Installing virtualenv"
+	echo "=== install bAnalysisApp: Installing virtualenv"
 	echo '==='
 	#sudo /usr/bin/easy_install virtualenv
 	pip install virtualenv
@@ -26,10 +26,10 @@ fi
 
 if [ ! -d "bAnalysis_env/" ]; then
 	echo '==='
-	echo "=== install-bAnalysisApp: Making Python 3 virtual environment in $PWD/bAnalysis_env"
+	echo "=== install bAnalysisApp: Making Python 3 virtual environment in $PWD/bAnalysis_env"
 	echo '==='
 	if ! type "virtualenv" > /dev/null; then
-		echo -e 'install-bAnalysisApp: ${RED}ERROR${NC}: DID NOT INSTALL VIRTUALENV -->> ABORTING'
+		echo -e 'install bAnalysisApp: ${RED}ERROR${NC}: DID NOT INSTALL VIRTUALENV -->> ABORTING'
 		exit 0
 	else
 		mkdir bAnalysis_env
@@ -37,7 +37,7 @@ if [ ! -d "bAnalysis_env/" ]; then
 	fi
 else
 	echo '==='
-	echo "=== install-bAnalysisApp: Python 3 virtual environment already exists in $PWD/bAnalysis_env"
+	echo "=== install bAnalysisApp: Python 3 virtual environment already exists in $PWD/bAnalysis_env"
 	echo '==='
 fi
 
@@ -45,7 +45,7 @@ fi
 
 if [ -f "bAnalysis_env/bin/activate" ]; then
 	echo '==='
-	echo "=== install-bAnalysisApp: Activating Python 3 virtual environment with 'source bAnalysis_env/bin/activate'"
+	echo "=== install bAnalysisApp: Activating Python 3 virtual environment with 'source bAnalysis_env/bin/activate'"
 	echo '==='
 	source bAnalysis_env/bin/activate
 else
@@ -56,11 +56,10 @@ fi
 
 
 echo '==='
-echo "=== install-bAnalysisApp: Installing required python libraries with 'pip install -r requirements.txt'"
+echo "=== install bAnalysisApp: Installing required python libraries with 'pip install -r requirements.txt'"
 echo '==='
 pip install -r requirements.txt
 
 deactivate
 
-echo "${GREEN}Install successful${NC}. Run the Analysis app with"
-echo "./run"
+echo -e "${GREEN}Install successful${NC}. Run the Analysis app with './run'"
