@@ -13,6 +13,11 @@ matplotlib.use("TkAgg")
 
 from matplotlib.widgets import SpanSelector
 
+# for color
+# https://chrisalbon.com/python/basics/set_the_color_of_a_matplotlib/
+# https://stackoverflow.com/questions/17682216/scatter-plot-and-color-mapping-in-python
+import matplotlib.pyplot as plt
+
 #####################################################################################
 class bPlotFrame(ttk.Frame):
 
@@ -108,8 +113,11 @@ class bPlotFrame(ttk.Frame):
 		#self.singlePointSelection, = self.axes.plot([], [], 'oc', markersize=10) # cyan circle
 		
 		
-		self.metaLines, = self.axes.plot([],[], 'ok', picker=5) # REMEMBER ',' ON LHS
-		self.metaLines3, = self.axes.plot([],[], 'ok', picker=5) # REMEMBER ',' ON LHS
+		self.metaLines = None
+		self.metaLines3 = None
+		#self.metaLines, = self.axes.plot([],[], 'ok', cmap=plt.get_cmap('inferno'), picker=5) # REMEMBER ',' ON LHS
+		#self.metaLines, = self.axes.scatter([],[], 'ok', c=[], cmap=plt.cm.RdGy, picker=5) # REMEMBER ',' ON LHS
+		#self.metaLines3, = self.axes.plot([],[], 'ok', picker=5) # REMEMBER ',' ON LHS
 
 		self.metax = []
 		self.metay = []
@@ -488,7 +496,8 @@ class bPlotFrame(ttk.Frame):
 		yLabel = ''
 
 		# clear existing
-		#self.metaLines3.remove()
+		if self.metaLines3 is not None:
+			self.metaLines3.remove()
 
 		# x
 		for currentAxis in ['x', 'y']:
@@ -611,8 +620,12 @@ class bPlotFrame(ttk.Frame):
 		# replot
 		print('len(xVal):', len(xVal))
 		print('len(yVal):', len(yVal))
+		'''
 		self.metaLines3.set_xdata(xVal)
 		self.metaLines3.set_ydata(yVal)
+		'''
+		tmpColor = range(len(xVal))
+		self.metaLines3 = self.axes.scatter(xVal,yVal, c=tmpColor, cmap=plt.cm.RdGy)
 
 		#
 		# set axis
@@ -646,11 +659,14 @@ class bPlotFrame(ttk.Frame):
 		xLabel = ''
 
 		# clear existing
-		self.metaLines.remove()
+		if self.metaLines is not None:
+			self.metaLines.remove()
 
+		'''
 		if doInit:
 			self.metaLines, = self.axes.plot([],[], 'ok', picker=5) # REMEMBER ',' ON LHS
-
+		'''
+		
 		if statName == 'threshold':
 			pnt = [x['thresholdPnt'] for x in self.controller.ba.spikeDict]
 			pnt = self.controller.ba.abf.sweepX[pnt]
@@ -790,8 +806,14 @@ class bPlotFrame(ttk.Frame):
 
 		#
 		# replot
+		'''
 		self.metaLines.set_ydata(val)
 		self.metaLines.set_xdata(pnt)
+		'''
+		tmpColor = pnt
+		#self.metaLines = self.axes.scatter(pnt,val, 'o', c=tmpColor, cmap=plt.cm.RdGy, picker=5)
+		self.metaLines = self.axes.scatter(pnt,val, c=tmpColor, cmap=plt.cm.RdGy)
+
 
 		#
 		# set axis
