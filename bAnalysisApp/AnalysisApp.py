@@ -3,9 +3,11 @@ Author: Robert Cudmore
 Date: 20190312
 
 switchFile(): called when user clicks on file in file list
+report(): to generate output reports
+
 '''
 
-import sys, os, json
+import sys, os, json, collections
 
 import numpy as np
 import pandas as pd
@@ -86,7 +88,7 @@ class AnalysisApp:
 		self.myMenus = bMenus.bMenus(self)
 
 		self.metaWindow = None
-		self.metaWindow3()
+		#self.metaWindow3()
 
 		if path is not None:
 			self.loadFolder(path=path)
@@ -665,6 +667,26 @@ class AnalysisApp:
 			excelFilePath = savefile
 			writer = pd.ExcelWriter(excelFilePath, engine='xlsxwriter')
 	
+			#
+			# header sheet
+			headerDict = collections.OrderedDict()
+			headerDict['filePath'] = [self.ba.file]
+			headerDict['dateAnalyzed'] = [self.ba.dateAnalyzed]
+			headerDict['dVthreshold'] = [self.ba.dVthreshold]
+			headerDict['medianFilter'] = [self.ba.medianFilter]
+			headerDict['startSeconds'] = [self.ba.startSeconds]
+			headerDict['stopSeconds'] = [self.ba.stopSeconds]
+			# dict to pandas dataframe
+			df = pd.DataFrame(headerDict).T
+			# pandas dataframe to excel sheet 'header'
+			df.to_excel(writer, sheet_name='header')
+			
+			# set the column widths in excel sheet 'cardiac'
+			columnWidth = 50
+			worksheet = writer.sheets['header']  # pull worksheet object
+			for idx, col in enumerate(df):  # loop through all columns
+				worksheet.set_column(idx, idx, columnWidth)  # set column width
+
 			#
 			# cardiac style analysis to sheet 'cardiac'
 			df2 = self.ba.report2() # report2 is more 'cardiac'

@@ -25,8 +25,7 @@ Plots:
 	Plot vm, derivative, spike stats etc
 '''
 
-import os, math, time
-import collections
+import os, math, time, collections, datetime
 
 import numpy as np
 import pandas as pd
@@ -39,9 +38,16 @@ import pyabf # see: https://github.com/swharden/pyABF
 
 class bAnalysis:
 	def __init__(self, file=None):
-		self.file = file
+		self.file = file # todo: change this to filePath
 		self._abf = None
 
+		# detection parameters specified by user
+		self.dateAnalyzed = None
+		self.dVthreshold = None
+		self.medianFilter = None
+		self.startSeconds = None
+		self.stopSeconds = None
+		
 		self.spikeDict = [] # a list of dict
 
 		self.spikeTimes = [] # created in self.spikeDetect()
@@ -110,6 +116,19 @@ class bAnalysis:
 		
 		print('bAnalysis.spikeDetect0() dVthresholdPos:', dVthresholdPos, 'medianFilter:', medianFilter, 'startSeconds:', startSeconds, 'stopSeconds:', stopSeconds)
 
+		#
+		# header
+		now = datetime.datetime.now()
+		dateStr = now.strftime('%Y-%m-%d %H:%M:%S')
+		self.dateAnalyzed = dateStr
+
+		self.dVthreshold = dVthresholdPos
+		self.medianFilter = medianFilter
+		self.startSeconds = startSeconds
+		self.stopSeconds = stopSeconds
+		
+		#
+		#
 		startPnt = 0
 		stopPnt = len(self.abf.sweepX) - 1
 		secondsOffset = 0
@@ -267,6 +286,8 @@ class bAnalysis:
 			self.spikeDict[i]['earlyDiastolicDuration_ms'] = None # seconds between preLinearFitPnt0 and preLinearFitPnt1
 			self.spikeDict[i]['preLinearFitVal0'] = None
 			self.spikeDict[i]['preLinearFitVal1'] = None
+			# m,b = np.polyfit(x, y, 1)
+			self.spikeDict[i]['earlyDiastolicDurationRate'] = None # fit of y=preLinearFitVal 0/1 versus x=preLinearFitPnt 0/1
 
 			self.spikeDict[i]['preSpike_dvdt_max_pnt'] = None
 			self.spikeDict[i]['preSpike_dvdt_max_val'] = None # in units mV
@@ -283,6 +304,9 @@ class bAnalysis:
 			self.spikeDict[i]['apDuration_ms'] = None
 			self.spikeDict[i]['diastolicDuration_ms'] = None
 
+			# The nonlinear late diastolic depolarization phase was estimated as the duration between 1% and 10% dV/dt
+			# todo: not done !!!!!!!!!!
+			
 			if i==0 or i==len(self.spikeTimes)-1:
 				continue
 			else:
@@ -312,7 +336,14 @@ class bAnalysis:
 				preLinearFitPnt1 = preMinPnt + math.floor(timeInterval_pnts * stopLinearFit)
 				preLinearFitVal0 = vm[preLinearFitPnt0]
 				preLinearFitVal1 = vm[preLinearFitPnt1]
-
+				# a linear fit where 'm,b = np.polyfit(x, y, 1)'
+				# m*x+b"
+				xFit = self.abf.sweepX[preLinearFitPnt0:preLinearFitPnt1]
+				yFit = vm[preLinearFitPnt0:preLinearFitPnt1]
+				mLinear, bLinear = np.polyfit(xFit, yFit, 1) # m is slope, b is intercept
+				#print('mLinear:', mLinear, 'bLinear:', bLinear)
+				self.spikeDict[i]['earlyDiastolicDurationRate'] = mLinear
+				
 				#
 				# maxima in dv/dt before spike
 				preRange = dvdt[self.spikeTimes[i]:peakPnt]

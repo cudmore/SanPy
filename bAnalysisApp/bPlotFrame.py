@@ -103,13 +103,18 @@ class bPlotFrame(ttk.Frame):
 			analysisLine, = self.axes.plot([],[], marker + markerColor) # REMEMBER ',' ON LHS
 			self.analysisLines[analysis] = analysisLine
 
+		#
+		# single point selection
+		#self.singlePointSelection, = self.axes.plot([], [], 'oc', markersize=10) # cyan circle
+		
+		
 		self.metaLines, = self.axes.plot([],[], 'ok', picker=5) # REMEMBER ',' ON LHS
 		self.metaLines3, = self.axes.plot([],[], 'ok', picker=5) # REMEMBER ',' ON LHS
 
 		self.metax = []
 		self.metay = []
 
-		self.singleSpikeSelection, = self.axes.plot([],[], 'oy') # REMEMBER ',' ON LHS
+		self.singleSpikeSelection, = self.axes.plot([],[], 'oc', markersize=10) # REMEMBER ',' ON LHS
 
 	def onclick(self, event):
 		print('bPlotFrame.onclick()')
@@ -120,35 +125,59 @@ class bPlotFrame(ttk.Frame):
 		'''
 
 	def onpick(self, event):
+		""" select and propogate user selection of a single spike"""
+		
 		print('bPlotFrame.onpick() event:', event)
 		#print('   event.ind:', event.ind)
+		
+		# the x/y data we are plotting
 		thisline = event.artist
 		xdata = thisline.get_xdata()
-		#ydata = thisline.get_ydata()
+		ydata = thisline.get_ydata()
+
 		ind = event.ind
 		print('   event.ind:', ind)
-		#print('xdata:', xdata)
-
 		ind = int(ind[0])
 
-		print('   xdata[ind]:', xdata[ind])
+		print('   xdata[ind]:', xdata[ind], 'ydata[ind]:', ydata[ind])
 
-		# select spike 'ind' in raw data
+		#
+		# select spike in this plot
+		xDataSinglePoint = xdata[ind]
+		yDataSinglePoint = ydata[ind]
+		self.singleSpikeSelection.set_xdata(xDataSinglePoint)
+		self.singleSpikeSelection.set_ydata(yDataSinglePoint)
+		self.canvas.draw()
+		
+		#
+		# propagate selected spike to other views
+		# e.g. select spike in (raw data, meta plot 3)
 		self.controller.selectSpike(ind)
 
 	def onpick3(self, event):
 		print('bPlotFrame.onpick3() event:', event)
-		#print('   event.ind:', event.ind)
+
+		# the x/y data we are plotting
 		thisline = event.artist
 		xdata = thisline.get_xdata()
-		#ydata = thisline.get_ydata()
+		ydata = thisline.get_ydata()
+
 		ind = event.ind
 		print('   event.ind:', ind)
 
+		print('todo: CRITICAL ... fix spike selection in meta plot 3 !!!!!!!!!!!')
 		ind = int(ind[0])
 		ind += 2
 		
-		print('   xdata[ind]:', xdata[ind])
+		print('   xdata[ind]:', xdata[ind], 'ydata[ind]:', ydata[ind])
+
+		#
+		# select spike in this plot
+		xDataSinglePoint = xdata[ind]
+		yDataSinglePoint = ydata[ind]
+		self.singleSpikeSelection.set_xdata(xDataSinglePoint)
+		self.singleSpikeSelection.set_ydata(yDataSinglePoint)
+		self.canvas.draw()
 
 		# select spike 'ind' in raw data
 		self.controller.selectSpike(ind)
@@ -257,7 +286,7 @@ class bPlotFrame(ttk.Frame):
 		#
 		# plot
 		if onoff:
-			self.analysisLines[name].set_ydata(val)
+			self.analysisLines[name].set_ydata(val) #todo: stupid to have self.analysisLines as dict. We are only ever plotting one stat !!!
 			self.analysisLines[name].set_xdata(pnt)
 		else:
 			self.analysisLines[name].set_ydata([])
@@ -721,9 +750,9 @@ class bPlotFrame(ttk.Frame):
 		if statName == 'AP Duration (ms)':
 			#todo: fix this, 'apDuration' is only calculated for spike # > 0
 			# could use 'thresholdSec' and not index sweepX[]
-			pnt = [x['thresholdPnt'] for x in self.controller.ba.spikeDict if x['thresholdPnt'] is not None and x['apDuration'] is not None]
+			pnt = [x['thresholdPnt'] for x in self.controller.ba.spikeDict if x['thresholdPnt'] is not None and x['apDuration_ms'] is not None]
 			pnt = self.controller.ba.abf.sweepX[pnt]
-			val = [x['apDuration'] for x in self.controller.ba.spikeDict if x['apDuration']]
+			val = [x['apDuration_ms'] for x in self.controller.ba.spikeDict if x['apDuration_ms']]
 			xLabel = 'Seconds'
 			yLabel = statName
 
@@ -738,10 +767,11 @@ class bPlotFrame(ttk.Frame):
 			yLabel = statName
 
 		if statName == 'Early Diastolic Depolarization Rate (slope of Vm)':
-			print('Not implemented')
-			pnt = [0]
-			val = [0]
-			xLabel = 'Not Implemented'
+			# earlyDiastolicDurationRate
+			pnt = [x['thresholdPnt'] for x in self.controller.ba.spikeDict if x['thresholdPnt'] is not None and x['earlyDiastolicDurationRate'] is not None]
+			pnt = self.controller.ba.abf.sweepX[pnt]
+			val = [x['earlyDiastolicDurationRate'] for x in self.controller.ba.spikeDict if x['earlyDiastolicDurationRate']]
+			xLabel = 'Seconds'
 			yLabel = statName
 
 		if statName == 'Early Diastolic Duration (ms)':
@@ -774,8 +804,8 @@ class bPlotFrame(ttk.Frame):
 		xMax = max(ba.abf.sweepX)
 		self.axes.set_xlim(xMin, xMax)
 
-		yMin = min(val)
-		yMax = max(val)
+		yMin = np.nanmin(val)
+		yMax = np.nanmax(val)
 		yRange = abs(yMax-yMin)
 		tenPercentRange = yRange * 0.1
 		self.axes.set_ylim(yMin-tenPercentRange, yMax+tenPercentRange)
