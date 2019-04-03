@@ -67,7 +67,7 @@ class AnalysisApp:
 		self.myPadding = 5
 		self.myBorderWidth = 2
 
-		self.analysisList = ['threshold', 'peak', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
+		self.analysisList = ['threshold', 'peak', 'peakHeight', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
 		self.metaAnalysisList = self.analysisList + ['isi (ms)', 'Phase Plot']
 
 		self.metaAnalysisList2 = ['AP Peak (mV)',
@@ -489,7 +489,7 @@ class AnalysisApp:
 			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
 
 	def check_Callback(self, name, var):
-		print("check_Callback() name:", name, "var:", var.get())
+		print("AnalysisApp.check_Callback() name:", name, "var:", var.get())
 		onoff = var.get()
 		
 		if name == 'showClips':
@@ -828,18 +828,17 @@ class AnalysisApp:
 
 		#
 		# y
-		#
-
 		self.metaTree_y = bTree.bMetaTree(metaStatFrame, self, statList=statList)
 		self.metaTree_y.grid(row=0,column=0, sticky="nsew")
 
 		#
 		# x
-		#
 		self.metaTree_x = bTree.bMetaTree(metaStatFrame, self, statList=statList)
 		self.metaTree_x.grid(row=0,column=1, sticky="nsew")
 
 
+		#
+		# plot
 		metaPlotFrame = ttk.Frame(metaStatFrame, borderwidth=self.myBorderWidth, relief="sunken")
 		metaPlotFrame.grid(row=0, column=2, sticky="nsew")
 		

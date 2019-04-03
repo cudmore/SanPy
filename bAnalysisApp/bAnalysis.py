@@ -112,6 +112,8 @@ class bAnalysis:
 		Returns:
 			self.thresholdTimes (pnts): the time of each threshold crossing
 			self.spikeTimes (pnts): the time before each threshold crossing when dv/dt crosses 15% of its max
+			self.filteredVm: 
+			self.filtereddVdt: 
 		"""
 		
 		print('bAnalysis.spikeDetect0() dVthresholdPos:', dVthresholdPos, 'medianFilter:', medianFilter, 'startSeconds:', startSeconds, 'stopSeconds:', stopSeconds)
@@ -215,8 +217,8 @@ class bAnalysis:
 				print('   error: bAnalysis.spikeDetect0() IndexError spike', i, spikeTime, 'percentMaxVal:', percentMaxVal)
 				spikeTimes1.append(spikeTime)
 
-		self.thresholdTimes = spikeTimes0
-		self.spikeTimes = spikeTimes1
+		self.thresholdTimes = spikeTimes0 # points
+		self.spikeTimes = spikeTimes1 # points
 
 		return self.spikeTimes, self.thresholdTimes, self.filteredVm, self.filteredDeriv
 
@@ -271,38 +273,44 @@ class bAnalysis:
 			spikeDict['peakVal'] = peakVal
 			spikeDict['peakSec'] = (peakPnt / self.abf.dataPointsPerMs) / 1000
 
+			spikeDict['peakHeight'] = spikeDict['peakVal'] - spikeDict['thresholdVal']
+			
 			self.spikeDict.append(spikeDict)
 
+			defaultVal = float('nan')
+			
 			# get pre/post spike minima
 			self.spikeDict[i]['preMinPnt'] = None
-			self.spikeDict[i]['preMinVal'] = None
+			self.spikeDict[i]['preMinVal'] = defaultVal
 			self.spikeDict[i]['postMinPnt'] = None
-			self.spikeDict[i]['postMinVal'] = None
+			self.spikeDict[i]['postMinVal'] = defaultVal
 
 			# early diastolic duration
 			# 0.1 to 0.5 of time between pre spike min and spike time
 			self.spikeDict[i]['preLinearFitPnt0'] = None
 			self.spikeDict[i]['preLinearFitPnt1'] = None
-			self.spikeDict[i]['earlyDiastolicDuration_ms'] = None # seconds between preLinearFitPnt0 and preLinearFitPnt1
-			self.spikeDict[i]['preLinearFitVal0'] = None
-			self.spikeDict[i]['preLinearFitVal1'] = None
+			self.spikeDict[i]['earlyDiastolicDuration_ms'] = defaultVal # seconds between preLinearFitPnt0 and preLinearFitPnt1
+			self.spikeDict[i]['preLinearFitVal0'] = defaultVal
+			self.spikeDict[i]['preLinearFitVal1'] = defaultVal
 			# m,b = np.polyfit(x, y, 1)
-			self.spikeDict[i]['earlyDiastolicDurationRate'] = None # fit of y=preLinearFitVal 0/1 versus x=preLinearFitPnt 0/1
+			self.spikeDict[i]['earlyDiastolicDurationRate'] = defaultVal # fit of y=preLinearFitVal 0/1 versus x=preLinearFitPnt 0/1
+			self.spikeDict[i]['lateDiastolicDuration'] = defaultVal # fit of y=preLinearFitVal 0/1 versus x=preLinearFitPnt 0/1
 
 			self.spikeDict[i]['preSpike_dvdt_max_pnt'] = None
-			self.spikeDict[i]['preSpike_dvdt_max_val'] = None # in units mV
-			self.spikeDict[i]['preSpike_dvdt_max_val2'] = None # in units dv/dt
+			self.spikeDict[i]['preSpike_dvdt_max_val'] = defaultVal # in units mV
+			self.spikeDict[i]['preSpike_dvdt_max_val2'] = defaultVal # in units dv/dt
 			self.spikeDict[i]['postSpike_dvdt_min_pnt'] = None
-			self.spikeDict[i]['postSpike_dvdt_min_val'] = None # in units mV
-			self.spikeDict[i]['postSpike_dvdt_min_val2'] = None # in units dv/dt
+			self.spikeDict[i]['postSpike_dvdt_min_val'] = defaultVal # in units mV
+			self.spikeDict[i]['postSpike_dvdt_min_val2'] = defaultVal # in units dv/dt
 
-			self.spikeDict[i]['isi_pnts'] = None # time between successive AP thresholds (thresholdSec)
-			self.spikeDict[i]['cycleLength_pnts'] = None # time between successive MDPs
-			self.spikeDict[i]['cycleLength_ms'] = None # time between successive MDPs
+			self.spikeDict[i]['isi_pnts'] = defaultVal # time between successive AP thresholds (thresholdSec)
+			self.spikeDict[i]['isi_ms'] = defaultVal # time between successive AP thresholds (thresholdSec)
+			self.spikeDict[i]['cycleLength_pnts'] = defaultVal # time between successive MDPs
+			self.spikeDict[i]['cycleLength_ms'] = defaultVal # time between successive MDPs
 
 			# Action potential duration (APD) was defined as the interval between the TOP and the subsequent MDP
-			self.spikeDict[i]['apDuration_ms'] = None
-			self.spikeDict[i]['diastolicDuration_ms'] = None
+			self.spikeDict[i]['apDuration_ms'] = defaultVal
+			self.spikeDict[i]['diastolicDuration_ms'] = defaultVal
 
 			# The nonlinear late diastolic depolarization phase was estimated as the duration between 1% and 10% dV/dt
 			# todo: not done !!!!!!!!!!
@@ -343,6 +351,9 @@ class bAnalysis:
 				mLinear, bLinear = np.polyfit(xFit, yFit, 1) # m is slope, b is intercept
 				#print('mLinear:', mLinear, 'bLinear:', bLinear)
 				self.spikeDict[i]['earlyDiastolicDurationRate'] = mLinear
+				
+				# not implemented
+				#self.spikeDict[i]['lateDiastolicDuration'] = ???
 				
 				#
 				# maxima in dv/dt before spike
@@ -417,7 +428,9 @@ class bAnalysis:
 
 				self.spikeDict[i]['cycleLength_ms'] = float('nan')
 				if i>1:
-					self.spikeDict[i]['isi_pnts'] = self.spikeDict[i]['thresholdPnt'] - self.spikeDict[i-1]['thresholdPnt']
+					isiPnts = self.spikeDict[i]['thresholdPnt'] - self.spikeDict[i-1]['thresholdPnt']
+					self.spikeDict[i]['isi_pnts'] = isiPnts
+					self.spikeDict[i]['isi_ms'] = self.pnt2Ms_(isiPnts)
 					
 					cycleLength_pnts = self.spikeDict[i]['postMinPnt'] - self.spikeDict[i-1]['postMinPnt']
 					self.spikeDict[i]['cycleLength_pnts'] = cycleLength_pnts
@@ -443,11 +456,11 @@ class bAnalysis:
 					widthDict = {
 						'halfHeight': halfHeight,
 						'risingPnt': None,
-						'risingVal': None,
+						'risingVal': defaultVal,
 						'fallingPnt': None,
-						'fallingVal': None,
+						'fallingVal': defaultVal,
 						'widthPnts': None,
-						'widthMs': None
+						'widthMs': defaultVal
 					}
 					try:
 						postRange = vm[peakPnt:postMinPnt]
@@ -516,6 +529,7 @@ class bAnalysis:
 		newList = []
 		for spike in self.spikeDict:
 			spikeDict = collections.OrderedDict() # use OrderedDict so Pandas output is in the correct order
+			spikeDict['threshold_sec'] = self.pnt2Sec_(spike['thresholdPnt'])
 			spikeDict['threshold_ms'] = self.pnt2Ms_(spike['thresholdPnt'])
 			spikeDict['threshold_mv'] = spike['thresholdVal']
 			spikeDict['peak_ms'] = self.pnt2Ms_(spike['peakPnt'])
@@ -527,11 +541,8 @@ class bAnalysis:
 			spikeDict['earlyDiastolicDuration_ms'] = spike['earlyDiastolicDuration_ms']
 			spikeDict['diastolicDuration_ms'] = spike['diastolicDuration_ms']
 			#
-			if spike['isi_pnts'] is not None:
-				spikeDict['isi_ms'] = self.pnt2Ms_(spike['isi_pnts'])
-			else:
-				spikeDict['isi_ms'] = float('nan')
-
+			spikeDict['isi_ms'] = spike['isi_ms']
+			
 			spikeDict['cycleLength_ms'] = spike['cycleLength_ms']
 
 			spikeDict['preSpike_dvdt_max_mv'] = spike['preSpike_dvdt_max_val']
