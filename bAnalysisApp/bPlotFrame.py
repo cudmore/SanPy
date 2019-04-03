@@ -32,6 +32,9 @@ class bPlotFrame(ttk.Frame):
 
 		self.controller = controller
 
+		# was 'plt.cm.RdGy'
+		self.colorTable = plt.cm.YlOrRd
+		
 		myPadding = 10
 
 		self.fig = matplotlib.figure.Figure(figsize=(8,figHeight), dpi=100)
@@ -116,7 +119,7 @@ class bPlotFrame(ttk.Frame):
 		self.metaLines = None
 		self.metaLines3 = None
 		#self.metaLines, = self.axes.plot([],[], 'ok', cmap=plt.get_cmap('inferno'), picker=5) # REMEMBER ',' ON LHS
-		#self.metaLines, = self.axes.scatter([],[], 'ok', c=[], cmap=plt.cm.RdGy, picker=5) # REMEMBER ',' ON LHS
+		#self.metaLines, = self.axes.scatter([],[], 'ok', c=[], cmap=self.colorTable, picker=5) # REMEMBER ',' ON LHS
 		#self.metaLines3, = self.axes.plot([],[], 'ok', picker=5) # REMEMBER ',' ON LHS
 
 		self.metax = []
@@ -587,7 +590,7 @@ class bPlotFrame(ttk.Frame):
 			self.metaLines3 = self.axes.scatter(xVal,yVal, picker=5)
 		
 		else:
-			self.metaLines3 = self.axes.scatter(xVal,yVal, c=tmpColor, cmap=plt.cm.RdGy, picker=5)
+			self.metaLines3 = self.axes.scatter(xVal,yVal, c=tmpColor, cmap=self.colorTable, picker=5)
 
 		# remove previous selection
 		self.singleSpikeSelection.set_xdata([])
@@ -780,8 +783,8 @@ class bPlotFrame(ttk.Frame):
 		self.metaLines.set_xdata(pnt)
 		'''
 		tmpColor = pnt
-		#self.metaLines = self.axes.scatter(pnt,val, 'o', c=tmpColor, cmap=plt.cm.RdGy, picker=5)
-		self.metaLines = self.axes.scatter(pnt,val, c=tmpColor, cmap=plt.cm.RdGy)
+		#self.metaLines = self.axes.scatter(pnt,val, 'o', c=tmpColor, cmap=self.colorTable, picker=5)
+		self.metaLines = self.axes.scatter(pnt,val, c=tmpColor, cmap=self.colorTable)
 
 
 		#

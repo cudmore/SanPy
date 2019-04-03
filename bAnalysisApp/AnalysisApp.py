@@ -236,6 +236,10 @@ class AnalysisApp:
 		self.checkList = []
 		myStyle = ttk.Style()
 		for i, analysisItem in enumerate(self.analysisList):
+			# ignor some
+			if analysisItem in ['peakHeight']:
+				continue
+			
 			styleStr = analysisItem + '.TCheckbutton'
 			foreground = 'black'
 			if analysisItem == 'peak':
@@ -546,11 +550,18 @@ class AnalysisApp:
 		# refresh clips
 		self.clipsPlot.plotClips(self.ba, plotEveryPoint=plotEveryPoint)
 
+		#todo: just turn off all stat plots
+		'''
+		for var in self.varList:
+			self.varList[i].get()
+		'''
+		'''
 		# refresh all stat plots
 		for i, analysis in enumerate(self.analysisList):
 			onoff = self.varList[i].get()
 			self.rawPlot.plotStat(analysis, onoff)
-
+		'''
+		
 		# refresh meta plot
 		statName = 'peak'
 		self.metaPlot.plotMeta(self.ba, statName, doInit=True)
