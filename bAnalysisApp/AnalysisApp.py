@@ -237,8 +237,10 @@ class AnalysisApp:
 		myStyle = ttk.Style()
 		for i, analysisItem in enumerate(self.analysisList):
 			# ignor some
+			'''
 			if analysisItem in ['peakHeight']:
 				continue
+			'''
 			
 			styleStr = analysisItem + '.TCheckbutton'
 			foreground = 'black'
@@ -378,7 +380,7 @@ class AnalysisApp:
 		rawFrame = ttk.Frame(hPane_plot, borderwidth=self.myBorderWidth, relief="sunken")
 		hPane_plot.add(rawFrame)
 
-		self.rawPlot = bPlotFrame(rawFrame, self, showToolbar=True, analysisList=self.analysisList)
+		self.rawPlot = bPlotFrame(rawFrame, self, showToolbar=False, analysisList=self.analysisList)
 
 		hPane_plot.sashpos(0, horizontalSashPos)
 
@@ -555,12 +557,10 @@ class AnalysisApp:
 		for var in self.varList:
 			self.varList[i].get()
 		'''
-		'''
 		# refresh all stat plots
 		for i, analysis in enumerate(self.analysisList):
 			onoff = self.varList[i].get()
 			self.rawPlot.plotStat(analysis, onoff)
-		'''
 		
 		# refresh meta plot
 		statName = 'peak'

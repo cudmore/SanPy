@@ -534,6 +534,7 @@ class bAnalysis:
 			spikeDict['threshold_mv'] = spike['thresholdVal']
 			spikeDict['peak_ms'] = self.pnt2Ms_(spike['peakPnt'])
 			spikeDict['peak_mv'] = spike['peakVal']
+			spikeDict['peakHeight'] = spike['peakHeight']
 			spikeDict['preMin_mv'] = spike['preMinVal']
 			spikeDict['postMin_mv'] = spike['postMinVal']
 			#
