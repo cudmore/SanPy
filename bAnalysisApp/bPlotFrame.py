@@ -626,6 +626,9 @@ class bPlotFrame(ttk.Frame):
 
 		print('bPlotFrame.plotMeta() statName:', statName)
 
+		self.plotMeta3('Time (sec)', statName)
+		return
+		
 		# fill in based on statName
 		pnt = [] # x
 		val = [] # y
