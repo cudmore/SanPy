@@ -286,9 +286,13 @@ class bFileTree(bTree):
 		
 ###################################################################################
 class bMetaTree(bTree):
-	def __init__(self, parent, parentApp, statList, *args, **kwargs):
+	def __init__(self, parent, parentApp, statList, name, *args, **kwargs):
+		"""
+		name: use this to have multiple bMetaTree in main app and call different plot function
+		"""
 		bTree.__init__(self, parent, parentApp, *args, **kwargs)
 		
+		self.name = name
 		self.statList = statList 
 
 		columns = ['Index', 'Stat']
@@ -324,9 +328,11 @@ class bMetaTree(bTree):
 			# switch video stream
 			self.myParentApp.switchFile(path)
 		'''
+		'''
 		stat, item = self._getTreeViewSelection('Stat')
 		print('bMetaTree.single_click() stat:', stat)
-		self.myParentApp.plotMeta3()
+		'''
+		self.myParentApp.plotMeta3(self.name)
 		
 	def setNote(self):
 		print('bVideoFileTree.setNote() not implemented')

@@ -13,9 +13,6 @@ matplotlib.use("TkAgg")
 
 from matplotlib.widgets import SpanSelector
 
-# for color
-# https://chrisalbon.com/python/basics/set_the_color_of_a_matplotlib/
-# https://stackoverflow.com/questions/17682216/scatter-plot-and-color-mapping-in-python
 import matplotlib.pyplot as plt
 
 #####################################################################################
@@ -32,8 +29,12 @@ class bPlotFrame(ttk.Frame):
 
 		self.controller = controller
 
+		# for color maps, see
+		# https://chrisalbon.com/python/basics/set_the_color_of_a_matplotlib/
+		# https://stackoverflow.com/questions/17682216/scatter-plot-and-color-mapping-in-python
 		# was 'plt.cm.RdGy'
-		self.colorTable = plt.cm.YlOrRd
+		#self.colorTable = plt.cm.YlOrRd
+		self.colorTable = plt.cm.coolwarm
 		
 		myPadding = 10
 
@@ -469,7 +470,7 @@ class bPlotFrame(ttk.Frame):
 
 		# clear existing
 		if self.metaLines3 is not None:
-			print('type(self.metaLines3):', type(self.metaLines3))
+			#print('type(self.metaLines3):', type(self.metaLines3))
 			self.metaLines3.remove()
 			self.metaLines3 = None
 			
@@ -498,10 +499,8 @@ class bPlotFrame(ttk.Frame):
 				thisVal = [x['preMinVal'] for x in self.controller.ba.spikeDict]
 			if thisStat == 'postMin':
 				thisVal = [x['postMinVal'] for x in self.controller.ba.spikeDict]
-				thisLabel = thisStat
 			if thisStat == 'preLinearFit':
-				print('error: plotMeta3()', thisStat, 'not implemented')
-				return 0
+				thisVal = [x['earlyDiastolicDurationRate'] for x in self.controller.ba.spikeDict]
 			if thisStat == 'preSpike_dvdt_max':
 				thisVal = [x['preSpike_dvdt_max_val'] for x in self.controller.ba.spikeDict]
 			if thisStat == 'postSpike_dvdt_min':
@@ -598,12 +597,16 @@ class bPlotFrame(ttk.Frame):
 
 		#
 		# set axis
+		print('xStat:', xStat)
 		xMin = np.nanmin(xVal) # for phase plot, is 2d array
 		xMax = np.nanmax(xVal)
 		if xMin == float('nan') or xMax == float('nan'):
 			print('error: bPlotFrame.plotMeta3() got xMin/xMax nan?')
 		else:
-			tenPercentRange = abs(xMax-xMin) * 0.1
+			if xStat == 'Time (sec)':
+				tenPercentRange = 0
+			else:
+				tenPercentRange = abs(xMax-xMin) * 0.1
 			self.axes.set_xlim(xMin-tenPercentRange, xMax+tenPercentRange)
 
 		yMin = np.nanmin(yVal)
@@ -629,6 +632,7 @@ class bPlotFrame(ttk.Frame):
 		self.plotMeta3('Time (sec)', statName)
 		return
 		
+		"""
 		# fill in based on statName
 		pnt = [] # x
 		val = [] # y
@@ -778,6 +782,7 @@ class bPlotFrame(ttk.Frame):
 			val = [0]
 			xLabel = 'Not Implemented'
 			yLabel = statName
+		"""
 
 		#
 		# replot

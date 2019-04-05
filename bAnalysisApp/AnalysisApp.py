@@ -68,7 +68,7 @@ class AnalysisApp:
 		self.myBorderWidth = 2
 
 		self.analysisList = ['threshold', 'peak', 'peakHeight', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
-		self.metaAnalysisList = self.analysisList + ['isi (ms)', 'Phase Plot']
+		self.metaAnalysisList = self.analysisList + ['isi (ms)']
 
 		self.metaAnalysisList2 = ['AP Peak (mV)',
 								'MDP (mV)',
@@ -93,19 +93,22 @@ class AnalysisApp:
 		if path is not None:
 			self.loadFolder(path=path)
 
-		# this will not return until we quit
-		self.root.mainloop()
-
-	"""
-	def schedule_redraw(self, event):
-		print('schedule_redraw() event:', event)
-		'''
-		if self._after_id:
-			self.root.after_cancel(self._after_id)
-		self._after_id = self.root.after(2000, self.root.redraw)
-		'''
-	"""
-	
+		
+		# the following while try/except is SUPER IMPORTANT
+		# see: https://stackoverflow.com/questions/16995969/inertial-scrolling-in-mac-os-x-with-tkinter-and-python
+		# without this little trick, we get random crashes while scrolling the stat list (in meta plot) with the mouse wheel
+		# the errors show up as "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff"
+		# was this
+		#self.root.mainloop()
+		# now this
+		while True:
+			try:
+				# this will not return until we quit
+				self.root.mainloop()
+				break
+			except UnicodeDecodeError:
+				pass
+				
 	def setStatus(self, str='Idle'):
 		"""
 		Set program status at top of window
@@ -284,22 +287,22 @@ class AnalysisApp:
 	def buildMetaOptionsFrame(self, container):
 		#
 		# meta plot frame
-		metaPlotFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
-		#metaPlotFrame.grid(row=0, column=0, sticky="nsew")
+		
+		statList = self.metaAnalysisList + self.metaAnalysisList2
+		statList = ['Time (sec)'] + statList
 
-		row = 0
-		col = 0
-		for i, analysisItem in enumerate(self.metaAnalysisList):
-			button = ttk.Button(metaPlotFrame, text=analysisItem, command=lambda name=analysisItem+'_button': self.button_Callback(name))
-			button.grid(row=row+i, column=col, sticky="w")
+		metaStatFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
+		metaStatFrame.grid(row=0, column=0, sticky="nsew")
 
-		row = 0
-		col = 1
-		for i, analysisItem in enumerate(self.metaAnalysisList2):
-			button = ttk.Button(metaPlotFrame, text=analysisItem, command=lambda name=analysisItem: self.button_Callback2(name))
-			button.grid(row=row+i, column=col, sticky="w")
+		metaStatFrame.grid_rowconfigure(0, weight=1)
+		metaStatFrame.grid_columnconfigure(0, weight=1)
 
-		return metaPlotFrame
+		#
+		# y
+		self.metaTree_y = bTree.bMetaTree(metaStatFrame, self, statList=statList, name='mainWindow')
+		self.metaTree_y.grid(row=0,column=0, sticky="nsew")
+
+		return metaStatFrame
 
 	def buildInterface3(self):
 		horizontalSashPos = 400
@@ -321,25 +324,11 @@ class AnalysisApp:
 
 		#
 		# horizontal pane for file list and global plot options
-		'''
-		hPane_top = ttk.PanedWindow(self.vPane, orient="horizontal")
-		self.vPane.add(hPane_top)
-		'''
 
 		#
 		# file list frame
 		fileList_frame = ttk.Frame(self.vPane, borderwidth=self.myBorderWidth, relief="sunken")
 		self.vPane.add(fileList_frame)
-		'''
-		fileList_frame = ttk.Frame(hPane_top, borderwidth=self.myBorderWidth, relief="sunken")
-		hPane_top.add(fileList_frame)
-		'''
-
-		'''
-		fileListFrameLabel = ttk.Label(fileList_frame)
-		fileListFrameLabel.grid(row=0, column=0, sticky="w")
-		fileListFrameLabel.configure(text='File List')
-		'''
 
 		self.fileListTree = bTree.bFileTree(fileList_frame, self, videoFileList='')
 		self.fileListTree.grid(row=1,column=0, sticky="nsew")
@@ -354,7 +343,6 @@ class AnalysisApp:
 		#
 		# horizontal pane for detection options and dv/dt plot
 		hPane_detection = ttk.PanedWindow(self.vPane, orient="horizontal")
-		#self.vPane.grid(row=0, column=0, sticky="nsew")
 		self.vPane.add(hPane_detection)
 
 		detectionFrame = self.buildDetectionFrame(hPane_detection)
@@ -425,11 +413,6 @@ class AnalysisApp:
 		self.derivPlot.plotDeriv(self.ba, plotEveryPoint=plotEveryPoint)
 		return True
 
-	def button_Callback2(self, buttonName):
-		print('AnalysisApp.button_Callback2() buttonName:', buttonName)
-
-		self.metaPlot.plotMeta(self.ba, buttonName, doInit=True)
-
 	def button_Callback(self, buttonName):
 		print('=== AnalysisApp.button_Callback() buttonName:', buttonName)
 		#print('   self.thresholdSpinbox:', self.thresholdSpinbox.get())
@@ -437,25 +420,6 @@ class AnalysisApp:
 
 		if buttonName == 'detectButton':
 			self.detectSpikes()
-			'''
-			self.setStatus('Detecting Spikes')
-
-			dVthresholdPos = int(self.thresholdSpinbox.get())
-			medianFilter = int(self.filterSpinbox.get())
-			plotEveryPoint = int(self.plotEverySpinbox.get())
-
-			# calls spike detect
-			self.derivPlot.plotDeriv(self.ba, dVthresholdPos=dVthresholdPos, medianFilter=medianFilter)
-
-			self.rawPlot.plotRaw(self.ba, plotEveryPoint=plotEveryPoint)
-
-			# refresh all stat plots
-			for i, analysis in enumerate(self.analysisList):
-				onoff = self.varList[i].get()
-				self.rawPlot.plotStat(analysis, onoff)
-
-			self.setStatus()
-			'''
 
 		if buttonName == 'fullAxisButton':
 			self.setXAxis_full()
@@ -465,35 +429,9 @@ class AnalysisApp:
 		if buttonName == 'reportButton':
 			self.report()
 
-		#
-		# respond to meta plot
-		if buttonName == 'threshold_button':
-			statName = 'threshold'
-			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
-		if buttonName == 'peak_button':
-			statName = 'peak'
-			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
-		if buttonName == 'preMin_button':
-			statName = 'preMin'
-			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
-		if buttonName == 'postMin_button':
-			statName = 'postMin'
-			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
-		if buttonName == 'preLinearFit_button':
-			print('   not implemented')
-		if buttonName == 'preSpike_dvdt_max_button':
-			statName = 'preSpike_dvdt_max'
-			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
-		if buttonName == 'postSpike_dvdt_min_button':
-			statName = 'postSpike_dvdt_min'
-			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
-		if buttonName == 'isi (sec)_button':
-			statName = 'isi (sec)'
-			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
-		if buttonName == 'Phase Plot_button':
-			statName = 'Phase Plot'
-			self.metaPlot.plotMeta(self.ba, statName, doInit=True)
-
+		if buttonName == 'Phase Plot':
+			self.metaPlot3.plotMeta3('Phase Plot', 'Phase Plot')
+			
 	def check_Callback(self, name, var):
 		print("AnalysisApp.check_Callback() name:", name, "var:", var.get())
 		onoff = var.get()
@@ -832,36 +770,52 @@ class AnalysisApp:
 		metaStatFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief="sunken")
 		metaStatFrame.grid(row=0, column=0, sticky="nsew")
 
-		metaStatFrame.grid_rowconfigure(0, weight=1)
+		metaStatFrame.grid_rowconfigure(0, weight=0)
+		metaStatFrame.grid_rowconfigure(1, weight=1)
 		metaStatFrame.grid_columnconfigure(0, weight=1)
 		metaStatFrame.grid_columnconfigure(1, weight=1)
 		metaStatFrame.grid_columnconfigure(2, weight=1)
 
 		#
+		# row 0 for some buttons
+		row0 = ttk.Frame(metaStatFrame, borderwidth=self.myBorderWidth, relief="sunken")
+		row0.grid(row=0,column=0, sticky="nw")
+
+		phasePlotButton = ttk.Button(row0, text='Phase Plot', command=lambda name='Phase Plot': self.button_Callback(name))
+		phasePlotButton.grid(row=0, column=0, sticky="w")
+
+		#
 		# y
-		self.metaTree_y = bTree.bMetaTree(metaStatFrame, self, statList=statList)
-		self.metaTree_y.grid(row=0,column=0, sticky="nsew")
+		self.meta3Tree_y = bTree.bMetaTree(metaStatFrame, self, statList=statList, name='meta3Window')
+		self.meta3Tree_y.grid(row=1,column=0, sticky="nsew")
 
 		#
 		# x
-		self.metaTree_x = bTree.bMetaTree(metaStatFrame, self, statList=statList)
-		self.metaTree_x.grid(row=0,column=1, sticky="nsew")
+		self.meta3Tree_x = bTree.bMetaTree(metaStatFrame, self, statList=statList, name='meta3Window')
+		self.meta3Tree_x.grid(row=1,column=1, sticky="nsew")
 
 
 		#
 		# plot
 		metaPlotFrame = ttk.Frame(metaStatFrame, borderwidth=self.myBorderWidth, relief="sunken")
-		metaPlotFrame.grid(row=0, column=2, sticky="nsew")
+		metaPlotFrame.grid(row=1, column=2, sticky="nsew")
 		
 		self.metaPlot3 = bPlotFrame(metaPlotFrame, self, showToolbar=True, allowSpan=False)
 	
 		return self.metaPlot3
 
-	def plotMeta3(self):
-		yStat, item = self.metaTree_y._getTreeViewSelection('Stat')
-		xStat, item = self.metaTree_x._getTreeViewSelection('Stat')
-		print('AnalysisApp.plotMeta3() yStat:', yStat, 'xStat:', xStat)
-		self.metaPlot3.plotMeta3(xStat, yStat)
+	def plotMeta3(self, name):
+		if name == 'mainWindow':
+			yStat, item = self.metaTree_y._getTreeViewSelection('Stat')
+			print('AnalysisApp.plotMeta3() yStat:', yStat)
+			xStat = 'Time (sec)'
+			self.metaPlot.plotMeta3(xStat, yStat)
+		elif name =='meta3Window':
+			yStat, item = self.meta3Tree_y._getTreeViewSelection('Stat')
+			xStat, item = self.meta3Tree_x._getTreeViewSelection('Stat')
+			print('AnalysisApp.plotMeta3() yStat:', yStat, 'xStat:', xStat)
+			self.metaPlot3.plotMeta3(xStat, yStat)
+		
 		
 		
 	def onClose3(self, event=None):
