@@ -300,8 +300,11 @@ class bMetaTree(bTree):
 		self.treeview["displaycolumns"] = columns
 		
 		self.treeview.column('Index', minwidth=50, width=50, stretch="no")
-		self.treeview.column('Stat', minwidth=50, width=200, stretch="no")
+		self.treeview.column('Stat', minwidth=50, width=225, stretch="no")
 		
+		self.treeview.heading('Index', text='Index')
+		self.treeview.heading('Stat', text='Stat')
+
 		for idx, stat in enumerate(statList):
 			position = "end"
 			#print('bMetaTree() inserting:', idx, stat)
@@ -310,7 +313,7 @@ class bMetaTree(bTree):
 			self.treeview.column('Index', width=5)
 			self.treeview.column('Stat', width=5)
 			'''
-			
+					
 		self.treeview.bind("<ButtonRelease-1>", self.single_click)
 
 	def single_click(self, event):

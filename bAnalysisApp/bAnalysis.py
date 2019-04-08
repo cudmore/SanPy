@@ -84,13 +84,19 @@ class bAnalysis:
 	def sweepList(self):
 		return self.abf.sweepList
 
+	@property
+	def numSweeps(self):
+		return len(self.abf.sweepList)
+		
 	def setSweep(self, sweepNumber):
 		if sweepNumber not in self.abf.sweepList:
 			print('error: bAnalysis.setSweep() did not find sweep', sweepNumber, ', sweepList =', self.abf.sweepList)
+			return False
 		else:
 			self.currentSweep = sweepNumber
 			self.abf.setSweep(sweepNumber)
-
+			return True
+			
 	@property
 	def numSpikes(self):
 		"""Returns the number of spikes, assumes self.spikeDetect(dVthreshold)"""
@@ -294,7 +300,7 @@ class bAnalysis:
 			self.spikeDict[i]['preLinearFitVal1'] = defaultVal
 			# m,b = np.polyfit(x, y, 1)
 			self.spikeDict[i]['earlyDiastolicDurationRate'] = defaultVal # fit of y=preLinearFitVal 0/1 versus x=preLinearFitPnt 0/1
-			self.spikeDict[i]['lateDiastolicDuration'] = defaultVal # fit of y=preLinearFitVal 0/1 versus x=preLinearFitPnt 0/1
+			self.spikeDict[i]['lateDiastolicDuration'] = defaultVal # 
 
 			self.spikeDict[i]['preSpike_dvdt_max_pnt'] = None
 			self.spikeDict[i]['preSpike_dvdt_max_val'] = defaultVal # in units mV
@@ -312,6 +318,20 @@ class bAnalysis:
 			self.spikeDict[i]['apDuration_ms'] = defaultVal
 			self.spikeDict[i]['diastolicDuration_ms'] = defaultVal
 
+			# any number of spike widths
+			self.spikeDict[i]['widths'] = []
+			for halfHeight in halfHeights:
+				widthDict = {
+					'halfHeight': halfHeight,
+					'risingPnt': None,
+					'risingVal': defaultVal,
+					'fallingPnt': None,
+					'fallingVal': defaultVal,
+					'widthPnts': None,
+					'widthMs': defaultVal
+				}
+				self.spikeDict[i]['widths'].append(widthDict)
+			
 			# The nonlinear late diastolic depolarization phase was estimated as the duration between 1% and 10% dV/dt
 			# todo: not done !!!!!!!!!!
 			
@@ -330,7 +350,6 @@ class bAnalysis:
 				# search backward from spike to find when vm reaches preMinVal (avg)
 				preRange = vm[preMinPnt:self.spikeTimes[i]]
 				preRange = np.flip(preRange) # we want to search backwards from peak
-				#tmp = np.where(preRange<preMinVal)
 				preMinPnt2 = np.where(preRange<preMinVal)[0][0]
 				preMinPnt = self.spikeTimes[i] - preMinPnt2
 
@@ -349,7 +368,6 @@ class bAnalysis:
 				xFit = self.abf.sweepX[preLinearFitPnt0:preLinearFitPnt1]
 				yFit = vm[preLinearFitPnt0:preLinearFitPnt1]
 				mLinear, bLinear = np.polyfit(xFit, yFit, 1) # m is slope, b is intercept
-				#print('mLinear:', mLinear, 'bLinear:', bLinear)
 				self.spikeDict[i]['earlyDiastolicDurationRate'] = mLinear
 				
 				# not implemented
@@ -380,9 +398,9 @@ class bAnalysis:
 					postMinPnt = self.spikeTimes[i] + postMinPnt2
 					#print('i:', i, 'postMinPnt:', postMinPnt)
 				except (IndexError) as e:
-					spikeDict['numError'] = spikeDict['numError'] + 1
+					self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
 					errorStr = 'spike ' + str(i) + ' searching for postMinVal:' + str(postMinVal) + ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
-					spikeDict['errors'].append(errorStr)
+					self.spikeDict[i]['errors'].append(errorStr)
 					self.numErrors += 1
 					
 				#
@@ -393,14 +411,7 @@ class bAnalysis:
 				#postRange = dvdt[self.spikeTimes[i]:self.spikeTimes[i]+postSpike_pnts] # fixed window after spike
 				postRange = dvdt[peakPnt:peakPnt+postSpike_pnts] # fixed window after spike
 
-				'''
-				try:
-					postSpike_dvdt_min_pnt = np.where(postRange<0)[0][0]
-				except:
-					print('error: spike', i, 'searhing for post spike min in dv/dt')
-				'''
 				postSpike_dvdt_min_pnt = np.argmin(postRange)
-				#postSpike_dvdt_min_pnt += self.spikeTimes[i]
 				postSpike_dvdt_min_pnt += peakPnt
 				#print('i:', i, 'postSpike_dvdt_min_pnt:', postSpike_dvdt_min_pnt)
 				self.spikeDict[i]['postSpike_dvdt_min_pnt'] = postSpike_dvdt_min_pnt
@@ -439,19 +450,9 @@ class bAnalysis:
 				#
 				# get 1/2 height (actually, any number of height measurements)
 				# action potential duration using peak and post min
-				self.spikeDict[i]['widths'] = []
+				#self.spikeDict[i]['widths'] = []
 				for j, halfHeight in enumerate(halfHeights):
 					thisVm = postMinVal + (peakVal - postMinVal) * (halfHeight * 0.01)
-					#print('halfHeight:', halfHeight, 'thisVm:', thisVm)
-					# search from previous min to peak
-					'''
-					# pre/rising
-					preRange = vm[preMinPnt:peakPnt]
-					risingPnt = np.where(preRange>thisVm)[0][0] # greater than
-					risingPnt += preMinPnt
-					risingVal = vm[risingPnt]
-					'''
-					# post/falling
 					#todo: logic is broken, this get over-written in following try
 					widthDict = {
 						'halfHeight': halfHeight,
@@ -477,23 +478,22 @@ class bAnalysis:
 						# width (pnts)
 						widthPnts = fallingPnt - risingPnt
 						# assign
-						widthDict = {
-							'halfHeight': halfHeight,
-							'risingPnt': risingPnt,
-							'risingVal': risingVal,
-							'fallingPnt': fallingPnt,
-							'fallingVal': fallingVal,
-							'widthPnts': widthPnts,
-							'widthMs': widthPnts / self.abf.dataPointsPerMs
-						}
+						widthDict['halfHeight'] = halfHeight
+						widthDict['risingPnt'] = risingPnt
+						widthDict['risingVal'] = risingVal
+						widthDict['fallingPnt'] = fallingPnt
+						widthDict['fallingVal'] = fallingVal
+						widthDict['widthPnts'] = widthPnts
+						widthDict['widthMs'] = widthPnts / self.abf.dataPointsPerMs
+						
 					except (IndexError) as e:
 						print('error: bAnalysis.spikeDetect() spike', i, 'half height', halfHeight)
-						spikeDict[i]['numError'] = spikeDict[i]['numError'] + 1
+						self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
 						errorStr = 'spike ' + str(i) + ' half width ' + str(j)
-						spikeDict['errors'].append(errorStr)
+						self.spikeDict[i]['errors'].append(errorStr)
 						self.numErrors += 1
-						#print(e)
-					self.spikeDict[i]['widths'].append(widthDict)
+					#self.spikeDict[i]['widths'].append(widthDict)
+					self.spikeDict[i]['widths'][j] = widthDict
 
 		#
 		# look between threshold crossing to get minima
@@ -520,43 +520,41 @@ class bAnalysis:
 	# output reports
 	############################################################
 	def report(self):
+		""" return entire spikeDIct as a pandas data frame """
 		df = pd.DataFrame(self.spikeDict)
-		# limit columns
-		#df = df[['file', 'spikeNumber', 'thresholdSec', 'peakSec', 'preMinVal', 'postMinVal', 'widths']]
 		return df
 
 	def report2(self):
 		newList = []
 		for spike in self.spikeDict:
 			spikeDict = collections.OrderedDict() # use OrderedDict so Pandas output is in the correct order
-			spikeDict['threshold_sec'] = self.pnt2Sec_(spike['thresholdPnt'])
-			spikeDict['threshold_ms'] = self.pnt2Ms_(spike['thresholdPnt'])
-			spikeDict['threshold_mv'] = spike['thresholdVal']
-			spikeDict['peak_ms'] = self.pnt2Ms_(spike['peakPnt'])
-			spikeDict['peak_mv'] = spike['peakVal']
-			spikeDict['peakHeight'] = spike['peakHeight']
-			spikeDict['preMin_mv'] = spike['preMinVal']
-			spikeDict['postMin_mv'] = spike['postMinVal']
+			spikeDict['Take Off Potential (s)'] = self.pnt2Sec_(spike['thresholdPnt'])
+			spikeDict['Take Off Potential (ms)'] = self.pnt2Ms_(spike['thresholdPnt'])
+			spikeDict['Take Off Potential (mV)'] = spike['thresholdVal']
+			spikeDict['AP Peak (ms)'] = self.pnt2Ms_(spike['peakPnt'])
+			spikeDict['AP Peak (mV)'] = spike['peakVal']
+			spikeDict['AP Height (mV)'] = spike['peakHeight']
+			spikeDict['Pre AP Min (mV)'] = spike['preMinVal']
+			spikeDict['Post AP Min (mV)'] = spike['postMinVal']
 			#
-			spikeDict['apDuration_ms'] = spike['apDuration_ms']
-			spikeDict['earlyDiastolicDuration_ms'] = spike['earlyDiastolicDuration_ms']
-			spikeDict['diastolicDuration_ms'] = spike['diastolicDuration_ms']
+			spikeDict['AP Duration (ms)'] = spike['apDuration_ms']
+			spikeDict['Early Diastolic Duration (ms)'] = spike['earlyDiastolicDuration_ms']
+			spikeDict['Diastolic Duration (ms)'] = spike['diastolicDuration_ms']
 			#
-			spikeDict['isi_ms'] = spike['isi_ms']
+			spikeDict['Inter-Spike-Interval (ms)'] = spike['isi_ms']
 			
-			spikeDict['cycleLength_ms'] = spike['cycleLength_ms']
+			spikeDict['Cycle Length (ms)'] = spike['cycleLength_ms']
 
-			spikeDict['preSpike_dvdt_max_mv'] = spike['preSpike_dvdt_max_val']
-			spikeDict['preSpike_dvdt_max_dvdt'] = spike['preSpike_dvdt_max_val2']
+			spikeDict['Max AP Upstroke (dV/dt)'] = spike['preSpike_dvdt_max_val2']
+			spikeDict['Max AP Upstroke (mV)'] = spike['preSpike_dvdt_max_val']
 			
-			spikeDict['postSpike_dvdt_min_mv'] = spike['postSpike_dvdt_min_val']
-			spikeDict['postSpike_dvdt_min_dvdt'] = spike['postSpike_dvdt_min_val2']
+			spikeDict['Max AP Repolarization (dV/dt)'] = spike['postSpike_dvdt_min_val2']
+			spikeDict['Max AP Repolarization (mV)'] = spike['postSpike_dvdt_min_val']
 			
 			# half-width
-			if 'widths' in spike:
-				for widthDict in spike['widths']:
-					keyName = 'width_' + str(widthDict['halfHeight'])
-					spikeDict[keyName] = widthDict['widthMs']
+			for widthDict in spike['widths']:
+				keyName = 'width_' + str(widthDict['halfHeight'])
+				spikeDict[keyName] = widthDict['widthMs']
 				
 			# errors
 			spikeDict['numError'] = spike['numError']
