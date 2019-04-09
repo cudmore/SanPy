@@ -7,7 +7,7 @@ report(): to generate output reports
 
 '''
 
-import sys, os, json, collections
+import sys, os, time, json, collections
 
 import numpy as np
 import pandas as pd
@@ -141,12 +141,6 @@ class AnalysisApp:
 		# force label to update
 		self.statusLabel.update()
 
-	def sweepPopupMenu_callback(self, event):
-		""" Handle user selection of sweep popup menu """
-		print('=== AnalysisApp.sweepPopupMenu_callback()', self.sweepVar.get())
-		sweep = int(self.sweepVar.get())
-		self.switchSweep(sweep)
-		
 	def buildDetectionFrame(self, container):
 		"""
 		Detection parameters, (sweep number, dV/dt threshold, hal widhts, etc)
@@ -467,6 +461,21 @@ class AnalysisApp:
 
 		hPane_meta.sashpos(0, horizontalSashPos)
 
+	def escapeKey_callback(self, event):
+		""" cancel all user selections (cyan) """
+		print('escapeKey_callback event:', event)
+		# todo: fix selectSpike(), it does not need ba, here we are passing None
+		self.rawPlot.selectSpike(None, None)
+		self.metaPlot.selectSpike(None, None)
+		if self.metaPlot3 is not None:
+			self.metaPlot3.selectSpike(None, None)
+					
+	def sweepPopupMenu_callback(self, event):
+		""" Handle user selection of sweep popup menu """
+		print('=== AnalysisApp.sweepPopupMenu_callback()', self.sweepVar.get())
+		sweep = int(self.sweepVar.get())
+		self.switchSweep(sweep)
+		
 	def spinBox_Callback(self, name):
 		print('spinBox_Callback:', name)
 		plotEveryPoint = int(self.plotEverySpinbox.get())
@@ -481,7 +490,9 @@ class AnalysisApp:
 		#print('   self.filterSpinbox:', self.filterSpinbox.get())
 
 		if buttonName == 'detectButton':
-			self.detectSpikes()
+			if self.configDict['autoDetect']:
+				self.detectSpikes()
+			self.replotResults()
 
 		if buttonName == 'fullAxisButton':
 			self.setXAxis_full()
@@ -489,25 +500,37 @@ class AnalysisApp:
 			#self.derivPlot.setFullAxis()
 
 		if buttonName == 'reportButton':
-			self.report()
+			theMin, theMax = self._get_xaxis()
+			self.saveReport(theMin, theMax)
 
 		if buttonName == 'Phase Plot':
 			self.metaPlot3.plotMeta3('Phase Plot', 'Phase Plot')
 			
+	def _get_xaxis(self):
+		"""
+		get the currently displayed x-axis of raw plot
+		"""
+		theMin, theMax = self.rawPlot._get_x_axes()
+		print('AnalysisApp._get_xaxis() current x axes is:', theMin, theMax)
+		return theMin, theMax
+		
 	def check_Callback(self, name, var):
-		print("AnalysisApp.check_Callback() name:", name, "var:", var.get())
+		print("=== AnalysisApp.check_Callback() name:", name, "var:", var.get())
 		onoff = var.get()
 		
 		if name == 'showClips':
 			if onoff:
-				print('turn clips on')
+				self.setStatus('Turning clips on')
 				#todo: need to get x-axis range of raw data plot
-				numDisplayedClips = self.clipsPlot.plotClips_updateSelection(self.ba, xMin=None, xMax=None)
+				theMin, theMax = self._get_xaxis()
+				numDisplayedClips = self.clipsPlot.plotClips_updateSelection(self.ba, xMin=theMin, xMax=theMax)
 				self.numClipsLabel['text'] = 'Number of spike clips: ' + str(numDisplayedClips) # todo: this is case where I want signalling infrastructure to update interface
+				self.setStatus()
 			else:
-				print('turn clips off')
+				self.setStatus('Turning clips off')
 				numDisplayedClips = self.clipsPlot.plotClips_updateSelection(self.ba, xMin=0, xMax=0)
 				self.numClipsLabel['text'] = 'Number of spike clips: ' + str(numDisplayedClips) # todo: this is case where I want signalling infrastructure to update interface
+				self.setStatus()
 		else:
 			self.rawPlot.plotStat(name, onoff)
 
@@ -529,12 +552,14 @@ class AnalysisApp:
 			stopSeconds = int(stopSeconds)
 		dVthresholdPos = int(self.thresholdSpinbox.get())
 		medianFilter = int(self.filterSpinbox.get())
+		#theSweep = int(self.sweepVar.get())
 
 		print('   halfWidths:', halfWidths)
 		print('   startSeconds:', startSeconds)
 		print('   stopSeconds:', stopSeconds)
 		print('   dVthresholdPos:', dVthresholdPos)
 		print('   medianFilter:', medianFilter)
+		#print('   theSweep:', theSweep)
 
 		# assuming halfWidths is a well formed list of numbers
 		halfWidthsList = halfWidths.split(',')
@@ -543,30 +568,9 @@ class AnalysisApp:
 		self.ba.spikeDetect(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter, halfHeights=halfWidthsInt, startSeconds=startSeconds, stopSeconds=stopSeconds) # calls spikeDetect0()
 
 		# refresh number of spikes
-		self.numSpikesLabel['text'] = 'Number of spikes detected: ' + str(self.ba.numSpikes)
-		
+		self.numSpikesLabel['text'] = 'Number of spikes detected: ' + str(self.ba.numSpikes)	
 		# refresh number of detection errors
 		self.numErrorsLabel['text'] = 'Number of spike errors: ' + str(self.ba.numSpikeErrors)
-		
-		'''
-		# refresh raw
-		self.rawPlot.plotRaw(self.ba, plotEveryPoint=plotEveryPoint)
-
-		# refresh deriv
-		self.derivPlot.plotDeriv(self.ba, plotEveryPoint=plotEveryPoint)
-
-		# refresh clips
-		self.clipsPlot.plotClips(self.ba, plotEveryPoint=plotEveryPoint)
-
-		# refresh all stat plots
-		for i, analysis in enumerate(self.analysisList):
-			onoff = self.varList[i].get()
-			self.rawPlot.plotStat(analysis, onoff)
-		
-		# refresh meta plot
-		statName = 'AP Peak (mV)'
-		self.metaPlot.plotMeta(self.ba, statName, doInit=True)
-		'''
 		
 		self.setStatus()
 
@@ -603,9 +607,12 @@ class AnalysisApp:
 		
 		sweepSet = self.ba.setSweep(sweep)
 
-		if sweepSet:
-			self.detectSpikes()
+		self.numSpikesLabel['text'] = 'Number of spikes detected: None'	
+		self.numErrorsLabel['text'] = 'Number of spike errors: None'
 
+		if sweepSet:
+			if self.configDict['autoDetect']:
+				self.detectSpikes()
 			self.replotResults()
 		else:
 			print('error: AnalysisApp.switchSweep() was not able to change to sweep:', sweep)
@@ -615,26 +622,32 @@ class AnalysisApp:
 		Switch interface to a different file
 		Called by bFileTree.single_click()
 		"""
-		print('=== AnalysisApp.switchFile() filePath:', filePath)
+		print('AnalysisApp.switchFile() filePath:', filePath)
 
 		self.currentFilePath = filePath
 
 		self.setStatus('Loading file ' + filePath)
+
 		self.ba = bAnalysis(file=filePath)
 
 		# default sweep popup to 0
-		self.sweepChoices = self.ba.sweepList
+		self.sweepChoices = [''] + self.ba.sweepList
 		self.sweepVar.set('0')
 		self.ba.setSweep(0)
 
 		# update available options in sweeps popup menu
 		self.sweepPopupMenu.set_menu(*self.sweepChoices)
 		
-		self.detectSpikes()
+		self.numSpikesLabel['text'] = 'Number of spikes detected: None'	
+		self.numErrorsLabel['text'] = 'Number of spike errors: None'
 
+		if self.configDict['autoDetect']:
+			self.detectSpikes()
 		self.replotResults()
 
 	def replotResults(self):
+		startTime = time.time()
+		
 		self.setStatus('Plotting Results')
 		plotEveryPoint = int(self.plotEverySpinbox.get())
 		
@@ -659,8 +672,16 @@ class AnalysisApp:
 		statName = 'AP Peak (mV)'
 		self.metaPlot.plotMeta(self.ba, statName, doInit=True)
 
+		if self.metaPlot3 is not None:
+			yStat, item = self.meta3Tree_y._getTreeViewSelection('Stat')
+			xStat, item = self.meta3Tree_x._getTreeViewSelection('Stat')
+			self.metaPlot3.plotMeta3(xStat, yStat)
+
 		self.setStatus()
 	
+		stopTime = time.time()
+		print('AnalysisApp.replotResults() took', stopTime-startTime, 'seconds')
+		
 	def setXAxis_full(self):
 		self.rawPlot.setFullAxis()
 		self.derivPlot.setFullAxis()
@@ -671,6 +692,7 @@ class AnalysisApp:
 			self.numClipsLabel['text'] = 'Number of spike clips: ' + str(numDisplayedClips) # todo: this is case where I want signalling infrastructure to update interface
 
 		self.metaPlot.plotMeta_updateSelection(self.ba, xMin=None, xMax=None)
+
 		if self.metaPlot3 is not None:
 			self.metaPlot3.plotMeta_updateSelection(self.ba, xMin=None, xMax=None)
 
@@ -697,134 +719,7 @@ class AnalysisApp:
 			self.metaPlot3.selectSpikeMeta(self.ba, spikeNumber)
 		else:
 			print('warning: AnalysisApp did not select spike in self.metaPlot3')
-			
-	def report(self):
-		filePath, fileName = os.path.split(os.path.abspath(self.currentFilePath))
-		fileBaseName, extension = os.path.splitext(fileName)
-		excelFilePath = os.path.join(filePath, fileBaseName + '.xlsx')
-		
-		#print('AnalysisApp.report() saving', excelFilePath)
-		print('Asking user for file name to save...')
-
-		#savefile will be full path to user specified file
-		savefile = asksaveasfilename(filetypes=(("Excel files", "*.xlsx"),
-									("All files", "*.*") ),
-									initialdir=filePath,
-									initialfile=fileBaseName + '.xlsx')			   
-														 
-		# always grab a df to the entire analysis (not sure what I will do with this)
-		#df = self.ba.report() # report() is my own 'bob' verbiage
-
-		if savefile:
-			print('Saving user specified .xlsx file:', savefile)
-			excelFilePath = savefile
-			writer = pd.ExcelWriter(excelFilePath, engine='xlsxwriter')
-	
-			#
-			# cardiac style analysis to sheet 'cardiac'
-			cardiac_df = self.ba.report2() # report2 is more 'cardiac'
-
-			#
-			# header sheet
-			headerDict = collections.OrderedDict()
-			headerDict['file'] = [self.ba.file]
-			headerDict['dateAnalyzed'] = [self.ba.dateAnalyzed]
-			headerDict['dVthreshold'] = [self.ba.dVthreshold]
-			headerDict['medianFilter'] = [self.ba.medianFilter]
-			headerDict['startSeconds'] = [self.ba.startSeconds]
-			headerDict['stopSeconds'] = [self.ba.stopSeconds]
-			headerDict['sweep number'] = [self.ba.currentSweep]
-			headerDict['num sweeps'] = [self.ba.numSweeps]
-			headerDict['stats'] = []
-			
-			for idx, col in enumerate(cardiac_df):
-				headerDict[col] = []
-				
-			# mean
-			theMean = cardiac_df.mean() # skipna default is True
-			theMean['errors'] = ''
-			# sd
-			theSD = cardiac_df.std() # skipna default is True
-			theSD['errors'] = ''
-			#se
-			theSE = cardiac_df.sem() # skipna default is True
-			theSE['errors'] = ''
-			#n
-			theN = cardiac_df.count() # skipna default is True
-			theN['errors'] = ''
-
-			statCols = ['mean', 'sd', 'se', 'n']
-			for j, stat in enumerate(statCols):
-				if j == 0:
-					pass
-				else:
-					headerDict['file'].append('')
-					headerDict['dateAnalyzed'].append('')
-					headerDict['dVthreshold'].append('')
-					headerDict['medianFilter'].append('')
-					headerDict['startSeconds'].append('')
-					headerDict['stopSeconds'].append('')
-					headerDict['sweep number'].append('')
-					headerDict['num sweeps'].append('')
-					
-				# a dictionary key for each stat
-				headerDict['stats'].append(stat)
-				for idx, col in enumerate(cardiac_df):
-					#headerDict[col].append('')
-					if stat == 'mean':
-						headerDict[col].append(theMean[col])
-					elif stat == 'sd':
-						headerDict[col].append(theSD[col])
-					elif stat == 'se':
-						headerDict[col].append(theSE[col])
-					elif stat == 'n':
-						headerDict[col].append(theN[col])
-			
-			
-			# dict to pandas dataframe
-			df = pd.DataFrame(headerDict).T
-			# pandas dataframe to excel sheet 'header'
-			df.to_excel(writer, sheet_name='summary')
-			
-			# set the column widths in excel sheet 'cardiac'
-			columnWidth = 25
-			worksheet = writer.sheets['summary']  # pull worksheet object
-			for idx, col in enumerate(df):  # loop through all columns
-				worksheet.set_column(idx, idx, columnWidth)  # set column width
-
-			#
-			# 'cardiac' sheet
-			cardiac_df.to_excel(writer, sheet_name='cardiac')
-
-			# set the column widths in excel sheet 'cardiac'
-			columnWidth = 20
-			worksheet = writer.sheets['cardiac']  # pull worksheet object
-			for idx, col in enumerate(cardiac_df):  # loop through all columns
-				worksheet.set_column(idx, idx, columnWidth)  # set column width
-
-	
-			#
-			# entire (verbose) analysis to sheet 'bob'
-			#df.to_excel(writer, sheet_name='bob')
-
-			#
-			# mean spike clip
-			df = pd.DataFrame(self.clipsPlot.meanClip)
-			df.to_excel(writer, sheet_name='Avg Spike')
-	
-			writer.save()
-	
-			#
-			# always save a text file
-			textFilePath = os.path.join(filePath, fileBaseName + '.txt')
-			print('Saving .txt file:', textFilePath)
-			df = self.ba.report()
-			df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
-
-			self.setStatus('Saved ' + excelFilePath)
-		else:
-			print('Save aborted by user')
-			
+						
 
 	#################################################################################
 	# preferences
@@ -849,8 +744,9 @@ class AnalysisApp:
 			self.preferencesDefaults()
 
 	def preferencesDefaults(self):
-		self.configDict = {}
+		self.configDict = collections.OrderedDict()
 
+		self.configDict['autoDetect'] = True # FALSE DOES NOT WORK!!!! auto detect on file selection and/or sweep selection
 		self.configDict['windowGeometry'] = {}
 		self.configDict['windowGeometry']['x'] = 100
 		self.configDict['windowGeometry']['y'] = 100
@@ -1005,15 +901,144 @@ class AnalysisApp:
 		else:
 			print('meta window 3 is already open?')
 
-	def escapeKey_callback(self, event):
-		""" cancel all user selections (cyan) """
-		print('escapeKey_callback event:', event)
-		# todo: fix selectSpike(), it does not need ba, here we are passing None
-		self.rawPlot.selectSpike(None, None)
-		self.metaPlot.selectSpike(None, None)
-		if self.metaPlot3 is not None:
-			self.metaPlot3.selectSpike(None, None)
+	#################################################################################
+	# save results (e.g. report)
+	#################################################################################
+	def saveReport(self, theMin, theMax):
+		"""
+		save a spike report for detected spikes between theMin (sec) and theMax (sec)
+		"""
+		
+		filePath, fileName = os.path.split(os.path.abspath(self.currentFilePath))
+		fileBaseName, extension = os.path.splitext(fileName)
+		excelFilePath = os.path.join(filePath, fileBaseName + '.xlsx')
+		
+		#print('AnalysisApp.report() saving', excelFilePath)
+		print('Asking user for file name to save...')
+
+		#savefile will be full path to user specified file
+		savefile = asksaveasfilename(filetypes=(("Excel files", "*.xlsx"),
+									("All files", "*.*") ),
+									initialdir=filePath,
+									initialfile=fileBaseName + '.xlsx')			   
+														 
+		# always grab a df to the entire analysis (not sure what I will do with this)
+		#df = self.ba.report() # report() is my own 'bob' verbiage
+
+		if savefile:
+			print('Saving user specified .xlsx file:', savefile)
+			excelFilePath = savefile
+			writer = pd.ExcelWriter(excelFilePath, engine='xlsxwriter')
+	
+			#
+			# cardiac style analysis to sheet 'cardiac'
+			cardiac_df = self.ba.report2(theMin, theMax) # report2 is more 'cardiac'
+
+			#
+			# header sheet
+			headerDict = collections.OrderedDict()
+			headerDict['file'] = [self.ba.file]
+			headerDict['Date Analyzed'] = [self.ba.dateAnalyzed]
+			headerDict['dV/dt Threshold'] = [self.ba.dVthreshold]
+			headerDict['Median Filter (pnts)'] = [self.ba.medianFilter]
+			headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
+			headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
+			headerDict['Sweep Number'] = [self.ba.currentSweep]
+			headerDict['Number of Sweeps'] = [self.ba.numSweeps]
+			headerDict['Export Start (sec)'] = [theMin] # on export, x-axis of raw plot will be ouput
+			headerDict['Export Stop (sec)'] = [theMax] # on export, x-axis of raw plot will be ouput
+			headerDict['stats'] = []
+			
+			for idx, col in enumerate(cardiac_df):
+				headerDict[col] = []
+				
+			# mean
+			theMean = cardiac_df.mean() # skipna default is True
+			theMean['errors'] = ''
+			# sd
+			theSD = cardiac_df.std() # skipna default is True
+			theSD['errors'] = ''
+			#se
+			theSE = cardiac_df.sem() # skipna default is True
+			theSE['errors'] = ''
+			#n
+			theN = cardiac_df.count() # skipna default is True
+			theN['errors'] = ''
+
+			statCols = ['mean', 'sd', 'se', 'n']
+			for j, stat in enumerate(statCols):
+				if j == 0:
+					pass
+				else:
+					headerDict['file'].append('')
+					headerDict['Date Analyzed'].append('')
+					headerDict['dV/dt Threshold'].append('')
+					headerDict['Median Filter (pnts)'].append('')
+					headerDict['Analysis Start (sec)'].append('')
+					headerDict['Analysis Stop (sec)'].append('')
+					headerDict['Sweep Number'].append('')
+					headerDict['Number of Sweeps'].append('')
+					headerDict['Export Start (sec)'].append('')
+					headerDict['Export Stop (sec)'].append('')
 					
+				# a dictionary key for each stat
+				headerDict['stats'].append(stat)
+				for idx, col in enumerate(cardiac_df):
+					#headerDict[col].append('')
+					if stat == 'mean':
+						headerDict[col].append(theMean[col])
+					elif stat == 'sd':
+						headerDict[col].append(theSD[col])
+					elif stat == 'se':
+						headerDict[col].append(theSE[col])
+					elif stat == 'n':
+						headerDict[col].append(theN[col])
+			
+			
+			# dict to pandas dataframe
+			df = pd.DataFrame(headerDict).T
+			# pandas dataframe to excel sheet 'header'
+			df.to_excel(writer, sheet_name='summary')
+			
+			# set the column widths in excel sheet 'cardiac'
+			columnWidth = 25
+			worksheet = writer.sheets['summary']  # pull worksheet object
+			for idx, col in enumerate(df):  # loop through all columns
+				worksheet.set_column(idx, idx, columnWidth)  # set column width
+
+			#
+			# 'cardiac' sheet
+			cardiac_df.to_excel(writer, sheet_name='cardiac')
+
+			# set the column widths in excel sheet 'cardiac'
+			columnWidth = 20
+			worksheet = writer.sheets['cardiac']  # pull worksheet object
+			for idx, col in enumerate(cardiac_df):  # loop through all columns
+				worksheet.set_column(idx, idx, columnWidth)  # set column width
+
+	
+			#
+			# entire (verbose) analysis to sheet 'bob'
+			#df.to_excel(writer, sheet_name='bob')
+
+			#
+			# mean spike clip
+			df = pd.DataFrame(self.clipsPlot.meanClip)
+			df.to_excel(writer, sheet_name='Avg Spike')
+	
+			writer.save()
+	
+			#
+			# always save a text file
+			textFilePath = os.path.join(filePath, fileBaseName + '.txt')
+			print('Saving .txt file:', textFilePath)
+			df = self.ba.report()
+			df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
+
+			self.setStatus('Saved ' + excelFilePath)
+		else:
+			print('Save aborted by user')
+
 if __name__ == '__main__':
 
 	print('starting AnalysisApp __main__')

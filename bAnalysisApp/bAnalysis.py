@@ -367,9 +367,16 @@ class bAnalysis:
 				# m*x+b"
 				xFit = self.abf.sweepX[preLinearFitPnt0:preLinearFitPnt1]
 				yFit = vm[preLinearFitPnt0:preLinearFitPnt1]
-				mLinear, bLinear = np.polyfit(xFit, yFit, 1) # m is slope, b is intercept
-				self.spikeDict[i]['earlyDiastolicDurationRate'] = mLinear
-				
+				try:
+					mLinear, bLinear = np.polyfit(xFit, yFit, 1) # m is slope, b is intercept
+					self.spikeDict[i]['earlyDiastolicDurationRate'] = mLinear
+				except TypeError:
+					#catching exception: raise TypeError("expected non-empty vector for x")
+					self.spikeDict[i]['earlyDiastolicDurationRate'] = defaultVal
+					self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
+					errorStr = 'error in earlyDiastolicDurationRate fit'
+					self.spikeDict[i]['errors'].append(errorStr)
+					
 				# not implemented
 				#self.spikeDict[i]['lateDiastolicDuration'] = ???
 				
@@ -399,7 +406,9 @@ class bAnalysis:
 					#print('i:', i, 'postMinPnt:', postMinPnt)
 				except (IndexError) as e:
 					self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
-					errorStr = 'spike ' + str(i) + ' searching for postMinVal:' + str(postMinVal) + ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
+					# sometimes postRange is empty, don't try and put min/max in error
+					#print('postRange:', postRange)
+					errorStr = 'spike ' + str(i) + ' searching for postMinVal:' + str(postMinVal) #+ ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
 					self.spikeDict[i]['errors'].append(errorStr)
 					self.numErrors += 1
 					
@@ -524,9 +533,18 @@ class bAnalysis:
 		df = pd.DataFrame(self.spikeDict)
 		return df
 
-	def report2(self):
+	def report2(self, theMin, theMax):
+		"""
+		generate a report of spikes with spike times between theMin (sec) and theMax (sec)
+		"""
 		newList = []
 		for spike in self.spikeDict:
+
+			# if current spike time is out of bounds then continue (e.g. it is not between theMin (sec) and theMax (sec)
+			spikeTime_sec = self.pnt2Sec_(spike['thresholdPnt'])
+			if spikeTime_sec<theMin or spikeTime_sec>theMax:
+				continue
+			
 			spikeDict = collections.OrderedDict() # use OrderedDict so Pandas output is in the correct order
 			spikeDict['Take Off Potential (s)'] = self.pnt2Sec_(spike['thresholdPnt'])
 			spikeDict['Take Off Potential (ms)'] = self.pnt2Ms_(spike['thresholdPnt'])

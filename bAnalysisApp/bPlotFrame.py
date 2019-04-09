@@ -197,8 +197,9 @@ class bPlotFrame(ttk.Frame):
 			self.analysisLines[name].set_ydata([])
 			self.analysisLines[name].set_xdata([])
 			#
-			self.analysisLines['halfWidthLines'].set_ydata([])
-			self.analysisLines['halfWidthLines'].set_xdata([])
+			if name == 'halfWidth':
+				self.analysisLines['halfWidthLines'].set_ydata([])
+				self.analysisLines['halfWidthLines'].set_xdata([])
 			#
 			self.canvas.draw()
 			###
@@ -295,6 +296,10 @@ class bPlotFrame(ttk.Frame):
 
 		self.canvas.draw()
 
+	def _get_x_axes(self):
+		theMin, theMax = self.axes.get_xlim()
+		return theMin, theMax
+		
 	def setXAxis(self, xMin, xMax):
 		print("bPlotFrame.setXAxis() xMin:", xMin, "xMax:", xMax)
 		self.axes.set_xlim(xMin, xMax)
@@ -323,7 +328,7 @@ class bPlotFrame(ttk.Frame):
 			return
 		if abs(xMax-xMin) < 0.001:
 			return
-		print('bPlotFrame.onselect() xMin:', xMin, 'xMax:', xMax)
+		print('=== bPlotFrame.onselect() xMin:', xMin, 'xMax:', xMax)
 		#self.axes.set_xlim(xMin, xMax)
 		self.controller.setXAxis(xMin, xMax)
 
@@ -492,7 +497,11 @@ class bPlotFrame(ttk.Frame):
 			line, = self.axes.plot(ba.spikeClips_x, self.meanClip, 'r')
 			self.clipLines_mean.append(line)
 		else:
-			print('error: bPlotFrame.plotClips_updateSelection() did not update the mean clip')
+			if xMin==0 and xMax==0:
+				# donlt warn
+				pass
+			else:
+				print('error: bPlotFrame.plotClips_updateSelection() did not update the mean clip')
 			
 		self.canvas.draw()
 
@@ -689,6 +698,10 @@ class bPlotFrame(ttk.Frame):
 		self.metax = xVal
 		self.metay = yVal
 
+		# on plotting, always cancel single spike selection
+		self.singleSpikeSelection.set_ydata([])
+		self.singleSpikeSelection.set_xdata([])		
+
 		self.canvas.draw()
 
 	def plotMeta(self, ba, statName, doInit=False):
@@ -701,10 +714,12 @@ class bPlotFrame(ttk.Frame):
 
 	def plotMeta_updateSelection(self, ba, xMin, xMax):
 		"""
-		select spikes withing a time range
+		select spikes withing a time range (they will be yellow)
 		"""
 
 		print('bPlotFrame.plotMeta_updateSelection() xMin:', xMin, 'xMax:', xMax)
+
+		self.controller.setStatus('Updating meta plot selection')
 
 		# clear existing
 		if self.plotMeta_selection is not None:
@@ -719,8 +734,10 @@ class bPlotFrame(ttk.Frame):
 				#print(spikeSeconds)
 				if spikeSeconds >= xMin and spikeSeconds <= xMax:
 					#print(spikeTime)
-					line, = self.axes.plot(self.metax[i], self.metay[i], 'oy')
+					line, = self.axes.plot(self.metax[i], self.metay[i], 'oy', markersize=10)
 					self.plotMeta_selection.append(line)
 
 		self.canvas.draw()
+
+		self.controller.setStatus()
 
