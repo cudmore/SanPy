@@ -36,7 +36,7 @@ __version__ = '20190328'
 #####################################################################################
 class AnalysisApp:
 
-	def __init__(self, path=None):
+	def __init__(self, path=''):
 
 		self.preferencesLoad()
 
@@ -109,8 +109,9 @@ class AnalysisApp:
 		self.metaWindow = None # see self.metaWindow3()
 		self.metaPlot3 = None
 
-		if path is not None:
-			self.loadFolder(path=path)
+		if len(path) == 0:
+			path = self.configDict['lastPath']
+		self.loadFolder(path=path)
 
 		
 		# the following while try/except is SUPER IMPORTANT
@@ -582,14 +583,18 @@ class AnalysisApp:
 		
 	def loadFolder(self, path=''):
 		if len(path) < 1:
-			path = tkinter.filedialog.askdirectory()
+			#self.configDict['lastFolder']
+			path = tkinter.filedialog.askdirectory(initialdir=self.configDict['lastPath'])
 
 		if not os.path.isdir(path):
 			print('error: did not find path:', path)
 			return
 
-		self.setStatus('Loading folder ' + path)
-
+		
+		statusStr = 'Loading folder "' + path + '"'
+		self.setStatus(statusStr)
+		print(statusStr)
+		
 		self.path = path
 		self.configDict['lastPath'] = path
 
@@ -753,6 +758,7 @@ class AnalysisApp:
 		self.configDict = collections.OrderedDict()
 
 		self.configDict['autoDetect'] = True # FALSE DOES NOT WORK!!!! auto detect on file selection and/or sweep selection
+		self.configDict['lastPath'] = 'data'
 		self.configDict['windowGeometry'] = {}
 		self.configDict['windowGeometry']['x'] = 100
 		self.configDict['windowGeometry']['y'] = 100
@@ -1049,6 +1055,6 @@ if __name__ == '__main__':
 
 	print('starting AnalysisApp __main__')
 
-	aa = AnalysisApp(path='/Users/cudmore/Sites/bAnalysis/data')
+	aa = AnalysisApp()
 
 	print('ending AnalysisApp __main__')
