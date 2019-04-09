@@ -563,8 +563,12 @@ class AnalysisApp:
 
 		# assuming halfWidths is a well formed list of numbers
 		halfWidthsList = halfWidths.split(',')
-		halfWidthsInt = list(map(int, halfWidthsList))
-		
+		try:
+			halfWidthsInt = list(map(int, halfWidthsList))
+		except:
+			self.setStatus('Invalid half widths. Please enter comman delimeted numbers')
+			return False
+			
 		self.ba.spikeDetect(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter, halfHeights=halfWidthsInt, startSeconds=startSeconds, stopSeconds=stopSeconds) # calls spikeDetect0()
 
 		# refresh number of spikes
@@ -574,6 +578,8 @@ class AnalysisApp:
 		
 		self.setStatus()
 
+		return True
+		
 	def loadFolder(self, path=''):
 		if len(path) < 1:
 			path = tkinter.filedialog.askdirectory()
