@@ -70,16 +70,6 @@ app.layout = html.Div([
 			id='xaxis-column',
 			options=myOptionsList,
 			value='peakSec'
-			'''
-			[
-				{'label': 'peakSec', 'value': 'peakSec'},
-				{'label': 'peakVal', 'value': 'peakVal'},
-				{'label': 'New York City', 'value': 'NYC'},
-				{'label': u'Montréal', 'value': 'MTL'},
-				{'label': 'San Francisco', 'value': 'SF'}
-			],
-			value='MTL'
-			'''
 		),
 	], style={'width': '48%', 'display': 'inline-block'}),
 
@@ -89,16 +79,6 @@ app.layout = html.Div([
 			id='yaxis-column',
 			options=myOptionsList,
 			value='thresholdVal'
-			'''
-			options=[
-				{'label': 'peakSec', 'value': 'peakSec'},
-				{'label': 'peakVal', 'value': 'peakVal'},
-				{'label': 'New York City', 'value': 'NYC'},
-				{'label': u'Montréal', 'value': 'MTL'},
-				{'label': 'San Francisco', 'value': 'SF'}
-			],
-			value='MTL'
-			'''
 		),
 	], style={'width': '48%', 'display': 'inline-block'}),
 
