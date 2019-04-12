@@ -26,26 +26,15 @@ myMedianFilter = 3
 halfHeights = [20, 50, 80]
 ba.spikeDetect(dVthresholdPos=myThreshold, medianFilter=myMedianFilter, halfHeights=halfHeights)
 
-x = [spike['peakSec'] for spike in ba.spikeDict]
-y = [spike['peakVal'] for spike in ba.spikeDict]
-'''
-print(len(x))
-print(len(y))
-'''
+plotEveryPoint = 10
+start = 0
+stop = len(ba.abf.sweepX) - 1
+subSetOfPnts = range(start, stop, plotEveryPoint)
 ##
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-
-'''
-df = pd.read_csv(
-	'https://gist.githubusercontent.com/chriddyp/' +
-	'5d1ea79569ed194d432e56108a04d188/raw/' +
-	'a9f9e8076b837d541398e999dcbac2b2826a81f8/'+
-	'gdp-life-exp-2007.csv')
-print(df)
-'''
 
 # a list of key names in ba.spikeDict
 skipKeys = ['file', 'spikeNumber', 'numError', 'errors', 'dVthreshold', 'medianFilter', 'halfHeights']
@@ -60,18 +49,14 @@ for key,value in ba.spikeDict[mySpikeNumber].items():
 		'value': key
 	}
 	myOptionsList.append(optionsDict)
-#print('myOptionsList:', myOptionsList)
 
 app.layout = html.Div([
 	html.Label('File: ' + myFile),
-	html.Div([
-		html.Label('X'),
-		dcc.Dropdown(
-			id='xaxis-column',
-			options=myOptionsList,
-			value='peakSec'
-		),
-	], style={'width': '48%', 'display': 'inline-block'}),
+
+	html.Button(id='plot-button', children='Plot'),
+	
+	dcc.Graph(style={'height': '300px'}, id='dvdt-graph'),
+	dcc.Graph(style={'height': '300px'}, id='raw-graph'),
 
 	html.Div([
 		html.Label('Y'),
@@ -82,14 +67,117 @@ app.layout = html.Div([
 		),
 	], style={'width': '48%', 'display': 'inline-block'}),
 
-	dcc.Graph(id='life-exp-vs-gdp')
+	html.Div([
+		html.Label('X'),
+		dcc.Dropdown(
+			id='xaxis-column',
+			options=myOptionsList,
+			value='peakSec'
+		),
+	], style={'width': '48%', 'display': 'inline-block'}),
+
+
+	dcc.Graph(style={'height': '300px'}, id='life-exp-vs-gdp')
 ])
 
+#
+# dvdt plot
+@app.callback(
+	Output('dvdt-graph', 'figure'),
+	[Input('plot-button','id'),
+	Input('plot-button', 'n_clicks'),
+	Input('dvdt-graph', 'relayoutData')
+	])
+def dvdt_plot_callback(id, n_clicks, relayoutData):
+	print('dvdt_plot_callback id:', id, 'relayoutData:', relayoutData)
+	# relayoutData: {'autosize': True}
+	xMin = 0
+	xMax = ba.abf.sweepX[-1]
+	if relayoutData is not None:
+		if 'xaxis.range[0]' in relayoutData and 'xaxis.range[1]' in relayoutData:
+			xMin = relayoutData['xaxis.range[0]']
+			xMax = relayoutData['xaxis.range[1]']
+			#print('xMin:', xMin, 'xMax:', xMax)
+	print('   xMin:', xMin, 'xMax:', xMax)
+	
+	return {
+		'data': [go.Scatter(
+			x=ba.abf.sweepX[subSetOfPnts],
+			y=ba.filteredDeriv[subSetOfPnts],
+			text='???', #dff[dff['Indicator Name'] == yaxis_column_name]['Country Name'],
+			mode='lines',
+			marker={
+				'size': 15,
+				'opacity': 0.5,
+				'line': {'width': 0.5, 'color': 'white'}
+			}
+		)],
+		'layout': go.Layout(
+			xaxis={
+				'title': 'Time (sec)',
+				'type': 'linear',
+				'range': [xMin, xMax]
+			},
+			yaxis={
+				'title': 'dV/dt',
+				'type': 'linear'
+			},
+			margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
+			hovermode='closest',
+		)
+	}
+	
+#
+# raw plot
+@app.callback(
+	Output('raw-graph', 'figure'),
+	[Input('plot-button','id'),
+	Input('plot-button', 'n_clicks'),
+	Input('raw-graph', 'relayoutData')
+	])
+def raw_plot_callback(id, n_clicks, relayoutData):
+	print('raw_plot_callback id:', id)
+	xMin = 0
+	xMax = ba.abf.sweepX[-1]
+	if relayoutData is not None:
+		if 'xaxis.range[0]' in relayoutData and 'xaxis.range[1]' in relayoutData:
+			xMin = relayoutData['xaxis.range[0]']
+			xMax = relayoutData['xaxis.range[1]']
+			#print('xMin:', xMin, 'xMax:', xMax)
+	print('   xMin:', xMin, 'xMax:', xMax)
+	return {
+		'data': [go.Scatter(
+			x=ba.abf.sweepX[subSetOfPnts], #dff[dff['Indicator Name'] == xaxis_column_name]['Value'],
+			y=ba.abf.sweepY[subSetOfPnts], #dff[dff['Indicator Name'] == yaxis_column_name]['Value'],
+			text='???', #dff[dff['Indicator Name'] == yaxis_column_name]['Country Name'],
+			mode='lines',
+			marker={
+				'size': 15,
+				'opacity': 0.5,
+				'line': {'width': 0.5, 'color': 'white'}
+			}
+		)],
+		'layout': go.Layout(
+			xaxis={
+				'title': 'Time (sec)',
+				'type': 'linear',
+				'range': [xMin, xMax]
+			},
+			yaxis={
+				'title': 'dV/dt',
+				'type': 'linear'
+			},
+			margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
+			hovermode='closest'
+		)
+	}
+	
+#
+# stat plot
 @app.callback(
 	Output('life-exp-vs-gdp', 'figure'),
 	[Input('xaxis-column', 'value'),
 	 Input('yaxis-column', 'value')])
-	 
 def update_graph(xaxis_column_name, yaxis_column_name):
 	print('update_graph()')
 	print('   xaxis_column_name:', xaxis_column_name)
@@ -122,7 +210,7 @@ def update_graph(xaxis_column_name, yaxis_column_name):
 				'title': yaxis_column_name,
 				'type': 'linear' if yaxis_type == 'Linear' else 'log'
 			},
-			margin={'l': 40, 'b': 40, 't': 10, 'r': 0},
+			margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
 			hovermode='closest'
 		)
 	}
