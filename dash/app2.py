@@ -54,7 +54,7 @@ app.layout = html.Div([
 	html.Label('File: ' + myFile),
 
 	html.Button(id='plot-button', children='Plot'),
-	
+
 	dcc.Graph(style={'height': '300px'}, id='dvdt-graph'),
 	dcc.Graph(style={'height': '300px'}, id='raw-graph'),
 
@@ -99,7 +99,7 @@ def dvdt_plot_callback(id, n_clicks, relayoutData):
 			xMax = relayoutData['xaxis.range[1]']
 			#print('xMin:', xMin, 'xMax:', xMax)
 	print('   xMin:', xMin, 'xMax:', xMax)
-	
+
 	return {
 		'data': [go.Scatter(
 			x=ba.abf.sweepX[subSetOfPnts],
@@ -126,7 +126,7 @@ def dvdt_plot_callback(id, n_clicks, relayoutData):
 			hovermode='closest',
 		)
 	}
-	
+
 #
 # raw plot
 @app.callback(
@@ -171,7 +171,7 @@ def raw_plot_callback(id, n_clicks, relayoutData):
 			hovermode='closest'
 		)
 	}
-	
+
 #
 # stat plot
 @app.callback(
@@ -216,4 +216,4 @@ def update_graph(xaxis_column_name, yaxis_column_name):
 	}
 
 if __name__ == '__main__':
-	app.run_server(debug=True)
+	app.run_server(debug=True, host='0.0.0.0')
