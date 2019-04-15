@@ -272,8 +272,9 @@ class bAnalysis:
 			spikeDict['halfHeights'] = halfHeights
 
 			spikeDict['thresholdPnt'] = spikeTime
-			spikeDict['thresholdVal'] = vm[spikeTime]
-			#spikeDict['thresholdSec'] = (spikeTime / self.abf.dataPointsPerMs) / 1000
+			spikeDict['thresholdVal'] = vm[spikeTime] # in vm
+			spikeDict['thresholdVal_dvdt'] = dvdt[spikeTime] # in dvdt
+			spikeDict['thresholdSec'] = (spikeTime / self.abf.dataPointsPerMs) / 1000
 
 			spikeDict['peakPnt'] = peakPnt
 			spikeDict['peakVal'] = peakVal
@@ -382,12 +383,21 @@ class bAnalysis:
 				
 				#
 				# maxima in dv/dt before spike
-				preRange = dvdt[self.spikeTimes[i]:peakPnt]
-				preSpike_dvdt_max_pnt = np.argmax(preRange)
-				preSpike_dvdt_max_pnt += self.spikeTimes[i]
-				self.spikeDict[i]['preSpike_dvdt_max_pnt'] = preSpike_dvdt_max_pnt
-				self.spikeDict[i]['preSpike_dvdt_max_val'] = vm[preSpike_dvdt_max_pnt] # in units mV
-				self.spikeDict[i]['preSpike_dvdt_max_val2'] = dvdt[preSpike_dvdt_max_pnt] # in units mV
+				# added try/except sunday april 14, seems to break spike detection???
+				try:
+					preRange = dvdt[self.spikeTimes[i]:peakPnt]
+					preSpike_dvdt_max_pnt = np.argmax(preRange)
+					preSpike_dvdt_max_pnt += self.spikeTimes[i]
+					self.spikeDict[i]['preSpike_dvdt_max_pnt'] = preSpike_dvdt_max_pnt
+					self.spikeDict[i]['preSpike_dvdt_max_val'] = vm[preSpike_dvdt_max_pnt] # in units mV
+					self.spikeDict[i]['preSpike_dvdt_max_val2'] = dvdt[preSpike_dvdt_max_pnt] # in units mV
+				except (ValueError) as e:
+					self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
+					# sometimes preRange is empty, don't try and put min/max in error
+					#print('preRange:', preRange)
+					errorStr = 'spike ' + str(i) + ' searching for preSpike_dvdt_max_pnt:'
+					self.spikeDict[i]['errors'].append(errorStr)
+					self.numErrors += 1
 
 				#
 				# post spike min
