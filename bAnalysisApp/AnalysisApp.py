@@ -150,9 +150,17 @@ class AnalysisApp:
 
 		row = 0
 
+		#
+		# detect button
 		detectButton = ttk.Button(detection_frame, text='Detect Spikes', command=lambda name='detectButton': self.button_Callback(name))
 		detectButton.grid(row=row, column=0, sticky="w")
 
+		# auto detect checkbox
+		#print("self.configDict['autoDetect']:", self.configDict['autoDetect'])
+		var = tkinter.BooleanVar(value=self.configDict['autoDetect'])
+		check = ttk.Checkbutton(detection_frame, text='Auto Detect', var=var, command=lambda name='autoAnalysisCheckbox', var=var: self.check_Callback(name, var))
+		check.grid(row=row, column=1, sticky="w")
+		
 		# popup for sweeps
 		self.sweepVar = tkinter.StringVar(self.root)
  
@@ -162,11 +170,10 @@ class AnalysisApp:
  
 		self.sweepPopupMenu = ttk.OptionMenu(detection_frame, self.sweepVar, *self.sweepChoices, command=self.sweepPopupMenu_callback)
 		sweepPopupLabel = ttk.Label(detection_frame, text="Sweep")
-		sweepPopupLabel.grid(row = row, column = 1)
-		self.sweepPopupMenu.grid(row = row, column =2)
+		sweepPopupLabel.grid(row = row, column = 2)
+		self.sweepPopupMenu.grid(row = row, column =3)
  
 		row += 1
-
 
 		# dV/dt threshold
 		labelDir = ttk.Label(detection_frame, text='dV/dt Threshold')
@@ -179,6 +186,17 @@ class AnalysisApp:
 
 		row += 1
 
+		# Vm Threshold (mV)
+		labelDir = ttk.Label(detection_frame, text='Vm Threshold (mV)')
+		labelDir.grid(row=row, column=0, sticky="w")
+
+		minSpikeVm = self.configDict['detection']['minSpikeVm']
+		self.minSpikeVmSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
+		self.minSpikeVmSpinbox.insert(0,minSpikeVm) # default is 100
+		self.minSpikeVmSpinbox.grid(row=row, column=1, sticky="w")
+
+
+		row += 1
 
 		# spike half-widths
 		labelDir = ttk.Label(detection_frame, text='Half Widths')
@@ -283,7 +301,7 @@ class AnalysisApp:
 		labelDir.grid(row=0, column=1, sticky="w")
 
 		plotEveryPoint = self.configDict['display']['plotEveryPoint']
-		self.plotEverySpinbox = ttk.Spinbox(plotOptionsFrame, from_=1, to=1000, width=5, validate="focusout", validatecommand=lambda name='plotEverySpinbox': self.spinBox_Callback(name))
+		self.plotEverySpinbox = ttk.Spinbox(plotOptionsFrame, from_=1, to=1000, width=5, validate="focusout", validatecommand=lambda name='plotEverySpinbox': self.plotEverySpinbox_Callback(name))
 		self.plotEverySpinbox.insert(0,plotEveryPoint) # default is 10
 		self.plotEverySpinbox.grid(row=0, column=2, sticky="w")
 
@@ -477,10 +495,9 @@ class AnalysisApp:
 		sweep = int(self.sweepVar.get())
 		self.switchSweep(sweep)
 		
-	def spinBox_Callback(self, name):
-		print('spinBox_Callback:', name)
+	def plotEverySpinbox_Callback(self, name):
 		plotEveryPoint = int(self.plotEverySpinbox.get())
-		print('plotEveryPoint:', plotEveryPoint)
+		print('plotEverySpinbox_Callback:', name, 'plotEveryPoint:', plotEveryPoint)
 		self.rawPlot.plotRaw(self.ba, plotEveryPoint=plotEveryPoint)
 		self.derivPlot.plotDeriv(self.ba, plotEveryPoint=plotEveryPoint)
 		return True
@@ -491,8 +508,11 @@ class AnalysisApp:
 		#print('   self.filterSpinbox:', self.filterSpinbox.get())
 
 		if buttonName == 'detectButton':
+			'''
 			if self.configDict['autoDetect']:
 				self.detectSpikes()
+			'''
+			self.detectSpikes()
 			self.replotResults()
 
 		if buttonName == 'fullAxisButton':
@@ -532,6 +552,8 @@ class AnalysisApp:
 				numDisplayedClips = self.clipsPlot.plotClips_updateSelection(self.ba, xMin=0, xMax=0)
 				self.numClipsLabel['text'] = 'Number of spike clips: ' + str(numDisplayedClips) # todo: this is case where I want signalling infrastructure to update interface
 				self.setStatus()
+		elif name == 'autoAnalysisCheckbox':
+			self.configDict['autoDetect'] = onoff
 		else:
 			self.rawPlot.plotStat(name, onoff)
 
@@ -543,6 +565,9 @@ class AnalysisApp:
 		print('AnalysisApp.detectSpikes()')
 		self.setStatus('Detecting Spikes')
 
+		dVthresholdPos = int(self.thresholdSpinbox.get())
+		minSpikeVm = int(self.minSpikeVmSpinbox.get())
+		medianFilter = int(self.filterSpinbox.get())
 		plotEveryPoint = int(self.plotEverySpinbox.get()) # used in plot, not in detection
 		halfWidths = self.halfWidthEntry.get()
 		startSeconds = int(self.startSecondsSpinbox.get())
@@ -551,26 +576,28 @@ class AnalysisApp:
 			stopSeconds = max(self.ba.abf.sweepX)
 		else:
 			stopSeconds = int(stopSeconds)
-		dVthresholdPos = int(self.thresholdSpinbox.get())
-		medianFilter = int(self.filterSpinbox.get())
 		#theSweep = int(self.sweepVar.get())
 
+		'''
+		print('   dVthresholdPos:', dVthresholdPos)
+		print('   minSpikeVm:', minSpikeVm)
+		print('   medianFilter:', medianFilter)
 		print('   halfWidths:', halfWidths)
 		print('   startSeconds:', startSeconds)
 		print('   stopSeconds:', stopSeconds)
-		print('   dVthresholdPos:', dVthresholdPos)
-		print('   medianFilter:', medianFilter)
 		#print('   theSweep:', theSweep)
-
+		'''
+		
 		# assuming halfWidths is a well formed list of numbers
 		halfWidthsList = halfWidths.split(',')
 		try:
 			halfWidthsInt = list(map(int, halfWidthsList))
 		except:
-			self.setStatus('Invalid half widths. Please enter comman delimeted numbers')
+			self.setStatus('Invalid half widths. Please enter comma delimeted integers like 10,50,90')
 			return False
 			
-		self.ba.spikeDetect(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter, halfHeights=halfWidthsInt, startSeconds=startSeconds, stopSeconds=stopSeconds) # calls spikeDetect0()
+		# calls spikeDetect0()
+		self.ba.spikeDetect(dVthresholdPos=dVthresholdPos, minSpikeVm=minSpikeVm, medianFilter=medianFilter, halfHeights=halfWidthsInt, startSeconds=startSeconds, stopSeconds=stopSeconds)
 
 		# refresh number of spikes
 		self.numSpikesLabel['text'] = 'Number of spikes detected: ' + str(self.ba.numSpikes)	
@@ -622,6 +649,11 @@ class AnalysisApp:
 		self.numErrorsLabel['text'] = 'Number of spike errors: None'
 
 		if sweepSet:
+			# abb 20190513, always calculate and display the derivative
+
+			medianFilter = int(self.filterSpinbox.get())
+			self.ba.getDerivative(medianFilter=medianFilter)
+
 			if self.configDict['autoDetect']:
 				self.detectSpikes()
 			self.replotResults()
@@ -652,10 +684,14 @@ class AnalysisApp:
 		self.numSpikesLabel['text'] = 'Number of spikes detected: None'	
 		self.numErrorsLabel['text'] = 'Number of spike errors: None'
 
+		# abb, removed 20190513
+		'''
 		if self.configDict['autoDetect']:
 			self.detectSpikes()
 		self.replotResults()
-
+		'''
+		self.switchSweep(0)
+		
 	def replotResults(self):
 		startTime = time.time()
 		
@@ -767,6 +803,7 @@ class AnalysisApp:
 
 		self.configDict['detection'] = {}
 		self.configDict['detection']['dvdtThreshold'] = 100
+		self.configDict['detection']['minSpikeVm'] = -20
 		self.configDict['detection']['medianFilter'] = 5
 
 		self.configDict['display'] = {}
@@ -789,6 +826,9 @@ class AnalysisApp:
 		# detection
 		dvdtThreshold = int(self.thresholdSpinbox.get())
 		self.configDict['detection']['dvdtThreshold'] = dvdtThreshold
+
+		minSpikeVm = int(self.minSpikeVmSpinbox.get())
+		self.configDict['detection']['minSpikeVm'] = minSpikeVm
 
 		medianFilter = int(self.filterSpinbox.get())
 		self.configDict['detection']['medianFilter'] = medianFilter
@@ -952,6 +992,7 @@ class AnalysisApp:
 			headerDict['file'] = [self.ba.file]
 			headerDict['Date Analyzed'] = [self.ba.dateAnalyzed]
 			headerDict['dV/dt Threshold'] = [self.ba.dVthreshold]
+			headerDict['Vm Threshold (mV)'] = [self.ba.minSpikeVm]
 			headerDict['Median Filter (pnts)'] = [self.ba.medianFilter]
 			headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
 			headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
@@ -985,6 +1026,7 @@ class AnalysisApp:
 					headerDict['file'].append('')
 					headerDict['Date Analyzed'].append('')
 					headerDict['dV/dt Threshold'].append('')
+					headerDict['Vm Threshold (mV)'].append('')
 					headerDict['Median Filter (pnts)'].append('')
 					headerDict['Analysis Start (sec)'].append('')
 					headerDict['Analysis Stop (sec)'].append('')

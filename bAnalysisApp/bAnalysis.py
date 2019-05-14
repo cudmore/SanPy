@@ -17,12 +17,17 @@ Usage:
 	ba.plotClips()
 
 Detection:
+	getDerivative() creates a median filtered derivative
 	spikeDetect0() does threshold detection to generate a list of spike times
 	spikeDetect() takes a list of spike times and performs detailed analysis on each spike
 Reports:
 	report() and report2() generate pandas data frames of the results and can easily by manipulated or saved
 Plots:
 	Plot vm, derivative, spike stats etc
+	
+Updates
+	20190513, added self.VmThreshold
+	
 '''
 
 import os, math, time, collections, datetime
@@ -44,6 +49,7 @@ class bAnalysis:
 		# detection parameters specified by user
 		self.dateAnalyzed = None
 		self.dVthreshold = None
+		self.minSpikeVm = None # abb, 20190513
 		self.medianFilter = None
 		self.startSeconds = None
 		self.stopSeconds = None
@@ -66,6 +72,8 @@ class bAnalysis:
 		self.filteredDeriv = []
 		self.spikeTimes = []
 
+		self.thresholdTimes = None
+		
 		# keep track of the number of errors during spike detection
 		self.numErrors = 0
 		
@@ -110,7 +118,21 @@ class bAnalysis:
 	############################################################
 	# spike detection
 	############################################################
-	def spikeDetect0(self, dVthresholdPos=100, medianFilter=0, startSeconds=None, stopSeconds=None):
+	def getDerivative(self, medianFilter=0):
+		if medianFilter > 0:
+			self.filteredVm = scipy.signal.medfilt(self.abf.sweepY, medianFilter)
+		else:
+			self.filteredVm = self.abf.sweepY
+
+		self.filteredDeriv = np.diff(self.filteredVm)
+
+		# scale it to V/S (mV/ms)
+		self.filteredDeriv = self.filteredDeriv * self.abf.dataRate / 1000
+
+		# add an initial point so it is the same length as raw data in abf.sweepY
+		self.filteredDeriv = np.concatenate(([0],self.filteredDeriv))
+	
+	def spikeDetect0(self, dVthresholdPos=100, minSpikeVm=-20, medianFilter=0, startSeconds=None, stopSeconds=None):
 		"""
 		look for threshold crossings (dVthresholdPos) in first derivative (dV/dt) of membrane potential (Vm)
 		tally each threshold crossing (e.g. a spike) in self.spikeTimes list
@@ -122,7 +144,12 @@ class bAnalysis:
 			self.filtereddVdt: 
 		"""
 		
-		print('bAnalysis.spikeDetect0() dVthresholdPos:', dVthresholdPos, 'medianFilter:', medianFilter, 'startSeconds:', startSeconds, 'stopSeconds:', stopSeconds)
+		print('bAnalysis.spikeDetect0()')
+		print('    dVthresholdPos:', dVthresholdPos)
+		print('    minSpikeVm:', minSpikeVm)
+		print('    medianFilter:', medianFilter)
+		print('    startSeconds:', startSeconds)
+		print('    stopSeconds:', stopSeconds)
 
 		#
 		# header
@@ -131,6 +158,7 @@ class bAnalysis:
 		self.dateAnalyzed = dateStr
 
 		self.dVthreshold = dVthresholdPos
+		self.minSpikeVm = minSpikeVm
 		self.medianFilter = medianFilter
 		self.startSeconds = startSeconds
 		self.stopSeconds = stopSeconds
@@ -148,6 +176,8 @@ class bAnalysis:
 		print('   startPnt:', startPnt, 'stopPnt:', stopPnt)
 		'''
 		
+		# removed 20190513
+		'''
 		if medianFilter > 0:
 			self.filteredVm = scipy.signal.medfilt(self.abf.sweepY,medianFilter)
 		else:
@@ -160,7 +190,8 @@ class bAnalysis:
 
 		# add an initial point so it is the same length as raw data in abf.sweepY
 		self.filteredDeriv = np.concatenate(([0],self.filteredDeriv))
-
+		'''
+		
 		#spikeTimes = _where_cross(sweepDeriv,dVthresholdPos)
 		Is=np.where(self.filteredDeriv>dVthresholdPos)[0]
 		Is=np.concatenate(([0],Is))
@@ -174,6 +205,10 @@ class bAnalysis:
 		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if (spikeTime>=startPnt and spikeTime<=stopPnt)]
 		#print('after stripping len(spikeTimes0):', len(spikeTimes0))
 
+		#
+		# throw out all spikes that are below a threshold Vm (usually below -20 mV)
+		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if self.abf.sweepY[spikeTime] > self.minSpikeVm]
+		
 		#
 		# if there are doubles, throw-out the second one
 		refractory_ms = 10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
@@ -228,7 +263,7 @@ class bAnalysis:
 
 		return self.spikeTimes, self.thresholdTimes, self.filteredVm, self.filteredDeriv
 
-	def spikeDetect(self, dVthresholdPos=100, medianFilter=0, halfHeights=[20, 50, 80], startSeconds=None, stopSeconds=None):
+	def spikeDetect(self, dVthresholdPos=100, minSpikeVm=-20, medianFilter=0, halfHeights=[20, 50, 80], startSeconds=None, stopSeconds=None):
 		'''
 		spike detect the current sweep and put results into spikeTime[currentSweep]
 
@@ -242,7 +277,7 @@ class bAnalysis:
 		self.numErrors = 0
 		
 		# spike detect
-		self.spikeTimes, self.thresholdTimes, vm, dvdt = self.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter, startSeconds=startSeconds, stopSeconds=stopSeconds)
+		self.spikeTimes, self.thresholdTimes, vm, dvdt = self.spikeDetect0(dVthresholdPos=dVthresholdPos, minSpikeVm=minSpikeVm, medianFilter=medianFilter, startSeconds=startSeconds, stopSeconds=stopSeconds)
 
 		#
 		# look in a window after each threshold crossing to get AP peak
@@ -351,9 +386,16 @@ class bAnalysis:
 				# search backward from spike to find when vm reaches preMinVal (avg)
 				preRange = vm[preMinPnt:self.spikeTimes[i]]
 				preRange = np.flip(preRange) # we want to search backwards from peak
-				preMinPnt2 = np.where(preRange<preMinVal)[0][0]
-				preMinPnt = self.spikeTimes[i] - preMinPnt2
-
+				try:
+					preMinPnt2 = np.where(preRange<preMinVal)[0][0]
+					preMinPnt = self.spikeTimes[i] - preMinPnt2
+				except (IndexError) as e:
+					self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
+					# sometimes preRange is empty, don't try and put min/max in error
+					errorStr = 'spike ' + str(i) + ' searching for preMinVal:' + str(preMinVal) #+ ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
+					self.spikeDict[i]['errors'].append(errorStr)
+					self.numErrors += 1
+					
 				#
 				# linear fit on 10% - 50% of the time from preMinPnt to self.spikeTimes[i]
 				startLinearFit = 0.1 # percent of time between pre spike min and AP peak

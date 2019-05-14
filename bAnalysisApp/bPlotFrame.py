@@ -301,7 +301,7 @@ class bPlotFrame(ttk.Frame):
 		return theMin, theMax
 		
 	def setXAxis(self, xMin, xMax):
-		print("bPlotFrame.setXAxis() xMin:", xMin, "xMax:", xMax)
+		#print("bPlotFrame.setXAxis() xMin:", xMin, "xMax:", xMax)
 		self.axes.set_xlim(xMin, xMax)
 		self.canvas.draw()
 
@@ -425,9 +425,13 @@ class bPlotFrame(ttk.Frame):
 
 		# final spike time
 		#print('ba.thresholdTimes[0]:', ba.thresholdTimes[0])
-		self.thresholdCrossingsLine.set_ydata(ba.filteredDeriv[ba.thresholdTimes])
-		self.thresholdCrossingsLine.set_xdata(ba.abf.sweepX[ba.thresholdTimes])
-
+		if ba.thresholdTimes is not None:
+			self.thresholdCrossingsLine.set_ydata(ba.filteredDeriv[ba.thresholdTimes])
+			self.thresholdCrossingsLine.set_xdata(ba.abf.sweepX[ba.thresholdTimes])
+		else:
+			self.thresholdCrossingsLine.set_ydata([])
+			self.thresholdCrossingsLine.set_xdata([])
+		
 		self.canvas.draw()
 
 	def plotClips(self, ba, plotEveryPoint=10):
@@ -511,7 +515,7 @@ class bPlotFrame(ttk.Frame):
 		
 	def plotMeta3(self, xStat, yStat):
 
-		print('bPlotFrame.plotMeta3() xStat:', xStat, 'yStat:', yStat)
+		print('bPlotFrame.plotMeta3() xStat:', xStat, ', yStat:', yStat)
 
 		cid2 = self.canvas.mpl_connect('pick_event', self.onpick3_callback)
 
@@ -679,7 +683,7 @@ class bPlotFrame(ttk.Frame):
 					tenPercentRange = abs(xMax-xMin) * 0.1
 				self.axes.set_xlim(xMin-tenPercentRange, xMax+tenPercentRange)
 		except ValueError:
-			print('warning: bPlotFrame.plotMeta3() ValueError in setting x-axis')
+			print('    warning: bPlotFrame.plotMeta3() ValueError in setting x-axis')
 			
 		try:
 			yMin = np.nanmin(yVal)
@@ -690,7 +694,7 @@ class bPlotFrame(ttk.Frame):
 				tenPercentRange = abs(yMax-yMin) * 0.1
 				self.axes.set_ylim(yMin-tenPercentRange, yMax+tenPercentRange)
 		except ValueError:
-			print('warning: bPlotFrame.plotMeta3() ValueError in setting y-axis')
+			print('    warning: bPlotFrame.plotMeta3() ValueError in setting y-axis')
 						
 		self.axes.set_xlabel(xLabel)
 		self.axes.set_ylabel(yLabel)
@@ -706,7 +710,7 @@ class bPlotFrame(ttk.Frame):
 
 	def plotMeta(self, ba, statName, doInit=False):
 
-		print('bPlotFrame.plotMeta() statName:', statName)
+		#print('bPlotFrame.plotMeta() statName:', statName)
 
 		self.plotMeta3('Time (sec)', statName)
 		

@@ -191,7 +191,7 @@ class bFileTree(bTree):
 		self.videoFileList = videoFileList # bVideoList object
 
 	def populateFiles(self, videoFileList, doInit=False):
-		print('bFileTree.populateFiles()')
+		#print('bFileTree.populateFiles()')
 		
 		self.videoFileList = videoFileList # bVideoList object
 
