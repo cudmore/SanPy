@@ -207,11 +207,33 @@ class bAnalysis:
 
 		#
 		# throw out all spikes that are below a threshold Vm (usually below -20 mV)
-		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if self.abf.sweepY[spikeTime] > self.minSpikeVm]
+		#spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if self.abf.sweepY[spikeTime] > self.minSpikeVm]
+		peakWindow_ms = 10
+		peakWindow_pnts = self.abf.dataPointsPerMs * peakWindow_ms
+		goodSpikeTimes = []
+		for spikeTime in spikeTimes0:
+			peakVal = np.max(self.abf.sweepY[spikeTime:spikeTime+peakWindow_pnts])
+			if peakVal > self.minSpikeVm:
+				goodSpikeTimes.append(spikeTime)
+		spikeTimes0 = goodSpikeTimes
+			
+		#
+		# throw out spike that are not upward deflections of Vm
+		'''
+		prePntUp = 7 # pnts
+		goodSpikeTimes = []
+		for spikeTime in spikeTimes0:
+			preAvg = np.average(self.abf.sweepY[spikeTime-prePntUp:spikeTime-1])
+			postAvg = np.average(self.abf.sweepY[spikeTime+1:spikeTime+prePntUp])
+			#print(preAvg, postAvg)
+			if preAvg < postAvg:
+				goodSpikeTimes.append(spikeTime)
+		spikeTimes0 = goodSpikeTimes
+		'''
 		
 		#
 		# if there are doubles, throw-out the second one
-		refractory_ms = 10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
+		refractory_ms = 20 #10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
 		lastGood = 0 # first spike [0] will always be good, there is no spike [i-1]
 		for i in range(len(spikeTimes0)):
 			if i==0:
@@ -284,6 +306,7 @@ class bAnalysis:
 		# get minima before/after spike
 		peakWindow_ms = 10
 		peakWindow_pnts = self.abf.dataPointsPerMs * peakWindow_ms
+		#
 		avgWindow_ms = 5 # we find the min/max before/after (between spikes) and then take an average around this value
 		avgWindow_pnts = avgWindow_ms * self.abf.dataPointsPerMs
 		avgWindow_pnts = math.floor(avgWindow_pnts/2)
