@@ -1,3 +1,8 @@
+
+## This is a work in progress, do not use this code. 
+
+If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.
+
 ## Whole cell myocyte action potential analysis
 
 This repository has code to perform action potential analysis. It is primarily designed to analyze spontaneous action potentials from cardiac myocytes.
