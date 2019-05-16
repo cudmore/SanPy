@@ -36,6 +36,7 @@ def loadFile(name):
 	filePath = os.path.join(myPath, name)
 	global ba
 	ba = bAnalysis.bAnalysis(filePath)
+	ba.getDerivative(medianFilter=5)
 	ba.spikeDetect(dVthresholdPos=myThreshold, medianFilter=myMedianFilter, halfHeights=halfHeights)
 	start = 0
 	stop = len(ba.abf.sweepX) - 1
@@ -55,7 +56,7 @@ def getFileList(path):
 	retFileList = []
 	useExtension = '.abf'
 	videoFileIdx = 0
-	
+
 	fileDict = {}
 	fileDict['file'] = ''
 	#fileDict['path'] = ''
@@ -87,7 +88,7 @@ def getFileList(path):
 	if len(retFileList) == 0:
 		retFileList.append(fileDict)
 	return retFileList
-	
+
 path = '../data'
 fileList = getFileList(path)
 
@@ -114,12 +115,12 @@ app.css.append_css({'external_url': 'static/my.css'})
 
 app.layout = html.Div([
 
-	html.Div([	
+	html.Div([
 		html.Button(id='load-folder-button', children='Load Folder', className='button-primary'),
 		html.Label('File: ' + os.path.join(myPath, myFile)),
 	], style={'display': 'table-cell'}),
 
-	html.Div([	
+	html.Div([
 		html.Div([
 		dash_table.DataTable(
 			id='file-datatable',
@@ -139,7 +140,7 @@ app.layout = html.Div([
 		),
 		], style={'width': '49%', 'display': 'inline-block', 'vertical-align': 'middle'}),
 	], className='row'),
-	
+
 	html.Div(id='tmpdiv', className='row'),
 	html.Div(id='tmpdiv2', className='row'),
 	html.Div(id='tmpdivRadio', className='row'),
@@ -150,7 +151,7 @@ app.layout = html.Div([
 					html.Button(id='detect-button', children='Detect', className='button-primary'),
 					dcc.Input(id='dvdtThreshold', type='number', value=50, style={'width': 65}),
 				], style={'display': 'table-cell'}),
-				
+
 				dcc.Checklist(
 					id='plot-radio-buttons',
 					options=[
@@ -162,14 +163,14 @@ app.layout = html.Div([
 				),
 
 				html.Button(id='save-button', children='Save', className='button-primary'),
-		], className='two columns'),	
+		], className='two columns'),
 
 		# one dcc.Graph for both dvdt and vm
 		html.Div([
 			dcc.Graph(style={'height': '600px'}, id='linked-graph'),
 		], className='ten columns'),
 	], className='row'),
-		
+
 	html.Div([
 		html.Div([
 		dash_table.DataTable(
@@ -222,7 +223,7 @@ app.layout = html.Div([
 def detectButton(n_clicks, dvdtThreshold):
 	print('=== detectButton() dvdtThreshold:', dvdtThreshold)
 	myDetect(dvdtThreshold)
-	
+
 '''
 @app.callback(
 	Output('tmpdivRadio', 'children'),
@@ -241,9 +242,9 @@ def plotRadioButtons(values):
 # idea is to make fig in main code, then just makea a list [] of traces and return that as 'return {'data': traces}'
 def _regenerateFig(xMin, xMax, statList=None):
 	print('_regenerateFig() xMin:', xMin, 'xMax::', xMax, 'statlist:', statList)
-	
+
 	startSeconds = time.time()
-	
+
 	dvdtTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts], line=dict(color='black'), showlegend=False)
 	vmTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.abf.sweepY[subSetOfPnts], line=dict(color='black'), showlegend=False)
 
@@ -268,7 +269,7 @@ def _regenerateFig(xMin, xMax, statList=None):
 			if stat == 'Take Off Potential (dVdt)':
 				x = [spike['thresholdSec'] for spike in ba.spikeDict]
 				y = [spike['thresholdVal_dvdt'] for spike in ba.spikeDict]
-			
+
 			'''
 			print('x:', x)
 			print('y:', y)
@@ -290,7 +291,7 @@ def _regenerateFig(xMin, xMax, statList=None):
 					fig.append_trace(thisScatter, 1, 1)
 				else:
 					fig.append_trace(thisScatter, 2, 1)
-			
+
 	# only use xaxis1 because the two plots (dvdt and vm) are linked with the SAME xaxis !!!
 	fig['layout']['xaxis1'].update(title='Seconds')
 
@@ -304,7 +305,7 @@ def _regenerateFig(xMin, xMax, statList=None):
 	stopSeconds = time.time()
 	print('   took', str(stopSeconds-startSeconds), 'seconds')
 	return fig
-	
+
 #
 # combined dvdt and raw data
 @app.callback(
@@ -341,10 +342,10 @@ def linked_graph(relayoutData, values):
 	fig['layout']['xaxis1'].update(range= [xMin, xMax])
 	fig['layout'].update(margin= {'l': 100, 'b': 40, 't': 10, 'r': 10})
 	'''
-	
+
 	fig = _regenerateFig(xMin, xMax, values)
 	return fig
-	
+
 #
 # selecting a file
 @app.callback(
@@ -388,7 +389,7 @@ def myTableSelect(y_activeCell, x_activeCell):
 	else:
 		x = []
 		y = []
-		
+
 	return {
 		'data': [go.Scatter(
 			x=x, #dff[dff['Indicator Name'] == xaxis_column_name]['Value'],
