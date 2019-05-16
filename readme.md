@@ -77,9 +77,13 @@ Once you load a folder and select a file, it should look something like this.
 
 <IMG SRC="img/spike-app.png" width=700>
 
+Selecting menu 'Meta Window' allows stats to be plotted versus each other to explore correlations.
+
+<IMG SRC="img/meta-window-example.png" width=700>
+
 ## Writing your own Python scripts
 
-See the `examples` folder.
+See the [/examples](examples) folder.
 
 ```
 from bAnalysis import bAnalysis

@@ -1,3 +1,3 @@
 Example scripts and Jupyter notebooks using bAnalysis.
 
-For some reason the Jupyter notebooks are not rendering on github. Please see 'bBrowser.pdf' for an example run of the code.
+If the Jupyter notebooks (e.g. .ipynb files) do not render on Github, please see 'bBrowser.pdf' for an example run of the code.
