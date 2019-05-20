@@ -603,9 +603,10 @@ class bAnalysis:
 	############################################################
 	# output reports
 	############################################################
-	def report(self):
-		""" return entire spikeDIct as a pandas data frame """
+	def report(self, theMin, theMax):
+		""" return entire spikeDict as a pandas data frame """
 		df = pd.DataFrame(self.spikeDict)
+		df = df[df['thresholdSec'].between(theMin, theMax, inclusive=True)]
 		return df
 
 	def report2(self, theMin, theMax):

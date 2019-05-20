@@ -1084,10 +1084,11 @@ class AnalysisApp:
 	
 			#
 			# always save a text file
-			textFilePath = os.path.join(filePath, fileBaseName + '.txt')
+			textFileBaseName, tmpExtension = os.path.splitext(savefile)
+			textFilePath = os.path.join(filePath, textFileBaseName + '.txt')
 			print('Saving .txt file:', textFilePath)
-			df = self.ba.report()
-			df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
+			df = self.ba.report(theMin, theMax)
+			df.to_csv(textFilePath, sep=',', index_label='index', mode='w')
 
 			self.setStatus('Saved ' + excelFilePath)
 		else:
