@@ -192,7 +192,9 @@ app.layout = html.Div([
 				'backgroundColor': 'ltgray',
 				'fontWeight': 'bold'
 			},
-			active_cell=[12,0],
+			row_selectable=True,
+			selected_rows=[12],
+			#active_cell=[12,0],
 		),
 		], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'}),
 
@@ -211,7 +213,9 @@ app.layout = html.Div([
 				'backgroundColor': 'ltgray',
 				'fontWeight': 'bold'
 			},
-			active_cell=[14,0],
+			row_selectable=True,
+			selected_rows=[14],
+			#active_cell=[14,0],
 		),
 		], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'}),
 	], className='two columns'),
@@ -271,8 +275,8 @@ def myFileListSelect(rows, derived_virtual_selected_rows):
 @app.callback(
 	Output('life-exp-vs-gdp', 'figure'),
 	[
-	Input('y-datatable', 'active_cell'),
-	Input('x-datatable', 'active_cell'),
+	Input('y-datatable', 'selected_rows'),
+	Input('x-datatable', 'selected_rows'),
 	])
 def myTableSelect(y_activeCell, x_activeCell):
 	print('\nmyTableSelect() y_activeCell:', y_activeCell)
