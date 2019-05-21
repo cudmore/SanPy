@@ -23,9 +23,14 @@ class bBrowser:
 			path = '/Users/cudmore/Sites/bAnalysis/data'
 		self.path = path
 		
+		self.selectedRows = []
+		
 		self.df0 = None # small dataframe with list of files loaded
 		
 		self.df = None # massive dataframe with all spikes across all file
+		
+	def setSelectedRows(self, rows):
+		self.selectedRows = rows
 		
 	def loadFolder(self):
 		"""
@@ -161,14 +166,15 @@ app = dash.Dash(__name__)
 """
 
 app.layout = html.Div([
+	
 	dash_table.DataTable(
-		id='analysis-table',
+		id='file-list-table',
 		row_selectable='multi',
 		columns=[{"name": i, "id": i} for i in myBrowser.df0],
 		#data=df.to_dict('records'),
 		data=myBrowser.df0.to_dict('records'),
 	),
-
+	html.Div(id='hidden-div'),
 
 	html.Div([
 		html.Div([
@@ -186,6 +192,7 @@ app.layout = html.Div([
 				'backgroundColor': 'ltgray',
 				'fontWeight': 'bold'
 			},
+			active_cell=[12,0],
 		),
 		], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'}),
 
@@ -204,6 +211,7 @@ app.layout = html.Div([
 				'backgroundColor': 'ltgray',
 				'fontWeight': 'bold'
 			},
+			active_cell=[14,0],
 		),
 		], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'}),
 	], className='two columns'),
@@ -216,10 +224,10 @@ app.layout = html.Div([
 			'layout': {
 				#'title': 'xxxyyy',
 				'xaxis': {
-					'title':'SP'
+					'title':''
 				},
 				'yaxis': {
-					'title':'Number of issues'
+					'title':''
 				},
 				'margin':{'l': 50, 'b': 50, 't': 50, 'r': 50},
 				'clickmode':'event+select'
@@ -232,6 +240,34 @@ app.layout = html.Div([
 #
 # callbacks
 #
+
+class myCallbackException(Exception):
+	def __init__(self, str):
+		print('myCallbackException:', str)
+		pass
+		#raise
+		
+#
+# analysis file selection
+@app.callback(
+	Output('hidden-div', 'children'),
+	[Input('file-list-table', "derived_virtual_data"),
+     Input('file-list-table', "derived_virtual_selected_rows")])
+def myFileListSelect(rows, derived_virtual_selected_rows):
+	"""
+	rows: all the rows in the table ???
+	derived_virtual_selected_rows: list of int of selected rows (rows that are checked)
+	"""
+	print('\nmyFileListSelect() rows:', rows)
+	print('myFileListSelect() derived_virtual_selected_rows:', derived_virtual_selected_rows)
+	myBrowser.setSelectedRows(rows)
+	
+#
+# x/y stat selection
+'''
+	Input('y-datatable', 'active_cell'),
+	Input('x-datatable', 'active_cell'),
+'''
 @app.callback(
 	Output('life-exp-vs-gdp', 'figure'),
 	[
@@ -239,21 +275,30 @@ app.layout = html.Div([
 	Input('x-datatable', 'active_cell'),
 	])
 def myTableSelect(y_activeCell, x_activeCell):
+	print('\nmyTableSelect() y_activeCell:', y_activeCell)
+	print('myTableSelect() x_activeCell:', x_activeCell)
+	
+	try:
+		if y_activeCell is None or x_activeCell is None or len(y_activeCell)==0 or len(x_activeCell)==0:
+			raise myCallbackException('myTableSelect() got empty y_activeCell or x_activeCell')
+	except (myCallbackException) as e:
+		#raise
+		pass
+			
 	xSel, ySel = None, None
-	if y_activeCell is not None:
+	if len(y_activeCell) > 0: # is not None:
 		yRow = y_activeCell[0]
 		ySel = myStatList[yRow]['label']
-	if x_activeCell is not None:
+	if len(x_activeCell) > 0: # is not None:
 		xRow = x_activeCell[0]
 		xSel = myStatList[xRow]['label']
-	print('myTableSelect ySel:', ySel, 'xSrl:', xSel)
+	print('myTableSelect ySel:', ySel, 'xSel:', xSel)
 	
 	returnData = myBrowser.updatePlot(xStatName=xSel, yStatName=ySel)
 
 	return {
 		'data': returnData, # data is a list of go.Scatter
 		'layout': {
-			#'title': 'xxxyyy',
 			'xaxis': {
 				'title':xSel
 			},
