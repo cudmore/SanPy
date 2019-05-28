@@ -2,8 +2,9 @@
 Utility class to manage a list of BaNalaysis .txt files and provide dash style web objects
 """
 
-import os, collections
+import os, math, json, collections
 import pandas as pd
+import numpy as np
 
 '''
 class myCallbackException(Exception):
@@ -21,26 +22,111 @@ class bBrowser:
 		
 		self.selectedRows = []
 		
+		# list of files
 		self.df0 = None # small dataframe with list of files loaded
 		
+		# list of all spikes across all files
 		self.df = None # massive dataframe with all spikes across all file
 		
+		# this is the selection in the stat list
 		self.selectedStat_y = 'thresholdSec'
 		self.selectedStat_x = 'peakVal'
-		
-		self.selectedPoints = []
 		
 		'''
 		# keep track of x/y data that is plotted in graphs
 		self.graphStat_y = ['thresholdSec', 'thresholdSec', 'thresholdSec', 'thresholdSec']
 		self.graphStat_x = ['peakVal', 'peakVal', 'peakVal', 'peakVal']
 		'''
+		#list of what is plotted in each graph
+		self.graphPlot = []
+		plotDict = {}
+		# 1
+		plotDict['xStat'] = 'thresholdSec'
+		plotDict['yStat'] = 'peakVal'
+		print('plotDict:', plotDict)
+		self.graphPlot.append(plotDict)
+		# 2
+		plotDict = {}
+		plotDict['xStat'] = 'thresholdSec'
+		plotDict['yStat'] = 'peakVal' #'preMinVal'
+		print('plotDict:', plotDict)
+		self.graphPlot.append(plotDict)
+		# 3
+		plotDict = {}
+		plotDict['xStat'] = 'thresholdSec'
+		plotDict['yStat'] = 'peakVal' #'preMinVal'
+		print('plotDict:', plotDict)
+		self.graphPlot.append(plotDict)
+		# 4
+		plotDict = {}
+		plotDict['xStat'] = 'thresholdSec'
+		plotDict['yStat'] = 'peakVal' #'preMinVal'
+		print('plotDict:', plotDict)
+		self.graphPlot.append(plotDict)
 		
-	def setSelectedRows(self, rows):
+		print('self.graphPlot:', self.graphPlot)
+		
+		# list of point selected across all graphs
+		# ['points': {'curveNumber': 0, 'pointNumber': 16, 'pointIndex': 16, 'x': 48.2177734375, 'y': 14.4013}]
+		self.selectedPoints = None	
+		
+		self.showMean = False
+		
+	def setSelectedFiles(self, rows):
+		"""
+		Set the rows of selected files.
+		
+		rows: int list of selected rows
+		"""
+		print('bBrowser.setSelectedFiles() rows:', rows)
+
 		self.selectedRows = rows
 		
-	def selectedPoints(self, points):
+	def setSelectedStat(self, xy, thisStat):
+		if xy == 'x':
+			self.selectedStat_x = thisStat
+		elif xy == 'y':
+			self.selectedStat_y = thisStat
+		
+	def setSelectPoints(self, points):
+		"""
+		Set select points in a graph
+		
+		points: can be None
+				otherwise: {'curveNumber': 0, 'pointNumber': 16, 'pointIndex': 16, 'x': 48.2177734375, 'y': 14.4013}
+		"""
+		if points is not None:
+			points = json.loads(points)
 		self.selectedPoints = points
+		
+	def setShowMean(self, showMean):
+		"""
+		if not checked, showMean is []
+		if checked showMean is ['showMean']
+		"""
+		#print('bBrowser.setShowMean() showMean:', showMean)
+		if 'showMean' in showMean:
+			self.showMean = True
+		else:
+			self.showMean = False
+	
+	def setShow_sdev_sem(self, showSDEVID):
+		"""
+		if not checked, showMean is []
+		if checked showMean is ['showMean']
+		"""
+		#print('bBrowser.setShowMean() showMean:', showMean)
+		if 'SEM' in showSDEVID:
+			self.showSE = True
+		else:
+			self.showSE = False
+	
+	def plotTheseStats(self, graphNum):
+		"""
+		Set the x/y stat for graph graphNum to current x/y selected stat
+		"""
+		self.graphPlot[graphNum]['yStat'] = self.selectedStat_y
+		self.graphPlot[graphNum]['xStat'] = self.selectedStat_x
 		
 	def loadFolder(self):
 		"""
@@ -116,13 +202,29 @@ class bBrowser:
 		
 		theRet = []
 		
-		if xStatName and yStatName:
-			for index, row in self.df0.iterrows():
-				#print(index, row['ABF File'])
-				#print(index, row)
+		#doMean = True
+		#doSE = True
 		
-				analysisFile = row['Analysis File']
-				abfFile = row['ABF File']
+		if xStatName and yStatName:
+			displayedFileRows = 0
+			for index, file in self.df0.iterrows():
+				#print(index, file['ABF File'])
+				#print(index, file)
+		
+				if index not in self.selectedRows:
+					continue
+				
+				#
+				# this is critical, have not thought a lot about it -->> may break !!!!
+				# this is to allow show/hide of mean/sd/se which make index and selection curveNumber out of sync
+				#
+				displayedFileRows += 1
+				actualCurveNumber = index
+				if self.showMean:
+					actualCurveNumber = (displayedFileRows-1) * 2
+				
+				analysisFile = file['Analysis File']
+				abfFile = file['ABF File']
 
 				thisFileRows = self.df.loc[self.df['Analysis File'] == analysisFile]
 
@@ -133,11 +235,61 @@ class bBrowser:
 				dataDict = {}
 				dataDict['x'] = xStatVals
 				dataDict['y'] = yStatVals
-				dataDict['mode'] = 'markers'
-				dataDict['name'] = analysisFile + ':' + abfFile
-			
+				dataDict['mode'] = 'lines+markers'
+				dataDict['name'] = 'File ' + str(index + 1) #analysisFile
+				
+				if self.selectedPoints is not None:
+					if isinstance(self.selectedPoints, str):
+						print('updatePlot() converting to dict -- THIS SHOULD NEVER HAPPEN')
+						self.selectedPoints = json.loads(self.selectedPoints)
+					selectedPoints = [point['pointNumber'] for point in self.selectedPoints['points'] if point['curveNumber'] == actualCurveNumber]
+					dataDict['selectedpoints'] = selectedPoints
+					dataDict['unselected'] = {
+						'marker': {
+							'opacity': 0.3,
+						},
+						'textfont': {
+							# make text transparent when not selected
+							'color': 'rgba(0, 0, 0, 0)'
+						}
+					}
+				
 				theRet.append(dataDict)
 			
-			# append selection
-			
+				if self.showMean:
+					# x
+					xMean = np.nanmean(xStatVals)
+					xSD = np.nanstd(xStatVals)
+					xN = np.count_nonzero(~np.isnan(xStatVals))
+					xSE = xSD / math.sqrt(xN - 1) 
+					#print('xMean:', xMean, 'xSE', xSE, 'xN:', xN)
+					
+					# y
+					yMean = np.nanmean(yStatVals)
+					ySD = np.nanstd(yStatVals)
+					yN = np.count_nonzero(~np.isnan(yStatVals))
+					ySE = ySD / math.sqrt(yN - 1) 
+					#print('yMean:', yMean, 'ySE', ySE, 'yN:', yN)
+
+					meanDict = {}
+					meanDict['x'] = [xMean] # these have to be list, not scalar !
+					meanDict['y'] = [yMean]
+					meanDict['mode'] = 'markers'
+					meanDict['name'] = analysisFile + '_mean'
+
+					meanDict['error_x'] = {
+						'type': 'data',
+						'array': [xSE] if self.showSE else [xSD],
+						'visible': True
+					}
+					meanDict['error_y'] = {
+						'type': 'data',
+						'array': [ySE] if self.showSE else [ySD],
+						'visible': True
+					}
+					
+					#print('meanDict:', meanDict)
+					
+					theRet.append(meanDict)
+								
 		return theRet

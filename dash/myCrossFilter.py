@@ -106,7 +106,7 @@ def highlight(x, y):
                 'color': 'darkgrey'
             }
         }
-        if selectedDatas[0] and selectedDatas[0]['range']:
+        if selectedDatas[0] and ('range' in selectedDatas[0].items()) and selectedDatas[0]['range']:
             figure['layout']['shapes'] = [dict({
                 'x0': selectedDatas[0]['range']['x'][0],
                 'x1': selectedDatas[0]['range']['x'][1],
