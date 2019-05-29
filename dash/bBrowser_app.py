@@ -22,23 +22,42 @@ import plotly.graph_objs as go
 
 import dash_bootstrap_components as dbc # dash bootstrap https://github.com/facultyai/dash-bootstrap-components
 
-import plotly.colors
-print('plotly.colors.DEFAULT_PLOTLY_COLORS:', plotly.colors.DEFAULT_PLOTLY_COLORS)
-
-
 from bBrowser import bBrowser
 
 myBrowser = bBrowser()
 myBrowser.loadFolder()
 
-#print('myBrowser.getStatList():', myBrowser.getStatList())
 myStatList = myBrowser.getStatList()
+print('myStatList:', myStatList)
+
+statDict = collections.OrderedDict()
+statDict['Take Off Potential (s)'] = 'thresholdSec'
+statDict['AP Peak (mV)'] = 'peakVal'
+statDict['AP Height (mV)'] = 'peakHeight'
+statDict['Pre AP Min (mV)'] = 'preMinVal'
+statDict['Post AP Min (mV)'] = 'postMinVal'
+statDict['AP Duration (ms)'] = 'apDuration_ms'
+statDict['Early Diastolic Duration (ms)'] = 'earlyDiastolicDuration_ms'
+statDict['Diastolic Duration (ms)'] = 'diastolicDuration_ms'
+statDict['Inter-Spike-Interval (ms)'] = 'isi_ms'
+statDict['Cycle Length (ms)'] = 'cycleLength_ms'
+statDict['Max AP Upstroke (dV/dt)'] = 'preSpike_dvdt_max_val2'
+statDict['Max AP Upstroke (mV)'] = 'preSpike_dvdt_max_val'
+statDict['Max AP Repolarization (dV/dt)'] = 'postSpike_dvdt_min_val2'
+statDict['Max AP Repolarization (mV)'] = 'postSpike_dvdt_min_val'
+
+myStatList = list(statDict.keys())
+print('myStatList:', myStatList)
 
 # plot one of 4 graphs. USed in initialization and in 'plot' button callbacks
 def plotButton(graphNum):
 
-	yStat = myBrowser.graphPlot[graphNum]['yStat']
-	xStat = myBrowser.graphPlot[graphNum]['xStat']
+	yStatHuman = myBrowser.graphPlot[graphNum]['yStat']
+	xStatHuman = myBrowser.graphPlot[graphNum]['xStat']
+
+	# convert human readable cardiac stats back to back end stat name
+	yStat = statDict[yStatHuman]
+	xStat = statDict[xStatHuman]
 
 	print('bBrowser_app.plotButton() graphNum:', graphNum, 'xStat:', xStat, 'yStat:', yStat)
 
@@ -48,10 +67,10 @@ def plotButton(graphNum):
 		'data': returnData, # data is a list of go.Scatter
 		'layout': {
 			'xaxis': {
-				'title':xStat
+				'title':xStatHuman
 			},
 			'yaxis': {
-				'title':yStat
+				'title':yStatHuman
 			},
 			'margin':{'l': 50, 'b': 50, 't': 5, 'r': 5},
 			'clickmode':'event+select',
@@ -84,7 +103,6 @@ myRow = html.Div(
 	]
 )
 
-colorList = ['rgb(31, 119, 180)', 'rgb(255, 127, 14)', 'rgb(44, 160, 44)', 'rgb(214, 39, 40)', 'rgb(148, 103, 189)', 'rgb(140, 86, 75)', 'rgb(227, 119, 194)', 'rgb(127, 127, 127)', 'rgb(188, 189, 34)', 'rgb(23, 190, 207)']
 myBody = dbc.Container(
 	[
 		dbc.Row(
@@ -98,6 +116,7 @@ myBody = dbc.Container(
 							row_selectable='multi',
 							columns=[{"name": i, "id": i} for i in myBrowser.df0],
 							data=myBrowser.df0.to_dict('records'),
+							selected_rows=[0,1],
 						),
 					])
 			]
@@ -112,8 +131,10 @@ myBody = dbc.Container(
 				dcc.Checklist(
 					id='showMeanID',
 					options=[
+						{'label': 'Lines', 'value': 'showLines'},
+						{'label': 'Markers', 'value': 'showMarkers'},
 						{'label': 'Mean', 'value': 'showMean'},
-					], values=['showMean'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
+					], values=['showMarkers', 'showMean'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
 				),
 
 				dcc.RadioItems(
@@ -136,7 +157,8 @@ myBody = dbc.Container(
 						dash_table.DataTable(
 							id='y-datatable',
 							columns=[{"name": 'Idx', "id": 'Idx'}, {"name": 'Stat', "id": 'stat'}],
-							data=[{"Idx": idx+1, "stat": myOption['label']} for idx, myOption in enumerate(myStatList)],
+							#data=[{"Idx": idx+1, "stat": myOption['label']} for idx, myOption in enumerate(myStatList)],
+							data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myStatList)],
 							style_table={
 								'maxHeight': '800px',
 								'overflowY': 'scroll'
@@ -151,7 +173,7 @@ myBody = dbc.Container(
 								'backgroundColor': 'rgb(248, 248, 248)'
 							}],
 							row_selectable='single',
-							selected_rows=[12],
+							selected_rows=[1],
 						),
 
 					],
@@ -166,7 +188,8 @@ myBody = dbc.Container(
 						dash_table.DataTable(
 							id='x-datatable',
 							columns=[{"name": 'Idx', "id": 'Idx'}, {"name": 'Stat', "id": 'stat'}],
-							data=[{"Idx": idx+1, "stat": myOption['label']} for idx, myOption in enumerate(myStatList)],
+							#data=[{"Idx": idx+1, "stat": myOption['label']} for idx, myOption in enumerate(myStatList)],
+							data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myStatList)],
 							style_table={
 								'maxHeight': '800px',
 								'overflowY': 'scroll'
@@ -181,7 +204,7 @@ myBody = dbc.Container(
 								'backgroundColor': 'rgb(248, 248, 248)'
 							}],
 							row_selectable='single',
-							selected_rows=[12],
+							selected_rows=[0],
 						),
 
 					],
@@ -243,6 +266,7 @@ app.layout = html.Div([
 
 	html.Div(id='hidden-div'),
 	html.Div(id='hidden-div2'),
+	html.Div(id='hidden-div3'),
 
 
 	html.Div(children=[
@@ -316,21 +340,71 @@ def determine_last_click(*clickdatas):
 	return most_recent
 
 
+
+#
+# these 4 callbacks are unruly, create a dict to pass to handleGraphCallback()
+#
+
+# keep track of the number of clicks on each 'plot <n>'
 numClicks = [0, 0, 0, 0]
 
-def handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID):
+def handleGraphCallback(graphNumber, n_clicks, update_on_click_data, derived_virtual_selected_rows, showMean, showSDEVID):
 	myBrowser.setSelectPoints(update_on_click_data)
 	myBrowser.setSelectedFiles(derived_virtual_selected_rows)
-	myBrowser.setShowMean(showMean)
+	myBrowser.setPlotOptions(showMean)
 	myBrowser.setShow_sdev_sem(showSDEVID)
 	if n_clicks is not None and n_clicks > numClicks[graphNumber]:
 		numClicks[graphNumber] = n_clicks
 		myBrowser.plotTheseStats(graphNumber)
 
+##
+# new
+##
 
-#
-# these 4 callbacks are unruly, create a dict to pass to handleGraphCallback()
+inputList = [
+	#Input('g1-plot-button','n_clicks'),
+	Input('update-on-click-data', 'children'),
+	Input('file-list-table', "derived_virtual_selected_rows"),
+	Input('showMeanID', 'values'),
+	Input('showSDEVID', 'value'),
+]
 
+g1_Input = [Input('g1-plot-button','n_clicks')] + inputList
+g2_Input = [Input('g2-plot-button','n_clicks')] + inputList
+g3_Input = [Input('g3-plot-button','n_clicks')] + inputList
+g4_Input = [Input('g4-plot-button','n_clicks')] + inputList
+
+# 1
+@app.callback(Output('g1', 'figure'), g1_Input)
+def my1(*args):
+	graphNumber = 0
+	handleGraphCallback(graphNumber, *args)
+	return plotButton(graphNumber)
+# 2
+@app.callback(Output('g2', 'figure'), g2_Input)
+def my2(*args):
+	graphNumber = 1
+	handleGraphCallback(graphNumber, *args)
+	return plotButton(graphNumber)
+# 3
+@app.callback(Output('g3', 'figure'), g3_Input)
+def my3(*args):
+	graphNumber = 2
+	handleGraphCallback(graphNumber, *args)
+	return plotButton(graphNumber)
+# 4
+@app.callback(Output('g4', 'figure'), g4_Input)
+def my4(*args):
+	graphNumber = 3
+	handleGraphCallback(graphNumber, *args)
+	return plotButton(graphNumber)
+
+##
+# old
+##
+
+
+"""
 #1
 @app.callback(Output('g1', 'figure'),
 			[
@@ -342,10 +416,8 @@ def handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_vir
 			])
 def my1(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID):
 	graphNumber = 0
-	#print('graph', graphNumber, 'callback() update_on_click_data:', update_on_click_data, 'n_clicks:', n_clicks)
 	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
 	return plotButton(graphNumber)
-
 #2
 @app.callback(Output('g2', 'figure'),
 			[Input('update-on-click-data', 'children'),
@@ -356,7 +428,6 @@ def my1(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean,
 			])
 def my2(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID):
 	graphNumber = 1
-	#print('graph', graphNumber, 'callback() update_on_click_data:', update_on_click_data, 'n_clicks:', n_clicks)
 	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
 	return plotButton(graphNumber)
 
@@ -370,7 +441,6 @@ def my2(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean,
 			])
 def my2(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID):
 	graphNumber = 2
-	#print('graph', graphNumber, 'callback() update_on_click_data:', update_on_click_data, 'n_clicks:', n_clicks)
 	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
 	return plotButton(graphNumber)
 
@@ -384,9 +454,9 @@ def my2(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean,
 			])
 def my2(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID):
 	graphNumber = 3
-	#print('graph', graphNumber, 'callback() update_on_click_data:', update_on_click_data, 'n_clicks:', n_clicks)
 	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
 	return plotButton(graphNumber)
+"""
 
 #
 # analysis file selection
@@ -418,11 +488,13 @@ def myTableSelect(y_activeCell, x_activeCell):
 	xSel, ySel = None, None
 	if len(y_activeCell) > 0: # is not None:
 		yRow = y_activeCell[0]
-		ySel = myStatList[yRow]['label']
+		#ySel = myStatList[yRow]['label']
+		ySel = myStatList[yRow]
 		myBrowser.setSelectedStat('y', ySel)
 	if len(x_activeCell) > 0: # is not None:
 		xRow = x_activeCell[0]
-		xSel = myStatList[xRow]['label']
+		#xSel = myStatList[xRow]['label']
+		xSel = myStatList[xRow]
 		myBrowser.setSelectedStat('x', xSel)
 
 #

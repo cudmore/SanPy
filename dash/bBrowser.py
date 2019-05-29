@@ -6,6 +6,8 @@ import os, math, json, collections
 import pandas as pd
 import numpy as np
 
+import plotly.colors
+
 '''
 class myCallbackException(Exception):
 	def __init__(self, str):
@@ -41,26 +43,26 @@ class bBrowser:
 		self.graphPlot = []
 		plotDict = {}
 		# 1
-		plotDict['xStat'] = 'thresholdSec'
-		plotDict['yStat'] = 'peakVal'
+		plotDict['xStat'] = 'Take Off Potential (s)' #'thresholdSec'
+		plotDict['yStat'] = 'AP Peak (mV)' #'peakVal'
 		print('plotDict:', plotDict)
 		self.graphPlot.append(plotDict)
 		# 2
 		plotDict = {}
-		plotDict['xStat'] = 'thresholdSec'
-		plotDict['yStat'] = 'peakVal' #'preMinVal'
+		plotDict['xStat'] = 'Take Off Potential (s)'
+		plotDict['yStat'] = 'AP Peak (mV)'
 		print('plotDict:', plotDict)
 		self.graphPlot.append(plotDict)
 		# 3
 		plotDict = {}
-		plotDict['xStat'] = 'thresholdSec'
-		plotDict['yStat'] = 'peakVal' #'preMinVal'
+		plotDict['xStat'] = 'Take Off Potential (s)'
+		plotDict['yStat'] = 'AP Peak (mV)'
 		print('plotDict:', plotDict)
 		self.graphPlot.append(plotDict)
 		# 4
 		plotDict = {}
-		plotDict['xStat'] = 'thresholdSec'
-		plotDict['yStat'] = 'peakVal' #'preMinVal'
+		plotDict['xStat'] = 'Take Off Potential (s)'
+		plotDict['yStat'] = 'AP Peak (mV)'
 		print('plotDict:', plotDict)
 		self.graphPlot.append(plotDict)
 		
@@ -71,6 +73,10 @@ class bBrowser:
 		self.selectedPoints = None	
 		
 		self.showMean = False
+		self.showLines = False
+		self.showMarkers = False
+		
+		self.plotlyColors = plotly.colors.DEFAULT_PLOTLY_COLORS
 		
 	def setSelectedFiles(self, rows):
 		"""
@@ -83,6 +89,9 @@ class bBrowser:
 		self.selectedRows = rows
 		
 	def setSelectedStat(self, xy, thisStat):
+		"""
+		thisStat: Human readbale, convert back to actual columns in loaded file
+		"""
 		if xy == 'x':
 			self.selectedStat_x = thisStat
 		elif xy == 'y':
@@ -96,9 +105,18 @@ class bBrowser:
 				otherwise: {'curveNumber': 0, 'pointNumber': 16, 'pointIndex': 16, 'x': 48.2177734375, 'y': 14.4013}
 		"""
 		if points is not None:
+			print('bBrowser.setSelectPoints() points:', points)
 			points = json.loads(points)
 		self.selectedPoints = points
 		
+	# more general than just show mean
+	def setPlotOptions(self, plotOptions):
+		print('bBrowser.setPlotOptions() plotOptions:', plotOptions)
+		self.showMean = 'showMean' in plotOptions
+		self.showLines = 'showLines' in plotOptions
+		self.showMarkers = 'showMarkers' in plotOptions
+		
+	'''
 	def setShowMean(self, showMean):
 		"""
 		if not checked, showMean is []
@@ -109,6 +127,7 @@ class bBrowser:
 			self.showMean = True
 		else:
 			self.showMean = False
+	'''
 	
 	def setShow_sdev_sem(self, showSDEVID):
 		"""
@@ -226,16 +245,24 @@ class bBrowser:
 				analysisFile = file['Analysis File']
 				abfFile = file['ABF File']
 
+				# rows of large (spikes) df that make this file
 				thisFileRows = self.df.loc[self.df['Analysis File'] == analysisFile]
 
-				# get rows in self.df corresponding to abfFile
+				# get columns in self.df corresponding to selected stat
 				xStatVals = thisFileRows[xStatName]
 				yStatVals = thisFileRows[yStatName]
 			
 				dataDict = {}
 				dataDict['x'] = xStatVals
 				dataDict['y'] = yStatVals
-				dataDict['mode'] = 'lines+markers'
+				
+				dataDict['mode'] = 'none' # 'none' is lower case !!!
+				if self.showLines:
+					# assuming we can start the list of lines+markers as +lines
+					dataDict['mode'] += '+lines'
+				if self.showMarkers:
+					dataDict['mode'] += '+markers'
+					
 				dataDict['name'] = 'File ' + str(index + 1) #analysisFile
 				
 				if self.selectedPoints is not None:
