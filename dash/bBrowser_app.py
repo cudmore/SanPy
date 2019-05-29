@@ -28,7 +28,6 @@ myBrowser = bBrowser()
 myBrowser.loadFolder()
 
 myStatList = myBrowser.getStatList()
-print('myStatList:', myStatList)
 
 statDict = collections.OrderedDict()
 statDict['Take Off Potential (s)'] = 'thresholdSec'
@@ -47,7 +46,6 @@ statDict['Max AP Repolarization (dV/dt)'] = 'postSpike_dvdt_min_val2'
 statDict['Max AP Repolarization (mV)'] = 'postSpike_dvdt_min_val'
 
 myStatList = list(statDict.keys())
-print('myStatList:', myStatList)
 
 # plot one of 4 graphs. USed in initialization and in 'plot' button callbacks
 def plotButton(graphNum):
@@ -176,13 +174,7 @@ myBody = dbc.Container(
 							selected_rows=[1],
 						),
 
-					],
-					width={'size':100},
-
-				),
-				dbc.Col(
-					[
-
+						# X-Stat
 						html.H4("X-Stat"),
 
 						dash_table.DataTable(
@@ -225,7 +217,7 @@ myBody = dbc.Container(
 							figure=plotButton(2),
 						),
 					],
-					md=3, align='stretch',
+					md=4, align='stretch',
 
 				),
 				dbc.Col(
@@ -252,7 +244,7 @@ myBody = dbc.Container(
 								},
 						),
 					],
-					md=3, align='stretch',
+					md=4, align='stretch',
 				),
 			], no_gutters=False, align='stretch', # row
 		)
