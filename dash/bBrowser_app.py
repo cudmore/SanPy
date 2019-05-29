@@ -27,7 +27,7 @@ print('plotly.colors.DEFAULT_PLOTLY_COLORS:', plotly.colors.DEFAULT_PLOTLY_COLOR
 
 
 from bBrowser import bBrowser
-		
+
 myBrowser = bBrowser()
 myBrowser.loadFolder()
 
@@ -36,14 +36,14 @@ myStatList = myBrowser.getStatList()
 
 # plot one of 4 graphs. USed in initialization and in 'plot' button callbacks
 def plotButton(graphNum):
-	
+
 	yStat = myBrowser.graphPlot[graphNum]['yStat']
 	xStat = myBrowser.graphPlot[graphNum]['xStat']
-	
+
 	print('bBrowser_app.plotButton() graphNum:', graphNum, 'xStat:', xStat, 'yStat:', yStat)
-	
+
 	returnData = myBrowser.updatePlot(xStatName=xStat, yStatName=yStat)
-	
+
 	return {
 		'data': returnData, # data is a list of go.Scatter
 		'layout': {
@@ -84,6 +84,7 @@ myRow = html.Div(
 	]
 )
 
+colorList = ['rgb(31, 119, 180)', 'rgb(255, 127, 14)', 'rgb(44, 160, 44)', 'rgb(214, 39, 40)', 'rgb(148, 103, 189)', 'rgb(140, 86, 75)', 'rgb(227, 119, 194)', 'rgb(127, 127, 127)', 'rgb(188, 189, 34)', 'rgb(23, 190, 207)']
 myBody = dbc.Container(
 	[
 		dbc.Row(
@@ -91,7 +92,7 @@ myBody = dbc.Container(
 				dbc.Col(
 					[
 						html.H4("File List"),
-			
+
 						dash_table.DataTable(
 							id='file-list-table',
 							row_selectable='multi',
@@ -101,20 +102,20 @@ myBody = dbc.Container(
 					])
 			]
 		),
-		
+
 		html.P(''),
-		
+
 		dbc.Row(
 			[
 				html.H4("Plot Options"),
-				
+
 				dcc.Checklist(
 					id='showMeanID',
 					options=[
 						{'label': 'Mean', 'value': 'showMean'},
 					], values=['showMean'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
 				),
-				
+
 				dcc.RadioItems(
 					id='showSDEVID',
 					options=[
@@ -124,7 +125,7 @@ myBody = dbc.Container(
 				),
 			], no_gutters=False, align='stretch', # row
 		),
-		
+
 		dbc.Row(
 			[
 				dbc.Col(
@@ -194,7 +195,7 @@ myBody = dbc.Container(
 							id='g1',
 							figure=plotButton(0),
 						),
-						
+
 						dbc.Button("Plot 3", color="primary", id='g3-plot-button'),
 						dcc.Graph(
 							id='g3',
@@ -237,7 +238,7 @@ myBody = dbc.Container(
 ##############
 ##############
 app.layout = html.Div([
-			
+
 	myBody,
 
 	html.Div(id='hidden-div'),
@@ -258,7 +259,7 @@ app.layout = html.Div([
 
 		html.Pre(id='my-tmp-pre', style=pre_style),
 	], style={'display': 'none'}),
-	
+
 
 	]) # closing app.layout = html.Div([
 
@@ -344,7 +345,7 @@ def my1(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean,
 	#print('graph', graphNumber, 'callback() update_on_click_data:', update_on_click_data, 'n_clicks:', n_clicks)
 	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
 	return plotButton(graphNumber)
-	
+
 #2
 @app.callback(Output('g2', 'figure'),
 			[Input('update-on-click-data', 'children'),
@@ -358,7 +359,7 @@ def my2(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean,
 	#print('graph', graphNumber, 'callback() update_on_click_data:', update_on_click_data, 'n_clicks:', n_clicks)
 	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
 	return plotButton(graphNumber)
-	
+
 #3
 @app.callback(Output('g3', 'figure'),
 			[Input('update-on-click-data', 'children'),
@@ -372,7 +373,7 @@ def my2(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean,
 	#print('graph', graphNumber, 'callback() update_on_click_data:', update_on_click_data, 'n_clicks:', n_clicks)
 	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
 	return plotButton(graphNumber)
-	
+
 #4
 @app.callback(Output('g4', 'figure'),
 			[Input('update-on-click-data', 'children'),
@@ -386,7 +387,7 @@ def my2(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean,
 	#print('graph', graphNumber, 'callback() update_on_click_data:', update_on_click_data, 'n_clicks:', n_clicks)
 	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
 	return plotButton(graphNumber)
-	
+
 #
 # analysis file selection
 @app.callback(
@@ -398,12 +399,12 @@ def myFileListSelect(rows, derived_virtual_selected_rows):
 	rows: all the rows in the table ???
 	derived_virtual_selected_rows: list of int of selected rows (rows that are checked)
 	"""
-	
+
 	#print('\nmyFileListSelect() rows:', rows)
 	print('myFileListSelect() derived_virtual_selected_rows:', derived_virtual_selected_rows)
 
 	myBrowser.setSelectedFiles(derived_virtual_selected_rows)
-	
+
 #
 # x/y stat selection
 @app.callback(
@@ -423,7 +424,7 @@ def myTableSelect(y_activeCell, x_activeCell):
 		xRow = x_activeCell[0]
 		xSel = myStatList[xRow]['label']
 		myBrowser.setSelectedStat('x', xSel)
-	
+
 #
 # main
 #

@@ -11,3 +11,19 @@ These python files provide a web interface to browse analysis saved by bAnalysis
  - Try and connect mean with line when between the same abf file ???
  
  
+## Troubleshooting
+
+Trying to set background color in file list Index column causes Dash to not render? There is no error?
+
+```
+	style_data_conditional=[
+	    {
+	        'if': {
+	            'column_id': 'Index',
+	            'filter': '{Index} eq "1"'
+	        },
+	        'backgroundColor': colorList[0],
+	        'color': 'white',
+	    },
+	]
+```
