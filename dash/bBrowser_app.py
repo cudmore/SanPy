@@ -107,25 +107,18 @@ def plotButton(graphNum):
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 #app.css.append_css({'external_url': 'https://codepen.io/chriddyp/pen/bWLwgP.css'})  # noqa: E501
 
+app.css.append_css({
+   'external_url': (
+       'static/my.css'
+   )
+})
 
 graph_names = ['g1', 'g2', 'g3', 'g4']
 
 pre_style = {"backgroundColor": "#ddd", "fontSize": 20, "padding": "10px", "margin": "10px"}
 
 ###########
-###########
-myRow = html.Div(
-	[
-		dbc.Row(dbc.Col(html.Div("A single column"))),
-		dbc.Row(
-			[
-				dbc.Col(html.Div("One of three columns")),
-				dbc.Col(html.Div("One of three columns")),
-				dbc.Col(html.Div("One of three columns")),
-			]
-		),
-	]
-)
+editableColumns = [1, 2]
 
 myBody = dbc.Container(
 	[
@@ -138,8 +131,9 @@ myBody = dbc.Container(
 						dash_table.DataTable(
 							id='file-list-table',
 							row_selectable='multi',
-							columns=[{"name": i, "id": i} for i in myBrowser.df0],
+							columns=[{'name':i, 'id':i, 'editable':True} for i in myBrowser.df0], # i want to make only certain column cells editable
 							data=myBrowser.df0.to_dict('records'),
+							editable=True, # this makes all cells editable
 							selected_rows=[0,1],
 						),
 					])
@@ -161,12 +155,16 @@ myBody = dbc.Container(
 					], values=['showMarkers', 'showMean'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
 				),
 
+				html.Div('Error Bars', style={'padding-left': '20px', 'display': 'inline-block'}),
 				dcc.RadioItems(
 					id='showSDEVID',
 					options=[
+						{'label': 'None', 'value': 'None'},
 						{'label': 'SEM', 'value': 'SEM'},
 						{'label': 'SDEV', 'value': 'SDEV'},
-					], value='SEM', labelStyle={'padding-left': '10px', 'display': 'inline-block'}
+					],
+					value='SEM',
+					labelStyle={'padding-left': '10px', 'display': 'inline-block'}
 				),
 			], no_gutters=False, align='stretch', # row
 		),
@@ -266,7 +264,7 @@ myBody = dbc.Container(
 		)
 	], className="mt-4", fluid=True,
 )
-##############
+
 ##############
 app.layout = html.Div([
 
@@ -407,64 +405,14 @@ def my4(*args):
 	handleGraphCallback(graphNumber, *args)
 	return plotButton(graphNumber)
 
-##
-# old
-##
 
-
-"""
-#1
-@app.callback(Output('g1', 'figure'),
-			[
-			Input('update-on-click-data', 'children'),
-			Input('g1-plot-button','n_clicks'),
-			Input('file-list-table', "derived_virtual_selected_rows"),
-			Input('showMeanID', 'values'),
-			Input('showSDEVID', 'value'),
-			])
-def my1(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID):
-	graphNumber = 0
-	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
-	return plotButton(graphNumber)
-#2
-@app.callback(Output('g2', 'figure'),
-			[Input('update-on-click-data', 'children'),
-			Input('g2-plot-button','n_clicks'),
-			Input('file-list-table', "derived_virtual_selected_rows"),
-			Input('showMeanID', 'values'),
-			Input('showSDEVID', 'value'),
-			])
-def my2(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID):
-	graphNumber = 1
-	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
-	return plotButton(graphNumber)
-
-#3
-@app.callback(Output('g3', 'figure'),
-			[Input('update-on-click-data', 'children'),
-			Input('g3-plot-button','n_clicks'),
-			Input('file-list-table', "derived_virtual_selected_rows"),
-			Input('showMeanID', 'values'),
-			Input('showSDEVID', 'value'),
-			])
-def my2(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID):
-	graphNumber = 2
-	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
-	return plotButton(graphNumber)
-
-#4
-@app.callback(Output('g4', 'figure'),
-			[Input('update-on-click-data', 'children'),
-			Input('g4-plot-button','n_clicks'),
-			Input('file-list-table', "derived_virtual_selected_rows"),
-			Input('showMeanID', 'values'),
-			Input('showSDEVID', 'value'),
-			])
-def my2(update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID):
-	graphNumber = 3
-	handleGraphCallback(graphNumber, update_on_click_data, n_clicks, derived_virtual_selected_rows, showMean, showSDEVID)
-	return plotButton(graphNumber)
-"""
+# disable error bars when mean is off
+'''
+@app.callback(Output('showSDEVID', 'disabled'), [Input('showMeanID', 'values')])
+def myMeanCheckbox(values):
+	print('myMeanCheckbox() values:', values)
+	return not 'showMean' in values
+'''
 
 #
 # analysis file selection
@@ -505,6 +453,16 @@ def myTableSelect(y_activeCell, x_activeCell):
 		xSel = myStatList[xRow]
 		myBrowser.setSelectedStat('x', xSel)
 
+# edit condition
+@app.callback(
+    Output('hidden-div3', 'children'),
+    [Input('file-list-table', 'data'),
+     Input('file-list-table', 'columns')])
+def display_output(rows, columns):
+	print('display_output()')
+	print('   rows:', rows)
+	print('   columns:', columns)
+	
 #
 # main
 #

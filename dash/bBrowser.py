@@ -73,6 +73,7 @@ class bBrowser:
 		self.selectedPoints = None
 
 		self.showMean = False
+		self.showError = True
 		self.showLines = False
 		self.showMarkers = False
 
@@ -134,10 +135,14 @@ class bBrowser:
 		if not checked, showMean is []
 		if checked showMean is ['showMean']
 		"""
-		#print('bBrowser.setShowMean() showMean:', showMean)
-		if 'SEM' in showSDEVID:
+		print('bBrowser.setShow_sdev_sem() showSDEVID:', showSDEVID)
+		if 'None' in showSDEVID:
+			self.showError = False
+		elif 'SEM' in showSDEVID:
+			self.showError = True
 			self.showSE = True
 		else:
+			self.showError = True
 			self.showSE = False
 
 	def plotTheseStats(self, graphNum):
@@ -230,6 +235,8 @@ class bBrowser:
 
 		theRet = []
 
+		meanDataDict = {} # dict of list to be appended at end of loop
+		
 		if xStatName and yStatName:
 			displayedFileRows = 0
 			for index, file in self.df0.iterrows():
@@ -248,6 +255,7 @@ class bBrowser:
 				if self.showMean:
 					actualCurveNumber = (displayedFileRows-1) * 2
 
+				abfFile = file['ABF File'] # use this to connect mean with line
 				analysisFile = file['Analysis File']
 				abfFile = file['ABF File']
 
@@ -304,25 +312,36 @@ class bBrowser:
 					ySE = ySD / math.sqrt(yN - 1)
 					#print('yMean:', yMean, 'ySE', ySE, 'yN:', yN)
 
+					if abfFile not in meanDataDict.keys():
+						meanDataDict['abfFile'] = []
+						
 					meanDict = {}
 					meanDict['x'] = [xMean] # these have to be list, not scalar !
 					meanDict['y'] = [yMean]
 					meanDict['mode'] = 'markers'
 					meanDict['name'] = analysisFile + '_mean'
 
-					meanDict['error_x'] = {
-						'type': 'data',
-						'array': [xSE] if self.showSE else [xSD],
-						'visible': True
-					}
-					meanDict['error_y'] = {
-						'type': 'data',
-						'array': [ySE] if self.showSE else [ySD],
-						'visible': True
-					}
+					if self.showError:
+						meanDict['error_x'] = {
+							'type': 'data',
+							'array': [xSE] if self.showSE else [xSD],
+							'visible': True
+						}
+						meanDict['error_y'] = {
+							'type': 'data',
+							'array': [ySE] if self.showSE else [ySD],
+							'visible': True
+						}
 
 					#print('meanDict:', meanDict)
 
 					theRet.append(meanDict)
-
+					meanDataDict['abfFile'].append(meanDict)
+					
+			# after for index, file
+			'''
+			for key, value in meanDataDict.items():
+				theRet.append(value)
+			'''
+			
 		return theRet
