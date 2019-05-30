@@ -9,6 +9,7 @@ Purpose:
 import os, datetime, json, collections
 
 import pandas as pd
+import numpy as np
 
 from itertools import chain
 
@@ -44,6 +45,8 @@ statDict['Max AP Upstroke (dV/dt)'] = 'preSpike_dvdt_max_val2'
 statDict['Max AP Upstroke (mV)'] = 'preSpike_dvdt_max_val'
 statDict['Max AP Repolarization (dV/dt)'] = 'postSpike_dvdt_min_val2'
 statDict['Max AP Repolarization (mV)'] = 'postSpike_dvdt_min_val'
+statDict['Condition 1'] = 'Condition 1'
+statDict['Condition 2'] = 'Condition 2'
 
 myStatList = list(statDict.keys())
 
@@ -61,14 +64,37 @@ def plotButton(graphNum):
 
 	returnData = myBrowser.updatePlot(xStatName=xStat, yStatName=yStat)
 
+	# determine min/max so we can expand by 5%
+	xRange = []
+	'''
+	xList = [data['x'] for data in returnData]
+	print('xList:', xList)
+	if len(xList) > 0:
+		xMin = np.nanmin(xList)
+		xMax = np.nanmax(xList)
+		xBuffer = (xMax-xMin) * 0.05
+		xRange = [xMin-xBuffer, xMax+xBuffer]
+	'''
+	yRange = []
+	'''yList = [data['y'] for data in returnData]
+	if len(yList) > 0:
+		yMin = np.nanmin(yList)
+		yMax = np.nanmax(yList)
+		yBuffer = (yMax-yMin) * 0.05
+		yRange = [yMin-yBuffer, yMax+yBuffer]
+	'''
+
 	return {
 		'data': returnData, # data is a list of go.Scatter
 		'layout': {
 			'xaxis': {
-				'title':xStatHuman
+				'title':xStatHuman,
+				'zeroline':False,
+				'range':xRange,
 			},
 			'yaxis': {
-				'title':yStatHuman
+				'title':yStatHuman,
+				'zeroline':False,
 			},
 			'margin':{'l': 50, 'b': 50, 't': 5, 'r': 5},
 			'clickmode':'event+select',
@@ -107,7 +133,7 @@ myBody = dbc.Container(
 			[
 				dbc.Col(
 					[
-						html.H4("File List"),
+						html.H5("File List"),
 
 						dash_table.DataTable(
 							id='file-list-table',
@@ -124,7 +150,7 @@ myBody = dbc.Container(
 
 		dbc.Row(
 			[
-				html.H4("Plot Options"),
+				html.H5("Plot Options"),
 
 				dcc.Checklist(
 					id='showMeanID',
@@ -150,7 +176,7 @@ myBody = dbc.Container(
 				dbc.Col(
 					[
 
-						html.H4("Y-Stat"),
+						html.H5("Y-Stat"),
 
 						dash_table.DataTable(
 							id='y-datatable',
@@ -175,7 +201,7 @@ myBody = dbc.Container(
 						),
 
 						# X-Stat
-						html.H4("X-Stat"),
+						html.H5("X-Stat"),
 
 						dash_table.DataTable(
 							id='x-datatable',
@@ -205,13 +231,13 @@ myBody = dbc.Container(
 				),
 				dbc.Col(
 					[
-						dbc.Button("Plot 1", color="primary", id='g1-plot-button'),
+						dbc.Button("Plot 1", color="primary", size="sm", id='g1-plot-button'),
 						dcc.Graph(
 							id='g1',
 							figure=plotButton(0),
 						),
 
-						dbc.Button("Plot 3", color="primary", id='g3-plot-button'),
+						dbc.Button("Plot 3", color="primary", size="sm", id='g3-plot-button'),
 						dcc.Graph(
 							id='g3',
 							figure=plotButton(2),
@@ -222,26 +248,16 @@ myBody = dbc.Container(
 				),
 				dbc.Col(
 					[
-						dbc.Button("Plot 2", color="primary", id='g2-plot-button'),
+						dbc.Button("Plot 2", color="primary", size="sm", id='g2-plot-button'),
 						dcc.Graph(
 							id='g2',
-							figure={
-								"data": [{"x": [1, 2, 3], "y": [1, 4, 9]}],
-								'layout': {
-									'margin':{'l': 50, 'b': 50, 't': 5, 'r': 5},
-									},
-								},
+							figure=plotButton(1),
 						),
 
-						dbc.Button("Plot 4", color="primary", id='g4-plot-button'),
+						dbc.Button("Plot 4", color="primary", size="sm", id='g4-plot-button'),
 						dcc.Graph(
 							id='g4',
-							figure={
-								"data": [{"x": [1, 2, 3], "y": [1, 4, 9]}],
-								'layout': {
-									'margin':{'l': 50, 'b': 50, 't': 5, 'r': 5},
-									},
-								},
+							figure=plotButton(3),
 						),
 					],
 					md=4, align='stretch',
