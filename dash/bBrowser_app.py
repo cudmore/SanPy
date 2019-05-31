@@ -1,5 +1,5 @@
 '''
-Author: RObert Cudmore
+Author: Robert Cudmore
 Date: 20190518
 
 Purpose:
@@ -131,7 +131,8 @@ myBody = dbc.Container(
 						dash_table.DataTable(
 							id='file-list-table',
 							row_selectable='multi',
-							columns=[{'name':i, 'id':i, 'editable':True} for i in myBrowser.df0], # i want to make only certain column cells editable
+							# i want to make only certain column cells editable
+							columns=[{'name':i, 'id':i, 'editable':True} for i in myBrowser.df0], 
 							data=myBrowser.df0.to_dict('records'),
 							editable=True, # this makes all cells editable
 							selected_rows=[0,1],
@@ -291,7 +292,7 @@ app.layout = html.Div([
 	], style={'display': 'none'}),
 
 
-	]) # closing app.layout = html.Div([
+	]) # closing 'app.layout = html.Div(['
 
 #
 # callbacks
@@ -303,7 +304,7 @@ app.layout = html.Div([
 			  [Input('g1', 'clickData')],
 			  [State('g1-click-datas', 'id'), State('g1-click-datas', 'children')])
 def graph_clicked_xxx(click_data, clicked_id, children):
-	print('=== graph_clicked_xxx()')
+	print('=== graph_clicked_xxx() click_data:', click_data)
 	if not children:
 		children = []
 	if click_data is None:
@@ -320,7 +321,7 @@ for name in graph_names:
 				  [Input(name, 'selectedData')],
 				  [State('{}-click-datas'.format(name), 'id'), State('{}-click-datas'.format(name), 'children')])
 	def graph_clicked(click_data, clicked_id, children):
-		print('=== graph_clicked()')
+		print('=== graph_clicked() click_data:', click_data)
 		if not children:
 			children = []
 		if click_data is None:
@@ -455,13 +456,16 @@ def myTableSelect(y_activeCell, x_activeCell):
 
 # edit condition
 @app.callback(
-    Output('hidden-div3', 'children'),
-    [Input('file-list-table', 'data'),
-     Input('file-list-table', 'columns')])
-def display_output(rows, columns):
+    Output('file-list-table', 'data'),
+    [Input('file-list-table', 'data_timestamp')], # data_timestamp is not working ???
+    [State('file-list-table', 'data')])
+def display_output(data_timestamp, data):
 	print('display_output()')
-	print('   rows:', rows)
-	print('   columns:', columns)
+	theRet = []
+	for item in data:
+		item['Condition 1'] = int(item['Condition 1'])
+		theRet.append(item)
+	return theRet
 	
 #
 # main

@@ -191,7 +191,7 @@ class bBrowser:
 				firstSpikeSec = df['thresholdSec'].min()
 				lastSpikeSec = df['thresholdSec'].max()
 				abfFile = df.iloc[0]['file']
-				#abfFile = os.path.split(abfFile)[1] # get the file name from the path
+				abfFile = os.path.split(abfFile)[1] # get the file name from the path
 
 				dfRow = collections.OrderedDict()
 				dfRow['Index'] = currIdx + 1
@@ -235,7 +235,7 @@ class bBrowser:
 
 		theRet = []
 
-		meanDataDict = {} # dict of list to be appended at end of loop
+		meanDataDict = {} # dict of dict to be appended at end of loop
 		
 		if xStatName and yStatName:
 			displayedFileRows = 0
@@ -250,11 +250,14 @@ class bBrowser:
 				# this is critical, have not thought a lot about it -->> may break !!!!
 				# this is to allow show/hide of mean/sd/se which make index and selection curveNumber out of sync
 				#
-				displayedFileRows += 1
+				
+				#displayedFileRows += 1
 				actualCurveNumber = index
+				'''
 				if self.showMean:
 					actualCurveNumber = (displayedFileRows-1) * 2
-
+				'''
+				
 				abfFile = file['ABF File'] # use this to connect mean with line
 				analysisFile = file['Analysis File']
 				abfFile = file['ABF File']
@@ -271,8 +274,11 @@ class bBrowser:
 				dataDict['y'] = yStatVals
 
 				dataDict['mode'] = 'none' # 'none' is lower case !!!
+				dataDict['marker'] = {
+					'color': self.plotlyColors[actualCurveNumber],
+					'size': 10,
+				}
 				if self.showLines:
-					# assuming we can start the list of lines+markers as +lines
 					dataDict['mode'] += '+lines'
 				if self.showMarkers:
 					dataDict['mode'] += '+markers'
@@ -281,10 +287,21 @@ class bBrowser:
 
 				if self.selectedPoints is not None:
 					if isinstance(self.selectedPoints, str):
-						print('updatePlot() converting to dict -- THIS SHOULD NEVER HAPPEN')
+						print('\n\n      updatePlot() converting to dict -- THIS SHOULD NEVER HAPPEN \n\n')
 						self.selectedPoints = json.loads(self.selectedPoints)
+
+					# debug selection of mean
+					'''
+					for point in self.selectedPoints['points']:
+						#print('point:', point)
+						print("point['curveNumber']:", point['curveNumber'], 'actualCurveNumber:', actualCurveNumber)
+					'''
+						
+					# todo: problem here ???
+					# 20190530, we can't do this until we have appended the mean ???
 					selectedPoints = [point['pointNumber'] for point in self.selectedPoints['points'] if point['curveNumber'] == actualCurveNumber]
 					dataDict['selectedpoints'] = selectedPoints
+
 					dataDict['unselected'] = {
 						'marker': {
 							'opacity': 0.3,
@@ -294,7 +311,7 @@ class bBrowser:
 							'color': 'rgba(0, 0, 0, 0)'
 						}
 					}
-
+				
 				theRet.append(dataDict)
 
 				if self.showMean:
@@ -313,15 +330,46 @@ class bBrowser:
 					#print('yMean:', yMean, 'ySE', ySE, 'yN:', yN)
 
 					if abfFile not in meanDataDict.keys():
-						meanDataDict['abfFile'] = []
+						meanDataDict[abfFile] = {}
+						#meanDataDict[abfFile]['myCurveNumber'] = actualCurveNumber
+						meanDataDict[abfFile]['x'] = []
+						meanDataDict[abfFile]['y'] = []
+						meanDataDict[abfFile]['mode'] = 'lines+markers'
+						meanDataDict[abfFile]['name'] = abfFile + '_mean' # todo: need to clean up abfFile
+						meanDataDict[abfFile]['marker'] = {
+							'color': [],
+							'size': 13,
+						}
+						meanDataDict[abfFile]['line'] = {
+							'color': ('rgb(0,0,0)'),
+						}
+						meanDataDict[abfFile]['error_x'] = {
+							'type': 'data',
+							'array': [],
+							'visible': True,
+							'color': [],
+						}
+						meanDataDict[abfFile]['error_y'] = {
+							'type': 'data',
+							'array': [],
+							'visible': True,
+							'color': [],
+						}
 						
+					'''
 					meanDict = {}
 					meanDict['x'] = [xMean] # these have to be list, not scalar !
 					meanDict['y'] = [yMean]
 					meanDict['mode'] = 'markers'
 					meanDict['name'] = analysisFile + '_mean'
+					'''
+					meanDataDict[abfFile]['x'].append(xMean) # xMean is a scalar
+					meanDataDict[abfFile]['y'].append(yMean) # yMean is a scalar
 
+					meanDataDict[abfFile]['marker']['color'].append(self.plotlyColors[actualCurveNumber])
+					
 					if self.showError:
+						'''
 						meanDict['error_x'] = {
 							'type': 'data',
 							'array': [xSE] if self.showSE else [xSD],
@@ -332,16 +380,61 @@ class bBrowser:
 							'array': [ySE] if self.showSE else [ySD],
 							'visible': True
 						}
+						'''
+						meanDataDict[abfFile]['error_x']['array'].append(xSE if self.showSE else xSD)
+						meanDataDict[abfFile]['error_y']['array'].append(ySE if self.showSE else ySD)
 
+						meanDataDict[abfFile]['error_x']['color'].append(self.plotlyColors[actualCurveNumber])
+						meanDataDict[abfFile]['error_y']['color'].append(self.plotlyColors[actualCurveNumber])
+						
+					###
+					meanDataDict[abfFile]['unselected'] = {
+						'marker': {
+							'opacity': 0.3,
+						},
+						'textfont': {
+							# make text transparent when not selected
+							'color': 'rgba(0, 0, 0, 0)'
+						}
+					}
+					###
+					
 					#print('meanDict:', meanDict)
 
-					theRet.append(meanDict)
-					meanDataDict['abfFile'].append(meanDict)
+					#meanDataDict[abfFile].append(meanDict)
+					#theRet.append(meanDict)
 					
-			# after for index, file
-			'''
+			# after 'for index, file in self.df0.iterrows():'
+			
+			# append means at end, they are grouped based on original abf file !!!
 			for key, value in meanDataDict.items():
 				theRet.append(value)
-			'''
 			
+			# 20190530
+			# try and get user selection of a point including both (raw, mean)
+			# theRet has a number of traces including raw data (from) files and potentially a mean for each file
+			if self.selectedPoints is not None:
+				for idx, item in enumerate(theRet):
+					#print('xxx item:', item)
+					selectedPoints = [point['pointNumber'] for point in self.selectedPoints['points'] if point['curveNumber'] == idx]
+					
+					if len(selectedPoints) > 0:
+						#dataDict['selectedpoints'] = selectedPoints
+						print('   curve number idx:', idx, 'has selectedPoints:', selectedPoints)
+						theRet[idx]['selectedpoints'] = selectedPoints
+
+					###
+					theRet[idx]['unselected'] = {
+						'marker': {
+							'opacity': 0.3,
+						},
+						'textfont': {
+							# make text transparent when not selected
+							'color': 'rgba(0, 0, 0, 0)'
+						}
+					}
+					###
+
+
+		# def updatePlot() return
 		return theRet
