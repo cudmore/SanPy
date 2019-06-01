@@ -7,6 +7,40 @@ If you find the code in this repository interesting, please email Robert Cudmore
 
 This repository has code to perform action potential analysis. It is primarily designed to analyze spontaneous action potentials from cardiac myocytes.
 
+
+## Using the interface
+
+Once the interface is up, select a folder with .abf files using the main 'File - Open Folder...' menu.
+
+Once a folder is loaded and a file is selected, the interface should look something like this.
+
+<IMG SRC="img/spike-app.png" width=700>
+
+Selecting menu 'Meta Window' allows stats to be plotted versus each other to explore correlations.
+
+<IMG SRC="img/meta-window-example.png" width=700>
+
+## PyMy pooling
+
+Once data is analyzed, PyMy Pooling allows browsing spike statistics across any number of files.
+
+
+<IMG SRC="img/pymy-pooling.png" width=700>
+
+
+## Writing custom Python scripts
+
+See the [/examples](examples) folder.
+
+```
+from bAnalysis import bAnalysis
+ba = bAnalysis.bAnalysis('data/19114001.abf')
+ba.spikeDetect(dVthresholdPos=100, medianFilter=3, halfHeights=[20,50,80])
+ba.plotSpikes()
+```
+
+<IMG SRC="img/example1.png" width=600>
+
 ## Install
 
 We assume you have the following
@@ -68,32 +102,6 @@ source bAnalysis_env/bin/activate
 # run the graphical-user-interface
 python bAnalysisApp/AnalysisApp.py
 ```
-
-## Using the interface
-
-Once the interface is up, select a folder with .abf files using the main 'File - Open Folder...' menu.
-
-Once you load a folder and select a file, it should look something like this.
-
-<IMG SRC="img/spike-app.png" width=700>
-
-Selecting menu 'Meta Window' allows stats to be plotted versus each other to explore correlations.
-
-<IMG SRC="img/meta-window-example.png" width=700>
-
-## Writing your own Python scripts
-
-See the [/examples](examples) folder.
-
-```
-from bAnalysis import bAnalysis
-ba = bAnalysis.bAnalysis('data/19114001.abf')
-ba.spikeDetect(dVthresholdPos=100, medianFilter=3, halfHeights=[20,50,80])
-ba.plotSpikes()
-```
-
-<IMG SRC="img/example1.png" width=600>
-
 ## What are all these numbers?
 
 We are following the cardiac myocyte nomenclature from this paper:
@@ -113,6 +121,7 @@ myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 11
 
 ### What is a good recording
 
+- This is up to you ...
 - Access resistance (Ra) should be less than 10 MOhm and not changing during the recording
 
 

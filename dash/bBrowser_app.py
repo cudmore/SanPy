@@ -120,19 +120,41 @@ pre_style = {"backgroundColor": "#ddd", "fontSize": 20, "padding": "10px", "marg
 ###########
 editableColumns = [1, 2]
 
+def myStyleDataConditional():
+	""" return a list of dict, one item per file"""
+	m = len(myBrowser.df0.index)
+	theRet = []
+	for rowIdx in range(m):
+		theDict = {}
+		theDict = {
+			'if': {
+				'column_id': 'Index',
+				'filter': '{Index} eq ' + str(rowIdx+1)
+			},
+			'backgroundColor': myBrowser.plotlyColors[rowIdx],
+			'color': 'white',
+		}
+		theRet.append(theDict)
+	return theRet
+	
+print(myStyleDataConditional())
+
 myBody = dbc.Container(
 	[
 		dbc.Row(
 			[
 				dbc.Col(
 					[
-						html.H5("File List"),
+						#html.H5('File List'),
 
 						dash_table.DataTable(
 							id='file-list-table',
 							row_selectable='multi',
 							# i want to make only certain column cells editable
 							columns=[{'name':i, 'id':i, 'editable':True} for i in myBrowser.df0], 
+
+							style_data_conditional = myStyleDataConditional(),
+							
 							data=myBrowser.df0.to_dict('records'),
 							editable=True, # this makes all cells editable
 							selected_rows=[0,1],
@@ -145,7 +167,7 @@ myBody = dbc.Container(
 
 		dbc.Row(
 			[
-				html.H5("Plot Options"),
+				html.H6("Options"),
 
 				dcc.Checklist(
 					id='showMeanID',
@@ -153,7 +175,8 @@ myBody = dbc.Container(
 						{'label': 'Lines', 'value': 'showLines'},
 						{'label': 'Markers', 'value': 'showMarkers'},
 						{'label': 'Mean', 'value': 'showMean'},
-					], values=['showMarkers', 'showMean'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
+						{'label': 'Mean Lines', 'value': 'showMeanLines'},
+					], values=['showMarkers', 'showMean', 'showMeanLines'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
 				),
 
 				html.Div('Error Bars', style={'padding-left': '20px', 'display': 'inline-block'}),
@@ -175,36 +198,12 @@ myBody = dbc.Container(
 				dbc.Col(
 					[
 
-						html.H5("Y-Stat"),
-
-						dash_table.DataTable(
-							id='y-datatable',
-							columns=[{"name": 'Idx', "id": 'Idx'}, {"name": 'Stat', "id": 'stat'}],
-							#data=[{"Idx": idx+1, "stat": myOption['label']} for idx, myOption in enumerate(myStatList)],
-							data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myStatList)],
-							style_table={
-								'maxHeight': '800px',
-								'overflowY': 'scroll'
-							},
-							style_cell={'textAlign': 'left'},
-							style_header={
-								'backgroundColor': 'ltgray',
-								'fontWeight': 'bold'
-							},
-							style_cell_conditional=[{
-								'if': {'row_index': 'odd'},
-								'backgroundColor': 'rgb(248, 248, 248)'
-							}],
-							row_selectable='single',
-							selected_rows=[1],
-						),
-
 						# X-Stat
-						html.H5("X-Stat"),
+						#html.H5("X-Stat"),
 
 						dash_table.DataTable(
 							id='x-datatable',
-							columns=[{"name": 'Idx', "id": 'Idx'}, {"name": 'Stat', "id": 'stat'}],
+							columns=[{"name": '', "id": 'Idx'}, {"name": 'X Stat', "id": 'stat'}],
 							#data=[{"Idx": idx+1, "stat": myOption['label']} for idx, myOption in enumerate(myStatList)],
 							data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myStatList)],
 							style_table={
@@ -224,19 +223,45 @@ myBody = dbc.Container(
 							selected_rows=[0],
 						),
 
+						html.P(''),
+
+						#html.H5("Y-Stat"),
+
+						dash_table.DataTable(
+							id='y-datatable',
+							columns=[{"name": '', "id": 'Idx'}, {"name": 'Y Stat', "id": 'stat'}],
+							#data=[{"Idx": idx+1, "stat": myOption['label']} for idx, myOption in enumerate(myStatList)],
+							data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myStatList)],
+							style_table={
+								'maxHeight': '800px',
+								'overflowY': 'scroll'
+							},
+							style_cell={'textAlign': 'left'},
+							style_header={
+								'backgroundColor': 'ltgray',
+								'fontWeight': 'bold'
+							},
+							style_cell_conditional=[{
+								'if': {'row_index': 'odd'},
+								'backgroundColor': 'rgb(248, 248, 248)'
+							}],
+							row_selectable='single',
+							selected_rows=[1],
+						),						
+
 					],
 					width={'size':100},
 
 				),
 				dbc.Col(
 					[
-						dbc.Button("Plot 1", color="primary", size="sm", id='g1-plot-button'),
+						dbc.Button("Plot 1", color="primary", outline=True, size="sm", id='g1-plot-button'),
 						dcc.Graph(
 							id='g1',
 							figure=plotButton(0),
 						),
 
-						dbc.Button("Plot 3", color="primary", size="sm", id='g3-plot-button'),
+						dbc.Button("Plot 3", color="primary", outline=True, size="sm", id='g3-plot-button'),
 						dcc.Graph(
 							id='g3',
 							figure=plotButton(2),
@@ -247,13 +272,13 @@ myBody = dbc.Container(
 				),
 				dbc.Col(
 					[
-						dbc.Button("Plot 2", color="primary", size="sm", id='g2-plot-button'),
+						dbc.Button("Plot 2", color="primary", outline=True, size="sm", id='g2-plot-button'),
 						dcc.Graph(
 							id='g2',
 							figure=plotButton(1),
 						),
 
-						dbc.Button("Plot 4", color="primary", size="sm", id='g4-plot-button'),
+						dbc.Button("Plot 4", color="primary", outline=True, size="sm", id='g4-plot-button'),
 						dcc.Graph(
 							id='g4',
 							figure=plotButton(3),
@@ -358,7 +383,7 @@ numClicks = [0, 0, 0, 0]
 def handleGraphCallback(graphNumber, n_clicks, update_on_click_data, derived_virtual_selected_rows, showMean, showSDEVID):
 	myBrowser.setSelectPoints(update_on_click_data)
 	myBrowser.setSelectedFiles(derived_virtual_selected_rows)
-	myBrowser.setPlotOptions(showMean)
+	myBrowser.setPlotOptions(showMean) # show mean is from ['', '', ...]
 	myBrowser.setShow_sdev_sem(showSDEVID)
 	if n_clicks is not None and n_clicks > numClicks[graphNumber]:
 		numClicks[graphNumber] = n_clicks
@@ -462,8 +487,24 @@ def myTableSelect(y_activeCell, x_activeCell):
 def display_output(data_timestamp, data):
 	print('display_output()')
 	theRet = []
-	for item in data:
-		item['Condition 1'] = int(item['Condition 1'])
+	for rowIdx, item in enumerate(data):
+		#print('   item:', item)
+		
+		# convert to number
+		#item['Condition 1'] = int(item['Condition 1'])
+		
+		analysisFile = item['Analysis_File']
+		condition1 = item['Condition 1']
+
+		#print('   condition1:', condition1)
+		
+		rowsToChange = myBrowser.df0['Analysis_File'] == analysisFile
+		myBrowser.df0.loc[rowsToChange, 'Condition 1'] = condition1
+		
+		rowsToChange = myBrowser.df['Analysis_File'] == analysisFile
+		myBrowser.df.loc[rowsToChange, 'Condition 1'] = condition1
+		
+		
 		theRet.append(item)
 	return theRet
 	

@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 
 import plotly.colors
+import plotly.graph_objs as go
 
 '''
 class myCallbackException(Exception):
@@ -55,7 +56,7 @@ class bBrowser:
 		self.graphPlot.append(plotDict)
 		# 3
 		plotDict = {}
-		plotDict['xStat'] = 'Take Off Potential (s)'
+		plotDict['xStat'] = 'Condition 1'
 		plotDict['yStat'] = 'AP Peak (mV)'
 		print('plotDict:', plotDict)
 		self.graphPlot.append(plotDict)
@@ -73,12 +74,14 @@ class bBrowser:
 		self.selectedPoints = None
 
 		self.showMean = False
+		self.showMeanLines = False
 		self.showError = True
 		self.showLines = False
 		self.showMarkers = False
 
 		self.plotlyColors = plotly.colors.DEFAULT_PLOTLY_COLORS
-
+		print('bBrowser() will only show', len(self.plotlyColors), 'files !!!')
+		
 	def setSelectedFiles(self, rows):
 		"""
 		Set the rows of selected files.
@@ -112,8 +115,9 @@ class bBrowser:
 
 	# more general than just show mean
 	def setPlotOptions(self, plotOptions):
-		print('bBrowser.setPlotOptions() plotOptions:', plotOptions)
+		#print('bBrowser.setPlotOptions() plotOptions:', plotOptions)
 		self.showMean = 'showMean' in plotOptions
+		self.showMeanLines = 'showMeanLines' in plotOptions
 		self.showLines = 'showLines' in plotOptions
 		self.showMarkers = 'showMarkers' in plotOptions
 
@@ -135,7 +139,7 @@ class bBrowser:
 		if not checked, showMean is []
 		if checked showMean is ['showMean']
 		"""
-		print('bBrowser.setShow_sdev_sem() showSDEVID:', showSDEVID)
+		#print('bBrowser.setShow_sdev_sem() showSDEVID:', showSDEVID)
 		if 'None' in showSDEVID:
 			self.showError = False
 		elif 'SEM' in showSDEVID:
@@ -183,7 +187,7 @@ class bBrowser:
 				df = pd.read_csv(currFile, header=0) # load comma seperated values, read header names from row 1
 
 				# insert new columns not in original .txt file
-				df.insert(0, 'Analysis File', file)
+				df.insert(0, 'Analysis_File', file)
 				df.insert(0, 'Condition 2', currIdx + 2)
 				df.insert(0, 'Condition 1', currIdx + 1)
 
@@ -197,11 +201,11 @@ class bBrowser:
 				dfRow['Index'] = currIdx + 1
 				dfRow['Condition 1'] = currIdx + 1 # to start, these are FAKE
 				dfRow['Condition 2'] = currIdx + 2 # to start, these are FAKE
-				dfRow['Analysis File'] = file
+				dfRow['Analysis_File'] = file
 				dfRow['ABF File'] = abfFile
 				dfRow['Num Spikes'] = numSpikes
-				dfRow['First Spike (Sec)'] = firstSpikeSec
-				dfRow['Last Spike (Sec)'] = lastSpikeSec
+				dfRow['First Spike (Sec)'] = float('%.3f'%(firstSpikeSec))
+				dfRow['Last Spike (Sec)'] = float('%.3f'%(lastSpikeSec))
 
 
 				df0_list.append(dfRow)
@@ -237,6 +241,13 @@ class bBrowser:
 
 		meanDataDict = {} # dict of dict to be appended at end of loop
 		
+		doNotDoMean = ['Condition 1', 'Condition 2']
+		
+		doBar = xStatName in doNotDoMean or yStatName in doNotDoMean
+		doBar = False
+		
+		hideMeanLines = not self.showMeanLines or (xStatName in doNotDoMean or yStatName in doNotDoMean)
+		
 		if xStatName and yStatName:
 			displayedFileRows = 0
 			for index, file in self.df0.iterrows():
@@ -259,11 +270,11 @@ class bBrowser:
 				'''
 				
 				abfFile = file['ABF File'] # use this to connect mean with line
-				analysisFile = file['Analysis File']
+				analysisFile = file['Analysis_File']
 				abfFile = file['ABF File']
 
 				# rows of large (spikes) df that make this file
-				thisFileRows = self.df.loc[self.df['Analysis File'] == analysisFile]
+				thisFileRows = self.df.loc[self.df['Analysis_File'] == analysisFile]
 
 				# get columns in self.df corresponding to selected stat
 				xStatVals = thisFileRows[xStatName]
@@ -273,15 +284,26 @@ class bBrowser:
 				dataDict['x'] = xStatVals
 				dataDict['y'] = yStatVals
 
-				dataDict['mode'] = 'none' # 'none' is lower case !!!
-				dataDict['marker'] = {
-					'color': self.plotlyColors[actualCurveNumber],
-					'size': 10,
-				}
-				if self.showLines:
-					dataDict['mode'] += '+lines'
-				if self.showMarkers:
-					dataDict['mode'] += '+markers'
+				if doBar:
+					dataDict['marker'] = {
+						'color': self.plotlyColors[actualCurveNumber],
+					}
+				else:
+					dataDict['marker'] = {
+						'color': self.plotlyColors[actualCurveNumber],
+						'size': 10,
+					}
+
+				if doBar:
+					pass
+				else:
+					dataDict['mode'] = ''
+					if not self.showLines and not self.showMarkers:
+						dataDict['mode'] = 'none' # 'none' is lower case !!!
+					if self.showLines:
+						dataDict['mode'] += '+lines'
+					if self.showMarkers:
+						dataDict['mode'] += '+markers'
 
 				dataDict['name'] = 'File ' + str(index + 1) #analysisFile
 
@@ -312,29 +334,62 @@ class bBrowser:
 						}
 					}
 				
+				'''
+				if doBar:
+					myScatter = go.Bar(dataDict)
+				else:
+					myScatter = go.Scatter(dataDict)
+				'''
+				
+				#myScatter = go.Scatter(dataDict)
+				
+				#theRet.append(myScatter)
 				theRet.append(dataDict)
 
 				if self.showMean:
 					# x
-					xMean = np.nanmean(xStatVals)
-					xSD = np.nanstd(xStatVals)
-					xN = np.count_nonzero(~np.isnan(xStatVals))
-					xSE = xSD / math.sqrt(xN - 1)
-					#print('xMean:', xMean, 'xSE', xSE, 'xN:', xN)
+					xMean, xSD, xN, xSE = None, None, None, None
+					if xStatName in doNotDoMean:
+						#print('xStatVals:', xStatVals)
+						xMean = xStatVals[0]
+						'''
+						xSD = 0
+						xN = 0
+						xSE = 0
+						'''
+					else:
+						xMean = np.nanmean(xStatVals)
+						xSD = np.nanstd(xStatVals)
+						xN = np.count_nonzero(~np.isnan(xStatVals))
+						xSE = xSD / math.sqrt(xN - 1)
+						#print('xMean:', xMean, 'xSE', xSE, 'xN:', xN)
 
 					# y
-					yMean = np.nanmean(yStatVals)
-					ySD = np.nanstd(yStatVals)
-					yN = np.count_nonzero(~np.isnan(yStatVals))
-					ySE = ySD / math.sqrt(yN - 1)
-					#print('yMean:', yMean, 'ySE', ySE, 'yN:', yN)
+					yMean, ySD, yN, ySE = None, None, None, None
+					if yStatName in doNotDoMean:
+						#print('xStatVals:', xStatVals)
+						yMean = yStatVals[0]
+						'''
+						ySD = 0
+						yN = 0
+						ySE = 0
+						'''
+					else:
+						yMean = np.nanmean(yStatVals)
+						ySD = np.nanstd(yStatVals)
+						yN = np.count_nonzero(~np.isnan(yStatVals))
+						ySE = ySD / math.sqrt(yN - 1)
+						#print('yMean:', yMean, 'ySE', ySE, 'yN:', yN)
 
 					if abfFile not in meanDataDict.keys():
 						meanDataDict[abfFile] = {}
 						#meanDataDict[abfFile]['myCurveNumber'] = actualCurveNumber
 						meanDataDict[abfFile]['x'] = []
 						meanDataDict[abfFile]['y'] = []
-						meanDataDict[abfFile]['mode'] = 'lines+markers'
+						if hideMeanLines:
+							meanDataDict[abfFile]['mode'] = 'markers'
+						else:
+							meanDataDict[abfFile]['mode'] = 'lines+markers'
 						meanDataDict[abfFile]['name'] = abfFile + '_mean' # todo: need to clean up abfFile
 						meanDataDict[abfFile]['marker'] = {
 							'color': [],
