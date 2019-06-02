@@ -3,7 +3,7 @@ pip install dash==0.39.0  # The core dash backend
 pip install dash-daq==0.1.0  # DAQ components (newly open-sourced!)
 '''
 
-import os, time
+import os, time, collections
 from textwrap import dedent as d
 
 import dash
@@ -58,11 +58,11 @@ def getFileList(path):
 	videoFileIdx = 0
 
 	fileDict = {}
-	fileDict['file'] = ''
+	fileDict['File Name'] = ''
 	#fileDict['path'] = ''
 	fileDict['kHz'] = ''
-	fileDict['durationSec'] = ''
-	fileDict['numSweeps'] = ''
+	fileDict['Duration (Sec)'] = ''
+	fileDict['Number of Sweeps'] = ''
 	for file in os.listdir(path):
 		if file.startswith('.'):
 			continue
@@ -70,7 +70,7 @@ def getFileList(path):
 			fullPath = os.path.join(path, file)
 
 			fileDict = {} # WOW, I need this here !!!!!!!!
-			fileDict['file'] = file
+			fileDict['File Name'] = file
 			#fileDict['path'] = fullPath
 
 			tmp_ba = bAnalysis.bAnalysis(file=fullPath)
@@ -79,8 +79,8 @@ def getFileList(path):
 			durationSec = max(tmp_ba.abf.sweepX)
 
 			fileDict['kHz'] = pntsPerMS
-			fileDict['durationSec'] = int(round(durationSec))
-			fileDict['numSweeps'] = numSweeps
+			fileDict['Duration (Sec)'] = int(round(durationSec))
+			fileDict['Number of Sweeps'] = numSweeps
 
 
 			retFileList.append(fileDict)
@@ -94,6 +94,7 @@ fileList = getFileList(path)
 
 #
 # a list of key names in ba.spikeDict
+"""
 skipKeys = ['file', 'spikeNumber', 'numError', 'errors', 'dVthreshold', 'medianFilter', 'halfHeights']
 myOptionsList = []
 mySpikeNumber = 0
@@ -106,7 +107,37 @@ for key,value in ba.spikeDict[mySpikeNumber].items():
 		'value': key
 	}
 	myOptionsList.append(optionsDict)
+"""
 
+###
+###
+statDict = collections.OrderedDict()
+statDict['Take Off Potential (s)'] = 'thresholdSec'
+statDict['AP Peak (mV)'] = 'peakVal'
+statDict['AP Height (mV)'] = 'peakHeight'
+statDict['Pre AP Min (mV)'] = 'preMinVal'
+statDict['Post AP Min (mV)'] = 'postMinVal'
+statDict['AP Duration (ms)'] = 'apDuration_ms'
+statDict['Early Diastolic Duration (ms)'] = 'earlyDiastolicDuration_ms'
+statDict['Diastolic Duration (ms)'] = 'diastolicDuration_ms'
+statDict['Inter-Spike-Interval (ms)'] = 'isi_ms'
+statDict['Cycle Length (ms)'] = 'cycleLength_ms'
+statDict['Max AP Upstroke (dV/dt)'] = 'preSpike_dvdt_max_val2'
+statDict['Max AP Upstroke (mV)'] = 'preSpike_dvdt_max_val'
+statDict['Max AP Repolarization (dV/dt)'] = 'postSpike_dvdt_min_val2'
+statDict['Max AP Repolarization (mV)'] = 'postSpike_dvdt_min_val'
+statDict['Condition 1'] = 'Condition 1'
+statDict['Condition 2'] = 'Condition 2'
+###
+###
+
+myOptionsList = list(statDict.keys())
+#print('\n\nmyOptionsList:', myOptionsList)
+
+tmpData=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)]
+#for tmpDataRow in enumerate(tmpData):
+#	print('   ', tmpDataRow)
+	
 # see: https://codepen.io/chriddyp/pen/bWLwgP
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -115,12 +146,14 @@ app.css.append_css({'external_url': 'static/my.css'})
 
 app.layout = html.Div([
 
-	html.Div([
-		html.Button(id='load-folder-button', children='Load Folder', className='button-primary'),
-		html.Label('File: ' + os.path.join(myPath, myFile)),
-	], style={'display': 'table-cell'}),
 
 	html.Div([
+
+		html.Div([
+			html.Button(id='load-folder-button', children='Load Folder', className='button-primary'),
+			html.Label('File: ' + os.path.join(myPath, myFile)),
+		], className='two columns'),
+
 		html.Div([
 		dash_table.DataTable(
 			id='file-datatable',
@@ -137,21 +170,35 @@ app.layout = html.Div([
 				'backgroundColor': 'ltgray',
 				'fontWeight': 'bold'
 			},
+			style_cell_conditional=[{
+				'if': {'row_index': 'odd'},
+				'backgroundColor': 'rgb(248, 248, 248)'
+			}],
+			row_selectable='single',
+			selected_rows=[2],
 		),
-		], style={'width': '49%', 'display': 'inline-block', 'vertical-align': 'middle'}),
+		], className='ten columns'),
+		# style={'width': '49%', 'display': 'inline-block', 'vertical-align': 'middle'}),
 	], className='row'),
 
+	html.H2(" "),
+	
 	html.Div(id='tmpdiv', className='row'),
 	html.Div(id='tmpdiv2', className='row'),
 	html.Div(id='tmpdivRadio', className='row'),
 
 	html.Div([
 		html.Div([
+				html.Button(id='detect-button', children='Detect', className='button-primary'),
+					
 				html.Div([
-					html.Button(id='detect-button', children='Detect', className='button-primary'),
 					dcc.Input(id='dvdtThreshold', type='number', value=50, style={'width': 65}),
-				], style={'display': 'table-cell'}),
-
+				
+					" dV/dt",
+				], style={'display': 'inline-block'}), 
+				
+				html.H5("Plot"),
+				
 				dcc.Checklist(
 					id='plot-radio-buttons',
 					options=[
@@ -162,6 +209,8 @@ app.layout = html.Div([
 					values=[]
 				),
 
+				html.H2(" "),
+				
 				html.Button(id='save-button', children='Save', className='button-primary'),
 		], className='two columns'),
 
@@ -171,32 +220,15 @@ app.layout = html.Div([
 		], className='ten columns'),
 	], className='row'),
 
+	html.Div([ # row
 	html.Div([
-		html.Div([
-		dash_table.DataTable(
-			id='y-datatable',
-			columns=[{"name": 'Idx', "id": 'Idx'}, {"name": 'Stat', "id": 'stat'}],
-			data=[{"Idx": idx+1, "stat": myOption['label']} for idx, myOption in enumerate(myOptionsList)],
-			style_table={
-				'maxWidth': '300',
-				'maxHeight': '300',
-				'overflowY': 'scroll'
-			},
-			style_cell={'textAlign': 'left'},
-			style_header={
-				'backgroundColor': 'ltgray',
-				'fontWeight': 'bold'
-			},
-		),
-		], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'}),
 
 		html.Div([
 		dash_table.DataTable(
 			id='x-datatable',
-			columns=[{"name": 'Idx', "id": 'Idx'}, {"name": 'Stat', "id": 'stat'}],
-			data=[{"Idx": idx+1, "stat": myOption['label']} for idx, myOption in enumerate(myOptionsList)],
+			columns=[{"name": '', "id": 'Idx'}, {"name": 'X Stat', "id": 'stat'}],
+			data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)],
 			style_table={
-				'maxWidth': '300',
 				'maxHeight': '300',
 				'overflowY': 'scroll'
 			},
@@ -205,14 +237,47 @@ app.layout = html.Div([
 				'backgroundColor': 'ltgray',
 				'fontWeight': 'bold'
 			},
+			style_cell_conditional=[{
+				'if': {'row_index': 'odd'},
+				'backgroundColor': 'rgb(248, 248, 248)'
+			}],
+			row_selectable='single',
+			selected_rows=[0],
 		),
-		], style={'width': '50%', 'display': 'inline-block', 'vertical-align': 'middle'}),
-	], className='three columns'),
+		], style={'display': 'inline-block', 'vertical-align': 'middle'}),
+
+		html.Div([
+		dash_table.DataTable(
+			id='y-datatable',
+			columns=[{"name": '', "id": 'Idx'}, {"name": 'Y Stat', "id": 'stat'}],
+			data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)],
+			style_table={
+				'maxHeight': '400',
+				'overflowY': 'scroll'
+			},
+			style_cell={'textAlign': 'left'},
+			style_header={
+				'backgroundColor': 'ltgray',
+				'fontWeight': 'bold'
+			},
+			style_cell_conditional=[{
+				'if': {'row_index': 'odd'},
+				'backgroundColor': 'rgb(248, 248, 248)'
+			}],
+			row_selectable='single',
+			selected_rows=[1],
+		),
+		], style={'display': 'inline-block', 'vertical-align': 'middle'}),
+
+	], className='six columns'),
 
 	html.Div([
-		dcc.Graph(style={'height': '300px'}, id='life-exp-vs-gdp')
-	], className='eight columns'),
-])
+		dcc.Graph(id='life-exp-vs-gdp')
+	], className='six columns'),
+	
+	], className='row'),
+	
+]) # app.layout = html.Div([
 
 ###
 # Callbacks
@@ -351,14 +416,14 @@ def linked_graph(relayoutData, values):
 @app.callback(
 	Output('tmpdiv', 'children'),
 	[
-	Input('file-datatable', 'active_cell'),
+	Input('file-datatable', 'selected_rows'),
 	])
 def myFileSelect(activeCell):
 	#print('myTableSelect()')
 	if activeCell is not None:
 		print('myFileSelect()', 'activeCell:', activeCell)
 		selRow = activeCell[0]
-		fileSelection = fileList[selRow]['file']
+		fileSelection = fileList[selRow]['File Name']
 		print('   file selection is:', fileSelection)
 		print('   XXX LOADING FILE THIS IS WHERE I NEED REDIS !!!!!!!!!!!!!!!!!!!!!!!!!')
 		loadFile(fileSelection)
@@ -368,18 +433,26 @@ def myFileSelect(activeCell):
 @app.callback(
 	Output('life-exp-vs-gdp', 'figure'),
 	[
-	Input('y-datatable', 'active_cell'),
-	Input('x-datatable', 'active_cell'),
+	Input('y-datatable', 'selected_rows'),
+	Input('x-datatable', 'selected_rows'),
 	])
 def myTableSelect(y_activeCell, x_activeCell):
-	#print('myTableSelect()')
+	"""
+	y_activeCell: {'row': 1, 'column': 1, 'column_id': 'stat'}
+	x_activeCell: {'row': 3, 'column': 1, 'column_id': 'stat'}
+	"""
+	print('myTableSelect()')
+	print('   y_activeCell:', y_activeCell)
+	print('   x_activeCell:', x_activeCell)
 	xSel, ySel = None, None
 	if y_activeCell is not None:
 		yRow = y_activeCell[0]
-		ySel = myOptionsList[yRow]['label']
+		ySelHuman = myOptionsList[yRow] # human readable
+		ySel = statDict[ySelHuman] # convert back to backend names
 	if x_activeCell is not None:
 		xRow = x_activeCell[0]
-		xSel = myOptionsList[xRow]['label']
+		xSelHuman = myOptionsList[xRow]
+		xSel = statDict[xSelHuman] # convert back to backend names
 	print('myTableSelect ySel:', ySel, 'xSrl:', xSel)
 	xaxis_type = 'Linear'
 	yaxis_type = 'Linear'
@@ -403,11 +476,11 @@ def myTableSelect(y_activeCell, x_activeCell):
 		)],
 		'layout': go.Layout(
 			xaxis={
-				'title': xSel,
+				'title': xSelHuman,
 				'type': 'linear' if xaxis_type == 'Linear' else 'log'
 			},
 			yaxis={
-				'title': ySel,
+				'title': ySelHuman,
 				'type': 'linear' if yaxis_type == 'Linear' else 'log'
 			},
 			margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
