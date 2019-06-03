@@ -103,11 +103,11 @@ signal2 = [spike['thresholdVal'] for spike in ba.spikeDict]
 myX2 = [spike['thresholdSec'] for spike in ba.spikeDict]
 
 data2 = {c: signal2 for c in cols}
-start2 = 0
-end2 = myX2[-1]
-n2 = len(myX2)
-max_points2 = n2
-data2['Time'] = np.linspace(start2, end2, n2)
+#start2 = 0
+#end2 = myX2[-1]
+#n2 = len(myX2)
+#max_points2 = n2
+data2['Time'] = myX2 #np.linspace(start2, end2, n2)
 df2 = pd.DataFrame(data2)
 
 #######################################################################################################################
@@ -332,6 +332,8 @@ def draw_undecimated_data(selection):
 		sub_df2 = df2[(df2.Time >= x0) & (df2.Time <= x1)]
 		num_pts2 = len(sub_df2)
 		
+		#print('sub_df2:', sub_df2)
+		
 		if num_pts < max_points:
 			high_res_data = [
 				dict(
@@ -350,7 +352,7 @@ def draw_undecimated_data(selection):
 					'x': sub_df2['Time'],
 					'y': sub_df2['Signal'],
 					'mode': 'markers',
-					'type': 'scattergl',
+					#'type': 'scattergl',
 				}
 				]
 			high_res_layout = new_fig1['layout']
