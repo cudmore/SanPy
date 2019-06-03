@@ -109,7 +109,7 @@ app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 app.css.append_css({
    'external_url': (
-       'static/my.css'
+	   'static/my.css'
    )
 })
 
@@ -137,7 +137,7 @@ def myStyleDataConditional():
 		theRet.append(theDict)
 	return theRet
 	
-print(myStyleDataConditional())
+#print(myStyleDataConditional())
 
 myBody = dbc.Container(
 	[
@@ -167,7 +167,7 @@ myBody = dbc.Container(
 
 		dbc.Row(
 			[
-				html.H6("Options"),
+				html.H6('Plot Options'),
 
 				dcc.Checklist(
 					id='showMeanID',
@@ -177,6 +177,15 @@ myBody = dbc.Container(
 						{'label': 'Mean', 'value': 'showMean'},
 						{'label': 'Mean Lines', 'value': 'showMeanLines'},
 					], values=['showMarkers', 'showMean', 'showMeanLines'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
+				),
+				dbc.Tooltip(
+					[dcc.Markdown("""Select the plot options for all 4 plots."""),
+					dcc.Markdown("""Lines: Lines between sequential spikes."""),
+					dcc.Markdown("""Markers: Plot a marker for each spike."""),
+					dcc.Markdown("""Mean: Plot the mean for each file."""),
+					dcc.Markdown("""Mean Lines: Connect files that share the same 'Condition 1' with a line."""),
+					],
+					target="showMeanID",
 				),
 
 				html.Div('Error Bars', style={'padding-left': '20px', 'display': 'inline-block'}),
@@ -189,6 +198,14 @@ myBody = dbc.Container(
 					],
 					value='SEM',
 					labelStyle={'padding-left': '10px', 'display': 'inline-block'}
+				),
+				dbc.Tooltip([
+					dcc.Markdown("""Select the type of error bars."""),
+					dcc.Markdown("""None: No error bars."""),
+					dcc.Markdown("""SEM: Standard Error of the Mean."""),
+					dcc.Markdown("""SDEV: Standard Deviation."""),
+					],
+					target="showSDEVID",
 				),
 			], no_gutters=False, align='stretch', # row
 		),
@@ -256,6 +273,10 @@ myBody = dbc.Container(
 				dbc.Col(
 					[
 						dbc.Button("Plot 1", color="primary", outline=True, size="sm", id='g1-plot-button'),
+						dbc.Tooltip(
+							"Select both an X-Stat and Y-Stat, then use this button to plot those stats.",
+							target="g1-plot-button",
+						),
 						dcc.Graph(
 							id='g1',
 							figure=plotButton(0),
@@ -265,6 +286,10 @@ myBody = dbc.Container(
 						dcc.Graph(
 							id='g3',
 							figure=plotButton(2),
+						),
+						dbc.Tooltip(
+							"Select both an X-Stat and Y-Stat, then use this button to plot those stats.",
+							target="g3-plot-button",
 						),
 					],
 					md=4, align='stretch',
@@ -481,9 +506,9 @@ def myTableSelect(y_activeCell, x_activeCell):
 
 # edit condition
 @app.callback(
-    Output('file-list-table', 'data'),
-    [Input('file-list-table', 'data_timestamp')], # data_timestamp is not working ???
-    [State('file-list-table', 'data')])
+	Output('file-list-table', 'data'),
+	[Input('file-list-table', 'data_timestamp')], # data_timestamp is not working ???
+	[State('file-list-table', 'data')])
 def display_output(data_timestamp, data):
 	print('display_output()')
 	theRet = []
@@ -493,15 +518,15 @@ def display_output(data_timestamp, data):
 		# convert to number
 		#item['Condition 1'] = int(item['Condition 1'])
 		
-		analysisFile = item['Analysis_File']
+		analysisFile = item['Analysis File']
 		condition1 = item['Condition 1']
 
 		#print('   condition1:', condition1)
 		
-		rowsToChange = myBrowser.df0['Analysis_File'] == analysisFile
+		rowsToChange = myBrowser.df0['Analysis File'] == analysisFile
 		myBrowser.df0.loc[rowsToChange, 'Condition 1'] = condition1
 		
-		rowsToChange = myBrowser.df['Analysis_File'] == analysisFile
+		rowsToChange = myBrowser.df['Analysis File'] == analysisFile
 		myBrowser.df.loc[rowsToChange, 'Condition 1'] = condition1
 		
 		

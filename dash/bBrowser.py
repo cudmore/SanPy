@@ -187,7 +187,7 @@ class bBrowser:
 				df = pd.read_csv(currFile, header=0) # load comma seperated values, read header names from row 1
 
 				# insert new columns not in original .txt file
-				df.insert(0, 'Analysis_File', file)
+				df.insert(0, 'Analysis File', file)
 				df.insert(0, 'Condition 2', currIdx + 2)
 				df.insert(0, 'Condition 1', currIdx + 1)
 
@@ -201,7 +201,7 @@ class bBrowser:
 				dfRow['Index'] = currIdx + 1
 				dfRow['Condition 1'] = currIdx + 1 # to start, these are FAKE
 				dfRow['Condition 2'] = currIdx + 2 # to start, these are FAKE
-				dfRow['Analysis_File'] = file
+				dfRow['Analysis File'] = file
 				dfRow['ABF File'] = abfFile
 				dfRow['Num Spikes'] = numSpikes
 				dfRow['First Spike (Sec)'] = float('%.3f'%(firstSpikeSec))
@@ -269,12 +269,13 @@ class bBrowser:
 					actualCurveNumber = (displayedFileRows-1) * 2
 				'''
 				
-				abfFile = file['ABF File'] # use this to connect mean with line
-				analysisFile = file['Analysis_File']
+				abfFile = file['ABF File']
+				condition1 = file['Condition 1'] # use this to connect mean with line
+				analysisFile = file['Analysis File']
 				abfFile = file['ABF File']
 
 				# rows of large (spikes) df that make this file
-				thisFileRows = self.df.loc[self.df['Analysis_File'] == analysisFile]
+				thisFileRows = self.df.loc[self.df['Analysis File'] == analysisFile]
 
 				# get columns in self.df corresponding to selected stat
 				xStatVals = thisFileRows[xStatName]
@@ -381,30 +382,33 @@ class bBrowser:
 						ySE = ySD / math.sqrt(yN - 1)
 						#print('yMean:', yMean, 'ySE', ySE, 'yN:', yN)
 
-					if abfFile not in meanDataDict.keys():
-						meanDataDict[abfFile] = {}
-						#meanDataDict[abfFile]['myCurveNumber'] = actualCurveNumber
-						meanDataDict[abfFile]['x'] = []
-						meanDataDict[abfFile]['y'] = []
+					#if abfFile not in meanDataDict.keys():
+					meanKey = str(condition1)
+					if meanKey not in meanDataDict.keys():
+						#meanDataDict[abfFile] = {}
+						print('=== making meanDataDict for file index:', index, 'meanKey:', meanKey)
+						meanDataDict[meanKey] = {}
+						meanDataDict[meanKey]['x'] = []
+						meanDataDict[meanKey]['y'] = []
 						if hideMeanLines:
-							meanDataDict[abfFile]['mode'] = 'markers'
+							meanDataDict[meanKey]['mode'] = 'markers'
 						else:
-							meanDataDict[abfFile]['mode'] = 'lines+markers'
-						meanDataDict[abfFile]['name'] = abfFile + '_mean' # todo: need to clean up abfFile
-						meanDataDict[abfFile]['marker'] = {
+							meanDataDict[meanKey]['mode'] = 'lines+markers'
+						meanDataDict[meanKey]['name'] = abfFile + '_mean' # todo: need to clean up abfFile
+						meanDataDict[meanKey]['marker'] = {
 							'color': [],
 							'size': 13,
 						}
-						meanDataDict[abfFile]['line'] = {
+						meanDataDict[meanKey]['line'] = {
 							'color': ('rgb(0,0,0)'),
 						}
-						meanDataDict[abfFile]['error_x'] = {
+						meanDataDict[meanKey]['error_x'] = {
 							'type': 'data',
 							'array': [],
 							'visible': True,
 							'color': [],
 						}
-						meanDataDict[abfFile]['error_y'] = {
+						meanDataDict[meanKey]['error_y'] = {
 							'type': 'data',
 							'array': [],
 							'visible': True,
@@ -418,10 +422,10 @@ class bBrowser:
 					meanDict['mode'] = 'markers'
 					meanDict['name'] = analysisFile + '_mean'
 					'''
-					meanDataDict[abfFile]['x'].append(xMean) # xMean is a scalar
-					meanDataDict[abfFile]['y'].append(yMean) # yMean is a scalar
+					meanDataDict[meanKey]['x'].append(xMean) # xMean is a scalar
+					meanDataDict[meanKey]['y'].append(yMean) # yMean is a scalar
 
-					meanDataDict[abfFile]['marker']['color'].append(self.plotlyColors[actualCurveNumber])
+					meanDataDict[meanKey]['marker']['color'].append(self.plotlyColors[actualCurveNumber])
 					
 					if self.showError:
 						'''
@@ -436,14 +440,14 @@ class bBrowser:
 							'visible': True
 						}
 						'''
-						meanDataDict[abfFile]['error_x']['array'].append(xSE if self.showSE else xSD)
-						meanDataDict[abfFile]['error_y']['array'].append(ySE if self.showSE else ySD)
+						meanDataDict[meanKey]['error_x']['array'].append(xSE if self.showSE else xSD)
+						meanDataDict[meanKey]['error_y']['array'].append(ySE if self.showSE else ySD)
 
-						meanDataDict[abfFile]['error_x']['color'].append(self.plotlyColors[actualCurveNumber])
-						meanDataDict[abfFile]['error_y']['color'].append(self.plotlyColors[actualCurveNumber])
+						meanDataDict[meanKey]['error_x']['color'].append(self.plotlyColors[actualCurveNumber])
+						meanDataDict[meanKey]['error_y']['color'].append(self.plotlyColors[actualCurveNumber])
 						
 					###
-					meanDataDict[abfFile]['unselected'] = {
+					meanDataDict[meanKey]['unselected'] = {
 						'marker': {
 							'opacity': 0.3,
 						},
