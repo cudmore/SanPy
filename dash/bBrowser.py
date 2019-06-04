@@ -142,6 +142,10 @@ class bBrowser:
 		self.options['graphOptions'][graphNumStr]['yStat'] = self.selectedStat_y
 		self.options['graphOptions'][graphNumStr]['xStat'] = self.selectedStat_x
 
+	#
+	# folder options
+	#
+	
 	def _folderOptions_GetName(self):
 		"""
 		get the name of the enclosing folder options file
@@ -192,10 +196,6 @@ class bBrowser:
 			# no options yet
 			pass
 			
-	def loadFolder2(self):
-		print('loadFolder2()')
-		self.loadFolder()
-		
 	def loadFolder(self):
 		"""
 		Load a hard drive folder of bAnalysis output .txt files into one Pandas dataframe self.df0
@@ -204,6 +204,13 @@ class bBrowser:
 			print('error: bBrowser.loadFolder() did not find path:', self.path)
 			return
 
+		#
+		# load the index file
+		self.folderOptions_Load()
+		
+		#
+		# load each text file
+		
 		columns = ['Index',
 			'Condition 1', # new
 			'Condition 2', # new
@@ -274,7 +281,7 @@ class bBrowser:
 		self.df0 = pd.DataFrame(df0_list)
 
 		# trying to get saving json for folder working
-		#self.folderOptions_Save()
+		self.folderOptions_Save()
 		
 	def updatePlot(self, xStatName, yStatName):
 		""" return a list of dict for plotly/dash data"""

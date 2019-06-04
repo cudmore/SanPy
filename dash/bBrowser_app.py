@@ -26,7 +26,7 @@ import dash_bootstrap_components as dbc # dash bootstrap https://github.com/facu
 from bBrowser import bBrowser
 
 myBrowser = bBrowser()
-myBrowser.loadFolder2()
+myBrowser.loadFolder()
 
 # removed 20190603
 #myStatList = myBrowser.getStatList()
@@ -151,6 +151,21 @@ myBody = dbc.Container(
 	[
 		dbc.Row(
 			[
+				html.Div(
+					dbc.Button("Load Folder", color="primary", outline=False, size="sm", id='load-folder-button'),
+					style={'padding-left': '20px'}
+				),
+				html.Div(
+					dbc.Button("Save Folder", color="primary", outline=False, size="sm", id='save-folder-button'),
+					style={'padding-left': '20px'}
+				),
+			]
+		),
+		
+		html.P(''),
+
+		dbc.Row(
+			[
 				dbc.Col(
 					[
 						#html.H5('File List'),
@@ -176,7 +191,7 @@ myBody = dbc.Container(
 		dbc.Row(
 			[
 				html.H6('Plot Options'),
-
+				
 				dcc.Checklist(
 					id='showMeanID',
 					options=[
