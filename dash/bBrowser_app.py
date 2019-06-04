@@ -26,12 +26,14 @@ import dash_bootstrap_components as dbc # dash bootstrap https://github.com/facu
 from bBrowser import bBrowser
 
 myBrowser = bBrowser()
-myBrowser.loadFolder()
+myBrowser.loadFolder2()
 
-myStatList = myBrowser.getStatList()
+# removed 20190603
+#myStatList = myBrowser.getStatList()
 
 statDict = collections.OrderedDict()
 statDict['Take Off Potential (s)'] = 'thresholdSec'
+statDict['Take Off Potential (mV)'] = 'thresholdVal'
 statDict['AP Peak (mV)'] = 'peakVal'
 statDict['AP Height (mV)'] = 'peakHeight'
 statDict['Pre AP Min (mV)'] = 'preMinVal'
@@ -53,8 +55,14 @@ myStatList = list(statDict.keys())
 # plot one of 4 graphs. USed in initialization and in 'plot' button callbacks
 def plotButton(graphNum):
 
+	'''
 	yStatHuman = myBrowser.graphPlot[graphNum]['yStat']
 	xStatHuman = myBrowser.graphPlot[graphNum]['xStat']
+	'''
+	graphNumStr = str(graphNum) # I don't like making dict keys as int ???
+	yStatHuman = myBrowser.options['graphOptions'][graphNumStr]['yStat']
+	xStatHuman = myBrowser.options['graphOptions'][graphNumStr]['xStat']
+
 
 	# convert human readable cardiac stats back to back end stat name
 	yStat = statDict[yStatHuman]
@@ -128,7 +136,7 @@ def myStyleDataConditional():
 		theDict = {}
 		theDict = {
 			'if': {
-				'column_id': 'Index',
+				'column_id': 'Color',
 				'filter': '{Index} eq ' + str(rowIdx+1)
 			},
 			'backgroundColor': myBrowser.plotlyColors[rowIdx],
@@ -175,6 +183,7 @@ myBody = dbc.Container(
 						{'label': 'Lines', 'value': 'showLines'},
 						{'label': 'Markers', 'value': 'showMarkers'},
 						{'label': 'Mean', 'value': 'showMean'},
+						# get rid of this showMeanLines
 						{'label': 'Mean Lines', 'value': 'showMeanLines'},
 					], values=['showMarkers', 'showMean', 'showMeanLines'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
 				),
@@ -188,6 +197,17 @@ myBody = dbc.Container(
 					target="showMeanID",
 				),
 
+				# I need another structure in here for show mean lines between matching 'condition 1', 'condition 2', ...
+				html.Div('Mean Lines b/w Condition', style={'padding-left': '20px', 'display': 'inline-block'}),
+				dcc.Checklist(
+					id='showMeanLineID',
+					options=[
+						{'label': '1', 'value': 'meanLinesCondition1'},
+						{'label': '2', 'value': 'meanLinesCondition2'},
+						{'label': '3', 'value': 'meanLinesCondition3'},
+					], values=['meanLinesCondition1', 'meanLinesCondition2', 'meanLinesCondition3'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
+				),
+				
 				html.Div('Error Bars', style={'padding-left': '20px', 'display': 'inline-block'}),
 				dcc.RadioItems(
 					id='showSDEVID',

@@ -31,43 +31,12 @@ class bBrowser:
 		# list of all spikes across all files
 		self.df = None # massive dataframe with all spikes across all file
 
+		self.folderOptions = None # loaded from enclosing folder of self.path
+		self.options_Load() # load program options
+		
 		# this is the selection in the stat list
 		self.selectedStat_y = 'thresholdSec'
 		self.selectedStat_x = 'peakVal'
-
-		'''
-		# keep track of x/y data that is plotted in graphs
-		self.graphStat_y = ['thresholdSec', 'thresholdSec', 'thresholdSec', 'thresholdSec']
-		self.graphStat_x = ['peakVal', 'peakVal', 'peakVal', 'peakVal']
-		'''
-		#list of what is plotted in each graph
-		self.graphPlot = []
-		plotDict = {}
-		# 1
-		plotDict['xStat'] = 'Take Off Potential (s)' #'thresholdSec'
-		plotDict['yStat'] = 'AP Peak (mV)' #'peakVal'
-		print('plotDict:', plotDict)
-		self.graphPlot.append(plotDict)
-		# 2
-		plotDict = {}
-		plotDict['xStat'] = 'Take Off Potential (s)'
-		plotDict['yStat'] = 'AP Peak (mV)'
-		print('plotDict:', plotDict)
-		self.graphPlot.append(plotDict)
-		# 3
-		plotDict = {}
-		plotDict['xStat'] = 'Condition 1'
-		plotDict['yStat'] = 'AP Peak (mV)'
-		print('plotDict:', plotDict)
-		self.graphPlot.append(plotDict)
-		# 4
-		plotDict = {}
-		plotDict['xStat'] = 'Take Off Potential (s)'
-		plotDict['yStat'] = 'AP Peak (mV)'
-		print('plotDict:', plotDict)
-		self.graphPlot.append(plotDict)
-
-		print('self.graphPlot:', self.graphPlot)
 
 		# list of point selected across all graphs
 		# ['points': {'curveNumber': 0, 'pointNumber': 16, 'pointIndex': 16, 'x': 48.2177734375, 'y': 14.4013}]
@@ -82,6 +51,34 @@ class bBrowser:
 		self.plotlyColors = plotly.colors.DEFAULT_PLOTLY_COLORS
 		print('bBrowser() will only show', len(self.plotlyColors), 'files !!!')
 		
+	#
+	# define, save, and load global program options
+	def options_FactoryDefault(self):
+		"""
+		Create factory default options from bBrowser_FactoryDefaults.json file
+		"""
+		dir_path = os.path.dirname(os.path.realpath(__file__))
+		optionsPath = os.path.join(dir_path, 'bBrowser_FactoryDefaults.json')
+		with open(optionsPath) as json_file:  
+			self.options = json.load(json_file)
+		
+	def option_Save(self):
+		dir_path = os.path.dirname(os.path.realpath(__file__))
+		optionsPath = os.path.join(dir_path, 'bBrowser_Options.json')
+		with open(optionsPath, 'w') as json_file:  
+		    json.dump(self.options, json_file, indent=4)
+    		
+	def options_Load(self):
+		dir_path = os.path.dirname(os.path.realpath(__file__))
+		optionsPath = os.path.join(dir_path, 'bBrowser_Options.json')
+		if not os.path.isfile(optionsPath):
+			self.options_FactoryDefault()
+			#self.option_Save()
+		else:
+			with open(optionsPath) as json_file:  
+				self.options = json.load(json_file)
+		
+	#
 	def setSelectedFiles(self, rows):
 		"""
 		Set the rows of selected files.
@@ -96,6 +93,7 @@ class bBrowser:
 		"""
 		thisStat: Human readbale, convert back to actual columns in loaded file
 		"""
+		print('setSelectedStat()', xy, thisStat)
 		if xy == 'x':
 			self.selectedStat_x = thisStat
 		elif xy == 'y':
@@ -121,19 +119,6 @@ class bBrowser:
 		self.showLines = 'showLines' in plotOptions
 		self.showMarkers = 'showMarkers' in plotOptions
 
-	'''
-	def setShowMean(self, showMean):
-		"""
-		if not checked, showMean is []
-		if checked showMean is ['showMean']
-		"""
-		#print('bBrowser.setShowMean() showMean:', showMean)
-		if 'showMean' in showMean:
-			self.showMean = True
-		else:
-			self.showMean = False
-	'''
-
 	def setShow_sdev_sem(self, showSDEVID):
 		"""
 		if not checked, showMean is []
@@ -153,12 +138,67 @@ class bBrowser:
 		"""
 		Set the x/y stat for graph graphNum to current x/y selected stat
 		"""
-		self.graphPlot[graphNum]['yStat'] = self.selectedStat_y
-		self.graphPlot[graphNum]['xStat'] = self.selectedStat_x
+		graphNumStr= str(graphNum)
+		self.options['graphOptions'][graphNumStr]['yStat'] = self.selectedStat_y
+		self.options['graphOptions'][graphNumStr]['xStat'] = self.selectedStat_x
 
+	def _folderOptions_GetName(self):
+		"""
+		get the name of the enclosing folder options file
+		"""
+		enclosingFolder = os.path.split(self.path)[1]
+		fileName = enclosingFolder + '.json'
+		saveFilePath = os.path.join(self.path, fileName)
+		return saveFilePath
+	
+	def folderOptions_Save(self):
+		"""
+		Save options for an analysis folder
+		
+		Save a dict of:
+			global options: (lines, markers, mean, etc etc) and
+			for each file: (color, condition 1/2/3) 
+		
+		'Analysis File' makes each file unique
+		"""
+		print('folderOptions_Save()')
+		
+		outDict = {} # one key per file
+		for index, row in self.df0.iterrows():
+			#print(row)
+			analysisFile = row['Analysis File']
+			outDict[analysisFile] = {}
+			outDict[analysisFile]['Condition 1'] = row['Condition 1']
+			outDict[analysisFile]['Condition 2'] = row['Condition 2']
+			outDict[analysisFile]['Condition 3'] = row['Condition 3']
+			outDict[analysisFile]['Color'] = row['Color']
+
+
+		saveFilePath = self._folderOptions_GetName()
+		with open(saveFilePath, 'w') as json_file:  
+		    json.dump(outDict, json_file, indent=4)
+			
+		
+			
+	def folderOptions_Load(self):
+		"""
+		Load options for an analysis folder
+		"""
+		saveFilePath = self._folderOptions_GetName()
+		if os.path.isfile(saveFilePath):
+			# load json
+			pass
+		else:
+			# no options yet
+			pass
+			
+	def loadFolder2(self):
+		print('loadFolder2()')
+		self.loadFolder()
+		
 	def loadFolder(self):
 		"""
-		Load a hard drive folder of bAnalysis output files (e.g. .txt files) into one Pandas dataframe (df)
+		Load a hard drive folder of bAnalysis output .txt files into one Pandas dataframe self.df0
 		"""
 		if not os.path.isdir(self.path):
 			print('error: bBrowser.loadFolder() did not find path:', self.path)
@@ -167,6 +207,7 @@ class bBrowser:
 		columns = ['Index',
 			'Condition 1', # new
 			'Condition 2', # new
+			'Condition 3', # new
 			'Analysis File', # new
 			'ABF File',
 			'Num Spikes',
@@ -186,10 +227,20 @@ class bBrowser:
 				print('bBrowser.loadFolder() loading analysis file:', currFile)
 				df = pd.read_csv(currFile, header=0) # load comma seperated values, read header names from row 1
 
+				# look into self.folderOptions
+				if self.folderOptions is None:
+					condition1 = 'None'
+					condition2 = 'None'
+					condition3 = 'None'
+					color = 'rgb(0,0,0)'
+				else:
+					pass
+					
 				# insert new columns not in original .txt file
 				df.insert(0, 'Analysis File', file)
-				df.insert(0, 'Condition 2', currIdx + 2)
-				df.insert(0, 'Condition 1', currIdx + 1)
+				df.insert(0, 'Condition 3', condition3) # 'currIdx + 3' is bogus default value
+				df.insert(0, 'Condition 2', condition2)
+				df.insert(0, 'Condition 1', condition1)
 
 				numSpikes = len(df.index)
 				firstSpikeSec = df['thresholdSec'].min()
@@ -199,8 +250,10 @@ class bBrowser:
 
 				dfRow = collections.OrderedDict()
 				dfRow['Index'] = currIdx + 1
-				dfRow['Condition 1'] = currIdx + 1 # to start, these are FAKE
-				dfRow['Condition 2'] = currIdx + 2 # to start, these are FAKE
+				dfRow['Color'] = color
+				dfRow['Condition 1'] = condition1 # to start, condition1/2/3 are FAKE
+				dfRow['Condition 2'] = condition2 
+				dfRow['Condition 3'] = condition3
 				dfRow['Analysis File'] = file
 				dfRow['ABF File'] = abfFile
 				dfRow['Num Spikes'] = numSpikes
@@ -220,20 +273,9 @@ class bBrowser:
 
 		self.df0 = pd.DataFrame(df0_list)
 
-	def getStatList(self):
-		skipColumns = [''] #['file', 'spikeNumber', 'numError', 'errors', 'dVthreshold', 'medianFilter', 'halfHeights']
-		retList = []
-		mySpikeNumber = 0
-		for column in self.df:
-			if column in skipColumns:
-				continue
-			optionsDict = {
-				'label': column,
-				'value': column
-			}
-			retList.append(optionsDict)
-		return retList
-
+		# trying to get saving json for folder working
+		#self.folderOptions_Save()
+		
 	def updatePlot(self, xStatName, yStatName):
 		""" return a list of dict for plotly/dash data"""
 
@@ -241,7 +283,7 @@ class bBrowser:
 
 		meanDataDict = {} # dict of dict to be appended at end of loop
 		
-		doNotDoMean = ['Condition 1', 'Condition 2']
+		doNotDoMean = ['Condition 1', 'Condition 2', 'Condition 3']
 		
 		doBar = xStatName in doNotDoMean or yStatName in doNotDoMean
 		doBar = False

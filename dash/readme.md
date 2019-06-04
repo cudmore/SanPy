@@ -47,3 +47,13 @@ Seemed to get fixed with myStyleDataConditional()
 	    },
 	],
 ```
+
+## To Do
+
+ - Add right-click to bring up color picker and set color of a given file ...
+ - Condition plotting is not working when condition is a string
+ 
+ - Finish code to connect 'mean lines b/w condition 1/2/3'
+ 
+ 
+ 
