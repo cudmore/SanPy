@@ -188,6 +188,18 @@ myBody = dbc.Container(
 
 		html.P(''),
 
+        dbc.Popover(
+            [
+                'xxx', #colorPicker,
+                dbc.Button("OK", color="primary", outline=True, size="sm", id='ok-color-button'),
+                dbc.Button("Cancel", color="primary", outline=True, size="sm", id='cancel-color-button'),
+            ],
+            id="popover",
+            is_open=False,
+            #target="popover-target",
+            delay={'show':100, 'hide':500},
+        ),
+
 		dbc.Row(
 			[
 				html.H6('Plot Options'),
@@ -357,6 +369,7 @@ app.layout = html.Div([
 	myBody,
 
 	html.Div(id='hidden-div'),
+	html.Div(id='hidden-div-color'),
 	html.Div(id='hidden-div2'),
 	html.Div(id='hidden-div3'),
 
@@ -518,6 +531,51 @@ def myFileListSelect(rows, derived_virtual_selected_rows):
 	myBrowser.setSelectedFiles(derived_virtual_selected_rows)
 
 #
+# set the color of an analysis file
+#selected_cells
+@app.callback(
+	Output('hidden-div-color', 'children'),
+	[Input('file-list-table', "selected_cells")])
+def myFileListSelectColor(selected_cells):
+	print('myFileListSelectColor() selected_cells:', selected_cells)
+	if selected_cells is not None:
+		selected_cells = selected_cells[0]
+		colName = selected_cells['column_id']
+		if colName == 'Color':
+			print('   colName:', colName)
+
+"""
+#
+# show/hide color picker
+g_popover_ok_n_clicks = 0
+g_popover_cancel_n_clicks = 0
+
+@app.callback(
+    Output("popover", "is_open"),
+    [Input("popover-target", "n_clicks"), Input('ok-color-button', 'n_clicks'), Input('cancel-color-button', 'n_clicks')],
+    [State("popover", "is_open"), State('my-color-picker', 'value')],
+)
+def toggle_popover(n_clicks, ok_n_clicks, cancel_n_clicks, is_open, colorValue):
+    global g_popover_ok_n_clicks
+    global g_popover_cancel_n_clicks
+    print('toggle_popover() n_clicks:', n_clicks, 'ok_n_clicks:', ok_n_clicks, 'cancel_n_clicks:', cancel_n_clicks, 'is_open:', is_open, 'colorValue:', colorValue)
+    if n_clicks:
+        #return not is_open
+        is_open = not is_open
+    if ok_n_clicks and ok_n_clicks > g_popover_ok_n_clicks: #or n_clicks:
+        print('   new color:', colorValue)
+        g_popover_ok_n_clicks = ok_n_clicks
+        defaultColor = colorValue
+        return is_open
+    if cancel_n_clicks is not None and cancel_n_clicks > g_popover_cancel_n_clicks: #or n_clicks:
+        #defaultColor = colorValue
+        print('   cancelled')
+        g_popover_cancel_n_clicks = cancel_n_clicks
+        return is_open
+    return is_open
+"""
+			
+#
 # x/y stat selection
 @app.callback(
 	dash.dependencies.Output('hidden-div2', 'children'),
@@ -567,6 +625,7 @@ def display_output(data_timestamp, data):
 		
 		theRet.append(item)
 	return theRet
+
 	
 #
 # main

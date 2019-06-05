@@ -11,8 +11,8 @@ defaultColor = '#000000'
 colorPicker = html.Div([
     daq.ColorPicker(
         id='my-color-picker',
-        label='',
-        value=defaultColor
+        label='Pick A Color',
+        value={'hex': defaultColor}
     ),
     html.Div(id='color-picker-output')
 ])
@@ -38,7 +38,6 @@ popover = html.Div(
     ]
 )
 
-
 tooltip = html.Div(
     [
         html.P(
@@ -58,18 +57,37 @@ tooltip = html.Div(
     ]
 )
 
-app.layout = html.Div([popover])
+app.layout = html.Div([
+	html.P(""),
+	html.P(""),
+	popover
+	])
+
+g_popover_ok_n_clicks = 0
+g_popover_cancel_n_clicks = 0
 
 @app.callback(
     Output("popover", "is_open"),
-    [Input("popover-target", "n_clicks"), Input('ok-color-button', 'n_clicks')],
+    [Input("popover-target", "n_clicks"), Input('ok-color-button', 'n_clicks'), Input('cancel-color-button', 'n_clicks')],
     [State("popover", "is_open"), State('my-color-picker', 'value')],
 )
-def toggle_popover(n_clicks, ok_n_clicks, is_open, colorValue):
-    print('toggle_popover() n_clicks:', n_clicks, 'ok_n_clicks:', ok_n_clicks, 'is_open:', is_open, 'colorValue:', colorValue)
-    if ok_n_clicks or n_clicks:
+def toggle_popover(n_clicks, ok_n_clicks, cancel_n_clicks, is_open, colorValue):
+    global g_popover_ok_n_clicks
+    global g_popover_cancel_n_clicks
+    print('toggle_popover() n_clicks:', n_clicks, 'ok_n_clicks:', ok_n_clicks, 'cancel_n_clicks:', cancel_n_clicks, 'is_open:', is_open, 'colorValue:', colorValue)
+    if n_clicks:
+        #return not is_open
+        is_open = not is_open
+    if ok_n_clicks and ok_n_clicks > g_popover_ok_n_clicks: #or n_clicks:
+        print('   new color:', colorValue)
+        g_popover_ok_n_clicks = ok_n_clicks
         defaultColor = colorValue
-        return not is_open
+        return is_open
+    if cancel_n_clicks is not None and cancel_n_clicks > g_popover_cancel_n_clicks: #or n_clicks:
+        #defaultColor = colorValue
+        print('   cancelled')
+        g_popover_cancel_n_clicks = cancel_n_clicks
+        return is_open
     return is_open
 
 @app.callback(
