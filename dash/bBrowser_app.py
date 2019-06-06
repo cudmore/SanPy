@@ -14,6 +14,7 @@ import numpy as np
 from itertools import chain
 
 import dash
+import dash_daq as daq
 import dash_table
 import dash_html_components as html
 import dash_core_components as dcc
@@ -147,6 +148,45 @@ def myStyleDataConditional():
 	
 #print(myStyleDataConditional())
 
+###
+###
+defaultColor = '#000000'
+
+colorPicker = html.Div([
+    daq.ColorPicker(
+        id='my-color-picker',
+        label='Pick A Color',
+        value={'hex': defaultColor}
+    ),
+    html.Div(id='color-picker-output')
+])
+
+popover = html.Div(
+    [
+        html.P(
+            #["Click on the word ", html.Span("popover", id="popover-target")]
+            # It seems the popover target needs to be a html.Span(), it cannot be a DataTable???
+            [html.Span("", id="popover-target")]
+        ),
+        dbc.Popover(
+            [
+                #dbc.PopoverHeader("Popover header"),
+                #dbc.PopoverBody("Popover body"),
+                colorPicker,
+                dbc.Button("OK", color="primary", outline=True, size="sm", id='ok-color-button'),
+                dbc.Button("Cancel", color="primary", outline=True, size="sm", id='cancel-color-button'),
+            ],
+            id='popover',
+            is_open=False,
+            target="popover-target",
+            #target="file-list-table",
+            delay={'show':100, 'hide':500},
+        ),
+    ]
+)
+###
+###
+
 myBody = dbc.Container(
 	[
 		dbc.Row(
@@ -163,6 +203,8 @@ myBody = dbc.Container(
 		),
 		
 		html.P(''),
+
+		popover,
 
 		dbc.Row(
 			[
@@ -187,18 +229,6 @@ myBody = dbc.Container(
 		),
 
 		html.P(''),
-
-        dbc.Popover(
-            [
-                'xxx', #colorPicker,
-                dbc.Button("OK", color="primary", outline=True, size="sm", id='ok-color-button'),
-                dbc.Button("Cancel", color="primary", outline=True, size="sm", id='cancel-color-button'),
-            ],
-            id="popover",
-            is_open=False,
-            #target="popover-target",
-            delay={'show':100, 'hide':500},
-        ),
 
 		dbc.Row(
 			[
@@ -365,7 +395,7 @@ myBody = dbc.Container(
 
 ##############
 app.layout = html.Div([
-
+	
 	myBody,
 
 	html.Div(id='hidden-div'),
@@ -530,50 +560,71 @@ def myFileListSelect(rows, derived_virtual_selected_rows):
 
 	myBrowser.setSelectedFiles(derived_virtual_selected_rows)
 
-#
-# set the color of an analysis file
-#selected_cells
+###
+###
+g_popover_ok_n_clicks = 0
+g_popover_cancel_n_clicks = 0
+
+# respond to close of color picker and if it was OK then set the color
 @app.callback(
-	Output('hidden-div-color', 'children'),
-	[Input('file-list-table', "selected_cells")])
-def myFileListSelectColor(selected_cells):
+    Output('hidden-div-color', 'children'),
+	[Input('popover', 'is_open'),
+	],
+	)
+def detectColorPopoverClose(is_open):
+	print('detectColorPopoverClose() is_open:', is_open)
+	return '' 
+	
+# when we click in the 'color' column, show the color picker
+# but also show the current color selection (in the picker)
+
+
+# on click of a file in the color column
+# show a color picker
+@app.callback(
+    Output('popover', 'is_open'),
+	[Input('file-list-table', 'selected_cells'),
+	Input('ok-color-button', 'n_clicks'),
+	Input('cancel-color-button', 'n_clicks'),
+	],
+	[State('popover', "is_open"), State('my-color-picker', 'value')])
+def myFileListSelectColor(selected_cells, ok_n_clicks, cancel_n_clicks, is_open, colorValue):
 	print('myFileListSelectColor() selected_cells:', selected_cells)
+	print('   ', 'ok_n_clicks:', ok_n_clicks, 'cancel_n_clicks:', cancel_n_clicks, 'is_open:', is_open, 'colorValue:', colorValue)
+
+	# we might modify these
+	global g_popover_ok_n_clicks
+	global g_popover_cancel_n_clicks
+
 	if selected_cells is not None:
 		selected_cells = selected_cells[0]
 		colName = selected_cells['column_id']
 		if colName == 'Color':
 			print('   colName:', colName)
+			is_open = (is_open is None) or (not is_open)
+		else:
+			# close color picker when user clicks on some other column
+			is_open = False
+		'''
+		if popover_n_clicks:
+			#return not is_open
+			is_open = not is_open
+		'''
+		if ok_n_clicks and ok_n_clicks > g_popover_ok_n_clicks: #or n_clicks:
+			print('   new color:', colorValue)
+			g_popover_ok_n_clicks = ok_n_clicks
+			defaultColor = colorValue
+			return is_open
+		if cancel_n_clicks is not None and cancel_n_clicks > g_popover_cancel_n_clicks: #or n_clicks:
+			#defaultColor = colorValue
+			print('   cancelled')
+			g_popover_cancel_n_clicks = cancel_n_clicks
+			return is_open
+		print('   return is_open:', is_open)
+		return is_open
+###
+###
 
-"""
-#
-# show/hide color picker
-g_popover_ok_n_clicks = 0
-g_popover_cancel_n_clicks = 0
-
-@app.callback(
-    Output("popover", "is_open"),
-    [Input("popover-target", "n_clicks"), Input('ok-color-button', 'n_clicks'), Input('cancel-color-button', 'n_clicks')],
-    [State("popover", "is_open"), State('my-color-picker', 'value')],
-)
-def toggle_popover(n_clicks, ok_n_clicks, cancel_n_clicks, is_open, colorValue):
-    global g_popover_ok_n_clicks
-    global g_popover_cancel_n_clicks
-    print('toggle_popover() n_clicks:', n_clicks, 'ok_n_clicks:', ok_n_clicks, 'cancel_n_clicks:', cancel_n_clicks, 'is_open:', is_open, 'colorValue:', colorValue)
-    if n_clicks:
-        #return not is_open
-        is_open = not is_open
-    if ok_n_clicks and ok_n_clicks > g_popover_ok_n_clicks: #or n_clicks:
-        print('   new color:', colorValue)
-        g_popover_ok_n_clicks = ok_n_clicks
-        defaultColor = colorValue
-        return is_open
-    if cancel_n_clicks is not None and cancel_n_clicks > g_popover_cancel_n_clicks: #or n_clicks:
-        #defaultColor = colorValue
-        print('   cancelled')
-        g_popover_cancel_n_clicks = cancel_n_clicks
-        return is_open
-    return is_open
-"""
 			
 #
 # x/y stat selection
