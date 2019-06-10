@@ -199,12 +199,13 @@ myBody = dbc.Container(
 					dbc.Button("Save Folder", color="primary", outline=False, size="sm", id='save-folder-button'),
 					style={'padding-left': '20px'}
 				),
+
+				popover,
 			]
 		),
 		
 		html.P(''),
 
-		popover,
 
 		dbc.Row(
 			[
@@ -543,12 +544,16 @@ def myMeanCheckbox(values):
 	return not 'showMean' in values
 '''
 
+g_popover_ok_n_clicks = 0
+g_popover_cancel_n_clicks = 0
+
 #
 # analysis file selection
 @app.callback(
 	Output('hidden-div', 'children'),
 	[Input('file-list-table', "derived_virtual_data"),
-	 Input('file-list-table', "derived_virtual_selected_rows")])
+	 Input('file-list-table', "derived_virtual_selected_rows"),
+	 ])
 def myFileListSelect(rows, derived_virtual_selected_rows):
 	"""
 	rows: all the rows in the table ???
@@ -562,49 +567,63 @@ def myFileListSelect(rows, derived_virtual_selected_rows):
 
 ###
 ###
-g_popover_ok_n_clicks = 0
-g_popover_cancel_n_clicks = 0
 
 # respond to close of color picker and if it was OK then set the color
+# value = {'hex': defaultColor}
 @app.callback(
-    Output('hidden-div-color', 'children'),
+    Output('my-color-picker', 'value'),
 	[Input('popover', 'is_open'),
 	],
 	)
 def detectColorPopoverClose(is_open):
-	print('detectColorPopoverClose() is_open:', is_open)
-	return '' 
+	print('detectColorPopoverClose() is_open:', is_open, 'defaultColor:', defaultColor)
+	return {'hex': defaultColor}
 	
 # when we click in the 'color' column, show the color picker
 # but also show the current color selection (in the picker)
 
+updateColorDict = None #{'row': None, 'color': None,}
 
 # on click of a file in the color column
 # show a color picker
 @app.callback(
     Output('popover', 'is_open'),
-	[Input('file-list-table', 'selected_cells'),
+	[
+	Input('file-list-table', 'selected_cells'),
+	Input('file-list-table', "derived_virtual_data"),
 	Input('ok-color-button', 'n_clicks'),
 	Input('cancel-color-button', 'n_clicks'),
 	],
 	[State('popover', "is_open"), State('my-color-picker', 'value')])
-def myFileListSelectColor(selected_cells, ok_n_clicks, cancel_n_clicks, is_open, colorValue):
+def myFileListSelectColor(selected_cells, derived_virtual_data, ok_n_clicks, cancel_n_clicks, is_open, colorValue):
 	print('myFileListSelectColor() selected_cells:', selected_cells)
 	print('   ', 'ok_n_clicks:', ok_n_clicks, 'cancel_n_clicks:', cancel_n_clicks, 'is_open:', is_open, 'colorValue:', colorValue)
-
+	
+	'''
+	if selected_cells is not None and derived_virtual_data is not None:
+		selectedRow = selected_cells[0]['row']
+		#defaultColor = derived_virtual_data[selectedRow]['Color']
+		print('    derived_virtual_data:', derived_virtual_data[selectedRow]['Analysis File'])
+	'''
+	
 	# we might modify these
 	global g_popover_ok_n_clicks
 	global g_popover_cancel_n_clicks
+	global defaultColor
 
 	if selected_cells is not None:
 		selected_cells = selected_cells[0]
+		selectedRow = selected_cells['row']
 		colName = selected_cells['column_id']
 		if colName == 'Color':
 			print('   colName:', colName)
 			is_open = (is_open is None) or (not is_open)
+			
+			defaultColor = derived_virtual_data[selectedRow]['Color']
 		else:
 			# close color picker when user clicks on some other column
-			is_open = False
+			#is_open = False
+			pass
 		'''
 		if popover_n_clicks:
 			#return not is_open
@@ -613,7 +632,11 @@ def myFileListSelectColor(selected_cells, ok_n_clicks, cancel_n_clicks, is_open,
 		if ok_n_clicks and ok_n_clicks > g_popover_ok_n_clicks: #or n_clicks:
 			print('   new color:', colorValue)
 			g_popover_ok_n_clicks = ok_n_clicks
-			defaultColor = colorValue
+			defaultColor = colorValue['hex']
+			global updateColorDict
+			updateColorDict = {}
+			updateColorDict['row'] = selectedRow
+			updateColorDict['color'] = colorValue['hex']
 			return is_open
 		if cancel_n_clicks is not None and cancel_n_clicks > g_popover_cancel_n_clicks: #or n_clicks:
 			#defaultColor = colorValue
@@ -648,13 +671,18 @@ def myTableSelect(y_activeCell, x_activeCell):
 		xSel = myStatList[xRow]
 		myBrowser.setSelectedStat('x', xSel)
 
+#
 # edit condition
 @app.callback(
 	Output('file-list-table', 'data'),
-	[Input('file-list-table', 'data_timestamp')], # data_timestamp is not working ???
+	[
+	Input('file-list-table', 'data_timestamp'),
+	#Input('popover', "is_open"),
+	], # data_timestamp is not working ???
 	[State('file-list-table', 'data')])
+#def display_output(data_timestamp, is_open, data):
 def display_output(data_timestamp, data):
-	print('display_output()')
+	print('display_output() data_timestamp:', data_timestamp)
 	theRet = []
 	for rowIdx, item in enumerate(data):
 		#print('   item:', item)
@@ -673,6 +701,9 @@ def display_output(data_timestamp, data):
 		rowsToChange = myBrowser.df['Analysis File'] == analysisFile
 		myBrowser.df.loc[rowsToChange, 'Condition 1'] = condition1
 		
+		print('*** updateColorDict:', updateColorDict)
+		if updateColorDict is not None:
+			pass
 		
 		theRet.append(item)
 	return theRet
