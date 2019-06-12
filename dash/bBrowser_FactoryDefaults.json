@@ -9,7 +9,7 @@
             "yStat": "AP Peak (mV)"
         },
         "1": {
-            "xStat": "Take Off Potential (s)",
+            "xStat": "Condition 1",
             "yStat": "AP Peak (mV)"
         },
         "2": {

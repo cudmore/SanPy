@@ -75,23 +75,6 @@ def plotButton(graphNum):
 
 	# determine min/max so we can expand by 5%
 	xRange = []
-	'''
-	xList = [data['x'] for data in returnData]
-	print('xList:', xList)
-	if len(xList) > 0:
-		xMin = np.nanmin(xList)
-		xMax = np.nanmax(xList)
-		xBuffer = (xMax-xMin) * 0.05
-		xRange = [xMin-xBuffer, xMax+xBuffer]
-	'''
-	yRange = []
-	'''yList = [data['y'] for data in returnData]
-	if len(yList) > 0:
-		yMin = np.nanmin(yList)
-		yMax = np.nanmax(yList)
-		yBuffer = (yMax-yMin) * 0.05
-		yRange = [yMin-yBuffer, yMax+yBuffer]
-	'''
 
 	return {
 		'data': returnData, # data is a list of go.Scatter
@@ -140,14 +123,19 @@ def myStyleDataConditional():
 				'column_id': 'Color',
 				'filter': '{Index} eq ' + str(rowIdx+1)
 			},
-			'backgroundColor': myBrowser.plotlyColors[rowIdx],
+			
+			##
+			## HERE I NEED TO READ FROM ACTUAL COLOR !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+			##
+			#'backgroundColor': myBrowser.plotlyColors[rowIdx],
+			'backgroundColor': myBrowser.df0.loc[rowIdx, 'Color'],
 			'color': 'white',
 		}
+		print('      === myStyleDataConditional() set rowIdx:', rowIdx, 'to color:', myBrowser.df0.loc[rowIdx, 'Color'])
+		
 		theRet.append(theDict)
 	return theRet
 	
-#print(myStyleDataConditional())
-
 ###
 ###
 defaultColor = '#000000'
@@ -187,25 +175,46 @@ popover = html.Div(
 ###
 ###
 
+myFolderList = myBrowser.makeFolderList() # a string list of full folder paths in /data
+myFolderListItems = [] # items for 'my-folder-dropdown' dcc.Dropdown
+for folder in myFolderList:
+	folderItemDict = {}
+	folderItemDict['label'] = folder
+	folderItemDict['value'] = folder
+	myFolderListItems.append(folderItemDict)
+	
 myBody = dbc.Container(
 	[
 		dbc.Row(
 			[
+				#html.Div(
+				#	dbc.Button("Load Folder", color="primary", outline=False, size="sm", id='load-folder-button'),
+				#	style={'padding-left': '20px'}
+				#),
+				
+				# add some horizontal padding so popover does not cover 'Color' column
 				html.Div(
-					dbc.Button("Load Folder", color="primary", outline=False, size="sm", id='load-folder-button'),
-					style={'padding-left': '20px'}
-				),
-				html.Div(
-					dbc.Button("Save Folder", color="primary", outline=False, size="sm", id='save-folder-button'),
-					style={'padding-left': '20px'}
+					style={'padding-left': '150px'}
 				),
 
 				popover,
+
+				"Select a data folder",
+				
+				html.Div(
+					dcc.Dropdown(
+						id='my-folder-dropdown',
+						options=myFolderListItems,
+						value=myFolderListItems[0]['value'] # default to first folder, should be /data
+					),
+					style={'width': '50%'} # this is necessary o/w it gets pinched horizontally?
+				),
+				html.Div(id='my-folder-dropdown-selection', style={'display': 'none'}),
+
 			]
 		),
 		
-		html.P(''),
-
+		html.P(''), # some vertical padding
 
 		dbc.Row(
 			[
@@ -217,13 +226,17 @@ myBody = dbc.Container(
 							id='file-list-table',
 							row_selectable='multi',
 							# i want to make only certain column cells editable
-							columns=[{'name':i, 'id':i, 'editable':True} for i in myBrowser.df0], 
+							columns=[{'name':i, 'id':i, 'editable':True} for i in myBrowser.df0], # big assumption that columns do not change
+
+							# order matter here, we need data then style_data_conditional
+							
+							data = myBrowser.df0.to_dict('records'),
 
 							style_data_conditional = myStyleDataConditional(),
 							
-							data=myBrowser.df0.to_dict('records'),
-							editable=True, # this makes all cells editable
-							selected_rows=[0,1],
+							
+							editable = True, # this makes all cells editable
+							selected_rows = [0,1],
 						),
 					])
 			]
@@ -403,7 +416,10 @@ app.layout = html.Div([
 	html.Div(id='hidden-div-color'),
 	html.Div(id='hidden-div2'),
 	html.Div(id='hidden-div3'),
+	html.Div(id='hidden-div4'),
 
+
+	html.Div(id='this-is-fucking-stupid'),
 
 	html.Div(children=[
 		html.Label('g1 clickDatas'),
@@ -561,26 +577,10 @@ def myFileListSelect(rows, derived_virtual_selected_rows):
 	"""
 
 	#print('\nmyFileListSelect() rows:', rows)
-	print('myFileListSelect() derived_virtual_selected_rows:', derived_virtual_selected_rows)
+	#print('myFileListSelect() derived_virtual_selected_rows:', derived_virtual_selected_rows)
 
 	myBrowser.setSelectedFiles(derived_virtual_selected_rows)
 
-###
-###
-
-# respond to close of color picker and if it was OK then set the color
-# value = {'hex': defaultColor}
-@app.callback(
-    Output('my-color-picker', 'value'),
-	[Input('popover', 'is_open'),
-	],
-	)
-def detectColorPopoverClose(is_open):
-	print('detectColorPopoverClose() is_open:', is_open, 'defaultColor:', defaultColor)
-	return {'hex': defaultColor}
-	
-# when we click in the 'color' column, show the color picker
-# but also show the current color selection (in the picker)
 
 updateColorDict = None #{'row': None, 'color': None,}
 
@@ -590,65 +590,237 @@ updateColorDict = None #{'row': None, 'color': None,}
     Output('popover', 'is_open'),
 	[
 	Input('file-list-table', 'selected_cells'),
-	Input('file-list-table', "derived_virtual_data"),
 	Input('ok-color-button', 'n_clicks'),
 	Input('cancel-color-button', 'n_clicks'),
 	],
-	[State('popover', "is_open"), State('my-color-picker', 'value')])
-def myFileListSelectColor(selected_cells, derived_virtual_data, ok_n_clicks, cancel_n_clicks, is_open, colorValue):
-	print('myFileListSelectColor() selected_cells:', selected_cells)
-	print('   ', 'ok_n_clicks:', ok_n_clicks, 'cancel_n_clicks:', cancel_n_clicks, 'is_open:', is_open, 'colorValue:', colorValue)
+	[
+	State('popover', "is_open"),
+	State('my-color-picker', 'value'),
+	])
+def myFileListSelectColor(selected_cells, ok_n_clicks, cancel_n_clicks, is_open, colorValue):
+	print('\n')
+	print('************* myFileListSelectColor() selected_cells:', selected_cells)
+	print('   selected_cells:', selected_cells)
+	print('   ok_n_clicks:', ok_n_clicks)
+	print('   cancel_n_clicks:', cancel_n_clicks)
+	print('   is_open:', is_open)
+	print('   colorValue:', colorValue)
 	
-	'''
-	if selected_cells is not None and derived_virtual_data is not None:
-		selectedRow = selected_cells[0]['row']
-		#defaultColor = derived_virtual_data[selectedRow]['Color']
-		print('    derived_virtual_data:', derived_virtual_data[selectedRow]['Analysis File'])
-	'''
-	
-	# we might modify these
 	global g_popover_ok_n_clicks
 	global g_popover_cancel_n_clicks
-	global defaultColor
-
+	global updateColorDict
+	
+	print('   g_popover_ok_n_clicks:', g_popover_ok_n_clicks)
+	print('   g_popover_cancel_n_clicks:', g_popover_cancel_n_clicks)
+	print('   updateColorDict:', updateColorDict)
+	
+	theRet = is_open
+	
 	if selected_cells is not None:
 		selected_cells = selected_cells[0]
 		selectedRow = selected_cells['row']
 		colName = selected_cells['column_id']
+
 		if colName == 'Color':
-			print('   colName:', colName)
-			is_open = (is_open is None) or (not is_open)
-			
-			defaultColor = derived_virtual_data[selectedRow]['Color']
-		else:
-			# close color picker when user clicks on some other column
-			#is_open = False
-			pass
-		'''
-		if popover_n_clicks:
-			#return not is_open
-			is_open = not is_open
-		'''
-		if ok_n_clicks and ok_n_clicks > g_popover_ok_n_clicks: #or n_clicks:
-			print('   new color:', colorValue)
+			print('   myFileListSelectColor() colName:', colName)
+			theRet = (is_open is None) or (not is_open)
+
+		if ok_n_clicks is not None and ok_n_clicks > g_popover_ok_n_clicks: #or n_clicks:
+			print('   -->> myFileListSelectColor() OK clicked new color:', colorValue)
 			g_popover_ok_n_clicks = ok_n_clicks
-			defaultColor = colorValue['hex']
-			global updateColorDict
 			updateColorDict = {}
 			updateColorDict['row'] = selectedRow
 			updateColorDict['color'] = colorValue['hex']
-			return is_open
-		if cancel_n_clicks is not None and cancel_n_clicks > g_popover_cancel_n_clicks: #or n_clicks:
-			#defaultColor = colorValue
-			print('   cancelled')
-			g_popover_cancel_n_clicks = cancel_n_clicks
-			return is_open
-		print('   return is_open:', is_open)
-		return is_open
-###
-###
-
+			theRet = False
 			
+		if cancel_n_clicks is not None and cancel_n_clicks > g_popover_cancel_n_clicks: #or n_clicks:
+			print('   -->> myFileListSelectColor() CANCEL clicked')
+			g_popover_cancel_n_clicks = cancel_n_clicks
+			updateColorDict = None
+			theRet = False
+		print('   myFileListSelectColor() return theRet:', theRet)
+		return theRet
+###
+###
+			
+ok_n_clicks2 = 0
+
+@app.callback(
+	Output('this-is-fucking-stupid', 'children'),
+	[
+	Input('ok-color-button', 'n_clicks'),
+	],
+	[
+	State('my-color-picker', 'value'),
+	State('file-list-table', 'selected_cells'),
+	])
+def thisIsFuckingStupid(ok_Button_n_clicks2, colorPickerValue, selected_cells):
+	'''
+	print('\n************** thisIsFuckingStupid()')
+	print('   ok_Button_n_clicks2:', ok_Button_n_clicks2)
+	print('   colorPickerValue:', colorPickerValue) # {'hex': '#e80e0e', 'rgb': {'r': 232, 'g': 14, 'b': 14, 'a': 1}}
+	print('   selected_cells:', selected_cells) # a list of [{'row': 1, 'column': 1, 'column_id': 'Color'}]
+	'''
+	
+	global ok_n_clicks2
+	
+	# my temptation here is to start using globals outside the purpose of handling dash callbacks!!!!!!!
+	
+	if (ok_Button_n_clicks2 is not None) and (ok_Button_n_clicks2 > ok_n_clicks2):
+		ok_n_clicks2 = ok_Button_n_clicks2
+
+		selectedRow = selected_cells[0]['row']
+		selectedColor = colorPickerValue['hex']
+		
+		global updateColorDict
+		updateColorDict = {}
+		updateColorDict['row'] = selectedRow
+		updateColorDict['color'] = selectedColor
+
+		theRet = json.dumps(updateColorDict)
+
+		#return 'this-is-fucking-stupid ' + str(ok_n_clicks2)
+		return theRet
+	else:
+		return ''
+	
+# data folder dropdown 'my-folder-dropdown'
+@app.callback(
+	[
+	Output('my-folder-dropdown-selection', 'children'),
+	],
+	[
+	Input('my-folder-dropdown', 'value'),
+	],
+	)
+def myFolderDropdown(value):
+	print('myFolderDropdown()')
+	print('   value:', value)
+	
+	if value is not None:
+		# todo: get this assignment out of here !!!!
+		myBrowser.path = value
+		myBrowser.loadFolder()
+	
+	return [value]
+
+###
+# I want to also return required changes to style_data_conditional
+# As of dash 3.9 we can have multiple Output() !!!!!!!!!!!!!!!
+#
+# edit condition
+
+currentFolder = myBrowser.path
+
+@app.callback(
+	[
+	Output('file-list-table', 'data'),
+	Output('file-list-table', 'style_data_conditional'),
+	# this is a stretch
+	#Output('this-is-fucking-stupid', 'children'),
+	],
+	[
+	#Input('file-list-table', 'data_timestamp'),
+	Input('this-is-fucking-stupid', 'children'),
+	Input('my-folder-dropdown-selection', 'children'),
+	],
+	[
+	State('file-list-table', 'data'),
+	])
+#def edit_file_list_table(data_timestamp, this_is_fucking_stupid_children, folderDropdownValue, data):
+def edit_file_list_table(this_is_fucking_stupid_children, folderDropdownValue, data):
+	print('edit_file_list_table()')
+	#print('   data_timestamp:', data_timestamp)
+	print('   this_is_fucking_stupid_children:', this_is_fucking_stupid_children)
+	print('   folderDropdownValue:', folderDropdownValue)
+	'''
+	print('   INCOMING data:')
+	for item in data:
+		print('   ', item)
+	'''
+	
+	theRet = []
+
+	global currentFolder # todo: get rid of this global and store it in a div !!!
+	if (folderDropdownValue is not None) and folderDropdownValue != currentFolder:
+		# need to refresh all values in table
+		
+		currentFolder = folderDropdownValue
+		
+		print('edit_file_list_table() is switching to data folder:', currentFolder)
+		# switching incoming 'data' to new folder
+		data = myBrowser.df0.to_dict('records'),
+		# todo: fix this
+		data = data[0]
+		'''
+		print('   SWAPPED data:')
+		print('data:', data)
+		for item in data:
+			print('   ', item)
+		print('\n')
+		'''
+		
+	# this_is_fucking_stupid_children will be a string with a dictionary like
+	# {'row': 1, 'color': '#aabbcc'}	
+	stupidDict = None
+	if this_is_fucking_stupid_children:
+		print('\n\tthis_is_fucking_stupid_children:', this_is_fucking_stupid_children, '\n')
+		stupidDict = json.loads(this_is_fucking_stupid_children)
+		
+	if data is None:
+		theRet = data
+	else:
+		
+		for rowIdx, item in enumerate(data):
+			#print('   item:', item)
+		
+			# convert to number
+			#item['Condition 1'] = int(item['Condition 1'])
+		
+			analysisFile = item['Analysis File']
+			condition1 = item['Condition 1']
+			condition2 = item['Condition 2']
+			condition3 = item['Condition 3']
+			theColor = item['Color']
+
+			#print('   condition1:', condition1)
+		
+			rowsToChange = myBrowser.df0['Analysis File'] == analysisFile
+			myBrowser.df0.loc[rowsToChange, 'Condition 1'] = condition1
+			myBrowser.df0.loc[rowsToChange, 'Condition 2'] = condition2
+			myBrowser.df0.loc[rowsToChange, 'Condition 3'] = condition3
+			myBrowser.df0.loc[rowsToChange, 'Color'] = theColor
+		
+			rowsToChange = myBrowser.df['Analysis File'] == analysisFile
+			myBrowser.df.loc[rowsToChange, 'Condition 1'] = condition1
+			myBrowser.df.loc[rowsToChange, 'Condition 2'] = condition2
+			myBrowser.df.loc[rowsToChange, 'Condition 3'] = condition3
+		
+			'''
+			print('*** updateColorDict:', updateColorDict)
+			if updateColorDict is not None:
+				pass
+			'''
+			
+			if (stupidDict is not None) and rowIdx == stupidDict['row']:
+				print(' !!!!!!!!!!!!!!!!!!!!!!!!! ASSIGNNIG NEW COLOR')
+				newColor = stupidDict['color']
+				#print('ROW INDEX IS SAME AS STUPID DICT, SET THE COLOR TO:', newColor, '!!!!!!!!!!!!')
+				rowsToChange = myBrowser.df0['Analysis File'] == analysisFile
+				#print('rowsToChange:', rowsToChange)
+				myBrowser.df0.loc[rowsToChange, 'Color'] = newColor
+				
+				# need to actually mody the item here
+				item['Color'] = newColor
+				
+			theRet.append(item)
+		
+		myBrowser.folderOptions_Save()
+		
+	style_data_conditional = myStyleDataConditional()
+	
+	return theRet, style_data_conditional#, ('')
+
 #
 # x/y stat selection
 @app.callback(
@@ -670,43 +842,6 @@ def myTableSelect(y_activeCell, x_activeCell):
 		#xSel = myStatList[xRow]['label']
 		xSel = myStatList[xRow]
 		myBrowser.setSelectedStat('x', xSel)
-
-#
-# edit condition
-@app.callback(
-	Output('file-list-table', 'data'),
-	[
-	Input('file-list-table', 'data_timestamp'),
-	#Input('popover', "is_open"),
-	], # data_timestamp is not working ???
-	[State('file-list-table', 'data')])
-#def display_output(data_timestamp, is_open, data):
-def display_output(data_timestamp, data):
-	print('display_output() data_timestamp:', data_timestamp)
-	theRet = []
-	for rowIdx, item in enumerate(data):
-		#print('   item:', item)
-		
-		# convert to number
-		#item['Condition 1'] = int(item['Condition 1'])
-		
-		analysisFile = item['Analysis File']
-		condition1 = item['Condition 1']
-
-		#print('   condition1:', condition1)
-		
-		rowsToChange = myBrowser.df0['Analysis File'] == analysisFile
-		myBrowser.df0.loc[rowsToChange, 'Condition 1'] = condition1
-		
-		rowsToChange = myBrowser.df['Analysis File'] == analysisFile
-		myBrowser.df.loc[rowsToChange, 'Condition 1'] = condition1
-		
-		print('*** updateColorDict:', updateColorDict)
-		if updateColorDict is not None:
-			pass
-		
-		theRet.append(item)
-	return theRet
 
 	
 #
