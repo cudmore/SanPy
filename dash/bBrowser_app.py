@@ -73,8 +73,10 @@ def plotButton(graphNum):
 	yStat = statDict[yStatHuman]
 	xStat = statDict[xStatHuman]
 
+	"""
 	print('bBrowser_app.plotButton() graphNum:', graphNum, 'xStat:', xStat, 'yStat:', yStat)
-
+	"""
+	
 	returnData = myBrowser.updatePlot(xStatName=xStat, yStatName=yStat)
 
 	# determine min/max so we can expand by 5%
@@ -135,7 +137,7 @@ def myStyleDataConditional():
 			'backgroundColor': myBrowser.df0.loc[rowIdx, 'Color'],
 			'color': 'white',
 		}
-		print('      === myStyleDataConditional() set rowIdx:', rowIdx, 'to color:', myBrowser.df0.loc[rowIdx, 'Color'])
+		#print('      === myStyleDataConditional() set rowIdx:', rowIdx, 'to color:', myBrowser.df0.loc[rowIdx, 'Color'])
 
 		theRet.append(theDict)
 	return theRet
@@ -143,12 +145,17 @@ def myStyleDataConditional():
 ###
 ###
 defaultColor = '#000000'
+defaultColor2 = {'r':0, 'g':0, 'b':0, 'a':1}
 
 colorPicker = html.Div([
     daq.ColorPicker(
         id='my-color-picker',
         label='Pick A Color',
-        value={'hex': defaultColor}
+        # will show color as hex
+        #value={'hex': defaultColor},
+        # will show color as rgb
+        #value=(rgb=dict(r=<r_value>, g=<g_value>, b=<b_value>, a=<a_value>)
+        value=(defaultColor2)
     ),
     html.Div(id='color-picker-output')
 ])
@@ -170,7 +177,8 @@ popover = html.Div(
             ],
             id='popover',
             is_open=False,
-            target="popover-target",
+            target='popover-target',
+            #target='horizontal-popover-position',
             #target="file-list-table",
             delay={'show':100, 'hide':500},
         ),
@@ -197,13 +205,19 @@ myBody = dbc.Container(
 				#),
 
 				# add some horizontal padding so popover does not cover 'Color' column
+				#html.Div(
+				#	'eufghgaigrvuvg',
+				#	id='horizontal-popover-position',
+				#	style={'left':'500px', 'padding-left': '500px', 'display': 'block'}
+				#),
+
+
 				html.Div(
-					style={'padding-left': '150px'}
+					"Select a data folder ",
+					style={'padding-left': '50px'}
 				),
-
+				
 				popover,
-
-				"Select a data folder",
 
 				html.Div(
 					dcc.Dropdown(
@@ -591,7 +605,10 @@ updateColorDict = None #{'row': None, 'color': None,}
 # on click of a file in the color column
 # show a color picker
 @app.callback(
+    [
     Output('popover', 'is_open'),
+	Output('my-color-picker', 'value'),
+	],
 	[
 	Input('file-list-table', 'selected_cells'),
 	Input('ok-color-button', 'n_clicks'),
@@ -600,25 +617,30 @@ updateColorDict = None #{'row': None, 'color': None,}
 	[
 	State('popover', "is_open"),
 	State('my-color-picker', 'value'),
+	State('file-list-table', 'data'),
 	])
-def myFileListSelectColor(selected_cells, ok_n_clicks, cancel_n_clicks, is_open, colorValue):
+def myFileListSelectColor(selected_cells, ok_n_clicks, cancel_n_clicks, is_open, colorValue, fileListTableData):
 	print('\n')
-	print('************* myFileListSelectColor() selected_cells:', selected_cells)
+	print('****** myFileListSelectColor() selected_cells:', selected_cells)
 	print('   selected_cells:', selected_cells)
 	print('   ok_n_clicks:', ok_n_clicks)
 	print('   cancel_n_clicks:', cancel_n_clicks)
 	print('   is_open:', is_open)
 	print('   colorValue:', colorValue)
-
+	#print('   fileListTableData:', fileListTableData)
+	
 	global g_popover_ok_n_clicks
 	global g_popover_cancel_n_clicks
 	global updateColorDict
 
+	"""
 	print('   g_popover_ok_n_clicks:', g_popover_ok_n_clicks)
 	print('   g_popover_cancel_n_clicks:', g_popover_cancel_n_clicks)
 	print('   updateColorDict:', updateColorDict)
-
+	"""
+	
 	theRet = is_open
+	theRet2 = colorValue
 
 	if selected_cells is not None:
 		selected_cells = selected_cells[0]
@@ -626,26 +648,32 @@ def myFileListSelectColor(selected_cells, ok_n_clicks, cancel_n_clicks, is_open,
 		colName = selected_cells['column_id']
 
 		if colName == 'Color':
-			print('   myFileListSelectColor() colName:', colName)
+			#print('   myFileListSelectColor() colName:', colName)
 			theRet = (is_open is None) or (not is_open)
-
-		if ok_n_clicks is not None and ok_n_clicks > g_popover_ok_n_clicks: #or n_clicks:
+			hexColor = fileListTableData[selectedRow]['Color'] # hex
+			theRet2 = {'hex': hexColor}
+			#theRet2 = {'rgb': hexColor}
+			
+		if (ok_n_clicks is not None) and ok_n_clicks > g_popover_ok_n_clicks: #or n_clicks:
 			print('   -->> myFileListSelectColor() OK clicked new color:', colorValue)
 			g_popover_ok_n_clicks = ok_n_clicks
 			updateColorDict = {}
 			updateColorDict['row'] = selectedRow
 			updateColorDict['color'] = colorValue['hex']
+			#updateColorDict['color'] = colorValue['rgb']
 			theRet = False
-
+			theRet2 = {'hex': colorValue['hex']}
+			#theRet2 = {'rgb': colorValue['rgb']}
 		if cancel_n_clicks is not None and cancel_n_clicks > g_popover_cancel_n_clicks: #or n_clicks:
 			print('   -->> myFileListSelectColor() CANCEL clicked')
 			g_popover_cancel_n_clicks = cancel_n_clicks
 			updateColorDict = None
 			theRet = False
-		print('   myFileListSelectColor() return theRet:', theRet)
-		return theRet
-###
-###
+			theRet2 = {}
+		#print('   myFileListSelectColor() return theRet:', theRet, 'theRet2:', theRet2)
+		return theRet, theRet2
+	return '', {}
+
 
 ok_n_clicks2 = 0
 
@@ -657,8 +685,9 @@ ok_n_clicks2 = 0
 	[
 	State('my-color-picker', 'value'),
 	State('file-list-table', 'selected_cells'),
+	State('my-folder-dropdown', 'value'),
 	])
-def thisIsFuckingStupid(ok_Button_n_clicks2, colorPickerValue, selected_cells):
+def thisIsFuckingStupid(ok_Button_n_clicks2, colorPickerValue, selected_cells, folderDropdownValue):
 	'''
 	print('\n************** thisIsFuckingStupid()')
 	print('   ok_Button_n_clicks2:', ok_Button_n_clicks2)
@@ -675,12 +704,17 @@ def thisIsFuckingStupid(ok_Button_n_clicks2, colorPickerValue, selected_cells):
 
 		selectedRow = selected_cells[0]['row']
 		selectedColor = colorPickerValue['hex']
+		#selectedColor = colorPickerValue['rgb']
 
 		global updateColorDict
 		updateColorDict = {}
+		updateColorDict['path'] = folderDropdownValue
 		updateColorDict['row'] = selectedRow
 		updateColorDict['color'] = selectedColor
 
+		print('   thisIsFuckingStupid()')
+		print('      updateColorDict:', updateColorDict)
+		
 		theRet = json.dumps(updateColorDict)
 
 		#return 'this-is-fucking-stupid ' + str(ok_n_clicks2)
@@ -720,8 +754,6 @@ currentFolder = myBrowser.path
 	[
 	Output('file-list-table', 'data'),
 	Output('file-list-table', 'style_data_conditional'),
-	# this is a stretch
-	#Output('this-is-fucking-stupid', 'children'),
 	],
 	[
 	Input('file-list-table', 'data_timestamp'),
@@ -805,12 +837,12 @@ def edit_file_list_table(data_timestamp, this_is_fucking_stupid_children, folder
 				pass
 			'''
 
-			if (stupidDict is not None) and rowIdx == stupidDict['row']:
-				print('*** ASSIGNING NEW COLOR')
+			# we need 3rd clause here because once color value is set in stupidDict it stays set
+			# we need to know which folder it was set in
+			if (stupidDict is not None) and (rowIdx == stupidDict['row']) and (myBrowser.path == stupidDict['path']):
+				#print('*** ASSIGNING NEW COLOR')
 				newColor = stupidDict['color']
-				#print('ROW INDEX IS SAME AS STUPID DICT, SET THE COLOR TO:', newColor, '!!!!!!!!!!!!')
 				rowsToChange = myBrowser.df0['Analysis File'] == analysisFile
-				#print('rowsToChange:', rowsToChange)
 				myBrowser.df0.loc[rowsToChange, 'Color'] = newColor
 
 				# need to actually mody the item here
@@ -822,7 +854,7 @@ def edit_file_list_table(data_timestamp, this_is_fucking_stupid_children, folder
 
 	style_data_conditional = myStyleDataConditional()
 
-	return theRet, style_data_conditional#, ('')
+	return theRet, style_data_conditional
 
 #
 # x/y stat selection

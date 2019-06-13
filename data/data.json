@@ -1,44 +1,44 @@
 {
-    "19503001_b10.txt": {
-        "Condition 1": "4",
-        "Condition 2": "None",
-        "Condition 3": "None",
-        "Color": "#848739"
-    },
     "19114001_1.txt": {
-        "Condition 1": "4",
+        "Condition 1": "1",
         "Condition 2": "None",
         "Condition 3": "None",
-        "Color": "#000000"
+        "Color": "#c91039"
     },
     "19114001_2.txt": {
-        "Condition 1": "4",
-        "Condition 2": "None",
-        "Condition 3": "None",
-        "Color": "#e61bc2"
-    },
-    "19503001_b70.txt": {
-        "Condition 1": "None",
-        "Condition 2": "None",
-        "Condition 3": "None",
-        "Color": "rgb(0,0,0)"
-    },
-    "19503001_b1.txt": {
-        "Condition 1": "None",
+        "Condition 1": "2",
         "Condition 2": "None",
         "Condition 3": "None",
         "Color": "rgb(0,0,0)"
     },
     "19503001_b0.txt": {
-        "Condition 1": "None",
+        "Condition 1": "3",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#0be81f"
+    },
+    "19503001_b1.txt": {
+        "Condition 1": "2",
         "Condition 2": "None",
         "Condition 3": "None",
         "Color": "rgb(0,0,0)"
     },
+    "19503001_b10.txt": {
+        "Condition 1": "4",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#1821d8"
+    },
     "19503001_b30.txt": {
-        "Condition 1": "None",
+        "Condition 1": "2",
         "Condition 2": "None",
         "Condition 3": "None",
         "Color": "rgb(0,0,0)"
+    },
+    "19503001_b70.txt": {
+        "Condition 1": "5",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#999e33"
     }
 }

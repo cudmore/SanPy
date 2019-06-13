@@ -17,6 +17,8 @@ class myCallbackException(Exception):
 		#raise
 '''
 
+#blackColor = 
+
 class bBrowser:
 	def __init__(self, path=''):
 		if path == '':
@@ -307,9 +309,6 @@ class bBrowser:
 		
 		doNotDoMean = ['Condition 1', 'Condition 2', 'Condition 3']
 		
-		doBar = xStatName in doNotDoMean or yStatName in doNotDoMean
-		doBar = False
-		
 		hideMeanLines = not self.showMeanLines or (xStatName in doNotDoMean or yStatName in doNotDoMean)
 		
 		if xStatName and yStatName:
@@ -347,33 +346,27 @@ class bBrowser:
 				xStatVals = thisFileRows[xStatName]
 				yStatVals = thisFileRows[yStatName]
 
+				#print('type(xStatVals)', type(xStatVals))
+				#print('xStatVals[0]', xStatVals[0])
 				dataDict = {}
-				dataDict['x'] = xStatVals
+				dataDict['x'] = xStatVals			
 				dataDict['y'] = yStatVals
 
-				if doBar:
-					dataDict['marker'] = {
-						'color': thisIsMyColor #self.plotlyColors[actualCurveNumber],
-					}
-				else:
-					dataDict['marker'] = {
-						#'color': self.plotlyColors[actualCurveNumber],
-						#myBrowser.df0.loc[rowsToChange, 'Color']
-						'color': self.df0.loc[index, 'Color'],
-						'color': thisIsMyColor,
-						'size': 10,
-					}
+				dataDict['marker'] = {
+					#'color': self.plotlyColors[actualCurveNumber],
+					#myBrowser.df0.loc[rowsToChange, 'Color']
+					'color': self.df0.loc[index, 'Color'],
+					'color': thisIsMyColor,
+					'size': 10,
+				}
 
-				if doBar:
-					pass
-				else:
-					dataDict['mode'] = ''
-					if not self.showLines and not self.showMarkers:
-						dataDict['mode'] = 'none' # 'none' is lower case !!!
-					if self.showLines:
-						dataDict['mode'] += '+lines'
-					if self.showMarkers:
-						dataDict['mode'] += '+markers'
+				dataDict['mode'] = ''
+				if not self.showLines and not self.showMarkers:
+					dataDict['mode'] = 'none' # 'none' is lower case !!!
+				if self.showLines:
+					dataDict['mode'] += '+lines'
+				if self.showMarkers:
+					dataDict['mode'] += '+markers'
 
 				dataDict['name'] = 'File ' + str(index + 1) #analysisFile
 
@@ -404,24 +397,14 @@ class bBrowser:
 						}
 					}
 				
-				'''
-				if doBar:
-					myScatter = go.Bar(dataDict)
-				else:
-					myScatter = go.Scatter(dataDict)
-				'''
-				
-				#myScatter = go.Scatter(dataDict)
-				
-				#theRet.append(myScatter)
 				theRet.append(dataDict)
 
 				if self.showMean:
 					# x
 					xMean, xSD, xN, xSE = None, None, None, None
 					if xStatName in doNotDoMean:
-						#print('xStatVals:', xStatVals)
-						xMean = xStatVals[0]
+						xMean = xStatVals.values[0]
+						#print('type(xMean):', type(xMean), 'xMean:', xMean)
 						'''
 						xSD = 0
 						xN = 0
@@ -437,8 +420,8 @@ class bBrowser:
 					# y
 					yMean, ySD, yN, ySE = None, None, None, None
 					if yStatName in doNotDoMean:
-						#print('xStatVals:', xStatVals)
-						yMean = yStatVals[0]
+						#print('yStatVals:', yStatVals)
+						yMean = yStatVals.values[0]
 						'''
 						ySD = 0
 						yN = 0
