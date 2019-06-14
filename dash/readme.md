@@ -1,9 +1,23 @@
-## Plotly Dash experiments
+## Web interface to abf file analysis and plotting
 
-These python files provide a web interface to browse analysis saved by bAnalysis..
+ - app2.py, provides a web interface to load, visualize, analyze and save results of spike analysis (Save is not implemented!!!).
+ - bBrowser_app.py, provides a web interface to browse many analysis files and spie parameters at the same time.
 
+## To Do (backend)
 
-## To Do
+ - Add header to saved text file and add
+     - sampling frequency
+     - abf name
+ - Allow files other than abf to be opened?
+ 
+## To Do (bAnalysis)
+
+ - Implement save!!!!
+ - Get rid of 'Load Folder' button and implement dropdown to select /data folder like I have done in bBrowser
+ - Fix updating of raw dV/dt and Vm when a new files is selected and analyzed
+ - Implement data shader to speed up plotting of raw data
+ 
+## To Do (bBrowser)
 
  - [done] On select in one graph, highlight in others
  - [done] Filter stat names to match 'cardiac' like in the desktop app
@@ -11,11 +25,7 @@ These python files provide a web interface to browse analysis saved by bAnalysis
  - Add dropdown to each plot to specify: markers, lines, lines+markers
  - [done, needs to be checked] Try and connect mean with line when between the same abf file ???
  - [done] Add columns to file list for condition. Once done, plot x-axis as 'condition'
-     - Implement grand mean between files that have same condition
- - Add header to saved text file and add
-     - sampling frequency
-     - abf name
-     
+ - When plotting conditions, add grand mean of means between files that have same condition
  
 ## Versions
 

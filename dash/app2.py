@@ -142,6 +142,7 @@ tmpData=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptio
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets, static_folder='static')
+app.title = 'bAnalysis'
 app.css.append_css({'external_url': 'static/my.css'})
 
 app.layout = html.Div([

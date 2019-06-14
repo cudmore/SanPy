@@ -116,6 +116,40 @@ class bAnalysis:
 
 
 	############################################################
+	# map human readable to backend stat
+	############################################################
+	'''
+	def statNames_Init(self):
+		"""
+		Initialize list of stats and their mapping from human readable to backend
+		"""
+		statDict = collections.OrderedDict()
+		statDict['Take Off Potential (s)'] = 'thresholdSec'
+		statDict['Take Off Potential (mV)'] = 'thresholdVal'
+		statDict['AP Peak (mV)'] = 'peakVal'
+		statDict['AP Height (mV)'] = 'peakHeight'
+		statDict['Pre AP Min (mV)'] = 'preMinVal'
+		statDict['Post AP Min (mV)'] = 'postMinVal'
+		statDict['AP Duration (ms)'] = 'apDuration_ms'
+		# 'Early Diastolic Depol Rate (dV/s)'
+		statDict['Early Diastolic Duration (ms)'] = 'earlyDiastolicDuration_ms'
+		statDict['Diastolic Duration (ms)'] = 'diastolicDuration_ms'
+		statDict['Max AP Upstroke (dV/dt)'] = 'preSpike_dvdt_max_val2'
+		statDict['Max AP Upstroke (mV)'] = 'preSpike_dvdt_max_val'
+		statDict['Max AP Repolarization (dV/dt)'] = 'postSpike_dvdt_min_val2'
+		statDict['Max AP Repolarization (mV)'] = 'postSpike_dvdt_min_val'
+		statDict['Inter-Spike-Interval (ms)'] = 'isi_ms'
+		statDict['Cycle Length (ms)'] = 'cycleLength_ms'
+		# 'halfWidth' # THIS HAS TO BE DYNAMIC ???
+		statDict['Condition 1'] = 'Condition 1'
+		statDict['Condition 2'] = 'Condition 2'
+		statDict['Condition 3'] = 'Condition 3'
+	
+		# make a list of string from keys
+		#myStatList = list(statDict.keys())
+	'''
+	
+	############################################################
 	# spike detection
 	############################################################
 	def getDerivative(self, medianFilter=0):
@@ -600,6 +634,8 @@ class bAnalysis:
 		stopTime = time.time()
 		print('bAnalysis.spikeDetect() for file', self.file, 'detected', len(self.spikeTimes), 'spikes in', round(stopTime-startTime,2), 'seconds')
 
+	############################################################
+	
 	############################################################
 	# output reports
 	############################################################
