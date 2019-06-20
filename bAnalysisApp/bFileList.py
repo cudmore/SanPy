@@ -5,7 +5,7 @@
 Manager a list of video files
 """
 
-import os
+import os, json
 from collections import OrderedDict
 
 from bAnalysis import bAnalysis
@@ -25,23 +25,94 @@ class bFileList:
 
 		self.path = path
 
+		self.db = OrderedDict()
+		self.databaseLoad()
+
 		self.populateFolder(path)
+
+	def databaseRefresh(self):
+		useExtension = '.abf'
+		videoFileIdx = 0
+		for file in sorted(os.listdir(self.path)):
+			if file.startswith('.'):
+				continue
+			if file.endswith(useExtension):
+				if file in self.db.keys():
+					# already in database
+					continue
+
+				fullPath = os.path.join(self.path, file)
+				print('bFileList.databaseRefresh is parsing file:', file)
+				myVideoFile = bVideoFile(videoFileIdx, fullPath)
+
+				self.db[file] = OrderedDict()
+				self.db[file]['file'] = file
+				self.db[file]['kHz'] = myVideoFile.dict['kHz']
+				self.db[file]['durationSec'] = myVideoFile.dict['durationSec']
+				self.db[file]['numSweeps'] = myVideoFile.dict['numSweeps']
+				self.db[file]['dvdtThreshold'] = None
+				self.db[file]['numSpikes'] = None
+				self.db[file]['analysisDate'] = None
+				self.db[file]['analysisTime'] = None
+				self.db[file]['acqDate'] = None
+				self.db[file]['acqTime'] = None
+
+				videoFileIdx += 1
+
+		# any time we refresh, we save
+		self.databaseSave()
+
+	def databaseLoad(self):
+		# can't use this as dash is using it !!!
+		#enclosingFolder = os.path.basename(self.path)
+		enclosingFolder = 'db'
+		dbPath = os.path.join(self.path, enclosingFolder + '.json')
+		if os.path.isfile(dbPath):
+			with open(dbPath, "r") as dbFile:
+				self.db = json.load(dbFile)
+		'''
+		else:
+			# make a new db from file list (slow)
+			#self.databaseRefresh()
+		'''
+		# always refresh (will add new files if neccesary)
+		self.databaseRefresh()
+
+	def databaseSave(self):
+		'''
+		if self.db is None:
+			print('bFileList.databaseSave() got None db')
+			return
+		'''
+		# can't use this as dash is using it !!!
+		#enclosingFolder = os.path.basename(self.path)
+		enclosingFolder = 'db'
+		dbPath = os.path.join(self.path, enclosingFolder + '.json')
+		print('bFileList.databaseSave is saving:', dbPath)
+		with open(dbPath, "w") as dbFile:
+			json.dump(self.db, dbFile, indent=4)
 
 	def populateFolder(self, path):
 		"""
-		given a folder path containing .mp4 files, populate with list of .mp4 files
+		given a folder path containing .abf files, populate with list of .abf files
 		"""
 		if not os.path.isdir(path):
 			return
 
 		useExtension = '.abf'
 		videoFileIdx = 0
-		for file in os.listdir(path):
+		for file in sorted(os.listdir(path)):
 			if file.startswith('.'):
 				continue
 			if file.endswith(useExtension):
 				fullPath = os.path.join(path, file)
-				newVideoFile = bVideoFile(videoFileIdx, fullPath)
+
+				fromDict = None
+				if file in self.db.keys():
+					fromDict = self.db[file]
+				print('populateFolder()', file, fromDict)
+				newVideoFile = bVideoFile(videoFileIdx, fullPath, fromDict)
+
 				self.videoFileList.append(newVideoFile)
 				videoFileIdx += 1
 
@@ -54,9 +125,10 @@ class bFileList:
 #############################################################
 class bVideoFile:
 
-	def __init__(self, index, path):
+	def __init__(self, index, path, fromDict=None):
 		"""
 		path: (str) full path to .mp4 video file
+		fromDict: (dict) construct from database dict
 		"""
 
 		#print('bVideoFile() index:', index, 'path:', path)
@@ -87,10 +159,15 @@ class bVideoFile:
 		self.dict['file'] = videoFileName
 
 		# load abf file and grab parameters
-		ba = bAnalysis(file=path)
-		pntsPerMS = ba.dataPointsPerMs
-		numSweeps = len(ba.sweepList)
-		durationSec = max(ba.abf.sweepX)
+		if fromDict is None:
+			ba = bAnalysis(file=path)
+			pntsPerMS = ba.dataPointsPerMs
+			numSweeps = len(ba.sweepList)
+			durationSec = max(ba.abf.sweepX)
+		else:
+			pntsPerMS = fromDict['kHz']
+			numSweeps = fromDict['numSweeps']
+			durationSec = fromDict['durationSec']
 
 		self.dict['kHz'] = pntsPerMS
 		self.dict['durationSec'] = int(round(durationSec))

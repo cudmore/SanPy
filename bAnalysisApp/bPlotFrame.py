@@ -35,7 +35,7 @@ class bPlotFrame(ttk.Frame):
 		# was 'plt.cm.RdGy'
 		#self.colorTable = plt.cm.YlOrRd
 		self.colorTable = plt.cm.coolwarm
-		
+
 		myPadding = 10
 
 		self.fig = matplotlib.figure.Figure(figsize=(8,figHeight), dpi=100)
@@ -51,7 +51,7 @@ class bPlotFrame(ttk.Frame):
 		self.clipLines_selection = None
 		self.clipLines_mean = None
 		self.meanClip = []
-		
+
 		self.plotMeta_selection = None
 
 		self.canvas = matplotlib.backends.backend_tkagg.FigureCanvasTkAgg(self.fig, parent)
@@ -115,7 +115,7 @@ class bPlotFrame(ttk.Frame):
 		#
 		# single point selection
 		#self.singlePointSelection, = self.axes.plot([], [], 'oc', markersize=10) # cyan circle
-		
+
 		self.metaLines = None
 		self.metaLines3 = None
 		#self.metaLines, = self.axes.plot([],[], 'ok', cmap=plt.get_cmap('inferno'), picker=5) # REMEMBER ',' ON LHS
@@ -131,13 +131,13 @@ class bPlotFrame(ttk.Frame):
 	def onclick(self, event):
 		print('bPlotFrame.onclick()')
 	'''
-	
+
 	'''
 	def onpick_callback(self, event):
 		""" select and propogate user selection of a single spike"""
-		
+
 		print('=== bPlotFrame.onpick_callback() event:', event)
-		
+
 		# the x/y data we are plotting
 		thisline = event.artist
 		xdata = thisline.get_xdata()
@@ -156,29 +156,29 @@ class bPlotFrame(ttk.Frame):
 		self.singleSpikeSelection.set_xdata(xDataSinglePoint)
 		self.singleSpikeSelection.set_ydata(yDataSinglePoint)
 		self.canvas.draw()
-		
+
 		#
 		# propagate selected spike to other views
 		# e.g. select spike in (raw data, meta plot 3)
 		self.controller.selectSpike(event, ind)
 	'''
-	
+
 	def onpick3_callback(self, event):
 		print('=== bPlotFrame.onpick3_callback() event:', event, 'event.ind:', event.ind)
 
 		ind = event.ind
 		ind = ind[0]
-		
+
 		'''
 		# the x/y data we are plotting
 		offsets = event.artist.get_offsets()
 		print('   offsets[ind]:', offsets[ind])
 		xData = offsets[ind][0]
 		yData = offsets[ind][1]
-		
+
 		print('   x:', xData, 'y:', yData)
 		'''
-		
+
 		#
 		# select spike in this plot
 		'''
@@ -186,7 +186,7 @@ class bPlotFrame(ttk.Frame):
 		self.singleSpikeSelection.set_ydata(yData)
 		self.canvas.draw()
 		'''
-		
+
 		# select spike 'ind' in raw data
 		self.controller.selectSpike(ind)
 
@@ -203,9 +203,9 @@ class bPlotFrame(ttk.Frame):
 			#
 			self.canvas.draw()
 			###
-			return 
+			return
 			###
-			
+
 		pnt = []
 		val = []
 		if name == 'Take Off Potential (mV)':
@@ -284,7 +284,7 @@ class bPlotFrame(ttk.Frame):
 			else:
 				self.analysisLines['halfWidthLines'].set_ydata([])
 				self.analysisLines['halfWidthLines'].set_xdata([])
-			
+
 		#
 		# plot
 		if onoff:
@@ -299,7 +299,7 @@ class bPlotFrame(ttk.Frame):
 	def _get_x_axes(self):
 		theMin, theMax = self.axes.get_xlim()
 		return theMin, theMax
-		
+
 	def setXAxis(self, xMin, xMax):
 		#print("bPlotFrame.setXAxis() xMin:", xMin, "xMax:", xMax)
 		self.axes.set_xlim(xMin, xMax)
@@ -368,7 +368,7 @@ class bPlotFrame(ttk.Frame):
 		print('bPlotFrame.selectSpike() spikeNumber:', spikeNumber)
 		if spikeNumber is None:
 			self.singleSpikeSelection.set_ydata([])
-			self.singleSpikeSelection.set_xdata([])		
+			self.singleSpikeSelection.set_xdata([])
 		else:
 			spikeVm = ba.abf.sweepY[ba.spikeTimes[spikeNumber]]
 			spikeSeconds = ba.abf.sweepX[ba.spikeTimes[spikeNumber]]
@@ -376,7 +376,7 @@ class bPlotFrame(ttk.Frame):
 			self.singleSpikeSelection.set_xdata(spikeSeconds)
 
 		self.canvas.draw()
-	
+
 	def selectSpikeMeta(self, ba, spikeNumber):
 		""" Select a single spike in raw trace """
 
@@ -384,8 +384,8 @@ class bPlotFrame(ttk.Frame):
 
 		if spikeNumber is None:
 			self.singleSpikeSelection.set_ydata([])
-			self.singleSpikeSelection.set_xdata([])		
-		else:			
+			self.singleSpikeSelection.set_xdata([])
+		else:
 
 			offsets = self.metaLines3.get_offsets()
 			xData = offsets[spikeNumber][0]
@@ -394,7 +394,7 @@ class bPlotFrame(ttk.Frame):
 
 			self.singleSpikeSelection.set_xdata(xData)
 			self.singleSpikeSelection.set_ydata(yData)
-			
+
 		self.canvas.draw()
 
 	def plotDeriv(self, ba, plotEveryPoint=10, doInit=False):
@@ -431,7 +431,7 @@ class bPlotFrame(ttk.Frame):
 		else:
 			self.thresholdCrossingsLine.set_ydata([])
 			self.thresholdCrossingsLine.set_xdata([])
-		
+
 		self.canvas.draw()
 
 	def plotClips(self, ba, plotEveryPoint=10):
@@ -470,7 +470,7 @@ class bPlotFrame(ttk.Frame):
 		print('bPlotFrame.clipsPlot_updateSelection() xMin:', xMin, 'xMax:', xMax)
 
 		self.controller.setStatus('Updating clips')
-		
+
 		# clear existing
 		if self.clipLines_selection is not None:
 			for line in self.clipLines_selection:
@@ -485,7 +485,10 @@ class bPlotFrame(ttk.Frame):
 		if xMin is None and xMax is None:
 			xMin = 0
 			xMax = len(self.controller.ba.abf.sweepX) / ba.dataPointsPerMs / 1000 # pnts to seconds
-			
+
+		# keep track of yMin and yMax
+		yMinGlobal, yMaxGlobal = self.axes.get_ylim()
+
 		tmpClips = [] # for mean clip
 		for i, spikeTime in enumerate(ba.spikeTimes):
 			spikeSeconds = spikeTime / ba.dataPointsPerMs / 1000 # pnts to seconds
@@ -496,23 +499,35 @@ class bPlotFrame(ttk.Frame):
 					self.clipLines_selection.append(line)
 					tmpClips.append(ba.spikeClips[i]) # for mean clip
 
+					yMin = ba.spikeClips[i].min()
+					yMax = ba.spikeClips[i].max()
+					if yMin < yMinGlobal:
+						yMinGlobal = yMin
+					if yMax > yMaxGlobal:
+						yMaxGlobal = yMax
+
 		if len(tmpClips):
 			self.meanClip = np.mean(tmpClips, axis=0)
 			line, = self.axes.plot(ba.spikeClips_x, self.meanClip, 'r')
 			self.clipLines_mean.append(line)
 		else:
 			if xMin==0 and xMax==0:
-				# donlt warn
+				# don't warn
 				pass
 			else:
 				print('error: bPlotFrame.plotClips_updateSelection() did not update the mean clip')
-			
+
+		# 20190620
+		yRange = abs(yMinGlobal-yMaxGlobal)
+		tenPercent = yRange * 0.05
+		self.axes.set_ylim(yMinGlobal-tenPercent, yMaxGlobal+tenPercent)
+
 		self.canvas.draw()
 
 		self.controller.setStatus()
 
 		return len(self.clipLines_selection)
-		
+
 	def plotMeta3(self, xStat, yStat):
 
 		print('bPlotFrame.plotMeta3() xStat:', xStat, ', yStat:', yStat)
@@ -531,7 +546,7 @@ class bPlotFrame(ttk.Frame):
 			#print('type(self.metaLines3):', type(self.metaLines3))
 			self.metaLines3.remove()
 			self.metaLines3 = None
-			
+
 		# x
 		for currentAxis in ['x', 'y']:
 			#
@@ -539,10 +554,10 @@ class bPlotFrame(ttk.Frame):
 				thisStat = xStat
 			elif currentAxis == 'y':
 				thisStat = yStat
-		
+
 			#
 			thisLabel = thisStat
-			
+
 			if thisStat == 'Time (sec)':
 				thresholdPnt = [x['thresholdPnt'] for x in self.controller.ba.spikeDict]
 				thisVal = self.controller.ba.abf.sweepX[thresholdPnt]
@@ -567,7 +582,7 @@ class bPlotFrame(ttk.Frame):
 				thisVal = [x['preSpike_dvdt_max_val'] for x in self.controller.ba.spikeDict]
 			if thisStat == 'Max AP Repolarization (mV)':
 				thisVal = [x['postSpike_dvdt_min_val'] for x in self.controller.ba.spikeDict]
-			
+
 			if thisStat == 'halfWidth':
 				thisVal = [x['widths'][0]['widthMs'] for x in self.controller.ba.spikeDict]
 				'''
@@ -575,7 +590,7 @@ class bPlotFrame(ttk.Frame):
 				for j,widthDict in enumerate(self.controller.ba.spikeDict['widths']):
 					thisValue.append(widthDict['widthMs']
 				'''
-				
+
 			if thisStat == 'Inter-Spike-Interval (ms)':
 				'''
 				spikeTimes_sec = [x/self.controller.ba.abf.dataPointsPerMs for x in self.controller.ba.spikeTimes]
@@ -634,7 +649,7 @@ class bPlotFrame(ttk.Frame):
 				# for spike >1 and <len(spikes)
 				thisVal = [x['diastolicDuration_ms'] for x in self.controller.ba.spikeDict]
 
-			if thisStat == 'Early Diastolic Depol Rate (dV/s)':				
+			if thisStat == 'Early Diastolic Depol Rate (dV/s)':
 				thisVal = [x['earlyDiastolicDurationRate'] for x in self.controller.ba.spikeDict]
 
 			if thisStat == 'Early Diastolic Duration (ms)':
@@ -658,7 +673,7 @@ class bPlotFrame(ttk.Frame):
 		if xStat == 'Phase Plot' and yStat == 'Phase Plot':
 			# todo: get color in here
 			self.metaLines3 = self.axes.scatter(xVal,yVal, picker=5)
-		
+
 		else:
 			self.metaLines3 = self.axes.scatter(xVal,yVal, c=tmpColor, cmap=self.colorTable, picker=5)
 
@@ -684,7 +699,7 @@ class bPlotFrame(ttk.Frame):
 				self.axes.set_xlim(xMin-tenPercentRange, xMax+tenPercentRange)
 		except ValueError:
 			print('    warning: bPlotFrame.plotMeta3() ValueError in setting x-axis')
-			
+
 		try:
 			yMin = np.nanmin(yVal)
 			yMax = np.nanmax(yVal)
@@ -695,7 +710,7 @@ class bPlotFrame(ttk.Frame):
 				self.axes.set_ylim(yMin-tenPercentRange, yMax+tenPercentRange)
 		except ValueError:
 			print('    warning: bPlotFrame.plotMeta3() ValueError in setting y-axis')
-						
+
 		self.axes.set_xlabel(xLabel)
 		self.axes.set_ylabel(yLabel)
 
@@ -704,7 +719,7 @@ class bPlotFrame(ttk.Frame):
 
 		# on plotting, always cancel single spike selection
 		self.singleSpikeSelection.set_ydata([])
-		self.singleSpikeSelection.set_xdata([])		
+		self.singleSpikeSelection.set_xdata([])
 
 		self.canvas.draw()
 
@@ -713,8 +728,8 @@ class bPlotFrame(ttk.Frame):
 		#print('bPlotFrame.plotMeta() statName:', statName)
 
 		self.plotMeta3('Time (sec)', statName)
-		
-		return	
+
+		return
 
 	def plotMeta_updateSelection(self, ba, xMin, xMax):
 		"""
@@ -744,4 +759,3 @@ class bPlotFrame(ttk.Frame):
 		self.canvas.draw()
 
 		self.controller.setStatus()
-
