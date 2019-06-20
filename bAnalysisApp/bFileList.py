@@ -64,9 +64,9 @@ class bFileList:
 
 	def databaseLoad(self):
 		# can't use this as dash is using it !!!
-		#enclosingFolder = os.path.basename(self.path)
-		enclosingFolder = 'db'
-		dbPath = os.path.join(self.path, enclosingFolder + '.json')
+		enclosingFolder = os.path.basename(self.path)
+		#enclosingFolder = 'db'
+		dbPath = os.path.join(self.path, enclosingFolder + '_db.json')
 		if os.path.isfile(dbPath):
 			with open(dbPath, "r") as dbFile:
 				self.db = json.load(dbFile)
@@ -85,9 +85,9 @@ class bFileList:
 			return
 		'''
 		# can't use this as dash is using it !!!
-		#enclosingFolder = os.path.basename(self.path)
-		enclosingFolder = 'db'
-		dbPath = os.path.join(self.path, enclosingFolder + '.json')
+		enclosingFolder = os.path.basename(self.path)
+		#enclosingFolder = 'db'
+		dbPath = os.path.join(self.path, enclosingFolder + '_db.json')
 		print('bFileList.databaseSave is saving:', dbPath)
 		with open(dbPath, "w") as dbFile:
 			json.dump(self.db, dbFile, indent=4)
