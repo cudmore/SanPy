@@ -142,6 +142,50 @@ class AnalysisApp:
 		# force label to update
 		self.statusLabel.update()
 
+	def startSecondsSpinboxCallback(self):
+		theMin = self.startSecondsSpinbox.get() # str
+		theMax = self.stopSecondsSpinbox.get() # str
+
+		if self.ba is not None:
+			if theMin == 'Inf':
+				theMin = self.ba.abf.sweepX[0]
+			else:
+				theMin = float(theMin)
+			if theMax == 'Inf':
+				theMax = self.ba.abf.sweepX[-1]
+			else:
+				theMax = float(theMax)
+				
+			print('startSecondsSpinboxCallback() newValue:', theMin)
+			
+			self.setXAxis(theMin, theMax)
+		else:
+			print('startSecondsSpinboxCallback got self.ba == None')
+		
+		return True # important
+		
+	def stopSecondsSpinboxCallback(self):
+		theMin = self.startSecondsSpinbox.get() # str
+		theMax = self.stopSecondsSpinbox.get() # str
+
+		if self.ba is not None:
+			if theMin == 'Inf':
+				theMin = self.ba.abf.sweepX[0]
+			else:
+				theMin = float(theMin)
+			if theMax == 'Inf':
+				theMax = self.ba.abf.sweepX[-1]
+			else:
+				theMax = float(theMax)
+				
+			print('stopSecondsSpinboxCallback() newValue:', theMax)
+			
+			self.setXAxis(theMin, theMax)
+		else:
+			print('stopSecondsSpinboxCallback got self.ba == None')
+
+		return True # important
+		
 	def buildDetectionFrame(self, container):
 		"""
 		Detection parameters, (sweep number, dV/dt threshold, hal widhts, etc)
@@ -214,14 +258,14 @@ class AnalysisApp:
 		labelDir = ttk.Label(detection_frame, text='From (Sec)')
 		labelDir.grid(row=row, column=0, sticky="w")
 
-		self.startSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
+		self.startSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5, validate="focusout", validatecommand=lambda: self.startSecondsSpinboxCallback())
 		self.startSecondsSpinbox.insert(0,0) # default is 0
 		self.startSecondsSpinbox.grid(row=row, column=1, sticky="w")
 
 		labelDir = ttk.Label(detection_frame, text='To (Sec)')
 		labelDir.grid(row=row, column=2, sticky="w")
 
-		self.stopSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
+		self.stopSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5, validate="focusout", validatecommand=lambda: self.stopSecondsSpinboxCallback())
 		self.stopSecondsSpinbox.insert(0,float('inf')) # default is inf
 		self.stopSecondsSpinbox.grid(row=row, column=3, sticky="w")
 
@@ -522,8 +566,19 @@ class AnalysisApp:
 
 		if buttonName == 'reportButton':
 			theMin, theMax = self._get_xaxis()
-			self.saveReport(theMin, theMax)
-
+			fileWasSaved = self.saveReport(theMin, theMax)
+			if fileWasSaved:
+				self.fileList.databaseRefreshFile(self.currentFilePath, self.ba)
+				
+				print('AnalysisApp.button_Callback() is calling self.fileListTree.populateFiles()')
+				#self.fileListTree.populateFiles(self.fileList, doInit=False) # 20190620, this is super overkill
+				theRet, item = self.fileListTree._getTreeViewSelection('File')
+				print('\nreportButton got')
+				print('   theRet:', theRet)
+				print('   item:', item)
+				fakeTuple = (1,2,3)
+				self.fileListTree.updateRow(item, fakeTuple)
+				
 		if buttonName == 'Phase Plot':
 			self.metaPlot3.plotMeta3('Phase Plot', 'Phase Plot')
 			
@@ -618,7 +673,7 @@ class AnalysisApp:
 			return
 
 		
-		statusStr = 'Loading folder "' + path + '"'
+		statusStr = 'AnalysisApp.loadFolder() "' + path + '"'
 		self.setStatus(statusStr)
 		print(statusStr)
 		
@@ -744,6 +799,7 @@ class AnalysisApp:
 			self.metaPlot3.plotMeta_updateSelection(self.ba, xMin=None, xMax=None)
 
 	def setXAxis(self, theMin, theMax):
+
 		self.rawPlot.setXAxis(theMin, theMax)
 		self.derivPlot.setXAxis(theMin, theMax)
 
@@ -920,9 +976,7 @@ class AnalysisApp:
 			yStat, item = self.meta3Tree_y._getTreeViewSelection('Stat')
 			xStat, item = self.meta3Tree_x._getTreeViewSelection('Stat')
 			print('AnalysisApp.plotMeta3() yStat:', yStat, 'xStat:', xStat)
-			self.metaPlot3.plotMeta3(xStat, yStat)
-		
-		
+			self.metaPlot3.plotMeta3(xStat, yStat)		
 		
 	def onClose3(self, event=None):
 		print('onClose3()')
@@ -931,6 +985,9 @@ class AnalysisApp:
 		self.metaPlot3 = None
 		
 	def metaWindow3(self):
+		"""
+		Open second scatter plot window
+		"""
 		if self.metaWindow is None:
 			horizontalSashPos = 300
 
@@ -977,6 +1034,8 @@ class AnalysisApp:
 		# always grab a df to the entire analysis (not sure what I will do with this)
 		#df = self.ba.report() # report() is my own 'bob' verbiage
 
+		fileWasSaved = False
+		
 		if savefile:
 			print('Saving user specified .xlsx file:', savefile)
 			excelFilePath = savefile
@@ -1091,8 +1150,12 @@ class AnalysisApp:
 			df.to_csv(textFilePath, sep=',', index_label='index', mode='w')
 
 			self.setStatus('Saved ' + excelFilePath)
+			
+			fileWasSaved = True
 		else:
 			print('Save aborted by user')
+
+		return fileWasSaved
 
 if __name__ == '__main__':
 

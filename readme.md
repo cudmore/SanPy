@@ -241,6 +241,9 @@ git --version
 
 ## To Do
 
+ - Set from/to (sec) when user zooms by dragging on graph
+ - get file table to update when analysis is saved
+ 
 ### 20190326
 
  - Save analysis csv file and reload when loading folder. Don't always require re-analysis. Will break when format of csv file changes, make sure to include a file version.

@@ -2,7 +2,7 @@
 # Date: 20181116
 
 """
-Manager a list of video files
+Manager a list of abf files
 """
 
 import os, json
@@ -10,8 +10,8 @@ from collections import OrderedDict
 
 from bAnalysis import bAnalysis
 
-#gVideoFileColumns = ('index', 'path', 'file', 'width', 'height', 'frames', 'fps', 'seconds', 'minutes', 'numevents', 'note')
-gVideoFileColumns = ('Index', 'Path', 'File', 'kHz', 'Duration (sec)', 'Sweeps')
+gVideoFileColumns = ('Index', 'Path', 'File', 'kHz', 'Duration (sec)', 'Sweeps', 
+	'dV/dt Threshold', 'Num Spikes', 'Analysis Date', 'Analysis Time')
 
 #############################################################
 class bFileList:
@@ -29,6 +29,29 @@ class bFileList:
 		self.databaseLoad()
 
 		self.populateFolder(path)
+
+	def databaseRefreshFile(self, path, ba):
+		"""
+		On saving analysis, update the database for a file
+		
+		path: path to abf file
+		"""
+		file = os.path.basename(path)
+		if file not in self.db.keys():
+			# error
+			print('WARNING: bFileList.databaseRefreshFile() did not find file in self.db, file:', file)
+			pass
+		else:
+			self.db[file]['dvdtThreshold'] = ba.dVthreshold
+			self.db[file]['numSpikes'] = ba.numSpikes
+			
+			dateAnalyzed = ba.dateAnalyzed #'%Y-%m-%d %H:%M:%S'
+			myDate, myTime = dateAnalyzed.split(' ')
+			
+			self.db[file]['analysisDate'] = myDate
+			self.db[file]['analysisTime'] = myTime
+		
+		self.databaseSave()
 
 	def databaseRefresh(self):
 		useExtension = '.abf'
@@ -50,13 +73,15 @@ class bFileList:
 				self.db[file]['kHz'] = myVideoFile.dict['kHz']
 				self.db[file]['durationSec'] = myVideoFile.dict['durationSec']
 				self.db[file]['numSweeps'] = myVideoFile.dict['numSweeps']
-				self.db[file]['dvdtThreshold'] = None
-				self.db[file]['numSpikes'] = None
-				self.db[file]['analysisDate'] = None
-				self.db[file]['analysisTime'] = None
+				self.db[file]['dvdtThreshold'] = myVideoFile.dict['dvdtThreshold']
+				self.db[file]['numSpikes'] = myVideoFile.dict['numSpikes']
+				self.db[file]['analysisDate'] = myVideoFile.dict['analysisDate']
+				self.db[file]['analysisTime'] = myVideoFile.dict['analysisTime']
 				self.db[file]['acqDate'] = None
 				self.db[file]['acqTime'] = None
 
+				print("   bFileList.databaseRefresh() self.db[file]['dvdtThreshold'] =" ,self.db[file]['dvdtThreshold'])
+				
 				videoFileIdx += 1
 
 		# any time we refresh, we save
@@ -110,7 +135,7 @@ class bFileList:
 				fromDict = None
 				if file in self.db.keys():
 					fromDict = self.db[file]
-				print('populateFolder()', file, fromDict)
+				#print('populateFolder()', file, fromDict)
 				newVideoFile = bVideoFile(videoFileIdx, fullPath, fromDict)
 
 				self.videoFileList.append(newVideoFile)
@@ -168,10 +193,18 @@ class bVideoFile:
 			pntsPerMS = fromDict['kHz']
 			numSweeps = fromDict['numSweeps']
 			durationSec = fromDict['durationSec']
+			dvdtThreshold = fromDict['dvdtThreshold']
+			numSpikes = fromDict['numSpikes']
+			analysisDate = fromDict['analysisDate']
+			analysisTime = fromDict['analysisTime']
 
 		self.dict['kHz'] = pntsPerMS
 		self.dict['durationSec'] = int(round(durationSec))
 		self.dict['numSweeps'] = numSweeps
+		self.dict['dvdtThreshold'] = dvdtThreshold
+		self.dict['numSpikes'] = numSpikes
+		self.dict['analysisDate'] = analysisDate
+		self.dict['analysisTime'] = analysisTime
 
 		'''
 		self.dict['width'] = width

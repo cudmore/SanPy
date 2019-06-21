@@ -214,12 +214,18 @@ class bFileTree(bTree):
 			# set some column widths, width is in pixels?
 			#gVideoFileColumns = ('index', 'path', 'file', 'width', 'height', 'frames', 'fps', 'seconds', 'numevents', 'note')
 			defaultWidth = 100
+			defaultHalfWidth = 50
 			self.treeview.column('Index', minwidth=50, width=50, stretch="no")
 			self.treeview.column('File', width=300)
 
-			self.treeview.column('kHz', minwidth=defaultWidth, width=defaultWidth, stretch="no")
+			self.treeview.column('kHz', minwidth=defaultHalfWidth, width=defaultHalfWidth, stretch="no")
 			self.treeview.column('Duration (sec)', minwidth=defaultWidth, width=defaultWidth, stretch="no")
-			self.treeview.column('Sweeps', minwidth=defaultWidth, width=defaultWidth, stretch="no")
+			self.treeview.column('Sweeps', minwidth=defaultHalfWidth, width=defaultHalfWidth, stretch="no")
+			# new 20190620
+			self.treeview.column('dV/dt Threshold', minwidth=defaultWidth, width=defaultWidth, stretch="no")
+			self.treeview.column('Num Spikes', minwidth=defaultWidth, width=defaultWidth, stretch="no")
+			self.treeview.column('Analysis Date', minwidth=defaultWidth, width=defaultWidth, stretch="no")
+			self.treeview.column('Analysis Time', minwidth=defaultWidth, width=defaultWidth, stretch="no")
 			
 			# hide some columns
 			self.treeview["displaycolumns"] = displaycolumns
@@ -242,8 +248,44 @@ class bFileTree(bTree):
 
 		for idx, videoFile in enumerate(self.videoFileList.getList()):
 			position = "end"
+			print('bTree.populateFiles() videoFile.asTuple():', videoFile.asTuple())
 			self.treeview.insert("" , position, text=str(idx+1), values=videoFile.asTuple())
 
+	#
+	#
+	#
+	#
+	#
+	#
+	#
+	# THIS IS WHERE THE PROBLEM IS
+	#
+	#
+	#
+	#
+	#
+	#
+	#
+	#
+	#
+	#
+	
+	#20190620
+	def updateRow(self, item, thisTuple):
+		thisTuple = self.videoFileList.getList()[0].asTuple()
+		
+		#see: https://docs.python.org/3/library/tkinter.ttk.html
+		
+		theBug = self.treeview.item(item)
+		print('theBug:', theBug)
+		# why does this look like this:
+		# {'text': '3', 'image': '', 'values': [2, 'data/19114001.abf', '19114001.abf', 20, 60, 1, 49, 103, '2019-06-20', '20:56:53', ''], 'open': 0, 'tags': ''}
+
+		# i want this
+		#self.treeview.item(item, thisTuple)
+		# debug with this
+		self.treeview.item(item, theBug)
+		
 	def single_click(self, event):
 		""" display events """
 		print('=== bVideoFileTree.single_click()')		

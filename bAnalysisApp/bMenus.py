@@ -50,6 +50,8 @@ class bMenus:
 		filemenu = tkinter.Menu(menubar, tearoff=0)
 		filemenu.add_command(label="Open Folder ...", command=self.open_folder)
 		filemenu.add_separator()
+		filemenu.add_command(label="Save Options", command=self.save_options)
+		filemenu.add_separator()
 		'''
 		filemenu.add_command(label="Generate Chunks ...", command=self.generateChunks)
 		filemenu.add_separator()
@@ -92,5 +94,9 @@ class bMenus:
 		#print('path:', path)
 		self.app.loadFolder(path)
 
+	def save_options(self):
+		print('bMenus.save_options()')
+		self.app.preferencesSave()
+		
 	def open_meta_window(self):
 		self.app.metaWindow3()
