@@ -42,7 +42,11 @@ class bPlotFrame(ttk.Frame):
 		#self.fig = matplotlib.figure.Figure()
 		self.axes = self.fig.add_subplot(111)
 
-		self.line, = self.axes.plot([],[], 'k') # REMEMBER ',' ON LHS
+		# debugging
+		self.line, = self.axes.plot([],[], 'ok') # REMEMBER ',' ON LHS
+		# normal
+		#self.line, = self.axes.plot([],[], 'k') # REMEMBER ',' ON LHS
+
 		self.spikeTimesLine, = self.axes.plot([],[], 'or') # REMEMBER ',' ON LHS
 		self.thresholdCrossingsLine, = self.axes.plot([],[], 'og') # REMEMBER ',' ON LHS
 
@@ -89,6 +93,8 @@ class bPlotFrame(ttk.Frame):
 			#print("bPlotFrame.__init__ color analysis:", analysis)
 			markerColor = 'k'
 			marker = 'o'
+			if analysis == 'Take Off Potential (mV)':
+				markerColor = 'm' # megenta
 			if analysis == 'AP Peak (mV)':
 				markerColor = 'r'
 			if analysis == 'Pre AP Min (mV)':
@@ -312,12 +318,6 @@ class bPlotFrame(ttk.Frame):
 		xMax = max(self.line.get_xdata())
 		self.axes.set_xlim(xMin, xMax)
 
-		'''
-		yMin = min(self.line.get_ydata())
-		yMax = max(self.line.get_ydata())
-		self.axes.set_ylim(yMin, yMax)
-		'''
-
 		self.canvas.draw()
 
 	def onselect(self, xMin, xMax):
@@ -330,7 +330,7 @@ class bPlotFrame(ttk.Frame):
 			return
 		print('=== bPlotFrame.onselect() xMin:', xMin, 'xMax:', xMax)
 		#self.axes.set_xlim(xMin, xMax)
-		self.controller.setXAxis(xMin, xMax)
+		self.controller.setXAxis(xMin, xMax, setFromToSec=True)
 
 	def plotRaw(self, ba, plotEveryPoint=10, doInit=False):
 		"""
@@ -698,8 +698,9 @@ class bPlotFrame(ttk.Frame):
 					tenPercentRange = abs(xMax-xMin) * 0.1
 				self.axes.set_xlim(xMin-tenPercentRange, xMax+tenPercentRange)
 		except ValueError:
-			print('    warning: bPlotFrame.plotMeta3() ValueError in setting x-axis')
-
+			#print('    warning: bPlotFrame.plotMeta3() ValueError in setting x-axis')
+			pass
+			
 		try:
 			yMin = np.nanmin(yVal)
 			yMax = np.nanmax(yVal)
@@ -709,8 +710,9 @@ class bPlotFrame(ttk.Frame):
 				tenPercentRange = abs(yMax-yMin) * 0.1
 				self.axes.set_ylim(yMin-tenPercentRange, yMax+tenPercentRange)
 		except ValueError:
-			print('    warning: bPlotFrame.plotMeta3() ValueError in setting y-axis')
-
+			#print('    warning: bPlotFrame.plotMeta3() ValueError in setting y-axis')
+			pass
+			
 		self.axes.set_xlabel(xLabel)
 		self.axes.set_ylabel(yLabel)
 

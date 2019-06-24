@@ -224,6 +224,9 @@ class AnalysisApp:
 		labelDir.grid(row=row, column=0, sticky="w")
 		
 		dvdtThreshold = self.configDict['detection']['dvdtThreshold']
+		# 20190623
+		if dvdtThreshold is None:
+			dvdtThreshold = 'None'
 		self.thresholdSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
 		self.thresholdSpinbox.insert(0,dvdtThreshold) # default is 100
 		self.thresholdSpinbox.grid(row=row, column=1, sticky="w")
@@ -258,14 +261,14 @@ class AnalysisApp:
 		labelDir = ttk.Label(detection_frame, text='From (Sec)')
 		labelDir.grid(row=row, column=0, sticky="w")
 
-		self.startSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5, validate="focusout", validatecommand=lambda: self.startSecondsSpinboxCallback())
+		self.startSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=7, validate="focusout", validatecommand=lambda: self.startSecondsSpinboxCallback())
 		self.startSecondsSpinbox.insert(0,0) # default is 0
 		self.startSecondsSpinbox.grid(row=row, column=1, sticky="w")
 
 		labelDir = ttk.Label(detection_frame, text='To (Sec)')
 		labelDir.grid(row=row, column=2, sticky="w")
 
-		self.stopSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5, validate="focusout", validatecommand=lambda: self.stopSecondsSpinboxCallback())
+		self.stopSecondsSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=7, validate="focusout", validatecommand=lambda: self.stopSecondsSpinboxCallback())
 		self.stopSecondsSpinbox.insert(0,float('inf')) # default is inf
 		self.stopSecondsSpinbox.grid(row=row, column=3, sticky="w")
 
@@ -552,10 +555,6 @@ class AnalysisApp:
 		#print('   self.filterSpinbox:', self.filterSpinbox.get())
 
 		if buttonName == 'detectButton':
-			'''
-			if self.configDict['autoDetect']:
-				self.detectSpikes()
-			'''
 			self.detectSpikes()
 			self.replotResults()
 
@@ -568,16 +567,23 @@ class AnalysisApp:
 			theMin, theMax = self._get_xaxis()
 			fileWasSaved = self.saveReport(theMin, theMax)
 			if fileWasSaved:
-				self.fileList.databaseRefreshFile(self.currentFilePath, self.ba)
 				
-				print('AnalysisApp.button_Callback() is calling self.fileListTree.populateFiles()')
-				#self.fileListTree.populateFiles(self.fileList, doInit=False) # 20190620, this is super overkill
-				theRet, item = self.fileListTree._getTreeViewSelection('File')
-				print('\nreportButton got')
-				print('   theRet:', theRet)
-				print('   item:', item)
-				fakeTuple = (1,2,3)
-				self.fileListTree.updateRow(item, fakeTuple)
+				theFile, item = self.fileListTree._getTreeViewSelection('File')
+				treeViewRow, item = self.fileListTree._getTreeViewRow('File', theFile)
+
+				newTuple = self.fileList.refreshRow(treeViewRow, self.currentFilePath, self.ba)
+				
+				'''
+				print('treeViewRow:', treeViewRow)
+				print('newTuple:', newTuple)
+				
+				theFile, item = self.fileListTree._getTreeViewSelection('File')
+				
+				print('theFile:', theFile)
+				print('item:', item)
+				'''
+				
+				self.fileListTree.updateRow(item, newTuple)
 				
 		if buttonName == 'Phase Plot':
 			self.metaPlot3.plotMeta3('Phase Plot', 'Phase Plot')
@@ -620,29 +626,25 @@ class AnalysisApp:
 		print('AnalysisApp.detectSpikes()')
 		self.setStatus('Detecting Spikes')
 
-		dVthresholdPos = int(self.thresholdSpinbox.get())
+		#20190623
+		dVthresholdPos = self.thresholdSpinbox.get()
+		if dVthresholdPos == 'None':
+			dVthresholdPos = None
+		else:
+			dVthresholdPos = int(self.thresholdSpinbox.get())
+
 		minSpikeVm = int(self.minSpikeVmSpinbox.get())
 		medianFilter = int(self.filterSpinbox.get())
 		plotEveryPoint = int(self.plotEverySpinbox.get()) # used in plot, not in detection
 		halfWidths = self.halfWidthEntry.get()
-		startSeconds = int(self.startSecondsSpinbox.get())
+
+		startSeconds = float(self.startSecondsSpinbox.get()) # float is CRITICAL here
 		stopSeconds = self.stopSecondsSpinbox.get() # can be 'inf'
 		if stopSeconds in ('Inf', 'inf'):
 			stopSeconds = max(self.ba.abf.sweepX)
 		else:
-			stopSeconds = int(stopSeconds)
-		#theSweep = int(self.sweepVar.get())
+			stopSeconds = float(stopSeconds) # float is CRITICAL here
 
-		'''
-		print('   dVthresholdPos:', dVthresholdPos)
-		print('   minSpikeVm:', minSpikeVm)
-		print('   medianFilter:', medianFilter)
-		print('   halfWidths:', halfWidths)
-		print('   startSeconds:', startSeconds)
-		print('   stopSeconds:', stopSeconds)
-		#print('   theSweep:', theSweep)
-		'''
-		
 		# assuming halfWidths is a well formed list of numbers
 		halfWidthsList = halfWidths.split(',')
 		try:
@@ -703,6 +705,9 @@ class AnalysisApp:
 		self.numSpikesLabel['text'] = 'Number of spikes detected: None'	
 		self.numErrorsLabel['text'] = 'Number of spike errors: None'
 
+		self.startSecondsSpinbox.set(0)
+		self.stopSecondsSpinbox.set('Inf') # alternate is to set to max, self.ba.sweepX[-1]
+
 		if sweepSet:
 			# abb 20190513, always calculate and display the derivative
 
@@ -711,7 +716,7 @@ class AnalysisApp:
 
 			if self.configDict['autoDetect']:
 				self.detectSpikes()
-			self.replotResults()
+			self.replotResults(resetAxis=True)
 		else:
 			print('error: AnalysisApp.switchSweep() was not able to change to sweep:', sweep)
 			
@@ -722,6 +727,10 @@ class AnalysisApp:
 		"""
 		print('AnalysisApp.switchFile() filePath:', filePath)
 
+		if filePath == self.currentFilePath:
+			print('   did not switch, already viewing file:', os.path.basename(self.currentFilePath))
+			return
+			
 		self.currentFilePath = filePath
 
 		self.setStatus('Loading file ' + filePath)
@@ -739,25 +748,33 @@ class AnalysisApp:
 		self.numSpikesLabel['text'] = 'Number of spikes detected: None'	
 		self.numErrorsLabel['text'] = 'Number of spike errors: None'
 
-		# abb, removed 20190513
-		'''
-		if self.configDict['autoDetect']:
-			self.detectSpikes()
-		self.replotResults()
-		'''
 		self.switchSweep(0)
 		
-	def replotResults(self):
+	def replotResults(self, resetAxis=False):
+		print('AnalysisApp.replotResults() resetAxis:', resetAxis)
+		
 		startTime = time.time()
 		
 		self.setStatus('Plotting Results')
 		plotEveryPoint = int(self.plotEverySpinbox.get())
 		
+		##
+		##
+		##
+		##
+		## Why did these have doInit=True ??????????????
+		##
+		##
+		##
+		##
 		# plot raw
-		self.rawPlot.plotRaw(self.ba, plotEveryPoint=plotEveryPoint, doInit=True)
+		
+		self.rawPlot.plotRaw(self.ba, plotEveryPoint=plotEveryPoint, doInit=resetAxis) # doInit was False
+		#self.rawPlot.plotRaw(self.ba, plotEveryPoint=plotEveryPoint, doInit=False)
 		
 		# plot deriv
-		self.derivPlot.plotDeriv(self.ba, plotEveryPoint=plotEveryPoint, doInit=True)
+		self.derivPlot.plotDeriv(self.ba, plotEveryPoint=plotEveryPoint, doInit=resetAxis) # doInit was False
+		#self.derivPlot.plotDeriv(self.ba, plotEveryPoint=plotEveryPoint, doInit=False)
 
 		# plot clips
 		showClips = self.showClips.get()
@@ -798,7 +815,10 @@ class AnalysisApp:
 		if self.metaPlot3 is not None:
 			self.metaPlot3.plotMeta_updateSelection(self.ba, xMin=None, xMax=None)
 
-	def setXAxis(self, theMin, theMax):
+		self.startSecondsSpinbox.set(0)
+		self.stopSecondsSpinbox.set('Inf') # alternate is to set to max, self.ba.sweepX[-1]
+
+	def setXAxis(self, theMin, theMax, setFromToSec=False):
 
 		self.rawPlot.setXAxis(theMin, theMax)
 		self.derivPlot.setXAxis(theMin, theMax)
@@ -812,6 +832,11 @@ class AnalysisApp:
 		if self.metaPlot3 is not None:
 			self.metaPlot3.plotMeta_updateSelection(self.ba, theMin, theMax)
 
+		if setFromToSec:
+			# this was called from user selecting horizontal selection update 'From (Sec)' and 'To (Sec)'
+			self.startSecondsSpinbox.set(theMin)
+			self.stopSecondsSpinbox.set(theMax)
+			
 	def selectSpike(self, spikeNumber):
 		print('AnalysisApp.selectSpike() spikeNumber:', spikeNumber)
 
@@ -880,7 +905,15 @@ class AnalysisApp:
 
 		#
 		# detection
-		dvdtThreshold = int(self.thresholdSpinbox.get())
+		# 
+		#20190623
+		#dvdtThreshold = int(self.thresholdSpinbox.get())
+		dvdtThreshold = self.thresholdSpinbox.get()
+		if dvdtThreshold == 'None':
+			dvdtThreshold = None
+		else:
+			dvdtThreshold = int(self.thresholdSpinbox.get())
+
 		self.configDict['detection']['dvdtThreshold'] = dvdtThreshold
 
 		minSpikeVm = int(self.minSpikeVmSpinbox.get())

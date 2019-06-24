@@ -37,7 +37,7 @@ class bTree(ttk.Frame):
 		print('=== bTree.sort_column()()', 'col:', col, 'reverse:', reverse)
 
 		sortType = 'float'
-		if col in ['file', 'note']:
+		if col in ['File', 'note', 'Acq Date', 'Acq Time', 'Analysis Date', 'Anaysis Time']:
 			sortType = 'str'
 			#print('   not allowed to sort on:', col)
 			#return 0
@@ -55,7 +55,7 @@ class bTree(ttk.Frame):
 				if itemColValue:
 					currentFrameStart = float(itemColValue)
 				else:
-					# handles empy string ''
+					# handles empty string ''
 					currentFrameStart = np.NaN
 			frameStartList.append(currentFrameStart)
 
@@ -222,6 +222,9 @@ class bFileTree(bTree):
 			self.treeview.column('Duration (sec)', minwidth=defaultWidth, width=defaultWidth, stretch="no")
 			self.treeview.column('Sweeps', minwidth=defaultHalfWidth, width=defaultHalfWidth, stretch="no")
 			# new 20190620
+			self.treeview.column('Acq Date', minwidth=defaultWidth, width=defaultWidth, stretch="no")
+			self.treeview.column('Acq Time', minwidth=defaultWidth, width=defaultWidth, stretch="no")
+			# new 20190620
 			self.treeview.column('dV/dt Threshold', minwidth=defaultWidth, width=defaultWidth, stretch="no")
 			self.treeview.column('Num Spikes', minwidth=defaultWidth, width=defaultWidth, stretch="no")
 			self.treeview.column('Analysis Date', minwidth=defaultWidth, width=defaultWidth, stretch="no")
@@ -248,43 +251,13 @@ class bFileTree(bTree):
 
 		for idx, videoFile in enumerate(self.videoFileList.getList()):
 			position = "end"
-			print('bTree.populateFiles() videoFile.asTuple():', videoFile.asTuple())
+			#print('bTree.populateFiles() videoFile.asTuple():', videoFile.asTuple())
 			self.treeview.insert("" , position, text=str(idx+1), values=videoFile.asTuple())
 
-	#
-	#
-	#
-	#
-	#
-	#
-	#
-	# THIS IS WHERE THE PROBLEM IS
-	#
-	#
-	#
-	#
-	#
-	#
-	#
-	#
-	#
-	#
-	
 	#20190620
 	def updateRow(self, item, thisTuple):
-		thisTuple = self.videoFileList.getList()[0].asTuple()
-		
-		#see: https://docs.python.org/3/library/tkinter.ttk.html
-		
-		theBug = self.treeview.item(item)
-		print('theBug:', theBug)
-		# why does this look like this:
-		# {'text': '3', 'image': '', 'values': [2, 'data/19114001.abf', '19114001.abf', 20, 60, 1, 49, 103, '2019-06-20', '20:56:53', ''], 'open': 0, 'tags': ''}
-
-		# i want this
-		#self.treeview.item(item, thisTuple)
-		# debug with this
-		self.treeview.item(item, theBug)
+		#see: https://stackoverflow.com/questions/28468405/python-3-ttk-treeview-item-set
+		self.treeview.item(item, values=thisTuple)
 		
 	def single_click(self, event):
 		""" display events """

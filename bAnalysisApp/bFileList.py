@@ -10,7 +10,8 @@ from collections import OrderedDict
 
 from bAnalysis import bAnalysis
 
-gVideoFileColumns = ('Index', 'Path', 'File', 'kHz', 'Duration (sec)', 'Sweeps', 
+gVideoFileColumns = ('Index', 'Path', 'File', 'kHz', 'Sweeps', 'Duration (sec)',
+	'Acq Date', 'Acq Time',
 	'dV/dt Threshold', 'Num Spikes', 'Analysis Date', 'Analysis Time')
 
 #############################################################
@@ -30,7 +31,7 @@ class bFileList:
 
 		self.populateFolder(path)
 
-	def databaseRefreshFile(self, path, ba):
+	def refreshRow(self, treeViewRow, path, ba):
 		"""
 		On saving analysis, update the database for a file
 		
@@ -51,12 +52,23 @@ class bFileList:
 			self.db[file]['analysisDate'] = myDate
 			self.db[file]['analysisTime'] = myTime
 		
+			#
+			#
+			self.videoFileList[treeViewRow].dict['dvdtThreshold'] = ba.dVthreshold
+			self.videoFileList[treeViewRow].dict['numSpikes'] = ba.numSpikes
+			self.videoFileList[treeViewRow].dict['analysisDate'] = myDate
+			self.videoFileList[treeViewRow].dict['analysisTime'] = myTime
+			
 		self.databaseSave()
-
+		
+		return self.videoFileList[treeViewRow].asTuple()
+		
 	def databaseRefresh(self):
 		useExtension = '.abf'
 		videoFileIdx = 0
-		for file in sorted(os.listdir(self.path)):
+		fileList = sorted(os.listdir(self.path))
+		mFile = len(fileList)
+		for file in fileList:
 			if file.startswith('.'):
 				continue
 			if file.endswith(useExtension):
@@ -65,7 +77,8 @@ class bFileList:
 					continue
 
 				fullPath = os.path.join(self.path, file)
-				print('bFileList.databaseRefresh is parsing file:', file)
+				print(str(videoFileIdx+1), 'of', str(mFile), 'bFileList.databaseRefresh parsing file:', file)
+
 				myVideoFile = bVideoFile(videoFileIdx, fullPath)
 
 				self.db[file] = OrderedDict()
@@ -77,10 +90,10 @@ class bFileList:
 				self.db[file]['numSpikes'] = myVideoFile.dict['numSpikes']
 				self.db[file]['analysisDate'] = myVideoFile.dict['analysisDate']
 				self.db[file]['analysisTime'] = myVideoFile.dict['analysisTime']
-				self.db[file]['acqDate'] = None
-				self.db[file]['acqTime'] = None
+				self.db[file]['acqDate'] = myVideoFile.dict['acqDate']
+				self.db[file]['acqTime'] = myVideoFile.dict['acqTime']
 
-				print("   bFileList.databaseRefresh() self.db[file]['dvdtThreshold'] =" ,self.db[file]['dvdtThreshold'])
+				#print("   bFileList.databaseRefresh() self.db[file]['dvdtThreshold'] =" ,self.db[file]['dvdtThreshold'])
 				
 				videoFileIdx += 1
 
@@ -110,12 +123,15 @@ class bFileList:
 			return
 		'''
 		# can't use this as dash is using it !!!
-		enclosingFolder = os.path.basename(self.path)
-		#enclosingFolder = 'db'
-		dbPath = os.path.join(self.path, enclosingFolder + '_db.json')
-		print('bFileList.databaseSave is saving:', dbPath)
-		with open(dbPath, "w") as dbFile:
-			json.dump(self.db, dbFile, indent=4)
+		if len(self.db) == 0:
+			print('databaseSave() did not save, no abf files in folder', self.path)
+		else:
+			enclosingFolder = os.path.basename(self.path)
+			#enclosingFolder = 'db'
+			dbPath = os.path.join(self.path, enclosingFolder + '_db.json')
+			print('bFileList.databaseSave is saving:', dbPath)
+			with open(dbPath, "w") as dbFile:
+				json.dump(self.db, dbFile, indent=4)
 
 	def populateFolder(self, path):
 		"""
@@ -156,25 +172,9 @@ class bVideoFile:
 		fromDict: (dict) construct from database dict
 		"""
 
-		#print('bVideoFile() index:', index, 'path:', path)
-
 		if not os.path.isfile(path):
 			print('error: bVideoFile() could not open file path:', path)
 			return
-
-		'''
-		# open file using cv2
-		myFile = cv2.VideoCapture(path)
-
-		if not myFile.isOpened():
-			print('error: bVideoFile() found file but could not open it:', path)
-			return
-
-		width = int(myFile.get(cv2.CAP_PROP_FRAME_WIDTH))
-		height = int(myFile.get(cv2.CAP_PROP_FRAME_HEIGHT))
-		numFrames = int(myFile.get(cv2.CAP_PROP_FRAME_COUNT))
-		fps = myFile.get(cv2.CAP_PROP_FPS)
-		'''
 
 		videoFileName = os.path.basename(path)
 
@@ -185,60 +185,53 @@ class bVideoFile:
 
 		# load abf file and grab parameters
 		if fromDict is None:
+			#
 			ba = bAnalysis(file=path)
+			#
 			pntsPerMS = ba.dataPointsPerMs
 			numSweeps = len(ba.sweepList)
 			durationSec = max(ba.abf.sweepX)
+			acqDate = ba.acqDate
+			acqTime = ba.acqTime
+			
+			##
+			##
+			## THIS IS PROBABLY AN ERROR
+			##
+			##
+			dvdtThreshold = None
+			numSpikes = None
+			analysisDate = None
+			analysisTime = None
+			
 		else:
 			pntsPerMS = fromDict['kHz']
 			numSweeps = fromDict['numSweeps']
 			durationSec = fromDict['durationSec']
+			acqDate = fromDict['acqDate']
+			acqTime = fromDict['acqTime']
+
 			dvdtThreshold = fromDict['dvdtThreshold']
 			numSpikes = fromDict['numSpikes']
 			analysisDate = fromDict['analysisDate']
 			analysisTime = fromDict['analysisTime']
 
 		self.dict['kHz'] = pntsPerMS
-		self.dict['durationSec'] = int(round(durationSec))
 		self.dict['numSweeps'] = numSweeps
+		self.dict['durationSec'] = int(round(durationSec))
+		self.dict['acqDate'] = acqDate
+		self.dict['acqTime'] = acqTime
+
 		self.dict['dvdtThreshold'] = dvdtThreshold
 		self.dict['numSpikes'] = numSpikes
 		self.dict['analysisDate'] = analysisDate
 		self.dict['analysisTime'] = analysisTime
 
-		'''
-		self.dict['width'] = width
-		self.dict['height'] = height
-		self.dict['frames'] = numFrames
-		self.dict['fps'] = round(fps, 2)
-		self.dict['seconds'] = round(self.dict['frames'] / self.dict['fps'], 2)
-		self.dict['minutes'] = round(self.dict['seconds'] / 60, 2)
-		self.dict['numevents'] = ''
-		self.dict['note'] = ''
-
-		cv2.VideoCapture.release(myFile)
-
-		# read the header from event .txt file
-		videoDirName = os.path.dirname(path)
-		eventFileName = videoFileName.replace('.mp4', '.txt')
-		eventFilePath = os.path.join(videoDirName, eventFileName)
-		#print('eventFilePath:', eventFilePath)
-		if os.path.isfile(eventFilePath):
-			#print('bVideoFile() is parsing event header:', eventFilePath)
-			with open(eventFilePath) as f:
-				header = f.readline().strip()
-				for n in header.split(','):
-					if len(n) > 0:
-						name, value = n.split('=')
-						if name == 'videoFileNote':
-							self.dict['note'] = value
-						if name == 'numEvents':
-							self.dict['numevents'] = value
-		'''
-
 	def asString(self):
 		theRet = ''
 		for i, (k,v) in enumerate(self.dict.items()):
+			if v is None:
+				v = ''
 			theRet += str(v) + ','
 		return theRet
 
