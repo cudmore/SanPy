@@ -1,6 +1,62 @@
 {
-    "file": "SAN-AP-example-Rs-change.abf",
-    "kHz": 10,
-    "durationSec": 300,
-    "numSweeps": 1
+    "19114000.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    },
+    "19114001.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    },
+    "19114001_1.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    },
+    "19114001_2.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    },
+    "19114001__.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    },
+    "19503001_b0.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    },
+    "19503001_b1.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    },
+    "19503001_b10.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    },
+    "19503001_b30.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    },
+    "19503001_b70.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    }
 }
