@@ -29,8 +29,8 @@ Updates
 	20190513, added self.VmThreshold
 	
 Acknowledgements
-    https://github.com/swharden/pyABF
-    
+	https://github.com/swharden/pyABF
+	
 '''
 
 import os, math, time, collections, datetime
@@ -190,11 +190,11 @@ class bAnalysis:
 		"""
 		
 		print('bAnalysis.spikeDetect0()')
-		print('    dVthresholdPos:', dVthresholdPos)
-		print('    minSpikeVm:', minSpikeVm)
-		print('    medianFilter:', medianFilter)
-		print('    startSeconds:', startSeconds)
-		print('    stopSeconds:', stopSeconds)
+		print('	dVthresholdPos:', dVthresholdPos)
+		print('	minSpikeVm:', minSpikeVm)
+		print('	medianFilter:', medianFilter)
+		print('	startSeconds:', startSeconds)
+		print('	stopSeconds:', stopSeconds)
 
 		#
 		# header
@@ -345,11 +345,11 @@ class bAnalysis:
 		"""
 		
 		print('bAnalysis.spikeDetect00()')
-		#print('    dVthresholdPos:', dVthresholdPos)
-		print('    minSpikeVm:', minSpikeVm)
-		print('    medianFilter:', medianFilter)
-		print('    startSeconds:', startSeconds)
-		print('    stopSeconds:', stopSeconds)
+		#print('	dVthresholdPos:', dVthresholdPos)
+		print('	minSpikeVm:', minSpikeVm)
+		print('	medianFilter:', medianFilter)
+		print('	startSeconds:', startSeconds)
+		print('	stopSeconds:', stopSeconds)
 
 		#
 		# header
@@ -434,21 +434,19 @@ class bAnalysis:
 			preAvg = np.average(tmpFuckPreClip)
 			postAvg = np.average(tmpFuckPostClip)
 			#if preAvg < postAvg:
-			if (abs(postAvg) - abs(preAvg)) > 5:
+			if (abs(postAvg) - abs(preAvg)) > 1:
 				tmpSpikeTimeSec = self.pnt2Sec_(spikeTime)
-				"""print('GOOD tmpIdx:', tmpIdx, 'tmpSpikeTimeSec:', tmpSpikeTimeSec, 'preAvg:', preAvg, 'postAvg:', postAvg)
+				print('GOOD tmpIdx:', tmpIdx, 'tmpSpikeTimeSec:', tmpSpikeTimeSec, 'preAvg:', preAvg, 'postAvg:', postAvg)
 				print('   spikeTime:', spikeTime)
 				print('   tmpFuckPreClip:', tmpFuckPreClip)
 				print('   tmpFuckPostClip:', tmpFuckPostClip)
-				"""
 				goodSpikeTimes.append(spikeTime)
 			else:
 				tmpSpikeTimeSec = self.pnt2Sec_(spikeTime)
-				"""print('BAD tmpIdx:', tmpIdx, 'tmpSpikeTimeSec:', tmpSpikeTimeSec, 'preAvg:', preAvg, 'postAvg:', postAvg)
+				print('BAD tmpIdx:', tmpIdx, 'tmpSpikeTimeSec:', tmpSpikeTimeSec, 'preAvg:', preAvg, 'postAvg:', postAvg)
 				print('   spikeTime:', spikeTime)
 				print('   tmpFuckPreClip:', tmpFuckPreClip)
 				print('   tmpFuckPostClip:', tmpFuckPostClip)
-				"""
 			# debug
 			if tmpIdx == 10:
 				#sys.exit()
