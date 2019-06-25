@@ -1,0 +1,74 @@
+{
+    "19514001_0nm_b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(31, 119, 180)"
+    },
+    "19514001_10nm_b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(255, 127, 14)"
+    },
+    "19514001_70nm_b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(44, 160, 44)"
+    },
+    "19521000_b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(214, 39, 40)"
+    },
+    "19530003_0nm_b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(148, 103, 189)"
+    },
+    "19530003_10nm_b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(140, 86, 75)"
+    },
+    "19530003_30nm_b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(227, 119, 194)"
+    },
+    "19530003_70nm_b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(127, 127, 127)"
+    },
+    "19530004_0nm__b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(188, 189, 34)"
+    },
+    "19530004_10nm_b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(23, 190, 207)"
+    },
+    "19530004_30nm_b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(31, 119, 180)"
+    },
+    "19530004_70nm_b.txt": {
+        "Condition 1": "None",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(255, 127, 14)"
+    }
+}
