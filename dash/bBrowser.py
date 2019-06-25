@@ -3,6 +3,8 @@ Utility class to manage a list of bAnalysis .txt files and provide dash style we
 """
 
 import os, math, json, collections
+from collections import OrderedDict
+
 import pandas as pd
 import numpy as np
 
@@ -35,8 +37,9 @@ class bBrowser:
 		# list of all spikes across all files
 		self.df = None # massive dataframe with all spikes across all file
 
-		self.folderOptions = None # loaded from enclosing folder of self.path
 		self.options_Load() # load program options
+
+		self.folderOptions = None # loaded from enclosing folder of self.path
 		
 		# this is the selection in the stat list
 		self.selectedStat_y = 'thresholdSec'
@@ -52,8 +55,9 @@ class bBrowser:
 		self.showLines = False
 		self.showMarkers = False
 
-		#self.plotlyColors = plotly.colors.DEFAULT_PLOTLY_COLORS
-		#print('bBrowser() will only show', len(self.plotlyColors), 'files !!!')
+		self.plotlyColors = plotly.colors.DEFAULT_PLOTLY_COLORS + plotly.colors.DEFAULT_PLOTLY_COLORS
+		print('bBrowser() will only show', len(self.plotlyColors), 'files !!!')
+		print('self.plotlyColors:', self.plotlyColors)
 		
 	def makeFolderList(self):
 		folderList = [self.path] # always include root /data folder as an option
@@ -69,18 +73,21 @@ class bBrowser:
 		"""
 		Create factory default options from bBrowser_FactoryDefaults.json file
 		"""
+		print('bBrowser.options_FactoryDefault()')
 		dir_path = os.path.dirname(os.path.realpath(__file__))
 		optionsPath = os.path.join(dir_path, 'bBrowser_FactoryDefaults.json')
 		with open(optionsPath) as json_file:  
 			self.options = json.load(json_file)
 		
 	def option_Save(self):
+		print('bBrowser.option_Save()')
 		dir_path = os.path.dirname(os.path.realpath(__file__))
 		optionsPath = os.path.join(dir_path, 'bBrowser_Options.json')
 		with open(optionsPath, 'w') as json_file:  
 		    json.dump(self.options, json_file, indent=4)
     		
 	def options_Load(self):
+		print('bBrowser.options_Load()')
 		dir_path = os.path.dirname(os.path.realpath(__file__))
 		optionsPath = os.path.join(dir_path, 'bBrowser_Options.json')
 		if not os.path.isfile(optionsPath):
@@ -164,10 +171,17 @@ class bBrowser:
 		get the name of the enclosing folder options file
 		"""
 		enclosingFolder = os.path.split(self.path)[1]
-		fileName = enclosingFolder + '.json'
+		fileName = enclosingFolder + '_dash_db.json'
 		saveFilePath = os.path.join(self.path, fileName)
 		return saveFilePath
 	
+	def _folderOptions_Print(self):
+		if self.folderOptions is not None:
+			for item in self.folderOptions.items():
+				print('   ', item)
+		else:
+			print('warning: _folderOptions_Print() found None self.folderOptions')
+			
 	def folderOptions_Save(self):
 		"""
 		Save options for an analysis folder
@@ -181,24 +195,23 @@ class bBrowser:
 		
 		#print('folderOptions_Save()')
 		
-		outDict = {} # one key per file
+		# update self.folderOptions with any new conditions/color
+		#outDict = {} # one key per file
 		for index, row in self.df0.iterrows():
 			#print(row)
 			analysisFile = row['Analysis File']
-			outDict[analysisFile] = {}
-			outDict[analysisFile]['Condition 1'] = row['Condition 1']
-			outDict[analysisFile]['Condition 2'] = row['Condition 2']
-			outDict[analysisFile]['Condition 3'] = row['Condition 3']
-			outDict[analysisFile]['Color'] = row['Color']
+			#self.folderOptions[analysisFile] = {}
+			self.folderOptions[analysisFile]['Condition 1'] = row['Condition 1']
+			self.folderOptions[analysisFile]['Condition 2'] = row['Condition 2']
+			self.folderOptions[analysisFile]['Condition 3'] = row['Condition 3']
+			self.folderOptions[analysisFile]['Color'] = row['Color']
 
 
 		saveFilePath = self._folderOptions_GetName()
 		with open(saveFilePath, 'w') as json_file:  
 		    print('bBrowser.folderOptions_Save() is saving saveFilePath:', saveFilePath)
-		    json.dump(outDict, json_file, indent=4)
-			
-		
-			
+		    json.dump(self.folderOptions, json_file, indent=4)
+				
 	def folderOptions_Load(self):
 		"""
 		Load options for an analysis folder
@@ -210,9 +223,10 @@ class bBrowser:
 			print('bBrowser.folderOptions_Load() is loading saveFilePath:', saveFilePath)
 			# load json
 			with open(saveFilePath) as json_file:  
-				theRet = json.load(json_file)
+				self.folderOptions = json.load(json_file)
+				self._folderOptions_Print()
 		return theRet
-		
+	
 	def loadFolder(self):
 		"""
 		Load a hard drive folder of bAnalysis output .txt files into one Pandas dataframe self.df0
@@ -222,9 +236,13 @@ class bBrowser:
 			return
 
 		#
-		# load the index file
-		myFolderOptions = self.folderOptions_Load()
-		
+		# load the index file, if self.folderOptions is None then build it !!!
+		self.folderOptions = self.folderOptions_Load()
+		madeNewFolderOptions = False
+		if self.folderOptions is None:
+			madeNewFolderOptions = True
+			self.folderOptions = OrderedDict()
+			
 		#
 		# load each text file
 		
@@ -252,17 +270,27 @@ class bBrowser:
 				df = pd.read_csv(currFile, header=0) # load comma seperated values, read header names from row 1
 
 				# look into self.folderOptions
-				if (myFolderOptions is not None) and file in myFolderOptions.keys():
-					condition1 = myFolderOptions[file]['Condition 1']				
-					condition2 = myFolderOptions[file]['Condition 2']				
-					condition3 = myFolderOptions[file]['Condition 3']				
-					color = myFolderOptions[file]['Color']				
+				if (self.folderOptions is not None) and file in self.folderOptions.keys():
+					condition1 = self.folderOptions[file]['Condition 1']				
+					condition2 = self.folderOptions[file]['Condition 2']				
+					condition3 = self.folderOptions[file]['Condition 3']				
+					color = self.folderOptions[file]['Color']				
 				else:
 					condition1 = 'None'
 					condition2 = 'None'
 					condition3 = 'None'
-					color = 'rgb(0,0,0)'
+					color = self.plotlyColors[currIdx]
+				
+					# add a new file
+					self.folderOptions[file] = OrderedDict()
+					self.folderOptions[file]['Condition 1'] = condition1
+					self.folderOptions[file]['Condition 2'] = condition2
+					self.folderOptions[file]['Condition 3'] = condition3
+					self.folderOptions[file]['Color'] = color
 					
+				# THIS IS TOO FUCKING COMPLICATED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				# regardless set self.folderOptions
+				
 				# insert new columns not in original .txt file
 				df.insert(0, 'Analysis File', file)
 				df.insert(0, 'Condition 3', condition3) # 'currIdx + 3' is bogus default value
@@ -300,6 +328,9 @@ class bBrowser:
 
 		self.df0 = pd.DataFrame(df0_list)
 
+		if madeNewFolderOptions:
+			self.folderOptions_Save()
+			
 	def updatePlot(self, xStatName, yStatName):
 		""" return a list of dict for plotly/dash data"""
 
@@ -310,6 +341,7 @@ class bBrowser:
 		doNotDoMean = ['Condition 1', 'Condition 2', 'Condition 3']
 		
 		hideMeanLines = not self.showMeanLines or (xStatName in doNotDoMean or yStatName in doNotDoMean)
+		hideMeanLines = False
 		
 		if xStatName and yStatName:
 			displayedFileRows = 0
@@ -435,7 +467,8 @@ class bBrowser:
 						#print('yMean:', yMean, 'ySE', ySE, 'yN:', yN)
 
 					#if abfFile not in meanDataDict.keys():
-					meanKey = str(condition1)
+					#meanKey = str(condition1)
+					meanKey = str(abfFile)
 					if meanKey not in meanDataDict.keys():
 						#print('=== making meanDataDict for file index:', index, 'meanKey:', meanKey)
 						meanDataDict[meanKey] = {}
@@ -445,7 +478,8 @@ class bBrowser:
 							meanDataDict[meanKey]['mode'] = 'markers'
 						else:
 							meanDataDict[meanKey]['mode'] = 'lines+markers'
-						meanDataDict[meanKey]['name'] = abfFile + '_mean' # todo: need to clean up abfFile
+						#meanDataDict[meanKey]['name'] = abfFile + '_mean' # todo: need to clean up abfFile
+						meanDataDict[meanKey]['name'] = condition1 + '_mean' # todo: need to clean up abfFile
 						meanDataDict[meanKey]['marker'] = {
 							'color': [],
 							'size': 13,

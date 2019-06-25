@@ -1,0 +1,74 @@
+{
+    "19514001_10nm_b.txt": {
+        "Condition 1": "10",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#ec3d09"
+    },
+    "19514001_70nm_b.txt": {
+        "Condition 1": "70",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#0bf543"
+    },
+    "19514001ctrl_b.txt": {
+        "Condition 1": "1",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#1129dc"
+    },
+    "19521000_b.txt": {
+        "Condition 1": "1",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#0be5f3"
+    },
+    "19530003_10nm_b.txt": {
+        "Condition 1": "10",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#e10be2"
+    },
+    "19530003_30nm_b.txt": {
+        "Condition 1": "30",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#c4cb2a"
+    },
+    "19530003_70nm_b.txt": {
+        "Condition 1": "70",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#dc9415"
+    },
+    "19530003ctrl_b.txt": {
+        "Condition 1": "1",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#2ac76d"
+    },
+    "19530004_10nm_b.txt": {
+        "Condition 1": "10",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "#f00732"
+    },
+    "19530004_30nm_b.txt": {
+        "Condition 1": "30",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    },
+    "19530004_70nm_b.txt": {
+        "Condition 1": "70",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    },
+    "19530004ctrl_b.txt": {
+        "Condition 1": "1",
+        "Condition 2": "None",
+        "Condition 3": "None",
+        "Color": "rgb(0,0,0)"
+    }
+}

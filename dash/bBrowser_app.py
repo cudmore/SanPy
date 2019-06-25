@@ -852,7 +852,14 @@ def edit_file_list_table(data_timestamp, this_is_fucking_stupid_children, folder
 
 			theRet.append(item)
 
-		myBrowser.folderOptions_Save()
+			#
+			# 20190624 NEED TO FIGURE OUT WHEN TO SAVE THIS ON CHANGE
+			#
+			#need to update self.folderOptions ???
+			#myBrowser.folderOptions_Save()
+			
+		# was here
+		#myBrowser.folderOptions_Save()
 
 	style_data_conditional = myStyleDataConditional()
 
