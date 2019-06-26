@@ -275,7 +275,7 @@ myBody = dbc.Container(
 						{'label': 'Markers', 'value': 'showMarkers'},
 						{'label': 'Mean', 'value': 'showMean'},
 						# get rid of this showMeanLines
-						{'label': 'Mean Lines', 'value': 'showMeanLines'},
+						{'label': 'Mean Lines b/w abf files', 'value': 'showMeanLines'},
 					], values=['showMarkers', 'showMean', 'showMeanLines'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
 				),
 				dbc.Tooltip(
@@ -289,15 +289,15 @@ myBody = dbc.Container(
 				),
 
 				# I need another structure in here for show mean lines between matching 'condition 1', 'condition 2', ...
-				html.Div('Mean Lines b/w Condition', style={'padding-left': '20px', 'display': 'inline-block'}),
-				dcc.Checklist(
-					id='showMeanLineID',
-					options=[
-						{'label': '1', 'value': 'meanLinesCondition1'},
-						{'label': '2', 'value': 'meanLinesCondition2'},
-						{'label': '3', 'value': 'meanLinesCondition3'},
-					], values=['meanLinesCondition1', 'meanLinesCondition2', 'meanLinesCondition3'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
-				),
+				#html.Div('Mean Lines b/w Condition', style={'padding-left': '20px', 'display': 'inline-block'}),
+				#dcc.Checklist(
+				#	id='showMeanLineID',
+				#	options=[
+				#		{'label': '1', 'value': 'meanLinesCondition1'},
+				#		{'label': '2', 'value': 'meanLinesCondition2'},
+				#		{'label': '3', 'value': 'meanLinesCondition3'},
+				#	], values=['meanLinesCondition1', 'meanLinesCondition2', 'meanLinesCondition3'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
+				#),
 
 				html.Div('Error Bars', style={'padding-left': '20px', 'display': 'inline-block'}),
 				dcc.RadioItems(

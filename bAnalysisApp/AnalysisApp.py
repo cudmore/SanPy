@@ -46,12 +46,12 @@ class AnalysisApp:
 		self.root.wm_protocol("WM_DELETE_WINDOW", self.onClose)
 		self.root.bind('<Command-q>', self.onClose)
 		self.root.bind("<Escape>", self.escapeKey_callback)
-		
+
 		'''
 		self._after_id = None
 		self.root.bind("<Configure>", self.schedule_redraw)
 		'''
-		
+
 		# remove the default behavior of invoking the button with the space key
 		self.root.unbind_class("Button", "<Key-space>")
 
@@ -71,7 +71,7 @@ class AnalysisApp:
 
 		# preLinearFit is 'Early Diastolic Depol Rate (dV/s)'
 		# 'Post AP Min (mV)' is 'MDP (mV)'
-		
+
 		#self.analysisList = ['threshold', 'peak', 'peakHeight', 'preMin', 'postMin', 'preLinearFit', 'preSpike_dvdt_max', 'postSpike_dvdt_min', 'halfWidth']
 		self.analysisList = ['Take Off Potential (mV)',
 								'AP Peak (mV)',
@@ -93,13 +93,13 @@ class AnalysisApp:
 		self.metaAnalysisList2 = ['Cycle Length (ms)',
 								'AP Duration (ms)',
 								'Diastolic Duration (ms)']
-		
+
 		self.analysisListIgnore = ['AP Height (mV)',
 									'Early Diastolic Depol Rate (dV/s)',
 									'Max AP Upstroke (dV/dt)',
 									'Max AP Repolarization (dV/dt)',
 									'Inter-Spike-Interval (ms)']
-				
+
 		self.metaAnalysisList3 = ['Time (sec)'] + self.metaAnalysisList + self.metaAnalysisList2
 
 		self.buildInterface3()
@@ -113,7 +113,7 @@ class AnalysisApp:
 			path = self.configDict['lastPath']
 		self.loadFolder(path=path)
 
-		
+
 		# the following while try/except is SUPER IMPORTANT
 		# see: https://stackoverflow.com/questions/16995969/inertial-scrolling-in-mac-os-x-with-tkinter-and-python
 		# without this little trick, we get random crashes while scrolling the stat list (in meta plot) with the mouse wheel
@@ -128,7 +128,7 @@ class AnalysisApp:
 				break
 			except UnicodeDecodeError:
 				pass
-				
+
 	def setStatus(self, str='Idle'):
 		"""
 		Set program status at top of window
@@ -155,15 +155,15 @@ class AnalysisApp:
 				theMax = self.ba.abf.sweepX[-1]
 			else:
 				theMax = float(theMax)
-				
+
 			print('startSecondsSpinboxCallback() newValue:', theMin)
-			
+
 			self.setXAxis(theMin, theMax)
 		else:
 			print('startSecondsSpinboxCallback got self.ba == None')
-		
+
 		return True # important
-		
+
 	def stopSecondsSpinboxCallback(self):
 		theMin = self.startSecondsSpinbox.get() # str
 		theMax = self.stopSecondsSpinbox.get() # str
@@ -177,15 +177,15 @@ class AnalysisApp:
 				theMax = self.ba.abf.sweepX[-1]
 			else:
 				theMax = float(theMax)
-				
+
 			print('stopSecondsSpinboxCallback() newValue:', theMax)
-			
+
 			self.setXAxis(theMin, theMax)
 		else:
 			print('stopSecondsSpinboxCallback got self.ba == None')
 
 		return True # important
-		
+
 	def buildDetectionFrame(self, container):
 		"""
 		Detection parameters, (sweep number, dV/dt threshold, hal widhts, etc)
@@ -204,25 +204,25 @@ class AnalysisApp:
 		var = tkinter.BooleanVar(value=self.configDict['autoDetect'])
 		check = ttk.Checkbutton(detection_frame, text='Auto Detect', var=var, command=lambda name='autoAnalysisCheckbox', var=var: self.check_Callback(name, var))
 		check.grid(row=row, column=1, sticky="w")
-		
+
 		# popup for sweeps
 		self.sweepVar = tkinter.StringVar(self.root)
- 
+
 		# Dictionary with options
 		self.sweepChoices = ['','0'] # choices is a Python 'set'
 		self.sweepVar.set('0') # set the default option
- 
+
 		self.sweepPopupMenu = ttk.OptionMenu(detection_frame, self.sweepVar, *self.sweepChoices, command=self.sweepPopupMenu_callback)
 		sweepPopupLabel = ttk.Label(detection_frame, text="Sweep")
 		sweepPopupLabel.grid(row = row, column = 2)
 		self.sweepPopupMenu.grid(row = row, column =3)
- 
+
 		row += 1
 
 		# dV/dt threshold
 		labelDir = ttk.Label(detection_frame, text='dV/dt Threshold')
 		labelDir.grid(row=row, column=0, sticky="w")
-		
+
 		dvdtThreshold = self.configDict['detection']['dvdtThreshold']
 		# 20190623
 		if dvdtThreshold is None:
@@ -248,15 +248,15 @@ class AnalysisApp:
 		# spike half-widths
 		labelDir = ttk.Label(detection_frame, text='Half Widths')
 		labelDir.grid(row=row, column=0, sticky="w")
-		
+
 		haldWidthsStr = '20, 50, 80'
 		self.halfWidthEntry = ttk.Entry(detection_frame, width=10)
 		self.halfWidthEntry.insert(0,'10,50,90') # default is 100
 		self.halfWidthEntry.grid(row=row, column=1, sticky="w")
 
 		row += 1
-				
-		
+
+
 		# time range
 		labelDir = ttk.Label(detection_frame, text='From (Sec)')
 		labelDir.grid(row=row, column=0, sticky="w")
@@ -291,7 +291,7 @@ class AnalysisApp:
 		# feedback frame (columnspan = 3)
 		feedback_frame = ttk.Frame(detection_frame, borderwidth=self.myBorderWidth, relief=self.myRelief)
 		feedback_frame.grid(row=row, column=0, sticky="w", columnspan=3)
-		
+
 
 		# number of detected spikes
 		self.numSpikesLabel = ttk.Label(feedback_frame, text='Number of spikes detected: None')
@@ -333,7 +333,7 @@ class AnalysisApp:
 
 		return plotOptionsFrame
 	'''
-	
+
 	def buildPlotOptionsFrame(self, container):
 		#
 		# plot options frame (checkboxes)
@@ -366,9 +366,11 @@ class AnalysisApp:
 			if analysisItem in ['peakHeight']:
 				continue
 			'''
-			
+
 			styleStr = analysisItem + '.TCheckbutton'
 			foreground = 'black'
+			if analysisItem == 'Take Off Potential (mV)':
+				foreground = 'magenta'
 			if analysisItem == 'AP Peak (mV)':
 				foreground = 'red2'
 			if analysisItem == 'Pre AP Min (mV)':
@@ -414,12 +416,12 @@ class AnalysisApp:
 	def buildMetaOptionsFrame(self, container):
 		#
 		# meta plot frame
-		
+
 		'''
 		statList = self.metaAnalysisList + self.metaAnalysisList2
 		statList = ['Time (sec)'] + statList
 		'''
-		
+
 		metaStatFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief=self.myRelief)
 		metaStatFrame.grid(row=0, column=0, sticky="nsew")
 
@@ -535,13 +537,13 @@ class AnalysisApp:
 		self.metaPlot.selectSpike(None, None)
 		if self.metaPlot3 is not None:
 			self.metaPlot3.selectSpike(None, None)
-					
+
 	def sweepPopupMenu_callback(self, event):
 		""" Handle user selection of sweep popup menu """
 		print('=== AnalysisApp.sweepPopupMenu_callback()', self.sweepVar.get())
 		sweep = int(self.sweepVar.get())
 		self.switchSweep(sweep)
-		
+
 	def plotEverySpinbox_Callback(self, name):
 		plotEveryPoint = int(self.plotEverySpinbox.get())
 		print('plotEverySpinbox_Callback:', name, 'plotEveryPoint:', plotEveryPoint)
@@ -567,27 +569,27 @@ class AnalysisApp:
 			theMin, theMax = self._get_xaxis()
 			fileWasSaved = self.saveReport(theMin, theMax)
 			if fileWasSaved:
-				
+
 				theFile, item = self.fileListTree._getTreeViewSelection('File')
 				treeViewRow, item = self.fileListTree._getTreeViewRow('File', theFile)
 
 				newTuple = self.fileList.refreshRow(treeViewRow, self.currentFilePath, self.ba)
-				
+
 				'''
 				print('treeViewRow:', treeViewRow)
 				print('newTuple:', newTuple)
-				
+
 				theFile, item = self.fileListTree._getTreeViewSelection('File')
-				
+
 				print('theFile:', theFile)
 				print('item:', item)
 				'''
-				
+
 				self.fileListTree.updateRow(item, newTuple)
-				
+
 		if buttonName == 'Phase Plot':
 			self.metaPlot3.plotMeta3('Phase Plot', 'Phase Plot')
-			
+
 	def _get_xaxis(self):
 		"""
 		get the currently displayed x-axis of raw plot
@@ -595,11 +597,11 @@ class AnalysisApp:
 		theMin, theMax = self.rawPlot._get_x_axes()
 		print('AnalysisApp._get_xaxis() current x axes is:', theMin, theMax)
 		return theMin, theMax
-		
+
 	def check_Callback(self, name, var):
 		print("=== AnalysisApp.check_Callback() name:", name, "var:", var.get())
 		onoff = var.get()
-		
+
 		if name == 'showClips':
 			if onoff:
 				self.setStatus('Turning clips on')
@@ -652,19 +654,19 @@ class AnalysisApp:
 		except:
 			self.setStatus('Invalid half widths. Please enter comma delimeted integers like 10,50,90')
 			return False
-			
+
 		# calls spikeDetect0()
 		self.ba.spikeDetect(dVthresholdPos=dVthresholdPos, minSpikeVm=minSpikeVm, medianFilter=medianFilter, halfHeights=halfWidthsInt, startSeconds=startSeconds, stopSeconds=stopSeconds)
 
 		# refresh number of spikes
-		self.numSpikesLabel['text'] = 'Number of spikes detected: ' + str(self.ba.numSpikes)	
+		self.numSpikesLabel['text'] = 'Number of spikes detected: ' + str(self.ba.numSpikes)
 		# refresh number of detection errors
 		self.numErrorsLabel['text'] = 'Number of spike errors: ' + str(self.ba.numSpikeErrors)
-		
+
 		self.setStatus()
 
 		return True
-		
+
 	def loadFolder(self, path=''):
 		if len(path) < 1:
 			#self.configDict['lastFolder']
@@ -674,11 +676,11 @@ class AnalysisApp:
 			print('error: did not find path:', path)
 			return
 
-		
+
 		statusStr = 'AnalysisApp.loadFolder() "' + path + '"'
 		self.setStatus(statusStr)
 		print(statusStr)
-		
+
 		self.path = path
 		self.configDict['lastPath'] = path
 
@@ -697,12 +699,12 @@ class AnalysisApp:
 			print('error: switchSweep() says please select a file')
 			self.setStatus('Please select a file')
 			return
-		
+
 		self.setStatus('Switching to sweep ' + str(sweep))
-		
+
 		sweepSet = self.ba.setSweep(sweep)
 
-		self.numSpikesLabel['text'] = 'Number of spikes detected: None'	
+		self.numSpikesLabel['text'] = 'Number of spikes detected: None'
 		self.numErrorsLabel['text'] = 'Number of spike errors: None'
 
 		self.startSecondsSpinbox.set(0)
@@ -719,7 +721,7 @@ class AnalysisApp:
 			self.replotResults(resetAxis=True)
 		else:
 			print('error: AnalysisApp.switchSweep() was not able to change to sweep:', sweep)
-			
+
 	def switchFile(self, filePath):
 		"""
 		Switch interface to a different file
@@ -730,7 +732,7 @@ class AnalysisApp:
 		if filePath == self.currentFilePath:
 			print('   did not switch, already viewing file:', os.path.basename(self.currentFilePath))
 			return
-			
+
 		self.currentFilePath = filePath
 
 		self.setStatus('Loading file ' + filePath)
@@ -744,20 +746,20 @@ class AnalysisApp:
 
 		# update available options in sweeps popup menu
 		self.sweepPopupMenu.set_menu(*self.sweepChoices)
-		
-		self.numSpikesLabel['text'] = 'Number of spikes detected: None'	
+
+		self.numSpikesLabel['text'] = 'Number of spikes detected: None'
 		self.numErrorsLabel['text'] = 'Number of spike errors: None'
 
 		self.switchSweep(0)
-		
+
 	def replotResults(self, resetAxis=False):
 		print('AnalysisApp.replotResults() resetAxis:', resetAxis)
-		
+
 		startTime = time.time()
-		
+
 		self.setStatus('Plotting Results')
 		plotEveryPoint = int(self.plotEverySpinbox.get())
-		
+
 		##
 		##
 		##
@@ -768,10 +770,10 @@ class AnalysisApp:
 		##
 		##
 		# plot raw
-		
+
 		self.rawPlot.plotRaw(self.ba, plotEveryPoint=plotEveryPoint, doInit=resetAxis) # doInit was False
 		#self.rawPlot.plotRaw(self.ba, plotEveryPoint=plotEveryPoint, doInit=False)
-		
+
 		# plot deriv
 		self.derivPlot.plotDeriv(self.ba, plotEveryPoint=plotEveryPoint, doInit=resetAxis) # doInit was False
 		#self.derivPlot.plotDeriv(self.ba, plotEveryPoint=plotEveryPoint, doInit=False)
@@ -781,7 +783,7 @@ class AnalysisApp:
 		if showClips:
 			numDisplayedClips = self.clipsPlot.plotClips_updateSelection(self.ba, xMin=None, xMax=None)
 			self.numClipsLabel['text'] = 'Number of spike clips: ' + str(numDisplayedClips) # todo: this is case where I want signalling infrastructure to update interface
-		
+
 		# refresh all stat plots
 		for i, analysis in enumerate(self.analysisList):
 			onoff = self.varList[i].get()
@@ -797,10 +799,10 @@ class AnalysisApp:
 			self.metaPlot3.plotMeta3(xStat, yStat)
 
 		self.setStatus()
-	
+
 		stopTime = time.time()
 		print('AnalysisApp.replotResults() took', stopTime-startTime, 'seconds')
-		
+
 	def setXAxis_full(self):
 		self.rawPlot.setFullAxis()
 		self.derivPlot.setFullAxis()
@@ -836,18 +838,18 @@ class AnalysisApp:
 			# this was called from user selecting horizontal selection update 'From (Sec)' and 'To (Sec)'
 			self.startSecondsSpinbox.set(theMin)
 			self.stopSecondsSpinbox.set(theMax)
-			
+
 	def selectSpike(self, spikeNumber):
 		print('AnalysisApp.selectSpike() spikeNumber:', spikeNumber)
 
 		self.rawPlot.selectSpike(self.ba, spikeNumber)
-		
+
 		self.metaPlot.selectSpikeMeta(self.ba, spikeNumber)
 		if self.metaPlot3 is not None:
 			self.metaPlot3.selectSpikeMeta(self.ba, spikeNumber)
 		else:
 			print('warning: AnalysisApp did not select spike in self.metaPlot3')
-						
+
 
 	#################################################################################
 	# preferences
@@ -905,7 +907,7 @@ class AnalysisApp:
 
 		#
 		# detection
-		# 
+		#
 		#20190623
 		#dvdtThreshold = int(self.thresholdSpinbox.get())
 		dvdtThreshold = self.thresholdSpinbox.get()
@@ -954,14 +956,14 @@ class AnalysisApp:
 		if self.metaPlot3 is not None:
 			self.metaPlot3.plotMeta(self.ba, buttonName, doInit=True)
 	'''
-	
+
 	def buildMetaOptionsFrame3(self, container):
 
 		'''
 		statList = self.metaAnalysisList + self.metaAnalysisList2
 		statList = ['Time (sec)'] + statList
 		'''
-		
+
 		metaStatFrame = ttk.Frame(container, borderwidth=self.myBorderWidth, relief=self.myRelief)
 		metaStatFrame.grid(row=0, column=0, sticky="nsew")
 
@@ -994,9 +996,9 @@ class AnalysisApp:
 		# plot
 		metaPlotFrame = ttk.Frame(metaStatFrame, borderwidth=self.myBorderWidth, relief=self.myRelief)
 		metaPlotFrame.grid(row=1, column=2, sticky="nsew")
-		
+
 		self.metaPlot3 = bPlotFrame(metaPlotFrame, self, showToolbar=True, allowSpan=False)
-	
+
 		return self.metaPlot3
 
 	def plotMeta3(self, name):
@@ -1009,14 +1011,14 @@ class AnalysisApp:
 			yStat, item = self.meta3Tree_y._getTreeViewSelection('Stat')
 			xStat, item = self.meta3Tree_x._getTreeViewSelection('Stat')
 			print('AnalysisApp.plotMeta3() yStat:', yStat, 'xStat:', xStat)
-			self.metaPlot3.plotMeta3(xStat, yStat)		
-		
+			self.metaPlot3.plotMeta3(xStat, yStat)
+
 	def onClose3(self, event=None):
 		print('onClose3()')
 		self.metaWindow.destroy()
 		self.metaWindow = None
 		self.metaPlot3 = None
-		
+
 	def metaWindow3(self):
 		"""
 		Open second scatter plot window
@@ -1050,11 +1052,11 @@ class AnalysisApp:
 		"""
 		save a spike report for detected spikes between theMin (sec) and theMax (sec)
 		"""
-		
+
 		filePath, fileName = os.path.split(os.path.abspath(self.currentFilePath))
 		fileBaseName, extension = os.path.splitext(fileName)
 		excelFilePath = os.path.join(filePath, fileBaseName + '.xlsx')
-		
+
 		#print('AnalysisApp.report() saving', excelFilePath)
 		print('Asking user for file name to save...')
 
@@ -1062,18 +1064,18 @@ class AnalysisApp:
 		savefile = asksaveasfilename(filetypes=(("Excel files", "*.xlsx"),
 									("All files", "*.*") ),
 									initialdir=filePath,
-									initialfile=fileBaseName + '.xlsx')			   
-														 
+									initialfile=fileBaseName + '.xlsx')
+
 		# always grab a df to the entire analysis (not sure what I will do with this)
 		#df = self.ba.report() # report() is my own 'bob' verbiage
 
 		fileWasSaved = False
-		
+
 		if savefile:
 			print('Saving user specified .xlsx file:', savefile)
 			excelFilePath = savefile
 			writer = pd.ExcelWriter(excelFilePath, engine='xlsxwriter')
-	
+
 			#
 			# cardiac style analysis to sheet 'cardiac'
 			cardiac_df = self.ba.report2(theMin, theMax) # report2 is more 'cardiac'
@@ -1093,10 +1095,10 @@ class AnalysisApp:
 			headerDict['Export Start (sec)'] = [theMin] # on export, x-axis of raw plot will be ouput
 			headerDict['Export Stop (sec)'] = [theMax] # on export, x-axis of raw plot will be ouput
 			headerDict['stats'] = []
-			
+
 			for idx, col in enumerate(cardiac_df):
 				headerDict[col] = []
-				
+
 			# mean
 			theMean = cardiac_df.mean() # skipna default is True
 			theMean['errors'] = ''
@@ -1126,7 +1128,7 @@ class AnalysisApp:
 					headerDict['Number of Sweeps'].append('')
 					headerDict['Export Start (sec)'].append('')
 					headerDict['Export Stop (sec)'].append('')
-					
+
 				# a dictionary key for each stat
 				headerDict['stats'].append(stat)
 				for idx, col in enumerate(cardiac_df):
@@ -1139,13 +1141,13 @@ class AnalysisApp:
 						headerDict[col].append(theSE[col])
 					elif stat == 'n':
 						headerDict[col].append(theN[col])
-			
-			
+
+
 			# dict to pandas dataframe
 			df = pd.DataFrame(headerDict).T
 			# pandas dataframe to excel sheet 'header'
 			df.to_excel(writer, sheet_name='summary')
-			
+
 			# set the column widths in excel sheet 'cardiac'
 			columnWidth = 25
 			worksheet = writer.sheets['summary']  # pull worksheet object
@@ -1162,7 +1164,7 @@ class AnalysisApp:
 			for idx, col in enumerate(cardiac_df):  # loop through all columns
 				worksheet.set_column(idx, idx, columnWidth)  # set column width
 
-	
+
 			#
 			# entire (verbose) analysis to sheet 'bob'
 			#df.to_excel(writer, sheet_name='bob')
@@ -1171,9 +1173,9 @@ class AnalysisApp:
 			# mean spike clip
 			df = pd.DataFrame(self.clipsPlot.meanClip)
 			df.to_excel(writer, sheet_name='Avg Spike')
-	
+
 			writer.save()
-	
+
 			#
 			# always save a text file
 			textFileBaseName, tmpExtension = os.path.splitext(savefile)
@@ -1183,7 +1185,7 @@ class AnalysisApp:
 			df.to_csv(textFilePath, sep=',', index_label='index', mode='w')
 
 			self.setStatus('Saved ' + excelFilePath)
-			
+
 			fileWasSaved = True
 		else:
 			print('Save aborted by user')

@@ -42,10 +42,13 @@ class bPlotFrame(ttk.Frame):
 		#self.fig = matplotlib.figure.Figure()
 		self.axes = self.fig.add_subplot(111)
 
+		#self.my_xMin = None
+		#self.my_xMax = None
+
 		# debugging
-		self.line, = self.axes.plot([],[], 'ok') # REMEMBER ',' ON LHS
+		#self.line, = self.axes.plot([],[], 'ok') # REMEMBER ',' ON LHS
 		# normal
-		#self.line, = self.axes.plot([],[], 'k') # REMEMBER ',' ON LHS
+		self.line, = self.axes.plot([],[], 'k') # REMEMBER ',' ON LHS
 
 		self.spikeTimesLine, = self.axes.plot([],[], 'or') # REMEMBER ',' ON LHS
 		self.thresholdCrossingsLine, = self.axes.plot([],[], 'og') # REMEMBER ',' ON LHS
@@ -309,6 +312,7 @@ class bPlotFrame(ttk.Frame):
 	def setXAxis(self, xMin, xMax):
 		#print("bPlotFrame.setXAxis() xMin:", xMin, "xMax:", xMax)
 		self.axes.set_xlim(xMin, xMax)
+
 		self.canvas.draw()
 
 	def setFullAxis(self):
@@ -338,6 +342,13 @@ class bPlotFrame(ttk.Frame):
 		plotEveryPoint: plot every plotEveryPoint, 1 will plot all, 10 will plot every 10th
 		"""
 
+		if doInit:
+			xMin = min(ba.abf.sweepX)
+			xMax = max(ba.abf.sweepX)
+		else:
+			xMin, xMax = self._get_x_axes()
+		print('    plotRaw() doInit:', doInit, 'xMin:', xMin, 'xMax:', xMax)
+
 		start = 0
 		stop = len(ba.abf.sweepX) - 1
 		subSetOfPnts = range(start, stop, plotEveryPoint)
@@ -346,8 +357,8 @@ class bPlotFrame(ttk.Frame):
 		self.line.set_xdata(ba.abf.sweepX[subSetOfPnts])
 
 		if doInit:
-			xMin = min(ba.abf.sweepX)
-			xMax = max(ba.abf.sweepX)
+			#xMin = min(ba.abf.sweepX)
+			#xMax = max(ba.abf.sweepX)
 			self.axes.set_xlim(xMin, xMax)
 
 			yMin = min(ba.abf.sweepY)
@@ -700,7 +711,7 @@ class bPlotFrame(ttk.Frame):
 		except ValueError:
 			#print('    warning: bPlotFrame.plotMeta3() ValueError in setting x-axis')
 			pass
-			
+
 		try:
 			yMin = np.nanmin(yVal)
 			yMax = np.nanmax(yVal)
@@ -712,7 +723,7 @@ class bPlotFrame(ttk.Frame):
 		except ValueError:
 			#print('    warning: bPlotFrame.plotMeta3() ValueError in setting y-axis')
 			pass
-			
+
 		self.axes.set_xlabel(xLabel)
 		self.axes.set_ylabel(yLabel)
 
