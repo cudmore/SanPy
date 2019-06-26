@@ -19,7 +19,7 @@ class myCallbackException(Exception):
 		#raise
 '''
 
-#blackColor = 
+#blackColor =
 
 class bBrowser:
 	def __init__(self, path=''):
@@ -28,7 +28,7 @@ class bBrowser:
 		self.path = path
 
 		self.makeFolderList()
-		
+
 		self.selectedRows = []
 
 		# list of files
@@ -40,7 +40,7 @@ class bBrowser:
 		self.options_Load() # load program options
 
 		self.folderOptions = None # loaded from enclosing folder of self.path
-		
+
 		# this is the selection in the stat list
 		self.selectedStat_y = 'thresholdSec'
 		self.selectedStat_x = 'peakVal'
@@ -58,7 +58,7 @@ class bBrowser:
 		self.plotlyColors = plotly.colors.DEFAULT_PLOTLY_COLORS + plotly.colors.DEFAULT_PLOTLY_COLORS
 		print('bBrowser() will only show', len(self.plotlyColors), 'files !!!')
 		print('self.plotlyColors:', self.plotlyColors)
-		
+
 	def makeFolderList(self):
 		folderList = [self.path] # always include root /data folder as an option
 		for item in os.listdir(self.path):
@@ -66,7 +66,7 @@ class bBrowser:
 			if os.path.isdir(currPath):
 				folderList.append(currPath)
 		return folderList
-			
+
 	#
 	# define, save, and load global program options
 	def options_FactoryDefault(self):
@@ -76,16 +76,16 @@ class bBrowser:
 		print('bBrowser.options_FactoryDefault()')
 		dir_path = os.path.dirname(os.path.realpath(__file__))
 		optionsPath = os.path.join(dir_path, 'bBrowser_FactoryDefaults.json')
-		with open(optionsPath) as json_file:  
+		with open(optionsPath) as json_file:
 			self.options = json.load(json_file)
-		
+
 	def option_Save(self):
 		print('bBrowser.option_Save()')
 		dir_path = os.path.dirname(os.path.realpath(__file__))
 		optionsPath = os.path.join(dir_path, 'bBrowser_Options.json')
-		with open(optionsPath, 'w') as json_file:  
+		with open(optionsPath, 'w') as json_file:
 		    json.dump(self.options, json_file, indent=4)
-    		
+
 	def options_Load(self):
 		print('bBrowser.options_Load()')
 		dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -94,9 +94,9 @@ class bBrowser:
 			self.options_FactoryDefault()
 			#self.option_Save()
 		else:
-			with open(optionsPath) as json_file:  
+			with open(optionsPath) as json_file:
 				self.options = json.load(json_file)
-		
+
 	#
 	def setSelectedFiles(self, rows):
 		"""
@@ -104,7 +104,7 @@ class bBrowser:
 
 		rows: int list of selected rows
 		"""
-		
+
 		#print('bBrowser.setSelectedFiles() rows:', rows)
 
 		self.selectedRows = rows
@@ -165,7 +165,7 @@ class bBrowser:
 	#
 	# folder options
 	#
-	
+
 	def _folderOptions_GetName(self):
 		"""
 		get the name of the enclosing folder options file
@@ -174,27 +174,27 @@ class bBrowser:
 		fileName = enclosingFolder + '_dash_db.json'
 		saveFilePath = os.path.join(self.path, fileName)
 		return saveFilePath
-	
+
 	def _folderOptions_Print(self):
 		if self.folderOptions is not None:
 			for item in self.folderOptions.items():
 				print('   ', item)
 		else:
 			print('warning: _folderOptions_Print() found None self.folderOptions')
-			
+
 	def folderOptions_Save(self):
 		"""
 		Save options for an analysis folder
-		
+
 		Save a dict of:
 			global options: (lines, markers, mean, etc etc) and
-			for each file: (color, condition 1/2/3) 
-		
+			for each file: (color, condition 1/2/3)
+
 		'Analysis File' makes each file unique
 		"""
-		
+
 		#print('folderOptions_Save()')
-		
+
 		# update self.folderOptions with any new conditions/color
 		#outDict = {} # one key per file
 		for index, row in self.df0.iterrows():
@@ -208,25 +208,25 @@ class bBrowser:
 
 
 		saveFilePath = self._folderOptions_GetName()
-		with open(saveFilePath, 'w') as json_file:  
+		with open(saveFilePath, 'w') as json_file:
 		    print('bBrowser.folderOptions_Save() is saving saveFilePath:', saveFilePath)
 		    json.dump(self.folderOptions, json_file, indent=4)
-				
+
 	def folderOptions_Load(self):
 		"""
 		Load options for an analysis folder
 		"""
 		theRet = None
-		
+
 		saveFilePath = self._folderOptions_GetName()
 		if os.path.isfile(saveFilePath):
 			print('bBrowser.folderOptions_Load() is loading saveFilePath:', saveFilePath)
 			# load json
-			with open(saveFilePath) as json_file:  
+			with open(saveFilePath) as json_file:
 				self.folderOptions = json.load(json_file)
 				self._folderOptions_Print()
 		return theRet
-	
+
 	def loadFolder(self):
 		"""
 		Load a hard drive folder of bAnalysis output .txt files into one Pandas dataframe self.df0
@@ -242,10 +242,10 @@ class bBrowser:
 		if self.folderOptions is None:
 			madeNewFolderOptions = True
 			self.folderOptions = OrderedDict()
-			
+
 		#
 		# load each text file
-		
+
 		columns = ['Index',
 			'Condition 1', # new
 			'Condition 2', # new
@@ -261,7 +261,7 @@ class bBrowser:
 		df0_list = []
 
 		currIdx = 0
-		for file in os.listdir(self.path):
+		for file in sorted(os.listdir(self.path)):
 			if file.startswith('.'):
 				continue
 			if file.endswith('.txt'):
@@ -271,26 +271,26 @@ class bBrowser:
 
 				# look into self.folderOptions
 				if (self.folderOptions is not None) and file in self.folderOptions.keys():
-					condition1 = self.folderOptions[file]['Condition 1']				
-					condition2 = self.folderOptions[file]['Condition 2']				
-					condition3 = self.folderOptions[file]['Condition 3']				
-					color = self.folderOptions[file]['Color']				
+					condition1 = self.folderOptions[file]['Condition 1']
+					condition2 = self.folderOptions[file]['Condition 2']
+					condition3 = self.folderOptions[file]['Condition 3']
+					color = self.folderOptions[file]['Color']
 				else:
 					condition1 = 'None'
 					condition2 = 'None'
 					condition3 = 'None'
 					color = self.plotlyColors[currIdx]
-				
+
 					# add a new file
 					self.folderOptions[file] = OrderedDict()
 					self.folderOptions[file]['Condition 1'] = condition1
 					self.folderOptions[file]['Condition 2'] = condition2
 					self.folderOptions[file]['Condition 3'] = condition3
 					self.folderOptions[file]['Color'] = color
-					
+
 				# THIS IS TOO FUCKING COMPLICATED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				# regardless set self.folderOptions
-				
+
 				# insert new columns not in original .txt file
 				df.insert(0, 'Analysis File', file)
 				df.insert(0, 'Condition 3', condition3) # 'currIdx + 3' is bogus default value
@@ -307,7 +307,7 @@ class bBrowser:
 				dfRow['Index'] = currIdx + 1
 				dfRow['Color'] = color
 				dfRow['Condition 1'] = condition1 # to start, condition1/2/3 are FAKE
-				dfRow['Condition 2'] = condition2 
+				dfRow['Condition 2'] = condition2
 				dfRow['Condition 3'] = condition3
 				dfRow['Analysis File'] = file
 				dfRow['ABF File'] = abfFile
@@ -330,19 +330,19 @@ class bBrowser:
 
 		if madeNewFolderOptions:
 			self.folderOptions_Save()
-			
+
 	def updatePlot(self, xStatName, yStatName):
 		""" return a list of dict for plotly/dash data"""
 
 		theRet = []
 
 		meanDataDict = {} # dict of dict to be appended at end of loop
-		
+
 		doNotDoMean = ['Condition 1', 'Condition 2', 'Condition 3']
-		
+
 		hideMeanLines = not self.showMeanLines or (xStatName in doNotDoMean or yStatName in doNotDoMean)
 		hideMeanLines = False
-		
+
 		if xStatName and yStatName:
 			displayedFileRows = 0
 			for index, file in self.df0.iterrows():
@@ -356,16 +356,16 @@ class bBrowser:
 				# this is critical, have not thought a lot about it -->> may break !!!!
 				# this is to allow show/hide of mean/sd/se which make index and selection curveNumber out of sync
 				#
-				
+
 				thisIsMyColor = self.df0.loc[index, 'Color']
-				
+
 				#displayedFileRows += 1
 				actualCurveNumber = index
 				'''
 				if self.showMean:
 					actualCurveNumber = (displayedFileRows-1) * 2
 				'''
-				
+
 				abfFile = file['ABF File']
 				condition1 = file['Condition 1'] # use this to connect mean with line
 				analysisFile = file['Analysis File']
@@ -381,7 +381,7 @@ class bBrowser:
 				#print('type(xStatVals)', type(xStatVals))
 				#print('xStatVals[0]', xStatVals[0])
 				dataDict = {}
-				dataDict['x'] = xStatVals			
+				dataDict['x'] = xStatVals
 				dataDict['y'] = yStatVals
 
 				dataDict['marker'] = {
@@ -400,7 +400,7 @@ class bBrowser:
 				if self.showMarkers:
 					dataDict['mode'] += '+markers'
 
-				dataDict['name'] = 'File ' + str(index + 1) #analysisFile
+				dataDict['name'] = analysisFile #'File ' + str(index + 1)
 
 				if self.selectedPoints is not None:
 					if isinstance(self.selectedPoints, str):
@@ -413,7 +413,7 @@ class bBrowser:
 						#print('point:', point)
 						print("point['curveNumber']:", point['curveNumber'], 'actualCurveNumber:', actualCurveNumber)
 					'''
-						
+
 					# todo: problem here ???
 					# 20190530, we can't do this until we have appended the mean ???
 					selectedPoints = [point['pointNumber'] for point in self.selectedPoints['points'] if point['curveNumber'] == actualCurveNumber]
@@ -428,7 +428,7 @@ class bBrowser:
 							'color': 'rgba(0, 0, 0, 0)'
 						}
 					}
-				
+
 				theRet.append(dataDict)
 
 				if self.showMean:
@@ -499,7 +499,7 @@ class bBrowser:
 							'visible': True,
 							'color': [],
 						}
-						
+
 					'''
 					meanDict = {}
 					meanDict['x'] = [xMean] # these have to be list, not scalar !
@@ -512,7 +512,7 @@ class bBrowser:
 
 					#meanDataDict[meanKey]['marker']['color'].append(self.plotlyColors[actualCurveNumber])
 					meanDataDict[meanKey]['marker']['color'].append(thisIsMyColor)
-					
+
 					if self.showError:
 						'''
 						meanDict['error_x'] = {
@@ -533,7 +533,7 @@ class bBrowser:
 						#meanDataDict[meanKey]['error_y']['color'].append(self.plotlyColors[actualCurveNumber])
 						meanDataDict[meanKey]['error_x']['color'].append(thisIsMyColor)
 						meanDataDict[meanKey]['error_y']['color'].append(thisIsMyColor)
-						
+
 					###
 					meanDataDict[meanKey]['unselected'] = {
 						'marker': {
@@ -545,18 +545,18 @@ class bBrowser:
 						}
 					}
 					###
-					
+
 					#print('meanDict:', meanDict)
 
 					#meanDataDict[abfFile].append(meanDict)
 					#theRet.append(meanDict)
-					
+
 			# after 'for index, file in self.df0.iterrows():'
-			
+
 			# append means at end, they are grouped based on original abf file !!!
 			for key, value in meanDataDict.items():
 				theRet.append(value)
-			
+
 			# 20190530
 			# try and get user selection of a point including both (raw, mean)
 			# theRet has a number of traces including raw data (from) files and potentially a mean for each file
@@ -564,7 +564,7 @@ class bBrowser:
 				for idx, item in enumerate(theRet):
 					#print('xxx item:', item)
 					selectedPoints = [point['pointNumber'] for point in self.selectedPoints['points'] if point['curveNumber'] == idx]
-					
+
 					if len(selectedPoints) > 0:
 						#dataDict['selectedpoints'] = selectedPoints
 						print('   curve number idx:', idx, 'has selectedPoints:', selectedPoints)

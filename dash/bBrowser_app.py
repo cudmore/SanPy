@@ -76,7 +76,7 @@ def plotButton(graphNum):
 	"""
 	print('bBrowser_app.plotButton() graphNum:', graphNum, 'xStat:', xStat, 'yStat:', yStat)
 	"""
-	
+
 	returnData = myBrowser.updatePlot(xStatName=xStat, yStatName=yStat)
 
 	# determine min/max so we can expand by 5%
@@ -98,7 +98,8 @@ def plotButton(graphNum):
 			'clickmode':'event+select',
 			'dragmode': 'select',
 			'showlegend': False,
-		}
+		},
+		#'config': {'editable': True},
 	}
 
 #app = dash.Dash(__name__)
@@ -218,7 +219,7 @@ myBody = dbc.Container(
 					"Select a data folder ",
 					style={'padding-left': '50px'}
 				),
-				
+
 				popover,
 
 				html.Div(
@@ -391,12 +392,14 @@ myBody = dbc.Container(
 						dcc.Graph(
 							id='g1',
 							figure=plotButton(0),
+							config={'showSendToCloud': True, 'displaylogo': False},
 						),
 
 						dbc.Button("Plot 3", color="primary", outline=True, size="sm", id='g3-plot-button'),
 						dcc.Graph(
 							id='g3',
 							figure=plotButton(2),
+							config={'showSendToCloud': True, 'displaylogo': False},
 						),
 						dbc.Tooltip(
 							"Select both an X-Stat and Y-Stat, then use this button to plot those stats.",
@@ -412,12 +415,14 @@ myBody = dbc.Container(
 						dcc.Graph(
 							id='g2',
 							figure=plotButton(1),
+							config={'showSendToCloud': True, 'displaylogo': False},
 						),
 
 						dbc.Button("Plot 4", color="primary", outline=True, size="sm", id='g4-plot-button'),
 						dcc.Graph(
 							id='g4',
 							figure=plotButton(3),
+							config={'showSendToCloud': True, 'displaylogo': False},
 						),
 					],
 					md=4, align='stretch',
@@ -630,7 +635,7 @@ def myFileListSelectColor(selected_cells, ok_n_clicks, cancel_n_clicks, is_open,
 	print('   is_open:', is_open)
 	print('   colorValue:', colorValue)
 	#print('   fileListTableData:', fileListTableData)
-	
+
 	global g_popover_ok_n_clicks
 	global g_popover_cancel_n_clicks
 	global updateColorDict
@@ -640,7 +645,7 @@ def myFileListSelectColor(selected_cells, ok_n_clicks, cancel_n_clicks, is_open,
 	print('   g_popover_cancel_n_clicks:', g_popover_cancel_n_clicks)
 	print('   updateColorDict:', updateColorDict)
 	"""
-	
+
 	theRet = is_open
 	theRet2 = colorValue
 
@@ -655,7 +660,7 @@ def myFileListSelectColor(selected_cells, ok_n_clicks, cancel_n_clicks, is_open,
 			hexColor = fileListTableData[selectedRow]['Color'] # hex
 			theRet2 = {'hex': hexColor}
 			#theRet2 = {'rgb': hexColor}
-			
+
 		if (ok_n_clicks is not None) and ok_n_clicks > g_popover_ok_n_clicks: #or n_clicks:
 			print('   -->> myFileListSelectColor() OK clicked new color:', colorValue)
 			g_popover_ok_n_clicks = ok_n_clicks
@@ -716,7 +721,7 @@ def thisIsFuckingStupid(ok_Button_n_clicks2, colorPickerValue, selected_cells, f
 
 		print('   thisIsFuckingStupid()')
 		print('      updateColorDict:', updateColorDict)
-		
+
 		theRet = json.dumps(updateColorDict)
 
 		#return 'this-is-fucking-stupid ' + str(ok_n_clicks2)
@@ -857,7 +862,7 @@ def edit_file_list_table(data_timestamp, this_is_fucking_stupid_children, folder
 			#
 			#need to update self.folderOptions ???
 			#myBrowser.folderOptions_Save()
-			
+
 		# was here
 		#myBrowser.folderOptions_Save()
 
