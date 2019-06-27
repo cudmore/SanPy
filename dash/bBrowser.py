@@ -29,7 +29,7 @@ class bBrowser:
 
 		self.makeFolderList()
 
-		self.selectedRows = []
+		self.selectedFileRows = []
 
 		# list of files
 		self.df0 = None # small dataframe with list of files loaded
@@ -108,7 +108,7 @@ class bBrowser:
 
 		#print('bBrowser.setSelectedFiles() rows:', rows)
 
-		self.selectedRows = rows
+		self.selectedFileRows = rows
 
 	def setSelectedStat(self, xy, thisStat):
 		"""
@@ -156,7 +156,7 @@ class bBrowser:
 			self.showSE = False
 
 	def setShow_Normalize(self, normalizeValue):
-		print('setShow_Normalize()', normalizeValue)
+		#print('setShow_Normalize()', normalizeValue)
 		self.showNormalize = normalizeValue
 
 	def plotTheseStats(self, graphNum):
@@ -265,6 +265,7 @@ class bBrowser:
 
 		df0_list = []
 
+		selectedFileRows = [] #self.selectedFileRows
 		currIdx = 0
 		for file in sorted(os.listdir(self.path)):
 			if file.startswith('.'):
@@ -276,11 +277,13 @@ class bBrowser:
 
 				# look into self.folderOptions
 				if (self.folderOptions is not None) and file in self.folderOptions.keys():
+					isChecked = self.folderOptions[file]['isChecked']
 					condition1 = self.folderOptions[file]['Condition 1']
 					condition2 = self.folderOptions[file]['Condition 2']
 					condition3 = self.folderOptions[file]['Condition 3']
 					color = self.folderOptions[file]['Color']
 				else:
+					isChecked = True
 					condition1 = 'None'
 					condition2 = 'None'
 					condition3 = 'None'
@@ -288,10 +291,13 @@ class bBrowser:
 
 					# add a new file
 					self.folderOptions[file] = OrderedDict()
+					self.folderOptions[file]['isChecked'] = isChecked
 					self.folderOptions[file]['Condition 1'] = condition1
 					self.folderOptions[file]['Condition 2'] = condition2
 					self.folderOptions[file]['Condition 3'] = condition3
 					self.folderOptions[file]['Color'] = color
+
+				selectedFileRows.append(isChecked)
 
 				# THIS IS TOO FUCKING COMPLICATED !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				# regardless set self.folderOptions
@@ -333,11 +339,16 @@ class bBrowser:
 
 		self.df0 = pd.DataFrame(df0_list)
 
+		self.selectedFileRows = selectedFileRows
+
 		if madeNewFolderOptions:
 			self.folderOptions_Save()
 
-	def updatePlot(self, xStatName, yStatName):
-		""" return a list of dict for plotly/dash data"""
+	def updatePlot(self, graphNum, xStatName, yStatName):
+		""" return
+		1) a list of dict for plotly/dash data
+		2) layout
+		"""
 
 		theRet = []
 
@@ -356,7 +367,7 @@ class bBrowser:
 				#print(index, file['ABF File'])
 				#print(index, file)
 
-				if index not in self.selectedRows:
+				if index not in self.selectedFileRows:
 					continue
 
 				#
@@ -402,9 +413,9 @@ class bBrowser:
 					#sys.exit()
 					#xStatVals = xStatVals.values / myNormDict[abfFile]['x']
 					if self.showNormalize == 'normalizeAbsolute':
-						yStatVals = yStatVals.values / myNormDict[abfFile]['y'] * 100
-					elif self.showNormalize == 'normalizePercent':
 						yStatVals = yStatVals.values - myNormDict[abfFile]['y']
+					elif self.showNormalize == 'normalizePercent':
+						yStatVals = yStatVals.values / myNormDict[abfFile]['y'] * 100
 
 				#print('type(xStatVals)', type(xStatVals))
 				#print('xStatVals[0]', xStatVals[0])
@@ -507,7 +518,10 @@ class bBrowser:
 						else:
 							meanDataDict[meanKey]['mode'] = 'lines+markers'
 						#meanDataDict[meanKey]['name'] = abfFile + '_mean' # todo: need to clean up abfFile
-						meanDataDict[meanKey]['name'] = condition1 + '_mean' # todo: need to clean up abfFile
+						#meanDataDict[meanKey]['name'] = condition1 + '_mean' # todo: need to clean up abfFile
+						#meanDataDict[meanKey]['name'] = condition1 + ' ' + abfFile # todo: need to clean up abfFile
+						meanDataDict[meanKey]['name'] = analysisFile # todo: need to clean up abfFile
+						#abfFile
 						meanDataDict[meanKey]['marker'] = {
 							'color': [],
 							'size': 13,
@@ -610,6 +624,62 @@ class bBrowser:
 					}
 					###
 
+		# 20190626, get this to work !!!!!!!!!!!
+		graphNumStr = str(graphNum)
+		yStatHuman = self.options['graphOptions'][graphNumStr]['yStat']
+		xStatHuman = self.options['graphOptions'][graphNumStr]['xStat']
 
-		# def updatePlot() return
-		return theRet
+		#print('   !!!!!!!!!!!!!!!!!! WHY IS LAYOUT XAXIS FONT SIZE NOT WORKING????????????????????????????????')
+
+		#if self.showNormalize != 'normalizeNone' and xStatName == 'Condition 1':
+		yaxisLabel = yStatHuman
+		if xStatName == 'Condition 1':
+			if self.showNormalize == 'normalizeNone':
+				yaxisLabel = yStatHuman
+			elif self.showNormalize == 'normalizeAbsolute':
+				yaxisLabel = yStatHuman + ' Abs'
+			elif self.showNormalize == 'normalizePercent':
+				yaxisLabel = yStatHuman + ' %'
+
+		layout = {
+			'xaxis': {
+				#'title': xStatHuman,
+				'title': {
+					'text': xStatHuman,
+					'font': { 'size': 18},
+				},
+				'zeroline': False,
+				#'font': { 'size': 56},
+				'range': [],
+			},
+			'yaxis': {
+				#'title': yStatHuman,
+				'title': {
+					'text': yaxisLabel,
+					'font': { 'size': 18},
+				},
+				'zeroline': False,
+			},
+			'margin':{'l': 50, 'b': 50, 't': 5, 'r': 5},
+			'clickmode':'event+select',
+			'dragmode': 'select',
+			'showlegend': False,
+		}
+		#},
+		# OH MY FUCKING GOD, if a dict definition {} has a trailing ',', it becomes a tuple !!!!!!!! FUCK
+
+		# 20190626 was this
+		#return theRet
+
+		# 20190626, get this to work !!!!!!!!!!!!
+		finalReturn = {
+			'data': theRet,
+			'layout': layout,
+		}
+		return finalReturn
+		"""
+		return {
+			'data': theRet,
+			'layout': layout,
+		}
+		"""

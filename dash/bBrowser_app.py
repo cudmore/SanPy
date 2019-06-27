@@ -13,6 +13,8 @@ import numpy as np
 
 from itertools import chain
 
+from textwrap import dedent # to get markdown in tooltips to display properly
+
 import dash
 import dash_daq as daq
 import dash_table
@@ -57,17 +59,19 @@ statDict['Condition 2'] = 'Condition 2'
 
 myStatList = list(statDict.keys())
 
-# plot one of 4 graphs. USed in initialization and in 'plot' button callbacks
+# plot one of 4 graphs. Used in initialization and in 'plot' button callbacks
 def plotButton(graphNum):
 
 	'''
 	yStatHuman = myBrowser.graphPlot[graphNum]['yStat']
 	xStatHuman = myBrowser.graphPlot[graphNum]['xStat']
 	'''
+
+	# 20190626, I want to remove this and put it into myBrowser.updatePlot()
+	# to do this, need to move statDict into myBrowser !!!
 	graphNumStr = str(graphNum) # I don't like making dict keys as int ???
 	yStatHuman = myBrowser.options['graphOptions'][graphNumStr]['yStat']
 	xStatHuman = myBrowser.options['graphOptions'][graphNumStr]['xStat']
-
 
 	# convert human readable cardiac stats back to back end stat name
 	yStat = statDict[yStatHuman]
@@ -77,13 +81,17 @@ def plotButton(graphNum):
 	print('bBrowser_app.plotButton() graphNum:', graphNum, 'xStat:', xStat, 'yStat:', yStat)
 	"""
 
-	returnData = myBrowser.updatePlot(xStatName=xStat, yStatName=yStat)
+	# this returns a dict of ['data'] and ['layout']
+	returnData = myBrowser.updatePlot(graphNum, xStatName=xStat, yStatName=yStat)
 
 	# determine min/max so we can expand by 5%
 	xRange = []
 
-	return {
-		'data': returnData, # data is a list of go.Scatter
+	#print('bBrowser_app.plotButton()')
+	#print('    returnData:', returnData)
+
+	"""
+	# 20190626 was in return dict
 		'layout': {
 			'xaxis': {
 				'title':xStatHuman,
@@ -99,8 +107,16 @@ def plotButton(graphNum):
 			'dragmode': 'select',
 			'showlegend': False,
 		},
-		#'config': {'editable': True},
+	"""
+
+	"""
+	return {
+		'data': returnData, # data is a list of go.Scatter
+		'layout': returnLayout, # data is a list of go.Scatter
 	}
+	"""
+
+	return returnData
 
 #app = dash.Dash(__name__)
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -282,7 +298,7 @@ myBody = dbc.Container(
 					dcc.Markdown("""Lines: Lines between sequential spikes."""),
 					dcc.Markdown("""Markers: Plot a marker for each spike."""),
 					dcc.Markdown("""Mean: Plot the mean for each file."""),
-					dcc.Markdown("""Mean Lines: Connect files that share the same 'Condition 1' with a line."""),
+					dcc.Markdown("""Mean Lines: Connect files that share the same 'ABF File' with a line."""),
 					],
 					target="showMeanID",
 				),
@@ -324,9 +340,26 @@ myBody = dbc.Container(
 					id='normalizeCondition1ID',
 					options=[
 						{'label': 'None', 'value': 'normalizeNone'},
-						{'label': 'Abs', 'value': 'normalizeAbsoute'},
-						{'label': '%', 'value': 'normalizePercent'},
+						{'label': 'Absolute', 'value': 'normalizeAbsolute'},
+						{'label': 'Percent', 'value': 'normalizePercent'},
 					], value='normalizeNone', labelStyle={'padding-left': '20px', 'display': 'inline-block'}
+				),
+
+				#from textwrap import dedent
+				dbc.Tooltip(
+					[
+					#dcc.Markdown("""For any plot with 'Condition 1' on the X-Axis."""),
+					#dcc.Markdown("""None: Plot Y-Values as raw data."""),
+					#dcc.Markdown("""Absolute: Plot Y-Values as absolute change from first 'Condition 1'."""),
+					#dcc.Markdown("""Percent: Plot Y-Values as percent change from first 'Condition 1'."""),
+					dcc.Markdown(dedent('''
+					For any plot with 'Condition 1' on the X-Axis
+					 - None: Plot Y-Values as raw data
+					 - Absolute: Plot Y-Values as absolute change from first 'Condition 1'
+					 - Percent: Plot Y-Values as percent change from first 'Condition 1'
+					''')),
+					],
+					target="normalizeCondition1ID",
 				),
 
 			], no_gutters=False, align='stretch', # row
@@ -552,7 +585,7 @@ def handleGraphCallback(graphNumber, n_clicks, update_on_click_data, derived_vir
 inputList = [
 	#Input('g1-plot-button','n_clicks'),
 	Input('update-on-click-data', 'children'),
-	Input('file-list-table', "derived_virtual_selected_rows"),
+	Input('file-list-table', 'derived_virtual_selected_rows'),
 	Input('showMeanID', 'values'),
 	Input('showSDEVID', 'value'),
 	Input('normalizeCondition1ID', 'value'),
@@ -603,7 +636,11 @@ g_popover_cancel_n_clicks = 0
 #
 # analysis file selection
 @app.callback(
+	[
 	Output('hidden-div', 'children'),
+	# 20190626, trying to update selected rows????
+	#Output('file-list-table', 'selected_rows'), # 20190626
+	],
 	[Input('file-list-table', "derived_virtual_data"),
 	 Input('file-list-table', "derived_virtual_selected_rows"),
 	 ])
@@ -614,10 +651,15 @@ def myFileListSelect(rows, derived_virtual_selected_rows):
 	"""
 
 	#print('\nmyFileListSelect() rows:', rows)
-	print('myFileListSelect() derived_virtual_selected_rows:', derived_virtual_selected_rows)
+	print('=== myFileListSelect() derived_virtual_selected_rows:', derived_virtual_selected_rows)
 
 	myBrowser.setSelectedFiles(derived_virtual_selected_rows)
 
+	# 20190626, trying to update selected rows????
+	# was this
+	return ['']
+	# want this
+	#return '', []
 
 updateColorDict = None #{'row': None, 'color': None,}
 
@@ -778,14 +820,18 @@ currentFolder = myBrowser.path
 	Input('file-list-table', 'data_timestamp'),
 	Input('this-is-fucking-stupid', 'children'),
 	Input('my-folder-dropdown-selection', 'children'),
+	#20190626, adding this causes an infinite loop !!!
+	#Input('file-list-table', "derived_virtual_selected_rows"), # new 20190626
 	],
 	[
 	State('file-list-table', 'data'),
 	])
+#def edit_file_list_table(data_timestamp, this_is_fucking_stupid_children, folderDropdownValue, derived_virtual_selected_rows, data):
 def edit_file_list_table(data_timestamp, this_is_fucking_stupid_children, folderDropdownValue, data):
 	print('edit_file_list_table()')
 	print('   data_timestamp:', data_timestamp)
 	print('   this_is_fucking_stupid_children:', this_is_fucking_stupid_children)
+	#print('   derived_virtual_selected_rows:', derived_virtual_selected_rows)
 	print('   folderDropdownValue:', folderDropdownValue)
 	'''
 	print('   INCOMING data:')

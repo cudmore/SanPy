@@ -558,6 +558,8 @@ class bPlotFrame(ttk.Frame):
 			self.metaLines3.remove()
 			self.metaLines3 = None
 
+		thisVal = None
+
 		# x
 		for currentAxis in ['x', 'y']:
 			#
@@ -668,6 +670,9 @@ class bPlotFrame(ttk.Frame):
 
 			if thisStat == 'Late Diastolic Duration (ms)':
 				thisVal = [x['lateDiastolicDuration'] for x in self.controller.ba.spikeDict]
+
+			if thisVal is None:
+				return
 
 			#
 			if currentAxis == 'x':

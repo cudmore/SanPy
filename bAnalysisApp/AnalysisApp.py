@@ -1029,7 +1029,7 @@ class AnalysisApp:
 			self.metaWindow = tkinter.Toplevel(self.root)
 			self.metaWindow.wm_title('Meta Analysis')
 
-			#self.metaWindow.wm_protocol("WM_DELETE_WINDOW", self.onClose3)
+			self.metaWindow.wm_protocol("WM_DELETE_WINDOW", self.onClose3)
 			self.metaWindow.bind("<Escape>", self.escapeKey_callback)
 
 			w=1500
