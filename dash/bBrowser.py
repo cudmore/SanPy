@@ -2,7 +2,7 @@
 Utility class to manage a list of bAnalysis .txt files and provide dash style web objects
 """
 
-import os, math, json, collections
+import os, sys, math, json, collections
 from collections import OrderedDict
 
 import pandas as pd
@@ -52,6 +52,7 @@ class bBrowser:
 		self.showMean = False
 		self.showMeanLines = False
 		self.showError = True
+		self.showNormalize = 'None' # for plots with x-axis as 'Condition 1'
 		self.showLines = False
 		self.showMarkers = False
 
@@ -153,6 +154,9 @@ class bBrowser:
 		else:
 			self.showError = True
 			self.showSE = False
+
+	def setShow_Normalize(self, normalizeValue):
+		self.showNormalize = normalizeValue
 
 	def plotTheseStats(self, graphNum):
 		"""
@@ -343,6 +347,8 @@ class bBrowser:
 		hideMeanLines = not self.showMeanLines or (xStatName in doNotDoMean or yStatName in doNotDoMean)
 		hideMeanLines = False
 
+		myNormDict = {}
+
 		if xStatName and yStatName:
 			displayedFileRows = 0
 			for index, file in self.df0.iterrows():
@@ -375,8 +381,25 @@ class bBrowser:
 				thisFileRows = self.df.loc[self.df['Analysis File'] == analysisFile]
 
 				# get columns in self.df corresponding to selected stat
-				xStatVals = thisFileRows[xStatName]
+				xStatVals = thisFileRows[xStatName] #pandas.core.series.Series
 				yStatVals = thisFileRows[yStatName]
+
+				#
+				# normalize to first
+				if self.showNormalize != 'None' and xStatName == 'Condition 1':
+					pass
+					# before loop, create a dict
+					if not abfFile in myNormDict.keys():
+						myNormDict[abfFile] = {
+							'x': xStatVals,
+							'y': yStatVals
+						}
+					print('type(xStatVals)', type(xStatVals))
+					print('type(xStatVals.value)', type(xStatVals.values))
+					#print('type(xStatVals.values())', type(xStatVals.values()))
+					sys.exit()
+					xStatVals = xStatVals / myNormDict[abfFile]['x']
+					yStatVals = yStatVals / myNormDict[abfFile]['y']
 
 				#print('type(xStatVals)', type(xStatVals))
 				#print('xStatVals[0]', xStatVals[0])

@@ -241,8 +241,6 @@ myBody = dbc.Container(
 			[
 				dbc.Col(
 					[
-						#html.H5('File List'),
-
 						dash_table.DataTable(
 							id='file-list-table',
 							row_selectable='multi',
@@ -319,6 +317,18 @@ myBody = dbc.Container(
 					],
 					target="showSDEVID",
 				),
+
+				# if x axis is 'Condition 1' then normlize within each file
+				html.Div('Normalize Condition 1', style={'padding-left': '20px', 'display': 'inline-block'}),
+				dcc.RadioItems(
+					id='normalizeCondition1ID',
+					options=[
+						{'label': 'None', 'value': 'normalizeNone'},
+						{'label': 'Abs', 'value': 'normalizeAbsoute'},
+						{'label': '%', 'value': 'normalizePercent'},
+					], value='normalizeNone', labelStyle={'padding-left': '20px', 'display': 'inline-block'}
+				),
+
 			], no_gutters=False, align='stretch', # row
 		),
 
@@ -525,11 +535,12 @@ def determine_last_click(*clickdatas):
 # keep track of the number of clicks on each 'plot <n>'
 numClicks = [0, 0, 0, 0]
 
-def handleGraphCallback(graphNumber, n_clicks, update_on_click_data, derived_virtual_selected_rows, showMean, showSDEVID):
+def handleGraphCallback(graphNumber, n_clicks, update_on_click_data, derived_virtual_selected_rows, showMean, showSDEVID, normalizeCondition1ID):
 	myBrowser.setSelectPoints(update_on_click_data)
 	myBrowser.setSelectedFiles(derived_virtual_selected_rows)
 	myBrowser.setPlotOptions(showMean) # show mean is from ['', '', ...]
 	myBrowser.setShow_sdev_sem(showSDEVID)
+	myBrowser.setShow_Normalize(normalizeCondition1ID)
 	if n_clicks is not None and n_clicks > numClicks[graphNumber]:
 		numClicks[graphNumber] = n_clicks
 		myBrowser.plotTheseStats(graphNumber)
@@ -544,6 +555,7 @@ inputList = [
 	Input('file-list-table', "derived_virtual_selected_rows"),
 	Input('showMeanID', 'values'),
 	Input('showSDEVID', 'value'),
+	Input('normalizeCondition1ID', 'value'),
 ]
 
 g1_Input = [Input('g1-plot-button','n_clicks')] + inputList
@@ -602,7 +614,7 @@ def myFileListSelect(rows, derived_virtual_selected_rows):
 	"""
 
 	#print('\nmyFileListSelect() rows:', rows)
-	#print('myFileListSelect() derived_virtual_selected_rows:', derived_virtual_selected_rows)
+	print('myFileListSelect() derived_virtual_selected_rows:', derived_virtual_selected_rows)
 
 	myBrowser.setSelectedFiles(derived_virtual_selected_rows)
 
@@ -806,7 +818,7 @@ def edit_file_list_table(data_timestamp, this_is_fucking_stupid_children, folder
 	# {'row': 1, 'color': '#aabbcc'}
 	stupidDict = None
 	if this_is_fucking_stupid_children:
-		print('\n\tthis_is_fucking_stupid_children:', this_is_fucking_stupid_children, '\n')
+		#print('\n\tthis_is_fucking_stupid_children:', this_is_fucking_stupid_children, '\n')
 		stupidDict = json.loads(this_is_fucking_stupid_children)
 
 	if data is None:
