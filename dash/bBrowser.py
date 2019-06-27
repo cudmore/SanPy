@@ -52,7 +52,7 @@ class bBrowser:
 		self.showMean = False
 		self.showMeanLines = False
 		self.showError = True
-		self.showNormalize = 'None' # for plots with x-axis as 'Condition 1'
+		self.showNormalize = 'normalizeNone' # for plots with x-axis as 'Condition 1'
 		self.showLines = False
 		self.showMarkers = False
 
@@ -156,6 +156,7 @@ class bBrowser:
 			self.showSE = False
 
 	def setShow_Normalize(self, normalizeValue):
+		print('setShow_Normalize()', normalizeValue)
 		self.showNormalize = normalizeValue
 
 	def plotTheseStats(self, graphNum):
@@ -386,20 +387,24 @@ class bBrowser:
 
 				#
 				# normalize to first
-				if self.showNormalize != 'None' and xStatName == 'Condition 1':
-					pass
+				# NOTE: as I was adding this I transformed xStatVals and yStatVal from pandas series to numpy ndarray
+				if self.showNormalize != 'normalizeNone' and xStatName == 'Condition 1':
+					#pass
 					# before loop, create a dict
 					if not abfFile in myNormDict.keys():
 						myNormDict[abfFile] = {
-							'x': xStatVals,
-							'y': yStatVals
+							#'x': xStatVals.values,
+							'y': np.nanmean(yStatVals.values)
 						}
-					print('type(xStatVals)', type(xStatVals))
-					print('type(xStatVals.value)', type(xStatVals.values))
+					#print('type(xStatVals)', type(xStatVals))
+					#print('type(xStatVals.values)', type(xStatVals.values))
 					#print('type(xStatVals.values())', type(xStatVals.values()))
-					sys.exit()
-					xStatVals = xStatVals / myNormDict[abfFile]['x']
-					yStatVals = yStatVals / myNormDict[abfFile]['y']
+					#sys.exit()
+					#xStatVals = xStatVals.values / myNormDict[abfFile]['x']
+					if self.showNormalize == 'normalizeAbsolute':
+						yStatVals = yStatVals.values / myNormDict[abfFile]['y'] * 100
+					elif self.showNormalize == 'normalizePercent':
+						yStatVals = yStatVals.values - myNormDict[abfFile]['y']
 
 				#print('type(xStatVals)', type(xStatVals))
 				#print('xStatVals[0]', xStatVals[0])
