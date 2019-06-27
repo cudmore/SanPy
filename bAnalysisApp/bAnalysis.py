@@ -593,8 +593,12 @@ class bAnalysis:
 			spikeDict['numError'] = 0
 			spikeDict['errors'] = []
 
+			spikeDict['startSeconds'] = startSeconds
+			spikeDict['stopSeconds'] = stopSeconds
+
 			# detection params
 			spikeDict['dVthreshold'] = dVthresholdPos
+			spikeDict['minSpikeVm'] = minSpikeVm
 			spikeDict['medianFilter'] = medianFilter
 			spikeDict['halfHeights'] = halfHeights
 
@@ -639,6 +643,7 @@ class bAnalysis:
 
 			self.spikeDict[i]['isi_pnts'] = defaultVal # time between successive AP thresholds (thresholdSec)
 			self.spikeDict[i]['isi_ms'] = defaultVal # time between successive AP thresholds (thresholdSec)
+			self.spikeDict[i]['spikeFreq_hz'] = defaultVal # time between successive AP thresholds (thresholdSec)
 			self.spikeDict[i]['cycleLength_pnts'] = defaultVal # time between successive MDPs
 			self.spikeDict[i]['cycleLength_ms'] = defaultVal # time between successive MDPs
 
@@ -791,10 +796,12 @@ class bAnalysis:
 				self.spikeDict[i]['diastolicDuration_ms'] = self.pnt2Ms_(spikeTime - preMinPnt)
 
 				self.spikeDict[i]['cycleLength_ms'] = float('nan')
-				if i>1:
+				if i>1: #20190627, was i>1
 					isiPnts = self.spikeDict[i]['thresholdPnt'] - self.spikeDict[i-1]['thresholdPnt']
 					self.spikeDict[i]['isi_pnts'] = isiPnts
 					self.spikeDict[i]['isi_ms'] = self.pnt2Ms_(isiPnts)
+					# new 20190627
+					self.spikeDict[i]['spikeFreq_hz'] = 1 / (self.pnt2Ms_(isiPnts) / 1000)
 
 					cycleLength_pnts = self.spikeDict[i]['postMinPnt'] - self.spikeDict[i-1]['postMinPnt']
 					self.spikeDict[i]['cycleLength_pnts'] = cycleLength_pnts
@@ -907,6 +914,7 @@ class bAnalysis:
 			spikeDict['Diastolic Duration (ms)'] = spike['diastolicDuration_ms']
 			#
 			spikeDict['Inter-Spike-Interval (ms)'] = spike['isi_ms']
+			spikeDict['Spike Frequency (Hz)'] = spike['spikeFreq_hz']
 
 			spikeDict['Cycle Length (ms)'] = spike['cycleLength_ms']
 

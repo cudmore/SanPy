@@ -4,6 +4,7 @@
 
 # see https://github.com/facultyai/dash-bootstrap-components/issues/12
 #.popover {
-.tooltip {
-    max-width: 900px;
-}
+#tooltip {
+#    'max-width': '900px';
+#	'text-align': 'left';
+#}

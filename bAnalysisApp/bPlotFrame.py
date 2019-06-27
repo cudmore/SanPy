@@ -614,6 +614,10 @@ class bPlotFrame(ttk.Frame):
 				#thisVal = np.delete(thisVal, 0)
 				'''
 				thisVal = [x['isi_ms'] for x in self.controller.ba.spikeDict]
+
+			if thisStat == 'Spike Frequency (Hz)':
+				thisVal = [x['spikeFreq_hz'] for x in self.controller.ba.spikeDict]
+
 			if thisStat == 'Phase Plot':
 				#pnt = scipy.signal.medfilt(self.controller.ba.spikeClips[oneSpikeNumber],3)
 				pnt = scipy.signal.medfilt(self.controller.ba.spikeClips,3)

@@ -85,7 +85,8 @@ class AnalysisApp:
 								'Max AP Repolarization (mV)',
 								'Max AP Repolarization (dV/dt)',
 								'halfWidth',
-								'Inter-Spike-Interval (ms)']
+								'Inter-Spike-Interval (ms)',
+								'Spike Frequency (Hz)']
 		self.metaAnalysisList = self.analysisList #+ ['Inter-Spike-Interval (ms)']
 
 		# remove stats that are already in self.analysisList

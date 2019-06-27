@@ -49,6 +49,7 @@ statDict['AP Duration (ms)'] = 'apDuration_ms'
 statDict['Early Diastolic Duration (ms)'] = 'earlyDiastolicDuration_ms'
 statDict['Diastolic Duration (ms)'] = 'diastolicDuration_ms'
 statDict['Inter-Spike-Interval (ms)'] = 'isi_ms'
+statDict['Spike Frequency (Hz)'] = 'spike_Freq_hz'
 statDict['Cycle Length (ms)'] = 'cycleLength_ms'
 statDict['Max AP Upstroke (dV/dt)'] = 'preSpike_dvdt_max_val2'
 statDict['Max AP Upstroke (mV)'] = 'preSpike_dvdt_max_val'
@@ -294,13 +295,16 @@ myBody = dbc.Container(
 					], values=['showMarkers', 'showMean', 'showMeanLines'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
 				),
 				dbc.Tooltip(
-					[dcc.Markdown("""Select the plot options for all 4 plots."""),
-					dcc.Markdown("""Lines: Lines between sequential spikes."""),
-					dcc.Markdown("""Markers: Plot a marker for each spike."""),
-					dcc.Markdown("""Mean: Plot the mean for each file."""),
-					dcc.Markdown("""Mean Lines: Connect files that share the same 'ABF File' with a line."""),
+					[dcc.Markdown(dedent("""
+					Select the plot options for all 4 plots.
+					- Lines: Lines between sequential spikes.
+					- Markers: Plot a marker for each spike.
+					- Mean: Plot the mean for each file.
+					- Mean Lines: Connect files that share the same 'ABF File' with a line.
+					""")),
 					],
 					target="showMeanID",
+					style = {'max-width': '900px', 'text-align': 'left'},
 				),
 
 				# I need another structure in here for show mean lines between matching 'condition 1', 'condition 2', ...
@@ -326,12 +330,14 @@ myBody = dbc.Container(
 					labelStyle={'padding-left': '10px', 'display': 'inline-block'}
 				),
 				dbc.Tooltip([
-					dcc.Markdown("""Select the type of error bars."""),
-					dcc.Markdown("""None: No error bars."""),
-					dcc.Markdown("""SEM: Standard Error of the Mean."""),
-					dcc.Markdown("""SDEV: Standard Deviation."""),
-					],
+					dcc.Markdown(dedent("""
+					Select the type of error bars.
+					 - None: No error bars.
+					 - SEM: Standard Error of the Mean.
+					 - SDEV: Standard Deviation.
+					"""))],
 					target="showSDEVID",
+					style = {'max-width': '400px', 'text-align': 'left'},
 				),
 
 				# if x axis is 'Condition 1' then normlize within each file
@@ -360,6 +366,7 @@ myBody = dbc.Container(
 					''')),
 					],
 					target="normalizeCondition1ID",
+					style = {'max-width': '900px', 'text-align': 'left'},
 				),
 
 			], no_gutters=False, align='stretch', # row
@@ -431,6 +438,7 @@ myBody = dbc.Container(
 						dbc.Tooltip(
 							"Select both an X-Stat and Y-Stat, then use this button to plot those stats.",
 							target="g1-plot-button",
+							style = {'max-width': '400px'},
 						),
 						dcc.Graph(
 							id='g1',
@@ -447,6 +455,7 @@ myBody = dbc.Container(
 						dbc.Tooltip(
 							"Select both an X-Stat and Y-Stat, then use this button to plot those stats.",
 							target="g3-plot-button",
+							style = {'max-width': '400px'},
 						),
 					],
 					md=4, align='stretch',

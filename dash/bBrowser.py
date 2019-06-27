@@ -393,8 +393,16 @@ class bBrowser:
 				thisFileRows = self.df.loc[self.df['Analysis File'] == analysisFile]
 
 				# get columns in self.df corresponding to selected stat
-				xStatVals = thisFileRows[xStatName] #pandas.core.series.Series
-				yStatVals = thisFileRows[yStatName]
+				if xStatName in thisFileRows.columns:
+					xStatVals = thisFileRows[xStatName] #pandas.core.series.Series
+				else:
+					print('WARNING: bBrowser.updatePlot() did not find specified x statistic "' + xStatName + '"')
+					return {}
+				if yStatName in thisFileRows.columns:
+					yStatVals = thisFileRows[yStatName] #pandas.core.series.Series
+				else:
+					print('WARNING: bBrowser.updatePlot() did not find specified y statistic "' + yStatName + '"')
+					return {}
 
 				#
 				# normalize to first
@@ -402,7 +410,7 @@ class bBrowser:
 				if self.showNormalize != 'normalizeNone' and xStatName == 'Condition 1':
 					#pass
 					# before loop, create a dict
-					if not abfFile in myNormDict.keys():
+					if abfFile not in myNormDict.keys():
 						myNormDict[abfFile] = {
 							#'x': xStatVals.values,
 							'y': np.nanmean(yStatVals.values)
