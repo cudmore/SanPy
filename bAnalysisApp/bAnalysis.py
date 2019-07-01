@@ -34,22 +34,26 @@ Acknowledgements
 '''
 
 import os, math, time, collections, datetime
-
 import sys # for debugging to call sys.exit()
+from collections import OrderedDict
 
 import numpy as np
 import pandas as pd
 
 import scipy.signal
-
 import matplotlib.pyplot as plt
 
 import pyabf # see: https://github.com/swharden/pyABF
+
+from bAnalysisUtil import bAnalysisUtil
 
 class bAnalysis:
 	def __init__(self, file=None):
 		self.file = file # todo: change this to filePath
 		self._abf = None
+
+		#20190628
+		self.detectionConfig = bAnalysisUtil()
 
 		# detection parameters specified by user
 		self.dateAnalyzed = None
@@ -165,6 +169,9 @@ class bAnalysis:
 	############################################################
 	def getDerivative(self, medianFilter=0):
 		if medianFilter > 0:
+			if not medianFilter % 2:
+				medianFilter += 1
+				print('*** Warning: Please use an odd value for the median filter, bAnalysis.getDerivative() set medianFilter =', medianFilter)
 			self.filteredVm = scipy.signal.medfilt(self.abf.sweepY, medianFilter)
 		else:
 			self.filteredVm = self.abf.sweepY
@@ -432,7 +439,7 @@ class bAnalysis:
 		# trying to fix this BULLSHIT
 		tmpLastGoodSpike_pnts = None
 		#minISI_pnts = 5000 # at 20 kHz this is 0.25 sec
-		minISI_ms = 250
+		minISI_ms = 75 #250
 		minISI_pnts = self.ms2Pnt_(minISI_ms)
 
 		prePntUp = 10 # pnts

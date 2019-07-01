@@ -20,22 +20,22 @@ class bMenus:
 
 		self.app = app
 		self.root  = app.root
-		
+
 		"""
 		# put this concept back in
 		self.showVideoFilesBool = tkinter.BooleanVar()
 		self.showVideoFilesBool.set(self.app.configDict['showVideoFiles'])
-		
+
 		self.showEventsBool = tkinter.BooleanVar()
 		self.showEventsBool.set(self.app.configDict['showEvents'])
-		
+
 		self.blindInterfaceBool = tkinter.BooleanVar()
 		self.blindInterfaceBool.set(self.app.configDict['blindInterface'])
 		"""
-		
+
 		# main menu bar
 		menubar = tkinter.Menu(self.root)
-		
+
 		# app
 		appmenu = tkinter.Menu(menubar, name='apple')
 		appmenu.add_command(label="About Video Annotate", command=self.about)
@@ -45,10 +45,12 @@ class bMenus:
 		appmenu.add_command(label="Preferences...", command=self.preferences)
 		menubar.add_cascade(menu=appmenu)
 		"""
-		
+
 		# file
 		filemenu = tkinter.Menu(menubar, tearoff=0)
 		filemenu.add_command(label="Open Folder ...", command=self.open_folder)
+		filemenu.add_separator()
+		filemenu.add_command(label="Detection Options", command=self.detection_options)
 		filemenu.add_separator()
 		filemenu.add_command(label="Save Options", command=self.save_options)
 		filemenu.add_separator()
@@ -66,7 +68,7 @@ class bMenus:
 		# window
 		self.windowmenu = tkinter.Menu(menubar, tearoff=0)
 		self.windowmenu.add_command(label="Meta Window", command=self.open_meta_window)
-		
+
 		"""
 		# put this concept back in
 		self.windowmenu.add_checkbutton(label="Video Files", onvalue=1, offvalue=False, variable=self.showVideoFilesBool, command=self.togglevideofiles)
@@ -74,7 +76,7 @@ class bMenus:
 		self.windowmenu.add_separator()
 		self.windowmenu.add_checkbutton(label="Blind Interface", onvalue=1, offvalue=False, variable=self.blindInterfaceBool, command=self.blindInterface)
 		"""
-		
+
 		# append all menus to main menu bar
 		menubar.add_cascade(menu=filemenu, label='File')
 		#menubar.add_cascade(menu=chunkmenu, label='Chunks')
@@ -94,9 +96,12 @@ class bMenus:
 		#print('path:', path)
 		self.app.loadFolder(path)
 
+	def detection_options(self):
+		self.app.bAnalysisUtil.tk_PreferenesPanel(self.root)
+
 	def save_options(self):
 		print('bMenus.save_options()')
 		self.app.preferencesSave()
-		
+
 	def open_meta_window(self):
 		self.app.metaWindow3()

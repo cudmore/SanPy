@@ -15,6 +15,7 @@ import pandas as pd
 import tkinter
 from tkinter import ttk
 from tkinter import filedialog
+from tkinter import messagebox
 from tkinter.filedialog import asksaveasfilename
 
 # required to import bAnalysis which does 'import matplotlib.pyplot as plt'
@@ -23,6 +24,7 @@ import matplotlib
 matplotlib.use("TkAgg")
 
 from bAnalysis import bAnalysis
+import bAnalysisUtil
 import bMenus
 import bFileList
 import bTree
@@ -38,7 +40,10 @@ class AnalysisApp:
 
 	def __init__(self, path=''):
 
-		self.preferencesLoad()
+		self.preferencesLoad() # creates self.configDict
+
+		# load a default detection configuration
+		self.bAnalysisUtil = bAnalysisUtil.bAnalysisUtil()
 
 		self.root = tkinter.Tk()
 		self.root.title('Analysis App')
@@ -224,7 +229,8 @@ class AnalysisApp:
 		labelDir = ttk.Label(detection_frame, text='dV/dt Threshold')
 		labelDir.grid(row=row, column=0, sticky="w")
 
-		dvdtThreshold = self.configDict['detection']['dvdtThreshold']
+		dvdtThreshold = self.bAnalysisUtil.getDetectionParam('dvdtThreshold')
+		#dvdtThreshold = self.configDict['detection']['dvdtThreshold']
 		# 20190623
 		if dvdtThreshold is None:
 			dvdtThreshold = 'None'
@@ -238,7 +244,8 @@ class AnalysisApp:
 		labelDir = ttk.Label(detection_frame, text='Vm Threshold (mV)')
 		labelDir.grid(row=row, column=0, sticky="w")
 
-		minSpikeVm = self.configDict['detection']['minSpikeVm']
+		minSpikeVm = self.bAnalysisUtil.getDetectionParam('minSpikeVm')
+		#minSpikeVm = self.configDict['detection']['minSpikeVm']
 		self.minSpikeVmSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=5)
 		self.minSpikeVmSpinbox.insert(0,minSpikeVm) # default is 100
 		self.minSpikeVmSpinbox.grid(row=row, column=1, sticky="w")
@@ -280,8 +287,9 @@ class AnalysisApp:
 		labelDir = ttk.Label(detection_frame, text='Median Filter (pnts)')
 		labelDir.grid(row=row, column=0, sticky="w")
 
-		medianFilter = self.configDict['detection']['medianFilter']
-		self.filterSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, width=3)
+		medianFilter = self.bAnalysisUtil.getDetectionParam('medianFilter')
+		#medianFilter = self.configDict['detection']['medianFilter']
+		self.filterSpinbox = ttk.Spinbox(detection_frame, from_=0, to=1000, increment=2, width=3)
 		self.filterSpinbox.insert(0,medianFilter) # default is 5
 		self.filterSpinbox.grid(row=row, column=1, sticky="w")
 
@@ -631,13 +639,20 @@ class AnalysisApp:
 
 		#20190623
 		dVthresholdPos = self.thresholdSpinbox.get()
-		if dVthresholdPos == 'None':
+		if dVthresholdPos in ['None', 'none', '']:
 			dVthresholdPos = None
 		else:
 			dVthresholdPos = int(self.thresholdSpinbox.get())
 
 		minSpikeVm = int(self.minSpikeVmSpinbox.get())
+
 		medianFilter = int(self.filterSpinbox.get())
+		"""
+		if not medianFilter % 2:
+			tkinter.messagebox.showwarning('xxx')
+		"""
+
+
 		plotEveryPoint = int(self.plotEverySpinbox.get()) # used in plot, not in detection
 		halfWidths = self.halfWidthEntry.get()
 
@@ -791,7 +806,10 @@ class AnalysisApp:
 			self.rawPlot.plotStat(analysis, onoff)
 
 		# plot meta
-		statName = 'AP Peak (mV)'
+		#statName = 'AP Peak (mV)'
+		statName, item = self.metaTree_y._getTreeViewSelection('Stat')
+		if statName is None:
+			statName = 'Spike Frequency (Hz)'
 		self.metaPlot.plotMeta(self.ba, statName, doInit=True)
 
 		if self.metaPlot3 is not None:
@@ -885,10 +903,12 @@ class AnalysisApp:
 		self.configDict['windowGeometry']['width'] = 2000
 		self.configDict['windowGeometry']['height'] = 1200
 
+		"""
 		self.configDict['detection'] = {}
 		self.configDict['detection']['dvdtThreshold'] = 100
 		self.configDict['detection']['minSpikeVm'] = -20
 		self.configDict['detection']['medianFilter'] = 5
+		"""
 
 		self.configDict['display'] = {}
 		self.configDict['display']['plotEveryPoint'] = 10
@@ -912,11 +932,12 @@ class AnalysisApp:
 		#20190623
 		#dvdtThreshold = int(self.thresholdSpinbox.get())
 		dvdtThreshold = self.thresholdSpinbox.get()
-		if dvdtThreshold == 'None':
+		if dvdtThreshold in ['None', 'none', '']:
 			dvdtThreshold = None
 		else:
 			dvdtThreshold = int(self.thresholdSpinbox.get())
 
+		"""
 		self.configDict['detection']['dvdtThreshold'] = dvdtThreshold
 
 		minSpikeVm = int(self.minSpikeVmSpinbox.get())
@@ -924,6 +945,7 @@ class AnalysisApp:
 
 		medianFilter = int(self.filterSpinbox.get())
 		self.configDict['detection']['medianFilter'] = medianFilter
+		"""
 
 		#
 		# display

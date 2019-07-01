@@ -1,5 +1,5 @@
 
-## This is a work in progress, do not use this code. 
+## This is a work in progress, do not use this code.
 
 If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.
 
@@ -243,7 +243,7 @@ git --version
 
  - Set from/to (sec) when user zooms by dragging on graph
  - get file table to update when analysis is saved
- 
+
 ### 20190326
 
  - Save analysis csv file and reload when loading folder. Don't always require re-analysis. Will break when format of csv file changes, make sure to include a file version.
@@ -265,6 +265,12 @@ To Do:
  - Convert ALL reported units to milli-seconds
  - Add new window to plot stats on x/y. For example, peak AP amplitude (mV) versus spike width (ms).
 
+### 20190329
+ - Gave new code to Laura that does pure Vm detection
+ - New after giving Laura code
+ - Meta plot will remember last stat plot when switching files, when first run it defaults to 'Spike Frequency (Hz)'
+ - Median filter needs to be odd, if even value is specified we tweek it to odd
+ 
 ## Advanced
 
 #### Building a stand alone app (macOS)
