@@ -21,13 +21,15 @@ from bAnalysis import bAnalysis
 
 now = time.time()
 
-abfFile = '/Users/cudmore/Sites/bAnalysis/data/19114001.abf'
 abfFile = '/Users/cudmore/Sites/bAnalysis/data/19221021.abf'
+abfFile = '/Users/cudmore/Sites/bAnalysis/data/19114001.abf'
 #myabf = pyabf.ABF(abfFile)
 ba = bAnalysis(file=abfFile)
 
 ba.getDerivative(medianFilter=5) # derivative
-ba.spikeDetect0() # analysis
+ba.spikeDetect(dVthresholdPos=100, minSpikeVm=-20, medianFilter=0)
+
+#print('ba.spikeDict:', ba.spikeDict)
 
 print ("abf load/anaysis time:", time.time()-now, "sec")
 ###
@@ -86,8 +88,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.title = 'SanPy'
 		self.left = 20
 		self.top = 10
-		self.width = 3*1024 #640
-		self.height = 2*768 #480
+		self.width = 2*1024 #640
+		self.height = 1*768 #480
 
 		self.setMinimumSize(320, 240)
 		self.setWindowTitle(self.title)
@@ -130,32 +132,22 @@ class MainWindow(QtWidgets.QMainWindow):
 		#lines = MultiLine(x, y)
 		w2.addItem(lines)
 
+		#
 		# on top of Vm
-		scatter = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=1)
-		scatter.setData(x=[10,20,30,40], y=[-10, 0, 10, 20])
-		w2.addItem(scatter)
+		xPlot, yPlot = ba.getStat('peakSec', 'peakVal')
+
+		self.scatterPeak = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color='r'), symbol='o', size=2)
+		self.scatterPeak.setData(x=xPlot, y=yPlot)
+		self.scatterPeak.sigClicked.connect(self.scatterClicked)
+		w2.addItem(self.scatterPeak)
 
 		# try for horizontal selection
-		'''
 		linearRegionItem = pg.LinearRegionItem(values=(0,0), orientation=pg.LinearRegionItem.Vertical)
 		linearRegionItem.sigRegionChangeFinished.connect(self.update_x_axis)
 		w2.addItem(linearRegionItem)
-		'''
 
 		print('buildUI() adding view to myQVBoxLayout')
 		self.myQVBoxLayout.addWidget(view)
-
-		'''
-		#
-		# dv/dt plot
-		self.myGraphicsView0 = myQGraphicsView(plotThis='dvdt') #myQGraphicsView(self.centralwidget)
-		self.myQVBoxLayout.addWidget(self.myGraphicsView0)
-
-		#
-		# vm plot
-		self.myGraphicsView1 = myQGraphicsView(plotThis='vm') #myQGraphicsView(self.centralwidget)
-		self.myQVBoxLayout.addWidget(self.myGraphicsView1)
-		'''
 
 		#
 		# stat plot
@@ -170,8 +162,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.mplToolbar = backend_qt5agg.NavigationToolbar2QT(static_canvas, static_canvas)
 
 		self._static_ax = static_canvas.figure.subplots()
-		t = np.linspace(0, 10, 501)
-		self._static_ax.plot(t, np.tan(t), ".")
+		#t = np.linspace(0, 10, 501)
+		#self._static_ax.plot(t, np.tan(t), ".")
+		xPlot, yPlot = ba.getStat('peakSec', 'peakVal')
+		self._static_ax.plot(xPlot, yPlot, ".")
+
 
 		#
 		# leave here, critical
@@ -182,6 +177,9 @@ class MainWindow(QtWidgets.QMainWindow):
 	def update_x_axis(self):
 		print('update_x_axis()')
 
+	def scatterClicked(self, scatter, points):
+		print('scatterClicked() scatter:', scatter, points)
+	
 class myToolbarWidget(QtWidgets.QToolBar):
 	def __init__(self, parent=None):
 		print('myToolbarWidget.__init__')

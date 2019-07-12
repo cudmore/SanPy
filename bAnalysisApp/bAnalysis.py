@@ -130,6 +130,12 @@ class bAnalysis:
 		return self.numErrors
 
 
+	def getStat(self, xStat, yStat):
+		# peakVal, peakSec
+		x = [spike[xStat] for spike in self.spikeDict]
+		y = [spike[yStat] for spike in self.spikeDict]
+		return x, y
+		
 	############################################################
 	# map human readable to backend stat
 	############################################################
@@ -255,6 +261,7 @@ class bAnalysis:
 		# only include spike times between startPnt and stopPnt
 		#print('before stripping len(spikeTimes0):', len(spikeTimes0))
 		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if (spikeTime>=startPnt and spikeTime<=stopPnt)]
+		
 		#print('after stripping len(spikeTimes0):', len(spikeTimes0))
 
 		#
@@ -268,6 +275,8 @@ class bAnalysis:
 			if peakVal > self.minSpikeVm:
 				goodSpikeTimes.append(spikeTime)
 		spikeTimes0 = goodSpikeTimes
+		
+		#print('after stripping min isi', self.minSpikeVm, 'len(spikeTimes0):', len(spikeTimes0))
 
 		#
 		# throw out spike that are not upward deflections of Vm
@@ -302,6 +311,8 @@ class bAnalysis:
 		# spikeTimes[i] that were set to 0 above (they were too close to the previous spike)
 		# will not pass 'if spikeTime', as 'if 0' evaluates to False
 		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if spikeTime]
+		
+		#print('after stripping doubles refractory_ms', refractory_ms, 'len(spikeTimes0):', len(spikeTimes0))
 
 		#
 		# todo: make sure all spikes are on upslope
@@ -334,6 +345,8 @@ class bAnalysis:
 
 		self.thresholdTimes = spikeTimes0 # points
 		self.spikeTimes = spikeTimes1 # points
+
+		#print('spikeDetect0() got', len(spikeTimes0), 'spikes')
 
 		return self.spikeTimes, self.thresholdTimes, self.filteredVm, self.filteredDeriv
 
