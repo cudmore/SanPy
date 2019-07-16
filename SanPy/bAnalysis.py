@@ -131,9 +131,15 @@ class bAnalysis:
 
 
 	def getStat(self, xStat, yStat):
+		def clean(val):
+			if val is None:
+				val = float('nan')
+			return val
 		# peakVal, peakSec
-		x = [spike[xStat] for spike in self.spikeDict]
-		y = [spike[yStat] for spike in self.spikeDict]
+		#x = [spike[xStat] for spike in self.spikeDict]
+		#y = [spike[yStat] for spike in self.spikeDict]
+		x = [clean(spike[xStat]) for spike in self.spikeDict]
+		y = [clean(spike[yStat]) for spike in self.spikeDict]
 		return x, y
 		
 	############################################################
@@ -888,11 +894,19 @@ class bAnalysis:
 		# make one x axis clip with the threshold crossing at 0
 		self.spikeClips_x = [(x-halfClipWidth_pnts)/self.abf.dataPointsPerMs for x in range(clipWidth_pnts)]
 
+		#20190714, added this to make all clips same length, much easier to plot in MultiLine
+		numPointsInClip = len(self.spikeClips_x)
+		
 		self.spikeClips = []
-		for spikeTime in self.spikeTimes:
+		self.spikeClips_x2 = []
+		for idx, spikeTime in enumerate(self.spikeTimes):
 			currentClip = vm[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts]
-			self.spikeClips.append(currentClip)
-
+			if len(currentClip) == numPointsInClip:
+				self.spikeClips.append(currentClip)
+				self.spikeClips_x2.append(self.spikeClips_x) # a 2D version to make pyqtgraph multiline happy
+			else:
+				print('bAnalysis.spikeDetect() did not add clip for spike index', idx, 'at time', spikeTime)
+				
 		stopTime = time.time()
 		print('bAnalysis.spikeDetect() for file', self.file, 'detected', len(self.spikeTimes), 'spikes in', round(stopTime-startTime,2), 'seconds')
 
@@ -964,8 +978,12 @@ class bAnalysis:
 	# utility functions
 	#############################
 	def pnt2Sec_(self, pnt):
+		'''
 		if pnt is None or math.isnan(pnt):
 			return None
+		'''
+		if pnt is None:
+			return math.isnan(pnt)
 		else:
 			return pnt / self.abf.dataPointsPerMs / 1000
 

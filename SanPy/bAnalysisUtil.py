@@ -14,6 +14,16 @@ logging.debug('This is a debug message')
 logging.info('This is an info message')
 '''
 
+# do something like this
+'''
+statList = OrderedDict()
+statList['Time (sec)'] = {
+	'backendStat': '',
+	'backendStat_x': '',
+	'convertToSec': False
+	}
+'''
+	
 class bAnalysisUtil:
 	def __init__(self):
 		self.configDict = self.configDefault()
