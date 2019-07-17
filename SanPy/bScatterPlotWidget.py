@@ -5,7 +5,9 @@ import numpy as np
 from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
 
-import random
+#import random
+
+from bAnalysisUtil import bAnalysisUtil
 
 class bScatterPlotWidget(QtWidgets.QWidget):
 	def __init__(self, mainWindow=None, detectionWidget=None, parent=None):
@@ -20,7 +22,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		self.myHBoxLayout_statplot = QtWidgets.QHBoxLayout(self)
 
 		self.plotToolbarWidget = myStatPlotToolbarWidget(self)
-		self.myHBoxLayout_statplot.addWidget(self.plotToolbarWidget, stretch=1) # stretch=10, not sure on the units???
+		self.myHBoxLayout_statplot.addWidget(self.plotToolbarWidget, stretch=2) # stretch=10, not sure on the units???
 
 		# works
 		#static_canvas = backend_qt5agg.FigureCanvas(mpl.figure.Figure(figsize=(5, 3)))
@@ -59,12 +61,13 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		#self.myQVBoxLayout.addWidget(self.static_canvas)
 		#self.myQVBoxLayout.addLayout(self.myHBoxLayout_statplot)
 
-	def metaPlotStat(self, yStat):
-		print('metaPlotStat() yStat:', yStat)
+	def metaPlotStat(self, yStatHuman):
+		print('bScatterPlotWidget.metaPlotStat() yStatHuman:', yStatHuman)
 		# todo: we need to tweek xStat based on particular yStat
 		
 		
 		if self.myDetectionWidget.ba is None:
+			print('got empty ba ???')
 			return
 		
 		# works
@@ -73,10 +76,9 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		return
 		'''
 		
-		###
-		###
-		###
-		
+		# todo
+		# for now, always plot versus take off potential
+		'''
 		convertPntToSec = False
 		if yStat == 'peakVal':
 			xStat = 'peakSec'
@@ -86,12 +88,26 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		elif yStat == 'preMinVal':
 			xStat = 'preMinPnt'
 			convertPntToSec = True
+		'''
+		
+		# convert human readable yStat to backend
+		statList = bAnalysisUtil.getStatList()
+		yStat = statList[yStatHuman]['yStat'] # the name of the backend stat
+		
+		# todo for now always plot versus take off potential
+		xStatLabel = 'Seconds'
+		xStat = 'thresholdSec'
+		
+		print('    xStat:', xStat, 'yStat:', yStat)
 		
 		xPlot, yPlot = self.myDetectionWidget.ba.getStat(xStat, yStat)
 		if len(xPlot)==0 or len(yPlot)==0:
+			print('    got empty stat?')
 			return
-		if convertPntToSec:
+		
+		#if convertPntToSec:
 			xPlot = [self.myDetectionWidget.ba.pnt2Sec_(x) for x in xPlot]
+		#
 			
 		if self.metaLine is None:
 			self.metaLine, = self._static_ax.plot(xPlot, yPlot, ".")
@@ -113,12 +129,16 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		yMax = np.nanmax(yPlot)
 		
 		# expand by 5%
+		ySpan = abs(yMax - yMin)
+		percentSpan = ySpan * 0.05
+		yMin -= percentSpan
+		yMax += percentSpan
 		
 		self._static_ax.set_xlim([xMin, xMax])
 		self._static_ax.set_ylim([yMin, yMax])
 
-		self._static_ax.set_xlabel(xStat)
-		self._static_ax.set_ylabel(yStat)
+		self._static_ax.set_xlabel(xStatLabel)
+		self._static_ax.set_ylabel(yStatHuman)
 		
 		#self._static_ax.draw()
 		self.static_canvas.draw()
@@ -193,7 +213,9 @@ class myStatPlotToolbarWidget(QtWidgets.QWidget):
 		
 		self.myQVBoxLayout = QtWidgets.QVBoxLayout(self)
 
-		self.statList = ['peakVal', 'thresholdVal', 'preMinVal']
+		#self.statList = ['peakVal', 'thresholdVal', 'preMinVal']
+		# stat list is a dictionary where each key is a stat
+		self.statList = bAnalysisUtil.getStatList()
 
 		self.myTableWidget = QtWidgets.QTableWidget()
 		self.myTableWidget.setRowCount(len(self.statList))
@@ -201,12 +223,19 @@ class myStatPlotToolbarWidget(QtWidgets.QWidget):
 		self.myTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 		self.myTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 		self.myTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-		self.myTableWidget.cellClicked.connect(self.on_table_click)
-		headerLabels = ['Y']
+		self.myTableWidget.cellClicked.connect(self.on_scatter_toolbar_table_click)
+
+		headerLabels = ['Y-Stat']
 		self.myTableWidget.setHorizontalHeaderLabels(headerLabels)
+
+		header = self.myTableWidget.horizontalHeader()       
+		header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+		# QHeaderView will automatically resize the section to fill the available space. The size cannot be changed by the user or programmatically.
+		header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+
 		for idx, stat in enumerate(self.statList):
 			item = QtWidgets.QTableWidgetItem(stat)
-			self.myTableWidget.setItem(idx,0, item)
+			self.myTableWidget.setItem(idx, 0, item)
 		#self.addWidget(self.myTableWidget)
 
 		self.myQVBoxLayout.addWidget(self.myTableWidget)
@@ -218,13 +247,13 @@ class myStatPlotToolbarWidget(QtWidgets.QWidget):
 	'''
 	
 	@QtCore.pyqtSlot()
-	def on_table_click(self):
+	def on_scatter_toolbar_table_click(self):
 		print('*** on table click ***')
 		row = self.myTableWidget.currentRow()
 		if row == -1 or row is None:
 			return
 		yStat = self.myTableWidget.item(row,0).text() #
-		print('=== on_table_click', row, yStat)
+		print('=== on_scatter_toolbar_table_click', row, yStat)
 		self.myParent.metaPlotStat(yStat)
 		
 	@QtCore.pyqtSlot()

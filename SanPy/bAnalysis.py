@@ -579,6 +579,8 @@ class bAnalysis:
 		'''
 		spike detect the current sweep and put results into spikeTime[currentSweep]
 
+		dVthresholdPos: if None then detect only using minSpikeVm
+		
 		todo: remember values of halfHeights
 		'''
 

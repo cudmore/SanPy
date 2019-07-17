@@ -10,7 +10,12 @@ from collections import OrderedDict
 
 from bAnalysis import bAnalysis
 
+'''
 gVideoFileColumns = ('Index', 'Path', 'File', 'kHz', 'Sweeps', 'Duration (sec)',
+	'Acq Date', 'Acq Time',
+	'dV/dt Threshold', 'Num Spikes', 'Analysis Date', 'Analysis Time')
+'''
+gVideoFileColumns = ('File', 'kHz', 'Sweeps', 'Duration (sec)',
 	'Acq Date', 'Acq Time',
 	'dV/dt Threshold', 'Num Spikes', 'Analysis Date', 'Analysis Time')
 
@@ -163,6 +168,9 @@ class bFileList:
 	def getList(self):
 		return self.videoFileList
 
+	def getFileFromIndex(self, idx):
+		return self.videoFileList[idx]
+		
 #############################################################
 class bVideoFile:
 
@@ -176,11 +184,13 @@ class bVideoFile:
 			print('error: bVideoFile() could not open file path:', path)
 			return
 
+		self.path = path
+		
 		videoFileName = os.path.basename(path)
 
 		self.dict = OrderedDict()
-		self.dict['index'] = index
-		self.dict['path'] = path
+		#self.dict['index'] = index
+		#self.dict['path'] = path
 		self.dict['file'] = videoFileName
 
 		# load abf file and grab parameters

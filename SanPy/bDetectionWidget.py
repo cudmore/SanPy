@@ -25,7 +25,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		
 		self.myPlotList = []
 		
-		# a list of possible x/y plots
+		# a list of possible x/y plots (overlay over dvdt and Vm)
 		self.myPlots = [
 			{
 				'humanName': 'Threshold Sec (dV/dt)',
@@ -38,7 +38,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'plotIsOn': True,
 			},
 			{
-				'humanName': 'Peak Sec (Vm)',
+				'humanName': 'AP Peak (mV)',
 				'x': 'peakSec',
 				'y': 'peakVal',
 				'convertx_tosec': False,
@@ -48,7 +48,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'plotIsOn': True,
 			},
 			{
-				'humanName': 'Pre Min (Vm)',
+				'humanName': 'Pre AP Min (mV)',
 				'x': 'preMinPnt',
 				'y': 'preMinVal',
 				'convertx_tosec': True,
@@ -58,7 +58,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'plotIsOn': False,
 			},
 			{
-				'humanName': 'Post Min (Vm)',
+				'humanName': 'Post AP Min (mV)',
 				'x': 'postMinPnt',
 				'y': 'postMinVal',
 				'convertx_tosec': True,
@@ -86,6 +86,14 @@ class bDetectionWidget(QtWidgets.QWidget):
 		
 		self.ba.spikeDetect(dVthresholdPos=dvdtValue, minSpikeVm=minSpikeVm)
 
+		if self.ba.numSpikes == 0:
+			msg = QtWidgets.QMessageBox()
+			msg.setIcon(QtWidgets.QMessageBox.Warning)
+			msg.setText("No Spikes Detected")
+			msg.setInformativeText('dV/dt Threshold: ' + str(dvdtValue) + '\r' + ' Vm Threshold (mV): '  + str(minSpikeVm))
+			msg.setWindowTitle("No Spikes Detected")
+			retval = msg.exec_()
+			
 		self.replot() # replot statistics over traces
 		
 		self.refreshClips() # replot clips
@@ -96,9 +104,22 @@ class bDetectionWidget(QtWidgets.QWidget):
 		
 	def save(self):
 		print('=== save')
+		'''
 		rect = self.derivPlot.viewRect() # get xaxis
 		print(rect.left(), rect.right())
-	
+		'''
+		xMin, xMax = self.getXRange()
+		print('    xMin:', xMin, 'xMax:', xMax)
+		
+	def getXRange(self):
+		"""
+		Get the current range of X-Axis
+		"""
+		rect = self.derivPlot.viewRect() # get xaxis
+		xMin = rect.left()
+		xMax = rect.right()
+		return xMin, xMax
+		
 	def setFullAxis(self):
 		if self.ba is None:
 			return
@@ -116,7 +137,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			start = stop
 			stop = tmp
 		
-		print('bDetectionWidget.setAxis() start:', start, 'stop:', stop)
+		#print('bDetectionWidget.setAxis() start:', start, 'stop:', stop)
 
 		self.derivPlot.setXRange(start, stop)
 
@@ -134,9 +155,14 @@ class bDetectionWidget(QtWidgets.QWidget):
 		"""
 		print('=== bDetectionWidget.switchFile() path:', path)
 		
+		if self.ba is not None and self.ba.file == path:
+			print('bDetectionWidget is already displaying file:', path)
+			return
+			
 		self.ba = bAnalysis(file=path)
 		self.ba.getDerivative(medianFilter=5) # derivative
 		
+		#remove vm/dvdt/clip itmes
 		if self.dvdtLines is not None:
 			self.derivPlot.removeItem(self.dvdtLines)
 		if self.vmLines is not None:
@@ -147,8 +173,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#
 		# set full axis
 		self.setFullAxis()
-		#self.derivPlot.setXRange(0, self.ba.abf.sweepX[-1])
-		#self.vmPlot.setXRange(0, self.ba.abf.sweepX[-1])
 
 		#
 		# update lines
@@ -158,6 +182,19 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY, self)
 		self.vmPlot.addItem(self.vmLines)
 		
+		#
+		# remove and re-add plot overlays
+		for idx, plot in enumerate(self.myPlots):
+			plotItem = self.myPlotList[idx]
+			if plot['plotOn'] == 'vm':
+				self.vmPlot.removeItem(plotItem)
+				self.vmPlot.addItem(plotItem)
+			elif plot['plotOn'] == 'dvdt':
+				self.derivPlot.removeItem(plotItem)
+				self.derivPlot.addItem(plotItem)
+		
+		#
+		# critical
 		self.replot()
 		
 		#
@@ -192,52 +229,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.myPlotList[idx].setPen(pg.mkPen(width=0, color=plot['color'], symbol=plot['symbol']))
 			self.myPlotList[idx].setSize(0)
 
-	def refreshClips(self, start=None, stop=None):
-		print('refreshClips() start:', start, 'stop:', stop)
-		
-		if self.view.getItem(2,0) is None:
-			return
-		
-		if self.clipLines is not None:
-			#print('    removing clips')
-			self.clipPlot.removeItem(self.clipLines)
-
-		# make a list of clips within start/stop (Seconds)
-		theseClips = []
-		theseClips_x = []
-		if start is not None and stop is not None:
-			for idx, clip in enumerate(self.ba.spikeClips):
-				spikeTime = self.ba.spikeTimes[idx]
-				spikeTime = self.ba.pnt2Sec_(spikeTime)
-				#print('spikeTime:', spikeTime)
-				if spikeTime>=start and spikeTime<=stop:
-					#print('    refreshClips adding spike', idx, spikeTime)
-					theseClips.append(clip)
-					theseClips_x.append(self.ba.spikeClips_x2[idx]) # remember, all _x are the same
-		else:
-			#print('    refreshClips adding all spike clips')
-			theseClips = self.ba.spikeClips
-			theseClips_x = self.ba.spikeClips_x2
-								
-		# convert clips to 2d ndarray ???
-		xTmp = np.array(theseClips_x) 
-		yTmp = np.array(theseClips)
-		
-		#print(type(xTmp), xTmp.shape, type(yTmp), yTmp.shape)
-		
-		self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False)
-		self.clipPlot.addItem(self.clipLines)
-		
-	def toggleClips(self, on):
-		"""
-		toggle clips plot on/off
-		"""
-		if on:
-			if self.view.getItem(2,0) is None:
-				self.clipPlot = self.view.addPlot(row=2, col=0)
-		else:
-			self.view.removeItem(self.clipPlot)
-			
 	def replot(self):
 
 		if self.ba is None:
@@ -254,17 +245,66 @@ class bDetectionWidget(QtWidgets.QWidget):
 			
 		# update label with number of spikes detected
 		numSpikesStr = str(self.ba.numSpikes)
-		self.detectToolbarWidget.numSpikesLabel.setText('Number of Spikes: ' + numSpikesStr)
+		self.detectToolbarWidget.numSpikesLabel.setText('Number of Spikes Detected: ' + numSpikesStr)
 		self.detectToolbarWidget.numSpikesLabel.repaint()
 		
+	def refreshClips(self, xMin=None, xMax=None):
+		if self.view.getItem(2,0) is None:
+			# clips are not being displayed
+			return
+
+		if xMin is None or xMax is None:
+			xMin, xMax = self.getXRange() # the current viewed x-axis range
+		
+		print('bDetectionWidget.refreshClips() xMin:', xMin, 'xMax:', xMax)
+	
+		# remove existing
+		if self.clipLines is not None:
+			self.clipPlot.removeItem(self.clipLines)
+
+		# make a list of clips within start/stop (Seconds)
+		theseClips = []
+		theseClips_x = []
+		#if start is not None and stop is not None:
+		if 1:
+			for idx, clip in enumerate(self.ba.spikeClips):
+				spikeTime = self.ba.spikeTimes[idx]
+				spikeTime = self.ba.pnt2Sec_(spikeTime)
+				if spikeTime>=xMin and spikeTime<=xMax:
+					theseClips.append(clip)
+					theseClips_x.append(self.ba.spikeClips_x2[idx]) # remember, all _x are the same
+		'''
+		else:
+			theseClips = self.ba.spikeClips
+			theseClips_x = self.ba.spikeClips_x2
+		'''
+							
+		# convert clips to 2d ndarray ???
+		xTmp = np.array(theseClips_x) 
+		yTmp = np.array(theseClips)
+				
+		self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False)
+		self.clipPlot.addItem(self.clipLines)
+		
+	def toggleClips(self, on):
+		"""
+		toggle clips plot on/off
+		"""
+		if on:
+			if self.view.getItem(2,0) is None:
+				self.clipPlot = self.view.addPlot(row=2, col=0)
+				self.refreshClips() # refresh if they exist (e.g. analysis has been done)
+		else:
+			self.view.removeItem(self.clipPlot)
+			
 	def buildUI(self):
 		self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
 
 		# detection widget toolbar
 		self.detectToolbarWidget = myDetectToolbarWidget(self.myPlots, self)
-		self.myHBoxLayout_detect.addLayout(self.detectToolbarWidget) # stretch=10, not sure on the units???
+		self.myHBoxLayout_detect.addLayout(self.detectToolbarWidget, stretch=1) # stretch=10, not sure on the units???
 		
-		print('bDetectionWidget.buildUI() building pg.GraphicsLayoutWidget')
+		#print('bDetectionWidget.buildUI() building pg.GraphicsLayoutWidget')
 		self.view = pg.GraphicsLayoutWidget()
 		self.view.show()
 
@@ -297,7 +337,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		lines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY)
 		self.vmPlot.addItem(lines)
 		'''
-		
+
 		#
 		# update lines
 		'''
@@ -308,6 +348,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 		
 		self.vmLines = MultiLine(emptyArray, emptyArray, self)
 		self.vmPlot.addItem(self.vmLines)
+		'''
+
+		'''
+		empty_ndarray = np.empty([])
+		self.dvdtLines = MultiLine(empty_ndarray, empty_ndarray, self)
+		self.derivPlot.addItem(self.dvdtLines)
 		'''
 		
 		# add all plots
@@ -331,7 +377,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		
 		#
 		print('bDetectionWidget.buildUI() adding view to myQVBoxLayout')
-		self.myHBoxLayout_detect.addWidget(self.view) # stretch=10, not sure on the units???
+		self.myHBoxLayout_detect.addWidget(self.view, stretch=8) # stretch=10, not sure on the units???
 
 		print('bDetectionWidget.buildUI() done')
 		
@@ -430,42 +476,45 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		
 		row = 0
 		
-		buttonName = 'Detect Spikes'
+		buttonName = 'Detect dV/dt'
 		button = QtWidgets.QPushButton(buttonName)
-		#button.setToolTip('Detect Spikes')
+		button.setToolTip('Detect Spikes Using dV/dt Threshold')
 		button.clicked.connect(partial(self.on_button_click,buttonName))
 		self.addWidget(button, row, 0)
-
-		row += 1
 		
-		# dv/dt threshold
 		dvdtLabel = QtWidgets.QLabel('dV/dt Theshold')
-		self.addWidget(dvdtLabel, row, 0)
+		self.addWidget(dvdtLabel, row, 1)
 		
 		self.dvdtThreshold = QtWidgets.QDoubleSpinBox()
 		self.dvdtThreshold.setMinimum(-1e6)
 		self.dvdtThreshold.setMaximum(+1e6)
 		self.dvdtThreshold.setValue(50)
-		self.addWidget(self.dvdtThreshold, row, 1)
+		self.addWidget(self.dvdtThreshold, row, 2)
 		
 		row += 1
 
-		# min spike Vm
-		minSpikeVmLabel = QtWidgets.QLabel('min spike (mV)')
-		self.addWidget(minSpikeVmLabel, row, 0)
+		buttonName = 'Detect Vm Threshold'
+		button = QtWidgets.QPushButton(buttonName)
+		button.setToolTip('Detect Spikes Using Vm Threshold')
+		button.clicked.connect(partial(self.on_button_click,buttonName))
+		self.addWidget(button, row, 0)
+
+		# Vm Threshold (mV)
+		minSpikeVmLabel = QtWidgets.QLabel('Vm Threshold (mV)')
+		self.addWidget(minSpikeVmLabel, row, 1)
 
 		self.minSpikeVm = QtWidgets.QDoubleSpinBox()
 		self.minSpikeVm.setMinimum(-1e6)
 		self.minSpikeVm.setMaximum(+1e6)
 		self.minSpikeVm.setValue(-20)
-		self.addWidget(self.minSpikeVm, row, 1)
+		self.addWidget(self.minSpikeVm, row, 2)
 		
 		row += 1
 
 		# start/stop seconds
-		startSeconds = QtWidgets.QLabel('Start Seconds')
+		startSeconds = QtWidgets.QLabel('From (Sec)')
 		self.addWidget(startSeconds, row, 0)
-		stopSeconds = QtWidgets.QLabel('Stop Seconds')
+		stopSeconds = QtWidgets.QLabel('To (Sec)')
 		self.addWidget(stopSeconds, row, 1)
 		#
 		row += 1
@@ -485,34 +534,14 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 
 		row += 1
 
-		for idx, plot in enumerate(myPlots):
-			humanName = plot['humanName']
-			isChecked = plot['plotIsOn']
-			checkbox = QtWidgets.QCheckBox(humanName)
-			checkbox.setChecked(isChecked)
-			#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
-			checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,idx))
-			self.addWidget(checkbox, row, 0)
-			row += 1
-			
-		#row += 1
-
-		checkbox = QtWidgets.QCheckBox('Show Clips')
-		checkbox.setChecked(False)
-		#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
-		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Show Clips'))
-		self.addWidget(checkbox, row, 0)
-
-		row += 1
-
 		# dv/dt threshold
-		self.numSpikesLabel = QtWidgets.QLabel('Number of Spikes')
+		self.numSpikesLabel = QtWidgets.QLabel('Number of Spikes Detected: None')
 		#self.numSpikesLabel.setObjectName('numSpikesLabel')
 		self.addWidget(self.numSpikesLabel, row, 0)
 
 		row += 1
 
-		buttonName = 'Save'
+		buttonName = 'Save Spike Report'
 		button = QtWidgets.QPushButton(buttonName)
 		#button.setToolTip('Detect Spikes')
 		button.clicked.connect(partial(self.on_button_click,buttonName))
@@ -526,10 +555,32 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		button.clicked.connect(partial(self.on_button_click,buttonName))
 		self.addWidget(button, row, 0)
 
+		row += 1
+
+		for idx, plot in enumerate(myPlots):
+			humanName = plot['humanName']
+			isChecked = plot['plotIsOn']
+			checkbox = QtWidgets.QCheckBox(humanName)
+			checkbox.setChecked(isChecked)
+			#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
+			checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,idx))
+			self.addWidget(checkbox, row, 0)
+			row += 1
+		
+		#row += 1
+
+		checkbox = QtWidgets.QCheckBox('Show Clips')
+		checkbox.setChecked(False)
+		#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
+		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Show Clips'))
+		self.addWidget(checkbox, row, 0)
+
+
 	def on_start_stop(self):
-		print('=== on_start_stop()')
+		#print('myDetectToolbarWidget.on_start_stop()')
 		start = self.startSeconds.value()
 		stop = self.stopSeconds.value()
+		#print('    start:', start, 'stop:', stop)
 		self.detectionWidget.setAxis(start, stop)
 		
 	def on_check_click(self, checkbox, idx):
@@ -544,17 +595,21 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 	@QtCore.pyqtSlot()
 	def on_button_click(self, name):
 		print('=== myDetectToolbarWidget.on_button_click() name:', name)
-		if name == 'Detect Spikes':
+		if name == 'Detect dV/dt':
 			dvdtValue = self.dvdtThreshold.value()
 			minSpikeVm = self.minSpikeVm.value()
-			print('    dvdtValue:', dvdtValue)
-			print('    minSpikeVm:', minSpikeVm)
+			#print('    dvdtValue:', dvdtValue)
+			#print('    minSpikeVm:', minSpikeVm)
 			self.detectionWidget.detect(dvdtValue, minSpikeVm)
-			#self.detectionWidget.ba.spikeDetect(dVthresholdPos=dvdtValue, minSpikeVm=minSpikeVm)
-			#self.detectionWidget.replot()
+		elif name =='Detect Vm Threshold':
+			minSpikeVm = self.minSpikeVm.value()
+			#print('    minSpikeVm:', minSpikeVm)
+			# passing dvdtValue=None we will detect suing minSpikeVm
+			dvdtValue = None
+			self.detectionWidget.detect(dvdtValue, minSpikeVm)
 		elif name == 'Reset X-Axis':
 			self.detectionWidget.setFullAxis()
-		elif name == 'Save':
+		elif name == 'Save Spike Report':
 			self.detectionWidget.save()
 		
 if __name__ == '__main__':
