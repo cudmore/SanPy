@@ -976,6 +976,159 @@ class bAnalysis:
 		df = pd.DataFrame(newList)
 		return df
 
+	#################################################################################
+	# save results (e.g. report)
+	#################################################################################
+	def saveReport(self, savefile, theMin, theMax):
+		"""
+		save a spike report for detected spikes between theMin (sec) and theMax (sec)
+		"""
+
+		'''
+		filePath, fileName = os.path.split(os.path.abspath(self.file))
+		fileBaseName, extension = os.path.splitext(fileName)
+		excelFilePath = os.path.join(filePath, fileBaseName + '.xlsx')
+		'''
+		
+		#print('AnalysisApp.report() saving', excelFilePath)
+		#print('Asking user for file name to save...')
+
+		#savefile will be full path to user specified file
+		'''
+		savefile = asksaveasfilename(filetypes=(("Excel files", "*.xlsx"),
+									("All files", "*.*") ),
+									initialdir=filePath,
+									initialfile=fileBaseName + '.xlsx')
+		'''
+		
+		# always grab a df to the entire analysis (not sure what I will do with this)
+		#df = self.report() # report() is my own 'bob' verbiage
+
+		fileWasSaved = False
+
+		if savefile:
+			print('Saving user specified .xlsx file:', savefile)
+			excelFilePath = savefile
+			writer = pd.ExcelWriter(excelFilePath, engine='xlsxwriter')
+
+			#
+			# cardiac style analysis to sheet 'cardiac'
+			cardiac_df = self.report2(theMin, theMax) # report2 is more 'cardiac'
+
+			#
+			# header sheet
+			headerDict = collections.OrderedDict()
+			headerDict['file'] = [self.file]
+			headerDict['Date Analyzed'] = [self.dateAnalyzed]
+			headerDict['dV/dt Threshold'] = [self.dVthreshold]
+			headerDict['Vm Threshold (mV)'] = [self.minSpikeVm]
+			headerDict['Median Filter (pnts)'] = [self.medianFilter]
+			headerDict['Analysis Start (sec)'] = [self.startSeconds]
+			headerDict['Analysis Stop (sec)'] = [self.stopSeconds]
+			headerDict['Sweep Number'] = [self.currentSweep]
+			headerDict['Number of Sweeps'] = [self.numSweeps]
+			headerDict['Export Start (sec)'] = [theMin] # on export, x-axis of raw plot will be ouput
+			headerDict['Export Stop (sec)'] = [theMax] # on export, x-axis of raw plot will be ouput
+			headerDict['stats'] = []
+
+			for idx, col in enumerate(cardiac_df):
+				headerDict[col] = []
+
+			# mean
+			theMean = cardiac_df.mean() # skipna default is True
+			theMean['errors'] = ''
+			# sd
+			theSD = cardiac_df.std() # skipna default is True
+			theSD['errors'] = ''
+			#se
+			theSE = cardiac_df.sem() # skipna default is True
+			theSE['errors'] = ''
+			#n
+			theN = cardiac_df.count() # skipna default is True
+			theN['errors'] = ''
+
+			statCols = ['mean', 'sd', 'se', 'n']
+			for j, stat in enumerate(statCols):
+				if j == 0:
+					pass
+				else:
+					headerDict['file'].append('')
+					headerDict['Date Analyzed'].append('')
+					headerDict['dV/dt Threshold'].append('')
+					headerDict['Vm Threshold (mV)'].append('')
+					headerDict['Median Filter (pnts)'].append('')
+					headerDict['Analysis Start (sec)'].append('')
+					headerDict['Analysis Stop (sec)'].append('')
+					headerDict['Sweep Number'].append('')
+					headerDict['Number of Sweeps'].append('')
+					headerDict['Export Start (sec)'].append('')
+					headerDict['Export Stop (sec)'].append('')
+
+				# a dictionary key for each stat
+				headerDict['stats'].append(stat)
+				for idx, col in enumerate(cardiac_df):
+					#headerDict[col].append('')
+					if stat == 'mean':
+						headerDict[col].append(theMean[col])
+					elif stat == 'sd':
+						headerDict[col].append(theSD[col])
+					elif stat == 'se':
+						headerDict[col].append(theSE[col])
+					elif stat == 'n':
+						headerDict[col].append(theN[col])
+
+
+			# dict to pandas dataframe
+			df = pd.DataFrame(headerDict).T
+			# pandas dataframe to excel sheet 'header'
+			df.to_excel(writer, sheet_name='summary')
+
+			# set the column widths in excel sheet 'cardiac'
+			columnWidth = 25
+			worksheet = writer.sheets['summary']  # pull worksheet object
+			for idx, col in enumerate(df):  # loop through all columns
+				worksheet.set_column(idx, idx, columnWidth)  # set column width
+
+			#
+			# 'cardiac' sheet
+			cardiac_df.to_excel(writer, sheet_name='cardiac')
+
+			# set the column widths in excel sheet 'cardiac'
+			columnWidth = 20
+			worksheet = writer.sheets['cardiac']  # pull worksheet object
+			for idx, col in enumerate(cardiac_df):  # loop through all columns
+				worksheet.set_column(idx, idx, columnWidth)  # set column width
+
+
+			#
+			# entire (verbose) analysis to sheet 'bob'
+			#df.to_excel(writer, sheet_name='bob')
+
+			#
+			# mean spike clip
+			'''
+			df = pd.DataFrame(self.clipsPlot.meanClip)
+			df.to_excel(writer, sheet_name='Avg Spike')
+			'''
+			
+			writer.save()
+
+			#
+			# always save a text file
+			filePath, fileName = os.path.split(os.path.abspath(savefile))
+
+			textFileBaseName, tmpExtension = os.path.splitext(savefile)
+			textFilePath = os.path.join(filePath, textFileBaseName + '.txt')
+			print('Saving .txt file:', textFilePath)
+			df = self.report(theMin, theMax)
+			df.to_csv(textFilePath, sep=',', index_label='index', mode='w')
+
+			fileWasSaved = True
+		else:
+			print('Save aborted by user')
+
+		return fileWasSaved
+
 	#############################
 	# utility functions
 	#############################

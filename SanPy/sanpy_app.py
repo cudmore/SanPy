@@ -105,43 +105,89 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.ba.spikeDetect(dVthresholdPos=50, minSpikeVm=-20, medianFilter=0)
 	'''
 		
-	def on_file_table_click(self):
-		row = self.myTableWidget.currentRow()
-		file = self.fileList.getFileFromIndex(row)
-		path = file.path
-
-		print('=== on_file_table_click row:', row, 'path:', path)
-
-		self.myDetectionWidget.switchFile(path)
-		
 	def mySignal(self, this):
 		print('=== mySignal() "' + this +'"')
 		if this == 'detect':
-			#
-			# update file table
-			ba = self.myDetectionWidget.ba
-			# todo: I do not know row !!!!!!
-			#self.fileList.refreshRow(self, treeViewRow, path, ba)
 			
 			#
 			# update scatter plot
 			self.myScatterPlotWidget.plotToolbarWidget.on_scatter_toolbar_table_click()
+		elif this == 'saved':
+			#
+			# update file list object
+			ba = self.myDetectionWidget.ba
+			self.fileList.refreshRow(ba)
+		
+			# todo: make this more efficient, just update one row
+			#self.refreshFileTableWidget()
+			self.refreshFileTableWidget_Row()
 			
+	def file_table_get_value(self, thisRow, thisColumnName):
+		"""
+		get the value of a column columnName at a selected row
+		"""
+		theValue = ''
+		
+		numCol = self.myTableWidget.columnCount()
+		for j in range(numCol):
+			headerText = self.myTableWidget.horizontalHeaderItem(j).text()
+			if headerText == thisColumnName:
+				theValue = self.myTableWidget.item(thisRow,j).text()
+				break
+		if len(theValue) > 0:
+			return theValue
+		else:
+			print('error: file_table_get_value() did not find', thisRow, thisColumnName)
+			return None
+			
+	def on_file_table_click(self):
+		row = self.myTableWidget.currentRow()
+		
+		findThisColumn = 'File'
+		fileName = ''
+		
+		# todo: replace this with file_table_get_value()
+		numCol = self.myTableWidget.columnCount()
+		for j in range(numCol):
+			headerText = self.myTableWidget.horizontalHeaderItem(j).text()
+			if headerText == findThisColumn:
+				fileName = self.myTableWidget.item(row,j).text()
+				break
+				
+		if len(fileName) > 0:
+			path = os.path.join(self.path, fileName)
+			print('=== on_file_table_click row:', row, 'path:', path)
+			self.myDetectionWidget.switchFile(path)
+		else:
+			print('error: on_file_table_click() did not find File name at row:', row)
+			
+	def refreshFileTableWidget_Row(self):
+		"""
+		refresh the selected row
+		"""
+		selectedRow = self.myTableWidget.currentRow()
+		selectedFile = self.file_table_get_value(selectedRow, 'File')
+
+		fileValues = self.fileList.getFileValues(selectedFile) # get list of values in correct column order
+		for colIdx, fileValue in enumerate(fileValues):
+			if str(fileValue) == 'None':
+				fileValue = ''
+			item = QtWidgets.QTableWidgetItem(str(fileValue))
+			self.myTableWidget.setItem(selectedRow, colIdx, item)
+		
 	def refreshFileTableWidget(self):
 		print('refreshFileTableWidget()')
 		
 		if self.fileList is None:
 			print('refreshFileTableWidget() did not find a file list')
 			return
-		
-		fileList = self.fileList.getList()
-		
+				
 		#self.myTableWidget.setShowGrid(False) # remove grid
 		self.myTableWidget.setFont(QtGui.QFont('Arial', 13))
 		
 		#
 		# this will not change for a given path ???
-		numRows = len(fileList)
+		numRows = self.fileList.numFiles()
 		numCols = len(self.fileList.getColumns())
 		self.myTableWidget.setRowCount(numRows)
 		self.myTableWidget.setColumnCount(numCols)
@@ -156,13 +202,17 @@ class MainWindow(QtWidgets.QMainWindow):
 		
 		#
 		# update to reflect analysis date/time etc
-		for idx, file in enumerate(fileList):
-			#print('refreshFileTableWidget() file:', file)
-			myTuple = file.asTuple()
-			for idx2, j in enumerate(myTuple):
-				item = QtWidgets.QTableWidgetItem(str(j))
+		fileList = self.fileList.getList() #ordered dict of files
+
+		for idx, filename in enumerate(fileList.keys()):
+			#print(idx, filename)
+			fileValues = self.fileList.getFileValues(filename) # get list of values in correct column order
+			for idx2, fileValue in enumerate(fileValues):
+				if str(fileValue) == 'None':
+					fileValue = ''
+				item = QtWidgets.QTableWidgetItem(str(fileValue))
 				self.myTableWidget.setItem(idx, idx2, item)
-		
+			
 	def buildMenus(self):
 	
 		mainMenu = self.menuBar()

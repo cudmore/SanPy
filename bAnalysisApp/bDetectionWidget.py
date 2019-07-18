@@ -79,7 +79,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		
 		### REPLOT ###
 		self.replot()
-		
+			
 	def on_scatterClicked(self, scatter, points):
 		print('scatterClicked() scatter:', scatter, points)
 

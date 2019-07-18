@@ -1,11 +1,11 @@
+import math
+
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 import numpy as np
 
 from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
-
-#import random
 
 from bAnalysisUtil import bAnalysisUtil
 
@@ -123,8 +123,8 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		# xmin/xmax will always be time of recording in seconds
 		xMin = 0
 		xMax = self.myDetectionWidget.ba.abf.sweepX[-1]
-		#xMin = np.nanmin(xPlot)
-		#xMax = np.nanmax(xPlot)
+		self._static_ax.set_xlim([xMin, xMax])
+
 		yMin = np.nanmin(yPlot)
 		yMax = np.nanmax(yPlot)
 		
@@ -134,8 +134,12 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		yMin -= percentSpan
 		yMax += percentSpan
 		
-		self._static_ax.set_xlim([xMin, xMax])
-		self._static_ax.set_ylim([yMin, yMax])
+		#print('metaplotstat() ymin:', yMin, 'yMax:', yMax)
+		
+		if math.isnan(yMin) or math.isnan(xMin):
+			pass
+		else:
+			self._static_ax.set_ylim([yMin, yMax])
 
 		self._static_ax.set_xlabel(xStatLabel)
 		self._static_ax.set_ylabel(yStatHuman)

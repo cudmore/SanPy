@@ -1,4 +1,4 @@
-import sys
+import os, sys
 from functools import partial
 
 import numpy as np
@@ -103,14 +103,29 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#QtCore.QCoreApplication.processEvents()
 		
 	def save(self):
-		print('=== save')
-		'''
-		rect = self.derivPlot.viewRect() # get xaxis
-		print(rect.left(), rect.right())
-		'''
+		print('=== bDetectionWidget.save')
+		if self.ba is None or self.ba.numSpikes==0:
+			print('   no analysis ???')
+			return
 		xMin, xMax = self.getXRange()
 		print('    xMin:', xMin, 'xMax:', xMax)
 		
+		filePath, fileName = os.path.split(os.path.abspath(self.ba.file))
+		fileBaseName, extension = os.path.splitext(fileName)
+		excelFileName = os.path.join(filePath, fileBaseName + '.xlsx')
+		
+		print('Asking user for file name to save...')
+		savefile, tmp = QtGui.QFileDialog.getSaveFileName(self, 'Save File', excelFileName)
+
+		print('savefile:', savefile)
+		print('tmp:', tmp)
+		
+		if len(savefile) > 0:
+			self.ba.saveReport(savefile, xMin, xMax)
+			self.myMainWindow.mySignal('saved')
+		else:
+			print('no file saved')
+			
 	def getXRange(self):
 		"""
 		Get the current range of X-Axis
@@ -574,7 +589,6 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Show Clips'))
 		self.addWidget(checkbox, row, 0)
-
 
 	def on_start_stop(self):
 		#print('myDetectToolbarWidget.on_start_stop()')

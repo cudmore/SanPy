@@ -27,22 +27,50 @@ class bFileList:
 		path: path to folder with .mp4 files
 		"""
 
-		self.videoFileList = []
+		#self.videoFileList = []
 
 		self.path = path
 
 		self.db = OrderedDict()
 		self.databaseLoad()
 
-		self.populateFolder(path)
+		#self.populateFolder(path)
 
-	def refreshRow(self, treeViewRow, path, ba):
+	def getFileValues(self, file):
+		theRet = []
+		
+		fileDict = self.db[file]
+		
+		for colName in gVideoFileColumns:
+			if colName == 'File':
+				theRet.append(fileDict['file'])
+			if colName == 'kHz':
+				theRet.append(fileDict['kHz'])
+			if colName == 'Sweeps':
+				theRet.append(fileDict['numSweeps'])
+			if colName == 'Duration (sec)':
+				theRet.append(fileDict['durationSec'])
+			if colName == 'Acq Date':
+				theRet.append(fileDict['acqDate'])
+			if colName == 'Acq Time':
+				theRet.append(fileDict['acqTime'])
+			if colName == 'dV/dt Threshold':
+				theRet.append(fileDict['dvdtThreshold'])
+			if colName == 'Num Spikes':
+				theRet.append(fileDict['numSpikes'])
+			if colName == 'Analysis Date':
+				theRet.append(fileDict['analysisDate'])
+			if colName == 'Analysis Time':
+				theRet.append(fileDict['analysisTime'])
+		return theRet
+		
+	def refreshRow(self, ba):
 		"""
 		On saving analysis, update the database for a file
 		
 		path: path to abf file
 		"""
-		file = os.path.basename(path)
+		file = os.path.basename(ba.file)
 		if file not in self.db.keys():
 			# error
 			print('WARNING: bFileList.databaseRefreshFile() did not find file in self.db, file:', file)
@@ -59,14 +87,16 @@ class bFileList:
 		
 			#
 			#
+			'''
 			self.videoFileList[treeViewRow].dict['dvdtThreshold'] = ba.dVthreshold
 			self.videoFileList[treeViewRow].dict['numSpikes'] = ba.numSpikes
 			self.videoFileList[treeViewRow].dict['analysisDate'] = myDate
 			self.videoFileList[treeViewRow].dict['analysisTime'] = myTime
+			'''
 			
 		self.databaseSave()
 		
-		return self.videoFileList[treeViewRow].asTuple()
+		#return self.videoFileList[treeViewRow].asTuple()
 		
 	def databaseRefresh(self):
 		useExtension = '.abf'
@@ -138,6 +168,7 @@ class bFileList:
 			with open(dbPath, "w") as dbFile:
 				json.dump(self.db, dbFile, indent=4)
 
+	'''
 	def populateFolder(self, path):
 		"""
 		given a folder path containing .abf files, populate with list of .abf files
@@ -161,16 +192,26 @@ class bFileList:
 
 				self.videoFileList.append(newVideoFile)
 				videoFileIdx += 1
-
+	'''
+	
 	def getColumns(self):
 		return gVideoFileColumns
 
+	def numFiles(self):
+		if self.db is None:
+			return 0
+		else:
+			return len(self.db.keys())
+	
 	def getList(self):
-		return self.videoFileList
-
+		#return self.videoFileList
+		return self.db
+		
+	'''
 	def getFileFromIndex(self, idx):
 		return self.videoFileList[idx]
-		
+	'''
+	
 #############################################################
 class bVideoFile:
 
