@@ -105,15 +105,19 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.ba.spikeDetect(dVthresholdPos=50, minSpikeVm=-20, medianFilter=0)
 	'''
 		
-	def mySignal(self, this):
+	def mySignal(self, this, data=None):
+		"""
+		this: the signal
+		data: depends on signal:
+			signal=='set x axis': data=[min,max]
+		"""
 		print('=== mySignal() "' + this +'"')
+
 		if this == 'detect':
-			
-			#
 			# update scatter plot
 			self.myScatterPlotWidget.plotToolbarWidget.on_scatter_toolbar_table_click()
+
 		elif this == 'saved':
-			#
 			# update file list object
 			ba = self.myDetectionWidget.ba
 			self.fileList.refreshRow(ba)
@@ -121,7 +125,22 @@ class MainWindow(QtWidgets.QMainWindow):
 			# todo: make this more efficient, just update one row
 			#self.refreshFileTableWidget()
 			self.refreshFileTableWidget_Row()
+		
+		elif this == 'select spike':
+			self.myDetectionWidget.selectSpike(data)
+			self.myScatterPlotWidget.selectSpike(data)
 			
+		elif this == 'set x axis':
+			self.myScatterPlotWidget.selectXRange(data[0], data[1])
+		
+		elif this == 'set full x axis':
+			self.myScatterPlotWidget.selectXRange(None, None)
+		
+		elif this == 'cancel all selections':
+			self.myDetectionWidget.selectSpike(None)
+			self.myScatterPlotWidget.selectSpike(None)
+			self.myScatterPlotWidget.selectXRange(None, None)
+
 	def file_table_get_value(self, thisRow, thisColumnName):
 		"""
 		get the value of a column columnName at a selected row
@@ -236,6 +255,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		windowsMenu.addAction(scatterPlotAction)
 
 	def scatterPlot(self):
+		"""
+		open a new window with an x/y scatter plot
+		"""
 		print('=== scatterPlot()')
 		
 	'''
@@ -250,6 +272,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		if key in [70, 82]: # 'r' or 'f'
 			self.myDetectionWidget.setFullAxis()
 			
+		# todo make this a self.mySignal
+		if key == QtCore.Qt.Key.Key_Escape:
+			self.mySignal('cancel all selections')
+		
 	def buildUI(self):
 		self.centralwidget = QtWidgets.QWidget(self)
 		self.centralwidget.setObjectName("centralwidget")

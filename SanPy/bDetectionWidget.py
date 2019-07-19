@@ -80,7 +80,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 	'''
 			
 	def detect(self, dvdtValue, minSpikeVm):
-
+		"""
+		detect spikes
+		"""
+		
 		if self.ba is None:
 			return
 		
@@ -103,6 +106,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#QtCore.QCoreApplication.processEvents()
 		
 	def save(self):
+		"""
+		Prompt user for filename and save both xlsx and txt
+		Save always defaults to data folder
+		"""
 		print('=== bDetectionWidget.save')
 		if self.ba is None or self.ba.numSpikes==0:
 			print('   no analysis ???')
@@ -135,17 +142,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 		xMax = rect.right()
 		return xMin, xMax
 		
-	def setFullAxis(self):
-		if self.ba is None:
-			return
-		
-		start = 0
-		stop = self.ba.abf.sweepX[-1]
-		
-		self.setAxis(start, stop)
-	
-	def setAxis(self, start, stop):
-		
+	def _setAxis(self, start, stop):
+		"""
+		Shared by (setAxisFull, setAxis)
+		"""
 		# make sure start/stop are in correct order and swap if necc.
 		if stop<start:
 			tmp = start
@@ -154,8 +154,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 		
 		#print('bDetectionWidget.setAxis() start:', start, 'stop:', stop)
 
-		self.derivPlot.setXRange(start, stop)
+		self.derivPlot.setXRange(start, stop) # linked to Vm
 
+		# update detection toolbar
 		self.detectToolbarWidget.startSeconds.setValue(start)
 		self.detectToolbarWidget.startSeconds.repaint()
 		self.detectToolbarWidget.stopSeconds.setValue(stop)
@@ -163,6 +164,19 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.refreshClips(start, stop)
 		
+	def setAxisFull(self):
+		if self.ba is None:
+			return
+		
+		start = 0
+		stop = self.ba.abf.sweepX[-1]
+		
+		self._setAxis(start, stop)
+		self.myMainWindow.mySignal('set full x axis')
+	
+	def setAxis(self, start, stop):
+		self._setAxis(start, stop)
+		self.myMainWindow.mySignal('set x axis', data=[start,stop])
 	
 	def switchFile(self, path):
 		"""
@@ -185,11 +199,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if self.clipLines is not None:
 			self.clipPlot.removeItem(self.clipLines)
 		
-		#
+		# cancel spike selection
+		self.selectSpike(None)
+		
 		# set full axis
-		self.setFullAxis()
+		self.setAxisFull()
 
-		#
 		# update lines
 		self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.filteredDeriv, self)
 		self.derivPlot.addItem(self.dvdtLines)
@@ -197,7 +212,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY, self)
 		self.vmPlot.addItem(self.vmLines)
 		
-		#
 		# remove and re-add plot overlays
 		for idx, plot in enumerate(self.myPlots):
 			plotItem = self.myPlotList[idx]
@@ -207,6 +221,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 			elif plot['plotOn'] == 'dvdt':
 				self.derivPlot.removeItem(plotItem)
 				self.derivPlot.addItem(plotItem)
+		
+		# single spike selection
+		self.vmPlot.removeItem(self.mySingleSpikeScatterPlot)
+		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
 		
 		#
 		# critical
@@ -262,6 +280,18 @@ class bDetectionWidget(QtWidgets.QWidget):
 		numSpikesStr = str(self.ba.numSpikes)
 		self.detectToolbarWidget.numSpikesLabel.setText('Number of Spikes Detected: ' + numSpikesStr)
 		self.detectToolbarWidget.numSpikesLabel.repaint()
+		
+	def selectSpike(self, spikeNumber):
+		print('bDetectionWIdget.selectSpike() spikeNumber:', spikeNumber)
+		# we will always use self.ba peak
+		if spikeNumber is None:
+			x = None
+			y = None
+		else:
+			xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal')
+			x = [xPlot[spikeNumber]]
+			y = [yPlot[spikeNumber]]
+		self.mySingleSpikeScatterPlot.setData(x=x, y=y)
 		
 	def refreshClips(self, xMin=None, xMax=None):
 		if self.view.getItem(2,0) is None:
@@ -343,35 +373,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		
 		self.toggleClips(False)
 		
-		'''
-		print('bDetectionWidget.buildUI() building lines for deriv')
-		lines = MultiLine(self.ba.abf.sweepX, self.ba.filteredDeriv)
-		self.derivPlot.addItem(lines)
-
-		print('bDetectionWidget.buildUI() building lines for vm')
-		lines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY)
-		self.vmPlot.addItem(lines)
-		'''
-
-		#
-		# update lines
-		'''
-		emptyArray = np.ndarray([])
-		
-		self.dvdtLines = MultiLine(emptyArray, emptyArray, self)
-		self.derivPlot.addItem(self.dvdtLines)
-		
-		self.vmLines = MultiLine(emptyArray, emptyArray, self)
-		self.vmPlot.addItem(self.vmLines)
-		'''
-
-		'''
-		empty_ndarray = np.empty([])
-		self.dvdtLines = MultiLine(empty_ndarray, empty_ndarray, self)
-		self.derivPlot.addItem(self.dvdtLines)
-		'''
-		
-		# add all plots
+		# add all overlaid scatter plots
 		self.myPlotList = [] # list of pg.ScatterPlotItem
 		for idx, plot in enumerate(self.myPlots):
 			color = plot['color']
@@ -388,13 +390,19 @@ class bDetectionWidget(QtWidgets.QWidget):
 			elif plot['plotOn'] == 'dvdt':
 				self.derivPlot.addItem(myScatterPlot)
 
+		# single spike selection
+		color = 'c'
+		symbol = 'o'
+		self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=2)
+		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
+		
 		self.replot()
 		
 		#
-		print('bDetectionWidget.buildUI() adding view to myQVBoxLayout')
+		#print('bDetectionWidget.buildUI() adding view to myHBoxLayout_detect')
 		self.myHBoxLayout_detect.addWidget(self.view, stretch=8) # stretch=10, not sure on the units???
 
-		print('bDetectionWidget.buildUI() done')
+		#print('bDetectionWidget.buildUI() done')
 		
 class MultiLine(pg.QtGui.QGraphicsPathItem):
 	"""
@@ -480,6 +488,18 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 
 #class myDetectToolbarWidget(QtWidgets.QVBoxLayout):
 class myDetectToolbarWidget(QtWidgets.QGridLayout):
+
+	def sweepSelectionChange(self,i):
+		print('sweepSelectionChange() i:', i)
+		'''
+		print "Items in the list are :"
+		
+		for count in range(self.cb.count()):
+			print self.cb.itemText(count)
+		'''
+		sweepNumber = int(self.cb.currentText())
+		print('    sweep number:', sweepNumber)
+
 	def __init__(self, myPlots, detectionWidget, parent=None):
 		"""
 		myPlots is a list of dict describing each x/y plot (on top of vm and/or dvdt)
@@ -487,10 +507,24 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		
 		super(myDetectToolbarWidget, self).__init__(parent)
 
-		self.detectionWidget = detectionWidget
+		self.detectionWidget = detectionWidget # parent detection widget
 		
 		row = 0
 		
+		# sweeps
+		sweepLabel = QtWidgets.QLabel('Sweep')
+		self.addWidget(sweepLabel, row, 0)
+
+		sweeps = [0,1,2,3,4]
+		self.cb = QtWidgets.QComboBox()
+		#self.cb.addItems(sweeps)
+		for sweep in sweeps:
+			self.cb.addItem(str(sweep))
+		self.cb.currentIndexChanged.connect(self.sweepSelectionChange)
+		self.addWidget(self.cb, row, 1)
+
+		row += 1
+
 		buttonName = 'Detect dV/dt'
 		button = QtWidgets.QPushButton(buttonName)
 		button.setToolTip('Detect Spikes Using dV/dt Threshold')
@@ -622,7 +656,7 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 			dvdtValue = None
 			self.detectionWidget.detect(dvdtValue, minSpikeVm)
 		elif name == 'Reset X-Axis':
-			self.detectionWidget.setFullAxis()
+			self.detectionWidget.setAxisFull()
 		elif name == 'Save Spike Report':
 			self.detectionWidget.save()
 		

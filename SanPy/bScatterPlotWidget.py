@@ -16,8 +16,27 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		self.myMainWindow = mainWindow
 		self.myDetectionWidget = detectionWidget
 		
+		#self.colorTable = plt.cm.coolwarm
+		self.colorTable = mpl.pyplot.cm.coolwarm
+		
 		self.buildUI()
 
+	def on_pick_event(self, event):
+		print('=== bScatterWidget.on_pick_event() event:', event, 'event.ind:', event.ind)
+
+		if len(event.ind) < 1:
+			return	
+		spikeNumber = event.ind[0]
+		
+		# propagate a signal to parent
+		self.myMainWindow.mySignal('select spike', data=spikeNumber)
+		#self.selectSpike(spikeNumber)
+		
+	'''
+	def on_button_press(self, event):
+		print('=== bScatterWidget.on_button_press() event:', event, 'event:', event)
+	'''
+	
 	def buildUI(self):
 		self.myHBoxLayout_statplot = QtWidgets.QHBoxLayout(self)
 
@@ -32,6 +51,9 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		self._static_ax = self.static_canvas.figure.subplots()
 		#self._static_ax.plot(xPlot, yPlot, ".")
 		
+		# pick_event assumes 'picker=5' in any .plot()
+		self.cid = self.static_canvas.mpl_connect('pick_event', self.on_pick_event)
+
 		'''
 		fig = mpl.figure.Figure()
 		self._static_ax = fig.add_subplot(111)
@@ -39,7 +61,17 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		self._static_ax = self.static_canvas.figure.subplots()
 		'''
 		
+		self.lastSpikeNumber = None
+		self.lastFileName = ''
+		
+		self.plotMeta_selection = None # selection of many spikes matching detection widget x-aixs
+		
+		# holds data of current x/y plot values (used to quickly select a range with xxx
+		self.my_xPlot = None
+		self.my_yPlot = None
+
 		self.metaLine = None
+		self.singleSpikeSelection = None
 		self.metaPlotStat('peakVal') # x='peakSec'
 		
 		# works
@@ -61,6 +93,71 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		#self.myQVBoxLayout.addWidget(self.static_canvas)
 		#self.myQVBoxLayout.addLayout(self.myHBoxLayout_statplot)
 
+	def selectSpike(self, spikeNumber):
+		""" Select a single spike in scatter plot """
+
+		print('bSCatterPlotWidget.selectSpike() spikeNumber:', spikeNumber)
+
+		if spikeNumber is None:
+			self.lastSpikeNumber = None
+			self.singleSpikeSelection.set_ydata([])
+			self.singleSpikeSelection.set_xdata([])
+		else:
+			self.lastSpikeNumber = spikeNumber
+			
+			offsets = self.metaLine.get_offsets()
+			xData = offsets[spikeNumber][0]
+			yData = offsets[spikeNumber][1]
+			print('   xData:', xData, 'yData:', yData)
+
+			self.singleSpikeSelection.set_xdata(xData)
+			self.singleSpikeSelection.set_ydata(yData)
+
+		self.static_canvas.draw()
+		self.repaint() # this is updating the widget !!!!!!!!
+
+	def selectXRange(self, xMin, xMax):
+		"""
+		select all spikes in range
+		"""
+		
+		print('bScatterPlotWidget.selectXRange() xMin:', xMin, 'xMax:', xMax)
+		
+		'''
+		# clear existing
+		if self.plotMeta_selection is not None:
+			for line in self.plotMeta_selection:
+				line.remove()
+
+		self.plotMeta_selection = []
+		'''
+		
+		if self.plotMeta_selection is None:
+			return
+		
+		#if xMin is not None and xMax is not None:
+		if xMin is None and xMax is None:
+			self.plotMeta_selection.set_ydata([])
+			self.plotMeta_selection.set_xdata([])
+		else:
+			xData = []
+			yData = []
+			for i, spikeTime in enumerate(self.myDetectionWidget.ba.spikeTimes):
+				spikeSeconds = spikeTime / self.myDetectionWidget.ba.dataPointsPerMs / 1000 # pnts to seconds
+				#print(spikeSeconds)
+				if spikeSeconds >= xMin and spikeSeconds <= xMax:
+					'''
+					line, = self._static_ax.plot(self.my_xPlot[i], self.my_yPlot[i], 'oy', markersize=10)
+					self.plotMeta_selection.append(line)
+					'''
+					xData.append(self.my_xPlot[i])
+					yData.append(self.my_yPlot[i])
+			self.plotMeta_selection.set_xdata(xData)
+			self.plotMeta_selection.set_ydata(yData)
+					
+		self.static_canvas.draw()
+		self.repaint() # this is updating the widget !!!!!!!!
+		
 	def metaPlotStat(self, yStatHuman):
 		print('bScatterPlotWidget.metaPlotStat() yStatHuman:', yStatHuman)
 		# todo: we need to tweek xStat based on particular yStat
@@ -89,6 +186,9 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 			xStat = 'preMinPnt'
 			convertPntToSec = True
 		'''
+		if len(self.lastFileName)==0 or (self.lastFileName != self.myDetectionWidget.ba.file):
+			self.lastSpikeNumber = None
+			self.lastFileName = self.myDetectionWidget.ba.file
 		
 		# convert human readable yStat to backend
 		statList = bAnalysisUtil.getStatList()
@@ -106,18 +206,34 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 			return
 		
 		#if convertPntToSec:
-			xPlot = [self.myDetectionWidget.ba.pnt2Sec_(x) for x in xPlot]
+		#	xPlot = [self.myDetectionWidget.ba.pnt2Sec_(x) for x in xPlot]
 		#
+		
+		# todo add to constructor
+		self.my_xPlot = xPlot
+		self.my_yPlot = yPlot
 			
+		tmpColor = range(len(xPlot))
 		if self.metaLine is None:
-			self.metaLine, = self._static_ax.plot(xPlot, yPlot, ".")
+			#self.metaLine, = self._static_ax.plot(xPlot, yPlot, ".", picker=5)
+			self.metaLine = self._static_ax.scatter(xPlot, yPlot, c=tmpColor, cmap=self.colorTable, picker=5)
 		else:
 			print('	metaPlotStat() set ydata/xdata')
 			self._static_ax.cla()
-			self.metaLine, = self._static_ax.plot(xPlot, yPlot, ".")
+			#self.metaLine, = self._static_ax.plot(xPlot, yPlot, ".")
+			self.metaLine = self._static_ax.scatter(xPlot, yPlot, c=tmpColor, cmap=self.colorTable, picker=5)
 			#self.metaLine.set_ydata(yPlot)
 			#self.metaLine.set_xdata(xPlot)
 			
+		# todo keep track of multi spike selection so we do not loose it on switching stats
+		self.plotMeta_selection, = self._static_ax.plot([], [], "oy", markersize=10)
+
+		if 1: #or self.singleSpikeSelection is None:
+			if self.lastSpikeNumber is None:
+				self.singleSpikeSelection, = self._static_ax.plot([], [], "oc", markersize=10)
+			else:
+				self.singleSpikeSelection, = self._static_ax.plot(xPlot[self.lastSpikeNumber], yPlot[self.lastSpikeNumber], "oc", markersize=10)
+				
 		#print('	len xPlot:', len(xPlot), 'len yplot:', len(yPlot))
 		
 		# xmin/xmax will always be time of recording in seconds
