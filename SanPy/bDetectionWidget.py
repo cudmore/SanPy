@@ -5,6 +5,7 @@ import numpy as np
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
+import pyqtgraph.exporters
 
 from bAnalysis import bAnalysis
 
@@ -342,6 +343,18 @@ class bDetectionWidget(QtWidgets.QWidget):
 		else:
 			self.view.removeItem(self.clipPlot)
 			
+	def myPrint(self):
+		exporter = pg.exporters.ImageExporter(self.vmPlot)
+		#print(exporter.getTargetRect())
+		exporter.parameters()['width'] = 200   # (note this also affects height parameter)
+		#exporter.parameters()['height'] = 100   # (note this also affects height parameter)
+		print(exporter.getTargetRect())
+		'''
+		print(exporter.params['width'])
+		print(exporter.params['height'])
+		'''
+		exporter.export('fileName.png')
+	
 	def buildUI(self):
 		self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
 

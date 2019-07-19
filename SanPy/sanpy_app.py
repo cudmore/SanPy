@@ -272,6 +272,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		if key in [70, 82]: # 'r' or 'f'
 			self.myDetectionWidget.setFullAxis()
 			
+		if key in [QtCore.Qt.Key.Key_P]: # 'r' or 'f'
+			self.myDetectionWidget.myPrint()
+
 		# todo make this a self.mySignal
 		if key == QtCore.Qt.Key.Key_Escape:
 			self.mySignal('cancel all selections')
