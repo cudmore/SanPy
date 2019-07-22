@@ -12,13 +12,11 @@ This repository has code to perform [cardiac action potential][cardiac action po
 
 ## Desktop Application
 
-Once the interface is up, select a folder with .abf files using the main 'File - Open Folder...' menu.
-
-Once a folder is loaded and a file is selected, the interface should look something like this.
+Use the 'File - Open Folder...' menu to open a folder of .abf files, select a file from the list and the interface will look something like this.
 
 <IMG SRC="img/spike-app.png" width=700>
 
-Selecting menu 'Meta Window' allows detected parameters to be plotted versus each other to explore correlations.
+Use the 'Window - Meta Window' menu to view scatter plots of detection parameters.
 
 <IMG SRC="img/meta-window-example.png" width=700>
 
@@ -50,7 +48,7 @@ ba.plotSpikes()
 
 ## Install
 
-This code will run on either macOS or Microsoft Windows.
+This code will run on macOS, Microsoft Windows, or Linux.
 
 Assuming you have the following
 
@@ -63,7 +61,7 @@ Assuming you have the following
 ##### Option 1) Install using ./install
 
 ```
-# If you have git install.
+# If you have git installed.
 # Clone the github repository (this will create a bAnalysis folder).
 git clone https://github.com/cudmore/bAnalysis.git
 
@@ -177,10 +175,18 @@ myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 11
 
 ## Other software
 
-[ParamAP][ParamAP] - Standardized parameterization of sinoatrial node myocyte action potentials
+ - [ParamAP][ParamAP] - Standardized parameterization of sinoatrial node myocyte action potentials
+ - [stimfit][stimfit] - A program for viewing and analyzing electrophysiological data
+
+C++ libraries
+
+ - [biosig][biosig] - A C/C++ library providing reading and writing routines for biosignal data formats
+ - [sigviewer][sigviewer] - SigViewer is a viewing application for biosignals.
 
 [ParamAP]: https://github.com/christianrickert/ParamAP
-
+[stimfit]: https://github.com/neurodroid/stimfit
+[biosig]: http://biosig.sourceforge.net/projects.html
+[sigviewer]: https://github.com/cbrnr/sigviewer
 
 ## Technologies used
 

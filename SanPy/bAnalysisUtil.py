@@ -190,7 +190,7 @@ class bAnalysisUtil:
 			with open(self.configFilePath) as f:
 				self.configDict = json.load(f)
 		else:
-			print('	bAnalysisUtil.preferencesLoad() using program provided default options')
+			#print('	bAnalysisUtil.preferencesLoad() using program provided default options')
 			self.configDefault()
 
 	def configDefault(self):

@@ -2,6 +2,43 @@ import os, sys, time, math, json
 from functools import partial
 from collections import OrderedDict
 
+###
+###
+###
+
+print('!!!!!!!!!!!!!! LOGGING !!!!!!!!!!!!!!!!')
+import logging
+
+from logging import FileHandler #RotatingFileHandler
+from logging.config import dictConfig
+
+# set up logging
+logFormat = "[%(asctime)s] {%(filename)s %(funcName)s:%(lineno)d} %(levelname)s - %(message)s"
+dictConfig({
+	'version': 1,
+	'formatters': {'default': {
+		'format': logFormat,
+	}},
+})
+
+myFormatter = logging.Formatter(logFormat)
+
+logFileName = 'sanpy.log'
+logFileHandler = FileHandler(logFileName, mode='w')
+logFileHandler.setLevel(logging.DEBUG)
+logFileHandler.setFormatter(myFormatter)
+
+logger = logging.getLogger('sanpy')
+logger.addHandler(logFileHandler)
+
+logger.setLevel(logging.INFO)
+logger.debug('initialized sanpy log')
+
+###
+###
+###
+
+
 import numpy as np
 
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -21,6 +58,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		path: full path to folder with abf files
 		"""
 		
+		#sanpyLogger.debug('startArmVideo')
+		logging.info('QQQ ===================== +++++++++++++++++++++++++++++')
+		logger.warning('xxx This is a warning')
+		logger.error('xxx This is an error')
+
 		super(MainWindow, self).__init__(parent)
 
 		self.setWindowTitle('SanPy')

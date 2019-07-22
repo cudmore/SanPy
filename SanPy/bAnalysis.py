@@ -130,7 +130,10 @@ class bAnalysis:
 		return self.numErrors
 
 
-	def getStat(self, xStat, yStat):
+	def getStat(self, xStat, yStat, xToSec=False):
+		"""
+		xToSec: Automatically convert x from points to seconds
+		"""
 		def clean(val):
 			if val is None:
 				val = float('nan')
@@ -140,6 +143,10 @@ class bAnalysis:
 		#y = [spike[yStat] for spike in self.spikeDict]
 		x = [clean(spike[xStat]) for spike in self.spikeDict]
 		y = [clean(spike[yStat]) for spike in self.spikeDict]
+		
+		if xToSec:
+			x = [self.pnt2Sec_(xi) for xi in x] # convert pnt to sec
+			
 		return x, y
 		
 	############################################################
@@ -586,6 +593,9 @@ class bAnalysis:
 
 		startTime = time.time()
 
+		if self.filteredDeriv is None:
+			self.getDerivative(medianFilter=medianFilter)
+			
 		self.spikeDict = [] # we are filling this in, one entry for each spike
 
 		self.numErrors = 0
@@ -1128,7 +1138,7 @@ class bAnalysis:
 			print('Save aborted by user')
 
 		return fileWasSaved
-
+		
 	#############################
 	# utility functions
 	#############################
