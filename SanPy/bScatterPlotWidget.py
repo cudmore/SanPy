@@ -1,3 +1,6 @@
+# Author: Robert H Cudmore
+# Date: 20190719
+
 import math
 
 from PyQt5 import QtCore, QtWidgets, QtGui

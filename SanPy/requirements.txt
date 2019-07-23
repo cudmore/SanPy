@@ -1,7 +1,7 @@
 pandas
 numpy
 scipy
-PyQt5 # version >=5.13 has 16bit indexed image !!!
+PyQt5
 pyqtgraph
 matplotlib
 pyabf

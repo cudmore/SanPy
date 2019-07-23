@@ -56,6 +56,18 @@ class bPlot:
 
 		return fig
 
+	def plotRaw(ba, ax=None):
+		if ax is None:
+			grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
+
+			fig = plt.figure(figsize=(10, 8))
+			ax = fig.add_subplot(grid[0, 0:]) #Vm, entire sweep
+
+		ax.plot(ba.abf.sweepX, ba.abf.sweepY, 'k')
+
+		ax.set_ylabel('Vm (mV)')
+		ax.set_xlabel('Time (sec)')
+	
 	def plotSpikes(ba, all=True, oneSpikeNumber=None, ax=None):
 		'''
 		Plot Vm with all spike analysis

@@ -109,6 +109,7 @@ class bFileList:
 			if file.endswith(useExtension):
 				if file in self.db.keys():
 					# already in database
+					print('databaseRefresh.databaseRefresh() file is already in self.db')
 					continue
 
 				fullPath = os.path.join(self.path, file)

@@ -1,3 +1,6 @@
+# Author: Robert H Cudmore
+# Date: 20190717
+
 import os, sys
 from functools import partial
 
@@ -187,6 +190,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 		
 		if self.ba is not None and self.ba.file == path:
 			print('bDetectionWidget is already displaying file:', path)
+			return
+			
+		if not os.path.isfile(path):
+			print('error: bDetectionWidget.switchFile() did not find file:', path)
 			return
 			
 		self.ba = bAnalysis(file=path)
