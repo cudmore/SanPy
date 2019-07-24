@@ -1,3 +1,6 @@
+# Author: Robert H Cudmore
+# Date: 20190719
+
 import os, sys, time, math, json
 from functools import partial
 from collections import OrderedDict
@@ -48,6 +51,7 @@ from bDetectionWidget import bDetectionWidget
 from bScatterPlotWidget import bScatterPlotWidget
 import bFileList
 from bAnalysis import bAnalysis
+from bExportWidget import bExportWidget
 
 pg.setConfigOption('background', 'w')
 pg.setConfigOption('foreground', 'k')
@@ -101,6 +105,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		
 		self.buildUI()
 		
+		self.myExportWidget = None
+		
 	# no idea why I need this ???
 	def _tmp_loadFolder2(self, bool):
 		loadedFolder = self.loadFolder()
@@ -153,7 +159,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		data: depends on signal:
 			signal=='set x axis': data=[min,max]
 		"""
-		print('=== mySignal() "' + this +'"')
+		print('=== sanpy_app.mySignal() "' + this +'"')
 
 		if this == 'detect':
 			# update scatter plot
@@ -217,8 +223,12 @@ class MainWindow(QtWidgets.QMainWindow):
 				
 		if len(fileName) > 0:
 			path = os.path.join(self.path, fileName)
-			print('=== on_file_table_click row:', row, 'path:', path)
+			print('=== sanpy.on_file_table_click() row:', row+1, 'path:', path)
 			self.myDetectionWidget.switchFile(path)
+			
+			if self.myExportWidget is not None:
+				self.myExportWidget.setFile(path, plotRaw=True)
+				
 		else:
 			print('error: on_file_table_click() did not find File name at row:', row)
 			
@@ -282,6 +292,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		loadFolderAction.setShortcut('Ctrl+O')
 		loadFolderAction.triggered.connect(self._tmp_loadFolder2)
 
+		exportRawDataAction = QtWidgets.QAction('Export To pdf', self)        
+		exportRawDataAction.triggered.connect(self.export_pdf)
+
 		savePreferencesAction = QtWidgets.QAction('Save Preferences', self)        
 		savePreferencesAction.triggered.connect(self.preferencesSave)
 
@@ -295,7 +308,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		windowsMenu = mainMenu.addMenu('&Windows')
 		windowsMenu.addAction(scatterPlotAction)
+		windowsMenu.addSeparator()
+		windowsMenu.addAction(exportRawDataAction)
 
+	def export_pdf(self):
+		"""
+		Open a new window with raw Vm and provide interface to save as pdf
+		"""
+		if self.myDetectionWidget.ba is not None:
+			self.myExportWidget = bExportWidget(self.myDetectionWidget.ba.file)
+		else:
+			print('please select an abf file')
+			
 	def scatterPlot(self):
 		"""
 		open a new window with an x/y scatter plot
@@ -331,7 +355,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		# tree view of files
 		#
 		
-		print('	buildUI() building file table')
+		#print('	buildUI() building file table')
 		self.myTableWidget = QtWidgets.QTableWidget()
 		self.myTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 		self.myTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)

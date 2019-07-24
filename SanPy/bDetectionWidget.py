@@ -1,3 +1,6 @@
+# Author: Robert H Cudmore
+# Date: 20190717
+
 import os, sys
 from functools import partial
 
@@ -117,7 +120,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			print('   no analysis ???')
 			return
 		xMin, xMax = self.getXRange()
-		print('    xMin:', xMin, 'xMax:', xMax)
+		#print('    xMin:', xMin, 'xMax:', xMax)
 
 		filePath, fileName = os.path.split(os.path.abspath(self.ba.file))
 		fileBaseName, extension = os.path.splitext(fileName)
@@ -126,8 +129,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		print('Asking user for file name to save...')
 		savefile, tmp = QtGui.QFileDialog.getSaveFileName(self, 'Save File', excelFileName)
 
-		print('savefile:', savefile)
-		print('tmp:', tmp)
+		print('    savefile:', savefile)
+		#print('tmp:', tmp)
 
 		if len(savefile) > 0:
 			self.ba.saveReport(savefile, xMin, xMax)
@@ -166,6 +169,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.refreshClips(start, stop)
 
+		return start, stop
+
 	def setAxisFull(self):
 		if self.ba is None:
 			return
@@ -173,11 +178,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 		start = 0
 		stop = self.ba.abf.sweepX[-1]
 
-		self._setAxis(start, stop)
+		start, stop = self._setAxis(start, stop)
 		self.myMainWindow.mySignal('set full x axis')
 
 	def setAxis(self, start, stop):
-		self._setAxis(start, stop)
+		start, stop = self._setAxis(start, stop)
 		self.myMainWindow.mySignal('set x axis', data=[start,stop])
 
 	def switchFile(self, path):
@@ -188,6 +193,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		if self.ba is not None and self.ba.file == path:
 			print('bDetectionWidget is already displaying file:', path)
+			return
+
+		if not os.path.isfile(path):
+			print('error: bDetectionWidget.switchFile() did not find file:', path)
 			return
 
 		self.ba = bAnalysis(file=path)
@@ -300,37 +309,18 @@ class bDetectionWidget(QtWidgets.QWidget):
 			# clips are not being displayed
 			return
 
-		if xMin is None or xMax is None:
-			xMin, xMax = self.getXRange() # the current viewed x-axis range
-
-		print('bDetectionWidget.refreshClips() xMin:', xMin, 'xMax:', xMax)
-
 		# remove existing
 		if self.clipLines is not None:
 			self.clipPlot.removeItem(self.clipLines)
 
-		# make a list of clips within start/stop (Seconds)
-		theseClips = []
-		theseClips_x = []
-		#if start is not None and stop is not None:
-		if 1:
-			for idx, clip in enumerate(self.ba.spikeClips):
-				spikeTime = self.ba.spikeTimes[idx]
-				spikeTime = self.ba.pnt2Sec_(spikeTime)
-				if spikeTime>=xMin and spikeTime<=xMax:
-					theseClips.append(clip)
-					theseClips_x.append(self.ba.spikeClips_x2[idx]) # remember, all _x are the same
-		'''
-		else:
-			theseClips = self.ba.spikeClips
-			theseClips_x = self.ba.spikeClips_x2
-		'''
+		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(xMin, xMax)
 
 		# convert clips to 2d ndarray ???
 		xTmp = np.array(theseClips_x)
 		yTmp = np.array(theseClips)
 
 		self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False)
+
 		self.clipPlot.addItem(self.clipLines)
 
 	def toggleClips(self, on):
@@ -686,14 +676,17 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 			#print('    dvdtValue:', dvdtValue)
 			#print('    minSpikeVm:', minSpikeVm)
 			self.detectionWidget.detect(dvdtValue, minSpikeVm)
+
 		elif name =='Detect Vm Threshold':
 			minSpikeVm = self.minSpikeVm.value()
 			#print('    minSpikeVm:', minSpikeVm)
 			# passing dvdtValue=None we will detect suing minSpikeVm
 			dvdtValue = None
 			self.detectionWidget.detect(dvdtValue, minSpikeVm)
+
 		elif name == 'Reset X-Axis':
 			self.detectionWidget.setAxisFull()
+
 		elif name == 'Save Spike Report':
 			self.detectionWidget.save()
 
