@@ -24,6 +24,10 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		
 		self.buildUI()
 
+		# default stat
+		# does not work
+		#self.metaPlotStat('Spike Frequency (Hz)')
+		
 	def on_pick_event(self, event):
 		print('=== bScatterWidget.on_pick_event() event:', event, 'event.ind:', event.ind)
 
@@ -362,6 +366,9 @@ class myStatPlotToolbarWidget(QtWidgets.QWidget):
 		#self.addWidget(self.myTableWidget)
 
 		self.myQVBoxLayout.addWidget(self.myTableWidget)
+		
+		# select a default stat
+		self.myTableWidget.selectRow(12) # hard coding 'Spike Frequency (Hz)'
 		
 	'''
 	def getSelectedStat(self):

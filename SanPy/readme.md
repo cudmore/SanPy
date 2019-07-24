@@ -36,7 +36,9 @@ A spike detection program optimized for cardiac myocytes
 
 ### Detection widget
 
+ @@@@@ IMPORTANT @@@@@@
  - add sweeps to detection widget
+ @@@@@ IMPORTANT @@@@@@
 
  - add spinner on file load
 
@@ -46,14 +48,14 @@ A spike detection program optimized for cardiac myocytes
 
  - [done] implement 'Save' of selected x-axis analysis
 
- - make sure saved Excel file always has average clip of x axis when we save
+ - [done] make sure saved Excel file always has average clip of x axis when we save
 
  - [done] Get stats on top of dv/dt and Vm
  - [done] make sure clips show when toggling on/off with 'show clips'
 
 ### Scatter Plot
 
- - add default selected stat in scatter plot, e.g. 'ap peak'
+ - [done] add default selected stat in scatter plot, e.g. 'Spike Frequency (Hz)'
   
  - (mostly done) add single spike selection to scatter and highlight in detection widget vm plot
  - (mostly done) add multi-spike selection to scatter plot as x-axis is zoomed ???

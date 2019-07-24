@@ -159,7 +159,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		data: depends on signal:
 			signal=='set x axis': data=[min,max]
 		"""
-		print('=== mySignal() "' + this +'"')
+		print('=== sanpy_app.mySignal() "' + this +'"')
 
 		if this == 'detect':
 			# update scatter plot
@@ -223,7 +223,7 @@ class MainWindow(QtWidgets.QMainWindow):
 				
 		if len(fileName) > 0:
 			path = os.path.join(self.path, fileName)
-			print('=== on_file_table_click row:', row, 'path:', path)
+			print('=== sanpy.on_file_table_click() row:', row+1, 'path:', path)
 			self.myDetectionWidget.switchFile(path)
 			
 			if self.myExportWidget is not None:
@@ -355,7 +355,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		# tree view of files
 		#
 		
-		print('	buildUI() building file table')
+		#print('	buildUI() building file table')
 		self.myTableWidget = QtWidgets.QTableWidget()
 		self.myTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 		self.myTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)

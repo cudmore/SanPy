@@ -60,9 +60,11 @@ class bAnalysis:
 		self.dVthreshold = None
 		self.minSpikeVm = None # abb, 20190513
 		self.medianFilter = None
-		self.startSeconds = None
-		self.stopSeconds = None
+		#self.startSeconds = None
+		#self.stopSeconds = None
 
+		self.detectionType = None
+		
 		self.spikeDict = [] # a list of dict
 
 		self.spikeTimes = [] # created in self.spikeDetect()
@@ -203,7 +205,7 @@ class bAnalysis:
 		# add an initial point so it is the same length as raw data in abf.sweepY
 		self.filteredDeriv = np.concatenate(([0],self.filteredDeriv))
 
-	def spikeDetect0(self, dVthresholdPos=100, minSpikeVm=-20, medianFilter=0, startSeconds=None, stopSeconds=None):
+	def spikeDetect0(self, dVthresholdPos=100, minSpikeVm=-20, medianFilter=0): #, startSeconds=None, stopSeconds=None):
 		"""
 		look for threshold crossings (dVthresholdPos) in first derivative (dV/dt) of membrane potential (Vm)
 		tally each threshold crossing (e.g. a spike) in self.spikeTimes list
@@ -219,8 +221,8 @@ class bAnalysis:
 		print('	dVthresholdPos:', dVthresholdPos)
 		print('	minSpikeVm:', minSpikeVm)
 		print('	medianFilter:', medianFilter)
-		print('	startSeconds:', startSeconds)
-		print('	stopSeconds:', stopSeconds)
+		#print('	startSeconds:', startSeconds)
+		#print('	stopSeconds:', stopSeconds)
 
 		#
 		# header
@@ -228,20 +230,24 @@ class bAnalysis:
 		dateStr = now.strftime('%Y-%m-%d %H:%M:%S')
 		self.dateAnalyzed = dateStr
 
+		self.detectionType = 'dVdtThreshold'
 		self.dVthreshold = dVthresholdPos
 		self.minSpikeVm = minSpikeVm
 		self.medianFilter = medianFilter
-		self.startSeconds = startSeconds
-		self.stopSeconds = stopSeconds
+		#self.startSeconds = startSeconds
+		#self.stopSeconds = stopSeconds
 
 		#
 		#
 		startPnt = 0
 		stopPnt = len(self.abf.sweepX) - 1
 		secondsOffset = 0
+		'''
 		if startSeconds is not None and stopSeconds is not None:
 			startPnt = self.dataPointsPerMs * (startSeconds*1000) # seconds to pnt
 			stopPnt = self.dataPointsPerMs * (stopSeconds*1000) # seconds to pnt
+		'''
+		
 		'''
 		print('   startSeconds:', startSeconds, 'stopSeconds:', stopSeconds)
 		print('   startPnt:', startPnt, 'stopPnt:', stopPnt)
@@ -363,7 +369,7 @@ class bAnalysis:
 
 		return self.spikeTimes, self.thresholdTimes, self.filteredVm, self.filteredDeriv
 
-	def spikeDetect00(self, minSpikeVm=-20, medianFilter=0, startSeconds=None, stopSeconds=None):
+	def spikeDetect00(self, minSpikeVm=-20, medianFilter=0): #, startSeconds=None, stopSeconds=None):
 		"""
 		added 20190623 - to detect using Vm threshold - NOT dvdt
 
@@ -381,8 +387,8 @@ class bAnalysis:
 		#print('	dVthresholdPos:', dVthresholdPos)
 		print('	minSpikeVm:', minSpikeVm)
 		print('	medianFilter:', medianFilter)
-		print('	startSeconds:', startSeconds)
-		print('	stopSeconds:', stopSeconds)
+		#print('	startSeconds:', startSeconds)
+		#print('	stopSeconds:', stopSeconds)
 
 		#
 		# header
@@ -390,20 +396,24 @@ class bAnalysis:
 		dateStr = now.strftime('%Y-%m-%d %H:%M:%S')
 		self.dateAnalyzed = dateStr
 
+		self.detectionType = 'minSpikeVm'
 		self.dVthreshold = None					# 20190623 - IMPORTANT
 		self.minSpikeVm = minSpikeVm
 		self.medianFilter = medianFilter
-		self.startSeconds = startSeconds
-		self.stopSeconds = stopSeconds
+		#self.startSeconds = startSeconds
+		#self.stopSeconds = stopSeconds
 
 		#
 		#
 		startPnt = 0
 		stopPnt = len(self.abf.sweepX) - 1
 		secondsOffset = 0
+		'''
 		if startSeconds is not None and stopSeconds is not None:
 			startPnt = self.dataPointsPerMs * (startSeconds*1000) # seconds to pnt
 			stopPnt = self.dataPointsPerMs * (stopSeconds*1000) # seconds to pnt
+		'''
+		
 		'''
 		print('   startSeconds:', startSeconds, 'stopSeconds:', stopSeconds)
 		print('   startPnt:', startPnt, 'stopPnt:', stopPnt)
@@ -582,7 +592,7 @@ class bAnalysis:
 		#return self.spikeTimes, self.thresholdTimes, self.filteredVm, self.filteredDeriv
 		return self.spikeTimes, self.filteredVm, self.filteredDeriv
 
-	def spikeDetect(self, dVthresholdPos=100, minSpikeVm=-20, medianFilter=0, halfHeights=[20, 50, 80], startSeconds=None, stopSeconds=None):
+	def spikeDetect(self, dVthresholdPos=100, minSpikeVm=-20, medianFilter=0, halfHeights=[20, 50, 80]): #, startSeconds=None, stopSeconds=None):
 		'''
 		spike detect the current sweep and put results into spikeTime[currentSweep]
 
@@ -604,9 +614,9 @@ class bAnalysis:
 		if dVthresholdPos is None:
 			# new 20190623
 			self.thresholdTimes = None
-			self.spikeTimes, vm, dvdt = self.spikeDetect00(minSpikeVm=minSpikeVm, medianFilter=medianFilter, startSeconds=startSeconds, stopSeconds=stopSeconds)
+			self.spikeTimes, vm, dvdt = self.spikeDetect00(minSpikeVm=minSpikeVm, medianFilter=medianFilter) #, startSeconds=startSeconds, stopSeconds=stopSeconds)
 		else:
-			self.spikeTimes, self.thresholdTimes, vm, dvdt = self.spikeDetect0(dVthresholdPos=dVthresholdPos, minSpikeVm=minSpikeVm, medianFilter=medianFilter, startSeconds=startSeconds, stopSeconds=stopSeconds)
+			self.spikeTimes, self.thresholdTimes, vm, dvdt = self.spikeDetect0(dVthresholdPos=dVthresholdPos, minSpikeVm=minSpikeVm, medianFilter=medianFilter) #, startSeconds=startSeconds, stopSeconds=stopSeconds)
 
 		#
 		# look in a window after each threshold crossing to get AP peak
@@ -631,8 +641,8 @@ class bAnalysis:
 			spikeDict['numError'] = 0
 			spikeDict['errors'] = []
 
-			spikeDict['startSeconds'] = startSeconds
-			spikeDict['stopSeconds'] = stopSeconds
+			#spikeDict['startSeconds'] = startSeconds
+			#spikeDict['stopSeconds'] = stopSeconds
 
 			# detection params
 			spikeDict['dVthreshold'] = dVthresholdPos
@@ -922,6 +932,33 @@ class bAnalysis:
 		stopTime = time.time()
 		print('bAnalysis.spikeDetect() for file', self.file, 'detected', len(self.spikeTimes), 'spikes in', round(stopTime-startTime,2), 'seconds')
 
+	def getSpikeClips(self, theMin, theMax):
+		"""
+		get 2d list of spike clips, spike clips x, and 1d mean spike clip
+		"""
+		if theMin is None or theMax is None:
+			theMin = 0
+			theMax = self.abf.sweepX[-1]
+		
+		# make a list of clips within start/stop (Seconds)
+		theseClips = []
+		theseClips_x = []
+		tmpClips = [] # for mean clip
+		meanClip = []
+		#if start is not None and stop is not None:
+		for idx, clip in enumerate(self.spikeClips):
+			spikeTime = self.spikeTimes[idx]
+			spikeTime = self.pnt2Sec_(spikeTime)
+			if spikeTime>=theMin and spikeTime<=theMax:
+				theseClips.append(clip)
+				theseClips_x.append(self.spikeClips_x2[idx]) # remember, all _x are the same
+				if len(self.spikeClips_x) == len(clip):
+					tmpClips.append(clip) # for mean clip
+		if len(tmpClips):
+			meanClip = np.mean(tmpClips, axis=0)
+	
+		return theseClips, theseClips_x, meanClip
+		
 	############################################################
 
 	############################################################
@@ -1030,15 +1067,16 @@ class bAnalysis:
 			headerDict = collections.OrderedDict()
 			headerDict['file'] = [self.file]
 			headerDict['Date Analyzed'] = [self.dateAnalyzed]
+			headerDict['Detection Type'] = [self.detectionType]
 			headerDict['dV/dt Threshold'] = [self.dVthreshold]
 			headerDict['Vm Threshold (mV)'] = [self.minSpikeVm]
 			headerDict['Median Filter (pnts)'] = [self.medianFilter]
-			headerDict['Analysis Start (sec)'] = [self.startSeconds]
-			headerDict['Analysis Stop (sec)'] = [self.stopSeconds]
+			#headerDict['Analysis Start (sec)'] = [self.startSeconds]
+			#headerDict['Analysis Stop (sec)'] = [self.stopSeconds]
 			headerDict['Sweep Number'] = [self.currentSweep]
 			headerDict['Number of Sweeps'] = [self.numSweeps]
-			headerDict['Export Start (sec)'] = [theMin] # on export, x-axis of raw plot will be ouput
-			headerDict['Export Stop (sec)'] = [theMax] # on export, x-axis of raw plot will be ouput
+			headerDict['Export Start (sec)'] = [float('%.2f'%(theMin))] # on export, x-axis of raw plot will be ouput
+			headerDict['Export Stop (sec)'] = [float('%.2f'%(theMax))] # on export, x-axis of raw plot will be ouput
 			headerDict['stats'] = []
 
 			for idx, col in enumerate(cardiac_df):
@@ -1064,11 +1102,12 @@ class bAnalysis:
 				else:
 					headerDict['file'].append('')
 					headerDict['Date Analyzed'].append('')
+					headerDict['Detection Type'].append('')
 					headerDict['dV/dt Threshold'].append('')
 					headerDict['Vm Threshold (mV)'].append('')
 					headerDict['Median Filter (pnts)'].append('')
-					headerDict['Analysis Start (sec)'].append('')
-					headerDict['Analysis Stop (sec)'].append('')
+					#headerDict['Analysis Start (sec)'].append('')
+					#headerDict['Analysis Stop (sec)'].append('')
 					headerDict['Sweep Number'].append('')
 					headerDict['Number of Sweeps'].append('')
 					headerDict['Export Start (sec)'].append('')
@@ -1116,22 +1155,53 @@ class bAnalysis:
 
 			#
 			# mean spike clip
-			'''
-			df = pd.DataFrame(self.clipsPlot.meanClip)
+			theseClips, theseClips_x, meanClip = self.getSpikeClips(theMin, theMax)
+			first_X = theseClips_x[0] #- theseClips_x[0][0]
+			print('    saving mean clip from', len(theseClips), 'clips')
+			df = pd.DataFrame(meanClip, first_X)
 			df.to_excel(writer, sheet_name='Avg Spike')
-			'''
+			
+			#print('df:', df)
 			
 			writer.save()
 
 			#
 			# always save a text file
+			#
+			
 			filePath, fileName = os.path.split(os.path.abspath(savefile))
 
 			textFileBaseName, tmpExtension = os.path.splitext(savefile)
 			textFilePath = os.path.join(filePath, textFileBaseName + '.txt')
-			print('Saving .txt file:', textFilePath)
+			
+			# save header
+			textFileHeader = OrderedDict()
+			textFileHeader['file'] = self.file
+			textFileHeader['dateAnalyzed'] = self.dateAnalyzed
+			textFileHeader['detectionType'] = self.detectionType
+			textFileHeader['dVthreshold'] = self.dVthreshold
+			textFileHeader['minSpikeVm'] = self.minSpikeVm
+			textFileHeader['medianFilter'] = self.medianFilter
+			textFileHeader['startSeconds'] = '%.2f'%(theMin)
+			textFileHeader['stopSeconds'] = '%.2f'%(theMax)
+			#textFileHeader['startSeconds'] = self.startSeconds
+			#textFileHeader['stopSeconds'] = self.stopSeconds
+			textFileHeader['currentSweep'] = self.currentSweep
+			textFileHeader['numSweeps'] = self.numSweeps
+			#textFileHeader['theMin'] = theMin
+			#textFileHeader['theMax'] = theMax
+			
+			headerStr = ''
+			for k,v in textFileHeader.items():
+				headerStr += k + '=' + str(v) + ';'
+			headerStr += '\n'
+			print('headerStr:', headerStr)
+			with open(textFilePath,'w') as f:
+				f.write(headerStr)
+				
+			#print('Saving .txt file:', textFilePath)
 			df = self.report(theMin, theMax)
-			df.to_csv(textFilePath, sep=',', index_label='index', mode='w')
+			df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
 
 			fileWasSaved = True
 		else:
