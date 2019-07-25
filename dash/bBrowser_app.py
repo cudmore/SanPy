@@ -30,7 +30,9 @@ from bBrowser import bBrowser
 
 print('dash.__version__=', dash.__version__)
 
-myBrowser = bBrowser()
+path = '/Users/cudmore/box/data/laura/SAN CC/NEWxxx'
+
+myBrowser = bBrowser(path)
 myBrowser.loadFolder()
 
 #print(myBrowser.df0.to_dict('records'))

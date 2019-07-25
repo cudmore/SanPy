@@ -275,7 +275,7 @@ class bBrowser:
 			if file.endswith('.txt'):
 				currFile = os.path.join(self.path,file)
 				print('   bBrowser.loadFolder() loading analysis file:', currFile)
-				df = pd.read_csv(currFile, header=0) # load comma seperated values, read header names from row 1
+				df = pd.read_csv(currFile, header=1) # load comma seperated values, read header names from row 1
 
 				# look into self.folderOptions
 				if (self.folderOptions is not None) and file in self.folderOptions.keys():
@@ -289,7 +289,11 @@ class bBrowser:
 					condition1 = 'None'
 					condition2 = 'None'
 					condition3 = 'None'
-					color = self.plotlyColors[currIdx]
+					
+					if currIdx > len(self.plotlyColors)-1:
+						currIdx = 0
+					else:
+						color = self.plotlyColors[currIdx]
 
 					# add a new file
 					self.folderOptions[file] = OrderedDict()
