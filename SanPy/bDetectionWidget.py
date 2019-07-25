@@ -305,6 +305,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.mySingleSpikeScatterPlot.setData(x=x, y=y)
 
 	def refreshClips(self, xMin=None, xMax=None):
+		if self.ba is None:
+			return
+		
 		if self.view.getItem(2,0) is None:
 			# clips are not being displayed
 			return

@@ -57,9 +57,11 @@ class bBrowser:
 		self.showMarkers = False
 
 		self.plotlyColors = plotly.colors.DEFAULT_PLOTLY_COLORS + plotly.colors.DEFAULT_PLOTLY_COLORS
+		'''
 		print('bBrowser() will only show', len(self.plotlyColors), 'files !!!')
 		print('self.plotlyColors:', self.plotlyColors)
-
+		'''
+		
 	def makeFolderList(self):
 		folderList = [self.path] # always include root /data folder as an option
 		for item in os.listdir(self.path):
@@ -309,6 +311,12 @@ class bBrowser:
 				df.insert(0, 'Condition 1', condition1)
 
 				numSpikes = len(df.index)
+				
+				#
+				#
+				# 20190724, newly saved files fail here, there is no thresholdSec
+				#
+				#
 				firstSpikeSec = df['thresholdSec'].min()
 				lastSpikeSec = df['thresholdSec'].max()
 				abfFile = df.iloc[0]['file']

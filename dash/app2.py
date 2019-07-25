@@ -20,7 +20,7 @@ from plotly import tools
 # bAnalysis
 import sys
 sys.path.append("..") # Adds higher directory to python modules path.
-from bAnalysisApp import bAnalysis
+from SanPy import bAnalysis
 
 myPath = '../data'
 
