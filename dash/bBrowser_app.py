@@ -51,7 +51,7 @@ statDict['AP Duration (ms)'] = 'apDuration_ms'
 statDict['Early Diastolic Duration (ms)'] = 'earlyDiastolicDuration_ms'
 statDict['Diastolic Duration (ms)'] = 'diastolicDuration_ms'
 statDict['Inter-Spike-Interval (ms)'] = 'isi_ms'
-statDict['Spike Frequency (Hz)'] = 'spike_Freq_hz'
+statDict['Spike Frequency (Hz)'] = 'spikeFreq_hz'
 statDict['Cycle Length (ms)'] = 'cycleLength_ms'
 statDict['Max AP Upstroke (dV/dt)'] = 'preSpike_dvdt_max_val2'
 statDict['Max AP Upstroke (mV)'] = 'preSpike_dvdt_max_val'
@@ -64,7 +64,10 @@ myStatList = list(statDict.keys())
 
 # plot one of 4 graphs. Used in initialization and in 'plot' button callbacks
 def plotButton(graphNum):
-
+	"""
+	Respond to plot button and call myBrowser.updatePlot() to replot
+	"""
+	
 	'''
 	yStatHuman = myBrowser.graphPlot[graphNum]['yStat']
 	xStatHuman = myBrowser.graphPlot[graphNum]['xStat']
@@ -272,9 +275,8 @@ myBody = dbc.Container(
 
 							style_data_conditional = myStyleDataConditional(),
 
-
 							editable = True, # this makes all cells editable
-							selected_rows = [0,1],
+							selected_rows = [i for i in range(len(myBrowser.df0))],
 						),
 					])
 			]

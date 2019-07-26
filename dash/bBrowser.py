@@ -269,6 +269,7 @@ class bBrowser:
 
 		selectedFileRows = [] #self.selectedFileRows
 		currIdx = 0
+		currColorIdx = 0
 		for file in sorted(os.listdir(self.path)):
 			if file.startswith('.'):
 				continue
@@ -286,14 +287,13 @@ class bBrowser:
 					color = self.folderOptions[file]['Color']
 				else:
 					isChecked = True
-					condition1 = 'None'
-					condition2 = 'None'
-					condition3 = 'None'
+					condition1 = df.iloc[0]['condition1'] # assuming each row/spike has same condition 1/2/3
+					condition2 = df.iloc[0]['condition2']
+					condition3 = df.iloc[0]['condition3']
 					
-					if currIdx > len(self.plotlyColors)-1:
-						currIdx = 0
-					else:
-						color = self.plotlyColors[currIdx]
+					if currColorIdx > len(self.plotlyColors)-1:
+						currColorIdx = 0
+					color = self.plotlyColors[currColorIdx]
 
 					# add a new file
 					self.folderOptions[file] = OrderedDict()
@@ -310,9 +310,9 @@ class bBrowser:
 
 				# insert new columns not in original .txt file
 				df.insert(0, 'Analysis File', file)
-				df.insert(0, 'Condition 3', condition3) # 'currIdx + 3' is bogus default value
-				df.insert(0, 'Condition 2', condition2)
-				df.insert(0, 'Condition 1', condition1)
+				#df.insert(0, 'Condition 3', condition3) # 'currIdx + 3' is bogus default value
+				#df.insert(0, 'Condition 2', condition2)
+				#df.insert(0, 'Condition 1', condition1)
 
 				numSpikes = len(df.index)
 				
@@ -348,7 +348,8 @@ class bBrowser:
 					self.df = pd.concat([self.df, df], axis=0)
 
 				currIdx += 1
-
+				currColorIdx += 1
+				
 		self.df0 = pd.DataFrame(df0_list)
 
 		self.selectedFileRows = selectedFileRows
@@ -357,9 +358,12 @@ class bBrowser:
 			self.folderOptions_Save()
 
 	def updatePlot(self, graphNum, xStatName, yStatName):
-		""" return
-		1) a list of dict for plotly/dash data
-		2) layout
+		"""
+		Update a plot with new x/y stat
+		
+		Return
+			1) a list of dict for plotly/dash data
+			2) layout
 		"""
 
 		theRet = []
@@ -423,6 +427,10 @@ class bBrowser:
 					#pass
 					# before loop, create a dict
 					if abfFile not in myNormDict.keys():
+						# 20190725, here, I need to normalize to FIRST condition
+						# but we do not know the FIRST condition !!!!
+						# conditions are coming in as we encounter them in the file list !!!!
+						print('!!! bBrowser.updatePlot() adding abf file to myNormDict, abfFile:', abfFile, 'condition1:', condition1)
 						myNormDict[abfFile] = {
 							#'x': xStatVals.values,
 							'y': np.nanmean(yStatVals.values)

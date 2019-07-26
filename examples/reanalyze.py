@@ -18,8 +18,12 @@ def reanalyze(dataPath, dbFile):
 	startSeconds_ = time.time()
 	
 	savePath = os.path.join(dataPath, 'NEWxxx')
-	os.mkdir(savePath)
-	
+	if not os.path.exists(savePath):
+		os.mkdir(savePath)
+		print('created output folder:', savePath)
+	else:
+		print('output folder already exists:', savePath)
+		
 	df = pd.read_csv(dbFile, header=0, dtype={'ABF File': str})
 	
 	
@@ -40,6 +44,8 @@ def reanalyze(dataPath, dbFile):
 			continue
 
 		condition = df.iloc[idx]['Condition']
+		cellNumber = df.iloc[idx]['Cell Number']
+		maleFemale = df.iloc[idx]['Male/Female']
 
 		startSeconds = float(df.iloc[idx]['Start Seconds'])
 		stopSeconds = float(df.iloc[idx]['Stop Seconds'])
@@ -62,11 +68,19 @@ def reanalyze(dataPath, dbFile):
 		ba = bAnalysis.bAnalysis(abfFilePath)
 		
 		#
+		# set (condition 1, condition 2, condition 3')
+		# need to do this for analysis, gets stored in each spike
+		ba.condition1 = condition
+		ba.condition2 = cellNumber
+		ba.condition3 = maleFemale
+
+		#
 		# detect
 		# if (dvdtThreshold is None), this will detect using min vm
 		# we could also specify 'medianFilter=0, halfHeights=[20, 50, 80]'
 		ba.spikeDetect(dVthresholdPos=dvdtThreshold, minSpikeVm=minVmThreshold, verbose=False)
 
+		
 		#
 		# save
 		saveFile = file + '_' + condition + '.xlsx'
