@@ -23,11 +23,11 @@ class bExportWidget(QtWidgets.QWidget):
 		file: always iniliaize with an abf file
 		"""
 		super(bExportWidget, self).__init__()
-				
+
 		self.setFile(file)
-		
+
 		self.initUI()
-		
+
 	def initUI(self):
 
 		self.setGeometry(100, 100, 1000, 600)
@@ -41,39 +41,39 @@ class bExportWidget(QtWidgets.QWidget):
 		saveButton.resize(saveButton.sizeHint())
 		saveButton.clicked.connect(self.save)
 		grid.addWidget(saveButton, 5, 1)
-		
+
 		self.figure = matplotlib.figure.Figure()
 		self.canvas = FigureCanvas(self.figure)
-		
+
 		# matplotlib navigation toolbar
 		self.toolbar = NavigationToolbar(self.canvas, self)
 		self.toolbar.zoom()
-		
+
 		grid.addWidget(self.toolbar, 2, 0, 1, 2)
 		grid.addWidget(self.canvas, 3, 0, 1, 2)
 		# grid.addWidget(self.toolbar, ??)
 
 		self.myAxis = None
 		self.plotRaw()
-		
+
 		self.show()
-		
+
 	def setFile(self, filePath, plotRaw=False):
 		"""
 		when main application changes file
 		"""
 		if not os.path.isfile(filePath):
 			return
-			
+
 		self.filePath = filePath
 		self.ba = bAnalysis.bAnalysis(filePath)
 		if plotRaw:
 			self.plotRaw()
-			
+
 	def plotRaw(self):
 		self.figure.clf()
 		self.myAxis = self.figure.add_subplot(111)
-		
+
 		'''
 		x = [i for i in range(100)]
 		y = [i**0.5 for i in x]
@@ -88,7 +88,7 @@ class bExportWidget(QtWidgets.QWidget):
 		"""
 		Save the current view to a pdf file
 		"""
-		
+
 		# get min/max of x-axis
 		[xMin, xMax] = self.myAxis.get_xlim()
 		if xMin < 0:
@@ -114,8 +114,8 @@ class bExportWidget(QtWidgets.QWidget):
 		# do actual save
 		if len(fullSavePath) > 0:
 			print('saving:', fullSavePath)
-			self.figure.savefig(saveFilePath)
-	
+			self.figure.savefig(fullSavePath)
+
 	def center(self):
 		"""
 		Center the window on the screen
@@ -124,7 +124,7 @@ class bExportWidget(QtWidgets.QWidget):
 		cp = QtWidgets.QDesktopWidget().availableGeometry().center()
 		qr.moveCenter(cp)
 		self.move(qr.topLeft())
-	
+
 if __name__ == '__main__':
 	file = '../data/19114001.abf'
 	app = QtWidgets.QApplication(sys.argv)
