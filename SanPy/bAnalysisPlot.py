@@ -12,7 +12,7 @@ import scipy.signal
 import matplotlib.pyplot as plt
 
 class bPlot:
-	def __init__(self, ba):
+	def __init__(self, ba=None):
 		"""
 		ba: bAnalysis object
 		"""
