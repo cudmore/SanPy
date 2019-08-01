@@ -9,6 +9,18 @@ A spike detection program optimized for cardiac myocytes
 
 ## To Do
 
+### Most important
+
+ - Add code to backend to load text files (currently limited to Axon Instruments ABF files)
+ - Add all hard coded detection parameters to json file and provide interface ot change !!!
+ 
+ - Clean up code and write API documentation for each function
+ - Revamp example Jupyter notebooks
+  - Example: load, analyze, plot dV/dt and Vm
+  - Example: load, analyze, plot scatter
+  - Example: load, analyze many files, plot scatter across many files
+ - Document output .txt file
+
 ### General
 
  - move ba to main window (remove from detection). Add option to detection to hold it.
