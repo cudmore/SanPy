@@ -63,10 +63,12 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 		
 		#sanpyLogger.debug('startArmVideo')
+		'''
 		logging.info('QQQ ===================== +++++++++++++++++++++++++++++')
 		logger.warning('xxx This is a warning')
 		logger.error('xxx This is an error')
-
+		'''
+		
 		super(MainWindow, self).__init__(parent)
 
 		self.setWindowTitle('SanPy')
