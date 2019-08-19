@@ -68,10 +68,16 @@ class bPlot:
 		ax.set_ylabel('Vm (mV)')
 		ax.set_xlabel('Time (sec)')
 	
-	def plotSpikes(ba, all=True, oneSpikeNumber=None, ax=None):
+	def plotSpikes(ba, oneSpikeNumber=None, ax=None, xMin=None, xMax=None):
 		'''
-		Plot Vm with all spike analysis
+		Plot Vm with spike analysis overlaid as symbols
+		
+		oneSpikeNumber: If specified will select one spike with a yellow symbol
+		ax: If specified will plot into a MatPlotLib axes
+		xMin/xMax: if specified will set_xlim(xMin, xMax) 
 		'''
+		
+		fig = None
 		if ax is None:
 			grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
 
@@ -174,7 +180,13 @@ class bPlot:
 		ax.set_ylabel('Vm (mV)')
 		ax.set_xlabel('Time (sec)')
 
-		return line
+		# set the x-axis of the plot
+		if xMin is not None and xMax is not None:
+			ax.set_xlim([xMin,xMax])
+			
+		# 20190816, was return line
+		# not sure if this break anything???
+		return fig, ax
 
 	def plotTimeSeries(ba, stat, halfWidthIdx=0, ax=None):
 		""" Plot a given spike parameter"""

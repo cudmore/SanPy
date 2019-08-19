@@ -12,11 +12,11 @@ This repository has code to perform [cardiac action potential][cardiac action po
 
 ## Desktop Application
 
-Use the 'File - Open Folder...' menu to open a folder of .abf files, select a file from the list and the interface will look something like this.
+The desktop application allows the user to load a folder of files (top table). Selecting a file will display both the derivative and raw membrane potential (middle two traces). Spike detection is then easily performed by specifying a threshold in either the derivative of the membrane potential or the membrane potential itself. Once spikes are detected, the detection parameters are overlaid over the raw membrane and derivative traces. Finally, there is an interface (lower table and colored plot) to inspect the detection parameters.
+
 
 <IMG SRC="img/spike-app.png" width=700>
 
-Use the 'Window - Meta Window' menu to view scatter plots of detection parameters.
 
 <IMG SRC="img/meta-window-example.png" width=700>
 
@@ -35,13 +35,18 @@ Once data is analyzed, Pooling allows browsing detection parameters across any n
 
 ## Writing custom Python scripts
 
-See the [/examples](examples) folder.
+In just a few lines of code, recordings can be loaded, analyzed, and plotted. See the [/examples](examples) folder for examples.
 
 ```
-from bAnalysis import bAnalysis
-ba = bAnalysis.bAnalysis('data/19114001.abf')
-ba.spikeDetect(dVthresholdPos=100, medianFilter=3, halfHeights=[20,50,80])
-ba.plotSpikes()
+import matplotlib.pyplot as plt
+from SanPy import bAnalysis
+from SanPy import bAnalysisPlot
+
+ba = bAnalysis.bAnalysis('data/SAN-AP-example-Rs-change.abf')
+ba.spikeDetect()
+
+bAnalysisPlot.bPlot.plotSpikes(ba, xMin=140, xMax=145)
+plt.show()
 ```
 
 <IMG SRC="img/example1.png" width=600>
@@ -74,6 +79,8 @@ git clone https://github.com/cudmore/bAnalysis.git
 # Change into the cloned or downloaded 'bAnalysis' folder.
 cd bAnalysis
 
+cd SanPy
+
 # Install
 ./install
 
@@ -98,6 +105,7 @@ virtualenv -p python3 --no-site-packages bAnalysis_env
 source bAnalysis_env/bin/activate
 
 # install the required python packages (into the activated virtual environment)
+cd SanPy
 pip install -r requirements.txt
 ```
 
@@ -106,6 +114,8 @@ pip install -r requirements.txt
 ##### Option 1) Using ./run
 
 ```
+cd bAnalysis
+cd SanPy
 ./run
 ```
 
@@ -116,7 +126,7 @@ pip install -r requirements.txt
 source bAnalysis_env/bin/activate
 
 # run the desktop application
-python bAnalysisApp/AnalysisApp.py
+python SanPy/sanpy_app.py
 ```
 
 ### Install the web application
@@ -132,7 +142,7 @@ Run the web application to analyze raw data
 
 ```
 cd bAnalysis/dash
-python3 app2.py
+python app2.py
 ```
 
 The web application for analysis is available at
@@ -145,7 +155,7 @@ Run the web application to browse and pool saved analysis
 
 ```
 cd bAnalysis/dash
-python3 bBrowser_app.py
+python bBrowser_app.py
 ```
 
 The web application for browsing and pooling saved analysis is available at
@@ -173,6 +183,49 @@ myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 11
 
 [larson et al 2013]: https://www.ncbi.nlm.nih.gov/pubmed/24128759
 
+## Why is this useful?
+
+We provide a Python library that can load, analyze, save, and plot eletropysiology recordings. This library is then accessed through simple to use graphical user interfaces (GUIs) with either a traditional desktop or web based application. Finally, the same code that drives the user interface can be scripted. In just a few lines of code, the exact same loading, analysis, saving, and plotting can be performed as is done with the GUIs.
+
+## Why is this important?
+
+When you publish a paper, you need to ensure your primary data is available for interogation and that your analysis can be reproduced. This software facilitates that by allowing you to share the raw data, provide the code that was used to analyze it, and explicity show how it was analyzed such that it can be verified and reproduced.
+
+## Technologies used
+
+#### Backend
+
+ - [Python][Python]
+ - [Pandas][Pandas]
+ - [NumPy][NumPy]
+ - [pyABF][pyABF] - Package to open Axon Binary Format (ABF) files
+ - [XlsxWriter][XlsxWriter]
+ - 
+#### Desktop Application
+
+ - [PyQt][PyQt] - Desktop application interface
+ - [PyQtGraph][pyqtgraph] - Derived from PyQt and used to make fast plots
+ - [Matplotlib][Matplotlib] - Desktop application plotting
+
+#### Web application
+
+ - [Plotly Python][Plotly]
+ - [Plotly Dash][Dash] - Web application interface
+ - [Dash Bootstrap components][Dash Bootstrap components]
+
+[Python]: https://www.python.org/
+[Pandas]: https://pandas.pydata.org/
+[NumPy]: https://www.numpy.org/
+[pyABF]: https://github.com/swharden/pyABF
+[TkInter]: https://docs.python.org/3/library/tkinter.html
+[PyQt]: https://riverbankcomputing.com/software/pyqt/intro
+[pyqtgraph]: http://www.pyqtgraph.org/
+[XlsxWriter]: https://xlsxwriter.readthedocs.io/
+[Matplotlib]: https://matplotlib.org/
+[Plotly]: https://plot.ly/python/
+[Dash]: https://plot.ly/products/dash/
+[Dash Bootstrap components]: https://dash-bootstrap-components.opensource.faculty.ai/
+
 ## Other software
 
  - [ParamAP][ParamAP] - Standardized parameterization of sinoatrial node myocyte action potentials
@@ -188,57 +241,43 @@ C++ libraries
 [biosig]: http://biosig.sourceforge.net/projects.html
 [sigviewer]: https://github.com/cbrnr/sigviewer
 
-## Technologies used
+## Advanced
 
-#### Backend
+#### Building a stand alone app (macOS)
 
- - [Python][Python]
- - [Pandas][Pandas]
- - [NumPy][NumPy]
- - [pyABF][pyABF] - Package to open Axon Binary Format (ABF) files
+Install pyinstaller
 
-#### Desktop Application
+    pip install pyinstaller
 
- - [TkInter][TkInter] - Desktop applicaiton interface
- - [Matplotlib][Matplotlib] - Desktop application plotting
+Make the app
 
-#### Web application
+    cd SanPy
+    ./makeapp
 
- - [Plotly Python][Plotly]
- - [Plotly Dash][Dash] - Web application interface
- - [Dash Bootstrap components][Dash Bootstrap components]
+You can find the app in `dist/SanPy.app`.
 
-[Python]: https://www.python.org/
-[Pandas]: https://pandas.pydata.org/
-[NumPy]: https://www.numpy.org/
-[pyABF]: https://github.com/swharden/pyABF
-[TkInter]: https://docs.python.org/3/library/tkinter.html
-[Matplotlib]: https://matplotlib.org/
-[Plotly]: https://plot.ly/python/
-[Dash]: https://plot.ly/products/dash/
-[Dash Bootstrap components]: https://dash-bootstrap-components.opensource.faculty.ai/
+#### Download the AnalysisApp
 
-## Troubleshooting
+**This is not available yet.** We will eventually distribute a precompiled application for macOS, Microsoft Windows, an Linux.
 
-Type each of the following into a Terminal window. If you see 'command not found' then you need to install the component.
+Be sure to download the .zip file by clicking the triple tilde '...' on the top-right of the page and select download.
 
-You need Python 3.7.0 or newer
+Once you have the .zip file ...
 
-```
-python --version
-```
+When you run the app you will see a dialog telling you 'Can't be opened because it is from an unidentified developer'.
 
-You need pip
+You need to go into your 'Apple Menu - System Preferences - Security & Privacy'
 
-```
-pip --version
-```
+Find the part that says "SpikeAnalysis... was blocked from opening because it is not from an identified developer" and click "Open Anyway"
 
-You need git
+After that, you are good to go!
 
-```
-git --version
-```
+[python3]: https://www.python.org/downloads/
+[pip]: https://pip.pypa.io/en/stable/
+[pyabf]: https://github.com/swharden/pyABF
+[paramap]: https://github.com/christianrickert/ParamAP
+[git]: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+[virtualenv]: https://virtualenv.pypa.io/en/stable/
 
 ## Change log
 
@@ -277,40 +316,3 @@ To Do:
  - Meta plot will remember last stat plot when switching files, when first run it defaults to 'Spike Frequency (Hz)'
  - Median filter needs to be odd, if even value is specified we tweek it to odd
  
-## Advanced
-
-#### Building a stand alone app (macOS)
-
-Install pyinstaller
-
-    pip install pyinstaller
-
-Make the app
-
-    cd bAnalysisApp
-    ./makeapp
-
-You can find the app in `dist/SpikeAnalysis.app`.
-
-#### Download the AnalysisApp
-
-**This is not available yet** but we plan on distributing a precompiled application for both macOS and Microsoft Windows.
-
-Be sure to download the .zip file by clicking the triple tilde '...' on the top-right of the page and select download.
-
-Once you have the .zip file ...
-
-When you run the app you will see a dialog telling you 'Can't be opened because it is from an unidentified developer'.
-
-You need to go into your 'Apple Menu - System Preferences - Security & Privacy'
-
-Find the part that says "SpikeAnalysis... was blocked from opening because it is not from an identified developer" and click "Open Anyway"
-
-After that, you are good to go!
-
-[python3]: https://www.python.org/downloads/
-[pip]: https://pip.pypa.io/en/stable/
-[pyabf]: https://github.com/swharden/pyABF
-[paramap]: https://github.com/christianrickert/ParamAP
-[git]: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
-[virtualenv]: https://virtualenv.pypa.io/en/stable/
