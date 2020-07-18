@@ -307,7 +307,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 	def refreshClips(self, xMin=None, xMax=None):
 		if self.ba is None:
 			return
-		
+
 		if self.view.getItem(2,0) is None:
 			# clips are not being displayed
 			return
@@ -601,14 +601,17 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		self.startSeconds.setMinimum(-1e6)
 		self.startSeconds.setMaximum(+1e6)
 		self.startSeconds.setValue(0)
-		self.startSeconds.valueChanged.connect(self.on_start_stop)
+		# abb 20200718
+		#self.startSeconds.valueChanged.connect(self.on_start_stop)
+		self.startSeconds.editingFinished.connect(self.on_start_stop)
 		self.addWidget(self.startSeconds, row, 0)
 		#
 		self.stopSeconds = QtWidgets.QDoubleSpinBox()
 		self.stopSeconds.setMinimum(-1e6)
 		self.stopSeconds.setMaximum(+1e6)
 		self.stopSeconds.setValue(0)
-		self.stopSeconds.valueChanged.connect(self.on_start_stop)
+		#self.stopSeconds.valueChanged.connect(self.on_start_stop)
+		self.stopSeconds.editingFinished.connect(self.on_start_stop)
 		self.addWidget(self.stopSeconds, row, 1)
 
 		row += 1
@@ -654,6 +657,7 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Show Clips'))
 		self.addWidget(checkbox, row, 0)
 
+	@QtCore.pyqtSlot()
 	def on_start_stop(self):
 		#print('myDetectToolbarWidget.on_start_stop()')
 		start = self.startSeconds.value()

@@ -33,7 +33,8 @@ if [ ! -d "sanpy_env/" ]; then
 		exit 0
 	else
 		mkdir sanpy_env
-		virtualenv -p python3 --no-site-packages sanpy_env
+		#virtualenv -p python3 --no-site-packages sanpy_env
+		python3 -m venv sanpy_env
 	fi
 else
 	echo '==='
