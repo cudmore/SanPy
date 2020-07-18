@@ -39,13 +39,13 @@ In just a few lines of code, recordings can be loaded, analyzed, and plotted. Se
 
 ```
 import matplotlib.pyplot as plt
-from SanPy import bAnalysis
-from SanPy import bAnalysisPlot
+import bAnalysis
+import bAnalysisPlot
 
 ba = bAnalysis.bAnalysis('data/SAN-AP-example-Rs-change.abf')
 ba.spikeDetect()
 
-bAnalysisPlot.bPlot.plotSpikes(ba, xMin=140, xMax=145)
+sPlot.bPlot.plotSpikes(ba, xMin=140, xMax=145)
 plt.show()
 ```
 
@@ -67,18 +67,16 @@ Assuming you have the following
 
 ```
 # If you have git installed.
-# Clone the github repository (this will create a bAnalysis folder).
-git clone https://github.com/cudmore/bAnalysis.git
+# Clone the github repository (this will create a SanPy/ folder).
+git clone https://github.com/cudmore/SanPy.git
 
 # If you do not have git installed you can download the .zip file manually.
-# In a browser, go to 'https://github.com/cudmore/bAnalysis'.
+# In a browser, go to 'https://github.com/cudmore/SanPy'.
 # Click green button 'Clone or download'.
 # Select 'Download ZIP'.
 # Once downloaded, manually extract the contents of the .zip file and continue following this tutorial.
 
-# Change into the cloned or downloaded 'bAnalysis' folder.
-cd bAnalysis
-
+# Change into the cloned or downloaded 'SanPy/' folder.
 cd SanPy
 
 # Install
@@ -91,22 +89,27 @@ cd SanPy
 ##### Option 2) Install manually
 
 ```
-# clone the github repository (this will create a bAnalysis folder)
-git clone https://github.com/cudmore/bAnalysis.git
+# clone the github repository (this will create a SanPy/ folder)
+git clone https://github.com/cudmore/SanPy.git
 
-# change into the cloned bAnalysis folder
-cd bAnalysis
-
-# create a Python3 virtual environment in 'bAnalysis_env'
-mkdir bAnalysis_env
-virtualenv -p python3 --no-site-packages bAnalysis_env
-
-# activate the virtual environment in bAnalysis_env
-source bAnalysis_env/bin/activate
-
-# install the required python packages (into the activated virtual environment)
+# change into the cloned SanPy folder
 cd SanPy
-pip install -r requirements.txt
+
+# create a Python3 virtual environment in 'sanpy_env/' folder
+python -m venv sanpy_env
+
+# [OR] if python is bound to Python 2 (check with 'python --version')
+
+python3 -m venv sanpy_env
+
+# activate the virtual environment in sanpy_env/
+source sanpy_env/bin/activate
+
+# install the package
+pip install .
+
+# [OR] install the required python packages (into the activated virtual environment)
+# pip install -r requirements.txt
 ```
 
 ### Running the desktop application
@@ -114,7 +117,6 @@ pip install -r requirements.txt
 ##### Option 1) Using ./run
 
 ```
-cd bAnalysis
 cd SanPy
 ./run
 ```
@@ -122,8 +124,9 @@ cd SanPy
 ##### Option 2) Manually
 
 ```
-# activate the virtual environment in bAnalysis_env
-source bAnalysis_env/bin/activate
+# activate the virtual environment in sanpy_env/
+cd SanPy
+source sanpy_env/bin/activate
 
 # run the desktop application
 python SanPy/sanpy_app.py
@@ -131,8 +134,10 @@ python SanPy/sanpy_app.py
 
 ### Install the web application
 
+Please note, this is experimental and does not have all functions implemented. Please use the desktop version instead.
+
 ```
-cd bAnalysis/dash
+cd SanPy/dash
 pip install -r requirements.txt
 ```
 
@@ -141,7 +146,7 @@ pip install -r requirements.txt
 Run the web application to analyze raw data
 
 ```
-cd bAnalysis/dash
+cd SanPy/dash
 python app2.py
 ```
 
@@ -154,7 +159,7 @@ http://localhost:8000
 Run the web application to browse and pool saved analysis
 
 ```
-cd bAnalysis/dash
+cd SanPy/dash
 python bBrowser_app.py
 ```
 
@@ -200,7 +205,7 @@ When you publish a paper, you need to ensure your primary data is available for 
  - [NumPy][NumPy]
  - [pyABF][pyABF] - Package to open Axon Binary Format (ABF) files
  - [XlsxWriter][XlsxWriter]
- - 
+ -
 #### Desktop Application
 
  - [PyQt][PyQt] - Desktop application interface
@@ -315,4 +320,3 @@ To Do:
  - New after giving Laura code
  - Meta plot will remember last stat plot when switching files, when first run it defaults to 'Spike Frequency (Hz)'
  - Median filter needs to be odd, if even value is specified we tweek it to odd
- 
