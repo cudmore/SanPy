@@ -1,8 +1,0 @@
-pandas
-numpy
-scipy
-PyQt5
-pyqtgraph
-matplotlib
-pyabf
-XlsxWriter

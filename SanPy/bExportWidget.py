@@ -8,11 +8,14 @@ import matplotlib.figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 
+# abb 20200718
 # needed to import from SanPy which is one folder up
-sys.path.append("..")
+#sys.path.append("..")
 
-from SanPy import bAnalysis
-from SanPy import bAnalysisPlot
+#from SanPy import bAnalysis
+#from SanPy import bAnalysisPlot
+import bAnalysis
+import bAnalysisPlot
 
 class bExportWidget(QtWidgets.QWidget):
 	"""

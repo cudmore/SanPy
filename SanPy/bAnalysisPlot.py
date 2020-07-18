@@ -17,7 +17,7 @@ class bPlot:
 		ba: bAnalysis object
 		"""
 		self.ba = ba
-	
+
 	#############################
 	# plot functions
 	#############################
@@ -67,16 +67,16 @@ class bPlot:
 
 		ax.set_ylabel('Vm (mV)')
 		ax.set_xlabel('Time (sec)')
-	
+
 	def plotSpikes(ba, oneSpikeNumber=None, ax=None, xMin=None, xMax=None):
 		'''
 		Plot Vm with spike analysis overlaid as symbols
-		
+
 		oneSpikeNumber: If specified will select one spike with a yellow symbol
 		ax: If specified will plot into a MatPlotLib axes
-		xMin/xMax: if specified will set_xlim(xMin, xMax) 
+		xMin/xMax: if specified will set_xlim(xMin, xMax)
 		'''
-		
+
 		fig = None
 		if ax is None:
 			grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
@@ -169,7 +169,7 @@ class bPlot:
 				# line between rising and falling is ([x1, y1], [x2, y2])
 				ax.plot([risingPntX, fallingPntX], [risingPntY, fallingPntY], color='b', linestyle='-', linewidth=2)
 		'''
-		
+
 		#
 		# plot one spike time as a yellow circle
 		line = None
@@ -183,7 +183,7 @@ class bPlot:
 		# set the x-axis of the plot
 		if xMin is not None and xMax is not None:
 			ax.set_xlim([xMin,xMax])
-			
+
 		# 20190816, was return line
 		# not sure if this break anything???
 		return fig, ax
@@ -266,7 +266,7 @@ class bPlot:
 			try:
 				ax.plot(ba.spikeClips_x, ba.spikeClips[i], 'k')
 			except (ValueError) as e:
-				print('exception in bAnalysisPlot.plotClips() while plotting clips', i)
+				print('exception in bPlot.plotClips() while plotting clips', i)
 
 		#
 		# plot current clip
@@ -275,7 +275,7 @@ class bPlot:
 			try:
 				line, = ax.plot(ba.spikeClips_x, ba.spikeClips[oneSpikeNumber], 'y')
 			except (ValueError) as e:
-				print('exception in bAnalysisPlot.plotClips() while plotting oneSpikeNumber', oneSpikeNumber)
+				print('exception in bPlot.plotClips() while plotting oneSpikeNumber', oneSpikeNumber)
 
 		ax.set_ylabel('Vm (mV)')
 		ax.set_xlabel('Time (ms)')
