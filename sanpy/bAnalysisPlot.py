@@ -186,6 +186,7 @@ class bPlot:
 
 		# 20190816, was return line
 		# not sure if this break anything???
+		#return fig, ax
 		return fig, ax
 
 	def plotTimeSeries(ba, stat, halfWidthIdx=0, ax=None):

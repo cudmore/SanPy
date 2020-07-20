@@ -5,7 +5,7 @@ If you find the code in this repository interesting, please email Robert Cudmore
 
 ## Whole cell myocyte action potential analysis
 
-This repository has code to perform [cardiac action potential][cardiac action potential] analysis. It is primarily designed to analyze spontaneous cardiac action potentials from whole-cell recordings of [cardiac myocytes].
+This repository has code to perform [cardiac action potential][cardiac action potential] analysis. It is primarily designed to analyze spontaneous cardiac action potentials from whole-cell current-clamp recordings of [cardiac myocytes].
 
 [cardiac action potential]: https://en.wikipedia.org/wiki/Cardiac_action_potential
 [cardiac myocytes]: https://en.wikipedia.org/wiki/Cardiac_muscle_cell
@@ -20,19 +20,6 @@ The desktop application allows the user to load a folder of files (top table). S
 
 <IMG SRC="img/meta-window-example.png" width=700>
 
-## Web Application
-
-The browser based web application provides the same interface for analysis as the desktop application.
-
-<IMG SRC="img/app2-interface.png" width=700 border=1>
-
-
-Once data is analyzed, Pooling allows browsing detection parameters across any number of files.
-
-
-<IMG SRC="img/pymy-pooling.png" width=700 border=1>
-
-
 ## Writing custom Python scripts
 
 In just a few lines of code, recordings can be loaded, analyzed, and plotted. See the [/examples](examples) folder for examples.
@@ -45,7 +32,7 @@ import bAnalysisPlot
 ba = bAnalysis.bAnalysis('data/SAN-AP-example-Rs-change.abf')
 ba.spikeDetect()
 
-sPlot.bPlot.plotSpikes(ba, xMin=140, xMax=145)
+bAnalysisPlot.bPlot.plotSpikes(ba, xMin=140, xMax=145)
 plt.show()
 ```
 
@@ -129,8 +116,20 @@ cd SanPy
 source sanpy_env/bin/activate
 
 # run the desktop application
-python SanPy/sanpy_app.py
+python sanpy/sanpy_app.py
 ```
+
+## Web Application
+
+The browser based web application provides the same interface for analysis as the desktop application.
+
+<IMG SRC="img/app2-interface.png" width=700 border=1>
+
+
+Once data is analyzed, Pooling allows browsing detection parameters across any number of files.
+
+
+<IMG SRC="img/pymy-pooling.png" width=700 border=1>
 
 ### Install the web application
 

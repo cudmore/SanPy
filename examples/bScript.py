@@ -6,7 +6,7 @@ matplotlib.use("TkAgg")
 
 import matplotlib.pyplot as plt
 
-from bAnalysisApp import bAnalysis
+from sanpy import bAnalysis
 
 # open an abf file into a bAnalysis object
 myFile = '../data/19114001.abf'
