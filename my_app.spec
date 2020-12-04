@@ -41,7 +41,8 @@ coll = COLLECT(exe,
 # Package the executable file into .app if on OS X
 if sys.platform == 'darwin':
 	#app = BUNDLE(exe,
-	app = BUNDLE(coll,
+	#app = BUNDLE(coll,
+	app = BUNDLE(exe,
 			name='SanPy.app',
 			info_plist={
 			'NSHighResolutionCapable': 'True'
