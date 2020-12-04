@@ -1,0 +1,64 @@
+/*
+Robert Cudmore
+Date: 20200218
+*/
+
+
+/* setting these causes parent layout to auto resize ... don't do this !!!*/
+/*
+QPushButton {
+	width: 70px;
+	min-width: 70px;
+}
+*/
+
+/*
+QRadioButton {
+	color: white;
+}
+
+QCheckBox {
+	color: white;
+}
+*/
+
+/*
+see: https://stackoverflow.com/questions/2730331/set-qgroupbox-title-font-size-with-style-sheets
+*/
+QGroupBox {
+    border: 2px solid gray;
+    border-radius: 3px;
+	margin-top: 0.5em;
+	font-size: 12px;
+ }
+
+QGroupBox::title {
+    color: white;
+	/* background-color: transparent; */
+    /* subcontrol-position: top left; */
+	subcontrol-origin: margin;
+    left: 10px;
+    padding: 0 3px 0 3px;
+ }
+
+/* abb aics */
+QPushButton {
+	font-size: 11px;
+}
+
+QLabel {
+	font-size: 11px;
+}
+
+QSpinBox {
+	font-size: 11px;
+}
+
+QTableWidget {
+	font-size: 11px;
+	/* height: 36px; */
+}
+
+QHeaderView::section {
+	font-size: 11px;
+}
