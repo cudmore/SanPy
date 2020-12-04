@@ -4,7 +4,7 @@ from setuptools import setup#, find_packages
 
 setup(
     name='sanpy',
-    version='0.1',
+    version='0.1.1',
     description='Cardiac Myocyte Current Clamp Analysis',
     url='http://github.com/cudmore/SanPy',
     author='Robert H Cudmore',
@@ -14,11 +14,11 @@ setup(
         'numpy',
         'scipy',
         'pandas',
-        'PyQt5',
         'pyqtgraph',
         'matplotlib',
         'pyabf',
         'XlsxWriter',
+        'PyQt5==5.13.0',
 		'qdarkstyle',
     ]
 )

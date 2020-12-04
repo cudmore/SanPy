@@ -1,11 +1,13 @@
 pandas
 numpy
 scipy
-PyQt5
 pyqtgraph
 matplotlib
 pyabf
 XlsxWriter
 
-qdarkstyle==2.8.1
+PyQt5==5.13.0
+#qdarkstyle==2.8.1
+qdarkstyle
+
 xlrd # for loading excel files in examples/reanalyze.py
