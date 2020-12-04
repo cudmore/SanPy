@@ -27,9 +27,10 @@ class bExportWidget(QtWidgets.QWidget):
 		"""
 		super(bExportWidget, self).__init__()
 
-		self.setFile(file)
+		okGo = self.setFile(file)
 
-		self.initUI()
+		if okGo:
+			self.initUI()
 
 	def initUI(self):
 
@@ -66,12 +67,16 @@ class bExportWidget(QtWidgets.QWidget):
 		when main application changes file
 		"""
 		if not os.path.isfile(filePath):
-			return
+			return False
 
 		self.filePath = filePath
 		self.ba = bAnalysis.bAnalysis(filePath)
+		if self.ba.loadError:
+			print('there was an error loading file', filePath)
+			return False
 		if plotRaw:
 			self.plotRaw()
+		return True
 
 	def plotRaw(self):
 		self.figure.clf()

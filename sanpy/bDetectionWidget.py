@@ -6,12 +6,25 @@ from functools import partial
 
 import numpy as np
 
+#import qdarkstyle
+
 from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
 from pyqtgraph.exporters import ImageExporter
 #import pyqtgraph.exporters
 
 from bAnalysis import bAnalysis
+
+# abb trying to get detection widget to look respactable
+'''
+class bLeftDetectionWidget(QtWidgets.QWidget):
+	def __init__(self, mainWindow=None, parent=None):
+		super(bLeftDetectionWidget, self).__init__(parent)
+
+		self.mainWindow = mainWindow
+
+		self.buildUI()
+'''
 
 class bDetectionWidget(QtWidgets.QWidget):
 	def __init__(self, ba=None, mainWindow=None, parent=None):
@@ -21,8 +34,21 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		super(bDetectionWidget, self).__init__(parent)
 
+		# all widgets should inherit this
+		#self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+
 		self.ba = ba
 		self.myMainWindow = mainWindow
+
+		self.mySetTheme()
+		'''
+		if self.myMainWindow.useDarkStyle:
+			pg.setConfigOption('background', 'k')
+			pg.setConfigOption('foreground', 'w')
+		else:
+			pg.setConfigOption('background', 'w')
+			pg.setConfigOption('foreground', 'k')
+		'''
 
 		self.dvdtLines = None
 		self.vmLines = None
@@ -38,6 +64,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'y': 'thresholdVal_dvdt',
 				'convertx_tosec': False, # some stats are in points, we need to convert to seconds
 				'color': 'r',
+				'styleColor': 'color: red',
 				'symbol': 'o',
 				'plotOn': 'dvdt', # which plot to overlay (vm, dvdt)
 				'plotIsOn': True,
@@ -48,6 +75,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'y': 'peakVal',
 				'convertx_tosec': False,
 				'color': 'r',
+				'styleColor': 'color: red',
 				'symbol': 'o',
 				'plotOn': 'vm',
 				'plotIsOn': True,
@@ -58,6 +86,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'y': 'preMinVal',
 				'convertx_tosec': True,
 				'color': 'g',
+				'styleColor': 'color: green',
 				'symbol': 'o',
 				'plotOn': 'vm',
 				'plotIsOn': False,
@@ -68,6 +97,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'y': 'postMinVal',
 				'convertx_tosec': True,
 				'color': 'b',
+				'styleColor': 'color: blue',
 				'symbol': 'o',
 				'plotOn': 'vm',
 				'plotIsOn': False,
@@ -84,12 +114,24 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.myPlotList[idx].setData(x=[], y=[])
 	'''
 
+	def mySetTheme(self):
+		if self.myMainWindow.useDarkStyle:
+			pg.setConfigOption('background', 'k')
+			pg.setConfigOption('foreground', 'w')
+		else:
+			pg.setConfigOption('background', 'w')
+			pg.setConfigOption('foreground', 'k')
+
 	def detect(self, dvdtValue, minSpikeVm):
 		"""
 		detect spikes
 		"""
 
 		if self.ba is None:
+			return
+
+		if self.ba.loadError:
+			print('bDetectionWidget.detect() did not spike detect because the file was not loaded (may be corrupt .abf file?)')
 			return
 
 		self.ba.spikeDetect(dVthresholdPos=dvdtValue, minSpikeVm=minSpikeVm)
@@ -110,7 +152,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		#QtCore.QCoreApplication.processEvents()
 
-	def save(self):
+	def save(self, alsoSaveTxt=False):
 		"""
 		Prompt user for filename and save both xlsx and txt
 		Save always defaults to data folder
@@ -133,7 +175,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#print('tmp:', tmp)
 
 		if len(savefile) > 0:
-			self.ba.saveReport(savefile, xMin, xMax)
+			self.ba.saveReport(savefile, xMin, xMax, alsoSaveTxt=alsoSaveTxt)
 			self.myMainWindow.mySignal('saved')
 		else:
 			print('no file saved')
@@ -188,6 +230,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 	def switchFile(self, path):
 		"""
 		set self.ba to new bAnalysis object ba
+
+		Can fail if .abf file is corrupt
 		"""
 		print('=== bDetectionWidget.switchFile() path:', path)
 
@@ -199,16 +243,28 @@ class bDetectionWidget(QtWidgets.QWidget):
 			print('error: bDetectionWidget.switchFile() did not find file:', path)
 			return
 
-		self.ba = bAnalysis(file=path)
-		self.ba.getDerivative(medianFilter=5) # derivative
+		# make analysis object from file
+		self.ba = bAnalysis(file=path) # loads abf file
 
-		#remove vm/dvdt/clip itmes
+		if self.ba.loadError:
+			# happend when .abf file is corrupt
+			pass
+		else:
+			self.ba.getDerivative(medianFilter=5) # derivative
+
+		#remove vm/dvdt/clip items (even when abf file is corrupt)
 		if self.dvdtLines is not None:
 			self.derivPlot.removeItem(self.dvdtLines)
 		if self.vmLines is not None:
 			self.vmPlot.removeItem(self.vmLines)
 		if self.clipLines is not None:
 			self.clipPlot.removeItem(self.clipLines)
+
+		# abb 20201009
+		if self.ba.loadError:
+			self.replot()
+			print('bDetectionWidget.switchFile() did not switch file, the .abf file may be corrupt:', path)
+			return None
 
 		# cancel spike selection
 		self.selectSpike(None)
@@ -293,7 +349,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.detectToolbarWidget.numSpikesLabel.repaint()
 
 	def selectSpike(self, spikeNumber):
-		print('bDetectionWIdget.selectSpike() spikeNumber:', spikeNumber)
+		if spikeNumber is not None:
+			print('bDetectionWIdget.selectSpike() spikeNumber:', spikeNumber)
 		# we will always use self.ba peak
 		if spikeNumber is None:
 			x = None
@@ -326,6 +383,30 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.clipPlot.addItem(self.clipLines)
 
+	def toggle_scatter(self, on):
+		"""
+		toggle scatter plot in parent (e.g. xxx)
+		"""
+		self.myMainWindow.toggleStatisticsPlot(on)
+
+	def toggle_dvdt(self, on):
+		"""
+		toggle dv/dt plot on/off
+		"""
+		if on:
+			self.derivPlot.show()
+		else:
+			self.derivPlot.hide()
+
+	def toggle_vm(self, on):
+		"""
+		toggle vm plot on/off
+		"""
+		if on:
+			self.vmPlot.show()
+		else:
+			self.vmPlot.hide()
+
 	def toggleClips(self, on):
 		"""
 		toggle clips plot on/off
@@ -338,19 +419,28 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.view.removeItem(self.clipPlot)
 
 	def buildUI(self):
+		# left is toolbar, right is PYQtGraph (self.view)
 		self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
 
 		# detection widget toolbar
-		self.detectToolbarWidget = myDetectToolbarWidget(self.myPlots, self)
-		self.myHBoxLayout_detect.addLayout(self.detectToolbarWidget, stretch=1) # stretch=10, not sure on the units???
+		# abb 20201110, switching over to a better layout
+		#self.detectToolbarWidget = myDetectToolbarWidget(self.myPlots, self)
+		#self.myHBoxLayout_detect.addLayout(self.detectToolbarWidget, stretch=1) # stretch=10, not sure on the units???
+		self.detectToolbarWidget = myDetectToolbarWidget2(self.myPlots, self)
+		self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget, stretch=1) # stretch=10, not sure on the units???
 
 		#print('bDetectionWidget.buildUI() building pg.GraphicsLayoutWidget')
 		self.view = pg.GraphicsLayoutWidget()
+		# works but does not stick
+		#self.view.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 		self.view.show()
 
 		self.derivPlot = self.view.addPlot(row=0, col=0)
 		self.vmPlot = self.view.addPlot(row=1, col=0)
 		self.clipPlot = self.view.addPlot(row=2, col=0)
+
+		# does not have setStyleSheet
+		#self.derivPlot.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 
 		# hide the little 'A' button to rescale axis
 		self.derivPlot.hideButtons()
@@ -391,6 +481,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=2)
 		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
 
+		# axis labels
+		self.derivPlot.getAxis('left').setLabel('dV/dt')
+		self.vmPlot.getAxis('left').setLabel('mV')
+		self.vmPlot.getAxis('bottom').setLabel('Seconds')
+
 		self.replot()
 
 		#
@@ -400,6 +495,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#print('bDetectionWidget.buildUI() done')
 
 	def myPrint(self):
+		"""
+		save the vmPlot to a file????
+		"""
 		# this does not do svg
 		#exporter = pg.exporters.ImageExporter(self.vmPlot)
 
@@ -410,7 +508,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 		'''
 
 		exporter = pg.exporters.SVGExporter(self.vmPlot)
-		filename = '/Users/cudmore/Desktop/myExport.svg'
+		# macOs
+		#filename = '/Users/cudmore/Desktop/myExport.svg'
+		# linux
+		filename = '/home/cudmore/Desktop/myExport.svg'
 
 		print('myPrint() saving file', filename)
 		exporter.export(filename)
@@ -461,11 +562,20 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 
 		# holy shit, this is bad, without this the app becomes non responsive???
 		# if width > 1.0 then this whole app STALLS
-		self.setPen(pg.mkPen(color='k', width=1))
+		# default heme
+		#self.setPen(pg.mkPen(color='k', width=1))
+		# dark theme
+		if self.detectionWidget.myMainWindow.useDarkStyle:
+			penColor = 'w'
+		else:
+			penColor = 'k'
+		self.setPen(pg.mkPen(color=penColor, width=1))
+
 	def shape(self):
 		# override because QGraphicsPathItem.shape is too expensive.
 		#print(time.time(), 'MultiLine.shape()', pg.QtGui.QGraphicsItem.shape(self))
 		return pg.QtGui.QGraphicsItem.shape(self)
+
 	def boundingRect(self):
 		#print(time.time(), 'MultiLine.boundingRect()', self.path.boundingRect())
 		return self.path.boundingRect()
@@ -516,8 +626,13 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 		print('myGraphicsLayoutWidget.mouseClickEvent(self, ev):')
 	'''
 
-#class myDetectToolbarWidget(QtWidgets.QVBoxLayout):
-class myDetectToolbarWidget(QtWidgets.QGridLayout):
+class myDetectToolbarWidget2(QtWidgets.QWidget):
+	def __init__(self, myPlots, detectionWidget, parent=None):
+		super(myDetectToolbarWidget2, self).__init__(parent)
+
+		self.myPlots = myPlots
+		self.detectionWidget = detectionWidget # parent detection widget
+		self.buildUI()
 
 	def sweepSelectionChange(self,i):
 		print('sweepSelectionChange() i:', i)
@@ -530,6 +645,258 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		sweepNumber = int(self.cb.currentText())
 		print('    sweep number:', sweepNumber)
 
+	@QtCore.pyqtSlot()
+	def on_start_stop(self):
+		#print('myDetectToolbarWidget.on_start_stop()')
+		start = self.startSeconds.value()
+		stop = self.stopSeconds.value()
+		#print('    start:', start, 'stop:', stop)
+		self.detectionWidget.setAxis(start, stop)
+
+	@QtCore.pyqtSlot()
+	def on_button_click(self, name):
+		print('=== myDetectToolbarWidget.on_button_click() name:', name)
+
+		modifiers = QtWidgets.QApplication.keyboardModifiers()
+		isShift = modifiers == QtCore.Qt.ShiftModifier
+
+		if name == 'Detect dV/dt':
+			dvdtValue = self.dvdtThreshold.value()
+			minSpikeVm = self.minSpikeVm.value()
+			#print('    dvdtValue:', dvdtValue)
+			#print('    minSpikeVm:', minSpikeVm)
+			self.detectionWidget.detect(dvdtValue, minSpikeVm)
+
+		elif name =='Detect mV':
+			minSpikeVm = self.minSpikeVm.value()
+			#print('    minSpikeVm:', minSpikeVm)
+			# passing dvdtValue=None we will detect suing minSpikeVm
+			dvdtValue = None
+			#print('    dvdtValue:', dvdtValue)
+			#print('    minSpikeVm:', minSpikeVm)
+			self.detectionWidget.detect(dvdtValue, minSpikeVm)
+
+		elif name == 'Reset X-Axis':
+			self.detectionWidget.setAxisFull()
+
+		elif name == 'Save Spike Report':
+			print('isShift:', isShift)
+			self.detectionWidget.save(alsoSaveTxt=isShift)
+
+	def on_check_click(self, checkbox, idx):
+		isChecked = checkbox.isChecked()
+		print('on_check_click() text:', checkbox.text(), 'isChecked:', isChecked, 'idx:', idx)
+		if idx == 'Clips':
+			self.detectionWidget.toggleClips(isChecked)
+		elif idx == 'dV/dt':
+			self.detectionWidget.toggle_dvdt(isChecked)
+		elif idx == 'Scatter':
+			self.detectionWidget.toggle_scatter(isChecked)
+		#elif idx == 'Show Vm':
+		#	self.detectionWidget.toggle_vm(isChecked)
+		else:
+			# assuming idx is int !!!
+			self.detectionWidget.togglePlot(idx, isChecked)
+
+	def buildUI(self):
+		#self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+
+		myPath = os.path.dirname(os.path.abspath(__file__))
+
+		'''
+		mystylesheet_css = os.path.join(myPath, 'css', 'mystylesheet.css')
+		if os.path.isfile(mystylesheet_css):
+			with open(mystylesheet_css) as f:
+				myStyleSheet = f.read()
+		'''
+
+		self.setFixedWidth(330)
+		self.mainLayout = QtWidgets.QVBoxLayout(self)
+		self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
+
+		#
+		# sweeps
+		sweepLayout = QtWidgets.QHBoxLayout(self)
+
+		sweepLabel = QtWidgets.QLabel('Sweep')
+		sweepLayout.addWidget(sweepLabel)
+
+		sweeps = [0,1,2,3,4]
+		self.cb = QtWidgets.QComboBox()
+		#self.cb.addItems(sweeps)
+		for sweep in sweeps:
+			self.cb.addItem(str(sweep))
+		self.cb.currentIndexChanged.connect(self.sweepSelectionChange)
+		sweepLayout.addWidget(self.cb)
+
+		# finalize
+		self.mainLayout.addLayout(sweepLayout)
+
+		#
+		# detection parameters group
+		detectionGroupBox = QtWidgets.QGroupBox('Detect Parameters')
+		#detectionGroupBox.setStyleSheet(myStyleSheet)
+
+		detectionGridLayout = QtWidgets.QGridLayout()
+
+		buttonName = 'Detect dV/dt'
+		button = QtWidgets.QPushButton(buttonName)
+		button.setToolTip('Detect Spikes Using dV/dt Threshold')
+		button.clicked.connect(partial(self.on_button_click,buttonName))
+
+		row = 0
+		rowSpan = 1
+		columnSpan = 2
+		detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)
+
+		self.dvdtThreshold = QtWidgets.QDoubleSpinBox()
+		self.dvdtThreshold.setMinimum(-1e6)
+		self.dvdtThreshold.setMaximum(+1e6)
+		self.dvdtThreshold.setValue(50)
+		detectionGridLayout.addWidget(self.dvdtThreshold, row, 2, rowSpan, columnSpan)
+
+		row += 1
+		rowSpan = 1
+		columnSpan = 2
+		buttonName = 'Detect mV'
+		button = QtWidgets.QPushButton(buttonName)
+		button.setToolTip('Detect Spikes Using Vm Threshold')
+		button.clicked.connect(partial(self.on_button_click,buttonName))
+		detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)
+
+		# Vm Threshold (mV)
+		#minSpikeVmLabel = QtWidgets.QLabel('Vm Threshold (mV)')
+		#self.addWidget(minSpikeVmLabel, row, 1)
+
+		#row += 1
+		self.minSpikeVm = QtWidgets.QDoubleSpinBox()
+		self.minSpikeVm.setMinimum(-1e6)
+		self.minSpikeVm.setMaximum(+1e6)
+		self.minSpikeVm.setValue(-20)
+		detectionGridLayout.addWidget(self.minSpikeVm, row, 2, rowSpan, columnSpan)
+
+		# start/stop seconds
+		row += 1
+		startSeconds = QtWidgets.QLabel('From (Sec)')
+		detectionGridLayout.addWidget(startSeconds, row, 0)
+		#
+		#row += 1
+		self.startSeconds = QtWidgets.QDoubleSpinBox()
+		self.startSeconds.setMinimum(-1e6)
+		self.startSeconds.setMaximum(+1e6)
+		self.startSeconds.setValue(0)
+		# abb 20200718
+		#self.startSeconds.valueChanged.connect(self.on_start_stop)
+		self.startSeconds.editingFinished.connect(self.on_start_stop)
+		detectionGridLayout.addWidget(self.startSeconds, row, 1)
+		#
+		stopSeconds = QtWidgets.QLabel('To (Sec)')
+		detectionGridLayout.addWidget(stopSeconds, row, 2)
+
+		self.stopSeconds = QtWidgets.QDoubleSpinBox()
+		self.stopSeconds.setMinimum(-1e6)
+		self.stopSeconds.setMaximum(+1e6)
+		self.stopSeconds.setValue(0)
+		#self.stopSeconds.valueChanged.connect(self.on_start_stop)
+		self.stopSeconds.editingFinished.connect(self.on_start_stop)
+		detectionGridLayout.addWidget(self.stopSeconds, row, 3)
+
+		# always the last row
+		row += 1
+		self.numSpikesLabel = QtWidgets.QLabel('Number of Spikes Detected: None')
+		#self.numSpikesLabel.setObjectName('numSpikesLabel')
+		tmpRowSpan = 1
+		tmpColSpan = 4
+		detectionGridLayout.addWidget(self.numSpikesLabel, row, 0, tmpRowSpan, tmpColSpan) # columnSpan=2 does not work?
+
+		# finalize
+		detectionGroupBox.setLayout(detectionGridLayout)
+		self.mainLayout.addWidget(detectionGroupBox)
+
+		#
+		# save button (has its own row in mainLayout VBoxLayout)
+		buttonName = 'Save Spike Report'
+		button = QtWidgets.QPushButton(buttonName)
+		button.setToolTip('Save Detected Spikes to Excel file')
+		button.setStyleSheet("background-color: green")
+		button.clicked.connect(partial(self.on_button_click,buttonName))
+		self.mainLayout.addWidget(button)
+
+		#
+		# display  group
+		displayGroupBox = QtWidgets.QGroupBox('Display')
+		#displayGroupBox.setStyleSheet(myStyleSheet)
+
+		displayGridLayout = QtWidgets.QGridLayout()
+
+		row = 0
+		buttonName = 'Reset X-Axis'
+		button = QtWidgets.QPushButton(buttonName)
+		#button.setToolTip('Detect Spikes')
+		button.clicked.connect(partial(self.on_button_click,buttonName))
+		displayGridLayout.addWidget(button, row, 0)
+
+		# a number of stats that will get overlaid
+		row += 1
+		for idx, plot in enumerate(self.myPlots):
+			humanName = plot['humanName']
+			isChecked = plot['plotIsOn']
+			styleColor = plot['styleColor']
+			checkbox = QtWidgets.QCheckBox(humanName)
+			checkbox.setChecked(isChecked)
+			#checkbox.setStyleSheet(styleColor) # looks really ugly
+			#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
+			checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,idx))
+			col = 0
+			if humanName == 'Post AP Min (mV)':
+				col = 1
+			displayGridLayout.addWidget(checkbox, row, col)
+			if humanName == 'Pre AP Min (mV)':
+				# don't increment row, we are in col = 1
+				pass
+			else:
+				row += 1
+
+		# finalize
+		displayGroupBox.setLayout(displayGridLayout)
+		self.mainLayout.addWidget(displayGroupBox)
+
+		#
+		# plots  group
+		plotGroupBox = QtWidgets.QGroupBox('Plots')
+		#plotGroupBox.setStyleSheet(myStyleSheet)
+
+		plotGridLayout = QtWidgets.QGridLayout()
+
+		# add widgets
+		row = 0
+		col = 0
+		show_dvdt_checkbox = QtWidgets.QCheckBox('dV/dt')
+		show_dvdt_checkbox.setChecked(True)
+		show_dvdt_checkbox.stateChanged.connect(partial(self.on_check_click,show_dvdt_checkbox,'dV/dt'))
+		plotGridLayout.addWidget(show_dvdt_checkbox, row, col)
+
+		row = 0
+		col = 1
+		checkbox = QtWidgets.QCheckBox('Clips')
+		checkbox.setChecked(False)
+		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Clips'))
+		plotGridLayout.addWidget(checkbox, row, col)
+
+		row = 0
+		col = 2
+		checkbox = QtWidgets.QCheckBox('Scatter')
+		checkbox.setChecked(True)
+		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Scatter'))
+		plotGridLayout.addWidget(checkbox, row, col)
+
+		# finalize
+		plotGroupBox.setLayout(plotGridLayout)
+		self.mainLayout.addWidget(plotGroupBox)
+
+#class myDetectToolbarWidget(QtWidgets.QVBoxLayout):
+class myDetectToolbarWidget(QtWidgets.QGridLayout):
+
 	def __init__(self, myPlots, detectionWidget, parent=None):
 		"""
 		myPlots is a list of dict describing each x/y plot (on top of vm and/or dvdt)
@@ -538,6 +905,11 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		super(myDetectToolbarWidget, self).__init__(parent)
 
 		self.detectionWidget = detectionWidget # parent detection widget
+
+		# this does not work
+		#self.setMaximumWidth(22)
+
+		self.setAlignment(QtCore.Qt.AlignTop)
 
 		row = 0
 
@@ -561,32 +933,32 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		button.clicked.connect(partial(self.on_button_click,buttonName))
 		self.addWidget(button, row, 0)
 
-		dvdtLabel = QtWidgets.QLabel('dV/dt Theshold')
-		self.addWidget(dvdtLabel, row, 1)
+		#dvdtLabel = QtWidgets.QLabel('dV/dt Theshold')
+		#self.addWidget(dvdtLabel, row, 1)
 
 		self.dvdtThreshold = QtWidgets.QDoubleSpinBox()
 		self.dvdtThreshold.setMinimum(-1e6)
 		self.dvdtThreshold.setMaximum(+1e6)
 		self.dvdtThreshold.setValue(50)
-		self.addWidget(self.dvdtThreshold, row, 2)
+		self.addWidget(self.dvdtThreshold, row, 1)
 
 		row += 1
 
-		buttonName = 'Detect Vm Threshold'
+		buttonName = 'Detect mV'
 		button = QtWidgets.QPushButton(buttonName)
 		button.setToolTip('Detect Spikes Using Vm Threshold')
 		button.clicked.connect(partial(self.on_button_click,buttonName))
 		self.addWidget(button, row, 0)
 
 		# Vm Threshold (mV)
-		minSpikeVmLabel = QtWidgets.QLabel('Vm Threshold (mV)')
-		self.addWidget(minSpikeVmLabel, row, 1)
+		#minSpikeVmLabel = QtWidgets.QLabel('Vm Threshold (mV)')
+		#self.addWidget(minSpikeVmLabel, row, 1)
 
 		self.minSpikeVm = QtWidgets.QDoubleSpinBox()
 		self.minSpikeVm.setMinimum(-1e6)
 		self.minSpikeVm.setMaximum(+1e6)
 		self.minSpikeVm.setValue(-20)
-		self.addWidget(self.minSpikeVm, row, 2)
+		self.addWidget(self.minSpikeVm, row, 1)
 
 		row += 1
 
@@ -619,7 +991,9 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		# dv/dt threshold
 		self.numSpikesLabel = QtWidgets.QLabel('Number of Spikes Detected: None')
 		#self.numSpikesLabel.setObjectName('numSpikesLabel')
-		self.addWidget(self.numSpikesLabel, row, 0)
+		tmpRowSpan = 1
+		tmpColSpan = 2
+		self.addWidget(self.numSpikesLabel, row, 0, tmpRowSpan, tmpColSpan) # columnSpan=2 does not work?
 
 		row += 1
 
@@ -650,12 +1024,37 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 			row += 1
 
 		#row += 1
+		show_dvdt_checkbox = QtWidgets.QCheckBox('Show dV/dt')
+		show_dvdt_checkbox.setChecked(True)
+		#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
+		show_dvdt_checkbox.stateChanged.connect(partial(self.on_check_click,show_dvdt_checkbox,'Show dV/dt'))
+		self.addWidget(show_dvdt_checkbox, row, 0)
 
+		# don't allow user to turn off all plot
+		# the layout gets screwed up
+		'''
+		row += 1
+		show_vm_checkbox = QtWidgets.QCheckBox('Show Vm')
+		show_vm_checkbox.setChecked(True)
+		#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
+		show_vm_checkbox.stateChanged.connect(partial(self.on_check_click,show_vm_checkbox,'Show Vm'))
+		self.addWidget(show_vm_checkbox, row, 0)
+		'''
+
+		row += 1
 		checkbox = QtWidgets.QCheckBox('Show Clips')
 		checkbox.setChecked(False)
 		#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Show Clips'))
 		self.addWidget(checkbox, row, 0)
+
+		# this does not work at all !!!
+		'''
+		# abb 20201109, we have two columns (detection buttons and plot)
+		# set the width of the detection buttons
+		self.setColumnStretch(1, 10)
+		self.setColumnStretch(0, 2)
+		'''
 
 	@QtCore.pyqtSlot()
 	def on_start_stop(self):
@@ -667,9 +1066,13 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 
 	def on_check_click(self, checkbox, idx):
 		isChecked = checkbox.isChecked()
-		print('on_check_click()', checkbox.text(), isChecked, idx)
+		print('on_check_click() text:', checkbox.text(), 'isChecked:', isChecked, 'idx:', idx)
 		if idx == 'Show Clips':
 			self.detectionWidget.toggleClips(isChecked)
+		elif idx == 'Show dV/dt':
+			self.detectionWidget.toggle_dvdt(isChecked)
+		elif idx == 'Show Vm':
+			self.detectionWidget.toggle_vm(isChecked)
 		else:
 			# assuming idx is int !!!
 			self.detectionWidget.togglePlot(idx, isChecked)
@@ -677,6 +1080,10 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 	@QtCore.pyqtSlot()
 	def on_button_click(self, name):
 		print('=== myDetectToolbarWidget.on_button_click() name:', name)
+
+		modifiers = QtWidgets.QApplication.keyboardModifiers()
+		isShift = modifiers == QtCore.Qt.ShiftModifier
+
 		if name == 'Detect dV/dt':
 			dvdtValue = self.dvdtThreshold.value()
 			minSpikeVm = self.minSpikeVm.value()
@@ -684,18 +1091,33 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 			#print('    minSpikeVm:', minSpikeVm)
 			self.detectionWidget.detect(dvdtValue, minSpikeVm)
 
-		elif name =='Detect Vm Threshold':
+		elif name =='Detect mV':
 			minSpikeVm = self.minSpikeVm.value()
 			#print('    minSpikeVm:', minSpikeVm)
 			# passing dvdtValue=None we will detect suing minSpikeVm
 			dvdtValue = None
+			#print('    dvdtValue:', dvdtValue)
+			#print('    minSpikeVm:', minSpikeVm)
 			self.detectionWidget.detect(dvdtValue, minSpikeVm)
 
 		elif name == 'Reset X-Axis':
 			self.detectionWidget.setAxisFull()
 
 		elif name == 'Save Spike Report':
-			self.detectionWidget.save()
+			print('isShift:', isShift)
+			self.detectionWidget.save(alsoSaveTxt=isShift)
+
+	def sweepSelectionChange(self,i):
+		print('sweepSelectionChange() i:', i)
+		'''
+		print "Items in the list are :"
+
+		for count in range(self.cb.count()):
+			print self.cb.itemText(count)
+		'''
+		sweepNumber = int(self.cb.currentText())
+		print('    sweep number:', sweepNumber)
+
 
 if __name__ == '__main__':
 	# load a bAnalysis file
@@ -703,14 +1125,19 @@ if __name__ == '__main__':
 
 	abfFile = '/Users/cudmore/Sites/bAnalysis/data/19221021.abf'
 	abfFile = '/Users/cudmore/Sites/bAnalysis/data/19114001.abf'
+	abfFile = '/media/cudmore/data/Laura-data/manuscript-data/2020_06_23_0006.abf'
 	ba = bAnalysis(file=abfFile)
 
 	# spike detect
 	ba.getDerivative(medianFilter=5) # derivative
 	ba.spikeDetect(dVthresholdPos=50, minSpikeVm=-20, medianFilter=0)
 
+	# default theme
 	pg.setConfigOption('background', 'w')
 	pg.setConfigOption('foreground', 'k')
+	# dark theme
+	#pg.setConfigOption('background', 'k')
+	#pg.setConfigOption('foreground', 'w')
 
 	app = QtWidgets.QApplication(sys.argv)
 	w = bDetectionWidget(ba)

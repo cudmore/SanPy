@@ -1,38 +1,57 @@
 import os, sys, time
 
+import numpy as np
 import pandas as pd
 
 sys.path.append("..") # Adds higher directory to python modules path.
-from SanPy import bAnalysis
+from sanpy import bAnalysis
 
 def reanalyze(dataPath, dbFile):
 	"""
 	Reanalyze all abf files in a folder following a database file
-	
+
 	dataPath: Full path to folder with original abf files
 	dbFile: full path to comma-seperated text file with database
-	
-	Note: dbFile has to follumn a very precise column names
+
+	Note: dbFile uses very precise column names
 	"""
-	
+
 	startSeconds_ = time.time()
-	
+
+	print('=== reanalyze()')
+	print('  dataPath:', dataPath)
+	print('  dbFile:', dbFile)
+
 	savePath = os.path.join(dataPath, 'NEWxxx')
 	if not os.path.exists(savePath):
 		os.mkdir(savePath)
 		print('created output folder:', savePath)
 	else:
 		print('output folder already exists:', savePath)
-		
-	df = pd.read_csv(dbFile, header=0, dtype={'ABF File': str})
-	
-	
+
+	if dbFile.endswith('.csv'):
+		df = pd.read_csv(dbFile, header=0, dtype={'ABF File': str})
+	elif dbFile.endswith('.xlsx'):
+		df = pd.read_excel(dbFile, header=0, dtype={'ABF File': str})
+	else:
+		print('error reading dbFile:', dbFile)
+
 	print(df[:5])
-	
+
 	numFiles = df.shape[0]
-	
+
+	baList = []
+
+	# keep list of new stats to add to df
+	nFreqList = []
+	meanFreqList = []
+	sdFreqList = []
+	seFreqList = []
+	cvFreqList = []
+
 	actualNumFiles = 0
 	totalNumberOfSpikes = 0
+	cellNumber = 1
 	for idx, file in enumerate(df['ABF File']):
 
 		if str(file) in ['nan', 'NaN']:
@@ -44,35 +63,46 @@ def reanalyze(dataPath, dbFile):
 			continue
 
 		condition = df.iloc[idx]['Condition']
-		cellNumber = df.iloc[idx]['Cell Number']
+		#cellNumber = df.iloc[idx]['Cell Number']
 		maleFemale = df.iloc[idx]['Male/Female']
+		superiorInferior = df.iloc[idx]['Superior/Inferior']
 
 		startSeconds = float(df.iloc[idx]['Start Seconds'])
 		stopSeconds = float(df.iloc[idx]['Stop Seconds'])
 
 		# can be None
 		dvdtThreshold = df.iloc[idx]['dv/dt Threshold']
-		if dvdtThreshold is None or dvdtThreshold == 'None':
+		if dvdtThreshold is None or dvdtThreshold == 'None' or np.isnan(dvdtThreshold):
 			dvdtThreshold = None
 		else:
-			dvdtThreshold = int(dvdtThreshold)
-		
+			# if we use this, we ALSO need minVmThreshold
+			dvdtThreshold = float(dvdtThreshold)
+
 		minVmThreshold = float(df.iloc[idx]['mV min/threshold'])
-			
 
 		print('\n', idx+1, 'of', numFiles)
-		print('   ',  abfFilePath, 'startSeconds:', startSeconds, 'stopSeconds:', stopSeconds, 'dvdtThreshold:', dvdtThreshold, 'minVmThreshold:', minVmThreshold)
-		
+		print('   ',  abfFilePath)
+		print('   ', 'startSeconds:', startSeconds, 'stopSeconds:', stopSeconds)
+		print('   ', 'dvdtThreshold:', type(dvdtThreshold), dvdtThreshold)
+		print('   ', 'minVmThreshold:', type(minVmThreshold), minVmThreshold)
+
+		if dvdtThreshold is not None and np.isnan(minVmThreshold):
+			print('  \nERROR: when using dvdtThreshold we also need minVmThreshold')
+			print('  dvdtThreshold:', dvdtThreshold)
+			print('  minVmThreshold:', minVmThreshold)
+			print('\n')
+			continue
 		#
 		# load
 		ba = bAnalysis.bAnalysis(abfFilePath)
-		
+
 		#
 		# set (condition 1, condition 2, condition 3')
 		# need to do this for analysis, gets stored in each spike
 		ba.condition1 = condition
 		ba.condition2 = cellNumber
 		ba.condition3 = maleFemale
+		ba.condition4 = superiorInferior
 
 		#
 		# detect
@@ -80,21 +110,68 @@ def reanalyze(dataPath, dbFile):
 		# we could also specify 'medianFilter=0, halfHeights=[20, 50, 80]'
 		ba.spikeDetect(dVthresholdPos=dvdtThreshold, minSpikeVm=minVmThreshold, verbose=False)
 
-		
+		# abb 20201110
+		baList.append(ba)
+
+		if ba.numSpikes == 0:
+			# error
+			print('\n  ERROR: 0 spikes !!!\n')
+			continue
+
 		#
 		# save
 		saveFile = file + '_' + condition + '.xlsx'
 		saveFilePath = os.path.join(savePath, saveFile)
 		ba.saveReport(saveFilePath, startSeconds, stopSeconds)
-		
+
+		#
+		# add columns to df and then save as new csv
+		# use this csv to make pivot table plot
+		xStat = 'spikeFreq_hz'
+		yStat = 'spikeFreq_hz'
+		xData, yData = ba.getStat(xStat, yStat, xToSec=True)
+		nIntervals = np.count_nonzero(~np.isnan(xData))
+		xMean = np.nanmean(xData)
+		xMean *= 1000
+		xSD = np.nanstd(xData)
+		xSD *= 1000
+		xCV = xSD / xMean
+		#df['aMeanSpikeFreq'] = xMean
+		nFreqList.append(nIntervals)
+		meanFreqList.append(xMean)
+		sdFreqList.append(xSD)
+		cvFreqList.append(xCV)
+
+		# increment
 		totalNumberOfSpikes += ba.numSpikes
 		actualNumFiles += 1
-		
+		cellNumber += 1
+
+	# append columns to df
+	df['aSpikeFreq_n'] = nFreqList
+	df['aSpikeFreq_m'] = meanFreqList
+	df['aSpikeFreq_sd'] = sdFreqList
+	df['aSpikeFreq_cv'] = cvFreqList
+
+	#
+	# save the df in a new file
+	tmpPath, tmpExt = os.path.splitext(dbFile)
+	tmpPath += '_analysis.csv'
+	print('reanalyze() saving new csv in:', tmpPath)
+	df.to_csv(tmpPath)
+
 	stopSeconds_ = time.time()
-	print('reanalyze() finished', actualNumFiles, 'files with', totalNumberOfSpikes, 'spikes in', stopSeconds_-startSeconds_, 'seconds')
-	
+	elapsedSeconds = round(stopSeconds_-startSeconds_,2)
+	print('reanalyze() finished', actualNumFiles, 'files with', totalNumberOfSpikes, 'spikes in', elapsedSeconds, 'seconds')
+
+	return baList
+
 if __name__ == '__main__':
 
 	dataPath = '/Users/cudmore/box/data/laura/SAN CC'
 	dbFile = 'sanpy-analysis-database.csv'
-	reanalyze(dataPath, dbFile)
+
+	dataPath = '/media/cudmore/data/Laura-data/manuscript-data'
+	dbFile = '/media/cudmore/data/Laura-data/Superior vs Inferior database.xlsx'
+
+	baList = reanalyze(dataPath, dbFile)

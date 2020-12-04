@@ -5,13 +5,9 @@ import os, sys, time, math, json
 from functools import partial
 from collections import OrderedDict
 
-###
-###
-###
+import qdarkstyle
 
-#print('!!!!!!!!!!!!!! LOGGING !!!!!!!!!!!!!!!!')
 import logging
-
 from logging import FileHandler #RotatingFileHandler
 from logging.config import dictConfig
 
@@ -46,7 +42,7 @@ print('The first time this is run, will take 40-60 seconds to start ... please w
 import numpy as np
 
 from PyQt5 import QtCore, QtWidgets, QtGui
-import pyqtgraph as pg
+#from pyqtspinner.spinner import WaitingSpinner
 
 from bDetectionWidget import bDetectionWidget
 from bScatterPlotWidget import bScatterPlotWidget
@@ -54,8 +50,12 @@ import bFileList
 from bAnalysis import bAnalysis
 from bExportWidget import bExportWidget
 
-pg.setConfigOption('background', 'w')
-pg.setConfigOption('foreground', 'k')
+# default theme
+#pg.setConfigOption('background', 'w')
+#pg.setConfigOption('foreground', 'k')
+# dark theme
+#pg.setConfigOption('background', 'k')
+#pg.setConfigOption('foreground', 'w')
 
 class MainWindow(QtWidgets.QMainWindow):
 	def __init__(self, path='', parent=None):
@@ -72,12 +72,24 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		super(MainWindow, self).__init__(parent)
 
-		self.setWindowTitle('SanPy')
+		# todo: update this with selected folder
+		windowTitle = f'SanPy {path}'
+		self.setWindowTitle(windowTitle)
+
+		self._rowHeight = 12
 
 		self.path = path
 
 		# todo: modify self.path if we get a good folder
 		self.configDict = self.preferencesLoad()
+
+		# I changed saved preferences file, try not to screw up Laura's analysis
+		if 'useDarkStyle' in self.configDict.keys():
+			self.useDarkStyle = self.configDict['useDarkStyle']
+		else:
+			print('  adding useDarkStyle to preferences')
+			self.useDarkStyle = True
+			self.configDict['useDarkStyle'] = True
 
 		# set window geometry
 		self.setMinimumSize(640, 480)
@@ -99,16 +111,36 @@ class MainWindow(QtWidgets.QMainWindow):
 			print('using last path from preferences json file:', lastPath)
 			self.path = lastPath
 		else:
-			print('last path is no good', lastPath)
+			print('sanpy_app.py MainWindow.__init__ last path is no good:', lastPath)
+			#self.path = None
 
 		self.fileList = None
-		self.loadFolder(self.path)
+
+		# abb 20201109, added if clause
+		if self.path is not None and len(self.path)>0:
+			self.loadFolder(self.path)
 
 		self.buildMenus()
 
 		self.buildUI()
 
 		self.myExportWidget = None
+
+	def toggleStyleSheet(self, doDark=None, buildingInterface=False):
+		if doDark is None:
+			doDark = self.useDarkStyle
+		self.useDarkStyle = doDark
+		if doDark:
+			self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+		else:
+			self.setStyleSheet("")
+
+		self.configDict['useDarkStyle'] = self.useDarkStyle
+
+		if not buildingInterface:
+			#self.myScatterPlotWidget.defaultPlotLayout()
+			#self.myScatterPlotWidget.buildUI(doRebuild=True)
+			self.myDetectionWidget.mySetTheme()
 
 	# no idea why I need this ???
 	def _tmp_loadFolder2(self, bool):
@@ -138,6 +170,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.fileList = bFileList.bFileList(path)
 
 		#self.refreshFileTableWidget()
+
+		windowTitle = f'SanPy {path}'
+		self.setWindowTitle(windowTitle)
 
 		return True
 
@@ -225,12 +260,17 @@ class MainWindow(QtWidgets.QMainWindow):
 				break
 
 		if len(fileName) > 0:
+			#spinner = WaitingSpinner(self.myTableWidget, True, True, QtCore.Qt.ApplicationModal)
+			#spinner.start() # starts spinning
+
 			path = os.path.join(self.path, fileName)
 			print('=== sanpy.on_file_table_click() row:', row+1, 'path:', path)
 			self.myDetectionWidget.switchFile(path)
 
 			if self.myExportWidget is not None:
 				self.myExportWidget.setFile(path, plotRaw=True)
+
+			#spinner.stop() # starts spinning
 
 		else:
 			print('error: on_file_table_click() did not find File name at row:', row)
@@ -248,6 +288,7 @@ class MainWindow(QtWidgets.QMainWindow):
 				fileValue = ''
 			item = QtWidgets.QTableWidgetItem(str(fileValue))
 			self.myTableWidget.setItem(selectedRow, colIdx, item)
+			self.myTableWidget.setRowHeight(selectedRow, self._rowHeight)
 
 	def refreshFileTableWidget(self):
 		print('refreshFileTableWidget()')
@@ -257,7 +298,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			return
 
 		#self.myTableWidget.setShowGrid(False) # remove grid
-		self.myTableWidget.setFont(QtGui.QFont('Arial', 13))
+		#self.myTableWidget.setFont(QtGui.QFont('Arial', 13))
 
 		#
 		# this will not change for a given path ???
@@ -286,33 +327,7 @@ class MainWindow(QtWidgets.QMainWindow):
 					fileValue = ''
 				item = QtWidgets.QTableWidgetItem(str(fileValue))
 				self.myTableWidget.setItem(idx, idx2, item)
-
-	def buildMenus(self):
-
-		mainMenu = self.menuBar()
-
-		loadFolderAction = QtWidgets.QAction('Load Folder ...', self)
-		loadFolderAction.setShortcut('Ctrl+O')
-		loadFolderAction.triggered.connect(self._tmp_loadFolder2)
-
-		exportRawDataAction = QtWidgets.QAction('Export To pdf', self)
-		exportRawDataAction.triggered.connect(self.export_pdf)
-
-		savePreferencesAction = QtWidgets.QAction('Save Preferences', self)
-		savePreferencesAction.triggered.connect(self.preferencesSave)
-
-		fileMenu = mainMenu.addMenu('&File')
-		fileMenu.addAction(loadFolderAction)
-		fileMenu.addSeparator()
-		fileMenu.addAction(savePreferencesAction)
-
-		scatterPlotAction = QtWidgets.QAction('Scatter Plot', self)
-		scatterPlotAction.triggered.connect(self.scatterPlot)
-
-		windowsMenu = mainMenu.addMenu('&Windows')
-		windowsMenu.addAction(scatterPlotAction)
-		windowsMenu.addSeparator()
-		windowsMenu.addAction(exportRawDataAction)
+				self.myTableWidget.setRowHeight(idx, self._rowHeight)
 
 	def export_pdf(self):
 		"""
@@ -327,7 +342,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 		open a new window with an x/y scatter plot
 		"""
-		print('=== scatterPlot()')
+		print('=== scatterPlot() IS NOT IMPLEMENTED !!!')
 
 	'''
 	def closeApplication(self):
@@ -335,7 +350,7 @@ class MainWindow(QtWidgets.QMainWindow):
 	'''
 
 	def keyPressEvent(self, event):
-		print('=== keyPressEvent()')
+		print('=== sanpy_app.MainWindow() keyPressEvent()')
 		key = event.key()
 		print(key)
 		if key in [70, 82]: # 'r' or 'f'
@@ -348,7 +363,62 @@ class MainWindow(QtWidgets.QMainWindow):
 		if key == QtCore.Qt.Key.Key_Escape:
 			self.mySignal('cancel all selections')
 
+	def buildMenus(self):
+
+		mainMenu = self.menuBar()
+
+		loadFolderAction = QtWidgets.QAction('Load Folder ...', self)
+		loadFolderAction.setShortcut('Ctrl+O')
+		loadFolderAction.triggered.connect(self._tmp_loadFolder2)
+
+		savePreferencesAction = QtWidgets.QAction('Save Preferences', self)
+		savePreferencesAction.triggered.connect(self.preferencesSave)
+
+		fileMenu = mainMenu.addMenu('&File')
+		fileMenu.addAction(loadFolderAction)
+		fileMenu.addSeparator()
+		fileMenu.addAction(savePreferencesAction)
+
+		scatterPlotAction = QtWidgets.QAction('Scatter Plot', self)
+		scatterPlotAction.triggered.connect(self.scatterPlot)
+
+		exportRawDataAction = QtWidgets.QAction('Export To pdf', self)
+		exportRawDataAction.triggered.connect(self.export_pdf)
+
+		windowsMenu = mainMenu.addMenu('&Windows')
+		windowsMenu.addAction(scatterPlotAction)
+		windowsMenu.addSeparator()
+		windowsMenu.addAction(exportRawDataAction)
+
+		# view menu to toggle scatter plot widget
+		viewMenu = mainMenu.addMenu('&View')
+
+		'''
+		statisticsPlotAction = QtWidgets.QAction('Statistics Plot', self)
+		statisticsPlotAction.triggered.connect(self.toggleStatisticsPlot)
+		statisticsPlotAction.setCheckable(True)
+		statisticsPlotAction.setChecked(True)
+		viewMenu.addAction(statisticsPlotAction)
+		'''
+
+		darkThemeAction = QtWidgets.QAction('Dark Theme', self)
+		darkThemeAction.triggered.connect(self.toggleStyleSheet)
+		darkThemeAction.setCheckable(True)
+		darkThemeAction.setChecked(self.useDarkStyle)
+		viewMenu.addAction(darkThemeAction)
+
+	def toggleStatisticsPlot(self, state):
+		print('toggleStatisticsPlot() state:', state)
+		if state:
+			self.myScatterPlotWidget.show()
+		else:
+			self.myScatterPlotWidget.hide()
+
 	def buildUI(self):
+		# all widgets should inherit this
+
+		self.toggleStyleSheet(buildingInterface=True)
+
 		self.centralwidget = QtWidgets.QWidget(self)
 		self.centralwidget.setObjectName("centralwidget")
 
@@ -357,28 +427,22 @@ class MainWindow(QtWidgets.QMainWindow):
 		#
 		# tree view of files
 		#
-
-		#print('	buildUI() building file table')
 		self.myTableWidget = QtWidgets.QTableWidget()
 		self.myTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
 		self.myTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 		self.myTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 		self.myTableWidget.cellClicked.connect(self.on_file_table_click)
+		#self.setStyleSheet(myStyleSheet)
 
 		self.refreshFileTableWidget()
-
-		# append to layout
-		self.myQVBoxLayout.addWidget(self.myTableWidget)
+		self.myQVBoxLayout.addWidget(self.myTableWidget, stretch=4)
 
 		#
-		# detect/plot widget
+		# detect/plot widget, on the left are params and on the right are plots
 		#
 		baNone = None
 		self.myDetectionWidget = bDetectionWidget(baNone,self)
-		#self.myDetectionWidget = bDetectionWidget(self.ba)
-
-		# add the detection widget to the main vertical layout
-		self.myQVBoxLayout.addWidget(self.myDetectionWidget)
+		self.myQVBoxLayout.addWidget(self.myDetectionWidget, stretch=10)
 
 
 		#
@@ -386,6 +450,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		#
 		self.myScatterPlotWidget = bScatterPlotWidget(self, self.myDetectionWidget)
 		self.myQVBoxLayout.addWidget(self.myScatterPlotWidget)
+		#self.myScatterPlotWidget.hide()
 
 		"""
 		#
@@ -466,6 +531,7 @@ class MainWindow(QtWidgets.QMainWindow):
 	def preferencesDefaults(self):
 		configDict = OrderedDict()
 
+		configDict['useDarkStyle'] = True
 		configDict['autoDetect'] = True # FALSE DOES NOT WORK!!!! auto detect on file selection and/or sweep selection
 		configDict['lastPath'] = 'data'
 		configDict['windowGeometry'] = {}
@@ -509,20 +575,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
 if __name__ == '__main__':
 	path = '/Users/cudmore/Sites/bAnalysis/data'
-
+	path = '/media/cudmore/data/Laura-data/manuscript-data'
+	path = '/media/cudmore/data/SAN AP'
+	
 	import logging
 	import traceback
 
-	try:
-		app = QtWidgets.QApplication(sys.argv)
-		w = MainWindow(path=path)
-		#w.resize(640, 480)
-		w.show()
-		#sys.exit(app.exec_())
-	except Exception as e:
-		print('fastplot3 error')
-		print(traceback.format_exc())
-		#logging.error(traceback.format_exc())
-		raise
-	finally:
-		sys.exit(app.exec_())
+	app = QtWidgets.QApplication(sys.argv)
+	w = MainWindow(path=path)
+	#w.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+	w.show()
+
+	# abb 20201109, program is not quiting on error???
+	sys.exit(app.exec_())

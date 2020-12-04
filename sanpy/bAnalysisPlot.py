@@ -63,7 +63,8 @@ class bPlot:
 			fig = plt.figure(figsize=(10, 8))
 			ax = fig.add_subplot(grid[0, 0:]) #Vm, entire sweep
 
-		ax.plot(ba.abf.sweepX, ba.abf.sweepY, 'k')
+		#ax.plot(ba.abf.sweepX, ba.abf.sweepY, 'k')
+		ax.plot(ba.abf.sweepX, ba.abf.sweepY, '-') # fmt = '[marker][line][color]'
 
 		ax.set_ylabel('Vm (mV)')
 		ax.set_xlabel('Time (sec)')

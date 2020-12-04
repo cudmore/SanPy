@@ -15,9 +15,12 @@ gVideoFileColumns = ('Index', 'Path', 'File', 'kHz', 'Sweeps', 'Duration (sec)',
 	'Acq Date', 'Acq Time',
 	'dV/dt Threshold', 'Num Spikes', 'Analysis Date', 'Analysis Time')
 '''
+# abb 202012 moved into class
+''
 gVideoFileColumns = ('File', 'kHz', 'Sweeps', 'Duration (sec)',
 	'Acq Date', 'Acq Time',
-	'dV/dt Threshold', 'Num Spikes', 'Analysis Date', 'Analysis Time')
+	'dV/dt Threshold', 'mV Threshold', 'Num Spikes', 'Analysis Date', 'Analysis Time')
+''
 
 #############################################################
 class bFileList:
@@ -29,6 +32,10 @@ class bFileList:
 
 		#self.videoFileList = []
 
+		self.videoFileColumns = ('File', 'kHz', 'Sweeps', 'Duration (sec)',
+			'Acq Date', 'Acq Time',
+			'dV/dt Threshold', 'mV Threshold', 'Num Spikes', 'Analysis Date', 'Analysis Time')
+
 		self.path = path
 
 		self.db = OrderedDict()
@@ -38,10 +45,10 @@ class bFileList:
 
 	def getFileValues(self, file):
 		theRet = []
-		
+
 		fileDict = self.db[file]
-		
-		for colName in gVideoFileColumns:
+
+		for colName in self.videoFileColumns:
 			if colName == 'File':
 				theRet.append(fileDict['file'])
 			if colName == 'kHz':
@@ -56,6 +63,14 @@ class bFileList:
 				theRet.append(fileDict['acqTime'])
 			if colName == 'dV/dt Threshold':
 				theRet.append(fileDict['dvdtThreshold'])
+
+			# abb 202012, minSpikeVm WILL NOT exist in older versions of _db.json
+			try:
+				if colName == 'mV Threshold':
+					theRet.append(fileDict['minSpikeVm'])
+			except:
+				theRet.append('')
+
 			if colName == 'Num Spikes':
 				theRet.append(fileDict['numSpikes'])
 			if colName == 'Analysis Date':
@@ -63,11 +78,11 @@ class bFileList:
 			if colName == 'Analysis Time':
 				theRet.append(fileDict['analysisTime'])
 		return theRet
-		
+
 	def refreshRow(self, ba):
 		"""
 		On saving analysis, update the database for a file
-		
+
 		path: path to abf file
 		"""
 		file = os.path.basename(ba.file)
@@ -77,14 +92,16 @@ class bFileList:
 			pass
 		else:
 			self.db[file]['dvdtThreshold'] = ba.dVthreshold
+			self.db[file]['minSpikeVm'] = ba.minSpikeVm
+
 			self.db[file]['numSpikes'] = ba.numSpikes
-			
+
 			dateAnalyzed = ba.dateAnalyzed #'%Y-%m-%d %H:%M:%S'
 			myDate, myTime = dateAnalyzed.split(' ')
-			
+
 			self.db[file]['analysisDate'] = myDate
 			self.db[file]['analysisTime'] = myTime
-		
+
 			#
 			#
 			'''
@@ -93,11 +110,11 @@ class bFileList:
 			self.videoFileList[treeViewRow].dict['analysisDate'] = myDate
 			self.videoFileList[treeViewRow].dict['analysisTime'] = myTime
 			'''
-			
+
 		self.databaseSave()
-		
+
 		#return self.videoFileList[treeViewRow].asTuple()
-		
+
 	def databaseRefresh(self):
 		useExtension = '.abf'
 		videoFileIdx = 0
@@ -109,7 +126,7 @@ class bFileList:
 			if file.endswith(useExtension):
 				if file in self.db.keys():
 					# already in database
-					print('databaseRefresh.databaseRefresh() file is already in self.db')
+					#print('databaseRefresh.databaseRefresh() file is already in self.db')
 					continue
 
 				fullPath = os.path.join(self.path, file)
@@ -123,6 +140,7 @@ class bFileList:
 				self.db[file]['durationSec'] = myVideoFile.dict['durationSec']
 				self.db[file]['numSweeps'] = myVideoFile.dict['numSweeps']
 				self.db[file]['dvdtThreshold'] = myVideoFile.dict['dvdtThreshold']
+				self.db[file]['minSpikeVm'] = myVideoFile.dict['minSpikeVm'] # abb 202012
 				self.db[file]['numSpikes'] = myVideoFile.dict['numSpikes']
 				self.db[file]['analysisDate'] = myVideoFile.dict['analysisDate']
 				self.db[file]['analysisTime'] = myVideoFile.dict['analysisTime']
@@ -130,7 +148,7 @@ class bFileList:
 				self.db[file]['acqTime'] = myVideoFile.dict['acqTime']
 
 				#print("   bFileList.databaseRefresh() self.db[file]['dvdtThreshold'] =" ,self.db[file]['dvdtThreshold'])
-				
+
 				videoFileIdx += 1
 
 		# any time we refresh, we save
@@ -165,7 +183,7 @@ class bFileList:
 			enclosingFolder = os.path.basename(self.path)
 			#enclosingFolder = 'db'
 			dbPath = os.path.join(self.path, enclosingFolder + '_db.json')
-			print('bFileList.databaseSave is saving:', dbPath)
+			print('bFileList.databaseSave() is saving:', dbPath)
 			with open(dbPath, "w") as dbFile:
 				json.dump(self.db, dbFile, indent=4)
 
@@ -194,25 +212,25 @@ class bFileList:
 				self.videoFileList.append(newVideoFile)
 				videoFileIdx += 1
 	'''
-	
+
 	def getColumns(self):
-		return gVideoFileColumns
+		return self.videoFileColumns
 
 	def numFiles(self):
 		if self.db is None:
 			return 0
 		else:
 			return len(self.db.keys())
-	
+
 	def getList(self):
 		#return self.videoFileList
 		return self.db
-		
+
 	'''
 	def getFileFromIndex(self, idx):
 		return self.videoFileList[idx]
 	'''
-	
+
 #############################################################
 class bVideoFile:
 
@@ -227,36 +245,45 @@ class bVideoFile:
 			return
 
 		self.path = path
-		
+
 		videoFileName = os.path.basename(path)
 
-		self.dict = OrderedDict()
-		#self.dict['index'] = index
-		#self.dict['path'] = path
+		# abb 20201009
+		#self.dict = OrderedDict()
+		self.dict = self._getDefaultDict()
+
 		self.dict['file'] = videoFileName
 
 		# load abf file and grab parameters
 		if fromDict is None:
 			#
-			ba = bAnalysis(file=path)
-			#
-			pntsPerMS = ba.dataPointsPerMs
-			numSweeps = len(ba.sweepList)
-			durationSec = max(ba.abf.sweepX)
-			acqDate = ba.acqDate
-			acqTime = ba.acqTime
-			
-			##
-			##
-			## THIS IS PROBABLY AN ERROR
-			##
-			##
-			dvdtThreshold = None
-			numSpikes = None
-			analysisDate = None
-			analysisTime = None
-			
+			loadWasGood = True
+			try:
+				ba = bAnalysis(file=path) # load file as abf file (may fail)
+			except (NotImplementedError) as e:
+				print('bFileList.bVideoFile.__init__() exception, did not load file:', path)
+				loadWasGood = False
+			else:
+				#
+				pntsPerMS = ba.dataPointsPerMs
+				numSweeps = len(ba.sweepList)
+				durationSec = max(ba.abf.sweepX)
+				acqDate = ba.acqDate
+				acqTime = ba.acqTime
+
+				##
+				##
+				## THIS IS PROBABLY AN ERROR
+				##
+				##
+				dvdtThreshold = None
+				minSpikeVm = None # abb 202012
+				numSpikes = None
+				analysisDate = None
+				analysisTime = None
+
 		else:
+			# loading from a saved _db.json file ???
 			pntsPerMS = fromDict['kHz']
 			numSweeps = fromDict['numSweeps']
 			durationSec = fromDict['durationSec']
@@ -264,20 +291,41 @@ class bVideoFile:
 			acqTime = fromDict['acqTime']
 
 			dvdtThreshold = fromDict['dvdtThreshold']
+			minSpikeVm = fromDict['minSpikeVm'] # abb 202012
 			numSpikes = fromDict['numSpikes']
 			analysisDate = fromDict['analysisDate']
 			analysisTime = fromDict['analysisTime']
 
-		self.dict['kHz'] = pntsPerMS
-		self.dict['numSweeps'] = numSweeps
-		self.dict['durationSec'] = int(round(durationSec))
-		self.dict['acqDate'] = acqDate
-		self.dict['acqTime'] = acqTime
+		if loadWasGood:
+			self.dict['kHz'] = pntsPerMS
+			self.dict['numSweeps'] = numSweeps
+			self.dict['durationSec'] = int(round(durationSec))
+			self.dict['acqDate'] = acqDate
+			self.dict['acqTime'] = acqTime
 
-		self.dict['dvdtThreshold'] = dvdtThreshold
-		self.dict['numSpikes'] = numSpikes
-		self.dict['analysisDate'] = analysisDate
-		self.dict['analysisTime'] = analysisTime
+			self.dict['dvdtThreshold'] = dvdtThreshold
+			self.dict['minSpikeVm'] = minSpikeVm # abb 202012
+			self.dict['numSpikes'] = numSpikes
+			self.dict['analysisDate'] = analysisDate
+			self.dict['analysisTime'] = analysisTime
+
+	# abb 20201109
+	def _getDefaultDict(self):
+		retDict = {}
+		retDict['file'] = ''
+		retDict['kHz'] = None
+		retDict['numSweeps'] = None
+		retDict['durationSec'] = None
+		retDict['acqDate'] = ''
+		retDict['acqTime'] = ''
+
+		retDict['dvdtThreshold'] = None
+		retDict['minSpikeVm'] = None # abb 202012
+		retDict['numSpikes'] = None
+		retDict['analysisDate'] = ''
+		retDict['analysisTime'] = ''
+
+		return retDict
 
 	def asString(self):
 		theRet = ''

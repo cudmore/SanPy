@@ -5,8 +5,11 @@ import sys, os, json
 
 from collections import OrderedDict
 
+# abb removed 20201109, not using this, write a PyQt preferences panel
+'''
 import tkinter
 from tkinter import ttk
+'''
 
 '''
 import logging
@@ -37,70 +40,70 @@ statList['AP Height (mV)'] = {
 	'xStat': 'peakPnt',
 	'xStatUnits': 'Points'
 	}
-statList['Pre AP Min (mV)'] = { 
+statList['Pre AP Min (mV)'] = {
 	'yStat': 'preMinVal',
 	'yStatUnits': 'mV',
 	'xStat': 'preMinPnt',
 	'xStatUnits': 'Points'
 	}
-statList['Post AP Min (mV)'] = { 
+statList['Post AP Min (mV)'] = {
 	'yStat': 'postMinVal',
 	'yStatUnits': 'mV',
 	'xStat': 'postMinPnt',
 	'xStatUnits': 'Points'
 	}
 # todo: fix this
-statList['Early Diastolic Depol Rate (dV/s)'] = { 
+statList['Early Diastolic Depol Rate (dV/s)'] = {
 	'yStat': 'earlyDiastolicDurationRate',
 	'yStatUnits': 'dV/s',
 	'xStat': '',
 	'xStatUnits': ''
 	}
 # todo: fix this
-statList['Early Diastolic Duration (ms)'] = { 
+statList['Early Diastolic Duration (ms)'] = {
 	'yStat': 'earlyDiastolicDuration_ms',
 	'yStatUnits': 'dV/s',
 	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
 	}
 
-statList['Diastolic Duration (ms)'] = { 
+statList['Diastolic Duration (ms)'] = {
 	'yStat': 'diastolicDuration_ms',
 	'yStatUnits': 'dV/s',
 	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
 	}
-statList['Max AP Upstroke (mV)'] = { 
+statList['Max AP Upstroke (mV)'] = {
 	'yStat': 'preSpike_dvdt_max_val',
 	'yStatUnits': 'dV/s',
 	'xStat': 'preSpike_dvdt_max_pnt',
 	'xStatUnits': 'Points'
 	}
-statList['Max AP Upstroke (dV/dt)'] = { 
+statList['Max AP Upstroke (dV/dt)'] = {
 	'yStat': 'preSpike_dvdt_max_val2',
 	'yStatUnits': 'dV/dt',
 	'xStat': 'preSpike_dvdt_max_pnt',
 	'xStatUnits': 'Points'
 	}
-statList['Max AP Repolarization (mV)'] = { 
+statList['Max AP Repolarization (mV)'] = {
 	'yStat': 'postSpike_dvdt_min_val',
 	'yStatUnits': 'mV',
 	'xStat': 'postSpike_dvdt_min_pnt',
 	'xStatUnits': 'Points'
 	}
-statList['Inter-Spike-Interval (ms)'] = { 
+statList['Inter-Spike-Interval (ms)'] = {
 	'yStat': 'isi_ms',
 	'yStatUnits': 'ms',
 	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
 	}
-statList['Spike Frequency (Hz)'] = { 
+statList['Spike Frequency (Hz)'] = {
 	'yStat': 'spikeFreq_hz',
 	'yStatUnits': 'Hz',
 	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
 	}
-statList['Cycle Length (ms)'] = { 
+statList['Cycle Length (ms)'] = {
 	'yStat': 'cycleLength_ms',
 	'yStatUnits': 'ms',
 	'xStat': 'thresholdPnt',
@@ -109,7 +112,7 @@ statList['Cycle Length (ms)'] = {
 
 # todo: fix this
 '''
-statList['halfWidth'] = { 
+statList['halfWidth'] = {
 	'yStat': '',
 	'yStatUnits': '/dt',
 	'xStat': '',
@@ -118,13 +121,13 @@ statList['halfWidth'] = {
 '''
 
 # todo: fix this
-statList['AP Duration (ms)'] = { 
+statList['AP Duration (ms)'] = {
 	'yStat': 'apDuration_ms',
 	'yStatUnits': 'ms',
 	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
 	}
-	
+
 class bAnalysisUtil:
 	def __init__(self):
 		self.configDict = self.configDefault()
@@ -145,13 +148,13 @@ class bAnalysisUtil:
 	@staticmethod
 	def getStatList():
 		return statList
-	
+
 	'''
 	@staticmethod
 	def humanStatToBackend(theStat):
 		return ''
 	'''
-		
+
 	def prettyPrint(self):
 		print(json.dumps(self.configDict, indent=4, sort_keys=True))
 
@@ -224,6 +227,8 @@ class bAnalysisUtil:
 
 		return theRet
 
+	# abb removed 20201109, not using this, write a PyQt preferences panel
+	'''
 	def tk_PreferenesPanel(self, app):
 		"""
 		app: tkinter.Tk()
@@ -284,8 +289,10 @@ class bAnalysisUtil:
 
 		okButton = ttk.Button(myFrameOK, text="Save Preferences", command=self.tk_okButton_Callback)
 		okButton.grid(row=0, column=2)
+	'''
 
-
+	# abb removed 20201109, not using this, write a PyQt preferences panel
+	'''
 	def tk_spinbox_Callback(self, event=None, xxx=None, yyy=None):
 		print('spinbox_Callback() event:', event, 'xxx:', xxx, 'yyy:', yyy)
 		print('new value is:', xxx.get())
@@ -304,6 +311,7 @@ class bAnalysisUtil:
 	def tk_ignore(self, event):
 		#print('_ignore event:', event)
 		return 'break'
+	'''
 
 if __name__ == '__main__':
 	# unit tests
@@ -315,6 +323,9 @@ if __name__ == '__main__':
 
 	bau.prettyPrint()
 
+	# abb removed 20201109, not using this, write a PyQt preferences panel
+	'''
 	myRoot = tkinter.Tk()
 	bau.tk_PreferenesPanel(myRoot)
 	myRoot.mainloop()
+	'''

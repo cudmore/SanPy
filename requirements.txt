@@ -6,3 +6,6 @@ pyqtgraph
 matplotlib
 pyabf
 XlsxWriter
+
+qdarkstyle==2.8.1
+xlrd # for loading excel files in examples/reanalyze.py
