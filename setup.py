@@ -19,5 +19,6 @@ setup(
         'matplotlib',
         'pyabf',
         'XlsxWriter',
+		'qdarkstyle',
     ]
 )
