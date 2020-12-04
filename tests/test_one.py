@@ -1,4 +1,4 @@
-import bimpy
+import sanpy
 
 print('test_one.py import bimpy worked')
 
