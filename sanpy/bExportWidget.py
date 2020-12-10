@@ -14,8 +14,10 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as Navigatio
 
 #from SanPy import bAnalysis
 #from SanPy import bAnalysisPlot
-import bAnalysis
-import bAnalysisPlot
+#import bAnalysis
+#import bAnalysisPlot
+from sanpy import bAnalysis
+from sanpy import bAnalysisPlot
 
 class bExportWidget(QtWidgets.QWidget):
 	"""
@@ -70,7 +72,7 @@ class bExportWidget(QtWidgets.QWidget):
 			return False
 
 		self.filePath = filePath
-		self.ba = bAnalysis.bAnalysis(filePath)
+		self.ba = bAnalysis(filePath)
 		if self.ba.loadError:
 			print('there was an error loading file', filePath)
 			return False

@@ -19,6 +19,12 @@ setup(
         'pyabf',
         'XlsxWriter',
         'PyQt5==5.13.0',
-		'qdarkstyle',
-    ]
+		'qdarkstyle', # 2.8.1
+		'xlrd', # for loading excel files in examples/reanalyze.py
+    ],
+    entry_points={
+        'console_scripts': [
+            'sanpy=sanpy.sanpy_app:main',
+        ]
+    },
 )

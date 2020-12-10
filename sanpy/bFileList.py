@@ -8,7 +8,8 @@ Manager a list of abf files
 import os, json
 from collections import OrderedDict
 
-from bAnalysis import bAnalysis
+#from bAnalysis import bAnalysis
+import sanpy
 
 '''
 gVideoFileColumns = ('Index', 'Path', 'File', 'kHz', 'Sweeps', 'Duration (sec)',
@@ -42,6 +43,11 @@ class bFileList:
 		self.databaseLoad()
 
 		#self.populateFolder(path)
+
+	def getFileError(self, file):
+		fileDict = self.db[file]
+		theRet = fileDict['abfError']
+		return theRet
 
 	def getFileValues(self, file):
 		theRet = []
@@ -83,6 +89,7 @@ class bFileList:
 		"""
 		On saving analysis, update the database for a file
 
+		ba: bAnalysis object
 		path: path to abf file
 		"""
 		file = os.path.basename(ba.file)
@@ -127,6 +134,9 @@ class bFileList:
 				if file in self.db.keys():
 					# already in database
 					#print('databaseRefresh.databaseRefresh() file is already in self.db')
+					if not ('abfError' in self.db[file].keys()):
+						self.db[file]['abfError'] = None
+					#
 					continue
 
 				fullPath = os.path.join(self.path, file)
@@ -136,6 +146,7 @@ class bFileList:
 
 				self.db[file] = OrderedDict()
 				self.db[file]['file'] = file
+				self.db[file]['abfError'] = myVideoFile.loadError
 				self.db[file]['kHz'] = myVideoFile.dict['kHz']
 				self.db[file]['durationSec'] = myVideoFile.dict['durationSec']
 				self.db[file]['numSweeps'] = myVideoFile.dict['numSweeps']
@@ -254,15 +265,24 @@ class bVideoFile:
 
 		self.dict['file'] = videoFileName
 
+		self.loadError = False # abb 202012
+
 		# load abf file and grab parameters
 		if fromDict is None:
 			#
 			loadWasGood = True
+			'''
 			try:
-				ba = bAnalysis(file=path) # load file as abf file (may fail)
+				ba = sanpy.bAnalysis(file=path) # load file as abf file (may fail)
 			except (NotImplementedError) as e:
 				print('bFileList.bVideoFile.__init__() exception, did not load file:', path)
 				loadWasGood = False
+			'''
+			ba = sanpy.bAnalysis(file=path) # load file as abf file (may fail)
+			if ba.loadError:
+				print('bFileList.bVideoFile.__init__() exception, did not load file:', path)
+				loadWasGood = False
+				self.loadError = True
 			else:
 				#
 				pntsPerMS = ba.dataPointsPerMs

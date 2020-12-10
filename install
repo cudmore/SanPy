@@ -62,6 +62,11 @@ fi
 #echo '==='
 
 echo '==='
+echo "=== install SanPy: Installing requirements.txt 'pip install -r requirements.txt'"
+echo '==='
+pip install -r requirements.txt
+
+echo '==='
 echo "=== install SanPy: Installing sanpy package with 'pip install .'"
 echo '==='
 pip install .

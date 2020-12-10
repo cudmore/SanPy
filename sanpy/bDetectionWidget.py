@@ -13,7 +13,8 @@ import pyqtgraph as pg
 from pyqtgraph.exporters import ImageExporter
 #import pyqtgraph.exporters
 
-from bAnalysis import bAnalysis
+#from bAnalysis import bAnalysis
+import sanpy
 
 # abb trying to get detection widget to look respactable
 '''
@@ -244,7 +245,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			return
 
 		# make analysis object from file
-		self.ba = bAnalysis(file=path) # loads abf file
+		self.ba = sanpy.bAnalysis(file=path) # loads abf file
 
 		if self.ba.loadError:
 			# happend when .abf file is corrupt
@@ -1121,12 +1122,11 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 
 if __name__ == '__main__':
 	# load a bAnalysis file
-	from bAnalysis import bAnalysis
 
 	abfFile = '/Users/cudmore/Sites/bAnalysis/data/19221021.abf'
 	abfFile = '/Users/cudmore/Sites/bAnalysis/data/19114001.abf'
 	abfFile = '/media/cudmore/data/Laura-data/manuscript-data/2020_06_23_0006.abf'
-	ba = bAnalysis(file=abfFile)
+	ba = sanpy.bAnalysis(file=abfFile)
 
 	# spike detect
 	ba.getDerivative(medianFilter=5) # derivative

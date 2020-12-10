@@ -2,8 +2,8 @@
 """
 20201110
 
-This will plot stats (like spie freq) between superior (0) and inferior (1)
-color will be condition with ctrl balck and iso read
+This will plot stats (like spike freq) between superior (0) and inferior (1)
+color will be condition with ctrl black and iso red
 
 This is two step
 	1) python reanalyze to make a new .csv with columns like aSpikeFreq_m

@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt # used to set global plot options in defaultPlot
 
 #import qdarkstyle
 
-from bAnalysisUtil import bAnalysisUtil
+#from bAnalysisUtil import bAnalysisUtil
+import sanpy
 
 class bScatterPlotWidget(QtWidgets.QWidget):
 	def __init__(self, mainWindow=None, detectionWidget=None, parent=None):
@@ -246,7 +247,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 			self.lastFileName = self.myDetectionWidget.ba.file
 
 		# convert human readable yStat to backend
-		statList = bAnalysisUtil.getStatList()
+		statList = sanpy.bAnalysisUtil.getStatList()
 		yStat = statList[yStatHuman]['yStat'] # the name of the backend stat
 
 		# todo for now always plot versus take off potential
@@ -396,7 +397,7 @@ class myStatPlotToolbarWidget(QtWidgets.QWidget):
 
 		#self.statList = ['peakVal', 'thresholdVal', 'preMinVal']
 		# stat list is a dictionary where each key is a stat
-		self.statList = bAnalysisUtil.getStatList()
+		self.statList = sanpy.bAnalysisUtil.getStatList()
 
 		# load stye sheet
 		'''

@@ -22,13 +22,16 @@ dictConfig({
 
 myFormatter = logging.Formatter(logFormat)
 
+# removed to use PyInstaller
+'''
 logFileName = 'sanpy.log'
 logFileHandler = FileHandler(logFileName, mode='w')
 logFileHandler.setLevel(logging.DEBUG)
 logFileHandler.setFormatter(myFormatter)
+'''
 
 logger = logging.getLogger('sanpy')
-logger.addHandler(logFileHandler)
+#logger.addHandler(logFileHandler)
 
 logger.setLevel(logging.INFO)
 logger.debug('initialized sanpy log')
@@ -37,18 +40,21 @@ logger.debug('initialized sanpy log')
 ###
 ###
 
-print('The first time this is run, will take 40-60 seconds to start ... please wait ...')
+#print('The first time this is run, will take 40-60 seconds to start ... please wait ...')
+print('SanPy is starting up ...')
 
 import numpy as np
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 #from pyqtspinner.spinner import WaitingSpinner
 
-from bDetectionWidget import bDetectionWidget
-from bScatterPlotWidget import bScatterPlotWidget
-import bFileList
-from bAnalysis import bAnalysis
-from bExportWidget import bExportWidget
+import sanpy
+
+#from sanpy import bDetectionWidget
+#from bScatterPlotWidget import bScatterPlotWidget
+#import bFileList
+#from bAnalysis import bAnalysis
+#from bExportWidget import bExportWidget
 
 # default theme
 #pg.setConfigOption('background', 'w')
@@ -112,7 +118,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.path = lastPath
 		else:
 			print('sanpy_app.py MainWindow.__init__ last path is no good:', lastPath)
-			#self.path = None
+			self.path = None
 
 		self.fileList = None
 
@@ -167,7 +173,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.path = path
 
-		self.fileList = bFileList.bFileList(path)
+		self.fileList = sanpy.bFileList(path)
 
 		#self.refreshFileTableWidget()
 
@@ -185,7 +191,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		if not os.path.isfile(path):
 			return
 
-		self.ba = bAnalysis(file=path)
+		self.ba = sanpy.bAnalysis(file=path)
 		if defaultAnalysis:
 			self.ba.getDerivative(medianFilter=5) # derivative
 			self.ba.spikeDetect(dVthresholdPos=50, minSpikeVm=-20, medianFilter=0)
@@ -282,16 +288,22 @@ class MainWindow(QtWidgets.QMainWindow):
 		selectedRow = self.myTableWidget.currentRow()
 		selectedFile = self.file_table_get_value(selectedRow, 'File')
 
+		# abb 202012
+		# if abfError then set file name text to red
+		abfError = self.fileList.getFileError(selectedFile)
+
 		fileValues = self.fileList.getFileValues(selectedFile) # get list of values in correct column order
 		for colIdx, fileValue in enumerate(fileValues):
 			if str(fileValue) == 'None':
 				fileValue = ''
 			item = QtWidgets.QTableWidgetItem(str(fileValue))
+			if colIdx==0 and abfError:
+				item.setForeground(QtGui.QBrush(QtGui.QColor("#DD4444")))
 			self.myTableWidget.setItem(selectedRow, colIdx, item)
 			self.myTableWidget.setRowHeight(selectedRow, self._rowHeight)
 
 	def refreshFileTableWidget(self):
-		print('refreshFileTableWidget()')
+		#print('refreshFileTableWidget()')
 
 		if self.fileList is None:
 			print('refreshFileTableWidget() did not find a file list')
@@ -321,11 +333,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		for idx, filename in enumerate(fileList.keys()):
 			#print(idx, filename)
+			abfError = self.fileList.getFileError(filename) # abb 202012
 			fileValues = self.fileList.getFileValues(filename) # get list of values in correct column order
 			for idx2, fileValue in enumerate(fileValues):
 				if str(fileValue) == 'None':
 					fileValue = ''
 				item = QtWidgets.QTableWidgetItem(str(fileValue))
+				if idx2==0 and abfError:
+					item.setForeground(QtGui.QBrush(QtGui.QColor("#DD4444")))
 				self.myTableWidget.setItem(idx, idx2, item)
 				self.myTableWidget.setRowHeight(idx, self._rowHeight)
 
@@ -334,7 +349,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		Open a new window with raw Vm and provide interface to save as pdf
 		"""
 		if self.myDetectionWidget.ba is not None:
-			self.myExportWidget = bExportWidget(self.myDetectionWidget.ba.file)
+			self.myExportWidget = sanpy.bExportWidget(self.myDetectionWidget.ba.file)
 		else:
 			print('please select an abf file')
 
@@ -350,9 +365,9 @@ class MainWindow(QtWidgets.QMainWindow):
 	'''
 
 	def keyPressEvent(self, event):
-		print('=== sanpy_app.MainWindow() keyPressEvent()')
+		#print('=== sanpy_app.MainWindow() keyPressEvent()')
 		key = event.key()
-		print(key)
+		#print(key)
 		if key in [70, 82]: # 'r' or 'f'
 			self.myDetectionWidget.setFullAxis()
 
@@ -441,14 +456,14 @@ class MainWindow(QtWidgets.QMainWindow):
 		# detect/plot widget, on the left are params and on the right are plots
 		#
 		baNone = None
-		self.myDetectionWidget = bDetectionWidget(baNone,self)
+		self.myDetectionWidget = sanpy.bDetectionWidget(baNone,self)
 		self.myQVBoxLayout.addWidget(self.myDetectionWidget, stretch=10)
 
 
 		#
 		# scatter plot
 		#
-		self.myScatterPlotWidget = bScatterPlotWidget(self, self.myDetectionWidget)
+		self.myScatterPlotWidget = sanpy.bScatterPlotWidget(self, self.myDetectionWidget)
 		self.myQVBoxLayout.addWidget(self.myScatterPlotWidget)
 		#self.myScatterPlotWidget.hide()
 
@@ -533,7 +548,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		configDict['useDarkStyle'] = True
 		configDict['autoDetect'] = True # FALSE DOES NOT WORK!!!! auto detect on file selection and/or sweep selection
-		configDict['lastPath'] = 'data'
+		configDict['lastPath'] = ''
 		configDict['windowGeometry'] = {}
 		configDict['windowGeometry']['x'] = 100
 		configDict['windowGeometry']['y'] = 100
@@ -573,16 +588,28 @@ class MainWindow(QtWidgets.QMainWindow):
 		with open(self.optionsFile, 'w') as outfile:
 			json.dump(self.configDict, outfile, indent=4, sort_keys=True)
 
+def main():
+	path = '/media/cudmore/data/SAN AP'
+	app = QtWidgets.QApplication([''])
+	w = MainWindow(path=path)
+	#w.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+	w.show()
+
+	# abb 20201109, program is not quiting on error???
+	sys.exit(app.exec_())
+
 if __name__ == '__main__':
+	print('in sanpy_app.py __main__')
 	path = '/Users/cudmore/Sites/bAnalysis/data'
 	path = '/media/cudmore/data/Laura-data/manuscript-data'
 	path = '/media/cudmore/data/SAN AP'
-	
+
 	import logging
 	import traceback
 
 	app = QtWidgets.QApplication(sys.argv)
-	w = MainWindow(path=path)
+	#w = MainWindow(path=path)
+	w = MainWindow(path='')
 	#w.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 	w.show()
 

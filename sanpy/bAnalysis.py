@@ -45,7 +45,8 @@ import matplotlib.pyplot as plt
 
 import pyabf # see: https://github.com/swharden/pyABF
 
-from bAnalysisUtil import bAnalysisUtil
+#from bAnalysisUtil import bAnalysisUtil
+import sanpy
 
 class bAnalysis:
 	def __init__(self, file=None):
@@ -55,7 +56,7 @@ class bAnalysis:
 		self._abf = None
 
 		#20190628
-		self.detectionConfig = bAnalysisUtil()
+		self.detectionConfig = sanpy.bAnalysisUtil()
 
 		# detection parameters specified by user
 		self.dateAnalyzed = None
@@ -82,11 +83,16 @@ class bAnalysis:
 			self._abf = pyabf.ABF(file)
 		except (NotImplementedError) as e:
 			print('error: bAnalysis.__init__() did not load abf file:', file)
-			print('  error was:', e)
+			print('  exception was:', e)
 			self.loadError = True
+			self._abf = None
 			return
-		except:
+		except (Exception) as e:
+			# some abf files throw: 'unpack requires a buffer of 234 bytes'
 			print('error: bAnalysis.__init__() did not load abf file:', file)
+			print('  unknown exception was:', e)
+			self.loadError = True
+			self._abf = None
 			return
 
 		#20190621
@@ -1069,7 +1075,7 @@ class bAnalysis:
 	#################################################################################
 	# save results (e.g. report)
 	#################################################################################
-	def saveReport(self, savefile, theMin, theMax, alsoSaveTxt=True, verbose=True):
+	def saveReport(self, savefile, theMin, theMax, saveExcel=True, alsoSaveTxt=True, verbose=True):
 		"""
 		save a spike report for detected spikes between theMin (sec) and theMax (sec)
 
@@ -1096,9 +1102,7 @@ class bAnalysis:
 		# always grab a df to the entire analysis (not sure what I will do with this)
 		#df = self.report() # report() is my own 'bob' verbiage
 
-		fileWasSaved = False
-
-		if savefile:
+		if saveExcel and savefile:
 			if verbose: print('    bAnalysis.saveReport() saving user specified .xlsx file:', savefile)
 			excelFilePath = savefile
 			writer = pd.ExcelWriter(excelFilePath, engine='xlsxwriter')
@@ -1223,55 +1227,99 @@ class bAnalysis:
 
 			writer.save()
 
-			#
-			# always save a text file
-			#
-			if alsoSaveTxt:
-				filePath, fileName = os.path.split(os.path.abspath(savefile))
+		#
+		# always save a text file
+		#
+		if alsoSaveTxt:
+			df0 = self.getReportDf(theMin, theMax, savefile)
 
-				textFileBaseName, tmpExtension = os.path.splitext(savefile)
-				textFilePath = os.path.join(filePath, textFileBaseName + '.txt')
+			'''
+			filePath, fileName = os.path.split(os.path.abspath(savefile))
 
-				print('    saving text file:', textFilePath)
+			textFileBaseName, tmpExtension = os.path.splitext(savefile)
+			textFilePath = os.path.join(filePath, textFileBaseName + '.txt')
 
-				# save header
-				textFileHeader = OrderedDict()
-				textFileHeader['file'] = self.file
-				textFileHeader['condition1'] = self.condition1
-				textFileHeader['condition2'] = self.condition2
-				textFileHeader['condition3'] = self.condition3
-				textFileHeader['dateAnalyzed'] = self.dateAnalyzed
-				textFileHeader['detectionType'] = self.detectionType
-				textFileHeader['dVthreshold'] = self.dVthreshold
-				textFileHeader['minSpikeVm'] = self.minSpikeVm
-				textFileHeader['medianFilter'] = self.medianFilter
-				textFileHeader['startSeconds'] = '%.2f'%(theMin)
-				textFileHeader['stopSeconds'] = '%.2f'%(theMax)
-				#textFileHeader['startSeconds'] = self.startSeconds
-				#textFileHeader['stopSeconds'] = self.stopSeconds
-				textFileHeader['currentSweep'] = self.currentSweep
-				textFileHeader['numSweeps'] = self.numSweeps
-				#textFileHeader['theMin'] = theMin
-				#textFileHeader['theMax'] = theMax
+			print('    saving text file:', textFilePath)
 
-				headerStr = ''
-				for k,v in textFileHeader.items():
-					headerStr += k + '=' + str(v) + ';'
-				headerStr += '\n'
-				#print('headerStr:', headerStr)
-				with open(textFilePath,'w') as f:
-					f.write(headerStr)
+			# save header
+			textFileHeader = OrderedDict()
+			textFileHeader['file'] = self.file
+			textFileHeader['condition1'] = self.condition1
+			textFileHeader['condition2'] = self.condition2
+			textFileHeader['condition3'] = self.condition3
+			textFileHeader['dateAnalyzed'] = self.dateAnalyzed
+			textFileHeader['detectionType'] = self.detectionType
+			textFileHeader['dVthreshold'] = self.dVthreshold
+			textFileHeader['minSpikeVm'] = self.minSpikeVm
+			textFileHeader['medianFilter'] = self.medianFilter
+			textFileHeader['startSeconds'] = '%.2f'%(theMin)
+			textFileHeader['stopSeconds'] = '%.2f'%(theMax)
+			#textFileHeader['startSeconds'] = self.startSeconds
+			#textFileHeader['stopSeconds'] = self.stopSeconds
+			textFileHeader['currentSweep'] = self.currentSweep
+			textFileHeader['numSweeps'] = self.numSweeps
+			#textFileHeader['theMin'] = theMin
+			#textFileHeader['theMax'] = theMax
 
-				#print('Saving .txt file:', textFilePath)
-				df = self.report(theMin, theMax)
-				df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
+			headerStr = ''
+			for k,v in textFileHeader.items():
+				headerStr += k + '=' + str(v) + ';'
+			headerStr += '\n'
+			#print('headerStr:', headerStr)
+			with open(textFilePath,'w') as f:
+				f.write(headerStr)
 
-			#
-			fileWasSaved = True
-		else:
-			print('Save aborted by user')
+			#print('Saving .txt file:', textFilePath)
+			df = self.report(theMin, theMax)
+			df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
+			'''
+		#
+		return df0
 
-		return fileWasSaved
+	def getReportDf(self, theMin, theMax, savefile):
+		"""
+		savefile: .xls file path
+		"""
+		filePath, fileName = os.path.split(os.path.abspath(savefile))
+
+		textFileBaseName, tmpExtension = os.path.splitext(savefile)
+		textFilePath = os.path.join(filePath, textFileBaseName + '.txt')
+
+		print('    saving text file:', textFilePath)
+
+		# save header
+		textFileHeader = OrderedDict()
+		textFileHeader['file'] = self.file
+		textFileHeader['condition1'] = self.condition1
+		textFileHeader['condition2'] = self.condition2
+		textFileHeader['condition3'] = self.condition3
+		textFileHeader['dateAnalyzed'] = self.dateAnalyzed
+		textFileHeader['detectionType'] = self.detectionType
+		textFileHeader['dVthreshold'] = self.dVthreshold
+		textFileHeader['minSpikeVm'] = self.minSpikeVm
+		textFileHeader['medianFilter'] = self.medianFilter
+		textFileHeader['startSeconds'] = '%.2f'%(theMin)
+		textFileHeader['stopSeconds'] = '%.2f'%(theMax)
+		#textFileHeader['startSeconds'] = self.startSeconds
+		#textFileHeader['stopSeconds'] = self.stopSeconds
+		textFileHeader['currentSweep'] = self.currentSweep
+		textFileHeader['numSweeps'] = self.numSweeps
+		#textFileHeader['theMin'] = theMin
+		#textFileHeader['theMax'] = theMax
+
+		headerStr = ''
+		for k,v in textFileHeader.items():
+			headerStr += k + '=' + str(v) + ';'
+		headerStr += '\n'
+		#print('headerStr:', headerStr)
+		with open(textFilePath,'w') as f:
+			f.write(headerStr)
+
+		#print('Saving .txt file:', textFilePath)
+		df = self.report(theMin, theMax)
+		df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
+
+		return df
 
 	#############################
 	# utility functions

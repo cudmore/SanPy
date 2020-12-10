@@ -36,6 +36,7 @@ def reanalyze(dataPath, dbFile):
 	else:
 		print('error reading dbFile:', dbFile)
 
+	print('loaded database is:')
 	print(df[:5])
 
 	numFiles = df.shape[0]
@@ -52,6 +53,7 @@ def reanalyze(dataPath, dbFile):
 	actualNumFiles = 0
 	totalNumberOfSpikes = 0
 	cellNumber = 1
+	masterDf = None
 	for idx, file in enumerate(df['ABF File']):
 
 		if str(file) in ['nan', 'NaN']:
@@ -94,7 +96,7 @@ def reanalyze(dataPath, dbFile):
 			continue
 		#
 		# load
-		ba = bAnalysis.bAnalysis(abfFilePath)
+		ba = bAnalysis(abfFilePath)
 
 		#
 		# set (condition 1, condition 2, condition 3')
@@ -122,8 +124,12 @@ def reanalyze(dataPath, dbFile):
 		# save
 		saveFile = file + '_' + condition + '.xlsx'
 		saveFilePath = os.path.join(savePath, saveFile)
-		ba.saveReport(saveFilePath, startSeconds, stopSeconds)
-
+		df0 = ba.saveReport(saveFilePath, startSeconds, stopSeconds,
+						saveExcel=False)
+		if idx==0:
+			masterDf = df0
+		else:
+			masterDf = masterDf.append(df0, ignore_index=True)
 		#
 		# add columns to df and then save as new csv
 		# use this csv to make pivot table plot
@@ -160,6 +166,11 @@ def reanalyze(dataPath, dbFile):
 	print('reanalyze() saving new csv in:', tmpPath)
 	df.to_csv(tmpPath)
 
+	masterPath, tmpExt = os.path.splitext(dbFile)
+	masterPath += '_master.csv'
+	print('reanalyze() saving master csv in:', masterPath)
+	masterDf.to_csv(masterPath)
+
 	stopSeconds_ = time.time()
 	elapsedSeconds = round(stopSeconds_-startSeconds_,2)
 	print('reanalyze() finished', actualNumFiles, 'files with', totalNumberOfSpikes, 'spikes in', elapsedSeconds, 'seconds')
@@ -171,7 +182,11 @@ if __name__ == '__main__':
 	dataPath = '/Users/cudmore/box/data/laura/SAN CC'
 	dbFile = 'sanpy-analysis-database.csv'
 
+	# using these to check Laura's manuscript analysis
 	dataPath = '/media/cudmore/data/Laura-data/manuscript-data'
 	dbFile = '/media/cudmore/data/Laura-data/Superior vs Inferior database.xlsx'
+
+	dbFile = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database.xlsx'
+	dataPath = '/Users/cudmore/data/laura-ephys/SAN AP'
 
 	baList = reanalyze(dataPath, dbFile)
