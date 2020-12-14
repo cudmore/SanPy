@@ -1013,7 +1013,11 @@ class bAnalysis:
 	# output reports
 	############################################################
 	def report(self, theMin, theMax):
-		""" return entire spikeDict as a pandas data frame """
+		"""
+		return entire spikeDict as a pandas data frame
+
+		(theMin, theMax): start/stop seconds of the analysis
+		"""
 		df = pd.DataFrame(self.spikeDict)
 		df = df[df['thresholdSec'].between(theMin, theMax, inclusive=True)]
 		return df
@@ -1080,6 +1084,7 @@ class bAnalysis:
 		save a spike report for detected spikes between theMin (sec) and theMax (sec)
 
 		savefile: path to xlsx file
+		(theMin, theMax): start/stop seconds of the analysis
 		"""
 
 		'''
@@ -1274,7 +1279,7 @@ class bAnalysis:
 			df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
 			'''
 		#
-		return df0
+		#return df0
 
 	def getReportDf(self, theMin, theMax, savefile):
 		"""
@@ -1289,7 +1294,7 @@ class bAnalysis:
 
 		# save header
 		textFileHeader = OrderedDict()
-		textFileHeader['file'] = self.file
+		textFileHeader['file'] = self.file # this is actuall file path
 		textFileHeader['condition1'] = self.condition1
 		textFileHeader['condition2'] = self.condition2
 		textFileHeader['condition3'] = self.condition3
@@ -1317,6 +1322,26 @@ class bAnalysis:
 
 		#print('Saving .txt file:', textFilePath)
 		df = self.report(theMin, theMax)
+
+		# we need a column indicating (path), the original .abf file
+		# along with (start,stop) which should make this analysis unique?
+		minStr = '%.2f'%(theMin)
+		maxStr = '%.2f'%(theMax)
+		minStr = minStr.replace('.', '_')
+		maxStr = maxStr.replace('.', '_')
+		tmpPath, tmpFile = os.path.split(self.file)
+		tmpFile, tmpExt = os.path.splitext(tmpFile)
+		analysisName = tmpFile + '_s' + minStr + '_s' + maxStr
+		print('minStr:', minStr, 'maxStr:', maxStr, 'analysisName:', analysisName)
+		df['analysisname'] = analysisName
+
+		df['Condition'] = 	df['condition1']
+		df['File Number'] = 	df['condition2']
+		df['Sex'] = 	df['condition3']
+		df['Region'] = 	df['condition4']
+		df['filename'] = [os.path.splitext(os.path.split(x)[1])[0] for x in 	df['file'].tolist()]
+
+		#
 		df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
 
 		return df

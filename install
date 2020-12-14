@@ -34,7 +34,7 @@ if [ ! -d "sanpy_env/" ]; then
 	else
 		mkdir sanpy_env
 		#virtualenv -p python3 --no-site-packages sanpy_env
-		python3 -m venv sanpy_env
+		python -m venv sanpy_env
 	fi
 else
 	echo '==='
@@ -69,7 +69,7 @@ pip install -r requirements.txt
 echo '==='
 echo "=== install SanPy: Installing sanpy package with 'pip install .'"
 echo '==='
-pip install .
+pip install -e .
 
 deactivate
 

@@ -64,7 +64,9 @@ import sanpy
 #pg.setConfigOption('foreground', 'w')
 
 class MainWindow(QtWidgets.QMainWindow):
-	def __init__(self, path='', parent=None):
+	signalUpdateStatusBar = QtCore.Signal(object)
+
+	def __init__(self, path='', parent=None, app=None):
 		"""
 		path: full path to folder with abf files
 		"""
@@ -77,6 +79,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		'''
 
 		super(MainWindow, self).__init__(parent)
+
+		self.myApp = app
 
 		# todo: update this with selected folder
 		windowTitle = f'SanPy {path}'
@@ -132,6 +136,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.myExportWidget = None
 
+		self.updateStatusBar('SanPy started')
+
 	def toggleStyleSheet(self, doDark=None, buildingInterface=False):
 		if doDark is None:
 			doDark = self.useDarkStyle
@@ -148,11 +154,24 @@ class MainWindow(QtWidgets.QMainWindow):
 			#self.myScatterPlotWidget.buildUI(doRebuild=True)
 			self.myDetectionWidget.mySetTheme()
 
+		self.preferencesSave()
+
+		if buildingInterface:
+			pass
+		else:
+			msg = QtWidgets.QMessageBox()
+			msg.setIcon(QtWidgets.QMessageBox.Warning)
+			msg.setText("Theme Changed")
+			msg.setInformativeText('Please restart SanPy for changes to take effect.')
+			msg.setWindowTitle("Theme Changed")
+			retval = msg.exec_()
+
 	# no idea why I need this ???
 	def _tmp_loadFolder2(self, bool):
 		loadedFolder = self.loadFolder()
 		if loadedFolder:
 			self.refreshFileTableWidget()
+			self.preferencesSave()
 
 	def loadFolder(self, path=''):
 		print('MainWindow.loadFolder() path:', path)
@@ -233,6 +252,9 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.myScatterPlotWidget.selectSpike(None)
 			self.myScatterPlotWidget.selectXRange(None, None)
 
+		else:
+			print('MainWindow.mySignal() did not understand this:', this)
+
 	def file_table_get_value(self, thisRow, thisColumnName):
 		"""
 		get the value of a column columnName at a selected row
@@ -273,8 +295,9 @@ class MainWindow(QtWidgets.QMainWindow):
 			print('=== sanpy.on_file_table_click() row:', row+1, 'path:', path)
 			self.myDetectionWidget.switchFile(path)
 
-			if self.myExportWidget is not None:
-				self.myExportWidget.setFile(path, plotRaw=True)
+			# we should be able to open one for each file?
+			#if self.myExportWidget is not None:
+			#	self.myExportWidget.setFile2(path, plotRaw=True)
 
 			#spinner.stop() # starts spinning
 
@@ -344,12 +367,19 @@ class MainWindow(QtWidgets.QMainWindow):
 				self.myTableWidget.setItem(idx, idx2, item)
 				self.myTableWidget.setRowHeight(idx, self._rowHeight)
 
-	def export_pdf(self):
+	def old_export_pdf(self):
 		"""
 		Open a new window with raw Vm and provide interface to save as pdf
 		"""
 		if self.myDetectionWidget.ba is not None:
-			self.myExportWidget = sanpy.bExportWidget(self.myDetectionWidget.ba.file)
+			#self.myExportWidget = sanpy.bExportWidget(self.myDetectionWidget.ba.file)
+			sweepX = self.myDetectionWidget.ba.abf.sweepX
+			sweepY = self.myDetectionWidget.ba.abf.sweepY
+			xyUnits = ('Time (sec)', 'Vm (mV)')
+			self.myExportWidget = sanpy.bExportWidget(sweepX, sweepY,
+								path=self.myDetectionWidget.ba.file,
+								xyUnits=xyUnits,
+								darkTheme=self.useDarkStyle)
 		else:
 			print('please select an abf file')
 
@@ -371,8 +401,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		if key in [70, 82]: # 'r' or 'f'
 			self.myDetectionWidget.setFullAxis()
 
+		'''
 		if key in [QtCore.Qt.Key.Key_P]: # 'r' or 'f'
 			self.myDetectionWidget.myPrint()
+		'''
 
 		# todo make this a self.mySignal
 		if key == QtCore.Qt.Key.Key_Escape:
@@ -394,6 +426,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		fileMenu.addSeparator()
 		fileMenu.addAction(savePreferencesAction)
 
+		'''
 		scatterPlotAction = QtWidgets.QAction('Scatter Plot', self)
 		scatterPlotAction.triggered.connect(self.scatterPlot)
 
@@ -404,6 +437,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		windowsMenu.addAction(scatterPlotAction)
 		windowsMenu.addSeparator()
 		windowsMenu.addAction(exportRawDataAction)
+		'''
 
 		# view menu to toggle scatter plot widget
 		viewMenu = mainMenu.addMenu('&View')
@@ -429,10 +463,21 @@ class MainWindow(QtWidgets.QMainWindow):
 		else:
 			self.myScatterPlotWidget.hide()
 
+	def updateStatusBar(self, text):
+		#self.signalUpdateStatusBar.emit(text)
+		self.statusBar.showMessage(text)
+		self.statusBar.repaint()
+		self.statusBar.update()
+		self.myApp.processEvents()
+
 	def buildUI(self):
 		# all widgets should inherit this
 
 		self.toggleStyleSheet(buildingInterface=True)
+
+		self.statusBar = QtWidgets.QStatusBar()
+		#self.statusBar.showMessage.connect(self.signalUpdateStatusBar)
+		self.setStatusBar(self.statusBar)
 
 		self.centralwidget = QtWidgets.QWidget(self)
 		self.centralwidget.setObjectName("centralwidget")
@@ -536,11 +581,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.optionsFile = os.path.join(bundle_dir, 'sanpy_app.json')
 
 		if os.path.isfile(self.optionsFile):
-			print('	preferencesLoad() loading options file:', self.optionsFile)
+			print('	 preferencesLoad() loading options file:', self.optionsFile)
 			with open(self.optionsFile) as f:
 				return json.load(f)
 		else:
-			print('	preferencesLoad() using program provided default options')
+			print('	 preferencesLoad() using program provided default options')
 			return self.preferencesDefaults()
 
 	def preferencesDefaults(self):
@@ -589,9 +634,12 @@ class MainWindow(QtWidgets.QMainWindow):
 			json.dump(self.configDict, outfile, indent=4, sort_keys=True)
 
 def main():
+	import platform
+	print('Python version is:', platform.python_version())
+
 	path = '/media/cudmore/data/SAN AP'
 	app = QtWidgets.QApplication([''])
-	w = MainWindow(path=path)
+	w = MainWindow(path=path, app=app)
 	#w.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 	w.show()
 
@@ -599,19 +647,22 @@ def main():
 	sys.exit(app.exec_())
 
 if __name__ == '__main__':
+	main()
+	'''
 	print('in sanpy_app.py __main__')
 	path = '/Users/cudmore/Sites/bAnalysis/data'
 	path = '/media/cudmore/data/Laura-data/manuscript-data'
 	path = '/media/cudmore/data/SAN AP'
 
-	import logging
-	import traceback
+	#import logging
+	#import traceback
 
 	app = QtWidgets.QApplication(sys.argv)
 	#w = MainWindow(path=path)
-	w = MainWindow(path='')
+	w = MainWindow(path='', parent=app)
 	#w.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 	w.show()
 
 	# abb 20201109, program is not quiting on error???
 	sys.exit(app.exec_())
+	'''

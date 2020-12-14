@@ -27,10 +27,72 @@ class pandasModel(QtCore.QAbstractTableModel):
 				return str(self._data.iloc[index.row(), index.column()])
 		return None
 
+	def update(self, dataIn):
+		print('pandasModel.update()', dataIn)
+
+	def setData(self, index, value, role=QtCore.Qt.DisplayRole):
+		print('pandasModel.setData()', index.row(), index.column(), value)
+		if index.column() == 1:
+			#self._data.iset_value(index.row(), 1, value)
+			print('  ', type(index.row()))
+			self._data.loc[index.row(), 'isGood'] = value
+			print(self._data)
+			return value
+		return value
+
+	def flags(self, index):
+		if index.column() == 1:
+			return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled
+		else:
+			return QtCore.Qt.ItemIsEnabled
+
 	def headerData(self, col, orientation, role):
 		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
 			return self._data.columns[col]
 		return None
+
+class CheckBoxDelegate(QtWidgets.QItemDelegate):
+	"""
+	A delegate that places a fully functioning QCheckBox cell of the column to which it's applied.
+	"""
+	def __init__(self, parent):
+		QtWidgets.QItemDelegate.__init__(self, parent)
+
+	def createEditor(self, parent, option, index):
+		"""
+		Important, otherwise an editor is created if the user clicks in this cell.
+		"""
+		return None
+
+	def paint(self, painter, option, index):
+		"""
+		Paint a checkbox without the label.
+		"""
+		self.drawCheck(painter, option, option.rect, QtCore.Qt.Unchecked if int(index.data()) == 0 else QtCore.Qt.Checked)
+
+	def editorEvent(self, event, model, option, index):
+		'''
+		Change the data in the model and the state of the checkbox
+		if the user presses the left mousebutton and this cell is editable. Otherwise do nothing.
+		'''
+		if not int(index.flags() & QtCore.Qt.ItemIsEditable) > 0:
+			return False
+
+		if event.type() == QtCore.QEvent.MouseButtonRelease and event.button() == QtCore.Qt.LeftButton:
+			# Change the checkbox-state
+			self.setModelData(None, model, index)
+			return True
+
+		return False
+
+
+	def setModelData (self, editor, model, index):
+		'''
+		The user wanted to change the old state in the opposite.
+		'''
+		print('CheckBoxDelegate.setModelData()')
+		model.setData(index, 1 if int(index.data()) == 0 else 0, QtCore.Qt.EditRole)
+
 
 class MainWindow(QtWidgets.QMainWindow):
 	send_fig = QtCore.pyqtSignal(str)
@@ -40,6 +102,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		path: full path to .csv file generated with reanalyze
 		"""
 		super(MainWindow, self).__init__()
+
+		self.statusBar = QtWidgets.QStatusBar()
+		self.setStatusBar(self.statusBar)
 
 		self.buildMenus()
 
@@ -53,12 +118,16 @@ class MainWindow(QtWidgets.QMainWindow):
 			'cycleLength_ms': 'cycleLength_ms',
 			'apDuration_ms': 'apDuration_ms',
 			'diastolicDuration_ms': 'diastolicDuration_ms',
+			'Condition': 'Condition',
 			'Sex': 'Sex',
 			'Region': 'Region',
+			'File Number': 'File Number',
 			'File Name': 'filename',
 		}
 
 		self.loadPath(path)
+
+		self.yDf = None
 
 		self.main_widget = QtWidgets.QWidget(self)
 
@@ -77,6 +146,7 @@ class MainWindow(QtWidgets.QMainWindow):
 								  QtWidgets.QSizePolicy.Expanding)
 		self.canvas.updateGeometry()
 
+		# to hold popups
 		self.layout = QtWidgets.QGridLayout(self.main_widget)
 
 		##
@@ -90,7 +160,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.yDropdown.addItems(keys)
 		self.yDropdown.setCurrentIndex(yStatIdx)
 
-		hueTypes = ['Region', 'Sex', 'File Name']
+		hueTypes = ['Region', 'Sex', 'Condition', 'File Number'] #, 'File Name'] #, 'None']
 		self.hue = 'Region'
 		self.hueDropdown = QtWidgets.QComboBox()
 		self.hueDropdown.addItems(hueTypes)
@@ -118,9 +188,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		showLegendCheckBox.setChecked(self.showLegend)
 		showLegendCheckBox.stateChanged.connect(self.setShowLegend)
 
-		self.layout.addWidget(QtWidgets.QLabel("X-Axis"), 0, 0)
+		self.layout.addWidget(QtWidgets.QLabel("X Statistic"), 0, 0)
 		self.layout.addWidget(self.xDropdown, 0, 1)
-		self.layout.addWidget(QtWidgets.QLabel("Y-Axis"), 1, 0)
+		self.layout.addWidget(QtWidgets.QLabel("Y Statistic"), 1, 0)
 		self.layout.addWidget(self.yDropdown, 1, 1)
 		self.layout.addWidget(QtWidgets.QLabel("Hue"), 2, 0)
 		self.layout.addWidget(self.hueDropdown, 2, 1)
@@ -133,11 +203,20 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		rowSpan = 1
 		colSpan = 4
-		self.layout.addWidget(self.canvas, 3, 0, rowSpan, colSpan)
+		#self.layout.addWidget(self.canvas, 3, 0, rowSpan, colSpan)
+
+		self.myToolbar = QtWidgets.QToolBar()
+		self.myToolbar.setFloatable(True)
+		self.myToolbar.setMovable(True)
+		self.myToolbar.addWidget(self.canvas)
+		self.addToolBar(QtCore.Qt.RightToolBarArea, self.myToolbar)
 
 		# table with pandas dataframe
 		self.myModel = pandasModel(self.masterDf)
 		self.tableView = QtWidgets.QTableView()
+		# todo, derive a class for tableView
+		self.tableView.setItemDelegateForColumn(1, CheckBoxDelegate(None))
+		self.tableView.setFont(QtGui.QFont('Arial', 10))
 		self.tableView.setModel(self.myModel)
 		self.tableView.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
 								  QtWidgets.QSizePolicy.Expanding)
@@ -148,14 +227,39 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.show()
 		self.update2()
 
+	def mySetStatusBar(self, text):
+		self.statusBar.showMessage(text) #,2000)
+
 	def eventFilter(self, source, event):
 		if (event.type() == QtCore.QEvent.KeyPress and
 			event.matches(QtGui.QKeySequence.Copy)):
-			self.copySelection()
+			self.copySelection2()
 			return True
 		return super(MainWindow, self).eventFilter(source, event)
 
+	'''
+	def copyTable(self):
+		headerList = []
+		for i in self.tableView.model().columnCount():
+			headers.append(self.tableView.model().headerData(i, QtCore.Qt.Horizontal).toString()
+		print('copyTable()')
+		print('  headers:', headers)
+		m = self.tableView.rowCount()
+		n = self.tableView.columnCount()
+		table = [[''] * n for x in range(m+1)]
+		#for i in m:
+	'''
+
+	def copySelection2(self):
+		if self.yDf is not None:
+			self.yDf.to_clipboard(sep='\t', index=False)
+			print('Copied to clipboard')
+			print(self.yDf)
+
+	'''
 	def copySelection(self):
+		#self.copyTable()
+
 		selection = self.tableView.selectedIndexes()
 		if selection:
 			rows = sorted(index.row() for index in selection)
@@ -170,6 +274,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			stream = io.StringIO()
 			csv.writer(stream).writerows(table)
 			QtWidgets.QApplication.clipboard().setText(stream.getvalue())
+	'''
 
 	def buildMenus(self):
 		loadAction = QtWidgets.QAction('Load CSV', self)
@@ -188,10 +293,16 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 		#path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
 		self.masterDf = pd.read_csv(path, header=0) #, dtype={'ABF File': str})
+		'''
+		self.masterDf['Condition'] = self.masterDf['condition1']
+		self.masterDf['File Number'] = self.masterDf['condition2']
 		self.masterDf['Sex'] = self.masterDf['condition3']
 		self.masterDf['Region'] = self.masterDf['condition4']
 		self.masterDf['filename'] = [os.path.splitext(os.path.split(x)[1])[0] for x in self.masterDf['file'].tolist()]
+		'''
 		self.masterDfColumns = self.masterDf.columns.to_list()
+		self.masterCatColumns = ['Condition', 'File Number', 'Sex', 'Region', 'filename', 'analysisname']
+		self.setWindowTitle(path)
 
 	def setShowLegend(self, state):
 		print('setShowLegend() state:', state)
@@ -214,7 +325,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.update2()
 
 	def on_pick_event(self, event):
-		print('on_pick_event() event:', event, 'event.ind:', event.ind)
+		print('on_pick_event() event:', event)
+		print('event.ind:', event.ind)
 
 		if len(event.ind) < 1:
 			return
@@ -224,6 +336,67 @@ class MainWindow(QtWidgets.QMainWindow):
 		# propagate a signal to parent
 		#self.myMainWindow.mySignal('select spike', data=spikeNumber)
 		#self.selectSpike(spikeNumber)
+
+	def getMeanDf(self, xStat, yStat):
+		# need to get all categorical columns from orig df
+		# these do not change per file (sex, condition, region)
+		print('getMeanDf() xStat:', xStat, 'yStat:', yStat)
+
+		if xStat == yStat:
+			groupList = [xStat]
+		else:
+			groupList = [xStat, yStat]
+		#meanDf = self.masterDf.groupby('analysisname', as_index=False)[groupList].mean()
+		meanDf = self.masterDf.groupby('analysisname', as_index=False)[groupList].mean()
+		meanDf = meanDf.reset_index()
+
+		print('after initial grouping')
+		print(meanDf)
+
+		for catName in self.masterCatColumns:
+			if catName == 'analysisname':
+				# this is column we grouped by, already in meanDf
+				continue
+			meanDf[catName] = ''
+
+		# for each row, update all categorical columns using self.masterCatColumns
+		fileNameList = meanDf['analysisname'].unique()
+		#print('  fileNameList:', fileNameList)
+		for analysisname in fileNameList:
+			tmpDf = self.masterDf[ self.masterDf['analysisname']==analysisname ]
+			if len(tmpDf) == 0:
+				print('  error: got 0 length for analysisname:', analysisname)
+				continue
+			for catName in self.masterCatColumns:
+				if catName == 'analysisname':
+					# this is column we grouped by, already in meanDf
+					continue
+				#print('analysisname:', analysisname, 'catName:', catName)
+				# find value of catName column from 1st instance in masterDf
+				#print('  tmpDf[catName]:', tmpDf[catName])
+				#print('  tmpDf[catName].iloc[0]:', tmpDf[catName].iloc[0])
+				catValue = tmpDf[catName].iloc[0]
+				#print('  analysisname:', analysisname, 'catName:', catName, 'catValue:', catValue)
+				#meanDf[ meanDf['analysisname']=='analysisname' ][catName] = catValue
+				theseRows = (meanDf['analysisname']==analysisname).tolist()
+				#print('	theseRows:', theseRows)
+				meanDf.loc[theseRows, catName] = catValue
+
+		#
+		# is good
+		meanDf.insert(1, 'isGood', 0)
+
+		#
+		# sort
+		meanDf = meanDf.sort_values(['Region', 'Sex', 'Condition'])
+		meanDf['index'] = [x+1 for x in range(len(meanDf))]
+		meanDf = meanDf.reset_index()
+		meanDf = meanDf.round(3)
+		#
+		print('getMeanDf():')
+		print(meanDf)
+		#
+		return meanDf
 
 	def update2(self):
 		xStatHuman = self.xDropdown.currentText()
@@ -243,17 +416,16 @@ class MainWindow(QtWidgets.QMainWindow):
 		if self.dataType == 'Raw':
 			meanDf = self.masterDf
 		elif self.dataType == 'File Mean':
-			supDf = self.masterDf[ self.masterDf['Region']=='Superior']
-			infDf = self.masterDf[ self.masterDf['Region']=='Inferior']
-			meanDf = supDf.groupby('filename', as_index=False)[[xStat, yStat]].mean()
-			meanDf['Region'] = 'Superior'
-			meanDf2 = infDf.groupby('filename', as_index=False)[[xStat, yStat]].mean()
-			meanDf2['Region'] = 'Inferior'
-			meanDf = meanDf.append(meanDf2)
-			#print(meanDf)
-		okGo = True
+			meanDf = self.getMeanDf(xStat, yStat)
+
 		plotType = self.plotType
-		hue = self.statNameMap[self.hue]
+		if self.hue == 'None':
+			# special case, we do not want None in self.statNameMap
+			hue = None
+		else:
+			hue = self.statNameMap[self.hue]
+
+		warningStr = ''
 		if plotType == 'Scatter Plot':
 			try:
 				sns.scatterplot(x=xStat, y=yStat, hue=hue,
@@ -263,44 +435,49 @@ class MainWindow(QtWidgets.QMainWindow):
 				print('EXCEPTION:', e)
 		elif plotType == 'Violin Plot':
 			if not xIsCategorical:
-				print('Violin plot requires a categorical x statistic')
-				okGo = False
+				warningStr = 'Violin plot requires a categorical x statistic'
 			else:
 				sns.violinplot(x=xStat, y=yStat, hue=hue,
 						data=meanDf, ax=self.axes[0])
 		elif plotType == 'Box Plot':
 			if not xIsCategorical:
-				print('Box plot requires a categorical x statistic')
-				okGo = False
+				warningStr = 'Box plot requires a categorical x statistic'
 			else:
 				sns.boxplot(x=xStat, y=yStat, hue=hue,
 						data=meanDf, ax=self.axes[0])
 		elif plotType == 'Raw + Mean Plot':
 			if not xIsCategorical:
-				print('Raw + Mean plot requires a categorical x statistic')
-				okGo = False
+				warningStr = 'Raw + Mean plot requires a categorical x statistic'
 			else:
-				print('  todo: curently, does not use hue')
-				sns.pointplot(x=xStat, y=yStat,
+				try:
+					sns.stripplot(x=xStat, y=yStat, hue=hue,
+							data=meanDf,
+							ax=self.axes[0],
+							zorder=1)
+					sns.pointplot(x=xStat, y=yStat, hue=hue,
 							data=meanDf,
 							ci=68, capsize=0.1, color='k',
-							ax=self.axes[0])
-				sns.stripplot(x=xStat, y=yStat,
-							data=meanDf,
-							color="0.5",
-							ax=self.axes[0]);
+							ax=self.axes[0],
+							zorder=10)
+				except (ValueError) as e:
+					print('EXCEPTION in "Raw + Mean Plot":', e)
+
 		elif plotType == 'Regression Plot':
+			# regplot does not have hue
 			if xIsCategorical or yIsCategorical:
-				print('Regression plot requires continuous x and statistics')
-				okGo = False
+				warningStr = 'Regression plot requires continuous x and y statistics'
 			else:
-				print(' todo: Regression plot needs some work')
-				supDf = meanDf [ meanDf['Region']=='Superior' ]
-				infDf = meanDf [ meanDf['Region']=='Inferior' ]
-				sns.regplot(x=xStat, y=yStat, data=supDf,
+				# todo: loop and make a regplot
+				# for each unique() name in
+				# hue (like Region, Sex, Condition)
+				hueList = self.masterDf[hue].unique()
+				for oneHue in hueList:
+					tmpDf = meanDf [ meanDf[hue]==oneHue ]
+					#print('regplot oneHue:', oneHue, 'len(tmpDf)', len(tmpDf))
+					sns.regplot(x=xStat, y=yStat, data=tmpDf,
 							ax=self.axes[0]);
-				sns.regplot(x=xStat, y=yStat, data=infDf,
-							ax=self.axes[0]);
+
+		self.mySetStatusBar(warningStr)
 
 		self.axes[0].spines['right'].set_visible(False)
 		self.axes[0].spines['top'].set_visible(False)
@@ -315,32 +492,16 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.fig.canvas.draw()
 
 		#
-		supDf = self.masterDf [ self.masterDf['Region']=='Superior' ]
-		infDf = self.masterDf [ self.masterDf['Region']=='Inferior' ]
 		# raises pandas.core.base.DataError
 		try:
-			aggStatList = ['mean', 'std', 'sem', 'median', 'min', 'max', 'count']
+			meanDf = self.getMeanDf(xStat, yStat)
 
-			newDf = supDf.groupby('filename', as_index=False)[yStat].agg(aggStatList) #.mean()
-			# xStatHuman
-			newDf['Region'] = 'Superior'
-			newDf['Stat'] = yStatHuman
-			#newDf.columns = [c for c in newDf.columns.to_list()]
-			#newDf.columns = newDf.columns.get_level_values(0)
-			newDf = newDf.reset_index().round(3)
+			# before we set the model, remove some columns
+			modelMeanDf = meanDf.drop(['level_0', 'File Number', 'analysisname'], axis=1)
 
-			newDf2 = infDf.groupby('filename', as_index=False)[yStat].agg(aggStatList) #.mean()
-			newDf2['Region'] = 'Inferior'
-			newDf2['Stat'] = yStatHuman
-			#newDf2.columns = [c for c in newDf2.columns.to_list()]
-			#newDf2.columns = newDf2.columns.get_level_values(0)
-			newDf2 = newDf2.reset_index().round(3)
+			self.yDf = modelMeanDf
 
-			newDf = newDf.append(newDf2)
-
-			print(newDf)
-
-			self.myModel = pandasModel(newDf)
+			self.myModel = pandasModel(modelMeanDf)
 			self.tableView.setModel(self.myModel)
 		except (pd.core.base.DataError) as e:
 			print('EXCEPTION:', e)

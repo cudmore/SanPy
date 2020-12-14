@@ -42,18 +42,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.myMainWindow = mainWindow
 
 		self.mySetTheme()
-		'''
-		if self.myMainWindow.useDarkStyle:
-			pg.setConfigOption('background', 'k')
-			pg.setConfigOption('foreground', 'w')
-		else:
-			pg.setConfigOption('background', 'w')
-			pg.setConfigOption('foreground', 'k')
-		'''
 
 		self.dvdtLines = None
 		self.vmLines = None
 		self.clipLines = None
+		self.meanClipLine = None
 
 		self.myPlotList = []
 
@@ -108,20 +101,22 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.buildUI()
 
 	'''
-	def _toggle_plot(self, idx, on):
-		if on:
-			pass
-		else:
-			self.myPlotList[idx].setData(x=[], y=[])
+	def eventFilter(self, target, event : QtCore.QEvent):
+		if event.type() == QtCore.QEvent.MouseButtonPress:
+			if event.button() == QtCore.Qt.RightButton:
+				print("Right button clicked")
+		return False
 	'''
 
 	def mySetTheme(self):
-		if self.myMainWindow.useDarkStyle:
+		if self.myMainWindow is not None and self.myMainWindow.useDarkStyle:
 			pg.setConfigOption('background', 'k')
 			pg.setConfigOption('foreground', 'w')
+			self.useDarkStyle = True
 		else:
 			pg.setConfigOption('background', 'w')
 			pg.setConfigOption('foreground', 'k')
+			self.useDarkStyle = False
 
 	def detect(self, dvdtValue, minSpikeVm):
 		"""
@@ -134,6 +129,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if self.ba.loadError:
 			print('bDetectionWidget.detect() did not spike detect because the file was not loaded (may be corrupt .abf file?)')
 			return
+
+		self.updateStatusBar(f'Detecting spikes dvdt:{dvdtValue} minVm:{minSpikeVm}')
 
 		self.ba.spikeDetect(dVthresholdPos=dvdtValue, minSpikeVm=minSpikeVm)
 
@@ -149,9 +146,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.refreshClips() # replot clips
 
-		self.myMainWindow.mySignal('detect') # signal to main window so it can update (file list, scatter plot)
+		if self.myMainWindow is not None:
+			self.myMainWindow.mySignal('detect') # signal to main window so it can update (file list, scatter plot)
 
 		#QtCore.QCoreApplication.processEvents()
+		self.updateStatusBar(f'Detected {self.ba.numSpikes} spikes')
 
 	def save(self, alsoSaveTxt=False):
 		"""
@@ -163,7 +162,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			print('   no analysis ???')
 			return
 		xMin, xMax = self.getXRange()
-		#print('    xMin:', xMin, 'xMax:', xMax)
+		#print('	xMin:', xMin, 'xMax:', xMax)
 
 		filePath, fileName = os.path.split(os.path.abspath(self.ba.file))
 		fileBaseName, extension = os.path.splitext(fileName)
@@ -172,12 +171,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 		print('Asking user for file name to save...')
 		savefile, tmp = QtGui.QFileDialog.getSaveFileName(self, 'Save File', excelFileName)
 
-		print('    savefile:', savefile)
+		print('	savefile:', savefile)
 		#print('tmp:', tmp)
 
 		if len(savefile) > 0:
 			self.ba.saveReport(savefile, xMin, xMax, alsoSaveTxt=alsoSaveTxt)
-			self.myMainWindow.mySignal('saved')
+			if self.myMainWindow is not None:
+				self.myMainWindow.mySignal('saved')
 		else:
 			print('no file saved')
 
@@ -190,7 +190,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		xMax = rect.right()
 		return xMin, xMax
 
-	def _setAxis(self, start, stop):
+	def _setAxis(self, start, stop, set_xyBoth='xAxis', whichPlot='vm'):
 		"""
 		Shared by (setAxisFull, setAxis)
 		"""
@@ -202,31 +202,96 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		#print('bDetectionWidget.setAxis() start:', start, 'stop:', stop)
 
-		self.derivPlot.setXRange(start, stop) # linked to Vm
+		padding = 0
+		if set_xyBoth == 'xAxis':
+			self.derivPlot.setXRange(start, stop, padding=padding) # linked to Vm
+		if set_xyBoth == 'yAxis':
+			if whichPlot == 'dvdt':
+				self.derivPlot.setYRange(start, stop) # linked to Vm
+			elif whichPlot == 'vm':
+				self.vmPlot.setYRange(start, stop) # linked to Vm
+			else:
+				print('bDetectionWidget._setAxis() did not understand whichPlot:', whichPlot)
 
 		# update detection toolbar
-		self.detectToolbarWidget.startSeconds.setValue(start)
-		self.detectToolbarWidget.startSeconds.repaint()
-		self.detectToolbarWidget.stopSeconds.setValue(stop)
-		self.detectToolbarWidget.stopSeconds.repaint()
+		if set_xyBoth == 'xAxis':
+			self.detectToolbarWidget.startSeconds.setValue(start)
+			self.detectToolbarWidget.startSeconds.repaint()
+			self.detectToolbarWidget.stopSeconds.setValue(stop)
+			self.detectToolbarWidget.stopSeconds.repaint()
+		#else:
+		#	print('todo: add interface for y range in bDetectionWidget._setAxis()')
 
-		self.refreshClips(start, stop)
+		if set_xyBoth == 'xAxis':
+			self.refreshClips(start, stop)
 
 		return start, stop
 
+	def setAxisFull_y(self, thisAxis):
+		"""
+		thisAxis: (vm, dvdt)
+		"""
+		# y-axis is NOT shared
+		# dvdt
+		if thisAxis == 'dvdt':
+			top = np.nanmax(self.ba.filteredDeriv)
+			bottom = np.nanmin(self.ba.filteredDeriv)
+			start, stop = self._setAxis(bottom, top,
+									set_xyBoth='yAxis',
+									whichPlot='dvdt')
+		# vm
+		if thisAxis == 'vm':
+			top = np.nanmax(self.ba.abf.sweepY)
+			bottom = np.nanmin(self.ba.abf.sweepY)
+			start, stop = self._setAxis(bottom, top,
+									set_xyBoth='yAxis',
+									whichPlot='vm')
 	def setAxisFull(self):
+
 		if self.ba is None:
 			return
 
+		# x-axis is shared between (dvdt, vm)
 		start = 0
 		stop = self.ba.abf.sweepX[-1]
+		start, stop = self._setAxis(start, stop, set_xyBoth='xAxis')
 
-		start, stop = self._setAxis(start, stop)
-		self.myMainWindow.mySignal('set full x axis')
+		# y-axis is NOT shared
+		# dvdt
+		top = np.nanmax(self.ba.filteredDeriv)
+		bottom = np.nanmin(self.ba.filteredDeriv)
+		start, stop = self._setAxis(bottom, top,
+									set_xyBoth='yAxis',
+									whichPlot='dvdt')
+		# vm
+		top = np.nanmax(self.ba.abf.sweepY)
+		bottom = np.nanmin(self.ba.abf.sweepY)
+		start, stop = self._setAxis(bottom, top,
+									set_xyBoth='yAxis',
+									whichPlot='vm')
 
-	def setAxis(self, start, stop):
-		start, stop = self._setAxis(start, stop)
-		self.myMainWindow.mySignal('set x axis', data=[start,stop])
+		# todo: make this a signal, with slot in main window
+		if self.myMainWindow is not None:
+			self.myMainWindow.mySignal('set full x axis')
+
+	def setAxis(self, start, stop, set_xyBoth='xAxis', whichPlot='vm'):
+		"""
+		set_xyBoth: (xAxis, yAxis, Both)
+		whichPlot: (dvdt, vm)
+		"""
+		start, stop = self._setAxis(start, stop, set_xyBoth=set_xyBoth, whichPlot=whichPlot)
+		if set_xyBoth == 'xAxis':
+			if self.myMainWindow is not None:
+				self.myMainWindow.mySignal('set x axis', data=[start,stop])
+		# no nned to emit change in y-axis, no other widgets change
+		'''
+		elif set_xyBoth == 'yAxis':
+			# todo: this needs to know which plot
+			if self.myMainWindow is not None:
+				self.myMainWindow.mySignal('set y axis', data=[start,stop])
+		'''
+		#elif set_xyBoth == 'both':
+		#	self.myMainWindow.mySignal('set y axis', data=[start,stop])
 
 	def switchFile(self, path):
 		"""
@@ -243,6 +308,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if not os.path.isfile(path):
 			print('error: bDetectionWidget.switchFile() did not find file:', path)
 			return
+
+		self.updateStatusBar(f'Loading file {path}')
 
 		# make analysis object from file
 		self.ba = sanpy.bAnalysis(file=path) # loads abf file
@@ -265,19 +332,24 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if self.ba.loadError:
 			self.replot()
 			print('bDetectionWidget.switchFile() did not switch file, the .abf file may be corrupt:', path)
+			self.updateStatusBar(f'Error loading file {path}')
 			return None
+
+		self.updateStatusBar(f'Plotting file {path}')
 
 		# cancel spike selection
 		self.selectSpike(None)
 
 		# set full axis
-		self.setAxisFull()
+		#self.setAxisFull()
 
 		# update lines
-		self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.filteredDeriv, self)
+		self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.filteredDeriv,
+							self, type='dvdt')
 		self.derivPlot.addItem(self.dvdtLines)
 
-		self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY, self)
+		self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY,
+							self, type='vm')
 		self.vmPlot.addItem(self.vmLines)
 
 		# remove and re-add plot overlays
@@ -290,6 +362,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 				self.derivPlot.removeItem(plotItem)
 				self.derivPlot.addItem(plotItem)
 
+		# set full axis
+		self.setAxisFull()
+
 		# single spike selection
 		self.vmPlot.removeItem(self.mySingleSpikeScatterPlot)
 		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
@@ -301,6 +376,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#
 		# set sweep to 0
 
+		self.updateStatusBar(f'Done loading file {path}')
+
+	def updateStatusBar(self, text):
+		if self.myMainWindow is not None:
+			self.myMainWindow.updateStatusBar(text)
 
 	def on_scatterClicked(self, scatter, points):
 		print('scatterClicked() scatter:', scatter, points)
@@ -373,22 +453,29 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# remove existing
 		if self.clipLines is not None:
 			self.clipPlot.removeItem(self.clipLines)
+		if self.meanClipLine is not None:
+			self.clipPlot.removeItem(self.meanClipLine)
 
 		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(xMin, xMax)
 
 		# convert clips to 2d ndarray ???
 		xTmp = np.array(theseClips_x)
 		yTmp = np.array(theseClips)
-
-		self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False)
-
+		self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type='clip')
 		self.clipPlot.addItem(self.clipLines)
+
+		#print(xTmp.shape) # (num spikes, time)
+		self.xMeanClip = np.nanmean(xTmp, axis=0)
+		self.yMeanClip = np.nanmean(yTmp, axis=0)
+		self.meanClipLine = MultiLine(self.xMeanClip, self.yMeanClip, self, allowXAxisDrag=False, type='meanclip')
+		self.clipPlot.addItem(self.meanClipLine)
 
 	def toggle_scatter(self, on):
 		"""
 		toggle scatter plot in parent (e.g. xxx)
 		"""
-		self.myMainWindow.toggleStatisticsPlot(on)
+		if self.myMainWindow is not None:
+			self.myMainWindow.toggleStatisticsPlot(on)
 
 	def toggle_dvdt(self, on):
 		"""
@@ -432,6 +519,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		#print('bDetectionWidget.buildUI() building pg.GraphicsLayoutWidget')
 		self.view = pg.GraphicsLayoutWidget()
+
+		#self.view.scene().sigMouseClicked.connect(self.slot_dvdtMouseReleased)
+
 		# works but does not stick
 		#self.view.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 		self.view.show()
@@ -447,6 +537,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.derivPlot.hideButtons()
 		self.vmPlot.hideButtons()
 		self.clipPlot.hideButtons()
+
+		# turn off right-click menu
+		self.derivPlot.setMenuEnabled(False)
+		self.vmPlot.setMenuEnabled(False)
+		self.clipPlot.setMenuEnabled(False)
 
 		# link x-axis of deriv and vm
 		self.derivPlot.setXLink(self.vmPlot)
@@ -495,10 +590,22 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		#print('bDetectionWidget.buildUI() done')
 
-	def myPrint(self):
+	'''
+	def slot_dvdtMouseReleased(self, event):
+		print('slot_dvdtMouseReleased() event:', event)
+		print('  event.buttons()', event.buttons())
+		pos = event.pos()
+		items = self.view.scene().items(pos)
+		print('  items:', items)
+	'''
+
+	def old_myPrint(self):
 		"""
 		save the vmPlot to a file????
 		"""
+		print('bDetectionWidget.myPrint()  -->>  NOT IMPLEMENTED')
+		return
+
 		# this does not do svg
 		#exporter = pg.exporters.ImageExporter(self.vmPlot)
 
@@ -512,11 +619,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# macOs
 		#filename = '/Users/cudmore/Desktop/myExport.svg'
 		# linux
-		filename = '/home/cudmore/Desktop/myExport.svg'
+		filename_svg = '/home/cudmore/Desktop/myExport.svg'
+		filename_png = '/home/cudmore/Desktop/myExport.png'
 
-		print('myPrint() saving file', filename)
-		exporter.export(filename)
-		exporter.export('fileName.png')
+		try:
+			print('  myPrint() saving file', filename_svg)
+			exporter.export(filename_svg)
+		except (FileNotFoundError) as e:
+			print('exception:', e)
+
+		print('  myPrint() saving file', filename_png)
+		exporter.export(filename_png)
 		print('   done')
 
 class myImageExporter(ImageExporter):
@@ -543,12 +656,21 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 
 	see: https://stackoverflow.com/questions/17103698/plotting-large-arrays-in-pyqtgraph/17108463#17108463
 	"""
-	def __init__(self, x, y, detectionWidget, allowXAxisDrag=True):
-		"""x and y are 2D arrays of shape (Nplots, Nsamples)"""
+	def __init__(self, x, y, detectionWidget, type, allowXAxisDrag=True):
+		"""
+		x and y are 2D arrays of shape (Nplots, Nsamples)
+		type: (dvdt, vm)
+		"""
 
+		self.exportWidgetList = []
+
+		self.x = x
+		self.y = y
 		self.detectionWidget = detectionWidget
+		self.myType = type
 		self.allowXAxisDrag = allowXAxisDrag
 
+		self.xDrag = None # if true, user is dragging x-axis, otherwise y-axis
 		self.xStart = None
 		self.xCurrent = None
 		self.linearRegionItem = None
@@ -566,11 +688,21 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 		# default heme
 		#self.setPen(pg.mkPen(color='k', width=1))
 		# dark theme
-		if self.detectionWidget.myMainWindow.useDarkStyle:
-			penColor = 'w'
-		else:
+		if self.detectionWidget.myMainWindow is None:
 			penColor = 'k'
-		self.setPen(pg.mkPen(color=penColor, width=1))
+		else:
+			if self.detectionWidget.myMainWindow.useDarkStyle:
+				penColor = 'w'
+			else:
+				penColor = 'k'
+		#
+		width = 1
+		if self.myType == 'meanclip':
+			penColor = 'r'
+			width = 3
+
+		#
+		self.setPen(pg.mkPen(color=penColor, width=width))
 
 	def shape(self):
 		# override because QGraphicsPathItem.shape is too expensive.
@@ -581,51 +713,146 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 		#print(time.time(), 'MultiLine.boundingRect()', self.path.boundingRect())
 		return self.path.boundingRect()
 
-	def mouseDragEvent(self, ev):
-		#print('myGraphicsLayoutWidget.mouseDragEvent(self, ev):')
+	def mouseClickEvent(self, event):
+		if event.button() == QtCore.Qt.RightButton:
+			print('mouseClickEvent() right click', self.myType)
+			self.contextMenuEvent(event)
 
-		if not self.allowXAxisDrag:
-			ev.accept() # this prevents click+drag of plot
+	def contextMenuEvent(self, event):
+		myType = self.myType
+
+		if myType == 'clip':
+			print('WARNING: no export for clips, try clicking again')
 			return
+
+		contextMenu = QtWidgets.QMenu()
+		exportTraceAction = contextMenu.addAction(f'Export Trace {myType}')
+		contextMenu.addSeparator()
+		resetYAxisAction = contextMenu.addAction(f'Reset Y-Axis')
+		#openAct = contextMenu.addAction("Open")
+		#quitAct = contextMenu.addAction("Quit")
+		#action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+		posQPoint = QtCore.QPoint(event.screenPos().x(), event.screenPos().y())
+		action = contextMenu.exec_(posQPoint)
+		if action is None:
+			return
+		actionText = action.text()
+		if actionText == f'Export Trace {myType}':
+			print('Opening Export Trace Window')
+
+			if self.myType == 'vm':
+				xyUnits = ('Time (sec)', 'Vm (mV)')# todo: pass xMin,xMax to constructor
+			elif self.myType == 'dvdt':
+				xyUnits = ('Time (sec)', 'dV/dt')# todo: pass xMin,xMax to constructor
+			elif self.myType == 'meanclip':
+				xyUnits = ('Time (sec)', 'Vm (mV)')# todo: pass xMin,xMax to constructor
+
+			path = self.detectionWidget.ba.file
+
+			xMin = None
+			xMax = None
+			if self.myType in ['clip', 'meanclip']:
+				xMin, xMax = self.detectionWidget.clipPlot.getAxis('bottom').range
+			else:
+				xMin, xMax = self.detectionWidget.getXRange()
+			print('  xMin:', xMin, 'xMax:', xMax)
+
+			exportWidget = sanpy.bExportWidget(self.x, self.y,
+							xyUnits=xyUnits,
+							path=path,
+							xMin=xMin, xMax=xMax,
+							darkTheme=self.detectionWidget.useDarkStyle)
+
+			exportWidget.myCloseSignal.connect(self.slot_closeChildWindow)
+			exportWidget.show()
+
+			self.exportWidgetList.append(exportWidget)
+		elif actionText == 'Reset Y-Axis':
+			print('Reset Y-Axis', self.myType)
+			self.detectionWidget.setAxisFull_y(self.myType)
+		else:
+			print('  action not taken:', action)
+
+	def slot_closeChildWindow(self, windowPointer):
+		#print('closeChildWindow()', windowPointer)
+		#print('  exportWidgetList:', self.exportWidgetList)
+
+		idx = self.exportWidgetList.index(windowPointer)
+		if idx is not None:
+			popedItem = self.exportWidgetList.pop(idx)
+			#print('  popedItem:', popedItem)
+		else:
+			print(' slot_closeChildWindow() did not find', windowPointer)
+
+	def mouseDragEvent(self, ev):
+		"""
+		default is to drag x-axis, use alt_drag for y-axis
+		"""
+		#print('MultiLine.mouseDragEvent():', type(ev), ev)
 
 		if ev.button() != QtCore.Qt.LeftButton:
 			ev.ignore()
 			return
 
+		#modifiers = QtWidgets.QApplication.keyboardModifiers()
+		#isAlt = modifiers == QtCore.Qt.AltModifier
+		isAlt = ev.modifiers() == QtCore.Qt.AltModifier
+
+		#xDrag = not isAlt # x drag is dafault, when alt is pressed, xDrag==False
+
+		# allowXAxisDrag is now used for both x and y
+		if not self.allowXAxisDrag:
+			ev.accept() # this prevents click+drag of plot
+			return
+
 		if ev.isStart():
-			self.xStart = ev.buttonDownPos()[0]
-			self.linearRegionItem = pg.LinearRegionItem(values=(self.xStart,0), orientation=pg.LinearRegionItem.Vertical)
+			self.xDrag = not isAlt
+			if self.xDrag:
+				self.xStart = ev.buttonDownPos()[0]
+				self.linearRegionItem = pg.LinearRegionItem(values=(self.xStart,0), orientation=pg.LinearRegionItem.Vertical)
+			else:
+				# in y-drag, we need to know (vm, dvdt)
+				self.xStart = ev.buttonDownPos()[1]
+				self.linearRegionItem = pg.LinearRegionItem(values=(0,self.xStart), orientation=pg.LinearRegionItem.Horizontal)
 			#self.linearRegionItem.sigRegionChangeFinished.connect(self.update_x_axis)
 			# add the LinearRegionItem to the parent widget (Cannot add to self as it is an item)
 			self.parentWidget().addItem(self.linearRegionItem)
 		elif ev.isFinish():
-
+			if self.xDrag:
+				set_xyBoth = 'xAxis'
+			else:
+				set_xyBoth = 'yAxis'
 			#self.parentWidget().setXRange(self.xStart, self.xCurrent)
-			self.detectionWidget.setAxis(self.xStart, self.xCurrent)
+			self.detectionWidget.setAxis(self.xStart, self.xCurrent, set_xyBoth=set_xyBoth, whichPlot=self.myType)
 
+			self.xDrag = None
 			self.xStart = None
 			self.xCurrent = None
 
+			'''
+			if self.myType == 'clip':
+				if self.xDrag:
+					self.clipPlot.setXRange(self.xStart, self.xCurrent, padding=padding)
+				else:
+					self.clipPlot.setYRange(self.xStart, self.xCurrent, padding=padding)
+			else:
+				self.parentWidget().removeItem(self.linearRegionItem)
+			'''
 			self.parentWidget().removeItem(self.linearRegionItem)
-			self.linearRegionItem = None
 
+			self.linearRegionItem = None
 
 			return
 
-		self.xCurrent = ev.pos()[0]
-		#print('xStart:', self.xStart, 'self.xCurrent:', self.xCurrent)
-		self.linearRegionItem.setRegion((self.xStart, self.xCurrent))
+		if self.xDrag:
+			self.xCurrent = ev.pos()[0]
+			#print('xStart:', self.xStart, 'self.xCurrent:', self.xCurrent)
+			self.linearRegionItem.setRegion((self.xStart, self.xCurrent))
+		else:
+			self.xCurrent = ev.pos()[1]
+			#print('xStart:', self.xStart, 'self.xCurrent:', self.xCurrent)
+			self.linearRegionItem.setRegion((self.xStart, self.xCurrent))
 		ev.accept()
-
-	'''
-	def update_x_axis(self):
-		print('myGraphicsLayoutWidget.update_x_axis()')
-	'''
-
-	'''
-	def mouseClickEvent(self, ev):
-		print('myGraphicsLayoutWidget.mouseClickEvent(self, ev):')
-	'''
 
 class myDetectToolbarWidget2(QtWidgets.QWidget):
 	def __init__(self, myPlots, detectionWidget, parent=None):
@@ -644,14 +871,14 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			print self.cb.itemText(count)
 		'''
 		sweepNumber = int(self.cb.currentText())
-		print('    sweep number:', sweepNumber)
+		print('	sweep number:', sweepNumber)
 
 	@QtCore.pyqtSlot()
 	def on_start_stop(self):
 		#print('myDetectToolbarWidget.on_start_stop()')
 		start = self.startSeconds.value()
 		stop = self.stopSeconds.value()
-		#print('    start:', start, 'stop:', stop)
+		#print('	start:', start, 'stop:', stop)
 		self.detectionWidget.setAxis(start, stop)
 
 	@QtCore.pyqtSlot()
@@ -664,20 +891,20 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		if name == 'Detect dV/dt':
 			dvdtValue = self.dvdtThreshold.value()
 			minSpikeVm = self.minSpikeVm.value()
-			#print('    dvdtValue:', dvdtValue)
-			#print('    minSpikeVm:', minSpikeVm)
+			#print('	dvdtValue:', dvdtValue)
+			#print('	minSpikeVm:', minSpikeVm)
 			self.detectionWidget.detect(dvdtValue, minSpikeVm)
 
 		elif name =='Detect mV':
 			minSpikeVm = self.minSpikeVm.value()
-			#print('    minSpikeVm:', minSpikeVm)
+			#print('	minSpikeVm:', minSpikeVm)
 			# passing dvdtValue=None we will detect suing minSpikeVm
 			dvdtValue = None
-			#print('    dvdtValue:', dvdtValue)
-			#print('    minSpikeVm:', minSpikeVm)
+			#print('	dvdtValue:', dvdtValue)
+			#print('	minSpikeVm:', minSpikeVm)
 			self.detectionWidget.detect(dvdtValue, minSpikeVm)
 
-		elif name == 'Reset X-Axis':
+		elif name == 'Reset All Axes':
 			self.detectionWidget.setAxisFull()
 
 		elif name == 'Save Spike Report':
@@ -785,10 +1012,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.startSeconds = QtWidgets.QDoubleSpinBox()
 		self.startSeconds.setMinimum(-1e6)
 		self.startSeconds.setMaximum(+1e6)
+		self.startSeconds.setKeyboardTracking(False)
 		self.startSeconds.setValue(0)
-		# abb 20200718
-		#self.startSeconds.valueChanged.connect(self.on_start_stop)
-		self.startSeconds.editingFinished.connect(self.on_start_stop)
+		self.startSeconds.valueChanged.connect(self.on_start_stop)
+		#self.startSeconds.editingFinished.connect(self.on_start_stop)
 		detectionGridLayout.addWidget(self.startSeconds, row, 1)
 		#
 		stopSeconds = QtWidgets.QLabel('To (Sec)')
@@ -797,9 +1024,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.stopSeconds = QtWidgets.QDoubleSpinBox()
 		self.stopSeconds.setMinimum(-1e6)
 		self.stopSeconds.setMaximum(+1e6)
+		self.stopSeconds.setKeyboardTracking(False)
 		self.stopSeconds.setValue(0)
-		#self.stopSeconds.valueChanged.connect(self.on_start_stop)
-		self.stopSeconds.editingFinished.connect(self.on_start_stop)
+		self.stopSeconds.valueChanged.connect(self.on_start_stop)
+		#self.stopSeconds.editingFinished.connect(self.on_start_stop)
 		detectionGridLayout.addWidget(self.stopSeconds, row, 3)
 
 		# always the last row
@@ -831,7 +1059,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		displayGridLayout = QtWidgets.QGridLayout()
 
 		row = 0
-		buttonName = 'Reset X-Axis'
+		buttonName = 'Reset All Axes'
 		button = QtWidgets.QPushButton(buttonName)
 		#button.setToolTip('Detect Spikes')
 		button.clicked.connect(partial(self.on_button_click,buttonName))
@@ -1006,7 +1234,7 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 
 		row += 1
 
-		buttonName = 'Reset X-Axis'
+		buttonName = 'Reset All Axes'
 		button = QtWidgets.QPushButton(buttonName)
 		#button.setToolTip('Detect Spikes')
 		button.clicked.connect(partial(self.on_button_click,buttonName))
@@ -1062,7 +1290,7 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		#print('myDetectToolbarWidget.on_start_stop()')
 		start = self.startSeconds.value()
 		stop = self.stopSeconds.value()
-		#print('    start:', start, 'stop:', stop)
+		#print('	start:', start, 'stop:', stop)
 		self.detectionWidget.setAxis(start, stop)
 
 	def on_check_click(self, checkbox, idx):
@@ -1088,20 +1316,20 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 		if name == 'Detect dV/dt':
 			dvdtValue = self.dvdtThreshold.value()
 			minSpikeVm = self.minSpikeVm.value()
-			#print('    dvdtValue:', dvdtValue)
-			#print('    minSpikeVm:', minSpikeVm)
+			#print('	dvdtValue:', dvdtValue)
+			#print('	minSpikeVm:', minSpikeVm)
 			self.detectionWidget.detect(dvdtValue, minSpikeVm)
 
 		elif name =='Detect mV':
 			minSpikeVm = self.minSpikeVm.value()
-			#print('    minSpikeVm:', minSpikeVm)
+			#print('	minSpikeVm:', minSpikeVm)
 			# passing dvdtValue=None we will detect suing minSpikeVm
 			dvdtValue = None
-			#print('    dvdtValue:', dvdtValue)
-			#print('    minSpikeVm:', minSpikeVm)
+			#print('	dvdtValue:', dvdtValue)
+			#print('	minSpikeVm:', minSpikeVm)
 			self.detectionWidget.detect(dvdtValue, minSpikeVm)
 
-		elif name == 'Reset X-Axis':
+		elif name == 'Reset All Axes':
 			self.detectionWidget.setAxisFull()
 
 		elif name == 'Save Spike Report':
@@ -1117,7 +1345,7 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 			print self.cb.itemText(count)
 		'''
 		sweepNumber = int(self.cb.currentText())
-		print('    sweep number:', sweepNumber)
+		print('	sweep number:', sweepNumber)
 
 
 if __name__ == '__main__':
@@ -1126,21 +1354,27 @@ if __name__ == '__main__':
 	abfFile = '/Users/cudmore/Sites/bAnalysis/data/19221021.abf'
 	abfFile = '/Users/cudmore/Sites/bAnalysis/data/19114001.abf'
 	abfFile = '/media/cudmore/data/Laura-data/manuscript-data/2020_06_23_0006.abf'
-	ba = sanpy.bAnalysis(file=abfFile)
+	path = '../data/19114001.abf'
 
+	'''
+	ba = sanpy.bAnalysis(file=abfFile)
 	# spike detect
 	ba.getDerivative(medianFilter=5) # derivative
 	ba.spikeDetect(dVthresholdPos=50, minSpikeVm=-20, medianFilter=0)
+	'''
 
 	# default theme
-	pg.setConfigOption('background', 'w')
-	pg.setConfigOption('foreground', 'k')
+	#pg.setConfigOption('background', 'w')
+	#pg.setConfigOption('foreground', 'k')
 	# dark theme
 	#pg.setConfigOption('background', 'k')
 	#pg.setConfigOption('foreground', 'w')
 
 	app = QtWidgets.QApplication(sys.argv)
-	w = bDetectionWidget(ba)
+	w = bDetectionWidget()
+	w.switchFile(path)
+	w.detect(10, -20)
+
 	w.show()
 
 	sys.exit(app.exec_())

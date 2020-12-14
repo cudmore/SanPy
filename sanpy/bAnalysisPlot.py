@@ -56,7 +56,7 @@ class bPlot:
 
 		return fig
 
-	def plotRaw(ba, ax=None):
+	def plotRaw(ba, lineWidth=1, color='k', ax=None):
 		if ax is None:
 			grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
 
@@ -64,7 +64,7 @@ class bPlot:
 			ax = fig.add_subplot(grid[0, 0:]) #Vm, entire sweep
 
 		#ax.plot(ba.abf.sweepX, ba.abf.sweepY, 'k')
-		ax.plot(ba.abf.sweepX, ba.abf.sweepY, '-') # fmt = '[marker][line][color]'
+		ax.plot(ba.abf.sweepX, ba.abf.sweepY, '-', c=color, linewidth=lineWidth) # fmt = '[marker][line][color]'
 
 		ax.set_ylabel('Vm (mV)')
 		ax.set_xlabel('Time (sec)')
