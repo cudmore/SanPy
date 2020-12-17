@@ -182,9 +182,21 @@ class bDetectionWidget(QtWidgets.QWidget):
 		xMin, xMax = self.getXRange()
 		#print('	xMin:', xMin, 'xMax:', xMax)
 
+		# abb 20201217, I thought I was already doing this?
+		xMinStr = '%.2f'%(xMin)
+		xMaxStr = '%.2f'%(xMax)
+
+		lhs, rhs = xMinStr.split('.')
+		xMinStr = '_b' + lhs + '_' + rhs
+
+		lhs, rhs = xMaxStr.split('.')
+		xMaxStr = '_e' + lhs + '_' + rhs
+
 		filePath, fileName = os.path.split(os.path.abspath(self.ba.file))
 		fileBaseName, extension = os.path.splitext(fileName)
-		excelFileName = os.path.join(filePath, fileBaseName + '.xlsx')
+		fileBaseName = f'{fileBaseName}{xMinStr}{xMaxStr}.xlsx'
+		#excelFileName = os.path.join(filePath, fileBaseName + '.xlsx')
+		excelFileName = os.path.join(filePath, fileBaseName)
 
 		print('Asking user for file name to save...')
 		savefile, tmp = QtGui.QFileDialog.getSaveFileName(self, 'Save File', excelFileName)

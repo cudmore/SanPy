@@ -885,8 +885,13 @@ class bExportWidget(QtWidgets.QWidget):
 		[xMin, xMax] = self.myAxis.get_xlim()
 		#if xMin < 0:
 		#	xMin = 0
+
+		xMin += self.xMargin
+		xMax -= self.xMargin
+
 		xMin = '%.2f'%(xMin)
 		xMax = '%.2f'%(xMax)
+
 
 		lhs, rhs = xMin.split('.')
 		xMin = 'b' + lhs + '_' + rhs
