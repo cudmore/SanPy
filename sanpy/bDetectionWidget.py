@@ -100,6 +100,18 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.buildUI()
 
+		windowOptions = self.getMainWindowOptions()
+		showDvDt = True
+		showClips = False
+		showScatter = True
+		if windowOptions is not None:
+			showDvDt = windowOptions['display']['showDvDt']
+			showClips = windowOptions['display']['showClips']
+			showScatter = windowOptions['display']['showScatter']
+
+			self.toggle_dvdt(showDvDt)
+			self.toggleClips(showClips)
+
 	'''
 	def eventFilter(self, target, event : QtCore.QEvent):
 		if event.type() == QtCore.QEvent.MouseButtonPress:
@@ -117,6 +129,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 			pg.setConfigOption('background', 'w')
 			pg.setConfigOption('foreground', 'k')
 			self.useDarkStyle = False
+
+	def getMainWindowOptions(self):
+		theRet = None
+		if self.myMainWindow is not None:
+			theRet = self.myMainWindow.getOptions()
+		return theRet
 
 	def detect(self, dvdtValue, minSpikeVm):
 		"""
@@ -315,7 +333,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.ba = sanpy.bAnalysis(file=path) # loads abf file
 
 		if self.ba.loadError:
-			# happend when .abf file is corrupt
+			# happens when .abf file is corrupt
 			pass
 		else:
 			self.ba.getDerivative(medianFilter=5) # derivative
@@ -333,6 +351,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.replot()
 			print('bDetectionWidget.switchFile() did not switch file, the .abf file may be corrupt:', path)
 			self.updateStatusBar(f'Error loading file {path}')
+			self.myMainWindow.mySignal('set abfError')
 			return None
 
 		self.updateStatusBar(f'Plotting file {path}')
@@ -456,16 +475,20 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if self.meanClipLine is not None:
 			self.clipPlot.removeItem(self.meanClipLine)
 
+		# this returns x-axis in ms
 		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(xMin, xMax)
+
+		dataPointsPerMs = self.ba.abf.dataPointsPerMs
 
 		# convert clips to 2d ndarray ???
 		xTmp = np.array(theseClips_x)
+		xTmp /= dataPointsPerMs # pnt to ms
 		yTmp = np.array(theseClips)
 		self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type='clip')
 		self.clipPlot.addItem(self.clipLines)
 
 		#print(xTmp.shape) # (num spikes, time)
-		self.xMeanClip = np.nanmean(xTmp, axis=0)
+		self.xMeanClip = np.nanmean(xTmp, axis=0) # xTmp is in ms
 		self.yMeanClip = np.nanmean(yTmp, axis=0)
 		self.meanClipLine = MultiLine(self.xMeanClip, self.yMeanClip, self, allowXAxisDrag=False, type='meanclip')
 		self.clipPlot.addItem(self.meanClipLine)
@@ -552,7 +575,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.vmPlot.setMouseEnabled(x=False, y=False)
 		self.clipPlot.setMouseEnabled(x=False, y=False)
 
-		self.toggleClips(False)
+		#self.toggleClips(False)
 
 		# add all overlaid scatter plots
 		self.myPlotList = [] # list of pg.ScatterPlotItem
@@ -745,7 +768,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 			elif self.myType == 'dvdt':
 				xyUnits = ('Time (sec)', 'dV/dt')# todo: pass xMin,xMax to constructor
 			elif self.myType == 'meanclip':
-				xyUnits = ('Time (sec)', 'Vm (mV)')# todo: pass xMin,xMax to constructor
+				xyUnits = ('Time (ms)', 'Vm (mV)')# todo: pass xMin,xMax to constructor
 
 			path = self.detectionWidget.ba.file
 
@@ -757,10 +780,17 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 				xMin, xMax = self.detectionWidget.getXRange()
 			print('  xMin:', xMin, 'xMax:', xMax)
 
+			if self.myType in ['vm', 'dvdt']:
+				xMargin = 2 # seconds
+			else:
+				xMargin = 2
+
 			exportWidget = sanpy.bExportWidget(self.x, self.y,
 							xyUnits=xyUnits,
 							path=path,
 							xMin=xMin, xMax=xMax,
+							xMargin = xMargin,
+							type=self.myType,
 							darkTheme=self.detectionWidget.useDarkStyle)
 
 			exportWidget.myCloseSignal.connect(self.slot_closeChildWindow)
@@ -923,6 +953,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		#elif idx == 'Show Vm':
 		#	self.detectionWidget.toggle_vm(isChecked)
 		else:
+			# Toggle overlay of stats like spike peak.
 			# assuming idx is int !!!
 			self.detectionWidget.togglePlot(idx, isChecked)
 
@@ -930,6 +961,15 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		#self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 
 		myPath = os.path.dirname(os.path.abspath(__file__))
+
+		windowOptions = self.detectionWidget.getMainWindowOptions()
+		showDvDt = True
+		showClips = False
+		showScatter = True
+		if windowOptions is not None:
+			showDvDt = windowOptions['display']['showDvDt']
+			showClips = windowOptions['display']['showClips']
+			showScatter = windowOptions['display']['showScatter']
 
 		'''
 		mystylesheet_css = os.path.join(myPath, 'css', 'mystylesheet.css')
@@ -1101,21 +1141,21 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		row = 0
 		col = 0
 		show_dvdt_checkbox = QtWidgets.QCheckBox('dV/dt')
-		show_dvdt_checkbox.setChecked(True)
+		show_dvdt_checkbox.setChecked(showDvDt)
 		show_dvdt_checkbox.stateChanged.connect(partial(self.on_check_click,show_dvdt_checkbox,'dV/dt'))
 		plotGridLayout.addWidget(show_dvdt_checkbox, row, col)
 
 		row = 0
 		col = 1
 		checkbox = QtWidgets.QCheckBox('Clips')
-		checkbox.setChecked(False)
+		checkbox.setChecked(showClips)
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Clips'))
 		plotGridLayout.addWidget(checkbox, row, col)
 
 		row = 0
 		col = 2
 		checkbox = QtWidgets.QCheckBox('Scatter')
-		checkbox.setChecked(True)
+		checkbox.setChecked(showScatter)
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Scatter'))
 		plotGridLayout.addWidget(checkbox, row, col)
 

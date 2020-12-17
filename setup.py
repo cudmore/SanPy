@@ -21,6 +21,8 @@ setup(
         'PyQt5==5.13.0',
 		'qdarkstyle', # 2.8.1
 		'xlrd', # for loading excel files in examples/reanalyze.py
+		'openpyxl',
+		'seaborn'
     ],
     entry_points={
         'console_scripts': [

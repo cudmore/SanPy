@@ -1,5 +1,8 @@
 
 ## Updates 20201109
+- Added SanPy program icon
+- Now properly sort the file list
+- Fixed errors with parsing _db.json when files are added/removed or have abf errors
 
 - Added 'Early Diastolic Depol Rate (dV/s)' to saved Excel report.
 - Added checkboxes to toggle dV/dt and Scatter views (like Clips view).

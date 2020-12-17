@@ -32,7 +32,15 @@ def reanalyze(dataPath, dbFile):
 	if dbFile.endswith('.csv'):
 		df = pd.read_csv(dbFile, header=0, dtype={'ABF File': str})
 	elif dbFile.endswith('.xlsx'):
-		df = pd.read_excel(dbFile, header=0, dtype={'ABF File': str})
+
+		# stopped working 20201216???
+		#df = pd.read_excel(dbFile, header=0, dtype={'ABF File': str})
+
+		df=pd.read_excel(
+				dbFile,
+				header=0,
+				engine='openpyxl',
+				)
 	else:
 		print('error reading dbFile:', dbFile)
 
@@ -44,11 +52,13 @@ def reanalyze(dataPath, dbFile):
 	baList = []
 
 	# keep list of new stats to add to df
+	'''
 	nFreqList = []
 	meanFreqList = []
 	sdFreqList = []
 	seFreqList = []
 	cvFreqList = []
+	'''
 
 	actualNumFiles = 0
 	totalNumberOfSpikes = 0
@@ -57,11 +67,12 @@ def reanalyze(dataPath, dbFile):
 	for idx, file in enumerate(df['ABF File']):
 
 		if str(file) in ['nan', 'NaN']:
+			#print('  error: got empty row, id:', idx)
 			continue
 		abfFile = file + '.abf'
 		abfFilePath = os.path.join(dataPath, abfFile)
 		if not os.path.isfile(abfFilePath):
-			print('error: did not find file:', abfFilePath)
+			print('  error: did not find file:', abfFilePath)
 			continue
 
 		condition = df.iloc[idx]['Condition']
@@ -120,19 +131,25 @@ def reanalyze(dataPath, dbFile):
 			print('\n  ERROR: 0 spikes !!!\n')
 			continue
 
+		print('    number of spikes detect:', ba.numSpikes)
+
 		#
 		# save
 		saveFile = file + '_' + condition + '.xlsx'
 		saveFilePath = os.path.join(savePath, saveFile)
 		df0 = ba.saveReport(saveFilePath, startSeconds, stopSeconds,
 						saveExcel=False)
-		if idx==0:
+
+		#if idx==0:
+		if masterDf is None:
 			masterDf = df0
 		else:
 			masterDf = masterDf.append(df0, ignore_index=True)
+
 		#
 		# add columns to df and then save as new csv
 		# use this csv to make pivot table plot
+		'''
 		xStat = 'spikeFreq_hz'
 		yStat = 'spikeFreq_hz'
 		xData, yData = ba.getStat(xStat, yStat, xToSec=True)
@@ -147,24 +164,35 @@ def reanalyze(dataPath, dbFile):
 		meanFreqList.append(xMean)
 		sdFreqList.append(xSD)
 		cvFreqList.append(xCV)
+		'''
 
 		# increment
 		totalNumberOfSpikes += ba.numSpikes
 		actualNumFiles += 1
 		cellNumber += 1
 
+	# drop empy rows (convert to nan first)
+	'''
+	df['ABF File'].replace('', np.nan, inplace=True)
+	df.dropna(subset=['ABF File'], inplace=True)
+	'''
+
 	# append columns to df
+	'''
 	df['aSpikeFreq_n'] = nFreqList
 	df['aSpikeFreq_m'] = meanFreqList
 	df['aSpikeFreq_sd'] = sdFreqList
 	df['aSpikeFreq_cv'] = cvFreqList
+	'''
 
 	#
 	# save the df in a new file
+	'''
 	tmpPath, tmpExt = os.path.splitext(dbFile)
 	tmpPath += '_analysis.csv'
 	print('reanalyze() saving new csv in:', tmpPath)
 	df.to_csv(tmpPath)
+	'''
 
 	masterPath, tmpExt = os.path.splitext(dbFile)
 	masterPath += '_master.csv'
@@ -179,12 +207,12 @@ def reanalyze(dataPath, dbFile):
 
 if __name__ == '__main__':
 
-	dataPath = '/Users/cudmore/box/data/laura/SAN CC'
-	dbFile = 'sanpy-analysis-database.csv'
+	#dataPath = '/Users/cudmore/box/data/laura/SAN CC'
+	#dbFile = 'sanpy-analysis-database.csv'
 
 	# using these to check Laura's manuscript analysis
-	dataPath = '/media/cudmore/data/Laura-data/manuscript-data'
-	dbFile = '/media/cudmore/data/Laura-data/Superior vs Inferior database.xlsx'
+	#dataPath = '/media/cudmore/data/Laura-data/manuscript-data'
+	#dbFile = '/media/cudmore/data/Laura-data/Superior vs Inferior database.xlsx'
 
 	dbFile = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database.xlsx'
 	dataPath = '/Users/cudmore/data/laura-ephys/SAN AP'

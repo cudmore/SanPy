@@ -71,22 +71,20 @@ class MainWindow(QtWidgets.QMainWindow):
 		path: full path to folder with abf files
 		"""
 
-		#sanpyLogger.debug('startArmVideo')
-		'''
-		logging.info('QQQ ===================== +++++++++++++++++++++++++++++')
-		logger.warning('xxx This is a warning')
-		logger.error('xxx This is an error')
-		'''
-
 		super(MainWindow, self).__init__(parent)
+
+		#self.setWindowIcon(QtGui.QIcon('icons/sanpy_transparent.png'))
 
 		self.myApp = app
 
 		# todo: update this with selected folder
-		windowTitle = f'SanPy {path}'
+		if os.path.isdir(path):
+			windowTitle = f'SanPy {path}'
+		else:
+			windowTitle = 'SanPy'
 		self.setWindowTitle(windowTitle)
 
-		self._rowHeight = 12
+		self._rowHeight = 11
 
 		self.path = path
 
@@ -117,11 +115,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		#self._loadFile(tmpFile)
 
 		lastPath = self.configDict['lastPath']
-		if os.path.isdir(lastPath):
-			print('using last path from preferences json file:', lastPath)
+		if lastPath is not None and os.path.isdir(lastPath):
+			print('sanpy_app using last path from preferences json file:', lastPath)
 			self.path = lastPath
 		else:
-			print('sanpy_app.py MainWindow.__init__ last path is no good:', lastPath)
+			print('sanpy_app last path is no good:', lastPath)
 			self.path = None
 
 		self.fileList = None
@@ -137,6 +135,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.myExportWidget = None
 
 		self.updateStatusBar('SanPy started')
+
+	def getOptions(self):
+		return self.configDict
 
 	def toggleStyleSheet(self, doDark=None, buildingInterface=False):
 		if doDark is None:
@@ -224,7 +225,15 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 		print('=== sanpy_app.mySignal() "' + this +'"')
 
-		if this == 'detect':
+		if this == 'set abfError':
+			ba = self.myDetectionWidget.ba
+			self.fileList.refreshRow(ba)
+
+			# todo: make this more efficient, just update one row
+			#self.refreshFileTableWidget()
+			self.refreshFileTableWidget_Row()
+
+		elif this == 'detect':
 			# update scatter plot
 			self.myScatterPlotWidget.plotToolbarWidget.on_scatter_toolbar_table_click()
 
@@ -284,7 +293,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		for j in range(numCol):
 			headerText = self.myTableWidget.horizontalHeaderItem(j).text()
 			if headerText == findThisColumn:
-				fileName = self.myTableWidget.item(row,j).text()
+				tmpItem = self.myTableWidget.item(row,j)
+				if tmpItem is not None:
+					fileName = tmpItem.text()
 				break
 
 		if len(fileName) > 0:
@@ -339,7 +350,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		# this will not change for a given path ???
 		numRows = self.fileList.numFiles()
 		numCols = len(self.fileList.getColumns())
-		self.myTableWidget.setRowCount(numRows)
+		self.myTableWidget.setRowCount(numRows+1) # trying to get last row visible
 		self.myTableWidget.setColumnCount(numCols)
 
 		headerLabels = self.fileList.getColumns()
@@ -354,10 +365,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		# update to reflect analysis date/time etc
 		fileList = self.fileList.getList() #ordered dict of files
 
-		for idx, filename in enumerate(fileList.keys()):
-			#print(idx, filename)
+		#for idx, filename in enumerate(fileList.keys()):
+		for idx, filename in enumerate(sorted(fileList)):
 			abfError = self.fileList.getFileError(filename) # abb 202012
 			fileValues = self.fileList.getFileValues(filename) # get list of values in correct column order
+			#print('refreshFileTableWidget()', idx+1, filename, fileValues)
 			for idx2, fileValue in enumerate(fileValues):
 				if str(fileValue) == 'None':
 					fileValue = ''
@@ -457,7 +469,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		viewMenu.addAction(darkThemeAction)
 
 	def toggleStatisticsPlot(self, state):
+		"""
+		toggle scatter plot on/off
+		"""
 		print('toggleStatisticsPlot() state:', state)
+		self.configDict['display']['showScatter'] = state
 		if state:
 			self.myScatterPlotWidget.show()
 		else:
@@ -494,6 +510,12 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.myTableWidget.cellClicked.connect(self.on_file_table_click)
 		#self.setStyleSheet(myStyleSheet)
 
+		# set font size of table (default seems to be 13 point)
+		fnt = self.font()
+		#print('  original table font size:', fnt.pointSize())
+		fnt.setPointSize(self._rowHeight)
+		self.myTableWidget.setFont(fnt)
+
 		self.refreshFileTableWidget()
 		self.myQVBoxLayout.addWidget(self.myTableWidget, stretch=4)
 
@@ -502,7 +524,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		#
 		baNone = None
 		self.myDetectionWidget = sanpy.bDetectionWidget(baNone,self)
-		self.myQVBoxLayout.addWidget(self.myDetectionWidget, stretch=10)
+		self.myQVBoxLayout.addWidget(self.myDetectionWidget, stretch=6)
 
 
 		#
@@ -510,6 +532,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		#
 		self.myScatterPlotWidget = sanpy.bScatterPlotWidget(self, self.myDetectionWidget)
 		self.myQVBoxLayout.addWidget(self.myScatterPlotWidget)
+		if self.configDict['display']['showScatter']:
+			pass
+		else:
+			self.myScatterPlotWidget.hide()
 		#self.myScatterPlotWidget.hide()
 
 		"""
@@ -581,7 +607,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.optionsFile = os.path.join(bundle_dir, 'sanpy_app.json')
 
 		if os.path.isfile(self.optionsFile):
-			print('	 preferencesLoad() loading options file:', self.optionsFile)
+			print('  preferencesLoad() loading options file:', self.optionsFile)
 			with open(self.optionsFile) as f:
 				return json.load(f)
 		else:
@@ -608,7 +634,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 
 		configDict['display'] = {}
-		configDict['display']['plotEveryPoint'] = 10
+		configDict['display']['plotEveryPoint'] = 10 # not used?
+		configDict['display']['showDvDt'] = True # not used?
+		configDict['display']['showClips'] = False # not used?
+		configDict['display']['showScatter'] = True # not used?
 
 		return configDict
 
@@ -638,7 +667,21 @@ def main():
 	print('Python version is:', platform.python_version())
 
 	path = '/media/cudmore/data/SAN AP'
+	path = '/Users/cudmore/data/laura-ephys/SAN AP'
+
 	app = QtWidgets.QApplication([''])
+
+	if getattr(sys, 'frozen', False):
+		# we are running in a bundle (frozen)
+		bundle_dir = sys._MEIPASS
+	else:
+		# we are running in a normal Python environment
+		bundle_dir = os.path.dirname(os.path.abspath(__file__))
+
+	appIconPath = os.path.join(bundle_dir, 'icons/sanpy_transparent.png')
+	print('app icon is in', appIconPath)
+	app.setWindowIcon(QtGui.QIcon(appIconPath))
+
 	w = MainWindow(path=path, app=app)
 	#w.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 	w.show()

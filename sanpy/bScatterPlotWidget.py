@@ -391,7 +391,7 @@ class myStatPlotToolbarWidget(QtWidgets.QWidget):
 
 		self.myParent = myParent
 
-		self._rowHeight = 12
+		self._rowHeight = 11
 
 		self.myQVBoxLayout = QtWidgets.QVBoxLayout(self)
 
@@ -416,6 +416,11 @@ class myStatPlotToolbarWidget(QtWidgets.QWidget):
 		self.myTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
 		self.myTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
 		self.myTableWidget.cellClicked.connect(self.on_scatter_toolbar_table_click)
+
+		# set font size of table (default seems to be 13 point)
+		fnt = self.font()
+		fnt.setPointSize(self._rowHeight)
+		self.myTableWidget.setFont(fnt)
 
 		headerLabels = ['Y-Stat']
 		self.myTableWidget.setHorizontalHeaderLabels(headerLabels)

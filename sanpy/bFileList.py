@@ -46,7 +46,14 @@ class bFileList:
 
 	def getFileError(self, file):
 		fileDict = self.db[file]
-		theRet = fileDict['abfError']
+		try:
+			theRet = fileDict['abfError']
+		except (KeyError) as e:
+			theRet = True
+			print('exception in bFileList.getFileError() did not find key "abfError" in:', file)
+			print('fileDict')
+			print(json.dumps(fileDict, indent=2))
+		#
 		return theRet
 
 	def getFileValues(self, file):
@@ -98,6 +105,8 @@ class bFileList:
 			print('WARNING: bFileList.databaseRefreshFile() did not find file in self.db, file:', file)
 			pass
 		else:
+			self.db[file]['abfError'] = ba.loadError
+
 			self.db[file]['dvdtThreshold'] = ba.dVthreshold
 			self.db[file]['minSpikeVm'] = ba.minSpikeVm
 
@@ -123,6 +132,9 @@ class bFileList:
 		#return self.videoFileList[treeViewRow].asTuple()
 
 	def databaseRefresh(self):
+		"""
+		go through list of .abf file and compare to .json database
+		"""
 		useExtension = '.abf'
 		videoFileIdx = 0
 		fileList = sorted(os.listdir(self.path))
@@ -131,15 +143,19 @@ class bFileList:
 			if file.startswith('.'):
 				continue
 			if file.endswith(useExtension):
+				fullPath = os.path.join(self.path, file)
+
 				if file in self.db.keys():
 					# already in database
 					#print('databaseRefresh.databaseRefresh() file is already in self.db')
 					if not ('abfError' in self.db[file].keys()):
+						# load file to make sure we don't get eror
+						#tmpVideoFile = bVideoFile(videoFileIdx, fullPath)
+						#self.db[file]['abfError'] = tmpVideoFile.loadError
 						self.db[file]['abfError'] = None
 					#
 					continue
 
-				fullPath = os.path.join(self.path, file)
 				print(str(videoFileIdx+1), 'of', str(mFile), 'bFileList.databaseRefresh parsing file:', file)
 
 				myVideoFile = bVideoFile(videoFileIdx, fullPath)

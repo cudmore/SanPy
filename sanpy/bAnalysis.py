@@ -1008,8 +1008,6 @@ class bAnalysis:
 		return theseClips, theseClips_x, meanClip
 
 	############################################################
-
-	############################################################
 	# output reports
 	############################################################
 	def report(self, theMin, theMax):
@@ -1106,6 +1104,8 @@ class bAnalysis:
 
 		# always grab a df to the entire analysis (not sure what I will do with this)
 		#df = self.report() # report() is my own 'bob' verbiage
+
+		theRet = None
 
 		if saveExcel and savefile:
 			if verbose: print('    bAnalysis.saveReport() saving user specified .xlsx file:', savefile)
@@ -1278,8 +1278,9 @@ class bAnalysis:
 			df = self.report(theMin, theMax)
 			df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
 			'''
+			theRet = df0
 		#
-		#return df0
+		return theRet
 
 	def getReportDf(self, theMin, theMax, savefile):
 		"""
@@ -1332,7 +1333,7 @@ class bAnalysis:
 		tmpPath, tmpFile = os.path.split(self.file)
 		tmpFile, tmpExt = os.path.splitext(tmpFile)
 		analysisName = tmpFile + '_s' + minStr + '_s' + maxStr
-		print('minStr:', minStr, 'maxStr:', maxStr, 'analysisName:', analysisName)
+		print('    minStr:', minStr, 'maxStr:', maxStr, 'analysisName:', analysisName)
 		df['analysisname'] = analysisName
 
 		df['Condition'] = 	df['condition1']

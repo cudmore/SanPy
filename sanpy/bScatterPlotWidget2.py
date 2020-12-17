@@ -5,9 +5,11 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure
+import matplotlib.pyplot as plt # abb 202012 added to set theme
 import seaborn as sns
 
 #tips = sns.load_dataset("tips")
+import sanpy
 
 class pandasModel(QtCore.QAbstractTableModel):
 
@@ -108,8 +110,16 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.buildMenus()
 
+		self.statListDict = sanpy.bAnalysisUtil.getStatList()
+		categoricalList = ['Condition', 'Sex', 'Region', 'File Number', 'File Name']
+		for categorical in categoricalList:
+			self.statListDict[categorical] = {'yStat': categorical}
+		#for k,v in statList.items():
+		#	print(k, v)
+
+		'''
 		self.statNameMap = {
-			'Early Diastolic Duration': 'earlyDiastolicDurationRate',
+			'Early Diastolic Duration Rate': 'earlyDiastolicDurationRate',
 			'Spike Frequency': 'spikeFreq_hz',
 			'peakHeight': 'peakHeight',
 			'peakVal': 'peakVal',
@@ -124,12 +134,18 @@ class MainWindow(QtWidgets.QMainWindow):
 			'File Number': 'File Number',
 			'File Name': 'filename',
 		}
+		'''
 
 		self.loadPath(path)
 
 		self.yDf = None
 
 		self.main_widget = QtWidgets.QWidget(self)
+
+		self.darkTheme = True
+		if self.darkTheme:
+			plt.style.use('dark_background')
+		sns.set_context('paper')
 
 		self.fig = Figure()
 		self.ax1 = self.fig.add_subplot(111)
@@ -150,9 +166,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.layout = QtWidgets.QGridLayout(self.main_widget)
 
 		##
-		keys = list(self.statNameMap.keys())
-		xStatIdx = keys.index('Spike Frequency')
-		yStatIdx = keys.index('Early Diastolic Duration')
+		#keys = list(self.statNameMap.keys())
+		keys = list(self.statListDict.keys())
+		xStatIdx = keys.index('Spike Frequency (Hz)')
+		yStatIdx = keys.index('Early Diastolic Depol Rate (dV/s)')
 		self.xDropdown = QtWidgets.QComboBox()
 		self.xDropdown.addItems(keys)
 		self.xDropdown.setCurrentIndex(xStatIdx)
@@ -167,16 +184,25 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.hueDropdown.setCurrentIndex(0)
 		self.hueDropdown.currentIndexChanged.connect(self.updateHue)
 
+		# color
+		colorTypes = ['Region', 'Sex', 'Condition', 'File Number'] #, 'File Name'] #, 'None']
+		self.color = 'Region'
+		self.colorDropdown = QtWidgets.QComboBox()
+		self.colorDropdown.addItems(colorTypes)
+		self.colorDropdown.setCurrentIndex(0)
+		self.colorDropdown.currentIndexChanged.connect(self.updateColor)
+
 		self.plotType = 'Scatter Plot'
 		self.typeDropdown = QtWidgets.QComboBox()
-		self.typeDropdown.addItems(['Scatter Plot', 'Violin Plot', 'Box Plot', 'Raw + Mean Plot', 'Regression Plot'])
+		self.typeDropdown.addItems(['Scatter Plot', 'Regression Plot', 'Violin Plot', 'Box Plot', 'Raw + Mean Plot'])
 		self.typeDropdown.setCurrentIndex(0)
 
-		self.dataTypes = ['Raw', 'File Mean']
-		self.dataType = 'Raw' # (Raw, File Mean)
+		self.dataTypes = ['All Spikes', 'File Mean']
+		self.dataType = 'File Mean' # (Raw, File Mean)
 		self.dataTypeDropdown = QtWidgets.QComboBox()
+		self.dataTypeDropdown.setToolTip('All Spikes is all spikes \n File Mean is the mean within each analysis file')
 		self.dataTypeDropdown.addItems(self.dataTypes)
-		self.dataTypeDropdown.setCurrentIndex(0)
+		self.dataTypeDropdown.setCurrentIndex(1)
 
 		self.xDropdown.currentIndexChanged.connect(self.update2)
 		self.yDropdown.currentIndexChanged.connect(self.update2)
@@ -188,18 +214,25 @@ class MainWindow(QtWidgets.QMainWindow):
 		showLegendCheckBox.setChecked(self.showLegend)
 		showLegendCheckBox.stateChanged.connect(self.setShowLegend)
 
+		darkThemeCheckBox = QtWidgets.QCheckBox('Dark Theme')
+		darkThemeCheckBox.setChecked(self.darkTheme)
+		darkThemeCheckBox.stateChanged.connect(self.setTheme)
+
 		self.layout.addWidget(QtWidgets.QLabel("X Statistic"), 0, 0)
 		self.layout.addWidget(self.xDropdown, 0, 1)
 		self.layout.addWidget(QtWidgets.QLabel("Y Statistic"), 1, 0)
 		self.layout.addWidget(self.yDropdown, 1, 1)
 		self.layout.addWidget(QtWidgets.QLabel("Hue"), 2, 0)
 		self.layout.addWidget(self.hueDropdown, 2, 1)
+		self.layout.addWidget(QtWidgets.QLabel("Color"), 3, 0)
+		self.layout.addWidget(self.colorDropdown, 3, 1)
 		#
 		self.layout.addWidget(QtWidgets.QLabel("Plot Type"), 0, 2)
 		self.layout.addWidget(self.typeDropdown, 0, 3)
 		self.layout.addWidget(QtWidgets.QLabel("Data Type"), 1, 2)
 		self.layout.addWidget(self.dataTypeDropdown, 1, 3)
 		self.layout.addWidget(showLegendCheckBox, 2, 2)
+		self.layout.addWidget(darkThemeCheckBox, 3, 2)
 
 		rowSpan = 1
 		colSpan = 4
@@ -277,7 +310,7 @@ class MainWindow(QtWidgets.QMainWindow):
 	'''
 
 	def buildMenus(self):
-		loadAction = QtWidgets.QAction('Load CSV', self)
+		loadAction = QtWidgets.QAction('Load database.xlsx', self)
 		loadAction.triggered.connect(self.loadPathMenuAction)
 
 		menubar = self.menuBar()
@@ -285,6 +318,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		fileMenu.addAction(loadAction)
 
 	def loadPathMenuAction(self):
+		"""
+		prompt user for database.xlsx
+		run reanalyze.py on that xlsx database
+		load resultant _master.csv
+		"""
 		print('loadPathMenuAction')
 
 	def loadPath(self, path):
@@ -309,9 +347,20 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.showLegend = state
 		self.update2()
 
+	def setTheme(self, state):
+		print('setTheme() state:', state)
+		self.darkTheme = state
+		print('  -->> NOT IMPLEMENTED')
+		#self.update2()
+
 	def updateHue(self):
 		hue = self.hueDropdown.currentText()
 		self.hue = hue
+		self.update2()
+
+	def updateColor(self):
+		color = self.colorDropdown.currentText()
+		self.color = color
 		self.update2()
 
 	def updatePlotType(self):
@@ -350,8 +399,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		meanDf = self.masterDf.groupby('analysisname', as_index=False)[groupList].mean()
 		meanDf = meanDf.reset_index()
 
-		print('after initial grouping')
-		print(meanDf)
+		#print('after initial grouping')
+		#print(meanDf)
 
 		for catName in self.masterCatColumns:
 			if catName == 'analysisname':
@@ -402,8 +451,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		xStatHuman = self.xDropdown.currentText()
 		yStatHuman = self.yDropdown.currentText()
 		print('update2() xStatHuman:', xStatHuman, 'yStatHuman:', yStatHuman)
-		xStat = self.statNameMap[xStatHuman]
-		yStat = self.statNameMap[yStatHuman]
+		#xStat = self.statNameMap[xStatHuman]
+		#yStat = self.statNameMap[yStatHuman]
+		xStat = self.statListDict[xStatHuman]['yStat']
+		yStat = self.statListDict[yStatHuman]['yStat']
 
 		xIsCategorical = pd.api.types.is_string_dtype(self.masterDf[xStat].dtype)
 		yIsCategorical = pd.api.types.is_string_dtype(self.masterDf[yStat].dtype)
@@ -413,23 +464,28 @@ class MainWindow(QtWidgets.QMainWindow):
 		#self.axes[1].clear()
 
 		# per cell mean
-		if self.dataType == 'Raw':
+		if self.dataType == 'All Spikes':
 			meanDf = self.masterDf
 		elif self.dataType == 'File Mean':
 			meanDf = self.getMeanDf(xStat, yStat)
+		else:
+			print('error in self.dataType:', self.dataType)
 
 		plotType = self.plotType
 		if self.hue == 'None':
 			# special case, we do not want None in self.statNameMap
 			hue = None
 		else:
-			hue = self.statNameMap[self.hue]
+			#hue = self.statNameMap[self.hue]
+			# don't map hue
+			hue = self.hue
 
 		warningStr = ''
+		picker = 5
 		if plotType == 'Scatter Plot':
 			try:
 				sns.scatterplot(x=xStat, y=yStat, hue=hue,
-						data=meanDf, ax=self.axes[0])
+						data=meanDf, ax=self.axes[0], picker=picker)
 			except (ValueError) as e:
 				self.fig.canvas.draw()
 				print('EXCEPTION:', e)
@@ -450,13 +506,27 @@ class MainWindow(QtWidgets.QMainWindow):
 				warningStr = 'Raw + Mean plot requires a categorical x statistic'
 			else:
 				try:
-					sns.stripplot(x=xStat, y=yStat, hue=hue,
+					sns.stripplot(x=xStat, y=yStat,
+							hue=hue,
 							data=meanDf,
 							ax=self.axes[0],
+							picker=picker,
 							zorder=1)
-					sns.pointplot(x=xStat, y=yStat, hue=hue,
+					hueList = meanDf[hue].unique()
+					if self.darkTheme:
+						color = 'w'
+					else:
+						color = 'k'
+					# todo: get this working
+					'''
+					color = [color] * len(hueList)
+					print('color:', color)
+					'''
+					
+					sns.pointplot(x=xStat, y=yStat,
+							hue=hue,
 							data=meanDf,
-							ci=68, capsize=0.1, color='k',
+							ci=68, capsize=0.1, color=color,
 							ax=self.axes[0],
 							zorder=10)
 				except (ValueError) as e:
@@ -476,6 +546,9 @@ class MainWindow(QtWidgets.QMainWindow):
 					#print('regplot oneHue:', oneHue, 'len(tmpDf)', len(tmpDf))
 					sns.regplot(x=xStat, y=yStat, data=tmpDf,
 							ax=self.axes[0]);
+
+		# picker
+		self.axes[0].figure.canvas.mpl_connect("pick_event", self.onPick)
 
 		self.mySetStatusBar(warningStr)
 
@@ -506,6 +579,41 @@ class MainWindow(QtWidgets.QMainWindow):
 		except (pd.core.base.DataError) as e:
 			print('EXCEPTION:', e)
 
+	def onPick(self, event):
+		"""
+		when user clicks on a point in the graph
+
+		todo: this makes perfect sense for scatter but maybe not other plots???
+		"""
+		print('=== onPick()') #' event:', type(event), event)
+		line = event.artist
+
+		# when categorical x, line switches (superior/inferior)
+		# then ind is within that categorical line
+		print('  type(event)', type(event))
+		print('  line:', line)
+		print('  type(line)', type(line))
+
+		# theArray is None
+		#theArray = line.get_array()
+		#print('  theArray:', theArray)
+
+		# error
+		# 'PathCollection' object has no attribute 'get_data'
+		#xdata, ydata = line.get_data()
+
+		# when Scatter, line is 'PathCollection', a list of (x,y)
+		offsets = line.get_offsets()
+		#print('offsets:', offsets)
+
+		# ind somehow corresponds to the liist in teh table???
+		ind = event.ind
+		print('  ind:', ind)
+		#print('on pick line:', np.array([xdata[ind], ydata[ind]]).T)
+
+		# ind is the ith element in (x,y) list of offsets
+		# ind 10 (0 based) is index 11 (1 based) in table list
+		print('  selected:', offsets[ind])
 
 if __name__ == '__main__':
 	path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
