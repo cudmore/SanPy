@@ -1224,7 +1224,7 @@ class bAnalysis:
 			# mean spike clip
 			theseClips, theseClips_x, meanClip = self.getSpikeClips(theMin, theMax)
 			first_X = theseClips_x[0] #- theseClips_x[0][0]
-			if verbose: print('    bAnalysis.saveReport() saving mean clip to sheet "Avg Spike" from', len(theseClips), 'clips')
+			#if verbose: print('    bAnalysis.saveReport() saving mean clip to sheet "Avg Spike" from', len(theseClips), 'clips')
 			df = pd.DataFrame(meanClip, first_X)
 			df.to_excel(writer, sheet_name='Avg Spike')
 

@@ -544,6 +544,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 	def buildUI(self):
 		# left is toolbar, right is PYQtGraph (self.view)
 		self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
+		self.myHBoxLayout_detect.setAlignment(QtCore.Qt.AlignTop)
 
 		# detection widget toolbar
 		# abb 20201110, switching over to a better layout
@@ -983,17 +984,18 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			showClips = windowOptions['display']['showClips']
 			showScatter = windowOptions['display']['showScatter']
 
-		'''
 		mystylesheet_css = os.path.join(myPath, 'css', 'mystylesheet.css')
 		if os.path.isfile(mystylesheet_css):
 			with open(mystylesheet_css) as f:
 				myStyleSheet = f.read()
-		'''
 
 		self.setFixedWidth(330)
 		self.mainLayout = QtWidgets.QVBoxLayout(self)
 		self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
 
+		# IMPLEMENT SWEEPS AND
+		# PUT THIS BACK IN
+		'''
 		#
 		# sweeps
 		sweepLayout = QtWidgets.QHBoxLayout(self)
@@ -1011,11 +1013,12 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		# finalize
 		self.mainLayout.addLayout(sweepLayout)
+		'''
 
 		#
 		# detection parameters group
 		detectionGroupBox = QtWidgets.QGroupBox('Detect Parameters')
-		#detectionGroupBox.setStyleSheet(myStyleSheet)
+		detectionGroupBox.setStyleSheet(myStyleSheet)
 
 		detectionGridLayout = QtWidgets.QGridLayout()
 
@@ -1106,7 +1109,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		#
 		# display  group
 		displayGroupBox = QtWidgets.QGroupBox('Display')
-		#displayGroupBox.setStyleSheet(myStyleSheet)
+		displayGroupBox.setStyleSheet(myStyleSheet)
 
 		displayGridLayout = QtWidgets.QGridLayout()
 
@@ -1145,7 +1148,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		#
 		# plots  group
 		plotGroupBox = QtWidgets.QGroupBox('Plots')
-		#plotGroupBox.setStyleSheet(myStyleSheet)
+		plotGroupBox.setStyleSheet(myStyleSheet)
 
 		plotGridLayout = QtWidgets.QGridLayout()
 
@@ -1194,6 +1197,9 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 
 		row = 0
 
+		# IMPLEMENT SWEEPS AND
+		# PUT THIS BACK IN
+		'''
 		# sweeps
 		sweepLabel = QtWidgets.QLabel('Sweep')
 		self.addWidget(sweepLabel, row, 0)
@@ -1205,8 +1211,8 @@ class myDetectToolbarWidget(QtWidgets.QGridLayout):
 			self.cb.addItem(str(sweep))
 		self.cb.currentIndexChanged.connect(self.sweepSelectionChange)
 		self.addWidget(self.cb, row, 1)
-
 		row += 1
+		'''
 
 		buttonName = 'Detect dV/dt'
 		button = QtWidgets.QPushButton(buttonName)

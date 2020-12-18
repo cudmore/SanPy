@@ -11,6 +11,8 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt # abb 202012 added to set theme
 
+import qdarkstyle
+
 # abb 20200718
 # needed to import from SanPy which is one folder up
 #sys.path.append("..")
@@ -196,6 +198,9 @@ class bExportWidget(QtWidgets.QWidget):
 		"""
 		super(bExportWidget, self).__init__(parent)
 
+		self.shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+w"), self)
+		self.shortcut.activated.connect(self.myCloseAction)
+
 		self.setFont(QtGui.QFont("Helvetica", 11, QtGui.QFont.Normal, italic=False))
 
 		self.myType = type # use this to size defaults for scale bar
@@ -249,25 +254,44 @@ class bExportWidget(QtWidgets.QWidget):
 			xMax = np.nanmax(self.mySweepX_Downsample)
 		#
 		self.myAxis.set_xlim(xMin, xMax)
+
 		#self._setXAxis(xMin, xMax)
 
-	def closeEvent(self, event):
+	def myCloseAction(self):
+		self.closeEvent()
+
+	def closeEvent(self, event=None):
 		"""
 		in Qt, close only hides the widget!
 		"""
+		print('bExportWidget.closeEvent()')
 		self.deleteLater()
 		self.myCloseSignal.emit(self)
 
 	def initUI(self):
+
+		self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+
+		'''
+		myPath = os.path.dirname(os.path.abspath(__file__))
+		mystylesheet_css = os.path.join(myPath, 'css', 'mystylesheet.css')
+		myStyleSheet = None
+		if os.path.isfile(mystylesheet_css):
+			with open(mystylesheet_css) as f:
+				myStyleSheet = f.read()
+
+		if myStyleSheet is not None:
+			self.setStyleSheet(myStyleSheet)
+		'''
 
 		#self.setGeometry(100, 100, 1000, 600)
 		self.center()
 
 		if self.path:
 			windowTitle = os.path.split(self.path)[1]
-			self.setWindowTitle('Raw Plot: ' + windowTitle)
+			self.setWindowTitle('Export Trace: ' + windowTitle)
 		else:
-			self.setWindowTitle('Raw Plot: ' + 'None')
+			self.setWindowTitle('Export Trace: ' + 'None')
 
 		myAlignLeft = QtCore.Qt.AlignLeft
 		myAlignTop = QtCore.Qt.AlignTop
@@ -277,7 +301,7 @@ class bExportWidget(QtWidgets.QWidget):
 		self.setLayout(hMasterLayout)
 
 		left_container = QtWidgets.QWidget(self)
-		left_container.setFixedWidth(300)
+		left_container.setFixedWidth(350)
 
 		hMasterLayout.addWidget(left_container, myAlignTop)
 
@@ -460,6 +484,7 @@ class bExportWidget(QtWidgets.QWidget):
 		#
 		# sixth row
 		scaleBarGroupBox = QtWidgets.QGroupBox('Scale Bar')
+		scaleBarGroupBox.setAlignment(myAlignTop)
 		vBoxLayout.addWidget(scaleBarGroupBox, myAlignTop)
 
 		gridBoxScaleBar = QtWidgets.QGridLayout()
@@ -515,6 +540,8 @@ class bExportWidget(QtWidgets.QWidget):
 		saveButton.resize(saveButton.sizeHint())
 		saveButton.clicked.connect(self.save)
 		vBoxLayout.addWidget(saveButton)
+
+		#vBoxLayout.addStretch()
 
 		self.figure = matplotlib.figure.Figure()
 		self.canvas = FigureCanvas(self.figure)
@@ -633,6 +660,7 @@ class bExportWidget(QtWidgets.QWidget):
 		xMin = self.xMinSpinBox.value()
 		xMax = self.xMaxSpinBox.value()
 
+		#print('_setXAxis() calling self.myAxis.set_xlim()', xMin, xMax)
 		xMin -= self.xMargin
 		xMax += self.xMargin
 
@@ -789,7 +817,15 @@ class bExportWidget(QtWidgets.QWidget):
 	def plotRaw(self, xMin=None, xMax=None, firstPlot=False):
 		if firstPlot:
 			self.figure.clf()
+
 			self.myAxis = self.figure.add_subplot(111)
+			'''
+			left = .2 #0.05
+			bottom = 0.05
+			width = 0.7 #0.9
+			height = 0.9
+			self.myAxis = self.figure.add_axes([left, bottom, width, height])
+			'''
 
 			self.myAxis.spines['right'].set_visible(False)
 			self.myAxis.spines['top'].set_visible(False)
@@ -801,9 +837,6 @@ class bExportWidget(QtWidgets.QWidget):
 
 			lineWidth = self.lineWidthSpinBox.value()
 
-		#bAnalysisPlot.bPlot.plotRaw(self.ba, ax=self.myAxis, color=color, lineWidth=lineWidth)
-		#sweepX = self.ba.abf.sweepX
-		#sweepY = self.ba.abf.sweepX
 		sweepX = self.mySweepX_Downsample
 		sweepY = self.mySweepY_Downsample
 
@@ -817,9 +850,6 @@ class bExportWidget(QtWidgets.QWidget):
 		yMaxOrig = np.nanmax(sweepY)
 
 		xClip = self.xMargin
-
-		#self.myAxis.margins(x=0.5)
-
 		if xMin is not None and xMax is not None:
 			minClip = xMin + xClip
 			maxClip = xMax - xClip
@@ -866,6 +896,9 @@ class bExportWidget(QtWidgets.QWidget):
 				line.set_xdata(sweepX)
 				line.set_ydata(sweepY)
 			'''
+
+		#self.myAxis.use_sticky_edges = False
+		#self.myAxis.margins(self.xMargin, tight=None)
 
 		if firstPlot:
 			#self.myAxis.set_ylabel('Vm (mV)')

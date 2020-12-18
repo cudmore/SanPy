@@ -38,3 +38,5 @@ echo "=== run SanPy: running 'python sanpy/sanpy_app.py'"
 echo "=== run sanpy_app: interface should appear shortly ... "
 echo '==='
 python sanpy/sanpy_app.py
+
+$SHELL

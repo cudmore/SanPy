@@ -73,7 +73,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		super(MainWindow, self).__init__(parent)
 
-		#self.setWindowIcon(QtGui.QIcon('icons/sanpy_transparent.png'))
+		myFontSize = 10
+		myFont = self.font();
+		myFont.setPointSize(myFontSize);
+		self.setFont(myFont)
 
 		self.myApp = app
 
@@ -499,6 +502,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.centralwidget.setObjectName("centralwidget")
 
 		self.myQVBoxLayout = QtWidgets.QVBoxLayout(self.centralwidget)
+		self.myQVBoxLayout.setAlignment(QtCore.Qt.AlignTop)
 
 		#
 		# tree view of files
@@ -517,14 +521,14 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.myTableWidget.setFont(fnt)
 
 		self.refreshFileTableWidget()
-		self.myQVBoxLayout.addWidget(self.myTableWidget, stretch=4)
+		self.myQVBoxLayout.addWidget(self.myTableWidget)#, stretch=4)
 
 		#
 		# detect/plot widget, on the left are params and on the right are plots
 		#
 		baNone = None
 		self.myDetectionWidget = sanpy.bDetectionWidget(baNone,self)
-		self.myQVBoxLayout.addWidget(self.myDetectionWidget, stretch=6)
+		self.myQVBoxLayout.addWidget(self.myDetectionWidget)#, stretch=6)
 
 
 		#

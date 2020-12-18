@@ -1,4 +1,5 @@
 import os, sys, io, csv
+import traceback
 import pandas as pd
 import numpy as np
 from PyQt5 import QtCore, QtGui, QtWidgets
@@ -96,14 +97,18 @@ class CheckBoxDelegate(QtWidgets.QItemDelegate):
 		model.setData(index, 1 if int(index.data()) == 0 else 0, QtCore.Qt.EditRole)
 
 
+#class MainWindow(QtWidgets.QWidget):
 class MainWindow(QtWidgets.QMainWindow):
 	send_fig = QtCore.pyqtSignal(str)
 
-	def __init__(self, path):
+	def __init__(self, path, parent=None):
 		"""
 		path: full path to .csv file generated with reanalyze
 		"""
-		super(MainWindow, self).__init__()
+		super(MainWindow, self).__init__(parent)
+
+		self.shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+w"), self)
+		self.shortcut.activated.connect(self.myCloseAction)
 
 		self.statusBar = QtWidgets.QStatusBar()
 		self.setStatusBar(self.statusBar)
@@ -140,22 +145,38 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.yDf = None
 
-		self.main_widget = QtWidgets.QWidget(self)
+		#self.main_widget = QtWidgets.QWidget(self)
 
 		self.darkTheme = True
 		if self.darkTheme:
 			plt.style.use('dark_background')
 		sns.set_context('paper')
 
+		# HBox for control and plot
+		self.hBoxLayout = QtWidgets.QHBoxLayout(self)
+
+		# this is confusing, beacaue we are a QMainWindow
+		# we need to create a central widget
+		# set its layout
+		# and then set the central widget of self (QMainWindow)
+		centralWidget = QtWidgets.QWidget()
+		centralWidget.setLayout(self.hBoxLayout)
+		self.setCentralWidget(centralWidget)
+
+		# WHAT THE  FUCK HAPPENED !!!!!!!!!!!!
+		#self.setLayout(self.hBoxLayout)
+
 		self.fig = Figure()
 		self.ax1 = self.fig.add_subplot(111)
 		#self.ax2 = self.fig.add_subplot(122, sharex=self.ax1, sharey=self.ax1)
 		#self.ax2 = self.fig.add_subplot(122)
 		#self.axes=[self.ax1, self.ax2]
-		self.axes=[self.ax1]
+		self.axes = [self.ax1]
 		self.canvas = FigureCanvas(self.fig)
 		self.cid = self.canvas.mpl_connect('pick_event', self.on_pick_event)
 		# matplotlib toolbar
+		# maybe use
+		#self.toolbar = NavigationToolbar(self.canvas, self)
 		self.mplToolbar = NavigationToolbar2QT(self.canvas, self.canvas) # params are (canvas, parent)
 
 		self.canvas.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
@@ -163,7 +184,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.canvas.updateGeometry()
 
 		# to hold popups
-		self.layout = QtWidgets.QGridLayout(self.main_widget)
+		#self.layout = QtWidgets.QGridLayout(self.main_widget)
+		self.layout = QtWidgets.QGridLayout()
+
+		self.hBoxLayout.addLayout(self.layout)
 
 		##
 		#keys = list(self.statNameMap.keys())
@@ -210,13 +234,20 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.dataTypeDropdown.currentIndexChanged.connect(self.updateDataType)
 
 		self.showLegend = True
-		showLegendCheckBox = QtWidgets.QCheckBox('Show Legend')
+		showLegendCheckBox = QtWidgets.QCheckBox('Legend')
 		showLegendCheckBox.setChecked(self.showLegend)
 		showLegendCheckBox.stateChanged.connect(self.setShowLegend)
 
 		darkThemeCheckBox = QtWidgets.QCheckBox('Dark Theme')
 		darkThemeCheckBox.setChecked(self.darkTheme)
 		darkThemeCheckBox.stateChanged.connect(self.setTheme)
+
+		plotSizeList = ['paper', 'poster', 'talk']
+		self.plotSizeDropdown = QtWidgets.QComboBox()
+		self.plotSizeDropdown.setToolTip('All Spikes is all spikes \n File Mean is the mean within each analysis file')
+		self.plotSizeDropdown.addItems(plotSizeList)
+		self.plotSizeDropdown.setCurrentIndex(0)
+		self.plotSizeDropdown.currentIndexChanged.connect(self.updatePlotSize)
 
 		self.layout.addWidget(QtWidgets.QLabel("X Statistic"), 0, 0)
 		self.layout.addWidget(self.xDropdown, 0, 1)
@@ -232,23 +263,30 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.layout.addWidget(QtWidgets.QLabel("Data Type"), 1, 2)
 		self.layout.addWidget(self.dataTypeDropdown, 1, 3)
 		self.layout.addWidget(showLegendCheckBox, 2, 2)
-		self.layout.addWidget(darkThemeCheckBox, 3, 2)
+		self.layout.addWidget(darkThemeCheckBox, 2, 3)
+		self.layout.addWidget(QtWidgets.QLabel("Plot Size"), 3, 2)
+		self.layout.addWidget(self.plotSizeDropdown, 3, 3)
 
 		rowSpan = 1
 		colSpan = 4
 		#self.layout.addWidget(self.canvas, 3, 0, rowSpan, colSpan)
 
+		# switch from toolbar to widget
+		self.hBoxLayout.addWidget(self.canvas)
+		'''
 		self.myToolbar = QtWidgets.QToolBar()
 		self.myToolbar.setFloatable(True)
 		self.myToolbar.setMovable(True)
-		self.myToolbar.addWidget(self.canvas)
+		self.tmpToolbarAction = self.myToolbar.addWidget(self.canvas)
 		self.addToolBar(QtCore.Qt.RightToolBarArea, self.myToolbar)
+		'''
 
 		# table with pandas dataframe
 		self.myModel = pandasModel(self.masterDf)
 		self.tableView = QtWidgets.QTableView()
 		# todo, derive a class for tableView
-		self.tableView.setItemDelegateForColumn(1, CheckBoxDelegate(None))
+		# put this back in to enable isGood checkBox
+		#self.tableView.setItemDelegateForColumn(1, CheckBoxDelegate(None))
 		self.tableView.setFont(QtGui.QFont('Arial', 10))
 		self.tableView.setModel(self.myModel)
 		self.tableView.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
@@ -256,9 +294,13 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.tableView.installEventFilter(self)
 		self.layout.addWidget(self.tableView, 4, 0, rowSpan, colSpan)
 
-		self.setCentralWidget(self.main_widget)
+		#self.setCentralWidget(self.main_widget)
+		#self.setLayout(self.hBoxLayout)
 		self.show()
 		self.update2()
+
+	def myCloseAction(self):
+		print('myCloseAction()')
 
 	def mySetStatusBar(self, text):
 		self.statusBar.showMessage(text) #,2000)
@@ -349,9 +391,52 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def setTheme(self, state):
 		print('setTheme() state:', state)
+
+		print('NOT IMPLEMENTED')
+		#return
+
 		self.darkTheme = state
-		print('  -->> NOT IMPLEMENTED')
-		#self.update2()
+		if self.darkTheme:
+			plt.style.use('dark_background')
+			#sns.set_context('talk')
+
+		else:
+			#print(plt.style.available)
+			plt.rcParams.update(plt.rcParamsDefault)
+			#sns.set_context('paper')
+		###
+		###
+		# remove
+		#self.plotVBoxLayout.removeWidget(self.toolbar)
+		# need this !!! removeWidget does not work
+		#self.myToolbar.removeAction(self.tmpToolbarAction)
+		self.hBoxLayout.removeWidget(self.canvas)
+
+		#self.toolbar.setParent(None)
+		self.canvas.setParent(None)
+
+		self.fig = None # ???
+		self.mplToolbar = None
+		self.canvas = None
+
+		self.fig = Figure()
+		self.canvas = FigureCanvas(self.fig)
+
+		self.ax1 = self.fig.add_subplot(111)
+		self.axes = [self.ax1]
+		self.cid = self.canvas.mpl_connect('pick_event', self.on_pick_event)
+
+		# matplotlib navigation toolbar
+		self.mplToolbar = NavigationToolbar2QT(self.canvas, self.canvas) # params are (canvas, parent)
+
+		self.hBoxLayout.addWidget(self.canvas)
+
+		self.update2()
+
+	def updatePlotSize(self):
+		plotSize = self.plotSizeDropdown.currentText()
+		sns.set_context(plotSize)
+		self.update2()
 
 	def updateHue(self):
 		hue = self.hueDropdown.currentText()
@@ -386,7 +471,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		#self.myMainWindow.mySignal('select spike', data=spikeNumber)
 		#self.selectSpike(spikeNumber)
 
-	def getMeanDf(self, xStat, yStat):
+	def getMeanDf(self, xStat, yStat, verbose=False):
 		# need to get all categorical columns from orig df
 		# these do not change per file (sex, condition, region)
 		print('getMeanDf() xStat:', xStat, 'yStat:', yStat)
@@ -433,7 +518,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		#
 		# is good
-		meanDf.insert(1, 'isGood', 0)
+		#meanDf.insert(1, 'isGood', 0)
 
 		#
 		# sort
@@ -442,8 +527,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		meanDf = meanDf.reset_index()
 		meanDf = meanDf.round(3)
 		#
-		print('getMeanDf():')
-		print(meanDf)
+		if verbose:
+			print('getMeanDf():')
+			print(meanDf)
 		#
 		return meanDf
 
@@ -489,48 +575,76 @@ class MainWindow(QtWidgets.QMainWindow):
 			except (ValueError) as e:
 				self.fig.canvas.draw()
 				print('EXCEPTION:', e)
+
 		elif plotType == 'Violin Plot':
 			if not xIsCategorical:
 				warningStr = 'Violin plot requires a categorical x statistic'
 			else:
 				sns.violinplot(x=xStat, y=yStat, hue=hue,
 						data=meanDf, ax=self.axes[0])
+
 		elif plotType == 'Box Plot':
 			if not xIsCategorical:
 				warningStr = 'Box plot requires a categorical x statistic'
 			else:
 				sns.boxplot(x=xStat, y=yStat, hue=hue,
 						data=meanDf, ax=self.axes[0])
+
 		elif plotType == 'Raw + Mean Plot':
 			if not xIsCategorical:
 				warningStr = 'Raw + Mean plot requires a categorical x statistic'
 			else:
 				try:
-					sns.stripplot(x=xStat, y=yStat,
+					#print(meanDf)
+
+					'''
+					colorList = [('red'), ('green'), 'b', 'c', 'm', 'y']
+					hueList = meanDf[hue].unique()
+					palette = {}
+					for idx, hue in enumerate(hueList):
+						palette[hue] = colorList[idx]
+					print(palette)
+					'''
+
+					palette = sns.color_palette("Paired")
+					#palette = ['r', 'g', 'b']
+
+					g = sns.stripplot(x=xStat, y=yStat,
 							hue=hue,
+							palette=palette,
 							data=meanDf,
 							ax=self.axes[0],
 							picker=picker,
 							zorder=1)
-					hueList = meanDf[hue].unique()
+
+					#g.legend().remove()
+					self.axes[0].legend().remove()
+
+					handles, labels = self.axes[0].get_legend_handles_labels()
+					l = self.axes[0].legend(handles[0:2], labels[0:2], bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+
+					'''
 					if self.darkTheme:
 						color = 'w'
 					else:
 						color = 'k'
-					# todo: get this working
-					'''
 					color = [color] * len(hueList)
 					print('color:', color)
 					'''
-					
-					sns.pointplot(x=xStat, y=yStat,
+
+					g = sns.pointplot(x=xStat, y=yStat,
 							hue=hue,
+							palette=palette,
 							data=meanDf,
-							ci=68, capsize=0.1, color=color,
+							estimator=np.nanmean,
+							ci=68, capsize=0.1,
 							ax=self.axes[0],
+							#legend='full',
 							zorder=10)
+
 				except (ValueError) as e:
 					print('EXCEPTION in "Raw + Mean Plot":', e)
+					traceback.print_exc()
 
 		elif plotType == 'Regression Plot':
 			# regplot does not have hue
