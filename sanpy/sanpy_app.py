@@ -471,6 +471,14 @@ class MainWindow(QtWidgets.QMainWindow):
 		darkThemeAction.setChecked(self.useDarkStyle)
 		viewMenu.addAction(darkThemeAction)
 
+		# view menu to toggle scatter plot widget
+		windowsMenu = mainMenu.addMenu('&Windows')
+		mainWindowAction = QtWidgets.QAction('Main', self)
+		#mainWindowAction.triggered.connect(self.toggleStyleSheet)
+		mainWindowAction.setCheckable(True)
+		mainWindowAction.setChecked(True)
+		windowsMenu.addAction(mainWindowAction)
+
 	def toggleStatisticsPlot(self, state):
 		"""
 		toggle scatter plot on/off
@@ -636,6 +644,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		configDict['detection']['minSpikeVm'] = -20
 		configDict['detection']['medianFilter'] = 5
 		"""
+
+		configDict['detect'] = {}
+		configDict['detect']['detectDvDt'] = 20
+		configDict['detect']['detectMv'] = -20		
 
 		configDict['display'] = {}
 		configDict['display']['plotEveryPoint'] = 10 # not used?

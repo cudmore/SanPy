@@ -205,9 +205,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#print('tmp:', tmp)
 
 		if len(savefile) > 0:
-			self.ba.saveReport(savefile, xMin, xMax, alsoSaveTxt=alsoSaveTxt)
+			analysisName, df = self.ba.saveReport(savefile, xMin, xMax, alsoSaveTxt=alsoSaveTxt)
 			if self.myMainWindow is not None:
-				self.myMainWindow.mySignal('saved')
+				self.myMainWindow.mySignal('saved', data=analysisName)
 		else:
 			print('no file saved')
 
@@ -951,7 +951,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			self.detectionWidget.setAxisFull()
 
 		elif name == 'Save Spike Report':
-			print('isShift:', isShift)
+			print('"Save Spike Report" isShift:', isShift)
 			self.detectionWidget.save(alsoSaveTxt=isShift)
 
 	def on_check_click(self, checkbox, idx):
@@ -976,10 +976,14 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		myPath = os.path.dirname(os.path.abspath(__file__))
 
 		windowOptions = self.detectionWidget.getMainWindowOptions()
+		detectDvDt = 20
+		detectMv = -20
 		showDvDt = True
 		showClips = False
 		showScatter = True
 		if windowOptions is not None:
+			detectDvDt = windowOptions['detect']['detectDvDt']
+			detectMv = windowOptions['detect']['detectMv']
 			showDvDt = windowOptions['display']['showDvDt']
 			showClips = windowOptions['display']['showClips']
 			showScatter = windowOptions['display']['showScatter']
@@ -1024,7 +1028,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		buttonName = 'Detect dV/dt'
 		button = QtWidgets.QPushButton(buttonName)
-		button.setToolTip('Detect Spikes Using dV/dt Threshold')
+		button.setToolTip('Detect Spikes Using BOTH dV/dt Threshold and minimum mV')
 		button.clicked.connect(partial(self.on_button_click,buttonName))
 
 		row = 0
@@ -1035,7 +1039,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.dvdtThreshold = QtWidgets.QDoubleSpinBox()
 		self.dvdtThreshold.setMinimum(-1e6)
 		self.dvdtThreshold.setMaximum(+1e6)
-		self.dvdtThreshold.setValue(50)
+		self.dvdtThreshold.setValue(detectDvDt)
 		detectionGridLayout.addWidget(self.dvdtThreshold, row, 2, rowSpan, columnSpan)
 
 		row += 1
@@ -1055,7 +1059,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.minSpikeVm = QtWidgets.QDoubleSpinBox()
 		self.minSpikeVm.setMinimum(-1e6)
 		self.minSpikeVm.setMaximum(+1e6)
-		self.minSpikeVm.setValue(-20)
+		self.minSpikeVm.setValue(detectMv)
 		detectionGridLayout.addWidget(self.minSpikeVm, row, 2, rowSpan, columnSpan)
 
 		# start/stop seconds

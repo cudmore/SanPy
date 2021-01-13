@@ -21,6 +21,26 @@ logging.info('This is an info message')
 # A list of human readable stats and how to map them to backend
 # Each key, like 'Take Off Potential (mV)' is a y-stat
 statList = OrderedDict()
+'''
+statList['Inter-Spike-Interval (ms)'] = {
+	'yStat': 'isi_ms',
+	'yStatUnits': 'ms',
+	'xStat': 'thresholdPnt',
+	'xStatUnits': 'Points'
+	}
+'''
+statList['Spike Frequency (Hz)'] = {
+	'yStat': 'spikeFreq_hz',
+	'yStatUnits': 'Hz',
+	'xStat': 'thresholdPnt',
+	'xStatUnits': 'Points'
+	}
+statList['Cycle Length (ms)'] = {
+	'yStat': 'cycleLength_ms',
+	'yStatUnits': 'ms',
+	'xStat': 'thresholdPnt',
+	'xStatUnits': 'Points'
+	}
 statList['Take Off Potential (mV)'] = {
 	'yStat': 'thresholdVal',
 	'yStatUnits': 'mV',
@@ -89,24 +109,6 @@ statList['Max AP Repolarization (mV)'] = {
 	'yStat': 'postSpike_dvdt_min_val',
 	'yStatUnits': 'mV',
 	'xStat': 'postSpike_dvdt_min_pnt',
-	'xStatUnits': 'Points'
-	}
-statList['Inter-Spike-Interval (ms)'] = {
-	'yStat': 'isi_ms',
-	'yStatUnits': 'ms',
-	'xStat': 'thresholdPnt',
-	'xStatUnits': 'Points'
-	}
-statList['Spike Frequency (Hz)'] = {
-	'yStat': 'spikeFreq_hz',
-	'yStatUnits': 'Hz',
-	'xStat': 'thresholdPnt',
-	'xStatUnits': 'Points'
-	}
-statList['Cycle Length (ms)'] = {
-	'yStat': 'cycleLength_ms',
-	'yStatUnits': 'ms',
-	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
 	}
 

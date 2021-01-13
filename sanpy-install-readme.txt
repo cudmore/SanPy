@@ -1,11 +1,13 @@
 
-I will start putting new versions of SanPy into our shared "SAN AP" box folder. This is the recipe for installing any new version of SanPy. Keep in mind, as we move forward the 'creating date' will be different.
+I will start putting new versions of SanPy into our shared "SAN AP" box folder.
+This is the recipe for installing any new version of SanPy.
+Keep in mind, as we move forward the yyyymmdd 'creating date' will be different.
 
 1) Go to our shared box folder "SAN AP/SanPy"
 
 2) Copy SanPy-20201217a.zip to your Desktop
 
-3) Uncompress the .zip into the folder Desktop/SanPy-20201217a
+3) Double-click the .zip to uncompress into the 'SanPy-20201217a' folder.
 
 5) Install SanPy
 
@@ -30,5 +32,5 @@ I will start putting new versions of SanPy into our shared "SAN AP" box folder. 
 
 	If SanPy has a bug or crashed, copy/paste the output of the terminal into an email or a slack post.
 
-Note: You can make an alias of the 'run' file and put it wherever you like. You also want to rename the alias something like 'SanPy 20201217a'.
-
+Note: You can make an alias of the 'run' file and put it wherever you like.
+You also want to rename the alias something like 'SanPy-20201217a'.

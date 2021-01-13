@@ -1,6 +1,10 @@
 
 [![Build Status](https://travis-ci.org/cudmore/SanPy.svg?branch=master)](https://travis-ci.org/cudmore/SanPy)
 
+## SanPy, pronounced ['senpai']['senpai']
+
+['senpai']: https://en.wikipedia.org/wiki/Senpai_and_k%C5%8Dhai
+
 ## This is a work in progress, do not use this code.
 
 If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.

@@ -1,5 +1,13 @@
 
-## Updates 20201109
+## Update 20201230
+ - In export window, added X-Tick and Y-Tick major/minor controls (4x controls). To set the tick intervals on the X/Y axis.
+ - In export window fixed bug where click or double-click on set value up/down would result in control incrementing over and over (no way to stop it)
+
+## Update 20201218
+ - Finalized changes from 20201209
+ - Now making zip from local git and distributing as SanPy-20201218a.zip
+
+## Updates 20201209
 - Added SanPy program icon
 - Now properly sort the file list
 - Fixed errors with parsing _db.json when files are added/removed or have abf errors

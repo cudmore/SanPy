@@ -1233,11 +1233,39 @@ class bAnalysis:
 			writer.save()
 
 		#
-		# always save a text file
+		# save a csv text file
 		#
+		analysisName = ''
 		if alsoSaveTxt:
-			df0 = self.getReportDf(theMin, theMax, savefile)
+			# this also saves
+			analysisName, df0 = self.getReportDf(theMin, theMax, savefile)
 
+			#
+			# save mean spike clip
+
+			theseClips, theseClips_x, meanClip = self.getSpikeClips(theMin, theMax)
+			first_X = theseClips_x[0] #- theseClips_x[0][0]
+			first_X = np.array(first_X)
+			first_X /= self.abf.dataPointsPerMs # pnts to ms
+			#if verbose: print('    bAnalysis.saveReport() saving mean clip to sheet "Avg Spike" from', len(theseClips), 'clips')
+			#dfClip = pd.DataFrame(meanClip, first_X)
+			dfClip = pd.DataFrame.from_dict({
+				'xMs': first_X,
+				'yVm': meanClip
+				})
+			# load clip based on analysisname (with start/stop seconds)
+			analysisname = df0['analysisname'].iloc[0] # name with start/stop seconds
+			print('bAnalysis.saveReport() analysisname:', analysisname)
+			#print('analysisname:', analysisname)
+			clipFileName = analysisname + '_clip.csv'
+			tmpPath, tmpFile = os.path.split(savefile)
+			tmpPath = os.path.join(tmpPath, 'analysis')
+			# dir is already created in getReportDf
+			if not os.path.isdir(tmpPath):
+				os.mkdir(tmpPath)
+			clipSavePath = os.path.join(tmpPath, clipFileName)
+			print('    clipSavePath:', clipSavePath)
+			dfClip.to_csv(clipSavePath)
 			'''
 			filePath, fileName = os.path.split(os.path.abspath(savefile))
 
@@ -1280,7 +1308,7 @@ class bAnalysis:
 			'''
 			theRet = df0
 		#
-		return theRet
+		return analysisName, theRet
 
 	def getReportDf(self, theMin, theMax, savefile):
 		"""
@@ -1288,10 +1316,14 @@ class bAnalysis:
 		"""
 		filePath, fileName = os.path.split(os.path.abspath(savefile))
 
-		textFileBaseName, tmpExtension = os.path.splitext(savefile)
-		textFilePath = os.path.join(filePath, textFileBaseName + '.txt')
+		# make an analysis folder
+		filePath = os.path.join(filePath, 'analysis')
+		if not os.path.isdir(filePath):
+			print('    making output folder:', filePath)
+			os.mkdir(filePath)
 
-		print('    saving text file:', textFilePath)
+		textFileBaseName, tmpExtension = os.path.splitext(fileName)
+		textFilePath = os.path.join(filePath, textFileBaseName + '.csv')
 
 		# save header
 		textFileHeader = OrderedDict()
@@ -1343,9 +1375,11 @@ class bAnalysis:
 		df['filename'] = [os.path.splitext(os.path.split(x)[1])[0] for x in 	df['file'].tolist()]
 
 		#
-		df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
+		print('    bAnalysis.getReportDf() saving text file:', textFilePath)
+		#df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
+		df.to_csv(textFilePath, sep=',', index_label='index', mode='w')
 
-		return df
+		return analysisName, df
 
 	#############################
 	# utility functions

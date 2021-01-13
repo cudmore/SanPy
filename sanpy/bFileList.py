@@ -103,7 +103,6 @@ class bFileList:
 		if file not in self.db.keys():
 			# error
 			print('WARNING: bFileList.databaseRefreshFile() did not find file in self.db, file:', file)
-			pass
 		else:
 			self.db[file]['abfError'] = ba.loadError
 

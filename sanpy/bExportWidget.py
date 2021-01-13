@@ -10,6 +10,7 @@ import matplotlib.figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt # abb 202012 added to set theme
+import matplotlib.ticker as ticker
 
 import qdarkstyle
 
@@ -198,6 +199,8 @@ class bExportWidget(QtWidgets.QWidget):
 		"""
 		super(bExportWidget, self).__init__(parent)
 
+		self._inCallback = False
+
 		self.shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+w"), self)
 		self.shortcut.activated.connect(self.myCloseAction)
 
@@ -316,7 +319,7 @@ class bExportWidget(QtWidgets.QWidget):
 
 		# x axis on/off (todo: does not need self)
 		self.xAxisCheckBox = QtWidgets.QCheckBox('')
-		self.xAxisCheckBox.setToolTip('Toggle X-Axis Labels')
+		self.xAxisCheckBox.setToolTip('Toggle X-Axis On/Off')
 		self.xAxisCheckBox.setChecked(True)
 		self.xAxisCheckBox.stateChanged.connect(self.xAxisToggle)
 		hBoxRow0.addWidget(self.xAxisCheckBox, myAlignLeft)
@@ -330,6 +333,7 @@ class bExportWidget(QtWidgets.QWidget):
 		self.xMinSpinBox.setMinimum(-1e6)
 		self.xMinSpinBox.setMaximum(1e6)
 		self.xMinSpinBox.setValue(0)
+		self.xMinSpinBox.setToolTip('X-Axis Minimum')
 		self.xMinSpinBox.setKeyboardTracking(False)
 		self.xMinSpinBox.valueChanged.connect(self._setXAxis)
 		#self.lineWidthSpinBox.editingFinished.connect(self._setLineWidth)
@@ -344,6 +348,7 @@ class bExportWidget(QtWidgets.QWidget):
 		self.xMaxSpinBox.setMinimum(-1e6)
 		self.xMaxSpinBox.setMaximum(1e6)
 		self.xMaxSpinBox.setValue(self.mySweepX_Downsample[-1])
+		self.xMaxSpinBox.setToolTip('X-Axis Maximum')
 		self.xMaxSpinBox.setKeyboardTracking(False)
 		self.xMaxSpinBox.valueChanged.connect(self._setXAxis)
 		#self.lineWidthSpinBox.editingFinished.connect(self._setLineWidth)
@@ -356,7 +361,7 @@ class bExportWidget(QtWidgets.QWidget):
 
 		# y axis
 		self.yAxisCheckBox = QtWidgets.QCheckBox('')
-		self.yAxisCheckBox.setToolTip('Toggle Y-Axis Labels')
+		self.yAxisCheckBox.setToolTip('Toggle Y-Axis On/Off')
 		self.yAxisCheckBox.setChecked(True)
 		self.yAxisCheckBox.stateChanged.connect(self.yAxisToggle)
 		hBoxRow1.addWidget(self.yAxisCheckBox)
@@ -370,6 +375,7 @@ class bExportWidget(QtWidgets.QWidget):
 		self.yMinSpinBox.setMinimum(-1e6)
 		self.yMinSpinBox.setMaximum(1e6)
 		self.yMinSpinBox.setValue(yMinValue) # flipped
+		self.yMinSpinBox.setToolTip('Y-Axis Minimum')
 		self.yMinSpinBox.setKeyboardTracking(False)
 		self.yMinSpinBox.valueChanged.connect(self._setYAxis)
 		#self.lineWidthSpinBox.editingFinished.connect(self._setLineWidth)
@@ -384,10 +390,78 @@ class bExportWidget(QtWidgets.QWidget):
 		self.yMaxSpinBox.setMinimum(-1e6)
 		self.yMaxSpinBox.setMaximum(1e6)
 		self.yMaxSpinBox.setValue(yMaxValue) # flipped
+		self.yMaxSpinBox.setToolTip('Y-Axis Maximum')
 		self.yMaxSpinBox.setKeyboardTracking(False)
 		self.yMaxSpinBox.valueChanged.connect(self._setYAxis)
 		#self.lineWidthSpinBox.editingFinished.connect(self._setLineWidth)
 		hBoxRow1.addWidget(self.yMaxSpinBox)
+
+		#
+		# one 1/2 row
+		hBoxRow1_5 = QtWidgets.QHBoxLayout()
+		vBoxLayout.addLayout(hBoxRow1_5)
+
+		# x-tick major
+		lineWidthLabel = QtWidgets.QLabel('X-Tick Major')
+		hBoxRow1_5.addWidget(lineWidthLabel)
+		self.xTickIntervalSpinBox = QtWidgets.QDoubleSpinBox()
+		self.xTickIntervalSpinBox.setSingleStep(0.1)
+		self.xTickIntervalSpinBox.setMinimum(0.0)
+		self.xTickIntervalSpinBox.setMaximum(1e6)
+		self.xTickIntervalSpinBox.setValue(10)
+		self.xTickIntervalSpinBox.setToolTip('Major Tick Interval, 0 To Turn Off')
+		self.xTickIntervalSpinBox.setKeyboardTracking(False)
+		self.xTickIntervalSpinBox.valueChanged.connect(self._setTickMajorInterval)
+		#self.lineWidthSpinBox.editingFinished.connect(self._setLineWidth)
+		hBoxRow1_5.addWidget(self.xTickIntervalSpinBox)
+
+		# x-tick minor
+		lineWidthLabel = QtWidgets.QLabel('Minor')
+		hBoxRow1_5.addWidget(lineWidthLabel)
+		self.xTickMinorIntervalSpinBox = QtWidgets.QDoubleSpinBox()
+		self.xTickMinorIntervalSpinBox.setSingleStep(0.1)
+		self.xTickMinorIntervalSpinBox.setMinimum(0.0)
+		self.xTickMinorIntervalSpinBox.setMaximum(1e6)
+		self.xTickMinorIntervalSpinBox.setValue(10)
+		self.xTickMinorIntervalSpinBox.setToolTip('Minor Tick Interval, 0 To Turn Off')
+		self.xTickMinorIntervalSpinBox.setKeyboardTracking(False)
+		self.xTickMinorIntervalSpinBox.valueChanged.connect(self._setTickMinorInterval)
+		#self.lineWidthSpinBox.editingFinished.connect(self._setLineWidth)
+		hBoxRow1_5.addWidget(self.xTickMinorIntervalSpinBox)
+
+		#
+		# one 3/4 row
+		hBoxRow1_ytick = QtWidgets.QHBoxLayout()
+		vBoxLayout.addLayout(hBoxRow1_ytick)
+
+		# y-tick major
+		lineWidthLabel = QtWidgets.QLabel('Y-Tick Major')
+		hBoxRow1_ytick.addWidget(lineWidthLabel)
+		self.yTickIntervalSpinBox = QtWidgets.QDoubleSpinBox()
+		self.yTickIntervalSpinBox.setSingleStep(0.1)
+		self.yTickIntervalSpinBox.setMinimum(0.0)
+		self.yTickIntervalSpinBox.setMaximum(1e6)
+		self.yTickIntervalSpinBox.setValue(20)
+		self.yTickIntervalSpinBox.setToolTip('Major Y-Tick Interval, 0 To Turn Off')
+		self.yTickIntervalSpinBox.setKeyboardTracking(False)
+		self.yTickIntervalSpinBox.valueChanged.connect(self._setYTickMajorInterval)
+		#todo: FIX THIS RECURSION WITH USING UP/DOWN ARROWS
+		#self.yTickIntervalSpinBox.editingFinished.connect(self._setYTickMajorInterval)
+		hBoxRow1_ytick.addWidget(self.yTickIntervalSpinBox)
+
+		# y-tick minor
+		lineWidthLabel = QtWidgets.QLabel('Minor')
+		hBoxRow1_ytick.addWidget(lineWidthLabel)
+		self.yTickMinorIntervalSpinBox = QtWidgets.QDoubleSpinBox()
+		self.yTickMinorIntervalSpinBox.setSingleStep(0.1)
+		self.yTickMinorIntervalSpinBox.setMinimum(0.0)
+		self.yTickMinorIntervalSpinBox.setMaximum(1e6)
+		self.yTickMinorIntervalSpinBox.setValue(20)
+		self.yTickMinorIntervalSpinBox.setToolTip('Minor Y-Tick Interval, 0 To Turn Off')
+		self.yTickMinorIntervalSpinBox.setKeyboardTracking(False)
+		self.yTickMinorIntervalSpinBox.valueChanged.connect(self._setYTickMinorInterval)
+		#self.lineWidthSpinBox.editingFinished.connect(self._setLineWidth)
+		hBoxRow1_ytick.addWidget(self.yTickMinorIntervalSpinBox)
 
 		#
 		# third row
@@ -425,6 +499,7 @@ class bExportWidget(QtWidgets.QWidget):
 		self.lineWidthSpinBox.valueChanged.connect(self._setLineWidth)
 		#self.lineWidthSpinBox.editingFinished.connect(self._setLineWidth)
 		hBoxRow3.addWidget(self.lineWidthSpinBox)
+
 
 		# color
 		colorList = ['red', 'green', 'blue', 'cyan', 'magenta', 'yellow', 'black', 'white']
@@ -648,15 +723,20 @@ class bExportWidget(QtWidgets.QWidget):
 		return True
 
 	def _setXMargin(self):
+		self.xMarginSpinBox.setEnabled(False)
 		self.xMargin = self.xMarginSpinBox.value()
 
 		self.plotRaw()
+		self.xMarginSpinBox.setEnabled(True)
 
 	def _setXAxis(self):
 		"""
 		called when user sets values in x spin boxes
 		see: on_xlim_change
 		"""
+		self.xMinSpinBox.setEnabled(False)
+		self.xMaxSpinBox.setEnabled(False)
+
 		xMin = self.xMinSpinBox.value()
 		xMax = self.xMaxSpinBox.value()
 
@@ -673,17 +753,26 @@ class bExportWidget(QtWidgets.QWidget):
 		#self.plotRaw(xMin=xMin, xMax=xMax)
 		self.plotRaw()
 
+		self.xMinSpinBox.setEnabled(True)
+		self.xMaxSpinBox.setEnabled(True)
+
 	def _setYAxis(self):
 		"""
 		called when user sets values in y spin boxes
 		see: on_xlim_change
 		"""
+		self.yMinSpinBox.setEnabled(False)
+		self.yMaxSpinBox.setEnabled(False)
+
 		yMin = self.yMinSpinBox.value()
 		yMax = self.yMaxSpinBox.value()
 
 		self.myAxis.set_ylim(yMin, yMax)
 
 		self.scaleBars.setPos(yPos=yMax, fromMax=True)
+
+		self.yMinSpinBox.setEnabled(True)
+		self.yMaxSpinBox.setEnabled(True)
 
 	def on_xlims_change(self, mplEvent):
 		"""
@@ -739,9 +828,11 @@ class bExportWidget(QtWidgets.QWidget):
 		except (Exception) as e:
 			print('EXCEPTION in _setDownSample():', e)
 
+		self.canvas.draw_idle()
+		#self.repaint()
+
 		self.downSampleSpinBox.setEnabled(True)
 		self.medianFilterSpinBox.setEnabled(True)
-		self.repaint()
 
 	def xAxisToggle(self):
 		checked = self.xAxisCheckBox.isChecked()
@@ -757,19 +848,78 @@ class bExportWidget(QtWidgets.QWidget):
 		self._toggleScaleBar(xChecked, yChecked)
 
 	def _setScaleBarSize(self):
+		self.scaleBarWidthSpinBox.setEnabled(False)
+		self.scaleBarHeightSpinBox.setEnabled(False)
+
 		width = self.scaleBarWidthSpinBox.value()
 		height = self.scaleBarHeightSpinBox.value()
 		self.scaleBars.setWidthHeight(width=width, height=height)
 		#
-		self.canvas.draw()
-		self.repaint()
+		self.canvas.draw_idle()
+		#self.repaint()
+
+		self.scaleBarWidthSpinBox.setEnabled(True)
+		self.scaleBarHeightSpinBox.setEnabled(True)
 
 	def _setScaleBarThickness(self):
+		self.scaleBarThicknessSpinBox.setEnabled(False)
+
 		thickness = self.scaleBarThicknessSpinBox.value()
 		self.scaleBars.setThickness(thickness)
 		#
-		self.canvas.draw()
-		self.repaint()
+		self.canvas.draw_idle()
+		#self.repaint()
+
+		self.scaleBarThicknessSpinBox.setEnabled(True)
+
+	def _setYTickMajorInterval(self): #, interval):
+		self.yTickIntervalSpinBox.setEnabled(False)
+		interval = self.yTickIntervalSpinBox.value()
+		if interval == 0:
+			ml = ticker.NullLocator()
+		else:
+			ml = ticker.MultipleLocator(interval)
+		self.myAxis.yaxis.set_major_locator(ml)
+		#
+		self.canvas.draw_idle()
+		#self.repaint()
+		self.yTickIntervalSpinBox.setEnabled(True)
+
+	def _setYTickMinorInterval(self, interval):
+		self.yTickMinorIntervalSpinBox.setEnabled(False)
+		if interval == 0:
+			ml = ticker.NullLocator()
+		else:
+			ml = ticker.MultipleLocator(interval)
+		self.myAxis.yaxis.set_minor_locator(ml)
+		#
+		self.canvas.draw_idle()
+		#self.repaint()
+		self.yTickMinorIntervalSpinBox.setEnabled(True)
+
+	def _setTickMajorInterval(self, interval):
+		self.xTickIntervalSpinBox.setEnabled(False)
+		if interval == 0:
+			ml = ticker.NullLocator()
+		else:
+			ml = ticker.MultipleLocator(interval)
+		self.myAxis.xaxis.set_major_locator(ml)
+		#
+		self.canvas.draw_idle()
+		#self.repaint()
+		self.xTickIntervalSpinBox.setEnabled(True)
+
+	def _setTickMinorInterval(self, interval):
+		self.xTickMinorIntervalSpinBox.setEnabled(False)
+		if interval == 0:
+			ml = ticker.NullLocator()
+		else:
+			ml = ticker.MultipleLocator(interval)
+		self.myAxis.xaxis.set_minor_locator(ml)
+		#
+		self.canvas.draw_idle()
+		#self.repaint()
+		self.xTickMinorIntervalSpinBox.setEnabled(True)
 
 	def _toggleAxis(self, leftBottom, onOff):
 		if leftBottom == 'bottom':
@@ -779,8 +929,8 @@ class bExportWidget(QtWidgets.QWidget):
 			self.myAxis.get_yaxis().set_visible(onOff)
 			self.myAxis.spines['left'].set_visible(onOff)
 		#
-		self.canvas.draw()
-		self.repaint()
+		self.canvas.draw_idle()
+		#self.repaint()
 
 	def _toggleScaleBar(self, xChecked, yChecked):
 		self.scaleBars.hideScaleBar(xChecked, yChecked)
@@ -797,13 +947,15 @@ class bExportWidget(QtWidgets.QWidget):
 		'''
 
 		#
-		self.canvas.draw()
-		self.repaint()
+		self.canvas.draw_idle()
+		#self.repaint()
 
 	def _setLineWidth(self):
+		self.lineWidthSpinBox.setEnabled(False)
+
 		lineWidth = self.lineWidthSpinBox.value()
 
-		print('bExportWidget._setLineWidth() lineWidth:', lineWidth)
+		#print('bExportWidget._setLineWidth() lineWidth:', lineWidth)
 
 		self.myTraceLine.set_linewidth(lineWidth)
 		'''
@@ -811,8 +963,10 @@ class bExportWidget(QtWidgets.QWidget):
 			line.set_linewidth(lineWidth)
 		'''
 		#
-		self.canvas.draw()
-		self.repaint()
+		self.canvas.draw_idle()
+		#self.repaint()
+
+		self.lineWidthSpinBox.setEnabled(True)
 
 	def plotRaw(self, xMin=None, xMax=None, firstPlot=False):
 		if firstPlot:
@@ -907,7 +1061,7 @@ class bExportWidget(QtWidgets.QWidget):
 			self.myAxis.set_xlabel(self.xyUnits[0])
 
 		self.canvas.draw_idle()
-		self.repaint()
+		#self.repaint()
 
 	def save(self):
 		"""
