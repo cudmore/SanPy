@@ -1,3 +1,15 @@
+"""
+202012
+
+General purpose plotting from arbitrary csv files
+
+Started as specifically for SanPy (using reanalyze.py) from a database of spikes
+
+20210112, extending it to any csv for use with bImPy nodes/edges
+	See: bImPy/bimpy/analysis/bScrapeNodesAndEdges.py
+
+"""
+
 import os, sys, io, csv
 import traceback
 import pandas as pd
@@ -10,7 +22,7 @@ import matplotlib.pyplot as plt # abb 202012 added to set theme
 import seaborn as sns
 
 #tips = sns.load_dataset("tips")
-import sanpy
+#import sanpy
 
 class pandasModel(QtCore.QAbstractTableModel):
 
@@ -98,14 +110,19 @@ class CheckBoxDelegate(QtWidgets.QItemDelegate):
 
 
 #class MainWindow(QtWidgets.QWidget):
-class MainWindow(QtWidgets.QMainWindow):
+class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 	send_fig = QtCore.pyqtSignal(str)
 
-	def __init__(self, path, parent=None):
+	def __init__(self, path, categoricalList, hueTypes, analysisName, sortOrder, statListDict=None, parent=None):
 		"""
 		path: full path to .csv file generated with reanalyze
+		categoricalList: specify columns that are categorical
+			would just like to use 'if column is string' but sometimes number like 1/2/3 need to be categorical
+		statListDict: dict where keys are human readable stat names that map onto 'yStat' to specify column in csv
+		analysisName: column used for group by
+		todo: make pure text columns categorical
 		"""
-		super(MainWindow, self).__init__(parent)
+		super(bScatterPlotMainWindow, self).__init__(parent)
 
 		self.shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+w"), self)
 		self.shortcut.activated.connect(self.myCloseAction)
@@ -115,33 +132,35 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.buildMenus()
 
-		self.statListDict = sanpy.bAnalysisUtil.getStatList()
-		categoricalList = ['Condition', 'Sex', 'Region', 'File Number', 'File Name']
+		self.loadPath(path)
+
+		# statListDict is a dict with key=humanstat name and yStat=column name in csv
+		#self.statListDict = sanpy.bAnalysisUtil.getStatList()
+		if statListDict is None:
+			# build statListDict from columns of csv path
+			self.statListDict = {}
+			for colStr in self.masterDfColumns:
+				self.statListDict[colStr] = {'yStat': colStr}
+		else:
+			self.statListDict = statListDict
+
+		#categoricalList = ['Condition', 'Sex', 'Region', 'File Number', 'File Name']
 		for categorical in categoricalList:
 			self.statListDict[categorical] = {'yStat': categorical}
-		#for k,v in statList.items():
-		#	print(k, v)
+		# this was originally in self.load() ???
+		self.masterCatColumns = categoricalList
 
-		'''
-		self.statNameMap = {
-			'Early Diastolic Duration Rate': 'earlyDiastolicDurationRate',
-			'Spike Frequency': 'spikeFreq_hz',
-			'peakHeight': 'peakHeight',
-			'peakVal': 'peakVal',
-			'preMinVal': 'preMinVal',
-			'postMinVal': 'postMinVal',
-			'cycleLength_ms': 'cycleLength_ms',
-			'apDuration_ms': 'apDuration_ms',
-			'diastolicDuration_ms': 'diastolicDuration_ms',
-			'Condition': 'Condition',
-			'Sex': 'Sex',
-			'Region': 'Region',
-			'File Number': 'File Number',
-			'File Name': 'filename',
-		}
-		'''
 
-		self.loadPath(path)
+		self.hueTypes = hueTypes # ['Region', 'Sex', 'Condition', 'File Number'] #, 'File Name'] #, 'None']
+		self.colorTypes = self.hueTypes
+
+		# unique identifyer to group by
+		# for sanpy this is 'analysisName', for bImPy this is xxx
+		self.analysisName = analysisName
+		self.sortOrder = sortOrder
+
+		# 20210112 moved up
+		#self.loadPath(path)
 
 		self.yDf = None
 
@@ -190,29 +209,34 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.hBoxLayout.addLayout(self.layout)
 
 		##
+		# 20210112, don't do this because we do not know the columsn of the csv
 		#keys = list(self.statNameMap.keys())
 		keys = list(self.statListDict.keys())
-		xStatIdx = keys.index('Spike Frequency (Hz)')
-		yStatIdx = keys.index('Early Diastolic Depol Rate (dV/s)')
+		#xStatIdx = keys.index('Spike Frequency (Hz)')
+		#yStatIdx = keys.index('Early Diastolic Depol Rate (dV/s)')
 		self.xDropdown = QtWidgets.QComboBox()
 		self.xDropdown.addItems(keys)
-		self.xDropdown.setCurrentIndex(xStatIdx)
+		#self.xDropdown.setCurrentIndex(xStatIdx)
 		self.yDropdown = QtWidgets.QComboBox()
 		self.yDropdown.addItems(keys)
-		self.yDropdown.setCurrentIndex(yStatIdx)
+		#self.yDropdown.setCurrentIndex(yStatIdx)
+		self.yDropdown.setCurrentIndex(0)
 
-		hueTypes = ['Region', 'Sex', 'Condition', 'File Number'] #, 'File Name'] #, 'None']
-		self.hue = 'Region'
+		# 20210112 we need to specify this on creation
+		#hueTypes = ['Region', 'Sex', 'Condition', 'File Number'] #, 'File Name'] #, 'None']
+		self.hue = self.hueTypes[0]
+		#self.hue = 'Region'
 		self.hueDropdown = QtWidgets.QComboBox()
-		self.hueDropdown.addItems(hueTypes)
+		self.hueDropdown.addItems(self.hueTypes)
 		self.hueDropdown.setCurrentIndex(0)
 		self.hueDropdown.currentIndexChanged.connect(self.updateHue)
 
 		# color
-		colorTypes = ['Region', 'Sex', 'Condition', 'File Number'] #, 'File Name'] #, 'None']
-		self.color = 'Region'
+		#colorTypes = ['Region', 'Sex', 'Condition', 'File Number'] #, 'File Name'] #, 'None']
+		#self.color = 'Region'
+		self.color = self.colorTypes[0]
 		self.colorDropdown = QtWidgets.QComboBox()
-		self.colorDropdown.addItems(colorTypes)
+		self.colorDropdown.addItems(self.colorTypes)
 		self.colorDropdown.setCurrentIndex(0)
 		self.colorDropdown.currentIndexChanged.connect(self.updateColor)
 
@@ -310,7 +334,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			event.matches(QtGui.QKeySequence.Copy)):
 			self.copySelection2()
 			return True
-		return super(MainWindow, self).eventFilter(source, event)
+		return super(bScatterPlotMainWindow, self).eventFilter(source, event)
 
 	'''
 	def copyTable(self):
@@ -373,15 +397,14 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 		#path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
 		self.masterDf = pd.read_csv(path, header=0) #, dtype={'ABF File': str})
-		'''
-		self.masterDf['Condition'] = self.masterDf['condition1']
-		self.masterDf['File Number'] = self.masterDf['condition2']
-		self.masterDf['Sex'] = self.masterDf['condition3']
-		self.masterDf['Region'] = self.masterDf['condition4']
-		self.masterDf['filename'] = [os.path.splitext(os.path.split(x)[1])[0] for x in self.masterDf['file'].tolist()]
-		'''
+
 		self.masterDfColumns = self.masterDf.columns.to_list()
-		self.masterCatColumns = ['Condition', 'File Number', 'Sex', 'Region', 'filename', 'analysisname']
+
+		# not sure what this was for ???
+		# 20210112, put back in if necc
+		#self.masterCatColumns = ['Condition', 'File Number', 'Sex', 'Region', 'filename', 'analysisname']
+		#self.masterCatColumns = self.categoricalList
+
 		self.setWindowTitle(path)
 
 	def setShowLegend(self, state):
@@ -481,28 +504,33 @@ class MainWindow(QtWidgets.QMainWindow):
 		else:
 			groupList = [xStat, yStat]
 		#meanDf = self.masterDf.groupby('analysisname', as_index=False)[groupList].mean()
-		meanDf = self.masterDf.groupby('analysisname', as_index=False)[groupList].mean()
+		#meanDf = self.masterDf.groupby('analysisname', as_index=False)[groupList].mean()
+		meanDf = self.masterDf.groupby(self.analysisName, as_index=False)[groupList].mean()
 		meanDf = meanDf.reset_index()
 
 		#print('after initial grouping')
 		#print(meanDf)
 
 		for catName in self.masterCatColumns:
-			if catName == 'analysisname':
+			#if catName == 'analysisname':
+			if catName == self.analysisName:
 				# this is column we grouped by, already in meanDf
 				continue
 			meanDf[catName] = ''
 
 		# for each row, update all categorical columns using self.masterCatColumns
-		fileNameList = meanDf['analysisname'].unique()
+		#fileNameList = meanDf['analysisname'].unique()
+		fileNameList = meanDf[self.analysisName].unique()
 		#print('  fileNameList:', fileNameList)
 		for analysisname in fileNameList:
-			tmpDf = self.masterDf[ self.masterDf['analysisname']==analysisname ]
+			#tmpDf = self.masterDf[ self.masterDf['analysisname']==analysisname ]
+			tmpDf = self.masterDf[ self.masterDf[self.analysisName]==analysisname ]
 			if len(tmpDf) == 0:
 				print('  error: got 0 length for analysisname:', analysisname)
 				continue
 			for catName in self.masterCatColumns:
-				if catName == 'analysisname':
+				#if catName == 'analysisname':
+				if catName == self.analysisName:
 					# this is column we grouped by, already in meanDf
 					continue
 				#print('analysisname:', analysisname, 'catName:', catName)
@@ -512,7 +540,8 @@ class MainWindow(QtWidgets.QMainWindow):
 				catValue = tmpDf[catName].iloc[0]
 				#print('  analysisname:', analysisname, 'catName:', catName, 'catValue:', catValue)
 				#meanDf[ meanDf['analysisname']=='analysisname' ][catName] = catValue
-				theseRows = (meanDf['analysisname']==analysisname).tolist()
+				#theseRows = (meanDf['analysisname']==analysisname).tolist()
+				theseRows = (meanDf[self.analysisName]==analysisname).tolist()
 				#print('	theseRows:', theseRows)
 				meanDf.loc[theseRows, catName] = catValue
 
@@ -522,7 +551,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		#
 		# sort
-		meanDf = meanDf.sort_values(['Region', 'Sex', 'Condition'])
+		#meanDf = meanDf.sort_values(['Region', 'Sex', 'Condition'])
+		meanDf = meanDf.sort_values(self.sortOrder)
 		meanDf['index'] = [x+1 for x in range(len(meanDf))]
 		meanDf = meanDf.reset_index()
 		meanDf = meanDf.round(3)
@@ -684,7 +714,10 @@ class MainWindow(QtWidgets.QMainWindow):
 			meanDf = self.getMeanDf(xStat, yStat)
 
 			# before we set the model, remove some columns
-			modelMeanDf = meanDf.drop(['level_0', 'File Number', 'analysisname'], axis=1)
+			#modelMeanDf = meanDf.drop(['level_0', 'File Number', 'analysisname'], axis=1)
+			#modelMeanDf = meanDf.drop(['level_0', 'File Number', self.analysisName], axis=1)
+			#modelMeanDf = meanDf.drop(['level_0', self.analysisName], axis=1)
+			modelMeanDf = meanDf.drop(['level_0'], axis=1)
 
 			self.yDf = modelMeanDf
 
@@ -730,8 +763,35 @@ class MainWindow(QtWidgets.QMainWindow):
 		print('  selected:', offsets[ind])
 
 if __name__ == '__main__':
-	path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
+	"""
+	20210112, extending this to work with any csv. Starting with nodes/edges from bimpy
+	"""
 
+	statListDict = None
+
+	# sanpy database
+	if 0:
+		import sanpy
+
+		# this is from mac laptop
+		#path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
+		path = '../examples/Superior vs Inferior database_master.csv'
+		analysisName = 'analysisname'
+		#statListDict = None #sanpy.bAnalysisUtil.getStatList()
+		categoricalList = ['Condition', 'Sex', 'Region', 'File Number']#, 'File Name']
+		hueTypes = ['Region', 'Sex', 'Condition', 'File Number'] #, 'File Name'] #, 'None']
+		sortOrder = ['Region', 'Sex', 'Condition']
+
+	# bimpy database
+	if 1:
+		path = '../examples/edges_db.csv'
+		analysisName = 'fileNumber'
+		categoricalList = ['san', 'region', 'path', 'file', 'fileNumber', 'nCon']
+		hueTypes = categoricalList
+		sortOrder = ['san', 'region']
+	#
 	app = QtWidgets.QApplication(sys.argv)
-	ex = MainWindow(path)
+
+	ex = bScatterPlotMainWindow(path, categoricalList, hueTypes, analysisName, sortOrder, statListDict=statListDict)
+
 	sys.exit(app.exec_())
