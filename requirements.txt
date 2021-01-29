@@ -14,3 +14,6 @@ xlrd # for loading excel files in examples/reanalyze.py
 openpyxl # flor loading .xlsx
 
 seaborn
+
+# to open newer xlsx files
+openpyxl

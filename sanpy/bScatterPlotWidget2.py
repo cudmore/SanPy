@@ -396,7 +396,14 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		path: full path to .csv file generated with reanalyze.py
 		"""
 		#path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
-		self.masterDf = pd.read_csv(path, header=0) #, dtype={'ABF File': str})
+		if path.endswith('.csv'):
+			self.masterDf = pd.read_csv(path, header=0) #, dtype={'ABF File': str})
+		elif path.endswith('.xls'):
+			self.masterDf = pd.read_excel(path, header=0) #, dtype={'ABF File': str})
+		elif path.endswith('.xlsx'):
+			self.masterDf = pd.read_excel(path, header=0, engine='openpyxl') #, dtype={'ABF File': str})
+		else:
+			print('error: file type not supported. Expecting csv/xls/xlsx. Path:', path)
 
 		self.masterDfColumns = self.masterDf.columns.to_list()
 
@@ -769,13 +776,28 @@ if __name__ == '__main__':
 
 	statListDict = None
 
-	# sanpy database
+	# todo: using 'analysisname' for group by, I think I can also use 'File Number'
+
+	# machine learning db
 	if 0:
-		import sanpy
+		# this is from mac laptop
+		#path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
+		path = '/Users/cudmore/data/laura-ephys/SANdatabaseForMachineLearning.xlsx'
+		analysisName = 'File Number'
+		#statListDict = None #sanpy.bAnalysisUtil.getStatList()
+		categoricalList = ['LOCATION', 'SEX', 'File Number']#, 'File Name']
+		hueTypes = ['LOCATION', 'SEX', 'File Number'] #, 'File Name'] #, 'None']
+		sortOrder = ['LOCATION', 'SEX', 'File Number']
+
+	# sanpy database
+	if 1:
+		#import sanpy
 
 		# this is from mac laptop
 		#path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
 		path = '../examples/Superior vs Inferior database_master.csv'
+		path = '/Users/cudmore/data/laura-ephys/Superior_Inferior_database_master_jan25.csv'
+		path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
 		analysisName = 'analysisname'
 		#statListDict = None #sanpy.bAnalysisUtil.getStatList()
 		categoricalList = ['Condition', 'Sex', 'Region', 'File Number']#, 'File Name']
@@ -783,7 +805,7 @@ if __name__ == '__main__':
 		sortOrder = ['Region', 'Sex', 'Condition']
 
 	# bimpy database
-	if 1:
+	if 0:
 		path = '../examples/edges_db.csv'
 		analysisName = 'fileNumber'
 		categoricalList = ['san', 'region', 'path', 'file', 'fileNumber', 'nCon']

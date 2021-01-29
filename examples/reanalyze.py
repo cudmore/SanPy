@@ -22,7 +22,7 @@ def reanalyze(dataPath, dbFile):
 	print('  dataPath:', dataPath)
 	print('  dbFile:', dbFile)
 
-	savePath = os.path.join(dataPath, 'NEWxxx')
+	savePath = os.path.join(dataPath, 'NEWxxx2')
 	if not os.path.exists(savePath):
 		os.mkdir(savePath)
 		print('created output folder:', savePath)
@@ -76,6 +76,12 @@ def reanalyze(dataPath, dbFile):
 			continue
 
 		condition = df.iloc[idx]['Condition']
+
+		# 20210125, only parse control conditions
+		if condition != 'ctrl':
+			print('\n!!! skipping', idx, file, condition, '\n')
+			continue
+
 		#cellNumber = df.iloc[idx]['Cell Number']
 		maleFemale = df.iloc[idx]['Male/Female']
 		superiorInferior = df.iloc[idx]['Superior/Inferior']
@@ -137,11 +143,12 @@ def reanalyze(dataPath, dbFile):
 		# save
 		saveFile = file + '_' + condition + '.xlsx'
 		saveFilePath = os.path.join(savePath, saveFile)
-		df0 = ba.saveReport(saveFilePath, startSeconds, stopSeconds,
+		analysisName, df0 = ba.saveReport(saveFilePath, startSeconds, stopSeconds,
 						saveExcel=False)
 
 		#if idx==0:
 		if masterDf is None:
+			print('seeding masterDf with df0', df0.shape)
 			masterDf = df0
 		else:
 			masterDf = masterDf.append(df0, ignore_index=True)

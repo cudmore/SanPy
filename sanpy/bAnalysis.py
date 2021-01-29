@@ -747,6 +747,9 @@ class bAnalysis:
 					'widthPnts': None,
 					'widthMs': defaultVal
 				}
+				# abb 20210125, make column width_<n> where <n> is 'halfHeight'
+				self.spikeDict[i]['widths_' + str(halfHeight)] = defaultVal
+				# was this
 				self.spikeDict[i]['widths'].append(widthDict)
 
 			# The nonlinear late diastolic depolarization phase was estimated as the duration between 1% and 10% dV/dt
@@ -907,6 +910,7 @@ class bAnalysis:
 						'widthPnts': None,
 						'widthMs': defaultVal
 					}
+					widthMs = np.nan
 					try:
 						postRange = vm[peakPnt:postMinPnt]
 						fallingPnt = np.where(postRange<thisVm)[0][0] # less than
@@ -929,6 +933,7 @@ class bAnalysis:
 						widthDict['fallingVal'] = fallingVal
 						widthDict['widthPnts'] = widthPnts
 						widthDict['widthMs'] = widthPnts / self.abf.dataPointsPerMs
+						widthMs = widthPnts / self.abf.dataPointsPerMs # abb 20210125
 
 					except (IndexError) as e:
 						##
@@ -941,6 +946,8 @@ class bAnalysis:
 						errorStr = 'spike ' + str(i) + ' half width ' + str(j)
 						self.spikeDict[i]['errors'].append(errorStr)
 						self.numErrors += 1
+					# abb 20210125
+					self.spikeDict[i]['widths_'+str(halfHeight)] = widthMs
 					#self.spikeDict[i]['widths'].append(widthDict)
 					self.spikeDict[i]['widths'][j] = widthDict
 
@@ -1345,6 +1352,7 @@ class bAnalysis:
 		#textFileHeader['theMin'] = theMin
 		#textFileHeader['theMax'] = theMax
 
+		# 20210125, this is not needed, we are saviing pandas df below ???
 		headerStr = ''
 		for k,v in textFileHeader.items():
 			headerStr += k + '=' + str(v) + ';'
