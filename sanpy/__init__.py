@@ -9,3 +9,5 @@ from .bAnalysisUtil import bAnalysisUtil
 from .bAnalysisPlot import bPlot
 
 from .bExportWidget import bExportWidget
+
+from .bAbfText import bAbfText

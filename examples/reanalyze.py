@@ -6,7 +6,7 @@ import pandas as pd
 sys.path.append("..") # Adds higher directory to python modules path.
 from sanpy import bAnalysis
 
-def reanalyze(dataPath, dbFile):
+def reanalyze(dataPath, dbFile, outputFolder='newxxx'):
 	"""
 	Reanalyze all abf files in a folder following a database file
 
@@ -22,32 +22,42 @@ def reanalyze(dataPath, dbFile):
 	print('  dataPath:', dataPath)
 	print('  dbFile:', dbFile)
 
-	savePath = os.path.join(dataPath, 'NEWxxx2')
-	if not os.path.exists(savePath):
-		os.mkdir(savePath)
-		print('created output folder:', savePath)
-	else:
-		print('output folder already exists:', savePath)
-
 	if dbFile.endswith('.csv'):
 		df = pd.read_csv(dbFile, header=0, dtype={'ABF File': str})
 	elif dbFile.endswith('.xlsx'):
-
 		# stopped working 20201216???
 		#df = pd.read_excel(dbFile, header=0, dtype={'ABF File': str})
-
-		df=pd.read_excel(
-				dbFile,
-				header=0,
-				engine='openpyxl',
-				)
+		df=pd.read_excel(dbFile, header=0, engine='openpyxl')
 	else:
 		print('error reading dbFile:', dbFile)
 
 	print('loaded database is:')
 	print(df[:5])
 
+	# go through rows and make sure every abf file exists
+	tmpFileCount = 0
+	for idx, file in enumerate(df['ABF File']):
+		if str(file) in ['nan', 'NaN']:
+			#print('  error: got empty row, id:', idx)
+			continue
+		abfFile = file + '.abf'
+		abfFilePath = os.path.join(dataPath, abfFile)
+		if not os.path.isfile(abfFilePath):
+			print(f'  ERROR: row {idx}, did not find file: {abfFilePath}')
+			continue
+		else:
+			tmpFileCount += 1
+	print(f'found {tmpFileCount} abf files')
+
 	numFiles = df.shape[0]
+
+	# make output folder
+	savePath = os.path.join(dataPath, outputFolder)
+	if not os.path.exists(savePath):
+		os.mkdir(savePath)
+		print('created output folder:', savePath)
+	else:
+		print('output folder already exists:', savePath)
 
 	baList = []
 
@@ -224,4 +234,7 @@ if __name__ == '__main__':
 	dbFile = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database.xlsx'
 	dataPath = '/Users/cudmore/data/laura-ephys/SAN AP'
 
-	baList = reanalyze(dataPath, dbFile)
+	dbFile = '/Users/cudmore/data/laura-ephys/sanap202101/Superior vs Inferior database.xlsx'
+	dataPath = '/Users/cudmore/data/laura-ephys/sanap202101'
+
+	baList = reanalyze(dataPath, dbFile, outputFolder='new_20210129')

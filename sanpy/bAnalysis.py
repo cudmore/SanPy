@@ -78,27 +78,36 @@ class bAnalysis:
 			self.loadError = True
 			return
 
-		# instantiate and load abf file
-		try:
-			self._abf = pyabf.ABF(file)
-		except (NotImplementedError) as e:
-			print('error: bAnalysis.__init__() did not load abf file:', file)
-			print('  exception was:', e)
-			self.loadError = True
-			self._abf = None
-			return
-		except (Exception) as e:
-			# some abf files throw: 'unpack requires a buffer of 234 bytes'
-			print('error: bAnalysis.__init__() did not load abf file:', file)
-			print('  unknown exception was:', e)
-			self.loadError = True
-			self._abf = None
-			return
+		self.acqDate = None
+		self.acqTime = None
 
-		#20190621
-		abfDateTime = self._abf.abfDateTime #2019-01-14 15:20:48.196000
-		self.acqDate = abfDateTime.strftime("%Y-%m-%d")
-		self.acqTime = abfDateTime.strftime("%H:%M:%S")
+		# instantiate and load abf file
+		if file.endswith('.csv'):
+			self._abf = sanpy.bAbfText(file)
+		elif file.endswith('.abf'):
+			try:
+				self._abf = pyabf.ABF(file)
+				#20190621
+				abfDateTime = self._abf.abfDateTime #2019-01-14 15:20:48.196000
+				self.acqDate = abfDateTime.strftime("%Y-%m-%d")
+				self.acqTime = abfDateTime.strftime("%H:%M:%S")
+			except (NotImplementedError) as e:
+				print('error: bAnalysis.__init__() did not load abf file:', file)
+				print('  exception was:', e)
+				self.loadError = True
+				self._abf = None
+				return
+			except (Exception) as e:
+				# some abf files throw: 'unpack requires a buffer of 234 bytes'
+				print('error: bAnalysis.__init__() did not load abf file:', file)
+				print('  unknown exception was:', e)
+				self.loadError = True
+				self._abf = None
+				return
+		else:
+			print(f'error: bAnalysis.__init__() can only open csv or abf files: {file}')
+			self.loadError = True
+			return
 
 		self.currentSweep = None
 		self.setSweep(0)
@@ -225,10 +234,17 @@ class bAnalysis:
 		# add an initial point so it is the same length as raw data in abf.sweepY
 		self.filteredDeriv = np.concatenate(([0],self.filteredDeriv))
 
-	def spikeDetect0(self, dVthresholdPos=100, minSpikeVm=-20, medianFilter=0, verbose=True): #, startSeconds=None, stopSeconds=None):
+	def spikeDetect0(self, dVthresholdPos=100, minSpikeVm=-20,
+						peakWindow_ms=10,
+						window_ms=2,
+						refractory_ms=20,
+						dvdt_percentOfMax=0.1,
+						medianFilter=0, verbose=True): #, startSeconds=None, stopSeconds=None):
 		"""
 		look for threshold crossings (dVthresholdPos) in first derivative (dV/dt) of membrane potential (Vm)
 		tally each threshold crossing (e.g. a spike) in self.spikeTimes list
+
+		window_ms: 20210130, pre-roll to then search for real threshold crossing
 
 		Returns:
 			self.thresholdTimes (pnts): the time of each threshold crossing
@@ -296,19 +312,25 @@ class bAnalysis:
 		Ds=Is[:-1]-Is[1:]+1
 		spikeTimes0 = Is[np.where(Ds)[0]+1]
 
+		#print('v1 spikeTimes0', len(spikeTimes0), spikeTimes0)
+
 		#
 		# reduce spike times based on start/stop
 		# only include spike times between startPnt and stopPnt
 		#print('before stripping len(spikeTimes0):', len(spikeTimes0))
 		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if (spikeTime>=startPnt and spikeTime<=stopPnt)]
 
+		#print('v2 spikeTimes0', len(spikeTimes0), spikeTimes0)
+
 		#print('after stripping len(spikeTimes0):', len(spikeTimes0))
 
 		#
 		# throw out all spikes that are below a threshold Vm (usually below -20 mV)
 		#spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if self.abf.sweepY[spikeTime] > self.minSpikeVm]
-		peakWindow_ms = 10
+		#peakWindow_ms = 10
 		peakWindow_pnts = self.abf.dataPointsPerMs * peakWindow_ms
+		# abb 20210130 lcr analysis
+		peakWindow_pnts = round(peakWindow_pnts)
 		goodSpikeTimes = []
 		for spikeTime in spikeTimes0:
 			peakVal = np.max(self.abf.sweepY[spikeTime:spikeTime+peakWindow_pnts])
@@ -334,7 +356,7 @@ class bAnalysis:
 
 		#
 		# if there are doubles, throw-out the second one
-		refractory_ms = 20 #10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
+		#refractory_ms = 20 #10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
 		lastGood = 0 # first spike [0] will always be good, there is no spike [i-1]
 		for i in range(len(spikeTimes0)):
 			if i==0:
@@ -359,13 +381,24 @@ class bAnalysis:
 
 		#
 		# for each threshold crossing, search backwards in dV/dt for a % of maximum (about 10 ms)
-		dvdt_percentOfMax = 0.1
-		window_ms = 2
+		#dvdt_percentOfMax = 0.1
+		#window_ms = 2
 		window_pnts = window_ms * self.dataPointsPerMs
+		# abb 20210130 lcr analysis
+		window_pnts = round(window_pnts)
 		spikeTimes1 = []
 		for i, spikeTime in enumerate(spikeTimes0):
 			# get max in derivative
-			preDerivClip = self.filteredDeriv[spikeTime-window_pnts:spikeTime] # backwards
+
+			# 20210130, was this
+			# was this
+			# this is a legit bug !!!! I was only looking before
+			# should be looking before AND after
+			#preDerivClip = self.filteredDeriv[spikeTime-window_pnts:spikeTime] # backwards
+
+			# 20210130 lcr analysis now this
+			preDerivClip = self.filteredDeriv[spikeTime-window_pnts:spikeTime+window_pnts] # backwards
+
 			#preDerivClip = np.flip(preDerivClip)
 			peakPnt = np.argmax(preDerivClip)
 			peakPnt += spikeTime-window_pnts
@@ -382,7 +415,7 @@ class bAnalysis:
 			except (IndexError) as e:
 				##
 				##
-				#print('   error: bAnalysis.spikeDetect0() IndexError spike', i, spikeTime, 'percentMaxVal:', percentMaxVal)
+				print('   error: bAnalysis.spikeDetect0() IndexError spike', i, spikeTime, 'percentMaxVal:', percentMaxVal)
 				##
 				##
 				spikeTimes1.append(spikeTime)
@@ -463,10 +496,12 @@ class bAnalysis:
 
 		#spikeTimes = _where_cross(sweepDeriv,dVthresholdPos)
 		#Is=np.where(self.filteredDeriv>dVthresholdPos)[0]
-		Is=np.where(self.filteredVm>minSpikeVm)[0]
+		Is=np.where(self.filteredVm>minSpikeVm)[0] # returns boolean array
 		Is=np.concatenate(([0],Is))
 		Ds=Is[:-1]-Is[1:]+1
 		spikeTimes0 = Is[np.where(Ds)[0]+1]
+
+		print('bAnalysis.spikeDetect00() spikeTimes0:', len(spikeTimes0), spikeTimes0)
 
 		#
 		# reduce spike times based on start/stop
@@ -618,11 +653,22 @@ class bAnalysis:
 		#return self.spikeTimes, self.thresholdTimes, self.filteredVm, self.filteredDeriv
 		return self.spikeTimes, self.filteredVm, self.filteredDeriv
 
-	def spikeDetect(self, dVthresholdPos=100, minSpikeVm=-20, medianFilter=0, halfHeights=[20, 50, 80], verbose=True): #, startSeconds=None, stopSeconds=None):
+	def spikeDetect(self, dVthresholdPos=100, minSpikeVm=-20,
+					medianFilter=0, halfHeights=[20, 50, 80],
+					refractory_ms=20,
+					peakWindow_ms=10, window_ms=2,
+					avgWindow_ms=5,
+					dvdt_percentOfMax=0.1,
+					halfWidthWindow_ms = 20,
+					verbose=True): #, startSeconds=None, stopSeconds=None):
 		'''
 		spike detect the current sweep and put results into spikeTime[currentSweep]
 
 		dVthresholdPos: if None then detect only using minSpikeVm
+		peakWindow_ms: added 20210130 during dual lcr analysis
+						time after spike to look for AP peak
+						linescan is way slower (0.004 s/line versis 0.0001 s/point)
+		window_ms: added 20210130
 
 		todo: remember values of halfHeights
 		'''
@@ -641,20 +687,32 @@ class bAnalysis:
 		if dVthresholdPos is None:
 			self.thresholdTimes = None
 			#print('detecting with spikeDetect00() minSpikeVm:',minSpikeVm)
-			self.spikeTimes, vm, dvdt = self.spikeDetect00(minSpikeVm=minSpikeVm, medianFilter=medianFilter, verbose=verbose) #, startSeconds=startSeconds, stopSeconds=stopSeconds)
+			self.spikeTimes, vm, dvdt = \
+				self.spikeDetect00(minSpikeVm=minSpikeVm, medianFilter=medianFilter,
+									verbose=verbose) #, startSeconds=startSeconds, stopSeconds=stopSeconds)
 		else:
 			#print('detecting with spikeDetect0() dVthresholdPos:',dVthresholdPos)
 			# REMEMBER, WE NEED BOTH dVthresholdPos AND minSpikeVm
 			self.spikeTimes, self.thresholdTimes, vm, dvdt = \
-				self.spikeDetect0(dVthresholdPos=dVthresholdPos, minSpikeVm=minSpikeVm, medianFilter=medianFilter, verbose=verbose) #, startSeconds=startSeconds, stopSeconds=stopSeconds)
+				self.spikeDetect0(dVthresholdPos=dVthresholdPos, minSpikeVm=minSpikeVm,
+									peakWindow_ms=peakWindow_ms,
+									window_ms=window_ms,
+									refractory_ms=refractory_ms,
+									dvdt_percentOfMax=dvdt_percentOfMax,
+									medianFilter=medianFilter, verbose=verbose) #, startSeconds=startSeconds, stopSeconds=stopSeconds)
 
 		#
 		# look in a window after each threshold crossing to get AP peak
 		# get minima before/after spike
-		peakWindow_ms = 10
+		#peakWindow_ms = 10
 		peakWindow_pnts = self.abf.dataPointsPerMs * peakWindow_ms
+		# abb 20210130 lcr analysis
+		peakWindow_pnts = round(peakWindow_pnts)
+		print('debug lcr:', 'peakWindow_pnts:', peakWindow_pnts, 'self.abf.dataPointsPerMs:', self.abf.dataPointsPerMs)
+
 		#
-		avgWindow_ms = 5 # we find the min/max before/after (between spikes) and then take an average around this value
+		#avgWindow_ms = 5 # we find the min/max before/after (between spikes)
+							#and then take an average around this value
 		avgWindow_pnts = avgWindow_ms * self.abf.dataPointsPerMs
 		avgWindow_pnts = math.floor(avgWindow_pnts/2)
 		for i, spikeTime in enumerate(self.spikeTimes):
@@ -663,6 +721,16 @@ class bAnalysis:
 			peakPnt = np.argmax(vm[spikeTime:spikeTime+peakWindow_pnts])
 			peakPnt += spikeTime
 			peakVal = np.max(vm[spikeTime:spikeTime+peakWindow_pnts])
+
+			'''
+			if i == 2:
+				print(i)
+				print('peakWindow_pnts:', peakWindow_pnts)
+				print('spikeTime (pnt):', spikeTime)
+				print('peakPnt:', peakPnt)
+				print('vm:', vm[spikeTime:spikeTime+peakWindow_pnts])
+				#continue
+			'''
 
 			spikeDict = collections.OrderedDict() # use OrderedDict so Pandas output is in the correct order
 			spikeDict['file'] = self.file
@@ -756,7 +824,8 @@ class bAnalysis:
 			# todo: not done !!!!!!!!!!
 
 			if i==0 or i==len(self.spikeTimes)-1:
-				continue
+				# was continue but moved half width out of here
+				pass
 			else:
 				#
 				# pre spike min
@@ -853,6 +922,8 @@ class bAnalysis:
 				#postRange = dvdt[self.spikeTimes[i]:postMinPnt]
 				postSpike_ms = 10
 				postSpike_pnts = self.abf.dataPointsPerMs * postSpike_ms
+				# abb 20210130 lcr analysis
+				postSpike_pnts = round(postSpike_pnts)
 				#postRange = dvdt[self.spikeTimes[i]:self.spikeTimes[i]+postSpike_pnts] # fixed window after spike
 				postRange = dvdt[peakPnt:peakPnt+postSpike_pnts] # fixed window after spike
 
@@ -894,62 +965,84 @@ class bAnalysis:
 					self.spikeDict[i]['cycleLength_pnts'] = cycleLength_pnts
 					self.spikeDict[i]['cycleLength_ms'] = self.pnt2Ms_(cycleLength_pnts)
 
-				#
-				# get 1/2 height (actually, any number of height measurements)
-				# action potential duration using peak and post min
-				#self.spikeDict[i]['widths'] = []
-				for j, halfHeight in enumerate(halfHeights):
+			#
+			# 20210130, moving 'half width' out of inner if spike # is first/last
+			#
+			# get 1/2 height (actually, any number of height measurements)
+			# action potential duration using peak and post min
+			#self.spikeDict[i]['widths'] = []
+			#print('*** calculating half width for spike', i)
+			doWidthVersion2 = True
+
+			#halfWidthWindow_ms = 20
+			hwWindowPnts = halfWidthWindow_ms * self.abf.dataPointsPerMs
+			hwWindowPnts = round(hwWindowPnts)
+
+			for j, halfHeight in enumerate(halfHeights):
+				if doWidthVersion2:
+					tmpThreshVm = spikeDict['thresholdVal']
+					thisVm = tmpThreshVm + (peakVal - tmpThreshVm) * (halfHeight * 0.01)
+				else:
 					thisVm = postMinVal + (peakVal - postMinVal) * (halfHeight * 0.01)
-					#todo: logic is broken, this get over-written in following try
-					widthDict = {
-						'halfHeight': halfHeight,
-						'risingPnt': None,
-						'risingVal': defaultVal,
-						'fallingPnt': None,
-						'fallingVal': defaultVal,
-						'widthPnts': None,
-						'widthMs': defaultVal
-					}
-					widthMs = np.nan
-					try:
+				#todo: logic is broken, this get over-written in following try
+				widthDict = {
+					'halfHeight': halfHeight,
+					'risingPnt': None,
+					'risingVal': defaultVal,
+					'fallingPnt': None,
+					'fallingVal': defaultVal,
+					'widthPnts': None,
+					'widthMs': defaultVal
+				}
+				widthMs = np.nan
+				try:
+					if doWidthVersion2:
+						postRange = vm[peakPnt:peakPnt+hwWindowPnts]
+					else:
 						postRange = vm[peakPnt:postMinPnt]
-						fallingPnt = np.where(postRange<thisVm)[0][0] # less than
-						fallingPnt += peakPnt
-						fallingVal = vm[fallingPnt]
+					fallingPnt = np.where(postRange<thisVm)[0][0] # less than
+					fallingPnt += peakPnt
+					fallingVal = vm[fallingPnt]
 
-						# use the post/falling to find pre/rising
+					# use the post/falling to find pre/rising
+					if doWidthVersion2:
+						preRange = vm[peakPnt-hwWindowPnts:peakPnt]
+					else:
 						preRange = vm[preMinPnt:peakPnt]
-						risingPnt = np.where(preRange>fallingVal)[0][0] # greater than
+					risingPnt = np.where(preRange>fallingVal)[0][0] # greater than
+					if doWidthVersion2:
+						risingPnt += peakPnt-hwWindowPnts
+					else:
 						risingPnt += preMinPnt
-						risingVal = vm[risingPnt]
+					risingVal = vm[risingPnt]
 
-						# width (pnts)
-						widthPnts = fallingPnt - risingPnt
-						# assign
-						widthDict['halfHeight'] = halfHeight
-						widthDict['risingPnt'] = risingPnt
-						widthDict['risingVal'] = risingVal
-						widthDict['fallingPnt'] = fallingPnt
-						widthDict['fallingVal'] = fallingVal
-						widthDict['widthPnts'] = widthPnts
-						widthDict['widthMs'] = widthPnts / self.abf.dataPointsPerMs
-						widthMs = widthPnts / self.abf.dataPointsPerMs # abb 20210125
+					# width (pnts)
+					widthPnts = fallingPnt - risingPnt
+					# assign
+					widthDict['halfHeight'] = halfHeight
+					widthDict['risingPnt'] = risingPnt
+					widthDict['risingVal'] = risingVal
+					widthDict['fallingPnt'] = fallingPnt
+					widthDict['fallingVal'] = fallingVal
+					widthDict['widthPnts'] = widthPnts
+					widthDict['widthMs'] = widthPnts / self.abf.dataPointsPerMs
+					widthMs = widthPnts / self.abf.dataPointsPerMs # abb 20210125
 
-					except (IndexError) as e:
-						##
-						##
-						#print('error: bAnalysis.spikeDetect() spike', i, 'half height', halfHeight)
-						##
-						##
+				except (IndexError) as e:
+					##
+					##
+					#print('  ERROR: bAnalysis.spikeDetect() spike', i, 'half height', halfHeight)
+					##
+					##
 
-						self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
-						errorStr = 'spike ' + str(i) + ' half width ' + str(j)
-						self.spikeDict[i]['errors'].append(errorStr)
-						self.numErrors += 1
-					# abb 20210125
-					self.spikeDict[i]['widths_'+str(halfHeight)] = widthMs
-					#self.spikeDict[i]['widths'].append(widthDict)
-					self.spikeDict[i]['widths'][j] = widthDict
+					self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
+					errorStr = 'spike ' + str(i) + ' half width ' + str(j)
+					self.spikeDict[i]['errors'].append(errorStr)
+					self.numErrors += 1
+				# abb 20210125
+				self.spikeDict[i]['widths_'+str(halfHeight)] = widthMs
+				#self.spikeDict[i]['widths'].append(widthDict)
+				self.spikeDict[i]['widths'][j] = widthDict
 
 		#
 		# look between threshold crossing to get minima
@@ -959,6 +1052,8 @@ class bAnalysis:
 		# build a list of spike clips
 		clipWidth_ms = 500
 		clipWidth_pnts = clipWidth_ms * self.abf.dataPointsPerMs
+		# abb 20210130 lcr analysis
+		clipWidth_pnts = round(clipWidth_pnts)
 		halfClipWidth_pnts = int(clipWidth_pnts/2)
 
 		# make one x axis clip with the threshold crossing at 0
@@ -1397,6 +1492,11 @@ class bAnalysis:
 		if pnt is None or math.isnan(pnt):
 			return None
 		'''
+
+		# debug
+		#pntInSeconds = pnt / self.abf.dataPointsPerMs / 1000
+		#print(f'pnt2Sec_() pnt:{pnt}, self.abf.dataPointsPerMs:{self.abf.dataPointsPerMs}, pntInSeconds:{pntInSeconds}')
+
 		if pnt is None:
 			return math.isnan(pnt)
 		else:
@@ -1412,7 +1512,196 @@ class bAnalysis:
 		retStr = 'file: ' + self.file + '\n' + str(self.abf)
 		return retStr
 
+def test_load_abf():
+	path = '/Users/cudmore/data/dual-lcr/20210115/data/21115002.abf'
+	ba = bAnalysis(path)
+
+	dVthresholdPos = 30
+	minSpikeVm = -20
+	halfWidthWindow_ms = 60 # was 20
+	ba.spikeDetect(dVthresholdPos=dVthresholdPos, minSpikeVm=minSpikeVm,
+		halfWidthWindow_ms=halfWidthWindow_ms
+		)
+		#avgWindow_ms=avgWindow_ms,
+		#window_ms=window_ms,
+		#peakWindow_ms=peakWindow_ms,
+		#refractory_ms=refractory_ms,
+		#dvdt_percentOfMax=dvdt_percentOfMax)
+
+	#test_plot(ba)
+
+	return ba
+
+def test_load_txt():
+	"""
+	working on spike detection from sum of intensities along a line scan
+	see: example/lcr-analysis
+	"""
+	path = '/Users/Cudmore/Desktop/caInt.csv'
+	ba = bAnalysis(path)
+	#ba.getDerivative()
+
+	#print('ba.abf.sweepX:', len(ba.abf.sweepX))
+	#print('ba.abf.sweepY:', len(ba.abf.sweepY))
+
+	#print('ba.abf.sweepX:', ba.abf.sweepX)
+	#print('ba.abf.sweepY:', ba.abf.sweepY)
+
+	# Ca recording is ~40 times slower than e-phys at 10 kHz
+	minSpikeVm = 0.5
+	dVthresholdPos = 0.01
+	refractory_ms = 60 # was 20 ms
+	avgWindow_ms=60 # pre-roll to find eal threshold crossing
+		# was 5, in detect I am using avgWindow_ms/2 ???
+	window_ms = 20 # was 2
+	peakWindow_ms = 70 # 20 gives us 5, was 10
+	dvdt_percentOfMax = 0.2 # was 0.1
+	halfWidthWindow_ms = 60 # was 20
+	ba.spikeDetect(dVthresholdPos=dVthresholdPos, minSpikeVm=minSpikeVm,
+		avgWindow_ms=avgWindow_ms,
+		window_ms=window_ms,
+		peakWindow_ms=peakWindow_ms,
+		refractory_ms=refractory_ms,
+		dvdt_percentOfMax=dvdt_percentOfMax,
+		halfWidthWindow_ms=halfWidthWindow_ms
+		)
+
+	for k,v in ba.spikeDict[0].items():
+		print('  ', k, ':', v)
+
+	#test_plot(ba)
+
+	return ba
+
+def test_plot(ba):
+	firstSampleTime = ba.abf.sweepX[0] # is not 0 for 'wait for trigger' FV3000
+
+	# plot
+	fig, axs = plt.subplots(2, 1, sharex=True)
+
+	#
+	# dv/dt
+	axs[0].plot(ba.abf.sweepX, ba.filteredDeriv, 'k')
+
+	# thresholdVal_dvdt
+	xThresh = [x['thresholdSec'] + firstSampleTime for x in ba.spikeDict]
+	yThresh = [x['thresholdVal_dvdt'] for x in ba.spikeDict]
+	axs[0].plot(xThresh, yThresh, 'or')
+
+	#
+	# vm with detection params
+	axs[1].plot(ba.abf.sweepX, ba.abf.sweepY, 'k-', lw=0.5)
+
+	xThresh = [x['thresholdSec'] + firstSampleTime for x in ba.spikeDict]
+	yThresh = [x['thresholdVal'] for x in ba.spikeDict]
+	axs[1].plot(xThresh, yThresh, 'or')
+
+	xPeak = [x['peakSec'] + firstSampleTime for x in ba.spikeDict]
+	yPeak = [x['peakVal'] for x in ba.spikeDict]
+	axs[1].plot(xPeak, yPeak, 'ob')
+
+	for idx, spikeDict in enumerate(ba.spikeDict):
+		#
+		# plot all widths
+		#print('plotting width for spike', idx)
+		for j,widthDict in enumerate(spikeDict['widths']):
+			#for k,v in widthDict.items():
+			#	print('  ', k, ':', v)
+			#print('j:', j)
+			if widthDict['risingPnt'] is None:
+				#print('  -->> no half width')
+				continue
+
+			risingPntX = ba.abf.sweepX[widthDict['risingPnt']]
+			# y value of rising pnt is y value of falling pnt
+			#risingPntY = ba.abf.sweepY[widthDict['risingPnt']]
+			risingPntY = ba.abf.sweepY[widthDict['fallingPnt']]
+			fallingPntX = ba.abf.sweepX[widthDict['fallingPnt']]
+			fallingPntY = ba.abf.sweepY[widthDict['fallingPnt']]
+			fallingPnt = widthDict['fallingPnt']
+			# plotting y-value of rising to match y-value of falling
+			#ax.plot(ba.abf.sweepX[widthDict['risingPnt']], ba.abf.sweepY[widthDict['risingPnt']], 'ob')
+			# plot as pnts
+			#axs[1].plot(ba.abf.sweepX[widthDict['risingPnt']], ba.abf.sweepY[widthDict['fallingPnt']], '-b')
+			#axs[1].plot(ba.abf.sweepX[widthDict['fallingPnt']], ba.abf.sweepY[widthDict['fallingPnt']], '-b')
+			# line between rising and falling is ([x1, y1], [x2, y2])
+			axs[1].plot([risingPntX, fallingPntX], [risingPntY, fallingPntY], color='b', linestyle='-', linewidth=2)
+
+	#
+	#plt.show()
+
+def lcrDualAnalysis():
+	ba0 = test_load_txt() # image
+	ba1 = test_load_abf() # recording
+
+	firstSampleTime = ba0.abf.sweepX[0] # is not 0 for 'wait for trigger' FV3000
+	print('firstSampleTime:', firstSampleTime)
+
+	# for each spike in e-phys, match it with a spike in imaging
+	# e-phys is shorter, fewer spikes
+	numSpikes = ba1.numSpikes
+	print('num spikes in recording:', numSpikes)
+
+	thresholdSec0, peakSec0 = ba0.getStat('thresholdSec', 'peakSec')
+	thresholdSec1, peakSec1 = ba1.getStat('thresholdSec', 'peakSec')
+
+	ba1_width50, throwOut = ba1.getStat('widths_50', 'peakSec')
+
+	# todo: add an option in bAnalysis.getStat()
+	thresholdSec0 = [x + firstSampleTime for x in thresholdSec0]
+	peakSec0 = [x + firstSampleTime for x in peakSec0]
+
+	# assuming spike-detection is clean
+	# truncate imaging (it is longer than e-phys)
+	thresholdSec0 = thresholdSec0[0:numSpikes] # second value/max is NOT INCLUSIVE
+	peakSec0 = peakSec0[0:numSpikes]
+
+	numSubplots = 2
+	fig, axs = plt.subplots(numSubplots, 1, sharex=False)
+
+	# threshold in image starts about 20 ms after Vm
+	axs[0].plot(thresholdSec0, 'or')
+	axs[0].plot(thresholdSec1, 'ok')
+
+	#axs[1].plot(thresholdSec1, peakSec0, 'ok')
+
+	# time to peak in image wrt AP threshold time
+	caTimeToPeak = []
+	for idx, thresholdSec in enumerate(thresholdSec1):
+		timeToPeak = peakSec0[idx] - thresholdSec
+		#print('thresholdSec:', thresholdSec, 'peakSec0:', peakSec0[idx], 'timeToPeak:', timeToPeak)
+		caTimeToPeak.append(timeToPeak)
+
+	print('caTimeToPeak:', caTimeToPeak)
+
+	axs[1].plot(ba1_width50, caTimeToPeak, 'ok')
+
+	# draw diagonal
+	#axs[1].plot([0, 1], [0, 1], transform=axs[1].transAxes)
+
+	axs[1].set_xlabel('ba1_width50')
+	axs[1].set_ylabel('caTimeToPeak')
+
+	#
+	plt.show()
+
 if __name__ == '__main__':
-	print('running bAnalysis __main__')
-	ba = bAnalysis('../data/19114001.abf')
-	print(ba.dataPointsPerMs)
+	'''
+	if 0:
+		print('running bAnalysis __main__')
+		ba = bAnalysis('../data/19114001.abf')
+		print(ba.dataPointsPerMs)
+	'''
+
+	# this is to load/analyze/plot the sum of a number of Ca imaging line scans
+	# e.g. lcr
+	if 0:
+		ba0 = test_load_txt()
+		# todo: add title
+		test_plot(ba0)
+
+		ba1 = test_load_abf()
+		test_plot(ba1)
+		plt.show()
+
+	lcrDualAnalysis()

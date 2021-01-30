@@ -2,6 +2,8 @@
 
 import os, pprint
 import numpy as np
+import pandas as pd
+import scipy.signal
 import matplotlib.pyplot as plt
 import tifffile
 import pyabf
@@ -105,12 +107,86 @@ def myLoad(myDict):
 	tifHeader = loadLineScanHeader(tifFile)
 	tifHeader['shape'] = tifNorm.shape
 	tifHeader['secondsPerLine'] = tifHeader['totalSeconds'] / tifHeader['shape'][1]
+	tifHeader['abfPath'] = abfFile
 
 	abf = pyabf.ABF(abfFile)
 
+	tagTimesSec = abf.tagTimesSec
+	firstFrameSeconds = tagTimesSec[0]
+	tifHeader['firstFrameSeconds'] = firstFrameSeconds
+
+	xMaxRecordingSec = abf.sweepX[-1] # seconds
+	tifHeader['xMaxRecordingSec'] = xMaxRecordingSec
+
 	return tif, tifHeader, abf
 
-def myPlot(tif, tifHeader, abf):
+def simpleAnalysis(mvThreshold=-20):
+
+	fileNumber = 3
+	tif, tifHeader, abf = myLoad(lcrData.dataList[fileNumber])
+
+	print('abf.dataRate', abf.dataRate)
+
+	xVm = abf.sweepX
+	yVm = abf.sweepY
+
+	medianKernel = 31
+	yVmFiltered = scipy.signal.medfilt(yVm, medianKernel)
+
+	dtSeconds = xVm[1] - xVm[0]
+	print(dtSeconds)
+
+	# threshholdCrossing is a boolean aray
+	threshholdCrossing = np.diff(yVm > mvThreshold, prepend=False)
+
+	# spikePoints is just points where threshold was crossed
+	spikePoints = np.argwhere(threshholdCrossing)[:,0]  # Upward crossings
+
+	# remove spikes on downward trajectory
+	goodSpikePoints = []
+	pntWindow = 20
+	for spikePoint in spikePoints:
+		preMean = np.mean(yVmFiltered[spikePoint-pntWindow:spikePoint-1])
+		postMean = np.mean(yVmFiltered[spikePoint+1:spikePoint+pntWindow])
+		#print(spikePoint, preMean, postMean)
+		if preMean<postMean:
+			goodSpikePoints.append(spikePoint)
+	#
+	print(goodSpikePoints)
+
+	spikeTimes0 = [x*dtSeconds for x in goodSpikePoints]
+
+	refractorySeconds = 0.3 # 500 ms
+	print('refractorySeconds:', refractorySeconds)
+
+	spikeTimes = [spikeTimes0[0]]
+	lastSpikeTime = spikeTimes[0]
+	for idx, spikeTime in enumerate(spikeTimes0):
+		if idx == 0:
+			continue
+		if (spikeTime-lastSpikeTime) > refractorySeconds:
+			spikeTimes.append(spikeTime)
+			lastSpikeTime = spikeTime
+
+
+	xSpikes = spikeTimes
+	ySpikes = [mvThreshold] * len(spikeTimes)
+	#threshold_crossings = [mvThreshold if x==1 else np.nan for x in threshold_crossings]
+
+	#
+	# plot
+	numPanels = 1
+	fig, axs = plt.subplots(numPanels, 1, sharex=True)
+	if numPanels == 1:
+		axs = [axs]
+
+	axs[0].plot(xVm, yVm, 'k')
+	axs[0].plot(xVm, yVmFiltered, 'r', lw=1)
+	axs[0].plot(xSpikes, ySpikes, 'ro')
+
+	plt.show()
+
+def myPlot(tif, tifHeader, abf, plotCaSum=False):
 	"""
 	tif: 2D numpy.array
 	tifHeader: dict
@@ -119,7 +195,13 @@ def myPlot(tif, tifHeader, abf):
 
 	xMaxImage = tifHeader['totalSeconds'] #35.496 # seconds
 
-	fig, axs = plt.subplots(3, 1, sharex=True)
+	if plotCaSum:
+		numPanels = 3
+	else:
+		numPanels = 2
+	fig, axs = plt.subplots(numPanels, 1, sharex=True)
+	titleStr = os.path.split(tifHeader['tif'])[1]
+	fig.suptitle(titleStr)
 
 	# e-phys
 	# has 100 ms + 5 ms ttl
@@ -133,14 +215,16 @@ def myPlot(tif, tifHeader, abf):
 	xPlot = abf.sweepX
 	xPlot += xMinPhys # e-phys recording starts with (100 ms + 5 ms ttl)
 	yPlot = abf.sweepY
-	xMaxRecording = abf.sweepX[-1] # seconds
-	print('xMaxRecording:', xMaxRecording)
+	#xMaxRecording = abf.sweepX[-1] # seconds
+	xMaxRecordingSec = tifHeader['xMaxRecordingSec']
+	#print('xMaxRecording:', xMaxRecording)
+
 	# time of first frame, shift image by this amount
 	tagTimesSec = abf.tagTimesSec
 	firstFrameSeconds = tagTimesSec[0]
-	print('firstFrameSeconds:', firstFrameSeconds)
+	#print('firstFrameSeconds:', firstFrameSeconds)
 
-	xMax = max(xMaxImage+firstFrameSeconds, xMaxRecording)
+	xMax = max(xMaxImage+firstFrameSeconds, xMaxRecordingSec)
 	xMaxLim = xMax
 	#xMaxLim = 2.5 # debugging
 
@@ -181,7 +265,8 @@ def myPlot(tif, tifHeader, abf):
 	axs[1].plot(xPlot, yPlot, 'k')
 	axs[1].margins(x=0)
 	axs[1].set_xlim([xMinPhys, xMaxLim])
-	axs[1].set_xlabel('Time (s)')
+	if not plotCaSum:
+		axs[1].set_xlabel('Time (s)')
 	axs[1].set_ylabel('Vm (mV)')
 	axs[1].spines['right'].set_visible(False)
 	axs[1].spines['top'].set_visible(False)
@@ -193,19 +278,46 @@ def myPlot(tif, tifHeader, abf):
 	#
 	# plot the sum of inensity along each line
 	# this might contribute to membrane depolarizations !!!
-	axs[2].plot(xLineScanSum, yLineScanSum)
-	axs[2].axhline(y=meanLineScanSum, linewidth=1, color='r')
-	axs[2].axhline(y=meanLineScanSum+stdLineScanSum, linewidth=1, color='r')
-	axs[2].margins(x=0)
-	axs[2].set_xlim([xMinPhys, xMaxLim])
-	tmpMinY = meanLineScanSum - 1.5 * stdLineScanSum
-	tmpMaxY = meanLineScanSum + 1.5 * stdLineScanSum
-	axs[2].set_ylim([tmpMinY, tmpMaxY])
-	axs[2].set_ylabel('Sum Line Inensity')
-	axs[2].spines['right'].set_visible(False)
-	axs[2].spines['top'].set_visible(False)
+	if plotCaSum:
+		yPlotNorm = NormalizeData(yPlot)
+		axs[2].plot(xPlot, yPlotNorm, 'k')
+
+		yLineScanSumNorm = NormalizeData(yLineScanSum)
+		axs[2].plot(xLineScanSum, yLineScanSumNorm, 'r')
+
+		#axs[2].axhline(y=meanLineScanSum, linewidth=1, color='r')
+		#axs[2].axhline(y=meanLineScanSum+stdLineScanSum, linewidth=1, color='r')
+		axs[2].margins(x=0)
+		axs[2].set_xlim([xMinPhys, xMaxLim])
+		#tmpMinY = meanLineScanSum - 1.5 * stdLineScanSum
+		#tmpMaxY = meanLineScanSum + 1.5 * stdLineScanSum
+		#axs[2].set_ylim([tmpMinY, tmpMaxY])
+		#axs[2].set_ylabel('Sum Line Inensity')
+		axs[2].spines['right'].set_visible(False)
+		axs[2].spines['top'].set_visible(False)
+		axs[2].set_xlabel('Time (s)')
+
+		tmpDf = pd.DataFrame()
+		tmpDf['time (s)'] = xLineScanSum
+		tmpDf['y'] = yLineScanSumNorm
+		tmpDf.to_csv('/Users/cudmore/Desktop/caInt.csv', header=True, index=False)
+
+
+	#
+	# cross cor between 'sum of line scan intensity' and Vm
+	# todo: work on this, need to subsample Vm to match pnts in kymograph
+	if 0:
+		fig2, ax2 = plt.subplots(1, 1, sharex=True)
+		print('yLineScanSum:', len(yLineScanSum))
+		print('yPlot:', len(yPlot[0:-1:4]))
+		ax2.xcorr(yLineScanSum, yPlot, usevlines=True,
+				maxlags=50, normed=True, lw=2)
+		ax2.grid(True)
 
 	plt.show()
+
+def NormalizeData(data):
+	return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 def test_header():
 	tifFile = '/Users/cudmore/data/dual-lcr/20201222/data/20201222_.tif'
@@ -214,7 +326,7 @@ def test_header():
 	print(tifHeader)
 
 def test_plot():
-	fileNumber = 12
+	fileNumber = 3
 	tif, tifHeader, abf = myLoad(lcrData.dataList[fileNumber])
 
 	# bingo !!!
@@ -222,9 +334,70 @@ def test_plot():
 
 	pprint.pprint(tifHeader)
 
-	myPlot(tif, tifHeader, abf)
+	myPlot(tif, tifHeader, abf, plotCaSum=True)
+
+def myPrintDict(theDict):
+	for k,v in theDict.items():
+		print(f'  {k} : {v}')
+
+def makeReport():
+	dictList = []
+	for fileIdx in range(len(lcrData.dataList)):
+		#tmpDict = lcrData.dataList[i]
+		tif, tifHeader, abf = myLoad(lcrData.dataList[fileIdx])
+		dictList.append(tifHeader)
+	#
+	df = pd.DataFrame(dictList)
+	print(df[['abfPath', 'firstFrameSeconds']])
+
+def analyzeTagTimes():
+	"""
+	analyze the timing of all tags
+	tags are scan start from fv3000
+	"""
+	fileIdx = 3
+	tif, tifHeader, abf = myLoad(lcrData.dataList[fileIdx])
+	tagTimesSec = abf.tagTimesSec # [0.516, 0.5415, 0.567, 0.5925, 0.618, 0.6435, 0.669, 0.6945
+
+	# looking into other tags
+	tagTimesMin = abf.tagTimesMin
+	tagComments = abf.tagComments
+	tagSweeps = abf.tagSweeps # tagSweeps = [0.020640000000000002, 0.02166, 0.02268, 0.023700000000000002, 0.02472, 0.02574, 0.026760000000000003,
+	# not available?
+	#nTagType = abf.nTagType # is 2 for 'external'
+
+	# not available
+	# seems to be fSynchTimeUnit = 100.0
+	#fSynchTimeUnit = abf.fSynchTimeUnit
+
+	'''
+	Later we will populate the times and sweeps (human-understandable units)
+	by multiplying the lTagTime by fSynchTimeUnit from the protocol section.
+	'''
+	# not available
+	# like lTagTime = [0.516, 0.5415, 0.567, 0.5925, 0.618, 0.6435, 0.669
+	#lTagTime = abf.lTagTime
+
+	myPrintDict(tifHeader)
+	print('number of tags:', len(tagTimesSec))
+	tagTimeDiff = np.diff(tagTimesSec)
+
+	if 0:
+		fig, axs = plt.subplots(2, 1, sharex=False)
+		titleStr = os.path.split(tifHeader['tif'])[1]
+		fig.suptitle(titleStr)
+
+		n, bins, patches = axs[0].hist(tagTimeDiff, 100, density=False, facecolor='k', alpha=0.75)
+		#axs[1].plot(tagTimeDiff)
+		axs[1].plot(nTagType)
+		plt.show()
+
+	#print(abf.headerText)
 
 if __name__ == '__main__':
 	#test_header()
 
 	test_plot()
+	#makeReport()
+	#analyzeTagTimes()
+	#simpleAnalysis()
