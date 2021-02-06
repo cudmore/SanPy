@@ -64,12 +64,23 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'plotIsOn': True,
 			},
 			{
+				'humanName': 'Threshold Sec (mV)',
+				'x': 'thresholdSec',
+				'y': 'thresholdVal',
+				'convertx_tosec': False, # some stats are in points, we need to convert to seconds
+				'color': 'r',
+				'styleColor': 'color: red',
+				'symbol': 'o',
+				'plotOn': 'vm', # which plot to overlay (vm, dvdt)
+				'plotIsOn': True,
+			},
+			{
 				'humanName': 'AP Peak (mV)',
 				'x': 'peakSec',
 				'y': 'peakVal',
 				'convertx_tosec': False,
-				'color': 'r',
-				'styleColor': 'color: red',
+				'color': 'g',
+				'styleColor': 'color: green',
 				'symbol': 'o',
 				'plotOn': 'vm',
 				'plotIsOn': True,
@@ -150,7 +161,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.updateStatusBar(f'Detecting spikes dvdt:{dvdtValue} minVm:{minSpikeVm}')
 
-		self.ba.spikeDetect(dVthresholdPos=dvdtValue, minSpikeVm=minSpikeVm)
+		detectionDict = self.ba.getDefaultDetection()
+		detectionDict['dVthresholdPos'] = dvdtValue
+		detectionDict['minSpikeVm'] = minSpikeVm
+
+		#self.ba.spikeDetect(dVthresholdPos=dvdtValue, minSpikeVm=minSpikeVm)
+		self.ba.spikeDetect(detectionDict)
 
 		if self.ba.numSpikes == 0:
 			msg = QtWidgets.QMessageBox()
@@ -1127,6 +1143,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		# a number of stats that will get overlaid
 		row += 1
 		for idx, plot in enumerate(self.myPlots):
+			print('humanName:', plot['humanName'])
 			humanName = plot['humanName']
 			isChecked = plot['plotIsOn']
 			styleColor = plot['styleColor']
