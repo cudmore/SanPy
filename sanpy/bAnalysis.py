@@ -89,10 +89,15 @@ class bAnalysis:
 		self.acqTime = None
 
 		# instantiate and load abf file
+		self.myFileType = None
 		if file.endswith('.tif'):
 			self._abf = sanpy.bAbfText(file)
+			print('  === REMEMBER: bAnalysis.__init__() is normalizing Ca sweepY')
+			self._abf.sweepY = self.NormalizeData(self._abf.sweepY)
+			self.myFileType = 'tif'
 		elif file.endswith('.csv'):
 			self._abf = sanpy.bAbfText(file)
+			self.myFileType = 'csv'
 		elif file.endswith('.abf'):
 			try:
 				self._abf = pyabf.ABF(file)
@@ -113,6 +118,9 @@ class bAnalysis:
 				self.loadError = True
 				self._abf = None
 				return
+			# we have a good abf file
+			self.myFileType = 'abf'
+
 		else:
 			print(f'error: bAnalysis.__init__() can only open csv or abf files: {file}')
 			self.loadError = True
@@ -231,10 +239,15 @@ class bAnalysis:
 	# spike detection
 	############################################################
 	def getDerivative(self, medianFilter=0):
+		"""
+		medianFilter: pnts, must be int and odd
+		"""
+		#print('getDerivative() medianFilter:', medianFilter)
 		if medianFilter > 0:
 			if not medianFilter % 2:
 				medianFilter += 1
 				print('*** Warning: Please use an odd value for the median filter, bAnalysis.getDerivative() set medianFilter =', medianFilter)
+			medianFilter = int(medianFilter)
 			self.filteredVm = scipy.signal.medfilt(self.abf.sweepY, medianFilter)
 		else:
 			self.filteredVm = self.abf.sweepY
@@ -247,10 +260,58 @@ class bAnalysis:
 		# add an initial point so it is the same length as raw data in abf.sweepY
 		self.filteredDeriv = np.concatenate(([0],self.filteredDeriv))
 
+	def getDefaultDetection(self):
+		theDict = {
+			'dVthresholdPos': 100, #if None then detect only using minSpikeVm
+			'minSpikeVm': -20,
+			'medianFilter': 0,
+			'halfHeights': [20,50,80],
+			'refractory_ms': 170, # rreject spikes with instantaneous frequency
+			'peakWindow_ms': 100, #10, # time after spike to look for AP peak
+			'window_ms': 5, #2, # used in dvdt, pre-roll to then search for real threshold crossing
+			'avgWindow_ms': 5,
+			'dvdt_percentOfMax': 0.1, # only used in dvdt detection, used to back up spike threshold to more meaningful value
+			'halfWidthWindow_ms': 20,
+			'spikeClipWidth_ms': 500,
+			'onlyPeaksAbove_mV': None,
+			'startSeconds': None,
+			'stopSeconds': None,
+
+			# for detection of Ca from line scans
+			#'caThresholdPos': 0.01,
+			#'caMinSpike': 0.5,
+		}
+		return theDict.copy()
+
+	def getDefaultDetection_ca(self):
+		theDict = self.getDefaultDetection()
+		theDict['dVthresholdPos'] = 0.01 #if None then detect only using minSpikeVm
+		theDict['minSpikeVm'] = 0.5
+		#
+		#theDict['medianFilter': 0
+		#'halfHeights': [20,50,80]
+		theDict['refractory_ms'] = 200 #170 # reject spikes with instantaneous frequency
+		#theDict['peakWindow_ms': 100 #10, # time after spike to look for AP peak
+		#theDict['window_ms': 2 # used in dvdt, pre-roll to then search for real threshold crossing
+		#theDict['avgWindow_ms': 5
+		#theDict['dvdt_percentOfMax': 0.1
+		theDict['halfWidthWindow_ms'] = 200 #was 20
+		#theDict['spikeClipWidth_ms': 500
+		#theDict['onlyPeaksAbove_mV': None
+		#theDict['startSeconds': None
+		#theDict['stopSeconds': None
+
+		# for detection of Ca from line scans
+		#theDict['caThresholdPos'] = 0.01
+		#theDict['caMinSpike'] = 0.5
+
+		return theDict.copy()
+
 	def _throwOutRefractory(self, spikeTimes0, refractory_ms=20):
 		"""
 		# todo: add this to spikeDetect0()
 		"""
+		print('  bAnalysis._throwOutRefractory() len(spikeTimes0)', len(spikeTimes0))
 		#
 		# if there are doubles, throw-out the second one
 		#refractory_ms = 20 #10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
@@ -270,6 +331,8 @@ class bAnalysis:
 		# spikeTimes[i] that were set to 0 above (they were too close to the previous spike)
 		# will not pass 'if spikeTime', as 'if 0' evaluates to False
 		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if spikeTime]
+
+		print('    after len(spikeTimes0)', len(spikeTimes0))
 
 		return spikeTimes0
 	'''
@@ -294,9 +357,9 @@ class bAnalysis:
 
 		if verbose:
 			print('bAnalysis.spikeDetect0()')
-			print('	dVthresholdPos:', dDict['dVthresholdPos'])
-			print('	minSpikeVm:', dDict['minSpikeVm'])
-			print('	medianFilter:', dDict['medianFilter'])
+			print('	 dVthresholdPos:', dDict['dVthresholdPos'])
+			print('	 minSpikeVm:', dDict['minSpikeVm'])
+			print('	 medianFilter:', dDict['medianFilter'])
 
 		#
 		# header
@@ -360,7 +423,9 @@ class bAnalysis:
 		#
 		# if there are doubles, throw-out the second one
 		#refractory_ms = 20 #10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
+
 		spikeTimes0 = self._throwOutRefractory(spikeTimes0, refractory_ms=dDict['refractory_ms'])
+
 		'''
 		lastGood = 0 # first spike [0] will always be good, there is no spike [i-1]
 		for i in range(len(spikeTimes0)):
@@ -395,10 +460,11 @@ class bAnalysis:
 			# was this
 			# this is a legit bug !!!! I was only looking before
 			# should be looking before AND after
-			#preDerivClip = self.filteredDeriv[spikeTime-window_pnts:spikeTime] # backwards
+			preDerivClip = self.filteredDeriv[spikeTime-window_pnts:spikeTime] # backwards
+			postDerivClip = self.filteredDeriv[spikeTime:spikeTime+window_pnts] # backwards
 
 			# 20210130 lcr analysis now this
-			preDerivClip = self.filteredDeriv[spikeTime-window_pnts:spikeTime+window_pnts] # backwards
+			#preDerivClip = self.filteredDeriv[spikeTime-window_pnts:spikeTime+window_pnts] # backwards
 
 			if len(preDerivClip) == 0:
 				print('error: spikeDetect0()',
@@ -407,21 +473,32 @@ class bAnalysis:
 						'window_ms:', dDict['window_ms'],
 						'len(preDerivClip)', len(preDerivClip))#preDerivClip = np.flip(preDerivClip)
 
-			# look for % of max
+			# look for % of max in dvdt
 			try:
-				peakPnt = np.argmax(preDerivClip)
-				peakPnt += spikeTime-window_pnts
+				#peakPnt = np.argmax(preDerivClip)
+				peakPnt = np.argmax(postDerivClip)
+				#peakPnt += spikeTime-window_pnts
+				peakPnt += spikeTime
 				peakVal = self.filteredDeriv[peakPnt]
 
 				percentMaxVal = peakVal * dDict['dvdt_percentOfMax'] # value we are looking for in dv/dt
 				preDerivClip = np.flip(preDerivClip) # backwards
-				threshPnt2 = np.where(preDerivClip<percentMaxVal)[0][0]
-				threshPnt2 = (spikeTime) - threshPnt2
-				#print('i:', i, 'spikeTime:', spikeTime, 'peakPnt:', peakPnt, 'threshPnt2:', threshPnt2)
-				spikeTimes1.append(threshPnt2)
+				tmpWhere = np.where(preDerivClip<percentMaxVal)
+				#print('tmpWhere:', type(tmpWhere), tmpWhere)
+				tmpWhere = tmpWhere[0]
+				if len(tmpWhere) > 0:
+					threshPnt2 = np.where(preDerivClip<percentMaxVal)[0][0]
+					threshPnt2 = (spikeTime) - threshPnt2
+					#print('i:', i, 'spikeTime:', spikeTime, 'peakPnt:', peakPnt, 'threshPnt2:', threshPnt2)
+					spikeTimes1.append(threshPnt2)
+				else:
+					print('   error: bAnalysis.spikeDetect0() looking for dvdt_percentOfMax:', dDict['dvdt_percentOfMax'])
+					print('      ', 'np.where did not find preDerivClip<percentMaxVal')
+					spikeTimes1.append(spikeTime)
 			except (IndexError, ValueError) as e:
 				##
-				print('   error: bAnalysis.spikeDetect0() IndexError spike', i, spikeTime)
+				print('   error: bAnalysis.spikeDetect0() looking for dvdt_percentOfMax')
+				print('      ', 'IndexError for spike', i, spikeTime)
 				print('      ', e)
 				##
 				spikeTimes1.append(spikeTime)
@@ -561,25 +638,6 @@ class bAnalysis:
 		#
 		return self.spikeTimes, self.filteredVm, self.filteredDeriv
 
-	def getDefaultDetection(self):
-		theDict = {
-			'dVthresholdPos': 100, #if None then detect only using minSpikeVm
-			'minSpikeVm': -20,
-			'medianFilter': 0,
-			'halfHeights': [20,50,80],
-			'refractory_ms': 170, # rreject spikes with instantaneous frequency
-			'peakWindow_ms': 100, #10, # time after spike to look for AP peak
-			'window_ms': 2, # used in dvdt, pre-roll to then search for real threshold crossing
-			'avgWindow_ms': 5,
-			'dvdt_percentOfMax': 0.1,
-			'halfWidthWindow_ms': 20,
-			'spikeClipWidth_ms': 500,
-			'onlyPeaksAbove_mV': None,
-			'startSeconds': None,
-			'stopSeconds': None,
-		}
-		return theDict.copy()
-
 	'''
 	def spikeDetect(self, dVthresholdPos=100, minSpikeVm=-20,
 					medianFilter=0, halfHeights=[20, 50, 80],
@@ -606,7 +664,7 @@ class bAnalysis:
 		self.numErrors = 0
 
 		# spike detect
-		if dDict['dVthresholdPos'] is None:
+		if dDict['dVthresholdPos'] is None or np.isnan(dDict['dVthresholdPos']):
 			# detect using mV threshold
 			self.thresholdTimes = None
 			self.spikeTimes, vm, dvdt = self.spikeDetect00(dDict, verbose=verbose)
@@ -648,6 +706,8 @@ class bAnalysis:
 				peakVal = np.max(vm[spikeTime:spikeTime+peakWindow_pnts])
 				if peakVal > dDict['onlyPeaksAbove_mV']:
 					newSpikeTimes.append(spikeTime)
+				else:
+					print('peak height: rejecting spike', i, 'at pnt:', spikeTime, "dDict['onlyPeaksAbove_mV']:", dDict['onlyPeaksAbove_mV'])
 			#
 			self.spikeTimes = newSpikeTimes
 
@@ -1449,6 +1509,9 @@ class bAnalysis:
 	def __str__(self):
 		retStr = 'file: ' + self.file + '\n' + str(self.abf)
 		return retStr
+
+	def NormalizeData(self, data):
+		return (data - np.min(data)) / (np.max(data) - np.min(data))
 
 def test_load_abf():
 	path = '/Users/cudmore/data/dual-lcr/20210115/data/21115002.abf'

@@ -790,7 +790,7 @@ if __name__ == '__main__':
 		sortOrder = ['LOCATION', 'SEX', 'File Number']
 
 	# sanpy database
-	if 1:
+	if 0:
 		#import sanpy
 
 		# this is from mac laptop
@@ -811,6 +811,16 @@ if __name__ == '__main__':
 		categoricalList = ['san', 'region', 'path', 'file', 'fileNumber', 'nCon']
 		hueTypes = categoricalList
 		sortOrder = ['san', 'region']
+
+	# dualAnalysis database
+	if 1:
+		path = '/Users/cudmore/Desktop/dualAnalysis_db.csv'
+		analysisName = 'fileNumber' # # rows in .xlsx database, one recording per row
+		# trial is 1a/1b/1c... trial withing cellNumber
+		categoricalList = ['region', 'fileNumber', 'cellNumber', 'trial', 'quality']
+		hueTypes = categoricalList
+		sortOrder = ['region']
+
 	#
 	app = QtWidgets.QApplication(sys.argv)
 
