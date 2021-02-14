@@ -3,6 +3,8 @@ numpy
 scipy
 pyqtgraph
 matplotlib
+mplcursors # added 202102 for bScatterPlotWidget2 (to show popup on hover)
+
 pyabf
 XlsxWriter
 

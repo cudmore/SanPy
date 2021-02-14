@@ -53,7 +53,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# a list of possible x/y plots (overlay over dvdt and Vm)
 		self.myPlots = [
 			{
-				'humanName': 'Threshold Sec (dV/dt)',
+				'humanName': 'Threshold (dV/dt)',
 				'x': 'thresholdSec',
 				'y': 'thresholdVal_dvdt',
 				'convertx_tosec': False, # some stats are in points, we need to convert to seconds
@@ -64,7 +64,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'plotIsOn': True,
 			},
 			{
-				'humanName': 'Threshold Sec (mV)',
+				'humanName': 'Threshold (mV)',
 				'x': 'thresholdSec',
 				'y': 'thresholdVal',
 				'convertx_tosec': False, # some stats are in points, we need to convert to seconds
@@ -86,11 +86,22 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'plotIsOn': True,
 			},
 			{
+				'humanName': 'Half-Widths',
+				'x': None,
+				'y': None,
+				'convertx_tosec': True,
+				'color': 'y',
+				'styleColor': 'color: yellow',
+				'symbol': 'o',
+				'plotOn': 'vm',
+				'plotIsOn': False,
+			},
+			{
 				'humanName': 'Pre AP Min (mV)',
 				'x': 'preMinPnt',
 				'y': 'preMinVal',
 				'convertx_tosec': True,
-				'color': 'g',
+				'color': 'y',
 				'styleColor': 'color: green',
 				'symbol': 'o',
 				'plotOn': 'vm',
@@ -147,7 +158,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			theRet = self.myMainWindow.getOptions()
 		return theRet
 
-	def detect(self, dvdtValue, minSpikeVm):
+	def detect(self, dvdtThreshold, vmThreshold):
 		"""
 		detect spikes
 		"""
@@ -159,20 +170,25 @@ class bDetectionWidget(QtWidgets.QWidget):
 			print('bDetectionWidget.detect() did not spike detect because the file was not loaded (may be corrupt .abf file?)')
 			return
 
-		self.updateStatusBar(f'Detecting spikes dvdt:{dvdtValue} minVm:{minSpikeVm}')
+		self.updateStatusBar(f'Detecting spikes dvdt:{dvdtThreshold} minVm:{vmThreshold}')
 
 		detectionDict = self.ba.getDefaultDetection()
-		detectionDict['dVthresholdPos'] = dvdtValue
-		detectionDict['minSpikeVm'] = minSpikeVm
+		detectionDict['dvdtThreshold'] = dvdtThreshold
+		detectionDict['vmThreshold'] = vmThreshold
 
-		#self.ba.spikeDetect(dVthresholdPos=dvdtValue, minSpikeVm=minSpikeVm)
+		if self.myMainWindow is not None:
+			myDetectionDict = self.myMainWindow.getTableRowDict()
+			sanpy.bUtil.printDict(myDetectionDict, withType=True)
+			#todo fill in detectionDict
+
+		#self.ba.spikeDetect(dvdtThreshold=dvdtThreshold, vmThreshold=vmThreshold)
 		self.ba.spikeDetect(detectionDict)
 
 		if self.ba.numSpikes == 0:
 			msg = QtWidgets.QMessageBox()
 			msg.setIcon(QtWidgets.QMessageBox.Warning)
 			msg.setText("No Spikes Detected")
-			msg.setInformativeText('dV/dt Threshold: ' + str(dvdtValue) + '\r' + ' Vm Threshold (mV): '  + str(minSpikeVm))
+			msg.setInformativeText('dV/dt Threshold: ' + str(dvdtThreshold) + '\r' + ' Vm Threshold (mV): '  + str(vmThreshold))
 			msg.setWindowTitle("No Spikes Detected")
 			retval = msg.exec_()
 
@@ -429,8 +445,113 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if self.myMainWindow is not None:
 			self.myMainWindow.updateStatusBar(text)
 
-	def on_scatterClicked(self, scatter, points):
-		print('scatterClicked() scatter:', scatter, points)
+	def on_scatterClicked(self, item, points, ev=None):
+		print('=== on_scatterClicked')
+		print('  item:', item)
+		print('  points:', points)
+		print('  ev:', ev)
+		indexes = []
+		#print('item.data:', item.data())
+		for p in points:
+			print('p.data():', p.data(), 'pos:', p.pos()) #, 'x:', p.x(), 'y:', p.y())
+		'''
+		for p in points:
+			p = p.pos()
+			x, y = p.x(), p.y()
+			lx = np.argwhere(item.data['x'] == x)
+			ly = np.argwhere(item.data['y'] == y)
+			i = np.intersect1d(lx, ly).tolist()
+			indexes += i
+		indexes = list(set(indexes))
+		print('spike(s):', indexes)
+		'''
+
+	def getHalfWidths(self):
+		#print('bDetectionWidget.getHalfWidths()')
+		# defer until we know how many half-widths 20/50/80
+		x = []
+		y = []
+		numPerSpike = 3 # rise/fall/nan
+		numSpikes = self.ba.numSpikes
+		xyIdx = 0
+		for idx, spike in enumerate(self.ba.spikeDict):
+			if idx ==0:
+				# make x/y from first spike using halfHeights = [20,50,80]
+				halfHeights = spike['halfHeights'] # will be same for all spike, like [20, 50, 80]
+				numHalfHeights = len(halfHeights)
+				# *numHalfHeights to account for rise/fall + padding nan
+				x = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
+				y = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
+				#print('  len(x):', len(x), 'numHalfHeights:', numHalfHeights, 'numSpikes:', numSpikes, 'halfHeights:', halfHeights)
+
+			for idx2, width in enumerate(spike['widths']):
+				halfHeight = width['halfHeight'] # [20,50,80]
+				risingPnt = width['risingPnt']
+				risingVal = width['risingVal']
+				fallingPnt = width['fallingPnt']
+				fallingVal = width['fallingVal']
+
+				#print('	spike:', idx, 'halfHeight:', halfHeight, 'risingPnt:', risingPnt)
+				if risingPnt is None or fallingPnt is None:
+					# half-height was not detected
+					#print('  getHalfWidths() skipping spike', idx, 'width', halfHeight , 'not dtected')
+					continue
+
+				risingSec = self.ba.pnt2Sec_(risingPnt)
+				fallingSec = self.ba.pnt2Sec_(fallingPnt)
+
+				#if idx==2:
+				#	print('')
+				#	print('risingSec:', risingSec, 'fallingSec:', fallingSec)
+				#	sanpy.bUtil.printDict(width)
+
+				x[xyIdx] = risingSec
+				x[xyIdx+1] = fallingSec
+				x[xyIdx+2] = np.nan
+				# y
+				y[xyIdx] = fallingVal #risingVal, to make line horizontal
+				y[xyIdx+1] = fallingVal
+				y[xyIdx+2] = np.nan
+
+				# each spike has 3x pnts: rise/fall/nan
+				xyIdx += numPerSpike # accounts for rising/falling/nan
+			# end for width
+		# end for spike
+		#print('  numSpikes:', numSpikes, 'xyIdx:', xyIdx)
+		#
+		return x, y
+
+	def replot(self):
+
+		if self.ba is None:
+			return
+
+		for idx, plot in enumerate(self.myPlots):
+			if plot['humanName'] == 'Half-Widths':
+				# new 20210212
+				xPlot, yPlot = self.getHalfWidths()
+
+			else:
+				xPlot, yPlot = self.ba.getStat(plot['x'], plot['y'])
+				if plot['convertx_tosec']:
+					xPlot = [self.ba.pnt2Sec_(x) for x in xPlot] # convert pnt to sec
+			#
+			# added connect='finite' to respect nan in half-width
+			# not sure how connect='finite' affect all other plots using scatter???
+			self.myPlotList[idx].setData(x=xPlot, y=yPlot)
+			self.togglePlot(idx, plot['plotIsOn'])
+
+		# update label with number of spikes detected
+		numSpikesStr = str(self.ba.numSpikes)
+		self.detectToolbarWidget.numSpikesLabel.setText('Number of Spikes: ' + numSpikesStr)
+		self.detectToolbarWidget.numSpikesLabel.repaint()
+
+		# spike freq
+		meanSpikeFreq = self.ba.getStatMean('spikeFreq_hz')
+		if meanSpikeFreq is not None:
+			meanSpikeFreq = round(meanSpikeFreq,2)
+		self.detectToolbarWidget.spikeFreqLabel.setText('Frequency: ' + str(meanSpikeFreq))
+		self.detectToolbarWidget.spikeFreqLabel.repaint()
 
 	def togglePlot(self, idx, on):
 		"""
@@ -439,42 +560,21 @@ class bDetectionWidget(QtWidgets.QWidget):
 		idx: overlay index into self.myPlots
 		on: boolean
 		"""
-
-		#print('togglePlot()', idx, on)
-
 		# toggle the plot on/off
 		self.myPlots[idx]['plotIsOn'] = on
 
-		#We do not want to setData as it seems to trash x/y data if it is not specified
-		#We just want to set the pen/size in order to show/hide
-		plot = self.myPlots[idx]
 		if on:
 			#self.myPlotList[idx].setData(pen=pg.mkPen(width=5, color=plot['color'], symbol=plot['symbol']), size=2)
-			self.myPlotList[idx].setPen(pg.mkPen(width=5, color=plot['color'], symbol=plot['symbol']))
-			self.myPlotList[idx].setSize(2)
+			self.myPlotList[idx].show()
+			#self.myPlotList[idx].setPen(pg.mkPen(width=5, color=plot['color'], symbol=plot['symbol']))
+			# removed for half-width
+			#self.myPlotList[idx].setSize(2)
 		else:
 			#self.myPlotList[idx].setData(pen=pg.mkPen(width=0, color=plot['color'], symbol=plot['symbol']), size=0)
-			self.myPlotList[idx].setPen(pg.mkPen(width=0, color=plot['color'], symbol=plot['symbol']))
-			self.myPlotList[idx].setSize(0)
-
-	def replot(self):
-
-		if self.ba is None:
-			return
-
-		for idx, plot in enumerate(self.myPlots):
-			xPlot, yPlot = self.ba.getStat(plot['x'], plot['y'])
-			if plot['convertx_tosec']:
-				xPlot = [self.ba.pnt2Sec_(x) for x in xPlot] # convert pnt to sec
-
-			self.myPlotList[idx].setData(x=xPlot, y=yPlot)
-
-			self.togglePlot(idx, plot['plotIsOn'])
-
-		# update label with number of spikes detected
-		numSpikesStr = str(self.ba.numSpikes)
-		self.detectToolbarWidget.numSpikesLabel.setText('Number of Spikes Detected: ' + numSpikesStr)
-		self.detectToolbarWidget.numSpikesLabel.repaint()
+			self.myPlotList[idx].hide()
+			#self.myPlotList[idx].setPen(pg.mkPen(width=0, color=plot['color'], symbol=plot['symbol']))
+			# removed for half-width
+			#self.myPlotList[idx].setSize(0)
 
 	def selectSpike(self, spikeNumber):
 		if spikeNumber is not None:
@@ -582,6 +682,34 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.vmPlot = self.view.addPlot(row=1, col=0)
 		self.clipPlot = self.view.addPlot(row=2, col=0)
 
+		#
+		# mouse crosshair
+		crosshairPlots = ['derivPlot', 'vmPlot', 'clipPlot']
+		self.crosshairDict = {}
+		for crosshairPlot in crosshairPlots:
+			self.crosshairDict[crosshairPlot] = {
+				'h': pg.InfiniteLine(angle=0, movable=False),
+				'v': pg.InfiniteLine(angle=90, movable=False)
+			}
+			# start hidden
+			self.crosshairDict[crosshairPlot]['h'].hide()
+			self.crosshairDict[crosshairPlot]['v'].hide()
+
+			# add h/v to appropriate plot
+			if crosshairPlot == 'derivPlot':
+				self.derivPlot.addItem(self.crosshairDict[crosshairPlot]['h'], ignoreBounds=True)
+				self.derivPlot.addItem(self.crosshairDict[crosshairPlot]['v'], ignoreBounds=True)
+			elif crosshairPlot == 'vmPlot':
+				self.vmPlot.addItem(self.crosshairDict[crosshairPlot]['h'], ignoreBounds=True)
+				self.vmPlot.addItem(self.crosshairDict[crosshairPlot]['v'], ignoreBounds=True)
+			elif crosshairPlot == 'clipPlot':
+				self.clipPlot.addItem(self.crosshairDict[crosshairPlot]['h'], ignoreBounds=True)
+				self.clipPlot.addItem(self.crosshairDict[crosshairPlot]['v'], ignoreBounds=True)
+
+		# trying to implement mouse moved events
+		self.myProxy = pg.SignalProxy(self.vmPlot.scene().sigMouseMoved, rateLimit=60, slot=self.myMouseMoved)
+		#self.vmPlot.scene().sigMouseMoved.connect(self.myMouseMoved)
+
 		# does not have setStyleSheet
 		#self.derivPlot.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 
@@ -611,9 +739,20 @@ class bDetectionWidget(QtWidgets.QWidget):
 		for idx, plot in enumerate(self.myPlots):
 			color = plot['color']
 			symbol = plot['symbol']
-			myScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=2)
-			myScatterPlot.setData(x=[], y=[]) # start empty
-			myScatterPlot.sigClicked.connect(self.on_scatterClicked)
+			humanName = plot['humanName']
+			if humanName == 'Half-Widths':
+				# PlotCurveItem
+				#myScatterPlot = pg.PlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=2)
+				#myScatterPlot = pg.PlotCurveItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=2, connect='finite')
+				myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=4, color=color), connect='finite') # default is no symbol
+				#myScatterPlot.setData(x=[], y=[]) # start empty
+				#smyScatterPlot.sigClicked.connect(self.on_scatterClicked)
+			else:
+				myScatterPlot = pg.PlotDataItem(pen=None, symbol=symbol, symbolSize=4, symbolPen=None, symbolBrush=color)
+				#myScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=2)
+				myScatterPlot.setData(x=[], y=[]) # start empty
+				#myScatterPlot.sigClicked.connect(self.on_scatterClicked)
+				myScatterPlot.sigPointsClicked.connect(self.on_scatterClicked)
 
 			self.myPlotList.append(myScatterPlot)
 
@@ -641,6 +780,81 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.myHBoxLayout_detect.addWidget(self.view, stretch=8) # stretch=10, not sure on the units???
 
 		#print('bDetectionWidget.buildUI() done')
+
+	def toggleCrosshair(self, onOff):
+		for plotName in self.crosshairDict.keys():
+			self.crosshairDict[plotName]['h'].setVisible(onOff)
+			self.crosshairDict[plotName]['v'].setVisible(onOff)
+
+	def myMouseMoved(self, event):
+		# event: PyQt5.QtCore.QPointF
+		#print('myMouseMoved()', event)
+
+		# looking directly at checkbox in myDetectionToolbarWidget2
+		if not self.detectToolbarWidget.crossHairCheckBox.isChecked():
+			return
+
+		pos = event[0]  ## using signal proxy turns original arguments into a tuple
+
+		x = None
+		y = None
+		mousePoint = None
+		inPlot = None
+		if self.derivPlot.sceneBoundingRect().contains(pos):
+			# deriv
+			inPlot = 'derivPlot'
+			self.crosshairDict[inPlot]['h'].show()
+			self.crosshairDict[inPlot]['v'].show()
+			mousePoint = self.derivPlot.vb.mapSceneToView(pos)
+			# hide the horizontal in vmPlot
+			self.crosshairDict['vmPlot']['v'].show()
+			self.crosshairDict['vmPlot']['h'].hide()
+
+		elif self.vmPlot.sceneBoundingRect().contains(pos):
+			# vm
+			inPlot = 'vmPlot'
+			self.crosshairDict[inPlot]['h'].show()
+			self.crosshairDict[inPlot]['v'].show()
+			mousePoint = self.vmPlot.vb.mapSceneToView(pos)
+			# hide the horizontal in derivPlot
+			self.crosshairDict['derivPlot']['v'].show()
+			self.crosshairDict['derivPlot']['h'].hide()
+
+		elif self.clipPlot.sceneBoundingRect().contains(pos):
+			# clip
+			inPlot = 'clipPlot'
+			self.crosshairDict[inPlot]['h'].show()
+			self.crosshairDict[inPlot]['v'].show()
+			mousePoint = self.clipPlot.vb.mapSceneToView(pos)
+			# hide the horizontal/vertical in both derivPlot and vmPlot
+
+		if inPlot is not None and mousePoint is not None:
+			self.crosshairDict[inPlot]['h'].setPos(mousePoint.y())
+			self.crosshairDict[inPlot]['v'].setPos(mousePoint.x())
+
+		if inPlot == 'derivPlot':
+			self.crosshairDict['vmPlot']['v'].setPos(mousePoint.x())
+		if inPlot == 'vmPlot':
+			self.crosshairDict['derivPlot']['v'].setPos(mousePoint.x())
+
+		# hide
+		if inPlot in ['derivPlot', 'vmPlot']:
+			# hide h/v in clipPlot
+			self.crosshairDict['clipPlot']['h'].hide()
+			self.crosshairDict['clipPlot']['v'].hide()
+		elif inPlot == 'clipPlot':
+			# hide h/v in derivPlot and vmPlot
+			self.crosshairDict['derivPlot']['h'].hide()
+			self.crosshairDict['derivPlot']['v'].hide()
+			self.crosshairDict['vmPlot']['h'].hide()
+			self.crosshairDict['vmPlot']['v'].hide()
+
+		if mousePoint is not None:
+			x = mousePoint.x()
+			y = mousePoint.y()
+
+		# x/y can still be None
+		self.detectToolbarWidget.setMousePositionLabel(x,y)
 
 	'''
 	def slot_dvdtMouseReleased(self, event):
@@ -683,6 +897,47 @@ class bDetectionWidget(QtWidgets.QWidget):
 		print('  myPrint() saving file', filename_png)
 		exporter.export(filename_png)
 		print('   done')
+
+	def exploreSpikes(self):
+		"""
+		use bScatterPlotWidget2.py to explore spike stat for one file
+
+		todo:
+			limit to start/stop
+			don't reload, just reuse spike analysis in bAnalysis
+		"""
+		print('bDetectionWidget.exploreSpikes()')
+		print('  todo:')
+		print('    limit start/stop')
+		print('    do not reload, just reuse spike analysis in bAnalysis')
+
+		if self.ba is None:
+			print('please detect first')
+
+		# get the df rport
+		saveFilePath = ''
+		# todo: get start/stop from curent x-axis ???
+		startSeconds = self.detectToolbarWidget.startSeconds.value()
+		stopSeconds = self.detectToolbarWidget.stopSeconds.value()
+
+		df0 = self.ba.report(startSeconds, stopSeconds)
+
+		print(df0.head())
+
+		# show it with bScatterPlotWidget
+		path = ''
+		categoricalList = []
+		hueTypes = ['file'] # fix this
+		analysisName = 'file' # fix this
+		sortOrder = None
+		statListDict = None # fix this sanpy.bAnalysisUtil.statList
+		masterDf = df0
+		parent = None
+		sanpy.bScatterPlotMainWindow(
+			path,
+			categoricalList, hueTypes, analysisName, sortOrder,
+			statListDict=statListDict, masterDf=masterDf, parent=None
+		)
 
 class myImageExporter(ImageExporter):
 	def __init__(self, item):
@@ -942,26 +1197,26 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 	@QtCore.pyqtSlot()
 	def on_button_click(self, name):
-		print('=== myDetectToolbarWidget.on_button_click() name:', name)
+		#print('=== myDetectToolbarWidget2.on_button_click() name:', name)
 
 		modifiers = QtWidgets.QApplication.keyboardModifiers()
 		isShift = modifiers == QtCore.Qt.ShiftModifier
 
 		if name == 'Detect dV/dt':
-			dvdtValue = self.dvdtThreshold.value()
-			minSpikeVm = self.minSpikeVm.value()
-			#print('	dvdtValue:', dvdtValue)
-			#print('	minSpikeVm:', minSpikeVm)
-			self.detectionWidget.detect(dvdtValue, minSpikeVm)
+			dvdtThreshold = self.dvdtThreshold.value()
+			vmThreshold = self.vmThreshold.value()
+			#print('	dvdtThreshold:', dvdtThreshold)
+			#print('	vmThreshold:', vmThreshold)
+			self.detectionWidget.detect(dvdtThreshold, vmThreshold)
 
 		elif name =='Detect mV':
-			minSpikeVm = self.minSpikeVm.value()
-			#print('	minSpikeVm:', minSpikeVm)
-			# passing dvdtValue=None we will detect suing minSpikeVm
-			dvdtValue = None
-			#print('	dvdtValue:', dvdtValue)
-			#print('	minSpikeVm:', minSpikeVm)
-			self.detectionWidget.detect(dvdtValue, minSpikeVm)
+			vmThreshold = self.vmThreshold.value()
+			#print('	vmThreshold:', vmThreshold)
+			# passing dvdtThreshold=None we will detect suing vmThreshold
+			dvdtThreshold = None
+			#print('	dvdtThreshold:', dvdtThreshold)
+			#print('	vmThreshold:', vmThreshold)
+			self.detectionWidget.detect(dvdtThreshold, vmThreshold)
 
 		elif name == 'Reset All Axes':
 			self.detectionWidget.setAxisFull()
@@ -969,6 +1224,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		elif name == 'Save Spike Report':
 			print('"Save Spike Report" isShift:', isShift)
 			self.detectionWidget.save(alsoSaveTxt=isShift)
+
+		elif name == 'Explore':
+			# open bScatterPlot2 for one recording
+			self.detectionWidget.exploreSpikes()
 
 	def on_check_click(self, checkbox, idx):
 		isChecked = checkbox.isChecked()
@@ -985,6 +1244,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			# Toggle overlay of stats like spike peak.
 			# assuming idx is int !!!
 			self.detectionWidget.togglePlot(idx, isChecked)
+
+	def on_crosshair_clicked(self, value):
+		print('on_crosshair_clicked() value:', value)
+		onOff = value==2
+		self.detectionWidget.toggleCrosshair(onOff)
 
 	def buildUI(self):
 		#self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
@@ -1037,7 +1301,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		#
 		# detection parameters group
-		detectionGroupBox = QtWidgets.QGroupBox('Detect Parameters')
+		detectionGroupBox = QtWidgets.QGroupBox('Detection')
 		detectionGroupBox.setStyleSheet(myStyleSheet)
 
 		detectionGridLayout = QtWidgets.QGridLayout()
@@ -1068,15 +1332,15 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)
 
 		# Vm Threshold (mV)
-		#minSpikeVmLabel = QtWidgets.QLabel('Vm Threshold (mV)')
-		#self.addWidget(minSpikeVmLabel, row, 1)
+		#vmThresholdLabel = QtWidgets.QLabel('Vm Threshold (mV)')
+		#self.addWidget(vmThresholdLabel, row, 1)
 
 		#row += 1
-		self.minSpikeVm = QtWidgets.QDoubleSpinBox()
-		self.minSpikeVm.setMinimum(-1e6)
-		self.minSpikeVm.setMaximum(+1e6)
-		self.minSpikeVm.setValue(detectMv)
-		detectionGridLayout.addWidget(self.minSpikeVm, row, 2, rowSpan, columnSpan)
+		self.vmThreshold = QtWidgets.QDoubleSpinBox()
+		self.vmThreshold.setMinimum(-1e6)
+		self.vmThreshold.setMaximum(+1e6)
+		self.vmThreshold.setValue(detectMv)
+		detectionGridLayout.addWidget(self.vmThreshold, row, 2, rowSpan, columnSpan)
 
 		# start/stop seconds
 		row += 1
@@ -1107,11 +1371,26 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		# always the last row
 		row += 1
-		self.numSpikesLabel = QtWidgets.QLabel('Number of Spikes Detected: None')
+		self.numSpikesLabel = QtWidgets.QLabel('Number of Spikes: None')
 		#self.numSpikesLabel.setObjectName('numSpikesLabel')
 		tmpRowSpan = 1
-		tmpColSpan = 4
-		detectionGridLayout.addWidget(self.numSpikesLabel, row, 0, tmpRowSpan, tmpColSpan) # columnSpan=2 does not work?
+		tmpColSpan = 2
+		detectionGridLayout.addWidget(self.numSpikesLabel, row, 0, tmpRowSpan, tmpColSpan)
+
+		self.spikeFreqLabel = QtWidgets.QLabel('Frequency: None')
+		detectionGridLayout.addWidget(self.spikeFreqLabel, row, 2, tmpRowSpan, tmpColSpan)
+
+		row += 1
+
+		self.crossHairCheckBox = QtWidgets.QCheckBox('Crosshair')
+		self.crossHairCheckBox.setChecked(False)
+		self.crossHairCheckBox.stateChanged.connect(self.on_crosshair_clicked)
+		tmpColSpan = 2
+		detectionGridLayout.addWidget(self.crossHairCheckBox, row, 0, tmpRowSpan, tmpColSpan)
+
+		# x/y coordinates of mouse in each of derivPlot, vmPlot, clipPlot)
+		self.mousePositionLabel = QtWidgets.QLabel('x:None\ty:None')
+		detectionGridLayout.addWidget(self.mousePositionLabel, row, 2, tmpRowSpan, tmpColSpan)
 
 		# finalize
 		detectionGroupBox.setLayout(detectionGridLayout)
@@ -1140,10 +1419,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		button.clicked.connect(partial(self.on_button_click,buttonName))
 		displayGridLayout.addWidget(button, row, 0)
 
-		# a number of stats that will get overlaid
+		# a number of stats that will get overlaid on dv/dt and Vm
 		row += 1
+		col = 0
 		for idx, plot in enumerate(self.myPlots):
-			print('humanName:', plot['humanName'])
+			#print('humanName:', plot['humanName'])
 			humanName = plot['humanName']
 			isChecked = plot['plotIsOn']
 			styleColor = plot['styleColor']
@@ -1152,14 +1432,12 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			#checkbox.setStyleSheet(styleColor) # looks really ugly
 			#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
 			checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,idx))
-			col = 0
-			if humanName == 'Post AP Min (mV)':
-				col = 1
+			# append
 			displayGridLayout.addWidget(checkbox, row, col)
-			if humanName == 'Pre AP Min (mV)':
-				# don't increment row, we are in col = 1
-				pass
-			else:
+			# increment
+			col += 1
+			if col == 2: # we only have col 0/1, nx2 grid
+				col = 0
 				row += 1
 
 		# finalize
@@ -1195,237 +1473,27 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Scatter'))
 		plotGridLayout.addWidget(checkbox, row, col)
 
+		row = 0
+		col = 3
+		buttonName = 'Explore'
+		spikeExploreButton = QtWidgets.QPushButton(buttonName)
+		spikeExploreButton.setToolTip('Explore spike measurements')
+		#spikeExploreButton.setStyleSheet("background-color: green")
+		spikeExploreButton.clicked.connect(partial(self.on_button_click, buttonName))
+		self.mainLayout.addWidget(spikeExploreButton)
+
 		# finalize
 		plotGroupBox.setLayout(plotGridLayout)
 		self.mainLayout.addWidget(plotGroupBox)
 
-#class myDetectToolbarWidget(QtWidgets.QVBoxLayout):
-class myDetectToolbarWidget(QtWidgets.QGridLayout):
-
-	def __init__(self, myPlots, detectionWidget, parent=None):
-		"""
-		myPlots is a list of dict describing each x/y plot (on top of vm and/or dvdt)
-		"""
-
-		super(myDetectToolbarWidget, self).__init__(parent)
-
-		self.detectionWidget = detectionWidget # parent detection widget
-
-		# this does not work
-		#self.setMaximumWidth(22)
-
-		self.setAlignment(QtCore.Qt.AlignTop)
-
-		row = 0
-
-		# IMPLEMENT SWEEPS AND
-		# PUT THIS BACK IN
-		'''
-		# sweeps
-		sweepLabel = QtWidgets.QLabel('Sweep')
-		self.addWidget(sweepLabel, row, 0)
-
-		sweeps = [0,1,2,3,4]
-		self.cb = QtWidgets.QComboBox()
-		#self.cb.addItems(sweeps)
-		for sweep in sweeps:
-			self.cb.addItem(str(sweep))
-		self.cb.currentIndexChanged.connect(self.sweepSelectionChange)
-		self.addWidget(self.cb, row, 1)
-		row += 1
-		'''
-
-		buttonName = 'Detect dV/dt'
-		button = QtWidgets.QPushButton(buttonName)
-		button.setToolTip('Detect Spikes Using dV/dt Threshold')
-		button.clicked.connect(partial(self.on_button_click,buttonName))
-		self.addWidget(button, row, 0)
-
-		#dvdtLabel = QtWidgets.QLabel('dV/dt Theshold')
-		#self.addWidget(dvdtLabel, row, 1)
-
-		self.dvdtThreshold = QtWidgets.QDoubleSpinBox()
-		self.dvdtThreshold.setMinimum(-1e6)
-		self.dvdtThreshold.setMaximum(+1e6)
-		self.dvdtThreshold.setValue(50)
-		self.addWidget(self.dvdtThreshold, row, 1)
-
-		row += 1
-
-		buttonName = 'Detect mV'
-		button = QtWidgets.QPushButton(buttonName)
-		button.setToolTip('Detect Spikes Using Vm Threshold')
-		button.clicked.connect(partial(self.on_button_click,buttonName))
-		self.addWidget(button, row, 0)
-
-		# Vm Threshold (mV)
-		#minSpikeVmLabel = QtWidgets.QLabel('Vm Threshold (mV)')
-		#self.addWidget(minSpikeVmLabel, row, 1)
-
-		self.minSpikeVm = QtWidgets.QDoubleSpinBox()
-		self.minSpikeVm.setMinimum(-1e6)
-		self.minSpikeVm.setMaximum(+1e6)
-		self.minSpikeVm.setValue(-20)
-		self.addWidget(self.minSpikeVm, row, 1)
-
-		row += 1
-
-		# start/stop seconds
-		startSeconds = QtWidgets.QLabel('From (Sec)')
-		self.addWidget(startSeconds, row, 0)
-		stopSeconds = QtWidgets.QLabel('To (Sec)')
-		self.addWidget(stopSeconds, row, 1)
-		#
-		row += 1
-		self.startSeconds = QtWidgets.QDoubleSpinBox()
-		self.startSeconds.setMinimum(-1e6)
-		self.startSeconds.setMaximum(+1e6)
-		self.startSeconds.setValue(0)
-		# abb 20200718
-		#self.startSeconds.valueChanged.connect(self.on_start_stop)
-		self.startSeconds.editingFinished.connect(self.on_start_stop)
-		self.addWidget(self.startSeconds, row, 0)
-		#
-		self.stopSeconds = QtWidgets.QDoubleSpinBox()
-		self.stopSeconds.setMinimum(-1e6)
-		self.stopSeconds.setMaximum(+1e6)
-		self.stopSeconds.setValue(0)
-		#self.stopSeconds.valueChanged.connect(self.on_start_stop)
-		self.stopSeconds.editingFinished.connect(self.on_start_stop)
-		self.addWidget(self.stopSeconds, row, 1)
-
-		row += 1
-
-		# dv/dt threshold
-		self.numSpikesLabel = QtWidgets.QLabel('Number of Spikes Detected: None')
-		#self.numSpikesLabel.setObjectName('numSpikesLabel')
-		tmpRowSpan = 1
-		tmpColSpan = 2
-		self.addWidget(self.numSpikesLabel, row, 0, tmpRowSpan, tmpColSpan) # columnSpan=2 does not work?
-
-		row += 1
-
-		buttonName = 'Save Spike Report'
-		button = QtWidgets.QPushButton(buttonName)
-		#button.setToolTip('Detect Spikes')
-		button.clicked.connect(partial(self.on_button_click,buttonName))
-		self.addWidget(button, row, 0)
-
-		row += 1
-
-		buttonName = 'Reset All Axes'
-		button = QtWidgets.QPushButton(buttonName)
-		#button.setToolTip('Detect Spikes')
-		button.clicked.connect(partial(self.on_button_click,buttonName))
-		self.addWidget(button, row, 0)
-
-		row += 1
-
-		for idx, plot in enumerate(myPlots):
-			humanName = plot['humanName']
-			isChecked = plot['plotIsOn']
-			checkbox = QtWidgets.QCheckBox(humanName)
-			checkbox.setChecked(isChecked)
-			#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
-			checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,idx))
-			self.addWidget(checkbox, row, 0)
-			row += 1
-
-		#row += 1
-		show_dvdt_checkbox = QtWidgets.QCheckBox('Show dV/dt')
-		show_dvdt_checkbox.setChecked(True)
-		#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
-		show_dvdt_checkbox.stateChanged.connect(partial(self.on_check_click,show_dvdt_checkbox,'Show dV/dt'))
-		self.addWidget(show_dvdt_checkbox, row, 0)
-
-		# don't allow user to turn off all plot
-		# the layout gets screwed up
-		'''
-		row += 1
-		show_vm_checkbox = QtWidgets.QCheckBox('Show Vm')
-		show_vm_checkbox.setChecked(True)
-		#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
-		show_vm_checkbox.stateChanged.connect(partial(self.on_check_click,show_vm_checkbox,'Show Vm'))
-		self.addWidget(show_vm_checkbox, row, 0)
-		'''
-
-		row += 1
-		checkbox = QtWidgets.QCheckBox('Show Clips')
-		checkbox.setChecked(False)
-		#checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
-		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Show Clips'))
-		self.addWidget(checkbox, row, 0)
-
-		# this does not work at all !!!
-		'''
-		# abb 20201109, we have two columns (detection buttons and plot)
-		# set the width of the detection buttons
-		self.setColumnStretch(1, 10)
-		self.setColumnStretch(0, 2)
-		'''
-
-	@QtCore.pyqtSlot()
-	def on_start_stop(self):
-		#print('myDetectToolbarWidget.on_start_stop()')
-		start = self.startSeconds.value()
-		stop = self.stopSeconds.value()
-		#print('	start:', start, 'stop:', stop)
-		self.detectionWidget.setAxis(start, stop)
-
-	def on_check_click(self, checkbox, idx):
-		isChecked = checkbox.isChecked()
-		print('on_check_click() text:', checkbox.text(), 'isChecked:', isChecked, 'idx:', idx)
-		if idx == 'Show Clips':
-			self.detectionWidget.toggleClips(isChecked)
-		elif idx == 'Show dV/dt':
-			self.detectionWidget.toggle_dvdt(isChecked)
-		elif idx == 'Show Vm':
-			self.detectionWidget.toggle_vm(isChecked)
-		else:
-			# assuming idx is int !!!
-			self.detectionWidget.togglePlot(idx, isChecked)
-
-	@QtCore.pyqtSlot()
-	def on_button_click(self, name):
-		print('=== myDetectToolbarWidget.on_button_click() name:', name)
-
-		modifiers = QtWidgets.QApplication.keyboardModifiers()
-		isShift = modifiers == QtCore.Qt.ShiftModifier
-
-		if name == 'Detect dV/dt':
-			dvdtValue = self.dvdtThreshold.value()
-			minSpikeVm = self.minSpikeVm.value()
-			#print('	dvdtValue:', dvdtValue)
-			#print('	minSpikeVm:', minSpikeVm)
-			self.detectionWidget.detect(dvdtValue, minSpikeVm)
-
-		elif name =='Detect mV':
-			minSpikeVm = self.minSpikeVm.value()
-			#print('	minSpikeVm:', minSpikeVm)
-			# passing dvdtValue=None we will detect suing minSpikeVm
-			dvdtValue = None
-			#print('	dvdtValue:', dvdtValue)
-			#print('	minSpikeVm:', minSpikeVm)
-			self.detectionWidget.detect(dvdtValue, minSpikeVm)
-
-		elif name == 'Reset All Axes':
-			self.detectionWidget.setAxisFull()
-
-		elif name == 'Save Spike Report':
-			print('isShift:', isShift)
-			self.detectionWidget.save(alsoSaveTxt=isShift)
-
-	def sweepSelectionChange(self,i):
-		print('sweepSelectionChange() i:', i)
-		'''
-		print "Items in the list are :"
-
-		for count in range(self.cb.count()):
-			print self.cb.itemText(count)
-		'''
-		sweepNumber = int(self.cb.currentText())
-		print('	sweep number:', sweepNumber)
-
+	def setMousePositionLabel(self, x, y):
+		if x is not None:
+			x = round(x,4) # 4 to get 10kHz precision, 0.0001
+		if y is not None:
+			y = round(y,2)
+		labelStr = f'x:{x}   y:{y}'
+		self.mousePositionLabel.setText(labelStr)
+		self.mousePositionLabel.repaint()
 
 if __name__ == '__main__':
 	# load a bAnalysis file
@@ -1439,7 +1507,7 @@ if __name__ == '__main__':
 	ba = sanpy.bAnalysis(file=abfFile)
 	# spike detect
 	ba.getDerivative(medianFilter=5) # derivative
-	ba.spikeDetect(dVthresholdPos=50, minSpikeVm=-20, medianFilter=0)
+	ba.spikeDetect(dvdtThreshold=50, vmThreshold=-20, medianFilter=0)
 	'''
 
 	# default theme

@@ -56,7 +56,7 @@ def loadDatabase(dbFile='dual-database.xlsx'):
 			#df['tifPath'].iloc[row] = tifPath
 			df.at[row, 'tifPath'] = tifPath
 		else:
-			print(f'  ERROR: did not find tif at row {row+1}, path:', tifPath)
+			print(f'  ERROR: did not find tif at row {row+1}, path: {tifPath}')
 
 		abfPath = os.path.join(myPath, dataPath, dateFolder, abf)
 		if os.path.isfile(abfPath):
@@ -389,7 +389,7 @@ class dualRecord:
 			onlyPeaksAbove_mV=onlyPeaksAbove_mV)
 
 			#avgWindow_ms=avgWindow_ms,
-			#window_ms=window_ms,
+			#dvdtPreWindow_ms=dvdtPreWindow_ms,
 			#peakWindow_ms=peakWindow_ms,
 			#refractory_ms=refractory_ms,
 			#dvdt_percentOfMax=dvdt_percentOfMax)
@@ -1237,7 +1237,8 @@ class dualRecord:
 
 def runPool():
 	"""
-	output a long list of spike stats as a df (one row per spike
+	load/analyze/findspikepairs, then
+		output a long list of spike stats as a df (one row per spike
 	"""
 	df = loadDatabase()
 
@@ -1248,14 +1249,14 @@ def runPool():
 		tifFile = df['tifPath'].loc[fileNumber]
 		abfFile = df['abfPath'].loc[fileNumber]
 
-		goodAnalysis = df['good analysis'].iloc[fileNumber]
-		if goodAnalysis != 1:
+		spikeAnalysis = df['spike analysis'].iloc[fileNumber]
+		if spikeAnalysis != 1:
 			continue
 
 		region = df['region'].iloc[fileNumber]
 		quality = df['quality'].iloc[fileNumber]
-		cellNumber = df['cellNumber'].iloc[trial]
-		trial = df['trial'].iloc[trial]
+		cellNumber = df['cell number'].iloc[fileNumber]
+		trial = df['trial'].iloc[fileNumber]
 
 		print('runPool() running on file:', fileNumber)
 
@@ -1271,11 +1272,12 @@ def runPool():
 		# make a spike report
 		df0 = pd.DataFrame(dr.baAbf.spikeDict)
 		# append columns
+		df0['include'] = 1
 		df0['cellNumber'] = cellNumber # each cell can have multiple trial
-		df0['trial'] = trial
+		df0['trial'] = trial # multiple trials for each cell e.g. 3a/3b/3c
 		df0['quality'] = quality
 		df0['region'] = region
-		df0['fileNumber'] = fileNumber # rows in .xlsx database
+		df0['fileNumber'] = fileNumber # rows in .xlsx database, individual recording
 		print('df0.shape:', df0.shape)
 		if dfMaster is None:
 			dfMaster = df0
@@ -1292,7 +1294,7 @@ def runPool():
 	print('savePath:', savePath)
 	dfMaster.to_csv(savePath)
 
-def run():
+def runOneRecording():
 	df = loadDatabase()
 
 	if 1:
@@ -1342,5 +1344,5 @@ def run():
 		plt.show()
 
 if __name__ == '__main__':
-	#run()
+	#runOneRecording()
 	runPool()

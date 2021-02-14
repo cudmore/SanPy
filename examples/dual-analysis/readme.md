@@ -40,6 +40,24 @@ Notes:
 	- the interval between abf.tagTimesSec is way to long
 		should be the duration of each tif file scan but it is not
 
+Code Notes
+
+	to browse data from dual-database.xls, use
+		testTable.py
+
+	in dualAnalysis.py, dualRecord.findSpikePairs()
+		assumes dualRecord is loaded and analyzed
+		find spike pairs between abf and tif recording
+
+	dualAnalysis.py runOneRecording() will
+		use dual-database.xls to analyze and plot ONE dual (tif/abf) recording
+		also runs/plot dualRecord.findSpikePairs()
+
+	dualAnalysis.py runPool() will
+		use dual-database.xls to analyze all files and make a df
+		save df as /Users/cudmore/Desktop/dualAnalysis_db.csv
+		to be opened in sanpy/bScatterPlot2.py
+
 Data Notes
 
 how to open in Fiji?

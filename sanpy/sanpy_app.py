@@ -226,7 +226,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		data: depends on signal:
 			signal=='set x axis': data=[min,max]
 		"""
-		print('=== sanpy_app.mySignal() "' + this +'"')
+		#print('=== sanpy_app.mySignal() "' + this +'"')
 
 		if this == 'set abfError':
 			ba = self.myDetectionWidget.ba
@@ -647,7 +647,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		configDict['detect'] = {}
 		configDict['detect']['detectDvDt'] = 20
-		configDict['detect']['detectMv'] = -20		
+		configDict['detect']['detectMv'] = -20
 
 		configDict['display'] = {}
 		configDict['display']['plotEveryPoint'] = 10 # not used?

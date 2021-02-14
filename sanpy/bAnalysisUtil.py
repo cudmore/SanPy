@@ -111,23 +111,45 @@ statList['Max AP Repolarization (mV)'] = {
 	'xStat': 'postSpike_dvdt_min_pnt',
 	'xStatUnits': 'Points'
 	}
-
-# todo: fix this
-'''
-statList['halfWidth'] = {
-	'yStat': '',
-	'yStatUnits': '/dt',
-	'xStat': '',
-	'xStatUnits': ''
-	}
-'''
-
 # todo: fix this
 statList['AP Duration (ms)'] = {
 	'yStat': 'apDuration_ms',
 	'yStatUnits': 'ms',
 	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
+	}
+
+# new 20210211
+statList['Half Width 20 (ms)'] = {
+	'yStat': 'widths_20',
+	'yStatUnits': 'ms',
+	'xStat': '',
+	'xStatUnits': ''
+	}
+statList['Half Width 50 (ms)'] = {
+	'yStat': 'widths_50',
+	'yStatUnits': 'ms',
+	'xStat': '',
+	'xStatUnits': ''
+	}
+statList['Half Width 80 (ms)'] = {
+	'yStat': 'widths_80',
+	'yStatUnits': 'ms',
+	'xStat': '',
+	'xStatUnits': ''
+	}
+# kymograph analysis
+statList['Ca++ Delay (s)'] = {
+	'yStat': 'caDelay_sec',
+	'yStatUnits': 's',
+	'xStat': '',
+	'xStatUnits': ''
+	}
+statList['Ca++ Width (ms)'] = {
+	'yStat': 'caWidth_ms',
+	'yStatUnits': 'ms',
+	'xStat': '',
+	'xStatUnits': ''
 	}
 
 class bAnalysisUtil:

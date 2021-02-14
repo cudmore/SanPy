@@ -177,7 +177,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		select all spikes in range
 		"""
 
-		print('bScatterPlotWidget.selectXRange() xMin:', xMin, 'xMax:', xMax)
+		#print('bScatterPlotWidget.selectXRange() xMin:', xMin, 'xMax:', xMax)
 
 		'''
 		# clear existing
@@ -215,7 +215,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		self.repaint() # this is updating the widget !!!!!!!!
 
 	def metaPlotStat(self, yStatHuman):
-		print('bScatterPlotWidget.metaPlotStat() yStatHuman:', yStatHuman)
+		#print('bScatterPlotWidget.metaPlotStat() yStatHuman:', yStatHuman)
 		# todo: we need to tweek xStat based on particular yStat
 
 
@@ -459,7 +459,7 @@ class myStatPlotToolbarWidget(QtWidgets.QWidget):
 		if row == -1 or row is None:
 			return
 		yStat = self.myTableWidget.item(row,0).text() #
-		print('=== myStatPlotToolbarWidget.on_scatter_toolbar_table_click', row, yStat)
+		#print('=== myStatPlotToolbarWidget.on_scatter_toolbar_table_click', row, yStat)
 		self.myParent.metaPlotStat(yStat)
 
 	@QtCore.pyqtSlot()
