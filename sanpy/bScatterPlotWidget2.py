@@ -8,6 +8,9 @@ Started as specifically for SanPy (using reanalyze.py) from a database of spikes
 20210112, extending it to any csv for use with bImPy nodes/edges
 	See: bImPy/bimpy/analysis/bScrapeNodesAndEdges.py
 
+I want this to run independent of SanPy, to do this:
+	copy (pandas model, checkbox delegate) from sanpy.butil
+	into a local folder and change imports
 """
 
 import os, sys, io, csv
@@ -22,12 +25,14 @@ import matplotlib.pyplot as plt # abb 202012 added to set theme
 import seaborn as sns
 import mplcursors
 
-sysPath = os.path.dirname(sys.path[0])
-sysPath = os.path.join(sysPath, 'sanpy')
-print(sysPath)
-sys.path.append(sysPath)
-import bAnalysisUtil
-import bUtil # from sanpy folder
+#sysPath = os.path.dirname(sys.path[0])
+#sysPath = os.path.join(sysPath, 'sanpy')
+#print('bScatterPlotWidget2.py sysPath:', sysPath)
+#sys.path.append(sysPath)
+
+#print('os.getcwd():', os.getcwd())
+import sanpy
+#import bUtil # from sanpy folder, for pandas model
 
 #class MainWindow(QtWidgets.QWidget):
 class bScatterPlotMainWindow(QtWidgets.QMainWindow):
@@ -251,7 +256,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		'''
 
 		# table with pandas dataframe
-		self.myModel = bUtil.pandasModel(self.masterDf)
+		self.myModel = sanpy.bUtil.pandasModel(self.masterDf)
 		self.tableView = QtWidgets.QTableView()
 		# todo, derive a class for tableView
 		# put this back in to enable isGood checkBox
@@ -282,13 +287,13 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		self.tableView.setModel(newModel)
 
 		print('  todo: on xxx when we set check box delegate we crash !!!')
-		if 0:
+		if 1:
 			# install checkboxes in 'incude' column
 			colList = newModel._data.columns.values.tolist()
 			if 'include' in colList:
 				includeCol = colList.index('include')
-				print(f'_switchTableModel() setting include column {includeCol} to "bUtil.myCheckBoxDelegate"')
-				self.tableView.setItemDelegateForColumn(includeCol, myCheckBoxDelegate(None))
+				print(f'_switchTableModel() setting include column {includeCol} to "sanpy.bUtil.myCheckBoxDelegate"')
+				self.tableView.setItemDelegateForColumn(includeCol, sanpy.bUtil.myCheckBoxDelegate(None))
 
 	def myCloseAction(self):
 		print('myCloseAction()')
@@ -773,7 +778,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 			self.yDf = modelMeanDf
 
-			self.myModel = bUtil.pandasModel(modelMeanDf)
+			self.myModel = sanpy.bUtil.pandasModel(modelMeanDf)
 			#self.tableView.setModel(self.myModel)
 			self._switchTableModel(self.myModel)
 		except (pd.core.base.DataError) as e:
@@ -833,7 +838,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		analysisName = self.plotDf.at[ind, self.analysisName]
 		index = self.plotDf.at[ind, 'index']
-		region = self.plotDf.at[ind, 'region']
+		region = self.plotDf.at[ind, 'region'] # not all will have this
 		xVal = self.plotDf.at[ind, self.plotStatx]
 		yVal = self.plotDf.at[ind, self.plotStaty]
 

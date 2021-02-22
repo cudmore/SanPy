@@ -1229,6 +1229,40 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			# open bScatterPlot2 for one recording
 			self.detectionWidget.exploreSpikes()
 
+		elif name == 'Error':
+			self.detectionWidget.ba.errorReport()
+
+		elif name == 'Go':
+			spikeNumber = self.spikeNumber.value()
+			thresholdSeconds = self.detectionWidget.ba.getStat('thresholdSec')
+			thresholdSecond = thresholdSeconds[spikeNumber]
+			thresholdSecond = round(thresholdSecond, 3)
+			startSec = thresholdSecond - 0.5
+			startSec = round(startSec, 2)
+			stopSec = thresholdSecond + 0.5
+			stopSec = round(stopSec, 2)
+			print('spikeNumber:', spikeNumber, 'thresholdSecond:', thresholdSecond, 'startSec:', startSec, 'stopSec:', stopSec)
+			start = self.detectionWidget.setAxis(startSec, stopSec)
+
+		elif name == '<<':
+			spikeNumber = self.spikeNumber.value()
+			spikeNumber -= 1
+			if spikeNumber < 0:
+				spikeNumber = 0
+			self.spikeNumber.setValue(spikeNumber)
+			self.on_button_click('Go')
+
+		elif name == '>>':
+			spikeNumber = self.spikeNumber.value()
+			spikeNumber += 1
+			if spikeNumber > self.detectionWidget.ba.numSpikes - 1:
+				spikeNumber = self.detectionWidget.ba.numSpikes - 1
+			self.spikeNumber.setValue(spikeNumber)
+			self.on_button_click('Go')
+
+		else:
+			print('on_button_click() did not understand button:', name)
+
 	def on_check_click(self, checkbox, idx):
 		isChecked = checkbox.isChecked()
 		print('on_check_click() text:', checkbox.text(), 'isChecked:', isChecked, 'idx:', idx)
@@ -1391,6 +1425,64 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		# x/y coordinates of mouse in each of derivPlot, vmPlot, clipPlot)
 		self.mousePositionLabel = QtWidgets.QLabel('x:None\ty:None')
 		detectionGridLayout.addWidget(self.mousePositionLabel, row, 2, tmpRowSpan, tmpColSpan)
+
+		#
+		# row for (error report, spike #, go, prev, next)
+		hBoxSpikeBrowser = QtWidgets.QHBoxLayout()
+
+		row += 1
+		rowSpan = 1
+		columnSpan = 1
+
+		col = 0
+		buttonName = 'Error'
+		button = QtWidgets.QPushButton(buttonName)
+		button.setToolTip('Print Spike Errors')
+		button.clicked.connect(partial(self.on_button_click,buttonName))
+		#detectionGridLayout.addWidget(button, row, col, rowSpan, columnSpan)
+		hBoxSpikeBrowser.addWidget(button)
+
+		col = 1
+		# spike number
+		self.spikeNumber = QtWidgets.QSpinBox()
+		self.spikeNumber.setMinimum(0)
+		self.spikeNumber.setMaximum(+1e6)
+		self.spikeNumber.setKeyboardTracking(False)
+		self.spikeNumber.setValue(0)
+		#self.spikeNumber.valueChanged.connect(self.on_spike_number)
+		#detectionGridLayout.addWidget(self.spikeNumber, row, col)
+		hBoxSpikeBrowser.addWidget(self.spikeNumber)
+
+		col = 2
+		buttonName = 'Go'
+		button = QtWidgets.QPushButton(buttonName)
+		button.setMinimumWidth(20)
+		button.setMaximumWidth(20)
+		button.setFixedSize(20,20)
+		button.setToolTip('Go To Spike Number')
+		button.clicked.connect(partial(self.on_button_click,buttonName))
+		#detectionGridLayout.addWidget(button, row, col, rowSpan, columnSpan)
+		hBoxSpikeBrowser.addWidget(button)
+
+		col = 3
+		buttonName = '<<'
+		button = QtWidgets.QPushButton(buttonName)
+		button.setToolTip('Prev Spike')
+		button.clicked.connect(partial(self.on_button_click,buttonName))
+		#detectionGridLayout.addWidget(button, row, col, rowSpan, columnSpan)
+		hBoxSpikeBrowser.addWidget(button)
+
+		col = 4
+		buttonName = '>>'
+		button = QtWidgets.QPushButton(buttonName)
+		button.setToolTip('Next Spike')
+		button.clicked.connect(partial(self.on_button_click,buttonName))
+		#detectionGridLayout.addWidget(button, row, col, rowSpan, columnSpan)
+		hBoxSpikeBrowser.addWidget(button)
+
+		rowSpan = 1
+		columnSpan = 4
+		detectionGridLayout.addLayout(hBoxSpikeBrowser, row, 0, rowSpan, columnSpan)
 
 		# finalize
 		detectionGroupBox.setLayout(detectionGridLayout)

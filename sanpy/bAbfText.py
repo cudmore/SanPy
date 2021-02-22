@@ -91,6 +91,8 @@ class bAbfText:
 		f0 = tif.mean()
 		tifNorm = tif / f0
 
+		self.tif = tif
+
 		# assuming this was exported using Olympus software
 		# which gives us a .txt file
 		self.tifHeader = self._loadLineScanHeader(path)
@@ -118,6 +120,7 @@ class bAbfText:
 		# normalize to 0..1
 		yLineScanSum = self._NormalizeData(yLineScanSum)
 
+
 		return xLineScanSum, yLineScanSum, tif, tifNorm
 
 	def _loadLineScanHeader(self, path):
@@ -143,6 +146,8 @@ class bAbfText:
 
 		theRet = {'tif': path}
 
+		theRet['numLines'] = self.tif.shape[1]
+		
 		with open(txtFile, 'r') as fp:
 			lines = fp.readlines()
 			for line in lines:
@@ -183,6 +188,10 @@ class bAbfText:
 
 				#elif line.startswith('"Image Size(Unit Converted)"'):
 				#	print('loadLineScanHeader:', line)
+
+		theRet['shape'] = self.tif.shape
+		theRet['secondsPerLine'] = theRet['totalSeconds'] / theRet['shape'][1]
+		theRet['linesPerSecond'] = 1 / theRet['secondsPerLine']
 		#
 		return theRet
 

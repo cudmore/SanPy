@@ -739,7 +739,7 @@ class bAnalysis:
 					spikeClipWidth_ms=500, onlyPeaksAbove_mV=None,
 					verbose=True): #, startSeconds=None, stopSeconds=None):
 	'''
-	def spikeDetect(self, dDict, verbose=True):
+	def spikeDetect(self, dDict, verbose=False):
 		'''
 		spike detect the current sweep and put results into spikeTime[currentSweep]
 
@@ -749,7 +749,8 @@ class bAnalysis:
 
 		startTime = time.time()
 
-		sanpy.bUtil.printDict(dDict)
+		if verbose:
+			sanpy.bUtil.printDict(dDict)
 
 		self.getDerivative(medianFilter=dDict['medianFilter'])
 
@@ -1191,6 +1192,7 @@ class bAnalysis:
 		# look between threshold crossing to get minima
 		# we will ignore the first and last spike
 
+		# todo: call self.makeSpikeClips()
 		#
 		# build a list of spike clips
 		#clipWidth_ms = 500
@@ -1233,6 +1235,60 @@ class bAnalysis:
 			print('  detected', len(self.spikeTimes), 'spikes in', round(stopTime-startTime,2), 'seconds')
 
 		self.errorReport(justTheNumber=True)
+
+	def makeSpikeClips(self, spikeClipWidth_ms, theseTime_sec=None):
+		"""
+		theseTime_sec
+
+		return
+			spikeClips_x2: ms
+			spikeClips: sweepY
+		"""
+
+		print('makeSpikeClips() spikeClipWidth_ms:', spikeClipWidth_ms, 'theseTime_sec:', theseTime_sec)
+		if theseTime_sec is None:
+			theseTime_pnts = self.spikeTimes
+		else:
+			# convert theseTime_sec to pnts
+			theseTime_ms = [x*1000 for x in theseTime_sec]
+			theseTime_pnts = [x*self.abf.dataPointsPerMs for x in theseTime_ms]
+			theseTime_pnts = [round(x) for x in theseTime_pnts]
+
+		clipWidth_pnts = spikeClipWidth_ms * self.abf.dataPointsPerMs
+		# abb 20210130 lcr analysis
+		clipWidth_pnts = round(clipWidth_pnts)
+		if clipWidth_pnts % 2 == 0:
+			pass # Even
+		else:
+			clipWidth_pnts += 1 # Make odd even
+
+		halfClipWidth_pnts = int(clipWidth_pnts/2)
+
+		print('  makeSpikeClips() clipWidth_pnts:', clipWidth_pnts, 'halfClipWidth_pnts:', halfClipWidth_pnts)
+		# make one x axis clip with the threshold crossing at 0
+		self.spikeClips_x = [(x-halfClipWidth_pnts)/self.abf.dataPointsPerMs for x in range(clipWidth_pnts)]
+
+		#20190714, added this to make all clips same length, much easier to plot in MultiLine
+		numPointsInClip = len(self.spikeClips_x)
+
+		self.spikeClips = []
+		self.spikeClips_x2 = []
+
+		#for idx, spikeTime in enumerate(self.spikeTimes):
+		for idx, spikeTime in enumerate(theseTime_pnts):
+			#currentClip = vm[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts]
+			currentClip = self.abf.sweepY[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts]
+			if len(currentClip) == numPointsInClip:
+				self.spikeClips.append(currentClip)
+				self.spikeClips_x2.append(self.spikeClips_x) # a 2D version to make pyqtgraph multiline happy
+			else:
+				pass
+				##
+				print('  ERROR: bAnalysis.spikeDetect() did not add clip for spike index', idx, 'at time', spikeTime, 'currentClip:', len(currentClip), 'numPointsInClip:', numPointsInClip)
+				##
+
+		#
+		return self.spikeClips_x2, self.spikeClips
 
 	def getSpikeClips(self, theMin, theMax):
 		"""

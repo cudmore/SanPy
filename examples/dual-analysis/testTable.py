@@ -1,6 +1,9 @@
 from tkinter import *
 import matplotlib
+import matplotlib.pyplot as plt
 from pandastable import Table, TableModel
+
+#import sanpy
 
 import dualAnalysis
 
@@ -49,6 +52,8 @@ class MyTable(Table):
 		popupmenu.add_command(label='Plot Dual Recording', command=self.myRightClick)
 		popupmenu.add_command(label='Plot Spike Detection', command=self.myRightClickDetection)
 		popupmenu.add_command(label='Plot Spike Phase', command=self.myRightClickPhase)
+		popupmenu.add_command(label='Plot LCR Hist', command=self.myRightClick_LCR)
+		#popupmenu.add_command(label='Info', command=self.myRightClickInfo)
 		popupmenu.bind("<FocusOut>", popupFocusOut)
 		popupmenu.focus_set()
 		popupmenu.post(event.x_root, event.y_root)
@@ -117,6 +122,18 @@ class MyTable(Table):
 		selectedRow = self.getSelectedRow()
 		print('myRightClick selectedRow:', selectedRow)
 		self.myPlotPhase(selectedRow)
+
+	def myRightClick_LCR(self):
+		selectedRow = self.getSelectedRow()
+		print('myRightClick_LCR selectedRow:', selectedRow)
+		tifFile = self.model.df['tifPath'].loc[selectedRow]
+		abfFile = self.model.df['abfPath'].loc[selectedRow]
+		print('  plotting tifFile:', tifFile)
+		df = self.model.df
+		dr = dualAnalysis.dualRecord(tifFile, abfFile)
+		dr.new_plotSparkMaster()
+		plt.show()
+		#return fig
 
 	def myPlotPhase(self, rowNumber):
 		tifFile = self.model.df['tifPath'].loc[rowNumber]

@@ -42,7 +42,10 @@ def loadDatabase(path):
 
 def printDict(d, withType=False):
 	for k,v in d.items():
-		print(f'  {k}: {v} {type(v)}')
+		if withType:
+			print(f'  {k}: {v} {type(v)}')
+		else:
+			print(f'  {k}: {v}')
 
 class pandasModel(QtCore.QAbstractTableModel):
 
