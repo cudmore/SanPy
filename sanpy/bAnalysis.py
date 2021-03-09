@@ -754,13 +754,15 @@ class bAnalysis:
 
 		self.getDerivative(medianFilter=dDict['medianFilter'])
 
-		self.spikeDict = [] # we are filling this in, one entry for each spike
+		self.spikeDict = [] # we are filling this in, one dict for each spike
 
 		self.numErrors = 0
+		detectionType = None
 
 		# spike detect
 		if dDict['dvdtThreshold'] is None or np.isnan(dDict['dvdtThreshold']):
 			# detect using mV threshold
+			detectionType = 'dvdt'
 			self.thresholdTimes = None
 			self.spikeTimes, vm, dvdt = self.spikeDetect00(dDict, verbose=verbose)
 
@@ -775,6 +777,7 @@ class bAnalysis:
 			'''
 		else:
 			# detect using dv/dt threshold AND min mV
+			detectionType = 'dvdt'
 			self.spikeTimes, self.thresholdTimes, vm, dvdt = self.spikeDetect0(dDict, verbose=verbose)
 			'''
 			self.spikeTimes, self.thresholdTimes, vm, dvdt = \
@@ -788,14 +791,9 @@ class bAnalysis:
 
 		#
 		# look in a window after each threshold crossing to get AP peak
-		# get minima before/after spike
-		#peakWindow_ms = 10
 		peakWindow_pnts = self.abf.dataPointsPerMs * dDict['peakWindow_ms']
-		# abb 20210130 lcr analysis
 		peakWindow_pnts = round(peakWindow_pnts)
-		#print('debug lcr:', 'peakWindow_pnts:', peakWindow_pnts, 'self.abf.dataPointsPerMs:', self.abf.dataPointsPerMs)
 
-		# 20210205
 		# throw out spikes that have peak below onlyPeaksAbove_mV
 		newSpikeTimes = []
 		if dDict['onlyPeaksAbove_mV'] is not None:
@@ -811,10 +809,10 @@ class bAnalysis:
 			self.spikeTimes = newSpikeTimes
 
 		#
-		#avgWindow_ms = 5 # we find the min/max before/after (between spikes)
-							#and then take an average around this value
+		# throw out spikes on a down-slope
 		avgWindow_pnts = dDict['avgWindow_ms'] * self.abf.dataPointsPerMs
 		avgWindow_pnts = math.floor(avgWindow_pnts/2)
+
 		for i, spikeTime in enumerate(self.spikeTimes):
 			# spikeTime units is ALWAYS points
 
@@ -825,6 +823,7 @@ class bAnalysis:
 			spikeDict = collections.OrderedDict() # use OrderedDict so Pandas output is in the correct order
 			spikeDict['file'] = self.file
 
+			spikeDict['detectionType'] = detectionType
 			spikeDict['condition1'] = self.condition1
 			spikeDict['condition2'] = self.condition2
 			spikeDict['condition3'] = self.condition3
@@ -1197,7 +1196,6 @@ class bAnalysis:
 		# build a list of spike clips
 		#clipWidth_ms = 500
 		clipWidth_pnts = dDict['spikeClipWidth_ms'] * self.abf.dataPointsPerMs
-		# abb 20210130 lcr analysis
 		clipWidth_pnts = round(clipWidth_pnts)
 		if clipWidth_pnts % 2 == 0:
 			pass # Even
@@ -1255,7 +1253,6 @@ class bAnalysis:
 			theseTime_pnts = [round(x) for x in theseTime_pnts]
 
 		clipWidth_pnts = spikeClipWidth_ms * self.abf.dataPointsPerMs
-		# abb 20210130 lcr analysis
 		clipWidth_pnts = round(clipWidth_pnts)
 		if clipWidth_pnts % 2 == 0:
 			pass # Even

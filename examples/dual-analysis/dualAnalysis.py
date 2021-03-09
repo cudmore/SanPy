@@ -5,7 +5,9 @@ import os, sys, math
 import numpy as np
 import pandas as pd
 
-import scipy.signal
+#import scipy.signal
+import scipy.optimize
+import scipy.stats
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -14,6 +16,22 @@ import tifffile
 import pyabf
 
 import sanpy
+
+def getPathFromRow(df, row):
+	# get data path from first row
+	firstRow = df.iloc[0]
+	dataPath = firstRow['data path']
+
+	# params from selected row
+	dfRow = df.iloc[row]
+	dateFolder = str(dfRow['date folder']) # is np.int64
+	tifFile = dfRow['tif file']
+	abfFile = dfRow['abf file']
+
+	tifPath = os.path.join(dataPath, dateFolder, tifFile)
+	abfPath = os.path.join(dataPath, dateFolder, abfFile)
+
+	return tifPath, abfPath
 
 def loadDatabase(dbFile='dual-database.xlsx'):
 	"""
@@ -83,6 +101,98 @@ def makeReport(df):
 	df = pd.DataFrame(dictList)
 	print(df[['abfPath', 'firstFrameSeconds']])
 
+# todo use database to pull (region, quality, etc)
+def makeLcrReport():
+	"""
+	go through all _clipped_sm.csv and make one big dataframe
+	save df as lcr-database.csv
+
+	as we parse, add columns:
+		date
+		tifFile
+	"""
+	dfDatabase = loadDatabase()
+
+	basePath = 'dual-data'
+	df = None
+	numFiles = 0
+	for dateFolder in sorted(os.listdir(basePath)):
+		if dateFolder.startswith('.'):
+			continue
+		dateFolderPath = os.path.join(basePath, dateFolder)
+		print(dateFolderPath)
+		for file in sorted(os.listdir(dateFolderPath)):
+			if file.startswith('.'):
+				continue
+			filePath = os.path.join(dateFolderPath, file)
+			# we detect with sparkmaster from (raw .tif OR _clipped.tif)
+			isClippedCsv = filePath.endswith('_clipped_sm.csv')
+			#isRawCsv = filePath.endswith('_sm.csv')
+			if filePath.endswith('_clipped_sm.csv') or filePath.endswith('_sm.csv'):
+				print('  ', filePath)
+
+				# find row in main database
+				oneTifFile = file.replace('_clipped_sm.csv', '.tif')
+				oneTifFile = oneTifFile.replace('_sm.csv', '.tif')
+				dfRow = dfDatabase.loc[dfDatabase['tif file'] == oneTifFile]
+				if len(dfRow) == 0:
+					print('error: did not find tif in main database with oneTifFile:', oneTifFile)
+				else:
+					# grab (quality, trial, region) from master database
+					clippedTif = isClippedCsv
+					quality = dfRow['quality'].values[0]
+					trial = dfRow['trial'].values[0]
+					region = dfRow['region'].values[0]
+
+				# load lcr csv for this one file
+				df0 = pd.read_csv(filePath, header=0)
+
+				# append columns
+				df0['fileNumber'] = numFiles
+				df0['dateFolder'] = str(dateFolder)
+				df0['tifFile'] = file.replace('_clipped_sm.csv', '')
+				# from master database
+				df0['clippedTif'] = clippedTif
+				df0['quality'] = quality
+				df0['trial'] = trial
+				df0['region'] = region
+
+				# append to master df
+				if df is None:
+					df = df0
+				else:
+					df = df.append(df0)
+					df.reset_index(drop=True)
+				numFiles += 1
+
+	# remove all spaces from column names and rename them
+	for colIdx, colStr in enumerate(df.columns):
+		newColStr = colStr.replace(' ', '')
+		#dfSparkMaster.columns[colIdx] = colStr
+		df.rename(columns={colStr: newColStr}, inplace=True)
+	# remove columns (Analysis, Parameters)
+	df=df.drop('Analysis',1)
+	df=df.drop('Parameters',1)
+
+	# derive signal mass from Vinogradova et al 2006
+	fwhm = df['FWHM']
+	fdhm = df['FDHM']
+	ampl = df['Ampl.']
+	#print(df.columns)
+	df_f0 = df['Δ(F/Fo)/Δtmax']
+	df['sm ampl'] = fwhm * fdhm * 0.5 * ampl
+	df['sm dF'] = fwhm * fdhm * 0.5 * df_f0
+	# end dateFolder
+	print(len(df), f'LCRs from {numFiles} files.')
+	print(df.head())
+
+	#
+	# save the database
+	if 1:
+		saveName = 'lcr-database.csv'
+		print('saving saveName:', saveName)
+		df.to_csv(saveName)
+
 def new_plotSparkMaster_from_db(fileNumber):
 
 	df = loadDatabase()
@@ -130,6 +240,8 @@ def new_TifReport():
 			quality = df['quality'][i]
 			if quality in ['perfect', 'meh', 'good']:
 				dr.new_blankAbfSpikesInTif(i)
+			else:
+				print('NOT BLANKING SPIKES, NOT SAVING _clipped.tif')
 
 		#
 		# save _sm.txt with SparrkMaster parameters
@@ -153,12 +265,13 @@ def new_TifReport():
 				for L in theFileLines:
 					f.writelines(L)
 
-			for col in theseCol:
-				colVal = dr.abfTif.tifHeader[col]
-				dfReport.loc[i, col] = colVal
+		#
+		for col in theseCol:
+			colVal = dr.abfTif.tifHeader[col]
+			dfReport.loc[i, col] = colVal
 
 	#
-	if 0:
+	if 1:
 		print('saving tif header db into "tifHeader-db.csv"')
 		dfReport.to_csv('tifHeader-db.csv')
 
@@ -257,13 +370,67 @@ class dualRecord:
 		print('  saving:', tmpPath)
 		tifffile.imsave(tmpPath, clippedTif)
 
-	def new_plotSparkMaster(self):
+	def new_plotSparkMaster(self, region=None):
 		"""
 		using csv output of SparkMaster result with one LCR per line
 
 		parameters:
 			tifBins_ms: how to bin SM LCR ROIs
 		"""
+
+		def lcrHist_key_press_event(event):
+			#print('press', event.key)
+			global spikeNumber # needed because we are assigning new value
+			#print('lcrHist_key_press_event() event.key:', event.key)
+			sys.stdout.flush()
+			if event.key in ['.', 'right']:
+				# next
+				spikeNumber += 1
+				if spikeNumber > self.baAbf.numSpikes-1:
+					print('at last spike')
+					spikeNumber -= 1
+					pass
+				else:
+					lcrHist_Zoom_Spike(spikeNumber)
+
+			elif event.key in [',', 'left']:
+				# previous
+				spikeNumber -= 1
+				if spikeNumber < 0:
+					spikeNumber = 0
+					return
+				else:
+					lcrHist_Zoom_Spike(spikeNumber)
+
+			elif event.key == 'escape':
+				# reset x axis
+				startSeconds = 0
+				stopSeconds = self.abf.sweepX[-1]
+				axRight2.set_xlim(startSeconds, stopSeconds)
+				fig.canvas.draw()
+
+		def lcrHist_Zoom_Spike(n):
+			print('lcrHist_Zoom_Spike() n:', n, 'of', self.baAbf.numSpikes-1)
+			# get time of spike (n, n-1)
+			vmThresholdSecs, vmPeakSeconds = self.baAbf.getStat('thresholdSec', 'peakSec')
+			if n == 0:
+				startSeconds = 0
+			else:
+				startSeconds = vmPeakSeconds[n-1]
+			stopSeconds = vmPeakSeconds[n]
+			stopSeconds += 0.02
+
+			axRight2.set_xlim(startSeconds, stopSeconds)
+			axRight2.set_ylim(0, 5)
+			fig.canvas.draw()
+
+		def onpick2(event):
+			# event is type MouseEvent
+			print('onpick2 line:', event.xdata, event.ydata)
+
+		# main fn()
+		global spikeNumber # needed because we will assign +/- in callback
+		spikeNumber = 0 # used in callback for phase plot
 		print('new_plotSparkMaster()')
 		if self.dfSparkMaster is None:
 			print('  error: new_plotSparkMaster() did not find self.dfSparkMaster')
@@ -299,6 +466,8 @@ class dualRecord:
 		tPos_bin = [round(x/tifSecondsPerLine) for x in tPos_orig] # t-pos of each LCR as bin # (into tif)
 		#print('tPos_bin:', tPos_bin)
 
+		xPos = self.dfSparkMaster['x-pos'] # pixel along line scan???
+
 		#
 		# bin sparkmaster time and count the number of LCR ROIs in a bin
 		tifBins_ms = 50 #10
@@ -321,12 +490,14 @@ class dualRecord:
 
 		#
 		# plot
-		numPanels = 3
+		numPanels = 4
 		fig, axs = plt.subplots(numPanels, 1, sharex=True)
 		if numPanels == 1:
 			axs = [axs]
+		fig.canvas.mpl_connect('key_press_event', lcrHist_key_press_event)
 
-		titleStr = os.path.split(self.abfTif.tifHeader['tif'])[1]
+		titleStr = str(region)
+		titleStr += ' ' + os.path.split(self.abfTif.tifHeader['tif'])[1]
 		titleStr += ' tifBins_ms:' + str(tifBins_ms)
 		fig.suptitle(titleStr)
 
@@ -360,6 +531,7 @@ class dualRecord:
 		axs[2].set_ylabel('Vm (mV)')
 
 		axRight2 = axs[2].twinx()  # instantiate a second axes that shares the same x-axis
+		fig.canvas.mpl_connect('button_press_event', onpick2)
 		#axRight2.plot(xLineScanSum, yLineScanSum, '-r')
 		n, bins, patches = axRight2.hist(tPos_offset, weights=weights,
 									bins=xBins,
@@ -372,6 +544,22 @@ class dualRecord:
 		# we do not need log plot !!!
 		#axRight2.set_yscale('log')
 
+		#
+		# plot tif image overlaid with position of LCRs
+		if 1:
+			firstFrameSeconds = self.abfTif.tifHeader['firstFrameSeconds']
+			xMin = firstFrameSeconds
+			xMax = firstFrameSeconds + self.abfTif.sweepX[-1]
+			yMin = 0
+			yMax = self.abfTif.tifHeader['umLength'] #57.176
+			#extent = [xMin, xMaxImage, yMax, yMin] # flipped y
+			extent = [xMin, xMax, yMin, yMax] # flipped y
+			axs[3].imshow(self.abfTif.tif, extent=extent, aspect='auto')
+			axs[3].spines['right'].set_visible(False)
+			axs[3].spines['top'].set_visible(False)
+
+			axRight3 = axs[3].twinx()  # instantiate a second axes that shares the same x-axis
+			axRight3.plot(tPos_offset, xPos, '.r')
 
 		# 2nd plot
 		# correllation between LCR FWHM and Amplitude is really weak
@@ -390,6 +578,7 @@ class dualRecord:
 		axs[1].set_xlabel(xStatStr)
 		axs[1].set_ylabel(yStatStr)
 		'''
+		return fig
 
 	def load(self):
 		"""
@@ -648,7 +837,7 @@ class dualRecord:
 
 		self.baTif = ba
 
-	def plotSpikeAnalysis(self, type='abf', fileNumber=None, myParent=None):
+	def plotSpikeAnalysis(self, type='abf', fileNumber=None, region=None, myParent=None):
 		"""
 		type: ('abf', 'tif')
 
@@ -686,7 +875,7 @@ class dualRecord:
 			fig, axs = plt.subplots(2, 1, sharex=True)
 		else:
 			fig, axs = plt.subplots(3, 1, sharex=True)
-		titleStr = self._getTitle(fileNumber=fileNumber)
+		titleStr = self._getTitle(fileNumber=fileNumber, region=region)
 		fig.suptitle(titleStr)
 
 		#
@@ -761,6 +950,8 @@ class dualRecord:
 			axs[2].spines['right'].set_visible(False)
 			axs[2].spines['top'].set_visible(False)
 
+		ba.errorReport()
+
 		#
 		return fig
 
@@ -784,8 +975,10 @@ class dualRecord:
 			#print('plotSpikeClip.close_event()')
 			if myParent is not None:
 				# for now expectin parent to be testTable.py
-				myParent.closeChild('spike clip plot', fileNumber)
-
+				try:
+					myParent.closeChild('spike clip plot', fileNumber)
+				except (AttributeError) as e:
+					pass
 		def key_press_event(event):
 			#print('press', event.key)
 			global spikeNumber # needed because we are assigning new value
@@ -794,6 +987,8 @@ class dualRecord:
 				# next
 				spikeNumber += 1
 				updatePhasePlot(spikeNumber)
+				updateOneSpikeClip(spikeNumber)
+
 			if event.key in [',', 'left']:
 				# previous
 				spikeNumber -= 1
@@ -802,6 +997,7 @@ class dualRecord:
 					return
 				else:
 					updatePhasePlot(spikeNumber)
+					updateOneSpikeClip(spikeNumber)
 			if event.key == 'p':
 				global phasePlotOptions
 				phasePlotOptions += 1
@@ -814,12 +1010,44 @@ class dualRecord:
 					# all + mean + 1
 					pass
 
+		def updateOneSpikeClip(localSpikeNumber):
+			"""
+			update axs[2] with (i) spike clip and (ii) lcr hist
+			"""
+			# grab x from vm recording (10kHz)
+			xSpikeClips_vm = baAbf.spikeClips_x2[localSpikeNumber] # list of list
+			ySpikeClips_vm = baAbf.spikeClips[localSpikeNumber]
+
+			numVmSpikes = len(baAbf.spikeClips_x2)
+
+			currentSpikeClipPlot.set_data(xSpikeClips_vm, ySpikeClips_vm)
+
+			# yPreClipSparkMasterBins_2d is 2d list, one row per spike
+			#print('  xPreClipSparkMasterBins:', xPreClipSparkMasterBins)
+			#print('  yPreClipSparkMasterBins_2d:', yPreClipSparkMasterBins_2d[localSpikeNumber])
+			# using stem(), easier to replot than to set data
+			secondAxs2.cla()
+			oneSpikeLcrBins = yPreClipSparkMasterBins_2d[localSpikeNumber]
+			numLcr = sum(oneSpikeLcrBins)
+			spikeTime = theseTime_sec[localSpikeNumber]
+			print('updateOneSpikeClip() spikeNumber:', localSpikeNumber, 'of', numVmSpikes, 'spikeTime:', spikeTime, 'numLcr:', numLcr)
+
+			secondAxs2.stem(xPreClipSparkMasterBins, oneSpikeLcrBins,
+				linefmt='grey',
+				markerfmt=' ', # use space ' ' and not None or ''
+				basefmt=' ')
+
+			fig.canvas.draw()
+
 		def updatePhasePlot(localSpikeNumber):
+
+			if doPhasePlot == 0:
+				return
 
 			numVmSpikes = len(baAbf.spikeClips_x2)
 			numCaSpikes = len(baTiff.spikeClips_x2)
 
-			print('spikeNumber:', localSpikeNumber, 'numVmSpikes:', numVmSpikes, 'numCaSpikes:', numCaSpikes)
+			print('localSpikeNumber:', localSpikeNumber, 'numVmSpikes:', numVmSpikes, 'numCaSpikes:', numCaSpikes)
 
 			# grab x from vm recording (10kHz)
 			xSpikeClips_vm = baAbf.spikeClips_x2[localSpikeNumber] # list of list
@@ -844,6 +1072,7 @@ class dualRecord:
 			fig.canvas.draw()
 
 		#
+		# start of main function
 		tifPath = self.tifFile
 		abfPath = self.abfFile
 		tifHeader = self.abfTif.tifHeader
@@ -863,23 +1092,21 @@ class dualRecord:
 		print('plotSpikeClip() ca num spikes:', baTiff.numSpikes, ', vm num spikes:', len(thresholdSec1), baAbf.numSpikes)
 
 		# ca
+		doPhasePlot = 0
 		if doPhasePlot:
 			numSubplots = 3
 		else:
 			numSubplots = 2
-		fig, axs = plt.subplots(numSubplots, 1, sharex=False)
+		numSubplots = 3 # axs[2] will be one spike clip + lcr
+		fig, axs = plt.subplots(numSubplots, 1, sharex=True)
 		# share just axs[0] and axs[1], axs[2] is phase plot
-		axs[0].get_shared_x_axes().join(axs[0], axs[1])
+		#axs[0].get_shared_x_axes().join(axs[0], axs[1])
 
 		# set the window/figure title
-		titleStr = ''
-		if fileNumber is not None:
-			titleStr += str(fileNumber) + ' '
-		if region is not None:
-			titleStr += region + ' '
-		titleStr += os.path.split(tifHeader['tif'])[1]
+		titleStr = self._getTitle(fileNumber=fileNumber, region=region)
+		titleStr = 'SpikeClips:' + titleStr
 		fig.canvas.set_window_title(titleStr)
-		#fig.suptitle(titleStr)
+		fig.suptitle(titleStr)
 
 		fig.canvas.mpl_connect('key_press_event', key_press_event)
 		fig.canvas.mpl_connect('close_event', close_event)
@@ -891,9 +1118,11 @@ class dualRecord:
 		axs[1].spines['right'].set_visible(False)
 		axs[1].spines['top'].set_visible(False)
 		axs[1].set_ylabel('Vm')
+		axs[1].set_xlabel('Time (ms)')
 
 		# use threshholdSec of abf file to retrieve spike clips from Ca
 		spikeClipWidth_ms = 400
+		spikeClipWidth_sec = spikeClipWidth_ms / 1000
 
 		#
 		# ca
@@ -928,8 +1157,145 @@ class dualRecord:
 				oneSpikeClips = abfSpikeClips[idx]
 				axs[1].plot(oneSpikeClips_x2, oneSpikeClips, '-k')
 
+				if idx == 0:
+					currentSpikeClipPlot, = axs[2].plot(oneSpikeClips_x2, oneSpikeClips, '-k')
+
 			except (IndexError) as e:
 				print('error: plotSpikeClip() vm no spike', idx)
+
+		#
+		# sparkmaster
+		# bin SM LCR before each spike
+		if self.dfSparkMaster is not None:
+			halWidth_ms_int = int(spikeClipWidth_ms/2)
+			# this yPreClipSparkMasterBins is misleading
+			# generate a y for EACH spike and take avg/#spike to get something more like a probability
+			#yPreClipSparkMasterBins2 = [0] * halWidth_ms_int +1 for LCR -1 for none
+			yPreClipSparkMasterBins = [0] * halWidth_ms_int # for count for each ms across all spikes
+			xPreClipSparkMasterBins = [-x for x in range(halWidth_ms_int)] # -0, -1, -2
+
+			# 2d list of spark-master bins per spike
+			yPreClipSparkMasterBins_2d = []
+
+			#xPreClipSparkMasterBins.reverse() # -3, -2, -1
+
+			# 2d ndaray to get mean of each bin (column)
+			# this is like a probability
+			numSpikes = len(caTheseTime_sec)
+			yPreClipPerSpike = np.zeros((numSpikes,halWidth_ms_int))
+
+			# the time of each LCR (w.r.t. imaging)
+			tPos = self.dfSparkMaster['t-pos'].values
+			#print(type(tPos), tPos)
+			# caTheseTime_sec is based on abf 'thresholdSec'
+			for idx, smSec in enumerate(caTheseTime_sec):
+				# new row to hold lcr hist for this one spike (idx)
+				yPreClipSparkMasterBins_2d.append([0] * halWidth_ms_int)
+
+				smStartSec = smSec-(spikeClipWidth_sec/2)
+				smStopSec = smSec #+spikeClipWidth_sec
+				smHits_pnts = np.argwhere((tPos>smStartSec) & (tPos<smStopSec))
+				#print('  tPos[smHits_pnts]:', tPos[smHits_pnts])
+				smHits_ms = (smSec*1000) - (tPos[smHits_pnts]*1000)
+				# - because we want BEFORE spike and with int() we bin for manual hist
+				smHits_ms = [int(-x) for x in smHits_ms]
+				for smHitms in smHits_ms:
+					# todo: make sure -smHitms is good index
+					yPreClipSparkMasterBins[-smHitms] += 1 # add one to bin
+					yPreClipPerSpike[idx][-smHitms] += 1
+
+					# 2d list to keep track of lcr per spike
+					yPreClipSparkMasterBins_2d[idx][-smHitms] += 1
+
+				print('  spike', idx, 'smSec:', smSec, 'has', len(smHits_pnts), 'sm pnts before it, smHits_ms:', smHits_ms)
+				#print('    20ms before spike', xPreClipSparkMasterBins[0:20])
+				#print('    20ms before spike', yPreClipSparkMasterBins[0:20])
+
+				# fit line and put in self.baAbf spikeDict
+				x_values = xPreClipSparkMasterBins
+				y_values = yPreClipSparkMasterBins
+				resultObj = scipy.stats.linregress(x_values, y_values)
+				print('spike', idx, 'resultObj slope:', resultObj.slope, 'p:', resultObj.pvalue)
+				self.baAbf.spikeDict[idx]['lcrSlope'] = resultObj.slope
+
+			# 2d, take mean of col (# lcr in each ms across all spikes)
+			#print('yPreClipPerSpike:', yPreClipPerSpike)
+			yPreClipSpikeMean = yPreClipPerSpike.mean(axis=0)
+			#print('yPreClipSpikeMean[0:20]:', yPreClipSpikeMean[0:20])
+
+			# compare the slope for each spike to its earlyDiastolicDurationRate
+			# test significance
+			eddRate, lcrSlope = baAbf.getStat('earlyDiastolicDurationRate', 'lcrSlope') #returns list []
+			eddRate = np.array(eddRate)
+			lcrSlope = np.array(lcrSlope)
+			notNaNIdx = ~np.isnan(eddRate) & ~np.isnan(lcrSlope) # strip nan
+			#print('notNaNIdx:', notNaNIdx)
+			rTmp, pTmp = scipy.stats.pearsonr(eddRate[notNaNIdx], lcrSlope[notNaNIdx])
+			print('  test eddRate vs lcrSlope pearsonsr r:', rTmp, 'p:', pTmp)
+			if 0:
+				# plot slope versus early diastolic duration rate
+				tmpFig, tmpAxs = plt.subplots(1, 1, sharex=False)
+				tmpAxs = [tmpAxs]
+				tmpAxs[0].plot(eddRate, lcrSlope)
+				plt.show()
+
+			#
+			# fit a line to all spike
+			# see https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html
+			def lineFitFunction(x, a, b, c):
+				return a * x + b
+			x_values = xPreClipSparkMasterBins
+			y_values = yPreClipSpikeMean
+			# popt: [0.0002 0.0418 1.    ]
+			popt, pcov = scipy.optimize.curve_fit(lineFitFunction, x_values, y_values)
+			#print('slope*x + intercept ... a * x + b')
+			#print('popt:', popt)
+			#print('pcov:', pcov)
+			xFit = np.linspace(min(x_values), max(x_values), 1000)
+			yFit = lineFitFunction(xFit, *popt)
+			# plot(x_line, y_line)
+			resultObj = scipy.stats.linregress(x_values, y_values)
+			print('  all spikes resultObj slope of # lcr approacing spike:', resultObj.slope, 'p:', resultObj.pvalue)
+
+			# copy/paste to excel
+			tifStr = os.path.split(tifPath)[1]
+			print(f'index\ttif\tregion\tnSpikes\tslope\tp\tr\tp')
+			print(f'{fileNumber}\t{tifStr}\t{region}\t{numSpikes}\t{round(resultObj.slope,5)}\t{round(resultObj.pvalue,5)}\t{round(rTmp,5)}\t{round(pTmp,5)}')
+
+			#
+			secondAxs1 = axs[1].twinx()
+			#secondAxs1.spines['right'].set_visible(False)
+			secondAxs1.spines['top'].set_visible(False)
+			#secondAxs1.plot(xPreClipSparkMasterBins, yPreClipSparkMasterBins, '.b')
+			# was this
+			'''
+			yPreClipSparkMasterBins = [x if x>0 else np.nan for x in yPreClipSparkMasterBins]
+			secondAxs1.stem(xPreClipSparkMasterBins, yPreClipSparkMasterBins,
+						linefmt='.b',
+						markerfmt=' ', # use space ' ' and not None or ''
+						basefmt=' ')
+			'''
+			# now this
+			yPreClipSpikeMean = [x if x>0 else np.nan for x in yPreClipSpikeMean]
+			secondAxs1.stem(xPreClipSparkMasterBins, yPreClipSpikeMean,
+						linefmt='grey',
+						markerfmt=' ', # use space ' ' and not None or ''
+						basefmt=' ')
+			secondAxs1.plot(xFit, yFit, 'r', linewidth=1)
+			#
+			secondAxs1.set_ylabel('Prob LCR')
+
+			#
+			# axs[2] is showing 1 spike
+			# twin axs[2] to show one hist of lcr (for one spike)
+			secondAxs2 = axs[2].twinx()
+			secondAxs2.spines['top'].set_visible(False)
+			# xPreClipSparkMasterBins is 1d
+			oneSpikeLCRHist = secondAxs2.stem(xPreClipSparkMasterBins, yPreClipSparkMasterBins_2d[0],
+						linefmt='grey',
+						markerfmt=' ', # use space ' ' and not None or ''
+						basefmt=' ')
+			# todo: maybe add line fit???
 
 		# BROKEN 20210218
 		#
@@ -1058,6 +1424,10 @@ class dualRecord:
 		titleStr += os.path.split(tifHeader['tif'])[1]
 		fig.canvas.set_window_title(titleStr)
 		#fig.suptitle(titleStr)
+		'''
+		titleStr = 'SpikeClips:' + titleStr
+		fig.canvas.set_window_title(titleStr)
+		'''
 
 		# e-phy recording always starts at time 0
 		xMinPhys = 0
@@ -1175,7 +1545,11 @@ class dualRecord:
 		#
 		# try and load _sm.csv
 		tmpPath, tmpExt = os.path.splitext(self.tifFile)
+		# sm .csv will come from raw (_sm.csv) or clipped (_clipped_sm.csv)
 		csvPath = tmpPath + '_clipped_sm.csv'
+		if not os.path.isfile(csvPath):
+			csvPath = tmpPath + '_sm.csv'
+
 		if not os.path.isfile(csvPath):
 			print('  warning: dualAnalysis.loadSparkMaster() did not find csvPath:', csvPath)
 		else:
@@ -1283,7 +1657,7 @@ class dualRecord:
 		#fig = self.plotSpikeClip(doPhasePlot=True, fileNumber=fileNumber,
 		#						region=region, myParent=myParent)
 		figTif = self.plotSpikeAnalysis(type='tif', fileNumber=fileNumber, myParent=myParent)
-		figAbf = self.plotSpikeAnalysis(type='abf', fileNumber=fileNumber, myParent=myParent)
+		figAbf = self.plotSpikeAnalysis(type='abf', fileNumber=fileNumber, region=region, myParent=myParent)
 
 		return figTif, figAbf
 
@@ -1537,7 +1911,8 @@ def runPool():
 
 	#
 	print('runPool() dfMaster len:', len(dfMaster))
-	savePath = '/Users/cudmore/Desktop/dualAnalysis_db.csv'
+	#savePath = '/Users/cudmore/Desktop/dualAnalysis_final_db.csv'
+	savePath = 'dualAnalysis_final_db.csv'
 	print('savePath:', savePath)
 	dfMaster.to_csv(savePath)
 
@@ -1596,6 +1971,8 @@ if __name__ == '__main__':
 	# then open with bScatterPlotWidthet2.py
 	if 0:
 		#runOneRecording()
+		# make a spike db (with ca peak/delay)
+		# likewe would for sanpy
 		runPool()
 
 	# testing the plotting of output of Fiji/ImageJ spark master
@@ -1620,7 +1997,8 @@ if __name__ == '__main__':
 		dr.new_plotSparkMaster()
 
 		plt.show()
-	if 1:
+	if 0:
+		# overlay lcr hist and vm
 		fileNumber = 4
 		new_plotSparkMaster_from_db(fileNumber)
 		plt.show()
@@ -1628,3 +2006,8 @@ if __name__ == '__main__':
 	if 0:
 		# make _clipped.tif for each .tif
 		new_TifReport()
+
+	if 1:
+		# merge all _clipped_sm.csv into big df and save
+		# use saved .csv in bScatterPlot2.py
+		makeLcrReport()
