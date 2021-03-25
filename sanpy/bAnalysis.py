@@ -1395,13 +1395,18 @@ class bAnalysis:
 	#################################################################################
 	# save results (e.g. report)
 	#################################################################################
-	def saveReport(self, savefile, theMin, theMax, saveExcel=True, alsoSaveTxt=True, verbose=True):
+	def saveReport(self, savefile, theMin=None, theMax=None, saveExcel=True, alsoSaveTxt=True, verbose=True):
 		"""
 		save a spike report for detected spikes between theMin (sec) and theMax (sec)
 
 		savefile: path to xlsx file
 		(theMin, theMax): start/stop seconds of the analysis
 		"""
+
+		if theMin == None:
+			theMin = 0
+		if theMax == None:
+			theMax = self.abf.sweepX[-1]
 
 		'''
 		filePath, fileName = os.path.split(os.path.abspath(self.file))

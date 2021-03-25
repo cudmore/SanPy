@@ -206,6 +206,33 @@ def new_plotSparkMaster_from_db(fileNumber):
 	dr = dualRecord(tifPath, abfPath)
 	dr.new_plotSparkMaster()
 
+def spikeClipPlotAndSave():
+	"""
+	step through database and call plotSpikeClip for a subset of rows (in db)
+	"""
+	df = loadDatabase()
+	n = len(df)
+	dataPath = df['data path'][0]
+	plotTheseQuality = ['perfect', 'good', 'meh']
+	for row in range(n):
+		quality = df['quality'][row]
+		if quality in plotTheseQuality:
+			print('row:', row, quality)
+
+			dateFolder = str(df['date folder'][row])
+			tifFile = df['tif file'][row]
+			abfFile = df['abf file'][row]
+			tifPath = os.path.join(dataPath, dateFolder, tifFile)
+			abfPath = os.path.join(dataPath, dateFolder, abfFile)
+			dr = dualRecord(tifPath, abfPath)
+			# df is backend model loaded from .csv and displayed in table
+			fig = dr.plotSpikeClip_df(df, row, myParent=None)
+
+			#dr.findSpikePairs(fileNumber=row, doPlot=False)
+
+	# mergae all those files into one csv
+	fig9MergeDatabase()
+
 def new_TifReport():
 	"""
 	load each tif and print new columns from tifHeader
@@ -274,6 +301,31 @@ def new_TifReport():
 	if 1:
 		print('saving tif header db into "tifHeader-db.csv"')
 		dfReport.to_csv('tifHeader-db.csv')
+
+def fig9MergeDatabase():
+	# this is saved when we plot spike clip
+	# it has columns for lcr including # lcr per spike (lcrNum)
+	folderPath = '/Users/cudmore/Sites/SanPy/examples/dual-analysis/tmpMergedDatabase/analysis'
+	dfMaster = None
+	for file in os.listdir(folderPath):
+		if file.startswith('.'):
+			continue
+		if file.endswith('_clip.csv'):
+			continue
+		csvPath = os.path.join(folderPath, file)
+		print('csvPath:', csvPath)
+		if not os.path.isfile(csvPath):
+			continue
+		df0 = pd.read_csv(csvPath, header=0)
+		if dfMaster is None:
+			dfMaster = df0
+		else:
+			dfMaster = dfMaster.append(df0, ignore_index=True)
+
+	# save dfMaster
+	savePath = '/Users/cudmore/Sites/SanPy/examples/dual-analysis/combined-sanpy-lcr-db.csv'
+	print('saving merged database to', savePath)
+	dfMaster.to_csv(savePath)
 
 class dualRecord:
 	def __init__(self, tifFile, abfFile):
@@ -369,6 +421,432 @@ class dualRecord:
 		tmpPath += '_clipped.tif'
 		print('  saving:', tmpPath)
 		tifffile.imsave(tmpPath, clippedTif)
+
+
+	def plotImage(self, ax, fig, cbar_ax):
+		# make proper dF/f_0, using mean as f_0
+		f = self.abfTif.tif
+		f0 = np.nanmean(f)
+		df_f0 = (f - f0) / f0
+
+		cmap = 'plasma'
+
+		firstFrameSeconds = self.abfTif.tifHeader['firstFrameSeconds']
+		xMin = firstFrameSeconds
+		xMax = firstFrameSeconds + self.abfTif.sweepX[-1]
+		yMin = 0
+		yMax = self.abfTif.tifHeader['umLength'] #57.176
+		extent = [xMin, xMax, yMin, yMax] # flipped y
+
+		vmin = 0
+		vmax = 6
+		plottedImage = ax.imshow(df_f0, cmap=cmap,
+						vmin=0,
+						vmax=6,
+						extent=extent, aspect='auto')
+
+		ax.spines['left'].set_visible(False)
+		ax.spines['top'].set_visible(False)
+		ax.spines['right'].set_visible(False)
+		ax.spines['bottom'].set_visible(False)
+
+		ax.set_xticks([], minor=False)
+		ax.set_xticks([], minor=True)
+		#ax.set_yticks([], minor=False)
+		#ax.set_yticks([], minor=True)
+
+		#fig.colorbar(plottedImage, cax=cbar_ax, shrink=0.2)
+		#fig.colorbar(plottedImage,fraction=0.046, pad=0.04)
+		fig.colorbar(plottedImage,fraction=0.02, pad=0.04)
+		#cax = fig.add_axes([0.9, 0.5, 0.03, 0.38]) # [x, y, w, h]
+		#plt.colorbar(im0,fraction=0.046, pad=0.04, cax=axs[2])
+		#plt.colorbar(im0,cax=cax)
+
+	def plotLcrHist(self, ax):
+		tifFirstFrameSeconds = self.abfTif.tifHeader['firstFrameSeconds']
+		tifSecondsPerLine = self.abfTif.tifHeader['secondsPerLine']
+		tifTotalSeconds = self.abfTif.tifHeader['totalSeconds']
+		print('  first frame of the image wrt pClamp abf as at', tifFirstFrameSeconds)
+
+		xLineScanSum = self.abfTif.sweepX + tifFirstFrameSeconds
+		yLineScanSum = self.abfTif.sweepY
+
+		# now stripping leading spaces in SparkMaster columns (see loadSparkMaster)
+		# remember: when traversing rows, t-pos is out of order w.r.t. time
+		xSmStatStr = 't-pos' # t-pos is in seconds?
+		xSmStat = self.dfSparkMaster[xSmStatStr]
+		# shift wrt tifFirstFrameSeconds
+		xSmStatSec = [x+tifFirstFrameSeconds for x in xSmStat]
+
+		yDoThisSmStat = 'FWHM' # 'Ampl.' # or 'FWHM'
+		ySmStatStr = yDoThisSmStat
+		ySmStat = self.dfSparkMaster[ySmStatStr]
+
+		yDoThisSmStat2 = 'Ampl.' # 'Ampl.' # or 'FWHM'
+		ySmStatStr2 = yDoThisSmStat2
+		ySmStat2 = self.dfSparkMaster[ySmStatStr2]
+
+		tPos_orig = self.dfSparkMaster['t-pos']
+		tPos_offset = tPos_orig + tifFirstFrameSeconds
+		tPos_bin = [round(x/tifSecondsPerLine) for x in tPos_orig] # t-pos of each LCR as bin # (into tif)
+		#print('tPos_bin:', tPos_bin)
+
+		xPos = self.dfSparkMaster['x-pos'] # pixel along line scan???
+
+		#
+		# bin sparkmaster time and count the number of LCR ROIs in a bin
+		tifBins_ms = 50 #10
+		print('  tifBins_ms:', tifBins_ms)
+		tifBins_sec = tifBins_ms / 1000
+		# important to consider wrt tifBins_sec
+		xNumBins = math.floor(tifTotalSeconds / tifBins_sec)
+		print('tifBins_sec:', tifBins_sec, 'xNumBins:', xNumBins, 'tifSecondsPerLine:', tifSecondsPerLine)
+		# make new x-axis with bins
+		xBins = [tifFirstFrameSeconds+(x*tifBins_sec) for x in range(xNumBins)]
+
+		# if weights is None, will count LCR in each bin
+		# if weight=ampl, will sum ampl for each LCRR in each bin
+		weights = None
+		weights = self.dfSparkMaster['Ampl.']
+
+		n, bins, patches = ax.hist(tPos_offset, weights=weights,
+									bins=xBins,
+									facecolor='0.6',
+									#histtype='step',
+									#color = "k",
+									ec="k"
+									)
+
+		ax.spines['left'].set_visible(False)
+		ax.spines['top'].set_visible(False)
+		ax.spines['right'].set_visible(False)
+		#ax.spines['bottom'].set_visible(False)
+
+	def plotClips(self, fileNumber=None, region=None, axs=None):
+
+		# need to get these from database df
+		#region = None
+		cellNumber = None
+		trial = None
+		#fileNumber = None
+
+		fig = None
+		if axs is None:
+			'''
+			fig, axs = plt.subplots(1, 1)
+			fig.set_size_inches(4, 1.5)
+			'''
+
+			figSize =(4,1.5) # inches
+			fig = plt.figure(figsize=figSize, constrained_layout=True)
+			widths = [2]
+			heights = [1, 0.5]
+			gridSpec = fig.add_gridspec(ncols=1, nrows=2, width_ratios=widths, height_ratios=heights)
+
+			fig, axs = plt.subplots(nrows=2, ncols=1, sharex=True, sharey=False,
+                               gridspec_kw={'height_ratios': [2, 1]},
+                               figsize=figSize)
+
+			fig.suptitle(f'{fileNumber} {region}')
+
+			# plot vm
+			'''
+			row = 0
+			col = 0
+			axVm = fig.add_subplot(gridSpec[row, col])
+			'''
+			axVm = axs[0]
+			axVm.xaxis.set_visible(False)
+			# plot lcr
+			'''
+			row = 1
+			col = 0
+			axLcr = fig.add_subplot(gridSpec[row, col])
+			'''
+			axLcr = axs[1]
+			axLcr.xaxis.set_visible(False)
+
+
+		spikeClipWidth_ms = 400
+		spikeClipWidth_sec = spikeClipWidth_ms / 1000
+
+		theseTime_sec = self.baAbf.getStat('thresholdSec') # spike times from abf
+
+		# theseTime_sec is spike time in abf, need to shift it for imaging
+		firstFrameSeconds = self.abfTif.tifHeader['firstFrameSeconds']
+		caTheseTime_sec = [x-firstFrameSeconds for x in theseTime_sec]
+
+		thresholdSec0, peakSec0 = self.baTif.getStat('thresholdSec', 'peakSec')
+		thresholdSec1, peakSec1 = self.baAbf.getStat('thresholdSec', 'peakSec')
+
+		#
+		# vm plot
+		abfSpikeClips_x2, abfSpikeClips = self.baAbf.makeSpikeClips(spikeClipWidth_ms, theseTime_sec=theseTime_sec)
+		for idx, sec in enumerate(thresholdSec1):
+			try:
+				oneSpikeClips_x2 = abfSpikeClips_x2[idx]
+				oneSpikeClips = abfSpikeClips[idx]
+				axVm.plot(oneSpikeClips_x2, oneSpikeClips, '-k')
+
+				'''
+				if idx == 0:
+					currentSpikeClipPlot, = axVm.plot(oneSpikeClips_x2, oneSpikeClips, '-k')
+				'''
+
+			except (IndexError) as e:
+				print('error: plotSpikeClip() vm no spike', idx)
+
+		axVm.spines['left'].set_visible(False)
+		axVm.spines['top'].set_visible(False)
+		axVm.spines['right'].set_visible(False)
+		axVm.spines['bottom'].set_visible(False)
+		axVm.xaxis.set_visible(False)
+		axVm.yaxis.set_visible(False)
+		print('xxx set_ylim -6 20')
+		axVm.set_ylim(-60, 20)
+
+		#
+		# sparkmaster
+		# bin SM LCR before each spike
+		if self.dfSparkMaster is not None:
+			halWidth_ms_int = int(spikeClipWidth_ms/2)
+			# this yPreClipSparkMasterBins is misleading
+			# generate a y for EACH spike and take avg/#spike to get something more like a probability
+			#yPreClipSparkMasterBins2 = [0] * halWidth_ms_int +1 for LCR -1 for none
+			yPreClipSparkMasterBins = [0] * halWidth_ms_int # for count for each ms across all spikes
+			xPreClipSparkMasterBins = [-x for x in range(halWidth_ms_int)] # -0, -1, -2
+
+			# 2d list of spark-master bins per spike
+			yPreClipSparkMasterBins_2d = []
+
+			#xPreClipSparkMasterBins.reverse() # -3, -2, -1
+
+			# 2d ndaray to get mean of each bin (column)
+			# this is like a probability
+			numSpikes = len(caTheseTime_sec)
+			yPreClipPerSpike = np.zeros((numSpikes,halWidth_ms_int))
+
+			# the time of each LCR (w.r.t. imaging)
+			tPos = self.dfSparkMaster['t-pos'].values
+			#print(type(tPos), tPos)
+			# caTheseTime_sec is based on abf 'thresholdSec'
+			for idx, smSec in enumerate(caTheseTime_sec):
+				# new row to hold lcr hist for this one spike (idx)
+				yPreClipSparkMasterBins_2d.append([0] * halWidth_ms_int)
+
+				smStartSec = smSec-(spikeClipWidth_sec/2)
+				smStopSec = smSec #+spikeClipWidth_sec
+				smHits_pnts = np.argwhere((tPos>smStartSec) & (tPos<smStopSec))
+				#print('  tPos[smHits_pnts]:', tPos[smHits_pnts])
+				smHits_ms = (smSec*1000) - (tPos[smHits_pnts]*1000)
+				# - because we want BEFORE spike and with int() we bin for manual hist
+				smHits_ms = [int(-x) for x in smHits_ms]
+				for smHitms in smHits_ms:
+					# todo: make sure -smHitms is good index
+					try:
+						yPreClipSparkMasterBins[-smHitms] += 1 # add one to bin
+						yPreClipPerSpike[idx][-smHitms] += 1
+						# 2d list to keep track of lcr per spike
+						yPreClipSparkMasterBins_2d[idx][-smHitms] += 1
+					except (IndexError) as e:
+						print('    ERROR: spike', idx, 'had error with -smHitms:', -smHitms)
+
+				print('  spike', idx, 'smSec:', smSec, 'has', len(smHits_pnts), 'sm pnts before it, smHits_ms:', smHits_ms)
+				#print('    20ms before spike', xPreClipSparkMasterBins[0:20])
+				#print('    20ms before spike', yPreClipSparkMasterBins[0:20])
+
+				# fit line and put in self.baAbf spikeDict
+				x_values = xPreClipSparkMasterBins # same for every spikes
+				y_values = yPreClipSparkMasterBins # starts at all 0 and accumulates lcr (could be 0 lcr !!!)
+				resultObj = scipy.stats.linregress(x_values, y_values)
+				# there is also resultObj.rvalue (not need to run pearsons)
+				print('spike', idx, 'region:', region, 'resultObj slope:', resultObj.slope, 'p:', resultObj.pvalue)
+				self.baAbf.spikeDict[idx]['lcrSlope'] = resultObj.slope
+				self.baAbf.spikeDict[idx]['lcrNum'] = len(smHits_pnts) # number of lcr before spike
+				self.baAbf.spikeDict[idx]['region'] = region
+				self.baAbf.spikeDict[idx]['cell number'] = cellNumber
+				self.baAbf.spikeDict[idx]['trial'] = trial
+
+			#
+			# 20210311
+			# save the merged SanPy/clr anaysis
+			# this is for generating figure 9
+			if 0:
+				tmpSavefile = '/Users/cudmore/Sites/SanPy/examples/dual-analysis/tmpMergedDatabase'
+				print('self.baAbf.file:', self.baAbf.file)
+				tmpAbfPath, tmpAbfFile = os.path.split(self.baAbf.file)
+				tmpAbfFile, tmpExt = os.path.splitext(tmpAbfFile)
+				tmpAbfFile += '.csv'
+				tmpSavefile = os.path.join(tmpSavefile, tmpAbfFile)
+				print('saving fig9 merged database to tmpSavefile:', tmpSavefile)
+				self.baAbf.saveReport(tmpSavefile, saveExcel=False, alsoSaveTxt=True)
+
+			# 2d, take mean of col (# lcr in each ms across all spikes)
+			#print('yPreClipPerSpike:', yPreClipPerSpike)
+			yPreClipSpikeMean = yPreClipPerSpike.mean(axis=0)
+			#print('yPreClipSpikeMean[0:20]:', yPreClipSpikeMean[0:20])
+
+			# compare the slope for each spike to its earlyDiastolicDurationRate
+			# test significance
+			eddRate, lcrSlope = self.baAbf.getStat('earlyDiastolicDurationRate', 'lcrSlope') #returns list []
+			eddRate = np.array(eddRate)
+			lcrSlope = np.array(lcrSlope)
+			notNaNIdx = ~np.isnan(eddRate) & ~np.isnan(lcrSlope) # strip nan
+			#print('notNaNIdx:', notNaNIdx)
+			rTmp, pTmp = scipy.stats.pearsonr(eddRate[notNaNIdx], lcrSlope[notNaNIdx])
+			'''
+			print('  test eddRate vs lcrSlope pearsonsr r:', rTmp, 'p:', pTmp)
+			if 0:
+				# plot slope versus early diastolic duration rate
+				tmpFig, tmpAxs = plt.subplots(1, 1, sharex=False)
+				tmpAxs = [tmpAxs]
+				tmpAxs[0].plot(eddRate, lcrSlope)
+				plt.show()
+			'''
+
+			#
+			# fit a line to all spike
+			# see https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.linregress.html
+			def lineFitFunction(x, a, b, c):
+				return a * x + b
+			x_values = xPreClipSparkMasterBins
+			y_values = yPreClipSpikeMean
+			# popt: [0.0002 0.0418 1.    ]
+			popt, pcov = scipy.optimize.curve_fit(lineFitFunction, x_values, y_values)
+			#print('slope*x + intercept ... a * x + b')
+			#print('popt:', popt)
+			#print('pcov:', pcov)
+			xFit = np.linspace(min(x_values), max(x_values), 1000)
+			yFit = lineFitFunction(xFit, *popt)
+			# plot(x_line, y_line)
+			resultObj = scipy.stats.linregress(x_values, y_values)
+			print('  all spikes resultObj slope of # lcr approacing spike:', resultObj.slope, 'p:', resultObj.pvalue)
+
+			# copy/paste to excel
+			tifStr = os.path.split(self.tifFile)[1]
+			print(f'index\ttif\tregion\tnSpikes\tslope\tp\tr\tp')
+			print(f'{fileNumber}\t{tifStr}\t{region}\t{numSpikes}\t{round(resultObj.slope,5)}\t{round(resultObj.pvalue,5)}\t{round(rTmp,5)}\t{round(pTmp,5)}')
+
+			#
+			# use axLcr instead
+			#secondAxs1 = axs.twinx()
+			#secondAxs1.spines['right'].set_visible(False)
+			#secondAxs1.spines['top'].set_visible(False)
+			#secondAxs1.plot(xPreClipSparkMasterBins, yPreClipSparkMasterBins, '.b')
+			# was this
+			'''
+			yPreClipSparkMasterBins = [x if x>0 else np.nan for x in yPreClipSparkMasterBins]
+			secondAxs1.stem(xPreClipSparkMasterBins, yPreClipSparkMasterBins,
+						linefmt='.b',
+						markerfmt=' ', # use space ' ' and not None or ''
+						basefmt=' ')
+			'''
+			# now this
+			yPreClipSpikeMean = [x if x>0 else np.nan for x in yPreClipSpikeMean]
+			axLcr.stem(xPreClipSparkMasterBins, yPreClipSpikeMean,
+						linefmt='grey',
+						markerfmt=' ', # use space ' ' and not None or ''
+						basefmt=' ')
+			axLcr.plot(xFit, yFit, 'b', linewidth=2.5)
+			#
+			axLcr.set_ylabel('Prob LCR')
+			axLcr.spines['left'].set_visible(False)
+			axLcr.spines['top'].set_visible(False)
+			axLcr.spines['right'].set_visible(False)
+			axLcr.spines['bottom'].set_visible(False)
+			axLcr.xaxis.set_visible(False)
+			axLcr.yaxis.set_visible(False)
+
+			print('xxx axLcr set_ylim 0 .2')
+			axLcr.set_ylim(0, 0.1)
+		#
+		return fig
+
+	def plotFigure9(self, region=None):
+		"""
+		for figure 9
+		plot dF/f_o, add image scale bar,
+		plot lcr bins
+		"""
+
+		figSize =(6,2) # inches
+		fig = plt.figure(figsize=figSize, constrained_layout=True)
+		widths = [2, 0.25]
+		heights = [1, 0.2]
+		gridSpec = fig.add_gridspec(ncols=2, nrows=2, width_ratios=widths, height_ratios=heights)
+
+		fig.suptitle(region)
+
+		# plot image
+		row = 0
+		col = 0
+		axImage = fig.add_subplot(gridSpec[row, col])
+
+		# remove x axis
+		axImage.xaxis.set_visible(False)
+		axImage.yaxis.set_visible(False)
+
+		# colorbar for image
+		#cbar_ax = fig.add_axes([0.85, 0.15, 0.05, 0.7])
+		#figColorBar, axsColorBar = plt.subplots(1, 1, figsize=(1,2))
+		'''
+		row = 0
+		col = 1
+		axColorBar = fig.add_subplot(gridSpec[row, col])
+		'''
+
+		#self.plotImage(axImage, fig, axsColorBar)
+		self.plotImage(axImage, fig, None)
+		axImage.xaxis.set_visible(False)
+		axImage.yaxis.set_visible(False)
+
+		# twin image x and overlay Vm
+		axImageRight = axImage.twinx()  # instantiate a second axes that shares the same x-axis
+		sweepX = self.abf.sweepX
+		sweepY = self.abf.sweepY
+		axImageRight.plot(sweepX, sweepY, '-w', linewidth=0.5)
+		axImageRight.set_xticks([], minor=False)
+		axImageRight.set_xticks([], minor=True)
+		#axImageRight.set_yticks([], minor=False)
+		#axImageRight.set_yticks([], minor=True)
+		axImageRight.spines['left'].set_visible(False)
+		axImageRight.spines['top'].set_visible(False)
+		axImageRight.spines['right'].set_visible(False)
+		axImageRight.spines['bottom'].set_visible(False)
+		axImageRight.xaxis.set_visible(False)
+		axImageRight.yaxis.set_visible(False)
+
+		#plt.axis('off')
+		'''
+		plt.tick_params(
+			axis='x',          # changes apply to the x-axis
+			which='both',      # both major and minor ticks are affected
+			left=False,      # ticks along the bottom edge are off
+			right=False,      # ticks along the bottom edge are off
+			bottom=False,      # ticks along the bottom edge are off
+			top=False,         # ticks along the top edge are off
+			labelbottom=False) # labels along the bottom edge are off
+		'''
+
+		# plot lcr hist
+		row = 1
+		col = 0
+		axLcr = fig.add_subplot(gridSpec[row, col])
+		self.plotLcrHist(ax=axLcr)
+		axLcr.xaxis.set_visible(False)
+		axLcr.yaxis.set_visible(False)
+
+		# join x-axis
+		axImage.get_shared_x_axes().join(axImage, axLcr)
+
+		# set_xlim to range of e-phys (shorter than image acq)
+		# using 2021_01_29_0006
+		#axLcr.set_ylim(0, 12)
+		#axLcr.set_xlim(7.0, 8)
+
+		#
+		#plt.show()
+		return fig, axImage, axLcr
 
 	def new_plotSparkMaster(self, region=None):
 		"""
@@ -958,10 +1436,16 @@ class dualRecord:
 	def NormalizeData(self, data):
 		return (data - np.min(data)) / (np.max(data) - np.min(data))
 
-	def plotSpikeClip(self, doPhasePlot=False, fileNumber=None, region=None, myParent=None):
+	def plotSpikeClip(self, doPhasePlot=False, fileNumber=None, region=None, myParent=None, df=None):
 		"""
 		myParent: tkInter testTable
 		"""
+
+		cellNumber = None
+		trial = None
+		if df is not None:
+			cellNumber = df['cell number'].loc[fileNumber]
+			trial = df['trial'].loc[fileNumber]
 
 		myParent = myParent # testTable
 		global spikeNumber # needed because we will assign +/- in callback
@@ -1143,6 +1627,10 @@ class dualRecord:
 				print('error: plotSpikeClip() ca no spike', idx)
 
 		#
+		# start 20210317
+		#
+
+		#
 		# vm
 		abfSpikeClips_x2, abfSpikeClips = baAbf.makeSpikeClips(spikeClipWidth_ms, theseTime_sec=theseTime_sec)
 		for idx, sec in enumerate(thresholdSec1):
@@ -1201,22 +1689,43 @@ class dualRecord:
 				smHits_ms = [int(-x) for x in smHits_ms]
 				for smHitms in smHits_ms:
 					# todo: make sure -smHitms is good index
-					yPreClipSparkMasterBins[-smHitms] += 1 # add one to bin
-					yPreClipPerSpike[idx][-smHitms] += 1
-
-					# 2d list to keep track of lcr per spike
-					yPreClipSparkMasterBins_2d[idx][-smHitms] += 1
+					try:
+						yPreClipSparkMasterBins[-smHitms] += 1 # add one to bin
+						yPreClipPerSpike[idx][-smHitms] += 1
+						# 2d list to keep track of lcr per spike
+						yPreClipSparkMasterBins_2d[idx][-smHitms] += 1
+					except (IndexError) as e:
+						print('    ERROR: spike', idx, 'had error with -smHitms:', -smHitms)
 
 				print('  spike', idx, 'smSec:', smSec, 'has', len(smHits_pnts), 'sm pnts before it, smHits_ms:', smHits_ms)
 				#print('    20ms before spike', xPreClipSparkMasterBins[0:20])
 				#print('    20ms before spike', yPreClipSparkMasterBins[0:20])
 
 				# fit line and put in self.baAbf spikeDict
-				x_values = xPreClipSparkMasterBins
-				y_values = yPreClipSparkMasterBins
+				x_values = xPreClipSparkMasterBins # same for every spikes
+				y_values = yPreClipSparkMasterBins # starts at all 0 and accumulates lcr (could be 0 lcr !!!)
 				resultObj = scipy.stats.linregress(x_values, y_values)
-				print('spike', idx, 'resultObj slope:', resultObj.slope, 'p:', resultObj.pvalue)
+				# there is also resultObj.rvalue (not need to run pearsons)
+				print('spike', idx, 'region:', region, 'resultObj slope:', resultObj.slope, 'p:', resultObj.pvalue)
 				self.baAbf.spikeDict[idx]['lcrSlope'] = resultObj.slope
+				self.baAbf.spikeDict[idx]['lcrNum'] = len(smHits_pnts) # number of lcr before spike
+				self.baAbf.spikeDict[idx]['region'] = region
+				self.baAbf.spikeDict[idx]['cell number'] = cellNumber
+				self.baAbf.spikeDict[idx]['trial'] = trial
+
+			#
+			# 20210311
+			# save the merged SanPy/clr anaysis
+			# this is for generating figure 9
+			if 0:
+				tmpSavefile = '/Users/cudmore/Sites/SanPy/examples/dual-analysis/tmpMergedDatabase'
+				print('self.baAbf.file:', self.baAbf.file)
+				tmpAbfPath, tmpAbfFile = os.path.split(self.baAbf.file)
+				tmpAbfFile, tmpExt = os.path.splitext(tmpAbfFile)
+				tmpAbfFile += '.csv'
+				tmpSavefile = os.path.join(tmpSavefile, tmpAbfFile)
+				print('saving fig9 merged database to tmpSavefile:', tmpSavefile)
+				self.baAbf.saveReport(tmpSavefile, saveExcel=False, alsoSaveTxt=True)
 
 			# 2d, take mean of col (# lcr in each ms across all spikes)
 			#print('yPreClipPerSpike:', yPreClipPerSpike)
@@ -1281,9 +1790,13 @@ class dualRecord:
 						linefmt='grey',
 						markerfmt=' ', # use space ' ' and not None or ''
 						basefmt=' ')
-			secondAxs1.plot(xFit, yFit, 'r', linewidth=1)
+			secondAxs1.plot(xFit, yFit, 'b', linewidth=2.5)
 			#
 			secondAxs1.set_ylabel('Prob LCR')
+
+			#
+			# end 20210317
+			#
 
 			#
 			# axs[2] is showing 1 spike
@@ -1625,7 +2138,7 @@ class dualRecord:
 		self.baTif = baTif
 
 
-	def plotSpikeClip_df(self, df, fileNumber, myParent=None):
+	def plotSpikeClip_df(self, df, fileNumber, forFig9=False, myParent=None):
 		"""
 		to plot spike clips from testTable.py
 		"""
@@ -1636,9 +2149,15 @@ class dualRecord:
 
 		region = df['region'].loc[fileNumber]
 
+		self.findSpikePairs(fileNumber=fileNumber, doPlot=False)
+
 		#dr.plotSpikeAnalysis(type='tif') # works
-		fig = self.plotSpikeClip(doPhasePlot=True, fileNumber=fileNumber,
-								region=region, myParent=myParent)
+		if forFig9:
+			fig = self.plotClips(fileNumber=fileNumber, region=region)
+		else:
+			fig = self.plotSpikeClip(doPhasePlot=True, fileNumber=fileNumber,
+								region=region, df=df,
+								myParent=myParent)
 
 		return fig
 
@@ -2007,7 +2526,18 @@ if __name__ == '__main__':
 		# make _clipped.tif for each .tif
 		new_TifReport()
 
-	if 1:
+	if 0:
 		# merge all _clipped_sm.csv into big df and save
 		# use saved .csv in bScatterPlot2.py
 		makeLcrReport()
+
+	if 0:
+		# merge combined sanpy/lcr spike database from 'plot spike clip'
+		# use this in fig9 to show per spike lcr slope versus eddr
+		fig9MergeDatabase()
+
+	if 1:
+		# step through main lcr database and call 'spike clips' to save to sanpy analysis
+		# key here, we are adding columns to saved file like:
+		# (lcr slope, lcrNum, etc)
+		spikeClipPlotAndSave()
