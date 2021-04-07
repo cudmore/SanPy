@@ -23,6 +23,7 @@ Requires (need to make local copies of (pandas model, checkbox delegate)
 """
 
 import os, sys, io, csv
+from collections import OrderedDict
 import traceback
 import pandas as pd
 import numpy as np
@@ -91,6 +92,7 @@ class myPandasModel(QtCore.QAbstractTableModel):
 		data: pandas dataframe
 		"""
 		QtCore.QAbstractTableModel.__init__(self)
+		self.verbose = False
 		self._data = data
 		columnList = self._data.columns.values.tolist()
 		if 'include' in columnList:
@@ -98,15 +100,18 @@ class myPandasModel(QtCore.QAbstractTableModel):
 		else:
 			self.includeCol = None
 		#print('pandasModel.__init__() self.includeCol:', self.includeCol)
+		self.columns_boolean = ['include']
 
 	def rowCount(self, parent=None):
+		#if self.verbose: print('myPandasModel.rowCount()')
 		return self._data.shape[0]
 
 	def columnCount(self, parnet=None):
+		#if self.verbose: print('myPandasModel.columnCount()')
 		return self._data.shape[1]
 
 	def data(self, index, role=QtCore.Qt.DisplayRole):
-		#print('data() role:', role)
+		if self.verbose: print('myPandasModel.data()')
 		if index.isValid():
 			if role == QtCore.Qt.DisplayRole:
 
@@ -130,7 +135,7 @@ class myPandasModel(QtCore.QAbstractTableModel):
 		return None
 
 	def update(self, dataIn):
-		print('myPandasModel.update()', dataIn)
+		if self.verbose: print('myPandasModel.update()')
 
 	def setData(self, index, value, role=QtCore.Qt.DisplayRole):
 		"""
@@ -141,7 +146,8 @@ class myPandasModel(QtCore.QAbstractTableModel):
 			True if value is changed. Calls layoutChanged after update.
 			False if value is not different from original value.
 		"""
-		print('myPandasModel.setData() row:', index.row(), 'column:', index.column(), 'value:', value, type(value))
+		if self.verbose: print('myPandasModel.setData()')
+		print('  myPandasModel.setData() row:', index.row(), 'column:', index.column(), 'value:', value, type(value))
 		#if index.column() == self.includeCol:
 
 		#self.dataChanged.emit(index, index)
@@ -168,14 +174,21 @@ class myPandasModel(QtCore.QAbstractTableModel):
 		return True
 
 	def flags(self, index):
-		#if index.column() == self.includeCol:
+		if self.verbose:
+			print('myPandasModel.flags()')
+			print('  index.column():', index.column())
 		if 1:
 			# turn on editing (limited to checkbox for now)
+			if index.column() in self.columns_boolean:
+				#print('  return with columns_boolean')
+				return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsUserCheckable
+			#print('  return with ...')
 			return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 		else:
 			return QtCore.Qt.ItemIsEnabled
 
 	def headerData(self, col, orientation, role):
+		#if self.verbose: print('myPandasModel.headerData()')
 		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
 			return self._data.columns[col]
 		return None
@@ -187,17 +200,34 @@ class myCheckBoxDelegate(QtWidgets.QItemDelegate):
 	"""
 	def __init__(self, parent):
 		QtWidgets.QItemDelegate.__init__(self, parent)
+		self.verbose = False
+		if self.verbose: print('myCheckBoxDelegate.__init__()')
 
 	def createEditor(self, parent, option, index):
 		"""
 		Important, otherwise an editor is created if the user clicks in this cell.
 		"""
+		if self.verbose: print('myCheckBoxDelegate.createEditor()')
 		return None
 
 	def paint(self, painter, option, index):
 		"""
 		Paint a checkbox without the label.
+
+		option: PyQt5.QtWidgets.QStyleOptionViewItem
+		index: PyQt5.QtCore.QModelIndex
 		"""
+		if self.verbose: print('myCheckBoxDelegate.paint()')
+		#print('  option:', option, 'index:', index)
+		#print('  index.data():', type(index.data()), index.data())
+		#HasCheckIndicator = QtWidget.QStyleOptionViewItem.HasCheckIndicator
+		# options.HasCheckIndicator returns hex 4, value of enum
+		# how do i query it?
+		#print('  ', option.ViewItemFeatures().HasCheckIndicator) # returns PyQt5.QtWidgets.QStyleOptionViewItem.ViewItemFeature
+		#print('  ', option.features)
+		#print('  ', index.data(QtCore.Qt.CheckStateRole)  )
+		#state = index.data(QtCore.Qt.CheckStateRole)
+		#print('  state:', state, 'option.HasCheckIndicator:', option.HasCheckIndicator)
 		self.drawCheck(painter, option, option.rect, QtCore.Qt.Unchecked if int(index.data()) == 0 else QtCore.Qt.Checked)
 
 	def editorEvent(self, event, model, option, index):
@@ -205,6 +235,7 @@ class myCheckBoxDelegate(QtWidgets.QItemDelegate):
 		Change the data in the model and the state of the checkbox
 		if the user presses the left mousebutton and this cell is editable. Otherwise do nothing.
 		'''
+		if self.verbose: print('myCheckBoxDelegate.editorEvent()')
 		if not int(index.flags() & QtCore.Qt.ItemIsEditable) > 0:
 			return False
 
@@ -216,34 +247,272 @@ class myCheckBoxDelegate(QtWidgets.QItemDelegate):
 		return False
 
 
-	def setModelData (self, editor, model, index):
+	def setModelData(self, editor, model, index):
 		'''
 		The user wanted to change the old state in the opposite.
 		'''
-		print('myCheckBoxDelegate.setModelData()')
+		if self.verbose:
+			print('myCheckBoxDelegate.setModelData()')
+			print('  editor:', editor)
+			print('  model:', model)
+			print('  index:', index)
+			print('  index.data():', type(index.data()), index.data())
+		#data = index.data()
+		#if isinstance(data, str):
+		#	return
 		model.setData(index, 1 if int(index.data()) == 0 else 0, QtCore.Qt.EditRole)
 
 #class MainWindow(QtWidgets.QWidget):
+myInterfaceDefaults = OrderedDict({
+	'X Statistic': None,
+	'Y Statistic': None,
+	'Hue': None,
+	'Group By': None,
+})
+
+class myTableView(QtWidgets.QTableView):
+	def __init__(self, parent=None):
+		super(myTableView, self).__init__(parent)
+
+		self.setFont(QtGui.QFont('Arial', 10))
+		self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+								  QtWidgets.QSizePolicy.Expanding)
+		self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+
+		p = self.palette();
+		color1 = QtGui.QColor('#dddddd')
+		color2 = QtGui.QColor('#ffffff')
+		p.setColor(QtGui.QPalette.Base, color1);
+		p.setColor(QtGui.QPalette.AlternateBase, color2);
+		self.setAlternatingRowColors(True)
+		self.setPalette(p);
+
+	def slotSelectRow(self, selectDict):
+		print('slotSelectRow() selectDict:', selectDict)
+		ind = selectDict['index']
+		'''
+		plotDf = selectDict['plotDf']
+		index = plotDf.at[ind, 'index']
+		index = int(index)
+		'''
+		index = ind
+		index -= 1 # !!! MY VISUAL INDEX IN TABLE IS ONE BASED !!!
+		column = 0
+		modelIndex = self.model().index(index, column)
+		self.setCurrentIndex(modelIndex)
+
+class myMplCanvas(FigureCanvas):
+	"""
+	hold an fig/plot canvas, in scatter plot we can have 1-4 of these
+	"""
+	signalSelectFromPlot = QtCore.Signal(object)
+
+	def __init__(self):
+
+		self.stateDict = None
+		self.plotDf = None
+
+		self.fig = Figure()
+		super(myMplCanvas, self).__init__(self.fig)
+
+		#self.canvas = FigureCanvas(self.fig)
+		self.axes = self.fig.add_subplot(111)
+		self.axes.plot([1,2,3], [5,3,10], 'o', picker=5)
+		#self.scatterPlotSelection, = self.axes2[0].plot([], [], 'oy',
+		#							markersize=12, fillstyle='none')
+		self.cid2 = self.mpl_connect('pick_event', self.on_pick_event)
+		#self.hBoxLayout.addWidget(self.canvas2)
+
+		self.scatterPlotSelection = None
+
+	def on_pick_event(self, event):
+		try:
+			print('myMplCanvas.on_pick_event() event:', event)
+			print('  event.ind:', event.ind)
+
+			if len(event.ind) < 1:
+				return
+			spikeNumber = event.ind[0]
+			print('  selected:', spikeNumber)
+
+			# propagate a signal to parent
+			#self.myMainWindow.mySignal('select spike', data=spikeNumber)
+			#self.selectSpike(spikeNumber)
+		except (AttributeError) as e:
+			pass
+
+	def onPick(self, event):
+		"""
+		when user clicks on a point in the graph
+
+		todo: this makes perfect sense for scatter but maybe not other plots???
+		"""
+		print('=== myMplCanvas.onPick()') #' event:', type(event), event)
+		line = event.artist
+
+		# filter out clicks on 'Annotation' used by mplcursors
+		try:
+			# when Scatter, line is 'PathCollection', a list of (x,y)
+			offsets = line.get_offsets()
+		except (AttributeError) as e:
+			return
+
+		ind = event.ind # ind is a list []
+		if len(ind)==0:
+			return
+		ind = ind[0]
+		#print('on pick line:', np.array([xdata[ind], ydata[ind]]).T)
+
+		# visual selection
+		self._selectInd(ind)
+
+		# ind is the ith element in (x,y) list of offsets
+		# ind 10 (0 based) is index 11 (1 based) in table list
+		print(f'  selected from plot ind:{ind}, offsets values are {offsets[ind]}')
+		selectDict = self.getAnnotation(ind)
+
+		#
+		# emit
+		print('  myMplCanvas.signalSelectFromPlot.emit()', selectDict)
+		self.signalSelectFromPlot.emit(selectDict)
+
+	def _selectInd(self, ind):
+		"""
+		visually select a point in scatter plot
+		"""
+		print('myMplCanvas._selectInd() ind:', ind)
+		xVal = self.plotDf.at[ind, self.stateDict['xStat']]
+		yVal = self.plotDf.at[ind, self.stateDict['yStat']]
+		if self.scatterPlotSelection is not None:
+			print('  scatterPlotSelection x:', xVal, 'y:', yVal)
+			self.scatterPlotSelection.set_data(xVal, yVal)
+		self.fig.canvas.draw()
+
+	def getAnnotation(self, ind):
+		if not np.issubdtype(ind, np.integer):
+			print('myMplCanvas.getAnnotation() got bad ind:', ind, type(ind))
+			return
+
+		xStat = self.stateDict['xStat']
+		yStat = self.stateDict['yStat']
+		groupByColumnName = self.stateDict['groupByColumnName']
+
+		analysisName = self.plotDf.at[ind, groupByColumnName]
+		index = self.plotDf.at[ind, 'index']
+		try:
+			region = self.plotDf.at[ind, 'Region'] # not all will have this
+		except (KeyError) as e:
+			region = 'n/a'
+		xVal = self.plotDf.at[ind, xStat]
+		yVal = self.plotDf.at[ind, yStat]
+
+		returnDict = {
+					'index': index,
+					'analysisName': analysisName,
+					'region': region,
+					'xVal': xVal,
+					'yVal': yVal,
+					#'plotDf': self.plotDf, # potentially very big
+			}
+		return returnDict
+
+	def myUpdate(self, stateDict):
+		"""
+		update plot based on control interface
+		"""
+		self.stateDict = stateDict
+
+		dataType = stateDict['dataType']
+		hue = stateDict['hue']
+		groupByColumnName = stateDict['groupByColumnName']
+
+		xStatHuman = stateDict['xStatHuman']
+		yStatHuman = stateDict['yStatHuman']
+		print('=== myMplCanvas.myUpdate()')
+		print('  ', 'xStatHuman:', xStatHuman, 'yStatHuman:', yStatHuman)
+		xStat = stateDict['xStat']
+		yStat = stateDict['yStat']
+		print('  ', 'xStat:', xStat, 'yStat:', yStat)
+
+		xIsCategorical = stateDict['xIsCategorical']
+		yIsCategorical = stateDict['yIsCategorical']
+
+		masterDf = stateDict['masterDf']
+		meanDf = stateDict['meanDf']
+
+		self.plotDf = meanDf
+
+		self.axes.clear()
+
+		picker = 5
+		plotType = 'Scatter Plot'
+		if plotType == 'Scatter Plot':
+			# scatter plot user selection
+			self.scatterPlotSelection, = self.axes.plot([], [], 'oy',
+									markersize=12, fillstyle='none')
+
+			# main scatter
+			try:
+				self.whatWeArePlotting = sns.scatterplot(x=xStat, y=yStat, hue=hue,
+								data=meanDf, ax=self.axes, picker=picker)
+			except (ValueError) as e:
+				self.fig.canvas.draw()
+				print('  EXCEPTION: in myUpdate() "Scatter Plot", exception is:')
+				print('  ', e)
+				print('  ', 'hue:', hue)
+
+			# sem in both x and y, pulling from masterDf
+			if dataType == 'File Mean':
+				# we need to do this for each hue???
+				# if x or y is in categorical (e.g. a string) then do not do this ...
+				if xIsCategorical or yIsCategorical:
+					pass
+				else:
+					print('  grabbing mean +- sem for self.groupByColumnName:', self.groupByColumnName)
+					color = 'k'
+					xd = masterDf.groupby(groupByColumnName).mean()[xStat]
+					xerrd = masterDf.groupby(groupByColumnName).sem()[xStat]
+					yd = masterDf.groupby(groupByColumnName).mean()[yStat]
+					yerrd = masterDf.groupby(groupByColumnName).sem()[yStat]
+					self.axes.errorbar(xd, yd, xerr=xerrd, yerr=yerrd, fmt='none', capsize=0, zorder=1, color=color, alpha=0.5);
+
+		#
+		self.axes.figure.canvas.mpl_connect("pick_event", self.onPick)
+
+
 class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 	#send_fig = QtCore.pyqtSignal(str)
+	signalSelectFromPlot = QtCore.Signal(object)
 
 	def __init__(self, path,
 					categoricalList, hueTypes, analysisName, sortOrder=None,
-					statListDict=None, masterDf=None, parent=None):
+					statListDict=None,
+					masterDf=None,
+					interfaceDefaults=None,
+					parent=None):
 		"""
 		path: full path to .csv file generated with reanalyze
 		categoricalList: specify columns that are categorical
 			would just like to use 'if column is string' but sometimes number like 1/2/3 need to be categorical
-		statListDict: dict where keys are human readable stat names that map onto 'yStat' to specify column in csv
+		hueTypes:
 		analysisName: column used for group by
-		masterDf: if not none then use it (rather than loading)
+		sortOrder:
+		statListDict: dict where keys are human readable stat names
+					that map onto 'yStat' to specify column in csv
+		masterDf: NOT USED, if not none then use it (rather than loading)
 					used by main sanpy interface
+		interfaceDefaults: specify key/value in dict to set state of interface popups/etc
+
 		todo: make pure text columns categorical
 		todo: remove analysisName and add as 'groupby' popup from categorical columns
 			depending on 'analysisName' popup, group differently in getMeanDf
 		"""
 		super(bScatterPlotMainWindow, self).__init__(parent)
 
+		self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
+
+		if interfaceDefaults is None:
+			interfaceDefaults = myInterfaceDefaults
 		self.shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+w"), self)
 		self.shortcut.activated.connect(self.myCloseAction)
 
@@ -254,11 +523,16 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		self.buildMenus()
 
-		self.loadPath(path, masterDf=masterDf)
+		self.loadPath(path, masterDf=masterDf, categoricalList=categoricalList)
 
 		# statListDict is a dict with key=humanstat name and yStat=column name in csv
 		#self.statListDict = sanpy.bAnalysisUtil.getStatList()
 		# 20210305 done in loadPath()
+		if statListDict is not None:
+			self.statListDict = statListDict
+			# append all categorical
+			for categorical in categoricalList:
+				self.statListDict[categorical] = {'yStat':categorical}
 		'''
 		if statListDict is None:
 			# build statListDict from columns of csv path
@@ -285,7 +559,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		# unique identifyer to group by
 		# for sanpy this is 'analysisName', for bImPy this is xxx
-		self.analysisName = analysisName
+		self.groupByColumnName = analysisName
 		self.sortOrder = sortOrder
 
 		# 20210112 moved up
@@ -301,7 +575,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		#self.main_widget = QtWidgets.QWidget(self)
 
-		self.hue = self.hueTypes[0]
+		# this is causing tons of problems/crashes
+		if interfaceDefaults['Hue'] is not None:
+			self.hue = interfaceDefaults['Hue']
+		else:
+			self.hue = 'None' #self.hueTypes[0]
+
 		self.darkTheme = True
 		self.doKDE = False # fits on histogram plots
 		self.doHover = False
@@ -314,7 +593,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		self.dataTypes = ['All Spikes', 'File Mean']
 		self.dataType = 'File Mean' # (Raw, File Mean)
 
-		self.buildUI()
+		self.buildUI(interfaceDefaults=interfaceDefaults)
 
 		#bar = self.menuBar()
 		#file = bar.addMenu("Load")
@@ -323,7 +602,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		self.updatePlotSize() # calls update2()
 		#self.update2()
 
-	def buildUI(self):
+	def buildUI(self, interfaceDefaults):
 		if self.darkTheme:
 			plt.style.use('dark_background')
 		#sns.set_context('talk')
@@ -343,15 +622,24 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		# WHAT THE  FUCK HAPPENED !!!!!!!!!!!!
 		#self.setLayout(self.hBoxLayout)
 
+		# allow 1-4 plots
+		tmpNumRow = 1
+		tmpNumCol = 1
+		numPlot = tmpNumRow * tmpNumCol
+
 		self.fig = Figure()
+		self.fig.tight_layout()
+
+		'''
 		self.ax1 = self.fig.add_subplot(111)
-		#self.ax2 = self.fig.add_subplot(122, sharex=self.ax1, sharey=self.ax1)
-		#self.ax2 = self.fig.add_subplot(122)
-		#self.axes=[self.ax1, self.ax2]
 		self.axes = [self.ax1]
-		self.canvas = FigureCanvas(self.fig)
+		'''
+
+		self.axes = [self.fig.add_subplot(tmpNumRow, tmpNumCol, i+1) for i in range(numPlot)]
+
+		self.canvas = FigureCanvas(self.fig) # what is added to pyqt interface
 		self.cid = self.canvas.mpl_connect('pick_event', self.on_pick_event)
-		# matplotlib toolbar
+
 		# maybe use
 		#self.toolbar = NavigationToolbar(self.canvas, self)
 		self.mplToolbar = NavigationToolbar2QT(self.canvas, self.canvas) # params are (canvas, parent)
@@ -366,30 +654,56 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		self.hBoxLayout.addLayout(self.layout)
 
-		##
-		# 20210112, don't do this because we do not know the columsn of the csv
-		#keys = list(self.statNameMap.keys())
+		def _defaultDropdownIdx(keyList, name):
+			# if name not in keys, return 0
+			theRet = 0
+			try:
+				theRet = keyList.index(name)
+			except (ValueError) as e:
+				print(f'WARNING: _defaultDropdownIdx() did not find "{name}"" in keyList: {keyList}')
+				theRet = 0
+			return theRet
+
 		keys = list(self.statListDict.keys())
-		#xStatIdx = keys.index('Spike Frequency (Hz)')
-		#yStatIdx = keys.index('Early Diastolic Depol Rate (dV/s)')
+		#keys += self.hueTypes
 		self.xDropdown = QtWidgets.QComboBox()
 		self.xDropdown.addItems(keys)
-		#self.xDropdown.setCurrentIndex(xStatIdx)
+		if interfaceDefaults['X Statistic'] is not None:
+			defaultIdx = _defaultDropdownIdx(keys, interfaceDefaults['X Statistic'])
+		else:
+			defaultIdx = 0
+		self.xDropdown.setCurrentIndex(defaultIdx)
+
 		self.yDropdown = QtWidgets.QComboBox()
 		self.yDropdown.addItems(keys)
-		#self.yDropdown.setCurrentIndex(yStatIdx)
-		self.yDropdown.setCurrentIndex(0)
+		if interfaceDefaults['Y Statistic'] is not None:
+			defaultIdx = _defaultDropdownIdx(keys, interfaceDefaults['Y Statistic'])
+		else:
+			defaultIdx = 0
+		self.yDropdown.setCurrentIndex(defaultIdx)
 
-		# 20210112 we need to specify this on creation
+		#
+		# hue, to control colors in plot
+		hueList = ['None'] + self.hueTypes # prepend 'None'
 		self.hueDropdown = QtWidgets.QComboBox()
-		self.hueDropdown.addItems(['None'] + self.hueTypes)
-		self.hueDropdown.setCurrentIndex(1) # 1 because we pre-pended 'None'
+		self.hueDropdown.addItems(hueList)
+		if interfaceDefaults['Hue'] is not None:
+			defaultIdx = _defaultDropdownIdx(hueList, interfaceDefaults['Hue'])
+		else:
+			defaultIdx = 0
+		self.hueDropdown.setCurrentIndex(defaultIdx) # 1 because we pre-pended 'None'
 		self.hueDropdown.currentIndexChanged.connect(self.updateHue)
 
-		# to control grouping in table
+		#
+		# group by, to control grouping in table
+		groupByList = ['None'] + self.hueTypes # prepend 'None'
 		self.groupByDropdown = QtWidgets.QComboBox()
-		self.groupByDropdown.addItems(['None'] + self.hueTypes)
-		self.groupByDropdown.setCurrentIndex(1) # 1 because we pre-pended 'None'
+		self.groupByDropdown.addItems(groupByList)
+		if interfaceDefaults['Group By'] is not None:
+			defaultIdx = _defaultDropdownIdx(groupByList, interfaceDefaults['Group By'])
+		else:
+			defaultIdx = 0
+		self.groupByDropdown.setCurrentIndex(defaultIdx) # 1 because we pre-pended 'None'
 		self.groupByDropdown.currentIndexChanged.connect(self.updateGroupBy)
 
 		# color
@@ -468,6 +782,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		# switch from toolbar to widget
 		self.hBoxLayout.addWidget(self.canvas)
+
 		'''
 		self.myToolbar = QtWidgets.QToolBar()
 		self.myToolbar.setFloatable(True)
@@ -478,28 +793,41 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		# table with pandas dataframe
 		#self.myModel = sanpy.bUtil.pandasModel(self.masterDf)
-		self.myModel = myPandasModel(self.masterDf)
-		self.tableView = QtWidgets.QTableView()
+		#self.myModel = myPandasModel(self.masterDf)
+
+		self.tableView = myTableView()
+		#self.tableView = QtWidgets.QTableView()
+
+		# connect table slot to self.signalSelectFromPlot emit
+		self.signalSelectFromPlot.connect(self.tableView.slotSelectRow)
+
 		# todo, derive a class for tableView
 		# put this back in to enable isGood checkBox
-		'''
-		colList = self.masterDf.columns.values.tolist()
-		if 'include' in colList:
-			includeCol = colList.index('include')
-			print(f'setting include column {includeCol} to "myCheckBoxDelegate"')
-			self.tableView.setItemDelegateForColumn(includeCol, myCheckBoxDelegate(None))
-		'''
-		self.tableView.setFont(QtGui.QFont('Arial', 10))
+		if 0:
+			colList = self.masterDf.columns.values.tolist()
+			if 'include' in colList:
+				includeCol = colList.index('include')
+				print(f'setting include column {includeCol} to "myCheckBoxDelegate"')
+				self.tableView.setItemDelegateForColumn(includeCol, myCheckBoxDelegate(None))
+
+		#self.tableView.setFont(QtGui.QFont('Arial', 10))
 
 		#self.tableView.setModel(self.myModel)
-		self._switchTableModel(self.myModel)
+		#print('calling _switchTableModel from buildinterface')
+		#print(self.masterDf)
+		#self._switchTableModel(self.myModel)
 
-		self.tableView.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
-								  QtWidgets.QSizePolicy.Expanding)
+		#self.tableView.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+		#						  QtWidgets.QSizePolicy.Expanding)
+
 		#self.tableView.installEventFilter(self)
-		self.tableView.clicked.connect(self.tableViewClicked)
-		self.tableView.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+		# todo: connect back to sanpy app
+		#if self.mySanPyApp is not None:
+		#	self.tableView.clicked.connect(self.mySanPyApp.slotScatterTableClicked)
+		self.tableView.clicked.connect(self.slotTableViewClicked)
+		#self.tableView.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
 
+		'''
 		p = self.tableView.palette();
 		color1 = QtGui.QColor('#dddddd')
 		color2 = QtGui.QColor('#ffffff')
@@ -507,6 +835,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		p.setColor(QtGui.QPalette.AlternateBase, color2);
 		self.tableView.setAlternatingRowColors(True)
 		self.tableView.setPalette(p);
+		'''
 
 		#
 		self.layout.addWidget(self.tableView, nextRow, 0, rowSpan, colSpan)
@@ -518,17 +847,21 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		event.accept()
 
 	# slot respondinng to signal self.tableView.clicked
-	def tableViewClicked(self, clickedIndex):
+	def slotTableViewClicked(self, clickedIndex):
+		"""
+		clickedIndex: PyQt5.QtCore.QModelIndex
+		"""
 		row=clickedIndex.row()
 		model=clickedIndex.model()
-		print('tableViewClicked() row:', row, 'clickedIndex:', clickedIndex)
+		print('slotTableViewClicked() row:', row, 'clickedIndex:', clickedIndex)
 
 		# select in plot
 		self._selectInd(row) # !!!! visually, index start at 1
 
 	def cancelSelection(self):
 		# cancel in plot
-		self.scatterPlotSelection.set_data([], [])
+		if self.scatterPlotSelection is not None:
+			self.scatterPlotSelection.set_data([], [])
 		self.fig.canvas.draw()
 		# cancel mplCursorHover hover selection
 		if self.mplCursorHover is not None:
@@ -542,16 +875,71 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		"""
 		switch between full .csv model and getMeanDf model
 		"""
+		print('bScatterPlotMainWindow._switchTableModel()')
 		self.tableView.setModel(newModel)
 
-		print('  todo: on xxx when we set check box delegate we crash !!!')
-		if 0:
-			# install checkboxes in 'incude' column
-			colList = newModel._data.columns.values.tolist()
-			if 'include' in colList:
-				includeColIndex = colList.index('include')
-				print(f'_switchTableModel() setting include column {includeColIndex} to myCheckBoxDelegate')
-				self.tableView.setItemDelegateForColumn(includeColIndex, myCheckBoxDelegate(None))
+		colList = newModel._data.columns.values.tolist()
+		print('  todo: set all columns to default delegate itemDelegate()')
+		for idx, col in enumerate(colList):
+			# default delegate is self.tableView.itemDelegate()
+			self.tableView.setItemDelegateForColumn(idx, self.tableView.itemDelegate())
+
+		# install checkboxes in 'incude' column
+		if 'include' in colList:
+			includeColIndex = colList.index('include')
+			print(f'_switchTableModel() setting include column {includeColIndex} to myCheckBoxDelegate')
+			#self.tableView.setItemDelegateForColumn(includeColIndex, myCheckBoxDelegate(None))
+			self.tableView.setItemDelegateForColumn(includeColIndex, self.keepCheckBoxDelegate)
+
+	def getState(self):
+		"""
+		query all controls and create dict with state
+
+		used by myMplCanvas.update()
+		"""
+		stateDict = {}
+
+		stateDict['dataType'] = self.dataType
+		stateDict['groupByColumnName'] = self.groupByColumnName
+
+		xStatHuman = self.xDropdown.currentText()
+		yStatHuman = self.yDropdown.currentText()
+		stateDict['xStatHuman'] = xStatHuman
+		stateDict['yStatHuman'] = yStatHuman
+		xStat = self.statListDict[xStatHuman]['yStat'] # statListDict always used yStat
+		yStat = self.statListDict[yStatHuman]['yStat']
+		stateDict['xStat'] = xStat
+		stateDict['yStat'] = yStat
+		stateDict['xIsCategorical'] = pd.api.types.is_string_dtype(self.masterDf[xStat].dtype)
+		stateDict['yIsCategorical'] = pd.api.types.is_string_dtype(self.masterDf[yStat].dtype)
+
+		if self.hue == 'None':
+			# special case, we do not want None in self.statNameMap
+			hue = None
+		else:
+			hue = self.hue
+		stateDict['hue'] = hue
+
+		if self.dataType == 'All Spikes':
+			meanDf = self.masterDf
+			if self.sortOrder is not None:
+				# need to sort so onPick works
+				print('  ', '(1) sorting by self.sortOrder:', self.sortOrder)
+				meanDf = meanDf.sort_values(self.sortOrder)
+
+			# remove rows that have nan in our x or y stat
+			meanDf = meanDf[~meanDf[xStat].isnull()]
+			meanDf = meanDf[~meanDf[yStat].isnull()]
+			meanDf = meanDf.reset_index()
+
+		elif self.dataType == 'File Mean':
+			meanDf = self.getMeanDf(xStat, yStat)
+		else:
+			print('error in self.dataType:', self.dataType)
+
+		stateDict['masterDf'] = self.masterDf
+		stateDict['meanDf'] = meanDf
+		return stateDict
 
 	def myCloseAction(self):
 		print('myCloseAction()')
@@ -621,7 +1009,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		"""
 		print('loadPathMenuAction')
 
-	def loadPath(self, path, masterDf=None):
+	def loadPath(self, path, masterDf=None, categoricalList=None):
 		"""
 		path: full path to .csv file generated with reanalyze.py
 		"""
@@ -641,20 +1029,21 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		self.masterDfColumns = self.masterDf.columns.to_list()
 
 		#
-		# try and guess categorical
+		# try and guess categorical columns
 		# if int64 and unique()<20 then assume it is category (works for date yyyymmdd)
-		print('loadPath() dtypes:')
-		print(self.masterDf.dtypes)
-		categoricalList = []
-		for colStr, dtype in self.masterDf.dtypes.items():
-			if dtype==object:
-				print('colStr:', colStr, 'is', dtype)
-				categoricalList.append(colStr)
-			elif dtype==np.int64:
-				unique = self.masterDf[colStr].unique()
-				numUnique = len(unique)
-				print('colStr:', colStr, 'is', dtype, 'numUnique:', numUnique)
-				categoricalList.append(colStr)
+		#print('loadPath() dtypes:')
+		#print(self.masterDf.dtypes)
+		if categoricalList is None:
+			categoricalList = []
+			for colStr, dtype in self.masterDf.dtypes.items():
+				if dtype==object:
+					print('colStr:', colStr, 'is', dtype)
+					categoricalList.append(colStr)
+				elif dtype==np.int64:
+					unique = self.masterDf[colStr].unique()
+					numUnique = len(unique)
+					print('colStr:', colStr, 'is', dtype, 'numUnique:', numUnique)
+					categoricalList.append(colStr)
 
 		self.masterCatColumns = categoricalList
 		self.hueTypes = categoricalList
@@ -689,9 +1078,6 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 	def setTheme(self, state):
 		print('setTheme() state:', state)
 
-		print('NOT IMPLEMENTED')
-		#return
-
 		self.darkTheme = state
 		if self.darkTheme:
 			plt.style.use('dark_background')
@@ -718,15 +1104,30 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		self.fig = Figure()
 		self.canvas = FigureCanvas(self.fig)
-
-		self.ax1 = self.fig.add_subplot(111)
-		self.axes = [self.ax1]
+		tmpAx = self.fig.add_subplot(111) # self.ax1 not used
+		self.axes = [tmpAx]
 		self.cid = self.canvas.mpl_connect('pick_event', self.on_pick_event)
-
 		# matplotlib navigation toolbar
 		self.mplToolbar = NavigationToolbar2QT(self.canvas, self.canvas) # params are (canvas, parent)
-
 		self.hBoxLayout.addWidget(self.canvas)
+
+		# add a second plot
+		self.canvas2 = myMplCanvas()
+		tmpState = self.getState()
+		self.canvas2.myUpdate(tmpState)
+		self.hBoxLayout.addWidget(self.canvas2)
+
+		'''
+		self.fig2 = Figure()
+		self.canvas2 = FigureCanvas(self.fig2)
+		tmpAx = self.fig2.add_subplot(111)
+		self.axes2 = [tmpAx]
+		self.axes2[0].plot([1,2,3], [5,3,10], 'o', picker=5)
+		#self.scatterPlotSelection, = self.axes2[0].plot([], [], 'oy',
+		#							markersize=12, fillstyle='none')
+		self.cid2 = self.canvas2.mpl_connect('pick_event', self.on_pick_event)
+		self.hBoxLayout.addWidget(self.canvas2)
+		'''
 
 		self.update2()
 
@@ -741,7 +1142,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		self.update2()
 
 	def updateGroupBy(self):
-		self.analysisName = self.groupByDropdown.currentText()
+		self.groupByColumnName = self.groupByDropdown.currentText()
 		self.update2() # todo: don't update plot, update table
 
 	'''
@@ -780,27 +1181,27 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 	def getMeanDf(self, xStat, yStat, verbose=False):
 		# need to get all categorical columns from orig df
 		# these do not change per file (sex, condition, region)
-		print('getMeanDf() xStat:', xStat, 'yStat:', yStat)
+		print('=== getMeanDf() xStat:', xStat, 'yStat:', yStat)
 
 		if xStat == yStat:
 			groupList = [xStat]
 		else:
 			groupList = [xStat, yStat]
-		meanDf = self.masterDf.groupby(self.analysisName, as_index=False)[groupList].mean()
+		meanDf = self.masterDf.groupby(self.groupByColumnName, as_index=False)[groupList].mean()
 		meanDf = meanDf.reset_index()
 
 		#
 		# 20210211 get median/std/sem/n
 		# try and add median/std/sem/sem/n
 		if 0:
-			tmpDf = self.masterDf.groupby(self.analysisName, as_index=False)[groupList].median()
+			tmpDf = self.masterDf.groupby(self.groupByColumnName, as_index=False)[groupList].median()
 			#print('tmpDf:', tmpDf)
-			meanDf['median'] = tmpDf[self.analysisName]
+			meanDf['median'] = tmpDf[self.groupByColumnName]
 
 		'''
 		for catName in self.masterCatColumns:
 			#if catName == 'analysisname':
-			if catName == self.analysisName:
+			if catName == self.groupByColumnName:
 				# this is column we grouped by, already in meanDf
 				continue
 			meanDf[catName] = ''
@@ -808,16 +1209,19 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		# for each row, update all categorical columns using self.masterCatColumns
 		#fileNameList = meanDf['analysisname'].unique()
-		fileNameList = meanDf[self.analysisName].unique()
+		fileNameList = meanDf[self.groupByColumnName].unique()
 		#print('  fileNameList:', fileNameList)
+		print('  getMeanDf() updating all categorical columns for rows in fileNameList:', fileNameList)
+		#print('    categorical columns are self.masterCatColumns:', self.masterCatColumns)
 		for analysisname in fileNameList:
 			#tmpDf = self.masterDf[ self.masterDf['analysisname']==analysisname ]
-			tmpDf = self.masterDf[ self.masterDf[self.analysisName]==analysisname ]
+			tmpDf = self.masterDf[ self.masterDf[self.groupByColumnName]==analysisname ]
 			if len(tmpDf) == 0:
-				print('  error: got 0 length for analysisname:', analysisname)
+				print('  ERROR: got 0 length for analysisname:', analysisname)
 				continue
+			# need to limit this to pre-defined catecorical columns
 			for catName in self.masterCatColumns:
-				if catName == self.analysisName:
+				if catName == self.groupByColumnName:
 					# this is column we grouped by, already in meanDf
 					continue
 
@@ -825,9 +1229,10 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 				# if more than one unique value, don't put into table
 				numUnique = len(tmpDf[catName].unique())
 				if numUnique == 1:
+					#print('    updating categorical colum with catName:', catName)
 					catValue = tmpDf[catName].iloc[0]
 
-					theseRows = (meanDf[self.analysisName]==analysisname).tolist()
+					theseRows = (meanDf[self.groupByColumnName]==analysisname).tolist()
 					meanDf.loc[theseRows, catName] = catValue
 					#print('catName:', catName, 'catValue:', type(catValue), catValue)
 				else:
@@ -841,7 +1246,11 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		# sort
 		#meanDf = meanDf.sort_values(['Region', 'Sex', 'Condition'])
 		if self.sortOrder is not None:
-			meanDf = meanDf.sort_values(self.sortOrder)
+			print('  ', '(2) sorting by self.sortOrder:', self.sortOrder)
+			try:
+				meanDf = meanDf.sort_values(self.sortOrder)
+			except (KeyError) as e:
+				print('    ', 'sorting (2) failed with:', e)
 		meanDf['index'] = [x+1 for x in range(len(meanDf))]
 		meanDf = meanDf.reset_index()
 
@@ -858,11 +1267,13 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 	def update2(self):
 		xStatHuman = self.xDropdown.currentText()
 		yStatHuman = self.yDropdown.currentText()
-		print('update2() xStatHuman:', xStatHuman, 'yStatHuman:', yStatHuman)
+		print('=== update2()')
+		print('  ', 'xStatHuman:', xStatHuman, 'yStatHuman:', yStatHuman)
 		#xStat = self.statNameMap[xStatHuman]
 		#yStat = self.statNameMap[yStatHuman]
 		xStat = self.statListDict[xStatHuman]['yStat']
 		yStat = self.statListDict[yStatHuman]['yStat']
+		print('  ', 'xStat:', xStat, 'yStat:', yStat)
 
 		xIsCategorical = pd.api.types.is_string_dtype(self.masterDf[xStat].dtype)
 		yIsCategorical = pd.api.types.is_string_dtype(self.masterDf[yStat].dtype)
@@ -876,14 +1287,15 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 			meanDf = self.masterDf
 			# need to sort so onPick works
 			if self.sortOrder is not None:
+				print('  ', '(1) sorting by self.sortOrder:', self.sortOrder)
 				meanDf = meanDf.sort_values(self.sortOrder)
 			#meanDf['index'] = [x+1 for x in range(len(meanDf))]
 
-			print(' before removing nan rows:', len(meanDf))
+			print('  before removing nan rows:', len(meanDf))
 			# remove rows that have nan in our x or y stat
 			meanDf = meanDf[~meanDf[xStat].isnull()]
 			meanDf = meanDf[~meanDf[yStat].isnull()]
-			print(' after removing nan rows:', len(meanDf))
+			print('  after removing nan rows:', len(meanDf))
 
 			meanDf = meanDf.reset_index()
 		elif self.dataType == 'File Mean':
@@ -918,7 +1330,8 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		picker = 5
 		if plotType == 'Scatter Plot':
 			# scatter plot user selection
-			self.scatterPlotSelection, = self.axes[0].plot([], [], 'oy', markersize=12, fillstyle='none')
+			self.scatterPlotSelection, = self.axes[0].plot([], [], 'oy',
+									markersize=12, fillstyle='none')
 
 			# main scatter
 			try:
@@ -926,18 +1339,24 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 								data=meanDf, ax=self.axes[0], picker=picker)
 			except (ValueError) as e:
 				self.fig.canvas.draw()
-				print('EXCEPTION:', e)
+				print('EXCEPTION: in update() "Scatter Plot", exception is:')
+				print('  ', e)
+				print('  ', 'hue:', hue)
 
 			# sem in both x and y, pulling from masterDf
 			if self.dataType == 'File Mean':
 				# we need to do this for each hue???
 				# if x or y is in categorical (e.g. a string) then do not do this ...
-				color = 'k'
-				xd = self.masterDf.groupby(self.analysisName).mean()[xStat]
-				yd = self.masterDf.groupby(self.analysisName).mean()[yStat]
-				xerrd = self.masterDf.groupby(self.analysisName).sem()[xStat]
-				yerrd = self.masterDf.groupby(self.analysisName).sem()[yStat]
-				self.axes[0].errorbar(xd, yd, xerr=xerrd, yerr=yerrd, fmt='none', capsize=0, zorder=1, color=color, alpha=0.5);
+				if xIsCategorical or yIsCategorical:
+					pass
+				else:
+					print('grabbing mean +- sem for self.groupByColumnName:', self.groupByColumnName)
+					color = 'k'
+					xd = self.masterDf.groupby(self.groupByColumnName).mean()[xStat]
+					xerrd = self.masterDf.groupby(self.groupByColumnName).sem()[xStat]
+					yd = self.masterDf.groupby(self.groupByColumnName).mean()[yStat]
+					yerrd = self.masterDf.groupby(self.groupByColumnName).sem()[yStat]
+					self.axes[0].errorbar(xd, yd, xerr=xerrd, yerr=yerrd, fmt='none', capsize=0, zorder=1, color=color, alpha=0.5);
 
 		elif plotType == 'Histogram':
 			yStatHuman = 'Count'
@@ -978,7 +1397,9 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 				warningStr = 'Raw + Mean plot requires a categorical x statistic'
 			else:
 				try:
-					#print(meanDf)
+					# does not work here for categorical x
+					#self.scatterPlotSelection, = self.axes[0].plot([], [], 'oy',
+					#				markersize=12, fillstyle='none')
 
 					'''
 					colorList = [('red'), ('green'), 'b', 'c', 'm', 'y']
@@ -991,14 +1412,24 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 					palette = sns.color_palette("Paired")
 					#palette = ['r', 'g', 'b']
+					'''
+					if self.darkTheme:
+						color = 'w'
+					else:
+						color = 'k'
+					'''
 
-					g = sns.stripplot(x=xStat, y=yStat,
+					g = sns.swarmplot(x=xStat, y=yStat,
 							hue=hue,
 							palette=palette,
 							data=meanDf,
 							ax=self.axes[0],
+							#color = color,
+							dodge=True,
+							alpha=0.6,
 							picker=picker,
 							zorder=1)
+
 
 					#g.legend().remove()
 					self.axes[0].legend().remove()
@@ -1017,11 +1448,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 					self.whatWeArePlotting = sns.pointplot(x=xStat, y=yStat,
 							hue=hue,
-							palette=palette,
+							#palette=palette,
 							data=meanDf,
 							estimator=np.nanmean,
 							ci=68, capsize=0.1,
 							ax=self.axes[0],
+							color='r',
 							#legend='full',
 							zorder=10)
 
@@ -1060,7 +1492,10 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 				# row in df is from sel.target.index
 				#print('sel.target.index:', sel.target.index)
 				ind = sel.target.index
-				myText = self.getAnnotation(ind)
+				annotationDict = self.getAnnotation(ind)
+				myText = ''
+				for k,v in annotationDict.items():
+					myText += f'{k}: {v}\n'
 				sel.annotation.set_text(myText)
 
 		'''
@@ -1106,15 +1541,21 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 			# before we set the model, remove some columns
 			#modelMeanDf = meanDf.drop(['level_0', 'File Number', 'analysisname'], axis=1)
-			#modelMeanDf = meanDf.drop(['level_0', 'File Number', self.analysisName], axis=1)
-			#modelMeanDf = meanDf.drop(['level_0', self.analysisName], axis=1)
-			modelMeanDf = meanDf.drop(['level_0'], axis=1)
+			#modelMeanDf = meanDf.drop(['level_0', 'File Number', self.groupByColumnName], axis=1)
+			#modelMeanDf = meanDf.drop(['level_0', self.groupByColumnName], axis=1)
 
+			modelMeanDf = meanDf.drop(['level_0'], axis=1)
 			self.yDf = modelMeanDf
 
 			#self.myModel = sanpy.bUtil.pandasModel(modelMeanDf)
+			#self.myModel._data = self.yDf
 			self.myModel = myPandasModel(modelMeanDf)
+
 			#self.tableView.setModel(self.myModel)
+			print('calling _switchTableModel from update2()')
+			#print('  self.myModel:', self.myModel)
+			#print('  modelMeanDf:')
+			#print(modelMeanDf)
 			self._switchTableModel(self.myModel)
 		except (pd.core.base.DataError) as e:
 			print('EXCEPTION:', e)
@@ -1158,29 +1599,40 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		ind = ind[0]
 		#print('on pick line:', np.array([xdata[ind], ydata[ind]]).T)
 
-		# ind is the ith element in (x,y) list of offsets
-		# ind 10 (0 based) is index 11 (1 based) in table list
-		print(f'  selected from plot ind:{ind}, offsets values are {offsets[ind]}')
-		myString = self.getAnnotation(ind)
-		print(myString)
-
 		# visual selection
 		self._selectInd(ind)
 
+		# ind is the ith element in (x,y) list of offsets
+		# ind 10 (0 based) is index 11 (1 based) in table list
+		print(f'  selected from plot ind:{ind}, offsets values are {offsets[ind]}')
+		selectDict = self.getAnnotation(ind)
+
+		#
+		# emit
+		print('signalSelectFromPlot.emit()', selectDict)
+		self.signalSelectFromPlot.emit(selectDict)
+
+		# replaced by self.tableView.slotSelectRow()
 		# select in table (by row)
+		'''
 		column = 0
 		index = self.plotDf.at[ind, 'index']
 		index = int(index)
 		index -= 1 # !!! MY VISUAL INDEX IN TABLE IS ONE BASED !!!
 		modelIndex = self.tableView.model().index(index, column)
 		self.tableView.setCurrentIndex(modelIndex)
+		'''
 
 	def _selectInd(self, ind):
+		"""
+		visually select a point in scatter plot
+		"""
 		print('_selectInd() ind:', ind)
 		xVal = self.plotDf.at[ind, self.plotStatx]
 		yVal = self.plotDf.at[ind, self.plotStaty]
-		print('scatterPlotSelection x:', xVal, 'y:', yVal)
-		self.scatterPlotSelection.set_data(xVal, yVal)
+		if self.scatterPlotSelection is not None:
+			print('scatterPlotSelection x:', xVal, 'y:', yVal)
+			self.scatterPlotSelection.set_data(xVal, yVal)
 		self.fig.canvas.draw()
 
 	def getAnnotation(self, ind):
@@ -1190,19 +1642,32 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 			print('getAnnotation() got bad ind:', ind, type(ind))
 			return
 
-		analysisName = self.plotDf.at[ind, self.analysisName]
+		analysisName = self.plotDf.at[ind, self.groupByColumnName]
 		index = self.plotDf.at[ind, 'index']
-		region = self.plotDf.at[ind, 'region'] # not all will have this
+		try:
+			region = self.plotDf.at[ind, 'Region'] # not all will have this
+		except (KeyError) as e:
+			region = 'n/a'
 		xVal = self.plotDf.at[ind, self.plotStatx]
 		yVal = self.plotDf.at[ind, self.plotStaty]
 
+		'''
 		theRet = f'index: {index}\n'
 		theRet += f'analysisName: {analysisName}\n'
-		theRet += f'region: {region}\n'
+		#theRet += f'region: {region}\n'
 		theRet += f'{self.plotStatx}: {xVal}\n'
 		theRet += f'{self.plotStaty}: {yVal}'
+		'''
 
-		return theRet
+		returnDict = {
+					'index': index,
+					'analysisName': analysisName,
+					'region': region,
+					'xVal': xVal,
+					'yVal': yVal,
+					#'plotDf': self.plotDf, # potentially very big
+			}
+		return returnDict
 
 	# see: https://stackoverflow.com/questions/7908636/possible-to-make-labels-appear-when-hovering-over-a-point-in-matplotlib
 	"""
@@ -1228,7 +1693,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		"""
 		get stat from self.plotDf from connected click/hover
 		"""
-		analysisName = self.plotDf.at[ind, self.analysisName]
+		analysisName = self.plotDf.at[ind, self.groupByColumnName]
 		index = self.plotDf.at[ind, 'index']
 		region = self.plotDf.at[ind, 'region']
 		xVal = self.plotDf.at[ind, self.plotStatx]
@@ -1242,6 +1707,8 @@ if __name__ == '__main__':
 
 	# todo: using 'analysisname' for group by, I think I can also use 'File Number'
 	statListDict = None # list of dict mapping human readbale to column names
+	masterDf = None
+	interfaceDefaults = None
 
 	# machine learning db
 	if 0:
@@ -1255,20 +1722,29 @@ if __name__ == '__main__':
 		sortOrder = ['LOCATION', 'SEX', 'File Number']
 
 	# sanpy database
-	if 0:
+	if 1:
 		#import sanpy
+		sys.path.append(os.path.join(os.path.dirname(sys.path[0]),'sanpy'))
+		import bAnalysisUtil
+		statListDict = bAnalysisUtil.statList
 
 		# this is from mac laptop
 		#path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
 		path = '../examples/Superior vs Inferior database_master.csv'
 		path = '/Users/cudmore/data/laura-ephys/Superior_Inferior_database_master_jan25.csv'
 		path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
+		path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master_20210402.csv'
+		#path = '/Users/cudmore/data/laura-ephys/Superior_Inferior_database_master_jan25.csv'
 		analysisName = 'analysisname'
 		#statListDict = None #sanpy.bAnalysisUtil.getStatList()
-		categoricalList = ['Condition', 'Sex', 'Region', 'File Number']#, 'File Name']
+		categoricalList = ['include', 'Condition', 'Sex', 'Region', 'File Number']#, 'File Name']
 		hueTypes = ['Region', 'Sex', 'Condition', 'File Number'] #, 'File Name'] #, 'None']
 		sortOrder = ['Region', 'Sex', 'Condition']
 
+		interfaceDefaults = {'Y Statistic': 'Spike Frequency (Hz)',
+							'X Statistic': 'Region',
+							'Hue': 'Region',
+							'Group By': 'File Number'}
 	# bimpy database
 	if 0:
 		path = '../examples/edges_db.csv'
@@ -1316,7 +1792,7 @@ if __name__ == '__main__':
 	# merged sanpy+lcr pre spike slope
 	# generated by dualAnalysis.py xxx()
 	# usnig to compare lcr slope to edddr for fig 9
-	if 1:
+	if 0:
 		path = '/Users/cudmore/Sites/SanPy/examples/dual-analysis/combined-sanpy-lcr-db.csv'
 		categoricalList = None
 		hueTypes = None
@@ -1327,6 +1803,8 @@ if __name__ == '__main__':
 	app = QtWidgets.QApplication(sys.argv)
 
 	ex = bScatterPlotMainWindow(path, categoricalList, hueTypes,
-					analysisName, sortOrder, statListDict=statListDict)
+					analysisName, sortOrder, statListDict=statListDict,
+					masterDf = masterDf,
+					interfaceDefaults = interfaceDefaults)
 
 	sys.exit(app.exec_())
