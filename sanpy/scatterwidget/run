@@ -1,0 +1,8 @@
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+echo -e "Running run from $DIR"
+cd "${DIR}"
+
+source scatter_env/bin/activate
+python bScatterPlotWidget2.py
+
+$SHELL
