@@ -140,11 +140,12 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		# this is adding mpl toolbar to main window -->> not what I want
 		#self.addToolBar(backend_qt5agg.NavigationToolbar2QT(self.static_canvas, self))
 		# this kinda works as wanted, toolbar is inside mpl plot but it is FUCKING UGLY !!!!
-		self.mplToolbar = backend_qt5agg.NavigationToolbar2QT(self.static_canvas, self.static_canvas) # params are (canvas, parent)
+		# works but turning off toolbar for now
+		#self.mplToolbar = backend_qt5agg.NavigationToolbar2QT(self.static_canvas, self.static_canvas) # params are (canvas, parent)
 
 		#self.mplToolbar = backend_qt5agg.NavigationToolbar2QT(self.myCanvas, self.myCanvas) # params are (canvas, parent)
 
-		self.myHBoxLayout_statplot.addWidget(self.static_canvas, stretch=9) # stretch=10, not sure on the units???
+		self.myHBoxLayout_statplot.addWidget(self.static_canvas, stretch=6) # stretch=10, not sure on the units???
 
 		#self.myQVBoxLayout.addWidget(self.static_canvas)
 		#self.myQVBoxLayout.addLayout(self.myHBoxLayout_statplot)
@@ -208,6 +209,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 					'''
 					xData.append(self.my_xPlot[i])
 					yData.append(self.my_yPlot[i])
+			# multi spike selection (yellow)
 			self.plotMeta_selection.set_xdata(xData)
 			self.plotMeta_selection.set_ydata(yData)
 
@@ -254,7 +256,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		xStatLabel = 'Seconds'
 		xStat = 'thresholdSec'
 
-		print('    xStat:', xStat, 'yStat:', yStat)
+		print('  bScatterPlotWidget.metaPlotStat() xStat:', xStat, 'yStat:', yStat)
 
 		xPlot, yPlot = self.myDetectionWidget.ba.getStat(xStat, yStat)
 		if len(xPlot)==0 or len(yPlot)==0:
@@ -270,25 +272,33 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		self.my_yPlot = yPlot
 
 		tmpColor = range(len(xPlot))
+		markersize = 3
+		print('  markersize=', markersize)
 		if self.metaLine is None:
 			#self.metaLine, = self._static_ax.plot(xPlot, yPlot, ".", picker=5)
-			self.metaLine = self._static_ax.scatter(xPlot, yPlot, c=tmpColor, cmap=self.colorTable, picker=5)
+			self.metaLine = self._static_ax.scatter(xPlot, yPlot, c=tmpColor, cmap=self.colorTable,
+								s=markersize,
+								picker=5)
 		else:
 			print('	metaPlotStat() set ydata/xdata')
 			self._static_ax.cla()
 			#self.metaLine, = self._static_ax.plot(xPlot, yPlot, ".")
-			self.metaLine = self._static_ax.scatter(xPlot, yPlot, c=tmpColor, cmap=self.colorTable, picker=5)
+			self.metaLine = self._static_ax.scatter(xPlot, yPlot, c=tmpColor, cmap=self.colorTable,
+								s=markersize,
+								picker=5)
 			#self.metaLine.set_ydata(yPlot)
 			#self.metaLine.set_xdata(xPlot)
 
 		# todo keep track of multi spike selection so we do not loose it on switching stats
-		self.plotMeta_selection, = self._static_ax.plot([], [], "oy", markersize=10)
+		markersize = 6
+		self.plotMeta_selection, = self._static_ax.plot([], [], "oy", markersize=markersize)
 
 		if 1: #or self.singleSpikeSelection is None:
+			markersize = 6
 			if self.lastSpikeNumber is None:
-				self.singleSpikeSelection, = self._static_ax.plot([], [], "oc", markersize=10)
+				self.singleSpikeSelection, = self._static_ax.plot([], [], "oc", markersize=markersize)
 			else:
-				self.singleSpikeSelection, = self._static_ax.plot(xPlot[self.lastSpikeNumber], yPlot[self.lastSpikeNumber], "oc", markersize=10)
+				self.singleSpikeSelection, = self._static_ax.plot(xPlot[self.lastSpikeNumber], yPlot[self.lastSpikeNumber], "oc", markersize=markersize)
 
 		#print('	len xPlot:', len(xPlot), 'len yplot:', len(yPlot))
 
@@ -314,16 +324,27 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 			self._static_ax.set_ylim([yMin, yMax])
 
 		self._static_ax.set_xlabel(xStatLabel)
-		self._static_ax.set_ylabel(yStatHuman)
+
+		# will rely on seleted stat in list
+		#self._static_ax.set_ylabel(yStatHuman)
 
 		#self._static_ax.draw()
 		self.static_canvas.draw()
 		#self.static_canvas.flush_events()
 		self.repaint() # this is updating the widget !!!!!!!!
 
+	def slotSetXAxis(self, xMinMaxList):
+		print('bScatterPlotWidget.slotSetXAxis() xMinMaxList:', xMinMaxList)
+		self.selectXRange(xMinMaxList[0], xMinMaxList[1])
+
+	def slotSelectSpike(self, eDict):
+		print('bScatterPlotWidget.slotSelectSpike() eDict:', eDict)
+		spikeNumber = eDict['SpikeNumber']
+		self.selectSpike(spikeNumber)
+
 # todo: not used
 #class MyMplCanvas(backend_qt5agg.FigureCanvas):
-class MyMplCanvas(backend_qt5agg.FigureCanvasQTAgg):
+class old_MyMplCanvas(backend_qt5agg.FigureCanvasQTAgg):
 	"""Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.)."""
 	def __init__(self, parent=None):
 		#fig = mpl.figure.Figure()
@@ -351,10 +372,10 @@ class MyMplCanvas(backend_qt5agg.FigureCanvasQTAgg):
 	'''
 
 # todo: not used
-class MyDynamicMplCanvas(MyMplCanvas):
+class old_MyDynamicMplCanvas(old_MyMplCanvas):
 	"""A canvas that updates itself every second with a new plot."""
 	def __init__(self, *args, **kwargs):
-		MyMplCanvas.__init__(self, *args, **kwargs)
+		old_MyMplCanvas.__init__(self, *args, **kwargs)
 		'''
 		timer = QtCore.QTimer(self)
 		timer.timeout.connect(self.update_figure)
@@ -391,7 +412,7 @@ class myStatPlotToolbarWidget(QtWidgets.QWidget):
 
 		self.myParent = myParent
 
-		self._rowHeight = 11
+		self._rowHeight = 10
 
 		self.myQVBoxLayout = QtWidgets.QVBoxLayout(self)
 

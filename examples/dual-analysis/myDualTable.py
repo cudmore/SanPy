@@ -179,10 +179,10 @@ if __name__ == '__main__':
 
 	# for fig mar18
 	# 19 is superior
-	#mdt.plotSpikeClip(19, forFig9=True)
+	mdt.plotSpikeClip(19, forFig9=True)
 	mdt.plotImageFigure(19)
 	# 11 is inferior
-	#mdt.plotSpikeClip(11, forFig9=True)
+	mdt.plotSpikeClip(11, forFig9=True)
 	mdt.plotImageFigure(11)
 
 	sys.exit(app.exec_())

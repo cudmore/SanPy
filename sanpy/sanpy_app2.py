@@ -61,18 +61,39 @@ import sanpy
 #pg.setConfigOption('background', 'k')
 #pg.setConfigOption('foreground', 'w')
 
+sanpyColumns = [
+'Idx',
+'Include',
+'ABF File',
+'Cell Type',
+'Sex',
+'Condition',
+'startSeconds',
+'stopSeconds',
+'dvdtThreshold',
+'mvThreshold',
+'refractory_ms',
+'peakWindow_ms',
+'halfWidthWindow_ms',
+'Notes'
+]
+
 class MainWindow(QtWidgets.QMainWindow):
 	signalUpdateStatusBar = QtCore.Signal(object)
+	signalSetXAxis = QtCore.Signal(object)
+	signalSelectSpike = QtCore.Signal(object)
 
-
-	def __init__(self, csvPath=None, path='', parent=None, app=None):
+	def __init__(self, csvPath=None, path=None, parent=None, app=None):
 		"""
 		path: full path to folder with abf files
 		"""
 
 		super(MainWindow, self).__init__(parent)
 
+		self.myModel = None
+
 		self.fileFromDatabase = True # if False then from folder
+		self.csvPath = csvPath
 
 		myFontSize = 10
 		myFont = self.font();
@@ -82,8 +103,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.myApp = app
 
 		# todo: update this with selected folder
-		if os.path.isdir(path):
+		if path is not None and os.path.isdir(path):
 			windowTitle = f'SanPy {path}'
+		elif csvPath is not None:
+			csvName = os.path.split(csvPath)[1]
+			windowTitle = f'SanPy {csvName}'
 		else:
 			windowTitle = 'SanPy'
 		self.setWindowTitle(windowTitle)
@@ -91,7 +115,12 @@ class MainWindow(QtWidgets.QMainWindow):
 		self._rowHeight = 11
 		self.selectedRow = None
 
-		self.path = path
+		if path is not None:
+			self.path = path
+		elif csvPath is not None:
+			self.path = os.path.split(csvPath)[0]
+		else:
+			self.path = None
 
 		# todo: modify self.path if we get a good folder
 		self.configDict = self.preferencesLoad()
@@ -130,13 +159,19 @@ class MainWindow(QtWidgets.QMainWindow):
 		'''
 
 		self.csvPath = csvPath
-		self.masterDf = sanpy.bUtil.loadDatabase(csvPath)
+		masterDf = sanpy.bUtil.loadDatabase(csvPath)
+		if masterDf is not None:
+			print('masterDf:')
+			print(masterDf.head())
 
 		self.buildMenus()
 
-		self.buildUI()
+		self.buildUI(masterDf)
 
 		self.myExportWidget = None
+
+		self.dfReportForScatter = None
+		self.dfError = None
 
 		self.updateStatusBar('SanPy started')
 
@@ -171,15 +206,93 @@ class MainWindow(QtWidgets.QMainWindow):
 			msg.setWindowTitle("Theme Changed")
 			retval = msg.exec_()
 
-	# no idea why I need this ???
-	def fix_tmp_loadFolder2(self, bool):
+	def loadFolder(self, path=''):
 		"""
-		todo: load our old json and make self.masterDf
+		load a folder of .abf
+
+		create df and save in <folder>-analysis-db.csv
 		"""
+
+		# ask user for folder
+		if len(path)==0:
+			path = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory With Recordings"))
+			if len(path) == 0:
+				return
+		elif os.path.isdir(path):
+			pass
+		else:
+			return
+
+		print('=== loadFolder()', path)
+
+		dbFile = 'sanpy_recording_db.csv'
+
+		self.path = path # path to data folder
+
+		# try and find "sanpy_recording_db.csv"
+		df = None
+		loadedDatabase = False
+		dbPath = os.path.join(path, dbFile)
+		if os.path.isfile(dbPath):
+			# load existing db
+			print('loadFolder() loading existing db:', dbPath)
+			df = sanpy.bUtil.loadDatabase(dbPath)
+			loadedDatabase = True
+			# set data model
+		else:
+			# make new db folder folder
+			df = pd.DataFrame(columns=sanpyColumns)
+
+		if df is None:
+			return
+
+		if loadedDatabase:
+			# check columns with sanpyColumns
+			loadedColumns = df.columns
+			for col in loadedColumns:
+				if not col in sanpyColumns:
+					print('  error: did not find loaded col:', col, 'in "sanpyColumns"')
+			for col in sanpyColumns:
+				if not col in loadedColumns:
+					print('  error: did not find sanpyColumns col:', col, 'in "loadedColumns"')
+
+			# check that all 'ABF File' are actual .abf files in folder
+
+		# get all abf
+		abfList = []
+		for file in os.listdir(path):
+			if file.startswith('.'):
+				continue
+			if file.endswith('.abf'):
+				file = os.path.splitext(file)[0]
+				print('  ', file)
+				abfList.append(file)
+				# add abd file to table
+
+		if loadedDatabase:
+			# seach existing db for missing abf files
+			pass
+		else:
+			# build new db dataframe
+			df['Idx'] = [i for i in range(len(abfList))]
+			df['Include'] = [1 for i in range(len(abfList))]
+			df['ABF File'] = abfList
+			df['Cell Type'] = ''
+			df['Sex'] = ''
+			df['Condition'] = ''
+			df['dvdtThreshold'] = 10
+			df['mvThreshold'] = -20
+
+		# set df to model
+		self.myModel = sanpy.bUtil.pandasModel(df)
+		self.tableView.setModel(self.myModel)
+
+		'''
 		loadedFolder = self.loadFolder()
 		if loadedFolder:
 			self.refreshFileTableWidget()
 			self.preferencesSave()
+		'''
 
 	def old_loadFolder(self, path=''):
 		print('MainWindow.loadFolder() path:', path)
@@ -224,6 +337,13 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.ba.spikeDetect(dVthresholdPos=50, minSpikeVm=-20, medianFilter=0)
 	'''
 
+	def selectSpike(self, spikeNumber, doZoom=False):
+		eDict = {}
+		eDict['SpikeNumber'] = spikeNumber
+		eDict['doZoom'] = doZoom
+
+		self.signalSelectSpike.emit(eDict)
+
 	def mySignal(self, this, data=None):
 		"""
 		this: the signal
@@ -233,32 +353,51 @@ class MainWindow(QtWidgets.QMainWindow):
 		#print('=== sanpy_app.mySignal() "' + this +'"')
 
 		if this == 'set abfError':
-			ba = self.myDetectionWidget.ba
-			self.fileList.refreshRow(ba)
+			pass
+			# old
+			#ba = self.myDetectionWidget.ba
+			#self.fileList.refreshRow(ba)
 
 			# todo: make this more efficient, just update one row
 			#self.refreshFileTableWidget()
-			self.refreshFileTableWidget_Row()
+			#self.refreshFileTableWidget_Row()
 
 		elif this == 'detect':
 			# update scatter plot
 			self.myScatterPlotWidget.plotToolbarWidget.on_scatter_toolbar_table_click()
 
+			# data = dfReportForScatter
+			self.dfReportForScatter = data[0] # can be none when start/stop is not defined
+
+			# update eror table
+			self.dfError = data[1]
+			errorReportModel = sanpy.bUtil.pandasModel(self.dfError)
+			self.myErrorTable.setModel(errorReportModel)
+
 		elif this == 'saved':
+			pass
+			# old
 			# update file list object
-			ba = self.myDetectionWidget.ba
-			self.fileList.refreshRow(ba)
+			#ba = self.myDetectionWidget.ba
+			#self.fileList.refreshRow(ba)
 
 			# todo: make this more efficient, just update one row
 			#self.refreshFileTableWidget()
-			self.refreshFileTableWidget_Row()
+			#self.refreshFileTableWidget_Row()
 
 		elif this == 'select spike':
-			self.myDetectionWidget.selectSpike(data)
-			self.myScatterPlotWidget.selectSpike(data)
+			# old
+			#self.myDetectionWidget.selectSpike(data)
+			#self.myScatterPlotWidget.selectSpike(data)
+			# new
+			self.selectSpike(data)
+			#self.signalSelectSpike.emit(data)
 
 		elif this == 'set x axis':
+			# old
 			self.myScatterPlotWidget.selectXRange(data[0], data[1])
+			# new
+			self.signalSetXAxis.emit([data[0], data[1]])
 
 		elif this == 'set full x axis':
 			self.myScatterPlotWidget.selectXRange(None, None)
@@ -270,137 +409,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		else:
 			print('MainWindow.mySignal() did not understand this:', this)
-
-	def file_table_get_value(self, thisRow, thisColumnName):
-		"""
-		get the value of a column columnName at a selected row
-		"""
-		theValue = ''
-
-		numCol = self.myTableWidget.columnCount()
-		for j in range(numCol):
-			headerText = self.myTableWidget.horizontalHeaderItem(j).text()
-			if headerText == thisColumnName:
-				theValue = self.myTableWidget.item(thisRow,j).text()
-				break
-		if len(theValue) > 0:
-			return theValue
-		else:
-			print('error: file_table_get_value() did not find', thisRow, thisColumnName)
-			return None
-
-	def on_file_table_click(self):
-		row = self.myTableWidget.currentRow()
-
-		findThisColumn = 'File'
-		fileName = ''
-
-		# todo: replace this with file_table_get_value()
-		numCol = self.myTableWidget.columnCount()
-		for j in range(numCol):
-			headerText = self.myTableWidget.horizontalHeaderItem(j).text()
-			if headerText == findThisColumn:
-				tmpItem = self.myTableWidget.item(row,j)
-				if tmpItem is not None:
-					fileName = tmpItem.text()
-				break
-
-		if len(fileName) > 0:
-			#spinner = WaitingSpinner(self.myTableWidget, True, True, QtCore.Qt.ApplicationModal)
-			#spinner.start() # starts spinning
-
-			path = os.path.join(self.path, fileName)
-			print('=== sanpy.on_file_table_click() row:', row+1, 'path:', path)
-			self.myDetectionWidget.switchFile(path)
-
-			# we should be able to open one for each file?
-			#if self.myExportWidget is not None:
-			#	self.myExportWidget.setFile2(path, plotRaw=True)
-
-			#spinner.stop() # starts spinning
-
-		else:
-			print('error: on_file_table_click() did not find File name at row:', row)
-
-	def old_refreshFileTableWidget_Row(self):
-		"""
-		refresh the selected row
-		"""
-		selectedRow = self.myTableWidget.currentRow()
-		selectedFile = self.file_table_get_value(selectedRow, 'File')
-
-		# abb 202012
-		# if abfError then set file name text to red
-		abfError = self.fileList.getFileError(selectedFile)
-
-		fileValues = self.fileList.getFileValues(selectedFile) # get list of values in correct column order
-		for colIdx, fileValue in enumerate(fileValues):
-			if str(fileValue) == 'None':
-				fileValue = ''
-			item = QtWidgets.QTableWidgetItem(str(fileValue))
-			if colIdx==0 and abfError:
-				item.setForeground(QtGui.QBrush(QtGui.QColor("#DD4444")))
-			self.myTableWidget.setItem(selectedRow, colIdx, item)
-			self.myTableWidget.setRowHeight(selectedRow, self._rowHeight)
-
-	def old_refreshFileTableWidget(self):
-		#print('refreshFileTableWidget()')
-
-		if self.fileList is None:
-			print('refreshFileTableWidget() did not find a file list')
-			return
-
-		#self.myTableWidget.setShowGrid(False) # remove grid
-		#self.myTableWidget.setFont(QtGui.QFont('Arial', 13))
-
-		#
-		# this will not change for a given path ???
-		numRows = self.fileList.numFiles()
-		numCols = len(self.fileList.getColumns())
-		self.myTableWidget.setRowCount(numRows+1) # trying to get last row visible
-		self.myTableWidget.setColumnCount(numCols)
-
-		headerLabels = self.fileList.getColumns()
-		self.myTableWidget.setHorizontalHeaderLabels(headerLabels)
-
-		header = self.myTableWidget.horizontalHeader()
-		header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-		header.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
-		header.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeToContents)
-
-		#
-		# update to reflect analysis date/time etc
-		fileList = self.fileList.getList() #ordered dict of files
-
-		#for idx, filename in enumerate(fileList.keys()):
-		for idx, filename in enumerate(sorted(fileList)):
-			abfError = self.fileList.getFileError(filename) # abb 202012
-			fileValues = self.fileList.getFileValues(filename) # get list of values in correct column order
-			#print('refreshFileTableWidget()', idx+1, filename, fileValues)
-			for idx2, fileValue in enumerate(fileValues):
-				if str(fileValue) == 'None':
-					fileValue = ''
-				item = QtWidgets.QTableWidgetItem(str(fileValue))
-				if idx2==0 and abfError:
-					item.setForeground(QtGui.QBrush(QtGui.QColor("#DD4444")))
-				self.myTableWidget.setItem(idx, idx2, item)
-				self.myTableWidget.setRowHeight(idx, self._rowHeight)
-
-	def old_export_pdf(self):
-		"""
-		Open a new window with raw Vm and provide interface to save as pdf
-		"""
-		if self.myDetectionWidget.ba is not None:
-			#self.myExportWidget = sanpy.bExportWidget(self.myDetectionWidget.ba.file)
-			sweepX = self.myDetectionWidget.ba.abf.sweepX
-			sweepY = self.myDetectionWidget.ba.abf.sweepY
-			xyUnits = ('Time (sec)', 'Vm (mV)')
-			self.myExportWidget = sanpy.bExportWidget(sweepX, sweepY,
-								path=self.myDetectionWidget.ba.file,
-								xyUnits=xyUnits,
-								darkTheme=self.useDarkStyle)
-		else:
-			print('please select an abf file')
 
 	def scatterPlot(self):
 		"""
@@ -416,9 +424,10 @@ class MainWindow(QtWidgets.QMainWindow):
 	def keyPressEvent(self, event):
 		#print('=== sanpy_app.MainWindow() keyPressEvent()')
 		key = event.key()
-		#print(key)
+		text = event.text()
+		print('== MainWindow.keyPressEvent() key:', key, 'text:', text)
 		if key in [70, 82]: # 'r' or 'f'
-			self.myDetectionWidget.setFullAxis()
+			self.myDetectionWidget.setAxisFull()
 
 		'''
 		if key in [QtCore.Qt.Key.Key_P]: # 'r' or 'f'
@@ -429,19 +438,38 @@ class MainWindow(QtWidgets.QMainWindow):
 		if key == QtCore.Qt.Key.Key_Escape:
 			self.mySignal('cancel all selections')
 
+		# hide detection widget
+		if text == 'h':
+			if self.myDetectionWidget.detectToolbarWidget.isVisible():
+				self.myDetectionWidget.detectToolbarWidget.hide()
+			else:
+				self.myDetectionWidget.detectToolbarWidget.show()
+
+		if text == 'p':
+			print(self.myModel)
+			print(self.myModel._data) # this is df updated as user updates table
+
+		#
+		event.accept()
+
 	def buildMenus(self):
 
 		mainMenu = self.menuBar()
 
 		loadFolderAction = QtWidgets.QAction('Load Folder ...', self)
 		loadFolderAction.setShortcut('Ctrl+O')
-		loadFolderAction.triggered.connect(self.fix_tmp_loadFolder2)
+		loadFolderAction.triggered.connect(self.loadFolder)
+
+		buildDatabaseAction = QtWidgets.QAction('Build Database ...', self)
+		buildDatabaseAction.triggered.connect(self.buildDatabase)
 
 		savePreferencesAction = QtWidgets.QAction('Save Preferences', self)
 		savePreferencesAction.triggered.connect(self.preferencesSave)
 
 		fileMenu = mainMenu.addMenu('&File')
 		fileMenu.addAction(loadFolderAction)
+		fileMenu.addSeparator()
+		fileMenu.addAction(buildDatabaseAction)
 		fileMenu.addSeparator()
 		fileMenu.addAction(savePreferencesAction)
 
@@ -478,10 +506,20 @@ class MainWindow(QtWidgets.QMainWindow):
 		# view menu to toggle scatter plot widget
 		windowsMenu = mainMenu.addMenu('&Windows')
 		mainWindowAction = QtWidgets.QAction('Main', self)
+		#
+		openScatterAction = QtWidgets.QAction('Scatter Plot', self)
+		openScatterAction.triggered.connect(self.openScatterWindow)
 		#mainWindowAction.triggered.connect(self.toggleStyleSheet)
 		mainWindowAction.setCheckable(True)
 		mainWindowAction.setChecked(True)
 		windowsMenu.addAction(mainWindowAction)
+		windowsMenu.addAction(openScatterAction)
+
+	def toggleErrorTable(self, state):
+		if state:
+			self.myErrorTable.show()
+		else:
+			self.myErrorTable.hide()
 
 	def toggleStatisticsPlot(self, state):
 		"""
@@ -501,26 +539,33 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.statusBar.update()
 		self.myApp.processEvents()
 
-	def getTableRowDict(self):
+	def getSelectedRowDict(self):
 		"""
-		return a dict with selected row as dict (includes detection parameters)
+		used by detection widget
 		"""
-		theRet = None
+		rowDict = None
 		if self.selectedRow is not None:
-			theRet = {}
-			for column in self.masterDf.columns:
-				theRet[column] = self.getTableValue(self.selectedRow, column)
-		return theRet
+			rowDict = self.myModel.myGetRowDict(self.selectedRow)
+		return rowDict
 
-	def getTableValue(self, rowIdx, colStr):
-		val = None
-		if colStr not in self.masterDf.columns: # columns is a list
-			print('error: getTableValue() got bad column name:', colStr)
-		elif len(self.masterDf)-1 < rowIdx:
-			print('error: getTableValue() got bad row:', row)
-		else:
-			val = self.masterDf.loc[rowIdx, colStr]
-		return val
+	def errorTableClicked(self, index):
+		row = index.row()
+		column = index.column()
+
+		self.myErrorTable.selectRow(row)
+
+		doZoom = False
+		modifiers = QtGui.QApplication.keyboardModifiers()
+		if modifiers == QtCore.Qt.ShiftModifier:
+			print('Shift+Click')
+			doZoom = True
+
+		spikeNumber = self.dfError.loc[row, 'Spike']
+		spikeNumber = int(spikeNumber)
+
+		#self.signalSelectSpike.emit(spikeNumber)
+		print('errorTableClicked() spikeNumber:', spikeNumber, type(spikeNumber), 'modifiers:', modifiers)
+		self.selectSpike(spikeNumber, doZoom=doZoom)
 
 	def new_tableClicked(self, index):
 		"""
@@ -528,36 +573,34 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 		print('new_tableClicked() index:', 'row:', index.row(), 'column:', index.column())
 
-
-		#print(self.masterDf['ABF File'])
-
 		row = index.row()
+		column = index.column()
+
+		# select in table view (todo: switch to signal/slot)
+		if self.selectedRow is not None and row==self.selectedRow:
+			print('row', row, 'is already selected')
+			return
+
 		self.selectedRow = row
 		self.tableView.selectRow(row)
 
-		column = index.column()
-		abfColumnName = 'ABF File'
-		if self.masterDf.columns[column] != abfColumnName:
-			print('error: no "ABF File" column')
-			return
+		tableRowDict = self.myModel.myGetRowDict(row)
 
-		#fileName = self.masterDf.loc[row, abfColumnName]
-		fileName = self.getTableValue(row, abfColumnName)
+		abfColumnName = 'ABF File'
+		fileName = self.myModel.myGetValue(row, abfColumnName)
 		if not isinstance(fileName, str):
-			print('error: no "ABF File" specified')
+			print('  error: no "ABF File" specified')
 			return
 
 		if not fileName.endswith('.abf'):
 			fileName += '.abf'
 
-		dataPath = '/Users/cudmore/data/laura-ephys/sanap202101'
-		print('TODO: hard coding data path:', dataPath)
+		path = os.path.join(self.path, fileName)
+		switchedFile = self.myDetectionWidget.switchFile(path, tableRowDict)
+		if not switchedFile:
+			self.updateStatusBar('failed to load file: ' + path)
 
-		path = os.path.join(dataPath, fileName)
-
-		self.myDetectionWidget.switchFile(path)
-
-	def buildUI(self):
+	def buildUI(self, masterDf=None):
 		# all widgets should inherit this
 
 		self.toggleStyleSheet(buildingInterface=True)
@@ -592,11 +635,20 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.myQVBoxLayout.addWidget(self.myTableWidget)#, stretch=4)
 		'''
 
-		self.myModel = sanpy.bUtil.pandasModel(self.masterDf)
+		if masterDf is not None:
+			self.myModel = sanpy.bUtil.pandasModel(masterDf)
 
-		self.tableView = QtWidgets.QTableView()
+		# list of files
+		#self.tableView = QtWidgets.QTableView()
+		self.tableView = sanpy.bUtil.myTableView()
+		self.tableView.signalDuplicateRow.connect(self.slotDuplicateRow)
+		self.tableView.signalDeleteRow.connect(self.slotDeleteRow)
+		self.tableView.signalCopyTable.connect(self.slotCopyTable)
+		self.tableView.signalFindNewFiles.connect(self.slotFindNewFiles)
+
 		#self._switchTableModel(self.myModel)
 		self.tableView.setModel(self.myModel)
+		'''
 		numTableRows = self.myModel.rowCount()
 
 		self.tableView.setFont(QtGui.QFont('Arial', 10))
@@ -613,6 +665,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.tableView.resizeColumnToContents(column)
 		for row in range(numTableRows):
 			self.tableView.setRowHeight(row, self._rowHeight)
+		'''
 		self.tableView.clicked.connect(self.new_tableClicked)
 
 		self.myQVBoxLayout.addWidget(self.tableView)#, stretch=4)
@@ -622,6 +675,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		#
 		baNone = None
 		self.myDetectionWidget = sanpy.bDetectionWidget(baNone,self)
+		self.signalSelectSpike.connect(self.myDetectionWidget.slotSelectSpike) # myDetectionWidget listens to self
+		self.myDetectionWidget.signalSelectSpike.connect(self.slotSelectSpike) # self listens to myDetectionWidget
 		self.myQVBoxLayout.addWidget(self.myDetectionWidget)#, stretch=6)
 
 
@@ -630,11 +685,21 @@ class MainWindow(QtWidgets.QMainWindow):
 		#
 		self.myScatterPlotWidget = sanpy.bScatterPlotWidget(self, self.myDetectionWidget)
 		self.myQVBoxLayout.addWidget(self.myScatterPlotWidget)
+		self.signalSelectSpike.connect(self.myScatterPlotWidget.slotSelectSpike)
 		if self.configDict['display']['showScatter']:
 			pass
 		else:
 			self.myScatterPlotWidget.hide()
 		#self.myScatterPlotWidget.hide()
+
+		#
+		# eror report
+		self.myErrorTable = QtWidgets.QTableView()
+		self.myErrorTable.clicked.connect(self.errorTableClicked)
+
+		self.myErrorTable.hide() # start hidden
+		#self.myErrorTable.setModel()
+		self.myQVBoxLayout.addWidget(self.myErrorTable)
 
 		"""
 		#
@@ -721,7 +786,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		configDict['windowGeometry'] = {}
 		configDict['windowGeometry']['x'] = 100
 		configDict['windowGeometry']['y'] = 100
-		configDict['windowGeometry']['width'] = 2000
+		configDict['windowGeometry']['width'] = 1200
 		configDict['windowGeometry']['height'] = 1200
 
 		"""
@@ -764,12 +829,170 @@ class MainWindow(QtWidgets.QMainWindow):
 		with open(self.optionsFile, 'w') as outfile:
 			json.dump(self.configDict, outfile, indent=4, sort_keys=True)
 
+	def openScatterWindow(self):
+		"""
+		todo: make 2 versions of this, one for a single cell df and
+		another to load master csv across entire dataset
+		"""
+		print('openScatterWindow')
+
+		csvBase, csvExt = os.path.splitext(self.csvPath)
+		masterCsvPath = csvBase + '_master.csv'
+
+		if not os.path.isfile(masterCsvPath):
+			print('error: openScatterWindow() did not find csvPath:', masterCsvPath)
+			return
+
+		from bAnalysisUtil import statList
+
+		print('  loading', masterCsvPath)
+		path = masterCsvPath
+		analysisName = 'analysisname'
+		statListDict = statList # maps human readable to comments
+		categoricalList = ['include', 'Condition', 'Region', 'Sex', 'RegSex', 'File Number', 'analysisname']#, 'File Name']
+		hueTypes = ['Region', 'Sex', 'RegSex', 'Condition', 'File Number', 'analysisname'] #, 'File Name'] #, 'None']
+		sortOrder = ['Region', 'Sex', 'Condition']
+		interfaceDefaults = {'Y Statistic': 'Spike Frequency (Hz)',
+							'X Statistic': 'Region',
+							'Hue': 'Region',
+							'Group By': 'File Number'}
+		#analysisName, masterDf = analysisName, df0 = ba.getReportDf(theMin, theMax, savefile)
+		masterDf = self.dfReportForScatter
+		self.scatterWindow = sanpy.scatterwidget.bScatterPlotMainWindow(
+						path, categoricalList, hueTypes,
+						analysisName, sortOrder, statListDict=statListDict,
+						masterDf = masterDf,
+						interfaceDefaults = interfaceDefaults)
+
+		self.scatterWindow.signalSelectFromPlot.connect(self.slotSelectFromScatter)
+
+	def slotSelectFromScatter(self, selectDict):
+		print('MainWindow.slotSelectFromScatter()')
+		print('  ', selectDict)
+
+	def slotSelectSpike(self, spikeNumber, doZoom=False):
+		self.selectSpike(spikeNumber, doZoom)
+
+	def slotCopyTable(self):
+		self.myModel.myCopyTable()
+
+	def slotDeleteRow(self, rowIdx):
+		# prompt user
+		msg = QtWidgets.QMessageBox()
+		msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+		msg.setIcon(QtWidgets.QMessageBox.Warning)
+		msg.setText(f'Are you sure you want to delete row {rowIdx}?')
+		msg.setInformativeText('informative text xxx')
+		msg.setWindowTitle("Delete Row")
+		returnValue = msg.exec_()
+		if returnValue == QtWidgets.QMessageBox.Ok:
+			print('  deleting row:', rowIdx)
+			self.myModel.myDeleteRow(rowIdx)
+			#df = self.myModel._data.drop([rowIdx])
+			#df = df.reset_index(drop=True)
+			#self.myModel._data = df # REQUIRED
+			# todo: select row none
+			self.selectedRow = None
+			self.tableView.clearSelection()
+		else:
+			print('  no action taken')
+
+	def slotDuplicateRow(self, row):
+		print('slotDuplicateRow() row:', row, type(row))
+		self.myModel.myDuplicateRow(row)
+		'''
+		newIdx = row + 0.5
+
+		rowDict = self.myModel.myGetRowDict(row)
+		print('  rowDict:', rowDict)
+
+		df = self.myModel._data
+		#df0 = pd.DataFrame(df.loc[row], index=[newIdx])
+		df0 = pd.DataFrame(rowDict, index=[newIdx])
+		#print('df0:', df0)
+		df = df.append(df0, ignore_index=False)
+		df = df.sort_index().reset_index(drop=True)		# v3
+		#
+		self.myModel._data = df # not needed?
+		'''
+		#print('  after:')
+		#print(df.head())
+
+	def slotFindNewFiles(self):
+		# find files in self.path that are not in pandas data model
+		# get all abf
+		abfList = []
+		for file in os.listdir(self.path):
+			if file.startswith('.'):
+				continue
+			if file.endswith('.abf'):
+				print('  ', file)
+				abfList.append(file)
+
+		abfInDb = self.myModel.myGetColumnList('ABF File')
+
+		# files in database that are not in folder
+		'''
+		print('abfInDb:', abfInDb)
+		for abf in abfInDb:
+			if not isinstance(abf, str):
+				continue
+			abfPath = os.path.join(self.path, abf+'.abf')
+			if not os.path.isfile(abfPath):
+				print('  error: abf in database that is not in folder:', abfPath)
+		'''
+
+		# files in folder that are not in db
+		for abf in abfList:
+			#if not isinstance(abf, str):
+			#	continue
+			abf = os.path.splitext(abf)[0] # remove .abf
+			if not abf in abfInDb:
+				print('  error: abf in folder that is not in db:', abf)
+				# add this abf file to main db
+				self.myModel.myAppendRow() # empty
+				rowCount = self.myModel.rowCount()
+				rowDict = self.myModel.myGetRowDict(rowCount-1)
+				rowDict['Idx'] = ''
+				rowDict['Include'] = 1
+				rowDict['ABF File'] = abf
+				rowDict['Cell Type'] = ''
+				rowDict['Sex'] = ''
+				rowDict['Condition'] = ''
+				rowDict['dvdtThreshold'] = 10
+				rowDict['mvThreshold'] = -20
+				print('    adding to db rowDict:', rowDict)
+				self.myModel.mySetRow(rowCount-1, rowDict)
+		#
+		#print(self.myModel._data)
+
+	def buildDatabase(self):
+		"""
+		prompt user for xls and build large per spike database
+		"""
+		print('== buildDatabase()')
+		dbFile = '/Users/cudmore/data/laura-ephys/sanap20210412/Superior vs Inferior database_13_Feb.xlsx'
+		#dataPath = '/Users/cudmore/data/laura-ephys/sanap20210412'
+		#outputFolder='new_20210129'
+		outputFolder='new_20210425'
+		fixedDvDt = None
+		fixedVmThreshold = None
+		noDvDtThreshold = False
+
+		baList = sanpy.reanalyze(dbFile, outputFolder=outputFolder,
+				fixedDvDt=fixedDvDt, noDvDtThreshold=noDvDtThreshold,
+				fixedVmThreshold=fixedVmThreshold)
+
 def main():
 	import platform
 	print('Python version is:', platform.python_version())
 
+	'''
 	path = '/media/cudmore/data/SAN AP'
 	path = '/Users/cudmore/data/laura-ephys/SAN AP'
+	path = '/Users/cudmore/data/laura-ephys/sanap20210412'
+	print('folder path is', path)
+	'''
 
 	app = QtWidgets.QApplication([''])
 
@@ -781,14 +1004,36 @@ def main():
 		bundle_dir = os.path.dirname(os.path.abspath(__file__))
 
 	appIconPath = os.path.join(bundle_dir, 'icons/sanpy_transparent.png')
-	print('app icon is in', appIconPath)
+	print('  app icon is in', appIconPath)
 	app.setWindowIcon(QtGui.QIcon(appIconPath))
 
 	# upgrading to mvc for file table (read from excel file)
 	#w = MainWindow(path=path, app=app)
 	csvPath = '/Users/cudmore/data/laura-ephys/sanap202101/Superior vs Inferior database.xlsx'
+	csvPath = '/Users/cudmore/data/laura-ephys/sanap202101/Superior vs Inferior database_13_Feb.xlsx'
+
+	# this is for manuscript
+	csvPath = '/Users/cudmore/data/laura-ephys/sanap20210412/Superior vs Inferior database_13_Feb.xlsx'
+
+	# use one dvdt to see if we get good APD20/50/80
+	#csvPath = '/Users/cudmore/data/laura-ephys/sanap20210412/Superior vs Inferior database_Feb13_just_dvdt.xlsx'
+
+	# now working on new version of sanpy
+	csvPath = '/Users/cudmore/data/laura-ephys/sanap20210412/recording_db_20210427.csv'
+
+	# trying to get sanpy to run with no foldeer, bbuild it as needed
+	csvPath = ''
+	path = '/Users/cudmore/data/laura-ephys/test1_sanpy2'
+
+	print('  csvPath is', csvPath)
 	w = MainWindow(csvPath=csvPath, app=app)
 	#w.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+
+	# debug
+	# trying to get sanpy to run with no foldeer, bbuild it as needed
+	w.loadFolder(path)
+	w.slotFindNewFiles()
+
 	w.show()
 
 	# abb 20201109, program is not quiting on error???

@@ -524,6 +524,12 @@ class dualRecord:
 
 	def plotClips(self, fileNumber=None, region=None, axs=None):
 
+		traceColor = 'k'
+		if region == 'superior':
+			traceColor = 'r'
+		elif region == 'inferior':
+			traceColor = 'b'
+
 		# need to get these from database df
 		#region = None
 		cellNumber = None
@@ -586,7 +592,7 @@ class dualRecord:
 			try:
 				oneSpikeClips_x2 = abfSpikeClips_x2[idx]
 				oneSpikeClips = abfSpikeClips[idx]
-				axVm.plot(oneSpikeClips_x2, oneSpikeClips, '-k')
+				axVm.plot(oneSpikeClips_x2, oneSpikeClips, '-', color=traceColor)
 
 				'''
 				if idx == 0:
@@ -744,10 +750,13 @@ class dualRecord:
 			# now this
 			yPreClipSpikeMean = [x if x>0 else np.nan for x in yPreClipSpikeMean]
 			axLcr.stem(xPreClipSparkMasterBins, yPreClipSpikeMean,
-						linefmt='grey',
+						#linefmt='grey',
+						linefmt=traceColor,
 						markerfmt=' ', # use space ' ' and not None or ''
 						basefmt=' ')
-			axLcr.plot(xFit, yFit, 'b', linewidth=2.5)
+			# before adding color r/b sup/inf for manuscript
+			#axLcr.plot(xFit, yFit, 'b', linewidth=2.5)
+			axLcr.plot(xFit, yFit, 'k', linewidth=2.5)
 			#
 			axLcr.set_ylabel('Prob LCR')
 			axLcr.spines['left'].set_visible(False)

@@ -5,6 +5,7 @@ from .bScatterPlotWidget import bScatterPlotWidget
 from .bFileList import bFileList
 
 from .bAnalysis import bAnalysis
+#from .bAnalysisUtil import statList
 from .bAnalysisUtil import bAnalysisUtil
 from .bAnalysisPlot import bPlot
 
@@ -17,4 +18,10 @@ from .bAbfText import bAbfText
 from .bUtil import pandasModel
 from .bUtil import myCheckBoxDelegate
 
-from .bScatterPlotWidget2 import bScatterPlotMainWindow
+from .reanalyze import reanalyze
+
+#from .bScatterPlotWidget2 import bScatterPlotMainWindow
+from . import scatterwidget
+
+from .version import analysisVersion
+from .version import interfaceVersion

@@ -14,37 +14,36 @@ import dash_table
 
 import pandas as pd
 import plotly.graph_objs as go
-from plotly import tools
+from plotly import subplots
 
-##
-# bAnalysis
-import sys
-sys.path.append("..") # Adds higher directory to python modules path.
-from SanPy import bAnalysis
+import sanpy
+from sanpy.bAnalysisUtil import statList
+statDict = statList
 
 myPath = '../data'
 
 # detect spikes
-myThreshold = 100
-myMedianFilter = 3
-halfHeights = [20, 50, 80]
-
+myThreshold = 10
+# limit points we are plotting
 plotEveryPoint = 10
 ##
 
 def loadFile(name):
 	filePath = os.path.join(myPath, name)
 	global ba
-	ba = bAnalysis.bAnalysis(filePath)
-	ba.getDerivative(medianFilter=5)
-	ba.spikeDetect(dVthresholdPos=myThreshold, medianFilter=myMedianFilter, halfHeights=halfHeights)
+	ba = sanpy.bAnalysis(filePath)
+	dDict = ba.getDefaultDetection()
+	dDict['dvdtThreshold'] = myThreshold
+	ba.spikeDetect(dDict)
 	start = 0
 	stop = len(ba.abf.sweepX) - 1
 	global subSetOfPnts
 	subSetOfPnts = range(start, stop, plotEveryPoint)
 
 def myDetect(dvdtThreshold):
-	ba.spikeDetect(dVthresholdPos=dvdtThreshold, medianFilter=myMedianFilter, halfHeights=halfHeights)
+	dDict = ba.getDefaultDetection()
+	dDict['dvdtThreshold'] = dvdtThreshold
+	ba.spikeDetect(dDict)
 
 myFile = '19114001.abf' # SMALL @ 60 sec
 #myFile = '19221021.abf' # BIG @ 300 sec
@@ -73,7 +72,7 @@ def getFileList(path):
 			fileDict['File Name'] = file
 			#fileDict['path'] = fullPath
 
-			tmp_ba = bAnalysis.bAnalysis(file=fullPath)
+			tmp_ba = sanpy.bAnalysis(file=fullPath)
 			pntsPerMS = tmp_ba.dataPointsPerMs
 			numSweeps = len(tmp_ba.sweepList)
 			durationSec = max(tmp_ba.abf.sweepX)
@@ -81,7 +80,6 @@ def getFileList(path):
 			fileDict['kHz'] = pntsPerMS
 			fileDict['Duration (Sec)'] = int(round(durationSec))
 			fileDict['Number of Sweeps'] = numSweeps
-
 
 			retFileList.append(fileDict)
 			videoFileIdx += 1
@@ -92,89 +90,48 @@ def getFileList(path):
 path = '../data'
 fileList = getFileList(path)
 
-#
-# a list of key names in ba.spikeDict
-"""
-skipKeys = ['file', 'spikeNumber', 'numError', 'errors', 'dVthreshold', 'medianFilter', 'halfHeights']
-myOptionsList = []
-mySpikeNumber = 0
-for key,value in ba.spikeDict[mySpikeNumber].items():
-	#print(key, value)
-	if key in skipKeys:
-		continue
-	optionsDict = {
-		'label': key,
-		'value': key
-	}
-	myOptionsList.append(optionsDict)
-"""
-
-###
-###
-statDict = collections.OrderedDict()
-statDict['Take Off Potential (s)'] = 'thresholdSec'
-statDict['AP Peak (mV)'] = 'peakVal'
-statDict['AP Height (mV)'] = 'peakHeight'
-statDict['Pre AP Min (mV)'] = 'preMinVal'
-statDict['Post AP Min (mV)'] = 'postMinVal'
-statDict['AP Duration (ms)'] = 'apDuration_ms'
-statDict['Early Diastolic Duration (ms)'] = 'earlyDiastolicDuration_ms'
-statDict['Diastolic Duration (ms)'] = 'diastolicDuration_ms'
-statDict['Inter-Spike-Interval (ms)'] = 'isi_ms'
-statDict['Cycle Length (ms)'] = 'cycleLength_ms'
-statDict['Max AP Upstroke (dV/dt)'] = 'preSpike_dvdt_max_val2'
-statDict['Max AP Upstroke (mV)'] = 'preSpike_dvdt_max_val'
-statDict['Max AP Repolarization (dV/dt)'] = 'postSpike_dvdt_min_val2'
-statDict['Max AP Repolarization (mV)'] = 'postSpike_dvdt_min_val'
-statDict['Condition 1'] = 'Condition 1'
-statDict['Condition 2'] = 'Condition 2'
-###
-###
-
 myOptionsList = list(statDict.keys())
-#print('\n\nmyOptionsList:', myOptionsList)
 
-tmpData=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)]
-#for tmpDataRow in enumerate(tmpData):
-#	print('   ', tmpDataRow)
-	
+#tmpData = [{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)]
+
 # see: https://codepen.io/chriddyp/pen/bWLwgP
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets, static_folder='static')
-app.title = 'bAnalysis'
-app.css.append_css({'external_url': 'static/my.css'})
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app.title = 'SanPy Analysis'
+app.css.append_css({'external_url': 'assets/my.css'})
 
 app.layout = html.Div([
-
-
 	html.Div([
 
 		html.Div([
 			html.Button(id='load-folder-button', children='Load Folder', className='button-primary'),
 			html.Label('File: ' + os.path.join(myPath, myFile)),
-		], className='two columns'),
+		], style={'fontSize':12}, className='two columns'),
 
 		html.Div([
 		dash_table.DataTable(
 			id='file-datatable',
 			#columns=[{"name": 'Idx', "id": 'Idx'}, {"name": 'Stat', "id": 'stat'}],
+			fixed_rows={'headers': True},
 			columns = [{'name': key, 'id': key} for key in fileList[0]],
 			data=[oneFile for idx, oneFile in enumerate(fileList)],
 			style_table={
 				'maxWidth': '1000',
-				'maxHeight': '300',
+				'maxHeight': 150,
 				'overflowY': 'scroll'
 			},
-			style_cell={'textAlign': 'left'},
+			style_cell={'textAlign': 'left', 'height':5},
 			style_header={
-				'backgroundColor': 'ltgray',
+				#'backgroundColor': 'ltgray',
 				'fontWeight': 'bold'
 			},
-			style_cell_conditional=[{
+			style_data_conditional=[
+				{
 				'if': {'row_index': 'odd'},
 				'backgroundColor': 'rgb(248, 248, 248)'
-			}],
+				}
+			],
 			row_selectable='single',
 			selected_rows=[2],
 		),
@@ -183,23 +140,22 @@ app.layout = html.Div([
 	], className='row'),
 
 	html.H2(" "),
-	
+
 	html.Div(id='tmpdiv', className='row'),
 	html.Div(id='tmpdiv2', className='row'),
 	html.Div(id='tmpdivRadio', className='row'),
 
 	html.Div([
 		html.Div([
-				html.Button(id='detect-button', children='Detect', className='button-primary'),
-					
+				html.Button(id='detect-button', children='Detect Spikes', className='button-primary'),
+
 				html.Div([
 					dcc.Input(id='dvdtThreshold', type='number', value=50, style={'width': 65}),
-				
 					" dV/dt",
-				], style={'display': 'inline-block'}), 
-				
-				html.H5("Plot"),
-				
+				], style={'display': 'inline-block'}),
+
+				#html.H5("Plot Overlay"),
+
 				dcc.Checklist(
 					id='plot-radio-buttons',
 					options=[
@@ -207,78 +163,111 @@ app.layout = html.Div([
 						{'label': 'AP Amp (mV)', 'value': 'AP Amp (mV)'},
 						{'label': 'Take Off Potential (mV)', 'value': 'Take Off Potential (mV)'},
 					],
-					values=[]
+					value=[]
 				),
 
 				html.H2(" "),
-				
+
 				html.Button(id='save-button', children='Save', className='button-primary'),
-		], className='two columns'),
+		], style={'fontSize':12}, className='two columns'),
 
 		# one dcc.Graph for both dvdt and vm
 		html.Div([
-			dcc.Graph(style={'height': '600px'}, id='linked-graph'),
+			dcc.Graph(style={'height': '500px'}, id='linked-graph'),
 		], className='ten columns'),
 	], className='row'),
 
 	html.Div([ # row
 	html.Div([
 
+		# X-Stat Table
 		html.Div([
 		dash_table.DataTable(
 			id='x-datatable',
+			fixed_rows={'headers': True},
 			columns=[{"name": '', "id": 'Idx'}, {"name": 'X Stat', "id": 'stat'}],
 			data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)],
 			style_table={
-				'maxHeight': '300',
+				'maxWidth': '200',
+				'maxHeight': '150',
 				'overflowY': 'scroll'
 			},
 			style_cell={'textAlign': 'left'},
 			style_header={
-				'backgroundColor': 'ltgray',
+				#'backgroundColor': 'ltgray',
 				'fontWeight': 'bold'
 			},
-			style_cell_conditional=[{
+			style_data_conditional=[{
 				'if': {'row_index': 'odd'},
-				'backgroundColor': 'rgb(248, 248, 248)'
+				'backgroundColor': 'rgb(220, 220, 220)'
 			}],
 			row_selectable='single',
 			selected_rows=[0],
 		),
-		], style={'display': 'inline-block', 'vertical-align': 'middle'}),
+		#], style={'display': 'inline-block', 'vertical-align': 'middle'}),
+		], className='three columns'),
 
+		# Y-Stat Table
 		html.Div([
 		dash_table.DataTable(
 			id='y-datatable',
+			fixed_rows={'headers': True},
 			columns=[{"name": '', "id": 'Idx'}, {"name": 'Y Stat', "id": 'stat'}],
 			data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)],
 			style_table={
-				'maxHeight': '400',
+				'maxWidth': '200',
+				'maxHeight': '150',
 				'overflowY': 'scroll'
 			},
 			style_cell={'textAlign': 'left'},
 			style_header={
-				'backgroundColor': 'ltgray',
+				#'backgroundColor': 'ltgray',
 				'fontWeight': 'bold'
 			},
-			style_cell_conditional=[{
+			style_data_conditional=[{
 				'if': {'row_index': 'odd'},
-				'backgroundColor': 'rgb(248, 248, 248)'
+				'backgroundColor': 'rgb(220, 220, 220)'
 			}],
 			row_selectable='single',
 			selected_rows=[1],
 		),
-		], style={'display': 'inline-block', 'vertical-align': 'middle'}),
+		#], style={'display': 'inline-block', 'vertical-align': 'middle'}),
+		], className='three columns'),
 
-	], className='six columns'),
+	#], className='four columns'),
+	]),
 
 	html.Div([
 		dcc.Graph(id='life-exp-vs-gdp')
 	], className='six columns'),
-	
+
 	], className='row'),
-	
+
 ]) # app.layout = html.Div([
+
+def todo_myDataTable(id, xxx):
+	dt = dash_table.DataTable(
+		id=id,
+		fixed_rows={'headers': True},
+		columns=[{"name": '', "id": 'Idx'}, {"name": 'X Stat', "id": 'stat'}],
+		data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)],
+		style_table={
+			'maxHeight': '300',
+			'overflowY': 'scroll'
+		},
+		style_cell={'textAlign': 'left'},
+		style_header={
+			#'backgroundColor': 'ltgray',
+			'fontWeight': 'bold'
+		},
+		style_data_conditional=[{
+			'if': {'row_index': 'odd'},
+			'backgroundColor': 'rgb(248, 248, 248)'
+		}],
+		row_selectable='single',
+		selected_rows=[0],
+	)
+	return dt
 
 ###
 # Callbacks
@@ -307,18 +296,30 @@ def plotRadioButtons(values):
 # see: https://stackoverflow.com/questions/46075960/live-updating-only-the-data-in-dash-plotly
 # idea is to make fig in main code, then just makea a list [] of traces and return that as 'return {'data': traces}'
 def _regenerateFig(xMin, xMax, statList=None):
+	"""
+	plot dv/dt and vm
+
+	globals:
+		subSetOfPnts
+	"""
 	print('_regenerateFig() xMin:', xMin, 'xMax::', xMax, 'statlist:', statList)
 
 	startSeconds = time.time()
 
-	dvdtTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts], line=dict(color='black'), showlegend=False)
-	vmTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.abf.sweepY[subSetOfPnts], line=dict(color='black'), showlegend=False)
+	lineDict = {
+		'color': 'black',
+		'width': 0.7,
+	}
+
+	dvdtTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts],
+							line=lineDict, showlegend=False)
+	vmTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.abf.sweepY[subSetOfPnts],
+							line=lineDict, showlegend=False)
 
 	# see: https://stackoverflow.com/questions/43106170/remove-the-this-is-the-format-of-your-plot-grid-in-a-plotly-subplot-in-a-jupy
-	fig = tools.make_subplots(rows=2, cols=1, shared_xaxes=True, print_grid=False)
+	fig = subplots.make_subplots(rows=2, cols=1, shared_xaxes=True, print_grid=False)
 	fig.append_trace(dvdtTrace, 1, 1)
 	fig.append_trace(vmTrace, 2, 1)
-
 
 	#statList = ['apAmp']
 	if statList is not None:
@@ -359,14 +360,14 @@ def _regenerateFig(xMin, xMax, statList=None):
 					fig.append_trace(thisScatter, 2, 1)
 
 	# only use xaxis1 because the two plots (dvdt and vm) are linked with the SAME xaxis !!!
-	fig['layout']['xaxis1'].update(title='Seconds')
+	fig['layout']['xaxis2'].update(title='Seconds')
 
 	fig['layout']['yaxis1'].update(title='dV/dt')
 	fig['layout']['yaxis2'].update(title='mV')
 
 	# only use xaxis1 because the two plots (dvdt and vm) are linked with the SAME xaxis !!!
 	fig['layout']['xaxis1'].update(range= [xMin, xMax])
-	fig['layout'].update(margin= {'l': 50, 'b': 40, 't': 10, 'r': 10})
+	fig['layout'].update(margin= {'l': 50, 'b': 10, 't': 10, 'r': 10})
 
 	stopSeconds = time.time()
 	print('   took', str(stopSeconds-startSeconds), 'seconds')
@@ -377,9 +378,17 @@ def _regenerateFig(xMin, xMax, statList=None):
 @app.callback(
 	Output('linked-graph', 'figure'),
 	[Input('linked-graph', 'relayoutData'),
-	Input('plot-radio-buttons', 'values'),
+	Input('file-datatable', 'selected_rows'),
+	Input('plot-radio-buttons', 'value'),
 	])
-def linked_graph(relayoutData, values):
+def linked_graph(relayoutData, selected_rows, values):
+	print('=== linked_graph() relayoutData:', relayoutData, 'selected_rows:', selected_rows, 'values:', values)
+	ctx = dash.callback_context
+	print('  ctx.triggered:', ctx.triggered)
+	triggeredControlId = None
+	if ctx.triggered:
+		triggeredControlId = ctx.triggered[0]['prop_id'].split('.')[0]
+
 	xMin = 0
 	xMax = ba.abf.sweepX[-1]
 	if relayoutData is not None:
@@ -387,8 +396,14 @@ def linked_graph(relayoutData, values):
 			xMin = relayoutData['xaxis.range[0]']
 			xMax = relayoutData['xaxis.range[1]']
 			#print('xMin:', xMin, 'xMax:', xMax)
-	print('=== linked_graph() xMin:', xMin, 'xMax:', xMax, 'values:', values)
-
+	print('  xMin:', xMin, 'xMax:', xMax, 'values:', values)
+	if triggeredControlId=='file-datatable' and selected_rows is not None:
+		print('  myFileSelect()', 'activeCell:', selected_rows)
+		selRow = selected_rows[0]
+		fileSelection = fileList[selRow]['File Name']
+		print('   file selection is:', fileSelection)
+		print('   XXX LOADING FILE THIS IS WHERE I NEED REDIS !!!!!!!!!!!!!!!!!!!!!!!!!')
+		loadFile(fileSelection)
 	'''
 	dvdtTrace = go.Scatter(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts], showlegend=False)
 	vmTrace = go.Scatter(x=ba.abf.sweepX[subSetOfPnts], y=ba.abf.sweepY[subSetOfPnts], showlegend=False)
@@ -414,12 +429,15 @@ def linked_graph(relayoutData, values):
 
 #
 # selecting a file
+'''
 @app.callback(
-	Output('tmpdiv', 'children'),
+	#Output('tmpdiv', 'children'),
+	Output('linked-graph', 'figure'),
 	[
 	Input('file-datatable', 'selected_rows'),
+	State('plot-radio-buttons', 'value'),
 	])
-def myFileSelect(activeCell):
+def myFileSelect(activeCell, values):
 	#print('myTableSelect()')
 	if activeCell is not None:
 		print('myFileSelect()', 'activeCell:', activeCell)
@@ -428,6 +446,12 @@ def myFileSelect(activeCell):
 		print('   file selection is:', fileSelection)
 		print('   XXX LOADING FILE THIS IS WHERE I NEED REDIS !!!!!!!!!!!!!!!!!!!!!!!!!')
 		loadFile(fileSelection)
+
+	xMin = 0
+	xMax = ba.abf.sweepX[-1]
+	fig = _regenerateFig(xMin, xMax, values)
+	return fig
+'''
 #
 # selecting a stat in table
 #['active_cell', 'columns', 'locale_format', 'content_style', 'css', 'data', 'data_previous', 'data_timestamp', 'editable', 'end_cell', 'id', 'is_focused', 'merge_duplicate_headers', 'n_fixed_columns', 'n_fixed_rows', 'row_deletable', 'row_selectable', 'selected_cells', 'selected_rows', 'start_cell', 'style_as_list_view', 'pagination_mode', 'pagination_settings', 'navigation', 'column_conditional_dropdowns', 'column_static_dropdown', 'column_static_tooltip', 'column_conditional_tooltips', 'tooltips', 'tooltip_delay', 'tooltip_duration', 'filtering', 'filtering_settings', 'filtering_type', 'filtering_types', 'sorting', 'sorting_type', 'sorting_settings', 'sorting_treat_empty_string_as_none', 'style_table', 'style_cell', 'style_data', 'style_filter', 'style_header', 'style_cell_conditional', 'style_data_conditional', 'style_filter_conditional', 'style_header_conditional', 'virtualization', 'derived_viewport_data', 'derived_viewport_indices', 'derived_viewport_selected_rows', 'derived_virtual_data', 'derived_virtual_indices', 'derived_virtual_selected_rows', 'dropdown_properties']
@@ -449,11 +473,11 @@ def myTableSelect(y_activeCell, x_activeCell):
 	if y_activeCell is not None:
 		yRow = y_activeCell[0]
 		ySelHuman = myOptionsList[yRow] # human readable
-		ySel = statDict[ySelHuman] # convert back to backend names
+		ySel = statDict[ySelHuman]['yStat'] # convert back to backend names
 	if x_activeCell is not None:
 		xRow = x_activeCell[0]
 		xSelHuman = myOptionsList[xRow]
-		xSel = statDict[xSelHuman] # convert back to backend names
+		xSel = statDict[xSelHuman]['yStat'] # convert back to backend names
 	print('myTableSelect ySel:', ySel, 'xSrl:', xSel)
 	xaxis_type = 'Linear'
 	yaxis_type = 'Linear'
@@ -470,7 +494,8 @@ def myTableSelect(y_activeCell, x_activeCell):
 			y=y, #dff[dff['Indicator Name'] == yaxis_column_name]['Value'],
 			mode='markers',
 			marker={
-				'size': 15,
+				'size': 10,
+				#'color': 'k',
 				'opacity': 0.5,
 				'line': {'width': 0.5, 'color': 'white'}
 			}

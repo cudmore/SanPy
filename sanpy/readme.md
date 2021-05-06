@@ -6,6 +6,15 @@ A spike detection program optimized for cardiac myocytes
 
 ## Running
 
+## Analysis errors:
+
+ - dvdtPercent: error searching for percent (10%) of dvdt max.
+ - preMin: error searching for spike pre min
+ - fitEDD: error while fitting slope of EDD
+ - preSpikeDvDt: error while searching for peak in max ap upstroke b/w spike threshold and dvdt peak
+ - postMinError:
+ - cycleLength:
+ - spikeWidth: error finding a particular spike with (AP_Dur)
 
 ## To Do
 
@@ -13,7 +22,7 @@ A spike detection program optimized for cardiac myocytes
 
  - Add code to backend to load text files (currently limited to Axon Instruments ABF files)
  - Add all hard coded detection parameters to json file and provide interface ot change !!!
- 
+
  - Clean up code and write API documentation for each function
  - Revamp example Jupyter notebooks
   - Example: load, analyze, plot dV/dt and Vm
@@ -26,7 +35,7 @@ A spike detection program optimized for cardiac myocytes
  - move ba to main window (remove from detection). Add option to detection to hold it.
     - once ba is in main window, add detection there
     - propagate changes to children including (detection widget, file widget, scatter widget)
-    
+
  @@@@@ IMPORTANT @@@@@@
  - *** ADD RESET mV BEFORE WE DETECT NEXT SPIKE *** !!! !!!
  @@@@@ IMPORTANT @@@@@@
@@ -68,13 +77,12 @@ A spike detection program optimized for cardiac myocytes
 ### Scatter Plot
 
  - [done] add default selected stat in scatter plot, e.g. 'Spike Frequency (Hz)'
-  
+
  - (mostly done) add single spike selection to scatter and highlight in detection widget vm plot
  - (mostly done) add multi-spike selection to scatter plot as x-axis is zoomed ???
- 
+
  - bug single spike selection in scatter widget goes to wrong index in detection widget vm plot
      - make sure my bAnalysis indices line up (for missing data) e.g. first/last spike
-  
- - [done] add all 'human' stat names to scatter widget 
+
+ - [done] add all 'human' stat names to scatter widget
  - [done] fix bug when there is one spike
- 

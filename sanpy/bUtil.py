@@ -1,5 +1,5 @@
 # 20210212
-import os
+import os, math
 
 import numpy as np
 import pandas as pd
@@ -47,6 +47,74 @@ def printDict(d, withType=False):
 		else:
 			print(f'  {k}: {v}')
 
+class myTableView(QtWidgets.QTableView):
+	signalDuplicateRow = QtCore.Signal(object) # row index
+	signalDeleteRow = QtCore.Signal(object) # row index
+	#signalRefreshTabe = QtCore.Signal(object) # row index
+	signalCopyTable = QtCore.Signal()
+	signalFindNewFiles = QtCore.Signal()
+
+	def __init__(self, parent=None):
+		"""
+		"""
+		super(myTableView, self).__init__(parent)
+
+		self.doIncludeCheckbox = False # todo: turn this on
+		self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
+
+		self.setFont(QtGui.QFont('Arial', 10))
+		self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+								  QtWidgets.QSizePolicy.Expanding)
+		self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+
+		self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers |
+							 QtGui.QAbstractItemView.DoubleClicked)
+
+		p = self.palette()
+		color1 = QtGui.QColor('#dddddd')
+		color2 = QtGui.QColor('#ffffff')
+		p.setColor(QtGui.QPalette.Base, color1)
+		p.setColor(QtGui.QPalette.AlternateBase, color2)
+		self.setAlternatingRowColors(True)
+		self.setPalette(p)
+
+	#def keyPressEvent(self, event): #Reimplement the event here, in your case, do nothing
+	#	return
+
+	def contextMenuEvent(self, event):
+		"""
+		handle right mouse click
+		"""
+		print('myTableView.contextMenuEvent() event:', event)
+		contextMenu = QtWidgets.QMenu(self)
+		duplicateRow = contextMenu.addAction("Duplicate Row")
+		contextMenu.addSeparator()
+		deleteRow = contextMenu.addAction("Delete Row")
+		contextMenu.addSeparator()
+		copyTable = contextMenu.addAction("Copy Table")
+		contextMenu.addSeparator()
+		findNewFiles = contextMenu.addAction("Find New Files")
+		#
+		action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+		if action == duplicateRow:
+			print('  todo: duplicateRow')
+			tmp = self.selectedIndexes()
+			if len(tmp)>0:
+				selectedRow = tmp[0].row()
+				self.signalDuplicateRow.emit(selectedRow)
+		elif action == deleteRow:
+			print('  todo: deleteRow')
+			tmp = self.selectedIndexes()
+			if len(tmp)>0:
+				selectedRow = tmp[0].row()
+				self.signalDeleteRow.emit(selectedRow)
+		elif action == copyTable:
+			print('  todo: copyTable')
+			self.signalCopyTable.emit()
+		elif action == findNewFiles:
+			print('  todo: findNewFiles')
+			self.signalFindNewFiles.emit()
+
 class pandasModel(QtCore.QAbstractTableModel):
 
 	def __init__(self, data):
@@ -72,68 +140,68 @@ class pandasModel(QtCore.QAbstractTableModel):
 		#print('data() role:', role)
 		if index.isValid():
 			if role == QtCore.Qt.DisplayRole:
-
 				#return QtCore.QVariant()
-
 				#return str(self._data.iloc[index.row(), index.column()])
 				retVal = self._data.iloc[index.row(), index.column()]
 				if isinstance(retVal, np.float64):
 					retVal = float(retVal)
 					if np.isnan(retVal):
 						retVal = ''
-				elif 1:
-					# string
-					pass
+				elif isinstance(retVal, np.int64):
+					retVal = int(retVal)
 				#
+				#print(retVal, type(retVal))
+				if isinstance(retVal, float) and math.isnan(retVal):
+					# don't show 'nan' in table
+					#print('  convert to empty')
+					retVal = ''
 				return retVal
 			elif role == QtCore.Qt.BackgroundRole:
-				return
+				return QtCore.QVariant()
 
 		return None
 
 	def update(self, dataIn):
 		print('pandasModel.update()', dataIn)
 
-	def setData(self, index, value, role=QtCore.Qt.DisplayRole):
+	def setData(self, index, value, role=QtCore.Qt.EditRole):
 		"""
 		This is curently limited to only handle checkbox
-		todo: extend to allow editing
 
 		Returns:
 			True if value is changed. Calls layoutChanged after update.
 			False if value is not different from original value.
 		"""
 		print('pandasModel.setData() row:', index.row(), 'column:', index.column(), 'value:', value, type(value))
-		#if index.column() == self.includeCol:
+		if index.isValid():
+			if role == QtCore.Qt.EditRole:
+				row = index.row()
+				column=index.column()
+				#print('value:', value, type(value))
+				v = self._data.iloc[row, column]
+				#print('before v:',v, type(v))
+				#print('isinstance:', isinstance(v, np.float64))
+				if isinstance(v, np.float64):
+					try:
+						value = float(value)
+					except (ValueError) as e:
+						print('  please enter a number')
+						return False
+				# set
+				self._data.iloc[row, column] = value
 
-		#self.dataChanged.emit(index, index)
-
-		if 1:
-
-			#print('value:', value, type(value))
-			v = self._data.iloc[index.row(), index.column()]
-			#print('before v:',v, type(v))
-			#print('isinstance:', isinstance(v, np.float64))
-			if isinstance(v, np.float64):
-				try:
-					value = float(value)
-				except (ValueError) as e:
-					print('please enter a number')
-					return False
-
-			# set
-			self._data.iloc[index.row(), index.column()] = value
-
-			v = self._data.iloc[index.row(), index.column()]
-			print('after v:',v, type(v))
-			return True
-		return True
+				#print('  after value:',value, type(value))
+				return True
+		#
+		return False
 
 	def flags(self, index):
 		#if index.column() == self.includeCol:
 		if 1:
 			# turn on editing (limited to checkbox for now)
-			return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled
+			#return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled
+			return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+
 		else:
 			return QtCore.Qt.ItemIsEnabled
 
@@ -141,6 +209,73 @@ class pandasModel(QtCore.QAbstractTableModel):
 		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
 			return self._data.columns[col]
 		return None
+
+	def myCopyTable(self):
+		"""
+		copy model data to clipboard
+		"""
+		print('myCopyTable()')
+		dfCopy = self._data.copy()
+		dfCopy.to_clipboard(sep='\t', index=False)
+		#print(dfCopy)
+
+	def myGetValue(self, rowIdx, colStr):
+		val = None
+		if colStr not in self._data.columns: # columns is a list
+			print('error: myGetTableValue() got bad column name:', colStr)
+		elif len(self._data)-1 < rowIdx:
+			print('error: myGetTableValue() got bad row:', row)
+		else:
+			val = self._data.loc[rowIdx, colStr]
+		return val
+
+	def myGetRowDict(self, rowIdx):
+		"""
+		return a dict with selected row as dict (includes detection parameters)
+		"""
+		theRet = {}
+		for column in self._data.columns:
+			theRet[column] = self.myGetValue(rowIdx, column)
+		return theRet
+
+	def myGetColumnList(self, col):
+		# return all valuues in column as a list
+		colList = self._data[col].tolist()
+		return colList
+
+	def myAppendRow(self, rowDict=None):
+		# append one empty row
+		newRowIdx = len(self._data)
+		self.beginInsertRows(QtCore.QModelIndex(), newRowIdx, newRowIdx)
+
+		self._data = self._data.append(pd.Series(), ignore_index=True)
+		self._data = self._data.reset_index(drop=True)
+
+		self.endInsertRows()
+
+	def myDeleteRow(self, rowIdx):
+		self.beginRemoveRows(QModelIndex(), rowIdx, rowIdx)
+		df = self._data.drop([rowIdx])
+		df = df.reset_index(drop=True)
+		self._data = df # REQUIRED
+		self.endRemoveRows()
+
+	def myDuplicateRow(self, rowIdx):
+		self.beginInsertRows(QtCore.QModelIndex(), rowIdx+1, rowIdx+1)
+		newIdx = rowIdx + 0.5
+		rowDict = self.myGetRowDict(rowIdx)
+		dfRow = pd.DataFrame(rowDict, index=[newIdx])
+		df = self._data
+		df = df.append(dfRow, ignore_index=False)
+		df = df.sort_index().reset_index(drop=True)
+		#
+		self._data = df # not needed?
+		self.endInsertRows()
+
+	def mySetRow(self, row, rowDict):
+		rowSeries = pd.Series(rowDict)
+		self._data.iloc[row] = rowSeries
+		self._data = self._data.reset_index(drop=True)
 
 # see: https://stackoverflow.com/questions/17748546/pyqt-column-of-checkboxes-in-a-qtableview
 class myCheckBoxDelegate(QtWidgets.QItemDelegate):
