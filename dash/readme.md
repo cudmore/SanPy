@@ -3,20 +3,28 @@
  - app2.py, provides a web interface to load, visualize, analyze and save results of spike analysis (Save is not implemented!!!).
  - bBrowser_app.py, provides a web interface to browse many analysis files and parameters at the same time.
 
+## install
+
+```
+python3 -m venv sanpy_dash
+source sanpy_dash/bin/activate
+pip install -r requirements.txt
+```
+
 ## To Do (backend)
 
  - Add header to saved text file and add
      - sampling frequency
      - abf name
  - Allow files other than abf to be opened?
- 
+
 ## To Do (bAnalysis)
 
  - Implement save!!!!
  - Get rid of 'Load Folder' button and implement dropdown to select /data folder like I have done in bBrowser
  - Fix updating of raw dV/dt and Vm when a new files is selected and analyzed
  - Implement data shader to speed up plotting of raw data
- 
+
 ## To Do (bBrowser)
 
  - [done] On select in one graph, highlight in others
@@ -26,7 +34,7 @@
  - [done, needs to be checked] Try and connect mean with line when between the same abf file ???
  - [done] Add columns to file list for condition. Once done, plot x-axis as 'condition'
  - When plotting conditions, add grand mean of means between files that have same condition
- 
+
 ## Versions
 
 ```
@@ -62,8 +70,5 @@ Seemed to get fixed with myStyleDataConditional()
 
  - Add right-click to bring up color picker and set color of a given file ...
  - Condition plotting is not working when condition is a string
- 
+
  - Finish code to connect 'mean lines b/w condition 1/2/3'
- 
- 
- 

@@ -1,3 +1,4 @@
 dash
 dash-bootstrap-components
 dash-daq
+git+git://github.com/cudmore/SanPy@master#egg=SanPy

@@ -19,3 +19,5 @@ seaborn
 
 # to open newer xlsx files
 openpyxl
+
+tifffile

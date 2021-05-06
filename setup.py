@@ -22,7 +22,9 @@ setup(
 		'qdarkstyle', # 2.8.1
 		'xlrd', # for loading excel files in examples/reanalyze.py
 		'openpyxl',
-		'seaborn'
+		'seaborn',
+		'tifffile',
+		'mplcursors'
     ],
     entry_points={
         'console_scripts': [
