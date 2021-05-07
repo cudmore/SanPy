@@ -48,11 +48,18 @@ def printDict(d, withType=False):
 			print(f'  {k}: {v}')
 
 class myTableView(QtWidgets.QTableView):
+	'''
 	signalDuplicateRow = QtCore.Signal(object) # row index
 	signalDeleteRow = QtCore.Signal(object) # row index
 	#signalRefreshTabe = QtCore.Signal(object) # row index
 	signalCopyTable = QtCore.Signal()
 	signalFindNewFiles = QtCore.Signal()
+	'''
+	signalDuplicateRow = QtCore.pyqtSignal(object) # row index
+	signalDeleteRow = QtCore.pyqtSignal(object) # row index
+	#signalRefreshTabe = QtCore.pyqtSignal(object) # row index
+	signalCopyTable = QtCore.pyqtSignal()
+	signalFindNewFiles = QtCore.pyqtSignal()
 
 	def __init__(self, parent=None):
 		"""
@@ -67,8 +74,8 @@ class myTableView(QtWidgets.QTableView):
 								  QtWidgets.QSizePolicy.Expanding)
 		self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
 
-		self.setEditTriggers(QtGui.QAbstractItemView.NoEditTriggers |
-							 QtGui.QAbstractItemView.DoubleClicked)
+		self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers |
+							 QtWidgets.QAbstractItemView.DoubleClicked)
 
 		p = self.palette()
 		color1 = QtGui.QColor('#dddddd')

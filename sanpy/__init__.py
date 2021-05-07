@@ -1,5 +1,14 @@
 #import os, sys;
 #sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+
+# only export base sanpy, no GUI
+from .bAnalysis import bAnalysis
+from .bAnalysisUtil import bAnalysisUtil
+#from .bUtil import bUtil
+from .version import analysisVersion
+from .version import interfaceVersion
+from .bUtil import *
+'''
 from .bDetectionWidget import bDetectionWidget
 from .bScatterPlotWidget import bScatterPlotWidget
 from .bFileList import bFileList
@@ -25,3 +34,4 @@ from . import scatterwidget
 
 from .version import analysisVersion
 from .version import interfaceVersion
+'''

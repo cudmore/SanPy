@@ -16,6 +16,7 @@ import pandas as pd
 import plotly.graph_objs as go
 from plotly import subplots
 
+#from sanpy import *
 import sanpy
 from sanpy.bAnalysisUtil import statList
 statDict = statList
