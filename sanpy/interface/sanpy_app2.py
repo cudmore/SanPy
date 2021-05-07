@@ -154,7 +154,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		'''
 
 		self.csvPath = csvPath
-		masterDf = sanpy.bUtil.loadDatabase(csvPath)
+		masterDf = sanpy.interface.bUtil.loadDatabase(csvPath)
 		if masterDf is not None:
 			print('masterDf:')
 			print(masterDf.head())
@@ -641,7 +641,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		# list of files
 		#self.tableView = QtWidgets.QTableView()
-		self.tableView = sanpy.bUtil.myTableView()
+		self.tableView = sanpy.interface.bUtil.myTableView()
 		self.tableView.signalDuplicateRow.connect(self.slotDuplicateRow)
 		self.tableView.signalDeleteRow.connect(self.slotDeleteRow)
 		self.tableView.signalCopyTable.connect(self.slotCopyTable)
