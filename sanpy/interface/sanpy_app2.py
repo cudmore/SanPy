@@ -209,7 +209,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 
 		# ask user for folder
-		if len(path)==0:
+		if isinstance(path,bool) or len(path)==0:
 			path = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory With Recordings"))
 			if len(path) == 0:
 				return
@@ -455,7 +455,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		loadFolderAction.setShortcut('Ctrl+O')
 		loadFolderAction.triggered.connect(self.loadFolder)
 
-		buildDatabaseAction = QtWidgets.QAction('Build Database ...', self)
+		saveDatabaseAction = QtWidgets.QAction('Save Database', self)
+		saveDatabaseAction.setShortcut('Ctrl+S')
+		saveDatabaseAction.triggered.connect(self.saveDatabase)
+
+		buildDatabaseAction = QtWidgets.QAction('Build Big Database ...', self)
 		buildDatabaseAction.triggered.connect(self.buildDatabase)
 
 		savePreferencesAction = QtWidgets.QAction('Save Preferences', self)
@@ -463,6 +467,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		fileMenu = mainMenu.addMenu('&File')
 		fileMenu.addAction(loadFolderAction)
+		fileMenu.addSeparator()
+		fileMenu.addAction(saveDatabaseAction)
 		fileMenu.addSeparator()
 		fileMenu.addAction(buildDatabaseAction)
 		fileMenu.addSeparator()
@@ -978,6 +984,11 @@ class MainWindow(QtWidgets.QMainWindow):
 				fixedDvDt=fixedDvDt, noDvDtThreshold=noDvDtThreshold,
 				fixedVmThreshold=fixedVmThreshold)
 
+	def saveDatabase(self):
+		dbFile = 'sanpy_recording_db.csv'
+		savePath = os.path.join(self.path, dbFile)
+		self.myModel.mySaveDb(savePath)
+
 def main():
 	import platform
 	print('Python version is:', platform.python_version())
@@ -1020,6 +1031,8 @@ def main():
 	csvPath = ''
 	path = '/Users/cudmore/data/laura-ephys/test1_sanpy2'
 
+	path = '/Users/cudmore/data/laura-ephys/sanap20210412'
+
 	print('  csvPath is', csvPath)
 	w = MainWindow(csvPath=csvPath, app=app)
 	#w.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
@@ -1027,7 +1040,7 @@ def main():
 	# debug
 	# trying to get sanpy to run with no foldeer, bbuild it as needed
 	w.loadFolder(path)
-	w.slotFindNewFiles()
+	#w.slotFindNewFiles()
 
 	w.show()
 

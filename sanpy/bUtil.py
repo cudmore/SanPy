@@ -261,7 +261,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 		self.endInsertRows()
 
 	def myDeleteRow(self, rowIdx):
-		self.beginRemoveRows(QModelIndex(), rowIdx, rowIdx)
+		self.beginRemoveRows(QtCore.QModelIndex(), rowIdx, rowIdx)
 		df = self._data.drop([rowIdx])
 		df = df.reset_index(drop=True)
 		self._data = df # REQUIRED
@@ -280,9 +280,14 @@ class pandasModel(QtCore.QAbstractTableModel):
 		self.endInsertRows()
 
 	def mySetRow(self, row, rowDict):
+		print('mySetRow() row:', row, 'rowDict:', rowDict)
 		rowSeries = pd.Series(rowDict)
 		self._data.iloc[row] = rowSeries
 		self._data = self._data.reset_index(drop=True)
+
+	def mySaveDb(self, path):
+		print('pandasModel.mySaveDb() path:', path)
+		self._data.to_csv(path)
 
 # see: https://stackoverflow.com/questions/17748546/pyqt-column-of-checkboxes-in-a-qtableview
 class myCheckBoxDelegate(QtWidgets.QItemDelegate):
