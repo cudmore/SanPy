@@ -99,11 +99,12 @@ def getDefaultDetection():
 	return theDict.copy()
 
 class bAnalysis:
-	def __init__(self, file=None, theTiff=None):
+	def __init__(self, file=None, theTiff=None, byteStream=None):
 		"""
 		file: either abf or csv with time/mV columns
 		theDict:
 		"""
+
 		self.loadError = False # abb 20201109
 
 		self.detectionDict = None # remember the parameters of our last detection
@@ -129,7 +130,7 @@ class bAnalysis:
 		self.spikeTimes = [] # created in self.spikeDetect()
 		self.spikeClips = [] # created in self.spikeDetect()
 
-		if not os.path.isfile(file):
+		if file is not None and not os.path.isfile(file):
 			print(f'error: bAnalysis.__init__ file does not exist: {file}')
 			self.loadError = True
 			return
@@ -139,7 +140,12 @@ class bAnalysis:
 
 		# instantiate and load abf file
 		self.myFileType = None
-		if file.endswith('.tif'):
+		if byteStream is not None:
+			print('  bAnalysis() loading bytestream with pyabf.ABF()')
+			self._abf = pyabf.ABF(byteStream)
+			print('  done')
+
+		elif file.endswith('.tif'):
 			self._abf = sanpy.bAbfText(file)
 			print('  === REMEMBER: bAnalysis.__init__() is normalizing Ca sweepY')
 			self._abf.sweepY = self.NormalizeData(self._abf.sweepY)
@@ -192,6 +198,9 @@ class bAnalysis:
 
 		# keep track of the number of errors during spike detection
 		self.numErrors = 0
+
+		# get default derivative
+		self.getDerivative()
 
 	def loadFromDict(theDict):
 		pass
@@ -298,10 +307,13 @@ class bAnalysis:
 	############################################################
 	# spike detection
 	############################################################
-	def getDerivative(self, dDict):
+	def getDerivative(self, dDict=None):
 		"""
 		medianFilter: pnts, must be int and odd
 		"""
+		if dDict is None:
+			dDict = self.getDefaultDetection()
+
 		medianFilter = dDict['medianFilter']
 		SavitzkyGolay_pnts = dDict['SavitzkyGolay_pnts']
 		SavitzkyGolay_poly = dDict['SavitzkyGolay_poly']
@@ -310,35 +322,28 @@ class bAnalysis:
 		if medianFilter > 0:
 			if not medianFilter % 2:
 				medianFilter += 1
-				print('*** Warning: Please use an odd value for the median filter, bAnalysis.getDerivative() set medianFilter =', medianFilter)
+				print('*** Warning: bAnalysis.getDerivative() Please use an odd value for the median filter, bAnalysis.getDerivative() set medianFilter =', medianFilter)
 			medianFilter = int(medianFilter)
 			self.filteredVm = scipy.signal.medfilt(self.abf.sweepY, medianFilter)
 		elif SavitzkyGolay_pnts > 0:
-			print('  getDerivative() vm SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
+			print('  bAnalysis.getDerivative() vm SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
 			self.filteredVm = scipy.signal.savgol_filter(self.abf.sweepY, SavitzkyGolay_pnts, SavitzkyGolay_poly, mode='nearest')
 		else:
 			self.filteredVm = self.abf.sweepY
 
 		self.filteredDeriv = np.diff(self.filteredVm)
-		#self.deriv = self.filteredDeriv # Vm filtered, deriv not
 
 		if medianFilter > 0:
 			if not medianFilter % 2:
 				medianFilter += 1
-				print('*** Warning: Please use an odd value for the median filter, bAnalysis.getDerivative() set medianFilter =', medianFilter)
+				print('*** Warning: bAnalysis.getDerivative() Please use an odd value for the median filter, bAnalysis.getDerivative() set medianFilter =', medianFilter)
 			medianFilter = int(medianFilter)
 			self.filteredDeriv = scipy.signal.medfilt(self.filteredDeriv, medianFilter)
 		elif SavitzkyGolay_pnts > 0:
-			print('  getDerivative() dvdt SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
+			print('  bAnalysis.getDerivative() dvdt SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
 			self.filteredDeriv = scipy.signal.savgol_filter(self.filteredDeriv, SavitzkyGolay_pnts, SavitzkyGolay_poly, mode='nearest')
 		else:
 			self.filteredDeriv = self.filteredDeriv
-
-		# scale it to V/S (mV/ms)
-		#self.deriv = self.deriv * self.abf.dataRate / 1000
-		# self.abf.dataPointsPerMs == 10
-		# 20210501 was this
-		#self.filteredDeriv = self.filteredDeriv * self.abf.dataRate / 1000
 
 		# mV/ms
 		dataPointsPerMs = self.abf.dataPointsPerMs

@@ -1,6 +1,6 @@
 ## Web interface to abf file analysis and plotting
 
- - app2.py, provides a web interface to load, visualize, analyze and save results of spike analysis (Save is not implemented!!!).
+ - app2.py, provides a web interface to load, visualize, analyze and save results of spike analysis.
  - bBrowser_app.py, provides a web interface to browse many analysis files and parameters at the same time.
 
 ## install
@@ -8,7 +8,11 @@
 ```
 python3 -m venv sanpy_dash
 source sanpy_dash/bin/activate
-pip install -r requirements.txt
+#pip install -r requirements.txt
+pip install wheel
+pip install dash
+pip install dash-bootstrap-components
+pip install dash-daq
 ```
 
 ## To Do (backend)

@@ -4,6 +4,6 @@ dash-bootstrap-components
 dash-daq
 
 # I have set this to not install desktop gui PyQt, PyQtGraph, etc
-# that is done locally with
-# pip install -e .[gui]
--e git+https://github.com/cudmore/SanPy#egg=sanpy
+# that is done locally with "pip install -e .[gui]""
+#-e git+https://github.com/cudmore/SanPy#egg=sanpy
+pip install -e ../.

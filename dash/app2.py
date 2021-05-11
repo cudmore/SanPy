@@ -3,7 +3,8 @@ pip install dash==0.39.0  # The core dash backend
 pip install dash-daq==0.1.0  # DAQ components (newly open-sourced!)
 '''
 
-import os, time, collections
+import os, sys, time, collections
+import io, base64 # to handle drag and drop of binary abf files
 from textwrap import dedent as d
 
 import dash
@@ -12,14 +13,28 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 import dash_table
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
 from plotly import subplots
+
+from pages import fileListPage, scatterPage, uploadpage, detectionPage
+import myDashUtils
 
 #from sanpy import *
 import sanpy
 from sanpy.bAnalysisUtil import statList
 statDict = statList
+
+# see: https://codepen.io/chriddyp/pen/bWLwgP
+'''
+external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
+app.title = 'SanPy Detection'
+app.css.append_css({'external_url': 'assets/my.css'})
+'''
+from app import app
+from app import server # needed for heroku
 
 myPath = '../data'
 
@@ -28,18 +43,26 @@ myThreshold = 10
 # limit points we are plotting
 plotEveryPoint = 10
 ##
+subSetOfPnts = None
 
 def loadFile(name):
 	filePath = os.path.join(myPath, name)
+	print('app2.loadFile() filePath:', filePath)
 	global ba
 	ba = sanpy.bAnalysis(filePath)
+
+	if name == '19221014.abf':
+		print(ba.abf.headerText)
+
+	# GET RID OF THIS, DO NOT DO ANALYSIS ON FILE LOAD !!!!!!!!!!!!!!!!!!!
 	dDict = ba.getDefaultDetection()
-	dDict['dvdtThreshold'] = myThreshold
+	dDict['dvdtThreshold'] = myThreshold # myThreshold IS A GLOBAL !!!!!!!!!!!!!!!
 	ba.spikeDetect(dDict)
 	start = 0
 	stop = len(ba.abf.sweepX) - 1
 	global subSetOfPnts
 	subSetOfPnts = range(start, stop, plotEveryPoint)
+	print('  load file subSetOfPnts:', subSetOfPnts)
 
 def myDetect(dvdtThreshold):
 	dDict = ba.getDefaultDetection()
@@ -90,55 +113,14 @@ def getFileList(path):
 
 path = '../data'
 fileList = getFileList(path)
+dfFileList = myDashUtils.getFileList(path)
 
 myOptionsList = list(statDict.keys())
 
 #tmpData = [{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)]
 
-# see: https://codepen.io/chriddyp/pen/bWLwgP
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-
-app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
-app.title = 'SanPy Analysis'
-app.css.append_css({'external_url': 'assets/my.css'})
 
 app.layout = html.Div([
-	html.Div([
-
-		html.Div([
-			html.Button(id='load-folder-button', children='Load Folder', className='button-primary'),
-			html.Label('File: ' + os.path.join(myPath, myFile)),
-		], style={'fontSize':12}, className='two columns'),
-
-		html.Div([
-		dash_table.DataTable(
-			id='file-datatable',
-			#columns=[{"name": 'Idx', "id": 'Idx'}, {"name": 'Stat', "id": 'stat'}],
-			fixed_rows={'headers': True},
-			columns = [{'name': key, 'id': key} for key in fileList[0]],
-			data=[oneFile for idx, oneFile in enumerate(fileList)],
-			style_table={
-				'maxWidth': '1000',
-				'maxHeight': 150,
-				'overflowY': 'scroll'
-			},
-			style_cell={'textAlign': 'left', 'height':5},
-			style_header={
-				#'backgroundColor': 'ltgray',
-				'fontWeight': 'bold'
-			},
-			style_data_conditional=[
-				{
-				'if': {'row_index': 'odd'},
-				'backgroundColor': 'rgb(248, 248, 248)'
-				}
-			],
-			row_selectable='single',
-			selected_rows=[2],
-		),
-		], className='ten columns'),
-		# style={'width': '49%', 'display': 'inline-block', 'vertical-align': 'middle'}),
-	], className='row'),
 
 	html.H2(" "),
 
@@ -146,103 +128,18 @@ app.layout = html.Div([
 	html.Div(id='tmpdiv2', className='row'),
 	html.Div(id='tmpdivRadio', className='row'),
 
-	html.Div([
-		html.Div([
-				html.Button(id='detect-button', children='Detect Spikes', className='button-primary'),
 
-				html.Div([
-					dcc.Input(id='dvdtThreshold', type='number', value=50, style={'width': 65}),
-					" dV/dt",
-				], style={'display': 'inline-block'}),
+	fileListPage.getFileListLayout(path, dfFileList),
 
-				#html.H5("Plot Overlay"),
+	detectionPage.getDetectionLayout(),
 
-				dcc.Checklist(
-					id='plot-radio-buttons',
-					options=[
-						{'label': 'Take Off Potential (dVdt)', 'value': 'Take Off Potential (dVdt)'},
-						{'label': 'AP Amp (mV)', 'value': 'AP Amp (mV)'},
-						{'label': 'Take Off Potential (mV)', 'value': 'Take Off Potential (mV)'},
-					],
-					value=[]
-				),
+	scatterPage.getScatterPageLayout(statList),
+	#
+	#cut out entire div
+	#
 
-				html.H2(" "),
+	#uploadpage.uploadPageLayout,
 
-				html.Button(id='save-button', children='Save', className='button-primary'),
-		], style={'fontSize':12}, className='two columns'),
-
-		# one dcc.Graph for both dvdt and vm
-		html.Div([
-			dcc.Graph(style={'height': '500px'}, id='linked-graph'),
-		], className='ten columns'),
-	], className='row'),
-
-	html.Div([ # row
-	html.Div([
-
-		# X-Stat Table
-		html.Div([
-		dash_table.DataTable(
-			id='x-datatable',
-			fixed_rows={'headers': True},
-			columns=[{"name": '', "id": 'Idx'}, {"name": 'X Stat', "id": 'stat'}],
-			data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)],
-			style_table={
-				'maxWidth': '200',
-				'maxHeight': '150',
-				'overflowY': 'scroll'
-			},
-			style_cell={'textAlign': 'left'},
-			style_header={
-				#'backgroundColor': 'ltgray',
-				'fontWeight': 'bold'
-			},
-			style_data_conditional=[{
-				'if': {'row_index': 'odd'},
-				'backgroundColor': 'rgb(220, 220, 220)'
-			}],
-			row_selectable='single',
-			selected_rows=[0],
-		),
-		#], style={'display': 'inline-block', 'vertical-align': 'middle'}),
-		], className='three columns'),
-
-		# Y-Stat Table
-		html.Div([
-		dash_table.DataTable(
-			id='y-datatable',
-			fixed_rows={'headers': True},
-			columns=[{"name": '', "id": 'Idx'}, {"name": 'Y Stat', "id": 'stat'}],
-			data=[{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)],
-			style_table={
-				'maxWidth': '200',
-				'maxHeight': '150',
-				'overflowY': 'scroll'
-			},
-			style_cell={'textAlign': 'left'},
-			style_header={
-				#'backgroundColor': 'ltgray',
-				'fontWeight': 'bold'
-			},
-			style_data_conditional=[{
-				'if': {'row_index': 'odd'},
-				'backgroundColor': 'rgb(220, 220, 220)'
-			}],
-			row_selectable='single',
-			selected_rows=[1],
-		),
-		#], style={'display': 'inline-block', 'vertical-align': 'middle'}),
-		], className='three columns'),
-
-	#], className='four columns'),
-	]),
-
-	html.Div([
-		dcc.Graph(id='life-exp-vs-gdp')
-	], className='six columns'),
-
-	], className='row'),
 
 ]) # app.layout = html.Div([
 
@@ -274,11 +171,43 @@ def todo_myDataTable(id, xxx):
 # Callbacks
 ###
 
-@app.callback(Output('tmpdiv2', 'children'),
-	[Input('detect-button', 'n_clicks')], [State('dvdtThreshold', 'value')])
-def detectButton(n_clicks, dvdtThreshold):
+@app.callback(Output('detect-spinner', 'children'),
+	[
+	Input('detect-button', 'n_clicks'),
+	],
+	[State('dvdtThreshold', 'value')])
+def detectButton(detectButton, dvdtThreshold):
 	print('=== detectButton() dvdtThreshold:', dvdtThreshold)
-	myDetect(dvdtThreshold)
+	ctx = dash.callback_context
+	if ctx.triggered:
+		triggeredControlId = ctx.triggered[0]['prop_id'].split('.')[0]
+	else:
+		triggeredControlId = None
+	print('  triggeredControlId:', triggeredControlId)
+
+	if triggeredControlId == 'detect-button':
+		myDetect(dvdtThreshold)
+	#elif triggeredControlId == 'save-button':
+	#	print('  todo: save')
+	return 'done'
+
+@app.callback(Output('tmpdiv2', 'children'),
+	[
+	Input('save-button', 'n_clicks'),
+	])
+def saveButton(saveButton):
+	print('=== saveButton()')
+	ctx = dash.callback_context
+	if ctx.triggered:
+		triggeredControlId = ctx.triggered[0]['prop_id'].split('.')[0]
+	else:
+		triggeredControlId = None
+	print('  triggeredControlId:', triggeredControlId)
+
+	#if triggeredControlId == 'detect-button':
+	#	myDetect(dvdtThreshold)
+	if triggeredControlId == 'save-button':
+		print('  todo: save')
 
 '''
 @app.callback(
@@ -308,13 +237,30 @@ def _regenerateFig(xMin, xMax, statList=None):
 	startSeconds = time.time()
 
 	lineDict = {
-		'color': 'black',
+		'color': 'white', # for dark layout
 		'width': 0.7,
 	}
 
-	dvdtTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts],
+	#print('    type(subSetOfPnts):', type(subSetOfPnts), len(subSetOfPnts))
+	print('    type(ba.abf.sweepX)', type(ba.abf.sweepX), len(ba.abf.sweepX))
+	print('    type(ba.abf.sweepY)', type(ba.abf.sweepY), len(ba.abf.sweepY))
+	print('    type(ba.filteredDeriv)', type(ba.filteredDeriv), len(ba.filteredDeriv))
+	#print('subSetOfPntsgg:', subSetOfPnts)
+	print('    sweepY:', np.min(ba.abf.sweepY), np.max(ba.abf.sweepY))
+	print('    filteredDeriv:', np.min(ba.filteredDeriv), np.max(ba.filteredDeriv))
+
+	try:
+		dvdtTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts],
 							line=lineDict, showlegend=False)
-	vmTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.abf.sweepY[subSetOfPnts],
+		vmTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.abf.sweepY[subSetOfPnts],
+							line=lineDict, showlegend=False)
+	except (TypeError) as e:
+		print('EXCEPTION: _regenerateFig() got TypeError ... reploting WITHOUT subSetOfPnts')
+		#print('  subSetOfPnts:', type(subSetOfPnts), subSetOfPnts)
+		print('  len(ba.filteredDeriv):', len(ba.filteredDeriv))
+		dvdtTrace = go.Scattergl(x=ba.abf.sweepX, y=ba.filteredDeriv,
+							line=lineDict, showlegend=False)
+		vmTrace = go.Scattergl(x=ba.abf.sweepX, y=ba.abf.sweepY,
 							line=lineDict, showlegend=False)
 
 	# see: https://stackoverflow.com/questions/43106170/remove-the-this-is-the-format-of-your-plot-grid-in-a-plotly-subplot-in-a-jupy
@@ -331,13 +277,14 @@ def _regenerateFig(xMin, xMax, statList=None):
 				x = [spike['peakSec'] for spike in ba.spikeDict]
 				y = [spike['peakVal'] for spike in ba.spikeDict]
 
-			if stat == 'Take Off Potential (mV)':
+			elif stat == 'Take Off Potential (mV)':
 				x = [spike['thresholdSec'] for spike in ba.spikeDict]
 				y = [spike['thresholdVal'] for spike in ba.spikeDict]
-			if stat == 'Take Off Potential (dVdt)':
+			elif stat == 'Take Off Potential (dVdt)':
 				x = [spike['thresholdSec'] for spike in ba.spikeDict]
 				y = [spike['thresholdVal_dvdt'] for spike in ba.spikeDict]
-
+			else:
+				print('warning: _regenerateFig() did not understand stat:', stat)
 			'''
 			print('x:', x)
 			print('y:', y)
@@ -367,8 +314,10 @@ def _regenerateFig(xMin, xMax, statList=None):
 	fig['layout']['yaxis2'].update(title='mV')
 
 	# only use xaxis1 because the two plots (dvdt and vm) are linked with the SAME xaxis !!!
+	# 20210508 PUT THIS BACK IN
 	fig['layout']['xaxis1'].update(range= [xMin, xMax])
 	fig['layout'].update(margin= {'l': 50, 'b': 10, 't': 10, 'r': 10})
+	fig['layout'].update(template='plotly_dark')
 
 	stopSeconds = time.time()
 	print('   took', str(stopSeconds-startSeconds), 'seconds')
@@ -379,16 +328,28 @@ def _regenerateFig(xMin, xMax, statList=None):
 @app.callback(
 	Output('linked-graph', 'figure'),
 	[Input('linked-graph', 'relayoutData'),
-	Input('file-datatable', 'selected_rows'),
-	Input('plot-radio-buttons', 'value'),
+	Input('file-list-table', 'selected_rows'),
+	Input('plot-options-check-list', 'value'),
+	Input('upload-data', 'contents'),
+	State('upload-data', 'filename'),
+	State('upload-data', 'last_modified'),
 	])
-def linked_graph(relayoutData, selected_rows, values):
+
+def linked_graph(relayoutData, selected_rows, values, list_of_contents, list_of_names, list_of_dates):
 	print('=== linked_graph() relayoutData:', relayoutData, 'selected_rows:', selected_rows, 'values:', values)
+	print('    list_of_names:', list_of_names)
+	print('    list_of_dates:', list_of_dates)
 	ctx = dash.callback_context
-	print('  ctx.triggered:', ctx.triggered)
+	if ctx.triggered[0]['prop_id'] == 'upload-data.contents':
+		# contents of file upload (binary abf)
+		pass
+	else:
+		print('  ctx.triggered:', ctx.triggered)
 	triggeredControlId = None
 	if ctx.triggered:
 		triggeredControlId = ctx.triggered[0]['prop_id'].split('.')[0]
+
+	print('  triggeredControlId:', triggeredControlId)
 
 	xMin = 0
 	xMax = ba.abf.sweepX[-1]
@@ -398,69 +359,77 @@ def linked_graph(relayoutData, selected_rows, values):
 			xMax = relayoutData['xaxis.range[1]']
 			#print('xMin:', xMin, 'xMax:', xMax)
 	print('  xMin:', xMin, 'xMax:', xMax, 'values:', values)
-	if triggeredControlId=='file-datatable' and selected_rows is not None:
+	if triggeredControlId=='file-list-table' and selected_rows is not None:
 		print('  myFileSelect()', 'activeCell:', selected_rows)
 		selRow = selected_rows[0]
 		fileSelection = fileList[selRow]['File Name']
 		print('   file selection is:', fileSelection)
 		print('   XXX LOADING FILE THIS IS WHERE I NEED REDIS !!!!!!!!!!!!!!!!!!!!!!!!!')
 		loadFile(fileSelection)
-	'''
-	dvdtTrace = go.Scatter(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts], showlegend=False)
-	vmTrace = go.Scatter(x=ba.abf.sweepX[subSetOfPnts], y=ba.abf.sweepY[subSetOfPnts], showlegend=False)
-
-	# see: https://stackoverflow.com/questions/43106170/remove-the-this-is-the-format-of-your-plot-grid-in-a-plotly-subplot-in-a-jupy
-	fig = tools.make_subplots(rows=2, cols=1, shared_xaxes=True, print_grid=False)
-	fig.append_trace(dvdtTrace, 1, 1)
-	fig.append_trace(vmTrace, 2, 1)
-
-	# only use xaxis1 because the two plots (dvdt and vm) are linked with the SAME xaxis !!!
-	fig['layout']['xaxis1'].update(title='Seconds')
-
-	fig['layout']['yaxis1'].update(title='dV/dt')
-	fig['layout']['yaxis2'].update(title='mV')
-
-	# only use xaxis1 because the two plots (dvdt and vm) are linked with the SAME xaxis !!!
-	fig['layout']['xaxis1'].update(range= [xMin, xMax])
-	fig['layout'].update(margin= {'l': 100, 'b': 40, 't': 10, 'r': 10})
-	'''
+	elif triggeredControlId=='upload-data':
+		print('  user uploaded an abf:', list_of_names)
+		# todo: fix this syntax, really weird !!!
+		try:
+			#[uploadPage.parse_contents_abf(c, n, d) for c, n, d in zip(list_of_contents, list_of_names, list_of_dates)]
+			c = list_of_contents[0]
+			n = list_of_names[0]
+			d = list_of_dates[0]
+			print('  n:', n)
+			print('  d:', d)
+			parse_contents_abf(c, n, d)
+		except:
+			print('*** exception in parse_contents_abf():')
+			print(sys.exc_info())
 
 	fig = _regenerateFig(xMin, xMax, values)
 	return fig
 
-#
-# selecting a file
-'''
-@app.callback(
-	#Output('tmpdiv', 'children'),
-	Output('linked-graph', 'figure'),
-	[
-	Input('file-datatable', 'selected_rows'),
-	State('plot-radio-buttons', 'value'),
+def parse_contents_abf(contents, filename, date):
+	"""
+	parses binary abf file
+	"""
+	print('app2.parse_contents_abf() filename:', filename)
+
+	content_type, content_string = contents.split(',')
+
+	print('  content_type:', content_type)
+	decoded = base64.b64decode(content_string)
+	#print('  type(decoded)', type(decoded))
+	fileLikeObject = io.BytesIO(decoded)
+	#print('  type(fileLikeObject)', type(fileLikeObject))
+
+	#print(len(fileLikeObject.getvalue()))
+	#major = pyabf.abfHeader.abfFileFormat(fileLikeObject)
+	#print('  pyabf major:', major)
+
+	print('  *** instantiating sanpy.bAnalysis with byte stream')
+	try:
+		global ba
+		ba = sanpy.bAnalysis(byteStream=fileLikeObject)
+
+		#print(ba.abf.headerText)
+
+		# todo: get rid of this weirdness
+		start = 0
+		stop = len(ba.abf.sweepX) - 1
+		print('    stop:', stop)
+		print('    plotEveryPoint:', plotEveryPoint)
+		global subSetOfPnts
+		subSetOfPnts = range(start, stop, plotEveryPoint)
+		print('  subSetOfPnts:', subSetOfPnts)
+	except:
+		print('*** exception in app2.parse_contents_abf():')
+		print(sys.exc_info())
+
+	return html.Div([
+		html.H5(f'Loaded file: {filename}'),
 	])
-def myFileSelect(activeCell, values):
-	#print('myTableSelect()')
-	if activeCell is not None:
-		print('myFileSelect()', 'activeCell:', activeCell)
-		selRow = activeCell[0]
-		fileSelection = fileList[selRow]['File Name']
-		print('   file selection is:', fileSelection)
-		print('   XXX LOADING FILE THIS IS WHERE I NEED REDIS !!!!!!!!!!!!!!!!!!!!!!!!!')
-		loadFile(fileSelection)
 
-	xMin = 0
-	xMax = ba.abf.sweepX[-1]
-	fig = _regenerateFig(xMin, xMax, values)
-	return fig
-'''
-#
-# selecting a stat in table
-#['active_cell', 'columns', 'locale_format', 'content_style', 'css', 'data', 'data_previous', 'data_timestamp', 'editable', 'end_cell', 'id', 'is_focused', 'merge_duplicate_headers', 'n_fixed_columns', 'n_fixed_rows', 'row_deletable', 'row_selectable', 'selected_cells', 'selected_rows', 'start_cell', 'style_as_list_view', 'pagination_mode', 'pagination_settings', 'navigation', 'column_conditional_dropdowns', 'column_static_dropdown', 'column_static_tooltip', 'column_conditional_tooltips', 'tooltips', 'tooltip_delay', 'tooltip_duration', 'filtering', 'filtering_settings', 'filtering_type', 'filtering_types', 'sorting', 'sorting_type', 'sorting_settings', 'sorting_treat_empty_string_as_none', 'style_table', 'style_cell', 'style_data', 'style_filter', 'style_header', 'style_cell_conditional', 'style_data_conditional', 'style_filter_conditional', 'style_header_conditional', 'virtualization', 'derived_viewport_data', 'derived_viewport_indices', 'derived_viewport_selected_rows', 'derived_virtual_data', 'derived_virtual_indices', 'derived_virtual_selected_rows', 'dropdown_properties']
 @app.callback(
 	Output('life-exp-vs-gdp', 'figure'),
 	[
-	Input('y-datatable', 'selected_rows'),
-	Input('x-datatable', 'selected_rows'),
+	Input('y-stat-table', 'selected_rows'),
+	Input('x-stat-table', 'selected_rows'),
 	])
 def myTableSelect(y_activeCell, x_activeCell):
 	"""
@@ -497,7 +466,7 @@ def myTableSelect(y_activeCell, x_activeCell):
 			marker={
 				'size': 10,
 				#'color': 'k',
-				'opacity': 0.5,
+				'opacity': 0.9,
 				'line': {'width': 0.5, 'color': 'white'}
 			}
 		)],
@@ -511,9 +480,11 @@ def myTableSelect(y_activeCell, x_activeCell):
 				'type': 'linear' if yaxis_type == 'Linear' else 'log'
 			},
 			margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
+			template='plotly_dark',
 			hovermode='closest'
 		)
 	}
 
 if __name__ == '__main__':
-	app.run_server(debug=True, host='0.0.0.0', port=8000)
+	app.run_server(debug=True)
+	#app.run_server(debug=True, host='0.0.0.0', port=8000)
