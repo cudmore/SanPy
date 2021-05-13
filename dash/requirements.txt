@@ -19,6 +19,6 @@ dash-daq
 # pip install git+https://github.com/cudmore/pyABF#egg=pyabf\&subdirectory=src
 #pip install "git+https://github.com/cudmore/pyABF#egg=pyabf&subdirectory=src"
 
-git+git://github.com/cudmore/SanPy#egg=sanpy
+git+https://github.com/cudmore/SanPy
 
-git+git://github.com/cudmore/pyABF#egg=pyabf&subdirectory=src
+git+git://github.com/cudmore/pyABF.git#egg=pyabf&subdirectory=src

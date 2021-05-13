@@ -11,7 +11,8 @@ setup(
     author_email='robert.cudmore@gmail.com',
     license='GNU GPLv3',
 	#packages=find_packages(include=['sanpy', 'sanpy.*']),
-    install_requires=[
+    packages=['sanpy'],
+	install_requires=[
         'numpy',
         'scipy',
         'pandas',
@@ -31,7 +32,7 @@ setup(
 	extras_require={
         'gui': [
 			'pyqtgraph',
-			'matplotlib',
+			#'matplotlib',
 			'PyQt5==5.13.0',
 			'qdarkstyle',
 		],
