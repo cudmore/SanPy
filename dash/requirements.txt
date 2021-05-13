@@ -10,10 +10,12 @@ dash-daq
 #-e git+https://github.com/cudmore/SanPy#egg=sanpy
 
 # install from our local copy, TODO: remove -e when installing on Heroku?
-pip install -e ../.
+#pip install -e ../.
 
 # install a fork of pyabf that opens binary streams from a webpagee
 # this works, note esc character '\' before &
 # see: https://stackoverflow.com/questions/13566200/how-can-i-install-from-a-git-subdirectory-with-pip
 # pip install git+https://github.com/cudmore/pyABF#egg=pyabf\&subdirectory=src
 pip install "git+https://github.com/cudmore/pyABF#egg=pyabf&subdirectory=src"
+
+pip install "git+https://github.com/cudmore/SanPy#egg=sanpy"
