@@ -36,7 +36,7 @@ app.css.append_css({'external_url': 'assets/my.css'})
 from app import app
 from app import server # needed for heroku
 
-myPath = '../data'
+myPath = 'data'
 
 # detect spikes
 myThreshold = 10
@@ -113,7 +113,7 @@ def getFileList(path):
 		retFileList.append(fileDict)
 	return retFileList
 
-path = '../data'
+path = 'data'
 fileList = getFileList(path)
 dfFileList = myDashUtils.getFileList(path)
 
