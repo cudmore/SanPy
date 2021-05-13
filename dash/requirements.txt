@@ -1,5 +1,6 @@
 # requirements for dash
 
+gunicorn # required to run on Heroku
 wheel
 dash
 dash-bootstrap-components

@@ -46,8 +46,9 @@ plotEveryPoint = 10
 subSetOfPnts = None
 
 def loadFile(name):
+	print('app2.loadFile() name:', name)
 	filePath = os.path.join(myPath, name)
-	print('app2.loadFile() filePath:', filePath)
+	print('  filePath:', filePath)
 	global ba
 	ba = sanpy.bAnalysis(filePath)
 
