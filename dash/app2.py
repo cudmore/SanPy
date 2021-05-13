@@ -51,13 +51,13 @@ def loadFile(name):
 	global ba
 	ba = sanpy.bAnalysis(filePath)
 
-	if name == '19221014.abf':
-		print(ba.abf.headerText)
+	#if name == '19221014.abf':
+	#	print(ba.abf.headerText)
 
 	# GET RID OF THIS, DO NOT DO ANALYSIS ON FILE LOAD !!!!!!!!!!!!!!!!!!!
 	dDict = ba.getDefaultDetection()
 	dDict['dvdtThreshold'] = myThreshold # myThreshold IS A GLOBAL !!!!!!!!!!!!!!!
-	ba.spikeDetect(dDict)
+	ba.spikeDetect(dDict) # throwing: RankWarning: Polyfit may be poorly conditioned
 	start = 0
 	stop = len(ba.abf.sweepX) - 1
 	global subSetOfPnts
@@ -69,9 +69,10 @@ def myDetect(dvdtThreshold):
 	dDict['dvdtThreshold'] = dvdtThreshold
 	ba.spikeDetect(dDict)
 
+'''
 myFile = '19114001.abf' # SMALL @ 60 sec
-#myFile = '19221021.abf' # BIG @ 300 sec
 loadFile(myFile)
+'''
 
 #
 # get a list of abf files
@@ -114,6 +115,11 @@ def getFileList(path):
 path = '../data'
 fileList = getFileList(path)
 dfFileList = myDashUtils.getFileList(path)
+
+# load first file in list
+loadFirstFile = dfFileList['File Name'][0]
+print('loadFirstFile:', loadFirstFile)
+loadFile(loadFirstFile)
 
 myOptionsList = list(statDict.keys())
 
@@ -189,7 +195,7 @@ def detectButton(detectButton, dvdtThreshold):
 		myDetect(dvdtThreshold)
 	#elif triggeredControlId == 'save-button':
 	#	print('  todo: save')
-	return 'done'
+	return html.Div(" ")
 
 @app.callback(Output('tmpdiv2', 'children'),
 	[
@@ -241,13 +247,15 @@ def _regenerateFig(xMin, xMax, statList=None):
 		'width': 0.7,
 	}
 
-	#print('    type(subSetOfPnts):', type(subSetOfPnts), len(subSetOfPnts))
-	print('    type(ba.abf.sweepX)', type(ba.abf.sweepX), len(ba.abf.sweepX))
-	print('    type(ba.abf.sweepY)', type(ba.abf.sweepY), len(ba.abf.sweepY))
-	print('    type(ba.filteredDeriv)', type(ba.filteredDeriv), len(ba.filteredDeriv))
+	#print('	type(subSetOfPnts):', type(subSetOfPnts), len(subSetOfPnts))
+	'''
+	print('	type(ba.abf.sweepX)', type(ba.abf.sweepX), len(ba.abf.sweepX))
+	print('	type(ba.abf.sweepY)', type(ba.abf.sweepY), len(ba.abf.sweepY))
+	print('	type(ba.filteredDeriv)', type(ba.filteredDeriv), len(ba.filteredDeriv))
 	#print('subSetOfPntsgg:', subSetOfPnts)
-	print('    sweepY:', np.min(ba.abf.sweepY), np.max(ba.abf.sweepY))
-	print('    filteredDeriv:', np.min(ba.filteredDeriv), np.max(ba.filteredDeriv))
+	print('	sweepY:', np.min(ba.abf.sweepY), np.max(ba.abf.sweepY))
+	print('	filteredDeriv:', np.min(ba.filteredDeriv), np.max(ba.filteredDeriv))
+	'''
 
 	try:
 		dvdtTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts],
@@ -323,28 +331,58 @@ def _regenerateFig(xMin, xMax, statList=None):
 	print('   took', str(stopSeconds-startSeconds), 'seconds')
 	return fig
 
+# spike error table
+'''
+@app.callback(
+	[Output("spike-error-table", "data"), Output('spike-error-table', 'columns')],
+	[Input("btn", "n_clicks")]
+)
+def updateTable(n_clicks):
+	# 	global ba
+	if n_clicks is None:
+		return df.values[0:100], columns
+
+	return df.values[100:110], columns[0:3]
+'''
+
 #
 # combined dvdt and raw data
 @app.callback(
+	[
 	Output('linked-graph', 'figure'),
-	[Input('linked-graph', 'relayoutData'),
+	Output("spike-error-table", "data"), Output('spike-error-table', 'columns')
+	],
+	[
+	Input('linked-graph', 'relayoutData'),
 	Input('file-list-table', 'selected_rows'),
 	Input('plot-options-check-list', 'value'),
+	Input('spike-error-table', 'selected_rows'),
 	Input('upload-data', 'contents'),
+	State('spike-error-table', 'derived_virtual_data'),
 	State('upload-data', 'filename'),
 	State('upload-data', 'last_modified'),
 	])
+def linked_graph(relayoutData, selected_rows, values, errorRowSelection, list_of_contents, errorRowData, list_of_names, list_of_dates):
+	print('=== linked_graph()')
+	print('  relayoutData:', relayoutData)
+	print('  selected_rows:', selected_rows)
+	print('  values:', values)
+	print('  errorRowSelection:', errorRowSelection)
+	#print('  errorRowData:', errorRowData)
+	#print('	 list_of_contents:', list_of_contents)
+	print('  list_of_names:', list_of_names)
+	print('  list_of_dates:', list_of_dates)
+	if relayoutData is None:
+		return dash.no_update, dash.no_update, dash.no_update
 
-def linked_graph(relayoutData, selected_rows, values, list_of_contents, list_of_names, list_of_dates):
-	print('=== linked_graph() relayoutData:', relayoutData, 'selected_rows:', selected_rows, 'values:', values)
-	print('    list_of_names:', list_of_names)
-	print('    list_of_dates:', list_of_dates)
 	ctx = dash.callback_context
+	'''
 	if ctx.triggered[0]['prop_id'] == 'upload-data.contents':
 		# contents of file upload (binary abf)
 		pass
 	else:
 		print('  ctx.triggered:', ctx.triggered)
+	'''
 	triggeredControlId = None
 	if ctx.triggered:
 		triggeredControlId = ctx.triggered[0]['prop_id'].split('.')[0]
@@ -381,8 +419,34 @@ def linked_graph(relayoutData, selected_rows, values, list_of_contents, list_of_
 			print('*** exception in parse_contents_abf():')
 			print(sys.exc_info())
 
-	fig = _regenerateFig(xMin, xMax, values)
-	return fig
+	elif triggeredControlId == 'spike-error-table' and errorRowSelection is not None:
+		errorRowSelection = errorRowSelection[0]
+		print('TODO: select error row:', errorRowSelection)
+		seconds = errorRowData[errorRowSelection]['Seconds']
+		xMin = seconds - 1
+		xMax = seconds + 1
+
+	if relayoutData is None:
+		fig = dash.no_update
+	else:
+		fig = _regenerateFig(xMin, xMax, values)
+
+	# TODO: if we are not switching files but just updating plots overlay, don't do this
+	# spike errors table
+	dataError = dash.no_update
+	columnsError = dash.no_update
+	if triggeredControlId in ['file-list-table', 'upload-data']:
+		print('  grabbing errors')
+		dfError = ba.errorReport()
+		if dfError is not None:
+			dataError =  dfError.to_dict('records')
+			columnList = dfError.columns.to_list()
+			columnsError = [{'id':x, 'name':x} for x in columnList]
+	#print('dataError:', dataError)
+	#print('columnsError:', columnsError)
+
+	#
+	return fig, dataError, columnsError
 
 def parse_contents_abf(contents, filename, date):
 	"""
@@ -412,8 +476,8 @@ def parse_contents_abf(contents, filename, date):
 		# todo: get rid of this weirdness
 		start = 0
 		stop = len(ba.abf.sweepX) - 1
-		print('    stop:', stop)
-		print('    plotEveryPoint:', plotEveryPoint)
+		print('	stop:', stop)
+		print('	plotEveryPoint:', plotEveryPoint)
 		global subSetOfPnts
 		subSetOfPnts = range(start, stop, plotEveryPoint)
 		print('  subSetOfPnts:', subSetOfPnts)

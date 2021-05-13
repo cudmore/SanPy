@@ -9,6 +9,8 @@ import dash_bootstrap_components as dbc
 
 import sanpy
 
+boxBorder = "1px gray solid"
+
 def getFileList(path):
 	retFileList = []
 	useExtension = '.abf'
@@ -66,11 +68,21 @@ def makeTable(id, df, height=200, row_selectable='single', defaultRow=0):
 	"""
 	defaultRow: row index selected on __init__
 	"""
+	if df is None:
+		statDict = {'tmp':'empty'}
+		df = pd.DataFrame(columns=['idx', 'error'])
+		df['idx'] = [i for i in range(len(statDict.keys()))]
+		df['error'] = [x for x in statDict.keys()]
+
+	#
+	columns=[{"name": i, "id": i} for i in df.columns]
+	data=df.to_dict('records')
+
 	ret = dash_table.DataTable(
 		id=id,
 		persistence = True,
-		columns=[{"name": i, "id": i} for i in df.columns],
-		data=df.to_dict('records'),
+		columns=columns,
+		data=data,
 		row_selectable=row_selectable,
 		fixed_rows={'headers': True}, # on scroll, keep headers at top
 		selected_rows = [defaultRow], # default selected row
@@ -91,9 +103,9 @@ def makeTable(id, df, height=200, row_selectable='single', defaultRow=0):
 			'backgroundColor': 'rgb(50, 50, 50)' # light theme
 			}
 		],
+		# CSS styles to be applied to the outer table container
 		style_table={
 			'height': height, # hard coding height
-			#'overflowY': 'scroll',
 			'overflowX': 'auto',
 			'overflowY': 'auto',
 			#'width': width

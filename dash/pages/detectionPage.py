@@ -22,20 +22,43 @@ def getDetectionLayout():
 		[
 		dbc.Row(
 			[
-			dbc.Spinner(children=[html.Div(id='detect-spinner')]),
 			dbc.Col(html.Button(id='detect-button', children='Detect Spikes (dV/dt)', className='btn-primary')),
-			# [dbc.Spinner(size="sm"), " Loading..."]
-			#dbc.Col(dbc.Button(id='detect-button0', children='Detect Spikes (dV/dt)', className='btn-primary btn-small')),
-			#
-			#dbc.Col(dbc.Button([dbc.Spinner(size="sm"), 'Detect Spikes (dV/dt)'], id='detect-button', color='primary', className='btn-primary btn-sm')),
-			#dbc.Col(dbc.Button(id='detect-button', children='Detect Spikes (dV/dt)', color='primary')),
-			dbc.Col(dcc.Input(id='dvdtThreshold', type='number', value=50, style={'width': 40})),
-			#dbc.Col(dcc.Input(id='dvdtThreshold', type='number', value=50)),
+			dbc.Spinner(children=[html.Div(id='detect-spinner')]),
 			]
 		),
 
-		dbc.Row(html.Label('Plot Options')),
+		dbc.Row(
+			[
+			dbc.Col(
+				[
+				dcc.Input(id='dvdtThreshold', type='number', value=50, style={'width': 60}),
+				html.Label('dV/dt'),
+				]),
+			]
+		),
 
+		dbc.Row(
+			[
+			dbc.Col(
+				[
+				dcc.Input(id='mvThreshold', type='number', value=-20, style={'width': 60}),
+				html.Label('Min AP Amp (mV)'),
+				]),
+			]
+		),
+
+		dbc.Row(
+			[
+			#dcc.Input(id='dvdtThreshold', type='number', value=50, style={'width': 60}),
+			dbc.Col(
+				[
+				dcc.Input(id='refractory-ms', type='number', value='', style={'width': 60}),
+				html.Label('Minimum ISI (ms)'),
+				]),
+			],
+		),
+
+		dbc.Row(dbc.Col(html.Label('Plot Options'))),
 		dbc.Row(
 			dbc.Col(myDashUtils.makeCheckList('plot-options-check-list', plotParamList))
 			),
@@ -43,11 +66,19 @@ def getDetectionLayout():
 		dbc.Row(
 			dbc.Col(html.Button(id='save-button', children='Save Analysis', className='btn-primary')),
 			),
+
+		dbc.Row(dbc.Col(html.Label('Spike Errors'))),
+		dbc.Row(
+			dbc.Col(
+				#html.Label('Spike Errors'),
+				myDashUtils.makeTable('spike-error-table', None, height=200)
+			)
+			), # row
 		]
 	) # div
 
 	#
-	boxBorder = "1px gray solid"
+	#boxBorder = "1px gray solid"
 	oneRow = html.Div( # outer div
 		[
 			dbc.Row(
@@ -58,7 +89,7 @@ def getDetectionLayout():
 							detectionRow,
 						]
 						) # div
-						,width=3, style={"border":boxBorder}
+						,width=3, style={"border":myDashUtils.boxBorder}
 					),
 
 				# plot
@@ -68,7 +99,7 @@ def getDetectionLayout():
 						dcc.Graph(id='linked-graph'),
 					]
 					) # div
-					,width=9, style={"border":boxBorder}
+					,width=9, style={"border":myDashUtils.boxBorder}
 				),
 				]
 			), # row

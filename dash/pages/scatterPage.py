@@ -10,7 +10,7 @@ import dash_bootstrap_components as dbc
 import myDashUtils
 
 def getScatterPageLayout(statDict):
-	print('getScatterPageLayout()')
+	print('scatterPage.getScatterPageLayout()')
 	#print('  statDict:', statDict)
 
 	boxBorder = 2

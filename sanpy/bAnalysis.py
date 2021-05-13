@@ -326,7 +326,7 @@ class bAnalysis:
 			medianFilter = int(medianFilter)
 			self.filteredVm = scipy.signal.medfilt(self.abf.sweepY, medianFilter)
 		elif SavitzkyGolay_pnts > 0:
-			print('  bAnalysis.getDerivative() vm SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
+			#print('  bAnalysis.getDerivative() vm SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
 			self.filteredVm = scipy.signal.savgol_filter(self.abf.sweepY, SavitzkyGolay_pnts, SavitzkyGolay_poly, mode='nearest')
 		else:
 			self.filteredVm = self.abf.sweepY
@@ -340,7 +340,7 @@ class bAnalysis:
 			medianFilter = int(medianFilter)
 			self.filteredDeriv = scipy.signal.medfilt(self.filteredDeriv, medianFilter)
 		elif SavitzkyGolay_pnts > 0:
-			print('  bAnalysis.getDerivative() dvdt SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
+			#print('  bAnalysis.getDerivative() dvdt SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
 			self.filteredDeriv = scipy.signal.savgol_filter(self.filteredDeriv, SavitzkyGolay_pnts, SavitzkyGolay_poly, mode='nearest')
 		else:
 			self.filteredDeriv = self.filteredDeriv
@@ -537,9 +537,13 @@ class bAnalysis:
 						medianFilter=0, verbose=True): #, startSeconds=None, stopSeconds=None):
 	'''
 	def _getErrorDict(self, spikeNumber, pnt, type, detailStr):
+		"""
+		get error dict for one spike
+		"""
 		#print('_getErrorDict() pnt:', pnt, 'self.abf.dataRate:', self.abf.dataRate, 'self.abf.dataPointsPerMs:', self.abf.dataPointsPerMs)
 		# self.abf.dataRate
 		sec = pnt / self.abf.dataPointsPerMs / 1000
+		sec = round(sec,4)
 		eDict = {} #OrderedDict()
 		eDict['Spike'] = spikeNumber
 		eDict['Seconds'] = sec
@@ -1543,6 +1547,11 @@ class bAnalysis:
 
 		dictList = []
 
+		if len(self.spikeDict) == 0:
+			dictList = []
+			dfError = pd.DataFrame(dictList)
+			return
+
 		numError = 0
 		errorList = []
 		for spikeIdx, spike in enumerate(self.spikeDict):
@@ -1552,16 +1561,18 @@ class bAnalysis:
 					continue
 				dictList.append(error)
 		#
+		'''
 		print('bAnalysis.errorReport() generated dictList:')
 		for error in dictList:
 			print(error)
+		'''
 
 		if len(dictList) == 0:
 			dfError = None
 		else:
 			dfError = pd.DataFrame(dictList)
 
-		print('bAnalysis.errorReport() returning dfError:', dfError)
+		#print('bAnalysis.errorReport() returning dfError:', dfError)
 		return dfError
 
 	def report(self, theMin, theMax):
