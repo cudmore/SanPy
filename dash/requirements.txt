@@ -17,6 +17,7 @@ dash-daq
 # see: https://stackoverflow.com/questions/13566200/how-can-i-install-from-a-git-subdirectory-with-pip
 # pip install git+https://github.com/cudmore/pyABF#egg=pyabf\&subdirectory=src
 #pip install "git+https://github.com/cudmore/pyABF#egg=pyabf&subdirectory=src"
-"git+https://github.com/cudmore/pyABF#egg=pyabf&subdirectory=src"
 
-git+https://github.com/cudmore/SanPy#egg=sanpy
+git+git://github.com/cudmore/SanPy#egg=sanpy
+
+git+git://github.com/cudmore/pyABF#egg=pyabf&subdirectory=src
