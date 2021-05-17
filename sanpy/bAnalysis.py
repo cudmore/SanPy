@@ -181,6 +181,15 @@ class bAnalysis:
 			self.loadError = True
 			return
 
+		# TODO: will not work for .tif
+		# determine if current-clamp or voltage clamp
+		if self._abf.sweepUnitsY in ['pA']:
+			self._recordingMode = 'V-Clamp'
+			self._yUnits = self._abf.sweepUnitsY
+		elif self._abf.sweepUnitsY in ['mV']:
+			self._recordingMode = 'I-Clamp'
+			self._yUnits = self._abf.sweepUnitsY
+
 		self.currentSweep = None
 		self.setSweep(0)
 
@@ -200,7 +209,13 @@ class bAnalysis:
 		self.numErrors = 0
 
 		# get default derivative
-		self.getDerivative()
+		if self._recordingMode == 'I-Clamp':
+			self.getDerivative()
+		elif self._recordingMode == 'V-Clamp':
+			self.getBaselineSubtract()
+
+	def get_yUnits(self):
+		return self._yUnits
 
 	def loadFromDict(theDict):
 		pass
@@ -307,6 +322,43 @@ class bAnalysis:
 	############################################################
 	# spike detection
 	############################################################
+	def getFilteredRecording(self, dDict=None):
+		"""
+		for both V-Clamp and I-Clamp
+		"""
+		if dDict is None:
+			dDict = self.getDefaultDetection()
+
+		medianFilter = dDict['medianFilter']
+		SavitzkyGolay_pnts = dDict['SavitzkyGolay_pnts']
+		SavitzkyGolay_poly = dDict['SavitzkyGolay_poly']
+
+		#print('getDerivative() medianFilter:', medianFilter)
+		if medianFilter > 0:
+			if not medianFilter % 2:
+				medianFilter += 1
+				print('*** Warning: bAnalysis.getDerivative() Please use an odd value for the median filter, bAnalysis.getDerivative() set medianFilter =', medianFilter)
+			medianFilter = int(medianFilter)
+			self.filteredVm = scipy.signal.medfilt(self.abf.sweepY, medianFilter)
+		elif SavitzkyGolay_pnts > 0:
+			#print('  bAnalysis.getDerivative() vm SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
+			self.filteredVm = scipy.signal.savgol_filter(self.abf.sweepY, SavitzkyGolay_pnts, SavitzkyGolay_poly, mode='nearest')
+		else:
+			self.filteredVm = self.abf.sweepY
+
+	def getBaselineSubtract(self, dDict=None):
+		if dDict is None:
+			dDict = self.getDefaultDetection()
+
+		dDict['medianFilter'] = 5
+
+		self.getFilteredRecording(dDict)
+
+		# baseline subtract filtered recording
+		theMean = np.nanmean(self.filteredVm)
+		self.filteredDeriv = self.filteredVm.copy()
+		self.filteredDeriv -= theMean
+
 	def getDerivative(self, dDict=None):
 		"""
 		medianFilter: pnts, must be int and odd
@@ -888,7 +940,11 @@ class bAnalysis:
 		if verbose:
 			sanpy.bUtil.printDict(dDict)
 
-		self.getDerivative(dDict)
+		#self.getDerivative(dDict)
+		if self._recordingMode == 'I-Clamp':
+			self.getDerivative(dDict)
+		elif self._recordingMode == 'V-Clamp':
+			self.getBaselineSubtract(dDict)
 
 		self.spikeDict = [] # we are filling this in, one dict for each spike
 
@@ -977,15 +1033,14 @@ class bAnalysis:
 
 			spikeDict['spikeNumber'] = i
 
-			spikeDict['numError'] = 0
+			#spikeDict['numError'] = 0
 			spikeDict['errors'] = []
 			# append existing spikeErrorList from spikeDetect0() or spikeDetect00()
 			tmpError = spikeErrorList[i]
 			if tmpError is not None and tmpError != np.nan:
-				spikeDict['numError'] += 1
+				#spikeDict['numError'] += 1
 				spikeDict['errors'].append(tmpError) # tmpError is from:
 							#eDict = self._getErrorDict(i, spikeTime, errType, errStr) # spikeTime is in pnts
-
 
 			#spikeDict['startSeconds'] = startSeconds
 			#spikeDict['stopSeconds'] = stopSeconds
@@ -1078,6 +1133,10 @@ class bAnalysis:
 				# pre spike min
 				#preRange = vm[self.spikeTimes[i-1]:self.spikeTimes[i]]
 				startPnt = self.spikeTimes[i]-mdp_pnts
+				print('  xxx preRange:', i, startPnt, self.spikeTimes[i])
+				if startPnt<0:
+					# for V-Clammp
+					startPnt = 0
 				preRange = vm[startPnt:self.spikeTimes[i]] # EXCEPTION
 				preMinPnt = np.argmin(preRange)
 				#preMinPnt += self.spikeTimes[i-1]
@@ -1096,8 +1155,10 @@ class bAnalysis:
 					self.spikeDict[i]['preMinVal'] = preMinVal
 
 				except (IndexError) as e:
-					self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
+					#self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
 					# sometimes preRange is empty, don't try and put min/max in error
+					#print('heroku preMinValue error !!!!!!!!!!!!!!!')
+					#print('  ', self.spikeDict[i])
 					errorStr = 'searching for preMinVal:' + str(preMinVal) #+ ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
 					eDict = self._getErrorDict(i, self.spikeTimes[i], 'preMin', errorStr) # spikeTime is in pnts
 					self.spikeDict[i]['errors'].append(eDict)
@@ -1131,7 +1192,7 @@ class bAnalysis:
 				except TypeError:
 					#catching exception: raise TypeError("expected non-empty vector for x")
 					self.spikeDict[i]['earlyDiastolicDurationRate'] = defaultVal
-					self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
+					#self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
 					errorStr = 'earlyDiastolicDurationRate fit'
 					eDict = self._getErrorDict(i, self.spikeTimes[i], 'fitEDD', errorStr) # spikeTime is in pnts
 					self.spikeDict[i]['errors'].append(eDict)
@@ -1153,7 +1214,7 @@ class bAnalysis:
 					self.spikeDict[i]['preSpike_dvdt_max_val'] = vm[preSpike_dvdt_max_pnt] # in units mV
 					self.spikeDict[i]['preSpike_dvdt_max_val2'] = dvdt[preSpike_dvdt_max_pnt] # in units mV
 				except (ValueError) as e:
-					self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
+					#self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
 					# sometimes preRange is empty, don't try and put min/max in error
 					#print('preRange:', preRange)
 					errorStr = 'searching for preSpike_dvdt_max_pnt:'
@@ -1260,7 +1321,7 @@ class bAnalysis:
 						self.spikeDict[i]['cycleLength_ms'] = self.pnt2Ms_(cycleLength_pnts)
 					else:
 						# error
-						self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
+						#self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
 						errorStr = 'previous spike preMinPnt is ' + str(prevPreMinPnt) + ' this preMinPnt:' + str(thisPreMinPnt)
 						eDict = self._getErrorDict(i, self.spikeTimes[i], 'cycleLength', errorStr) # spikeTime is in pnts
 						self.spikeDict[i]['errors'].append(eDict)
@@ -1378,11 +1439,11 @@ class bAnalysis:
 				except (IndexError) as e:
 					##
 					##
-					#print('  ERROR: bAnalysis.spikeDetect() spike', i, 'half height', halfHeight)
+					print('  EXCEPTION: bAnalysis.spikeDetect() spike', i, 'half height', halfHeight)
 					##
 					##
 
-					self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
+					#self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
 					#errorStr = 'spike ' + str(i) + ' half width ' + str(tmpErrorType) + ' ' + str(halfHeight) + ' halfWidthWindow_ms:' + str(dDict['halfWidthWindow_ms'])
 					errorStr = (f'half width {halfHeight} error in {tmpErrorType} '
 							f"with halfWidthWindow_ms:{dDict['halfWidthWindow_ms']} "
@@ -1394,8 +1455,11 @@ class bAnalysis:
 					self.numErrors += 1
 
 				# abb 20210125
+				# wtf is hapenning on Heroku????
+				#print('**** heroku debug i:', i, 'j:', j, 'len:', len(self.spikeDict), 'halfHeight:', halfHeight)
+				#print('  self.spikeDict[i]', self.spikeDict[i]['widths_'+str(halfHeight)])
+
 				self.spikeDict[i]['widths_'+str(halfHeight)] = widthMs
-				#self.spikeDict[i]['widths'].append(widthDict)
 				self.spikeDict[i]['widths'][j] = widthDict
 
 		#
@@ -1547,10 +1611,13 @@ class bAnalysis:
 
 		dictList = []
 
+		'''
 		if len(self.spikeDict) == 0:
+			fakeErorDict = self._getErrorDict(1, 1, 'fake', 'fake'')
 			dictList = []
-			dfError = pd.DataFrame(dictList)
-			return
+			dfError = pd.DataFrame(columns=fakeErorDict)
+			return dfError
+		'''
 
 		numError = 0
 		errorList = []
@@ -1568,11 +1635,12 @@ class bAnalysis:
 		'''
 
 		if len(dictList) == 0:
-			dfError = None
+			fakeErrorDict = self._getErrorDict(1, 1, 'fake', 'fake')
+			dfError = pd.DataFrame(columns=fakeErrorDict.keys())
 		else:
 			dfError = pd.DataFrame(dictList)
 
-		#print('bAnalysis.errorReport() returning dfError:', dfError)
+		print('bAnalysis.errorReport() returning len(dfError):', len(dfError))
 		return dfError
 
 	def report(self, theMin, theMax):
@@ -1673,7 +1741,7 @@ class bAnalysis:
 				spikeDict[keyName] = widthDict['widthMs']
 
 			# errors
-			spikeDict['numError'] = spike['numError']
+			#spikeDict['numError'] = spike['numError']
 			spikeDict['errors'] = spike['errors']
 
 

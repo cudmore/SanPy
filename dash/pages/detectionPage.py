@@ -9,6 +9,7 @@ import myDashUtils
 def getDetectionLayout():
 
 	plotParamList = [
+		'Derivative',
 		'Take Off Potential (dVdt)',
 		'Take Off Potential (mV)',
 		'AP Amp (mV)',

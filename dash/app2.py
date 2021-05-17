@@ -45,20 +45,34 @@ plotEveryPoint = 10
 ##
 subSetOfPnts = None
 
-def loadFile(name):
-	print('app2.loadFile() name:', name)
-	filePath = os.path.join(myPath, name)
-	print('  filePath:', filePath)
+global baList
+baList = []
+
+def loadFile(path, name, rowIdx):
+	print('app2.loadFile() name:', name, 'rowIdx:', rowIdx)
+
+	# already loaded when page was initialized
+	#filePath = os.path.join(path, name)
+	#print('  filePath:', filePath)
+
+	'''
 	global ba
 	ba = sanpy.bAnalysis(filePath)
+	global baList
+	baList.append(ba)
+	'''
 
+	global ba
+	ba = baList[rowIdx]
 	#if name == '19221014.abf':
 	#	print(ba.abf.headerText)
 
 	# GET RID OF THIS, DO NOT DO ANALYSIS ON FILE LOAD !!!!!!!!!!!!!!!!!!!
+	'''
 	dDict = ba.getDefaultDetection()
 	dDict['dvdtThreshold'] = myThreshold # myThreshold IS A GLOBAL !!!!!!!!!!!!!!!
 	ba.spikeDetect(dDict) # throwing: RankWarning: Polyfit may be poorly conditioned
+	'''
 	start = 0
 	stop = len(ba.abf.sweepX) - 1
 	global subSetOfPnts
@@ -66,6 +80,7 @@ def loadFile(name):
 	print('  load file subSetOfPnts:', subSetOfPnts)
 
 def myDetect(dvdtThreshold):
+	print('app2.myDetect() dvdtThreshold:', dvdtThreshold)
 	dDict = ba.getDefaultDetection()
 	dDict['dvdtThreshold'] = dvdtThreshold
 	ba.spikeDetect(dDict)
@@ -77,7 +92,11 @@ loadFile(myFile)
 
 #
 # get a list of abf files
+'''
 def getFileList(path):
+	"""
+	TODO: this opens all bba, keep them in memory and don't reload on display
+	"""
 	retFileList = []
 	useExtension = '.abf'
 	videoFileIdx = 0
@@ -103,6 +122,10 @@ def getFileList(path):
 			numSweeps = len(tmp_ba.sweepList)
 			durationSec = max(tmp_ba.abf.sweepX)
 
+			xLabel = tmp_ba.abf.sweepLabelX
+			yLabel = tmp_ba.abf.sweepLabelY
+			print('xLabel', xLabel, 'yLabel:', yLabel)
+
 			fileDict['kHz'] = pntsPerMS
 			fileDict['Duration (Sec)'] = int(round(durationSec))
 			fileDict['Number of Sweeps'] = numSweeps
@@ -112,20 +135,19 @@ def getFileList(path):
 	if len(retFileList) == 0:
 		retFileList.append(fileDict)
 	return retFileList
+'''
 
-path = 'data'
-fileList = getFileList(path)
-dfFileList = myDashUtils.getFileList(path)
+#fileList = getFileList(myPath)
+dfFileList, baList = myDashUtils.getFileList(myPath) # used to build file list DataTable ('file-list-table')
 
 # load first file in list
 loadFirstFile = dfFileList['File Name'][0]
 print('loadFirstFile:', loadFirstFile)
-loadFile(loadFirstFile)
+loadFile(myPath, loadFirstFile, 0)
 
 myOptionsList = list(statDict.keys())
 
 #tmpData = [{"Idx": idx+1, "stat": myOption} for idx, myOption in enumerate(myOptionsList)]
-
 
 app.layout = html.Div([
 
@@ -136,7 +158,7 @@ app.layout = html.Div([
 	html.Div(id='tmpdivRadio', className='row'),
 
 
-	fileListPage.getFileListLayout(path, dfFileList),
+	fileListPage.getFileListLayout(myPath, dfFileList),
 
 	detectionPage.getDetectionLayout(),
 
@@ -178,6 +200,8 @@ def todo_myDataTable(id, xxx):
 # Callbacks
 ###
 
+# removed to fix bug in global ba
+'''
 @app.callback(Output('detect-spinner', 'children'),
 	[
 	Input('detect-button', 'n_clicks'),
@@ -197,6 +221,7 @@ def detectButton(detectButton, dvdtThreshold):
 	#elif triggeredControlId == 'save-button':
 	#	print('  todo: save')
 	return html.Div(" ")
+'''
 
 @app.callback(Output('tmpdiv2', 'children'),
 	[
@@ -258,27 +283,43 @@ def _regenerateFig(xMin, xMax, statList=None):
 	print('	filteredDeriv:', np.min(ba.filteredDeriv), np.max(ba.filteredDeriv))
 	'''
 
+	doDeriv = 'Derivative' in statList
+
 	try:
-		dvdtTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts],
+		if doDeriv:
+			dvdtTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts],
 							line=lineDict, showlegend=False)
+		else:
+			dvdtTrace = None
 		vmTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.abf.sweepY[subSetOfPnts],
 							line=lineDict, showlegend=False)
 	except (TypeError) as e:
 		print('EXCEPTION: _regenerateFig() got TypeError ... reploting WITHOUT subSetOfPnts')
 		#print('  subSetOfPnts:', type(subSetOfPnts), subSetOfPnts)
+		'''
 		print('  len(ba.filteredDeriv):', len(ba.filteredDeriv))
 		dvdtTrace = go.Scattergl(x=ba.abf.sweepX, y=ba.filteredDeriv,
 							line=lineDict, showlegend=False)
 		vmTrace = go.Scattergl(x=ba.abf.sweepX, y=ba.abf.sweepY,
 							line=lineDict, showlegend=False)
+		'''
 
 	# see: https://stackoverflow.com/questions/43106170/remove-the-this-is-the-format-of-your-plot-grid-in-a-plotly-subplot-in-a-jupy
-	fig = subplots.make_subplots(rows=2, cols=1, shared_xaxes=True, print_grid=False)
-	fig.append_trace(dvdtTrace, 1, 1)
-	fig.append_trace(vmTrace, 2, 1)
+	if doDeriv:
+		numRows = 2
+	else:
+		numRows = 1
+
+	fig = subplots.make_subplots(rows=numRows, cols=1, shared_xaxes=True, print_grid=False)
+	if doDeriv:
+		fig.append_trace(dvdtTrace, 1, 1)
+		fig.append_trace(vmTrace, 2, 1)
+	else:
+		fig.append_trace(vmTrace, 1, 1)
 
 	#statList = ['apAmp']
-	if statList is not None:
+	numSpikes = len(ba.spikeDict)
+	if numSpikes > 0 and statList is not None:
 		for stat in statList:
 			print('   _regenerateFig() stat:"' + stat + '"')
 			x, y, = None, None
@@ -289,15 +330,11 @@ def _regenerateFig(xMin, xMax, statList=None):
 			elif stat == 'Take Off Potential (mV)':
 				x = [spike['thresholdSec'] for spike in ba.spikeDict]
 				y = [spike['thresholdVal'] for spike in ba.spikeDict]
-			elif stat == 'Take Off Potential (dVdt)':
+			elif doDeriv and stat == 'Take Off Potential (dVdt)':
 				x = [spike['thresholdSec'] for spike in ba.spikeDict]
 				y = [spike['thresholdVal_dvdt'] for spike in ba.spikeDict]
 			else:
-				print('warning: _regenerateFig() did not understand stat:', stat)
-			'''
-			print('x:', x)
-			print('y:', y)
-			'''
+				print('  warning: _regenerateFig() did not understand stat:', stat)
 			if x is not None and y is not None:
 				thisScatter = go.Scattergl(
 					x=x,
@@ -312,15 +349,22 @@ def _regenerateFig(xMin, xMax, statList=None):
 				# how do I append this into the plot????
 				#print('   appending thisScatter')
 				if stat == 'Take Off Potential (dVdt)':
+					# assuming we are showing with doDeriv
 					fig.append_trace(thisScatter, 1, 1)
 				else:
-					fig.append_trace(thisScatter, 2, 1)
+					if doDeriv:
+						fig.append_trace(thisScatter, 2, 1)
+					else:
+						fig.append_trace(thisScatter, 1, 1)
 
 	# only use xaxis1 because the two plots (dvdt and vm) are linked with the SAME xaxis !!!
+	print('  todo: put axis labels back in')
+	'''
 	fig['layout']['xaxis2'].update(title='Seconds')
 
-	fig['layout']['yaxis1'].update(title='dV/dt')
+	fig['layout']['yaxis1'].update(title='dV/dt') # TODO: get units from bAnalysis
 	fig['layout']['yaxis2'].update(title='mV')
+	'''
 
 	# only use xaxis1 because the two plots (dvdt and vm) are linked with the SAME xaxis !!!
 	# 20210508 PUT THIS BACK IN
@@ -346,6 +390,20 @@ def updateTable(n_clicks):
 	return df.values[100:110], columns[0:3]
 '''
 
+# update file list table
+@app.callback(
+	[
+	Output("file-list-table", "data"),
+	Output('file-list-table', 'columns')
+	],
+	[
+	Input('upload-data', 'filename'),
+	])
+def updateFileTable_Callback(filename):
+	print('updateFileTable_Callback() filename::', filename)
+
+	return dash.no_update, dash.no_update
+
 #
 # combined dvdt and raw data
 @app.callback(
@@ -359,11 +417,15 @@ def updateTable(n_clicks):
 	Input('plot-options-check-list', 'value'),
 	Input('spike-error-table', 'selected_rows'),
 	Input('upload-data', 'contents'),
+	Input('detect-button', 'n_clicks'),
 	State('spike-error-table', 'derived_virtual_data'),
 	State('upload-data', 'filename'),
 	State('upload-data', 'last_modified'),
+	State('dvdtThreshold', 'value'),
 	])
-def linked_graph(relayoutData, selected_rows, values, errorRowSelection, list_of_contents, errorRowData, list_of_names, list_of_dates):
+def linked_graph(relayoutData, selected_rows, values, errorRowSelection,
+				list_of_contents, detectButton, errorRowData, list_of_names, list_of_dates,
+				dvdtThreshold):
 	print('=== linked_graph()')
 	print('  relayoutData:', relayoutData)
 	print('  selected_rows:', selected_rows)
@@ -373,22 +435,18 @@ def linked_graph(relayoutData, selected_rows, values, errorRowSelection, list_of
 	#print('	 list_of_contents:', list_of_contents)
 	print('  list_of_names:', list_of_names)
 	print('  list_of_dates:', list_of_dates)
-	if relayoutData is None:
-		return dash.no_update, dash.no_update, dash.no_update
 
 	ctx = dash.callback_context
-	'''
-	if ctx.triggered[0]['prop_id'] == 'upload-data.contents':
-		# contents of file upload (binary abf)
-		pass
-	else:
-		print('  ctx.triggered:', ctx.triggered)
-	'''
+
 	triggeredControlId = None
 	if ctx.triggered:
 		triggeredControlId = ctx.triggered[0]['prop_id'].split('.')[0]
 
 	print('  triggeredControlId:', triggeredControlId)
+	print('  global baList len:', len(baList))
+
+	if relayoutData is None:
+		return dash.no_update, dash.no_update, dash.no_update
 
 	xMin = 0
 	xMax = ba.abf.sweepX[-1]
@@ -398,13 +456,18 @@ def linked_graph(relayoutData, selected_rows, values, errorRowSelection, list_of
 			xMax = relayoutData['xaxis.range[1]']
 			#print('xMin:', xMin, 'xMax:', xMax)
 	print('  xMin:', xMin, 'xMax:', xMax, 'values:', values)
-	if triggeredControlId=='file-list-table' and selected_rows is not None:
+
+	if triggeredControlId == 'detect-button':
+		myDetect(dvdtThreshold)
+
+	elif triggeredControlId=='file-list-table' and selected_rows is not None:
 		print('  myFileSelect()', 'activeCell:', selected_rows)
 		selRow = selected_rows[0]
-		fileSelection = fileList[selRow]['File Name']
+		#fileSelection = fileList[selRow]['File Name']
+		fileSelection = dfFileList.at[selRow, 'File Name']
 		print('   file selection is:', fileSelection)
-		print('   XXX LOADING FILE THIS IS WHERE I NEED REDIS !!!!!!!!!!!!!!!!!!!!!!!!!')
-		loadFile(fileSelection)
+		print('     XXX LOADING FILE THIS IS WHERE I NEED REDIS !!!!!!!!!!!!!!!!!!!!!!!!!')
+		loadFile(myPath, fileSelection, selRow)
 	elif triggeredControlId=='upload-data':
 		print('  user uploaded an abf:', list_of_names)
 		# todo: fix this syntax, really weird !!!
@@ -436,7 +499,9 @@ def linked_graph(relayoutData, selected_rows, values, errorRowSelection, list_of
 	# spike errors table
 	dataError = dash.no_update
 	columnsError = dash.no_update
-	if triggeredControlId in ['file-list-table', 'upload-data']:
+
+	#if triggeredControlId in ['file-list-table', 'upload-data']:
+	if triggeredControlId in ['detect-button', 'file-list-table', 'upload-data']:
 		print('  grabbing errors')
 		dfError = ba.errorReport()
 		if dfError is not None:
@@ -472,7 +537,14 @@ def parse_contents_abf(contents, filename, date):
 		global ba
 		ba = sanpy.bAnalysis(byteStream=fileLikeObject)
 
+		global baList
+		baList.append(ba)
+
 		#print(ba.abf.headerText)
+
+		# TODO: Add to file list
+		# {'File Name':fileName, 'kHz':, kHz, 'Duration (Sec)':durSeconds, 'Number of Sweeps':numberOfSweeps}
+		print('  todo: keep track of ba for this file and add to file list')
 
 		# todo: get rid of this weirdness
 		start = 0

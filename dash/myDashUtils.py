@@ -12,11 +12,18 @@ import sanpy
 boxBorder = "1px gray solid"
 
 def getFileList(path):
+	"""
+	returns
+		pandas df
+		list of bAnalysis
+	"""
+	baList = []
 	retFileList = []
 	useExtension = '.abf'
 	videoFileIdx = 0
 
 	fileDict = {}
+	fileDict['Type'] = 'file'
 	fileDict['File Name'] = ''
 	#fileDict['path'] = ''
 	fileDict['kHz'] = ''
@@ -29,13 +36,24 @@ def getFileList(path):
 			fullPath = os.path.join(path, file)
 
 			fileDict = {} # WOW, I need this here !!!!!!!!
+			fileDict['Type'] = 'file'
 			fileDict['File Name'] = file
 			#fileDict['path'] = fullPath
 
-			tmp_ba = sanpy.bAnalysis(file=fullPath)
-			pntsPerMS = tmp_ba.dataPointsPerMs
-			numSweeps = len(tmp_ba.sweepList)
-			durationSec = max(tmp_ba.abf.sweepX)
+			ba = sanpy.bAnalysis(file=fullPath)
+
+			baList.append(ba)
+			'''
+			if videoFileIdx == 0:
+				print(ba.abf.headerText)
+				sweepUnitsC # what we are clamping (mV, pA)
+				sweepUnitsX
+				sweepUnitsY
+			'''
+			
+			pntsPerMS = ba.dataPointsPerMs
+			numSweeps = len(ba.sweepList)
+			durationSec = max(ba.abf.sweepX)
 
 			fileDict['kHz'] = pntsPerMS
 			fileDict['Duration (Sec)'] = int(round(durationSec))
@@ -48,7 +66,7 @@ def getFileList(path):
 
 	df = pd.DataFrame(retFileList)
 
-	return df
+	return df, baList
 
 def makeCheckList(id, itemList, defaultItem=None):
 	options = [{'label': x, 'value': x} for x in itemList]
@@ -70,9 +88,9 @@ def makeTable(id, df, height=200, row_selectable='single', defaultRow=0):
 	"""
 	if df is None:
 		statDict = {'tmp':'empty'}
-		df = pd.DataFrame(columns=['idx', 'error'])
-		df['idx'] = [i for i in range(len(statDict.keys()))]
-		df['error'] = [x for x in statDict.keys()]
+		df = pd.DataFrame(columns=['Idx', 'Error'])
+		#df['idx'] = [i for i in range(len(statDict.keys()))]
+		#df['error'] = [x for x in statDict.keys()]
 
 	#
 	columns=[{"name": i, "id": i} for i in df.columns]
