@@ -141,9 +141,9 @@ class bAnalysis:
 		# instantiate and load abf file
 		self.myFileType = None
 		if byteStream is not None:
-			print('  bAnalysis() loading bytestream with pyabf.ABF()')
+			#print('  bAnalysis() loading bytestream with pyabf.ABF()')
 			self._abf = pyabf.ABF(byteStream)
-			print('  done')
+			#print('  done')
 
 		elif file.endswith('.tif'):
 			self._abf = sanpy.bAbfText(file)
@@ -183,6 +183,8 @@ class bAnalysis:
 
 		# TODO: will not work for .tif
 		# determine if current-clamp or voltage clamp
+		self._recordingMode = 'fix'
+		self._yUnits = 'fix'
 		if self._abf.sweepUnitsY in ['pA']:
 			self._recordingMode = 'V-Clamp'
 			self._yUnits = self._abf.sweepUnitsY
@@ -213,6 +215,8 @@ class bAnalysis:
 			self.getDerivative()
 		elif self._recordingMode == 'V-Clamp':
 			self.getBaselineSubtract()
+		else:
+			self.getDerivative()
 
 	def get_yUnits(self):
 		return self._yUnits
@@ -1129,11 +1133,13 @@ class bAnalysis:
 			else:
 				mdp_ms = dDict['mdp_ms']
 				mdp_pnts = mdp_ms * self.abf.dataPointsPerMs
+				#print('bAnalysis.spikeDetect() needs to be int mdp_pnts:', mdp_pnts)
+				mdp_pnts = int(mdp_pnts)
 				#
 				# pre spike min
 				#preRange = vm[self.spikeTimes[i-1]:self.spikeTimes[i]]
 				startPnt = self.spikeTimes[i]-mdp_pnts
-				print('  xxx preRange:', i, startPnt, self.spikeTimes[i])
+				#print('  xxx preRange:', i, startPnt, self.spikeTimes[i])
 				if startPnt<0:
 					# for V-Clammp
 					startPnt = 0

@@ -11,6 +11,7 @@ import scipy.stats
 
 import matplotlib
 import matplotlib.pyplot as plt
+#from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as NavigationToolbar
 
 import tifffile
 import pyabf
@@ -408,8 +409,14 @@ class dualRecord:
 		#
 		# plot
 		fig, axs = plt.subplots(2, 1, sharex=True)
-		axs[0].imshow(self.abfTif.tif, aspect='auto')
-		axs[1].imshow(clippedTif, aspect='auto')
+		tif = self.abfTif.tif
+		dfMean = np.nanmean(tif)
+		df_d0 = (tif- dfMean) / dfMean
+		axs[0].imshow(df_d0, aspect='auto')
+
+		dfMean = np.nanmean(clippedTif)
+		df_d0_2 = (clippedTif- dfMean) / dfMean
+		axs[1].imshow(df_d0_2, aspect='auto')
 
 		#
 		# rotate back into original orientation (bAbfText rotates tif on load)
@@ -423,11 +430,30 @@ class dualRecord:
 		tifffile.imsave(tmpPath, clippedTif)
 
 
-	def plotImage(self, ax, fig, cbar_ax):
+	def plotImage(self, ax, fig, cbar_ax, region=None, row=None):
+		print('!!!!!!!!!!!!!!!! dualAnalysis.plotImage() is plotting (f - f0) / f0')
 		# make proper dF/f_0, using mean as f_0
-		f = self.abfTif.tif
-		f0 = np.nanmean(f)
-		df_f0 = (f - f0) / f0
+
+		# df/f0
+		tifData = self.abfTif.tif
+		f0 = np.nanmean(tifData)
+		print('  **********  raw mean f0:', f0, 'min:', np.nanmin(tifData), 'max:', np.nanmax(tifData))
+		print('                         dtype:', tifData.dtype, 'shape:', tifData.shape)
+		if region == 'superior':
+			#f0 = f0
+			pass
+		elif region == 'inferior' and row==11:
+			# 1.2 looked ok, making more dim
+			tmpMult = 1.1
+			if tmpMult > 1:
+				print('     inferior f0 = 3797 *', tmpMult, '(tmpMult)')
+				f0 = 3797 * tmpMult # background is 2 * superioior
+		print('          using f0:', f0, 'region:', region)
+
+		df_f0 = (tifData - f0) / f0
+		# raw
+		#df_f0 = self.abfTif.tif
+		print('    mean f0 is', f0, 'df_f0 min:', np.nanmin(df_f0), 'df_f0 max:', np.nanmax(df_f0))
 
 		cmap = 'plasma'
 
@@ -439,10 +465,11 @@ class dualRecord:
 		extent = [xMin, xMax, yMin, yMax] # flipped y
 
 		vmin = 0
-		vmax = 6
+		vmax = 10 #15 #6
+		print('     forcing scalebar to vmin:', vmin, 'vmax:', vmax)
 		plottedImage = ax.imshow(df_f0, cmap=cmap,
-						vmin=0,
-						vmax=6,
+						#vmin=vmin,
+						#vmax=vmax,
 						extent=extent, aspect='auto')
 
 		ax.spines['left'].set_visible(False)
@@ -771,7 +798,7 @@ class dualRecord:
 		#
 		return fig
 
-	def plotFigure9(self, region=None):
+	def plotFigure9(self, region=None, row=''):
 		"""
 		for figure 9
 		plot dF/f_o, add image scale bar,
@@ -784,7 +811,7 @@ class dualRecord:
 		heights = [1, 0.2]
 		gridSpec = fig.add_gridspec(ncols=2, nrows=2, width_ratios=widths, height_ratios=heights)
 
-		fig.suptitle(region)
+		fig.suptitle(region + ' ' + str(row))
 
 		# plot image
 		row = 0
@@ -804,8 +831,9 @@ class dualRecord:
 		axColorBar = fig.add_subplot(gridSpec[row, col])
 		'''
 
+		#
 		#self.plotImage(axImage, fig, axsColorBar)
-		self.plotImage(axImage, fig, None)
+		self.plotImage(axImage, fig, None, region=region, row=row)
 		axImage.xaxis.set_visible(False)
 		axImage.yaxis.set_visible(False)
 
@@ -845,13 +873,19 @@ class dualRecord:
 		axLcr.xaxis.set_visible(False)
 		axLcr.yaxis.set_visible(False)
 
-		# join x-axis
+		# join x-axis between image and lcr
 		axImage.get_shared_x_axes().join(axImage, axLcr)
 
 		# set_xlim to range of e-phys (shorter than image acq)
 		# using 2021_01_29_0006
 		#axLcr.set_ylim(0, 12)
 		#axLcr.set_xlim(7.0, 8)
+
+		# 2nd argument needs to be canvas widget we are within
+		#fig.canvas.toolbar_visible = False
+		#win = fig.canvas.window()
+		#win = fig.canvas.manager.window
+		#toolbar = NavigationToolbar(fig.canvas, win)
 
 		#
 		#plt.show()
@@ -1041,7 +1075,9 @@ class dualRecord:
 			yMax = self.abfTif.tifHeader['umLength'] #57.176
 			#extent = [xMin, xMaxImage, yMax, yMin] # flipped y
 			extent = [xMin, xMax, yMin, yMax] # flipped y
-			axs[3].imshow(self.abfTif.tif, extent=extent, aspect='auto')
+			dfMean = np.nanmean(self.abfTif.tif)
+			df_d0 = (self.abfTif.tif- dfMean) / dfMean
+			axs[3].imshow(df_d0, extent=extent, aspect='auto')
 			axs[3].spines['right'].set_visible(False)
 			axs[3].spines['top'].set_visible(False)
 
@@ -1432,8 +1468,10 @@ class dualRecord:
 			yMin = 0
 			yMax = ba.abf.tifHeader['umLength'] #57.176
 			#extent = [xMin, xMaxImage, yMax, yMin] # flipped y
+			dfMean = np.nanmean(tif)
+			df_d0 = (tif- dfMean) / dfMean
 			extent = [xMin, xMax, yMin, yMax] # flipped y
-			axs[2].imshow(tif, extent=extent, aspect='auto')
+			axs[2].imshow(df_d0, extent=extent, aspect='auto')
 			axs[2].spines['right'].set_visible(False)
 			axs[2].spines['top'].set_visible(False)
 
@@ -1981,7 +2019,9 @@ class dualRecord:
 		yMax = tifHeader['umLength'] #57.176
 		extent = [xMin, xMax, yMin, yMax] # flipped y
 		cmap = 'inferno' #'Greens' # 'inferno'
-		axs[0].imshow(tif, aspect='auto', cmap=cmap, extent=extent)
+		dfMean = np.nanmean(tif)
+		df_d0 = (tif- dfMean) / dfMean
+		axs[0].imshow(df_d0, aspect='auto', cmap=cmap, extent=extent)
 		axs[0].set_xlim([xMin, xMaxLim])
 		axs[0].set_ylabel('Line (um)')
 		axs[0].spines['right'].set_visible(False)
@@ -2301,6 +2341,7 @@ class dualRecord:
 		# max allowed delya to peak
 		maxCaDelaySecond = 0.6
 
+		print('=== findSpikePairs() start pairing, maxCaDelaySecond:', maxCaDelaySecond)
 		#
 		# add to self.baAbf.spikeDict
 		for spikeDict in self.baAbf.spikeDict:
@@ -2308,9 +2349,13 @@ class dualRecord:
 			spikeDict['caWidth_ms'] = np.nan
 
 		firstFrameSeconds = self.abfTif.tifHeader['firstFrameSeconds']
+		print('  firstFrameSeconds:', firstFrameSeconds)
 
 		vmThresholdSecs, vmPeakSeconds = self.baAbf.getStat('thresholdSec', 'peakSec')
 		caThresholdSecs, caPeakSeconds = self.baTif.getStat('thresholdSec', 'peakSec')
+
+		print('  len(vmThresholdSecs)', len(vmThresholdSecs))
+		print('  len(caThresholdSecs)', len(caThresholdSecs))
 
 		# shift tif image by delay to start
 		caThresholdSecs = [x+firstFrameSeconds for x in caThresholdSecs]
@@ -2321,7 +2366,6 @@ class dualRecord:
 
 		# pair each Vm spike with the next ca spike
 		# is ca delay is >maxDelaySecond then reject the pairr
-		print('=== findSpikePairs() start pairing, maxCaDelaySecond:', maxCaDelaySecond)
 		caDelayToPeak = [np.nan] * len(vmThresholdSecs)
 		caWidth = [np.nan] * len(vmThresholdSecs)
 		for idx, vmThresholdSec in enumerate(vmThresholdSecs):
@@ -2330,7 +2374,12 @@ class dualRecord:
 				print('  rejecting vm spike', idx, 'it is at', vmThresholdSec, 'before start of ca imaging at:', firstFrameSeconds)
 				continue
 
-			caPeakPoint = np.argwhere(caPeakSeconds>vmThresholdSec)[0,0]  # Upward crossings
+			#caPeakPoint = np.argwhere(caPeakSeconds>vmThresholdSec)[0,0]  # Upward crossings
+			caPeakPoint = np.argwhere(caPeakSeconds>vmThresholdSec)  # Upward crossings
+			if len(caPeakPoint) == 0:
+				print(f'  rejecting vm spike {idx}, did not find caPeakSeconds>vmThresholdSec {vmThresholdSec}')
+				continue
+			caPeakPoint = caPeakPoint[0,0]
 			caPeakSecond = caPeakSeconds[caPeakPoint]
 
 			caDelay = caPeakSecond - vmThresholdSec

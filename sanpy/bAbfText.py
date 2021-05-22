@@ -11,9 +11,10 @@ class bAbfText:
 	"""
 	def __init__(self, path=None, theDict=None):
 		"""
-		path: path to .csv file with columns
-			time (seconds)
-			vm
+		path is either:
+			path to .csv file with columns (time (seconds), vm)
+			path to .tif file
+
 		theDict:
 			sweepX
 			sweepY
@@ -28,7 +29,7 @@ class bAbfText:
 		self.sweepList = [0]
 
 		self.tif = None
-		self.tifNorm = None
+		self.tifNorm = None # not used
 		self.tifHeader = None
 
 		if theDict is not None:
@@ -63,6 +64,9 @@ class bAbfText:
 		samplesPerMs = 1 / msPerSample
 		self.dataPointsPerMs = samplesPerMs #4.255 #1/235*1000,10 # 10 kHz
 
+		self.sweepUnitsX = 'todo: fix'
+		self.sweepUnitsY = 'todo: fix'
+
 		#
 		# print results
 		if self.tifHeader is not None:
@@ -83,20 +87,19 @@ class bAbfText:
 			return None, None, None, None
 
 		tif = tifffile.imread(path)
-
 		if len(tif.shape) == 3:
 			tif = tif[:,:,1] # assuming image channel is 1
 		tif = np.rot90(tif) # rotates 90 degrees counter-clockwise
 
 		f0 = tif.mean()
-		tifNorm = tif / f0
+		tifNorm = (tif - f0) / f0
 
 		self.tif = tif
 
 		# assuming this was exported using Olympus software
 		# which gives us a .txt file
 		self.tifHeader = self._loadLineScanHeader(path)
-		self.tifHeader['shape'] = tifNorm.shape
+		self.tifHeader['shape'] = tif.shape
 		self.tifHeader['secondsPerLine'] = \
 						self.tifHeader['totalSeconds'] / self.tifHeader['shape'][1]
 		#tifHeader['abfPath'] = abfFile
@@ -119,7 +122,6 @@ class bAbfText:
 
 		# normalize to 0..1
 		yLineScanSum = self._NormalizeData(yLineScanSum)
-
 
 		return xLineScanSum, yLineScanSum, tif, tifNorm
 
@@ -147,7 +149,7 @@ class bAbfText:
 		theRet = {'tif': path}
 
 		theRet['numLines'] = self.tif.shape[1]
-		
+
 		with open(txtFile, 'r') as fp:
 			lines = fp.readlines()
 			for line in lines:

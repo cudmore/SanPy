@@ -9,6 +9,7 @@ import pandas as pd
 
 import qdarkstyle
 
+'''
 import logging
 from logging import FileHandler #RotatingFileHandler
 from logging.config import dictConfig
@@ -27,6 +28,7 @@ myFormatter = logging.Formatter(logFormat)
 logger = logging.getLogger('sanpy')
 logger.setLevel(logging.INFO)
 logger.debug('initialized sanpy log')
+'''
 
 print('SanPy is starting up ...')
 

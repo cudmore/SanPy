@@ -4,6 +4,7 @@
 # only export base sanpy, no GUI
 from .bAnalysis import bAnalysis
 from .bAnalysisUtil import bAnalysisUtil
+from .bAbfText import bAbfText
 #from .bUtil import bUtil
 from .version import analysisVersion
 from .version import interfaceVersion

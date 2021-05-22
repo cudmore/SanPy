@@ -7,6 +7,7 @@ from collections import OrderedDict
 
 import qdarkstyle
 
+'''
 import logging
 from logging import FileHandler #RotatingFileHandler
 from logging.config import dictConfig
@@ -21,6 +22,7 @@ dictConfig({
 })
 
 myFormatter = logging.Formatter(logFormat)
+'''
 
 # removed to use PyInstaller
 '''
@@ -30,11 +32,13 @@ logFileHandler.setLevel(logging.DEBUG)
 logFileHandler.setFormatter(myFormatter)
 '''
 
+'''
 logger = logging.getLogger('sanpy')
 #logger.addHandler(logFileHandler)
 
 logger.setLevel(logging.INFO)
 logger.debug('initialized sanpy log')
+'''
 
 ###
 ###
