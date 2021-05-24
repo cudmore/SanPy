@@ -27,9 +27,14 @@ class bExport():
 
 	def report(self, theMin, theMax):
 		"""
-		return entire spikeDict as a pandas data frame
+		Get entire spikeDict as a Pandas DataFrame.
 
-		(theMin, theMax): start/stop seconds of the analysis
+		Args:
+			theMin (float): Start seconds of the analysis
+			theMax (float): Stop seconds of the analysis
+
+		Returns:
+			df: Pandas DataFrame
 		"""
 		if theMin is None or theMax is None:
 			return None
@@ -81,7 +86,14 @@ class bExport():
 
 	def report2(self, theMin, theMax):
 		"""
-		generate a report of spikes with spike times between theMin (sec) and theMax (sec)
+		Generate a report of spikes with spike times between theMin (sec) and theMax (sec).
+
+		Args:
+			theMin (float): Start seconds to save
+			theMax (float): Stop seconds to save
+
+		Returns:
+			df: Pandas DataFrame
 		"""
 		newList = []
 		for spike in self.ba.spikeDict:
@@ -138,15 +150,18 @@ class bExport():
 	#################################################################################
 	def saveReport(self, savefile, theMin=None, theMax=None, saveExcel=True, alsoSaveTxt=True, verbose=True):
 		"""
-		save a spike report for detected spikes between theMin (sec) and theMax (sec)
+		Save a spike report for detected spikes between theMin (sec) and theMax (sec)
 
-		ba: bAnalysis object
-		savefile: path to xlsx file
-		(theMin, theMax): start/stop seconds of the analysis
+		Args:
+			savefile (str): path to xlsx file
+			theMin (float): start/stop seconds of the analysis
+			theMax (float): start/stop seconds of the analysis
+			saveExcel (bool): xxx
+			alsoSaveTxt (bool): xxx
 
 		Return:
-			analysisName
-			df
+			str: analysisName
+			df: df
 		"""
 
 		if theMin == None:
@@ -362,7 +377,15 @@ class bExport():
 
 	def getReportDf(self, theMin, theMax, savefile):
 		"""
-		savefile: .xls file path
+		Get spikes as a Pandas DataFrame, one row per spike.
+
+		Args:
+			theMin (float): xxx
+			theMax (float): xxx
+			savefile (str): .xls file path
+
+		Returns:
+			df: Pandas DataFrame
 		"""
 		filePath, fileName = os.path.split(os.path.abspath(savefile))
 
