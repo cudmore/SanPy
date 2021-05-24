@@ -27,7 +27,7 @@ mkdocs serve
 ### To update docs from command line
 
 ```
-mkdocs gh-deploy'
+mkdocs gh-deploy
 ```
 
 Remember, this does not update the main repo, to do that
