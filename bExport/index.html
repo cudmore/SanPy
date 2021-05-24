@@ -654,13 +654,67 @@ reports can be generated with the bExport class.</p>
 
     <div class="doc doc-contents ">
 
-      <p>savefile: .xls file path</p>
+      <p>Get spikes as a Pandas DataFrame, one row per spike.</p>
 
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>theMin</code></td>
+        <td><code>float</code></td>
+        <td><p>xxx</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>theMax</code></td>
+        <td><code>float</code></td>
+        <td><p>xxx</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>savefile</code></td>
+        <td><code>str</code></td>
+        <td><p>.xls file path</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>df</code></td>
+      <td><p>Pandas DataFrame</p></td>
+    </tr>
+  </tbody>
+</table>
         <details class="quote">
           <summary>Source code in <code>sanpy/bExport.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getReportDf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">,</span> <span class="n">savefile</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	savefile: .xls file path</span>
+<span class="sd">	Get spikes as a Pandas DataFrame, one row per spike.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		theMin (float): xxx</span>
+<span class="sd">		theMax (float): xxx</span>
+<span class="sd">		savefile (str): .xls file path</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		df: Pandas DataFrame</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">filePath</span><span class="p">,</span> <span class="n">fileName</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">savefile</span><span class="p">))</span>
 
@@ -756,16 +810,60 @@ reports can be generated with the bExport class.</p>
 
     <div class="doc doc-contents ">
 
-      <p>return entire spikeDict as a pandas data frame</p>
-<p>(theMin, theMax): start/stop seconds of the analysis</p>
+      <p>Get entire spikeDict as a Pandas DataFrame.</p>
 
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>theMin</code></td>
+        <td><code>float</code></td>
+        <td><p>Start seconds of the analysis</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>theMax</code></td>
+        <td><code>float</code></td>
+        <td><p>Stop seconds of the analysis</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>df</code></td>
+      <td><p>Pandas DataFrame</p></td>
+    </tr>
+  </tbody>
+</table>
         <details class="quote">
           <summary>Source code in <code>sanpy/bExport.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	return entire spikeDict as a pandas data frame</span>
+<span class="sd">	Get entire spikeDict as a Pandas DataFrame.</span>
 
-<span class="sd">	(theMin, theMax): start/stop seconds of the analysis</span>
+<span class="sd">	Args:</span>
+<span class="sd">		theMin (float): Start seconds of the analysis</span>
+<span class="sd">		theMax (float): Stop seconds of the analysis</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		df: Pandas DataFrame</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="k">if</span> <span class="n">theMin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">theMax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="k">return</span> <span class="kc">None</span>
@@ -836,13 +934,60 @@ reports can be generated with the bExport class.</p>
 
     <div class="doc doc-contents ">
 
-      <p>generate a report of spikes with spike times between theMin (sec) and theMax (sec)</p>
+      <p>Generate a report of spikes with spike times between theMin (sec) and theMax (sec).</p>
 
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>theMin</code></td>
+        <td><code>float</code></td>
+        <td><p>Start seconds to save</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>theMax</code></td>
+        <td><code>float</code></td>
+        <td><p>Stop seconds to save</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>df</code></td>
+      <td><p>Pandas DataFrame</p></td>
+    </tr>
+  </tbody>
+</table>
         <details class="quote">
           <summary>Source code in <code>sanpy/bExport.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">report2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	generate a report of spikes with spike times between theMin (sec) and theMax (sec)</span>
+<span class="sd">	Generate a report of spikes with spike times between theMin (sec) and theMax (sec).</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		theMin (float): Start seconds to save</span>
+<span class="sd">		theMax (float): Stop seconds to save</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		df: Pandas DataFrame</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">newList</span> <span class="o">=</span> <span class="p">[]</span>
 	<span class="k">for</span> <span class="n">spike</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">:</span>
@@ -915,11 +1060,51 @@ reports can be generated with the bExport class.</p>
 
     <div class="doc doc-contents ">
 
-      <p>save a spike report for detected spikes between theMin (sec) and theMax (sec)</p>
-<p>ba: bAnalysis object
-savefile: path to xlsx file
-(theMin, theMax): start/stop seconds of the analysis</p>
+      <p>Save a spike report for detected spikes between theMin (sec) and theMax (sec)</p>
 
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>savefile</code></td>
+        <td><code>str</code></td>
+        <td><p>path to xlsx file</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>theMin</code></td>
+        <td><code>float</code></td>
+        <td><p>start/stop seconds of the analysis</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>theMax</code></td>
+        <td><code>float</code></td>
+        <td><p>start/stop seconds of the analysis</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>saveExcel</code></td>
+        <td><code>bool</code></td>
+        <td><p>xxx</p></td>
+        <td><code>True</code></td>
+      </tr>
+      <tr>
+        <td><code>alsoSaveTxt</code></td>
+        <td><code>bool</code></td>
+        <td><p>xxx</p></td>
+        <td><code>True</code></td>
+      </tr>
+  </tbody>
+</table>
 <p><strong>Returns:</strong></p>
 <table>
   <thead>
@@ -930,9 +1115,9 @@ savefile: path to xlsx file
   </thead>
   <tbody>
     <tr>
-      <td><code></code></td>
+      <td><code>str</code></td>
       <td><p>analysisName
-df</p></td>
+df: df</p></td>
     </tr>
   </tbody>
 </table>
@@ -940,15 +1125,18 @@ df</p></td>
           <summary>Source code in <code>sanpy/bExport.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">saveReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">savefile</span><span class="p">,</span> <span class="n">theMin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theMax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">saveExcel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alsoSaveTxt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	save a spike report for detected spikes between theMin (sec) and theMax (sec)</span>
+<span class="sd">	Save a spike report for detected spikes between theMin (sec) and theMax (sec)</span>
 
-<span class="sd">	ba: bAnalysis object</span>
-<span class="sd">	savefile: path to xlsx file</span>
-<span class="sd">	(theMin, theMax): start/stop seconds of the analysis</span>
+<span class="sd">	Args:</span>
+<span class="sd">		savefile (str): path to xlsx file</span>
+<span class="sd">		theMin (float): start/stop seconds of the analysis</span>
+<span class="sd">		theMax (float): start/stop seconds of the analysis</span>
+<span class="sd">		saveExcel (bool): xxx</span>
+<span class="sd">		alsoSaveTxt (bool): xxx</span>
 
 <span class="sd">	Return:</span>
-<span class="sd">		analysisName</span>
-<span class="sd">		df</span>
+<span class="sd">		str: analysisName</span>
+<span class="sd">		df: df</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 
 	<span class="k">if</span> <span class="n">theMin</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
