@@ -1,0 +1,10 @@
+# requirements to run dualPlot
+numpy
+pandas
+matplotlib
+
+tifffile # to open tif files
+pyabf # to open abf files
+openpyxl # to open Excel xlsx files
+xlrd
+pandastable
