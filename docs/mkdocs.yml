@@ -18,7 +18,7 @@ plugins:
   - autorefs
   - mkdocstrings:
       watch:
-        - sanpy
+        - ../sanpy
 
 extra:
   generator: false
