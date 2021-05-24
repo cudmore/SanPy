@@ -6,10 +6,11 @@ Helper class to plot results of bAnalysis object
 '''
 
 import numpy as np
-
 import scipy.signal
 
 import matplotlib.pyplot as plt
+
+import sanpy
 
 class bPlot:
 	def __init__(self, ba=None):
@@ -21,7 +22,7 @@ class bPlot:
 	#############################
 	# plot functions
 	#############################
-	def plotDeriv(ba, fig=None):
+	def plotDeriv(self, fig=None):
 		'''
 		Plot both Vm and the derivative of Vm (dV/dt).
 
@@ -30,7 +31,7 @@ class bPlot:
 							Integer greater than 0 specifies the number of points
 		'''
 
-		#spikeTimes, thresholdTimes, vm, sweepDeriv = self.spikeDetect0(dVthresholdPos=dVthresholdPos, medianFilter=medianFilter)
+		ba = self.ba
 
 		grid = plt.GridSpec(2, 1, wspace=0.2, hspace=0.4)
 		if fig is None:
@@ -57,6 +58,9 @@ class bPlot:
 		return fig
 
 	def plotRaw(ba, lineWidth=1, color='k', ax=None):
+		"""
+		plot raw recording
+		"""
 		if ax is None:
 			grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
 
@@ -69,7 +73,7 @@ class bPlot:
 		ax.set_ylabel('Vm (mV)')
 		ax.set_xlabel('Time (sec)')
 
-	def plotSpikes(ba, oneSpikeNumber=None, ax=None, xMin=None, xMax=None):
+	def plotSpikes(self, oneSpikeNumber=None, ax=None, xMin=None, xMax=None):
 		'''
 		Plot Vm with spike analysis overlaid as symbols
 
@@ -77,6 +81,8 @@ class bPlot:
 		ax: If specified will plot into a MatPlotLib axes
 		xMin/xMax: if specified will set_xlim(xMin, xMax)
 		'''
+
+		ba = self.ba
 
 		fig = None
 		if ax is None:
@@ -99,78 +105,6 @@ class bPlot:
 		peakPntList = [spikeDict['peakPnt'] for spikeDict in ba.spikeDict]
 		ax.plot(ba.abf.sweepX[peakPntList], ba.abf.sweepY[peakPntList], 'or')
 
-		# plot the pre min (avg)
-		'''
-		preMinPntList = [spikeDict['preMinPnt'] for spikeDict in ba.spikeDict if spikeDict['preMinPnt'] is not None]
-		preMinValList = [spikeDict['preMinVal'] for spikeDict in ba.spikeDict if spikeDict['preMinVal'] is not None]
-		ax.plot(ba.abf.sweepX[preMinPntList], preMinValList, 'or')
-		'''
-		xPlot, yPlot = ba.getStat('preMinPnt', 'preMinVal', xToSec=True)
-		ax.plot(xPlot, yPlot, 'og')
-
-		'''
-		# plot the post min (avg)
-		postMinPntList = [spikeDict['postMinPnt'] for spikeDict in ba.spikeDict if spikeDict['postMinPnt'] is not None]
-		postMinValList = [spikeDict['postMinVal'] for spikeDict in ba.spikeDict if spikeDict['postMinVal'] is not None]
-		ax.plot(ba.abf.sweepX[postMinPntList], postMinValList, 'og')
-		'''
-		xPlot, yPlot = ba.getStat('postMinPnt', 'postMinVal', xToSec=True)
-		ax.plot(xPlot, yPlot, 'or')
-
-		'''
-		#
-		# plot the pre spike slope
-		preLinearFitPnt0List = [spikeDict['preLinearFitPnt0'] for spikeDict in ba.spikeDict if spikeDict['preLinearFitPnt0'] is not None]
-		preLinearFitVal0List = [spikeDict['preLinearFitVal0'] for spikeDict in ba.spikeDict if spikeDict['preLinearFitVal0'] is not None]
-		ax.plot(ba.abf.sweepX[preLinearFitPnt0List], preLinearFitVal0List, 'oy')
-
-		preLinearFitPnt1List = [spikeDict['preLinearFitPnt1'] for spikeDict in ba.spikeDict if spikeDict['preLinearFitPnt1'] is not None]
-		preLinearFitVal1List = [spikeDict['preLinearFitVal1'] for spikeDict in ba.spikeDict if spikeDict['preLinearFitVal1'] is not None]
-		ax.plot(ba.abf.sweepX[preLinearFitPnt1List], preLinearFitVal1List, 'og')
-
-
-		#
-		# plot the maximum upswing of a spike
-		preSpike_dvdt_max_pnt_list = [spikeDict['preSpike_dvdt_max_pnt'] for spikeDict in ba.spikeDict if spikeDict['preSpike_dvdt_max_pnt'] is not None]
-		preSpike_dvdt_max_val_list = [spikeDict['preSpike_dvdt_max_val'] for spikeDict in ba.spikeDict if spikeDict['preSpike_dvdt_max_val'] is not None]
-		ax.plot(ba.abf.sweepX[preSpike_dvdt_max_pnt_list], preSpike_dvdt_max_val_list, 'xr')
-
-		#
-		# plot the minima downswing of a spike
-		postSpike_dvdt_min_pnt_list = [spikeDict['postSpike_dvdt_min_pnt'] for spikeDict in ba.spikeDict if spikeDict['postSpike_dvdt_min_pnt'] is not None]
-		postSpike_dvdt_min_val_list = [spikeDict['postSpike_dvdt_min_val'] for spikeDict in ba.spikeDict if spikeDict['postSpike_dvdt_min_val'] is not None]
-		ax.plot(ba.abf.sweepX[postSpike_dvdt_min_pnt_list], postSpike_dvdt_min_val_list, 'xg')
-
-		for i,spikeDict in enumerate(ba.spikeDict):
-			#ax.plot(ba.abf.sweepX[spikeDict['peakPnt']], ba.abf.sweepY[spikeDict['peakPnt']], 'or')
-			if i==0 or i==len(ba.spikeTimes)-1:
-				continue
-
-			#ax.plot(ba.abf.sweepX[spikeDict['preMinPnt']], spikeDict['preMinVal'], 'og')
-
-			#
-			# line for pre spike slope
-			ax.plot([ba.abf.sweepX[spikeDict['preLinearFitPnt0']], ba.abf.sweepX[spikeDict['preLinearFitPnt1']]], [spikeDict['preLinearFitVal0'], spikeDict['preLinearFitVal1']], color='b', linestyle='-', linewidth=2)
-
-			#
-			# plot all widths
-			for j,widthDict in enumerate(spikeDict['widths']):
-				#print('j:', j)
-				risingPntX = ba.abf.sweepX[widthDict['risingPnt']]
-				# y value of rising pnt is y value of falling pnt
-				#risingPntY = ba.abf.sweepY[widthDict['risingPnt']]
-				risingPntY = ba.abf.sweepY[widthDict['fallingPnt']]
-				fallingPntX = ba.abf.sweepX[widthDict['fallingPnt']]
-				fallingPntY = ba.abf.sweepY[widthDict['fallingPnt']]
-				fallingPnt = widthDict['fallingPnt']
-				# plotting y-value of rising to match y-value of falling
-				#ax.plot(ba.abf.sweepX[widthDict['risingPnt']], ba.abf.sweepY[widthDict['risingPnt']], 'ob')
-				ax.plot(ba.abf.sweepX[widthDict['risingPnt']], ba.abf.sweepY[widthDict['fallingPnt']], 'ob')
-				ax.plot(ba.abf.sweepX[widthDict['fallingPnt']], ba.abf.sweepY[widthDict['fallingPnt']], 'ob')
-				# line between rising and falling is ([x1, y1], [x2, y2])
-				ax.plot([risingPntX, fallingPntX], [risingPntY, fallingPntY], color='b', linestyle='-', linewidth=2)
-		'''
-
 		#
 		# plot one spike time as a yellow circle
 		line = None
@@ -188,7 +122,7 @@ class bPlot:
 		# 20190816, was return line
 		# not sure if this break anything???
 		#return fig, ax
-		return fig, ax
+		return fig
 
 	def plotTimeSeries(ba, stat, halfWidthIdx=0, ax=None):
 		""" Plot a given spike parameter"""
@@ -301,3 +235,27 @@ class bPlot:
 		ax.set_xlabel('filtered Vm (mV)')
 
 		return line
+
+def test():
+	# load abf
+	abfPath = '../data/19114000.abf'
+	ba = sanpy.bAnalysis(abfPath)
+	if ba.loadError:
+		print('did not load file:', abfPath)
+		return
+
+	# detect
+	dDict = ba.getDefaultDetection()
+	dDict['dvdThreshold'] = 50
+	ba.spikeDetect(dDict)
+
+	# plot
+	bp = bPlot(ba)
+	fig = bp.plotDeriv()
+
+	fig = bp.plotSpikes(oneSpikeNumber=10)
+
+	plt.show()
+
+if __name__ == '__main__':
+	test()

@@ -41,8 +41,14 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 			return
 		spikeNumber = event.ind[0]
 
+		doZoom = False
+		modifiers = QtGui.QApplication.keyboardModifiers()
+		if modifiers == QtCore.Qt.ShiftModifier:
+			print('Shift+Click')
+			doZoom = True
+
 		# propagate a signal to parent
-		self.myMainWindow.mySignal('select spike', data=spikeNumber)
+		self.myMainWindow.mySignal('select spike', data={'spikeNumber':spikeNumber, 'isShift':doZoom})
 		#self.selectSpike(spikeNumber)
 
 	'''
@@ -57,11 +63,11 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 
 		if plotForTalk:
 			useThisStyleSheet = 'dark_background'
-			print('bScatterPlotWidget.defaultPlotLayout() setting "dark_background"')
+			#print('bScatterPlotWidget.defaultPlotLayout() setting "dark_background"')
 			plt.style.use('dark_background')
 		else:
 			useThisStyleSheet = 'seaborn'
-			print('bScatterPlotWidget.defaultPlotLayout() setting "seaborn"')
+			#print('bScatterPlotWidget.defaultPlotLayout() setting "seaborn"')
 			plt.style.use('seaborn')
 
 		fontSize = 10
@@ -153,8 +159,10 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 	def selectSpike(self, spikeNumber):
 		""" Select a single spike in scatter plot """
 
-		print('bSCatterPlotWidget.selectSpike() spikeNumber:', spikeNumber)
+		print('bSCatterPlotWidget.selectSpike() spikeDict:', spikeNumber)
 
+		#spikeNumber = spikeDict['spikeNumber']
+		#doZoom = spikeDict['doZoom']
 		if spikeNumber is None:
 			self.lastSpikeNumber = None
 			self.singleSpikeSelection.set_ydata([])
@@ -177,17 +185,6 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		"""
 		select all spikes in range
 		"""
-
-		#print('bScatterPlotWidget.selectXRange() xMin:', xMin, 'xMax:', xMax)
-
-		'''
-		# clear existing
-		if self.plotMeta_selection is not None:
-			for line in self.plotMeta_selection:
-				line.remove()
-
-		self.plotMeta_selection = []
-		'''
 
 		if self.plotMeta_selection is None:
 			return
@@ -291,14 +288,14 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 
 		# todo keep track of multi spike selection so we do not loose it on switching stats
 		markersize = 6
-		self.plotMeta_selection, = self._static_ax.plot([], [], "oy", markersize=markersize)
+		self.plotMeta_selection, = self._static_ax.plot([], [], 'oc', markersize=markersize)
 
 		if 1: #or self.singleSpikeSelection is None:
 			markersize = 6
 			if self.lastSpikeNumber is None:
-				self.singleSpikeSelection, = self._static_ax.plot([], [], "oc", markersize=markersize)
+				self.singleSpikeSelection, = self._static_ax.plot([], [], 'oy', markersize=markersize)
 			else:
-				self.singleSpikeSelection, = self._static_ax.plot(xPlot[self.lastSpikeNumber], yPlot[self.lastSpikeNumber], "oc", markersize=markersize)
+				self.singleSpikeSelection, = self._static_ax.plot(xPlot[self.lastSpikeNumber], yPlot[self.lastSpikeNumber], 'oy', markersize=markersize)
 
 		#print('	len xPlot:', len(xPlot), 'len yplot:', len(yPlot))
 
@@ -339,7 +336,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 
 	def slotSelectSpike(self, eDict):
 		print('bScatterPlotWidget.slotSelectSpike() eDict:', eDict)
-		spikeNumber = eDict['SpikeNumber']
+		spikeNumber = eDict['spikeNumber']
 		self.selectSpike(spikeNumber)
 
 # todo: not used
@@ -457,10 +454,18 @@ class myStatPlotToolbarWidget(QtWidgets.QWidget):
 			self.myTableWidget.setRowHeight(idx, self._rowHeight)
 		#self.addWidget(self.myTableWidget)
 
+		p = self.myTableWidget.palette()
+		color1 = QtGui.QColor('#444444')
+		color2 = QtGui.QColor('#555555')
+		p.setColor(QtGui.QPalette.Base, color1)
+		p.setColor(QtGui.QPalette.AlternateBase, color2)
+		self.myTableWidget.setPalette(p)
+		self.myTableWidget.setAlternatingRowColors(True)
+
 		self.myQVBoxLayout.addWidget(self.myTableWidget)
 
 		# select a default stat
-		self.myTableWidget.selectRow(12) # hard coding 'Spike Frequency (Hz)'
+		self.myTableWidget.selectRow(0) # hard coding 'Spike Frequency (Hz)'
 
 	'''
 	def getSelectedStat(self):

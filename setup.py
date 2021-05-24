@@ -39,7 +39,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'sanpy=sanpy.sanpy_app:main',
+            'sanpy=sanpy.interface.app:main',
         ]
     },
 )

@@ -14,6 +14,7 @@ from .version import interfaceVersion
 from .bExportWidget import bExportWidget
 
 from .bUtil import *
+from .bDialog import *
 
 '''
 from .bDetectionWidget import bDetectionWidget

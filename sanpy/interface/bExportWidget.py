@@ -7,8 +7,8 @@ import scipy.signal
 from PyQt5 import QtWidgets, QtGui, QtCore
 import matplotlib
 import matplotlib.figure
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt # abb 202012 added to set theme
 import matplotlib.ticker as ticker
 
@@ -74,8 +74,8 @@ class draggable_lines:
 		self.vLine, = self.ax.plot(x, y, '-',
 								label='yScaleBar',
 								linewidth=linewidth, c=color,
-								clip_on = False,
-								picker=None)
+								clip_on = False)
+								#picker=None)
 		'''
 		self.vLine = matplotlib.lines.Line2D(x, y, label='yScaleBar',
 								marker=None,

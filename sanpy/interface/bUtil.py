@@ -12,8 +12,10 @@ def loadDatabase(path):
 	"""
 	#path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
 	masterDf = None
-	if not os.path.isfile(path):
-		print('eror: bUtil.loadDatabase() did not find file:', path)
+	if path is None:
+		pass
+	elif not os.path.isfile(path):
+		print(f'error: bUtil.loadDatabase() did not find file: "{path}"')
 	elif path.endswith('.csv'):
 		masterDf = pd.read_csv(path, header=0) #, dtype={'ABF File': str})
 	elif path.endswith('.xls'):
@@ -47,6 +49,37 @@ def printDict(d, withType=False):
 		else:
 			print(f'  {k}: {v}')
 
+class errorTableView(QtWidgets.QTableView):
+	def __init__(self, parent=None):
+		super(errorTableView, self).__init__(parent)
+
+		self.setFont(QtGui.QFont('Arial', 10))
+		self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+								  QtWidgets.QSizePolicy.Expanding)
+		self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+
+		self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers |
+							 QtWidgets.QAbstractItemView.DoubleClicked)
+
+		#self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch);
+		self.horizontalHeader().setStretchLastSection(True)
+
+		rowHeight = 11
+		fnt = self.font()
+		fnt.setPointSize(rowHeight)
+		self.setFont(fnt)
+		self.verticalHeader().setDefaultSectionSize(rowHeight);
+
+		'''
+		p = self.palette()
+		color1 = QtGui.QColor('#dddddd')
+		color2 = QtGui.QColor('#ffffff')
+		p.setColor(QtGui.QPalette.Base, color1)
+		p.setColor(QtGui.QPalette.AlternateBase, color2)
+		self.setAlternatingRowColors(True)
+		self.setPalette(p)
+		'''
+
 class myTableView(QtWidgets.QTableView):
 	'''
 	signalDuplicateRow = QtCore.Signal(object) # row index
@@ -60,6 +93,7 @@ class myTableView(QtWidgets.QTableView):
 	#signalRefreshTabe = QtCore.pyqtSignal(object) # row index
 	signalCopyTable = QtCore.pyqtSignal()
 	signalFindNewFiles = QtCore.pyqtSignal()
+	signalSaveFileTable = QtCore.pyqtSignal()
 
 	def __init__(self, parent=None):
 		"""
@@ -77,13 +111,20 @@ class myTableView(QtWidgets.QTableView):
 		self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers |
 							 QtWidgets.QAbstractItemView.DoubleClicked)
 
+		rowHeight = 11
+		fnt = self.font()
+		fnt.setPointSize(rowHeight)
+		self.setFont(fnt)
+		self.verticalHeader().setDefaultSectionSize(rowHeight);
+		'''
 		p = self.palette()
 		color1 = QtGui.QColor('#dddddd')
 		color2 = QtGui.QColor('#ffffff')
 		p.setColor(QtGui.QPalette.Base, color1)
 		p.setColor(QtGui.QPalette.AlternateBase, color2)
-		self.setAlternatingRowColors(True)
 		self.setPalette(p)
+		self.setAlternatingRowColors(True)
+		'''
 
 	#def keyPressEvent(self, event): #Reimplement the event here, in your case, do nothing
 	#	return
@@ -101,6 +142,8 @@ class myTableView(QtWidgets.QTableView):
 		copyTable = contextMenu.addAction("Copy Table")
 		contextMenu.addSeparator()
 		findNewFiles = contextMenu.addAction("Find New Files")
+		contextMenu.addSeparator()
+		saveTable = contextMenu.addAction("Save Table")
 		#
 		action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 		if action == duplicateRow:
@@ -110,17 +153,20 @@ class myTableView(QtWidgets.QTableView):
 				selectedRow = tmp[0].row()
 				self.signalDuplicateRow.emit(selectedRow)
 		elif action == deleteRow:
-			print('  todo: deleteRow')
+			#print('  todo: deleteRow')
 			tmp = self.selectedIndexes()
 			if len(tmp)>0:
 				selectedRow = tmp[0].row()
 				self.signalDeleteRow.emit(selectedRow)
 		elif action == copyTable:
-			print('  todo: copyTable')
+			#print('  todo: copyTable')
 			self.signalCopyTable.emit()
 		elif action == findNewFiles:
-			print('  todo: findNewFiles')
+			#print('  todo: findNewFiles')
 			self.signalFindNewFiles.emit()
+		elif action == saveTable:
+			#print('  todo: saveTable')
+			self.signalSaveFileTable.emit()
 
 class pandasModel(QtCore.QAbstractTableModel):
 
@@ -129,6 +175,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 		data: pandas dataframe
 		"""
 		QtCore.QAbstractTableModel.__init__(self)
+		self.isDirty = False
 		self._data = data
 		columnList = self._data.columns.values.tolist()
 		if 'include' in columnList:
@@ -164,7 +211,11 @@ class pandasModel(QtCore.QAbstractTableModel):
 					retVal = ''
 				return retVal
 			elif role == QtCore.Qt.BackgroundRole:
-				return QtCore.QVariant()
+				#return QtCore.QVariant()
+				if index.row() % 2 == 0:
+					return QtCore.QVariant(QtGui.QColor('#444444'))
+				else:
+					return QtCore.QVariant(QtGui.QColor('#555555'))
 
 		return None
 
@@ -196,6 +247,8 @@ class pandasModel(QtCore.QAbstractTableModel):
 						return False
 				# set
 				self._data.iloc[row, column] = value
+
+				self.isDirty = True
 
 				#print('  after value:',value, type(value))
 				return True
@@ -288,7 +341,8 @@ class pandasModel(QtCore.QAbstractTableModel):
 	def mySaveDb(self, path):
 		print('pandasModel.mySaveDb() path:', path)
 		self._data.to_csv(path)
-
+		self.isDirty = False
+		
 # see: https://stackoverflow.com/questions/17748546/pyqt-column-of-checkboxes-in-a-qtableview
 class myCheckBoxDelegate(QtWidgets.QItemDelegate):
 	"""

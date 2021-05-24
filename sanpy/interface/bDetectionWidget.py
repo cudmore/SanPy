@@ -147,8 +147,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 			showClips = windowOptions['display']['showClips']
 			showScatter = windowOptions['display']['showScatter']
 
-			self.toggle_dvdt(showDvDt)
-			self.toggleClips(showClips)
+			#self.toggle_dvdt(showDvDt)
+			#self.toggleClips(showClips)
+			self.toggleInterface('dV/dt', showDvDt)
+			self.toggleInterface('Clips', showClips)
 
 	'''
 	def eventFilter(self, target, event : QtCore.QEvent):
@@ -221,7 +223,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			detectionDict['condition'] = myDetectionDict['Condition']
 
 		print('final detection params')
-		sanpy.bUtil.printDict(detectionDict, withType=True)
+		sanpy.interface.bUtil.printDict(detectionDict, withType=True)
 		#self.ba.spikeDetect(dvdtThreshold=dvdtThreshold, vmThreshold=vmThreshold)
 		dfReportForScatter = self.ba.spikeDetect(detectionDict)
 
@@ -229,12 +231,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 		dfError = self.ba.errorReport()
 
 		if self.ba.numSpikes == 0:
+			'''
 			msg = QtWidgets.QMessageBox()
 			msg.setIcon(QtWidgets.QMessageBox.Warning)
 			msg.setText("No Spikes Detected")
 			msg.setInformativeText('dV/dt Threshold: ' + str(dvdtThreshold) + '\r' + ' Vm Threshold (mV): '  + str(vmThreshold))
 			msg.setWindowTitle("No Spikes Detected")
 			retval = msg.exec_()
+			'''
+			#
+			informativeText = 'dV/dt Threshold: ' + str(dvdtThreshold) + '\r' + ' Vm Threshold (mV): '  + str(vmThreshold)
+			sanpy.interface.bDialog.okDialog('No Spikes Detected', informativeText=informativeText)
 
 		self.replot() # replot statistics over traces
 
@@ -281,7 +288,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#print('tmp:', tmp)
 
 		if len(savefile) > 0:
-			analysisName, df = self.ba.saveReport(savefile, xMin, xMax, alsoSaveTxt=alsoSaveTxt)
+			exportObj = sanpy.bExport(self.ba)
+			analysisName, df = exportObj.saveReport(savefile, xMin, xMax, alsoSaveTxt=alsoSaveTxt)
 			if self.myMainWindow is not None:
 				self.myMainWindow.mySignal('saved', data=analysisName)
 		else:
@@ -426,7 +434,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			# happens when .abf file is corrupt
 			pass
 		else:
-			self.ba.getDerivative(dDict) # derivative
+			self.ba._getDerivative(dDict) # derivative
 
 		#remove vm/dvdt/clip items (even when abf file is corrupt)
 		#if self.dvdtLines is not None:
@@ -648,22 +656,18 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.togglePlot(idx, plot['plotIsOn'])
 
 		# update label with number of spikes detected
-		print('todo: move numSpikesLable to status')
-		'''
+		print('todo: bDetectionWidget.replot(), make numSpikesLabel respond to signal/slot')
 		numSpikesStr = str(self.ba.numSpikes)
-		self.detectToolbarWidget.numSpikesLabel.setText('Number of Spikes: ' + numSpikesStr)
+		self.detectToolbarWidget.numSpikesLabel.setText('# Spikes: ' + numSpikesStr)
 		self.detectToolbarWidget.numSpikesLabel.repaint()
-		'''
 
 		# spike freq
-		print('todo: move spikeFreqLabel to status')
-		'''
+		print('todo: bDetectionWidget.replot(), make spikeFreqLabel respond to signal/slot')
 		meanSpikeFreq = self.ba.getStatMean('spikeFreq_hz')
 		if meanSpikeFreq is not None:
 			meanSpikeFreq = round(meanSpikeFreq,2)
 		self.detectToolbarWidget.spikeFreqLabel.setText('Frequency: ' + str(meanSpikeFreq))
 		self.detectToolbarWidget.spikeFreqLabel.repaint()
-		'''
 
 	def togglePlot(self, idx, on):
 		"""
@@ -691,16 +695,18 @@ class bDetectionWidget(QtWidgets.QWidget):
 	def selectSpike(self, spikeNumber, doZoom=False, doEmit=False):
 		print('bDetectionWIdget.selectSpike() spikeNumber:', spikeNumber)
 		# we will always use self.ba peak
-		if spikeNumber is None:
-			x = None
-			y = None
-		else:
-			xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal')
+		if self.ba is None:
+			return
+		x = None
+		y = None
+		xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal')
+		if spikeNumber is not None and spikeNumber < len(xPlot):
 			x = [xPlot[spikeNumber]]
 			y = [yPlot[spikeNumber]]
+
 		self.mySingleSpikeScatterPlot.setData(x=x, y=y)
 
-		if doZoom:
+		if spikeNumber is not None and doZoom:
 			thresholdSeconds = self.ba.getStat('thresholdSec')
 			if spikeNumber > len(thresholdSeconds)-1:
 				return
@@ -748,56 +754,43 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.meanClipLine = MultiLine(self.xMeanClip, self.yMeanClip, self, allowXAxisDrag=False, type='meanclip')
 		self.clipPlot.addItem(self.meanClipLine)
 
-	def toggle_errorTable(self, on):
-		if self.myMainWindow is not None:
-			self.myMainWindow.toggleErrorTable(on)
-
-	def toggle_scatter(self, on):
+	def toggleInterface(self, item, on):
 		"""
-		toggle scatter plot in parent (e.g. xxx)
+		show/hide different portions of interface
 		"""
-		# 20210426, need to clean this up
-
-		# 20210426, was this
-		if self.myMainWindow is not None:
-			self.myMainWindow.toggleStatisticsPlot(on)
-
-		# 20210426, need to clean this up
-		'''
-		if on:
-			self.myScatterPlotWidget.show()
-		else:
-			self.myScatterPlotWidget.hide()
-		'''
-
-	def toggle_dvdt(self, on):
-		"""
-		toggle dv/dt plot on/off
-		"""
-		if on:
-			self.derivPlot.show()
-		else:
-			self.derivPlot.hide()
-
-	def toggle_vm(self, on):
-		"""
-		toggle vm plot on/off
-		"""
-		if on:
-			self.vmPlot.show()
-		else:
-			self.vmPlot.hide()
-
-	def toggleClips(self, on):
-		"""
-		toggle clips plot on/off
-		"""
-		if on:
-			if self.view.getItem(2,0) is None:
-				self.clipPlot = self.view.addPlot(row=2, col=0)
+		#print('toggle_Interface()', item, on)
+		if item == 'Clips':
+			#self.toggleClips(on)
+			if on:
+				self.clipPlot.show()
 				self.refreshClips() # refresh if they exist (e.g. analysis has been done)
+			else:
+				self.clipPlot.hide()
+		elif item == 'dV/dt':
+			#self.toggle_dvdt(on)
+			if on:
+				self.derivPlot.show()
+			else:
+				self.derivPlot.hide()
+		elif item == 'vM':
+			if on:
+				self.vmPlot.show()
+			else:
+				self.vmPlot.hide()
+		elif item == 'Scatter':
+			#self.toggle_scatter(on)
+			if self.myMainWindow is not None:
+				self.myMainWindow.toggleStatisticsPlot(on)
+		elif item == 'Errors':
+			#self.toggle_errorTable(on)
+			if self.myMainWindow is not None:
+				self.myMainWindow.toggleErrorTable(on)
+		#elif idx == 'Show Vm':
+		#	self.detectionWidget.toggle_vm(isChecked)
 		else:
-			self.view.removeItem(self.clipPlot)
+			# Toggle overlay of stats like spike peak.
+			# assuming item is int !!!
+			self.togglePlot(item, on)
 
 	def buildUI(self):
 		# left is toolbar, right is PYQtGraph (self.view)
@@ -849,6 +842,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 			elif crosshairPlot == 'clipPlot':
 				self.clipPlot.addItem(self.crosshairDict[crosshairPlot]['h'], ignoreBounds=True)
 				self.clipPlot.addItem(self.crosshairDict[crosshairPlot]['v'], ignoreBounds=True)
+			else:
+				print('error: case not taken for crosshairPlot:', crosshairPlot)
 
 		# trying to implement mouse moved events
 		self.myProxy = pg.SignalProxy(self.vmPlot.scene().sigMouseMoved, rateLimit=60, slot=self.myMouseMoved)
@@ -907,9 +902,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 				self.derivPlot.addItem(myScatterPlot)
 
 		# single spike selection
-		color = 'c'
+		color = 'y'
 		symbol = 'o'
-		self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=2)
+		self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=4)
 		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
 
 		# axis labels
@@ -1027,85 +1022,25 @@ class bDetectionWidget(QtWidgets.QWidget):
 		print('  items:', items)
 	'''
 
+	def keyPressEvent(self, event):
+		#print('=== sanpy_app.MainWindow() keyPressEvent()')
+		key = event.key()
+		text = event.text()
+		print('== bDetectionWidget.keyPressEvent() key:', key, 'text:', text)
+
+		if text == 'a':
+			#self.detectToolbarWidget.keyPressEvent(event)
+			self.setAxisFull()
+
+		if key == QtCore.Qt.Key.Key_Escape:
+			self.myMainWindow.mySignal('cancel all selections')
+
 	def slotSelectSpike(self, sDict):
 		print('detectionWidget.slotSelectSpike() sDict:', sDict)
-		spikeNumber = sDict['SpikeNumber']
+		spikeNumber = sDict['spikeNumber']
 		doZoom = sDict['doZoom']
 		self.selectSpike(spikeNumber, doZoom=doZoom)
 
-	def old_myPrint(self):
-		"""
-		save the vmPlot to a file????
-		"""
-		print('bDetectionWidget.myPrint()  -->>  NOT IMPLEMENTED')
-		return
-
-		# this does not do svg
-		#exporter = pg.exporters.ImageExporter(self.vmPlot)
-
-		'''
-		exporter = myImageExporter(self.vmPlot)
-		exporter.parameters()['width'] = 1000   # (note this also affects height parameter)
-		filename = '/Users/cudmore/Desktop/myExport.png'
-		'''
-
-		exporter = pg.exporters.SVGExporter(self.vmPlot)
-		# macOs
-		#filename = '/Users/cudmore/Desktop/myExport.svg'
-		# linux
-		filename_svg = '/home/cudmore/Desktop/myExport.svg'
-		filename_png = '/home/cudmore/Desktop/myExport.png'
-
-		try:
-			print('  myPrint() saving file', filename_svg)
-			exporter.export(filename_svg)
-		except (FileNotFoundError) as e:
-			print('exception:', e)
-
-		print('  myPrint() saving file', filename_png)
-		exporter.export(filename_png)
-		print('   done')
-
-	def old_exploreSpikes(self):
-		"""
-		use bScatterPlotWidget2.py to explore spike stat for one file
-
-		todo:
-			limit to start/stop
-			don't reload, just reuse spike analysis in bAnalysis
-		"""
-		print('bDetectionWidget.exploreSpikes()')
-		print('  todo:')
-		print('    limit start/stop')
-		print('    do not reload, just reuse spike analysis in bAnalysis')
-
-		if self.ba is None:
-			print('please detect first')
-
-		# get the df rport
-		saveFilePath = ''
-		# todo: get start/stop from curent x-axis ???
-		startSeconds = self.detectToolbarWidget.startSeconds.value()
-		stopSeconds = self.detectToolbarWidget.stopSeconds.value()
-
-		df0 = self.ba.report(startSeconds, stopSeconds)
-
-		print(df0.head())
-
-		# show it with bScatterPlotWidget
-		path = ''
-		categoricalList = []
-		hueTypes = ['file'] # fix this
-		analysisName = 'file' # fix this
-		sortOrder = None
-		statListDict = None # fix this sanpy.bAnalysisUtil.statList
-		masterDf = df0
-		parent = None
-		sanpy.bScatterPlotMainWindow(
-			path,
-			categoricalList, hueTypes, analysisName, sortOrder,
-			statListDict=statListDict, masterDf=masterDf, parent=None
-		)
 
 class myImageExporter(ImageExporter):
 	def __init__(self, item):
@@ -1224,6 +1159,9 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 				xyUnits = ('Time (sec)', 'dV/dt (mV/ms)')# todo: pass xMin,xMax to constructor
 			elif self.myType == 'meanclip':
 				xyUnits = ('Time (ms)', 'Vm (mV)')# todo: pass xMin,xMax to constructor
+			else:
+				print(f'bDetectionWidget.contextMenuEvent() error self.myType: "{self.myType}"')
+				xyUnits = ('error time', 'error y')
 
 			path = self.detectionWidget.ba.file
 
@@ -1240,7 +1178,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 			else:
 				xMargin = 2
 
-			exportWidget = sanpy.bExportWidget(self.x, self.y,
+			exportWidget = sanpy.interface.bExportWidget(self.x, self.y,
 							xyUnits=xyUnits,
 							path=path,
 							xMin=xMin, xMax=xMax,
@@ -1446,6 +1384,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			self.on_button_click('Go')
 
 		elif name == '>>':
+			if self.detectionWidget.ba is None:
+				return
 			spikeNumber = self.spikeNumber.value()
 			spikeNumber += 1
 			if spikeNumber > self.detectionWidget.ba.numSpikes - 1:
@@ -1459,6 +1399,12 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 	def on_check_click(self, checkbox, idx):
 		isChecked = checkbox.isChecked()
 		print('on_check_click() text:', checkbox.text(), 'isChecked:', isChecked, 'idx:', idx)
+
+		# use this
+		self.detectionWidget.toggleInterface(idx, isChecked)
+
+		# get rid of this
+		'''
 		if idx == 'Clips':
 			self.detectionWidget.toggleClips(isChecked)
 		elif idx == 'dV/dt':
@@ -1473,6 +1419,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			# Toggle overlay of stats like spike peak.
 			# assuming idx is int !!!
 			self.detectionWidget.togglePlot(idx, isChecked)
+		'''
 
 	def on_crosshair_clicked(self, value):
 		print('on_crosshair_clicked() value:', value)
@@ -1538,7 +1485,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		buttonName = 'Detect dV/dt'
 		button = QtWidgets.QPushButton(buttonName)
-		button.setToolTip('Detect Spikes Using BOTH dV/dt Threshold and minimum mV')
+		button.setToolTip('Detect spikes using both dV/dt threshold and minimum mV')
 		button.clicked.connect(partial(self.on_button_click,buttonName))
 
 		row = 0
@@ -1558,7 +1505,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		columnSpan = 2
 		buttonName = 'Detect mV'
 		button = QtWidgets.QPushButton(buttonName)
-		button.setToolTip('Detect Spikes Using Vm Threshold')
+		button.setToolTip('Detect spikes using mV threshold')
 		button.clicked.connect(partial(self.on_button_click,buttonName))
 		detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)
 
@@ -1572,37 +1519,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.vmThreshold.setMaximum(+1e6)
 		self.vmThreshold.setValue(detectMv)
 		detectionGridLayout.addWidget(self.vmThreshold, row, 2, rowSpan, columnSpan)
-
-		# moved into a save group box
-		'''
-		# todo: remove after adding to save group box
-		# start/stop seconds
-		row += 1
-		startSeconds = QtWidgets.QLabel('From (Sec)')
-		detectionGridLayout.addWidget(startSeconds, row, 0)
-		#
-		#row += 1
-		self.startSeconds = QtWidgets.QDoubleSpinBox()
-		self.startSeconds.setMinimum(-1e6)
-		self.startSeconds.setMaximum(+1e6)
-		self.startSeconds.setKeyboardTracking(False)
-		self.startSeconds.setValue(0)
-		self.startSeconds.valueChanged.connect(self.on_start_stop)
-		#self.startSeconds.editingFinished.connect(self.on_start_stop)
-		detectionGridLayout.addWidget(self.startSeconds, row, 1)
-		#
-		stopSeconds = QtWidgets.QLabel('To (Sec)')
-		detectionGridLayout.addWidget(stopSeconds, row, 2)
-
-		self.stopSeconds = QtWidgets.QDoubleSpinBox()
-		self.stopSeconds.setMinimum(-1e6)
-		self.stopSeconds.setMaximum(+1e6)
-		self.stopSeconds.setKeyboardTracking(False)
-		self.stopSeconds.setValue(0)
-		self.stopSeconds.valueChanged.connect(self.on_start_stop)
-		#self.stopSeconds.editingFinished.connect(self.on_start_stop)
-		detectionGridLayout.addWidget(self.stopSeconds, row, 3)
-		'''
 
 		tmpRowSpan = 1
 		tmpColSpan = 2
@@ -1783,20 +1699,28 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Errors'))
 		plotGridLayout.addWidget(checkbox, row, col)
 
-		'''
-		row = 0
-		col = 3
-		buttonName = 'Explore'
-		spikeExploreButton = QtWidgets.QPushButton(buttonName)
-		spikeExploreButton.setToolTip('Explore spike measurements')
-		#spikeExploreButton.setStyleSheet("background-color: green")
-		spikeExploreButton.clicked.connect(partial(self.on_button_click, buttonName))
-		self.mainLayout.addWidget(spikeExploreButton)
-		'''
-
 		# finalize
 		plotGroupBox.setLayout(plotGridLayout)
 		self.mainLayout.addWidget(plotGroupBox)
+
+		#
+		# selected spike info
+		spikeGroupBox = QtWidgets.QGroupBox('Spikes')
+		spikeGroupBox.setStyleSheet(myStyleSheet)
+		spikeGridLayout = QtWidgets.QGridLayout()
+
+		row = 0
+		tmpRowSpan = 1
+		tmpColSpan = 1
+		self.numSpikesLabel = QtWidgets.QLabel('# Spikes: None')
+		spikeGridLayout.addWidget(self.numSpikesLabel, row, 0, tmpRowSpan, tmpColSpan)
+
+		self.spikeFreqLabel = QtWidgets.QLabel('Frequency: None')
+		spikeGridLayout.addWidget(self.spikeFreqLabel, row, 2, tmpRowSpan, tmpColSpan)
+
+		# finalize
+		spikeGroupBox.setLayout(spikeGridLayout)
+		self.mainLayout.addWidget(spikeGroupBox)
 
 	def buildSpikeBrowser(self):
 		#
@@ -1851,7 +1775,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.mousePositionLabel.repaint()
 
 	def slotSelectSpike(self, eDict):
-		spikeNumber = eDict['SpikeNumber']
+		spikeNumber = eDict['spikeNumber']
 		self.spikeNumber.setValue(spikeNumber)
 
 if __name__ == '__main__':
@@ -1861,20 +1785,6 @@ if __name__ == '__main__':
 	abfFile = '/Users/cudmore/Sites/bAnalysis/data/19114001.abf'
 	abfFile = '/media/cudmore/data/Laura-data/manuscript-data/2020_06_23_0006.abf'
 	path = '../data/19114001.abf'
-
-	'''
-	ba = sanpy.bAnalysis(file=abfFile)
-	# spike detect
-	ba.getDerivative(medianFilter=5) # derivative
-	ba.spikeDetect(dvdtThreshold=50, vmThreshold=-20, medianFilter=0)
-	'''
-
-	# default theme
-	#pg.setConfigOption('background', 'w')
-	#pg.setConfigOption('foreground', 'k')
-	# dark theme
-	#pg.setConfigOption('background', 'k')
-	#pg.setConfigOption('foreground', 'w')
 
 	app = QtWidgets.QApplication(sys.argv)
 	w = bDetectionWidget()

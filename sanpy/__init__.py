@@ -5,6 +5,7 @@
 from .bAnalysis import bAnalysis
 from .bAnalysisUtil import bAnalysisUtil
 from .bAbfText import bAbfText
+from .bExport import bExport
 #from .bUtil import bUtil
 from .version import analysisVersion
 from .version import interfaceVersion

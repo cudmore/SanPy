@@ -1,132 +1,88 @@
-'''
-Author: Robert H Cudmore
-Date: 20190225
-
-The bAnalysis class wraps a pyabf file and adds spike detection and plotting.
-
-Instantiate a bAnalysis object with
-	1) .abf file name
-	2) .csv with time/mV columns
-	3) a dictionary (20210130, add this)
-
-The underlying pyabf object is always available as self.abf
-
-Usage:
-	ba = bAnalysis('data/19114001.abf')
-	print(ba) # prints info about underlying abf file
-	ba.plotDeriv()
-	ba.spikeDetect(dvdtThreshold=100)
-	ba.plotSpikes()
-	ba.plotClips()
-
-Detection:
-	getDerivative() creates a median filtered derivative
-	spikeDetect0() does threshold detection to generate a list of spike times
-	spikeDetect() takes a list of spike times and performs detailed analysis on each spike
-Reports:
-	report() and report2() generate pandas data frames of the results and can easily by manipulated or saved
-Plots:
-	Plot vm, derivative, spike stats etc
-
-Updates
-	20190513, added self.VmThreshold
-
-Acknowledgements
-	https://github.com/swharden/pyABF
-
-'''
+# Acknowledgements:
+# Author: Robert H Cudmore
+# Date: 20190225
 
 import os, sys, math, time, collections, datetime
 from collections import OrderedDict
+import warnings # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
 
 import numpy as np
 import pandas as pd
-
 import scipy.signal
 
 import pyabf # see: https://github.com/swharden/pyABF
 
 import sanpy
-
-def getDefaultDetection():
-	"""
-	todo: put this in a json file ???
-	"""
-	theDict = {}
-
-	theDict['dvdtThreshold'] = {}
-	theDict['dvdtThreshold']['value'] = 100
-	theDict['dvdtThreshold']['units'] = 'dVdt'
-	theDict['dvdtThreshold']['fullName'] = 'dV/dt Threshold'
-	theDict['dvdtThreshold']['description'] = 'dV/dt Threshold for a spike, will be backed up to dvdt_percentOfMax and have xxx error when this fails'
-
-	# todo: fill in all others
-	'''
-		'dvdtThreshold': 100, #if None then detect only using mvThreshold
-		'mvThreshold': -20,
-		'medianFilter': 0,
-		'SavitzkyGolay_pnts': 5, # shoould correspond to about 0.5 ms
-		'SavitzkyGolay_poly': 2,
-		'halfHeights': [10, 20, 50, 80, 90],
-		# new 20210501
-		'mdp_ms': 250, # window before/after peak to look for MDP
-		'refractory_ms': 170, # rreject spikes with instantaneous frequency
-		'peakWindow_ms': 100, #10, # time after spike to look for AP peak
-		'dvdtPreWindow_ms': 10, #5, # used in dvdt, pre-roll to then search for real threshold crossing
-		'avgWindow_ms': 5,
-		# 20210425, trying 0.15
-		#'dvdt_percentOfMax': 0.1, # only used in dvdt detection, used to back up spike threshold to more meaningful value
-		'dvdt_percentOfMax': 0.1, # only used in dvdt detection, used to back up spike threshold to more meaningful value
-		# 20210413, was 50 for manuscript, we were missing lots of 1/2 widths
-		'halfWidthWindow_ms': 200, #200, #20,
-		# add 20210413 to turn of doBackupSpikeVm on pure vm detection
-		'doBackupSpikeVm': True,
-		'spikeClipWidth_ms': 500,
-		'onlyPeaksAbove_mV': None,
-		'startSeconds': None,
-		'stopSeconds': None,
-
-		# for detection of Ca from line scans
-		#'caThresholdPos': 0.01,
-		#'caMinSpike': 0.5,
-
-		# book keeping like ('cellType', 'sex', 'condition')
-		'cellType': '',
-		'sex': '',
-		'condition': '',
-	}
-	'''
-	return theDict.copy()
+from sanpy import detectionParams
 
 class bAnalysis:
+	"""
+
+	## Purpose
+
+	The bAnalysis class wraps a pyabf file and adds spike detection, error checking, and saving of results. The underlying pyabf object is always available as `self.abf`.
+
+	## Instantiate a bAnalysis object with
+	1) An .abf file path.
+	2) A .csv file with time/mV columns (todo: add this, for now use bAbfText.py).
+	3) a byteStream when working in the cloud.
+	4) a dictionary (todo: add this).
+
+	## Examples:
+
+	```
+		ba = bAnalysis('data/19114001.abf')
+		print(ba) # prints info about underlying abf file
+		ba.plotDeriv()
+		ba.spikeDetect(dvdtThreshold=100)
+		ba.plotSpikes()
+		ba.plotClips()
+	```
+
+	## Reports:
+
+	See `sanpy.bExport.py` for report functions including:
+
+	- Generating reports as a Pandas DataFrame.
+	- Saving reports as a Microsoft Excel file.
+	- Saving reports as a CSV text files.
+
+	## Plotting raw data and analysis results:
+	See: bAnalysisPlot.py
+	"""
 	def __init__(self, file=None, theTiff=None, byteStream=None):
 		"""
-		file: either abf or csv with time/mV columns
-		theDict:
+		Args:
+			file (str): Path to either .abf or .csv with time/mV columns.
+			theTiff (str): Path to .tif file.
+			byteStream (binary): Binary stream for use in the cloud.
+
 		"""
 
+		self.myFileType = None
+		"""str: From ('abf', 'csv', 'tif', 'bytestream')"""
+
 		self.loadError = False # abb 20201109
+		"""bool: True if error loading file/stream."""
 
 		self.detectionDict = None # remember the parameters of our last detection
+		"""dict: Dictionary specifying detection parameters, see getDefaultDetection."""
 
 		self.file = file # todo: change this to filePath
+		"""str: File path."""
+
 		self._abf = None
 
-		#20190628
-		self.detectionConfig = sanpy.bAnalysisUtil()
-
-		# detection parameters specified by user
 		self.dateAnalyzed = None
-		self.dvdtThreshold = None
-		self.mvThreshold = None # abb, 20190513
-		self.medianFilter = None
-		#self.startSeconds = None
-		#self.stopSeconds = None
+		"""str: Date Time of analysis. TODO: make a property."""
 
 		self.detectionType = None
+		"""str: From ('dvdt', 'mv')"""
+
+		self.filteredVm = None
+		self.filteredDeriv = None
 
 		self.spikeDict = [] # a list of dict
-
 		self.spikeTimes = [] # created in self.spikeDetect()
 		self.spikeClips = [] # created in self.spikeDetect()
 
@@ -135,20 +91,20 @@ class bAnalysis:
 			self.loadError = True
 			return
 
+		# only defined when loading abf files
 		self.acqDate = None
 		self.acqTime = None
 
 		# instantiate and load abf file
-		self.myFileType = None
 		if byteStream is not None:
 			#print('  bAnalysis() loading bytestream with pyabf.ABF()')
 			self._abf = pyabf.ABF(byteStream)
-			#print('  done')
+			self.myFileType = 'bytestream'
 
 		elif file.endswith('.tif'):
 			self._abf = sanpy.bAbfText(file)
 			print('  === REMEMBER: bAnalysis.__init__() is normalizing Ca sweepY')
-			self._abf.sweepY = self.NormalizeData(self._abf.sweepY)
+			self._abf.sweepY = self._normalizeData(self._abf.sweepY)
 			self.myFileType = 'tif'
 		elif file.endswith('.csv'):
 			self._abf = sanpy.bAbfText(file)
@@ -196,27 +152,18 @@ class bAnalysis:
 		self.setSweep(0)
 
 		self.filteredVm = []
-		#self.deriv = []
 		self.filteredDeriv = []
 		self.spikeTimes = []
 
 		self.thresholdTimes = None # not used
 
-		#self.condition1 = None # in ('ctrl', '1nm', '10nm', '30nm', etc)
-		#self.condition2 = None # cell number
-		#self.condition3 = None # sex in ('M', 'F')
-		#self.condition4 = None # superior/inferior in ('superior', 'inferior')
-
-		# keep track of the number of errors during spike detection
-		self.numErrors = 0
-
 		# get default derivative
 		if self._recordingMode == 'I-Clamp':
-			self.getDerivative()
+			self._getDerivative()
 		elif self._recordingMode == 'V-Clamp':
-			self.getBaselineSubtract()
+			self._getBaselineSubtract()
 		else:
-			self.getDerivative()
+			self._getDerivative()
 
 	def get_yUnits(self):
 		return self._yUnits
@@ -227,21 +174,31 @@ class bAnalysis:
 
 	@property
 	def abf(self):
+		"""Get the underlying pyabf object."""
 		return self._abf
 
 	@property
 	def dataPointsPerMs(self):
+		"""Get 'data points per ms'."""
 		return self.abf.dataPointsPerMs
 
 	@property
 	def sweepList(self):
+		"""Get a list of sweeps."""
 		return self.abf.sweepList
 
 	@property
 	def numSweeps(self):
+		"""Get the number of sweeps."""
 		return len(self.abf.sweepList)
 
 	def setSweep(self, sweepNumber):
+		"""
+		Set the current sweep.
+
+		Args:
+			sweepNumber (int): The sweep number to set.
+		"""
 		if sweepNumber not in self.abf.sweepList:
 			print('error: bAnalysis.setSweep() did not find sweep', sweepNumber, ', sweepList =', self.abf.sweepList)
 			return False
@@ -252,83 +209,72 @@ class bAnalysis:
 
 	@property
 	def numSpikes(self):
-		"""Returns the number of spikes, assumes self.spikeDetect(dvdtThreshold)"""
+		"""Get the number of detected spikes"""
 		return len(self.spikeTimes)
 
-	@property
-	def numSpikeErrors(self):
-		return self.numErrors
+	def getStatMean(self, statName):
+		"""
+		Get the mean of an analysis parameter.
 
-	def getStatMean(self, xStat):
+		Args:
+			statName (str): Name of the statistic to retreive. For a list of available stats use xxx.
+		"""
 		theMean = None
-		x = self.getStat(xStat)
-		if len(x)>1:
+		x = self.getStat(statName)
+		if x is not None and len(x)>1:
 			theMean = np.nanmean(x)
 		return theMean
 
-	def getStat(self, xStat, yStat=None, xToSec=False):
+	def getStat(self, statName1, statName2=None):
 		"""
-		xToSec: Automatically convert x from points to seconds
+		Get a list of values for one or two analysis parameters.
+
+		For a list of available parameters use xxx.
+
+		If the returned list of analysis parameters are in points, convert to seconds or ms using: pnt2Sec_(pnt) or pnt2Ms_(pnt).
+
+		Args:
+			statName1 (str): Name of the first analysis parameter to retreive.
+			statName2 (str): Optional, Name of the second analysis parameter to retreive.
+
+		Returns:
+			list: List of analysis parameter values, None if error.
+
 		"""
 		def clean(val):
 			if val is None:
 				val = float('nan')
 			return val
-		# peakVal, peakSec
-		#x = [spike[xStat] for spike in self.spikeDict]
-		#y = [spike[yStat] for spike in self.spikeDict]
-		x = [clean(spike[xStat]) for spike in self.spikeDict]
-		if yStat is not None:
-			y = [clean(spike[yStat]) for spike in self.spikeDict]
 
-		if xToSec:
-			x = [self.pnt2Sec_(xi) for xi in x] # convert pnt to sec
+		x = None
+		y = None
+		error = False
 
-		if yStat is not None:
+		if len(self.spikeDict) == 0:
+			error = True
+		elif not statName1 in self.spikeDict[0].keys():
+			print('bAnalysis.getStat() did not find statName1', statName1, 'in spikeDict')
+			error = True
+		elif statName2 is not None and not statName2 in self.spikeDict[0].keys():
+			print('bAnalysis.getStat() did not find statName2', statName2, 'in spikeDict')
+			error = True
+
+		if not error:
+			x = [clean(spike[statName1]) for spike in self.spikeDict]
+			if statName2 is not None:
+				y = [clean(spike[statName2]) for spike in self.spikeDict]
+
+		if statName2 is not None:
 			return x, y
 		else:
 			return x
 
-	############################################################
-	# map human readable to backend stat
-	############################################################
-	'''
-	def statNames_Init(self):
+	def _getFilteredRecording(self, dDict=None):
 		"""
-		Initialize list of stats and their mapping from human readable to backend
-		"""
-		statDict = collections.OrderedDict()
-		statDict['Take Off Potential (s)'] = 'thresholdSec'
-		statDict['Take Off Potential (mV)'] = 'thresholdVal'
-		statDict['AP Peak (mV)'] = 'peakVal'
-		statDict['AP Height (mV)'] = 'peakHeight'
-		statDict['Pre AP Min (mV)'] = 'preMinVal'
-		statDict['Post AP Min (mV)'] = 'postMinVal'
-		statDict['AP Duration (ms)'] = 'apDuration_ms'
-		# 'Early Diastolic Depol Rate (dV/s)'
-		statDict['Early Diastolic Duration (ms)'] = 'earlyDiastolicDuration_ms'
-		statDict['Diastolic Duration (ms)'] = 'diastolicDuration_ms'
-		statDict['Max AP Upstroke (dV/dt)'] = 'preSpike_dvdt_max_val2'
-		statDict['Max AP Upstroke (mV)'] = 'preSpike_dvdt_max_val'
-		statDict['Max AP Repolarization (dV/dt)'] = 'postSpike_dvdt_min_val2'
-		statDict['Max AP Repolarization (mV)'] = 'postSpike_dvdt_min_val'
-		statDict['Inter-Spike-Interval (ms)'] = 'isi_ms'
-		statDict['Cycle Length (ms)'] = 'cycleLength_ms'
-		# 'halfWidth' # THIS HAS TO BE DYNAMIC ???
-		statDict['Condition 1'] = 'Condition 1'
-		statDict['Condition 2'] = 'Condition 2'
-		statDict['Condition 3'] = 'Condition 3'
+		Get a filtered version of recording, used for both V-Clamp and I-Clamp
 
-		# make a list of string from keys
-		#myStatList = list(statDict.keys())
-	'''
-
-	############################################################
-	# spike detection
-	############################################################
-	def getFilteredRecording(self, dDict=None):
-		"""
-		for both V-Clamp and I-Clamp
+		Args:
+			dDict (dict): Default detection dictionary. See getDefaultDetection()
 		"""
 		if dDict is None:
 			dDict = self.getDefaultDetection()
@@ -350,22 +296,31 @@ class bAnalysis:
 		else:
 			self.filteredVm = self.abf.sweepY
 
-	def getBaselineSubtract(self, dDict=None):
+	def _getBaselineSubtract(self, dDict=None):
+		"""
+		for V-Clamp
+
+		Args:
+			dDict (dict): Default detection dictionary. See getDefaultDetection()
+		"""
 		if dDict is None:
 			dDict = self.getDefaultDetection()
 
 		dDict['medianFilter'] = 5
 
-		self.getFilteredRecording(dDict)
+		self._getFilteredRecording(dDict)
 
 		# baseline subtract filtered recording
 		theMean = np.nanmean(self.filteredVm)
 		self.filteredDeriv = self.filteredVm.copy()
 		self.filteredDeriv -= theMean
 
-	def getDerivative(self, dDict=None):
+	def _getDerivative(self, dDict=None):
 		"""
-		medianFilter: pnts, must be int and odd
+		Get derivative of recording (used for I-Clamp). Uses (xxx,yyy,zzz) keys in dDict.
+
+		Args:
+			dDict (dict): Default detection dictionary. See getDefaultDetection()
 		"""
 		if dDict is None:
 			dDict = self.getDefaultDetection()
@@ -410,9 +365,16 @@ class bAnalysis:
 		self.filteredDeriv = np.concatenate(([0],self.filteredDeriv))
 
 	def getDefaultDetection(self):
+		"""
+		Get default detection dictionary, pass this to SpikeDetect()
+
+		Returns:
+			dict: Dictionary of detection parameters.
+		"""
+		mvThreshold = -20
 		theDict = {
 			'dvdtThreshold': 100, #if None then detect only using mvThreshold
-			'mvThreshold': -20,
+			'mvThreshold': mvThreshold,
 			'medianFilter': 0,
 			'SavitzkyGolay_pnts': 5, # shoould correspond to about 0.5 ms
 			'SavitzkyGolay_poly': 2,
@@ -431,14 +393,15 @@ class bAnalysis:
 			# add 20210413 to turn of doBackupSpikeVm on pure vm detection
 			'doBackupSpikeVm': True,
 			'spikeClipWidth_ms': 500,
-			'onlyPeaksAbove_mV': None,
-			'startSeconds': None,
+			'onlyPeaksAbove_mV': mvThreshold,
+			'startSeconds': None, # not used ???
 			'stopSeconds': None,
 
 			# for detection of Ca from line scans
 			#'caThresholdPos': 0.01,
 			#'caMinSpike': 0.5,
 
+			# todo: get rid of this
 			# book keeping like ('cellType', 'sex', 'condition')
 			'cellType': '',
 			'sex': '',
@@ -447,6 +410,12 @@ class bAnalysis:
 		return theDict.copy()
 
 	def getDefaultDetection_ca(self):
+		"""
+		Get default detection for Ca analysis. Warning, this is currently experimental.
+
+		Returns:
+			dict: Dictionary of detection parameters.
+		"""
 		theDict = self.getDefaultDetection()
 		theDict['dvdtThreshold'] = 0.01 #if None then detect only using mvThreshold
 		theDict['mvThreshold'] = 0.5
@@ -607,7 +576,7 @@ class bAnalysis:
 		eDict['Details'] = detailStr
 		return eDict
 
-	def spikeDetect0(self, dDict, verbose=False):
+	def _spikeDetect_dvdt(self, dDict, verbose=False):
 		"""
 		look for threshold crossings (dvdtThreshold) in first derivative (dV/dt) of membrane potential (Vm)
 		append each threshold crossing (e.g. a spike) in self.spikeTimes list
@@ -622,7 +591,7 @@ class bAnalysis:
 		#for k,v in dDict.items():
 
 		if verbose:
-			print('bAnalysis.spikeDetect0()')
+			print('bAnalysis.spikeDetect_dvdt()')
 			print('	 dvdtThreshold:', dDict['dvdtThreshold'])
 			print('	 mvThreshold:', dDict['mvThreshold'])
 			print('	 medianFilter:', dDict['medianFilter'])
@@ -632,11 +601,7 @@ class bAnalysis:
 		now = datetime.datetime.now()
 		dateStr = now.strftime('%Y-%m-%d %H:%M:%S')
 		self.dateAnalyzed = dateStr
-
 		self.detectionType = 'dVdtThreshold'
-		self.dvdtThreshold = dDict['dvdtThreshold']
-		self.mvThreshold = dDict['mvThreshold'] # todo: remove
-		self.medianFilter = dDict['medianFilter']
 
 		#
 		#
@@ -735,7 +700,7 @@ class bAnalysis:
 			#preDerivClip = self.filteredDeriv[spikeTime-window_pnts:spikeTime+window_pnts] # backwards
 
 			if len(preDerivClip) == 0:
-				print('error: spikeDetect0()',
+				print('error: spikeDetect_dvdt()',
 						'spike', i, 'at pnt', spikeTime,
 						'window_pnts:', window_pnts,
 						'dvdtPreWindow_ms:', dDict['dvdtPreWindow_ms'],
@@ -765,7 +730,7 @@ class bAnalysis:
 				else:
 					errType = 'dvdtPercent'
 					errStr = f"dvdtPercent error searching for dvdt_percentOfMax: {dDict['dvdt_percentOfMax']} peak dV/dt is {peakVal}"
-					#print(f'   error: bAnalysis.spikeDetect0() spike {i} looking for dvdt_percentOfMax:', dDict['dvdt_percentOfMax'], 'peak dV/dt is', peakVal)
+					#print(f'   error: bAnalysis.spikeDetect_dvdt() spike {i} looking for dvdt_percentOfMax:', dDict['dvdt_percentOfMax'], 'peak dV/dt is', peakVal)
 					#print('      ', 'np.where did not find preDerivClip<percentMaxVal')
 					spikeTimes1.append(spikeTime)
 					eDict = self._getErrorDict(i, spikeTime, errType, errStr) # spikeTime is in pnts
@@ -773,21 +738,20 @@ class bAnalysis:
 					spikeErrorList1.append(eDict)
 			except (IndexError, ValueError) as e:
 				##
-				print('   error: bAnalysis.spikeDetect0() looking for dvdt_percentOfMax')
+				print('   error: bAnalysis.spikeDetect_dvdt() looking for dvdt_percentOfMax')
 				print('      ', 'IndexError for spike', i, spikeTime)
 				print('      ', e)
 				##
 				spikeTimes1.append(spikeTime)
 
-		self.thresholdTimes = spikeTimes0 # points
-		self.spikeTimes = spikeTimes1 # points
+		#self.thresholdTimes = spikeTimes0 # points
+		#self.spikeTimes = spikeTimes1 # points
 
-		return self.spikeTimes, self.thresholdTimes, self.filteredVm, self.filteredDeriv, spikeErrorList1
+		return spikeTimes1, spikeErrorList1
 
-	#def spikeDetect00(self, mvThreshold=-20, refractory_ms=20, medianFilter=0, verbose=True): #, startSeconds=None, stopSeconds=None):
-	def spikeDetect00(self, dDict, verbose=False):
+	def _spikeDetect_vm(self, dDict, verbose=False):
 		"""
-		detect using Vm threshold and NOT dvdt
+		spike detect using Vm threshold and NOT dvdt
 		append each threshold crossing (e.g. a spike) in self.spikeTimes list
 
 		Returns:
@@ -798,22 +762,15 @@ class bAnalysis:
 		"""
 
 		if verbose:
-			print('bAnalysis.spikeDetect00() mvThreshold:', dDict['mvThreshold'])
+			print('bAnalysis.spikeDetect_vm() mvThreshold:', dDict['mvThreshold'])
 
 		#
 		# header
 		now = datetime.datetime.now()
 		dateStr = now.strftime('%Y-%m-%d %H:%M:%S')
 		self.dateAnalyzed = dateStr
-
 		self.detectionType = 'mvThreshold'
-		self.dvdtThreshold = None					# 20190623 - IMPORTANT
-		self.mvThreshold = dDict['mvThreshold']
-		self.medianFilter = dDict['medianFilter']
-		#self.startSeconds = startSeconds
-		#self.stopSeconds = stopSeconds
 
-		#
 		#
 		startPnt = 0
 		stopPnt = len(self.abf.sweepX) - 1
@@ -829,7 +786,7 @@ class bAnalysis:
 		Ds=Is[:-1]-Is[1:]+1
 		spikeTimes0 = Is[np.where(Ds)[0]+1]
 		if verbose:
-			print('  bAnalysis.spikeDetect00() spikeTimes0:', len(spikeTimes0), spikeTimes0)
+			print('  bAnalysis.spikeDetect_vm() spikeTimes0:', len(spikeTimes0), spikeTimes0)
 
 		#
 		# reduce spike times based on start/stop
@@ -876,7 +833,7 @@ class bAnalysis:
 			else:
 				tmpSpikeTimeSec = self.pnt2Sec_(spikeTime)
 
-		# todo: add this to spikeDetect0()
+		# todo: add this to spikeDetect_dvdt()
 		goodSpikeTimes, goodSpikeErrors = self._throwOutRefractory(goodSpikeTimes, goodSpikeErrors, refractory_ms=dDict['refractory_ms'])
 		spikeTimes0 = goodSpikeTimes
 		spikeErrorList = goodSpikeErrors
@@ -905,92 +862,70 @@ class bAnalysis:
 				#print('i:', i, 'spikeTime:', spikeTime, 'peakPnt:', peakPnt, 'threshPnt2:', threshPnt2)
 				spikeTimes1.append(threshPnt2)
 			except (IndexError) as e:
-				print('   error: bAnalysis.spikeDetect0() IndexError spike', i, spikeTime, 'percentMaxVal:', percentMaxVal)
+				print('   error: bAnalysis.spikeDetect_vm() IndexError spike', i, spikeTime, 'percentMaxVal:', percentMaxVal)
 				spikeTimes1.append(spikeTime)
 
 		self.thresholdTimes = spikeTimes0 # points
 		self.spikeTimes = spikeTimes1 # points
 		"""
 
-		self.spikeTimes = spikeTimes0
+		#self.spikeTimes = spikeTimes0
 
 		#
-		return self.spikeTimes, self.filteredVm, self.filteredDeriv, spikeErrorList
+		return spikeTimes0, spikeErrorList
 
-	'''
-	def spikeDetect(self, dvdtThreshold=100, mvThreshold=-20,
-					medianFilter=0, halfHeights=[20, 50, 80],
-					refractory_ms=20, peakWindow_ms=10,
-					window_ms=2, avgWindow_ms=5,
-					dvdt_percentOfMax=0.1, halfWidthWindow_ms = 20,
-					spikeClipWidth_ms=500, onlyPeaksAbove_mV=None,
-					verbose=True): #, startSeconds=None, stopSeconds=None):
-	'''
 	def spikeDetect(self, dDict, verbose=False):
 		'''
-		spike detect the current sweep and put results into spikeTime[currentSweep]
+		Spike detect the current sweep and put results into `self.spikeDict[]`.
 
-		parameters:
-			dDict: detection dictionary from self.getDefaultDetection
+		Args:
+			dDict (dict): Detection dictionary from self.getDefaultDetection
 		'''
 
 		self.detectionDict = dDict # remember the parameters of our last detection
 
 		startTime = time.time()
 
-		# todo: but sanpy analysis versions in seperate file, add documentation as to what has changed
-		#analysisVersion = '0.1.3'
-
 		if verbose:
 			sanpy.bUtil.printDict(dDict)
 
-		#self.getDerivative(dDict)
 		if self._recordingMode == 'I-Clamp':
-			self.getDerivative(dDict)
+			self._getDerivative(dDict)
 		elif self._recordingMode == 'V-Clamp':
-			self.getBaselineSubtract(dDict)
+			self._getBaselineSubtract(dDict)
+		else:
+			# in case recordingMode is ill defined
+			self._getDerivative(dDict)
 
 		self.spikeDict = [] # we are filling this in, one dict for each spike
 
-		self.numErrors = 0
 		detectionType = None
 
+		#
 		# spike detect
 		if dDict['dvdtThreshold'] is None or np.isnan(dDict['dvdtThreshold']):
 			# detect using mV threshold
 			detectionType = 'mv'
-			self.thresholdTimes = None
-			self.spikeTimes, vm, dvdt, spikeErrorList = self.spikeDetect00(dDict, verbose=verbose)
+			self.spikeTimes, spikeErrorList = self._spikeDetect_vm(dDict, verbose=verbose)
 
 			# backup childish vm threshold
 			if dDict['doBackupSpikeVm']:
 				self.spikeTimes = self._backupSpikeVm(dDict['medianFilter'])
 
-			'''
-			self.spikeTimes, vm, dvdt = \
-				self.spikeDetect00(mvThreshold=mvThreshold, medianFilter=medianFilter,
-									refractory_ms=refractory_ms,
-									verbose=verbose) #, startSeconds=startSeconds, stopSeconds=stopSeconds)
-			'''
 		else:
 			# detect using dv/dt threshold AND min mV
 			detectionType = 'dvdt'
-			self.spikeTimes, self.thresholdTimes, vm, dvdt, spikeErrorList = self.spikeDetect0(dDict, verbose=verbose)
-			'''
-			self.spikeTimes, self.thresholdTimes, vm, dvdt = \
-				self.spikeDetect0(dvdtThreshold=dvdtThreshold, mvThreshold=mvThreshold,
-									peakWindow_ms=peakWindow_ms,
-									window_ms=window_ms,
-									refractory_ms=refractory_ms,
-									dvdt_percentOfMax=dvdt_percentOfMax,
-									medianFilter=medianFilter, verbose=verbose) #, startSeconds=startSeconds, stopSeconds=stopSeconds)
-			'''
+			self.spikeTimes, spikeErrorList = self._spikeDetect_dvdt(dDict, verbose=verbose)
+
+		vm = self.filteredVm
+		dvdt = self.filteredDeriv
 
 		#
 		# look in a window after each threshold crossing to get AP peak
 		peakWindow_pnts = self.abf.dataPointsPerMs * dDict['peakWindow_ms']
 		peakWindow_pnts = round(peakWindow_pnts)
 
+		#
 		# throw out spikes that have peak below onlyPeaksAbove_mV
 		newSpikeTimes = []
 		newSpikeErrorList = []
@@ -1003,10 +938,11 @@ class bAnalysis:
 					newSpikeTimes.append(spikeTime)
 					newSpikeErrorList.append(spikeErrorList[i])
 				else:
-					print('peak height: rejecting spike', i, 'at pnt:', spikeTime, "dDict['onlyPeaksAbove_mV']:", dDict['onlyPeaksAbove_mV'])
+					print('spikeDetect() peak height: rejecting spike', i, 'at pnt:', spikeTime, "dDict['onlyPeaksAbove_mV']:", dDict['onlyPeaksAbove_mV'])
 			#
 			self.spikeTimes = newSpikeTimes
 			spikeErrorList = newSpikeErrorList
+
 		#
 		# throw out spikes on a down-slope
 		avgWindow_pnts = dDict['avgWindow_ms'] * self.abf.dataPointsPerMs
@@ -1019,7 +955,7 @@ class bAnalysis:
 			peakPnt += spikeTime
 			peakVal = np.max(vm[spikeTime:spikeTime+peakWindow_pnts])
 
-			spikeDict = collections.OrderedDict() # use OrderedDict so Pandas output is in the correct order
+			spikeDict = OrderedDict() # use OrderedDict so Pandas output is in the correct order
 
 			spikeDict['include'] = 1
 			spikeDict['analysisVersion'] = sanpy.analysisVersion
@@ -1027,27 +963,19 @@ class bAnalysis:
 			spikeDict['file'] = self.file
 
 			spikeDict['detectionType'] = detectionType
-			#spikeDict['condition1'] = self.condition1
-			#spikeDict['condition2'] = self.condition2
-			#spikeDict['condition3'] = self.condition3
-			#spikeDict['condition4'] = self.condition4
 			spikeDict['cellType'] = dDict['cellType']
 			spikeDict['sex'] = dDict['sex']
 			spikeDict['condition'] = dDict['condition']
 
 			spikeDict['spikeNumber'] = i
 
-			#spikeDict['numError'] = 0
 			spikeDict['errors'] = []
-			# append existing spikeErrorList from spikeDetect0() or spikeDetect00()
+			# append existing spikeErrorList from spikeDetect_dvdt() or spikeDetect_mv()
 			tmpError = spikeErrorList[i]
 			if tmpError is not None and tmpError != np.nan:
 				#spikeDict['numError'] += 1
 				spikeDict['errors'].append(tmpError) # tmpError is from:
 							#eDict = self._getErrorDict(i, spikeTime, errType, errStr) # spikeTime is in pnts
-
-			#spikeDict['startSeconds'] = startSeconds
-			#spikeDict['stopSeconds'] = stopSeconds
 
 			# detection params
 			spikeDict['dvdtThreshold'] = dDict['dvdtThreshold']
@@ -1168,7 +1096,6 @@ class bAnalysis:
 					errorStr = 'searching for preMinVal:' + str(preMinVal) #+ ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
 					eDict = self._getErrorDict(i, self.spikeTimes[i], 'preMin', errorStr) # spikeTime is in pnts
 					self.spikeDict[i]['errors'].append(eDict)
-					self.numErrors += 1
 
 				#
 				# linear fit on 10% - 50% of the time from preMinPnt to self.spikeTimes[i]
@@ -1192,16 +1119,23 @@ class bAnalysis:
 				# m*x+b"
 				xFit = self.abf.sweepX[preLinearFitPnt0:preLinearFitPnt1]
 				yFit = vm[preLinearFitPnt0:preLinearFitPnt1]
-				try:
-					mLinear, bLinear = np.polyfit(xFit, yFit, 1) # m is slope, b is intercept
-					self.spikeDict[i]['earlyDiastolicDurationRate'] = mLinear
-				except TypeError:
-					#catching exception: raise TypeError("expected non-empty vector for x")
-					self.spikeDict[i]['earlyDiastolicDurationRate'] = defaultVal
-					#self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
-					errorStr = 'earlyDiastolicDurationRate fit'
-					eDict = self._getErrorDict(i, self.spikeTimes[i], 'fitEDD', errorStr) # spikeTime is in pnts
-					self.spikeDict[i]['errors'].append(eDict)
+				with warnings.catch_warnings():
+					warnings.filterwarnings('error')
+					try:
+						mLinear, bLinear = np.polyfit(xFit, yFit, 1) # m is slope, b is intercept
+						self.spikeDict[i]['earlyDiastolicDurationRate'] = mLinear
+					except TypeError:
+						#catching exception: raise TypeError("expected non-empty vector for x")
+						self.spikeDict[i]['earlyDiastolicDurationRate'] = defaultVal
+						errorStr = 'earlyDiastolicDurationRate fit'
+						eDict = self._getErrorDict(i, self.spikeTimes[i], 'fitEDD', errorStr) # spikeTime is in pnts
+						self.spikeDict[i]['errors'].append(eDict)
+					except np.RankWarning:
+						# also throws: RankWarning: Polyfit may be poorly conditioned
+						self.spikeDict[i]['earlyDiastolicDurationRate'] = defaultVal
+						errorStr = 'earlyDiastolicDurationRate fit - RankWarning'
+						eDict = self._getErrorDict(i, self.spikeTimes[i], 'fitEDD2', errorStr) # spikeTime is in pnts
+						self.spikeDict[i]['errors'].append(eDict)
 
 				# not implemented
 				#self.spikeDict[i]['lateDiastolicDuration'] = ???
@@ -1226,7 +1160,6 @@ class bAnalysis:
 					errorStr = 'searching for preSpike_dvdt_max_pnt:'
 					eDict = self._getErrorDict(i, self.spikeTimes[i], 'preSpikeDvDt', errorStr) # spikeTime is in pnts
 					self.spikeDict[i]['errors'].append(eDict)
-					self.numErrors += 1
 
 			# 20210501, we do not need postMin/mdp, not used anywhere else
 			'''
@@ -1257,7 +1190,6 @@ class bAnalysis:
 					errorStr = 'searching for postMinVal:' + str(postMinVal) #+ ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
 					eDict = self._getErrorDict(i, self.spikeTimes[i], 'postMinError', errorStr) # spikeTime is in pnts
 					self.spikeDict[i]['errors'].append(eDict)
-					self.numErrors += 1
 			'''
 
 			if True:
@@ -1331,7 +1263,6 @@ class bAnalysis:
 						errorStr = 'previous spike preMinPnt is ' + str(prevPreMinPnt) + ' this preMinPnt:' + str(thisPreMinPnt)
 						eDict = self._getErrorDict(i, self.spikeTimes[i], 'cycleLength', errorStr) # spikeTime is in pnts
 						self.spikeDict[i]['errors'].append(eDict)
-						self.numErrors += 1
 					'''
 					# 20210501 was this, I am no longer using postMinPnt
 					prevPostMinPnt = self.spikeDict[i-1]['postMinPnt']
@@ -1345,7 +1276,6 @@ class bAnalysis:
 						errorStr = 'previous spike postMinPnt is ' + str(prevPostMinPnt) + ' this postMinPnt:' + str(tmpPostMinPnt)
 						eDict = self._getErrorDict(i, self.spikeTimes[i], 'cycleLength', errorStr) # spikeTime is in pnts
 						self.spikeDict[i]['errors'].append(eDict)
-						self.numErrors += 1
 					'''
 			#
 			# spike half with and APDur
@@ -1445,7 +1375,7 @@ class bAnalysis:
 				except (IndexError) as e:
 					##
 					##
-					print('  EXCEPTION: bAnalysis.spikeDetect() spike', i, 'half height', halfHeight)
+					#print('  EXCEPTION: bAnalysis.spikeDetect() spike', i, 'half height', halfHeight)
 					##
 					##
 
@@ -1458,7 +1388,6 @@ class bAnalysis:
 
 					eDict = self._getErrorDict(i, self.spikeTimes[i], 'spikeWidth', errorStr) # spikeTime is in pnts
 					self.spikeDict[i]['errors'].append(eDict)
-					self.numErrors += 1
 
 				# abb 20210125
 				# wtf is hapenning on Heroku????
@@ -1517,21 +1446,25 @@ class bAnalysis:
 		startSeconds = dDict['startSeconds']
 		stopSeconds = dDict['stopSeconds']
 		#tmpAnalysisName, df0 = self.getReportDf(theMin, theMax, savefile)
-		dfReportForScatter = self.report(startSeconds, stopSeconds)
+		exportObject = sanpy.bExport(self)
+		dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
 
 		stopTime = time.time()
 		if verbose:
 			print('bAnalysis.spikeDetect() for file', self.file)
 			print('  detected', len(self.spikeTimes), 'spikes in', round(stopTime-startTime,2), 'seconds')
-			self.errorReport(justTheNumber=False)
+			self.errorReport()
 
 		return dfReportForScatter
 
 	def makeSpikeClips(self, spikeClipWidth_ms, theseTime_sec=None):
 		"""
-		theseTime_sec
 
-		return
+		Args:
+			spikeClipWidth_ms (int): Width of each spike clip in milliseconds.
+			theseTime_sec (list of float): List of seconds to make clips from.
+
+		Returns:
 			spikeClips_x2: ms
 			spikeClips: sweepY
 		"""
@@ -1583,6 +1516,10 @@ class bAnalysis:
 	def getSpikeClips(self, theMin, theMax):
 		"""
 		get 2d list of spike clips, spike clips x, and 1d mean spike clip
+
+		Args:
+			theMin (float): Start seconds.
+			theMax (float): Stop seconds.
 		"""
 		if theMin is None or theMax is None:
 			theMin = 0
@@ -1607,23 +1544,15 @@ class bAnalysis:
 
 		return theseClips, theseClips_x, meanClip
 
-	############################################################
-	# output reports
-	############################################################
-	def errorReport(self, justTheNumber=False):
+	def errorReport(self, ):
 		"""
-		return dfError
+		Generate an error report, one error per spike. Spikes can have more than one error.
+
+		Returns:
+			(pandas DataFrame): Pandas DataFrame, one row per error.
 		"""
 
 		dictList = []
-
-		'''
-		if len(self.spikeDict) == 0:
-			fakeErorDict = self._getErrorDict(1, 1, 'fake', 'fake'')
-			dictList = []
-			dfError = pd.DataFrame(columns=fakeErorDict)
-			return dfError
-		'''
 
 		numError = 0
 		errorList = []
@@ -1633,12 +1562,6 @@ class bAnalysis:
 				if error is None or error == np.nan or error == 'nan':
 					continue
 				dictList.append(error)
-		#
-		'''
-		print('bAnalysis.errorReport() generated dictList:')
-		for error in dictList:
-			print(error)
-		'''
 
 		if len(dictList) == 0:
 			fakeErrorDict = self._getErrorDict(1, 1, 'fake', 'fake')
@@ -1649,487 +1572,61 @@ class bAnalysis:
 		print('bAnalysis.errorReport() returning len(dfError):', len(dfError))
 		return dfError
 
-	def report(self, theMin, theMax):
-		"""
-		return entire spikeDict as a pandas data frame
-
-		(theMin, theMax): start/stop seconds of the analysis
-		"""
-		if theMin is None or theMax is None:
-			return None
-
-		df = pd.DataFrame(self.spikeDict)
-		df = df[df['thresholdSec'].between(theMin, theMax, inclusive=True)]
-
-		# added when trying to make scatterwidget for one file
-		#print('  20210426 adding columns in bAnalysis.report()')
-		#df['Condition'] = 	df['condition1']
-		#df['File Number'] = 	df['condition2']
-		#df['Sex'] = 	df['condition3']
-		#df['Region'] = 	df['condition4']
-
-		# make new column with sex/region encoded
-		'''
-		tmpNewCol = 'RegSex'
-		self.masterDf[tmpNewCol] = ''
-		for tmpRegion in ['Superior', 'Inferior']:
-			for tmpSex in ['Male', 'Female']:
-				newEncoding = tmpRegion[0] + tmpSex[0]
-				regSex = self.masterDf[ (self.masterDf['Region']==tmpRegion) & (self.masterDf['Sex']==tmpSex)]
-				regSex = (self.masterDf['Region']==tmpRegion) & (self.masterDf['Sex']==tmpSex)
-				print('newEncoding:', newEncoding, 'regSex:', regSex.shape)
-				self.masterDf.loc[regSex, tmpNewCol] = newEncoding
-		'''
-
-		# want this but region/sex/condition are not defined
-		print('bAnalysis.report()')
-		print(df.head())
-		tmpNewCol = 'CellTypeSex'
-		cellTypeStr = df['cellType'].iloc[0]
-		sexStr = df['sex'].iloc[0]
-		print('cellTypeStr:', cellTypeStr, 'sexStr:', sexStr)
-		regSexEncoding = cellTypeStr + sexStr
-		df[tmpNewCol] = regSexEncoding
-
-		minStr = '%.2f'%(theMin)
-		maxStr = '%.2f'%(theMax)
-		minStr = minStr.replace('.', '_')
-		maxStr = maxStr.replace('.', '_')
-		tmpPath, tmpFile = os.path.split(self.file)
-		tmpFile, tmpExt = os.path.splitext(tmpFile)
-		analysisName = tmpFile + '_s' + minStr + '_s' + maxStr
-		print('    minStr:', minStr, 'maxStr:', maxStr, 'analysisName:', analysisName)
-		df['analysisname'] = analysisName
-
-		return df
-
-	def report2(self, theMin, theMax):
-		"""
-		generate a report of spikes with spike times between theMin (sec) and theMax (sec)
-		"""
-		newList = []
-		for spike in self.spikeDict:
-
-			# if current spike time is out of bounds then continue (e.g. it is not between theMin (sec) and theMax (sec)
-			spikeTime_sec = self.pnt2Sec_(spike['thresholdPnt'])
-			if spikeTime_sec<theMin or spikeTime_sec>theMax:
-				continue
-
-			spikeDict = collections.OrderedDict() # use OrderedDict so Pandas output is in the correct order
-			spikeDict['Take Off Potential (s)'] = self.pnt2Sec_(spike['thresholdPnt'])
-			spikeDict['Take Off Potential (ms)'] = self.pnt2Ms_(spike['thresholdPnt'])
-			spikeDict['Take Off Potential (mV)'] = spike['thresholdVal']
-			spikeDict['AP Peak (ms)'] = self.pnt2Ms_(spike['peakPnt'])
-			spikeDict['AP Peak (mV)'] = spike['peakVal']
-			spikeDict['AP Height (mV)'] = spike['peakHeight']
-			spikeDict['Pre AP Min (mV)'] = spike['preMinVal']
-			#spikeDict['Post AP Min (mV)'] = spike['postMinVal']
-			#
-			#spikeDict['AP Duration (ms)'] = spike['apDuration_ms']
-			spikeDict['Early Diastolic Duration (ms)'] = spike['earlyDiastolicDuration_ms']
-			spikeDict['Early Diastolic Depolarization Rate (dV/s)'] = spike['earlyDiastolicDurationRate'] # abb 202012
-			spikeDict['Diastolic Duration (ms)'] = spike['diastolicDuration_ms']
-			#
-			spikeDict['Inter-Spike-Interval (ms)'] = spike['isi_ms']
-			spikeDict['Spike Frequency (Hz)'] = spike['spikeFreq_hz']
-
-			spikeDict['Cycle Length (ms)'] = spike['cycleLength_ms']
-
-			spikeDict['Max AP Upstroke (dV/dt)'] = spike['preSpike_dvdt_max_val2']
-			spikeDict['Max AP Upstroke (mV)'] = spike['preSpike_dvdt_max_val']
-
-			spikeDict['Max AP Repolarization (dV/dt)'] = spike['postSpike_dvdt_min_val2']
-			spikeDict['Max AP Repolarization (mV)'] = spike['postSpike_dvdt_min_val']
-
-			# half-width
-			for widthDict in spike['widths']:
-				keyName = 'width_' + str(widthDict['halfHeight'])
-				spikeDict[keyName] = widthDict['widthMs']
-
-			# errors
-			#spikeDict['numError'] = spike['numError']
-			spikeDict['errors'] = spike['errors']
-
-
-			# append
-			newList.append(spikeDict)
-
-		df = pd.DataFrame(newList)
-		return df
-
-	#################################################################################
-	# save results (e.g. report)
-	#################################################################################
-	def saveReport(self, savefile, theMin=None, theMax=None, saveExcel=True, alsoSaveTxt=True, verbose=True):
-		"""
-		save a spike report for detected spikes between theMin (sec) and theMax (sec)
-
-		savefile: path to xlsx file
-		(theMin, theMax): start/stop seconds of the analysis
-
-		Return:
-			analysisName
-			df
-		"""
-
-		if theMin == None:
-			theMin = 0
-		if theMax == None:
-			theMax = self.abf.sweepX[-1]
-
-		'''
-		filePath, fileName = os.path.split(os.path.abspath(self.file))
-		fileBaseName, extension = os.path.splitext(fileName)
-		excelFilePath = os.path.join(filePath, fileBaseName + '.xlsx')
-		'''
-
-		#print('AnalysisApp.report() saving', excelFilePath)
-		#print('Asking user for file name to save...')
-
-		#savefile will be full path to user specified file
-		'''
-		savefile = asksaveasfilename(filetypes=(("Excel files", "*.xlsx"),
-									("All files", "*.*") ),
-									initialdir=filePath,
-									initialfile=fileBaseName + '.xlsx')
-		'''
-
-		# always grab a df to the entire analysis (not sure what I will do with this)
-		#df = self.report() # report() is my own 'bob' verbiage
-
-		theRet = None
-
-		if saveExcel and savefile:
-			if verbose: print('    bAnalysis.saveReport() saving user specified .xlsx file:', savefile)
-			excelFilePath = savefile
-			writer = pd.ExcelWriter(excelFilePath, engine='xlsxwriter')
-
-			#
-			# cardiac style analysis to sheet 'cardiac'
-			cardiac_df = self.report2(theMin, theMax) # report2 is more 'cardiac'
-
-			#
-			# header sheet
-			headerDict = collections.OrderedDict()
-			headerDict['file'] = [self.file]
-
-			#headerDict['Condition 1'] = [self.condition1]
-			#headerDict['Condition 2'] = [self.condition2]
-			#headerDict['Condition 3'] = [self.condition3]
-
-			headerDict['Cell Type'] = [self.detectionDict['cellType']]
-			headerDict['Sex'] = [self.detectionDict['sex']]
-			headerDict['Condition'] = [self.detectionDict['condition']]
-
-			headerDict['Date Analyzed'] = [self.dateAnalyzed]
-			headerDict['Detection Type'] = [self.detectionType]
-			headerDict['dV/dt Threshold'] = [self.dvdtThreshold]
-			#headerDict['mV Threshold'] = [self.mvThreshold] # abb 202012
-			headerDict['Vm Threshold (mV)'] = [self.mvThreshold]
-			headerDict['Median Filter (pnts)'] = [self.medianFilter]
-			headerDict['Analysis Version'] = [sanpy.analysisVersion]
-			headerDict['Interface Version'] = [sanpy.interfaceVersion]
-
-			#headerDict['Analysis Start (sec)'] = [self.startSeconds]
-			#headerDict['Analysis Stop (sec)'] = [self.stopSeconds]
-			headerDict['Sweep Number'] = [self.currentSweep]
-			headerDict['Number of Sweeps'] = [self.numSweeps]
-			headerDict['Export Start (sec)'] = [float('%.2f'%(theMin))] # on export, x-axis of raw plot will be ouput
-			headerDict['Export Stop (sec)'] = [float('%.2f'%(theMax))] # on export, x-axis of raw plot will be ouput
-			headerDict['stats'] = []
-
-			for idx, col in enumerate(cardiac_df):
-				headerDict[col] = []
-
-			# mean
-			theMean = cardiac_df.mean() # skipna default is True
-			theMean['errors'] = ''
-			# sd
-			theSD = cardiac_df.std() # skipna default is True
-			theSD['errors'] = ''
-			#se
-			theSE = cardiac_df.sem() # skipna default is True
-			theSE['errors'] = ''
-			#n
-			theN = cardiac_df.count() # skipna default is True
-			theN['errors'] = ''
-
-			statCols = ['mean', 'sd', 'se', 'n']
-			for j, stat in enumerate(statCols):
-				if j == 0:
-					pass
-				else:
-					headerDict['file'].append('')
-					#headerDict['Condition 1'].append('')
-					#headerDict['Condition 2'].append('')
-					#headerDict['Condition 3'].append('')
-					headerDict['Cell Type'].append('')
-					headerDict['Sex'].append('')
-					headerDict['Condition'].append('')
-					#
-					headerDict['Date Analyzed'].append('')
-					headerDict['Detection Type'].append('')
-					headerDict['dV/dt Threshold'].append('')
-					headerDict['Vm Threshold (mV)'].append('')
-					headerDict['Median Filter (pnts)'].append('')
-					headerDict['Analysis Version'].append('')
-					headerDict['Interface Version'].append('')
-					#headerDict['Analysis Start (sec)'].append('')
-					#headerDict['Analysis Stop (sec)'].append('')
-					headerDict['Sweep Number'].append('')
-					headerDict['Number of Sweeps'].append('')
-					headerDict['Export Start (sec)'].append('')
-					headerDict['Export Stop (sec)'].append('')
-
-				# a dictionary key for each stat
-				headerDict['stats'].append(stat)
-				for idx, col in enumerate(cardiac_df):
-					#headerDict[col].append('')
-					if stat == 'mean':
-						headerDict[col].append(theMean[col])
-					elif stat == 'sd':
-						headerDict[col].append(theSD[col])
-					elif stat == 'se':
-						headerDict[col].append(theSE[col])
-					elif stat == 'n':
-						headerDict[col].append(theN[col])
-
-
-			#print(headerDict)
-			#for k,v in headerDict.items():
-			#	print(k, v)
-
-			# dict to pandas dataframe
-			df = pd.DataFrame(headerDict).T
-			# pandas dataframe to excel sheet 'header'
-			df.to_excel(writer, sheet_name='summary')
-
-			# set the column widths in excel sheet 'cardiac'
-			columnWidth = 25
-			worksheet = writer.sheets['summary']  # pull worksheet object
-			for idx, col in enumerate(df):  # loop through all columns
-				worksheet.set_column(idx, idx, columnWidth)  # set column width
-
-			#
-			# 'cardiac' sheet
-			cardiac_df.to_excel(writer, sheet_name='cardiac')
-
-			# set the column widths in excel sheet 'cardiac'
-			columnWidth = 20
-			worksheet = writer.sheets['cardiac']  # pull worksheet object
-			for idx, col in enumerate(cardiac_df):  # loop through all columns
-				worksheet.set_column(idx, idx, columnWidth)  # set column width
-
-
-			#
-			# entire (verbose) analysis to sheet 'bob'
-			#df.to_excel(writer, sheet_name='bob')
-
-			#
-			# mean spike clip
-			theseClips, theseClips_x, meanClip = self.getSpikeClips(theMin, theMax)
-			try:
-				first_X = theseClips_x[0] #- theseClips_x[0][0]
-				#if verbose: print('    bAnalysis.saveReport() saving mean clip to sheet "Avg Spike" from', len(theseClips), 'clips')
-				df = pd.DataFrame(meanClip, first_X)
-				df.to_excel(writer, sheet_name='Avg Spike')
-			except (IndexError) as e:
-				print('warning: got bad spike clips in saveReport(). Usually happend when 1-2 spikes')
-			#print('df:', df)
-
-			writer.save()
-
-		#
-		# save a csv text file
-		#
-		analysisName = ''
-		if alsoSaveTxt:
-			# this also saves
-			analysisName, df0 = self.getReportDf(theMin, theMax, savefile)
-
-			#
-			# save mean spike clip
-
-			theseClips, theseClips_x, meanClip = self.getSpikeClips(theMin, theMax)
-			if len(theseClips_x) == 0:
-				pass
-			else:
-				first_X = theseClips_x[0] #- theseClips_x[0][0]
-				first_X = np.array(first_X)
-				first_X /= self.abf.dataPointsPerMs # pnts to ms
-				#if verbose: print('    bAnalysis.saveReport() saving mean clip to sheet "Avg Spike" from', len(theseClips), 'clips')
-				#dfClip = pd.DataFrame(meanClip, first_X)
-				dfClip = pd.DataFrame.from_dict({
-					'xMs': first_X,
-					'yVm': meanClip
-					})
-				# load clip based on analysisname (with start/stop seconds)
-				analysisname = df0['analysisname'].iloc[0] # name with start/stop seconds
-				print('bAnalysis.saveReport() analysisname:', analysisname)
-				#print('analysisname:', analysisname)
-				clipFileName = analysisname + '_clip.csv'
-				tmpPath, tmpFile = os.path.split(savefile)
-				tmpPath = os.path.join(tmpPath, 'analysis')
-				# dir is already created in getReportDf
-				if not os.path.isdir(tmpPath):
-					os.mkdir(tmpPath)
-				clipSavePath = os.path.join(tmpPath, clipFileName)
-				print('    clipSavePath:', clipSavePath)
-				dfClip.to_csv(clipSavePath)
-			#
-			'''
-			filePath, fileName = os.path.split(os.path.abspath(savefile))
-
-			textFileBaseName, tmpExtension = os.path.splitext(savefile)
-			textFilePath = os.path.join(filePath, textFileBaseName + '.txt')
-
-			print('    saving text file:', textFilePath)
-
-			# save header
-			textFileHeader = OrderedDict()
-			textFileHeader['file'] = self.file
-			textFileHeader['condition1'] = self.condition1
-			textFileHeader['condition2'] = self.condition2
-			textFileHeader['condition3'] = self.condition3
-			textFileHeader['dateAnalyzed'] = self.dateAnalyzed
-			textFileHeader['detectionType'] = self.detectionType
-			textFileHeader['dvdtThreshold'] = self.dvdtThreshold
-			textFileHeader['mvThreshold'] = self.mvThreshold
-			textFileHeader['medianFilter'] = self.medianFilter
-			textFileHeader['startSeconds'] = '%.2f'%(theMin)
-			textFileHeader['stopSeconds'] = '%.2f'%(theMax)
-			#textFileHeader['startSeconds'] = self.startSeconds
-			#textFileHeader['stopSeconds'] = self.stopSeconds
-			textFileHeader['currentSweep'] = self.currentSweep
-			textFileHeader['numSweeps'] = self.numSweeps
-			#textFileHeader['theMin'] = theMin
-			#textFileHeader['theMax'] = theMax
-
-			headerStr = ''
-			for k,v in textFileHeader.items():
-				headerStr += k + '=' + str(v) + ';'
-			headerStr += '\n'
-			#print('headerStr:', headerStr)
-			with open(textFilePath,'w') as f:
-				f.write(headerStr)
-
-			#print('Saving .txt file:', textFilePath)
-			df = self.report(theMin, theMax)
-			df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
-			'''
-			theRet = df0
-		#
-		return analysisName, theRet
-
-	def getReportDf(self, theMin, theMax, savefile):
-		"""
-		savefile: .xls file path
-		"""
-		filePath, fileName = os.path.split(os.path.abspath(savefile))
-
-		# make an analysis folder
-		filePath = os.path.join(filePath, 'analysis')
-		if not os.path.isdir(filePath):
-			print('    getReportDf() making output folder:', filePath)
-			os.mkdir(filePath)
-
-		textFileBaseName, tmpExtension = os.path.splitext(fileName)
-		textFilePath = os.path.join(filePath, textFileBaseName + '.csv')
-
-		# save header
-		textFileHeader = OrderedDict()
-		textFileHeader['file'] = self.file # this is actuall file path
-		#textFileHeader['condition1'] = self.condition1
-		#textFileHeader['condition2'] = self.condition2
-		#textFileHeader['condition3'] = self.condition3
-		textFileHeader['cellType'] = self.detectiondict['cellType']
-		textFileHeader['sex'] = self.detectiondict['sex']
-		textFileHeader['condition'] = self.detectiondict['condition']
-		#
-		textFileHeader['dateAnalyzed'] = self.dateAnalyzed
-		textFileHeader['detectionType'] = self.detectionType
-		textFileHeader['dvdtThreshold'] = self.dvdtThreshold
-		textFileHeader['mvThreshold'] = self.mvThreshold
-		textFileHeader['medianFilter'] = self.medianFilter
-		textFileHeader['startSeconds'] = '%.2f'%(theMin)
-		textFileHeader['stopSeconds'] = '%.2f'%(theMax)
-		#textFileHeader['startSeconds'] = self.startSeconds
-		#textFileHeader['stopSeconds'] = self.stopSeconds
-		textFileHeader['currentSweep'] = self.currentSweep
-		textFileHeader['numSweeps'] = self.numSweeps
-		#textFileHeader['theMin'] = theMin
-		#textFileHeader['theMax'] = theMax
-
-		# 20210125, this is not needed, we are saviing pandas df below ???
-		headerStr = ''
-		for k,v in textFileHeader.items():
-			headerStr += k + '=' + str(v) + ';'
-		headerStr += '\n'
-		#print('headerStr:', headerStr)
-		with open(textFilePath,'w') as f:
-			f.write(headerStr)
-
-		#print('Saving .txt file:', textFilePath)
-		df = self.report(theMin, theMax)
-
-		# we need a column indicating (path), the original .abf file
-		# along with (start,stop) which should make this analysis unique?
-		minStr = '%.2f'%(theMin)
-		maxStr = '%.2f'%(theMax)
-		minStr = minStr.replace('.', '_')
-		maxStr = maxStr.replace('.', '_')
-		tmpPath, tmpFile = os.path.split(self.file)
-		tmpFile, tmpExt = os.path.splitext(tmpFile)
-		analysisName = tmpFile + '_s' + minStr + '_s' + maxStr
-		print('    minStr:', minStr, 'maxStr:', maxStr, 'analysisName:', analysisName)
-		df['analysisname'] = analysisName
-
-		# should be filled in by self.report
-		#df['Condition'] = 	df['condition1']
-		#df['File Number'] = 	df['condition2']
-		#df['Sex'] = 	df['condition3']
-		#df['Region'] = 	df['condition4']
-		df['filename'] = [os.path.splitext(os.path.split(x)[1])[0] for x in 	df['file'].tolist()]
-
-		#
-		print('    bAnalysis.getReportDf() saving text file:', textFilePath)
-		#df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
-		df.to_csv(textFilePath, sep=',', index_label='index', mode='w')
-
-		return analysisName, df
-
 	#############################
 	# utility functions
 	#############################
 	def pnt2Sec_(self, pnt):
-		'''
-		if pnt is None or math.isnan(pnt):
-			return None
-		'''
+		"""
+		Convert a point to Seconds using `self.abf.dataPointsPerMs`
 
-		# debug
-		#pntInSeconds = pnt / self.abf.dataPointsPerMs / 1000
-		#print(f'pnt2Sec_() pnt:{pnt}, self.abf.dataPointsPerMs:{self.abf.dataPointsPerMs}, pntInSeconds:{pntInSeconds}')
+		Args:
+			pnt (int): The point
 
+		Returns:
+			float: The point in seconds
+		"""
 		if pnt is None:
 			return math.isnan(pnt)
 		else:
 			return pnt / self.abf.dataPointsPerMs / 1000
 
 	def pnt2Ms_(self, pnt):
+		"""
+		Convert a point to milliseconds (ms) using `self.abf.dataPointsPerMs`
+
+		Args:
+			pnt (int): The point
+
+		Returns:
+			float: The point in milliseconds (ms)
+		"""
 		return pnt / self.abf.dataPointsPerMs
 
 	def ms2Pnt_(self, ms):
-		return ms * self.abf.dataPointsPerMs
+		"""
+		Convert milliseconds (ms) to point in recording using `self.abf.dataPointsPerMs`
+
+		Args:
+			ms (float): The ms into the recording
+
+		Returns:
+			int: The point in the recording
+		"""
+		theRet = ms * self.abf.dataPointsPerMs
+		theRet = int(theRet)
+		return theRet
 
 	def __str__(self):
 		retStr = 'file: ' + self.file + '\n' + str(self.abf)
 		return retStr
 
-	def NormalizeData(self, data):
+	def _normalizeData(self, data):
+		"""
+		Used to calculate normalized data for detection from Kymograph. Is NOT for df/d0.
+		"""
 		return (data - np.min(data)) / (np.max(data) - np.min(data))
 
-def test_load_abf():
+def _test_load_abf():
 	path = '/Users/cudmore/data/dual-lcr/20210115/data/21115002.abf'
 	ba = bAnalysis(path)
 
@@ -2149,7 +1646,7 @@ def test_load_abf():
 
 	return ba
 
-def test_load_tif(path):
+def _test_load_tif(path):
 	"""
 	working on spike detection from sum of intensities along a line scan
 	see: example/lcr-analysis
@@ -2196,7 +1693,7 @@ def test_load_tif(path):
 
 	return ba
 
-def test_plot(ba, firstSampleTime=0):
+def _test_plot(ba, firstSampleTime=0):
 	#firstSampleTime = ba.abf.sweepX[0] # is not 0 for 'wait for trigger' FV3000
 
 	# plot
@@ -2263,7 +1760,7 @@ def test_plot(ba, firstSampleTime=0):
 	#
 	#plt.show()
 
-def lcrDualAnalysis():
+def _lcrDualAnalysis():
 	"""
 	for 2x files, line-scan and e-phys
 	plot spike time delay of ca imaging
