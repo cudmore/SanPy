@@ -13,6 +13,21 @@ theme:
     #generator: false
     custom_dir: 'theme'
 
+extra_css:
+- css/style.css
+
+markdown_extensions:
+- admonition
+- pymdownx.emoji
+- pymdownx.magiclink
+- pymdownx.snippets:
+    check_paths: true
+- pymdownx.superfences
+- pymdownx.tabbed
+- pymdownx.tasklist
+- toc:
+    permalink: "¤"
+
 plugins:
   - search
   - autorefs
@@ -20,8 +35,8 @@ plugins:
       watch:
         - ../sanpy
 
-extra:
-  generator: false
+#extra:
+#  generator: false
 
 nav:
     - Home: index.md

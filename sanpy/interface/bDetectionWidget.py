@@ -15,6 +15,7 @@ from pyqtgraph.exporters import ImageExporter
 
 #from bAnalysis import bAnalysis
 import sanpy
+#from sanpy import bAnalysis
 
 # abb trying to get detection widget to look respactable
 '''
@@ -647,7 +648,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				xPlot, yPlot = self.getEDD()
 			else:
 				xPlot, yPlot = self.ba.getStat(plot['x'], plot['y'])
-				if plot['convertx_tosec']:
+				if xPlot is not None and plot['convertx_tosec']:
 					xPlot = [self.ba.pnt2Sec_(x) for x in xPlot] # convert pnt to sec
 			#
 			# added connect='finite' to respect nan in half-width

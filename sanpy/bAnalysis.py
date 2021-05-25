@@ -26,9 +26,9 @@ class bAnalysis:
 	3. a byteStream when working in the cloud.
 	4. a dictionary (todo: add this).
 
-	## Examples:
+	Examples:
 
-	```
+	```python
 	ba = bAnalysis('data/19114001.abf')
 	print(ba) # prints info about underlying abf file
 	ba.plotDeriv()
@@ -37,9 +37,20 @@ class bAnalysis:
 	ba.plotClips()
 	```
 
+	Link to class, first braket is name, second is link [sanpy.bAnalysis][sanpy.bAnalysis.bAnalysis]
+
+	Link to a member function [sanpy.bAnalysis.bAnalysis.spikeDetect][]
+
+	[sanpy.bAnalysis.bAnalysis.makeSpikeClips][]
+
+	Link to bExport and show link as bExport [bExport][sanpy.bExport.bExport]
+
+	!!! note "This is an admonition with triple explamation points !!!."
+
 	"""
 	def __init__(self, file=None, theTiff=None, byteStream=None):
-		"""
+		"""Initialize a bAnalysis object
+
 		Args:
 			file (str): Path to either .abf or .csv with time/mV columns.
 			theTiff (str): Path to .tif file.
@@ -239,12 +250,13 @@ class bAnalysis:
 		error = False
 
 		if len(self.spikeDict) == 0:
+			#print('error bAnalysis.getStat(), there are no spikes')
 			error = True
 		elif not statName1 in self.spikeDict[0].keys():
-			print('bAnalysis.getStat() did not find statName1', statName1, 'in spikeDict')
+			print('error: bAnalysis.getStat() did not find statName1', statName1, 'in spikeDict')
 			error = True
 		elif statName2 is not None and not statName2 in self.spikeDict[0].keys():
-			print('bAnalysis.getStat() did not find statName2', statName2, 'in spikeDict')
+			print('error: bAnalysis.getStat() did not find statName2', statName2, 'in spikeDict')
 			error = True
 
 		if not error:
@@ -354,7 +366,7 @@ class bAnalysis:
 
 	def getDefaultDetection(self):
 		"""
-		Get default detection dictionary, pass this to SpikeDetect()
+		Get default detection dictionary, pass this to [bAnalysis.spikeDetect()][sanpy.bAnalysis.bAnalysis.spikeDetect]
 
 		Returns:
 			dict: Dictionary of detection parameters.
@@ -867,7 +879,7 @@ class bAnalysis:
 		Spike detect the current sweep and put results into `self.spikeDict[]`.
 
 		Args:
-			dDict (dict): Detection dictionary from self.getDefaultDetection
+			dDict (dict): A detection dictionary from [bAnalysis.getDefaultDetection()][sanpy.bAnalysis.bAnalysis.getDefaultDetection]
 		'''
 
 		self.detectionDict = dDict # remember the parameters of our last detection
@@ -1534,7 +1546,7 @@ class bAnalysis:
 
 	def errorReport(self, ):
 		"""
-		Generate an error report, one error per spike. Spikes can have more than one error.
+		Generate an error report, one row per error. Spikes can have more than one error.
 
 		Returns:
 			(pandas DataFrame): Pandas DataFrame, one row per error.

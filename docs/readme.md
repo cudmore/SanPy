@@ -36,3 +36,7 @@ Remember, this does not update the main repo, to do that
 git commit -am 'new commit'
 git push
 ```
+
+# using mkdocs docstring
+
+Tweeking the layout is here: https://mkdocstrings.github.io/handlers/python/

@@ -256,7 +256,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		print('  bScatterPlotWidget.metaPlotStat() xStat:', xStat, 'yStat:', yStat)
 
 		xPlot, yPlot = self.myDetectionWidget.ba.getStat(xStat, yStat)
-		if len(xPlot)==0 or len(yPlot)==0:
+		if xPlot is None or yPlot is None or len(xPlot)==0 or len(yPlot)==0:
 			print('    got empty stat?')
 			return
 
