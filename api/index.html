@@ -42,6 +42,8 @@
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
+      <link rel="stylesheet" href="../css/style.css">
+    
     
       
     
@@ -457,18 +459,18 @@
                 
                   <h1>Overview</h1>
                 
-                <h2 id="writing-custom-python-scripts">Writing custom Python scripts</h2>
+                <h2 id="writing-custom-python-scripts">Writing custom Python scripts<a class="headerlink" href="#writing-custom-python-scripts" title="Permanent link">¤</a></h2>
 <p>In just a few lines of code, recordings can be loaded, analyzed, and plotted. See the <a href="https://github.com/cudmore/SanPy/tree/master/examples">/examples</a> folder for examples.</p>
-<pre><code>import matplotlib.pyplot as plt
+<div class="highlight"><pre><span></span><code>import matplotlib.pyplot as plt
 import bAnalysis
 import bAnalysisPlot
 
-ba = bAnalysis.bAnalysis('data/SAN-AP-example-Rs-change.abf')
+ba = bAnalysis.bAnalysis(&#39;data/SAN-AP-example-Rs-change.abf&#39;)
 ba.spikeDetect()
 
 bAnalysisPlot.bPlot.plotSpikes(ba, xMin=140, xMax=145)
 plt.show()
-</code></pre>
+</code></pre></div>
 <p><IMG SRC="../img/example1.png" width=600></p>
                 
               

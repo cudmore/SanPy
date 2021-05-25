@@ -42,6 +42,8 @@
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
+      <link rel="stylesheet" href="../css/style.css">
+    
     
       
     
@@ -331,13 +333,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#sanpy.bAnalysis.bAnalysis--examples" class="md-nav__link">
-    Examples:
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#sanpy.bAnalysis.bAnalysis.__init__" class="md-nav__link">
     __init__()
   </a>
@@ -583,13 +578,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#sanpy.bAnalysis.bAnalysis--examples" class="md-nav__link">
-    Examples:
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#sanpy.bAnalysis.bAnalysis.__init__" class="md-nav__link">
     __init__()
   </a>
@@ -757,7 +745,7 @@
 
 
 
-</h2>
+<a href="#sanpy.bAnalysis.bAnalysis" class="headerlink" title="Permanent link">¤</a></h2>
 
     <div class="doc doc-contents ">
 
@@ -769,14 +757,23 @@
 <li>a byteStream when working in the cloud.</li>
 <li>a dictionary (todo: add this).</li>
 </ol>
-<h4 id="sanpy.bAnalysis.bAnalysis--examples">Examples:</h4>
-<pre><code>ba = bAnalysis('data/19114001.abf')
-print(ba) # prints info about underlying abf file
-ba.plotDeriv()
-ba.spikeDetect(dvdtThreshold=100)
-ba.plotSpikes()
-ba.plotClips()
-</code></pre>
+
+<p><strong>Examples:</strong></p>
+    
+      <div class="highlight"><pre><span></span><code><span class="n">ba</span> <span class="o">=</span> <span class="n">bAnalysis</span><span class="p">(</span><span class="s1">&#39;data/19114001.abf&#39;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">ba</span><span class="p">)</span> <span class="c1"># prints info about underlying abf file</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">plotDeriv</span><span class="p">()</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">spikeDetect</span><span class="p">(</span><span class="n">dvdtThreshold</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">plotSpikes</span><span class="p">()</span>
+<span class="n">ba</span><span class="o">.</span><span class="n">plotClips</span><span class="p">()</span>
+</code></pre></div>
+<p>Link to class, first braket is name, second is link <a href="#sanpy.bAnalysis.bAnalysis">sanpy.bAnalysis</a></p>
+<p>Link to a member function <a href="#sanpy.bAnalysis.bAnalysis.spikeDetect">sanpy.bAnalysis.bAnalysis.spikeDetect</a></p>
+<p><a href="#sanpy.bAnalysis.bAnalysis.makeSpikeClips">sanpy.bAnalysis.bAnalysis.makeSpikeClips</a></p>
+<p>Link to bExport and show link as bExport <a href="../bExport/#sanpy.bExport.bExport">bExport</a></p>
+<div class="admonition note">
+<p class="admonition-title">This is an admonition with triple explamation points !!!.</p>
+</div>
 
 
 
@@ -797,10 +794,11 @@ ba.plotClips()
       <small class="doc doc-property doc-property-special"><code>special</code></small>
   </span>
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.__init__" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
+      <p>Initialize a bAnalysis object</p>
 
 <p><strong>Parameters:</strong></p>
 <table>
@@ -836,7 +834,8 @@ ba.plotClips()
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theTiff</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">byteStream</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;</span>
+	<span class="sd">&quot;&quot;&quot;Initialize a bAnalysis object</span>
+
 <span class="sd">	Args:</span>
 <span class="sd">		file (str): Path to either .abf or .csv with time/mV columns.</span>
 <span class="sd">		theTiff (str): Path to .tif file.</span>
@@ -974,7 +973,7 @@ ba.plotClips()
       <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
   </span>
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.abf" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -999,7 +998,7 @@ ba.plotClips()
       <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
   </span>
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.dataPointsPerMs" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1020,11 +1019,11 @@ ba.plotClips()
 <code class="highlight language-python"><span class="n">errorReport</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.errorReport" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
-      <p>Generate an error report, one error per spike. Spikes can have more than one error.</p>
+      <p>Generate an error report, one row per error. Spikes can have more than one error.</p>
 
 <p><strong>Returns:</strong></p>
 <table>
@@ -1045,7 +1044,7 @@ ba.plotClips()
           <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">errorReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Generate an error report, one error per spike. Spikes can have more than one error.</span>
+<span class="sd">	Generate an error report, one row per error. Spikes can have more than one error.</span>
 
 <span class="sd">	Returns:</span>
 <span class="sd">		(pandas DataFrame): Pandas DataFrame, one row per error.</span>
@@ -1091,11 +1090,11 @@ ba.plotClips()
 <code class="highlight language-python"><span class="n">getDefaultDetection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.getDefaultDetection" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
-      <p>Get default detection dictionary, pass this to SpikeDetect()</p>
+      <p>Get default detection dictionary, pass this to <a href="#sanpy.bAnalysis.bAnalysis.spikeDetect">bAnalysis.spikeDetect()</a></p>
 
 <p><strong>Returns:</strong></p>
 <table>
@@ -1116,7 +1115,7 @@ ba.plotClips()
           <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getDefaultDetection</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Get default detection dictionary, pass this to SpikeDetect()</span>
+<span class="sd">	Get default detection dictionary, pass this to [bAnalysis.spikeDetect()][sanpy.bAnalysis.bAnalysis.spikeDetect]</span>
 
 <span class="sd">	Returns:</span>
 <span class="sd">		dict: Dictionary of detection parameters.</span>
@@ -1176,7 +1175,7 @@ ba.plotClips()
 <code class="highlight language-python"><span class="n">getDefaultDetection_ca</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.getDefaultDetection_ca" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1246,7 +1245,7 @@ ba.plotClips()
 <code class="highlight language-python"><span class="n">getSpikeClips</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.getSpikeClips" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1327,7 +1326,7 @@ ba.plotClips()
 <code class="highlight language-python"><span class="n">getStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statName1</span><span class="p">,</span> <span class="n">statName2</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.getStat" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1403,12 +1402,13 @@ ba.plotClips()
 	<span class="n">error</span> <span class="o">=</span> <span class="kc">False</span>
 
 	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="c1">#print(&#39;error bAnalysis.getStat(), there are no spikes&#39;)</span>
 		<span class="n">error</span> <span class="o">=</span> <span class="kc">True</span>
 	<span class="k">elif</span> <span class="ow">not</span> <span class="n">statName1</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;bAnalysis.getStat() did not find statName1&#39;</span><span class="p">,</span> <span class="n">statName1</span><span class="p">,</span> <span class="s1">&#39;in spikeDict&#39;</span><span class="p">)</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;error: bAnalysis.getStat() did not find statName1&#39;</span><span class="p">,</span> <span class="n">statName1</span><span class="p">,</span> <span class="s1">&#39;in spikeDict&#39;</span><span class="p">)</span>
 		<span class="n">error</span> <span class="o">=</span> <span class="kc">True</span>
 	<span class="k">elif</span> <span class="n">statName2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">statName2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;bAnalysis.getStat() did not find statName2&#39;</span><span class="p">,</span> <span class="n">statName2</span><span class="p">,</span> <span class="s1">&#39;in spikeDict&#39;</span><span class="p">)</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;error: bAnalysis.getStat() did not find statName2&#39;</span><span class="p">,</span> <span class="n">statName2</span><span class="p">,</span> <span class="s1">&#39;in spikeDict&#39;</span><span class="p">)</span>
 		<span class="n">error</span> <span class="o">=</span> <span class="kc">True</span>
 
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">error</span><span class="p">:</span>
@@ -1438,7 +1438,7 @@ ba.plotClips()
 <code class="highlight language-python"><span class="n">getStatMean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statName</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.getStatMean" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1498,7 +1498,7 @@ ba.plotClips()
 <code class="highlight language-python"><span class="n">makeSpikeClips</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeClipWidth_ms</span><span class="p">,</span> <span class="n">theseTime_sec</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.makeSpikeClips" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1619,7 +1619,7 @@ spikeClips: sweepY</p></td>
 <code class="highlight language-python"><span class="n">ms2Pnt_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ms</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.ms2Pnt_" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1696,7 +1696,7 @@ spikeClips: sweepY</p></td>
       <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
   </span>
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.numSpikes" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1721,7 +1721,7 @@ spikeClips: sweepY</p></td>
       <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
   </span>
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.numSweeps" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1742,7 +1742,7 @@ spikeClips: sweepY</p></td>
 <code class="highlight language-python"><span class="n">pnt2Ms_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pnt</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.pnt2Ms_" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1813,7 +1813,7 @@ spikeClips: sweepY</p></td>
 <code class="highlight language-python"><span class="n">pnt2Sec_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pnt</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.pnt2Sec_" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1887,7 +1887,7 @@ spikeClips: sweepY</p></td>
 <code class="highlight language-python"><span class="n">setSweep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.setSweep" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1946,7 +1946,7 @@ spikeClips: sweepY</p></td>
 <code class="highlight language-python"><span class="n">spikeDetect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dDict</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.spikeDetect" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1966,7 +1966,7 @@ spikeClips: sweepY</p></td>
       <tr>
         <td><code>dDict</code></td>
         <td><code>dict</code></td>
-        <td><p>Detection dictionary from self.getDefaultDetection</p></td>
+        <td><p>A detection dictionary from <a href="#sanpy.bAnalysis.bAnalysis.getDefaultDetection">bAnalysis.getDefaultDetection()</a></p></td>
         <td><em>required</em></td>
       </tr>
   </tbody>
@@ -1978,7 +1978,7 @@ spikeClips: sweepY</p></td>
 <span class="sd">	Spike detect the current sweep and put results into `self.spikeDict[]`.</span>
 
 <span class="sd">	Args:</span>
-<span class="sd">		dDict (dict): Detection dictionary from self.getDefaultDetection</span>
+<span class="sd">		dDict (dict): A detection dictionary from [bAnalysis.getDefaultDetection()][sanpy.bAnalysis.bAnalysis.getDefaultDetection]</span>
 <span class="sd">	&#39;&#39;&#39;</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">detectionDict</span> <span class="o">=</span> <span class="n">dDict</span> <span class="c1"># remember the parameters of our last detection</span>
@@ -2577,7 +2577,7 @@ spikeClips: sweepY</p></td>
       <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
   </span>
 
-</h3>
+<a href="#sanpy.bAnalysis.bAnalysis.sweepList" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 

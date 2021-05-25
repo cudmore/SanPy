@@ -42,6 +42,8 @@
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
+      <link rel="stylesheet" href="../css/style.css">
+    
     
       
     
@@ -469,7 +471,7 @@
                 
                   <h1>Methods</h1>
                 
-                <h2 id="what-spike-parameters-are-detected">What spike parameters are detected?</h2>
+                <h2 id="what-spike-parameters-are-detected">What spike parameters are detected?<a class="headerlink" href="#what-spike-parameters-are-detected" title="Permanent link">¤</a></h2>
 <p>We are following the cardiac myocyte nomenclature from this paper:</p>
 <p><a href="https://www.ncbi.nlm.nih.gov/pubmed/24128759">Larson, et al (2013) Depressed pacemaker activity of sinoatrial node
 myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 110(44):18011-18016</a></p>
@@ -484,7 +486,7 @@ myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 11
 <li>The early diastolic depolarization rate was estimated as the slope of a linear fit between 10% and 50% of the diastolic duration and the early diastolic duration was the corresponding time interval</li>
 <li>The nonlinear late diastolic depolarization phase was estimated as the duration between 1% and 10% dV/dt</li>
 </ul>
-<h2 id="detection-errors">Detection Errors</h2>
+<h2 id="detection-errors">Detection Errors<a class="headerlink" href="#detection-errors" title="Permanent link">¤</a></h2>
 <p>When we encounter errors during spike detection, they are stored for each spike in ['errors']. Each error has a name like 'dvdtPercent' as follows</p>
 <ul>
 <li>dvdtPercent: Error searching for percent (10%) of dvdt max. When this occurs, the TOP (mV) of a spike will be more depolarized than it should be.</li>
