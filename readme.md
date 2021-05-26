@@ -14,7 +14,7 @@ This repository has code to perform [cardiac action potential][cardiac action po
 
 ## Please see our documentation website
 
-[https://cudmore.github.io/SanPy/][https://cudmore.github.io/SanPy/]
+[https://cudmore.github.io/SanPy/](https://cudmore.github.io/SanPy/)
 
 ['sanpy-docs']: https://cudmore.github.io/SanPy/
 
