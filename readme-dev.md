@@ -124,3 +124,17 @@ Command line (from /Userrs/cudmore/Sites/SanPy)
 ```
 pyinstaller --clean --onedir --windowed --icon sanpy/interface/icons/sanpy_transparent.icns --noconfirm --path sanpy_env/lib/python3.7/site-packages --name SanPy sanpy/interface/app.py
 ```
+
+## Reduce png file size
+
+install
+
+```
+brew install pngquant
+```
+
+Compress all png in folder - REPLACES FILES
+
+```
+pngquant --ext .png --force docs/docs/img/*.png
+```
