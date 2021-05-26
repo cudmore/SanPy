@@ -175,7 +175,7 @@ class bExport():
 		theRet = None
 
 		if saveExcel and savefile:
-			if verbose: print('    bExport.saveReport() saving user specified .xlsx file:', savefile)
+			#if verbose: print('    bExport.saveReport() saving user specified .xlsx file:', savefile)
 			excelFilePath = savefile
 			writer = pd.ExcelWriter(excelFilePath, engine='xlsxwriter')
 

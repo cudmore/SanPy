@@ -35,7 +35,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		#self.metaPlotStat('Spike Frequency (Hz)')
 
 	def on_pick_event(self, event):
-		print('=== bScatterWidget.on_pick_event() event:', event, 'event.ind:', event.ind)
+		#print('=== bScatterWidget.on_pick_event() event:', event, 'event.ind:', event.ind)
 
 		if len(event.ind) < 1:
 			return
@@ -159,7 +159,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 	def selectSpike(self, spikeNumber):
 		""" Select a single spike in scatter plot """
 
-		print('bSCatterPlotWidget.selectSpike() spikeDict:', spikeNumber)
+		#print('bSCatterPlotWidget.selectSpike() spikeDict:', spikeNumber)
 
 		#spikeNumber = spikeDict['spikeNumber']
 		#doZoom = spikeDict['doZoom']
@@ -173,7 +173,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 			offsets = self.metaLine.get_offsets()
 			xData = offsets[spikeNumber][0]
 			yData = offsets[spikeNumber][1]
-			print('   xData:', xData, 'yData:', yData)
+			#print('   xData:', xData, 'yData:', yData)
 
 			self.singleSpikeSelection.set_xdata(xData)
 			self.singleSpikeSelection.set_ydata(yData)
@@ -219,7 +219,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 
 
 		if self.myDetectionWidget.ba is None:
-			print('bScatterPlotWidget.metaPlotStat() got empty ba ???')
+			#print('bScatterPlotWidget.metaPlotStat() got empty ba ???')
 			return
 
 		# works
@@ -249,15 +249,15 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		statList = sanpy.bAnalysisUtil.getStatList()
 		yStat = statList[yStatHuman]['yStat'] # the name of the backend stat
 
-		# todo for now always plot versus take off potential
+		# todo for now always plot seconds versus take off potential
 		xStatLabel = 'Seconds'
 		xStat = 'thresholdSec'
 
-		print('  bScatterPlotWidget.metaPlotStat() xStat:', xStat, 'yStat:', yStat)
+		#print('  bScatterPlotWidget.metaPlotStat() xStat:', xStat, 'yStat:', yStat)
 
 		xPlot, yPlot = self.myDetectionWidget.ba.getStat(xStat, yStat)
 		if xPlot is None or yPlot is None or len(xPlot)==0 or len(yPlot)==0:
-			print('    got empty stat?')
+			#print('    got empty stat?')
 			return
 
 		#if convertPntToSec:
@@ -270,14 +270,14 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 
 		tmpColor = range(len(xPlot))
 		markersize = 3
-		print('  markersize=', markersize)
+		#print('  markersize=', markersize)
 		if self.metaLine is None:
 			#self.metaLine, = self._static_ax.plot(xPlot, yPlot, ".", picker=5)
 			self.metaLine = self._static_ax.scatter(xPlot, yPlot, c=tmpColor, cmap=self.colorTable,
 								s=markersize,
 								picker=5)
 		else:
-			print('	metaPlotStat() set ydata/xdata')
+			#print('	metaPlotStat() set ydata/xdata')
 			self._static_ax.cla()
 			#self.metaLine, = self._static_ax.plot(xPlot, yPlot, ".")
 			self.metaLine = self._static_ax.scatter(xPlot, yPlot, c=tmpColor, cmap=self.colorTable,
@@ -331,11 +331,11 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		self.repaint() # this is updating the widget !!!!!!!!
 
 	def slotSetXAxis(self, xMinMaxList):
-		print('bScatterPlotWidget.slotSetXAxis() xMinMaxList:', xMinMaxList)
+		#print('bScatterPlotWidget.slotSetXAxis() xMinMaxList:', xMinMaxList)
 		self.selectXRange(xMinMaxList[0], xMinMaxList[1])
 
 	def slotSelectSpike(self, eDict):
-		print('bScatterPlotWidget.slotSelectSpike() eDict:', eDict)
+		#print('bScatterPlotWidget.slotSelectSpike() eDict:', eDict)
 		spikeNumber = eDict['spikeNumber']
 		self.selectSpike(spikeNumber)
 

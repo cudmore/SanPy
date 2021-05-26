@@ -1,3 +1,6 @@
+## I will start putting macOS Catalina SanPy.app in our shared Box folder
+
+## Old
 
 I will start putting new versions of SanPy into our shared "SAN AP" box folder.
 This is the recipe for installing any new version of SanPy.

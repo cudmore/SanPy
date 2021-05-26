@@ -1,0 +1,726 @@
+2021-05-25 17:05:33,926 - __main__ - INFO - app instanteated logger
+%(asctime)s  %(levelname)5s %(name)8s  %(filename)s %(funcName)s() line:%(lineno)d %(message)s
+2021-05-25 17:08:17,045   INFO __main__  app.py <module>() line:46 app instanteated logger
+2021-05-25 17:10:39,750   INFO __main__  app.py __init__() line:159 SanPy started
+2021-05-25 17:11:46,590   INFO __main__  app.py __init__() line:159 SanPy started
+2021-05-25 17:16:20,083   INFO __main__  app.py __init__() line:159 SanPy started
+2021-05-25 17:20:08,704  ERROR __main__  app.py __init__() line:159 SanPy started
+2021-05-25 17:20:39,152   INFO __main__  app.py __init__() line:159 SanPy started
+2021-05-25 17:23:11,472   INFO __main__  app.py __init__() line:159 SanPy started
+2021-05-25 17:24:07,480   INFO __main__  app.py __init__() line:159 SanPy started
+2021-05-25 17:26:18,552   INFO __main__  app.py __init__() line:159 SanPy started
+2021-05-25 17:28:08,183   INFO __main__  app.py <module>() line:24 SanPy app is starting up
+2021-05-25 17:28:08,633   INFO __main__  app.py __init__() line:138 SanPy started
+2021-05-25 17:30:29,839   INFO __main__  app.py <module>() line:21 SanPy app is starting up
+2021-05-25 17:30:30,284   INFO __main__  app.py __init__() line:135 SanPy started
+2021-05-25 17:30:48,179   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:887 start detection
+2021-05-25 17:35:31,125   INFO __main__  app.py <module>() line:21 SanPy app is starting up
+2021-05-25 17:35:31,586   INFO __main__  app.py __init__() line:135 SanPy started
+2021-05-25 17:36:53,955   INFO __main__  app.py <module>() line:21 SanPy app is starting up
+2021-05-25 17:36:54,402   INFO __main__  app.py __init__() line:135 SanPy started
+2021-05-25 17:36:55,581   INFO __main__  app.py closeEvent() line:154 SanPy is quiting
+2021-05-25 21:25:32,403   INFO __main__  app.py <module>() line:21 SanPy app.py is starting up
+2021-05-25 21:25:32,851   INFO __main__  app.py __init__() line:132 SanPy started
+2021-05-25 21:53:53,021   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:55 Added console and file handlers
+2021-05-25 21:53:53,463   INFO __main__  sanpyLogger.py get_logger() line:55 Added console and file handlers
+2021-05-25 21:53:53,463   INFO __main__  app.py <module>() line:21 SanPy app.py is starting up
+2021-05-25 21:53:53,465   INFO __main__  app.py main() line:830 Python version is 3.7.9
+2021-05-25 21:53:53,702   INFO __main__  app.py main() line:842 bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 21:53:53,703   INFO __main__  app.py main() line:846 appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 21:53:53,705  ERROR __main__  app.py main() line:850 Did not find appIconPath: /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 21:54:34,400   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:55 Added console and file handlers
+2021-05-25 21:54:34,730   INFO __main__  sanpyLogger.py get_logger() line:55 Added console and file handlers
+2021-05-25 21:54:34,731   INFO __main__  app.py <module>() line:21 SanPy app.py is starting up
+2021-05-25 21:54:34,732   INFO __main__  app.py main() line:830 Python version is 3.7.9
+2021-05-25 21:54:34,867   INFO __main__  app.py main() line:842 bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 21:54:34,868   INFO __main__  app.py main() line:846 appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 21:54:34,869  ERROR __main__  app.py main() line:850 Did not find appIconPath: /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 21:54:34,871   INFO __main__  app.py preferencesLoad() line:617 Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 21:54:35,243   INFO __main__  app.py __init__() line:130 SanPy started
+2021-05-25 21:56:37,549   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:55 Added console and file handlers
+2021-05-25 21:56:37,839   INFO __main__  sanpyLogger.py get_logger() line:55 Added console and file handlers
+2021-05-25 21:56:37,841   INFO __main__  app.py <module>() line:21 SanPy app.py is starting up
+2021-05-25 21:56:37,841   INFO __main__  app.py main() line:830 Python version is 3.7.9
+2021-05-25 21:56:37,974   INFO __main__  app.py main() line:842 bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 21:56:37,975   INFO __main__  app.py main() line:846 appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 21:56:38,001   INFO __main__  app.py preferencesLoad() line:617 Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 21:56:38,352   INFO __main__  app.py __init__() line:130 SanPy started
+2021-05-25 21:58:51,046   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:55 Added console and file handlers
+2021-05-25 21:58:51,376   INFO __main__  sanpyLogger.py get_logger() line:55 Added console and file handlers
+2021-05-25 21:58:51,378   INFO __main__  app.py <module>() line:21 SanPy app.py is starting up
+2021-05-25 21:58:51,378   INFO __main__  app.py main() line:831 Python version is 3.7.9
+2021-05-25 21:58:51,520   INFO __main__  app.py main() line:843 bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 21:58:51,520   INFO __main__  app.py main() line:847 appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 21:58:51,553   INFO __main__  app.py preferencesLoad() line:617 Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 21:58:51,600   INFO __main__  app.py preferencesSave() line:659 Saving options file as: "/Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json"
+2021-05-25 21:58:51,942   INFO __main__  app.py __init__() line:130 SanPy started
+2021-05-25 22:02:53,759   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:55 Added console and file handlers
+2021-05-25 22:02:54,087   INFO __main__  sanpyLogger.py get_logger() line:55 Added console and file handlers
+2021-05-25 22:02:54,089   INFO __main__  app.py <module>() line:21 SanPy app.py is starting up
+2021-05-25 22:02:54,090   INFO __main__  app.py main() line:831 Python version is 3.7.9
+2021-05-25 22:02:54,218   INFO __main__  app.py main() line:843 bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:02:54,218   INFO __main__  app.py main() line:847 appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:02:54,248   INFO __main__  app.py preferencesLoad() line:617 Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:02:54,670   INFO __main__  app.py __init__() line:130 SanPy started
+2021-05-25 22:04:00,220   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:55 -- Added console and file handlers
+2021-05-25 22:04:00,663   INFO __main__  sanpyLogger.py get_logger() line:55 -- Added console and file handlers
+2021-05-25 22:04:00,671   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:04:00,673   INFO __main__  app.py main() line:831 -- Python version is 3.7.9
+2021-05-25 22:04:00,816   INFO __main__  app.py main() line:843 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:04:00,816   INFO __main__  app.py main() line:847 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:04:00,845   INFO __main__  app.py preferencesLoad() line:617 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:04:01,201   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:06:00,410   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:06:00,410   INFO __main__  app.py main() line:831 -- Python version is 3.7.9
+2021-05-25 22:06:00,655   INFO __main__  app.py main() line:843 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:06:00,655   INFO __main__  app.py main() line:847 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:06:00,701   INFO __main__  app.py preferencesLoad() line:617 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:06:01,096   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:07:03,391   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:07:03,391   INFO __main__  app.py main() line:831 -- Python version is 3.7.9
+2021-05-25 22:07:03,546   INFO __main__  app.py main() line:843 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:07:03,548   INFO __main__  app.py main() line:847 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:07:03,590   INFO __main__  app.py preferencesLoad() line:617 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:07:04,008   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:10:19,535   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:10:19,536   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-25 22:10:19,665   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:10:19,666   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:10:19,694   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:10:20,038   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:10:52,653   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:10:52,653   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-25 22:10:52,786   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:10:52,786   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:10:52,819   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:10:53,170   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:11:54,035   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:11:54,036   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-25 22:11:54,178   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:11:54,179   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:11:54,207   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:11:54,556   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:11:56,498   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-25 22:12:06,885   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:12:06,885   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-25 22:12:07,033   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:12:07,034   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:12:07,064   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:12:07,545   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:40:03,987   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:40:03,988   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-25 22:40:04,260   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:40:04,261   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:40:04,302   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:40:04,675   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:40:42,251   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-25 22:44:27,138   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:44:27,138   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-25 22:44:27,348   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:44:27,349   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:44:27,379   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:44:27,765   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:44:46,888   INFO __main__  app.py slotSaveFilesTable() line:809 -- Saving folder csv as /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-25 22:44:57,539   INFO __main__  app.py preferencesSave() line:661 -- Saving options file as: "/Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json"
+2021-05-25 22:44:57,797   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-25 22:45:02,726   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:45:02,727   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-25 22:45:02,852   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:45:02,852   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:45:02,879   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:45:03,236   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:45:09,055   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:887 -- start detection
+2021-05-25 22:45:18,004   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:887 -- start detection
+2021-05-25 22:47:57,314   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-25 22:48:04,117   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:48:04,117   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-25 22:48:04,291   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:48:04,291   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:48:04,320   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:48:04,686   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:54:22,699   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-25 22:54:26,529   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-25 22:54:26,530   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-25 22:54:26,652   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-25 22:54:26,652   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-25 22:54:26,681   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-25 22:54:27,053   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-25 22:54:31,588   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-25 22:54:44,546   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/SAN-AP-example-Rs-change.abf
+2021-05-25 22:54:46,392   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:11:33,399   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 10:11:37,448   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:11:37,449   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:11:37,643   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:11:37,644   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:11:37,674   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:11:38,098   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:11:41,488   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:12:33,865   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 10:12:37,614   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:12:37,614   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:12:37,746   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:12:37,746   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:12:37,775   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:12:38,153   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:12:45,888   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:12:51,162   INFO __main__  app.py preferencesSave() line:661 -- Saving options file as: "/Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json"
+2021-05-26 10:13:10,563   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold: 50.0 vmThreshold: -20.0
+2021-05-26 10:13:10,566   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:887 -- start detection
+2021-05-26 10:14:18,785   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:14:18,786   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:14:18,967   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:14:18,967   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:14:18,998   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:14:19,444   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:14:21,889   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:19:49,978   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 10:19:53,724   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:19:53,724   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:19:53,858   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:19:53,858   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:19:53,888   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:19:54,336   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:20:02,559   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:20:02,662   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 10:21:56,490   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 10:22:33,401   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:22:33,402   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:22:33,599   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:22:33,600   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:22:33,633   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:22:34,041   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:24:03,125   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:24:03,226   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 10:25:40,045   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 10:25:43,813   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:25:43,813   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:25:43,976   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:25:43,976   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:25:44,004   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:25:44,386   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:25:46,435   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:25:46,531   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 10:30:43,852   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold: 60.0 vmThreshold: -20.0
+2021-05-26 10:30:43,857   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:887 -- start detection
+2021-05-26 10:38:50,908   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:38:50,909   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:38:51,050   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:38:51,051   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:38:51,075   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:38:51,606   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:38:55,274   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:38:55,379   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 10:39:38,688   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 10:39:38,690   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 10:39:38,693   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:889 -- start detection
+2021-05-26 10:39:38,724   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:557 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 10:39:56,190   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 10:40:00,245   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:40:00,247   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:40:00,383   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:40:00,383   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:40:00,414   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:40:00,800   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:40:02,887   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:40:02,983   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 10:40:05,116   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 10:40:05,118   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 10:40:05,121   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:889 -- start detection
+2021-05-26 10:40:05,156   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:557 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 10:40:05,196   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1579 -- Found 2 errors
+2021-05-26 10:40:27,758   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 10:41:24,185   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:41:24,186   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:41:24,377   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:41:24,379   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:41:24,430   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:41:24,859   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:41:27,037   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:41:27,129   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 10:41:34,408   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 10:41:34,409   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 10:41:34,411   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:889 -- start detection
+2021-05-26 10:41:34,438   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:557 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 10:41:34,472   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1579 -- Found 2 errors
+2021-05-26 10:41:39,236   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:None vmThreshold:-20.0
+2021-05-26 10:41:39,238   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 10:41:39,241   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:889 -- start detection
+2021-05-26 10:41:39,352   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:557 -- From 79 to 63 spikes with refractory_ms:170
+2021-05-26 10:41:39,846   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1579 -- Found 8 errors
+2021-05-26 10:51:41,393   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 10:51:51,164   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:51:51,165   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:51:51,309   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:51:51,310   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:51:51,351   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:51:51,863   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:51:55,785   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:51:55,898   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 10:51:59,419   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 10:51:59,421   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 10:51:59,424   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 10:51:59,461   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 10:51:59,499   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors
+2021-05-26 10:53:37,294   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 10:55:12,601   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:55:12,602   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:55:12,728   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:55:12,728   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:55:12,756   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:55:13,182   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:55:15,305   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 10:55:15,399   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 10:55:18,345   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 10:55:18,347   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 10:55:18,349   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 10:55:18,385   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 10:55:18,421   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors
+2021-05-26 10:56:00,816   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 10:57:52,501   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:57:52,501   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:57:52,639   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:57:52,639   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:57:52,673   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:57:53,031   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 10:57:58,637   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 10:59:22,213   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 10:59:22,214   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 10:59:22,429   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 10:59:22,429   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 10:59:22,470   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 10:59:22,885   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 11:03:11,990   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 11:03:15,375   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 11:03:15,376   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 11:03:15,507   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 11:03:15,507   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 11:03:15,536   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 11:03:15,905   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 11:03:18,101   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 11:03:18,209   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 11:03:30,500   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 0, doZoom True
+2021-05-26 11:07:56,458   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777249 text: 
+2021-05-26 11:07:59,937   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 11:07:59,938   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 11:08:00,068   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 11:08:00,069   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 11:08:00,097   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 11:08:00,494   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 11:08:03,107   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 11:08:03,203   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 11:08:06,041   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 11:08:06,042   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 11:08:06,045   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 11:08:06,075   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 11:08:06,112   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors in spike detection
+2021-05-26 11:08:39,191   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 11:08:39,191   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 11:08:39,411   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 11:08:39,411   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 11:08:39,447   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 11:08:39,854   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 11:08:42,169   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 11:08:42,269   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 11:08:44,536   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 11:08:44,537   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 11:08:44,539   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 11:08:44,577   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 11:08:44,618   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors in spike detection
+2021-05-26 11:08:58,471   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 0, doZoom True
+2021-05-26 11:08:58,805   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 0, doZoom True
+2021-05-26 11:09:44,656   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py save() line:264 -- savefile: /Users/cudmore/Sites/SanPy/data/19114000_b1_52_e2_52.xlsx
+2021-05-26 11:09:44,657   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py save() line:265 -- xMin:1.52 xMax:2.52 alsoSaveTxt:False
+2021-05-26 11:10:56,256   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 11:10:56,518   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 11:11:03,278   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 2, doZoom True
+2021-05-26 11:11:03,534   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 2, doZoom True
+2021-05-26 11:13:17,633   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 11:13:17,640   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 11:13:17,850   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 11:13:17,852   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 11:13:17,883   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 11:13:18,366   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 11:13:21,282   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 11:13:21,392   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 11:13:24,657   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 11:13:24,658   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 11:13:24,661   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 11:13:24,691   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 11:13:24,722   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors in spike detection
+2021-05-26 11:13:45,547   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 0, doZoom True
+2021-05-26 11:13:45,824   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 0, doZoom True
+2021-05-26 11:15:02,674   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 11:15:02,888   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 11:15:58,493   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 2, doZoom True
+2021-05-26 11:15:58,669   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 2, doZoom True
+2021-05-26 11:16:06,753   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 3, doZoom True
+2021-05-26 11:16:06,968   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 3, doZoom True
+2021-05-26 11:19:09,862   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 16, doZoom False
+2021-05-26 11:19:54,115   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 26, doZoom False
+2021-05-26 11:20:33,217   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 11:20:33,217   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 11:20:33,369   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 11:20:33,370   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 11:20:33,400   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 11:20:33,817   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 11:20:36,346   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 11:20:36,470   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 11:20:39,192   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 11:20:39,193   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 11:20:39,194   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 11:20:39,223   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 11:20:39,252   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors in spike detection
+2021-05-26 11:20:43,846   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 0, doZoom True
+2021-05-26 11:20:44,274   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 0, doZoom True
+2021-05-26 11:20:46,812   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 11:20:47,101   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 11:20:48,054   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 2, doZoom True
+2021-05-26 11:20:48,319   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 2, doZoom True
+2021-05-26 11:20:49,031   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 3, doZoom True
+2021-05-26 11:20:49,282   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 3, doZoom True
+2021-05-26 11:22:04,448   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 11:22:16,002   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 3, doZoom True
+2021-05-26 11:22:16,322   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 3, doZoom True
+2021-05-26 11:22:34,993   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom False
+2021-05-26 11:22:36,870   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777248 text: 
+2021-05-26 11:22:37,216   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 11:22:38,825   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777248 text: 
+2021-05-26 11:22:39,650   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 11:22:42,777   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777248 text: 
+2021-05-26 11:22:43,638   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 44, doZoom True
+2021-05-26 11:22:45,684   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777248 text: 
+2021-05-26 11:22:46,133   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 44, doZoom True
+2021-05-26 11:22:46,943   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 44, doZoom False
+2021-05-26 11:22:47,484   INFO __main__  app.py keyPressEvent() line:352 -- key: 16777248 text: 
+2021-05-26 11:22:47,796   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 44, doZoom True
+2021-05-26 11:23:50,475   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 11:23:50,477   INFO __main__  app.py main() line:833 -- Python version is 3.7.9
+2021-05-26 11:23:50,617   INFO __main__  app.py main() line:845 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 11:23:50,617   INFO __main__  app.py main() line:849 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 11:23:50,644   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 11:23:51,067   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 11:23:53,939   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 11:23:54,043   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 11:23:58,353   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 11:23:58,355   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 11:23:58,358   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 11:23:58,394   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 11:23:58,433   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors in spike detection
+2021-05-26 11:24:03,231   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 0, doZoom True
+2021-05-26 11:24:03,589   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 0, doZoom True
+2021-05-26 11:24:04,740   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 11:24:04,955   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 11:24:05,685   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 2, doZoom True
+2021-05-26 11:24:05,922   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 2, doZoom True
+2021-05-26 11:24:06,648   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 3, doZoom True
+2021-05-26 11:24:06,876   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 3, doZoom True
+2021-05-26 11:24:07,447   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 4, doZoom True
+2021-05-26 11:24:07,646   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 4, doZoom True
+2021-05-26 11:24:08,012   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 5, doZoom True
+2021-05-26 11:24:08,254   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 5, doZoom True
+2021-05-26 11:24:38,849   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 11:24:39,103   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 11:24:52,879   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 11:24:52,882   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 11:24:52,886   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 11:24:52,929   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 11:24:52,972   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors in spike detection
+2021-05-26 11:25:29,014   INFO __main__  app.py slotSaveFilesTable() line:809 -- Saving folder csv as /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 11:51:05,995   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 11:51:05,996   INFO __main__  app.py main() line:836 -- Python version is 3.7.9
+2021-05-26 11:51:06,235   INFO __main__  app.py main() line:848 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 11:51:06,235   INFO __main__  app.py main() line:852 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 11:51:06,266   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 11:51:06,752   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 11:56:25,668   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 11:56:25,669   INFO __main__  app.py main() line:836 -- Python version is 3.7.9
+2021-05-26 11:56:25,837   INFO __main__  app.py main() line:848 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 11:56:25,837   INFO __main__  app.py main() line:852 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 11:56:25,869   INFO __main__  app.py preferencesLoad() line:619 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 11:56:26,292   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 11:57:41,940   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 11:57:41,940   INFO __main__  app.py main() line:837 -- Python version is 3.7.9
+2021-05-26 11:57:42,094   INFO __main__  app.py main() line:849 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 11:57:42,094   INFO __main__  app.py main() line:853 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 11:57:42,123   INFO __main__  app.py preferencesLoad() line:620 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 11:57:42,617   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:01:25,590   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:01:25,590   INFO __main__  app.py main() line:837 -- Python version is 3.7.9
+2021-05-26 12:01:25,736   INFO __main__  app.py main() line:849 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:01:25,736   INFO __main__  app.py main() line:853 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:01:25,768   INFO __main__  app.py preferencesLoad() line:620 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:01:26,200   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:02:14,049   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:02:14,049   INFO __main__  app.py main() line:839 -- Python version is 3.7.9
+2021-05-26 12:02:14,184   INFO __main__  app.py main() line:851 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:02:14,184   INFO __main__  app.py main() line:855 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:02:14,210   INFO __main__  app.py preferencesLoad() line:622 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:02:14,602   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:03:38,952   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:03:38,953   INFO __main__  app.py main() line:839 -- Python version is 3.7.9
+2021-05-26 12:03:39,090   INFO __main__  app.py main() line:851 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:03:39,091   INFO __main__  app.py main() line:855 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:03:39,121   INFO __main__  app.py preferencesLoad() line:622 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:03:39,122   INFO __main__  app.py loadFolder() line:222 -- Making default file db
+2021-05-26 12:03:39,529   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:03:55,834   INFO __main__  app.py slotSaveFilesTable() line:815 -- Saving folder csv as /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:03:55,835   INFO sanpy.interface.bUtil  bUtil.py mySaveDb() line:346 -- Saving csv /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:04:48,885   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:04:48,885   INFO __main__  app.py main() line:839 -- Python version is 3.7.9
+2021-05-26 12:04:49,051   INFO __main__  app.py main() line:851 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:04:49,052   INFO __main__  app.py main() line:855 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:04:49,084   INFO __main__  app.py preferencesLoad() line:622 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:04:49,085   INFO __main__  app.py loadFolder() line:214 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:04:49,599   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:04:57,097   INFO __main__  app.py slotSaveFilesTable() line:815 -- Saving folder csv as /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:06:26,414   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:06:26,414   INFO __main__  app.py main() line:839 -- Python version is 3.7.9
+2021-05-26 12:06:26,575   INFO __main__  app.py main() line:851 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:06:26,575   INFO __main__  app.py main() line:855 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:06:26,605   INFO __main__  app.py preferencesLoad() line:622 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:06:26,606   INFO __main__  app.py __init__() line:84 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:06:26,607   INFO __main__  app.py loadFolder() line:190 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:06:26,607   INFO __main__  app.py loadFolder() line:214 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:06:27,130   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:06:44,877   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:06:44,997   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:07:23,902   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-05-26 12:07:24,007   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:07:25,864   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:07:52,149   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-05-26 12:07:52,254   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:07:53,685   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:09:51,804   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/SAN-AP-example-Rs-change.abf
+2021-05-26 12:09:52,043   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:09:55,032   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:13:11,360   INFO __main__  app.py closeEvent() line:149 -- SanPy is quiting
+2021-05-26 12:16:07,797   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:16:07,797   INFO __main__  app.py main() line:840 -- Python version is 3.7.9
+2021-05-26 12:16:07,963   INFO __main__  app.py main() line:852 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:16:07,964   INFO __main__  app.py main() line:856 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:16:07,996   INFO __main__  app.py preferencesLoad() line:623 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:16:07,997   INFO __main__  app.py __init__() line:84 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:16:07,997   INFO __main__  app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:16:07,997   INFO __main__  app.py loadFolder() line:215 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:16:08,583   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:16:11,684   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:16:11,809   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:16:24,437   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-05-26 12:16:24,561   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:16:26,545   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:16:26,664   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:16:32,031   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 12:16:32,034   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 12:16:32,037   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 12:16:32,065   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 50 to 45 spikes with refractory_ms:170
+2021-05-26 12:16:32,115   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors in spike detection
+2021-05-26 12:16:44,275   INFO __main__  app.py slotSaveFilesTable() line:816 -- Saving folder csv as /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:16:44,279   INFO __main__  app.py closeEvent() line:150 -- SanPy is quiting
+2021-05-26 12:19:43,267   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:19:43,267   INFO __main__  app.py main() line:845 -- Python version is 3.7.9
+2021-05-26 12:19:43,419   INFO __main__  app.py main() line:857 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:19:43,419   INFO __main__  app.py main() line:861 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:19:43,448   INFO __main__  app.py preferencesLoad() line:628 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:19:43,448   INFO __main__  app.py __init__() line:84 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:19:43,449   INFO __main__  app.py loadFolder() line:196 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:19:43,449   INFO __main__  app.py loadFolder() line:220 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:19:44,040   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:19:47,761   INFO __main__  app.py closeEvent() line:155 -- SanPy is quiting
+2021-05-26 12:19:54,414   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:19:54,415   INFO __main__  app.py main() line:845 -- Python version is 3.7.9
+2021-05-26 12:19:54,623   INFO __main__  app.py main() line:857 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:19:54,623   INFO __main__  app.py main() line:861 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:19:54,658   INFO __main__  app.py preferencesLoad() line:628 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:19:54,659   INFO __main__  app.py __init__() line:84 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:19:54,659   INFO __main__  app.py loadFolder() line:196 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:19:54,660   INFO __main__  app.py loadFolder() line:220 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:19:55,163   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:19:57,816   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:19:57,934   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:20:10,632   INFO __main__  app.py slotSaveFilesTable() line:821 -- Saving folder csv as /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:20:10,635   INFO __main__  app.py closeEvent() line:155 -- SanPy is quiting
+2021-05-26 12:20:58,994   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:20:58,994   INFO __main__  app.py main() line:845 -- Python version is 3.7.9
+2021-05-26 12:20:59,143   INFO __main__  app.py main() line:857 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:20:59,143   INFO __main__  app.py main() line:861 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:20:59,176   INFO __main__  app.py preferencesLoad() line:628 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:20:59,176   INFO __main__  app.py __init__() line:84 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:20:59,177   INFO __main__  app.py loadFolder() line:196 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:20:59,177   INFO __main__  app.py loadFolder() line:220 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:20:59,786   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:21:02,665   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:21:02,786   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:21:27,228   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:40.0 vmThreshold:-20.0
+2021-05-26 12:21:27,229   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 12:21:27,232   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 12:21:27,270   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 53 to 45 spikes with refractory_ms:170
+2021-05-26 12:21:27,309   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors in spike detection
+2021-05-26 12:21:38,867   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 0, doZoom True
+2021-05-26 12:21:39,287   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 0, doZoom True
+2021-05-26 12:21:42,073   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 12:21:42,344   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 12:21:43,066   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 2, doZoom True
+2021-05-26 12:21:43,606   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 2, doZoom True
+2021-05-26 12:21:44,023   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 3, doZoom True
+2021-05-26 12:21:44,283   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 3, doZoom True
+2021-05-26 12:21:44,762   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 4, doZoom True
+2021-05-26 12:21:45,154   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 4, doZoom True
+2021-05-26 12:21:45,801   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 5, doZoom True
+2021-05-26 12:21:46,278   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 5, doZoom True
+2021-05-26 12:21:46,566   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 6, doZoom True
+2021-05-26 12:21:46,874   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 6, doZoom True
+2021-05-26 12:21:47,282   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 7, doZoom True
+2021-05-26 12:21:47,561   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 7, doZoom True
+2021-05-26 12:21:47,855   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 8, doZoom True
+2021-05-26 12:21:48,155   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 8, doZoom True
+2021-05-26 12:21:48,704   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 9, doZoom True
+2021-05-26 12:21:49,121   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 9, doZoom True
+2021-05-26 12:21:49,492   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 10, doZoom True
+2021-05-26 12:21:49,799   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 10, doZoom True
+2021-05-26 12:21:50,124   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 11, doZoom True
+2021-05-26 12:21:50,389   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 11, doZoom True
+2021-05-26 12:21:50,711   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 12, doZoom True
+2021-05-26 12:21:50,996   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 12, doZoom True
+2021-05-26 12:21:51,307   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 13, doZoom True
+2021-05-26 12:21:51,683   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 13, doZoom True
+2021-05-26 12:21:52,260   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 14, doZoom True
+2021-05-26 12:21:52,776   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 14, doZoom True
+2021-05-26 12:21:53,080   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 15, doZoom True
+2021-05-26 12:21:53,427   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 15, doZoom True
+2021-05-26 12:21:53,734   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 16, doZoom True
+2021-05-26 12:21:54,058   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 16, doZoom True
+2021-05-26 12:21:54,386   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 17, doZoom True
+2021-05-26 12:21:54,680   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 17, doZoom True
+2021-05-26 12:21:55,271   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 18, doZoom True
+2021-05-26 12:21:55,712   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 18, doZoom True
+2021-05-26 12:21:56,025   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 19, doZoom True
+2021-05-26 12:21:56,295   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 19, doZoom True
+2021-05-26 12:22:15,250   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:40.0 vmThreshold:-20.0
+2021-05-26 12:22:15,252   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 12:22:15,253   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 12:22:15,302   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 53 to 45 spikes with refractory_ms:170
+2021-05-26 12:22:15,335   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors in spike detection
+2021-05-26 12:22:55,234   INFO __main__  app.py slotSaveFilesTable() line:821 -- Saving folder csv as /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:22:55,238   INFO __main__  app.py closeEvent() line:155 -- SanPy is quiting
+2021-05-26 12:23:32,746   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:23:32,747   INFO __main__  app.py main() line:845 -- Python version is 3.7.9
+2021-05-26 12:23:32,895   INFO __main__  app.py main() line:857 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:23:32,895   INFO __main__  app.py main() line:861 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:23:32,936   INFO __main__  app.py preferencesLoad() line:628 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:23:32,937   INFO __main__  app.py __init__() line:84 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:23:32,937   INFO __main__  app.py loadFolder() line:196 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:23:32,938   INFO __main__  app.py loadFolder() line:220 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:23:33,443   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:23:36,080   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:23:36,202   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:31:02,621   INFO __main__  app.py closeEvent() line:155 -- SanPy is quiting
+2021-05-26 12:31:06,733   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:31:06,733   INFO __main__  app.py main() line:845 -- Python version is 3.7.9
+2021-05-26 12:31:06,884   INFO __main__  app.py main() line:857 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:31:06,884   INFO __main__  app.py main() line:861 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:31:06,915   INFO __main__  app.py preferencesLoad() line:628 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:31:06,915   INFO __main__  app.py __init__() line:84 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:31:06,916   INFO __main__  app.py loadFolder() line:196 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:31:06,916   INFO __main__  app.py loadFolder() line:220 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:31:07,437   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:31:09,849   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:31:09,963   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:31:32,006  ERROR sanpy.interface.bDetectionWidget  bDetectionWidget.py contextMenuEvent() line:1149 -- Unknown myType: "vmFiltered"
+2021-05-26 12:31:51,132   INFO __main__  app.py closeEvent() line:155 -- SanPy is quiting
+2021-05-26 12:32:36,768   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:32:36,768   INFO __main__  app.py main() line:845 -- Python version is 3.7.9
+2021-05-26 12:32:36,889   INFO __main__  app.py main() line:857 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:32:36,891   INFO __main__  app.py main() line:861 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:32:36,913   INFO __main__  app.py preferencesLoad() line:628 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:32:36,914   INFO __main__  app.py __init__() line:84 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:32:36,915   INFO __main__  app.py loadFolder() line:196 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:32:36,915   INFO __main__  app.py loadFolder() line:220 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:32:37,326   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:32:39,669   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:32:39,858   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:32:44,325  ERROR sanpy.interface.bDetectionWidget  bDetectionWidget.py contextMenuEvent() line:1149 -- Unknown myType: "dvdtFiltered"
+2021-05-26 12:33:04,402   INFO __main__  app.py closeEvent() line:155 -- SanPy is quiting
+2021-05-26 12:33:31,740   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:33:31,807   INFO __main__  app.py main() line:845 -- Python version is 3.7.9
+2021-05-26 12:33:32,110   INFO __main__  app.py main() line:857 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:33:32,110   INFO __main__  app.py main() line:861 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:33:32,151   INFO __main__  app.py preferencesLoad() line:628 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:33:32,153   INFO __main__  app.py __init__() line:84 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:33:32,153   INFO __main__  app.py loadFolder() line:196 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:33:32,154   INFO __main__  app.py loadFolder() line:220 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:33:32,664   INFO __main__  app.py __init__() line:130 -- SanPy started
+2021-05-26 12:33:38,327   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:33:38,449   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:34:47,877   INFO sanpy.interface.bExportWidget  bExportWidget.py save() line:1109 -- saving: /Users/cudmore/Sites/SanPy/data/19114000_vmFiltered_b18_40_e38_56.pdf
+2021-05-26 12:35:55,050   INFO __main__  app.py closeEvent() line:155 -- SanPy is quiting
+2021-05-26 12:38:21,559   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:38:46,675   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:38:46,675   INFO __main__  app.py main() line:848 -- Python version is 3.7.9
+2021-05-26 12:38:46,837   INFO __main__  app.py main() line:860 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:38:46,838   INFO __main__  app.py main() line:864 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:38:46,868   INFO __main__  app.py preferencesLoad() line:631 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:38:46,869   INFO __main__  app.py __init__() line:87 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:38:46,870   INFO __main__  app.py loadFolder() line:199 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:38:46,870   INFO __main__  app.py loadFolder() line:223 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:38:47,548   INFO __main__  app.py __init__() line:133 -- SanPy started
+2021-05-26 12:38:56,230   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:38:56,356   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:40:42,786   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:40.0 vmThreshold:-20.0
+2021-05-26 12:40:42,787   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 12:40:42,790   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 12:40:42,830   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 53 to 45 spikes with refractory_ms:170
+2021-05-26 12:40:42,871   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 2 errors in spike detection
+2021-05-26 12:41:18,722   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-05-26 12:41:18,996   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:41:26,746   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-05-26 12:41:27,081   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:41:29,198   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-05-26 12:41:29,814   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False
+2021-05-26 12:41:31,855   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:165 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-05-26 12:41:31,856   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- getting detection parameters from main window table
+2021-05-26 12:41:31,859   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-05-26 12:41:31,898   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:561 -- From 107 to 103 spikes with refractory_ms:170
+2021-05-26 12:41:31,994   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1572 -- Found 1 errors in spike detection
+2021-05-26 12:41:40,295   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom False
+2021-05-26 12:41:41,677   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: 1, doZoom True
+2021-05-26 12:42:11,100   INFO __main__  app.py slotSaveFilesTable() line:824 -- Saving folder csv as /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:42:11,104   INFO __main__  app.py closeEvent() line:158 -- SanPy is quiting
+2021-05-26 12:44:13,066   INFO sanpy.interface.app  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:44:13,067   INFO sanpy.interface.app  app.py main() line:848 -- Python version is 3.7.9
+2021-05-26 12:44:13,221   INFO sanpy.interface.app  app.py main() line:860 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:44:13,221   INFO sanpy.interface.app  app.py main() line:864 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:44:13,252   INFO sanpy.interface.app  app.py preferencesLoad() line:631 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:44:13,253   INFO sanpy.interface.app  app.py __init__() line:87 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:44:13,253   INFO sanpy.interface.app  app.py loadFolder() line:199 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:44:13,254   INFO sanpy.interface.app  app.py loadFolder() line:223 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:44:13,662   INFO sanpy.interface.app  app.py __init__() line:133 -- SanPy started
+2021-05-26 12:45:19,265   INFO sanpy.interface.app  app.py closeEvent() line:158 -- SanPy is quiting
+2021-05-26 12:45:22,290   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-05-26 12:45:22,609   INFO sanpy.interface.bDetectionWidget  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-05-26 12:45:22,996   INFO sanpy.interface.bExportWidget  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-05-26 12:45:23,000   INFO sanpy.interface.app  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-05-26 12:45:23,000   INFO sanpy.interface.app  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:45:23,001   INFO sanpy.interface.app  app.py main() line:848 -- Python version is 3.7.9
+2021-05-26 12:45:23,139   INFO sanpy.interface.app  app.py main() line:860 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:45:23,139   INFO sanpy.interface.app  app.py main() line:864 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:45:23,167   INFO sanpy.interface.app  app.py preferencesLoad() line:631 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:45:23,168   INFO sanpy.interface.app  app.py __init__() line:87 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:45:23,169   INFO sanpy.interface.app  app.py loadFolder() line:199 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:45:23,169   INFO sanpy.interface.app  app.py loadFolder() line:223 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:45:23,576   INFO sanpy.interface.app  app.py __init__() line:133 -- SanPy started
+2021-05-26 12:48:33,334   INFO sanpy.interface.app  app.py closeEvent() line:158 -- SanPy is quiting
+2021-05-26 12:48:36,914   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-05-26 12:48:37,018   INFO sanpy.interface.bDetectionWidget  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-05-26 12:48:37,234   INFO sanpy.interface.bExportWidget  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-05-26 12:48:37,237   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-05-26 12:48:37,237   INFO __main__  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-05-26 12:48:37,238   INFO __main__  app.py main() line:848 -- Python version is 3.7.9
+2021-05-26 12:48:37,381   INFO __main__  app.py main() line:860 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-05-26 12:48:37,381   INFO __main__  app.py main() line:864 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-05-26 12:48:37,410   INFO __main__  app.py preferencesLoad() line:631 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-05-26 12:48:37,411   INFO __main__  app.py __init__() line:87 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-05-26 12:48:37,411   INFO __main__  app.py loadFolder() line:199 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-05-26 12:48:37,411   INFO __main__  app.py loadFolder() line:223 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-05-26 12:48:37,770   INFO __main__  app.py __init__() line:133 -- SanPy started
+2021-05-26 12:48:46,758   INFO __main__  app.py closeEvent() line:158 -- SanPy is quiting

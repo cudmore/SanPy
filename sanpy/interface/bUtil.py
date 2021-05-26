@@ -6,6 +6,9 @@ import pandas as pd
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+#from sanpy.sanpyLogger import get_logger
+#logger = get_logger(__name__)
+
 def loadDatabase(path):
 	"""
 	path: full path to .csv file generated with reanalyze.py
@@ -17,7 +20,7 @@ def loadDatabase(path):
 	elif not os.path.isfile(path):
 		print(f'error: bUtil.loadDatabase() did not find file: "{path}"')
 	elif path.endswith('.csv'):
-		masterDf = pd.read_csv(path, header=0) #, dtype={'ABF File': str})
+		masterDf = pd.read_csv(path, header=0, index_col=False) #, dtype={'ABF File': str})
 	elif path.endswith('.xls'):
 		masterDf = pd.read_excel(path, header=0) #, dtype={'ABF File': str})
 	elif path.endswith('.xlsx'):
@@ -133,7 +136,7 @@ class myTableView(QtWidgets.QTableView):
 		"""
 		handle right mouse click
 		"""
-		print('myTableView.contextMenuEvent() event:', event)
+		#print('myTableView.contextMenuEvent() event:', event)
 		contextMenu = QtWidgets.QMenu(self)
 		duplicateRow = contextMenu.addAction("Duplicate Row")
 		contextMenu.addSeparator()
@@ -147,7 +150,7 @@ class myTableView(QtWidgets.QTableView):
 		#
 		action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 		if action == duplicateRow:
-			print('  todo: duplicateRow')
+			#print('  todo: duplicateRow')
 			tmp = self.selectedIndexes()
 			if len(tmp)>0:
 				selectedRow = tmp[0].row()
@@ -220,7 +223,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 		return None
 
 	def update(self, dataIn):
-		print('pandasModel.update()', dataIn)
+		print('  pandasModel.update() dataIn:', dataIn)
 
 	def setData(self, index, value, role=QtCore.Qt.EditRole):
 		"""
@@ -274,7 +277,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 		"""
 		copy model data to clipboard
 		"""
-		print('myCopyTable()')
+		#print('myCopyTable()')
 		dfCopy = self._data.copy()
 		dfCopy.to_clipboard(sep='\t', index=False)
 		#print(dfCopy)
@@ -333,16 +336,17 @@ class pandasModel(QtCore.QAbstractTableModel):
 		self.endInsertRows()
 
 	def mySetRow(self, row, rowDict):
-		print('mySetRow() row:', row, 'rowDict:', rowDict)
+		#print('mySetRow() row:', row, 'rowDict:', rowDict)
 		rowSeries = pd.Series(rowDict)
 		self._data.iloc[row] = rowSeries
 		self._data = self._data.reset_index(drop=True)
 
 	def mySaveDb(self, path):
-		print('pandasModel.mySaveDb() path:', path)
-		self._data.to_csv(path)
+		#print('pandasModel.mySaveDb() path:', path)
+		#logger.info(f'Saving csv {path}')
+		self._data.to_csv(path, index=False)
 		self.isDirty = False
-		
+
 # see: https://stackoverflow.com/questions/17748546/pyqt-column-of-checkboxes-in-a-qtableview
 class myCheckBoxDelegate(QtWidgets.QItemDelegate):
 	"""

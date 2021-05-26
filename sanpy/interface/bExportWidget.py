@@ -23,7 +23,9 @@ import qdarkstyle
 #import bAnalysis
 #import bAnalysisPlot
 from sanpy import bAnalysis
-#from sanpy import bAnalysisPlot
+
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 class CustomStyle(QtWidgets.QProxyStyle):
 	def styleHint(self, hint, option=None, widget=None, returnData=None):
@@ -89,9 +91,9 @@ class draggable_lines:
 		self.sid = self.c.mpl_connect('pick_event', self.clickonline)
 
 	def clickonline(self, event):
-		print('clickonline()')
+		#print('clickonline()')
 		if event.artist == self.hLine:
-			print("  line selected ", event.artist)
+			#print("  line selected ", event.artist)
 			self.follower = self.c.mpl_connect("motion_notify_event", self.followmouse)
 			#self.releaser = self.c.mpl_connect("button_press_event", self.releaseonclick)
 			self.releaser = self.c.mpl_connect("button_release_event", self.releaseonclick)
@@ -177,7 +179,7 @@ class draggable_lines:
 		self.setPos(event.xdata, event.ydata)
 
 	def releaseonclick(self, event):
-		print('releaseonclick()')
+		#print('releaseonclick()')
 		self.c.mpl_disconnect(self.releaser)
 		self.c.mpl_disconnect(self.follower)
 
@@ -267,7 +269,7 @@ class bExportWidget(QtWidgets.QWidget):
 		"""
 		in Qt, close only hides the widget!
 		"""
-		print('bExportWidget.closeEvent()')
+		#print('bExportWidget.closeEvent()')
 		self.deleteLater()
 		self.myCloseSignal.emit(self)
 
@@ -698,6 +700,7 @@ class bExportWidget(QtWidgets.QWidget):
 		self.myAxis.set_xlim(xMin, xMax)
 		self.myAxis.set_ylim(yMin, yMax)
 
+	'''
 	def old_setFile(self, filePath, plotRaw=False):
 		"""
 		when main application changes file
@@ -721,6 +724,7 @@ class bExportWidget(QtWidgets.QWidget):
 		if plotRaw:
 			self.plotRaw()
 		return True
+	'''
 
 	def _setXMargin(self):
 		self.xMarginSpinBox.setEnabled(False)
@@ -783,7 +787,7 @@ class bExportWidget(QtWidgets.QWidget):
 			return
 
 		xLim = mplEvent.get_xlim()
-		print('on_xlims_change() xLim:', xLim)
+		#print('on_xlims_change() xLim:', xLim)
 
 		xMin = xLim[0]
 		xMax = xLim[1]
@@ -806,14 +810,14 @@ class bExportWidget(QtWidgets.QWidget):
 			if (medianFilter % 2) == 0:
 				medianFilter += 1
 
-			print('_setDownSample() downSample:', downSample, 'medianFilter:', medianFilter)
+			#print('_setDownSample() downSample:', downSample, 'medianFilter:', medianFilter)
 
-			print('downSample ... please wait')
+			#print('downSample ... please wait')
 			self.mySweepX_Downsample = self.mySweepX[::downSample]
 			self.mySweepY_Downsample = self.mySweepY[::downSample]
 
 			if medianFilter > 1:
-				print('medianFilter ... please wait')
+				#print('medianFilter ... please wait')
 				self.mySweepY_Downsample = scipy.signal.medfilt(self.mySweepY_Downsample,
 											kernel_size=medianFilter)
 
@@ -826,7 +830,7 @@ class bExportWidget(QtWidgets.QWidget):
 			#self.scaleBars.setPos(xPos, yPos, fromMax=True)
 
 		except (Exception) as e:
-			print('EXCEPTION in _setDownSample():', e)
+			logger.exceptiion('EXCEPTION in _setDownSample():', e)
 
 		self.canvas.draw_idle()
 		#self.repaint()
@@ -1102,7 +1106,7 @@ class bExportWidget(QtWidgets.QWidget):
 
 		# do actual save
 		if len(fullSavePath) > 0:
-			print('saving:', fullSavePath)
+			logger.info(f'saving: {fullSavePath}')
 			self.figure.savefig(fullSavePath)
 
 	def center(self):
@@ -1119,7 +1123,7 @@ if __name__ == '__main__':
 
 	ba = bAnalysis(path)
 	if ba.loadError:
-		print('there was an error loading file', path)
+		logger.error(f'Error loading file: {path}')
 	else:
 		app = QtWidgets.QApplication(sys.argv)
 		app.aboutToQuit.connect(app.deleteLater)

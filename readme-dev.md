@@ -98,13 +98,29 @@ pip install tornado
 ```
 
 ```
-python -m PyInstaller --windowed sanpy/sanpy_app.py
+python -m PyInstaller --windowed --noconfirm sanpy/interface/app.py
 ```
 then
 
 ```
-python -m PyInstaller --windowed sanpy_app.spec
+python -m PyInstaller --windowed --noconfirm sanpy_app.spec
+python -m PyInstaller --windowed --noconfirm app.spec
 ```
 
 ```
+```
+
+May 25, 2021
+
+The following worked after removing PyQt 5.15.4 (QApplication was giving segmentation fault)
+
+Using
+```
+PyQt5==5.15.2
+PyQt5-sip==12.9.0
+```
+
+Command line (from /Userrs/cudmore/Sites/SanPy)
+```
+pyinstaller --clean --onedir --windowed --icon sanpy/interface/icons/sanpy_transparent.icns --noconfirm --path sanpy_env/lib/python3.7/site-packages --name SanPy sanpy/interface/app.py
 ```

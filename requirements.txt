@@ -1,6 +1,8 @@
 pandas
 numpy
 scipy
+
+PyQt5==5.15.2
 pyqtgraph
 matplotlib
 mplcursors # added 202102 for bScatterPlotWidget2 (to show popup on hover)
@@ -8,7 +10,6 @@ mplcursors # added 202102 for bScatterPlotWidget2 (to show popup on hover)
 pyabf
 XlsxWriter
 
-PyQt5==5.13.0
 #qdarkstyle==2.8.1
 qdarkstyle
 

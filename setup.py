@@ -33,7 +33,7 @@ setup(
         'gui': [
 			'pyqtgraph',
 			#'matplotlib',
-			'PyQt5==5.13.0',
+			'PyQt5==5.15.2',
 			'qdarkstyle',
 		],
     },

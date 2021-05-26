@@ -468,8 +468,8 @@ class dualRecord:
 		vmax = 10 #15 #6
 		print('     forcing scalebar to vmin:', vmin, 'vmax:', vmax)
 		plottedImage = ax.imshow(df_f0, cmap=cmap,
-						#vmin=vmin,
-						#vmax=vmax,
+						vmin=vmin,
+						vmax=vmax,
 						extent=extent, aspect='auto')
 
 		ax.spines['left'].set_visible(False)
@@ -543,6 +543,9 @@ class dualRecord:
 									#color = "k",
 									ec="k"
 									)
+
+		# may12, this works but would also need to set width of hist outlines
+		#plt.setp(ax.spines.values(), linewidth=2)
 
 		ax.spines['left'].set_visible(False)
 		ax.spines['top'].set_visible(False)
@@ -841,7 +844,8 @@ class dualRecord:
 		axImageRight = axImage.twinx()  # instantiate a second axes that shares the same x-axis
 		sweepX = self.abf.sweepX
 		sweepY = self.abf.sweepY
-		axImageRight.plot(sweepX, sweepY, '-w', linewidth=0.5)
+		print('     may24 white plot is now 1.0, was 0.5')
+		axImageRight.plot(sweepX, sweepY, '-w', linewidth=1)
 		axImageRight.set_xticks([], minor=False)
 		axImageRight.set_xticks([], minor=True)
 		#axImageRight.set_yticks([], minor=False)

@@ -14,6 +14,8 @@ import pyabf # see: https://github.com/swharden/pyABF
 
 import sanpy
 from sanpy import detectionParams
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 class bAnalysis:
 	"""
@@ -444,7 +446,7 @@ class bAnalysis:
 		when detecting with just mV threshold (not dv/dt)
 		backup spike time using diminishnig SD and diff b/w vm at pnt[i]-pnt[i-1]
 		"""
-		print('_backupSpikeVm() medianFilter:', medianFilter)
+		#print('_backupSpikeVm() medianFilter:', medianFilter)
 		realSpikeTimePnts = [np.nan] * self.numSpikes
 
 		medianFilter = 5
@@ -452,6 +454,10 @@ class bAnalysis:
 			myVm = scipy.signal.medfilt(self.abf.sweepY, medianFilter)
 		else:
 			myVm = self.abf.sweepY
+
+		#
+		# TODO: this is going to fail if spike is at start/stop of recorrding
+		#
 
 		maxNumPntsToBackup = 20 # todo: add _ms
 		bin_ms = 1
@@ -488,7 +494,7 @@ class bAnalysis:
 					moveForwardPnts = 4
 					backupNumPnts = backupNumPnts - 1 # the prev is thresh
 					if backupNumPnts<moveForwardPnts:
-						print(f'  WARNING: _backupSpikeVm() spike {idx} backupNumPnts:{backupNumPnts} < moveForwardPnts:{moveForwardPnts}')
+						logger.warning(f'spike {idx} backupNumPnts:{backupNumPnts} < moveForwardPnts:{moveForwardPnts}')
 						#print('  -->> not adjusting spike time')
 						realBackupPnts = backupNumPnts - 0
 						realPnt = spikeTimePnts - (realBackupPnts*bin_pnts)
@@ -527,7 +533,8 @@ class bAnalysis:
 		goodSpikeErrors: list of errors per spike, can be None
 		refractory_ms:
 		"""
-		print('  bAnalysis._throwOutRefractory() len(spikeTimes0)', len(spikeTimes0), 'reject shorter than refractory_ms:', refractory_ms)
+		before = len(spikeTimes0)
+		#print('  bAnalysis._throwOutRefractory() len(spikeTimes0)', len(spikeTimes0), 'reject shorter than refractory_ms:', refractory_ms)
 		#
 		# if there are doubles, throw-out the second one
 		#refractory_ms = 20 #10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
@@ -550,17 +557,11 @@ class bAnalysis:
 			goodSpikeErrors = [goodSpikeErrors[idx] for idx, spikeTime in enumerate(spikeTimes0) if spikeTime]
 		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if spikeTime]
 
-		print('    after len(spikeTimes0)', len(spikeTimes0))
+		after = len(spikeTimes0)
+		logger.info(f'From {before} to {after} spikes with refractory_ms:{refractory_ms}')
 
 		return spikeTimes0, goodSpikeErrors
-	'''
-	def spikeDetect0(self, dvdtThreshold=100, mvThreshold=-20,
-						peakWindow_ms=10,
-						window_ms=2,
-						refractory_ms=20,
-						dvdt_percentOfMax=0.1,
-						medianFilter=0, verbose=True): #, startSeconds=None, stopSeconds=None):
-	'''
+
 	def _getErrorDict(self, spikeNumber, pnt, type, detailStr):
 		"""
 		get error dict for one spike
@@ -587,9 +588,6 @@ class bAnalysis:
 			self.filteredVm:
 			self.filtereddVdt:
 		"""
-
-		#for k,v in dDict.items():
-
 		if verbose:
 			print('bAnalysis.spikeDetect_dvdt()')
 			print('	 dvdtThreshold:', dDict['dvdtThreshold'])
@@ -604,7 +602,7 @@ class bAnalysis:
 		self.detectionType = 'dVdtThreshold'
 
 		#
-		#
+		# analyze full recording
 		startPnt = 0
 		stopPnt = len(self.abf.sweepX) - 1
 		secondsOffset = 0
@@ -628,7 +626,6 @@ class bAnalysis:
 		# throw out all spikes that are below a threshold Vm (usually below -20 mV)
 		#spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if self.abf.sweepY[spikeTime] > self.mvThreshold]
 		peakWindow_pnts = self.abf.dataPointsPerMs * dDict['peakWindow_ms']
-		# abb 20210130 lcr analysis
 		peakWindow_pnts = round(peakWindow_pnts)
 		goodSpikeTimes = []
 		for spikeTime in spikeTimes0:
@@ -881,6 +878,8 @@ class bAnalysis:
 		Args:
 			dDict (dict): A detection dictionary from [bAnalysis.getDefaultDetection()][sanpy.bAnalysis.bAnalysis.getDefaultDetection]
 		'''
+
+		logger.info('start detection')
 
 		self.detectionDict = dDict # remember the parameters of our last detection
 
@@ -1414,7 +1413,7 @@ class bAnalysis:
 
 		halfClipWidth_pnts = int(clipWidth_pnts/2)
 
-		print('  spikeDetect() clipWidth_pnts:', clipWidth_pnts, 'halfClipWidth_pnts:', halfClipWidth_pnts)
+		#print('  spikeDetect() clipWidth_pnts:', clipWidth_pnts, 'halfClipWidth_pnts:', halfClipWidth_pnts)
 		# make one x axis clip with the threshold crossing at 0
 		self.spikeClips_x = [(x-halfClipWidth_pnts)/self.abf.dataPointsPerMs for x in range(clipWidth_pnts)]
 
@@ -1442,7 +1441,7 @@ class bAnalysis:
 
 		# 20210426
 		# generate a df holding stats (used by scatterplotwidget)
-		print('  making df to pass to scatterplotwidget')
+		#print('  making df to pass to scatterplotwidget')
 		startSeconds = dDict['startSeconds']
 		stopSeconds = dDict['stopSeconds']
 		#tmpAnalysisName, df0 = self.getReportDf(theMin, theMax, savefile)
@@ -1569,7 +1568,10 @@ class bAnalysis:
 		else:
 			dfError = pd.DataFrame(dictList)
 
-		print('bAnalysis.errorReport() returning len(dfError):', len(dfError))
+		#print('bAnalysis.errorReport() returning len(dfError):', len(dfError))
+		logger.info(f'Found {len(dfError)} errors in spike detection')
+
+		#
 		return dfError
 
 	#############################

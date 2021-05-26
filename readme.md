@@ -21,10 +21,10 @@ This repository has code to perform [cardiac action potential][cardiac action po
 The desktop application allows the user to load a folder of files (top table). Selecting a file will display both the derivative and raw membrane potential (middle two traces). Spike detection is then easily performed by specifying a threshold in either the derivative of the membrane potential or the membrane potential itself. Once spikes are detected, the detection parameters are overlaid over the raw membrane and derivative traces. Finally, there is an interface (lower table and colored plot) to inspect the detection parameters.
 
 
-<IMG SRC="img/spike-app.png" width=700>
+<IMG SRC="docs/docs/img/spike-app.png" width=700>
 
 
-<IMG SRC="img/meta-window-example.png" width=700>
+<IMG SRC="docs/docs/img/meta-window-example.png" width=700>
 
 ## Writing custom Python scripts
 
@@ -42,7 +42,7 @@ bAnalysisPlot.bPlot.plotSpikes(ba, xMin=140, xMax=145)
 plt.show()
 ```
 
-<IMG SRC="img/example1.png" width=600>
+<IMG SRC="docs/docs/img/example1.png" width=600>
 
 ## Install
 
@@ -129,13 +129,13 @@ python sanpy/sanpy_app.py
 
 The browser based web application provides the same interface for analysis as the desktop application.
 
-<IMG SRC="img/app2-interface.png" width=700 border=1>
+<IMG SRC="docs/docs/img/app2-interface.png" width=700 border=1>
 
 
 Once data is analyzed, Pooling allows browsing detection parameters across any number of files.
 
 
-<IMG SRC="img/pymy-pooling.png" width=700 border=1>
+<IMG SRC="docs/docs/img/pymy-pooling.png" width=700 border=1>
 
 ### Install the web application
 
