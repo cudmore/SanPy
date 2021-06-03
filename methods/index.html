@@ -14,7 +14,7 @@
       
       
       <link rel="icon" href="../img/sanpy-transparent.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.6">
     
     
       
@@ -22,10 +22,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.bde7dde4.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.875de78c.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ef6f36e2.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.f1a3b89f.min.css">
         
       
     
@@ -202,7 +202,7 @@
   
     <li class="md-nav__item">
       <a href=".." class="md-nav__link">
-        Home
+        SanPy
       </a>
     </li>
   
@@ -264,7 +264,7 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" data-md-state="indeterminate" type="checkbox" id="__nav_5" checked>
       
       <label class="md-nav__link" for="__nav_5">
         API
@@ -282,7 +282,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/" class="md-nav__link">
+      <a href="../api/overview/" class="md-nav__link">
         Overview
       </a>
     </li>
@@ -294,7 +294,19 @@
   
   
     <li class="md-nav__item">
-      <a href="../bAnalysis/" class="md-nav__link">
+      <a href="../api/examples/" class="md-nav__link">
+        Examples
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/bAnalysis/" class="md-nav__link">
         bAnalysis
       </a>
     </li>
@@ -306,7 +318,31 @@
   
   
     <li class="md-nav__item">
-      <a href="../bExport/" class="md-nav__link">
+      <a href="../api/bAnalysisPlot/" class="md-nav__link">
+        bAnalysisPlot
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/bAnalysisDir/" class="md-nav__link">
+        bAnalysisDir
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/bExport/" class="md-nav__link">
         bExport
       </a>
     </li>
@@ -318,7 +354,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../detectionParams/" class="md-nav__link">
+      <a href="../api/detectionParams/" class="md-nav__link">
         detectionParams
       </a>
     </li>
@@ -370,6 +406,13 @@
         <li class="md-nav__item">
   <a href="#what-spike-parameters-are-detected" class="md-nav__link">
     What spike parameters are detected?
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detection-parameters" class="md-nav__link">
+    Detection Parameters
   </a>
   
 </li>
@@ -450,6 +493,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#detection-parameters" class="md-nav__link">
+    Detection Parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#detection-errors" class="md-nav__link">
     Detection Errors
   </a>
@@ -486,6 +536,150 @@ myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 11
 <li>The early diastolic depolarization rate was estimated as the slope of a linear fit between 10% and 50% of the diastolic duration and the early diastolic duration was the corresponding time interval</li>
 <li>The nonlinear late diastolic depolarization phase was estimated as the duration between 1% and 10% dV/dt</li>
 </ul>
+<h2 id="detection-parameters">Detection Parameters<a class="headerlink" href="#detection-parameters" title="Permanent link">¤</a></h2>
+<p>To detect action potentials, we use a number of parameters. These can all be configured using the default setting using <a href="../api/detectionParams">sanpy/detectionParams</a>.</p>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="left">Parameter</th>
+<th align="left">Default Value</th>
+<th align="left">Units</th>
+<th align="left">Human Readable</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">0</td>
+<td align="left">dvdtThreshold</td>
+<td align="left">100</td>
+<td align="left">dVdt</td>
+<td align="left">dV/dt Threshold</td>
+<td align="left">dV/dt threshold for a spike, will be backed up to dvdt_percentOfMax and have xxx error when this fails</td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td align="left">mvThreshold</td>
+<td align="left">-20</td>
+<td align="left">mV</td>
+<td align="left">mV Threshold</td>
+<td align="left">mV threshold for spike AND minimum spike mV when detecting with dV/dt</td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td align="left">dvdt_percentOfMax</td>
+<td align="left">0.1</td>
+<td align="left">Percent</td>
+<td align="left">dV/dt Percent of max</td>
+<td align="left">For dV/dt detection, the final TOP is when dV/dt drops to this percent from dV/dt AP peak</td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td align="left">onlyPeaksAbove_mV</td>
+<td align="left"></td>
+<td align="left">mV</td>
+<td align="left">Accept Peaks Above (mV)</td>
+<td align="left">For dV/dt detection, only accept APs above this value (mV)</td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td align="left">doBackupSpikeVm</td>
+<td align="left">True</td>
+<td align="left">Boolean</td>
+<td align="left">Backup Vm Spikes</td>
+<td align="left">If true, APs detected with just mV will be backed up until Vm falls to xxx</td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td align="left">refractory_ms</td>
+<td align="left">170</td>
+<td align="left">ms</td>
+<td align="left">Minimum AP interval (ms)</td>
+<td align="left">APs with interval (with respect to previous AP) less than this will be removed</td>
+</tr>
+<tr>
+<td align="right">6</td>
+<td align="left">peakWindow_ms</td>
+<td align="left">100</td>
+<td align="left">ms</td>
+<td align="left">Peak Window (ms)</td>
+<td align="left">Window after TOP (ms) to seach for AP peak (mV)</td>
+</tr>
+<tr>
+<td align="right">7</td>
+<td align="left">dvdtPreWindow_ms</td>
+<td align="left">10</td>
+<td align="left">ms</td>
+<td align="left">dV/dt Pre Window (ms)</td>
+<td align="left">Window (ms) to search before each TOP for real threshold crossing</td>
+</tr>
+<tr>
+<td align="right">8</td>
+<td align="left">mdp_ms</td>
+<td align="left">250</td>
+<td align="left">ms</td>
+<td align="left">Pre AP MDP window (ms)</td>
+<td align="left">Window (ms) before an AP to look for MDP</td>
+</tr>
+<tr>
+<td align="right">9</td>
+<td align="left">avgWindow_ms</td>
+<td align="left">5</td>
+<td align="left">ms</td>
+<td align="left"></td>
+<td align="left">Window (ms) to calculate MDP (mV) as a mean rather than mV at single point for MDP</td>
+</tr>
+<tr>
+<td align="right">10</td>
+<td align="left">halfHeights</td>
+<td align="left">[10, 20, 50, 80, 90]</td>
+<td align="left"></td>
+<td align="left">AP Durations (%)</td>
+<td align="left">AP Durations as percent of AP height (AP Peak (mV) - TOP (mV))</td>
+</tr>
+<tr>
+<td align="right">11</td>
+<td align="left">halfWidthWindow_ms</td>
+<td align="left">200</td>
+<td align="left">ms</td>
+<td align="left">Half Width Window (ms)</td>
+<td align="left">Window (ms) after TOP to look for AP Durations</td>
+</tr>
+<tr>
+<td align="right">12</td>
+<td align="left">medianFilter</td>
+<td align="left">0</td>
+<td align="left">points</td>
+<td align="left">Median Filter Points</td>
+<td align="left">Number of points in median filter, must be odd, 0 for no filter</td>
+</tr>
+<tr>
+<td align="right">13</td>
+<td align="left">SavitzkyGolay_pnts</td>
+<td align="left">5</td>
+<td align="left">points</td>
+<td align="left">SavitzkyGolay Filter Points</td>
+<td align="left">Number of points in SavitzkyGolay filter, must be odd, 0 for no filter</td>
+</tr>
+<tr>
+<td align="right">14</td>
+<td align="left">SavitzkyGolay_poly</td>
+<td align="left">2</td>
+<td align="left"></td>
+<td align="left">Savitzky-Golay Filter Polynomial Degree</td>
+<td align="left">The degree of the polynomial for Savitzky-Golay filter</td>
+</tr>
+<tr>
+<td align="right">15</td>
+<td align="left">spikeClipWidth_ms</td>
+<td align="left">500</td>
+<td align="left">ms</td>
+<td align="left">AP Clip Width (ms)</td>
+<td align="left">The width/duration of generated AP clips</td>
+</tr>
+</tbody>
+</table>
 <h2 id="detection-errors">Detection Errors<a class="headerlink" href="#detection-errors" title="Permanent link">¤</a></h2>
 <p>When we encounter errors during spike detection, they are stored for each spike in ['errors']. Each error has a name like 'dvdtPercent' as follows</p>
 <ul>
@@ -516,10 +710,10 @@ myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 11
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "navigation.expand"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.a1609d9a.min.js"></script>
+      <script src="../assets/javascripts/bundle.34eae1b6.min.js"></script>
       
     
   </body>

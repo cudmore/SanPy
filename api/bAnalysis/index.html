@@ -13,8 +13,8 @@
         <meta name="author" content="Robert H Cudmore">
       
       
-      <link rel="icon" href="../img/sanpy-transparent.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
+      <link rel="icon" href="../../img/sanpy-transparent.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.6">
     
     
       
@@ -22,10 +22,10 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.bde7dde4.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.875de78c.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.ef6f36e2.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.f1a3b89f.min.css">
         
       
     
@@ -40,9 +40,9 @@
     
     
     
-      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="../css/style.css">
+      <link rel="stylesheet" href="../../css/style.css">
     
     
       
@@ -59,7 +59,7 @@
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
   
     
-    <script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -78,9 +78,9 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href=".." title="SanPy Documentation" class="md-header__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
+    <a href="../.." title="SanPy Documentation" class="md-header__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
       
-  <img src="../img/sanpy-transparent.png" alt="logo">
+  <img src="../../img/sanpy-transparent.png" alt="logo">
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
@@ -170,9 +170,9 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="SanPy Documentation" class="md-nav__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
+    <a href="../.." title="SanPy Documentation" class="md-nav__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
       
-  <img src="../img/sanpy-transparent.png" alt="logo">
+  <img src="../../img/sanpy-transparent.png" alt="logo">
 
     </a>
     SanPy Documentation
@@ -201,8 +201,8 @@
   
   
     <li class="md-nav__item">
-      <a href=".." class="md-nav__link">
-        Home
+      <a href="../.." class="md-nav__link">
+        SanPy
       </a>
     </li>
   
@@ -216,7 +216,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../install/" class="md-nav__link">
+      <a href="../../install/" class="md-nav__link">
         Install
       </a>
     </li>
@@ -231,7 +231,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../desktop-application/" class="md-nav__link">
+      <a href="../../desktop-application/" class="md-nav__link">
         Desktop Application
       </a>
     </li>
@@ -246,7 +246,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../web-application/" class="md-nav__link">
+      <a href="../../web-application/" class="md-nav__link">
         Web Application
       </a>
     </li>
@@ -284,8 +284,20 @@
   
   
     <li class="md-nav__item">
-      <a href="../api/" class="md-nav__link">
+      <a href="../overview/" class="md-nav__link">
         Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../examples/" class="md-nav__link">
+        Examples
       </a>
     </li>
   
@@ -347,8 +359,29 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#sanpy.bAnalysis.bAnalysis.dataPointsPerMs" class="md-nav__link">
-    dataPointsPerMs
+  <a href="#sanpy.bAnalysis.bAnalysis.api_getHeader" class="md-nav__link">
+    api_getHeader()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis.bAnalysis.api_getRecording" class="md-nav__link">
+    api_getRecording()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis.bAnalysis.api_getSpikeInfo" class="md-nav__link">
+    api_getSpikeInfo()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis.bAnalysis.api_getSpikeStat" class="md-nav__link">
+    api_getSpikeStat()
   </a>
   
 </li>
@@ -438,6 +471,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis.bAnalysis.recordingFrequency" class="md-nav__link">
+    recordingFrequency
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.bAnalysis.bAnalysis.setSweep" class="md-nav__link">
     setSweep()
   </a>
@@ -463,10 +503,41 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis.check_abf" class="md-nav__link">
+    check_abf()
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bAnalysisPlot/" class="md-nav__link">
+        bAnalysisPlot
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bAnalysisDir/" class="md-nav__link">
+        bAnalysisDir
+      </a>
     </li>
   
 
@@ -509,7 +580,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../methods/" class="md-nav__link">
+      <a href="../../methods/" class="md-nav__link">
         Methods
       </a>
     </li>
@@ -524,7 +595,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../open-source/" class="md-nav__link">
+      <a href="../../open-source/" class="md-nav__link">
         Open Source
       </a>
     </li>
@@ -539,7 +610,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../about/" class="md-nav__link">
+      <a href="../../about/" class="md-nav__link">
         About
       </a>
     </li>
@@ -592,8 +663,29 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#sanpy.bAnalysis.bAnalysis.dataPointsPerMs" class="md-nav__link">
-    dataPointsPerMs
+  <a href="#sanpy.bAnalysis.bAnalysis.api_getHeader" class="md-nav__link">
+    api_getHeader()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis.bAnalysis.api_getRecording" class="md-nav__link">
+    api_getRecording()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis.bAnalysis.api_getSpikeInfo" class="md-nav__link">
+    api_getSpikeInfo()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis.bAnalysis.api_getSpikeStat" class="md-nav__link">
+    api_getSpikeStat()
   </a>
   
 </li>
@@ -683,6 +775,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis.bAnalysis.recordingFrequency" class="md-nav__link">
+    recordingFrequency
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.bAnalysis.bAnalysis.setSweep" class="md-nav__link">
     setSweep()
   </a>
@@ -705,6 +804,13 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis.check_abf" class="md-nav__link">
+    check_abf()
+  </a>
   
 </li>
       
@@ -740,12 +846,12 @@
 
 
 
-<h2 id="sanpy.bAnalysis.bAnalysis" class="doc doc-heading">
+<h2 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis">
         <code>bAnalysis</code>
 
 
 
-<a href="#sanpy.bAnalysis.bAnalysis" class="headerlink" title="Permanent link">¤</a></h2>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis" title="Permanent link">¤</a></h2>
 
     <div class="doc doc-contents ">
 
@@ -767,13 +873,6 @@
 <span class="n">ba</span><span class="o">.</span><span class="n">plotSpikes</span><span class="p">()</span>
 <span class="n">ba</span><span class="o">.</span><span class="n">plotClips</span><span class="p">()</span>
 </code></pre></div>
-<p>Link to class, first braket is name, second is link <a href="#sanpy.bAnalysis.bAnalysis">sanpy.bAnalysis</a></p>
-<p>Link to a member function <a href="#sanpy.bAnalysis.bAnalysis.spikeDetect">sanpy.bAnalysis.bAnalysis.spikeDetect</a></p>
-<p><a href="#sanpy.bAnalysis.bAnalysis.makeSpikeClips">sanpy.bAnalysis.bAnalysis.makeSpikeClips</a></p>
-<p>Link to bExport and show link as bExport <a href="../bExport/#sanpy.bExport.bExport">bExport</a></p>
-<div class="admonition note">
-<p class="admonition-title">This is an admonition with triple explamation points !!!.</p>
-</div>
 
 
 
@@ -787,14 +886,14 @@
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.__init__" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.__init__">
 <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theTiff</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">byteStream</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
   <span class="doc doc-properties">
       <small class="doc doc-property doc-property-special"><code>special</code></small>
   </span>
 
-<a href="#sanpy.bAnalysis.bAnalysis.__init__" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.__init__" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -871,9 +970,10 @@
 	<span class="bp">self</span><span class="o">.</span><span class="n">spikeClips</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># created in self.spikeDetect()</span>
 
 	<span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
-		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;error: bAnalysis.__init__ file does not exist: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="c1">#print(f&#39;error: bAnalysis.__init__ file does not exist: {file}&#39;)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;File does not exist: &quot;</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">loadError</span> <span class="o">=</span> <span class="kc">True</span>
-		<span class="k">return</span>
+		<span class="c1">#return</span>
 
 	<span class="c1"># only defined when loading abf files</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">acqDate</span> <span class="o">=</span> <span class="kc">None</span>
@@ -890,9 +990,11 @@
 		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  === REMEMBER: bAnalysis.__init__() is normalizing Ca sweepY&#39;</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normalizeData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepY</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">myFileType</span> <span class="o">=</span> <span class="s1">&#39;tif&#39;</span>
+
 	<span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAbfText</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">myFileType</span> <span class="o">=</span> <span class="s1">&#39;csv&#39;</span>
+
 	<span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abf&#39;</span><span class="p">):</span>
 		<span class="k">try</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="o">=</span> <span class="n">pyabf</span><span class="o">.</span><span class="n">ABF</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
@@ -905,32 +1007,33 @@
 			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  exception was:&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">loadError</span> <span class="o">=</span> <span class="kc">True</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="o">=</span> <span class="kc">None</span>
-			<span class="k">return</span>
+			<span class="c1">#return</span>
 		<span class="k">except</span> <span class="p">(</span><span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
 			<span class="c1"># some abf files throw: &#39;unpack requires a buffer of 234 bytes&#39;</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;error: bAnalysis.__init__() did not load abf file:&#39;</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  unknown exception was:&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+			<span class="c1">#print(&#39;error: bAnalysis.__init__() did not load abf file:&#39;, file)</span>
+			<span class="c1">#print(&#39;  unknown exception was:&#39;, e)</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">loadError</span> <span class="o">=</span> <span class="kc">True</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="o">=</span> <span class="kc">None</span>
-			<span class="k">return</span>
+			<span class="c1">#return</span>
 		<span class="c1"># we have a good abf file</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">myFileType</span> <span class="o">=</span> <span class="s1">&#39;abf&#39;</span>
 
 	<span class="k">else</span><span class="p">:</span>
 		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;error: bAnalysis.__init__() can only open abf/csv/tif files: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">loadError</span> <span class="o">=</span> <span class="kc">True</span>
-		<span class="k">return</span>
+		<span class="c1">#return</span>
 
 	<span class="c1"># TODO: will not work for .tif</span>
 	<span class="c1"># determine if current-clamp or voltage clamp</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">_recordingMode</span> <span class="o">=</span> <span class="s1">&#39;fix&#39;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">_yUnits</span> <span class="o">=</span> <span class="s1">&#39;fix&#39;</span>
-	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepUnitsY</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;pA&#39;</span><span class="p">]:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">_recordingMode</span> <span class="o">=</span> <span class="s1">&#39;V-Clamp&#39;</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">_yUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepUnitsY</span>
-	<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepUnitsY</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;mV&#39;</span><span class="p">]:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">_recordingMode</span> <span class="o">=</span> <span class="s1">&#39;I-Clamp&#39;</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">_yUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepUnitsY</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepUnitsY</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;pA&#39;</span><span class="p">]:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_recordingMode</span> <span class="o">=</span> <span class="s1">&#39;V-Clamp&#39;</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_yUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepUnitsY</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepUnitsY</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;mV&#39;</span><span class="p">]:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_recordingMode</span> <span class="o">=</span> <span class="s1">&#39;I-Clamp&#39;</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_yUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepUnitsY</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">currentSweep</span> <span class="o">=</span> <span class="kc">None</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">setSweep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -947,7 +1050,7 @@
 	<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recordingMode</span> <span class="o">==</span> <span class="s1">&#39;V-Clamp&#39;</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_getBaselineSubtract</span><span class="p">()</span>
 	<span class="k">else</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">_getDerivative</span><span class="p">()</span>
+		<span class="k">pass</span>
 </code></pre></div>
         </details>
     </div>
@@ -965,7 +1068,7 @@
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.abf" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.abf">
 <code class="highlight language-python"><span class="n">abf</span></code>
 
   <span class="doc doc-properties">
@@ -973,7 +1076,7 @@
       <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
   </span>
 
-<a href="#sanpy.bAnalysis.bAnalysis.abf" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.abf" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -986,23 +1089,80 @@
 
 
 
-  <div class="doc doc-object doc-attribute">
+  <div class="doc doc-object doc-method">
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.dataPointsPerMs" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">dataPointsPerMs</span></code>
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.api_getHeader">
+<code class="highlight language-python"><span class="n">api_getHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
 
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-property"><code>property</code></small>
-      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
-  </span>
 
-<a href="#sanpy.bAnalysis.bAnalysis.dataPointsPerMs" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.api_getHeader" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
-      <p>Get 'data points per ms'.</p>
+      <p>Get header as a dict.</p>
+<div class="admonition todo">
+<p class="admonition-title">Todo<ul>
+<li>add info on abf file, like samples per ms</li>
+</ul>
+</p>
+</div>
+
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>dict</code></td>
+      <td><p>Dictionary of information aboiut loaded file.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">api_getHeader</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get header as a dict.</span>
+
+<span class="sd">	TODO:</span>
+<span class="sd">		- add info on abf file, like samples per ms</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		dict: Dictionary of information aboiut loaded file.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">recordingDir_sec</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">abf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">recordingDir_sec</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">sweepX</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">dataPointsPerMs</span> <span class="o">/</span> <span class="mi">1000</span>
+	<span class="n">dataPointsPerMs</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">abf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">recordingFrequency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">dataPointsPerMs</span>
+
+	<span class="n">ret</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s1">&#39;myFileType&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">myFileType</span><span class="p">,</span> <span class="c1"># (&#39;abf&#39;, &#39;tif&#39;, &#39;bytestream&#39;, &#39;csv&#39;)</span>
+		<span class="s1">&#39;loadError&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadError</span><span class="p">,</span>
+		<span class="s1">&#39;detectionDict&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">,</span>
+		<span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">,</span>
+		<span class="s1">&#39;file&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+		<span class="s1">&#39;dateAnalyzed&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dateAnalyzed</span><span class="p">,</span>
+		<span class="s1">&#39;detectionType&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectionType</span><span class="p">,</span>
+		<span class="s1">&#39;acqDate&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqDate</span><span class="p">,</span>
+		<span class="s1">&#39;acqTime&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span><span class="p">,</span>
+		<span class="c1">#</span>
+		<span class="s1">&#39;_recordingMode&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recordingMode</span><span class="p">,</span>
+		<span class="s1">&#39;_yUnits&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_yUnits</span><span class="p">,</span>
+		<span class="s1">&#39;currentSweep&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentSweep</span><span class="p">,</span>
+		<span class="s1">&#39;recording_kHz&#39;</span><span class="p">:</span> <span class="n">recordingFrequency</span><span class="p">,</span>
+		<span class="s1">&#39;recordingDur_sec&#39;</span><span class="p">:</span> <span class="n">recordingDir_sec</span>
+	<span class="p">}</span>
+	<span class="k">return</span> <span class="n">ret</span>
+</code></pre></div>
+        </details>
     </div>
 
   </div>
@@ -1015,11 +1175,227 @@
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.errorReport" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.api_getRecording">
+<code class="highlight language-python"><span class="n">api_getRecording</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.api_getRecording" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Return primary recording</p>
+
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>dict</code></td>
+      <td><p>{'header', 'sweepX', 'sweepY'}</p></td>
+    </tr>
+  </tbody>
+</table>      <div class="admonition todo">
+<p class="admonition-title">Todo<p>Add param to only get every n'th point, to return a subset faster (for display)</p>
+</p>
+</div>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">api_getRecording</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Return primary recording</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		dict: {&#39;header&#39;, &#39;sweepX&#39;, &#39;sweepY&#39;}</span>
+
+<span class="sd">	TODO:</span>
+<span class="sd">		Add param to only get every n&#39;th point, to return a subset faster (for display)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1">#start = time.time()</span>
+	<span class="n">sweepX</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">sweepY</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">abf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">sweepX</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">sweepX</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+		<span class="n">sweepY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">sweepY</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+	<span class="n">ret</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s1">&#39;header&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_getHeader</span><span class="p">(),</span>
+		<span class="s1">&#39;sweepX&#39;</span><span class="p">:</span> <span class="n">sweepX</span><span class="p">,</span>
+		<span class="s1">&#39;sweepY&#39;</span><span class="p">:</span> <span class="n">sweepY</span><span class="p">,</span>
+	<span class="p">}</span>
+	<span class="c1">#stop = time.time()</span>
+	<span class="c1">#print(stop-start)</span>
+	<span class="k">return</span> <span class="n">ret</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.api_getSpikeInfo">
+<code class="highlight language-python"><span class="n">api_getSpikeInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeNum</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.api_getSpikeInfo" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get info about each spike.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>spikeNum</code></td>
+        <td><code>int</code></td>
+        <td><p>Get info for one spike, None for all spikes.</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>list</code></td>
+      <td><p>List of dict with info for all (one) spike.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">api_getSpikeInfo</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeNum</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get info about each spike.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		spikeNum (int): Get info for one spike, None for all spikes.</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		list: List of dict with info for all (one) spike.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="n">spikeNum</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">spikeNum</span><span class="p">]]</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span>
+	<span class="k">return</span> <span class="n">ret</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.api_getSpikeStat">
+<code class="highlight language-python"><span class="n">api_getSpikeStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stat</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.api_getSpikeStat" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get stat for each spike</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>stat</code></td>
+        <td><code>str</code></td>
+        <td><p>The name of the stat to get. Corresponds to key in self.spikeDict[i].</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>list</code></td>
+      <td><p>List of values for 'stat'. Ech value is for one spike.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">api_getSpikeStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stat</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get stat for each spike</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		stat (str): The name of the stat to get. Corresponds to key in self.spikeDict[i].</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		list: List of values for &#39;stat&#39;. Ech value is for one spike.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">statList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getStat</span><span class="p">(</span><span class="n">statName1</span><span class="o">=</span><span class="n">stat</span><span class="p">,</span> <span class="n">statName2</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">statList</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.errorReport">
 <code class="highlight language-python"><span class="n">errorReport</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.errorReport" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.errorReport" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1067,7 +1443,10 @@
 	<span class="k">else</span><span class="p">:</span>
 		<span class="n">dfError</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">dictList</span><span class="p">)</span>
 
-	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;bAnalysis.errorReport() returning len(dfError):&#39;</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">dfError</span><span class="p">))</span>
+	<span class="c1">#print(&#39;bAnalysis.errorReport() returning len(dfError):&#39;, len(dfError))</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dfError</span><span class="p">)</span><span class="si">}</span><span class="s1"> errors in spike detection&#39;</span><span class="p">)</span>
+
+	<span class="c1">#</span>
 	<span class="k">return</span> <span class="n">dfError</span>
 </code></pre></div>
         </details>
@@ -1086,11 +1465,11 @@
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.getDefaultDetection" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.getDefaultDetection">
 <code class="highlight language-python"><span class="n">getDefaultDetection</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.getDefaultDetection" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.getDefaultDetection" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1171,11 +1550,11 @@
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.getDefaultDetection_ca" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.getDefaultDetection_ca">
 <code class="highlight language-python"><span class="n">getDefaultDetection_ca</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.getDefaultDetection_ca" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.getDefaultDetection_ca" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1241,11 +1620,11 @@
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.getSpikeClips" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.getSpikeClips">
 <code class="highlight language-python"><span class="n">getSpikeClips</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.getSpikeClips" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.getSpikeClips" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1322,11 +1701,11 @@
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.getStat" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.getStat">
 <code class="highlight language-python"><span class="n">getStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statName1</span><span class="p">,</span> <span class="n">statName2</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.getStat" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.getStat" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1434,11 +1813,11 @@
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.getStatMean" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.getStatMean">
 <code class="highlight language-python"><span class="n">getStatMean</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statName</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.getStatMean" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.getStatMean" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1494,14 +1873,15 @@
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.makeSpikeClips" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.makeSpikeClips">
 <code class="highlight language-python"><span class="n">makeSpikeClips</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeClipWidth_ms</span><span class="p">,</span> <span class="n">theseTime_sec</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.makeSpikeClips" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.makeSpikeClips" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
+      <p>(Internal) Make small clips for each spike.</p>
 
 <p><strong>Parameters:</strong></p>
 <table>
@@ -1548,6 +1928,7 @@ spikeClips: sweepY</p></td>
           <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">makeSpikeClips</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeClipWidth_ms</span><span class="p">,</span> <span class="n">theseTime_sec</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	(Internal) Make small clips for each spike.</span>
 
 <span class="sd">	Args:</span>
 <span class="sd">		spikeClipWidth_ms (int): Width of each spike clip in milliseconds.</span>
@@ -1558,7 +1939,7 @@ spikeClips: sweepY</p></td>
 <span class="sd">		spikeClips: sweepY</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 
-	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;makeSpikeClips() spikeClipWidth_ms:&#39;</span><span class="p">,</span> <span class="n">spikeClipWidth_ms</span><span class="p">,</span> <span class="s1">&#39;theseTime_sec:&#39;</span><span class="p">,</span> <span class="n">theseTime_sec</span><span class="p">)</span>
+	<span class="c1">#print(&#39;makeSpikeClips() spikeClipWidth_ms:&#39;, spikeClipWidth_ms, &#39;theseTime_sec:&#39;, theseTime_sec)</span>
 	<span class="k">if</span> <span class="n">theseTime_sec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="n">theseTime_pnts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spikeTimes</span>
 	<span class="k">else</span><span class="p">:</span>
@@ -1576,7 +1957,7 @@ spikeClips: sweepY</p></td>
 
 	<span class="n">halfClipWidth_pnts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">clipWidth_pnts</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
 
-	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  makeSpikeClips() clipWidth_pnts:&#39;</span><span class="p">,</span> <span class="n">clipWidth_pnts</span><span class="p">,</span> <span class="s1">&#39;halfClipWidth_pnts:&#39;</span><span class="p">,</span> <span class="n">halfClipWidth_pnts</span><span class="p">)</span>
+	<span class="c1">#print(&#39;  makeSpikeClips() clipWidth_pnts:&#39;, clipWidth_pnts, &#39;halfClipWidth_pnts:&#39;, halfClipWidth_pnts)</span>
 	<span class="c1"># make one x axis clip with the threshold crossing at 0</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">spikeClips_x</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span><span class="o">-</span><span class="n">halfClipWidth_pnts</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">dataPointsPerMs</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">clipWidth_pnts</span><span class="p">)]</span>
 
@@ -1615,11 +1996,11 @@ spikeClips: sweepY</p></td>
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.ms2Pnt_" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.ms2Pnt_">
 <code class="highlight language-python"><span class="n">ms2Pnt_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ms</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.ms2Pnt_" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.ms2Pnt_" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1661,7 +2042,8 @@ spikeClips: sweepY</p></td>
 </table>
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">ms2Pnt_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ms</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="nd">@check_abf</span>
+<span class="k">def</span> <span class="nf">ms2Pnt_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ms</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Convert milliseconds (ms) to point in recording using `self.abf.dataPointsPerMs`</span>
 
@@ -1688,7 +2070,7 @@ spikeClips: sweepY</p></td>
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.numSpikes" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.numSpikes">
 <code class="highlight language-python"><span class="n">numSpikes</span></code>
 
   <span class="doc doc-properties">
@@ -1696,7 +2078,7 @@ spikeClips: sweepY</p></td>
       <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
   </span>
 
-<a href="#sanpy.bAnalysis.bAnalysis.numSpikes" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.numSpikes" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1713,7 +2095,7 @@ spikeClips: sweepY</p></td>
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.numSweeps" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.numSweeps">
 <code class="highlight language-python"><span class="n">numSweeps</span></code>
 
   <span class="doc doc-properties">
@@ -1721,7 +2103,7 @@ spikeClips: sweepY</p></td>
       <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
   </span>
 
-<a href="#sanpy.bAnalysis.bAnalysis.numSweeps" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.numSweeps" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1738,11 +2120,11 @@ spikeClips: sweepY</p></td>
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.pnt2Ms_" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.pnt2Ms_">
 <code class="highlight language-python"><span class="n">pnt2Ms_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pnt</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.pnt2Ms_" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.pnt2Ms_" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1784,7 +2166,8 @@ spikeClips: sweepY</p></td>
 </table>
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">pnt2Ms_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pnt</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="nd">@check_abf</span>
+<span class="k">def</span> <span class="nf">pnt2Ms_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pnt</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Convert a point to milliseconds (ms) using `self.abf.dataPointsPerMs`</span>
 
@@ -1809,11 +2192,11 @@ spikeClips: sweepY</p></td>
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.pnt2Sec_" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.pnt2Sec_">
 <code class="highlight language-python"><span class="n">pnt2Sec_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pnt</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.pnt2Sec_" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.pnt2Sec_" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1855,7 +2238,8 @@ spikeClips: sweepY</p></td>
 </table>
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">pnt2Sec_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pnt</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="nd">@check_abf</span>
+<span class="k">def</span> <span class="nf">pnt2Sec_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pnt</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Convert a point to Seconds using `self.abf.dataPointsPerMs`</span>
 
@@ -1879,15 +2263,40 @@ spikeClips: sweepY</p></td>
 
 
 
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.recordingFrequency">
+<code class="highlight language-python"><span class="n">recordingFrequency</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-property"><code>property</code></small>
+      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
+  </span>
+
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.recordingFrequency" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get recording frequency in kHz.</p>
+    </div>
+
+  </div>
+
+
+
+
+
   <div class="doc doc-object doc-method">
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.setSweep" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.setSweep">
 <code class="highlight language-python"><span class="n">setSweep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.setSweep" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.setSweep" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1914,7 +2323,8 @@ spikeClips: sweepY</p></td>
 </table>
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">setSweep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="nd">@check_abf</span>
+<span class="k">def</span> <span class="nf">setSweep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Set the current sweep.</span>
 
@@ -1942,11 +2352,11 @@ spikeClips: sweepY</p></td>
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.spikeDetect" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.spikeDetect">
 <code class="highlight language-python"><span class="n">spikeDetect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dDict</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.bAnalysis.bAnalysis.spikeDetect" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.spikeDetect" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1973,13 +2383,16 @@ spikeClips: sweepY</p></td>
 </table>
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">spikeDetect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dDict</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39;</span>
+          <div class="highlight"><pre><span></span><code><span class="nd">@check_abf</span>
+<span class="k">def</span> <span class="nf">spikeDetect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dDict</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Spike detect the current sweep and put results into `self.spikeDict[]`.</span>
 
 <span class="sd">	Args:</span>
 <span class="sd">		dDict (dict): A detection dictionary from [bAnalysis.getDefaultDetection()][sanpy.bAnalysis.bAnalysis.getDefaultDetection]</span>
-<span class="sd">	&#39;&#39;&#39;</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;start detection&#39;</span><span class="p">)</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">detectionDict</span> <span class="o">=</span> <span class="n">dDict</span> <span class="c1"># remember the parameters of our last detection</span>
 
@@ -2513,7 +2926,7 @@ spikeClips: sweepY</p></td>
 
 	<span class="n">halfClipWidth_pnts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">clipWidth_pnts</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
 
-	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  spikeDetect() clipWidth_pnts:&#39;</span><span class="p">,</span> <span class="n">clipWidth_pnts</span><span class="p">,</span> <span class="s1">&#39;halfClipWidth_pnts:&#39;</span><span class="p">,</span> <span class="n">halfClipWidth_pnts</span><span class="p">)</span>
+	<span class="c1">#print(&#39;  spikeDetect() clipWidth_pnts:&#39;, clipWidth_pnts, &#39;halfClipWidth_pnts:&#39;, halfClipWidth_pnts)</span>
 	<span class="c1"># make one x axis clip with the threshold crossing at 0</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">spikeClips_x</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x</span><span class="o">-</span><span class="n">halfClipWidth_pnts</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">dataPointsPerMs</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">clipWidth_pnts</span><span class="p">)]</span>
 
@@ -2541,7 +2954,7 @@ spikeClips: sweepY</p></td>
 
 	<span class="c1"># 20210426</span>
 	<span class="c1"># generate a df holding stats (used by scatterplotwidget)</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  making df to pass to scatterplotwidget&#39;</span><span class="p">)</span>
+	<span class="c1">#print(&#39;  making df to pass to scatterplotwidget&#39;)</span>
 	<span class="n">startSeconds</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;startSeconds&#39;</span><span class="p">]</span>
 	<span class="n">stopSeconds</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;stopSeconds&#39;</span><span class="p">]</span>
 	<span class="c1">#tmpAnalysisName, df0 = self.getReportDf(theMin, theMax, savefile)</span>
@@ -2569,7 +2982,7 @@ spikeClips: sweepY</p></td>
 
 
 
-<h3 id="sanpy.bAnalysis.bAnalysis.sweepList" class="doc doc-heading">
+<h3 class="doc doc-heading" id="sanpy.bAnalysis.bAnalysis.sweepList">
 <code class="highlight language-python"><span class="n">sweepList</span></code>
 
   <span class="doc doc-properties">
@@ -2577,7 +2990,7 @@ spikeClips: sweepY</p></td>
       <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
   </span>
 
-<a href="#sanpy.bAnalysis.bAnalysis.sweepList" class="headerlink" title="Permanent link">¤</a></h3>
+<a class="headerlink" href="#sanpy.bAnalysis.bAnalysis.sweepList" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -2595,6 +3008,50 @@ spikeClips: sweepY</p></td>
     </div>
 
   </div>
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h2 class="doc doc-heading" id="sanpy.bAnalysis.check_abf">
+<code class="highlight language-python"><span class="n">check_abf</span><span class="p">(</span><span class="n">func</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.bAnalysis.check_abf" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Decorator to return None is self.abf is None</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">check_abf</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Decorator to return None is self.abf is None</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+	<span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">abf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="c1">#raise ValueError</span>
+			<span class="k">return</span> <span class="kc">None</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">inner</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
 
 
 
@@ -2624,10 +3081,10 @@ spikeClips: sweepY</p></td>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant", "navigation.expand"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
     
     
-      <script src="../assets/javascripts/bundle.a1609d9a.min.js"></script>
+      <script src="../../assets/javascripts/bundle.34eae1b6.min.js"></script>
       
     
   </body>
