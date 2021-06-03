@@ -2,20 +2,7 @@
 # Date: 20190627
 
 import sys, os, json
-
 from collections import OrderedDict
-
-# abb removed 20201109, not using this, write a PyQt preferences panel
-'''
-import tkinter
-from tkinter import ttk
-'''
-
-'''
-import logging
-logging.debug('This is a debug message')
-logging.info('This is an info message')
-'''
 
 # todo: move these to a json file !!!
 # A list of human readable stats and how to map them to backend

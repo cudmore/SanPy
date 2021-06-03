@@ -53,7 +53,7 @@ def get_logger(name):
 		logger.addHandler(f_handler)
 
 		#logger.info('Added console and file handlers')
-		logger.info(f'Logging to file {logPath}')
+		#logger.info(f'Logging to file {logPath}')
 	#
 	return logger
 

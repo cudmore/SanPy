@@ -1,6 +1,29 @@
 
 """
-Root level functions to get and set detection parameters.
+Functions to get default detection parameters.
+
+Usage:
+
+```python
+import sanpy
+
+# dDict is a dictionary with default parameters
+dDict = sanpy.detectionParams.getDefaultDetection()
+
+# set to your liking
+dDict['dvdtThreshold'] = 50
+
+# load a recording
+myPath = '../data/19114001.abf'
+ba = sanpy.bAnalysis(myPath)
+
+# perform spike detection
+ba.spikeDetect(dDict)
+
+# browse results
+
+```
+
 """
 def getDefaultDetection():
 	"""
@@ -141,3 +164,32 @@ def getDefaultDetection():
 
 
 	return theDict.copy()
+
+def _print():
+	"""
+	Print out human readable detection parameters and convert to markdown table
+
+	Requires:
+		pip install tabulate
+	"""
+	import pandas as pd
+
+	d = getDefaultDetection()
+	dictList = []
+	for k,v in d.items():
+		parameter = k
+		oneDict = {
+			'Parameter': parameter,
+			'Default Value': v['defaultValue'],
+			'Units': v['units'],
+			'Human Readable': v['humanName'],
+			'Description': v['description'],
+		}
+		dictList.append(oneDict)
+	#
+	df = pd.DataFrame(dictList)
+	str = df.to_markdown()
+	print(str)
+
+if __name__ == '__main__':
+	_print()

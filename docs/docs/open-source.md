@@ -2,18 +2,19 @@
 
 #### Backend
 
- - [Python][Python]
- - [Pandas][Pandas]
- - [NumPy][NumPy]
- - [pyABF][pyABF] - Package to open Axon Binary Format (ABF) files
- - [heka_reader][heka_reader] - Python file to read Heka Data files
- - [XlsxWriter][XlsxWriter]
+ - [Python][Python]{target=_blank}
+ - [SciPy][SciPy]{target=_blank}
+ - [NumPy][NumPy]{target=_blank}
+ - [Pandas][Pandas]{target=_blank}
+ - [pyABF][pyABF]{target=_blank} - Package to open Axon Binary Format (ABF) files.
+ - [heka_reader][heka_reader]{target=_blank} - To read Heka Data files.
+ - [XlsxWriter][XlsxWriter]{target=_blank} - To read and write Microsoft Excel files.
  -
 #### Desktop Application
 
- - [PyQt][PyQt] - Desktop application interface
- - [PyQtGraph][pyqtgraph] - Derived from PyQt and used to make fast plots
- - [Matplotlib][Matplotlib] - Desktop application plotting
+ - [PyQt][PyQt]{target=_blank} - Desktop application interface
+ - [PyQtGraph][pyqtgraph]{target=_blank} - Derived from PyQt and used to make fast plots
+ - [Matplotlib][Matplotlib]{target=_blank} - Desktop application plotting
 
 #### Web application
 
@@ -22,6 +23,7 @@
  - [Dash Bootstrap components][Dash Bootstrap components]
 
 [Python]: https://www.python.org/
+[SciPy]: https://www.scipy.org/
 [Pandas]: https://pandas.pydata.org/
 [NumPy]: https://www.numpy.org/
 [pyABF]: https://github.com/swharden/pyABF

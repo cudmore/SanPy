@@ -724,3 +724,675 @@
 2021-05-26 12:48:37,411   INFO __main__  app.py loadFolder() line:223 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
 2021-05-26 12:48:37,770   INFO __main__  app.py __init__() line:133 -- SanPy started
 2021-05-26 12:48:46,758   INFO __main__  app.py closeEvent() line:158 -- SanPy is quiting
+2021-06-01 12:12:54,765   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:12:54,781   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:12:55,264   INFO __main__  bAnalysis.py spikeDetect() line:882 -- start detection
+2021-06-01 12:15:51,654   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:15:51,661   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:15:51,976   INFO __main__  bAnalysis.py spikeDetect() line:884 -- start detection
+2021-06-01 12:16:24,074   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:16:24,084   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:17:53,395   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:17:53,403   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:18:42,131   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:18:42,139   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:18:42,431   INFO __main__  bAnalysis.py spikeDetect() line:887 -- start detection
+2021-06-01 12:19:13,196   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:19:13,203   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:21:47,550   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:21:47,558   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:21:47,928   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 0 errors in spike detection
+2021-06-01 12:22:02,809   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:22:02,817   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:22:03,139   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 0 errors in spike detection
+2021-06-01 12:23:09,104   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:23:09,112   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:23:09,443   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 0 errors in spike detection
+2021-06-01 12:23:22,919   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:23:22,927   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:23:23,239   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 0 errors in spike detection
+2021-06-01 12:23:50,986   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:23:50,993   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:23:51,373   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 0 errors in spike detection
+2021-06-01 12:24:24,102   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:24:24,109   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:24:24,466   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:24:24,494   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:24:24,595   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:30:01,302   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:30:01,310   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:30:01,654   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:30:01,702   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:30:01,857   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:31:30,580   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:31:30,588   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:31:30,969   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:31:31,009   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:31:31,092   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:32:16,504   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:32:16,513   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:32:16,897   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:32:16,980   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:32:17,172   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:32:56,557   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:32:56,564   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:32:56,920   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:32:56,962   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:32:57,031   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:33:34,010   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:33:34,017   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:33:34,374   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:33:34,409   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:33:34,562   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:38:18,526   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:38:18,534   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:38:19,017   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:38:19,055   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:38:19,136   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:38:32,255   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:38:32,264   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:38:32,621   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:38:32,660   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:38:32,743   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:39:00,963   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:39:00,970   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:39:01,316   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:39:01,369   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:39:01,492   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:39:14,991   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:39:14,998   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:39:15,342   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:39:15,390   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:39:15,595   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:40:25,885   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:40:25,892   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:40:26,244   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:40:26,294   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:40:26,442   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:44:00,746   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:44:00,753   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:44:01,151   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:44:01,258   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:44:01,400   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:46:29,105   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:46:29,113   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:46:29,491   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:46:29,525   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:46:29,694   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:47:02,494   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:47:02,502   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:47:02,841   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:47:02,872   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:47:02,969   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:48:04,212   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:48:04,218   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:48:04,607   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:48:04,699   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:48:04,884   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 12:48:25,802   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:48:25,808   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 12:48:26,157   INFO __main__  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 12:48:26,184   INFO __main__  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 12:48:26,270   INFO __main__  bAnalysis.py errorReport() line:1580 -- Found 1 errors in spike detection
+2021-06-01 13:23:08,147   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 13:23:24,747   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 13:23:24,822   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 13:23:24,854   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 13:24:19,831   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 13:24:19,906   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 13:24:19,938   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 13:25:17,363   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 13:25:17,438   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 13:25:17,469   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 14:28:46,648   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 14:28:46,665   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 14:29:32,126   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 14:29:32,138   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 14:29:54,348   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 14:29:54,423   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 14:29:54,457   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 14:30:09,937   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 14:30:10,015   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 14:30:10,049   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 14:44:19,103   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 14:44:45,917   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 14:44:45,995   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 14:44:46,030   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 14:47:17,542   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 14:47:17,620   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 14:47:17,653   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 18:00:11,113   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 18:00:11,187   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 18:00:11,217   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 20:00:18,288   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 20:00:40,616   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 20:00:40,630   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 20:00:59,912   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 20:00:59,977   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 20:01:00,007   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 20:01:01,239   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 20:01:01,301   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 20:01:01,326   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 20:45:24,033   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 20:45:24,104   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 20:45:24,135   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 20:46:48,274   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 20:46:48,346   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 20:46:48,378   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 20:47:13,585   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 20:47:13,682   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 20:47:13,731   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 20:51:35,177   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 20:51:35,244   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 20:51:35,271   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 20:52:06,229   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 20:52:06,296   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 20:52:06,324   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 20:56:18,813   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 20:56:18,918   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 20:56:18,963   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 20:56:49,347   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 20:56:49,409   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 20:56:49,453   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 21:13:09,808   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:13:09,898   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:13:09,943   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 21:13:32,553   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:13:56,722   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:13:56,800   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:13:56,837   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 21:13:58,231   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:13:58,296   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:13:58,325   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 21:16:26,595   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:16:26,673   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:16:26,702   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 21:51:39,508   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:51:39,526   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:53:11,812   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:53:11,830   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:54:02,459   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:54:02,477   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:54:47,161   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:54:47,239   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:54:47,273   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 21:55:15,243   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:55:15,327   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:55:15,464   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 21:55:37,977   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:55:38,054   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:55:38,088   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 21:56:49,436   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:56:49,513   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:56:49,547   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 21:57:11,874   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:57:11,954   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:57:11,994   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 21:57:13,433   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:57:13,508   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:57:13,542   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 21:58:00,108   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 21:58:00,196   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 21:58:00,242   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 22:01:14,715   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:01:14,787   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 22:01:14,818   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 22:01:34,412   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:01:34,489   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 22:01:34,522   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 22:01:36,194   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:01:36,264   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 22:01:36,297   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 22:04:46,966   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:04:47,040   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 22:04:47,080   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 22:12:54,838   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:12:54,934   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 22:12:54,973   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 22:13:01,654   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:13:01,723   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 22:13:01,753   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 22:13:03,793   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:13:03,859   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 22:13:03,884   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 22:17:15,226   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:17:15,314   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 22:17:15,364   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:566 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-01 22:17:16,330   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:17:16,352   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:890 -- start detection
+2021-06-01 22:17:53,045   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:17:54,274   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:18:56,802   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:18:59,109   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:19:00,481   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:21:27,158   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:21:34,192   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:21:48,351   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:21:48,709   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:22:37,594   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:22:39,952   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:23:10,576   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:23:11,947   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:23:51,604   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:23:52,002   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:24:11,465   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:24:12,268   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:24:41,270   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:24:41,763   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:24:43,339   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:28:24,233   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:28:25,614   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:29:11,975   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:30:17,980   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:30:19,363   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:36:54,049   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:37:02,410   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-01 22:37:03,740   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 09:50:40,863   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 09:58:04,867   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 09:58:30,164   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 09:58:41,976   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 09:58:43,270   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 09:59:24,410   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 09:59:42,313   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 09:59:42,323   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:00:13,012   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:00:13,382   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:00:13,391   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:00:13,753   INFO __main__  bAnalysis.py spikeDetect() line:900 -- start detection
+2021-06-02 10:02:02,816   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:02:54,082   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:03:08,842   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:05:48,442   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:07:32,596   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:07:38,316   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:07:38,326   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:07:38,574   INFO __main__  bAnalysis.py spikeDetect() line:905 -- start detection
+2021-06-02 10:08:55,971   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:08:57,468   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:08:57,477   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:08:57,718   INFO __main__  bAnalysis.py errorReport() line:1596 -- Found 0 errors in spike detection
+2021-06-02 10:09:10,233   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:09:10,241   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:09:10,494   INFO __main__  bAnalysis.py errorReport() line:1596 -- Found 0 errors in spike detection
+2021-06-02 10:12:11,091   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:12:14,590   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:12:14,600   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:12:14,840   INFO __main__  bAnalysis.py errorReport() line:1596 -- Found 0 errors in spike detection
+2021-06-02 10:12:57,254   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:12:57,262   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:12:57,586   INFO __main__  bAnalysis.py spikeDetect() line:906 -- start detection
+2021-06-02 10:12:57,617   INFO __main__  bAnalysis.py _throwOutRefractory() line:581 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 10:12:57,676   INFO __main__  bAnalysis.py errorReport() line:1596 -- Found 1 errors in spike detection
+2021-06-02 10:13:31,995   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:13:32,167   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:13:32,177   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:13:32,574   INFO __main__  bAnalysis.py spikeDetect() line:906 -- start detection
+2021-06-02 10:13:32,606   INFO __main__  bAnalysis.py _throwOutRefractory() line:581 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 10:13:32,694   INFO __main__  bAnalysis.py errorReport() line:1596 -- Found 1 errors in spike detection
+2021-06-02 10:14:14,914   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:18:38,440   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:19:19,459   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:19:20,715   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:19:20,726   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:19:21,103   INFO __main__  bAnalysis.py spikeDetect() line:909 -- start detection
+2021-06-02 10:19:21,137   INFO __main__  bAnalysis.py _throwOutRefractory() line:584 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 10:19:21,219   INFO __main__  bAnalysis.py errorReport() line:1599 -- Found 1 errors in spike detection
+2021-06-02 10:20:27,766   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:26:50,249   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:26:50,257   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:27:23,438   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:27:23,445   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:27:23,794   INFO __main__  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 10:27:23,825   INFO __main__  bAnalysis.py _throwOutRefractory() line:592 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 10:28:10,289   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:28:10,297   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:28:10,682   INFO __main__  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 10:28:10,720   INFO __main__  bAnalysis.py _throwOutRefractory() line:592 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 10:28:10,830   INFO __main__  bAnalysis.py errorReport() line:1607 -- Found 1 errors in spike detection
+2021-06-02 10:29:19,493   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:29:21,204   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 10:33:59,864   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 14:08:09,529   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 14:14:27,046   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 14:14:27,115   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 14:14:27,146   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:592 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 14:15:23,590   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 14:15:23,656   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 14:15:23,689   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:592 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 14:16:15,838   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 14:16:15,913   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 14:16:15,953   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:592 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 15:25:58,926   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 15:25:59,001   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 15:25:59,025   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:592 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 15:26:00,719   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 15:26:00,789   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 15:26:00,816   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:592 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 16:31:51,050   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 16:31:51,130   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 16:31:51,234   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:592 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 16:32:26,085   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 16:32:26,152   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 16:32:26,178   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:592 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 19:00:01,535   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:00:01,615   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 19:00:01,640   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:592 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 19:00:03,219   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:00:03,309   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 19:00:03,337   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:592 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-02 19:08:52,913   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:08:53,027   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 19:08:53,032   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:592 -- From 0 to 0 spikes with refractory_ms:170
+2021-06-02 19:09:54,533   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:09:54,762   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:917 -- start detection
+2021-06-02 19:09:54,900   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:592 -- From 0 to 0 spikes with refractory_ms:170
+2021-06-02 19:21:48,268   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:23:18,565   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:24:38,145   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:25:12,343   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:25:46,942   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:27:50,782   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:29:38,357   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:31:14,410   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 19:36:04,489   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 20:12:07,212   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 20:13:33,065   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 20:18:59,728   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-02 21:22:56,289   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:16:03,713   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:16:36,562   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:16:36,572   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:17:08,641   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:17:09,028   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:17:09,039   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:17:09,040  ERROR __main__  bAnalysisDir.py loadFolder() line:33 -- Path not found
+2021-06-03 10:17:30,770   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:17:39,562   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:17:39,574   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:17:39,576  ERROR __main__  bAnalysisDir.py loadFolder() line:33 -- Path not found: ""
+2021-06-03 10:17:39,857   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:18:08,314   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:18:08,549   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:18:08,564   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:21:06,000   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:21:06,969   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:21:06,978   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:21:40,608   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:21:41,340   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:21:41,350   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:22:18,110   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:22:18,122   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:22:18,215   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:22:27,268   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:22:27,275   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:22:27,804   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:26:09,556   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:26:09,909   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:26:09,922   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:27:13,850   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:28:02,126   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:28:22,767   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:28:24,230   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:28:24,238   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:29:32,433   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:29:32,441   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:29:32,444   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:30:13,947   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:30:13,956   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:30:14,405   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:30:40,826   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:30:41,748   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:30:41,760   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:31:48,111   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:32:49,491   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:32:49,493   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:32:56,095   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:32:56,106   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:36:33,345   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:36:33,347   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:36:33,359   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:36:33,579   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:36:33,580   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:36:57,057   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:36:57,060   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:36:57,070   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:36:57,786   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:36:57,788   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:37:18,988   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:37:18,990   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:37:19,013   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:42:26,398   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:42:26,401   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:42:26,410   INFO __main__  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:43:27,200   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:43:27,202   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:43:28,585   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:43:28,588   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:47:08,927   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:47:08,929   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:57:19,304   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:57:19,307   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:35,915   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:35,917   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:38,845   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:38,846   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:42,656   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:42,657   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:45,736   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:45,736   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:48,677   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:48,678   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:52,815   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:52,815   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:55,778   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:55,779   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:59,617   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:58:59,617   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:02,713   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:02,713   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:06,147   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:06,148   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:09,481   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:09,481   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:12,506   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:12,506   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:15,624   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:15,624   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:19,190   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:19,190   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:22,322   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:22,324   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:25,814   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:25,815   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:29,120   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:29,121   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:32,515   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:32,515   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:36,092   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:36,092   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:39,468   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:39,469   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:42,556   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:42,557   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:46,453   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:46,454   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:49,853   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:49,856   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:53,391   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:53,391   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:56,489   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:56,490   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:59,631   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 10:59:59,632   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:03,595   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:03,596   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:06,701   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:06,702   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:10,075   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:10,076   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:13,799   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:13,800   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:17,150   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:17,152   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:20,485   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:20,485   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:24,042   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:24,043   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:27,360   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:27,361   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:30,522   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:30,523   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:33,894   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:33,894   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:38,472   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:38,473   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:42,245   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:42,246   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:45,670   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:45,671   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:49,762   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:49,763   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:52,579   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:52,580   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:55,549   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:55,550   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:58,439   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:00:58,439   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:01,195   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:01,196   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:04,241   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:04,241   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:07,333   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:07,334   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:10,259   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:10,260   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:13,221   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:13,221   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:16,892   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:16,893   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:20,029   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:20,030   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:22,846   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:22,847   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:26,438   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:01:26,438   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:05:17,386   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:05:17,387   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:05:20,774   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:05:20,775   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:41,029   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:41,032   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:43,563   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:43,565   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:45,766   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:45,767   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:49,611   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:49,612   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:52,286   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:52,287   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:55,868   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:08:55,869   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:11:27,739   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:11:27,740   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:11:52,091   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:11:52,092   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:12:20,837   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:12:20,838   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:12:23,526   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:12:23,527   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:05,302   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:05,303   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:06,847   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:06,848   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:09,919   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:09,920   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:13,315   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:13,316   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:16,681   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:16,682   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:20,527   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:20,528   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:23,631   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:23,632   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:26,842   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:26,842   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:30,561   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:30,562   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:34,360   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:34,361   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:37,590   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:37,590   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:41,003   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:41,004   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:43,800   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:43,801   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:46,978   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:46,979   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:50,654   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:50,656   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:54,201   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:54,202   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:57,638   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:23:57,639   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:24:23,717   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:24:23,718   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:26:27,924   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:26:27,925   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:02,909   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:02,910   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:06,974   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:06,975   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:10,676   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:10,677   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:14,261   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:14,262   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:17,167   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:17,168   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:21,314   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:21,315   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:24,283   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:24,283   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:27,787   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:27,788   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:31,396   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:31,397   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:34,860   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:34,860   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:37,979   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:37,980   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:41,430   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:41,431   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:44,619   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:44,620   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:47,586   INFO sanpy.bAnalysis  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 11:29:47,587   INFO sanpy.bAnalysisDir  sanpyLogger.py get_logger() line:56 -- Logging to file /Users/cudmore/Sites/SanPy/sanpy/sanpy.log
+2021-06-03 13:23:07,029  ERROR sanpy.bAnalysis  bAnalysis.py __init__() line:96 -- File does not exist: "../data/19114001.abf"
+2021-06-03 13:23:20,279  ERROR sanpy.bAnalysis  bAnalysis.py __init__() line:96 -- File does not exist: "../../data/19114001.abf"
+2021-06-03 13:23:28,787   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:910 -- start detection
+2021-06-03 13:23:50,705   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:910 -- start detection
+2021-06-03 13:26:12,641   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:910 -- start detection
+2021-06-03 13:26:12,676   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:585 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-03 13:30:23,574   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:910 -- start detection
+2021-06-03 13:30:23,618   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:585 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-03 13:32:18,204   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:910 -- start detection
+2021-06-03 13:32:18,252   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:585 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-03 13:50:02,327   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:910 -- start detection
+2021-06-03 13:50:02,366   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:585 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-03 13:52:12,612   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:910 -- start detection
+2021-06-03 13:52:12,810   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:585 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-03 13:56:11,019   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:910 -- start detection
+2021-06-03 13:56:11,058   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:585 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-03 13:57:39,919   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:910 -- start detection
+2021-06-03 13:57:39,977   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:585 -- From 103 to 102 spikes with refractory_ms:170
+2021-06-03 14:12:10,567   INFO sanpy.interface.app  app.py <module>() line:21 -- SanPy app.py is starting up
+2021-06-03 14:12:10,568   INFO sanpy.interface.app  app.py main() line:848 -- Python version is 3.7.9
+2021-06-03 14:12:10,864   INFO sanpy.interface.app  app.py main() line:860 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-03 14:12:10,864   INFO sanpy.interface.app  app.py main() line:864 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-03 14:12:10,922   INFO sanpy.interface.app  app.py preferencesLoad() line:631 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-03 14:12:10,923   INFO sanpy.interface.app  app.py __init__() line:87 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-03 14:12:10,923   INFO sanpy.interface.app  app.py loadFolder() line:199 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-03 14:12:10,923   INFO sanpy.interface.app  app.py loadFolder() line:223 -- Loading existing dbPath: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-03 14:12:11,262   INFO sanpy.interface.app  app.py __init__() line:133 -- SanPy started
+2021-06-03 14:12:14,213   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:395 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-03 14:12:14,332   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:675 -- spikeNumber: None, doZoom False

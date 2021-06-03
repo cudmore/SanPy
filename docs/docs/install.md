@@ -1,4 +1,20 @@
-SanPy will run on macOS, Microsoft Windows, or Linux.
+SanPy will run on:
+
+ - macOS
+ - Microsoft Windows
+ - Linux
+ - In the cloud.
+
+We are following the [FAIR][fair] principles of software development to promote: **(F)**indability, **(A)**ccessibility, **(I)**nteroperability, and **(R)**eusability.
+
+With this, our software is designed to be flexible in how it is used.
+
+- From a desktop
+- As a downloaded app
+- On an existing cloud server
+- Deployed by our users as their own cloud server
+
+## Installing on your own computer
 
 Assuming you have the following
 
@@ -9,6 +25,7 @@ Assuming you have the following
 [python3]: https://www.python.org/downloads/
 [pip]: https://pip.pypa.io/en/stable/
 [git]: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+[fair]: https://en.wikipedia.org/wiki/FAIR_data
 
 ### Install the desktop application
 

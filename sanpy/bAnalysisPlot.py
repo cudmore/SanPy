@@ -1,9 +1,5 @@
-'''
-Robert Cudmore
-20190328
-
-Helper class to plot results of bAnalysis object
-'''
+#Robert Cudmore
+#20190328
 
 import numpy as np
 import scipy.signal
@@ -12,27 +8,25 @@ import matplotlib.pyplot as plt
 
 import sanpy
 
-class bPlot:
+class bAnalysisPlot():
 	"""
-	Once data is analyzed with the bAnalysis class, plots can be created here.
+	Class to plot results of [sanpy.bAnalysis][sanpy.bAnalysis.bAnalysis] spike detection.
 	"""
 	def __init__(self, ba=None):
 		"""
-		ba: bAnalysis object
+		Args:
+			ba: [sanpy.bAnalysis][sanpy.bAnalysis] object
 		"""
 		self.ba = ba
 
-	#############################
-	# plot functions
-	#############################
 	def plotDeriv(self, fig=None):
-		'''
+		"""
 		Plot both Vm and the derivative of Vm (dV/dt).
 
-		Parameters:
-			medianFilter:	0 is no filtering
-							Integer greater than 0 specifies the number of points
-		'''
+		Args:
+			fig (matplotlib.pyplot.figure): An existing figure to plot to.
+				see: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.figure.html
+		"""
 
 		ba = self.ba
 
@@ -60,10 +54,12 @@ class bPlot:
 
 		return fig
 
-	def plotRaw(ba, lineWidth=1, color='k', ax=None):
+	def plotRaw(self, lineWidth=0.7, color='k', ax=None):
 		"""
 		plot raw recording
 		"""
+		ba = self.ba
+
 		if ax is None:
 			grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
 
@@ -122,10 +118,7 @@ class bPlot:
 		if xMin is not None and xMax is not None:
 			ax.set_xlim([xMin,xMax])
 
-		# 20190816, was return line
-		# not sure if this break anything???
-		#return fig, ax
-		return fig
+		return fig, ax
 
 	def plotTimeSeries(ba, stat, halfWidthIdx=0, ax=None):
 		""" Plot a given spike parameter"""
