@@ -5,6 +5,8 @@ __pycache__
 .pynb_checkpoints
 .ipynb_checkpoints
 
+.python-version
+
 # files fro grainger et al
 examples
 
