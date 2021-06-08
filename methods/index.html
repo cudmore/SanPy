@@ -267,11 +267,77 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" data-md-state="indeterminate" type="checkbox" id="__nav_5" checked>
       
       <label class="md-nav__link" for="__nav_5">
+        Scripting
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Scripting" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Scripting
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scripting/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scripting/examples/" class="md-nav__link">
+        Examples
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scripting/plotting-analysis/" class="md-nav__link">
+        Plotting Analysis
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" data-md-state="indeterminate" type="checkbox" id="__nav_6" checked>
+      
+      <label class="md-nav__link" for="__nav_6">
         API
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="__nav_5">
+        <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
@@ -284,18 +350,6 @@
     <li class="md-nav__item">
       <a href="../api/overview/" class="md-nav__link">
         Overview
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/examples/" class="md-nav__link">
-        Examples
       </a>
     </li>
   
@@ -361,6 +415,57 @@
   
 
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/bAnalysisUtil/" class="md-nav__link">
+        bAnalysisUtil
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8" data-md-state="indeterminate" type="checkbox" id="__nav_6_8" checked>
+      
+      <label class="md-nav__link" for="__nav_6_8">
+        interface
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="interface" data-md-level="2">
+        <label class="md-nav__title" for="__nav_6_8">
+          <span class="md-nav__icon md-icon"></span>
+          interface
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/interface/sanpy_app/" class="md-nav__link">
+        sanp_app
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
         </ul>
       </nav>
     </li>
@@ -420,6 +525,13 @@
         <li class="md-nav__item">
   <a href="#detection-errors" class="md-nav__link">
     Detection Errors
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#analysis-output" class="md-nav__link">
+    Analysis output
   </a>
   
 </li>
@@ -506,6 +618,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#analysis-output" class="md-nav__link">
+    Analysis output
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -518,8 +637,6 @@
             <article class="md-content__inner md-typeset">
               
                 
-                
-                  <h1>Methods</h1>
                 
                 <h2 id="what-spike-parameters-are-detected">What spike parameters are detected?<a class="headerlink" href="#what-spike-parameters-are-detected" title="Permanent link">¤</a></h2>
 <p>We are following the cardiac myocyte nomenclature from this paper:</p>
@@ -691,6 +808,243 @@ myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 11
 <li>cycleLength: Usually occurs on last spike when looking for next MDP.</li>
 <li>spikeWidth: Error finding a particular spike with (AP_Dur). Usually occurs when spikes are too broad, can increase detection parameter <code>hwWindow_ms</code>.</li>
 </ul>
+<h1 id="analysis-output">Analysis output<a class="headerlink" href="#analysis-output" title="Permanent link">¤</a></h1>
+<table>
+<thead>
+<tr>
+<th align="right"></th>
+<th align="left">Stat</th>
+<th align="left">name</th>
+<th align="left">units</th>
+<th align="left">yStat</th>
+<th align="left">yStatUnits</th>
+<th align="left">xStat</th>
+<th align="left">xStatUnits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="right">0</td>
+<td align="left">Take Off Potential (s)</td>
+<td align="left">thresholdSec</td>
+<td align="left">s</td>
+<td align="left">thresholdVal</td>
+<td align="left">mV</td>
+<td align="left">thresholdSec</td>
+<td align="left">s</td>
+</tr>
+<tr>
+<td align="right">1</td>
+<td align="left">Take Off Potential (mV)</td>
+<td align="left">thresholdVal</td>
+<td align="left">mV</td>
+<td align="left">thresholdVal</td>
+<td align="left">mV</td>
+<td align="left">thresholdPnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">2</td>
+<td align="left">Spike Frequency (Hz)</td>
+<td align="left">spikeFreq_hz</td>
+<td align="left">Hz</td>
+<td align="left">spikeFreq_hz</td>
+<td align="left">Hz</td>
+<td align="left">thresholdPnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">3</td>
+<td align="left">Cycle Length (ms)</td>
+<td align="left">cycleLength_ms</td>
+<td align="left">ms</td>
+<td align="left">cycleLength_ms</td>
+<td align="left">ms</td>
+<td align="left">thresholdPnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">4</td>
+<td align="left">AP Peak (mV)</td>
+<td align="left">peakVal</td>
+<td align="left">mV</td>
+<td align="left">peakVal</td>
+<td align="left">mV</td>
+<td align="left">peakPnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">5</td>
+<td align="left">AP Height (mV)</td>
+<td align="left">peakHeight</td>
+<td align="left">mV</td>
+<td align="left">peakHeight</td>
+<td align="left">mV</td>
+<td align="left">peakPnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">6</td>
+<td align="left">Pre AP Min (mV)</td>
+<td align="left">preMinVal</td>
+<td align="left">mV</td>
+<td align="left">preMinVal</td>
+<td align="left">mV</td>
+<td align="left">preMinPnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">7</td>
+<td align="left">Post AP Min (mV)</td>
+<td align="left">postMinVal</td>
+<td align="left">mV</td>
+<td align="left">postMinVal</td>
+<td align="left">mV</td>
+<td align="left">postMinPnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">8</td>
+<td align="left">Early Diastolic Depol Rate (dV/s)</td>
+<td align="left">earlyDiastolicDurationRate</td>
+<td align="left">dV/s</td>
+<td align="left">earlyDiastolicDurationRate</td>
+<td align="left">dV/s</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="right">9</td>
+<td align="left">Early Diastolic Duration (ms)</td>
+<td align="left">earlyDiastolicDuration_ms</td>
+<td align="left">ms</td>
+<td align="left">earlyDiastolicDuration_ms</td>
+<td align="left">dV/s</td>
+<td align="left">thresholdPnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">10</td>
+<td align="left">Diastolic Duration (ms)</td>
+<td align="left">diastolicDuration_ms</td>
+<td align="left">ms</td>
+<td align="left">diastolicDuration_ms</td>
+<td align="left">dV/s</td>
+<td align="left">thresholdPnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">11</td>
+<td align="left">Max AP Upstroke (mV)</td>
+<td align="left">preSpike_dvdt_max_val</td>
+<td align="left">mV</td>
+<td align="left">preSpike_dvdt_max_val</td>
+<td align="left">dV/s</td>
+<td align="left">preSpike_dvdt_max_pnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">12</td>
+<td align="left">Max AP Upstroke (dV/dt)</td>
+<td align="left">preSpike_dvdt_max_val2</td>
+<td align="left">dV/dt</td>
+<td align="left">preSpike_dvdt_max_val2</td>
+<td align="left">dV/dt</td>
+<td align="left">preSpike_dvdt_max_pnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">13</td>
+<td align="left">Max AP Repolarization (mV)</td>
+<td align="left">postSpike_dvdt_min_val</td>
+<td align="left">mV</td>
+<td align="left">postSpike_dvdt_min_val</td>
+<td align="left">mV</td>
+<td align="left">postSpike_dvdt_min_pnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">14</td>
+<td align="left">AP Duration (ms)</td>
+<td align="left">apDuration_ms</td>
+<td align="left">ms</td>
+<td align="left">apDuration_ms</td>
+<td align="left">ms</td>
+<td align="left">thresholdPnt</td>
+<td align="left">Points</td>
+</tr>
+<tr>
+<td align="right">15</td>
+<td align="left">Half Width 10 (ms)</td>
+<td align="left">nan</td>
+<td align="left">nan</td>
+<td align="left">widths_10</td>
+<td align="left">ms</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="right">16</td>
+<td align="left">Half Width 20 (ms)</td>
+<td align="left">nan</td>
+<td align="left">nan</td>
+<td align="left">widths_20</td>
+<td align="left">ms</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="right">17</td>
+<td align="left">Half Width 50 (ms)</td>
+<td align="left">nan</td>
+<td align="left">nan</td>
+<td align="left">widths_50</td>
+<td align="left">ms</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="right">18</td>
+<td align="left">Half Width 80 (ms)</td>
+<td align="left">nan</td>
+<td align="left">nan</td>
+<td align="left">widths_80</td>
+<td align="left">ms</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="right">19</td>
+<td align="left">Half Width 90 (ms)</td>
+<td align="left">nan</td>
+<td align="left">nan</td>
+<td align="left">widths_90</td>
+<td align="left">ms</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="right">20</td>
+<td align="left">Ca++ Delay (s)</td>
+<td align="left">nan</td>
+<td align="left">nan</td>
+<td align="left">caDelay_sec</td>
+<td align="left">s</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+<tr>
+<td align="right">21</td>
+<td align="left">Ca++ Width (ms)</td>
+<td align="left">nan</td>
+<td align="left">nan</td>
+<td align="left">caWidth_ms</td>
+<td align="left">ms</td>
+<td align="left"></td>
+<td align="left"></td>
+</tr>
+</tbody>
+</table>
                 
               
               

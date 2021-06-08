@@ -310,11 +310,77 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" data-md-state="indeterminate" type="checkbox" id="__nav_5" checked>
       
       <label class="md-nav__link" for="__nav_5">
+        Scripting
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Scripting" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Scripting
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scripting/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scripting/examples/" class="md-nav__link">
+        Examples
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../scripting/plotting-analysis/" class="md-nav__link">
+        Plotting Analysis
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" data-md-state="indeterminate" type="checkbox" id="__nav_6" checked>
+      
+      <label class="md-nav__link" for="__nav_6">
         API
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="__nav_5">
+        <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
@@ -327,18 +393,6 @@
     <li class="md-nav__item">
       <a href="../api/overview/" class="md-nav__link">
         Overview
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../api/examples/" class="md-nav__link">
-        Examples
       </a>
     </li>
   
@@ -400,6 +454,57 @@
       <a href="../api/detectionParams/" class="md-nav__link">
         detectionParams
       </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/bAnalysisUtil/" class="md-nav__link">
+        bAnalysisUtil
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8" data-md-state="indeterminate" type="checkbox" id="__nav_6_8" checked>
+      
+      <label class="md-nav__link" for="__nav_6_8">
+        interface
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="interface" data-md-level="2">
+        <label class="md-nav__title" for="__nav_6_8">
+          <span class="md-nav__icon md-icon"></span>
+          interface
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/interface/sanpy_app/" class="md-nav__link">
+        sanp_app
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -508,17 +613,25 @@
                   <h1>Web Application</h1>
                 
                 <p>The browser based web application provides the same interface for analysis as the desktop application.</p>
-<p><IMG SRC="../img/app2-interface.png" width=700 border=1></p>
+<p><IMG SRC="../img/dash-june4.png" width=900 border=1></p>
 <p>Once data is analyzed, Pooling allows browsing detection parameters across any number of files.</p>
 <p><IMG SRC="../img/pymy-pooling.png" width=700 border=1></p>
 <h3 id="install-the-web-application">Install the web application<a class="headerlink" href="#install-the-web-application" title="Permanent link">¤</a></h3>
 <p>Please note, this is experimental and does not have all functions implemented. Please use the desktop version instead.</p>
 <div class="highlight"><pre><span></span><code>cd SanPy/dash
+
+python3 -m venv sanpy_dash
+source sanpy_dash/bin/activate
+
 pip install -r requirements.txt
+
+# install sanpy from local copy of repository
+pip install -e ../.
 </code></pre></div>
 <h3 id="running-the-web-applications">Running the web applications<a class="headerlink" href="#running-the-web-applications" title="Permanent link">¤</a></h3>
 <p>Run the web application to analyze raw data</p>
 <div class="highlight"><pre><span></span><code>cd SanPy/dash
+source sanpy_dash/bin/activate
 python app2.py
 </code></pre></div>
 <p>The web application for analysis is available at</p>

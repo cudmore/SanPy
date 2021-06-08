@@ -259,6 +259,72 @@
 
   
   
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" data-md-state="indeterminate" type="checkbox" id="__nav_5" checked>
+      
+      <label class="md-nav__link" for="__nav_5">
+        Scripting
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Scripting" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Scripting
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scripting/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scripting/examples/" class="md-nav__link">
+        Examples
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scripting/plotting-analysis/" class="md-nav__link">
+        Plotting Analysis
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
     
   
   
@@ -266,14 +332,14 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
       
-      <label class="md-nav__link" for="__nav_5">
+      <label class="md-nav__link" for="__nav_6">
         API
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="__nav_5">
+        <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
@@ -286,18 +352,6 @@
     <li class="md-nav__item">
       <a href="../overview/" class="md-nav__link">
         Overview
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../examples/" class="md-nav__link">
-        Examples
       </a>
     </li>
   
@@ -403,8 +457,22 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisDir.bAnalysisDir.old_loadFolder" class="md-nav__link">
+    old_loadFolder()
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisDir.getFileRow" class="md-nav__link">
+    getFileRow()
+  </a>
   
 </li>
       
@@ -436,6 +504,57 @@
       <a href="../detectionParams/" class="md-nav__link">
         detectionParams
       </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bAnalysisUtil/" class="md-nav__link">
+        bAnalysisUtil
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8" data-md-state="indeterminate" type="checkbox" id="__nav_6_8" checked>
+      
+      <label class="md-nav__link" for="__nav_6_8">
+        interface
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="interface" data-md-level="2">
+        <label class="md-nav__title" for="__nav_6_8">
+          <span class="md-nav__icon md-icon"></span>
+          interface
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface/sanpy_app/" class="md-nav__link">
+        sanp_app
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -557,8 +676,22 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisDir.bAnalysisDir.old_loadFolder" class="md-nav__link">
+    old_loadFolder()
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisDir.getFileRow" class="md-nav__link">
+    getFileRow()
+  </a>
   
 </li>
       
@@ -663,8 +796,9 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">fileList</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># list of dict</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="kc">None</span>
 	<span class="k">if</span> <span class="n">autoLoad</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 </code></pre></div>
         </details>
     </div>
@@ -785,47 +919,71 @@
 
     <div class="doc doc-contents ">
 
-      <p>Load all files in folder</p>
-<p>TODO: Curently limited to abf, extend to (txt, csv, tif)</p>
+      <p>expensive</p>
 
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysisDir.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Load all files in folder</span>
-
-<span class="sd">	TODO: Curently limited to abf, extend to (txt, csv, tif)</span>
+<span class="sd">	expensive</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Path not found: &quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-		<span class="k">return</span>
-
 	<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
 
-	<span class="n">fileList</span> <span class="o">=</span> <span class="p">[]</span>
-	<span class="n">fileIdx</span> <span class="o">=</span> <span class="mi">0</span>
-	<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-		<span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">):</span>
-			<span class="k">continue</span>
-		<span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abf&#39;</span><span class="p">):</span>
-			<span class="c1"># load</span>
-			<span class="n">filePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
-			<span class="n">ba</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">(</span><span class="n">filePath</span><span class="p">)</span>
+	<span class="c1"># load an existing folder db or create a new one</span>
+	<span class="n">dbFile</span> <span class="o">=</span> <span class="s1">&#39;sanpy_recording_db.csv&#39;</span>
+	<span class="n">dbPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">dbFile</span><span class="p">)</span>
+	<span class="n">loadedDatabase</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">dbPath</span><span class="p">):</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loading existing folder db: </span><span class="si">{</span><span class="n">dbPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">dbPath</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-			<span class="c1"># header</span>
-			<span class="n">headerDict</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">api_getHeader</span><span class="p">()</span>
-			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fileIdx</span>
+		<span class="c1">#df[&quot;Idx&quot;] = pd.to_numeric(df[&quot;Idx&quot;])</span>
+		<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+			<span class="n">colType</span> <span class="o">=</span> <span class="n">sanpyColumns</span><span class="p">[</span><span class="n">col</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+			<span class="k">if</span>  <span class="n">colType</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+				<span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+				<span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+			<span class="k">elif</span> <span class="n">colType</span> <span class="o">==</span> <span class="nb">int</span><span class="p">:</span>
+				<span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+			<span class="k">elif</span> <span class="n">colType</span> <span class="o">==</span> <span class="nb">float</span><span class="p">:</span>
+				<span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span>
+			<span class="k">elif</span> <span class="n">colType</span> <span class="o">==</span> <span class="nb">bool</span><span class="p">:</span>
+				<span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=== final types&#39;</span><span class="p">)</span>
+		<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">dtypes</span><span class="p">)</span>
 
-			<span class="n">item</span> <span class="o">=</span> <span class="p">{</span>
-				<span class="s1">&#39;header&#39;</span><span class="p">:</span> <span class="n">headerDict</span><span class="p">,</span>
-				<span class="s1">&#39;ba&#39;</span><span class="p">:</span> <span class="n">ba</span><span class="p">,</span>
-				<span class="s1">&#39;sweepX&#39;</span><span class="p">:</span> <span class="n">ba</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">sweepX</span><span class="p">,</span>
-				<span class="s1">&#39;sweepY&#39;</span><span class="p">:</span> <span class="n">ba</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">sweepY</span><span class="p">,</span>
-			<span class="p">}</span>
-			<span class="n">fileList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-			<span class="n">fileIdx</span> <span class="o">+=</span> <span class="mi">1</span>
+		<span class="n">loadedDatabase</span> <span class="o">=</span> <span class="kc">True</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not find existing folder db </span><span class="si">{</span><span class="n">dbPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Making default folder db&#39;</span><span class="p">)</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">sanpyColumns</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+	<span class="k">if</span> <span class="n">loadedDatabase</span><span class="p">:</span>
+		<span class="c1"># check columns with sanpyColumns</span>
+		<span class="n">loadedColumns</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span>
+		<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">loadedColumns</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">sanpyColumns</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+				<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  error: bAnalysisDir did not find loaded col: &quot;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s1">&quot; in sanpyColumns.keys()&#39;</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">sanpyColumns</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">loadedColumns</span><span class="p">:</span>
+				<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  error: bAnalysisDir did not find sanpyColumns.keys() col: &quot;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s1">&quot; in loadedColumns&#39;</span><span class="p">)</span>
+
+	<span class="c1"># get list of all abf/csv/tif</span>
+	<span class="n">fileList</span> <span class="o">=</span> <span class="n">getFileList</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">loadedDatabase</span><span class="p">:</span>
+		<span class="c1"># seach existing db for missing abf files</span>
+		<span class="k">pass</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="c1"># build new db dataframe</span>
+		<span class="n">listOfDict</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">fileList</span><span class="p">:</span>
+			<span class="n">rowDict</span> <span class="o">=</span> <span class="n">getFileRow</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+			<span class="n">listOfDict</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rowDict</span><span class="p">)</span>
+		<span class="c1">#</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">listOfDict</span><span class="p">)</span>
 	<span class="c1">#</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">fileList</span> <span class="o">=</span> <span class="n">fileList</span>
+	<span class="k">return</span> <span class="n">df</span>
 </code></pre></div>
         </details>
     </div>
@@ -865,11 +1023,132 @@
 
 
 
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.bAnalysisDir.bAnalysisDir.old_loadFolder">
+<code class="highlight language-python"><span class="n">old_loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.bAnalysisDir.bAnalysisDir.old_loadFolder" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Load all files in folder</p>
+<p>TODO: Curently limited to abf, extend to (txt, csv, tif)</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bAnalysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">old_loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Load all files in folder</span>
+
+<span class="sd">	TODO: Curently limited to abf, extend to (txt, csv, tif)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Path not found: &quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+		<span class="k">return</span>
+
+	<span class="c1">#</span>
+	<span class="c1">#</span>
+	<span class="n">fileList</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">fileIdx</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">):</span>
+			<span class="k">continue</span>
+		<span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abf&#39;</span><span class="p">):</span>
+			<span class="c1"># load</span>
+			<span class="n">filePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+			<span class="n">ba</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">(</span><span class="n">filePath</span><span class="p">)</span>
+
+			<span class="c1"># header</span>
+			<span class="n">headerDict</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">api_getHeader</span><span class="p">()</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fileIdx</span>
+
+			<span class="n">item</span> <span class="o">=</span> <span class="p">{</span>
+				<span class="s1">&#39;header&#39;</span><span class="p">:</span> <span class="n">headerDict</span><span class="p">,</span>
+				<span class="s1">&#39;ba&#39;</span><span class="p">:</span> <span class="n">ba</span><span class="p">,</span>
+				<span class="s1">&#39;sweepX&#39;</span><span class="p">:</span> <span class="n">ba</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">sweepX</span><span class="p">,</span>
+				<span class="s1">&#39;sweepY&#39;</span><span class="p">:</span> <span class="n">ba</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">sweepY</span><span class="p">,</span>
+			<span class="p">}</span>
+			<span class="n">fileList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+			<span class="n">fileIdx</span> <span class="o">+=</span> <span class="mi">1</span>
+	<span class="c1">#</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">fileList</span> <span class="o">=</span> <span class="n">fileList</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
   </div>
 
     </div>
 
   </div>
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h2 class="doc doc-heading" id="sanpy.bAnalysisDir.getFileRow">
+<code class="highlight language-python"><span class="n">getFileRow</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.bAnalysisDir.getFileRow" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Get dict representing one file (row in table).</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bAnalysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getFileRow</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Get dict representing one file (row in table).&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+		<span class="k">return</span> <span class="kc">None</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">theseFileTypes</span><span class="p">:</span>
+		<span class="k">return</span> <span class="kc">None</span>
+
+	<span class="n">ba</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+	<span class="n">rowDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">sanpyColumns</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;File&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">ba</span><span class="o">.</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Dur(s)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">recodingDur</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;kHz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">recordingFrequency</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fix&#39;</span>
+
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
+
+	<span class="k">return</span> <span class="n">rowDict</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
 
 
 

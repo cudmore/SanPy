@@ -1,0 +1,1710 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Current Clamp Analysis For Cardiac Myocytes">
+      
+      
+      
+        <meta name="author" content="Robert H Cudmore">
+      
+      
+      <link rel="icon" href="../../../img/sanpy-transparent.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.6">
+    
+    
+      
+        <title>sanp_app - SanPy Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.875de78c.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.f1a3b89f.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../css/style.css">
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("../../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sanpy.interface.sanpy_app.MainWindow" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="SanPy Documentation" class="md-header__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
+      
+  <img src="../../../img/sanpy-transparent.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SanPy Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              sanp_app
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SanPy Repository
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="SanPy Documentation" class="md-nav__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
+      
+  <img src="../../../img/sanpy-transparent.png" alt="logo">
+
+    </a>
+    SanPy Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SanPy Repository
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        SanPy
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../install/" class="md-nav__link">
+        Install
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../desktop-application/" class="md-nav__link">
+        Desktop Application
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../web-application/" class="md-nav__link">
+        Web Application
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" data-md-state="indeterminate" type="checkbox" id="__nav_5" checked>
+      
+      <label class="md-nav__link" for="__nav_5">
+        Scripting
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Scripting" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Scripting
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../scripting/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../scripting/examples/" class="md-nav__link">
+        Examples
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../scripting/plotting-analysis/" class="md-nav__link">
+        Plotting Analysis
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
+      
+      <label class="md-nav__link" for="__nav_6">
+        API
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="API" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bAnalysis/" class="md-nav__link">
+        bAnalysis
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bAnalysisPlot/" class="md-nav__link">
+        bAnalysisPlot
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bAnalysisDir/" class="md-nav__link">
+        bAnalysisDir
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bExport/" class="md-nav__link">
+        bExport
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../detectionParams/" class="md-nav__link">
+        detectionParams
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bAnalysisUtil/" class="md-nav__link">
+        bAnalysisUtil
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8" type="checkbox" id="__nav_6_8" checked>
+      
+      <label class="md-nav__link" for="__nav_6_8">
+        interface
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="interface" data-md-level="2">
+        <label class="md-nav__title" for="__nav_6_8">
+          <span class="md-nav__icon md-icon"></span>
+          interface
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          sanp_app
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        sanp_app
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow" class="md-nav__link">
+    MainWindow
+  </a>
+  
+    <nav class="md-nav" aria-label="MainWindow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.buildDatabase" class="md-nav__link">
+    buildDatabase()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.closeEvent" class="md-nav__link">
+    closeEvent()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.getSelectedRowDict" class="md-nav__link">
+    getSelectedRowDict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.keyPressEvent" class="md-nav__link">
+    keyPressEvent()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.loadFolder" class="md-nav__link">
+    loadFolder()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.mySignal" class="md-nav__link">
+    mySignal()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.new_tableClicked" class="md-nav__link">
+    new_tableClicked()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.openLog" class="md-nav__link">
+    openLog()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.openScatterWindow" class="md-nav__link">
+    openScatterWindow()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.scatterPlot" class="md-nav__link">
+    scatterPlot()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.slotFindNewFiles" class="md-nav__link">
+    slotFindNewFiles()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.toggleStatisticsPlot" class="md-nav__link">
+    toggleStatisticsPlot()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../methods/" class="md-nav__link">
+        Methods
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../open-source/" class="md-nav__link">
+        Open Source
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../about/" class="md-nav__link">
+        About
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow" class="md-nav__link">
+    MainWindow
+  </a>
+  
+    <nav class="md-nav" aria-label="MainWindow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.buildDatabase" class="md-nav__link">
+    buildDatabase()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.closeEvent" class="md-nav__link">
+    closeEvent()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.getSelectedRowDict" class="md-nav__link">
+    getSelectedRowDict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.keyPressEvent" class="md-nav__link">
+    keyPressEvent()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.loadFolder" class="md-nav__link">
+    loadFolder()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.mySignal" class="md-nav__link">
+    mySignal()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.new_tableClicked" class="md-nav__link">
+    new_tableClicked()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.openLog" class="md-nav__link">
+    openLog()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.openScatterWindow" class="md-nav__link">
+    openScatterWindow()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.scatterPlot" class="md-nav__link">
+    scatterPlot()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.slotFindNewFiles" class="md-nav__link">
+    slotFindNewFiles()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.MainWindow.toggleStatisticsPlot" class="md-nav__link">
+    toggleStatisticsPlot()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>sanp_app</h1>
+                
+                <div class="doc doc-object doc-module">
+
+
+    <div class="doc doc-contents first">
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow">
+        <code>MainWindow</code>
+
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>signalUpdateStatusBar = QtCore.Signal(object)
+signalSetXAxis = QtCore.Signal(object)
+signalSelectSpike = QtCore.Signal(object)</p>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.__init__">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csvPath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.__init__" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>path: full path to folder with (abf,csv,tif) files</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csvPath</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	path: full path to folder with (abf,csv,tif) files</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="nb">super</span><span class="p">(</span><span class="n">MainWindow</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">myModel</span> <span class="o">=</span> <span class="kc">None</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">fileFromDatabase</span> <span class="o">=</span> <span class="kc">True</span> <span class="c1"># if False then from folder</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">csvPath</span> <span class="o">=</span> <span class="n">csvPath</span>
+
+	<span class="n">myFontSize</span> <span class="o">=</span> <span class="mi">10</span>
+	<span class="n">myFont</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">();</span>
+	<span class="n">myFont</span><span class="o">.</span><span class="n">setPointSize</span><span class="p">(</span><span class="n">myFontSize</span><span class="p">);</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">myFont</span><span class="p">)</span>
+
+	<span class="c1"># todo: update this with selected folder</span>
+	<span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+		<span class="n">windowTitle</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;SanPy </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span>
+	<span class="k">elif</span> <span class="n">csvPath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">csvName</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">csvPath</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+		<span class="n">windowTitle</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;SanPy </span><span class="si">{</span><span class="n">csvName</span><span class="si">}</span><span class="s1">&#39;</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">windowTitle</span> <span class="o">=</span> <span class="s1">&#39;SanPy&#39;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="n">windowTitle</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">_rowHeight</span> <span class="o">=</span> <span class="mi">11</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">selectedRow</span> <span class="o">=</span> <span class="kc">None</span>
+
+	<span class="c1"># todo: modify self.path if we get a good folder</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">configDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">preferencesLoad</span><span class="p">()</span>
+	<span class="n">lastPath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;lastPath&#39;</span><span class="p">]</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;json preferences file lastPath &quot;</span><span class="si">{</span><span class="n">lastPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+	<span class="k">elif</span> <span class="n">csvPath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">csvPath</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="k">elif</span> <span class="n">lastPath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">lastPath</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">lastPath</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="c1">#print(&#39;  self.path:&#39;, self.path)</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+	<span class="c1"># I changed saved preferences file, try not to screw up Laura&#39;s analysis</span>
+	<span class="k">if</span> <span class="s1">&#39;useDarkStyle&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;useDarkStyle&#39;</span><span class="p">]</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="c1">#print(&#39;  adding useDarkStyle to preferences&#39;)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;useDarkStyle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+	<span class="c1"># set window geometry</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">setMinimumSize</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">480</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;windowGeometry&#39;</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">top</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;windowGeometry&#39;</span><span class="p">][</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;windowGeometry&#39;</span><span class="p">][</span><span class="s1">&#39;width&#39;</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;windowGeometry&#39;</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">top</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">csvPath</span> <span class="o">=</span> <span class="n">csvPath</span>
+	<span class="n">masterDf</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bFileTable</span><span class="o">.</span><span class="n">loadDatabase</span><span class="p">(</span><span class="n">csvPath</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">masterDf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">loggerr</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loaded csvPath: </span><span class="si">{</span><span class="n">csvPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">buildMenus</span><span class="p">()</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">buildUI</span><span class="p">(</span><span class="n">masterDf</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">myExportWidget</span> <span class="o">=</span> <span class="kc">None</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">dfReportForScatter</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">dfError</span> <span class="o">=</span> <span class="kc">None</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">updateStatusBar</span><span class="p">(</span><span class="s1">&#39;SanPy started&#39;</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;SanPy started&#39;</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.buildDatabase">
+<code class="highlight language-python"><span class="n">buildDatabase</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.buildDatabase" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>prompt user for xls and build large per spike database</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">buildDatabase</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	prompt user for xls and build large per spike database</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;== MainWindow.buildDatabase()&#39;</span><span class="p">)</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  TODO: FIX THIS -- returning&#39;</span><span class="p">)</span>
+	<span class="k">return</span>
+
+	<span class="n">dbFile</span> <span class="o">=</span> <span class="s1">&#39;/Users/cudmore/data/laura-ephys/sanap20210412/Superior vs Inferior database_13_Feb.xlsx&#39;</span>
+	<span class="c1">#dataPath = &#39;/Users/cudmore/data/laura-ephys/sanap20210412&#39;</span>
+	<span class="c1">#outputFolder=&#39;new_20210129&#39;</span>
+	<span class="n">outputFolder</span><span class="o">=</span><span class="s1">&#39;new_20210425&#39;</span>
+	<span class="n">fixedDvDt</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">fixedVmThreshold</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">noDvDtThreshold</span> <span class="o">=</span> <span class="kc">False</span>
+
+	<span class="n">baList</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">reanalyze</span><span class="p">(</span><span class="n">dbFile</span><span class="p">,</span> <span class="n">outputFolder</span><span class="o">=</span><span class="n">outputFolder</span><span class="p">,</span>
+			<span class="n">fixedDvDt</span><span class="o">=</span><span class="n">fixedDvDt</span><span class="p">,</span> <span class="n">noDvDtThreshold</span><span class="o">=</span><span class="n">noDvDtThreshold</span><span class="p">,</span>
+			<span class="n">fixedVmThreshold</span><span class="o">=</span><span class="n">fixedVmThreshold</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.closeEvent">
+<code class="highlight language-python"><span class="n">closeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.closeEvent" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>called when user closes main window or selects quit</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">closeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	called when user closes main window or selects quit</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1">#print(&#39;sanpy_app2.closeEvent()&#39;, event)</span>
+
+	<span class="c1"># check if our table view has been edited by uder and warn</span>
+	<span class="n">doQuit</span> <span class="o">=</span> <span class="kc">True</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">myModel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">isDirty</span><span class="p">:</span>
+		<span class="c1">#print(&#39;  model is dirty --&gt;&gt; need to save&#39;)</span>
+		<span class="c1">#userResp = sanpy.interface.bDialog.okDialog(&#39;xxx&#39;)</span>
+		<span class="n">userResp</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bDialog</span><span class="o">.</span><span class="n">yesNoCancelDialog</span><span class="p">(</span><span class="s1">&#39;You changed the file database, do you want to save then quit?&#39;</span><span class="p">)</span>
+		<span class="c1">#print(&#39;  todo: fix userResp:&#39;, userResp)</span>
+		<span class="k">if</span> <span class="n">userResp</span> <span class="o">==</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Yes</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">slotSaveFilesTable</span><span class="p">()</span>
+			<span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+		<span class="k">if</span> <span class="n">userResp</span> <span class="o">==</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">No</span><span class="p">:</span>
+			<span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">event</span><span class="o">.</span><span class="n">ignore</span><span class="p">()</span>
+			<span class="n">doQuit</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="k">pass</span>
+		<span class="c1">#print(&#39;  model is not dirty --&gt;&gt; no need to save&#39;)</span>
+	<span class="k">if</span> <span class="n">doQuit</span><span class="p">:</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;SanPy is quiting&#39;</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.getSelectedRowDict">
+<code class="highlight language-python"><span class="n">getSelectedRowDict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.getSelectedRowDict" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>used by detection widget</p>
+<p>todo: problem is this dict has a mixture of float/int/str and hard to parse</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getSelectedRowDict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	used by detection widget</span>
+
+<span class="sd">	todo: problem is this dict has a mixture of float/int/str and hard to parse</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">rowDict</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectedRow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">rowDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">myGetRowDict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">selectedRow</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">rowDict</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.keyPressEvent">
+<code class="highlight language-python"><span class="n">keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.keyPressEvent" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>keyPressEvent(self, QKeyEvent)</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+	<span class="c1">#print(&#39;=== sanpy_app.MainWindow() keyPressEvent()&#39;)</span>
+	<span class="n">key</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
+	<span class="n">text</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+
+	<span class="c1">#print(&#39;== MainWindow.keyPressEvent() key:&#39;, key, &#39;text:&#39;, text)</span>
+	<span class="c1">#logger.info(f&#39;key: {key} text: {text}&#39;)</span>
+
+	<span class="c1"># set full axis</span>
+	<span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">70</span><span class="p">,</span> <span class="mi">82</span><span class="p">]:</span> <span class="c1"># &#39;r&#39; or &#39;f&#39;</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">setAxisFull</span><span class="p">()</span>
+
+	<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">	if key in [QtCore.Qt.Key.Key_P]: # &#39;r&#39; or &#39;f&#39;</span>
+<span class="sd">		self.myDetectionWidget.myPrint()</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+
+	<span class="c1"># cancel all selections</span>
+	<span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Key</span><span class="o">.</span><span class="n">Key_Escape</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">mySignal</span><span class="p">(</span><span class="s1">&#39;cancel all selections&#39;</span><span class="p">)</span>
+
+	<span class="c1"># hide detection widget</span>
+	<span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;h&#39;</span><span class="p">:</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">detectToolbarWidget</span><span class="o">.</span><span class="n">isVisible</span><span class="p">():</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">detectToolbarWidget</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">detectToolbarWidget</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+	<span class="c1"># print file list model</span>
+	<span class="k">if</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;p&#39;</span><span class="p">:</span>
+		<span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="p">)</span>
+		<span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">_data</span><span class="p">)</span> <span class="c1"># this is df updated as user updates table</span>
+
+	<span class="c1">#</span>
+	<span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.loadFolder">
+<code class="highlight language-python"><span class="n">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.loadFolder" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Load a folder of .abf</p>
+<p>create df and save in sanpy_recording_db.csv</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Load a folder of .abf</span>
+
+<span class="sd">	create df and save in sanpy_recording_db.csv</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="c1">#print(f&#39;=== sanpy_app2.loadFolder() &quot;{path}&quot;&#39;)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loading path: </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="c1"># ask user for folder</span>
+	<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span><span class="nb">bool</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+		<span class="n">path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QFileDialog</span><span class="o">.</span><span class="n">getExistingDirectory</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Select Directory With Recordings&quot;</span><span class="p">))</span>
+		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="k">return</span>
+	<span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+		<span class="k">pass</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="c1">#print(&#39;  returning none&#39;)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;returning None&#39;</span><span class="p">)</span>
+		<span class="k">return</span>
+
+	<span class="n">bad</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysisDir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+	<span class="n">df</span> <span class="o">=</span> <span class="n">bad</span><span class="o">.</span><span class="n">df</span>
+
+	<span class="c1"># set df to model</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">myModel</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bFileTable</span><span class="o">.</span><span class="n">pandasModel</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">tableView</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="p">)</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+		<span class="c1"># needed when we call loadFolder from __init__</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;--- exception in loadFolder()&#39;</span><span class="p">)</span>
+		<span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+		<span class="k">pass</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.mySignal">
+<code class="highlight language-python"><span class="n">mySignal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">this</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.mySignal" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>this: the signal</p>
+<div class="admonition data">
+<p class="admonition-title">depends on signal:<p>signal=='set x axis': data=[min,max]</p>
+</p>
+</div>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">mySignal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">this</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	this: the signal</span>
+<span class="sd">	data: depends on signal:</span>
+<span class="sd">		signal==&#39;set x axis&#39;: data=[min,max]</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1">#print(&#39;=== sanpy_app.mySignal() &quot;&#39; + this +&#39;&quot;&#39;)</span>
+
+	<span class="k">if</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;set abfError&#39;</span><span class="p">:</span>
+		<span class="k">pass</span>
+
+		<span class="c1"># todo: make this more efficient, just update one row</span>
+		<span class="c1">#self.refreshFileTableWidget()</span>
+		<span class="c1">#self.refreshFileTableWidget_Row()</span>
+
+	<span class="k">elif</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;detect&#39;</span><span class="p">:</span>
+		<span class="c1"># update scatter plot</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">myScatterPlotWidget</span><span class="o">.</span><span class="n">plotToolbarWidget</span><span class="o">.</span><span class="n">on_scatter_toolbar_table_click</span><span class="p">()</span>
+
+		<span class="c1"># data = dfReportForScatter</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">dfReportForScatter</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># can be none when start/stop is not defined</span>
+
+		<span class="c1"># update eror table</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">dfError</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+		<span class="n">errorReportModel</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bFileTable</span><span class="o">.</span><span class="n">pandasModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dfError</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">myErrorTable</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">errorReportModel</span><span class="p">)</span>
+
+	<span class="k">elif</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;saved&#39;</span><span class="p">:</span>
+		<span class="k">pass</span>
+		<span class="c1"># todo: make this more efficient, just update one row</span>
+		<span class="c1">#self.refreshFileTableWidget()</span>
+		<span class="c1">#self.refreshFileTableWidget_Row()</span>
+
+	<span class="k">elif</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;select spike&#39;</span><span class="p">:</span>
+		<span class="n">spikeNumber</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;spikeNumber&#39;</span><span class="p">]</span>
+		<span class="n">doZoom</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;isShift&#39;</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">selectSpike</span><span class="p">(</span><span class="n">spikeNumber</span><span class="p">,</span> <span class="n">doZoom</span><span class="o">=</span><span class="n">doZoom</span><span class="p">)</span>
+		<span class="c1">#self.signalSelectSpike.emit(data)</span>
+
+	<span class="k">elif</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;set x axis&#39;</span><span class="p">:</span>
+		<span class="c1"># old</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">myScatterPlotWidget</span><span class="o">.</span><span class="n">selectXRange</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+		<span class="c1"># new</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">signalSetXAxis</span><span class="o">.</span><span class="n">emit</span><span class="p">([</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+
+	<span class="k">elif</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;set full x axis&#39;</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">myScatterPlotWidget</span><span class="o">.</span><span class="n">selectXRange</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+	<span class="k">elif</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;cancel all selections&#39;</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">selectSpike</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">myScatterPlotWidget</span><span class="o">.</span><span class="n">selectSpike</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+		<span class="c1"># removing this may cause problems on file change ?</span>
+		<span class="c1">#self.myScatterPlotWidget.selectXRange(None, None)</span>
+
+	<span class="k">else</span><span class="p">:</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;MainWindow.mySignal() did not understand this:&#39;</span><span class="p">,</span> <span class="n">this</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.new_tableClicked">
+<code class="highlight language-python"><span class="n">new_tableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.new_tableClicked" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>index is QtCore.QModelIndex</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">new_tableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	index is QtCore.QModelIndex</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1">#print(&#39;new_tableClicked() index:&#39;, &#39;row:&#39;, index.row(), &#39;column:&#39;, index.column())</span>
+
+	<span class="n">row</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">row</span><span class="p">()</span>
+	<span class="n">column</span> <span class="o">=</span> <span class="n">index</span><span class="o">.</span><span class="n">column</span><span class="p">()</span>
+
+	<span class="c1"># select in table view (todo: switch to signal/slot)</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">selectedRow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">row</span><span class="o">==</span><span class="bp">self</span><span class="o">.</span><span class="n">selectedRow</span><span class="p">:</span>
+		<span class="c1">#print(&#39;  new_tableClicked() row&#39;, row, &#39;is already selected&#39;)</span>
+		<span class="k">return</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">selectedRow</span> <span class="o">=</span> <span class="n">row</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">tableView</span><span class="o">.</span><span class="n">selectRow</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+	<span class="n">tableRowDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">myGetRowDict</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+	<span class="n">abfColumnName</span> <span class="o">=</span> <span class="s1">&#39;File&#39;</span>
+	<span class="n">fileName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">myGetValue</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">abfColumnName</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fileName</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+		<span class="c1">#print(&#39;  error: no &quot;ABF File&quot; specified&#39;)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;No file specified&#39;</span><span class="p">)</span>
+		<span class="k">return</span>
+
+	<span class="c1">#if not fileName.endswith(&#39;.abf&#39;):</span>
+	<span class="c1">#	fileName += &#39;.abf&#39;</span>
+
+	<span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">fileName</span><span class="p">)</span>
+	<span class="n">switchedFile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">switchFile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">tableRowDict</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">switchedFile</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">updateStatusBar</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed to load file: &quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.openLog">
+<code class="highlight language-python"><span class="n">openLog</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.openLog" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Open sanpy.log in default app</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">openLog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Open sanpy.log in default app</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">logFilePath</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">sanpyLogger</span><span class="o">.</span><span class="n">getLoggerFile</span><span class="p">()</span>
+	<span class="n">logFilePath</span> <span class="o">=</span> <span class="s1">&#39;file://&#39;</span> <span class="o">+</span> <span class="n">logFilePath</span>
+	<span class="n">url</span> <span class="o">=</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">QUrl</span><span class="p">(</span><span class="n">logFilePath</span><span class="p">)</span>
+	<span class="n">QtGui</span><span class="o">.</span><span class="n">QDesktopServices</span><span class="o">.</span><span class="n">openUrl</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.openScatterWindow">
+<code class="highlight language-python"><span class="n">openScatterWindow</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.openScatterWindow" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <div class="admonition todo">
+<p class="admonition-title">Make 2 versions of this<p>one for a single cell df and
+second to load master csv across entire dataset</p>
+</p>
+</div>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">openScatterWindow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	TODO: Make 2 versions of this</span>
+<span class="sd">		one for a single cell df and</span>
+<span class="sd">		second to load master csv across entire dataset</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;MainWindow.openScatterWindow()&#39;</span><span class="p">)</span>
+
+	<span class="n">csvBase</span><span class="p">,</span> <span class="n">csvExt</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">csvPath</span><span class="p">)</span>
+	<span class="n">masterCsvPath</span> <span class="o">=</span> <span class="n">csvBase</span> <span class="o">+</span> <span class="s1">&#39;_master.csv&#39;</span>
+
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">masterCsvPath</span><span class="p">):</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;error: openScatterWindow() did not find csvPath:&#39;</span><span class="p">,</span> <span class="n">masterCsvPath</span><span class="p">)</span>
+		<span class="k">return</span>
+
+	<span class="kn">from</span> <span class="nn">bAnalysisUtil</span> <span class="kn">import</span> <span class="n">statList</span>
+
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  loading&#39;</span><span class="p">,</span> <span class="n">masterCsvPath</span><span class="p">)</span>
+	<span class="n">path</span> <span class="o">=</span> <span class="n">masterCsvPath</span>
+	<span class="n">analysisName</span> <span class="o">=</span> <span class="s1">&#39;analysisname&#39;</span>
+	<span class="n">statListDict</span> <span class="o">=</span> <span class="n">statList</span> <span class="c1"># maps human readable to comments</span>
+	<span class="n">categoricalList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;include&#39;</span><span class="p">,</span> <span class="s1">&#39;Condition&#39;</span><span class="p">,</span> <span class="s1">&#39;Region&#39;</span><span class="p">,</span> <span class="s1">&#39;Sex&#39;</span><span class="p">,</span> <span class="s1">&#39;RegSex&#39;</span><span class="p">,</span> <span class="s1">&#39;File Number&#39;</span><span class="p">,</span> <span class="s1">&#39;analysisname&#39;</span><span class="p">]</span><span class="c1">#, &#39;File Name&#39;]</span>
+	<span class="n">hueTypes</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Region&#39;</span><span class="p">,</span> <span class="s1">&#39;Sex&#39;</span><span class="p">,</span> <span class="s1">&#39;RegSex&#39;</span><span class="p">,</span> <span class="s1">&#39;Condition&#39;</span><span class="p">,</span> <span class="s1">&#39;File Number&#39;</span><span class="p">,</span> <span class="s1">&#39;analysisname&#39;</span><span class="p">]</span> <span class="c1">#, &#39;File Name&#39;] #, &#39;None&#39;]</span>
+	<span class="n">sortOrder</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Region&#39;</span><span class="p">,</span> <span class="s1">&#39;Sex&#39;</span><span class="p">,</span> <span class="s1">&#39;Condition&#39;</span><span class="p">]</span>
+	<span class="n">interfaceDefaults</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;Y Statistic&#39;</span><span class="p">:</span> <span class="s1">&#39;Spike Frequency (Hz)&#39;</span><span class="p">,</span>
+						<span class="s1">&#39;X Statistic&#39;</span><span class="p">:</span> <span class="s1">&#39;Region&#39;</span><span class="p">,</span>
+						<span class="s1">&#39;Hue&#39;</span><span class="p">:</span> <span class="s1">&#39;Region&#39;</span><span class="p">,</span>
+						<span class="s1">&#39;Group By&#39;</span><span class="p">:</span> <span class="s1">&#39;File Number&#39;</span><span class="p">}</span>
+	<span class="c1">#analysisName, masterDf = analysisName, df0 = ba.getReportDf(theMin, theMax, savefile)</span>
+	<span class="n">masterDf</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dfReportForScatter</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">scatterWindow</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">scatterwidget</span><span class="o">.</span><span class="n">bScatterPlotMainWindow</span><span class="p">(</span>
+					<span class="n">path</span><span class="p">,</span> <span class="n">categoricalList</span><span class="p">,</span> <span class="n">hueTypes</span><span class="p">,</span>
+					<span class="n">analysisName</span><span class="p">,</span> <span class="n">sortOrder</span><span class="p">,</span> <span class="n">statListDict</span><span class="o">=</span><span class="n">statListDict</span><span class="p">,</span>
+					<span class="n">masterDf</span> <span class="o">=</span> <span class="n">masterDf</span><span class="p">,</span>
+					<span class="n">interfaceDefaults</span> <span class="o">=</span> <span class="n">interfaceDefaults</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">scatterWindow</span><span class="o">.</span><span class="n">signalSelectFromPlot</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slotSelectFromScatter</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.scatterPlot">
+<code class="highlight language-python"><span class="n">scatterPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.scatterPlot" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>open a new window with an x/y scatter plot</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">scatterPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	open a new window with an x/y scatter plot</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;=== MainWindow.scatterPlot() IS NOT IMPLEMENTED !!!&#39;</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.slotFindNewFiles">
+<code class="highlight language-python"><span class="n">slotFindNewFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.slotFindNewFiles" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>find files in self.path that are not in pandas data model</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slotFindNewFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	find files in self.path that are not in pandas data model</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;MainWindow.slotFindNewFiles()&#39;</span><span class="p">)</span>
+	<span class="c1"># get all abf/csv/tif in folder</span>
+	<span class="n">abfList</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;TODO: have slotFindNewFiles find (abf, csv, tif)&#39;</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">):</span>
+			<span class="k">continue</span>
+		<span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abf&#39;</span><span class="p">):</span>
+			<span class="c1">#print(&#39;  &#39;, file)</span>
+			<span class="n">abfList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+	<span class="c1"># our curent database</span>
+	<span class="n">abfInDb</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">myGetColumnList</span><span class="p">(</span><span class="s1">&#39;File&#39;</span><span class="p">)</span>
+
+	<span class="c1"># files in database that are not in folder</span>
+	<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">	print(&#39;abfInDb:&#39;, abfInDb)</span>
+<span class="sd">	for abf in abfInDb:</span>
+<span class="sd">		if not isinstance(abf, str):</span>
+<span class="sd">			continue</span>
+<span class="sd">		abfPath = os.path.join(self.path, abf+&#39;.abf&#39;)</span>
+<span class="sd">		if not os.path.isfile(abfPath):</span>
+<span class="sd">			print(&#39;  error: abf in database that is not in folder:&#39;, abfPath)</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+
+	<span class="c1"># files in folder that are not in db</span>
+	<span class="k">for</span> <span class="n">abf</span> <span class="ow">in</span> <span class="n">abfList</span><span class="p">:</span>
+		<span class="c1">#if not isinstance(abf, str):</span>
+		<span class="c1">#	continue</span>
+		<span class="c1">#abf = os.path.splitext(abf)[0] # remove .abf</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">abf</span> <span class="ow">in</span> <span class="n">abfInDb</span><span class="p">:</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  info: file in folder that is not in db:&#39;</span><span class="p">,</span> <span class="n">abf</span><span class="p">)</span>
+			<span class="c1"># add this abf file to main db</span>
+
+			<span class="c1"># add an empty row</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">myAppendRow</span><span class="p">()</span>
+
+			<span class="n">rowCount</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">rowCount</span><span class="p">()</span>
+			<span class="c1"># this gives us the proper keys, iterate and fill in as necc.</span>
+			<span class="n">rowDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">myGetRowDict</span><span class="p">(</span><span class="n">rowCount</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+			<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Idx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+			<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Include&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+			<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;File&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">abf</span>
+
+			<span class="c1"># TODO: load abf to get these</span>
+			<span class="c1"># dur(s)</span>
+			<span class="c1"># kHz</span>
+			<span class="c1"># Mode</span>
+
+			<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Cell Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+			<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Sex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+			<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Condition&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+			<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
+			<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
+
+			<span class="c1"># TODO: insert in proper place, this is appending</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;	 adding to db rowDict:&#39;</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">)</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">mySetRow</span><span class="p">(</span><span class="n">rowCount</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 class="doc doc-heading" id="sanpy.interface.sanpy_app.MainWindow.toggleStatisticsPlot">
+<code class="highlight language-python"><span class="n">toggleStatisticsPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span></code>
+
+
+<a class="headerlink" href="#sanpy.interface.sanpy_app.MainWindow.toggleStatisticsPlot" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>toggle scatter plot on/off</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">toggleStatisticsPlot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	toggle scatter plot on/off</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1">#print(&#39;toggleStatisticsPlot() state:&#39;, state)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;display&#39;</span><span class="p">][</span><span class="s1">&#39;showScatter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span>
+	<span class="k">if</span> <span class="n">state</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">myScatterPlotWidget</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">myScatterPlotWidget</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        my footer
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant", "navigation.expand"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.34eae1b6.min.js"></script>
+      
+    
+  </body>
+</html>
