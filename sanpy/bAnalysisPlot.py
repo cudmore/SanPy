@@ -17,9 +17,67 @@ class bAnalysisPlot():
 		Args:
 			ba: [sanpy.bAnalysis][sanpy.bAnalysis] object
 		"""
-		self.ba = ba
+		self._ba = ba
 
-	def plotDeriv(self, fig=None):
+	@property
+	def ba(self):
+		"""Get underlying bAnalysis object."""
+		return self._ba
+
+	def getDefaultPlotStyle(self):
+		"""Get dictionary with default plot style."""
+		d = {
+			'linewidth': 0.5,
+			'color': 'k',
+			'width': 6,
+			'height': 3,
+		}
+		return d.copy()
+
+	def _makeFig(self, plotStyle=None):
+		if plotStyle is None:
+			plotStyle = self.getDefaultPlotStyle()
+
+		grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
+
+		width = plotStyle['width']
+		height = plotStyle['height']
+		fig = plt.figure(figsize=(width, height))
+		ax = fig.add_subplot(grid[0, 0:]) #Vm, entire sweep
+
+		ax.spines['right'].set_visible(False)
+		ax.spines['top'].set_visible(False)
+
+		return fig, ax
+
+	def plotRaw(self, plotStyle=None, ax=None):
+		"""
+		Plot raw recording
+
+		Args:
+			plotStye (float):
+			ax (xxx):
+		"""
+
+		if plotStyle is None:
+			plotStyle = self.getDefaultPlotStyle()
+
+		if ax is None:
+			fig, ax = self._makeFig()
+
+		color = plotStyle['color']
+		linewidth = plotStyle['linewidth']
+		sweepX = self.ba.sweepX
+		sweepY = self.ba.sweepY
+
+		ax.plot(sweepX, sweepY, '-', c=color, linewidth=linewidth) # fmt = '[marker][line][color]'
+
+		xUnits = self.ba.get_xUnits()
+		yUnits = self.ba.get_yUnits()
+		ax.set_xlabel(xUnits)
+		ax.set_ylabel(yUnits)
+
+	def plotDerivAndRaw(self):
 		"""
 		Plot both Vm and the derivative of Vm (dV/dt).
 
@@ -28,95 +86,61 @@ class bAnalysisPlot():
 				see: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.figure.html
 		"""
 
-		ba = self.ba
-
+		#
+		# make a 2-panel figure
 		grid = plt.GridSpec(2, 1, wspace=0.2, hspace=0.4)
-		if fig is None:
-			fig = plt.figure(figsize=(10, 8))
+		fig = plt.figure(figsize=(10, 8))
 		ax1 = fig.add_subplot(grid[0,0])
 		ax2 = fig.add_subplot(grid[1,0], sharex=ax1)
-		#ax3 = fig.add_subplot(grid[2,0], sharex=ax1)
+		ax1.spines['right'].set_visible(False)
+		ax1.spines['top'].set_visible(False)
+		ax2.spines['right'].set_visible(False)
+		ax2.spines['top'].set_visible(False)
 
+		self.plotRaw(ax=ax1);
 
-		ax1.plot(ba.abf.sweepX, ba.abf.sweepY, label='Vm (mV)')
-		ax1.set_ylabel('Vm (mV)')
+		sweepX = self.ba.sweepX
+		filteredDeriv = self.ba.filteredDeriv
+		ax2.plot(sweepX, filteredDeriv)
 
-		ax2.plot(ba.abf.sweepX, ba.filteredDeriv)
 		ax2.set_ylabel('dV/dt')
-		ax2.set_xlabel('Seconds')
-
-		#ax3.plot(self.abf.sweepX, sweepDeriv2)
-		#ax3.set_ylabel('dV/dt (2)')
-
-		# spike detect and append
-		#ax1.plot(ba.abf.sweepX[spikeTimes], ba.abf.sweepY[spikeTimes], 'or', label='threshold')
-		#ax2.plot(ba.abf.sweepX[spikeTimes], ba.filteredDeriv[spikeTimes], 'or')
+		#ax2.set_xlabel('Seconds')
 
 		return fig
 
-	def plotRaw(self, lineWidth=0.7, color='k', ax=None):
-		"""
-		plot raw recording
-		"""
-		ba = self.ba
-
-		if ax is None:
-			grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
-
-			fig = plt.figure(figsize=(10, 8))
-			ax = fig.add_subplot(grid[0, 0:]) #Vm, entire sweep
-
-		#ax.plot(ba.abf.sweepX, ba.abf.sweepY, 'k')
-		ax.plot(ba.abf.sweepX, ba.abf.sweepY, '-', c=color, linewidth=lineWidth) # fmt = '[marker][line][color]'
-
-		ax.set_ylabel('Vm (mV)')
-		ax.set_xlabel('Time (sec)')
-
-	def plotSpikes(self, oneSpikeNumber=None, ax=None, xMin=None, xMax=None):
+	def plotSpikes(self, plotStyle=None, ax=None):
 		'''
 		Plot Vm with spike analysis overlaid as symbols
 
-		oneSpikeNumber: If specified will select one spike with a yellow symbol
-		ax: If specified will plot into a MatPlotLib axes
-		xMin/xMax: if specified will set_xlim(xMin, xMax)
+		plotStyle (dict): xxx
+		ax (xxx): If specified will plot into a MatPlotLib axes
 		'''
 
-		ba = self.ba
+		if plotStyle is None:
+			plotStyle = self.getDefaultPlotStyle()
 
-		fig = None
 		if ax is None:
-			grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
-
-			fig = plt.figure(figsize=(10, 8))
-			ax = fig.add_subplot(grid[0, 0:]) #Vm, entire sweep
+			fig, ax = self._makeFig()
 
 		# plot vm
-		ax.plot(ba.abf.sweepX, ba.abf.sweepY, 'k')
+		self.plotRaw(ax=ax)
 
-		# plot all spike times (threshold crossings)
-		"""
-		for spikeTime in ba.spikeTimes:
-			ax.plot(ba.abf.sweepX[spikeTime], ba.abf.sweepY[spikeTime], 'xg')
-		"""
-		ax.plot(ba.abf.sweepX[ba.spikeTimes], ba.abf.sweepY[ba.spikeTimes], 'pg')
+		# plot spike times
+		thresholdVal = self.ba.getStat('thresholdVal')
+		thresholdPnt = self.ba.getStat('thresholdPnt')
+		thresholdSec = [self.ba.pnt2Sec_(x) for x in thresholdPnt]
+		ax.plot(thresholdSec, thresholdVal, 'pg')
 
 		# plot the peak
-		peakPntList = [spikeDict['peakPnt'] for spikeDict in ba.spikeDict]
-		ax.plot(ba.abf.sweepX[peakPntList], ba.abf.sweepY[peakPntList], 'or')
+		peakVal = self.ba.getStat('peakVal')
+		peakPnt = self.ba.getStat('peakPnt')
+		peakSec = [self.ba.pnt2Sec_(x) for x in peakPnt]
+		ax.plot(peakSec, peakVal, 'or')
 
-		#
-		# plot one spike time as a yellow circle
-		line = None
-		if oneSpikeNumber is not None:
-			oneSpikeTime = ba.spikeTimes[oneSpikeNumber]
-			line, = ax.plot(ba.abf.sweepX[oneSpikeTime], ba.abf.sweepY[oneSpikeTime], 'oy')
-
-		ax.set_ylabel('Vm (mV)')
-		ax.set_xlabel('Time (sec)')
-
-		# set the x-axis of the plot
-		if xMin is not None and xMax is not None:
-			ax.set_xlim([xMin,xMax])
+		xUnits = self.ba.get_xUnits()
+		yUnits = self.ba.get_yUnits()
+		ax.set_xlabel(xUnits)
+		ax.set_ylabel(yUnits)
 
 		return fig, ax
 
@@ -232,13 +256,9 @@ class bAnalysisPlot():
 
 		return line
 
-def test():
-	# load abf
-	abfPath = '../data/19114000.abf'
-	ba = sanpy.bAnalysis(abfPath)
-	if ba.loadError:
-		print('did not load file:', abfPath)
-		return
+def test_plot(path):
+	print('=== test_plot() path:', path)
+	ba = sanpy.bAnalysis(path)
 
 	# detect
 	dDict = ba.getDefaultDetection()
@@ -246,12 +266,19 @@ def test():
 	ba.spikeDetect(dDict)
 
 	# plot
-	bp = bPlot(ba)
-	fig = bp.plotDeriv()
+	bp = sanpy.bAnalysisPlot(ba)
 
-	fig = bp.plotSpikes(oneSpikeNumber=10)
+	fig = bp.plotDerivAndRaw()
+
+	fig = bp.plotSpikes()
 
 	plt.show()
 
 if __name__ == '__main__':
-	test()
+	path = 'data/19114001.abf'
+	test_plot(path)
+
+	# TODO: check if error
+
+	path = 'data/19114001.csv'
+	test_plot(path)

@@ -1,19 +1,37 @@
-## Writing custom Python scripts
+The SanPy API is split into two main sections: backend and frontend.
 
-In just a few lines of code, recordings can be loaded, analyzed, and plotted. See the [/examples][examples] folder for examples.
+### Loading raw data
 
-[examples]: https://github.com/cudmore/SanPy/tree/master/examples
+The following code loads from a file into a bAnalysis object.
 
 ```
-import matplotlib.pyplot as plt
-import bAnalysis
-import bAnalysisPlot
-
-ba = bAnalysis.bAnalysis('data/SAN-AP-example-Rs-change.abf')
-ba.spikeDetect()
-
-bAnalysisPlot.bPlot.plotSpikes(ba, xMin=140, xMax=145)
-plt.show()
+import sanpy
+path = 'xxx'
+ba = sanpy.bAnalysis(path)
 ```
 
-<IMG SRC="../../img/example1.png" width=600>
+### Detecting Spikes
+
+Spike detection takes a number of parameters but in its simplest form only requires a threshold in the derivative (dV/dt) of membrane potential (mV).
+
+```
+# set detecction parameters
+dDict = ba.getDefaultDetection()
+dDict['dvdtThreshold'] = 50
+
+# perform spike detection
+ba.spikeDetect(dDict)
+```
+
+### Plotting Results
+
+Once analyze, parameters can be plotted over the raw data
+
+```
+bp = sanpy.bAnalysisPlot(ba)
+fig, ax = bp.plotSpikes()
+```
+
+### Saved file formats
+
+TODO: Fill this in. xxx

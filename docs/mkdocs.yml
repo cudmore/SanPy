@@ -58,14 +58,20 @@ nav:
     - Install: install.md
     - Desktop Application: desktop-application.md
     - Web Application: web-application.md
+    - Scripting:
+        - Overview: scripting/overview.md
+        - Examples: scripting/examples.ipynb
+        - Plotting Analysis: scripting/plotting-analysis.ipynb
     - API:
         - Overview: api/overview.md
-        - Examples: api/examples.ipynb
         - bAnalysis: api/bAnalysis.md
         - bAnalysisPlot: api/bAnalysisPlot.md
         - bAnalysisDir: api/bAnalysisDir.md
         - bExport: api/bExport.md
         - detectionParams: api/detectionParams.md
+        - bAnalysisUtil: api/bAnalysisUtil.md
+        - interface:
+            - sanp_app: api/interface/sanpy_app.md
     - Methods: methods.md
     - Open Source: open-source.md
     - About: about.md

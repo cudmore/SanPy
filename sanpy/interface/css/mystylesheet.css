@@ -28,7 +28,7 @@ see: https://stackoverflow.com/questions/2730331/set-qgroupbox-title-font-size-w
 QGroupBox {
     border: 1px solid gray;
     border-radius: 3px;
-	margin-top: 0.5em;
+	/* margin-top: 0.5em; */
 	font-size: 11px;
  }
 

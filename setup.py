@@ -17,9 +17,6 @@ setup(
         'scipy',
         'pandas',
         'matplotlib',
-        #'pyqtgraph',
-        #'PyQt5==5.13.0',
-		#'qdarkstyle', # 2.8.1
         'pyabf',
         'XlsxWriter',
 		'xlrd', # for loading excel files in examples/reanalyze.py
@@ -39,7 +36,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            'sanpy=sanpy.interface.app:main',
+            'sanpy=sanpy.interface.sanpy_app:main',
         ]
     },
 )

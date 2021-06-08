@@ -13,8 +13,9 @@ boxBorder = "1px gray solid"
 
 def getFileList(path):
 	"""
-	returns
-		pandas df
+	Get list of bAnalysis from path
+
+	Returns:
 		list of bAnalysis
 	"""
 	baList = []
@@ -50,13 +51,15 @@ def getFileList(path):
 				sweepUnitsX
 				sweepUnitsY
 			'''
-			
-			pntsPerMS = ba.dataPointsPerMs
-			numSweeps = len(ba.sweepList)
-			durationSec = max(ba.abf.sweepX)
 
-			fileDict['kHz'] = pntsPerMS
-			fileDict['Duration (Sec)'] = int(round(durationSec))
+			# TODO: get this from bAnalysis header
+			baHeader = ba.api_getHeader()
+			recording_kHz = baHeader['recording_kHz'] #ba.dataPointsPerMs
+			numSweeps = len(ba.sweepList)
+			recordingDur_sec = baHeader['recordingDur_sec'] #max(ba.abf.sweepX)
+
+			fileDict['kHz'] = recording_kHz
+			fileDict['Duration (Sec)'] = round(recordingDur_sec,3)
 			fileDict['Number of Sweeps'] = numSweeps
 
 			retFileList.append(fileDict)

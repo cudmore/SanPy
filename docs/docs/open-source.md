@@ -16,12 +16,20 @@
  - [PyQtGraph][pyqtgraph]{target=_blank} - Derived from PyQt and used to make fast plots
  - [Matplotlib][Matplotlib]{target=_blank} - Desktop application plotting
 
-#### Web application
+#### Web application v1
 
  - [Plotly Python][Plotly]
  - [Plotly Dash][Dash] - Web application interface
  - [Dash Bootstrap components][Dash Bootstrap components]
 
+#### Web application v2
+
+ - Docker
+ - NGINX
+ - Flask
+ - Vue
+ - Bootstrap
+  
 [Python]: https://www.python.org/
 [SciPy]: https://www.scipy.org/
 [Pandas]: https://pandas.pydata.org/

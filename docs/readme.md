@@ -8,8 +8,6 @@ The main SanPy code repository is at
 
 https://github.com/cudmore/sanpy
 
-## Notes to self
-
 ### install
 
 ```

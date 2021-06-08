@@ -161,7 +161,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if self.ba is None:
 			return
 
-		#print('== bDetectionWidget.detect() dvdtThreshold:', dvdtThreshold, 'vmThreshold', vmThreshold)
 		logger.info(f'Detecting with dvdtThreshold:{dvdtThreshold} vmThreshold:{vmThreshold}')
 
 		if self.ba.loadError:
@@ -176,24 +175,26 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# grab parameters from main interface table
 		if self.myMainWindow is not None:
-			logger.info('getting detection parameters from main window table')
+			logger.info('get detection parameters from main window table')
+
+			# problem is these k/v have v that are mixture of str/float/int ... hard to parse
 			myDetectionDict = self.myMainWindow.getSelectedRowDict()
+
 			#print('  row detection dict is:')
 			#sanpy.bUtil.printDict(myDetectionDict, withType=True)
-			#todo fill in detectionDict
-			#print('  todo: fill in from table row:')
+
 			if myDetectionDict['refractory_ms'] > 0:
 				detectionDict['refractory_ms'] = myDetectionDict['refractory_ms']
 			if myDetectionDict['halfWidthWindow_ms'] > 0:
 				# default is 50 ms
 				detectionDict['halfWidthWindow_ms'] = myDetectionDict['halfWidthWindow_ms']
 			#
-			if myDetectionDict['startSeconds'] >= 0:
+			if myDetectionDict['Start(s)'] >= 0:
 				# default is 50 ms
-				detectionDict['startSeconds'] = myDetectionDict['startSeconds']
-			if myDetectionDict['stopSeconds'] >= 0:
+				detectionDict['startSeconds'] = myDetectionDict['Start(s)']
+			if myDetectionDict['Stop(s)'] >= 0:
 				# default is 50 ms
-				detectionDict['stopSeconds'] = myDetectionDict['stopSeconds']
+				detectionDict['stopSeconds'] = myDetectionDict['Stop(s)']
 			#
 			detectionDict['cellType'] = myDetectionDict['Cell Type']
 			detectionDict['sex'] = myDetectionDict['Sex']
@@ -207,16 +208,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# error report
 		dfError = self.ba.errorReport()
 
+		# show dialog when num spikes is 0
 		if self.ba.numSpikes == 0:
-			'''
-			msg = QtWidgets.QMessageBox()
-			msg.setIcon(QtWidgets.QMessageBox.Warning)
-			msg.setText("No Spikes Detected")
-			msg.setInformativeText('dV/dt Threshold: ' + str(dvdtThreshold) + '\r' + ' Vm Threshold (mV): '  + str(vmThreshold))
-			msg.setWindowTitle("No Spikes Detected")
-			retval = msg.exec_()
-			'''
-			#
 			informativeText = 'dV/dt Threshold: ' + str(dvdtThreshold) + '\r' + ' Vm Threshold (mV): '  + str(vmThreshold)
 			sanpy.interface.bDialog.okDialog('No Spikes Detected', informativeText=informativeText)
 
@@ -225,7 +218,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.refreshClips() # replot clips
 
 		if self.myMainWindow is not None:
-			self.myMainWindow.mySignal('detect', data=(dfReportForScatter,dfError)) # signal to main window so it can update (file list, scatter plot)
+			# signal to main window so it can update (file list, scatter plot)
+			self.myMainWindow.mySignal('detect', data=(dfReportForScatter,dfError))
 
 		#QtCore.QCoreApplication.processEvents()
 		self.updateStatusBar(f'Detected {self.ba.numSpikes} spikes')
@@ -331,8 +325,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 									whichPlot='dvdt')
 		# vm
 		if thisAxis == 'vm':
-			top = np.nanmax(self.ba.abf.sweepY)
-			bottom = np.nanmin(self.ba.abf.sweepY)
+			top = np.nanmax(self.ba.sweepY)
+			bottom = np.nanmin(self.ba.sweepY)
 			start, stop = self._setAxis(bottom, top,
 									set_xyBoth='yAxis',
 									whichPlot='vm')
@@ -343,7 +337,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# x-axis is shared between (dvdt, vm)
 		start = 0
-		stop = self.ba.abf.sweepX[-1]
+		stop = self.ba.sweepX[-1]
 		start, stop = self._setAxis(start, stop, set_xyBoth='xAxis')
 
 		# y-axis is NOT shared
@@ -354,8 +348,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 									set_xyBoth='yAxis',
 									whichPlot='dvdt')
 		# vm
-		top = np.nanmax(self.ba.abf.sweepY)
-		bottom = np.nanmin(self.ba.abf.sweepY)
+		top = np.nanmax(self.ba.sweepY)
+		bottom = np.nanmin(self.ba.sweepY)
 		start, stop = self._setAxis(bottom, top,
 									set_xyBoth='yAxis',
 									whichPlot='vm')
@@ -449,14 +443,14 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# update lines
 		#self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.deriv,
 		#					self, type='dvdt')
-		self.dvdtLinesFiltered = MultiLine(self.ba.abf.sweepX, self.ba.filteredDeriv,
+		self.dvdtLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredDeriv,
 							self, forcePenColor=None, type='dvdtFiltered')
 		#self.derivPlot.addItem(self.dvdtLines)
 		self.derivPlot.addItem(self.dvdtLinesFiltered)
 
 		#self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY,
 		#					self, type='vm')
-		self.vmLinesFiltered = MultiLine(self.ba.abf.sweepX, self.ba.filteredVm,
+		self.vmLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredVm,
 							self, forcePenColor=None, type='vmFiltered')
 		#self.vmPlot.addItem(self.vmLines)
 		self.vmPlot.addItem(self.vmLinesFiltered)
@@ -491,7 +485,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 	def fillInDetectionParameters(self, tableRowDict):
 		"""
-		{'idx': 4, 'include': 1.0, 'ABF File': '2020_07_23_0003', 'Cell Type': 'Inferior', 'Sex': 'Male', 'Condition': 'ISO 100nM', 'startSeconds': 177.26, 'stopSeconds': 276.67, 'dvdtThreshold': 3.5, 'mvThreshold': -20.0, 'refractory_ms': 150.0, 'peakWindow_ms': nan, 'halfWidthWindow_ms': nan, 'Notes': nan}
 		"""
 		#print('fillInDetectionParameters() tableRowDict:', tableRowDict)
 		self.detectToolbarWidget.fillInDetectionParameters(tableRowDict)
@@ -720,7 +713,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# this returns x-axis in ms
 		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(xMin, xMax)
 		#print('refreshClips() theseClips:', theseClips, 'theseClips_x:', theseClips_x)
-		dataPointsPerMs = self.ba.abf.dataPointsPerMs
+		dataPointsPerMs = self.ba.dataPointsPerMs
 
 		# convert clips to 2d ndarray ???
 		xTmp = np.array(theseClips_x)
@@ -1277,26 +1270,29 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.buildUI()
 
 	def fillInDetectionParameters(self, tableRowDict):
-		#print('=== fillInDetectionParameters() tableRowDict:')
-		#print(tableRowDict)
+		"""
+		Set detection widget interface (mostly QSpinBox) to match values from table
+		"""
 
 		dvdtThreshold = tableRowDict['dvdtThreshold']
 		mvThreshold = tableRowDict['mvThreshold']
-		startSeconds = tableRowDict['startSeconds']
-		stopSeconds = tableRowDict['stopSeconds']
+		startSeconds = tableRowDict['Start(s)']
+		stopSeconds = tableRowDict['Stop(s)']
 
-		# when number vvalues are set to 'empty' they come in as str ''
+		# when number values are set to 'empty' they come in as str ''
 		if isinstance(dvdtThreshold,str) and len(dvdtThreshold)==0:
+			# empy dvdThreshold means detect with mV
 			dvdtThreshold = -1
 		if isinstance(startSeconds,str) and len(startSeconds)==0:
 			startSeconds = 0
 		if isinstance(stopSeconds,str) and len(stopSeconds)==0:
-			stopSeconds = self.detectionWidget.ba.abf.sweepX[-1] # max seconds
+			stopSeconds = self.detectionWidget.ba.sweepX[-1] # max seconds
 
 		if isinstance(dvdtThreshold, str):
 			dvdtThreshold = float(dvdtThreshold)
 		if isinstance(mvThreshold, str):
-			mvThreshold = float(mvThresholdmvThreshold)
+			mvThreshold = float(mvThreshold)
+
 		if isinstance(startSeconds, str):
 			startSeconds = float(startSeconds)
 		if isinstance(mvThreshold, str):
@@ -1308,15 +1304,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.stopSeconds.setValue(stopSeconds)
 
 	def sweepSelectionChange(self,i):
-		print('sweepSelectionChange() i:', i)
-		'''
-		print "Items in the list are :"
-
-		for count in range(self.cb.count()):
-			print self.cb.itemText(count)
-		'''
 		sweepNumber = int(self.cb.currentText())
-		print('	sweep number:', sweepNumber)
+		print('	todo: implement sweep number:', sweepNumber)
 
 	@QtCore.pyqtSlot()
 	def on_start_stop(self):
@@ -1426,7 +1415,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			with open(mystylesheet_css) as f:
 				myStyleSheet = f.read()
 
-		self.setFixedWidth(330)
+		self.setFixedWidth(300)
 		self.mainLayout = QtWidgets.QVBoxLayout(self)
 		self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
 
@@ -1699,18 +1688,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.mainLayout.addWidget(spikeGroupBox)
 
 	def buildSpikeBrowser(self):
-		#
-		# row for (error report, spike #, go, prev, next)
+		"""Build interface to go to spike number, previous <<, and next >>"""
 		hBoxSpikeBrowser = QtWidgets.QHBoxLayout()
-
-		'''
-		buttonName = 'Error'
-		button = QtWidgets.QPushButton(buttonName)
-		button.setToolTip('Print Spike Errors')
-		button.clicked.connect(partial(self.on_button_click,buttonName))
-		#hBoxSpikeBrowser.addStretch()
-		hBoxSpikeBrowser.addWidget(button)
-		'''
 
 		# spike number
 		self.spikeNumber = QtWidgets.QSpinBox()

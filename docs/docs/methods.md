@@ -51,3 +51,30 @@ When we encounter errors during spike detection, they are stored for each spike 
 - preSpikeDvDt: Error while searching for peak in max ap upstroke (dV/dt) between spike threshold (TOP) and the peak in the first derivative of Vm (dV/dt).
 - cycleLength: Usually occurs on last spike when looking for next MDP.
 - spikeWidth: Error finding a particular spike with (AP_Dur). Usually occurs when spikes are too broad, can increase detection parameter `hwWindow_ms`.
+
+# Analysis output
+
+|    | Stat                              | name                       | units   | yStat                      | yStatUnits   | xStat                  | xStatUnits   |
+|---:|:----------------------------------|:---------------------------|:--------|:---------------------------|:-------------|:-----------------------|:-------------|
+|  0 | Take Off Potential (s)            | thresholdSec               | s       | thresholdVal               | mV           | thresholdSec           | s            |
+|  1 | Take Off Potential (mV)           | thresholdVal               | mV      | thresholdVal               | mV           | thresholdPnt           | Points       |
+|  2 | Spike Frequency (Hz)              | spikeFreq_hz               | Hz      | spikeFreq_hz               | Hz           | thresholdPnt           | Points       |
+|  3 | Cycle Length (ms)                 | cycleLength_ms             | ms      | cycleLength_ms             | ms           | thresholdPnt           | Points       |
+|  4 | AP Peak (mV)                      | peakVal                    | mV      | peakVal                    | mV           | peakPnt                | Points       |
+|  5 | AP Height (mV)                    | peakHeight                 | mV      | peakHeight                 | mV           | peakPnt                | Points       |
+|  6 | Pre AP Min (mV)                   | preMinVal                  | mV      | preMinVal                  | mV           | preMinPnt              | Points       |
+|  7 | Post AP Min (mV)                  | postMinVal                 | mV      | postMinVal                 | mV           | postMinPnt             | Points       |
+|  8 | Early Diastolic Depol Rate (dV/s) | earlyDiastolicDurationRate | dV/s    | earlyDiastolicDurationRate | dV/s         |                        |              |
+|  9 | Early Diastolic Duration (ms)     | earlyDiastolicDuration_ms  | ms      | earlyDiastolicDuration_ms  | dV/s         | thresholdPnt           | Points       |
+| 10 | Diastolic Duration (ms)           | diastolicDuration_ms       | ms      | diastolicDuration_ms       | dV/s         | thresholdPnt           | Points       |
+| 11 | Max AP Upstroke (mV)              | preSpike_dvdt_max_val      | mV      | preSpike_dvdt_max_val      | dV/s         | preSpike_dvdt_max_pnt  | Points       |
+| 12 | Max AP Upstroke (dV/dt)           | preSpike_dvdt_max_val2     | dV/dt   | preSpike_dvdt_max_val2     | dV/dt        | preSpike_dvdt_max_pnt  | Points       |
+| 13 | Max AP Repolarization (mV)        | postSpike_dvdt_min_val     | mV      | postSpike_dvdt_min_val     | mV           | postSpike_dvdt_min_pnt | Points       |
+| 14 | AP Duration (ms)                  | apDuration_ms              | ms      | apDuration_ms              | ms           | thresholdPnt           | Points       |
+| 15 | Half Width 10 (ms)                | nan                        | nan     | widths_10                  | ms           |                        |              |
+| 16 | Half Width 20 (ms)                | nan                        | nan     | widths_20                  | ms           |                        |              |
+| 17 | Half Width 50 (ms)                | nan                        | nan     | widths_50                  | ms           |                        |              |
+| 18 | Half Width 80 (ms)                | nan                        | nan     | widths_80                  | ms           |                        |              |
+| 19 | Half Width 90 (ms)                | nan                        | nan     | widths_90                  | ms           |                        |              |
+| 20 | Ca++ Delay (s)                    | nan                        | nan     | caDelay_sec                | s            |                        |              |
+| 21 | Ca++ Width (ms)                   | nan                        | nan     | caWidth_ms                 | ms           |                        |              |

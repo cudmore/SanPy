@@ -7,34 +7,60 @@ from collections import OrderedDict
 # todo: move these to a json file !!!
 # A list of human readable stats and how to map them to backend
 # Each key, like 'Take Off Potential (mV)' is a y-stat
+
+
 statList = OrderedDict()
-'''
-statList['Inter-Spike-Interval (ms)'] = {
-	'yStat': 'isi_ms',
-	'yStatUnits': 'ms',
+
+"""
+Functions to map human readable name to backen stat name and vica versa.
+
+See [xxx-methods](../../Methods) section for a list of available stats
+
+Example:
+
+```
+from sanpy.bAnalysisUtil import getHumandFromStat, getStatFromHuman
+
+humanStr = getHumandFromStat('thresholdSec')
+statStr = getStatFromHuman('Spike Time (s)')
+```
+"""
+
+statList['Spike Time (s)'] = {
+	'name': 'thresholdSec',
+	'units': 's',
+	'yStat': 'thresholdVal',
+	'yStatUnits': 'mV',
+	'xStat': 'thresholdSec',
+	'xStatUnits': 's'
+	}
+statList['Take Off Potential (mV)'] = {
+	'name': 'thresholdVal',
+	'units': 'mV',
+	'yStat': 'thresholdVal',
+	'yStatUnits': 'mV',
 	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
 	}
-'''
 statList['Spike Frequency (Hz)'] = {
+	'name': 'spikeFreq_hz',
+	'units': 'Hz',
 	'yStat': 'spikeFreq_hz',
 	'yStatUnits': 'Hz',
 	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
 	}
 statList['Cycle Length (ms)'] = {
+	'name': 'cycleLength_ms',
+	'units': 'ms',
 	'yStat': 'cycleLength_ms',
 	'yStatUnits': 'ms',
 	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
 	}
-statList['Take Off Potential (mV)'] = {
-	'yStat': 'thresholdVal',
-	'yStatUnits': 'mV',
-	'xStat': 'thresholdPnt',
-	'xStatUnits': 'Points'
-	}
 statList['AP Peak (mV)'] = {
+	'name': 'peakVal',
+	'units': 'mV',
 	'yStat': 'peakVal',
 	'yStatUnits': 'mV',
 	'xStat': 'peakPnt',
@@ -42,18 +68,24 @@ statList['AP Peak (mV)'] = {
 	}
 #spikeDict['peakVal'] - spikeDict['thresholdVal']
 statList['AP Height (mV)'] = {
+	'name': 'peakHeight',
+	'units': 'mV',
 	'yStat': 'peakHeight',
 	'yStatUnits': 'mV',
 	'xStat': 'peakPnt',
 	'xStatUnits': 'Points'
 	}
 statList['Pre AP Min (mV)'] = {
+	'name': 'preMinVal',
+	'units': 'mV',
 	'yStat': 'preMinVal',
 	'yStatUnits': 'mV',
 	'xStat': 'preMinPnt',
 	'xStatUnits': 'Points'
 	}
 statList['Post AP Min (mV)'] = {
+	'name': 'postMinVal',
+	'units': 'mV',
 	'yStat': 'postMinVal',
 	'yStatUnits': 'mV',
 	'xStat': 'postMinPnt',
@@ -61,6 +93,8 @@ statList['Post AP Min (mV)'] = {
 	}
 # todo: fix this
 statList['Early Diastolic Depol Rate (dV/s)'] = {
+	'name': 'earlyDiastolicDurationRate',
+	'units': 'dV/s',
 	'yStat': 'earlyDiastolicDurationRate',
 	'yStatUnits': 'dV/s',
 	'xStat': '',
@@ -68,6 +102,8 @@ statList['Early Diastolic Depol Rate (dV/s)'] = {
 	}
 # todo: fix this
 statList['Early Diastolic Duration (ms)'] = {
+	'name': 'earlyDiastolicDuration_ms',
+	'units': 'ms',
 	'yStat': 'earlyDiastolicDuration_ms',
 	'yStatUnits': 'dV/s',
 	'xStat': 'thresholdPnt',
@@ -75,24 +111,32 @@ statList['Early Diastolic Duration (ms)'] = {
 	}
 
 statList['Diastolic Duration (ms)'] = {
+	'name': 'diastolicDuration_ms',
+	'units': 'ms',
 	'yStat': 'diastolicDuration_ms',
 	'yStatUnits': 'dV/s',
 	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
 	}
 statList['Max AP Upstroke (mV)'] = {
+	'name': 'preSpike_dvdt_max_val',
+	'units': 'mV',
 	'yStat': 'preSpike_dvdt_max_val',
 	'yStatUnits': 'dV/s',
 	'xStat': 'preSpike_dvdt_max_pnt',
 	'xStatUnits': 'Points'
 	}
 statList['Max AP Upstroke (dV/dt)'] = {
+	'name': 'preSpike_dvdt_max_val2',
+	'units': 'dV/dt',
 	'yStat': 'preSpike_dvdt_max_val2',
 	'yStatUnits': 'dV/dt',
 	'xStat': 'preSpike_dvdt_max_pnt',
 	'xStatUnits': 'Points'
 	}
 statList['Max AP Repolarization (mV)'] = {
+	'name': 'postSpike_dvdt_min_val',
+	'units': 'mV',
 	'yStat': 'postSpike_dvdt_min_val',
 	'yStatUnits': 'mV',
 	'xStat': 'postSpike_dvdt_min_pnt',
@@ -100,6 +144,8 @@ statList['Max AP Repolarization (mV)'] = {
 	}
 # todo: fix this
 statList['AP Duration (ms)'] = {
+	'name': 'apDuration_ms',
+	'units': 'ms',
 	'yStat': 'apDuration_ms',
 	'yStatUnits': 'ms',
 	'xStat': 'thresholdPnt',
@@ -159,6 +205,56 @@ statList['Ca++ Width (ms)'] = {
 	'xStat': '',
 	'xStatUnits': ''
 	}
+
+def getHumanFromStat(statName):
+	"""Get human readable stat name from backend stat name."""
+	ret = ''
+	for k,v in statList.items():
+		name = v['name']
+		if name == statName:
+			ret = k
+			break
+	if ret =='':
+		logger.warning(f'Did not find "{statName}"')
+	#
+	return ret
+
+def getStatFromHuman(humanStat):
+	"""Get backend stat name from human readable stat."""
+	ret = ''
+	try:
+		ret = statList[humanStat]['name']
+	except (KeyError) as e:
+		logger.warning(f'Bad key "{humanStat}"')
+	#
+	return ret
+
+def _print():
+	"""
+	Print out human readable detection parameters and convert to markdown table
+
+	Requires:
+		pip install tabulate
+	"""
+	import pandas as pd
+
+	# statList is a dict with keys, one key per stat
+	d = statList
+
+	dictList = []
+	for k,v in d.items():
+		stat = k
+		oneDict = {
+			'Stat': stat,
+		}
+		for k2,v2 in v.items():
+			oneDict[k2] = v2
+
+		dictList.append(oneDict)
+	#
+	df = pd.DataFrame(dictList)
+	str = df.to_markdown()
+	print(str)
 
 class bAnalysisUtil:
 	def __init__(self):
@@ -346,14 +442,18 @@ class bAnalysisUtil:
 	'''
 
 if __name__ == '__main__':
-	# unit tests
-	bau = bAnalysisUtil()
-	print('dvdtThreshold:', bau.getDetectionParam('dvdtThreshold'))
-	print('minSpikeVm:', bau.getDetectionParam('minSpikeVm'))
-	print('medianFilter:', bau.getDetectionParam('medianFilter'))
-	bau.configSave()
 
-	bau.prettyPrint()
+	if 0:
+		# unit tests
+		bau = bAnalysisUtil()
+		print('dvdtThreshold:', bau.getDetectionParam('dvdtThreshold'))
+		print('minSpikeVm:', bau.getDetectionParam('minSpikeVm'))
+		print('medianFilter:', bau.getDetectionParam('medianFilter'))
+		bau.configSave()
+
+		bau.prettyPrint()
+
+	_print()
 
 	# abb removed 20201109, not using this, write a PyQt preferences panel
 	'''

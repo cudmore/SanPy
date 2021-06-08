@@ -404,9 +404,9 @@ class bExport():
 		#textFileHeader['condition1'] = self.ba.condition1
 		#textFileHeader['condition2'] = self.ba.condition2
 		#textFileHeader['condition3'] = self.ba.condition3
-		textFileHeader['cellType'] = self.ba.detectiondict['cellType']
-		textFileHeader['sex'] = self.ba.detectiondict['sex']
-		textFileHeader['condition'] = self.ba.detectiondict['condition']
+		textFileHeader['cellType'] = self.ba.detectionDict['cellType']
+		textFileHeader['sex'] = self.ba.detectionDict['sex']
+		textFileHeader['condition'] = self.ba.detectionDict['condition']
 		#
 		textFileHeader['dateAnalyzed'] = self.ba.dateAnalyzed
 		textFileHeader['detectionType'] = self.ba.detectionType

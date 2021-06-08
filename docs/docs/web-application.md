@@ -1,10 +1,9 @@
 The browser based web application provides the same interface for analysis as the desktop application.
 
-<IMG SRC="../img/app2-interface.png" width=700 border=1>
+<IMG SRC="../img/dash-june4.png" width=900 border=1>
 
 
 Once data is analyzed, Pooling allows browsing detection parameters across any number of files.
-
 
 <IMG SRC="../img/pymy-pooling.png" width=700 border=1>
 
@@ -14,7 +13,14 @@ Please note, this is experimental and does not have all functions implemented. P
 
 ```
 cd SanPy/dash
+
+python3 -m venv sanpy_dash
+source sanpy_dash/bin/activate
+
 pip install -r requirements.txt
+
+# install sanpy from local copy of repository
+pip install -e ../.
 ```
 
 ### Running the web applications
@@ -23,6 +29,7 @@ Run the web application to analyze raw data
 
 ```
 cd SanPy/dash
+source sanpy_dash/bin/activate
 python app2.py
 ```
 

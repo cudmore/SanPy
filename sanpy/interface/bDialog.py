@@ -28,3 +28,17 @@ def okCancelDialog(message, informativeText=None):
 	msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
 	retval = msg.exec_()
 	return retval
+
+def yesNoCancelDialog(message, informativeText=None):
+	msg = QtWidgets.QMessageBox()
+	msg.setIcon(QtWidgets.QMessageBox.Warning)
+	msg.setText(message)
+	if informativeText is not None:
+		msg.setInformativeText(informativeText)
+	msg.setWindowTitle(message)
+	msg.setStandardButtons(QtWidgets.QMessageBox.Yes | \
+							QtWidgets.QMessageBox.No | \
+							QtWidgets.QMessageBox.Cancel
+							)
+	retval = msg.exec_()
+	return retval
