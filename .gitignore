@@ -4,4 +4,14 @@
 __pycache__
 .pynb_checkpoints
 .ipynb_checkpoints
+
+# files fro grainger et al
+examples
+
+# mkdocs
 docs/site
+
+# client-server for flask-vue
+flask-vue/server/flask_env
+flask-vue/server/node_modules
+

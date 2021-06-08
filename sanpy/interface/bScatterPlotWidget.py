@@ -301,7 +301,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 
 		# xmin/xmax will always be time of recording in seconds
 		xMin = 0
-		xMax = self.myDetectionWidget.ba.abf.sweepX[-1]
+		xMax = self.myDetectionWidget.ba.sweepX[-1]
 		self._static_ax.set_xlim([xMin, xMax])
 
 		yMin = np.nanmin(yPlot)

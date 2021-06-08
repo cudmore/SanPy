@@ -215,13 +215,13 @@ class pandasModel(QtCore.QAbstractTableModel):
 
 	def setData(self, index, value, role=QtCore.Qt.EditRole):
 		"""
-		This is curently limited to only handle checkbox
+		Respond to user/keyboard edits
 
 		Returns:
 			True if value is changed. Calls layoutChanged after update.
 			False if value is not different from original value.
 		"""
-		print('pandasModel.setData() row:', index.row(), 'column:', index.column(), 'value:', value, type(value))
+		#print(f'pandasModel.setData() row:{index.row()} column:{index.column()} value:"{value}" {type(value)}')
 		if index.isValid():
 			if role == QtCore.Qt.EditRole:
 				row = index.row()
@@ -230,20 +230,21 @@ class pandasModel(QtCore.QAbstractTableModel):
 				v = self._data.iloc[row, column]
 				#print('before v:',v, type(v))
 				#print('isinstance:', isinstance(v, np.float64))
-				print(f'  existing value is v: "{v}" {type(v)}')
+				logger.info(f'Existing value is v: "{v}" {type(v)}')
 				if isinstance(v, np.float64):
 					try:
-						value = float(value)
+						if value == '':
+							value = np.nan
+						else:
+							value = float(value)
 					except (ValueError) as e:
-						print('  no action taken, please enter a number')
+						logger.info('No action -->> please enter a number')
 						return False
 				# set
-				print(f'  new value is {value} {type(value)}')
+				logger.info(f'New value is "{value}" {type(value)}')
 				self._data.iloc[row, column] = value
 
 				self.isDirty = True
-
-				#print('  after value:',value, type(value))
 				return True
 		#
 		return False

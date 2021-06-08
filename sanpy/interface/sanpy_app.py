@@ -6,11 +6,10 @@ from functools import partial
 from collections import OrderedDict
 import platform
 
+import numpy as np
 import pandas as pd
 
 import qdarkstyle
-
-import numpy as np
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -21,18 +20,15 @@ logger = get_logger(__name__)
 # This causes mkdocs to infinite recurse when running locally as 'mkdocs serve'
 #logger.info('SanPy app.py is starting up')
 
+# turn off qdarkstyle logging
 import logging
 logging.getLogger('qdarkstyle').setLevel(logging.WARNING)
 
 class MainWindow(QtWidgets.QMainWindow):
-	# 20210506, was this and is now randomly broken
-	'''
-	signalUpdateStatusBar = QtCore.Signal(object)
-	signalSetXAxis = QtCore.Signal(object)
-	signalSelectSpike = QtCore.Signal(object)
-	'''
-	# xxx
+
+	"""signalUpdateStatusBar (pyqtSignal): xxx"""
 	signalUpdateStatusBar = QtCore.pyqtSignal(object)
+
 	# yyy
 	signalSetXAxis = QtCore.pyqtSignal(object)
 	# zzz
@@ -40,7 +36,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def __init__(self, csvPath=None, path=None, parent=None):
 		"""
-		path: full path to folder with (abf,csv,tif) files
+		Args:
+			path (str): Full path to folder with raw file (abf,csv,tif).
 		"""
 
 		super(MainWindow, self).__init__(parent)
@@ -201,15 +198,15 @@ class MainWindow(QtWidgets.QMainWindow):
 		bad = sanpy.bAnalysisDir(path)
 		df = bad.df
 
+		self.path = path
+
 		# set df to model
 		self.myModel = sanpy.interface.bFileTable.pandasModel(df)
 		try:
 			self.tableView.setModel(self.myModel)
 		except (AttributeError) as e:
 			# needed when we call loadFolder from __init__
-			print('--- exception in loadFolder()')
-			print(e)
-			pass
+			logger.info('OK exception', e)
 
 	def selectSpike(self, spikeNumber, doZoom=False):
 		eDict = {}

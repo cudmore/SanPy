@@ -161,7 +161,16 @@ class bAnalysis:
 
 		dfCsv = pd.read_csv(self._path)
 
+		#print(dfCsv)
+
 		# TODO: check column names make sense
+		# There must be 2 columns ('s', 'mV')
+		numCols = len(dfCsv.columns)
+		if numCols != 2:
+			# error
+			logger.warning(f'There must be two columns, found {numCols}')
+			self.loadError = True
+			return
 
 		self.myFileType = 'csv'
 		self._sweepX = dfCsv['s'].values # first col is time

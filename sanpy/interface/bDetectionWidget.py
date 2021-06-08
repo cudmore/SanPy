@@ -155,7 +155,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 	def detect(self, dvdtThreshold, vmThreshold):
 		"""
-		detect spikes
+		Detect spikes
 		"""
 
 		if self.ba is None:
@@ -169,6 +169,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.updateStatusBar(f'Detecting spikes dvdt:{dvdtThreshold} minVm:{vmThreshold}')
 
+		# get default detection parammeters and tweek
 		detectionDict = self.ba.getDefaultDetection()
 		detectionDict['dvdtThreshold'] = dvdtThreshold
 		detectionDict['mvThreshold'] = vmThreshold
@@ -180,7 +181,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			# problem is these k/v have v that are mixture of str/float/int ... hard to parse
 			myDetectionDict = self.myMainWindow.getSelectedRowDict()
 
-			#print('  row detection dict is:')
+			#print('  bDetecctionWidget.detect() row detection dict is:')
 			#sanpy.bUtil.printDict(myDetectionDict, withType=True)
 
 			if myDetectionDict['refractory_ms'] > 0:
@@ -665,8 +666,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 			#self.myPlotList[idx].setSize(0)
 
 	def selectSpike(self, spikeNumber, doZoom=False, doEmit=False):
-		logger.info(f'spikeNumber: {spikeNumber}, doZoom {doZoom}')
-		# we will always use self.ba peak
+		if spikeNumber is not None:
+			logger.info(f'spikeNumber: {spikeNumber}, doZoom {doZoom}')
+		# we will always use self.ba ('peakSec', 'peakVal')
 		if self.ba is None:
 			return
 		if self.ba.numSpikes == 0:
@@ -712,7 +714,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# this returns x-axis in ms
 		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(xMin, xMax)
-		#print('refreshClips() theseClips:', theseClips, 'theseClips_x:', theseClips_x)
 		dataPointsPerMs = self.ba.dataPointsPerMs
 
 		# convert clips to 2d ndarray ???
@@ -763,12 +764,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 			#self.toggle_errorTable(on)
 			if self.myMainWindow is not None:
 				self.myMainWindow.toggleErrorTable(on)
-		#elif idx == 'Show Vm':
-		#	self.detectionWidget.toggle_vm(isChecked)
 		else:
-			# Toggle overlay of stats like spike peak.
-			# assuming item is int !!!
-			self.togglePlot(item, on)
+			# Toggle overlay of stats like (TOP, spike peak).
+			self.togglePlot(item, on) # assuming item is int !!!
 
 	def buildUI(self):
 		# left is toolbar, right is PYQtGraph (self.view)
@@ -1274,11 +1272,20 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		Set detection widget interface (mostly QSpinBox) to match values from table
 		"""
 
+		'''
+		print('fillInDetectionParameters()')
+		print('  tableRowDict:')
+		for k,v in tableRowDict.items():
+			print('  ', k, ':', v, type(v))
+		'''
+
 		dvdtThreshold = tableRowDict['dvdtThreshold']
 		mvThreshold = tableRowDict['mvThreshold']
 		startSeconds = tableRowDict['Start(s)']
 		stopSeconds = tableRowDict['Stop(s)']
 
+		# NOTE: This was fixed on loading .csv into pandas and converting columns to str or float
+		'''
 		# when number values are set to 'empty' they come in as str ''
 		if isinstance(dvdtThreshold,str) and len(dvdtThreshold)==0:
 			# empy dvdThreshold means detect with mV
@@ -1297,6 +1304,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			startSeconds = float(startSeconds)
 		if isinstance(mvThreshold, str):
 			stopSeconds = float(stopSeconds)
+		'''
+
+		# in table we specify 'nan' but float spin box will not show that
+		if np.isnan(dvdtThreshold):
+			dvdtThreshold = -1
 
 		self.dvdtThreshold.setValue(dvdtThreshold)
 		self.vmThreshold.setValue(mvThreshold)

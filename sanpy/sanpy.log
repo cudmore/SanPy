@@ -2740,3 +2740,1035 @@
 2021-06-08 11:23:24,273   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
 2021-06-08 11:23:30,730   INFO sanpy.interface.sanpy_app  sanpy_app.py slotSaveFilesTable() line:772 -- Saving folder csv as /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
 2021-06-08 11:24:27,628   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:147 -- SanPy is quiting
+2021-06-08 11:38:01,498   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:805 -- Python version is 3.7.9
+2021-06-08 11:38:01,647   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:817 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 11:38:01,648   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:821 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 11:38:01,695   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:564 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 11:38:01,696   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 11:38:01,697   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:188 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 11:38:01,697   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:165 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 11:38:02,046   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:120 -- SanPy started
+2021-06-08 11:38:06,352   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 11:38:06,474   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
+2021-06-08 11:40:13,976   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:147 -- SanPy is quiting
+2021-06-08 11:54:27,653   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 11:54:27,784   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 11:54:27,785   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 11:54:27,839   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 11:54:27,840   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 11:54:27,841   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 11:54:27,841   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:165 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 11:54:28,224   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 11:54:31,833   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data/19221014.abf
+2021-06-08 11:54:31,875   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
+2021-06-08 11:54:58,621   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 11:54:58,754   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
+2021-06-08 11:55:08,782   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 11:55:08,908   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
+2021-06-08 11:55:11,036   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 11:55:11,184   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
+2021-06-08 11:58:45,838   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 11:58:51,943   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 11:58:52,069   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 11:58:52,070   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 11:58:52,115   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 11:58:52,116   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 11:58:52,116   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 11:58:52,117   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:165 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 11:58:52,461   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 11:58:56,488   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 11:58:56,607   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
+2021-06-08 11:59:04,122   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 11:59:04,242   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
+2021-06-08 11:59:06,630   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 11:59:06,724   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
+2021-06-08 12:00:04,364   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 12:04:40,994   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 12:04:41,177   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 12:04:41,181   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 12:04:41,234   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 12:04:41,235   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 12:04:41,235   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 12:04:41,236   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:143 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 12:04:41,555   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 12:06:19,557   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 12:06:19,674   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
+2021-06-08 12:06:33,834   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 12:06:33,958   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
+2021-06-08 12:06:35,461   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 12:06:35,552   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:668 -- spikeNumber: None, doZoom False
+2021-06-08 12:10:45,121   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:None vmThreshold:-20.0
+2021-06-08 12:10:45,122   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:178 -- get detection parameters from main window table
+2021-06-08 12:10:45,124   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:960 -- start detection
+2021-06-08 12:10:45,183   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:647 -- From 103 to 103 spikes with refractory_ms:170
+2021-06-08 12:10:45,717  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:583 -- spike 23 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 12:10:45,849   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1651 -- Found 1 errors in spike detection
+2021-06-08 12:13:19,001   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 12:13:22,537   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 12:13:22,667   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 12:13:22,669   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 12:13:22,714   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 12:13:22,715   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 12:13:22,715   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 12:13:22,715   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:143 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 12:13:23,092   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 12:13:24,767   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 12:13:24,868   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 12:14:20,097   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 12:14:24,885   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 12:14:25,024   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 12:14:25,026   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 12:14:25,077   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 12:14:25,078   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 12:14:25,078   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 12:14:25,079   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:143 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 12:14:25,626   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 12:15:52,072   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 12:15:52,166   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 12:19:03,782   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 12:19:31,357   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 12:19:31,494   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 12:19:31,496   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 12:19:31,548   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 12:19:31,548   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 12:19:31,549   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 12:19:31,549   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:143 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 12:19:31,890   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 12:19:54,206   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 12:19:54,335   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 12:22:03,321   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19221014.abf
+2021-06-08 12:22:03,375   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 12:22:04,419   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 12:22:04,514   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 12:25:13,626   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 12:25:13,737   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 12:25:22,275   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 12:25:22,277   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 12:25:22,763   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 12:28:56,072   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 12:29:10,596   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 12:29:10,775   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 12:29:10,776   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 12:29:10,826   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 12:29:10,827   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 12:29:10,828   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 12:29:10,828   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:174 -- Did not find existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 12:29:10,829   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:175 -- Making default folder db
+2021-06-08 12:29:10,960   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 12:29:11,904   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 12:30:43,089   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 12:30:43,230   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 12:30:43,232   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 12:30:43,272   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 12:30:43,272   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 12:30:43,273   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 12:30:43,273   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:174 -- Did not find existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 12:30:43,273   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:175 -- Making default folder db
+2021-06-08 12:30:43,405   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 12:30:44,646   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 12:33:26,120   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 12:33:26,265   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 12:33:26,266   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 12:33:26,315   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 12:33:26,316   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 12:33:26,317   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 12:33:26,317   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:176 -- Did not find existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 12:33:26,317   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:177 -- Making default folder db
+2021-06-08 12:33:26,460   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 12:33:27,750   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 12:41:40,992   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 12:41:41,113   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 12:41:41,114   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 12:41:41,154   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 12:41:41,155   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 12:41:41,155   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 12:41:41,155   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:181 -- Did not find existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 12:41:41,155   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:182 -- Making default folder db
+2021-06-08 12:41:41,281   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 12:41:42,120   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 12:41:42,127  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 12:41:42,127   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 12:43:41,789   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 12:43:41,912   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 12:43:41,914   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 12:43:41,959   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 12:43:41,960   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 12:43:41,961   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 12:43:41,961   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:185 -- Did not find existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 12:43:41,961   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:186 -- Making default folder db
+2021-06-08 12:43:42,094   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 12:43:43,004   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 12:43:43,011  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 12:43:43,012   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 12:43:43,012  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:96 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 12:43:43,599   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 12:43:46,558   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 12:43:46,561   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 12:44:48,745   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 13:08:56,874   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 13:09:01,471   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:09:01,608   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:09:01,608   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:09:01,647   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:09:01,647   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:09:01,648   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:09:01,648   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:185 -- Did not find existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:09:01,648   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:186 -- Making default folder db
+2021-06-08 13:09:01,770   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:09:02,778   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:09:02,784  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:09:02,784   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:09:02,785  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:96 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:09:03,131   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 13:09:38,539   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 13:09:48,495   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 13:12:10,328   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 13:12:14,891   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:12:15,008   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:12:15,010   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:12:15,057   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:12:15,057   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:12:15,058   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:12:15,058   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:189 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:12:15,058   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:190 -- Making default folder db
+2021-06-08 13:12:15,192   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:12:16,177   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:12:16,184  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:12:16,184   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:12:16,185  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:96 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:12:16,619   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 13:12:19,039   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 13:12:41,926   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 13:12:47,703   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 13:12:59,847   INFO sanpy.interface.sanpy_app  sanpy_app.py slotSaveFilesTable() line:769 -- Saving folder csv as /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:13:09,244   INFO sanpy.interface.sanpy_app  sanpy_app.py slotSaveFilesTable() line:769 -- Saving folder csv as /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:13:11,936   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 13:13:15,958   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:13:16,064   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:13:16,066   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:13:16,108   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:13:16,109   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:13:16,110   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:13:16,110   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:164 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:13:16,458   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 13:13:19,070   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 13:13:19,179   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:13:21,272   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 13:14:24,839   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:14:25,019   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:14:25,021   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:14:25,059   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:14:25,060   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:14:25,060   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:14:25,060   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:189 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:14:25,061   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:190 -- Making default folder db
+2021-06-08 13:14:25,198   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:14:26,292   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:14:26,298  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:14:26,299   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:14:26,299  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:96 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:17:41,717   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:17:41,891   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:17:41,893   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:17:41,942   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:17:41,942   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:17:41,943   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:17:41,943   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:189 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:17:41,943   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:190 -- Making default folder db
+2021-06-08 13:17:42,087   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:17:42,970   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:17:42,975  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:17:42,976   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:17:42,976  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:96 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:18:48,332   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:18:48,461   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:18:48,462   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:18:48,505   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:18:48,505   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:18:48,506   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:18:48,506   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:189 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:18:48,506   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:190 -- Making default folder db
+2021-06-08 13:18:48,654   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:18:49,848   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:18:49,853  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:18:49,854   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:18:49,854  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:96 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:19:49,752   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:19:49,911   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:19:49,913   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:19:49,960   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:19:49,960   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:19:49,961   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:19:49,961   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:189 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:19:49,961   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:190 -- Making default folder db
+2021-06-08 13:19:50,111   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:19:50,997   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:19:51,005  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:19:51,006   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:19:51,006  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:96 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:21:33,245   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:21:33,367   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:21:33,368   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:21:33,402   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:21:33,403   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:21:33,403   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:21:33,404   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:189 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:21:33,404   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:190 -- Making default folder db
+2021-06-08 13:21:33,535   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:21:34,609   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:21:34,614  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:21:34,614   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:21:34,615  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:96 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:23:56,673   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:23:56,803   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:23:56,804   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:23:56,848   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:23:56,848   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:23:56,849   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:23:56,849   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:189 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:23:56,849   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:190 -- Making default folder db
+2021-06-08 13:23:56,995   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:23:58,252   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:23:58,260  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:23:58,262   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:23:58,263  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:96 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:24:18,501   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:24:18,688   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:24:18,690   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:24:18,729   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:24:18,730   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:24:18,731   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:24:18,731   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:189 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:24:18,731   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:190 -- Making default folder db
+2021-06-08 13:24:18,873   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:24:19,717   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:24:19,724  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:24:19,724   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:24:19,724  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:96 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:28:37,318   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:28:37,634   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:28:37,634   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:28:37,697   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:28:37,697   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:28:37,698   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:28:37,699   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:192 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:28:37,699   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:193 -- Making default folder db
+2021-06-08 13:28:37,963   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:28:38,860   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:28:38,867  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:28:38,867   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:28:38,868  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:99 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:30:31,991   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:30:32,118   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:30:32,120   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:30:32,169   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:30:32,170   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:30:32,170   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:30:32,171   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:192 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:30:32,171   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:193 -- Making default folder db
+2021-06-08 13:30:32,313   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:30:33,270   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:30:33,279  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:30:33,281   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:30:33,281  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:99 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:34:04,313   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:34:04,463   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:34:04,465   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:34:04,506   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:34:04,506   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:34:04,507   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:34:04,507   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:193 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:34:04,508   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:194 -- Making default folder db
+2021-06-08 13:34:04,643   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:34:05,543   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:34:05,548  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:34:05,548   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:34:05,548  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:99 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:35:10,415   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:35:10,547   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:35:10,549   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:35:10,592   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:35:10,593   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:35:10,593   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:35:10,593   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:193 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:35:10,594   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:194 -- Making default folder db
+2021-06-08 13:35:10,739   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:35:11,729   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:35:11,735  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:35:11,735   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:35:11,735  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:99 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:35:50,624   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:35:50,769   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:35:50,770   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:35:50,812   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:35:50,813   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:35:50,813   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:35:50,814   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:193 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:35:50,814   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:194 -- Making default folder db
+2021-06-08 13:35:50,960   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:35:51,844   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:35:51,850  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:35:51,850   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:35:51,851  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:99 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:39:58,803   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:39:58,975   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:39:58,977   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:39:59,017   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:39:59,017   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:39:59,018   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:39:59,018   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:200 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:39:59,018   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:201 -- Making default folder db
+2021-06-08 13:40:12,561   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:40:12,765   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:40:12,768   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:40:12,847   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:40:12,850   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:40:12,850   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:40:12,851   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:200 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:40:12,851   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:201 -- Making default folder db
+2021-06-08 13:40:13,126   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:40:14,057   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:40:14,063  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:40:14,064   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:40:14,064  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:99 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:40:14,600   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 13:40:19,907   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19221014.abf
+2021-06-08 13:40:19,953   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:40:22,022   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 13:40:22,151   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:40:28,486   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 13:40:28,623   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:40:31,156   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 13:40:31,267   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:40:37,588   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:None vmThreshold:-20.0
+2021-06-08 13:40:37,590   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-08 13:40:55,859   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 13:41:25,198   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:41:25,333   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:41:25,335   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:41:25,384   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:41:25,385   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:41:25,385   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:41:25,386   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:200 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:41:25,386   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:201 -- Making default folder db
+2021-06-08 13:41:25,535   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:41:26,618   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:41:26,643  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:41:26,644   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:41:26,644  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:99 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:41:27,232   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 13:41:29,477   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 13:41:29,596   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:41:32,878   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:20.0 vmThreshold:-20.0
+2021-06-08 13:41:32,880   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-08 13:41:32,881   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:969 -- start detection
+2021-06-08 13:41:32,934   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:656 -- From 769 to 103 spikes with refractory_ms:170
+2021-06-08 13:41:33,000   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1660 -- Found 53 errors in spike detection
+2021-06-08 13:41:40,690   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-08 13:41:40,691   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-08 13:41:40,694   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:969 -- start detection
+2021-06-08 13:41:40,739   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:656 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-08 13:41:40,819   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1660 -- Found 1 errors in spike detection
+2021-06-08 13:41:54,300   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:41:54,318   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:41:54,982   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:42:00,771   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 13:42:01,033   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:42:02,833   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:42:02,837   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:42:03,482   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:42:06,989   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-08 13:42:06,990   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-08 13:42:06,992   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:969 -- start detection
+2021-06-08 13:42:07,036   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:656 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-08 13:42:07,123   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1660 -- Found 1 errors in spike detection
+2021-06-08 13:42:19,455   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py save() line:259 -- savefile: /Users/cudmore/Desktop/19114001_b0_00_e60_00.xlsx
+2021-06-08 13:42:19,456   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py save() line:260 -- xMin:0.0 xMax:60.0 alsoSaveTxt:False
+2021-06-08 13:43:26,189   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 13:43:31,648   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:43:31,789   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:43:31,789   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:43:31,837   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:43:31,838   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:43:31,838   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:43:31,838   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:200 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:43:31,839   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:201 -- Making default folder db
+2021-06-08 13:43:31,979   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:43:32,908   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:43:32,914  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:43:32,914   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:43:32,914  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:99 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:43:33,351   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 13:44:32,547   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 13:44:37,584   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 13:44:37,734   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 13:44:37,735   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 13:44:37,781   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 13:44:37,782   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 13:44:37,782   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 13:44:37,783   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:200 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 13:44:37,783   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:201 -- Making default folder db
+2021-06-08 13:44:37,926   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:44:38,782   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:44:38,788  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 13:44:38,788   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:44:38,789  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:99 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 13:44:39,200   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 13:45:03,220   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:45:03,225   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:45:03,700   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:45:18,193   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 13:45:18,305   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:45:19,983   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:45:19,987   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 13:45:20,484   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:45:28,803   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-08 13:45:28,805   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-08 13:45:28,807   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:969 -- start detection
+2021-06-08 13:45:28,848   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:656 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-08 13:45:28,931   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1660 -- Found 1 errors in spike detection
+2021-06-08 13:51:07,503   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19221014.abf
+2021-06-08 13:51:07,762   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:51:09,397   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-08 13:51:09,822   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:51:19,297   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19114000.abf
+2021-06-08 13:51:19,546   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:54:43,629   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/19221014.abf
+2021-06-08 13:54:43,823   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:669 -- spikeNumber: None, doZoom False
+2021-06-08 13:54:51,709   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: False
+2021-06-08 13:55:05,851   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:200 -- No existing folder db /Users/cudmore/data/laura-ephys/SAN AP/sanpy_recording_db.csv
+2021-06-08 13:55:05,851   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:201 -- Making default folder db
+2021-06-08 13:55:14,127   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/data/laura-ephys/SAN AP/20191009_0007_s0_00_s34_15_clip.csv
+2021-06-08 13:55:14,176  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 3
+2021-06-08 13:55:14,180   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:55:14,180  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:99 -- /Users/cudmore/data/laura-ephys/SAN AP/20191009_0007_s0_00_s34_15_clip.csv
+2021-06-08 13:55:27,574   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 13:55:27,575  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:99 -- /Users/cudmore/data/laura-ephys/SAN AP/000-bad.abf
+2021-06-08 13:55:43,216   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/Sites/SanPy/data/20191016_0000.abf
+2021-06-08 13:55:43,216  ERROR sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:398 -- Did not find file: /Users/cudmore/Sites/SanPy/data/20191016_0000.abf
+2021-06-08 14:00:29,583   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 14:00:35,139   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:804 -- Python version is 3.7.9
+2021-06-08 14:00:35,329   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:816 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 14:00:35,329   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:820 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 14:00:35,380   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:563 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 14:00:35,381   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 14:00:35,381   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 14:00:35,382   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:201 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 14:00:35,382   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:202 -- Making default folder db
+2021-06-08 14:00:35,501   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 14:00:36,308   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 14:00:36,314  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 14:00:36,314   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 14:00:36,314  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:100 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 14:00:36,893   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 14:00:45,827   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: False
+2021-06-08 14:01:02,644   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:201 -- No existing folder db /Users/cudmore/data/laura-ephys/SAN AP/sanpy_recording_db.csv
+2021-06-08 14:01:02,644   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:202 -- Making default folder db
+2021-06-08 14:01:10,560   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/data/laura-ephys/SAN AP/20191009_0007_s0_00_s34_15_clip.csv
+2021-06-08 14:01:10,604  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 3
+2021-06-08 14:01:10,607   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 14:01:10,607  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:100 -- /Users/cudmore/data/laura-ephys/SAN AP/20191009_0007_s0_00_s34_15_clip.csv
+2021-06-08 14:01:25,833   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 14:01:25,834  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:100 -- /Users/cudmore/data/laura-ephys/SAN AP/000-bad.abf
+2021-06-08 14:01:39,984   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/data/laura-ephys/SAN AP/2020_10_29_0000.abf
+2021-06-08 14:01:53,348   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting
+2021-06-08 14:07:45,976   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:802 -- Python version is 3.7.9
+2021-06-08 14:07:46,217   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:814 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-08 14:07:46,218   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:818 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons/sanpy_transparent.png
+2021-06-08 14:07:46,294   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:561 -- Loading json options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-08 14:07:46,295   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:71 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-08 14:07:46,296   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-08 14:07:46,296   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:203 -- No existing folder db /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-08 14:07:46,296   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:204 -- Making default folder db
+2021-06-08 14:07:46,505   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/19114001.csv
+2021-06-08 14:07:47,339   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 14:07:47,345  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 17
+2021-06-08 14:07:47,345   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 14:07:47,345  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:100 -- /Users/cudmore/Sites/SanPy/data/!sanpy_recording_db.csv
+2021-06-08 14:07:47,733   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:117 -- SanPy started
+2021-06-08 14:08:09,203   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:185 -- Loading path: False
+2021-06-08 14:08:22,534   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:203 -- No existing folder db /Users/cudmore/data/laura-ephys/SAN AP/sanpy_recording_db.csv
+2021-06-08 14:08:22,534   INFO sanpy.bAnalysisDir  bAnalysisDir.py loadFolder() line:204 -- Making default folder db
+2021-06-08 14:08:30,628   INFO sanpy.bAnalysis  bAnalysis.py _loadCsv() line:160 -- /Users/cudmore/data/laura-ephys/SAN AP/20191009_0007_s0_00_s34_15_clip.csv
+2021-06-08 14:08:30,669  WARNING sanpy.bAnalysis  bAnalysis.py _loadCsv() line:171 -- There must be two columns, found 3
+2021-06-08 14:08:30,672   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 14:08:30,672  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:100 -- /Users/cudmore/data/laura-ephys/SAN AP/20191009_0007_s0_00_s34_15_clip.csv
+2021-06-08 14:08:45,530   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-08 14:08:45,531  ERROR sanpy.bAnalysisDir  bAnalysisDir.py getFileRow() line:100 -- /Users/cudmore/data/laura-ephys/SAN AP/000-bad.abf
+2021-06-08 14:09:20,023   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/data/laura-ephys/SAN AP/2020_07_20_0003.abf
+2021-06-08 14:09:22,938   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/data/laura-ephys/SAN AP/2020_06_23_0002.abf
+2021-06-08 14:09:28,265   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/data/laura-ephys/SAN AP/2020_10_29_0000.abf
+2021-06-08 14:09:33,483   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/data/laura-ephys/SAN AP/2020_10_29_0001.abf
+2021-06-08 14:09:36,489   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/data/laura-ephys/SAN AP/2020_06_11_0000.abf
+2021-06-08 14:09:38,275   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/data/laura-ephys/SAN AP/2020_06_25_0002.abf
+2021-06-08 14:09:46,966   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:2.0 vmThreshold:-20.0
+2021-06-08 14:09:46,970   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-08 14:09:46,972   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:969 -- start detection
+2021-06-08 14:09:47,059   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:656 -- From 109 to 24 spikes with refractory_ms:170
+2021-06-08 14:09:47,077   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1660 -- Found 3 errors in spike detection
+2021-06-08 14:09:52,559   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/data/laura-ephys/SAN AP/2020_06_11_0000.abf
+2021-06-08 14:09:55,200   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/data/laura-ephys/SAN AP/2020_06_25_0002.abf
+2021-06-08 14:09:59,414   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/data/laura-ephys/SAN AP/2020_09_01_0000.abf
+2021-06-08 14:10:05,022   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:20.0 vmThreshold:-20.0
+2021-06-08 14:10:05,023   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-08 14:10:05,025   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:969 -- start detection
+2021-06-08 14:10:05,162   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:656 -- From 207 to 201 spikes with refractory_ms:170
+2021-06-08 14:10:05,280   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1660 -- Found 1 errors in spike detection
+2021-06-08 14:10:20,792   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 -- path: /Users/cudmore/data/laura-ephys/SAN AP/20191209_0003.abf
+2021-06-08 14:10:36,699   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:None vmThreshold:-20.0
+2021-06-08 14:10:36,702   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-08 14:10:36,704   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:969 -- start detection
+2021-06-08 14:10:36,936   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:656 -- From 1032 to 846 spikes with refractory_ms:170
+2021-06-08 14:10:38,510  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 0 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,511  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 2 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,514  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 9 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,516  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 13 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,516  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 14 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,517  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 15 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,518  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 18 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,519  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 20 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,520  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 22 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,522  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 24 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,523  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 25 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,525  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 28 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,527  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 31 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,527  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 32 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,528  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 33 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,531  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 37 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,533  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 40 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,535  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 44 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,536  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 46 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,537  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 47 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,538  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 49 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,539  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 53 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,540  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 55 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,542  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 59 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,544  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 60 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,545  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 61 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,547  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 64 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,548  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 66 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,549  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 67 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,551  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 68 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,552  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 69 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,555  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 75 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,561  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 83 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,563  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 87 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,565  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 90 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,566  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 92 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,567  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 93 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,568  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 94 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,572  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 101 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,574  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 106 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,575  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 108 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,576  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 110 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,578  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 114 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,580  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 116 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,582  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 122 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,583  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 123 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,584  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 125 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,585  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 126 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,587  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 129 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,589  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 130 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,589  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 131 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,591  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 132 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,593  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 133 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,594  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 134 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,594  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 135 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,595  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 136 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,595  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 137 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,596  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 139 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,599  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 145 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,600  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 147 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,601  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 148 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,602  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 149 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,609  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 157 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,611  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 159 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,614  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 161 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,615  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 162 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,620  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 166 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,620  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 167 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,625  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 173 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,629  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 178 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,630  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 180 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,630  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 181 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,631  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 182 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,636  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 187 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,637  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 188 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,637  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 189 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,638  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 191 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,639  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 192 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,641  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 194 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,643  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 198 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,644  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 199 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,651  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 209 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,652  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 211 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,653  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 213 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,654  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 214 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,660  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 221 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,662  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 224 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,663  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 225 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,663  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 226 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,664  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 227 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,665  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 228 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,666  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 229 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,667  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 230 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,667  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 231 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,671  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 235 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,672  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 236 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,674  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 238 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,675  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 240 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,680  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 246 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,683  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 249 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,685  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 252 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,686  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 254 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,687  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 256 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,690  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 260 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,692  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 262 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,694  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 265 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,701  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 276 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,702  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 277 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,705  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 280 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,710  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 282 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,714  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 286 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,715  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 288 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,716  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 289 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,717  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 291 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,718  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 292 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,719  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 293 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,721  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 296 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,722  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 297 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,723  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 298 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,725  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 300 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,727  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 303 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,728  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 304 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,729  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 306 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,731  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 308 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,734  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 312 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,739  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 320 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,740  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 321 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,741  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 322 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,741  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 323 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,743  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 325 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,744  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 326 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,744  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 327 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,745  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 328 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,747  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 330 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,747  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 331 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,754  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 343 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,756  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 345 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,758  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 347 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,760  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 349 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,761  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 350 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,762  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 351 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,763  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 352 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,764  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 353 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,764  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 354 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,765  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 355 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,765  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 356 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,766  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 358 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,768  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 360 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,769  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 361 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,770  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 363 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,771  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 364 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,771  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 365 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,772  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 366 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,773  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 368 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,775  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 370 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,776  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 371 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,777  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 372 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,778  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 374 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,784  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 381 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,785  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 383 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,789  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 387 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,789  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 388 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,791  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 390 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,792  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 391 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,793  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 393 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,794  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 395 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,795  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 396 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,797  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 398 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,804  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 408 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,806  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 411 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,806  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 412 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,807  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 414 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,808  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 415 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,812  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 420 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,817  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 425 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,819  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 427 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,820  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 428 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,821  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 430 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,825  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 435 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,825  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 436 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,827  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 438 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,828  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 440 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,830  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 444 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,831  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 446 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,833  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 450 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,834  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 452 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,837  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 455 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,837  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 456 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,839  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 458 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,840  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 459 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,840  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 460 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,842  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 462 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,843  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 463 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,843  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 464 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,844  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 465 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,845  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 467 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,847  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 469 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,849  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 473 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,850  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 476 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,851  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 477 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,851  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 478 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,852  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 479 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,853  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 480 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,855  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 483 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,856  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 484 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,857  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 486 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,860  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 490 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,860  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 491 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,862  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 495 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,864  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 497 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,865  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 498 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,867  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 500 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,867  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 501 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,868  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 502 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,869  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 504 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,871  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 508 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:10:38,871  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 509 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,872  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 511 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,875  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 515 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,877  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 517 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,878  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 519 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,884  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 526 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,885  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 530 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,890  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 536 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,893  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 540 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,894  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 541 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,895  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 543 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,896  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 544 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,897  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 545 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,900  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 549 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,902  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 553 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,903  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 554 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,903  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 555 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,905  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 558 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,905  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 559 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,906  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 560 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,909  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 564 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,910  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 566 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,913  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 571 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,913  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 572 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:38,915  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 574 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,918  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 579 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,921  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 583 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,926  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 588 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,931  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 597 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,936  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 604 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,938  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 607 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,942  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 613 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,950  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 617 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,951  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 618 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,962  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 633 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,963  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 635 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,968  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 641 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,975  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 651 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,976  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 652 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,978  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 655 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,982  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 659 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,985  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 662 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,988  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 667 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,989  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 668 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,992  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 672 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:38,993  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 673 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:38,994  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 674 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,996  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 676 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,997  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 677 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:38,999  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 681 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,001  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 683 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,002  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 684 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:39,004  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 687 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,011  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 696 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,016  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 700 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,018  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 703 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,021  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 707 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,022  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 708 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,025  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 712 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,027  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 714 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,028  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 715 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,028  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 716 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,029  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 717 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,030  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 718 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,031  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 720 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,033  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 724 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,035  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 726 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,036  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 727 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,040  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 733 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:39,041  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 735 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:10:39,042  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 737 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,044  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 740 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,046  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 742 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,048  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 744 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:39,048  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 745 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,051  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 748 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,052  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 750 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:39,054  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 752 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,058  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 756 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,060  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 760 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,061  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 761 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:39,062  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 762 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:39,070  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 772 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:10:39,081  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 781 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,093  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 786 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,095  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 788 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,096  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 789 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,100  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 794 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,103  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 801 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,103  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 802 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,108  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 808 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,111  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 812 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:10:39,113  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 814 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,133  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 833 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:10:39,139  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 842 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:13,954   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:None vmThreshold:-10.0
+2021-06-08 14:11:13,956   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-08 14:11:13,958   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:969 -- start detection
+2021-06-08 14:11:14,189   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:656 -- From 959 to 812 spikes with refractory_ms:170
+2021-06-08 14:11:15,447  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 0 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,451  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 4 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,454  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 8 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,458  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 13 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,474  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 32 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:11:15,478  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 38 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:11:15,480  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 41 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:11:15,483  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 44 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,485  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 46 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,492  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 50 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,493  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 51 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,498  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 57 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,520  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 83 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,530  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 94 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,531  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 95 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,533  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 97 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,537  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 98 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,547  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 107 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,623  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 129 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,626  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 132 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,628  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 134 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,628  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 135 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,629  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 136 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,636  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 145 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,643  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 153 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,652  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 164 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,656  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 168 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,666  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 177 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,669  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 180 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,698  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 197 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,712  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 210 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,723  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 222 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,733  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 232 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,734  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 233 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,739  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 238 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:11:15,741  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 241 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:11:15,743  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 243 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,751  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 252 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,753  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 256 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,754  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 257 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,760  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 264 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,761  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 265 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,764  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 267 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,771  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 281 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,773  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 283 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,779  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 293 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,784  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 300 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,790  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 306 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,796  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 314 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,798  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 318 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,799  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 321 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:11:15,800  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 324 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:11:15,801  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 326 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,804  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 332 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:11:15,806  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 335 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:11:15,810  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 340 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,814  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 344 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,817  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 347 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,820  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 351 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,821  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 352 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,823  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 356 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,825  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 358 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,833  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 366 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,855  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 393 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,870  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 413 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,880  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 426 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,887  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 440 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,889  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 443 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,890  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 444 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,891  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 445 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,893  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 448 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,894  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 449 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,899  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 454 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,900  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 457 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,901  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 458 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:11:15,910  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 478 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,912  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 481 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,914  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 484 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,916  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 486 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,918  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 489 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,920  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 492 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:11:15,921  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 493 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,923  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 496 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,924  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 499 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:11:15,925  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 500 backupNumPnts:-1 < moveForwardPnts:4
+2021-06-08 14:11:15,926  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 501 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,930  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 509 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,933  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 514 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,934  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 515 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,935  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 517 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,944  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 530 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,947  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 536 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,948  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 537 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:15,949  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 540 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,957  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 547 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,969  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 558 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,974  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 563 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:15,977  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 568 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,984  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 575 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:11:15,985  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 577 backupNumPnts:0 < moveForwardPnts:4
+2021-06-08 14:11:15,989  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 582 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,018  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 622 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:11:16,039  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 647 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,040  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 648 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:16,048  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 659 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:16,050  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 662 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,061  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 672 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:16,074  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 678 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:16,082  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 683 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,090  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 691 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,091  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 692 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,093  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 694 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,100  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 698 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,103  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 701 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,117  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 715 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,119  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 717 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:16,121  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 720 backupNumPnts:1 < moveForwardPnts:4
+2021-06-08 14:11:16,122  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 722 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:16,124  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 724 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,129  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 730 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,134  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 739 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:16,142  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 747 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,231  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 799 backupNumPnts:3 < moveForwardPnts:4
+2021-06-08 14:11:16,357  WARNING sanpy.bAnalysis  bAnalysis.py _backupSpikeVm() line:592 -- spike 810 backupNumPnts:2 < moveForwardPnts:4
+2021-06-08 14:11:17,115   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1660 -- Found 35 errors in spike detection
+2021-06-08 14:12:07,762   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:5.0 vmThreshold:-10.0
+2021-06-08 14:12:07,763   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-08 14:12:07,766   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:969 -- start detection
+2021-06-08 14:12:08,080   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:656 -- From 9482 to 1027 spikes with refractory_ms:170
+2021-06-08 14:12:08,650   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1660 -- Found 575 errors in spike detection
+2021-06-08 14:12:33,292   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:8.0 vmThreshold:-10.0
+2021-06-08 14:12:33,294   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-08 14:12:33,297   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:969 -- start detection
+2021-06-08 14:12:33,491   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:656 -- From 2729 to 771 spikes with refractory_ms:170
+2021-06-08 14:12:33,961   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1660 -- Found 38 errors in spike detection
+2021-06-08 14:12:56,349   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 382, doZoom False
+2021-06-08 14:12:58,588   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 382, doZoom True
+2021-06-08 14:15:35,311   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:144 -- SanPy is quiting

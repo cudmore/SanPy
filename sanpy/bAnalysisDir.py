@@ -11,7 +11,11 @@ import sanpy
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-# Columns to use in display in table (pyqt, dash, vue)
+"""
+Columns to use in display in file table (pyqt, dash, vue).
+We require type so we can edit with QAbstractTableModel.
+Critical for qt interface to allow easy editing of values while preserving type
+"""
 sanpyColumns = {
 	'Idx': {
 		#'type': int,
@@ -68,34 +72,22 @@ sanpyColumns = {
 	},
 
 }
-print('sanpyColumns:', sanpyColumns)
 
-'''
-sanpyColumns = [
-'Idx',
-'Include',
-'File', # immutable
-'Dur(s)', # immutable
-'kHz', # immutable
-'Mode', # immutable
-'Cell Type',
-'Sex',
-'Condition',
-'Start(s)',
-'Stop(s)',
-'dvdtThreshold', # detection
-'mvThreshold',
-'refractory_ms',
-'peakWindow_ms',
-'halfWidthWindow_ms',
-'Notes'
-]
-'''
-
+# file types we will load
 theseFileTypes = ['.abf', '.csv', '.tif']
 
-def getFileRow(path):
-	"""Get dict representing one file (row in table)."""
+def getFileRow(path, rowIdx=None):
+	"""
+	Get dict representing one file (row in table).
+
+	Args:
+		path (Str): Full path to file.
+		rowIdx (int): Optional row index to assign in column 'Idx'
+
+	Return:
+		dict: On success, otherwise None
+				fails when path does not lead to valid bAnalysis file.
+	"""
 	if not os.path.isfile(path):
 		logger.error(path)
 		return None
@@ -104,7 +96,23 @@ def getFileRow(path):
 
 	ba = sanpy.bAnalysis(path)
 
+	if ba.loadError:
+		logger.error(path)
+		return None
+
+	# not sufficient to default everything to empty str ''
+	# sanpyColumns can only have type in ('float', 'str')
 	rowDict = dict.fromkeys(sanpyColumns.keys() , '')
+	for k in rowDict.keys():
+		if sanpyColumns[k]['type'] == str:
+			rowDict[k] = ''
+		elif sanpyColumns[k]['type'] == float:
+			rowDict[k] = np.nan
+
+	if rowIdx is not None:
+		rowDict['Idx'] = rowIdx
+
+	rowDict['Include'] = 1 # causes error if not here !!!!, can't be string
 	rowDict['File'] = os.path.split(ba.path)[1]
 	rowDict['Dur(s)'] = ba.recodingDur
 	rowDict['kHz'] = ba.recordingFrequency
@@ -120,6 +128,9 @@ def getFileList(path):
 	for file in os.listdir(path):
 		if file.startswith('.'):
 			continue
+		#if file == 'sanpy_recording_db.csv':
+		#	continue
+
 		# tmpExt is like .abf, .csv, etc
 		tmpFileName, tmpExt = os.path.splitext(file)
 		if tmpExt in theseFileTypes:
@@ -132,7 +143,7 @@ class bAnalysisDir():
 	"""
 	Class to manage a list of files loaded from a folder
 	"""
-	def __init__(self, path, autoLoad=True):
+	def __init__(self, path, myApp=None, autoLoad=True):
 		"""
 		Initialize with a path to folder
 
@@ -140,8 +151,10 @@ class bAnalysisDir():
 
 		Args:
 			path (str): Path to folder
+			myApp (sanpy_app): Optional
 		"""
 		self.path = path
+		self.myApp = myApp # used to signal on building initial db
 		self.fileList = [] # list of dict
 		self.df = None
 		if autoLoad:
@@ -166,6 +179,8 @@ class bAnalysisDir():
 			df = pd.read_csv(dbPath, header=0, index_col=False)
 
 			#df["Idx"] = pd.to_numeric(df["Idx"])
+			df = self._setColumnType(df)
+			'''
 			for col in df.columns:
 				colType = sanpyColumns[col]['type']
 				if  colType == str:
@@ -177,14 +192,18 @@ class bAnalysisDir():
 					df[col] = df[col].astype(float)
 				elif colType == bool:
 					df[col] = df[col].astype(bool)
+			'''
+
+			'''
 			print('=== final types')
 			print(df.dtypes)
-
+			'''
 			loadedDatabase = True
 		else:
-			logger.info(f'Did not find existing folder db {dbPath}')
+			logger.info(f'No existing folder db {dbPath}')
 			logger.info(f'Making default folder db')
 			df = pd.DataFrame(columns=sanpyColumns.keys())
+			df = self._setColumnType(df)
 
 		if loadedDatabase:
 			# check columns with sanpyColumns
@@ -205,14 +224,42 @@ class bAnalysisDir():
 		else:
 			# build new db dataframe
 			listOfDict = []
-			for file in fileList:
-				rowDict = getFileRow(file)
-				listOfDict.append(rowDict)
+			for rowIdx, file in enumerate(fileList):
+				self.signalApp(f'Please wait, loading "{file}"')
+				rowDict = getFileRow(file, rowIdx=rowIdx+1)
+				if rowDict is not None:
+					listOfDict.append(rowDict)
 			#
 			df = pd.DataFrame(listOfDict)
+			#print('=== built new db df:')
+			#print(df)
+			df = self._setColumnType(df)
 		#
 		return df
 
+	def _setColumnType(self, df):
+		"""
+		Needs to be called every time a df is created.
+		Ensures proper type of columns following sanpyColumns[key]['type']
+		"""
+		#print('columns are:', df.columns)
+		for col in df.columns:
+			colType = sanpyColumns[col]['type']
+			#print(f'  _setColumnType() for "{col}" is type "{colType}"')
+			#print(f'    df[col]:', 'len:', len(df[col]))
+			#print(df[col])
+			if colType == str:
+				df[col] = df[col].replace(np.nan, '', regex=True)
+				df[col] = df[col].astype(str)
+			elif colType == int:
+				df[col] = df[col].astype(int)
+			elif colType == float:
+				# error if ''
+				df[col] = df[col].astype(float)
+			elif colType == bool:
+				df[col] = df[col].astype(bool)
+		#
+		return df
 	def old_loadFolder(self, path):
 		"""
 		Load all files in folder
@@ -271,6 +318,10 @@ class bAnalysisDir():
 		"""
 		theRet = self.fileList[index][type]
 		return theRet
+
+	def signalApp(self, str):
+		if self.myApp is not None:
+			self.myApp.updateStatusBar(str)
 
 def _printDict(d):
 	for k,v in d.items():
