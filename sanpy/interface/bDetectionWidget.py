@@ -386,8 +386,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		Can fail if .abf file is corrupt
 		"""
 
-		#print('=== bDetectionWidget.switchFile() path:', path)
-		logger.info(f'path: {path}')
+		logger.info(f'path: {os.path.split(path)[0]}')
+		logger.info(f'  file: {os.path.split(path)[1]}')
 
 		#if self.ba is not None and self.ba.file == path:
 		#	print('bDetectionWidget is already displaying file:', path)

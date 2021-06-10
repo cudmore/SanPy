@@ -958,7 +958,7 @@ class bAnalysis:
 		#
 		return spikeTimes0, spikeErrorList
 
-	def spikeDetect(self, dDict, verbose=False):
+	def spikeDetect(self, dDict=None):
 		"""
 		Spike detect the current sweep and put results into `self.spikeDict[]`.
 
@@ -968,12 +968,12 @@ class bAnalysis:
 
 		logger.info('start detection')
 
+		if dDict is None:
+			dDict = self.getDefaultDetection()
+
 		self.detectionDict = dDict # remember the parameters of our last detection
 
 		startTime = time.time()
-
-		if verbose:
-			sanpy.bUtil.printDict(dDict)
 
 		if self._recordingMode == 'I-Clamp':
 			self._getDerivative(dDict)
@@ -992,7 +992,7 @@ class bAnalysis:
 		if dDict['dvdtThreshold'] is None or np.isnan(dDict['dvdtThreshold']):
 			# detect using mV threshold
 			detectionType = 'mv'
-			self.spikeTimes, spikeErrorList = self._spikeDetect_vm(dDict, verbose=verbose)
+			self.spikeTimes, spikeErrorList = self._spikeDetect_vm(dDict)
 
 			# backup childish vm threshold
 			if dDict['doBackupSpikeVm']:
@@ -1001,7 +1001,7 @@ class bAnalysis:
 		else:
 			# detect using dv/dt threshold AND min mV
 			detectionType = 'dvdt'
-			self.spikeTimes, spikeErrorList = self._spikeDetect_dvdt(dDict, verbose=verbose)
+			self.spikeTimes, spikeErrorList = self._spikeDetect_dvdt(dDict)
 
 		vm = self.filteredVm
 		dvdt = self.filteredDeriv
@@ -1536,10 +1536,9 @@ class bAnalysis:
 		dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
 
 		stopTime = time.time()
-		if verbose:
-			print('bAnalysis.spikeDetect() for file', self.file)
-			print('  detected', len(self.spikeTimes), 'spikes in', round(stopTime-startTime,2), 'seconds')
-			self.errorReport()
+		#print('bAnalysis.spikeDetect() for file', self.file)
+		logger.info(f'Detected {len(self.spikeTimes)} spikes in {round(stopTime-startTime,2)} seconds')
+		#self.errorReport()
 
 		return dfReportForScatter
 

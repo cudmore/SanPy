@@ -6,8 +6,11 @@ import pandas as pd
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-#from sanpy.sanpyLogger import get_logger
-#logger = get_logger(__name__)
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
+
+# using sanpy.analysisDir.sanpyColumns in pandasModel.setData()
+import sanpy.analysisDir
 
 def loadDatabase(path):
 	"""
@@ -160,12 +163,16 @@ class pandasModel(QtCore.QAbstractTableModel):
 		QtCore.QAbstractTableModel.__init__(self)
 		self.isDirty = False
 		self._data = data
+
 		columnList = self._data.columns.values.tolist()
+
 		if 'include' in columnList:
 			self.includeCol = columnList.index('include')
 		else:
 			self.includeCol = None
-		#print('pandasModel.__init__() self.includeCol:', self.includeCol)
+
+		# this is for file table with myTableView
+		self.sanpyColumns = sanpy.analysisDir.sanpyColumns
 
 	'''
 	def modelReset(self):
@@ -226,10 +233,16 @@ class pandasModel(QtCore.QAbstractTableModel):
 			if role == QtCore.Qt.EditRole:
 				row = index.row()
 				column=index.column()
-				#print('value:', value, type(value))
+
+				# use to check isEditable
+				columnName = self._data.columns[column]
+				columnDict = self.sanpyColumns[columnName]
+				#print(f'  edit column: "{columnName}" {columnDict}')
+				if not columnDict['isEditable']:
+					# todo: I think this is handled in self.flags()
+					return False
+
 				v = self._data.iloc[row, column]
-				#print('before v:',v, type(v))
-				#print('isinstance:', isinstance(v, np.float64))
 				logger.info(f'Existing value is v: "{v}" {type(v)}')
 				if isinstance(v, np.float64):
 					try:
@@ -250,14 +263,23 @@ class pandasModel(QtCore.QAbstractTableModel):
 		return False
 
 	def flags(self, index):
-		#if index.column() == self.includeCol:
-		if 1:
-			# turn on editing (limited to checkbox for now)
-			#return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled
-			return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+		row = index.row()
+		column=index.column()
 
+		# use to check isEditable
+		columnName = self._data.columns[column]
+		columnDict = self.sanpyColumns[columnName]
+		#print(f'  edit column: "{columnName}" {columnDict}')
+		isEditable = columnDict['isEditable']
+		if isEditable:
+			return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 		else:
 			return QtCore.Qt.ItemIsEnabled
+		# turn on editing (limited to checkbox for now)
+		#return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled
+		#return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+		#else:
+		#	return QtCore.Qt.ItemIsEnabled
 
 	def headerData(self, col, orientation, role):
 		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:

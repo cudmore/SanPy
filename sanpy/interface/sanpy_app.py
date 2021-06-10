@@ -5,6 +5,7 @@ import os, sys, time, math, json
 from functools import partial
 from collections import OrderedDict
 import platform
+import glob
 
 import numpy as np
 import pandas as pd
@@ -195,7 +196,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			logger.info('returning None')
 			return
 
-		bad = sanpy.bAnalysisDir(path)
+		bad = sanpy.analysisDir.bAnalysisDir(path)
 		df = bad.df
 
 		self.path = path
@@ -206,7 +207,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.tableView.setModel(self.myModel)
 		except (AttributeError) as e:
 			# needed when we call loadFolder from __init__
-			logger.info('OK exception', e)
+			logger.info('OK exception: no tableView during load folder')
 
 	def selectSpike(self, spikeNumber, doZoom=False):
 		eDict = {}
@@ -445,7 +446,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		windowsMenu.addAction(exportRawDataAction)
 		'''
 
-		# view menu to toggle scatter plot widget
+		# view menu to toggle theme
 		viewMenu = mainMenu.addMenu('&View')
 
 		'''
@@ -462,7 +463,19 @@ class MainWindow(QtWidgets.QMainWindow):
 		darkThemeAction.setChecked(self.useDarkStyle)
 		viewMenu.addAction(darkThemeAction)
 
-		# view menu to toggle scatter plot widget
+		#
+		# plugins
+		pluginDir = os.path.join(self._getBundledDir(), 'plugins', '*.txt')
+		pluginList = glob.glob(pluginDir)
+		logger.info(f'pluginList: {pluginList}')
+		pluginsMenu = mainMenu.addMenu('&Plugins')
+		oneAction = 'plotRecording'
+		aPluginAction = QtWidgets.QAction(oneAction, self)
+		#aPluginAction.triggered.connect(self.aPlugin_action)
+		aPluginAction.triggered.connect(lambda checked, oneAction=oneAction: self.aPlugin_action(oneAction))
+		pluginsMenu.addAction(aPluginAction)
+
+		# windows menu to toggle scatter plot widget
 		windowsMenu = mainMenu.addMenu('&Windows')
 		mainWindowAction = QtWidgets.QAction('Main', self)
 		#
@@ -545,6 +558,18 @@ class MainWindow(QtWidgets.QMainWindow):
 		# leave here, critical
 		self.setCentralWidget(self.centralwidget)
 
+	def _getBundledDir(self):
+		"""
+		TODO: use this in all cases
+		"""
+		if getattr(sys, 'frozen', False):
+			# we are running in a bundle (frozen)
+			bundle_dir = sys._MEIPASS
+		else:
+			# we are running in a normal Python environment
+			bundle_dir = os.path.dirname(os.path.abspath(__file__))
+		return bundle_dir
+
 	def preferencesLoad(self):
 		if getattr(sys, 'frozen', False):
 			# we are running in a bundle (frozen)
@@ -558,7 +583,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		if os.path.isfile(self.optionsFile):
 			#print('  preferencesLoad() loading options file:', self.optionsFile)
-			logger.info(f'Loading json options file: {self.optionsFile}')
+			logger.info(f'Loading options file: {self.optionsFile}')
 			with open(self.optionsFile) as f:
 				return json.load(f)
 		else:
@@ -619,6 +644,14 @@ class MainWindow(QtWidgets.QMainWindow):
 		# save
 		with open(self.optionsFile, 'w') as outfile:
 			json.dump(self.configDict, outfile, indent=4, sort_keys=True)
+
+	def aPlugin_action(self, actionName):
+		logger.info('actionName:' + actionName)
+		ba = self.myDetectionWidget.ba
+		#import sanpy.interface.plugins
+		aPlugin = sanpy.interface.plugins.plotRecording.plotRecording(ba)
+		self.myDetectionWidget.signalSelectSpike.connect(aPlugin.slot_selectSpike)
+		aPlugin.plot()
 
 	def openScatterWindow(self):
 		"""
@@ -698,18 +731,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def slotFindNewFiles(self):
 		"""
-		find files in self.path that are not in pandas data model
+		Find files in self.path that are not in pandas data model
 		"""
-		print('MainWindow.slotFindNewFiles()')
+		logger.info(self.path)
+
 		# get all abf/csv/tif in folder
-		abfList = []
-		print('TODO: have slotFindNewFiles find (abf, csv, tif)')
-		for file in os.listdir(self.path):
-			if file.startswith('.'):
-				continue
-			if file.endswith('.abf'):
-				#print('  ', file)
-				abfList.append(file)
+		abfList = sanpy.analysisDir.getFileList(self.path)
 
 		# our curent database
 		abfInDb = self.myModel.myGetColumnList('File')
@@ -800,6 +827,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 def main():
 	logger.info(f'Python version is {platform.python_version()}')
+	logger.info(f'PyQt version is {QtCore.QT_VERSION_STR}')
 
 	app = QtWidgets.QApplication(sys.argv)
 
@@ -815,7 +843,8 @@ def main():
 
 	appIconPath = os.path.join(bundle_dir, 'icons/sanpy_transparent.png')
 	#print('  app icon is in', appIconPath)
-	logger.info(f'appIconPath is {appIconPath}')
+	logger.info(f'appIconPath is {os.path.split(appIconPath)[0]}')
+	logger.info(f'  file is {os.path.split(appIconPath)[1]}')
 	if os.path.isfile(appIconPath):
 		app.setWindowIcon(QtGui.QIcon(appIconPath))
 	else:
