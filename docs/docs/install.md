@@ -1,6 +1,6 @@
-SanPy will run on: macOS, Microsoft Windows, and Linux.
+SanPy is designed to run on: macOS, Microsoft Windows, and Linux.
 
-## Download the SanPy app.
+## Download and run the one-click SanPy app.
 
 We are building apps so users can download a single SanPy.app and get working with just a double-click.
 
@@ -19,7 +19,6 @@ Assuming you have the following
 [python3]: https://www.python.org/downloads/
 [pip]: https://pip.pypa.io/en/stable/
 [git]: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
-[fair]: https://en.wikipedia.org/wiki/FAIR_data
 
 ### Install the desktop application
 
@@ -58,10 +57,6 @@ cd SanPy
 # create a Python3 virtual environment in 'sanpy_env/' folder
 python -m venv sanpy_env
 
-# [OR] if python is bound to Python 2 (check with 'python --version')
-
-python3 -m venv sanpy_env
-
 # activate the virtual environment in sanpy_env/
 source sanpy_env/bin/activate
 
@@ -75,6 +70,7 @@ pip install .[gui]
 # on Big Sur
 cd SanPy
 pip install .\[gui\]
+```
 
 ### Running the desktop application
 
@@ -93,7 +89,6 @@ cd SanPy
 source sanpy_env/bin/activate
 
 # run the desktop application
-python sanpy/sanpy_app.py
-# or just use
+# python sanpy/sanpy_app.py
 sanpy
 ```

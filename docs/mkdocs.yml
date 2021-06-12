@@ -55,9 +55,12 @@ plugins:
 
 nav:
     - SanPy: index.md
-    - Install: install.md
     - Desktop Application: desktop-application.md
     - Web Application: web-application.md
+    - Install: install.md
+    - Methods: methods.md
+    - Open Source: open-source.md
+    - About: about.md
     - Scripting:
         - Overview: scripting/overview.md
         - Examples: scripting/examples.ipynb
@@ -72,6 +75,3 @@ nav:
         - bAnalysisUtil: api/bAnalysisUtil.md
         - interface:
             - sanp_app: api/interface/sanpy_app.md
-    - Methods: methods.md
-    - Open Source: open-source.md
-    - About: about.md

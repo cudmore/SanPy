@@ -1,35 +1,47 @@
-## Technologies used
 
-#### Backend
+As all open-source projects are, we are indebted to an enormous number of underlying open-source projects. Without these projects, SanPy would not be possible.
 
- - [Python][Python]{target=_blank}
- - [SciPy][SciPy]{target=_blank}
- - [NumPy][NumPy]{target=_blank}
- - [Pandas][Pandas]{target=_blank}
+To contribute to the open-source community, we are following the [FAIR][fair]{target=_blank} principles of software development to promote: **(F)**indability, **(A)**ccessibility, **(I)**nteroperability, and **(R)**eusability.
+
+[fair]: https://en.wikipedia.org/wiki/FAIR_data
+
+With this, our software is designed to be flexible in how it is used.
+
+- From a desktop
+- As a downloaded app
+- On an existing cloud server
+- Deployed by our users as their own cloud server
+
+### Core
+
+ - [Python][Python]{target=_blank} - A programming language that lets you work quickly and integrate systems more effectively.
+ - [SciPy][SciPy]{target=_blank} - A Python-based ecosystem of open-source software for mathematics, science, and engineering.
+ - [NumPy][NumPy]{target=_blank} - The fundamental package for scientific computing with Python.
+ - [Pandas][Pandas]{target=_blank} - A data analysis and manipulation tool.
  - [pyABF][pyABF]{target=_blank} - Package to open Axon Binary Format (ABF) files.
  - [heka_reader][heka_reader]{target=_blank} - To read Heka Data files.
  - [XlsxWriter][XlsxWriter]{target=_blank} - To read and write Microsoft Excel files.
- -
-#### Desktop Application
 
- - [PyQt][PyQt]{target=_blank} - Desktop application interface
- - [PyQtGraph][pyqtgraph]{target=_blank} - Derived from PyQt and used to make fast plots
- - [Matplotlib][Matplotlib]{target=_blank} - Desktop application plotting
+### Desktop Application
 
-#### Web application v1
+ - [PyQt][PyQt]{target=_blank} - Python bindings for The [Qt Company's][Qt]{target=_blank} Qt application framework.
+ - [PyQtGraph][pyqtgraph]{target=_blank} - Scientific Graphics and GUI Library for Python (built on PyQt and PySide).
+ - [Matplotlib][Matplotlib]{target=_blank} - A comprehensive library for creating static, animated, and interactive visualizations in Python.
 
- - [Plotly Python][Plotly]
- - [Plotly Dash][Dash] - Web application interface
- - [Dash Bootstrap components][Dash Bootstrap components]
+### Web application v1
 
-#### Web application v2
+ - [Plotly Python][Plotly]{target=_blank} - Open Source Graphing Library.
+ - [Plotly Dash][Dash] - A low-code platform for ML & data science apps.
+ - [Dash Bootstrap components][Dash Bootstrap components]{target=_blank} - A a library of Bootstrap components for Plotly Dash.
+
+### Web application v2
 
  - Docker
  - NGINX
  - Flask
  - Vue
  - Bootstrap
-  
+
 [Python]: https://www.python.org/
 [SciPy]: https://www.scipy.org/
 [Pandas]: https://pandas.pydata.org/
@@ -38,6 +50,7 @@
 [heka_reader]: https://github.com/campagnola/heka_reader
 [TkInter]: https://docs.python.org/3/library/tkinter.html
 [PyQt]: https://riverbankcomputing.com/software/pyqt/intro
+[Qt]: https://www.qt.io/
 [pyqtgraph]: http://www.pyqtgraph.org/
 [XlsxWriter]: https://xlsxwriter.readthedocs.io/
 [Matplotlib]: https://matplotlib.org/
@@ -45,15 +58,24 @@
 [Dash]: https://plot.ly/products/dash/
 [Dash Bootstrap components]: https://dash-bootstrap-components.opensource.faculty.ai/
 
-## Other software
+### Development
 
- - [ParamAP][ParamAP] - Standardized parameterization of sinoatrial node myocyte action potentials
- - [stimfit][stimfit] - A program for viewing and analyzing electrophysiological data
+ - [pyenv][pyenv]{target=_blank} - Python version management.
+ - [mkdocs][mkdocs]{target=_blank} - Static site generator geared towards building project documentation.
+ - [mkdocs-material]{target=_blank} - Standardized theme for MkDocs
+ - [mkdocstrings][mkdocstrings]{target=_blank} - Automatic documentation from sources, for MkDocs.
 
-C++ libraries
+[pyenv]: https://github.com/pyenv/pyenv
+[mkdocs]: https://www.mkdocs.org/
+[mkdocs-material]: https://squidfunk.github.io/mkdocs-material/
+[mkdocstrings]: https://mkdocstrings.github.io/
 
- - [biosig][biosig] - A C/C++ library providing reading and writing routines for biosignal data formats
- - [sigviewer][sigviewer] - SigViewer is a viewing application for biosignals.
+### Other existing analysis software
+
+ - [ParamAP][ParamAP]{target=_blank} - Standardized parameterization of sinoatrial node myocyte action potentials
+ - [stimfit][stimfit]{target=_blank} - A program for viewing and analyzing electrophysiological data
+ - [biosig][biosig]{target=_blank} - A C/C++ library providing reading and writing routines for biosignal data formats
+ - [sigviewer][sigviewer]{target=_blank} - SigViewer is a viewing application for biosignals.
 
 [ParamAP]: https://github.com/christianrickert/ParamAP
 [stimfit]: https://github.com/neurodroid/stimfit
