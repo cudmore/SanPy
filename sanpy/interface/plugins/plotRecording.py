@@ -75,5 +75,16 @@ def testPlot():
 
 	#ap.slotUpdateAnalysis()
 
+def testLoad():
+	import os, glob
+	pluginFolder = '/Users/cudmore/sanpy_plugins'
+	files = glob.glob(os.path.join(pluginFolder, '*.py'))
+	for file in files:
+		#if file.startswith('.'):
+		#	continue
+		if file.endswith('__init__.py'):
+			continue
+		print(file)
 if __name__ == '__main__':
-	testPlot()
+	#testPlot()
+	testLoad()

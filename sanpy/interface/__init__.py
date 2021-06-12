@@ -10,5 +10,8 @@ from .bFileTable import *
 from .bErrorTable import *
 from .bDialog import *
 #from .bFileTable import *
+from .bPlugins import *
 from .aPlugin import *
+
+# critical for plugins to be loaded dynamically
 #from .plugins import *

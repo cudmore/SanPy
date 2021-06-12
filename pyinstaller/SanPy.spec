@@ -4,7 +4,7 @@
 block_cipher = None
 
 
-a = Analysis(['../sanpy/interface/app.py'],
+a = Analysis(['../sanpy/interface/sanpy_app.py'],
              pathex=['../sanpy_env/lib/python3.7/site-packages', '/Users/cudmore/Sites/SanPy/pyinstaller'],
              binaries=[],
              datas=[],

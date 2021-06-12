@@ -5,6 +5,11 @@
 #  Requires
 #    PyQt 5.15.2
 
+# see here for code to dynamically load plugins
+# https://stackoverflow.com/questions/56495814/how-to-load-plugins-in-an-app-build-with-pyinstaller
+
+# 	--onedir \
+
 pyinstaller \
 	--clean \
 	--onedir \
@@ -13,4 +18,4 @@ pyinstaller \
 	--noconfirm \
 	--path ../sanpy_env/lib/python3.7/site-packages \
 	--name SanPy \
-	../sanpy/interface/app.py
+	../sanpy/interface/sanpy_app.py

@@ -105,6 +105,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		if masterDf is not None:
 			loggerr.debug(f'Loaded csvPath: {csvPath}')
 
+
+		self.myPlugins = sanpy.interface.bPlugins()
+
 		self.buildMenus()
 
 		self.buildUI(masterDf)
@@ -465,6 +468,14 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		#
 		# plugins
+		pluginsMenu = mainMenu.addMenu('&Plugins')
+		plugins = self.myPlugins.pluginList()
+		for plugin in plugins:
+			aPluginAction = QtWidgets.QAction(plugin, self)
+			aPluginAction.triggered.connect(lambda checked, pluginName=plugin: self.aPlugin_action(pluginName))
+			pluginsMenu.addAction(aPluginAction)
+
+		'''
 		pluginDir = os.path.join(self._getBundledDir(), 'plugins', '*.txt')
 		pluginList = glob.glob(pluginDir)
 		logger.info(f'pluginList: {pluginList}')
@@ -474,6 +485,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		#aPluginAction.triggered.connect(self.aPlugin_action)
 		aPluginAction.triggered.connect(lambda checked, oneAction=oneAction: self.aPlugin_action(oneAction))
 		pluginsMenu.addAction(aPluginAction)
+		'''
 
 		# windows menu to toggle scatter plot widget
 		windowsMenu = mainMenu.addMenu('&Windows')
@@ -645,13 +657,12 @@ class MainWindow(QtWidgets.QMainWindow):
 		with open(self.optionsFile, 'w') as outfile:
 			json.dump(self.configDict, outfile, indent=4, sort_keys=True)
 
-	def aPlugin_action(self, actionName):
-		logger.info('actionName:' + actionName)
+	def aPlugin_action(self, pluginName):
+		"""
+		Run a plugin using curent ba
+		"""
 		ba = self.myDetectionWidget.ba
-		#import sanpy.interface.plugins
-		aPlugin = sanpy.interface.plugins.plotRecording.plotRecording(ba)
-		self.myDetectionWidget.signalSelectSpike.connect(aPlugin.slot_selectSpike)
-		aPlugin.plot()
+		self.myPlugins.runPlugin(pluginName, ba)
 
 	def openScatterWindow(self):
 		"""
