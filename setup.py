@@ -14,9 +14,9 @@ setup(
     packages=['sanpy'],
 	install_requires=[
         'numpy',
-        'scipy',
         'pandas',
         'matplotlib',
+        'scipy',
         'pyabf',
         'XlsxWriter',
 		'xlrd', # for loading excel files in examples/reanalyze.py
@@ -26,12 +26,21 @@ setup(
 		'mplcursors'
     ],
     # use pip install .[gui]
+    # on Big Sur use pip install .\[gui\]
 	extras_require={
         'gui': [
 			'pyqtgraph',
-			#'matplotlib',
 			'PyQt5==5.15.2',
 			'qdarkstyle',
+		],
+        'dev': [
+			'mkdocs',
+			'mkdocs-material',
+			'mkdocs-jupyter',
+            'mkdocstrings',
+            'tornado', # nneded for pyinstaller
+            'pyinstaller',
+            'ipython',
 		],
     },
     entry_points={

@@ -34,96 +34,6 @@ example/reanalyze.py, reanalyze from an excel file giving us threshold and start
 
 examples/manuscript0.py, plot stat across (condition, region),
 
-## pyinstaller
-
-python -m venv sanpy_env
-
-eval "$(pyenv init -)"
-
-pyinstaller --windowed bTestPrint.spec
-
-```
-# this never finished ?
-#env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.7.0
-
-env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.7.0
-```
-
-### build with PyInstall
-
-Tried with the python3 default from Catalina, does not work OSError:
-```
-Python library not found: libpython3.7.dylib, libpython3.7m.dylib, Python, .Python
-```
-
-Install pyenv
-
-```
-git clone https://github.com/pyenv/pyenv.git ~/.pyenv
-echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
-echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
-echo -e 'if command -v pyenv 1>/dev/null 2>&1; then\n  eval "$(pyenv init -)"\nfi' >> ~/.bash_profile
-```
-
-Use pyenv to install python
-
-```
-env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.7.3
-```
-
-activate python
-```
-# activate local python
-pyenv local 3.7.3
-```
-
-Install SanPy
-
-```
-pip install -r requirements
-pip install -e .
-```
-
-```
-which python
-/Users/cudmore/.pyenv/shims/python
-```
-
-Need to run PyInstaller like this (not directly on command line)
-
-When I do this it complains apout torndao, so
-
-```
-pip install tornado
-```
-
-```
-python -m PyInstaller --windowed --noconfirm sanpy/interface/app.py
-```
-then
-
-```
-python -m PyInstaller --windowed --noconfirm sanpy_app.spec
-python -m PyInstaller --windowed --noconfirm app.spec
-```
-
-```
-```
-
-May 25, 2021
-
-The following worked after removing PyQt 5.15.4 (QApplication was giving segmentation fault)
-
-Using
-```
-PyQt5==5.15.2
-PyQt5-sip==12.9.0
-```
-
-Command line (from /Userrs/cudmore/Sites/SanPy)
-```
-pyinstaller --clean --onedir --windowed --icon sanpy/interface/icons/sanpy_transparent.icns --noconfirm --path sanpy_env/lib/python3.7/site-packages --name SanPy sanpy/interface/app.py
-```
 
 ## Reduce png file size
 
@@ -137,4 +47,149 @@ Compress all png in folder - REPLACES FILES
 
 ```
 pngquant --ext .png --force docs/docs/img/*.png
+```
+
+## Big Sur
+
+This is my recipe for installing Python development environment, including SanPy, on a fresh install of macOS Big Surr.
+
+### Install Brew
+
+This should install XCode
+
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+```
+
+### Install some packages with Brew
+
+```
+#brew install zlib sqlite bzip2 libiconv libzip
+brew install openssl readline sqlite3 xz zlib
+```
+
+### Install pyenv
+
+```
+brew install pyenv
+```
+
+pyenv requires the following in `~/.zshrc`
+
+```
+if command -v pyenv 1>/dev/null 2>&1; then
+  export PYENV_ROOT="$HOME/.pyenv"
+  export PATH="$PYENV_ROOT/bin:$PATH"
+  eval "$(pyenv init --path)"
+  eval "$(pyenv init -)"
+fi
+```
+
+### Install Python 3.7.9 into pyenv
+
+```
+pyenv install 3.7.9
+pyenv global 3.7.9
+```
+
+And check python is correct
+
+```
+python --version
+# Python 3.7.9
+```
+
+```
+which python
+# /Users/cudmore/.pyenv/shims/python
+```
+
+### Upgrade pip
+
+scipy was failing on pip version 20.1.1 but working on newer pip 21.1.2. We will do this again once in the venv `sanpy_env`.
+
+```
+pip install --upgrade pip
+```
+
+Original pip version was
+
+```pip 20.1.1 from /Users/cudmore/Sites/SanPy/sanpy_env/lib/python3.7/site-packages/pip (python 3.7)
+```
+
+after `pip install --upgrade pip`
+
+```
+pip 21.1.2 from /Users/cudmore/Sites/SanPy/sanpy_env/lib/python3.7/site-packages/pip (python 3.7)
+```
+
+### Install python in pyenv to work with `pyinstaller`.
+
+When installing pyenv, need shared-libraries for pyinstaller to work. The commands are slightly different on macOS, need to use `--enable-framework`.
+
+If this is not configured properly, pyinstaller will give errors like `Python library not found: libpython3.7.dylib, libpython3.7m.dylib`
+
+```
+# on mac os, use framework
+env PYTHON_CONFIGURE_OPTS="--enable-framework" pyenv install 3.7.9
+pyenv global 3.7.9
+
+# linux/windows, use shared (not tested)
+env PYTHON_CONFIGURE_OPTS="--enable-shared" pyenv install 3.7.9
+# activate as global
+pyenv global 3.7.9
+```
+
+### Clone sanpy
+
+```
+git clone https://github.com/cudmore/SanPy.git
+cd SanPy
+```
+
+### Make a venv for SanPy in folder `sanpy_env`.
+
+```
+cd SanPy
+python -m venv sanpy_env
+# activate (will be different on Windows)
+source sanpy_env/bin/activate
+```
+
+The sanpy_env needs pip 21.1.2, otherwise SciPy install will fail
+
+```
+# in the sanpy_env
+pip install --upgrade pip
+```
+
+### Install SanPy (from cloned source code)
+
+Because using Zsh shell, need to escape square brackets
+
+```
+pip install -e .
+pip install -e .\[gui\]
+pip install -e .\[dev\]
+```
+
+### Run SanPy gui
+
+```
+sanpy
+```
+
+## Big Sur miscellaneous system configuration
+
+Colorize the command prompt in Zsh shell
+
+```
+PROMPT='%F{green}%*%f:%F{green}%~%f %% '
+```
+
+My ~/.zshrc looks like
+
+```
+# abb style the prompt
+PROMPT='%F{green}%n@%m%f:%F{green}%~%f %% '
 ```

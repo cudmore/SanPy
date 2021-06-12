@@ -1,20 +1,14 @@
-SanPy will run on:
+SanPy will run on: macOS, Microsoft Windows, and Linux.
 
- - macOS
- - Microsoft Windows
- - Linux
- - In the cloud.
+## Download the SanPy app.
 
-We are following the [FAIR][fair] principles of software development to promote: **(F)**indability, **(A)**ccessibility, **(I)**nteroperability, and **(R)**eusability.
+We are building apps so users can download a single SanPy.app and get working with just a double-click.
 
-With this, our software is designed to be flexible in how it is used.
+This does not require anything special on our users end, no Python, no command line.
 
-- From a desktop
-- As a downloaded app
-- On an existing cloud server
-- Deployed by our users as their own cloud server
+Check back for more info on this.
 
-## Installing on your own computer
+## Manual install from the command line
 
 Assuming you have the following
 
@@ -71,12 +65,16 @@ python3 -m venv sanpy_env
 # activate the virtual environment in sanpy_env/
 source sanpy_env/bin/activate
 
-# install the package
-pip install .
+# upgrade pip (scipy worrks with pip 21.1.2 but NOT with 20.1.1)
+pip install --upgrade pip
 
-# [OR] install the required python packages (into the activated virtual environment)
-# pip install -r requirements.txt
-```
+# install the SanPy package
+cd SanPy
+pip install .[gui]
+
+# on Big Sur
+cd SanPy
+pip install .\[gui\]
 
 ### Running the desktop application
 
@@ -96,4 +94,6 @@ source sanpy_env/bin/activate
 
 # run the desktop application
 python sanpy/sanpy_app.py
+# or just use
+sanpy
 ```

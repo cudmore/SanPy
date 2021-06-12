@@ -18,28 +18,29 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
 
-if ! type "virtualenv" > /dev/null; then
-	echo '==='
-	echo "=== install SanPy: Installing virtualenv with pip"
-	echo '==='
-	#sudo /usr/bin/easy_install virtualenv
-	pip install virtualenv
-	# debian
-	#sudo apt-get -qy install python-virtualenv
-fi
+#if ! type "virtualenv" > /dev/null; then
+#	echo '==='
+#	echo "=== install SanPy: Installing virtualenv with pip"
+#	echo '==='
+#	#sudo /usr/bin/easy_install virtualenv
+#	pip install virtualenv
+#	# debian
+#	#sudo apt-get -qy install python-virtualenv
+#fi
 
 if [ ! -d "sanpy_env/" ]; then
 	echo '==='
 	echo "=== install SanPy: Making Python 3 virtual environment in $PWD/sanpy_env"
 	echo '==='
-	if ! type "virtualenv" > /dev/null; then
-		echo -e 'install SanPy: ${RED}ERROR${NC}: DID NOT INSTALL VIRTUALENV -->> ABORTING'
-		exit 0
-	else
-		mkdir sanpy_env
-		#virtualenv -p python3 --no-site-packages sanpy_env
-		python -m venv sanpy_env
-	fi
+	python -m venv sanpy_env
+	#if ! type "virtualenv" > /dev/null; then
+	#	echo -e 'install SanPy: ${RED}ERROR${NC}: DID NOT INSTALL VIRTUALENV -->> ABORTING'
+	#	exit 0
+	#else
+	#	#mkdir sanpy_env
+	#	#virtualenv -p python3 --no-site-packages sanpy_env
+	#	python -m venv sanpy_env
+	#fi
 else
 	echo '==='
 	echo "=== install SanPy: Python 3 virtual environment already exists in $PWD/sanpy_env"
@@ -60,20 +61,24 @@ else
 fi
 
 
+echo '==='
+echo "=== install SanPy: Updating pip with 'pip install --upgrade pip'"
+pip install --upgrade pip
+
 #echo '==='
 #echo "=== install SanPy: Installing required python libraries with 'pip install -r requirements.txt'"
 #pip install -r requirements.txt
 #echo '==='
 
-echo '==='
-echo "=== install SanPy: Installing requirements.txt 'pip install -r requirements.txt'"
-echo '==='
-pip install -r requirements.txt
+#echo '==='
+#echo "=== install SanPy: Installing requirements.txt 'pip install -r requirements.txt'"
+#echo '==='
+#pip install -r requirements.txt
 
 echo '==='
-echo "=== install SanPy: Installing sanpy package with 'pip install .'"
+echo "=== install SanPy: Installing sanpy package with 'pip install -e .\[gui\]'"
 echo '==='
-pip install -e .
+pip install -e .\[gui\]
 
 deactivate
 
