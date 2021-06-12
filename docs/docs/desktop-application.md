@@ -9,5 +9,9 @@ works?
 
 <IMG SRC="../../img/sanpy-pyqt-1.png" width=900>
 
+works 2?
+
+<IMG SRC="img/sanpy-pyqt-1.png" width=900>
+
 
 <!-- <IMG SRC="../img/meta-window-example.png" width=700> -->
