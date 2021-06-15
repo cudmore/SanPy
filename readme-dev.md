@@ -1,4 +1,26 @@
 
+## Update 202106
+
+Documentation:
+ - https://cudmore.github.io/SanPy/
+ - A work in progress but critical for final publication. Added benefit is it makes me think in an organized way about a fairly complex system.
+
+Analysis:
+ - Built system to log per-AP errors (when detection goes wrong)
+ - Expanded detection parameters to be more controllable, see https://cudmore.github.io/SanPy/methods.html#detection-parameters
+
+Interface:
+ - Expanded detection parameters beyond dV/dt and mV thresholds to include things like refractory period and windows to control searching for spike peak, AP-durations etc. Goal is to have presets for different kinds of cells. For example: SA Node, ventricular, etc.
+ - Can now browse individual APs with automatic zooming, like: 'go to AP', 'next AP', previous AP', etc
+ - Can now browse per-AP errors and jump to zoomed view of the problem AP.
+ - Implemented 'Plugins', a bit like ImageJ/Fiji. This is SUPER useful to extend the analysis/plotting without having to update the main SanPy program. You just drop in some custom code to do detailed/specific analysis. I've started using this with some good examples that will get others up and running quickly.
+
+Desktop App:
+ - Now creating a downloadable app that can be run with one click (no Python or command prompt). This is a huge improvement but pretty technical on my end as I need a computer with actual operating system to build it. I have macOS Catalina and Big Sur working. Next is to get Windows 7 and 10 working.
+
+Cloud App:
+ - Created a web based app that runs in the cloud. When I get it back up I will send a link. This is great as it uses all the same code as the main SanPy Desktop app, just a different interface. This is a starting point for the Santana R01 software add on. Do not plan on including this in initial SanPy manuscript, too many details need to be hashed out.
+
 ## Update 20201230
  - In export window, added X-Tick and Y-Tick major/minor controls (4x controls). To set the tick intervals on the X/Y axis.
  - In export window fixed bug where click or double-click on set value up/down would result in control incrementing over and over (no way to stop it)

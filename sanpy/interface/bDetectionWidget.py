@@ -16,7 +16,7 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class bDetectionWidget(QtWidgets.QWidget):
-	signalSelectSpike = QtCore.Signal(object, object) # spike number, doZoom
+	signalSelectSpike = QtCore.Signal(object) # spike number, doZoom
 
 	def __init__(self, ba=None, mainWindow=None, parent=None):
 		"""
@@ -220,7 +220,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		if self.myMainWindow is not None:
 			# signal to main window so it can update (file list, scatter plot)
-			self.myMainWindow.mySignal('detect', data=(dfReportForScatter,dfError))
+			self.myMainWindow.mySignal('detect', data=(dfReportForScatter, dfError))
 
 		#QtCore.QCoreApplication.processEvents()
 		self.updateStatusBar(f'Detected {self.ba.numSpikes} spikes')
@@ -696,7 +696,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 			start = self.setAxis(startSec, stopSec)
 
 		if doEmit:
-			self.signalSelectSpike.emit(spikeNumber, doZoom)
+			eDict = {
+				'spikeNumber': spikeNumber,
+				'doZoom': doZoom
+			}
+			self.signalSelectSpike.emit(eDict)
 
 	def refreshClips(self, xMin=None, xMax=None):
 		if self.ba is None:
@@ -1012,7 +1016,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if key == QtCore.Qt.Key.Key_Escape:
 			self.myMainWindow.mySignal('cancel all selections')
 
-	def slotSelectSpike(self, sDict):
+	def slot_selectSpike(self, sDict):
 		#print('detectionWidget.slotSelectSpike() sDict:', sDict)
 		spikeNumber = sDict['spikeNumber']
 		doZoom = sDict['doZoom']

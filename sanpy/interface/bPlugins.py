@@ -1,30 +1,23 @@
 # 20210610
 
-import os, sys, pathlib, glob, importlib
+import os, sys, pathlib, glob, importlib, inspect
 
 import sanpy
+import sanpy.interface.plugins
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class bPlugins():
-	def __init__(self):
-		#import inspect
-		#tmpList = inspect.getmembers('sanpy.interface.plugins')
-		#print('tmpList:', tmpList)
+	"""
+	Generate a list of plugins.
 
-		'''
-		import sys, inspect
-		for name, obj in inspect.getmembers(sys.modules[__name__]):
-			if 1 or inspect.isclass(obj):
-				print('jjjj:', obj)
-		'''
-		
-		if 0:
-			for k,v in sys.modules.items():
-				print(k, '\n', '  ', v)
-			tmpList = dir('sanpy.interface.plugins')
-			print('tmpList:', tmpList)
+	Looking in
+		- sanpy.interface.plugins
+		- <user>/sanpy_plugins
+	"""
+	def __init__(self, sanpyApp=None):
+		self._sanpyApp = sanpyApp
 
 		error = False
 		userPath = pathlib.Path.home()
@@ -40,35 +33,80 @@ class bPlugins():
 			sys.path.append(self.pluginFolder)
 			self.loadPlugins()
 
+	def getSanPyApp(self):
+		"""
+		Get the underlying SanPy app
+		"""
+		return self._sanpyApp
+
 	def loadPlugins(self):
+		"""
+		Load plugins from both:
+		 - sanpy.interface.plugins
+		 - <user>/sanpy_plugins
+		"""
 		self.pluginDict = {}
 
+		ignoreModuleList = ['sanpyPlugin', 'myWidget']
+
+		#
+		# system plugins from sanpy.interface.plugins
+		for moduleName, obj in inspect.getmembers(sanpy.interface.plugins):
+			if inspect.isclass(obj):
+				if moduleName in ignoreModuleList:
+					# our base plugin class
+					continue
+				#print('sys plugin:', moduleName, ':', obj)
+				fullModuleName = 'sanpy.interface.plugins.' + moduleName
+				pluginDict = {
+					#'pluginName': moduleName,
+					'type': 'system',
+					'module': fullModuleName,
+					'path': '',
+					'constructor': obj,
+					# todo: checck that myHumanName is unique
+					'myHumanName': obj.myHumanName
+				}
+				if moduleName in self.pluginDict.keys():
+					logger.warning(f'Plugin already added "{moduleName}"')
+				else:
+					self.pluginDict[moduleName] = pluginDict
+
+		#
+		# user plugins from files in folder <user>/sanpy_plugins
 		pluginFolder = self.pluginFolder
 		files = glob.glob(os.path.join(pluginFolder, '*.py'))
 		for file in files:
 			if file.endswith('__init__.py'):
 				continue
-			logger.info(f'loading plugin: "{file}"')
 
 			moduleName = os.path.split(file)[1]
 			moduleName = os.path.splitext(moduleName)[0]
-			fullModuleName = 'sanpy.interface.plugins2.' + moduleName
+			fullModuleName = 'sanpy.interface.plugins.' + moduleName
 
 			loadedModule = self._module_from_file(fullModuleName, file)
-			#print('loadedModule:', type(loadedModule), loadedModule)
 
-			oneConstructor = getattr(loadedModule, moduleName)
-			#print('  oneConstructor:', type(oneConstructor), oneConstructor)
+			try:
+				oneConstructor = getattr(loadedModule, moduleName)
+			except (AttributeError) as e:
+				logger.error(f'Make sure filename and class are the same file:"{moduleName0}"')
 
-			pluginDict = {
-				#'pluginName': moduleName,
-				'module': fullModuleName,
-				'path': file,
-				'constructor': oneConstructor,
-			}
-
-			# assuming file name is unique
-			self.pluginDict[moduleName] = pluginDict
+			else:
+				pluginDict = {
+					#'pluginName': moduleName,
+					'type': 'user',
+					'module': fullModuleName,
+					'path': file,
+					'constructor': oneConstructor,
+					# todo: checck that myHumanName is unique
+					'myHumanName': oneConstructor.myHumanName
+					}
+				# assuming moduleName is unique
+				if moduleName in self.pluginDict.keys():
+					logger.warning(f'Plugin already added "{moduleName}"')
+				else:
+					logger.info(f'loading plugin: "{file}"')
+					self.pluginDict[moduleName] = pluginDict
 
 	def runPlugin(self, pluginName, ba):
 		"""
@@ -78,7 +116,25 @@ class bPlugins():
 			pluginName (str):
 			ba (bAnalysis): object
 		"""
-		self.pluginDict[pluginName]['constructor'](ba)
+		if not pluginName in self.pluginDict.keys():
+			logger.error(f'Did not find plugin: "{pluginName}"')
+			return
+		else:
+			logger.info(f'Running plugin: "{pluginName}"')
+			# TODO: to open PyQt windows, we need to keep a local (persistent) variable
+			self.tmpStorePlugin = \
+					self.pluginDict[pluginName]['constructor'](ba=ba, bPlugin=self)
+
+	def getType(self, pluginName):
+		"""
+		returns one of ('system', 'user')
+		"""
+		if not pluginName in self.pluginDict.keys():
+			logger.error(f'Did not find plugin: "{pluginName}"')
+			return None
+		else:
+			theRet = self.pluginDict[pluginName]['type']
+			return theRet
 
 	def pluginList(self):
 		"""Get list of names of loaded plugins"""
@@ -87,13 +143,41 @@ class bPlugins():
 			retList.append(k)
 		return retList
 
+	def getHumanNames(self):
+		retList = []
+		for k,v in self.pluginDict.items():
+			myHumanName = v['myHumanName']
+			retList.append(myHumanName)
+		return retList
+
 	def _module_from_file(self, module_name, file_path):
-	    spec = importlib.util.spec_from_file_location(module_name, file_path)
-	    module = importlib.util.module_from_spec(spec)
-	    spec.loader.exec_module(module)
-	    return module
+		spec = importlib.util.spec_from_file_location(module_name, file_path)
+		module = importlib.util.module_from_spec(spec)
+		spec.loader.exec_module(module)
+		return module
+
+	def slot_closeWindow(self, name):
+		"""
+		close named plugin window
+		"""
+		logger.info(name)
+
+def test_print_classes():
+	"""testing"""
+	print('__name__:', __name__)
+	for name, obj in inspect.getmembers(sys.modules[__name__]):
+		if inspect.isclass(obj):
+			print(name, ':', obj)
+
+	print('===')
+	for name, obj in inspect.getmembers(sanpy.interface.plugins):
+		if inspect.isclass(obj):
+			print(name, ':', obj)
 
 if __name__ == '__main__':
+	#print_classes()
+	#sys.exit(1)
+
 	bp = bPlugins()
 
 	pluginList = bp.pluginList()
@@ -102,4 +186,5 @@ if __name__ == '__main__':
 	abfPath = '/Users/cudmore/Sites/SanPy/data/19114001.abf'
 	ba = sanpy.bAnalysis(abfPath)
 
-	bp.runPlugin('plotRecording3', ba)
+	bp.runPlugin('plotRecording', ba)
+	#bp.runPlugin('plotRecording3', ba)

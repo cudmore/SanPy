@@ -37,17 +37,19 @@ class bExport():
 			df: Pandas DataFrame
 		"""
 		if theMin is None or theMax is None:
-			return None
+			#return None
+			theMin = 0
+			theMax = self.ba.sweepX[-1]
 
 		df = pd.DataFrame(self.ba.spikeDict)
 		df = df[df['thresholdSec'].between(theMin, theMax, inclusive=True)]
 
 		# added when trying to make scatterwidget for one file
 		#print('  20210426 adding columns in bExport.report()')
-		#df['Condition'] = 	df['condition1']
-		#df['File Number'] = 	df['condition2']
-		#df['Sex'] = 	df['condition3']
-		#df['Region'] = 	df['condition4']
+		df['Condition'] = '' #df['condition1']
+		df['File Number'] = '' #df['condition2']
+		df['Sex'] = '' #df['condition3']
+		df['Region'] = '' #df['condition4']
 
 		# make new column with sex/region encoded
 		'''

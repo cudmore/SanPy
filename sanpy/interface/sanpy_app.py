@@ -30,10 +30,12 @@ class MainWindow(QtWidgets.QMainWindow):
 	"""signalUpdateStatusBar (pyqtSignal): xxx"""
 	signalUpdateStatusBar = QtCore.pyqtSignal(object)
 
-	# yyy
 	signalSetXAxis = QtCore.pyqtSignal(object)
-	# zzz
 	signalSelectSpike = QtCore.pyqtSignal(object)
+	"""
+	Signal both switch file and detect
+	"""
+	signalUpdateAnalysis = QtCore.pyqtSignal(object)
 
 	def __init__(self, csvPath=None, path=None, parent=None):
 		"""
@@ -106,7 +108,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			loggerr.debug(f'Loaded csvPath: {csvPath}')
 
 
-		self.myPlugins = sanpy.interface.bPlugins()
+		self.myPlugins = sanpy.interface.bPlugins(sanpyApp=self)
 
 		self.buildMenus()
 
@@ -234,16 +236,20 @@ class MainWindow(QtWidgets.QMainWindow):
 			#self.refreshFileTableWidget_Row()
 
 		elif this == 'detect':
+			print('===sanpy_app.signal() detect')
 			# update scatter plot
 			self.myScatterPlotWidget.plotToolbarWidget.on_scatter_toolbar_table_click()
 
 			# data = dfReportForScatter
 			self.dfReportForScatter = data[0] # can be none when start/stop is not defined
 
-			# update eror table
+			# update error table
 			self.dfError = data[1]
 			errorReportModel = sanpy.interface.bFileTable.pandasModel(self.dfError)
 			self.myErrorTable.setModel(errorReportModel)
+
+			# TODO: This really should have payload
+			self.signalUpdateAnalysis.emit(None)
 
 		elif this == 'saved':
 			pass
@@ -340,6 +346,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.statusBar.repaint()
 		self.statusBar.update()
 
+	def get_bAnalysis(self):
+		return self.myDetectionWidget.ba
+
 	def getSelectedRowDict(self):
 		"""
 		used by detection widget
@@ -401,7 +410,10 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		path = os.path.join(self.path, fileName)
 		switchedFile = self.myDetectionWidget.switchFile(path, tableRowDict)
-		if not switchedFile:
+		if switchedFile:
+			# TODO: This really should have payload
+			self.signalUpdateAnalysis.emit(None)
+		else:
 			self.updateStatusBar(f'Failed to load file: "{path}"')
 
 	def buildMenus(self):
@@ -469,11 +481,23 @@ class MainWindow(QtWidgets.QMainWindow):
 		#
 		# plugins
 		pluginsMenu = mainMenu.addMenu('&Plugins')
+		# getHumanNames
 		plugins = self.myPlugins.pluginList()
 		for plugin in plugins:
-			aPluginAction = QtWidgets.QAction(plugin, self)
-			aPluginAction.triggered.connect(lambda checked, pluginName=plugin: self.aPlugin_action(pluginName))
-			pluginsMenu.addAction(aPluginAction)
+			sanpyPluginAction = QtWidgets.QAction(plugin, self)
+
+			'''
+			type = self.myPlugins.getType(plugin)
+			if type == 'system':
+				print(plugin, 'system -->> bold')
+				f = sanpyPluginAction.font()
+				f.setBold(True);
+				f.setItalic(True);
+				sanpyPluginAction.setFont(f);
+			'''
+
+			sanpyPluginAction.triggered.connect(lambda checked, pluginName=plugin: self.sanpyPlugin_action(pluginName))
+			pluginsMenu.addAction(sanpyPluginAction)
 
 		'''
 		pluginDir = os.path.join(self._getBundledDir(), 'plugins', '*.txt')
@@ -481,10 +505,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		logger.info(f'pluginList: {pluginList}')
 		pluginsMenu = mainMenu.addMenu('&Plugins')
 		oneAction = 'plotRecording'
-		aPluginAction = QtWidgets.QAction(oneAction, self)
-		#aPluginAction.triggered.connect(self.aPlugin_action)
-		aPluginAction.triggered.connect(lambda checked, oneAction=oneAction: self.aPlugin_action(oneAction))
-		pluginsMenu.addAction(aPluginAction)
+		sanpyPluginAction = QtWidgets.QAction(oneAction, self)
+		#sanpyPluginAction.triggered.connect(self.sanpyPlugin_action)
+		sanpyPluginAction.triggered.connect(lambda checked, oneAction=oneAction: self.sanpyPlugin_action(oneAction))
+		pluginsMenu.addAction(sanpyPluginAction)
 		'''
 
 		# windows menu to toggle scatter plot widget
@@ -534,8 +558,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		# detect/plot widget, on the left are params and on the right are plots
 		baNone = None
 		self.myDetectionWidget = sanpy.interface.bDetectionWidget(baNone,self)
-		self.signalSelectSpike.connect(self.myDetectionWidget.slotSelectSpike) # myDetectionWidget listens to self
-		self.myDetectionWidget.signalSelectSpike.connect(self.slotSelectSpike) # self listens to myDetectionWidget
+		self.signalSelectSpike.connect(self.myDetectionWidget.slot_selectSpike) # myDetectionWidget listens to self
+		self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike) # self listens to myDetectionWidget
 		#self.myQVBoxLayout.addWidget(self.myDetectionWidget)#, stretch=6)
 
 		#
@@ -657,11 +681,12 @@ class MainWindow(QtWidgets.QMainWindow):
 		with open(self.optionsFile, 'w') as outfile:
 			json.dump(self.configDict, outfile, indent=4, sort_keys=True)
 
-	def aPlugin_action(self, pluginName):
+	def sanpyPlugin_action(self, pluginName):
 		"""
 		Run a plugin using curent ba
 		"""
-		ba = self.myDetectionWidget.ba
+		#ba = self.myDetectionWidget.ba
+		ba = self.get_bAnalysis()
 		self.myPlugins.runPlugin(pluginName, ba)
 
 	def openScatterWindow(self):
@@ -672,17 +697,22 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 		print('MainWindow.openScatterWindow()')
 
+		'''
 		csvBase, csvExt = os.path.splitext(self.csvPath)
 		masterCsvPath = csvBase + '_master.csv'
 
 		if not os.path.isfile(masterCsvPath):
 			print('error: openScatterWindow() did not find csvPath:', masterCsvPath)
 			return
+		'''
 
-		from bAnalysisUtil import statList
+		from sanpy.bAnalysisUtil import statList
 
+		path = None
+		'''
 		print('  loading', masterCsvPath)
 		path = masterCsvPath
+		'''
 		analysisName = 'analysisname'
 		statListDict = statList # maps human readable to comments
 		categoricalList = ['include', 'Condition', 'Region', 'Sex', 'RegSex', 'File Number', 'analysisname']#, 'File Name']
@@ -694,7 +724,8 @@ class MainWindow(QtWidgets.QMainWindow):
 							'Group By': 'File Number'}
 		#analysisName, masterDf = analysisName, df0 = ba.getReportDf(theMin, theMax, savefile)
 		masterDf = self.dfReportForScatter
-		self.scatterWindow = sanpy.scatterwidget.bScatterPlotMainWindow(
+		#self.scatterWindow = sanpy.scatterwidget.bScatterPlotMainWindow(
+		self.scatterWindow = sanpy.interface.bScatterPlotMainWindow(
 						path, categoricalList, hueTypes,
 						analysisName, sortOrder, statListDict=statListDict,
 						masterDf = masterDf,
@@ -706,7 +737,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		print('MainWindow.slotSelectFromScatter()')
 		print('  ', selectDict)
 
-	def slotSelectSpike(self, spikeNumber, doZoom=False):
+	def slot_selectSpike(self, sDict):
+		spikeNumber = sDict['spikeNumber']
+		doZoom = sDict['doZoom']
 		self.selectSpike(spikeNumber, doZoom)
 
 	def slotCopyTable(self):

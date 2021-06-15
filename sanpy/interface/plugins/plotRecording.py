@@ -4,47 +4,71 @@ import scipy.signal
 
 import matplotlib.pyplot as plt
 
-from PyQt5 import QtCore, QtWidgets, QtGui
-import pyqtgraph as pg
-
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 import sanpy
-from sanpy.interface import aPlugin
+from sanpy.interface.plugins import sanpyPlugin
 
-class plotRecording(aPlugin):
+class plotRecording(sanpyPlugin):
 	"""
-	TODO: plugin should recieve slot() when
-		(1) detection is run
-		(2) spike is selected
-		(3) file is changed
+	Example of matplotlib plugin.
+
 	"""
-	def __init__(self, ba):
-		super(plotRecording, self).__init__(ba)
+	myHumanName = 'Plot Reccording'
+
+	def __init__(self, **kwargs):
+		super(plotRecording, self).__init__('plotRecording', **kwargs)
+		self.plot()
 
 	def plot(self):
 		if self.ba is None:
 			return
 
-		grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
-
-		width = 4
-		height = 4
-		self.fig = plt.figure(figsize=(width, height))
-		self.ax = self.fig.add_subplot(grid[0, 0:]) #Vm, entire sweep
-
-		self.ax.spines['right'].set_visible(False)
-		self.ax.spines['top'].set_visible(False)
+		self.mplWindow() # assigns self (fig, ax)
 
 		sweepX = self.ba.sweepX
 		sweepY = self.ba.sweepY
-		self.line = self.ax.plot(sweepX, sweepY)
+
+		# comma is critical
+		self.line, = self.ax.plot(sweepX, sweepY, '-', linewidth=0.5)
+
+		thresholdSec = self.ba.getStat('thresholdSec')
+		thresholdVal = self.ba.getStat('thresholdVal')
+		if thresholdSec is None and thresholdVal is None:
+			self.lineDetection, = self.ax.plot([], [])
+		else:
+			# comma is critical
+			self.lineDetection, = self.ax.plot(thresholdSec, thresholdVal, 'or')
+			print(type(tmpThrowOut), tmpThrowOut)
 
 		plt.show()
 
-	def slot_selectSpike(self, spikeNumber, doZoom):
-		logger.info(f'spikeNumber:{spikeNumber} doZoom:{doZoom}')
+	def replot(self):
+		"""
+		bAnalysis has been updated, replot
+		"""
+		logger.info('xxx')
+
+		sweepX = self.ba.sweepX
+		sweepY = self.ba.sweepY
+		self.line.set_data(sweepX, sweepY)
+
+		thresholdSec = self.ba.getStat('thresholdSec')
+		thresholdVal = self.ba.getStat('thresholdVal')
+		if thresholdSec is None and thresholdVal is None:
+			self.lineDetection.set_data([], [])
+		else:
+			self.lineDetection.set_data(thresholdSec, thresholdVal)
+
+		self.ax.relim()
+		self.ax.autoscale_view(True,True,True)
+		plt.draw()
+
+	def slot_selectSpike(self, eDict):
+		logger.info(eDict)
+		spikeNumber = eDict['spikeNumber']
+		doZoom = eDict['doZoom']
 
 		if spikeNumber is None:
 			return
@@ -57,7 +81,6 @@ class plotRecording(aPlugin):
 		xMin = spikeTime - 0.5
 		xMax = spikeTime + 0.5
 
-		print('  ', xMin, xMax)
 		self.ax.set_xlim(xMin, xMax)
 
 		self.fig.canvas.draw()

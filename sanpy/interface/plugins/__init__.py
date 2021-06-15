@@ -1,3 +1,10 @@
+from .sanpyPlugin import *
+
+# TODO: Fix this so I do not need to add each
+from .plotRecording import plotRecording
+from .sanpyLog import sanpyLog
+from .plotTool import plotTool
+
 # see: https://stackoverflow.com/questions/1057431/how-to-load-all-modules-in-a-folder
 '''
 import os
@@ -34,7 +41,6 @@ sys.path.append(os.path.dirname(sys.executable))
 print('  sys.path:', sys.path)
 '''
 
-from . import plotRecording
 
 '''
 import importlib
