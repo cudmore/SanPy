@@ -39,8 +39,13 @@ from app import server # needed for heroku
 def loadFile(path, name, rowIdx):
 	print('app2.loadFile() name:', name, 'rowIdx:', rowIdx)
 
-	# already loaded when page was initialized
 	global ba
+
+	if rowIdx > len(baList)-1:
+		# error
+		return
+
+	# already loaded when page was initialized
 	ba = baList[rowIdx]
 
 	start = 0
@@ -55,7 +60,7 @@ def myDetect(dvdtThreshold):
 	dDict['dvdtThreshold'] = dvdtThreshold
 	ba.spikeDetect(dDict)
 
-myPath = 'data'
+myPath = '../data'
 
 # detect spikes
 myThreshold = 20

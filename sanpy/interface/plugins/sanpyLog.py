@@ -13,6 +13,8 @@ class sanpyLog(sanpyPlugin):
 
 	Good example of PyQt plugin
 	"""
+	myHumanName = 'SanPy Log'
+
 	def __init__(self, **kwargs):
 		"""
 		Args:

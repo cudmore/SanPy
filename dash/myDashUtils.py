@@ -30,40 +30,47 @@ def getFileList(path):
 	fileDict['kHz'] = ''
 	fileDict['Duration (Sec)'] = ''
 	fileDict['Number of Sweeps'] = ''
-	for file in os.listdir(path):
-		if file.startswith('.'):
-			continue
-		if file.endswith(useExtension):
-			fullPath = os.path.join(path, file)
+	error = False
+	if not os.path.isdir(path):
+		# ERROR
+		error = True
 
-			fileDict = {} # WOW, I need this here !!!!!!!!
-			fileDict['Type'] = 'file'
-			fileDict['File Name'] = file
-			#fileDict['path'] = fullPath
+	if not error:
+		for file in os.listdir(path):
+			if file.startswith('.'):
+				continue
+			if file.endswith(useExtension):
+				fullPath = os.path.join(path, file)
 
-			ba = sanpy.bAnalysis(file=fullPath)
+				fileDict = {} # WOW, I need this here !!!!!!!!
+				fileDict['Type'] = 'file'
+				fileDict['File Name'] = file
+				#fileDict['path'] = fullPath
 
-			baList.append(ba)
-			'''
-			if videoFileIdx == 0:
-				print(ba.abf.headerText)
-				sweepUnitsC # what we are clamping (mV, pA)
-				sweepUnitsX
-				sweepUnitsY
-			'''
+				ba = sanpy.bAnalysis(file=fullPath)
 
-			# TODO: get this from bAnalysis header
-			baHeader = ba.api_getHeader()
-			recording_kHz = baHeader['recording_kHz'] #ba.dataPointsPerMs
-			numSweeps = len(ba.sweepList)
-			recordingDur_sec = baHeader['recordingDur_sec'] #max(ba.abf.sweepX)
+				baList.append(ba)
+				'''
+				if videoFileIdx == 0:
+					print(ba.abf.headerText)
+					sweepUnitsC # what we are clamping (mV, pA)
+					sweepUnitsX
+					sweepUnitsY
+				'''
 
-			fileDict['kHz'] = recording_kHz
-			fileDict['Duration (Sec)'] = round(recordingDur_sec,3)
-			fileDict['Number of Sweeps'] = numSweeps
+				# TODO: get this from bAnalysis header
+				baHeader = ba.api_getHeader()
+				recording_kHz = baHeader['recording_kHz'] #ba.dataPointsPerMs
+				numSweeps = len(ba.sweepList)
+				recordingDur_sec = baHeader['recordingDur_sec'] #max(ba.abf.sweepX)
 
-			retFileList.append(fileDict)
-			videoFileIdx += 1
+				fileDict['kHz'] = recording_kHz
+				fileDict['Duration (Sec)'] = round(recordingDur_sec,3)
+				fileDict['Number of Sweeps'] = numSweeps
+
+				retFileList.append(fileDict)
+				videoFileIdx += 1
+	#
 	if len(retFileList) == 0:
 		retFileList.append(fileDict)
 

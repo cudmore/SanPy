@@ -16,6 +16,8 @@ class scatterPlot(sanpyPlugin):
 
 	Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
 	"""
+	myHumanName = 'Scatter Plot'
+
 	def __init__(self, **kwargs):
 		"""
 		Args:

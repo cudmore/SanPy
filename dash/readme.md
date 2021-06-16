@@ -1,7 +1,7 @@
 ## Web interface to abf file analysis and plotting
 
- - app2.py, provides a web interface to load, visualize, analyze and save results of spike analysis.
- - bBrowser_app.py, provides a web interface to browse many analysis files and parameters at the same time.
+ - dash_app.py, provides a web interface to load, visualize, analyze and save results of spike analysis.
+ - bBrowser_app.py, EXPERIMENTAL, provides a web interface to browse many analysis files and parameters at the same time.
 
 ## install
 

@@ -60,19 +60,20 @@ class bPlugins():
 					continue
 				#print('sys plugin:', moduleName, ':', obj)
 				fullModuleName = 'sanpy.interface.plugins.' + moduleName
+				humanName = obj.myHumanName
 				pluginDict = {
-					#'pluginName': moduleName,
+					'pluginClass': moduleName,
 					'type': 'system',
 					'module': fullModuleName,
 					'path': '',
 					'constructor': obj,
-					# todo: checck that myHumanName is unique
-					'myHumanName': obj.myHumanName
+					'humanName': humanName
 				}
-				if moduleName in self.pluginDict.keys():
-					logger.warning(f'Plugin already added "{moduleName}"')
+				#if moduleName in self.pluginDict.keys():
+				if humanName in self.pluginDict.keys():
+					logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
 				else:
-					self.pluginDict[moduleName] = pluginDict
+					self.pluginDict[humanName] = pluginDict
 
 		#
 		# user plugins from files in folder <user>/sanpy_plugins
@@ -92,23 +93,24 @@ class bPlugins():
 				oneConstructor = getattr(loadedModule, moduleName)
 			except (AttributeError) as e:
 				logger.error(f'Make sure filename and class are the same file:"{moduleName0}"')
-
 			else:
+				humanName = oneConstructor.myHumanName
 				pluginDict = {
-					#'pluginName': moduleName,
+					'pluginClass': moduleName,
 					'type': 'user',
 					'module': fullModuleName,
 					'path': file,
 					'constructor': oneConstructor,
-					# todo: checck that myHumanName is unique
-					'myHumanName': oneConstructor.myHumanName
+					'humanName': humanName
 					}
 				# assuming moduleName is unique
-				if moduleName in self.pluginDict.keys():
-					logger.warning(f'Plugin already added "{moduleName}"')
+				#if moduleName in self.pluginDict.keys():
+				if humanName in self.pluginDict.keys():
+					logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
 				else:
 					logger.info(f'loading plugin: "{file}"')
-					self.pluginDict[moduleName] = pluginDict
+					#self.pluginDict[moduleName] = pluginDict
+					self.pluginDict[humanName] = pluginDict
 
 	def runPlugin(self, pluginName, ba):
 		"""
@@ -122,7 +124,8 @@ class bPlugins():
 			logger.error(f'Did not find plugin: "{pluginName}"')
 			return
 		else:
-			logger.info(f'Running plugin: "{pluginName}"')
+			humanName = self.pluginDict[pluginName]['constructor'].myHumanName
+			logger.info(f'Running plugin: "{pluginName}" {humanName}')
 			# TODO: to open PyQt windows, we need to keep a local (persistent) variable
 			self.tmpStorePlugin = \
 					self.pluginDict[pluginName]['constructor'](ba=ba, bPlugin=self)

@@ -14,6 +14,8 @@ from sanpy.bAnalysisUtil import statList
 class plotTool(sanpyPlugin):
 	"""
 	"""
+	myHumanName = 'Plot Analysis'
+	
 	def __init__(self, **kwargs):
 		super(plotTool, self).__init__('plotTool', **kwargs)
 		self.plot()
