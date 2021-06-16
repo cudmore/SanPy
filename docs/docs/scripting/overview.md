@@ -1,4 +1,3 @@
-## Writing custom Python scripts
 
 In just a few lines of code, recordings can be loaded, analyzed, and plotted. See the [/examples][examples] folder for examples.
 

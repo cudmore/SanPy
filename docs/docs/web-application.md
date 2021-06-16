@@ -1,11 +1,11 @@
 The browser based web application provides the same interface for analysis as the desktop application.
 
-<IMG SRC="img/dash-june4.png" width=900 border=1>
+<IMG SRC="../img/dash-june4.png" width=900 border=1>
 
 
 Once data is analyzed, Pooling allows browsing detection parameters across any number of files.
 
-<IMG SRC="img/pymy-pooling.png" width=700 border=1>
+<IMG SRC="../img/pymy-pooling.png" width=700 border=1>
 
 ### Install the web application
 

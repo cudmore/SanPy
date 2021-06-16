@@ -4,7 +4,7 @@ SanPy is designed to run on: macOS, Microsoft Windows, and Linux.
 
 We are building apps so users can download a single SanPy.app and get working with just a double-click.
 
-This does not require anything special on our users end, no Python, no command line.
+This does not require anything special on our users end. No programming, no installing Python, and no command line.
 
 Check back for more info on this.
 

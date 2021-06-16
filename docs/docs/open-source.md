@@ -36,11 +36,17 @@ With this, our software is designed to be flexible in how it is used.
 
 ### Web application v2
 
- - Docker
- - NGINX
- - Flask
- - Vue
- - Bootstrap
+ - [Docker][docker]{target=_blank} - Empowering App Development for Developers
+ - [NGINX][nginx]{target=_blank} - High Performance Load Balancer, Web Server ...
+ - [Flask][flask]{target=_blank} - Web development, one drop at a time.
+ - [Vue][vue]{target=_blank} - The progressive Javascript framework.
+ - [Bootstrap][bootstrap]{target=_blank} - The world's most popular framework for building responsive, mobile-first sites.
+
+[docker]: https://www.docker.com/
+[nginx]: https://www.nginx.com/
+[flask]: https://flask.palletsprojects.com/en/2.0.x/
+[vue]: https://vuejs.org/
+[bootstrap]: https://bootstrap-vue.org/
 
 [Python]: https://www.python.org/
 [SciPy]: https://www.scipy.org/

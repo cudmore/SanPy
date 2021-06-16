@@ -36,11 +36,10 @@ class plotRecording(sanpyPlugin):
 		thresholdSec = self.ba.getStat('thresholdSec')
 		thresholdVal = self.ba.getStat('thresholdVal')
 		if thresholdSec is None and thresholdVal is None:
-			self.lineDetection, = self.ax.plot([], [])
+			self.lineDetection, = self.ax.plot([], [], 'o')
 		else:
 			# comma is critical
 			self.lineDetection, = self.ax.plot(thresholdSec, thresholdVal, 'or')
-			print(type(tmpThrowOut), tmpThrowOut)
 
 		plt.show()
 

@@ -2,6 +2,8 @@
 import numpy as np
 import scipy.signal
 
+from matplotlib.backends import backend_qt5agg
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 # Allow this code to run with just backend
@@ -17,6 +19,11 @@ try:
 except (ModuleNotFoundError) as e:
 	pyqtgraph = None
 
+try:
+	import qdarkstyle
+except (ModuleNotFoundError) as e:
+	qdarkstyle = None
+
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
@@ -26,11 +33,17 @@ class myWidget(QtWidgets.QWidget):
 	"""
 	Helper class to open a PyQt window from within a plugin.
 	"""
-	def __init__(self, parentPlugin, name=''):
+	def __init__(self, parentPlugin, name='', doDark=True):
 		super().__init__()
 		self._parentPlugin = parentPlugin
 		self.name = name
 		self.setWindowTitle(name)
+
+		if doDark and qdarkstyle is not None:
+			self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+		else:
+			self.setStyleSheet("")
+
 		self.show()
 
 	def closeEvent(self, event):
@@ -45,6 +58,7 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 	"""
 	if QtCore is not None:
 		signalCloseWindow = QtCore.pyqtSignal(object)
+		signalSelectSpike = QtCore.pyqtSignal(object)
 
 	myHumanName = 'UNDEFINED'
 
@@ -90,9 +104,11 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 			app.signalSelectSpike.connect(self.slot_selectSpike)
 			# receive update analysis (both file change and detect)
 			app.signalUpdateAnalysis.connect(self.slot_updateAnalysis)
-		# emit on close window
 		bPlugins = self.get_bPlugins()
 		if bPlugins is not None:
+			# emit  spike select
+			self.signalSelectSpike.connect(bPlugins.slot_selectSpike)
+			# emit on close window
 			self.signalCloseWindow.connect(bPlugins.slot_closeWindow)
 
 	@property
@@ -116,10 +132,23 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 
 		Creates: self.mainWidget
 		"""
+		doDark = True
+
 		#self.mainWidget = QtWidgets.QWidget()
-		self.mainWidget = myWidget(self, self.name)
+		self.mainWidget = myWidget(self, self.name, doDark)
 		#self.mainWidget.setWindowTitle(self.name)
 		#self.mainWidget.show()
+
+	def mplWindow2(self):
+		tmpFig = mpl.figure.Figure()
+		self.static_canvas = backend_qt5agg.FigureCanvas(tmpFig)
+		self._static_ax = self.static_canvas.figure.subplots()
+		#
+		#self.lines, = self._static_ax.plot([], [], 'ow', picker=5)
+		#self.linesSel, = self._static_ax.plot([], [], 'oy')
+
+		# pick_event assumes 'picker=5' in any .plot()
+		self.cid = self.static_canvas.mpl_connect('pick_event', self.spike_pick_event)
 
 	def mplWindow(self):
 		"""
@@ -140,6 +169,35 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 		self.fig.canvas.manager.set_window_title(self.name)
 
 		self.fig.canvas.mpl_connect('close_event', self.onClose)
+
+		# spike selection
+		# TODO: epand this to other type of objects
+		# TODO: allow user to turn off
+		#self.cid = self.static_canvas.mpl_connect('pick_event', self.spike_pick_event)
+
+	def spike_pick_event(self, event):
+		"""
+		Respond to user clicks in plot
+		Assumes plot(..., picker=5)
+		"""
+		if len(event.ind) < 1:
+			return
+
+		spikeNumber = event.ind[0]
+
+		doZoom = False
+		modifiers = QtGui.QApplication.keyboardModifiers()
+		if modifiers == QtCore.Qt.ShiftModifier:
+			doZoom = True
+
+		logger.info(f'{spikeNumber} {doZoom}')
+
+		# propagate a signal to parent
+		sDict = {
+			'spikeNumber': spikeNumber,
+			'doZoom': doZoom
+		}
+		self.signalSelectSpike.emit(sDict)
 
 	def onClose(self, event):
 		"""

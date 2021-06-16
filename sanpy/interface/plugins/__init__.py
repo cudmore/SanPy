@@ -1,9 +1,12 @@
+#from . import *
+
 from .sanpyPlugin import *
 
 # TODO: Fix this so I do not need to add each
 from .plotRecording import plotRecording
 from .sanpyLog import sanpyLog
 from .plotTool import plotTool
+from .scatterPlot import scatterPlot
 
 # see: https://stackoverflow.com/questions/1057431/how-to-load-all-modules-in-a-folder
 '''

@@ -1,10 +1,16 @@
 SanPy is software to perform analysis of spontaneous [cardiac action potentials][cardiac action potential] from [whole-cell current-clamp][patch-clamp] recordings of [cardiac myocytes].
 
-## This is a work in progress
+This is a work-in-progress and under heavy development. If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.
 
-To make life easier, please contact us before using.
+Our primary goals are to create desktop and web based interfaces for e-phys analysis.
 
-If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.
+### On the desktop
+
+<IMG SRC="../img/sanpy-pyqt-1.png" width=900>
+
+### On the web
+
+<IMG SRC="../img/dash-june4.png" width=900 border=1>
 
 <!--
 ## For anyone interested

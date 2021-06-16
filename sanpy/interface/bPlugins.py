@@ -52,7 +52,9 @@ class bPlugins():
 		#
 		# system plugins from sanpy.interface.plugins
 		for moduleName, obj in inspect.getmembers(sanpy.interface.plugins):
+			print('moduleName:', moduleName, 'obj:', obj)
 			if inspect.isclass(obj):
+				print('  class')
 				if moduleName in ignoreModuleList:
 					# our base plugin class
 					continue
@@ -161,6 +163,19 @@ class bPlugins():
 		close named plugin window
 		"""
 		logger.info(name)
+
+	def slot_selectSpike(self, sDict):
+		"""
+		On user selection of spike in a plugin
+
+		Tell main app to select a spike everywhere
+		"""
+		logger.info(sDict)
+		app = self.getSanPyApp()
+		if app is not None:
+			spikeNumber = sDict['spikeNumber']
+			doZoom = sDict['doZoom']
+			app.selectSpike(spikeNumber, doZoom=False)
 
 def test_print_classes():
 	"""testing"""
