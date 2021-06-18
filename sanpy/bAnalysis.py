@@ -106,6 +106,7 @@ class bAnalysis:
 		self.spikeDict = [] # a list of dict
 		self.spikeTimes = [] # created in self.spikeDetect()
 		self.spikeClips = [] # created in self.spikeDetect()
+		self.dfError = None
 
 		if file is not None and not os.path.isfile(file):
 			logger.error(f'File does not exist: "{file}"')
@@ -117,16 +118,13 @@ class bAnalysis:
 
 		# instantiate and load abf file
 		if byteStream is not None:
-			self._abf = pyabf.ABF(byteStream) # my cloned pyAbf to load a byte-stream
-			self.myFileType = 'bytestream'
-
+			self._loadAbf(byteStream=byteStream)
+		elif file.endswith('.abf'):
+			self._loadAbf()
 		elif file.endswith('.tif'):
 			self._loadTif()
 		elif file.endswith('.csv'):
 			self._loadCsv()
-
-		elif file.endswith('.abf'):
-			self._loadAbf()
 		else:
 			print(f'error: bAnalysis.__init__() can only open abf/csv/tif files: {file}')
 			self.loadError = True
@@ -191,10 +189,13 @@ class bAnalysis:
 		_dataPointsPerMs = 1 / diff_ms
 		self._dataPointsPerMs = _dataPointsPerMs
 
-	def _loadAbf(self):
+	def _loadAbf(self, byteStream=None):
 		"""Load pyAbf from path"""
 		try:
-			self._abf = pyabf.ABF(self._path)
+			if byteStream is not None:
+				self._abf = pyabf.ABF(byteStream)
+			else:
+				self._abf = pyabf.ABF(self._path)
 			self._sweepX = self._abf.sweepX
 			self._sweepY = self._abf.sweepY
 
@@ -235,10 +236,21 @@ class bAnalysis:
 	def path(self):
 		return self._path
 
+	def getFileName(self):
+		if self._path is None:
+			return None
+		else:
+			return os.path.split(self._path)[1]
+
+	'''
 	@property
-	def file(self):
+	def fileName(self):
 		# singular self._path with return ('', 'filename')
-		return os.path.split(self._path)[1]
+		if self._path is None:
+			return None
+		else:
+			return os.path.split(self._path)[1]
+	'''
 
 	@property
 	def abf(self):
@@ -1046,7 +1058,7 @@ class bAnalysis:
 			spikeDict['include'] = 1
 			spikeDict['analysisVersion'] = sanpy.analysisVersion
 			spikeDict['interfaceVersion'] = sanpy.interfaceVersion
-			spikeDict['file'] = self.file
+			spikeDict['file'] = self.getFileName()
 
 			spikeDict['detectionType'] = detectionType
 			spikeDict['cellType'] = dDict['cellType']
@@ -1535,10 +1547,12 @@ class bAnalysis:
 		exportObject = sanpy.bExport(self)
 		dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
 
+		self.dfError = self.errorReport()
+
 		stopTime = time.time()
-		#print('bAnalysis.spikeDetect() for file', self.file)
+		#print('bAnalysis.spikeDetect() for file', self.getFileName())
 		logger.info(f'Detected {len(self.spikeTimes)} spikes in {round(stopTime-startTime,2)} seconds')
-		#self.errorReport()
+
 
 		return dfReportForScatter
 
@@ -1669,7 +1683,7 @@ class bAnalysis:
 		TODO: We need to save header with xxx
 		TODO: Load <path>_analysis.csv
 		"""
-		savefile = os.path.splitext(self.file)[0]
+		savefile = os.path.splitext(self._path)[0]
 		savefile += '_analysis.csv'
 		saveExcel = False
 		alsoSaveTxt = True
@@ -1719,13 +1733,6 @@ class bAnalysis:
 		theRet = int(theRet)
 		return theRet
 
-	# TODO: not needed ???
-	'''
-	def __str__(self):
-		retStr = 'file: ' + self.file + '\n' + str(self.abf)
-		return retStr
-	'''
-
 	def _normalizeData(self, data):
 		"""
 		Used to calculate normalized data for detection from Kymograph. Is NOT for df/d0.
@@ -1740,7 +1747,7 @@ class bAnalysis:
 			- add info on abf file, like samples per ms
 
 		Returns:
-			dict: Dictionary of information aboiut loaded file.
+			dict: Dictionary of information about loaded file.
 		"""
 		recordingDir_sec = len(self.sweepX) / self.dataPointsPerMs / 1000
 		recordingFrequency = self.dataPointsPerMs
@@ -1749,8 +1756,8 @@ class bAnalysis:
 			'myFileType': self.myFileType, # ('abf', 'tif', 'bytestream', 'csv')
 			'loadError': self.loadError,
 			'detectionDict': self.detectionDict,
-			'path': self.file,
-			'file': os.path.split(self.file)[1],
+			'path': self._path,
+			'file': self.getFileName(),
 			'dateAnalyzed': self.dateAnalyzed,
 			'detectionType': self.detectionType,
 			'acqDate': self.acqDate,

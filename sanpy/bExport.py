@@ -78,10 +78,15 @@ class bExport():
 		maxStr = '%.2f'%(theMax)
 		minStr = minStr.replace('.', '_')
 		maxStr = maxStr.replace('.', '_')
-		tmpPath, tmpFile = os.path.split(self.ba.file)
-		tmpFile, tmpExt = os.path.splitext(tmpFile)
-		analysisName = tmpFile + '_s' + minStr + '_s' + maxStr
-		print('    minStr:', minStr, 'maxStr:', maxStr, 'analysisName:', analysisName)
+
+		# TODO: bytestreams are not strictly from a hdd folder or file
+		fileName = self.ba.getFileName()
+		if fileName is not None:
+			fileName, tmpExt = os.path.splitext(fileName)
+			analysisName = fileName + '_s' + minStr + '_s' + maxStr
+			#print('    minStr:', minStr, 'maxStr:', maxStr, 'analysisName:', analysisName)
+		else:
+			analysisName = 'bytestream'
 		df['analysisname'] = analysisName
 
 		return df

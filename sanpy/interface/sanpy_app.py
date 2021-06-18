@@ -208,6 +208,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		# set df to model
 		self.myModel = sanpy.interface.bFileTable.pandasModel(df)
+		columnsDict = sanpy.analysisDir.sanpyColumns
+		self.myModel.mySetColumns(columnsDict)
 		try:
 			self.tableView.setModel(self.myModel)
 		except (AttributeError) as e:
@@ -236,16 +238,23 @@ class MainWindow(QtWidgets.QMainWindow):
 			#self.refreshFileTableWidget_Row()
 
 		elif this == 'detect':
-			print('===sanpy_app.signal() detect')
+			logger.info('detect')
 			# update scatter plot
 			self.myScatterPlotWidget.plotToolbarWidget.on_scatter_toolbar_table_click()
 
 			# data = dfReportForScatter
-			self.dfReportForScatter = data[0] # can be none when start/stop is not defined
+			# data[0] is:
+			# dfReportForScatter = self.ba.spikeDetect(detectionDict)
+			#self.dfReportForScatter = data[0] # can be none when start/stop is not defined
 
+			# data[1] is
+			# dfError = self.ba.errorReport()
 			# update error table
-			self.dfError = data[1]
-			errorReportModel = sanpy.interface.bFileTable.pandasModel(self.dfError)
+			#self.dfError = data[1]
+			dfError = self.get_bAnalysis().dfError
+			print('  dfError:')
+			print(dfError)
+			errorReportModel = sanpy.interface.bFileTable.pandasModel(dfError)
 			self.myErrorTable.setModel(errorReportModel)
 
 			# TODO: This really should have payload
@@ -360,7 +369,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			rowDict = self.myModel.myGetRowDict(self.selectedRow)
 		return rowDict
 
-	def errorTableClicked(self, index):
+	def old_errorTableClicked(self, index):
 		row = index.row()
 		column = index.column()
 
@@ -540,6 +549,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		# tree view of files
 		if masterDf is not None:
 			self.myModel = sanpy.interface.bFileTable.pandasModel(masterDf)
+			columnsDict = sanpy.analysisDir.sanpyColumns
+			self.myModel.mySetColumns(columnsDict)
 
 		#
 		# table of files
@@ -576,7 +587,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		# error report
 		#self.myErrorTable = QtWidgets.QTableView()
 		self.myErrorTable = sanpy.interface.bErrorTable.errorTableView()
-		self.myErrorTable.clicked.connect(self.errorTableClicked)
+		self.myErrorTable.signalSelectSpike.connect(self.slot_selectSpike)
+		#self.myErrorTable.clicked.connect(self.errorTableClicked)
 		self.myErrorTable.hide() # start hidden
 		#self.myQVBoxLayout.addWidget(self.myErrorTable)
 

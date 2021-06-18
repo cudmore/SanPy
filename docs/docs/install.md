@@ -1,6 +1,6 @@
 SanPy is designed to run on: macOS, Microsoft Windows, and Linux.
 
-## Download and run the one-click SanPy app.
+## Download the SanPy app.
 
 We are building apps so users can download a single SanPy.app and get working with just a double-click.
 

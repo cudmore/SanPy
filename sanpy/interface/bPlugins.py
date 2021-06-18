@@ -29,6 +29,9 @@ class bPlugins():
 		self.pluginFolder = pluginFolder
 		self.pluginDict = {}
 
+		"""set of open plugins"""
+		self._openSet = set()
+
 		if not error:
 			sys.path.append(self.pluginFolder)
 			self.loadPlugins()
@@ -127,8 +130,9 @@ class bPlugins():
 			humanName = self.pluginDict[pluginName]['constructor'].myHumanName
 			logger.info(f'Running plugin: "{pluginName}" {humanName}')
 			# TODO: to open PyQt windows, we need to keep a local (persistent) variable
-			self.tmpStorePlugin = \
+			newPlugin = \
 					self.pluginDict[pluginName]['constructor'](ba=ba, bPlugin=self)
+			self._openSet.add(newPlugin)
 
 	def getType(self, pluginName):
 		"""
@@ -161,11 +165,18 @@ class bPlugins():
 		spec.loader.exec_module(module)
 		return module
 
-	def slot_closeWindow(self, name):
+	def slot_closeWindow(self, pluginObj):
 		"""
 		close named plugin window
-		"""
-		logger.info(name)
+
+		Args:
+			id (int): The running plugin .id()
+			"""
+		logger.info(pluginObj)
+		try:
+			self._openSet.remove(pluginObj)
+		except (KeyError) as e:
+			logger.exception(e)
 
 	def slot_selectSpike(self, sDict):
 		"""

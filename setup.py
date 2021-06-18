@@ -23,7 +23,8 @@ setup(
 		'openpyxl',
 		'seaborn',
 		'tifffile',
-		'mplcursors'
+		'mplcursors',
+		'requests', # to load from the cloud (for now github)
     ],
     # use pip install .[gui]
     # on Big Sur use pip install .\[gui\]

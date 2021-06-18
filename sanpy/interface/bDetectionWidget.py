@@ -207,7 +207,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		dfReportForScatter = self.ba.spikeDetect(detectionDict)
 
 		# error report
-		dfError = self.ba.errorReport()
+		#dfError = self.ba.errorReport()
 
 		# show dialog when num spikes is 0
 		if self.ba.numSpikes == 0:
@@ -220,7 +220,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		if self.myMainWindow is not None:
 			# signal to main window so it can update (file list, scatter plot)
-			self.myMainWindow.mySignal('detect', data=(dfReportForScatter, dfError))
+			self.myMainWindow.mySignal('detect') #, data=(dfReportForScatter, dfError))
 
 		#QtCore.QCoreApplication.processEvents()
 		self.updateStatusBar(f'Detected {self.ba.numSpikes} spikes')

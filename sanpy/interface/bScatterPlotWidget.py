@@ -241,9 +241,9 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 			xStat = 'preMinPnt'
 			convertPntToSec = True
 		'''
-		if len(self.lastFileName)==0 or (self.lastFileName != self.myDetectionWidget.ba.file):
+		if len(self.lastFileName)==0 or (self.lastFileName != self.myDetectionWidget.ba.getFileName()):
 			self.lastSpikeNumber = None
-			self.lastFileName = self.myDetectionWidget.ba.file
+			self.lastFileName = self.myDetectionWidget.ba.getFileName()
 
 		# convert human readable yStat to backend
 		statList = sanpy.bAnalysisUtil.getStatList()

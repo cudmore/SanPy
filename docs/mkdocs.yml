@@ -57,7 +57,6 @@ nav:
     - SanPy: index.md
     - Install: install.md
     - Desktop Application: desktop-application.md
-    - Web Application: web-application.md
     - Plugins: plugins.md
     - Scripting:
         - Overview: scripting/overview.md
@@ -74,5 +73,6 @@ nav:
         - interface:
             - sanp_app: api/interface/sanpy_app.md
     - Methods: methods.md
+    - Web Application: web-application.md
     - Open Source: open-source.md
     - About: about.md

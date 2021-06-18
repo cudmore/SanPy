@@ -6,7 +6,8 @@ from .sanpyPlugin import *
 from .plotRecording import plotRecording
 from .sanpyLog import sanpyLog
 from .plotTool import plotTool
-from .scatterPlot import scatterPlot
+from .plotScatter import plotScatter
+from .detectionErrors import detectionErrors
 
 # see: https://stackoverflow.com/questions/1057431/how-to-load-all-modules-in-a-folder
 '''

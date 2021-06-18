@@ -4,13 +4,17 @@ This is a work-in-progress and under heavy development. If you find the code in 
 
 Our primary goals are to create desktop and web based interfaces for e-phys analysis.
 
-### On the desktop
+## Desktop Application
 
-<IMG SRC="../img/sanpy-pyqt-1.png" width=900>
+<IMG SRC="img/sanpy-pyqt-1.png" width=900>
 
-### On the web
+## Plugins
 
-<IMG SRC="../img/dash-june4.png" width=900 border=1>
+<IMG SRC="img/plugins/scatter-plot.png" width=700>
+
+<!-- ### On the web -->
+
+<!-- <IMG SRC="img/dash-june4.png" width=900 border=1> -->
 
 <!--
 ## For anyone interested

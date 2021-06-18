@@ -5,6 +5,7 @@
 import os
 import numpy as np
 import pandas as pd
+import requests, io # too load from the web
 
 import sanpy
 
@@ -162,11 +163,77 @@ def findNewFiles(path):
 
 	# (2) for each file in df, see if it is in dir
 
+class bAnalysisDirWeb():
+	"""
+	Load a directory of .abf from the web (for now from GitHub).
+	Will etend this to Box, Dropbox, other?.
+	"""
+	def __init__(self, cloudDict):
+		"""
+		cloudDict (dict): {
+					'owner': 'cudmore',
+					'repo_name': 'SanPy',
+					'path': 'data'
+					}
+		"""
+		self._cloudDict = cloudDict
+		self.loadFolder()
+
+	def loadFolder(self):
+		"""
+		Load using cloudDict
+		"""
+
+		"""
+		# use ['download_url'] to download abf file (no byte conversion)
+		response[0] = {
+			name : 171116sh_0018.abf
+			path : data/171116sh_0018.abf
+			sha : 5f3322b08d86458bf7ac8b5c12564933142ffd17
+			size : 2047488
+			url : https://api.github.com/repos/cudmore/SanPy/contents/data/171116sh_0018.abf?ref=master
+			html_url : https://github.com/cudmore/SanPy/blob/master/data/171116sh_0018.abf
+			git_url : https://api.github.com/repos/cudmore/SanPy/git/blobs/5f3322b08d86458bf7ac8b5c12564933142ffd17
+			download_url : https://raw.githubusercontent.com/cudmore/SanPy/master/data/171116sh_0018.abf
+			type : file
+			_links : {'self': 'https://api.github.com/repos/cudmore/SanPy/contents/data/171116sh_0018.abf?ref=master', 'git': 'https://api.github.com/repos/cudmore/SanPy/git/blobs/5f3322b08d86458bf7ac8b5c12564933142ffd17', 'html': 'https://github.com/cudmore/SanPy/blob/master/data/171116sh_0018.abf'}
+		}
+		"""
+
+		owner = self._cloudDict['owner']
+		repo_name = self._cloudDict['repo_name']
+		path = self._cloudDict['path']
+		url = f'https://api.github.com/repos/{owner}/{repo_name}/contents/{path}'
+
+		# response is a list of dict
+		response = requests.get(url).json()
+		#print('response:', type(response))
+
+		for idx, item in enumerate(response):
+			if not item['name'].endswith('.abf'):
+				continue
+			print(idx)
+			# use item['git_url']
+			for k,v in item.items():
+				print('  ', k, ':', v)
+
+		#
+		# test load
+		download_url = response[1]['download_url']
+		content = requests.get(download_url).content
+
+		fileLikeObject = io.BytesIO(content)
+		ba = sanpy.bAnalysis(byteStream=fileLikeObject)
+		#print(ba._abf)
+		#print(ba.api_getHeader())
+		ba.spikeDetect()
+		print(ba.numSpikes)
+
 class bAnalysisDir():
 	"""
 	Class to manage a list of files loaded from a folder
 	"""
-	def __init__(self, path, myApp=None, autoLoad=True):
+	def __init__(self, path=None, myApp=None, autoLoad=True):
 		"""
 		Initialize with a path to folder
 
@@ -175,22 +242,30 @@ class bAnalysisDir():
 		Args:
 			path (str): Path to folder
 			myApp (sanpy_app): Optional
+			autoLoad (boolean):
+			cloudDict (dict): To load frmo cloud, for now  just github
 		"""
 		self.path = path
 		self.myApp = myApp # used to signal on building initial db
+		self.autoLoad = autoLoad
+		#self.cloudDict = cloudDict
 		self.fileList = [] # list of dict
 		self.df = None
 		if autoLoad:
-			self.df = self.loadFolder(self.path)
+			self.df = self.loadFolder()
 
 	def numFiles(self):
 		"""Get the number of files"""
 		return len(self.fileList)
 
-	def loadFolder(self, path):
+	def loadFolder(self, path=None):
 		"""
 		expensive
+
+		TODO: extand the logic to load from cloud (after we were instantiated)
 		"""
+		if path is None:
+			path = self.path
 		self.path = path
 
 		# load an existing folder db or create a new one
@@ -203,19 +278,6 @@ class bAnalysisDir():
 
 			#df["Idx"] = pd.to_numeric(df["Idx"])
 			df = self._setColumnType(df)
-			'''
-			for col in df.columns:
-				colType = sanpyColumns[col]['type']
-				if  colType == str:
-					df[col] = df[col].replace(np.nan, '', regex=True)
-					df[col] = df[col].astype(str)
-				elif colType == int:
-					df[col] = df[col].astype(int)
-				elif colType == float:
-					df[col] = df[col].astype(float)
-				elif colType == bool:
-					df[col] = df[col].astype(bool)
-			'''
 
 			'''
 			print('=== final types')
@@ -383,6 +445,15 @@ def test():
 	tmpDict = ba.api_getRecording()
 	print(tmpDict.keys())
 
+def testCloud():
+	cloudDict = {
+		'owner': 'cudmore',
+		'repo_name': 'SanPy',
+		'path': 'data'
+	}
+	bad = bAnalysisDirWeb(cloudDict)
+
 if __name__ == '__main__':
 	#test()
-	test2()
+	#test2()
+	testCloud()

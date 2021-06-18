@@ -140,3 +140,105 @@ def makeTable(id, df, height=200, row_selectable='single', defaultRow=0):
 		}
 	)
 	return ret
+
+def old_test_requests():
+	"""
+	this gets all files, including
+
+	https://api.github.com/repos/cudmore/SanPy/git/trees/master?recursive=1
+
+    {
+      "path": "data",
+      "mode": "040000",
+      "type": "tree",
+      "sha": "8b97ef351ea95308b524b6febb2890f000b86388",
+      "url": "https://api.github.com/repos/cudmore/SanPy/git/trees/8b97ef351ea95308b524b6febb2890f000b86388"
+    },
+    {
+      "path": "data/171116sh_0018.abf",
+      "mode": "100644",
+      "type": "blob",
+      "sha": "5f3322b08d86458bf7ac8b5c12564933142ffd17",
+      "size": 2047488,
+      "url": "https://api.github.com/repos/cudmore/SanPy/git/blobs/5f3322b08d86458bf7ac8b5c12564933142ffd17"
+    },
+
+	Then this url:
+	https://api.github.com/repos/cudmore/SanPy/git/blobs/5f3322b08d86458bf7ac8b5c12564933142ffd17
+	returns a dict d{} with
+
+	{
+	  "sha": "5f3322b08d86458bf7ac8b5c12564933142ffd17",
+	  "node_id": "MDQ6QmxvYjE3MTA2NDA5Nzo1ZjMzMjJiMDhkODY0NThiZjdhYzhiNWMxMjU2NDkzMzE0MmZmZDE3",
+	  "size": 2047488,
+	  "url": "https://api.github.com/repos/cudmore/SanPy/git/blobs/5f3322b08d86458bf7ac8b5c12564933142ffd17",
+	  "coontent": "<CONTENTS>"
+	  "encoding": "base64"
+	  }
+
+	https://api.github.com/repos/:owner/:repo_name/contents/:path
+
+	"""
+	import requests
+	import io
+
+	# this works
+	'''
+	url = "https://github.com/cudmore/SanPy/blob/master/data/19114001.abf?raw=true"
+	# Make sure the url is the raw version of the file on GitHub
+	download = requests.get(url).content
+	'''
+
+	owner = 'cudmore'
+	repo_name = 'SanPy'
+	path = 'data'
+	url = f'https://api.github.com/repos/{owner}/{repo_name}/contents/{path}'
+	response = requests.get(url).json()
+	print('response:', type(response))
+	#print(response.json())
+	for idx, item in enumerate(response):
+		if not item['name'].endswith('.abf'):
+			continue
+		print(idx)
+		# use item['git_url']
+		for k,v in item.items():
+			print('  ', k, ':', v)
+
+	#
+	# grab the first file
+	#gitURl = response[0]['git_url']
+	'''
+	print('  === gitURL:', gitURL)
+	#download = requests.get(gitURl).content
+	downloadRespoonse = requests.get(gitURL).json()
+	print('  downloadRespoonse:', type(downloadRespoonse))
+	content = downloadRespoonse['content']
+	#print('  ', downloadRespoonse)
+	#decoded = download.decode('utf-8')
+	#print('  decoded:', type(decoded))
+	'''
+
+	# use response[0]['download_url'] to directly download file
+	#gitURL = 'https://raw.githubusercontent.com/cudmore/SanPy/master/data/SAN-AP-example-Rs-change.abf'
+	download_url = response[1]['download_url']
+	content = requests.get(download_url).content
+
+	#import base64
+	#myBase64 = base64.b64encode(bytes(content, 'utf-8'))
+	#myBase64 = base64.b64encode(bytes(content, 'base64'))
+	'''
+	myBase64 = base64.b64encode(bytes(content, 'utf-8'))
+	print('myBase64:', type(myBase64))
+	'''
+	#decoded = content.decode('utf-8')
+	#print(download)
+	#import pyabf
+	fileLikeObject = io.BytesIO(content)
+	ba = sanpy.bAnalysis(byteStream=fileLikeObject)
+	print(ba._abf)
+	print(ba.api_getHeader())
+
+if __name__ == '__main__':
+	#test_requests()
+	pass
+	

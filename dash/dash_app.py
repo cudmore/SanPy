@@ -223,6 +223,7 @@ def _regenerateFig(xMin, xMax, statList=None):
 							line=lineDict, showlegend=False)
 	except (TypeError) as e:
 		print('EXCEPTION: _regenerateFig() got TypeError ... reploting WITHOUT subSetOfPnts')
+		print(e)
 		#print('  subSetOfPnts:', type(subSetOfPnts), subSetOfPnts)
 		'''
 		print('  len(ba.filteredDeriv):', len(ba.filteredDeriv))
@@ -480,8 +481,8 @@ def parse_contents_abf(contents, filename, date):
 		print('	stop:', stop)
 		print('	plotEveryPoint:', plotEveryPoint)
 		global subSetOfPnts
-		subSetOfPnts = range(start, stop, plotEveryPoint)
-		print('  subSetOfPnts:', subSetOfPnts)
+		subSetOfPnts = slice(start, stop, plotEveryPoint)
+		#print('  subSetOfPnts:', subSetOfPnts)
 	except:
 		print('*** exception in app2.parse_contents_abf():')
 		print(sys.exc_info())

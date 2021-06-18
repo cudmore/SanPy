@@ -7934,3 +7934,1061 @@
 2021-06-16 10:27:53,654   INFO sanpy.interface.plugins.scatterPlot  scatterPlot.py slot_selectSpike() line:98 -- {'spikeNumber': 46, 'doZoom': False}
 2021-06-16 10:27:59,017   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- scatterPlot
 2021-06-16 10:28:01,960   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-16 19:12:00,495   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:147 -- Did not take derivative
+2021-06-16 19:15:15,453   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:145 -- Did not take derivative
+2021-06-16 19:16:35,457   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:145 -- Did not take derivative
+2021-06-16 19:24:36,062   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:145 -- Did not take derivative
+2021-06-16 19:25:06,343   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:145 -- Did not take derivative
+2021-06-16 19:27:47,919   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:145 -- Did not take derivative
+2021-06-16 19:27:47,919   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:987 -- start detection
+2021-06-16 19:27:47,955   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:674 -- From 39 to 39 spikes with refractory_ms:170
+2021-06-16 19:36:45,224   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:144 -- Did not take derivative
+2021-06-16 19:36:45,225   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-16 19:38:54,847   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-16 19:38:54,871   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 39 to 39 spikes with refractory_ms:170
+2021-06-16 19:43:10,925   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-16 19:43:10,959   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 39 to 39 spikes with refractory_ms:170
+2021-06-16 19:45:56,528   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-16 19:45:56,629   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 39 to 39 spikes with refractory_ms:170
+2021-06-16 19:45:56,956   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1551 -- Detected 39 spikes in 0.43 seconds
+2021-06-16 19:47:00,234   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-16 19:47:00,261   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 39 to 39 spikes with refractory_ms:170
+2021-06-16 19:47:00,410   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1551 -- Detected 39 spikes in 0.18 seconds
+2021-06-16 20:27:25,438   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 0 errors in spike detection
+2021-06-16 20:27:31,313   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-16 20:27:31,348   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 50 to 45 spikes with refractory_ms:170
+2021-06-16 20:27:31,510   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1551 -- Detected 45 spikes in 0.2 seconds
+2021-06-16 20:27:31,580   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 2 errors in spike detection
+2021-06-16 20:28:32,206   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 0 errors in spike detection
+2021-06-16 20:29:24,672   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 0 errors in spike detection
+2021-06-16 20:32:39,828   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 0 errors in spike detection
+2021-06-16 20:32:45,005   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-16 20:32:45,043   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-16 20:32:45,281   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1551 -- Detected 103 spikes in 0.28 seconds
+2021-06-16 20:32:45,445   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 1 errors in spike detection
+2021-06-16 20:32:51,508   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 0 errors in spike detection
+2021-06-16 20:33:02,967   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 0 errors in spike detection
+2021-06-16 20:33:06,427   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-16 20:33:06,464   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-16 20:33:06,640   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1551 -- Detected 103 spikes in 0.21 seconds
+2021-06-16 20:33:06,808   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 1 errors in spike detection
+2021-06-17 10:41:19,801   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 10:41:19,801   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 10:41:20,014   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 10:41:20,015   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 10:41:20,015   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 10:41:20,071   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 10:41:20,072   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 10:41:20,072   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 10:41:20,073   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 10:41:20,089   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 10:41:20,093   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 10:41:20,464   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 10:41:22,923   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 10:41:22,924   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 10:41:37,826   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Reccording" Plot Reccording
+2021-06-17 10:41:46,731   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotRecording
+2021-06-17 10:53:15,769   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 10:53:19,631   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 10:53:19,631   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 10:53:19,860   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 10:53:19,862   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 10:53:19,863   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 10:53:19,917   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 10:53:19,918   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 10:53:19,918   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 10:53:19,919   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 10:53:19,937   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 10:53:19,941   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 10:53:20,284   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 10:53:22,055   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 10:53:22,055   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 10:53:30,790   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Reccording" Plot Reccording
+2021-06-17 10:53:34,819   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotRecording
+2021-06-17 10:53:39,955   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Scatter Plot" Scatter Plot
+2021-06-17 11:17:00,333   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 11:18:03,232   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 11:18:03,233   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 11:18:03,379   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 11:18:03,381   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 11:18:03,381   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 11:18:03,432   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 11:18:03,432   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 11:18:03,433   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:18:03,433   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 11:18:03,448   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 11:18:03,451   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 11:18:03,783   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 11:18:05,634   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:18:05,634   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 11:18:09,552   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 11:18:13,002   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotScatter
+2021-06-17 11:18:13,009   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 11:19:08,721   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 11:19:08,722   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 11:19:08,861   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 11:19:08,863   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 11:19:08,863   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 11:19:08,915   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 11:19:08,915   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 11:19:08,916   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:19:08,916   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 11:19:08,930   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 11:19:08,933   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 11:19:09,269   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 11:19:10,798   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:19:10,800   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 11:19:15,185   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 11:19:23,772   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotScatter
+2021-06-17 11:19:23,778   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 11:20:30,090   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 11:20:30,091   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 11:20:30,228   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 11:20:30,229   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 11:20:30,230   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 11:20:30,285   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 11:20:30,286   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 11:20:30,286   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:20:30,287   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 11:20:30,304   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 11:20:30,307   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 11:20:30,655   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 11:20:32,546   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:20:32,547   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 11:20:36,674   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 11:20:51,870   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 11:20:51,896   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotScatter
+2021-06-17 11:22:02,013   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 11:22:02,013   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 11:22:02,145   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 11:22:02,146   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 11:22:02,147   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 11:22:02,202   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 11:22:02,202   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 11:22:02,203   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:22:02,203   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 11:22:02,222   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 11:22:02,225   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 11:22:02,543   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 11:22:04,320   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:22:04,320   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 11:22:11,235   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 11:22:17,448   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 11:22:17,450   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 11:22:17,452   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-17 11:22:17,485   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 11:22:17,662   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1551 -- Detected 103 spikes in 0.21 seconds
+2021-06-17 11:22:17,665   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 1 errors in spike detection
+2021-06-17 11:24:37,109   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotScatter
+2021-06-17 11:24:37,127   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 11:24:40,808   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 11:24:40,808   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 11:24:41,013   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 11:24:41,014   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 11:24:41,015   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 11:24:41,065   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 11:24:41,066   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 11:24:41,066   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:24:41,066   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 11:24:41,084   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 11:24:41,088   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 11:24:41,402   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 11:24:42,866   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:24:42,868   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 11:24:44,812   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 11:24:44,813   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 11:24:44,815   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-17 11:24:44,842   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 11:24:45,023   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1551 -- Detected 103 spikes in 0.21 seconds
+2021-06-17 11:24:45,026   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 1 errors in spike detection
+2021-06-17 11:24:56,161   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 11:25:00,262   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:87 -- thresholdSec thresholdSec
+2021-06-17 11:25:01,901   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:87 -- thresholdSec thresholdVal
+2021-06-17 11:25:09,182   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 0, doZoom True
+2021-06-17 11:25:09,724   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 0, doZoom True
+2021-06-17 11:25:09,849   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:120 -- {'spikeNumber': 0, 'doZoom': True}
+2021-06-17 11:25:10,545   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom True
+2021-06-17 11:25:10,803   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom True
+2021-06-17 11:25:10,949   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:120 -- {'spikeNumber': 1, 'doZoom': True}
+2021-06-17 11:25:11,227   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 2, doZoom True
+2021-06-17 11:25:11,430   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 2, doZoom True
+2021-06-17 11:25:11,546   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:120 -- {'spikeNumber': 2, 'doZoom': True}
+2021-06-17 11:25:11,774   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 3, doZoom True
+2021-06-17 11:25:12,001   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 3, doZoom True
+2021-06-17 11:25:12,215   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:120 -- {'spikeNumber': 3, 'doZoom': True}
+2021-06-17 11:25:12,489   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 4, doZoom True
+2021-06-17 11:25:12,681   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 4, doZoom True
+2021-06-17 11:25:12,775   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:120 -- {'spikeNumber': 4, 'doZoom': True}
+2021-06-17 11:25:21,000   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 5, doZoom True
+2021-06-17 11:25:21,183   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 5, doZoom True
+2021-06-17 11:25:21,272   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:120 -- {'spikeNumber': 5, 'doZoom': True}
+2021-06-17 11:25:22,501   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 6, doZoom True
+2021-06-17 11:25:22,702   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 6, doZoom True
+2021-06-17 11:25:22,801   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:120 -- {'spikeNumber': 6, 'doZoom': True}
+2021-06-17 11:25:23,349   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 7, doZoom True
+2021-06-17 11:25:23,517   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 7, doZoom True
+2021-06-17 11:25:23,627   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:120 -- {'spikeNumber': 7, 'doZoom': True}
+2021-06-17 11:25:24,145   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 8, doZoom True
+2021-06-17 11:25:24,366   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 8, doZoom True
+2021-06-17 11:25:24,454   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:120 -- {'spikeNumber': 8, 'doZoom': True}
+2021-06-17 11:25:28,087   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 11:25:28,091   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotScatter
+2021-06-17 11:27:02,904   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 11:27:02,905   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 11:27:03,038   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 11:27:03,040   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 11:27:03,040   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 11:27:03,091   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 11:27:03,091   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 11:27:03,092   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:27:03,092   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 11:27:03,107   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 11:27:03,110   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 11:27:03,439   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 11:27:05,197   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:27:05,197   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 11:27:08,667   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 11:27:12,637   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:89 -- thresholdSec thresholdSec
+2021-06-17 11:27:12,638  WARNING sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:102 -- Did not find xStat: "thresholdSec"
+2021-06-17 11:27:13,772   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:89 -- thresholdSec thresholdVal
+2021-06-17 11:27:13,774  WARNING sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:102 -- Did not find xStat: "thresholdSec"
+2021-06-17 11:27:16,550   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 11:27:16,554   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 11:27:16,555   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-17 11:27:16,591   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 11:27:16,788   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1551 -- Detected 103 spikes in 0.23 seconds
+2021-06-17 11:27:16,791   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 1 errors in spike detection
+2021-06-17 11:27:17,223   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:89 -- thresholdSec thresholdVal
+2021-06-17 11:27:21,836   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 0, doZoom True
+2021-06-17 11:27:22,382   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 0, doZoom True
+2021-06-17 11:27:22,536   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:122 -- {'spikeNumber': 0, 'doZoom': True}
+2021-06-17 11:27:23,156   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom True
+2021-06-17 11:27:23,407   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom True
+2021-06-17 11:27:23,543   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:122 -- {'spikeNumber': 1, 'doZoom': True}
+2021-06-17 11:27:23,746   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 2, doZoom True
+2021-06-17 11:27:23,972   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 2, doZoom True
+2021-06-17 11:27:24,122   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:122 -- {'spikeNumber': 2, 'doZoom': True}
+2021-06-17 11:27:24,560   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 3, doZoom True
+2021-06-17 11:27:24,973   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 3, doZoom True
+2021-06-17 11:27:25,094   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:122 -- {'spikeNumber': 3, 'doZoom': True}
+2021-06-17 11:27:25,356   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 4, doZoom True
+2021-06-17 11:27:25,576   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 4, doZoom True
+2021-06-17 11:27:25,721   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:122 -- {'spikeNumber': 4, 'doZoom': True}
+2021-06-17 11:27:25,938   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 5, doZoom True
+2021-06-17 11:27:26,164   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 5, doZoom True
+2021-06-17 11:27:26,283   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:122 -- {'spikeNumber': 5, 'doZoom': True}
+2021-06-17 11:27:36,452   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 6, doZoom True
+2021-06-17 11:27:36,658   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 6, doZoom True
+2021-06-17 11:27:37,725   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 7, doZoom True
+2021-06-17 11:27:38,075   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 7, doZoom True
+2021-06-17 11:27:38,689   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 8, doZoom True
+2021-06-17 11:27:38,921   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 8, doZoom True
+2021-06-17 11:27:46,695   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 9, doZoom True
+2021-06-17 11:27:46,925   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 9, doZoom True
+2021-06-17 11:27:47,052   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:122 -- {'spikeNumber': 9, 'doZoom': True}
+2021-06-17 11:34:49,828   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 11:34:49,832   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotScatter
+2021-06-17 11:38:33,059   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 11:38:33,060   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 11:38:33,192   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 11:38:33,194   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 11:38:33,194   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 11:38:33,251   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 11:38:33,252   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 11:38:33,252   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:38:33,252   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 11:38:33,268   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 11:38:33,270   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 11:38:33,584   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 11:38:35,585   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:38:35,585   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 11:38:38,410   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 11:38:50,999   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 11:38:51,005   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotScatter
+2021-06-17 11:42:52,757   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 11:42:52,757   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 11:42:52,895   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 11:42:52,897   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 11:42:52,897   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 11:42:52,948   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 11:42:52,949   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 11:42:52,949   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:42:52,950   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 11:42:52,966   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 11:42:52,969   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 11:42:53,318   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 11:42:55,021   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:42:55,022   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 11:42:59,284   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 11:43:03,499   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotScatter
+2021-06-17 11:43:03,509   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 11:43:18,183   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 11:43:18,183   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 11:43:18,321   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 11:43:18,322   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 11:43:18,323   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 11:43:18,375   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 11:43:18,376   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 11:43:18,377   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:43:18,377   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 11:43:18,394   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 11:43:18,397   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 11:43:18,730   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 11:43:20,357   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:43:20,359   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 11:43:23,756   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 11:43:33,018   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotScatter
+2021-06-17 11:43:33,027   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 11:43:54,906   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 11:43:54,907   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 11:43:55,029   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 11:43:55,031   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 11:43:55,031   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 11:43:55,075   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 11:43:55,077   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 11:43:55,078   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:43:55,079   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 11:43:55,091   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 11:43:55,094   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:111 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 11:43:55,423   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 11:43:57,265   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 11:43:57,267   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 11:44:00,252   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:128 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 11:44:07,209   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:98 -- thresholdSec thresholdSec
+2021-06-17 11:44:07,210  WARNING sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:111 -- Did not find xStat: "thresholdSec"
+2021-06-17 11:44:07,916   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:98 -- thresholdSec thresholdVal
+2021-06-17 11:44:07,918  WARNING sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:111 -- Did not find xStat: "thresholdSec"
+2021-06-17 11:44:12,002   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 11:44:12,006   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 11:44:12,007   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-17 11:44:12,057   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 11:44:12,250   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1551 -- Detected 103 spikes in 0.24 seconds
+2021-06-17 11:44:12,253   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 1 errors in spike detection
+2021-06-17 11:44:12,725   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:98 -- thresholdSec thresholdVal
+2021-06-17 11:44:17,815   INFO sanpy.interface.plugins.sanpyPlugin  sanpyPlugin.py spike_pick_event() line:231 -- 2 False
+2021-06-17 11:44:17,817   INFO sanpy.interface.bPlugins  bPlugins.py slot_selectSpike() line:176 -- {'spikeNumber': 2, 'doZoom': False}
+2021-06-17 11:44:17,818   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 2, doZoom False
+2021-06-17 11:44:17,889   INFO sanpy.interface.plugins.plotScatter  plotScatter.py selectSpike() line:131 -- {'spikeNumber': 2, 'doZoom': False}
+2021-06-17 11:44:45,177   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:168 -- plotScatter
+2021-06-17 11:44:48,401   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 13:48:50,036   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:873 -- Python version is 3.7.9
+2021-06-17 13:48:50,036   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:874 -- PyQt version is 5.15.2
+2021-06-17 13:48:50,181   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 13:48:50,181   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:890 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 13:48:50,182   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:891 --   file is sanpy_transparent.png
+2021-06-17 13:48:50,234   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:622 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 13:48:50,235   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 13:48:50,235   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 13:48:50,236   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 13:48:50,251   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 13:48:50,254   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 13:48:50,584   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 13:48:52,561   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 13:48:52,561   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 13:48:54,060   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 13:48:54,061   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 13:48:54,063   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:980 -- start detection
+2021-06-17 13:48:54,087   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:667 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 13:48:54,255   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1551 -- Detected 103 spikes in 0.19 seconds
+2021-06-17 13:48:54,258   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1670 -- Found 1 errors in spike detection
+2021-06-17 13:48:59,663   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 13:49:04,125   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:98 -- thresholdSec thresholdSec
+2021-06-17 13:49:05,197   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:98 -- thresholdSec thresholdVal
+2021-06-17 13:49:11,514   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 13:49:16,533   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:98 -- thresholdVal thresholdSec
+2021-06-17 13:49:17,372   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:98 -- thresholdVal spikeFreq_hz
+2021-06-17 13:49:24,549   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.plotScatter.plotScatter object at 0x7fb428616550>
+2021-06-17 13:49:32,321   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.plotScatter.plotScatter object at 0x7fb41a596d70>
+2021-06-17 13:49:35,309   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Plot Scatter" Plot Scatter
+2021-06-17 13:49:38,701   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:98 -- thresholdSec thresholdSec
+2021-06-17 13:49:39,716   INFO sanpy.interface.plugins.plotScatter  plotScatter.py replot() line:98 -- thresholdSec thresholdVal
+2021-06-17 13:49:42,161   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.plotScatter.plotScatter object at 0x7fb41a5cc4b0>
+2021-06-17 18:55:42,714   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 18:55:46,360   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:879 -- Python version is 3.7.9
+2021-06-17 18:55:46,360   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:880 -- PyQt version is 5.15.2
+2021-06-17 18:55:46,507   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:892 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 18:55:46,507   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:896 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 18:55:46,507   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:897 --   file is sanpy_transparent.png
+2021-06-17 18:55:46,564   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:628 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 18:55:46,566   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 18:55:46,566   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 18:55:46,567   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 18:55:46,578   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 18:55:46,582   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 18:57:03,243   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:879 -- Python version is 3.7.9
+2021-06-17 18:57:03,244   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:880 -- PyQt version is 5.15.2
+2021-06-17 18:57:03,378   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:892 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 18:57:03,380   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:896 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 18:57:03,380   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:897 --   file is sanpy_transparent.png
+2021-06-17 18:57:03,423   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:628 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 18:57:03,424   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 18:57:03,424   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 18:57:03,424   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 18:57:03,442   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 18:57:03,445   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 18:57:03,762   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 18:57:06,669   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 18:57:06,669   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 18:57:13,118   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 18:57:13,119   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 18:57:13,121   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 18:57:13,154   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 18:57:13,327   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 18:57:13,329   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.21 seconds
+2021-06-17 18:57:13,692   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:239 -- detect
+2021-06-17 19:02:06,454   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 19:02:22,917   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:881 -- Python version is 3.7.9
+2021-06-17 19:02:22,917   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:882 -- PyQt version is 5.15.2
+2021-06-17 19:02:23,048   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:894 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 19:02:23,048   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 19:02:23,049   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:899 --   file is sanpy_transparent.png
+2021-06-17 19:02:23,105   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:630 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 19:02:23,105   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 19:02:23,106   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:02:23,106   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 19:02:23,121   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:215 -- OK exception: no tableView during load folder
+2021-06-17 19:02:23,123   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 19:02:23,442   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 19:02:25,317   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:02:25,318   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 19:02:27,829   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 19:02:27,830   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 19:02:27,832   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 19:02:27,856   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 19:02:28,023   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 19:02:28,025   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.19 seconds
+2021-06-17 19:02:28,346   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:239 -- detect
+2021-06-17 19:15:58,578   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 19:19:32,046   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:883 -- Python version is 3.7.9
+2021-06-17 19:19:32,046   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:884 -- PyQt version is 5.15.2
+2021-06-17 19:19:32,186   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:896 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 19:19:32,187   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:900 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 19:19:32,187   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:901 --   file is sanpy_transparent.png
+2021-06-17 19:19:32,242   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:632 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 19:19:32,243   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 19:19:32,243   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:19:32,243   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 19:19:32,259   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 19:19:32,261   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 19:19:32,603   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 19:19:34,976   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:19:34,976   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 19:19:37,785   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 19:19:37,786   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 19:19:37,788   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 19:19:37,817   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 19:19:37,987   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 19:19:37,988   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.2 seconds
+2021-06-17 19:19:38,319   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 19:20:13,954   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 19:22:38,072   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:883 -- Python version is 3.7.9
+2021-06-17 19:22:38,073   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:884 -- PyQt version is 5.15.2
+2021-06-17 19:22:38,186   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:896 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 19:22:38,188   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:900 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 19:22:38,189   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:901 --   file is sanpy_transparent.png
+2021-06-17 19:22:38,227   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:632 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 19:22:38,228   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 19:22:38,228   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:22:38,229   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 19:22:38,247   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 19:22:38,259   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 19:22:38,593   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 19:22:40,784   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:22:40,784   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 19:22:42,945   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 19:22:42,946   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 19:22:42,948   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 19:22:42,978   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 19:22:43,175   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 19:22:43,177   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.23 seconds
+2021-06-17 19:22:43,536   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 19:29:02,368   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 19:29:06,356   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:883 -- Python version is 3.7.9
+2021-06-17 19:29:06,356   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:884 -- PyQt version is 5.15.2
+2021-06-17 19:29:06,474   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:896 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 19:29:06,476   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:900 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 19:29:06,476   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:901 --   file is sanpy_transparent.png
+2021-06-17 19:29:06,524   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:632 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 19:29:06,525   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 19:29:06,525   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:29:06,525   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 19:29:06,543   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 19:29:06,545   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 19:29:06,872   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 19:29:10,048   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:29:10,048   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 19:29:12,936   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 19:29:12,937   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 19:29:12,940   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 19:29:12,973   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 19:29:13,155   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 19:29:13,156   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.22 seconds
+2021-06-17 19:29:13,486   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 19:30:16,999   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 19:30:20,633   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:883 -- Python version is 3.7.9
+2021-06-17 19:30:20,633   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:884 -- PyQt version is 5.15.2
+2021-06-17 19:30:20,764   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:896 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 19:30:20,764   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:900 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 19:30:20,765   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:901 --   file is sanpy_transparent.png
+2021-06-17 19:30:20,808   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:632 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 19:30:20,809   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 19:30:20,809   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:30:20,809   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 19:30:20,827   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 19:30:20,832   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 19:30:21,170   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 19:30:23,654   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:30:23,656   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 19:30:26,203   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 19:30:26,206   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 19:30:26,207   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 19:30:26,237   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 19:30:26,411   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 19:30:26,413   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.21 seconds
+2021-06-17 19:30:27,108   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 19:30:37,263   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 19:30:41,731   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 19:37:31,379   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 19:37:34,747   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 19:37:34,747   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 19:37:34,882   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 19:37:34,883   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 19:37:34,883   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 19:37:34,935   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 19:37:34,936   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 19:37:34,936   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:37:34,936   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 19:37:34,952   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 19:37:34,954   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 19:37:35,295   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 19:37:38,101   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 19:37:38,101   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 19:37:40,453   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 19:37:40,453   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 19:37:40,455   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 19:37:40,483   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 19:37:40,656   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 19:37:40,657   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.2 seconds
+2021-06-17 19:37:41,010   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 19:37:48,710   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 19:38:00,624   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: False
+2021-06-17 19:38:16,752   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/data/laura-ephys/sanap20210412/sanpy_recording_db.csv
+2021-06-17 20:16:06,626   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:21:10,188   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:21:10,189   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:21:10,322   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:21:10,324   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:21:10,324   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:21:10,372   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:21:10,373   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:21:10,373   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:21:10,374   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:21:10,389   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:21:10,393   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:21:10,724   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:21:13,854   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:21:13,854   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:21:15,976   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:21:15,977   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:21:15,979   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:21:16,014   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:21:16,198   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:21:16,199   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.22 seconds
+2021-06-17 20:21:16,492   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:21:27,286   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:23:02,631   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:23:02,631   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:23:02,763   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:23:02,764   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:23:02,765   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:23:02,813   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:23:02,813   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:23:02,814   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:23:02,814   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:23:02,831   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:23:02,839   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:23:03,201   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:23:05,429   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:23:05,429   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:23:07,433   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:23:07,434   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:23:07,436   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:23:07,466   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:23:07,650   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:23:07,652   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.22 seconds
+2021-06-17 20:23:07,961   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:23:14,009   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:24:07,311   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:24:07,318   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fbc38d8e550>
+2021-06-17 20:24:11,540   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:24:11,540   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:24:11,774   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:24:11,776   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:24:11,776   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:24:11,821   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:24:11,823   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:24:11,824   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:24:11,824   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:24:11,840   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:24:11,843   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:24:12,187   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:24:14,847   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:24:14,849   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:24:16,473   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:24:16,475   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:24:16,476   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:24:16,505   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:24:16,671   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:24:16,672   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.2 seconds
+2021-06-17 20:24:17,003   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:24:20,384   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:24:28,974   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fc2fe58f550>
+2021-06-17 20:24:28,984   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:25:42,726   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:25:42,726   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:25:42,859   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:25:42,861   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:25:42,861   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:25:42,919   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:25:42,919   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:25:42,920   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:25:42,920   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:25:42,933   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:25:42,936   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:25:43,266   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:25:45,502   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:25:45,503   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:25:47,034   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:25:47,036   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:25:47,039   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:25:47,067   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:25:47,254   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:25:47,256   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.22 seconds
+2021-06-17 20:25:47,556   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:25:51,118   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:25:51,130   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py __init__() line:40 -- dfError
+2021-06-17 20:26:15,023   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fe6b5e81550>
+2021-06-17 20:26:15,032   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:27:00,187   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:27:00,187   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:27:00,322   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:27:00,324   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:27:00,324   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:27:00,375   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:27:00,376   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:27:00,376   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:27:00,376   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:27:00,394   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:27:00,396   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:27:00,740   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:27:03,778   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:27:03,778   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:27:07,095   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:27:07,097   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:27:07,100   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:27:07,133   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:27:07,325   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:27:07,327   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.23 seconds
+2021-06-17 20:27:07,668   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:27:11,084   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:27:11,099   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py __init__() line:40 -- dfError
+2021-06-17 20:27:28,696   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fb985e7f550>
+2021-06-17 20:27:28,705   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:31:08,074   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:31:08,074   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:31:08,214   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:31:08,215   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:31:08,216   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:31:08,265   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:31:08,266   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:31:08,266   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:31:08,267   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:31:08,281   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:31:08,284   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:31:08,601   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:31:10,894   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:31:10,894   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:31:14,408   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:31:21,561   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:31:21,562   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:31:21,562   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:31:21,588   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:31:21,767   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:31:21,767   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.2 seconds
+2021-06-17 20:31:22,097   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:31:22,261   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:45 -- dfError
+2021-06-17 20:31:25,117   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 20:31:27,770   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 20:31:41,125   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7ff98eecdf50>
+2021-06-17 20:31:41,138   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:34:46,245   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:34:46,245   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:34:46,384   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:34:46,384   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:34:46,385   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:34:46,435   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:34:46,436   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:34:46,436   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:34:46,437   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:34:46,456   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:34:46,459   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:34:46,802   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:34:49,617   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:34:49,618   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:34:53,470   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:35:19,415   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:35:22,896   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:35:22,896   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:35:23,023   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:35:23,025   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:35:23,025   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:35:23,078   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:35:23,079   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:35:23,080   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:35:23,080   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:35:23,099   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:35:23,101   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:35:23,455   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:35:26,725   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:36:30,666   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:36:34,680   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:36:34,681   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:36:34,794   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:36:34,796   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:36:34,796   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:36:34,851   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:36:34,851   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:36:34,852   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:36:34,852   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:36:34,867   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:36:34,869   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:36:35,196   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:36:38,329   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:36:41,892   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:36:41,893   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:36:42,504   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:48 -- dfError
+2021-06-17 20:36:43,750   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:36:43,754   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:36:43,756   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:36:43,789   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:36:43,961   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:36:43,963   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.21 seconds
+2021-06-17 20:36:44,284   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:36:44,442   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:48 -- dfError
+2021-06-17 20:36:47,148   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 20:36:47,150   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 20:39:07,893   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 20:39:07,894   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 20:39:08,960   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': True}
+2021-06-17 20:39:08,962   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom True
+2021-06-17 20:39:45,823   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:39:45,823   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19221014.abf
+2021-06-17 20:39:46,260   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:48 -- dfError
+2021-06-17 20:39:48,829   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:20.0 vmThreshold:-20.0
+2021-06-17 20:39:48,830   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:39:48,832   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:39:48,836   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 0 to 0 spikes with refractory_ms:170
+2021-06-17 20:40:14,874   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:20.0 vmThreshold:-20.0
+2021-06-17 20:40:14,875   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:40:14,876   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:40:14,878   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 0 to 0 spikes with refractory_ms:170
+2021-06-17 20:41:28,346   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:41:28,347   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:41:29,192   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:48 -- dfError
+2021-06-17 20:41:32,414   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:41:32,416   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:41:32,418   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:41:32,453   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:41:32,627   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:41:32,629   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.21 seconds
+2021-06-17 20:41:32,926   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:41:33,114   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:48 -- dfError
+2021-06-17 20:41:39,454   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:41:39,455   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114000.abf
+2021-06-17 20:41:40,758   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:48 -- dfError
+2021-06-17 20:41:45,218   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:20.0 vmThreshold:-20.0
+2021-06-17 20:41:45,219   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:41:45,222   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:41:45,269   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 604 to 74 spikes with refractory_ms:170
+2021-06-17 20:41:45,421   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 54 errors in spike detection
+2021-06-17 20:41:45,423   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 70 spikes in 0.2 seconds
+2021-06-17 20:41:45,631   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:41:45,765   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:48 -- dfError
+2021-06-17 20:41:51,952   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 20:41:51,954   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 20:41:54,037   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 20:41:54,039   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 20:41:54,676   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 2, 'doZoom': False}
+2021-06-17 20:41:54,678   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 2, doZoom False
+2021-06-17 20:41:55,308   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 5, 'doZoom': False}
+2021-06-17 20:41:55,310   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 5, doZoom False
+2021-06-17 20:41:55,800   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 7, 'doZoom': False}
+2021-06-17 20:41:55,802   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 7, doZoom False
+2021-06-17 20:41:56,444   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 8, 'doZoom': False}
+2021-06-17 20:41:56,445   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 8, doZoom False
+2021-06-17 20:41:57,452   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 13, 'doZoom': False}
+2021-06-17 20:41:57,454   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 13, doZoom False
+2021-06-17 20:41:59,064   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 13, 'doZoom': True}
+2021-06-17 20:41:59,065   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 13, doZoom True
+2021-06-17 20:44:06,557   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7f823cd144b0>
+2021-06-17 20:44:13,988   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:44:13,989   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:44:15,435   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:48 -- dfError
+2021-06-17 20:44:16,444   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:44:16,446   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:44:16,447   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:44:16,467   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:44:16,629   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:44:16,630   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.18 seconds
+2021-06-17 20:44:16,938   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:44:17,097   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:48 -- dfError
+2021-06-17 20:44:22,970   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:44:32,105   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:44:32,109   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7f823cd23d70>
+2021-06-17 20:44:49,853   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:44:49,853   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:44:50,008   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:44:50,009   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:44:50,009   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:44:50,059   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:44:50,060   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:44:50,061   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:44:50,061   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:44:50,076   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:44:50,080   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:44:50,429   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:44:54,002   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:44:57,593   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:44:57,594   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:44:58,420   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:47 -- dfError
+2021-06-17 20:44:59,598   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:44:59,601   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:44:59,603   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:44:59,632   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:44:59,808   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:44:59,810   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.21 seconds
+2021-06-17 20:45:00,111   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:45:00,274   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:47 -- dfError
+2021-06-17 20:45:02,408   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 20:45:02,409   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 20:45:04,271   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 20:45:04,273   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 20:45:05,327   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': True}
+2021-06-17 20:45:05,328   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom True
+2021-06-17 20:45:09,377   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fe06ec144b0>
+2021-06-17 20:45:12,926   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:45:12,928   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114000.abf
+2021-06-17 20:45:13,877   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:47 -- dfError
+2021-06-17 20:45:17,086   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:45:22,862   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:20.0 vmThreshold:-20.0
+2021-06-17 20:45:22,865   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:45:22,867   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:45:22,919   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 604 to 74 spikes with refractory_ms:170
+2021-06-17 20:45:23,077   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 54 errors in spike detection
+2021-06-17 20:45:23,078   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 70 spikes in 0.21 seconds
+2021-06-17 20:45:23,284   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:45:23,413   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:47 -- dfError
+2021-06-17 20:45:23,431   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:47 -- dfError
+2021-06-17 20:45:26,114   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 20:45:26,116   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 20:45:27,344   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 20:45:27,345   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 20:45:27,756   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 2, 'doZoom': False}
+2021-06-17 20:45:27,757   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 2, doZoom False
+2021-06-17 20:45:28,456   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 8, 'doZoom': False}
+2021-06-17 20:45:28,458   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 8, doZoom False
+2021-06-17 20:45:28,932   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 12, 'doZoom': False}
+2021-06-17 20:45:28,934   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 12, doZoom False
+2021-06-17 20:45:30,860   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 17, 'doZoom': False}
+2021-06-17 20:45:30,861   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 17, doZoom False
+2021-06-17 20:45:32,523   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 17, 'doZoom': True}
+2021-06-17 20:45:32,525   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 17, doZoom True
+2021-06-17 20:45:36,428   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fe06ec10910>
+2021-06-17 20:47:13,945   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:47:24,028   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:47:24,032   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fe06219e4b0>
+2021-06-17 20:47:56,764   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:47:56,764   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:47:56,933   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:47:56,934   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:47:56,935   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:47:56,988   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:47:56,989   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:47:56,989   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:47:56,989   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:47:57,007   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:47:57,010   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:47:57,353   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:47:59,288   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:47:59,289   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:48:01,020   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:48:01,021   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:48:01,023   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:48:01,047   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:48:01,210   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:48:01,212   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.19 seconds
+2021-06-17 20:48:01,508   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:48:04,107   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:48:04,121   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 20:48:11,222   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:48:11,222   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114000.abf
+2021-06-17 20:48:12,357   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 20:48:15,253   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:20.0 vmThreshold:-20.0
+2021-06-17 20:48:15,256   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:48:15,258   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:48:15,308   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 604 to 74 spikes with refractory_ms:170
+2021-06-17 20:48:15,465   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 54 errors in spike detection
+2021-06-17 20:48:15,467   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 70 spikes in 0.21 seconds
+2021-06-17 20:48:15,685   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:48:15,829   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 20:48:19,728   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:48:19,744   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 20:52:23,083   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fdfcf680370>
+2021-06-17 20:52:25,898   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fdfcf6805f0>
+2021-06-17 20:54:22,729   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Plot Reccording" Plot Reccording
+2021-06-17 20:54:29,207   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.plotRecording.plotRecording object at 0x7fdfc1a0d4b0>
+2021-06-17 20:54:29,208  ERROR sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:179 -- <sanpy.interface.plugins.plotRecording.plotRecording object at 0x7fdfc1a0d4b0>
+Traceback (most recent call last):
+  File "/Users/cudmore/Sites/SanPy/sanpy/interface/bPlugins.py", line 177, in slot_closeWindow
+    self._openSet.remove(pluginObj)
+KeyError: <sanpy.interface.plugins.plotRecording.plotRecording object at 0x7fdfc1a0d4b0>
+2021-06-17 20:59:21,214   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 20:59:28,738   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 20:59:28,739   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 20:59:28,869   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 20:59:28,871   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 20:59:28,871   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 20:59:28,922   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 20:59:28,923   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 20:59:28,924   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:59:28,924   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 20:59:28,939   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 20:59:28,942   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 20:59:29,269   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 20:59:33,878   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 20:59:47,584   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 20:59:47,584   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 20:59:48,239   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 20:59:51,958   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 20:59:51,961   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 20:59:51,964   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 20:59:52,000   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 20:59:52,197   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 20:59:52,199   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.23 seconds
+2021-06-17 20:59:52,512   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 20:59:52,707   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 20:59:55,682   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 20:59:55,683   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 20:59:57,946   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': True}
+2021-06-17 20:59:57,948   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom True
+2021-06-17 21:00:02,256   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7ff4434154b0>
+2021-06-17 21:00:02,276   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 21:02:37,706   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 21:02:37,706   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 21:02:37,813   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 21:02:37,815   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 21:02:37,815   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 21:02:37,849   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 21:02:37,850   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 21:02:37,850   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 21:02:37,851   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 21:02:37,863   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 21:02:37,865   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 21:02:38,206   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 21:02:40,408   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 21:02:40,409   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 21:02:44,847   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 21:02:44,865   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 21:02:46,838   INFO sanpy.interface.plugins.sanpyPlugin  sanpyPlugin.py keyPressEvent() line:270 -- event
+2021-06-17 21:02:55,672   INFO sanpy.interface.plugins.sanpyPlugin  sanpyPlugin.py keyPressEvent() line:270 -- event
+2021-06-17 21:02:56,246   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 21:02:56,251   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7f9434510eb0>
+2021-06-17 21:02:56,252  ERROR sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:179 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7f9434510eb0>
+Traceback (most recent call last):
+  File "/Users/cudmore/Sites/SanPy/sanpy/interface/bPlugins.py", line 177, in slot_closeWindow
+    self._openSet.remove(pluginObj)
+KeyError: <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7f9434510eb0>
+2021-06-17 21:03:40,743   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 21:03:40,743   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 21:03:40,859   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 21:03:40,861   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 21:03:40,861   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 21:03:40,911   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 21:03:40,912   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 21:03:40,912   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 21:03:40,913   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 21:03:40,928   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 21:03:40,930   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 21:03:41,280   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 21:03:43,606   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 21:03:43,608   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 21:03:48,873   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 21:03:48,891   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 21:04:19,140   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fa620dcaeb0>
+2021-06-17 21:04:19,141  ERROR sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:179 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fa620dcaeb0>
+Traceback (most recent call last):
+  File "/Users/cudmore/Sites/SanPy/sanpy/interface/bPlugins.py", line 177, in slot_closeWindow
+    self._openSet.remove(pluginObj)
+KeyError: <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fa620dcaeb0>
+2021-06-17 21:04:21,100   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 21:04:21,102   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 21:04:21,103   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 21:04:21,127   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 21:04:21,301   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 21:04:21,303   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.2 seconds
+2021-06-17 21:04:21,971   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 21:04:22,155   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 21:04:26,239   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 21:04:26,258   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 21:04:35,533   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 21:04:35,534   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 21:04:36,395   INFO sanpy.interface.plugins.sanpyPlugin  sanpyPlugin.py keyPressEvent() line:272 -- event
+2021-06-17 21:04:36,741   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': True}
+2021-06-17 21:04:36,743   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom True
+2021-06-17 21:04:40,844   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fa620d1d230>
+2021-06-17 21:05:06,054   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 21:05:11,837   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 21:05:11,837   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 21:05:11,985   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 21:05:11,987   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 21:05:11,987   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 21:05:12,038   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 21:05:12,040   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 21:05:12,040   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 21:05:12,041   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 21:05:12,058   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 21:05:12,061   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 21:05:12,414   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 21:05:16,748   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 21:05:29,599   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:389 -- path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 21:05:29,601   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:390 --   file: 19114001.abf
+2021-06-17 21:05:30,238   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 21:05:31,134   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:164 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-17 21:05:31,137   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:179 -- get detection parameters from main window table
+2021-06-17 21:05:31,139   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:981 -- start detection
+2021-06-17 21:05:31,172   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:668 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-17 21:05:31,363   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1673 -- Found 1 errors in spike detection
+2021-06-17 21:05:31,365   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1554 -- Detected 103 spikes in 0.22 seconds
+2021-06-17 21:05:31,658   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:241 -- detect
+2021-06-17 21:05:31,833   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:51 -- dfError
+2021-06-17 21:05:44,975   INFO sanpy.interface.bErrorTable  bErrorTable.py errorTableClicked() line:66 -- {'spikeNumber': 1, 'doZoom': False}
+2021-06-17 21:05:44,976   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py selectSpike() line:670 -- spikeNumber: 1, doZoom False
+2021-06-17 21:05:48,597   INFO sanpy.interface.plugins.sanpyPlugin  sanpyPlugin.py keyPressEvent() line:272 -- event
+2021-06-17 21:05:48,841   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7fad59c134b0>
+2021-06-17 21:05:48,861   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting
+2021-06-17 21:06:13,547   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:885 -- Python version is 3.7.9
+2021-06-17 21:06:13,547   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:886 -- PyQt version is 5.15.2
+2021-06-17 21:06:13,684   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:898 -- bundle_dir is /Users/cudmore/Sites/SanPy/sanpy/interface
+2021-06-17 21:06:13,686   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:902 -- appIconPath is /Users/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-17 21:06:13,689   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:903 --   file is sanpy_transparent.png
+2021-06-17 21:06:13,742   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:634 -- Loading options file: /Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-17 21:06:13,743   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:74 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-17 21:06:13,743   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:191 -- Loading path: /Users/cudmore/Sites/SanPy/data
+2021-06-17 21:06:13,743   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:276 -- Loading existing folder db: /Users/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-17 21:06:13,757   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:217 -- OK exception: no tableView during load folder
+2021-06-17 21:06:13,759   INFO sanpy.interface.bPlugins  bPlugins.py loadPlugins() line:114 -- loading plugin: "/Users/cudmore/sanpy_plugins/userPlotRecording2.py"
+2021-06-17 21:06:14,088   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:123 -- SanPy started
+2021-06-17 21:06:18,302   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:131 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-17 21:06:28,144   INFO sanpy.interface.plugins.sanpyPlugin  sanpyPlugin.py keyPressEvent() line:272 -- event
+2021-06-17 21:06:28,364   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:175 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7f80746d04b0>
+2021-06-17 21:06:28,376   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:150 -- SanPy is quiting

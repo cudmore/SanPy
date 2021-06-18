@@ -54,6 +54,8 @@ When we encounter errors during spike detection, they are stored for each spike 
 
 # Analysis output
 
+Once spike are detected/analyzed, we have a number of parameters.
+
 |    | Stat                              | name                       | units   | yStat                      | yStatUnits   | xStat                  | xStatUnits   |
 |---:|:----------------------------------|:---------------------------|:--------|:---------------------------|:-------------|:-----------------------|:-------------|
 |  0 | Take Off Potential (s)            | thresholdSec               | s       | thresholdVal               | mV           | thresholdSec           | s            |

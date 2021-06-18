@@ -172,7 +172,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 			self.includeCol = None
 
 		# this is for file table with myTableView
-		self.sanpyColumns = sanpy.analysisDir.sanpyColumns
+		self.sanpyColumns = None #sanpy.analysisDir.sanpyColumns
 
 	'''
 	def modelReset(self):
@@ -224,6 +224,8 @@ class pandasModel(QtCore.QAbstractTableModel):
 		"""
 		Respond to user/keyboard edits
 
+		Will not get called if xxx
+
 		Returns:
 			True if value is changed. Calls layoutChanged after update.
 			False if value is not different from original value.
@@ -236,11 +238,12 @@ class pandasModel(QtCore.QAbstractTableModel):
 
 				# use to check isEditable
 				columnName = self._data.columns[column]
-				columnDict = self.sanpyColumns[columnName]
-				#print(f'  edit column: "{columnName}" {columnDict}')
-				if not columnDict['isEditable']:
-					# todo: I think this is handled in self.flags()
-					return False
+				if self.sanpyColumns is not None:
+					columnDict = self.sanpyColumns[columnName]
+					#print(f'  edit column: "{columnName}" {columnDict}')
+					if not columnDict['isEditable']:
+						# todo: I think this is handled in self.flags()
+						return False
 
 				v = self._data.iloc[row, column]
 				logger.info(f'Existing value is v: "{v}" {type(v)}')
@@ -268,9 +271,12 @@ class pandasModel(QtCore.QAbstractTableModel):
 
 		# use to check isEditable
 		columnName = self._data.columns[column]
-		columnDict = self.sanpyColumns[columnName]
-		#print(f'  edit column: "{columnName}" {columnDict}')
-		isEditable = columnDict['isEditable']
+
+		isEditable = False
+		if self.sanpyColumns is not None:
+			columnDict = self.sanpyColumns[columnName]
+			#print(f'  edit column: "{columnName}" {columnDict}')
+			isEditable = columnDict['isEditable']
 		if isEditable:
 			return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 		else:
@@ -367,6 +373,12 @@ class pandasModel(QtCore.QAbstractTableModel):
 		#logger.info(f'Saving csv {path}')
 		self._data.to_csv(path, index=False)
 		self.isDirty = False
+
+	def mySetColumns(self, columnsDict):
+		"""
+		When used as a file table, set with: sanpy.analysisDir.sanpyColumns
+		"""
+		self.sanpyColumns = columnsDict
 
 # see: https://stackoverflow.com/questions/17748546/pyqt-column-of-checkboxes-in-a-qtableview
 class myCheckBoxDelegate(QtWidgets.QItemDelegate):

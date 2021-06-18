@@ -1,25 +1,55 @@
 
 ## Update 202106
 
-Documentation:
- - https://cudmore.github.io/SanPy/
+## Timeline
+
+ - I want to have a final draft of a manuscript by July 20th, 2021.
+ - I then want to submit an initial version to https://www.biorxiv.org/.
+ - Once the biorxiv is up and we get some feedback, I want to submit a manuscript to either PLoS or Frontiers. I am open to others on your suggestions.
+
+I would like some things from you:
+
+- Can you suggest 2-3 labs who would be interested in checking out SanPy? I want to make sure it encompasses their needs.
+- A few whole-cell current-clamp recordings of ventricular cells to make sure the analysis yields reasonable results.
+- Do you know any labs that use Heka amplifiers? I want to check this kind of file import works.
+- We need to create an 'experimental figure' for the manuscript. Ideally this would be detailed AP analysis before/after application of a drug. I think it is fine if we re-use already published data. How about some before/after Iso?
+
+Here is a recap of my work ...
+
+Documentation is at: https://cudmore.github.io/SanPy/
  - A work in progress but critical for final publication. Added benefit is it makes me think in an organized way about a fairly complex system.
+
+Overall:
+ - Added runtime logging to file. Users can view logs and send to me to troubleshoot. This is HUGE.
 
 Analysis:
  - Built system to log per-AP errors (when detection goes wrong)
- - Expanded detection parameters to be more controllable, see https://cudmore.github.io/SanPy/methods.html#detection-parameters
+ - Expanded detection parameters to be more controllable beyond dV/dt and mV thresholds to include things like refractory period and time-windows to control searching for spike peak, AP-durations etc. Goal is to have presets for different kinds of cells. For example: SA Node, ventricular, etc. See: https://cudmore.github.io/SanPy/methods.html#detection-parameters
 
 Interface:
- - Expanded detection parameters beyond dV/dt and mV thresholds to include things like refractory period and windows to control searching for spike peak, AP-durations etc. Goal is to have presets for different kinds of cells. For example: SA Node, ventricular, etc.
- - Can now browse individual APs with automatic zooming, like: 'go to AP', 'next AP', previous AP', etc
+ - Expanded detection parameters beyond dV/dt and mV thresholds (see above).
+ - Created interface to browse individual APs with automatic zooming, like: 'go to AP', 'next AP', previous AP', etc
  - Can now browse per-AP errors and jump to zoomed view of the problem AP.
  - Implemented 'Plugins', a bit like ImageJ/Fiji. This is SUPER useful to extend the analysis/plotting without having to update the main SanPy program. You just drop in some custom code to do detailed/specific analysis. I've started using this with some good examples that will get others up and running quickly.
 
 Desktop App:
- - Now creating a downloadable app that can be run with one click (no Python or command prompt). This is a huge improvement but pretty technical on my end as I need a computer with actual operating system to build it. I have macOS Catalina and Big Sur working. Next is to get Windows 7 and 10 working.
+ - Now creating a downloadable app that can be run with one click (no Python or command prompt). This is a huge improvement but pretty technical on my end. I need a computer with actual operating system to build it. I have macOS Catalina and Big Sur working. Next is to get Windows 7 and 10 working.
 
 Cloud App:
- - Created a web based app that runs in the cloud. When I get it back up I will send a link. This is great as it uses all the same code as the main SanPy Desktop app, just a different interface. This is a starting point for the Santana R01 software add on. Do not plan on including this in initial SanPy manuscript, too many details need to be hashed out.
+ - Created a web based app that runs in the cloud. This is great as it uses all the same code as the main SanPy Desktop app, just a different interface. This is a starting point for the Santana R01 software add on. Do not plan on including this in initial SanPy manuscript, too many details need to be hashed out.
+
+TODO:
+ - Make sure spike detect is using all columns in main File Table (imported from folder of csv)
+ - bFileTable.pandasModel needs to be split into two classes (file table, error table), put common functions in a base class 'sanpyPandasModel'
+ - Move sanpy_app.new_tableClicked() into bDetectionWidget. Requires proper signal to be emitted by detection widget and actions taken in slots
+ - Load folder (e.g. switch folder) is buggy and needs to be rock solid. (i) if existinf csv, parse columns inteligently, ensure soft error when abf corrupt, (iii) error check loading txt files, (iv) remove loading kymograph tif. Kymographs are beyond the scope of initial publication.
+ - Once we have a folder csv, ensure we can update csv after (i) files removed and (ii) files added
+ - add plugins including: detection errors, spike clips
+ - expand scatter plugin with option to display spike_i versus spike_i-1
+ - When detection yields no spikes -->> now getting exceptions ... fix
+ - If plugin is open with no file/detection, need to set title with file on switch file.
+ - Add keystrokes to all plugins, to toggle switching on update on file selection and new analysis. We already have a QCheckbox in scatter plugin to do this. Make it a default property
+ -
 
 ## Update 20201230
  - In export window, added X-Tick and Y-Tick major/minor controls (4x controls). To set the tick intervals on the X/Y axis.

@@ -1,5 +1,7 @@
 
-In just a few lines of code, recordings can be loaded, analyzed, and plotted. See the [/examples][examples] folder for examples.
+In just a few lines of code, recordings can be loaded, analyzed, and plotted.
+
+<!-- See the [/examples][examples] folder for more examples. -->
 
 [examples]: https://github.com/cudmore/SanPy/tree/master/examples
 
