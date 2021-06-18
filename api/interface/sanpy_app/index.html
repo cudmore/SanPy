@@ -246,21 +246,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../web-application/" class="md-nav__link">
-        Web Application
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../plugins/" class="md-nav__link">
         Plugins
       </a>
@@ -279,14 +264,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
       
-      <label class="md-nav__link" for="__nav_6">
+      <label class="md-nav__link" for="__nav_5">
         Scripting
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Scripting" data-md-level="1">
-        <label class="md-nav__title" for="__nav_6">
+        <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           Scripting
         </label>
@@ -347,14 +332,14 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
       
-      <label class="md-nav__link" for="__nav_7">
+      <label class="md-nav__link" for="__nav_6">
         API
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="__nav_7">
+        <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
@@ -454,14 +439,14 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7_8" type="checkbox" id="__nav_7_8" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8" type="checkbox" id="__nav_6_8" checked>
       
-      <label class="md-nav__link" for="__nav_7_8">
+      <label class="md-nav__link" for="__nav_6_8">
         interface
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="interface" data-md-level="2">
-        <label class="md-nav__title" for="__nav_7_8">
+        <label class="md-nav__title" for="__nav_6_8">
           <span class="md-nav__icon md-icon"></span>
           interface
         </label>
@@ -648,6 +633,21 @@
     <li class="md-nav__item">
       <a href="../../../methods/" class="md-nav__link">
         Methods
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../web-application/" class="md-nav__link">
+        Web Application
       </a>
     </li>
   
@@ -1121,9 +1121,6 @@
 
 
 
-
-
-
   <div class="doc doc-object doc-method">
 
 
@@ -1267,6 +1264,8 @@
 
 	<span class="c1"># set df to model</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">myModel</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bFileTable</span><span class="o">.</span><span class="n">pandasModel</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+	<span class="n">columnsDict</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">analysisDir</span><span class="o">.</span><span class="n">sanpyColumns</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">mySetColumns</span><span class="p">(</span><span class="n">columnsDict</span><span class="p">)</span>
 	<span class="k">try</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">tableView</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="p">)</span>
 	<span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -1318,16 +1317,23 @@
 		<span class="c1">#self.refreshFileTableWidget_Row()</span>
 
 	<span class="k">elif</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;detect&#39;</span><span class="p">:</span>
-		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;===sanpy_app.signal() detect&#39;</span><span class="p">)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;detect&#39;</span><span class="p">)</span>
 		<span class="c1"># update scatter plot</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">myScatterPlotWidget</span><span class="o">.</span><span class="n">plotToolbarWidget</span><span class="o">.</span><span class="n">on_scatter_toolbar_table_click</span><span class="p">()</span>
 
 		<span class="c1"># data = dfReportForScatter</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">dfReportForScatter</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># can be none when start/stop is not defined</span>
+		<span class="c1"># data[0] is:</span>
+		<span class="c1"># dfReportForScatter = self.ba.spikeDetect(detectionDict)</span>
+		<span class="c1">#self.dfReportForScatter = data[0] # can be none when start/stop is not defined</span>
 
+		<span class="c1"># data[1] is</span>
+		<span class="c1"># dfError = self.ba.errorReport()</span>
 		<span class="c1"># update error table</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">dfError</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-		<span class="n">errorReportModel</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bFileTable</span><span class="o">.</span><span class="n">pandasModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dfError</span><span class="p">)</span>
+		<span class="c1">#self.dfError = data[1]</span>
+		<span class="n">dfError</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bAnalysis</span><span class="p">()</span><span class="o">.</span><span class="n">dfError</span>
+		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  dfError:&#39;</span><span class="p">)</span>
+		<span class="nb">print</span><span class="p">(</span><span class="n">dfError</span><span class="p">)</span>
+		<span class="n">errorReportModel</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bFileTable</span><span class="o">.</span><span class="n">pandasModel</span><span class="p">(</span><span class="n">dfError</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">myErrorTable</span><span class="o">.</span><span class="n">setModel</span><span class="p">(</span><span class="n">errorReportModel</span><span class="p">)</span>
 
 		<span class="c1"># TODO: This really should have payload</span>
@@ -1429,6 +1435,9 @@
     </div>
 
   </div>
+
+
+
 
 
 

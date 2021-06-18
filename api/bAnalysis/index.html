@@ -246,21 +246,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../web-application/" class="md-nav__link">
-        Web Application
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../plugins/" class="md-nav__link">
         Plugins
       </a>
@@ -279,14 +264,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
       
-      <label class="md-nav__link" for="__nav_6">
+      <label class="md-nav__link" for="__nav_5">
         Scripting
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Scripting" data-md-level="1">
-        <label class="md-nav__title" for="__nav_6">
+        <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           Scripting
         </label>
@@ -347,14 +332,14 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
       
-      <label class="md-nav__link" for="__nav_7">
+      <label class="md-nav__link" for="__nav_6">
         API
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="__nav_7">
+        <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
@@ -696,14 +681,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7_8" type="checkbox" id="__nav_7_8" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8" type="checkbox" id="__nav_6_8" >
       
-      <label class="md-nav__link" for="__nav_7_8">
+      <label class="md-nav__link" for="__nav_6_8">
         interface
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="interface" data-md-level="2">
-        <label class="md-nav__title" for="__nav_7_8">
+        <label class="md-nav__title" for="__nav_6_8">
           <span class="md-nav__icon md-icon"></span>
           interface
         </label>
@@ -743,6 +728,21 @@
     <li class="md-nav__item">
       <a href="../../methods/" class="md-nav__link">
         Methods
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../web-application/" class="md-nav__link">
+        Web Application
       </a>
     </li>
   
@@ -1183,6 +1183,7 @@
 	<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># a list of dict</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">spikeTimes</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># created in self.spikeDetect()</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">spikeClips</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># created in self.spikeDetect()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">dfError</span> <span class="o">=</span> <span class="kc">None</span>
 
 	<span class="k">if</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file</span><span class="p">):</span>
 		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;File does not exist: &quot;</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
@@ -1194,16 +1195,13 @@
 
 	<span class="c1"># instantiate and load abf file</span>
 	<span class="k">if</span> <span class="n">byteStream</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="o">=</span> <span class="n">pyabf</span><span class="o">.</span><span class="n">ABF</span><span class="p">(</span><span class="n">byteStream</span><span class="p">)</span> <span class="c1"># my cloned pyAbf to load a byte-stream</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">myFileType</span> <span class="o">=</span> <span class="s1">&#39;bytestream&#39;</span>
-
+		<span class="bp">self</span><span class="o">.</span><span class="n">_loadAbf</span><span class="p">(</span><span class="n">byteStream</span><span class="o">=</span><span class="n">byteStream</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abf&#39;</span><span class="p">):</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_loadAbf</span><span class="p">()</span>
 	<span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.tif&#39;</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_loadTif</span><span class="p">()</span>
 	<span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_loadCsv</span><span class="p">()</span>
-
-	<span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abf&#39;</span><span class="p">):</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">_loadAbf</span><span class="p">()</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;error: bAnalysis.__init__() can only open abf/csv/tif files: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">loadError</span> <span class="o">=</span> <span class="kc">True</span>
@@ -1288,7 +1286,7 @@
   <tbody>
     <tr>
       <td><code>dict</code></td>
-      <td><p>Dictionary of information aboiut loaded file.</p></td>
+      <td><p>Dictionary of information about loaded file.</p></td>
     </tr>
   </tbody>
 </table>
@@ -1302,7 +1300,7 @@
 <span class="sd">		- add info on abf file, like samples per ms</span>
 
 <span class="sd">	Returns:</span>
-<span class="sd">		dict: Dictionary of information aboiut loaded file.</span>
+<span class="sd">		dict: Dictionary of information about loaded file.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">recordingDir_sec</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sweepX</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span> <span class="o">/</span> <span class="mi">1000</span>
 	<span class="n">recordingFrequency</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span>
@@ -1311,8 +1309,8 @@
 		<span class="s1">&#39;myFileType&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">myFileType</span><span class="p">,</span> <span class="c1"># (&#39;abf&#39;, &#39;tif&#39;, &#39;bytestream&#39;, &#39;csv&#39;)</span>
 		<span class="s1">&#39;loadError&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadError</span><span class="p">,</span>
 		<span class="s1">&#39;detectionDict&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">,</span>
-		<span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">,</span>
-		<span class="s1">&#39;file&#39;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span>
+		<span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span>
+		<span class="s1">&#39;file&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileName</span><span class="p">(),</span>
 		<span class="s1">&#39;dateAnalyzed&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dateAnalyzed</span><span class="p">,</span>
 		<span class="s1">&#39;detectionType&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectionType</span><span class="p">,</span>
 		<span class="s1">&#39;acqDate&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqDate</span><span class="p">,</span>
@@ -1648,9 +1646,6 @@
 
 
 
-
-
-
   <div class="doc doc-object doc-method">
 
 
@@ -1801,6 +1796,9 @@
     </div>
 
   </div>
+
+
+
 
 
 
@@ -2566,7 +2564,7 @@ TODO: Load <path>_analysis.csv</p>
 <span class="sd">	TODO: We need to save header with xxx</span>
 <span class="sd">	TODO: Load &lt;path&gt;_analysis.csv</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">savefile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="n">savefile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
 	<span class="n">savefile</span> <span class="o">+=</span> <span class="s1">&#39;_analysis.csv&#39;</span>
 	<span class="n">saveExcel</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">alsoSaveTxt</span> <span class="o">=</span> <span class="kc">True</span>
@@ -2770,7 +2768,7 @@ TODO: Load <path>_analysis.csv</p>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;include&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;analysisVersion&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">analysisVersion</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;interfaceVersion&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interfaceVersion</span>
-		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file</span>
+		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileName</span><span class="p">()</span>
 
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;detectionType&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detectionType</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;cellType&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;cellType&#39;</span><span class="p">]</span>
@@ -3259,10 +3257,12 @@ TODO: Load <path>_analysis.csv</p>
 	<span class="n">exportObject</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bExport</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 	<span class="n">dfReportForScatter</span> <span class="o">=</span> <span class="n">exportObject</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">startSeconds</span><span class="p">,</span> <span class="n">stopSeconds</span><span class="p">)</span>
 
+	<span class="bp">self</span><span class="o">.</span><span class="n">dfError</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">errorReport</span><span class="p">()</span>
+
 	<span class="n">stopTime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-	<span class="c1">#print(&#39;bAnalysis.spikeDetect() for file&#39;, self.file)</span>
+	<span class="c1">#print(&#39;bAnalysis.spikeDetect() for file&#39;, self.getFileName())</span>
 	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Detected </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spikeTimes</span><span class="p">)</span><span class="si">}</span><span class="s1"> spikes in </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">stopTime</span><span class="o">-</span><span class="n">startTime</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1"> seconds&#39;</span><span class="p">)</span>
-	<span class="c1">#self.errorReport()</span>
+
 
 	<span class="k">return</span> <span class="n">dfReportForScatter</span>
 </code></pre></div>

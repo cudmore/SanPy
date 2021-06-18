@@ -246,21 +246,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../web-application/" class="md-nav__link">
-        Web Application
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../plugins/" class="md-nav__link">
         Plugins
       </a>
@@ -279,14 +264,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
       
-      <label class="md-nav__link" for="__nav_6">
+      <label class="md-nav__link" for="__nav_5">
         Scripting
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Scripting" data-md-level="1">
-        <label class="md-nav__title" for="__nav_6">
+        <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           Scripting
         </label>
@@ -347,14 +332,14 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
       
-      <label class="md-nav__link" for="__nav_7">
+      <label class="md-nav__link" for="__nav_6">
         API
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="__nav_7">
+        <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
@@ -529,14 +514,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7_8" type="checkbox" id="__nav_7_8" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8" type="checkbox" id="__nav_6_8" >
       
-      <label class="md-nav__link" for="__nav_7_8">
+      <label class="md-nav__link" for="__nav_6_8">
         interface
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="interface" data-md-level="2">
-        <label class="md-nav__title" for="__nav_7_8">
+        <label class="md-nav__title" for="__nav_6_8">
           <span class="md-nav__icon md-icon"></span>
           interface
         </label>
@@ -576,6 +561,21 @@
     <li class="md-nav__item">
       <a href="../../methods/" class="md-nav__link">
         Methods
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../web-application/" class="md-nav__link">
+        Web Application
       </a>
     </li>
   
@@ -1058,10 +1058,15 @@ reports can be generated with the bExport class.</p>
 	<span class="n">maxStr</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">theMax</span><span class="p">)</span>
 	<span class="n">minStr</span> <span class="o">=</span> <span class="n">minStr</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
 	<span class="n">maxStr</span> <span class="o">=</span> <span class="n">maxStr</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="s1">&#39;_&#39;</span><span class="p">)</span>
-	<span class="n">tmpPath</span><span class="p">,</span> <span class="n">tmpFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">file</span><span class="p">)</span>
-	<span class="n">tmpFile</span><span class="p">,</span> <span class="n">tmpExt</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">tmpFile</span><span class="p">)</span>
-	<span class="n">analysisName</span> <span class="o">=</span> <span class="n">tmpFile</span> <span class="o">+</span> <span class="s1">&#39;_s&#39;</span> <span class="o">+</span> <span class="n">minStr</span> <span class="o">+</span> <span class="s1">&#39;_s&#39;</span> <span class="o">+</span> <span class="n">maxStr</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    minStr:&#39;</span><span class="p">,</span> <span class="n">minStr</span><span class="p">,</span> <span class="s1">&#39;maxStr:&#39;</span><span class="p">,</span> <span class="n">maxStr</span><span class="p">,</span> <span class="s1">&#39;analysisName:&#39;</span><span class="p">,</span> <span class="n">analysisName</span><span class="p">)</span>
+
+	<span class="c1"># TODO: bytestreams are not strictly from a hdd folder or file</span>
+	<span class="n">fileName</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">getFileName</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">fileName</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">fileName</span><span class="p">,</span> <span class="n">tmpExt</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">fileName</span><span class="p">)</span>
+		<span class="n">analysisName</span> <span class="o">=</span> <span class="n">fileName</span> <span class="o">+</span> <span class="s1">&#39;_s&#39;</span> <span class="o">+</span> <span class="n">minStr</span> <span class="o">+</span> <span class="s1">&#39;_s&#39;</span> <span class="o">+</span> <span class="n">maxStr</span>
+		<span class="c1">#print(&#39;    minStr:&#39;, minStr, &#39;maxStr:&#39;, maxStr, &#39;analysisName:&#39;, analysisName)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">analysisName</span> <span class="o">=</span> <span class="s1">&#39;bytestream&#39;</span>
 	<span class="n">df</span><span class="p">[</span><span class="s1">&#39;analysisname&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">analysisName</span>
 
 	<span class="k">return</span> <span class="n">df</span>

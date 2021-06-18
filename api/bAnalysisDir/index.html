@@ -246,21 +246,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../web-application/" class="md-nav__link">
-        Web Application
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../plugins/" class="md-nav__link">
         Plugins
       </a>
@@ -279,14 +264,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
       
-      <label class="md-nav__link" for="__nav_6">
+      <label class="md-nav__link" for="__nav_5">
         Scripting
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Scripting" data-md-level="1">
-        <label class="md-nav__title" for="__nav_6">
+        <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           Scripting
         </label>
@@ -347,14 +332,14 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
       
-      <label class="md-nav__link" for="__nav_7">
+      <label class="md-nav__link" for="__nav_6">
         API
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="__nav_7">
+        <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
@@ -523,14 +508,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7_8" type="checkbox" id="__nav_7_8" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8" type="checkbox" id="__nav_6_8" >
       
-      <label class="md-nav__link" for="__nav_7_8">
+      <label class="md-nav__link" for="__nav_6_8">
         interface
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="interface" data-md-level="2">
-        <label class="md-nav__title" for="__nav_7_8">
+        <label class="md-nav__title" for="__nav_6_8">
           <span class="md-nav__icon md-icon"></span>
           interface
         </label>
@@ -570,6 +555,21 @@
     <li class="md-nav__item">
       <a href="../../methods/" class="md-nav__link">
         Methods
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../web-application/" class="md-nav__link">
+        Web Application
       </a>
     </li>
   
@@ -705,7 +705,7 @@
 
 
 <h2 class="doc doc-heading" id="sanpy.analysisDir.bAnalysisDir.__init__">
-<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">myApp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autoLoad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">myApp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autoLoad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
 
   <span class="doc doc-properties">
       <small class="doc doc-property doc-property-special"><code>special</code></small>
@@ -733,7 +733,7 @@
         <td><code>path</code></td>
         <td><code>str</code></td>
         <td><p>Path to folder</p></td>
-        <td><em>required</em></td>
+        <td><code>None</code></td>
       </tr>
       <tr>
         <td><code>myApp</code></td>
@@ -741,11 +741,23 @@
         <td><p>Optional</p></td>
         <td><code>None</code></td>
       </tr>
+      <tr>
+        <td><code>autoLoad</code></td>
+        <td><code>boolean</code></td>
+        <td></td>
+        <td><code>True</code></td>
+      </tr>
+      <tr>
+        <td><code>cloudDict</code></td>
+        <td><code>dict</code></td>
+        <td><p>To load frmo cloud, for now  just github</p></td>
+        <td><em>required</em></td>
+      </tr>
   </tbody>
 </table>
         <details class="quote">
           <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">myApp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autoLoad</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">myApp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autoLoad</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Initialize with a path to folder</span>
 
@@ -754,13 +766,17 @@
 <span class="sd">	Args:</span>
 <span class="sd">		path (str): Path to folder</span>
 <span class="sd">		myApp (sanpy_app): Optional</span>
+<span class="sd">		autoLoad (boolean):</span>
+<span class="sd">		cloudDict (dict): To load frmo cloud, for now  just github</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">myApp</span> <span class="o">=</span> <span class="n">myApp</span> <span class="c1"># used to signal on building initial db</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">autoLoad</span> <span class="o">=</span> <span class="n">autoLoad</span>
+	<span class="c1">#self.cloudDict = cloudDict</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">fileList</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># list of dict</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="kc">None</span>
 	<span class="k">if</span> <span class="n">autoLoad</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadFolder</span><span class="p">()</span>
 </code></pre></div>
         </details>
     </div>
@@ -874,7 +890,7 @@
 
 
 <h2 class="doc doc-heading" id="sanpy.analysisDir.bAnalysisDir.loadFolder">
-<code class="highlight language-python"><span class="n">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
 <a class="headerlink" href="#sanpy.analysisDir.bAnalysisDir.loadFolder" title="Permanent link">¤</a></h2>
@@ -882,13 +898,18 @@
     <div class="doc doc-contents ">
 
       <p>expensive</p>
+<p>TODO: extand the logic to load from cloud (after we were instantiated)</p>
 
         <details class="quote">
           <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	expensive</span>
+
+<span class="sd">	TODO: extand the logic to load from cloud (after we were instantiated)</span>
 <span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
 
 	<span class="c1"># load an existing folder db or create a new one</span>
@@ -901,19 +922,6 @@
 
 		<span class="c1">#df[&quot;Idx&quot;] = pd.to_numeric(df[&quot;Idx&quot;])</span>
 		<span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setColumnType</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-		<span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">		for col in df.columns:</span>
-<span class="sd">			colType = sanpyColumns[col][&#39;type&#39;]</span>
-<span class="sd">			if  colType == str:</span>
-<span class="sd">				df[col] = df[col].replace(np.nan, &#39;&#39;, regex=True)</span>
-<span class="sd">				df[col] = df[col].astype(str)</span>
-<span class="sd">			elif colType == int:</span>
-<span class="sd">				df[col] = df[col].astype(int)</span>
-<span class="sd">			elif colType == float:</span>
-<span class="sd">				df[col] = df[col].astype(float)</span>
-<span class="sd">			elif colType == bool:</span>
-<span class="sd">				df[col] = df[col].astype(bool)</span>
-<span class="sd">		&#39;&#39;&#39;</span>
 
 		<span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">		print(&#39;=== final types&#39;)</span>
