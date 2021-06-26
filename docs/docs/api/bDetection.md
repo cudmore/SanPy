@@ -1,0 +1,2 @@
+# detectionParams module
+::: sanpy.bDetection
