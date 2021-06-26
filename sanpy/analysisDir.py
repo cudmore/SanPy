@@ -166,7 +166,8 @@ class bAnalysisDir():
 
 	def __init__(self, path=None, myApp=None, autoLoad=True):
 		"""
-		Initialize with a path to folder
+		Load and manager a list of files in a folder path.
+		Use this as the main model for file list QTableView.
 
 		TODO: extend to link to folder in cloud (start with box)
 
@@ -175,13 +176,21 @@ class bAnalysisDir():
 			myApp (sanpy_app): Optional
 			autoLoad (boolean):
 			cloudDict (dict): To load frmo cloud, for now  just github
+
+		Notes:
+			- on load existing .csv
+				- match columns in file with 'sanpyColumns'
+				- check that each file in csv exists in the path
+				- check if there are files in the path NOT in the csv
+
 		"""
 		self.path = path
 		self.myApp = myApp # used to signal on building initial db
 		self.autoLoad = autoLoad
 
-		# keys are file name, holds bAnalysisObjects
-		self.fileList = [] # list of dict
+		# keys are full path to file, if from cloud, key is 'cloud/<filename>'
+		# holds bAnalysisObjects
+		self.fileList = {} # list of dict
 		"""
 			'header': headerDict,
 			'ba': ba,
@@ -225,8 +234,7 @@ class bAnalysisDir():
 			'''
 			loadedDatabase = True
 		else:
-			logger.info(f'No existing folder db {dbPath}')
-			logger.info(f'Making default folder db')
+			logger.info(f'No existing folder db, making {dbPath}')
 			df = pd.DataFrame(columns=sanpyColumns.keys())
 			df = self._setColumnType(df)
 
@@ -235,23 +243,22 @@ class bAnalysisDir():
 			loadedColumns = df.columns
 			for col in loadedColumns:
 				if not col in sanpyColumns.keys():
-					print(f'  error: bAnalysisDir did not find loaded col: "{col}" in sanpyColumns.keys()')
+					logger.error(f'error: bAnalysisDir did not find loaded col: "{col}" in sanpyColumns.keys()')
 			for col in sanpyColumns.keys():
 				if not col in loadedColumns:
-					print(f'  error: bAnalysisDir did not find sanpyColumns.keys() col: "{col}" in loadedColumns')
-
-		# get list of all abf/csv/tif
-		fileList = getFileList(path)
+					logger.error(f'error: bAnalysisDir did not find sanpyColumns.keys() col: "{col}" in loadedColumns')
 
 		if loadedDatabase:
 			# seach existing db for missing abf files
 			pass
 		else:
+			# get list of all abf/csv/tif
+			fileList = self.getFileList(path)
 			# build new db dataframe
 			listOfDict = []
 			for rowIdx, file in enumerate(fileList):
 				self.signalApp(f'Please wait, loading "{file}"')
-				rowDict = getFileRow(file, rowIdx=rowIdx+1) # loads bAnalysis
+				rowDict = self.getFileRow(file, rowIdx=rowIdx+1) # loads bAnalysis
 				if rowDict is not None:
 					listOfDict.append(rowDict)
 			#
@@ -327,21 +334,25 @@ class bAnalysisDir():
 		Get list of header dict for folder
 		"""
 		theRet = []
-		for file in self.fileList:
-			item = file['header']
+		for file,v in self.fileList.items():
+			item = v['header']
 			theRet.append(item)
 		return theRet
 
-	def getFromIndex(self, index, type='header'):
+	def get(self, filePath, type='header'):
 		"""
-		Get one file from index
+		Get info on one file from file path
 
 		Args:
-			index (int): Index into list of files
+			filePath (str): Full path to file
 			type (str): type of data to return.
-				('header', 'ba', 'sweepX', 'sweepY')
+				One of ('header', 'ba', 'sweepX', 'sweepY')
 		"""
-		theRet = self.fileList[index][type]
+		try:
+			theRet = self.fileList[filePath][type]
+		except (KeyError) as e:
+			theRet = None
+			logger.error(f'Did not find file key "{filePath}"')
 		return theRet
 
 	def getFileRow(self, path, rowIdx=None):
@@ -360,7 +371,7 @@ class bAnalysisDir():
 			logger.warning(f'Did not find file "{path}"')
 			return None
 		fileType = os.path.splitext(path)[1]
-		if not fileType in theseFileTypes:
+		if not fileType in self.theseFileTypes:
 			logger.warning(f'Did not load file type "{fileType}"')
 			return None
 
@@ -407,17 +418,17 @@ class bAnalysisDir():
 
 			# tmpExt is like .abf, .csv, etc
 			tmpFileName, tmpExt = os.path.splitext(file)
-			if tmpExt in theseFileTypes:
+			if tmpExt in self.theseFileTypes:
 				file = os.path.join(path, file)
 				fileList.append(file)
 		#
 		return fileList
 
-	def findNewFiles(self.path):
+	def findNewFiles(self, path):
 		fileList = self.getFileList(path)
 		# (1) for each file, see if it is in df
 
-		# (2) for each file in df, see if it is in dir
+		# (2) for each file in df, see if it is in path
 
 	def signalApp(self, str):
 		"""Update status bar of app"""
@@ -436,6 +447,7 @@ def test2():
 
 def test():
 	path = '/Users/cudmore/Sites/SanPy/data'
+	path = '/home/cudmore/Sites/SanPy/data'
 	bad = bAnalysisDir(path)
 
 	# get list of dict, useful for inserting into table (pyqt, dash, vue)
@@ -470,6 +482,6 @@ def testCloud():
 	bad = bAnalysisDirWeb(cloudDict)
 
 if __name__ == '__main__':
-	#test()
+	test()
 	#test2()
-	testCloud()
+	#testCloud()

@@ -68,7 +68,7 @@ nav:
         - bAnalysisPlot: api/bAnalysisPlot.md
         - bAnalysisDir: api/bAnalysisDir.md
         - bExport: api/bExport.md
-        - detectionParams: api/detectionParams.md
+        - bDetection: api/bDetection.md
         - bAnalysisUtil: api/bAnalysisUtil.md
         - interface:
             - sanp_app: api/interface/sanpy_app.md

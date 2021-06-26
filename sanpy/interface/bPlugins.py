@@ -19,22 +19,26 @@ class bPlugins():
 	def __init__(self, sanpyApp=None):
 		self._sanpyApp = sanpyApp
 
-		error = False
-		userPath = pathlib.Path.home()
-		pluginFolder = os.path.join(userPath, 'sanpy_plugins')
-		if not os.path.isdir(pluginFolder):
-			error = True
-			logger.error(f'Did not find pluginFolder "{pluginFolder}"')
+		"""path to <user>/plugin_dir"""
+		self.userPluginFolder = ''
 
-		self.pluginFolder = pluginFolder
+		"""dict of pointers to open plugins"""
 		self.pluginDict = {}
 
 		"""set of open plugins"""
 		self._openSet = set()
 
-		if not error:
-			sys.path.append(self.pluginFolder)
-			self.loadPlugins()
+		# add <user>/sanpy_plugins folder
+		userPath = pathlib.Path.home()
+		userPluginFolder = os.path.join(userPath, 'sanpy_plugins')
+		if os.path.isdir(userPluginFolder):
+			self.userPluginFolder = userPluginFolder
+			sys.path.append(self.userPluginFolder)
+		else:
+			logger.warning(f'Did not find pluginFolder "{userPluginFolder}"')
+
+		#
+		self.loadPlugins()
 
 	def getSanPyApp(self):
 		"""
@@ -54,10 +58,11 @@ class bPlugins():
 
 		#
 		# system plugins from sanpy.interface.plugins
+		#print('loadPlugins sanpy.interface.plugins:', sanpy.interface.plugins)
 		for moduleName, obj in inspect.getmembers(sanpy.interface.plugins):
-			print('moduleName:', moduleName, 'obj:', obj)
+			#print('moduleName:', moduleName, 'obj:', obj)
 			if inspect.isclass(obj):
-				print('  class')
+				#print('  class')
 				if moduleName in ignoreModuleList:
 					# our base plugin class
 					continue
@@ -80,8 +85,10 @@ class bPlugins():
 
 		#
 		# user plugins from files in folder <user>/sanpy_plugins
-		pluginFolder = self.pluginFolder
-		files = glob.glob(os.path.join(pluginFolder, '*.py'))
+		if self.userPluginFolder:
+			files = glob.glob(os.path.join(self.userPluginFolder, '*.py'))
+		else:
+			files = []
 		for file in files:
 			if file.endswith('__init__.py'):
 				continue
@@ -111,7 +118,7 @@ class bPlugins():
 				if humanName in self.pluginDict.keys():
 					logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
 				else:
-					logger.info(f'loading plugin: "{file}"')
+					logger.info(f'loading user plugin: "{file}"')
 					#self.pluginDict[moduleName] = pluginDict
 					self.pluginDict[humanName] = pluginDict
 
@@ -124,7 +131,7 @@ class bPlugins():
 			ba (bAnalysis): object
 		"""
 		if not pluginName in self.pluginDict.keys():
-			logger.error(f'Did not find plugin: "{pluginName}"')
+			logger.warning(f'Did not find user plugin folder: "{pluginName}"')
 			return
 		else:
 			humanName = self.pluginDict[pluginName]['constructor'].myHumanName

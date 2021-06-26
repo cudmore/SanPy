@@ -510,8 +510,10 @@ class MainWindow(QtWidgets.QMainWindow):
 		# plugins
 		pluginsMenu = mainMenu.addMenu('&Plugins')
 		# getHumanNames
-		plugins = self.myPlugins.pluginList()
-		for plugin in plugins:
+		pluginList = self.myPlugins.pluginList()
+		#logger.info(f'pluginList: {pluginList}')
+		for plugin in pluginList:
+			logger.info(f'adding plugin: {plugin}')
 			sanpyPluginAction = QtWidgets.QAction(plugin, self)
 
 			# TODO: Add spacer between system and user plugins

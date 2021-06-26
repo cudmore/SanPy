@@ -11709,3 +11709,192 @@ KeyError: <sanpy.interface.plugins.plotRecording.plotRecording object at 0x7fbfc
 2021-06-22 11:31:05,515   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:143 -- Running plugin: "SanPy Log" SanPy Log
 2021-06-22 11:31:30,018   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:187 -- <sanpy.interface.plugins.sanpyLog.sanpyLog object at 0x7fbfa1064eb0>
 2021-06-26 11:42:05,664   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:153 -- SanPy is quiting
+2021-06-26 12:07:14,994   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:907 -- Python version is 3.8.3
+2021-06-26 12:07:14,995   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:908 -- PyQt version is 5.13.0
+2021-06-26 12:07:15,008   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:920 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:07:15,009   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:924 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:07:15,009   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:925 --   file is sanpy_transparent.png
+2021-06-26 12:07:15,022   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:656 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:07:15,023   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:07:15,023  ERROR sanpy.interface.bPlugins  bPlugins.py __init__() line:27 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:07:15,151   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:127 -- SanPy started
+2021-06-26 12:07:23,567   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:154 -- SanPy is quiting
+2021-06-26 12:08:13,123   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:908 -- Python version is 3.8.3
+2021-06-26 12:08:13,123   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:909 -- PyQt version is 5.13.0
+2021-06-26 12:08:13,137   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:921 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:08:13,137   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:925 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:08:13,137   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:926 --   file is sanpy_transparent.png
+2021-06-26 12:08:13,151   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:657 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:08:13,151   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:08:13,151  ERROR sanpy.interface.bPlugins  bPlugins.py __init__() line:27 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:08:13,295   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:127 -- SanPy started
+2021-06-26 12:08:36,959   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:154 -- SanPy is quiting
+2021-06-26 12:09:13,756   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:909 -- Python version is 3.8.3
+2021-06-26 12:09:13,756   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:910 -- PyQt version is 5.13.0
+2021-06-26 12:09:13,769   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:922 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:09:13,770   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:926 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:09:13,770   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:927 --   file is sanpy_transparent.png
+2021-06-26 12:09:13,784   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:658 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:09:13,784   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:09:13,784  ERROR sanpy.interface.bPlugins  bPlugins.py __init__() line:27 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:09:13,786   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:514 -- pluginList: []
+2021-06-26 12:09:13,914   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:127 -- SanPy started
+2021-06-26 12:09:18,832   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:154 -- SanPy is quiting
+2021-06-26 12:11:30,978   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:909 -- Python version is 3.8.3
+2021-06-26 12:11:30,978   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:910 -- PyQt version is 5.13.0
+2021-06-26 12:11:30,992   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:922 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:11:30,992   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:926 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:11:30,992   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:927 --   file is sanpy_transparent.png
+2021-06-26 12:11:31,005   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:658 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:11:31,006   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:11:31,006  ERROR sanpy.interface.bPlugins  bPlugins.py __init__() line:27 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:11:31,007   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:514 -- pluginList: []
+2021-06-26 12:11:31,135   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:127 -- SanPy started
+2021-06-26 12:11:38,495   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:154 -- SanPy is quiting
+2021-06-26 12:14:36,192   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:909 -- Python version is 3.8.3
+2021-06-26 12:14:36,192   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:910 -- PyQt version is 5.13.0
+2021-06-26 12:14:36,205   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:922 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:14:36,205   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:926 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:14:36,205   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:927 --   file is sanpy_transparent.png
+2021-06-26 12:14:36,219   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:658 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:14:36,219   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:14:36,219  ERROR sanpy.interface.bPlugins  bPlugins.py __init__() line:27 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:14:36,222   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:514 -- pluginList: ['Detection Errors', 'Plot Reccording', 'Plot Scatter', 'Plot Tool', 'Results Table', 'SanPy Log', 'Spike Clips']
+2021-06-26 12:15:13,098   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:909 -- Python version is 3.8.3
+2021-06-26 12:15:13,098   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:910 -- PyQt version is 5.13.0
+2021-06-26 12:15:13,111   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:922 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:15:13,111   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:926 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:15:13,111   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:927 --   file is sanpy_transparent.png
+2021-06-26 12:15:13,125   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:658 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:15:13,125   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:15:13,125  ERROR sanpy.interface.bPlugins  bPlugins.py __init__() line:27 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:15:13,127   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:514 -- pluginList: ['Detection Errors', 'Plot Reccording', 'Plot Scatter', 'Plot Tool', 'Results Table', 'SanPy Log', 'Spike Clips']
+2021-06-26 12:15:13,127   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Detection Errors
+2021-06-26 12:15:13,127   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Reccording
+2021-06-26 12:15:13,127   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Scatter
+2021-06-26 12:15:13,127   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Tool
+2021-06-26 12:15:13,127   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Results Table
+2021-06-26 12:15:13,127   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: SanPy Log
+2021-06-26 12:15:13,128   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Spike Clips
+2021-06-26 12:15:13,254   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:127 -- SanPy started
+2021-06-26 12:15:30,635   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:146 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-26 12:15:33,087   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:190 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7f0922956af0>
+2021-06-26 12:16:33,775   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:154 -- SanPy is quiting
+2021-06-26 12:16:35,721   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:909 -- Python version is 3.8.3
+2021-06-26 12:16:35,721   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:910 -- PyQt version is 5.13.0
+2021-06-26 12:16:35,734   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:922 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:16:35,735   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:926 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:16:35,735   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:927 --   file is sanpy_transparent.png
+2021-06-26 12:16:35,749   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:658 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:16:35,749   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:16:35,750  ERROR sanpy.interface.bPlugins  bPlugins.py __init__() line:27 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:16:35,752   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Detection Errors
+2021-06-26 12:16:35,752   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Reccording
+2021-06-26 12:16:35,753   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Scatter
+2021-06-26 12:16:35,753   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Tool
+2021-06-26 12:16:35,753   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Results Table
+2021-06-26 12:16:35,753   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: SanPy Log
+2021-06-26 12:16:35,753   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Spike Clips
+2021-06-26 12:16:35,925   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:127 -- SanPy started
+2021-06-26 12:16:58,727   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:154 -- SanPy is quiting
+2021-06-26 12:17:00,684   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:909 -- Python version is 3.8.3
+2021-06-26 12:17:00,684   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:910 -- PyQt version is 5.13.0
+2021-06-26 12:17:00,698   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:922 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:17:00,698   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:926 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:17:00,698   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:927 --   file is sanpy_transparent.png
+2021-06-26 12:17:00,712   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:658 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:17:00,713   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:17:00,713  ERROR sanpy.interface.bPlugins  bPlugins.py __init__() line:27 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:17:00,715   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Detection Errors
+2021-06-26 12:17:00,715   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Reccording
+2021-06-26 12:17:00,715   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Scatter
+2021-06-26 12:17:00,715   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Tool
+2021-06-26 12:17:00,715   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Results Table
+2021-06-26 12:17:00,715   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: SanPy Log
+2021-06-26 12:17:00,715   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Spike Clips
+2021-06-26 12:17:00,841   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:127 -- SanPy started
+2021-06-26 12:17:09,895   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:154 -- SanPy is quiting
+2021-06-26 12:17:44,680   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:909 -- Python version is 3.8.3
+2021-06-26 12:17:44,680   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:910 -- PyQt version is 5.13.0
+2021-06-26 12:17:44,694   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:922 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:17:44,694   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:926 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:17:44,695   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:927 --   file is sanpy_transparent.png
+2021-06-26 12:17:44,709   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:658 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:17:44,709   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:17:44,709  ERROR sanpy.interface.bPlugins  bPlugins.py __init__() line:27 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:17:44,711   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Detection Errors
+2021-06-26 12:17:44,711   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Reccording
+2021-06-26 12:17:44,711   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Scatter
+2021-06-26 12:17:44,712   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Tool
+2021-06-26 12:17:44,712   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Results Table
+2021-06-26 12:17:44,712   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: SanPy Log
+2021-06-26 12:17:44,712   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Spike Clips
+2021-06-26 12:17:44,855   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:127 -- SanPy started
+2021-06-26 12:38:13,027   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:195 -- Loading path: False
+2021-06-26 12:38:18,953   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:216 -- Loading existing folder db: /home/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-26 12:38:50,451   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:154 -- SanPy is quiting
+2021-06-26 12:38:52,253   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:909 -- Python version is 3.8.3
+2021-06-26 12:38:52,253   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:910 -- PyQt version is 5.13.0
+2021-06-26 12:38:52,266   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:922 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:38:52,266   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:926 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:38:52,266   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:927 --   file is sanpy_transparent.png
+2021-06-26 12:38:52,280   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:658 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:38:52,280   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:38:52,281  WARNING sanpy.interface.bPlugins  bPlugins.py __init__() line:34 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:43:01,669   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:909 -- Python version is 3.8.3
+2021-06-26 12:43:01,669   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:910 -- PyQt version is 5.13.0
+2021-06-26 12:43:01,683   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:922 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:43:01,683   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:926 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:43:01,683   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:927 --   file is sanpy_transparent.png
+2021-06-26 12:43:01,697   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:658 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:43:01,698   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:43:01,698  WARNING sanpy.interface.bPlugins  bPlugins.py __init__() line:38 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:43:01,699   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Detection Errors
+2021-06-26 12:43:01,699   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Reccording
+2021-06-26 12:43:01,700   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Scatter
+2021-06-26 12:43:01,700   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Tool
+2021-06-26 12:43:01,700   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Results Table
+2021-06-26 12:43:01,700   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: SanPy Log
+2021-06-26 12:43:01,700   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Spike Clips
+2021-06-26 12:43:01,830   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:127 -- SanPy started
+2021-06-26 12:43:07,682   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:195 -- Loading path: False
+2021-06-26 12:43:12,461   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:216 -- Loading existing folder db: /home/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-26 12:43:16,835   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:154 -- SanPy is quiting
+2021-06-26 12:44:50,307   INFO sanpy.bAnalysis  bAnalysis.py __init__() line:146 -- Did not take derivative
+2021-06-26 12:44:50,307   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:982 -- start detection
+2021-06-26 12:45:42,558   INFO __main__  analysisDir.py loadFolder() line:228 -- No existing folder db /home/cudmore/Sites/SanPy/sanpy_recording_db.csv
+2021-06-26 12:45:42,559   INFO __main__  analysisDir.py loadFolder() line:229 -- Making default folder db
+2021-06-26 12:46:47,790   INFO __main__  analysisDir.py loadFolder() line:216 -- Loading existing folder db: /home/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-26 12:52:33,943   INFO __main__  analysisDir.py loadFolder() line:224 -- Loading existing folder db: /home/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-26 12:53:16,134   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:909 -- Python version is 3.8.3
+2021-06-26 12:53:16,134   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:910 -- PyQt version is 5.13.0
+2021-06-26 12:53:16,151   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:922 -- bundle_dir is /home/cudmore/Sites/SanPy/sanpy/interface
+2021-06-26 12:53:16,151   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:926 -- appIconPath is /home/cudmore/Sites/SanPy/sanpy/interface/icons
+2021-06-26 12:53:16,151   INFO sanpy.interface.sanpy_app  sanpy_app.py main() line:927 --   file is sanpy_transparent.png
+2021-06-26 12:53:16,165   INFO sanpy.interface.sanpy_app  sanpy_app.py preferencesLoad() line:658 -- Loading options file: /home/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.json
+2021-06-26 12:53:16,166   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:78 -- json preferences file lastPath "/Users/cudmore/Sites/SanPy/data"
+2021-06-26 12:53:16,166  WARNING sanpy.interface.bPlugins  bPlugins.py __init__() line:38 -- Did not find pluginFolder "/home/cudmore/sanpy_plugins"
+2021-06-26 12:53:16,168   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Detection Errors
+2021-06-26 12:53:16,168   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Reccording
+2021-06-26 12:53:16,168   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Scatter
+2021-06-26 12:53:16,169   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Plot Tool
+2021-06-26 12:53:16,169   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Results Table
+2021-06-26 12:53:16,169   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: SanPy Log
+2021-06-26 12:53:16,169   INFO sanpy.interface.sanpy_app  sanpy_app.py buildMenus() line:516 -- adding plugin: Spike Clips
+2021-06-26 12:53:16,304   INFO sanpy.interface.sanpy_app  sanpy_app.py __init__() line:127 -- SanPy started
+2021-06-26 12:53:20,210   INFO sanpy.interface.sanpy_app  sanpy_app.py loadFolder() line:195 -- Loading path: False
+2021-06-26 12:53:25,697   INFO sanpy.analysisDir  analysisDir.py loadFolder() line:224 -- Loading existing folder db: /home/cudmore/Sites/SanPy/data/sanpy_recording_db.csv
+2021-06-26 12:53:27,851   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py switchFile() line:148 -- path: /home/cudmore/Sites/SanPy/data/19114001.abf
+2021-06-26 12:53:28,116   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:299 -- set full x axis
+2021-06-26 12:53:29,909   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:280 -- set x axis [16.3282203424421, 24.91638475208738]
+2021-06-26 12:53:31,666   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:253 -- Detecting with dvdtThreshold:50.0 vmThreshold:-20.0
+2021-06-26 12:53:31,667   INFO sanpy.interface.bDetectionWidget  bDetectionWidget.py detect() line:268 -- get detection parameters from main window table
+2021-06-26 12:53:31,667   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:982 -- start detection
+2021-06-26 12:53:31,684   INFO sanpy.bAnalysis  bAnalysis.py _throwOutRefractory() line:669 -- From 107 to 103 spikes with refractory_ms:170
+2021-06-26 12:53:31,767   INFO sanpy.bAnalysis  bAnalysis.py errorReport() line:1676 -- Found 1 errors in spike detection
+2021-06-26 12:53:31,767   INFO sanpy.bAnalysis  bAnalysis.py spikeDetect() line:1557 -- Detected 103 spikes in 0.1 seconds
+2021-06-26 12:53:31,902   INFO sanpy.interface.sanpy_app  sanpy_app.py mySignal() line:245 -- detect
+2021-06-26 12:53:37,778   INFO sanpy.interface.bPlugins  bPlugins.py runPlugin() line:150 -- Running plugin: "Detection Errors" Detection Errors
+2021-06-26 12:53:37,785   INFO sanpy.interface.plugins.detectionErrors  detectionErrors.py replot() line:52 -- dfError
+2021-06-26 14:11:22,167   INFO sanpy.interface.bPlugins  bPlugins.py slot_closeWindow() line:194 -- <sanpy.interface.plugins.detectionErrors.detectionErrors object at 0x7f2414dac550>
+2021-06-26 14:14:28,723   INFO sanpy.interface.sanpy_app  sanpy_app.py closeEvent() line:154 -- SanPy is quiting
