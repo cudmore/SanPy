@@ -49,13 +49,6 @@ class myTableView(QtWidgets.QTableView):
 	"""
 	Table view to display list of files
 	"""
-	'''
-	signalDuplicateRow = QtCore.Signal(object) # row index
-	signalDeleteRow = QtCore.Signal(object) # row index
-	#signalRefreshTabe = QtCore.Signal(object) # row index
-	signalCopyTable = QtCore.Signal()
-	signalFindNewFiles = QtCore.Signal()
-	'''
 	signalDuplicateRow = QtCore.pyqtSignal(object) # row index
 	signalDeleteRow = QtCore.pyqtSignal(object) # row index
 	#signalRefreshTabe = QtCore.pyqtSignal(object) # row index
@@ -69,6 +62,7 @@ class myTableView(QtWidgets.QTableView):
 		super(myTableView, self).__init__(parent)
 
 		self.doIncludeCheckbox = False # todo: turn this on
+		# need a local reference to delegate else 'segmentation fault'
 		self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
 
 		self.setFont(QtGui.QFont('Arial', 10))

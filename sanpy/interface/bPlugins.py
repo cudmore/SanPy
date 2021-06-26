@@ -128,10 +128,22 @@ class bPlugins():
 			return
 		else:
 			humanName = self.pluginDict[pluginName]['constructor'].myHumanName
+
+			# get the visible x-axis from main app
+			startStop = None
+			app = self.getSanPyApp()
+			if app is not None:
+				startSec = app.startSec
+				stopSec = app.stopSec
+				if startSec is None and stopSec is None:
+					startStop= None
+				else:
+					startStop = [startSec, stopSec]
+
 			logger.info(f'Running plugin: "{pluginName}" {humanName}')
 			# TODO: to open PyQt windows, we need to keep a local (persistent) variable
 			newPlugin = \
-					self.pluginDict[pluginName]['constructor'](ba=ba, bPlugin=self)
+					self.pluginDict[pluginName]['constructor'](ba=ba, bPlugin=self, startStop=startStop)
 			self._openSet.add(newPlugin)
 
 	def getType(self, pluginName):

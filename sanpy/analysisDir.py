@@ -91,78 +91,6 @@ sanpyColumns = {
 
 }
 
-# file types we will load
-theseFileTypes = ['.abf', '.csv', '.tif']
-
-def getFileRow(path, rowIdx=None):
-	"""
-	Get dict representing one file (row in table).
-
-	Args:
-		path (Str): Full path to file.
-		rowIdx (int): Optional row index to assign in column 'Idx'
-
-	Return:
-		dict: On success, otherwise None
-				fails when path does not lead to valid bAnalysis file.
-	"""
-	if not os.path.isfile(path):
-		logger.error(path)
-		return None
-	if not os.path.splitext(path)[1] in theseFileTypes:
-		return None
-
-	ba = sanpy.bAnalysis(path)
-
-	if ba.loadError:
-		logger.error(path)
-		return None
-
-	# not sufficient to default everything to empty str ''
-	# sanpyColumns can only have type in ('float', 'str')
-	rowDict = dict.fromkeys(sanpyColumns.keys() , '')
-	for k in rowDict.keys():
-		if sanpyColumns[k]['type'] == str:
-			rowDict[k] = ''
-		elif sanpyColumns[k]['type'] == float:
-			rowDict[k] = np.nan
-
-	if rowIdx is not None:
-		rowDict['Idx'] = rowIdx
-
-	rowDict['Include'] = 1 # causes error if not here !!!!, can't be string
-	rowDict['File'] = os.path.split(ba.path)[1]
-	rowDict['Dur(s)'] = ba.recodingDur
-	rowDict['kHz'] = ba.recordingFrequency
-	rowDict['Mode'] = 'fix'
-
-	rowDict['dvdtThreshold'] = 20
-	rowDict['mvThreshold'] = -20
-
-	return rowDict
-
-def getFileList(path):
-	fileList = []
-	for file in os.listdir(path):
-		if file.startswith('.'):
-			continue
-		#if file == 'sanpy_recording_db.csv':
-		#	continue
-
-		# tmpExt is like .abf, .csv, etc
-		tmpFileName, tmpExt = os.path.splitext(file)
-		if tmpExt in theseFileTypes:
-			file = os.path.join(path, file)
-			fileList.append(file)
-	#
-	return fileList
-
-def findNewFiles(path):
-	fileList = getFileList(path)
-	# (1) for each file, see if it is in df
-
-	# (2) for each file in df, see if it is in dir
-
 class bAnalysisDirWeb():
 	"""
 	Load a directory of .abf from the web (for now from GitHub).
@@ -233,6 +161,9 @@ class bAnalysisDir():
 	"""
 	Class to manage a list of files loaded from a folder
 	"""
+	# file types we will load
+	theseFileTypes = ['.abf', '.csv', '.tif']
+
 	def __init__(self, path=None, myApp=None, autoLoad=True):
 		"""
 		Initialize with a path to folder
@@ -248,9 +179,18 @@ class bAnalysisDir():
 		self.path = path
 		self.myApp = myApp # used to signal on building initial db
 		self.autoLoad = autoLoad
-		#self.cloudDict = cloudDict
+
+		# keys are file name, holds bAnalysisObjects
 		self.fileList = [] # list of dict
+		"""
+			'header': headerDict,
+			'ba': ba,
+			'sweepX': ba.abf.sweepX,
+			'sweepY': ba.abf.sweepY,
+		"""
+
 		self.df = None
+
 		if autoLoad:
 			self.df = self.loadFolder()
 
@@ -311,7 +251,7 @@ class bAnalysisDir():
 			listOfDict = []
 			for rowIdx, file in enumerate(fileList):
 				self.signalApp(f'Please wait, loading "{file}"')
-				rowDict = getFileRow(file, rowIdx=rowIdx+1)
+				rowDict = getFileRow(file, rowIdx=rowIdx+1) # loads bAnalysis
 				if rowDict is not None:
 					listOfDict.append(rowDict)
 			#
@@ -404,7 +344,83 @@ class bAnalysisDir():
 		theRet = self.fileList[index][type]
 		return theRet
 
+	def getFileRow(self, path, rowIdx=None):
+		"""
+		Get dict representing one file (row in table). Loads bAnalysis to get headers.
+
+		Args:
+			path (Str): Full path to file.
+			rowIdx (int): Optional row index to assign in column 'Idx'
+
+		Return:
+			dict: On success, otherwise None
+					fails when path does not lead to valid bAnalysis file.
+		"""
+		if not os.path.isfile(path):
+			logger.warning(f'Did not find file "{path}"')
+			return None
+		fileType = os.path.splitext(path)[1]
+		if not fileType in theseFileTypes:
+			logger.warning(f'Did not load file type "{fileType}"')
+			return None
+
+		# load bAnalysis
+		ba = sanpy.bAnalysis(path)
+
+		if ba.loadError:
+			logger.error(f'Error loading bAnalysis file "{path}"')
+			return None
+
+		# not sufficient to default everything to empty str ''
+		# sanpyColumns can only have type in ('float', 'str')
+		rowDict = dict.fromkeys(sanpyColumns.keys() , '')
+		for k in rowDict.keys():
+			if sanpyColumns[k]['type'] == str:
+				rowDict[k] = ''
+			elif sanpyColumns[k]['type'] == float:
+				rowDict[k] = np.nan
+
+		if rowIdx is not None:
+			rowDict['Idx'] = rowIdx
+
+		rowDict['Include'] = 1 # causes error if not here !!!!, can't be string
+		rowDict['File'] = ba.getFileName() #os.path.split(ba.path)[1]
+		rowDict['Dur(s)'] = ba.recodingDur
+		rowDict['kHz'] = ba.recordingFrequency
+		rowDict['Mode'] = 'fix'
+
+		rowDict['dvdtThreshold'] = 20
+		rowDict['mvThreshold'] = -20
+
+		return rowDict
+
+	def getFileList(self, path):
+		"""
+		Get file paths from path
+		"""
+		fileList = []
+		for file in os.listdir(path):
+			if file.startswith('.'):
+				continue
+			#if file == 'sanpy_recording_db.csv':
+			#	continue
+
+			# tmpExt is like .abf, .csv, etc
+			tmpFileName, tmpExt = os.path.splitext(file)
+			if tmpExt in theseFileTypes:
+				file = os.path.join(path, file)
+				fileList.append(file)
+		#
+		return fileList
+
+	def findNewFiles(self.path):
+		fileList = self.getFileList(path)
+		# (1) for each file, see if it is in df
+
+		# (2) for each file in df, see if it is in dir
+
 	def signalApp(self, str):
+		"""Update status bar of app"""
 		if self.myApp is not None:
 			self.myApp.updateStatusBar(str)
 

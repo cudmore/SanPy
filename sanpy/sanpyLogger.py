@@ -70,6 +70,15 @@ def get_logger(name):
 	#
 	return logger
 
+#see: https://stackoverflow.com/questions/6234405/logging-uncaught-exceptions-in-python
+def handle_exception(exc_type, exc_value, exc_traceback):
+	if issubclass(exc_type, KeyboardInterrupt):
+		sys.__excepthook__(exc_type, exc_value, exc_traceback)
+		return
+
+	logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+sys.excepthook = handle_exception
+
 def test():
 	logger.error('111')
 
@@ -79,9 +88,13 @@ if __name__ == '__main__':
 
 	test()
 
+	#print(1/0)
+
+	'''
 	a = 5
 	b = 0
 	try:
 		c = a / b
 	except Exception as e:
 		logger.exception("Exception occurred")
+	'''

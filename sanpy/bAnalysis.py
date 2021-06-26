@@ -107,6 +107,7 @@ class bAnalysis:
 		self.spikeTimes = [] # created in self.spikeDetect()
 		self.spikeClips = [] # created in self.spikeDetect()
 		self.dfError = None
+		self.dfReportForScatter = None
 
 		if file is not None and not os.path.isfile(file):
 			logger.error(f'File does not exist: "{file}"')
@@ -1540,13 +1541,15 @@ class bAnalysis:
 
 		# 20210426
 		# generate a df holding stats (used by scatterplotwidget)
-		#print('  making df to pass to scatterplotwidget')
 		startSeconds = dDict['startSeconds']
 		stopSeconds = dDict['stopSeconds']
 		#tmpAnalysisName, df0 = self.getReportDf(theMin, theMax, savefile)
-		exportObject = sanpy.bExport(self)
-		dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
-
+		if self.numSpikes > 0:
+			exportObject = sanpy.bExport(self)
+			self.dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
+		else:
+			self.dfReportForScatter = None
+			
 		self.dfError = self.errorReport()
 
 		stopTime = time.time()
@@ -1554,7 +1557,7 @@ class bAnalysis:
 		logger.info(f'Detected {len(self.spikeTimes)} spikes in {round(stopTime-startTime,2)} seconds')
 
 
-		return dfReportForScatter
+		return self.dfReportForScatter
 
 	def makeSpikeClips(self, spikeClipWidth_ms, theseTime_sec=None):
 		"""

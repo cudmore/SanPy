@@ -2,11 +2,11 @@
 # Date: 20190719
 
 import os, sys, time, math, json
+import traceback # to print call stack
 from functools import partial
 from collections import OrderedDict
 import platform
 import glob
-
 import numpy as np
 import pandas as pd
 
@@ -50,6 +50,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.fileFromDatabase = True # if False then from folder
 		self.csvPath = csvPath
 
+		self.startSec = None
+		self.stopSec = None
+
 		myFontSize = 10
 		myFont = self.font();
 		myFont.setPointSize(myFontSize);
@@ -68,8 +71,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		self._rowHeight = 11
 		self.selectedRow = None
 
-		# todo: modify self.path if we get a good folder
+		# path to loaded folder (using bAnalysisDir)
 		self.configDict = self.preferencesLoad()
+		self.myAnalysisDir = None
 		lastPath = self.configDict['lastPath']
 		logger.info(f'json preferences file lastPath "{lastPath}"')
 		if path is not None:
@@ -198,16 +202,16 @@ class MainWindow(QtWidgets.QMainWindow):
 			pass
 		else:
 			#print('  returning none')
-			logger.info('returning None')
+			logger.info('  returning None')
 			return
 
-		bad = sanpy.analysisDir.bAnalysisDir(path)
-		df = bad.df
+		self.myAnalysisDir = sanpy.analysisDir.bAnalysisDir(path)
+		dfAnalysisDir = self.myAnalysisDir.df
 
-		self.path = path
+		self.path = path # path to loaded bAnalysisDir folder
 
-		# set df to model
-		self.myModel = sanpy.interface.bFileTable.pandasModel(df)
+		# set dfAnalysisDir to file list model
+		self.myModel = sanpy.interface.bFileTable.pandasModel(dfAnalysisDir)
 		columnsDict = sanpy.analysisDir.sanpyColumns
 		self.myModel.mySetColumns(columnsDict)
 		try:
@@ -273,13 +277,27 @@ class MainWindow(QtWidgets.QMainWindow):
 			#self.signalSelectSpike.emit(data)
 
 		elif this == 'set x axis':
+			logger.info(f'set x axis {data}')
+
+			'''
+			print('----')
+			for line in traceback.format_stack():
+				print('  ', line)
+			'''
+
+			self.startSec = data[0]
+			self.stopSec = data[1]
 			# old
 			self.myScatterPlotWidget.selectXRange(data[0], data[1])
 			# new
 			self.signalSetXAxis.emit([data[0], data[1]])
 
 		elif this == 'set full x axis':
+			self.startSec = None
+			self.stopSec = None
 			self.myScatterPlotWidget.selectXRange(None, None)
+			logger.info('set full x axis')
+			self.signalSetXAxis.emit(None)
 
 		elif this == 'cancel all selections':
 			self.myDetectionWidget.selectSpike(None)
@@ -390,6 +408,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
 	def new_tableClicked(self, index):
 		"""
+		Select a roow in file table
+
 		index is QtCore.QModelIndex
 		"""
 		#print('new_tableClicked() index:', 'row:', index.row(), 'column:', index.column())
@@ -399,7 +419,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		# select in table view (todo: switch to signal/slot)
 		if self.selectedRow is not None and row==self.selectedRow:
-			#print('  new_tableClicked() row', row, 'is already selected')
+			logger.info(f'Row {row} is already selected')
 			return
 
 		self.selectedRow = row
@@ -414,9 +434,8 @@ class MainWindow(QtWidgets.QMainWindow):
 			logger.warning('No file specified')
 			return
 
-		#if not fileName.endswith('.abf'):
-		#	fileName += '.abf'
-
+		#
+		# switch file
 		path = os.path.join(self.path, fileName)
 		switchedFile = self.myDetectionWidget.switchFile(path, tableRowDict)
 		if switchedFile:
@@ -494,6 +513,9 @@ class MainWindow(QtWidgets.QMainWindow):
 		plugins = self.myPlugins.pluginList()
 		for plugin in plugins:
 			sanpyPluginAction = QtWidgets.QAction(plugin, self)
+
+			# TODO: Add spacer between system and user plugins
+			#fileMenu.addSeparator()
 
 			'''
 			type = self.myPlugins.getType(plugin)

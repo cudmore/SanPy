@@ -55,7 +55,15 @@ class errorTableView(QtWidgets.QTableView):
 			# zoomm on shift+click
 			doZoom = True
 
-		spikeNumber = self.model()._data.loc[row, 'Spike']
+		try:
+			spikeNumber = self.model()._data.loc[row, 'Spike']
+		except (KeyError) as e:
+			# for results plugin
+			try:
+				spikeNumber = self.model()._data.loc[row, 'spikeNumber']
+			except (KeyError) as e:
+				logger.warning(f'KeyError looking for column "Spike" or "spikeNumber"')
+				return
 		spikeNumber = int(spikeNumber)
 
 		#self.selectSpike(spikeNumber, doZoom=doZoom)

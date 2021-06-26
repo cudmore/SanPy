@@ -14,8 +14,8 @@ from sanpy.bAnalysisUtil import statList
 class plotTool(sanpyPlugin):
 	"""
 	"""
-	myHumanName = 'Plot Analysis'
-	
+	myHumanName = 'Plot Tool'
+
 	def __init__(self, **kwargs):
 		super(plotTool, self).__init__('plotTool', **kwargs)
 		self.plot()
@@ -34,11 +34,13 @@ class plotTool(sanpyPlugin):
 							'Hue': 'Region',
 							'Group By': 'File Number'}
 		#analysisName, masterDf = analysisName, df0 = ba.getReportDf(theMin, theMax, savefile)
-		masterDf = self._bPlugins._sanpyApp.dfReportForScatter
+		#masterDf = self._bPlugins._sanpyApp.dfReportForScatter
+		masterDf = self.ba.dfReportForScatter
 		#print('== masterDf:')
 		#print(masterDf)
 		if masterDf is None:
 			logger.warning('Did not get analysis df, be sure to run detectioon')
+			return
 		#bScatterPlotMainWindow
 		#self.scatterWindow = sanpy.scatterwidget.bScatterPlotMainWindow(
 		path = ''

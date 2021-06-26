@@ -49,7 +49,10 @@ TODO:
  - When detection yields no spikes -->> now getting exceptions ... fix
  - If plugin is open with no file/detection, need to set title with file on switch file.
  - Add keystrokes to all plugins, to toggle switching on update on file selection and new analysis. We already have a QCheckbox in scatter plugin to do this. Make it a default property
- -
+
+BUGS
+ - scatter plugin does not select correct spike when plotting 'chase'
+ - scatter plugin does not plot hw (AP dur), need to tweek my master stat list to include predefined hw (10,20,50,80,90).
 
 ## Update 20201230
  - In export window, added X-Tick and Y-Tick major/minor controls (4x controls). To set the tick intervals on the X/Y axis.

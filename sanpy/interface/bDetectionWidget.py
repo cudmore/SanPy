@@ -2,6 +2,7 @@
 # Date: 20190717
 
 import os, sys, math
+#import inspect # to print call stack
 from functools import partial
 
 import numpy as np
@@ -137,21 +138,109 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.toggleInterface('dV/dt', showDvDt)
 			self.toggleInterface('Clips', showClips)
 
-	def mySetTheme(self):
-		if self.myMainWindow is not None and self.myMainWindow.useDarkStyle:
-			pg.setConfigOption('background', 'k')
-			pg.setConfigOption('foreground', 'w')
-			self.useDarkStyle = True
-		else:
-			pg.setConfigOption('background', 'w')
-			pg.setConfigOption('foreground', 'k')
-			self.useDarkStyle = False
+	def switchFile(self, path, tableRowDict):
+		"""
+		set self.ba to new bAnalysis object ba
 
-	def getMainWindowOptions(self):
-		theRet = None
-		if self.myMainWindow is not None:
-			theRet = self.myMainWindow.getOptions()
-		return theRet
+		Can fail if .abf file is corrupt
+		"""
+
+		logger.info(f'path: {path}')
+
+		#if self.ba is not None and self.ba.file == path:
+		#	print('bDetectionWidget is already displaying file:', path)
+		#	return
+
+		if not os.path.isfile(path):
+			#print('  error: bDetectionWidget.switchFile() did not find file:', path)
+			logger.error(f'Did not find file: {path}')
+			return None
+
+		self.updateStatusBar(f'Loading file {path}')
+
+		# make analysis object from file
+		self.ba = sanpy.bAnalysis(file=path) # loads abf file
+
+		if self.ba.loadError:
+			# happens when .abf file is corrupt
+			pass
+		else:
+			dDict = self.ba.getDefaultDetection() # so we can fill in filtered derivartive
+			self.ba._getDerivative(dDict) # derivative
+
+		#remove vm/dvdt/clip items (even when abf file is corrupt)
+		#if self.dvdtLines is not None:
+		#	self.derivPlot.removeItem(self.dvdtLines)
+		if self.dvdtLinesFiltered is not None:
+			self.derivPlot.removeItem(self.dvdtLinesFiltered)
+		#if self.vmLines is not None:
+		#	self.vmPlot.removeItem(self.vmLines)
+		if self.vmLinesFiltered is not None:
+			self.vmPlot.removeItem(self.vmLinesFiltered)
+		if self.clipLines is not None:
+			self.clipPlot.removeItem(self.clipLines)
+
+		# abb 20201009
+		if self.ba.loadError:
+			self.replot()
+			logger.warning(f'Did not switch file, the .abf file may be corrupt: {path}')
+			self.updateStatusBar(f'Error loading file {path}')
+			self.myMainWindow.mySignal('set abfError')
+			return None
+
+		# fill in detection parameters
+		self.fillInDetectionParameters(tableRowDict) # fills in controls
+
+		self.updateStatusBar(f'Plotting file {path}')
+
+		# cancel spike selection
+		self.selectSpike(None)
+
+		# set full axis
+		#self.setAxisFull()
+
+		# update lines
+		#self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.deriv,
+		#					self, type='dvdt')
+		self.dvdtLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredDeriv,
+							self, forcePenColor=None, type='dvdtFiltered')
+		#self.derivPlot.addItem(self.dvdtLines)
+		self.derivPlot.addItem(self.dvdtLinesFiltered)
+
+		#self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY,
+		#					self, type='vm')
+		self.vmLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredVm,
+							self, forcePenColor=None, type='vmFiltered')
+		#self.vmPlot.addItem(self.vmLines)
+		self.vmPlot.addItem(self.vmLinesFiltered)
+
+		# remove and re-add plot overlays
+		for idx, plot in enumerate(self.myPlots):
+			plotItem = self.myPlotList[idx]
+			if plot['plotOn'] == 'vm':
+				self.vmPlot.removeItem(plotItem)
+				self.vmPlot.addItem(plotItem)
+			elif plot['plotOn'] == 'dvdt':
+				self.derivPlot.removeItem(plotItem)
+				self.derivPlot.addItem(plotItem)
+
+		# set full axis
+		self.setAxisFull()
+
+		# single spike selection
+		self.vmPlot.removeItem(self.mySingleSpikeScatterPlot)
+		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
+
+		#
+		# critical
+		self.replot()
+
+		#
+		# set sweep to 0
+
+		self.updateStatusBar(f'Done loading file {path}')
+
+		return True
 
 	def detect(self, dvdtThreshold, vmThreshold):
 		"""
@@ -180,6 +269,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 			# problem is these k/v have v that are mixture of str/float/int ... hard to parse
 			myDetectionDict = self.myMainWindow.getSelectedRowDict()
+
+			print('myDetectionDict:')
+			print(myDetectionDict)
 
 			#print('  bDetecctionWidget.detect() row detection dict is:')
 			#sanpy.bUtil.printDict(myDetectionDict, withType=True)
@@ -225,6 +317,22 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#QtCore.QCoreApplication.processEvents()
 		self.updateStatusBar(f'Detected {self.ba.numSpikes} spikes')
 
+	def mySetTheme(self):
+		if self.myMainWindow is not None and self.myMainWindow.useDarkStyle:
+			pg.setConfigOption('background', 'k')
+			pg.setConfigOption('foreground', 'w')
+			self.useDarkStyle = True
+		else:
+			pg.setConfigOption('background', 'w')
+			pg.setConfigOption('foreground', 'k')
+			self.useDarkStyle = False
+
+	def getMainWindowOptions(self):
+		theRet = None
+		if self.myMainWindow is not None:
+			theRet = self.myMainWindow.getOptions()
+		return theRet
+
 	def save(self, alsoSaveTxt=False):
 		"""
 		Prompt user for filename and save both xlsx and txt
@@ -246,7 +354,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		lhs, rhs = xMaxStr.split('.')
 		xMaxStr = '_e' + lhs + '_' + rhs
 
-		filePath, fileName = os.path.split(os.path.abspath(self.ba.file))
+		filePath, fileName = os.path.split(os.path.abspath(self.ba.path))
 		fileBaseName, extension = os.path.splitext(fileName)
 		fileBaseName = f'{fileBaseName}{xMinStr}{xMaxStr}.xlsx'
 		#excelFileName = os.path.join(filePath, fileBaseName + '.xlsx')
@@ -378,111 +486,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 		'''
 		#elif set_xyBoth == 'both':
 		#	self.myMainWindow.mySignal('set y axis', data=[start,stop])
-
-	def switchFile(self, path, tableRowDict):
-		"""
-		set self.ba to new bAnalysis object ba
-
-		Can fail if .abf file is corrupt
-		"""
-
-		logger.info(f'path: {os.path.split(path)[0]}')
-		logger.info(f'  file: {os.path.split(path)[1]}')
-
-		#if self.ba is not None and self.ba.file == path:
-		#	print('bDetectionWidget is already displaying file:', path)
-		#	return
-
-		if not os.path.isfile(path):
-			#print('  error: bDetectionWidget.switchFile() did not find file:', path)
-			logger.error(f'Did not find file: {path}')
-			return None
-
-		self.updateStatusBar(f'Loading file {path}')
-
-		# make analysis object from file
-		self.ba = sanpy.bAnalysis(file=path) # loads abf file
-		dDict = self.ba.getDefaultDetection() # so we can fill in filtered derivartive
-
-		if self.ba.loadError:
-			# happens when .abf file is corrupt
-			pass
-		else:
-			self.ba._getDerivative(dDict) # derivative
-
-		#remove vm/dvdt/clip items (even when abf file is corrupt)
-		#if self.dvdtLines is not None:
-		#	self.derivPlot.removeItem(self.dvdtLines)
-		if self.dvdtLinesFiltered is not None:
-			self.derivPlot.removeItem(self.dvdtLinesFiltered)
-		#if self.vmLines is not None:
-		#	self.vmPlot.removeItem(self.vmLines)
-		if self.vmLinesFiltered is not None:
-			self.vmPlot.removeItem(self.vmLinesFiltered)
-		if self.clipLines is not None:
-			self.clipPlot.removeItem(self.clipLines)
-
-		# abb 20201009
-		if self.ba.loadError:
-			self.replot()
-			logger.warning(f'Did not switch file, the .abf file may be corrupt: {path}')
-			self.updateStatusBar(f'Error loading file {path}')
-			self.myMainWindow.mySignal('set abfError')
-			return None
-
-		# fill in detection parameters
-		self.fillInDetectionParameters(tableRowDict) # fills in controls
-
-		self.updateStatusBar(f'Plotting file {path}')
-
-		# cancel spike selection
-		self.selectSpike(None)
-
-		# set full axis
-		#self.setAxisFull()
-
-		# update lines
-		#self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.deriv,
-		#					self, type='dvdt')
-		self.dvdtLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredDeriv,
-							self, forcePenColor=None, type='dvdtFiltered')
-		#self.derivPlot.addItem(self.dvdtLines)
-		self.derivPlot.addItem(self.dvdtLinesFiltered)
-
-		#self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY,
-		#					self, type='vm')
-		self.vmLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredVm,
-							self, forcePenColor=None, type='vmFiltered')
-		#self.vmPlot.addItem(self.vmLines)
-		self.vmPlot.addItem(self.vmLinesFiltered)
-
-		# remove and re-add plot overlays
-		for idx, plot in enumerate(self.myPlots):
-			plotItem = self.myPlotList[idx]
-			if plot['plotOn'] == 'vm':
-				self.vmPlot.removeItem(plotItem)
-				self.vmPlot.addItem(plotItem)
-			elif plot['plotOn'] == 'dvdt':
-				self.derivPlot.removeItem(plotItem)
-				self.derivPlot.addItem(plotItem)
-
-		# set full axis
-		self.setAxisFull()
-
-		# single spike selection
-		self.vmPlot.removeItem(self.mySingleSpikeScatterPlot)
-		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
-
-		#
-		# critical
-		self.replot()
-
-		#
-		# set sweep to 0
-
-		self.updateStatusBar(f'Done loading file {path}')
-
-		return True
 
 	def fillInDetectionParameters(self, tableRowDict):
 		"""
@@ -1144,7 +1147,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 				logger.error(f'Unknown myType: "{self.myType}"')
 				xyUnits = ('error time', 'error y')
 
-			path = self.detectionWidget.ba.file
+			path = self.detectionWidget.ba.path
 
 			xMin = None
 			xMax = None
@@ -1561,8 +1564,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.startSeconds.setMaximum(+1e6)
 		self.startSeconds.setKeyboardTracking(False)
 		self.startSeconds.setValue(0)
-		self.startSeconds.valueChanged.connect(self.on_start_stop)
-		#self.startSeconds.editingFinished.connect(self.on_start_stop)
+		#self.startSeconds.valueChanged.connect(self.on_start_stop)
+		self.startSeconds.editingFinished.connect(self.on_start_stop)
 		saveGridLayout.addWidget(self.startSeconds, row, 1)
 		#
 		stopSeconds = QtWidgets.QLabel('To (Sec)')
@@ -1573,8 +1576,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.stopSeconds.setMaximum(+1e6)
 		self.stopSeconds.setKeyboardTracking(False)
 		self.stopSeconds.setValue(0)
-		self.stopSeconds.valueChanged.connect(self.on_start_stop)
-		#self.stopSeconds.editingFinished.connect(self.on_start_stop)
+		#self.stopSeconds.valueChanged.connect(self.on_start_stop)
+		self.stopSeconds.editingFinished.connect(self.on_start_stop)
 		saveGridLayout.addWidget(self.stopSeconds, row, 3)
 
 		# final

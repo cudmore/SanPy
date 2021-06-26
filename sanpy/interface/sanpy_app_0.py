@@ -396,7 +396,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			sweepY = self.myDetectionWidget.ba.abf.sweepY
 			xyUnits = ('Time (sec)', 'Vm (mV)')
 			self.myExportWidget = sanpy.bExportWidget(sweepX, sweepY,
-								path=self.myDetectionWidget.ba.file,
+								path=self.myDetectionWidget.ba.path,
 								xyUnits=xyUnits,
 								darkTheme=self.useDarkStyle)
 		else:

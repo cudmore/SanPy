@@ -9,6 +9,8 @@ from collections import OrderedDict
 # Each key, like 'Take Off Potential (mV)' is a y-stat
 
 
+""" A dictionary of detection parameters.
+"""
 statList = OrderedDict()
 
 """

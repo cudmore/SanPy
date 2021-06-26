@@ -91,7 +91,7 @@ def testPlot():
 	ba.spikeDetect()
 
 	# create plugin
-	ap = plotRecording(ba)
+	ap = plotRecording(ba=ba)
 
 	ap.plot()
 
@@ -108,5 +108,5 @@ def testLoad():
 			continue
 		print(file)
 if __name__ == '__main__':
-	#testPlot()
-	testLoad()
+	testPlot()
+	#testLoad()

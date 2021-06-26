@@ -193,7 +193,7 @@ class bExport():
 			#
 			# header sheet
 			headerDict = OrderedDict()
-			filePath, fileName = os.path.split(self.ba.file)
+			filePath, fileName = os.path.split(self.ba.path)
 			headerDict['File Name'] = [fileName]
 			headerDict['File Path'] = [filePath]
 
@@ -407,7 +407,7 @@ class bExport():
 
 		# save header
 		textFileHeader = OrderedDict()
-		textFileHeader['file'] = self.ba.file # this is actuall file path
+		textFileHeader['file'] = self.ba.getFileName()
 		#textFileHeader['condition1'] = self.ba.condition1
 		#textFileHeader['condition2'] = self.ba.condition2
 		#textFileHeader['condition3'] = self.ba.condition3

@@ -247,7 +247,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 
 		# convert human readable yStat to backend
 		statList = sanpy.bAnalysisUtil.getStatList()
-		yStat = statList[yStatHuman]['yStat'] # the name of the backend stat
+		yStat = statList[yStatHuman]['name'] # the name of the backend stat
 
 		# todo for now always plot seconds versus take off potential
 		xStatLabel = 'Seconds'
