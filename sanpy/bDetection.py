@@ -251,9 +251,13 @@ def getDefaultDetection():
 
 	return theDict.copy()
 
+
+defaultDetection = getDefaultDetection()
+
+
 def _print():
 	"""
-	Print out human readable detection parameters and convert to markdown table
+	Print out human readable detection parameters and convert to markdown table.
 
 	Requires:
 		pip install tabulate
@@ -383,6 +387,6 @@ def test_0():
 	tmpDict = {'Idx': 2.0, 'Include': 1.0, 'File': '19114001.abf', 'Dur(s)': 60.0, 'kHz': 20.0, 'Mode': 'fix', 'Cell Type': '', 'Sex': '', 'Condition': '', 'Start(s)': nan, 'Stop(s)': nan, 'dvdtThreshold': 50.0, 'mvThreshold': -20.0, 'refractory_ms': nan, 'peakWindow_ms': nan, 'halfWidthWindow_ms': nan, 'Notes': ''}
 	for k,v in tmpDict.items():
 		print('  ', k, ':', v)
-		
+
 if __name__ == '__main__':
 	test_0()

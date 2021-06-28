@@ -6,11 +6,12 @@ import pandas as pd
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+# using sanpy.analysisDir in pandasModel.__init__()
+import sanpy.analysisDir
+import sanpy.bDetection
+
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
-
-# using sanpy.analysisDir.sanpyColumns in pandasModel.setData()
-import sanpy.analysisDir
 
 def loadDatabase(path):
 	"""
@@ -28,11 +29,11 @@ def loadDatabase(path):
 	elif not os.path.isfile(path):
 		print(f'error: bUtil.loadDatabase() did not find file: "{path}"')
 	elif path.endswith('.csv'):
-		masterDf = pd.read_csv(path, header=0, index_col=False) #, dtype={'ABF File': str})
+		masterDf = pd.read_csv(path, header=0, index_col=False)  # , dtype={'ABF File': str})
 	elif path.endswith('.xls'):
-		masterDf = pd.read_excel(path, header=0) #, dtype={'ABF File': str})
+		masterDf = pd.read_excel(path, header=0)  # , dtype={'ABF File': str})
 	elif path.endswith('.xlsx'):
-		masterDf = pd.read_excel(path, header=0, engine='openpyxl') #, dtype={'ABF File': str})
+		masterDf = pd.read_excel(path, header=0, engine='openpyxl')  # , dtype={'ABF File': str})
 	else:
 		print('error: file type not supported. Expecting csv/xls/xlsx. Path:', path)
 	#
@@ -46,9 +47,8 @@ def printDict(d, withType=False):
 			print(f'  {k}: {v}')
 
 class myTableView(QtWidgets.QTableView):
-	"""
-	Table view to display list of files
-	"""
+	"""Table view to display list of files."""
+
 	signalDuplicateRow = QtCore.pyqtSignal(object) # row index
 	signalDeleteRow = QtCore.pyqtSignal(object) # row index
 	#signalRefreshTabe = QtCore.pyqtSignal(object) # row index
@@ -61,26 +61,23 @@ class myTableView(QtWidgets.QTableView):
 		"""
 		super(myTableView, self).__init__(parent)
 
-		self.doIncludeCheckbox = False # todo: turn this on
+		self.doIncludeCheckbox = False  # todo: turn this on
 		# need a local reference to delegate else 'segmentation fault'
 		self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
 
 		self.setFont(QtGui.QFont('Arial', 10))
 		self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
-								  QtWidgets.QSizePolicy.Expanding)
+							QtWidgets.QSizePolicy.Expanding)
 		self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
 
-		self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers |
-							 QtWidgets.QAbstractItemView.DoubleClicked)
-
-		#self.setColumnHidden(1, True)
-		#self.horizontalHeader().hideSection(0)
+		self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers
+							| QtWidgets.QAbstractItemView.DoubleClicked)
 
 		rowHeight = 11
 		fnt = self.font()
 		fnt.setPointSize(rowHeight)
 		self.setFont(fnt)
-		self.verticalHeader().setDefaultSectionSize(rowHeight);
+		self.verticalHeader().setDefaultSectionSize(rowHeight)
 		'''
 		p = self.palette()
 		color1 = QtGui.QColor('#dddddd')
@@ -110,7 +107,6 @@ class myTableView(QtWidgets.QTableView):
 		"""
 		handle right mouse click
 		"""
-		#print('myTableView.contextMenuEvent() event:', event)
 		contextMenu = QtWidgets.QMenu(self)
 		duplicateRow = contextMenu.addAction("Duplicate Row")
 		contextMenu.addSeparator()
@@ -118,11 +114,12 @@ class myTableView(QtWidgets.QTableView):
 		contextMenu.addSeparator()
 		copyTable = contextMenu.addAction("Copy Table")
 		contextMenu.addSeparator()
-		findNewFiles = contextMenu.addAction("Find New Files")
+		findNewFiles = contextMenu.addAction("Sync With Folder")
 		contextMenu.addSeparator()
 		saveTable = contextMenu.addAction("Save Table")
 		#
 		action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+		#logger.info(f'  action:{action}')
 		if action == duplicateRow:
 			#print('  todo: duplicateRow')
 			tmp = self.selectedIndexes()
@@ -135,6 +132,8 @@ class myTableView(QtWidgets.QTableView):
 			if len(tmp)>0:
 				selectedRow = tmp[0].row()
 				self.signalDeleteRow.emit(selectedRow)
+			else:
+				logger.warning('no selection?')
 		elif action == copyTable:
 			#print('  todo: copyTable')
 			self.signalCopyTable.emit()
@@ -144,29 +143,30 @@ class myTableView(QtWidgets.QTableView):
 		elif action == saveTable:
 			#print('  todo: saveTable')
 			self.signalSaveFileTable.emit()
+		else:
+			logger.warning(f'action not taken "{action}"')
+
 
 class pandasModel(QtCore.QAbstractTableModel):
-
 	def __init__(self, data):
 		"""
-		A data model from a pandas dataframe
+		Data model for a pandas dataframe or sanpy.analysisDir.
 
 		Args:
-			data (pd dataframe): pandas dataframe
+			data (dataframe or analysisDir): pandas dataframe or analysisDir
 		"""
 		QtCore.QAbstractTableModel.__init__(self)
 		self.isDirty = False
-		self._data = data
 
-		columnList = self._data.columns.values.tolist()
-
-		if 'include' in columnList:
-			self.includeCol = columnList.index('include')
+		# data is either DataFrame or analysisDir
+		self.isAnalysisDir = False
+		if isinstance(data, pd.core.frame.DataFrame):
+			self.isAnalysisDir = False
+		elif isinstance(data, sanpy.analysisDir):
+			self.isAnalysisDir = True
 		else:
-			self.includeCol = None
-
-		# this is for file table with myTableView
-		self.sanpyColumns = None #sanpy.analysisDir.sanpyColumns
+			logger.error('Expeinting data in (xxx, yyy)')
+		self._data = data
 
 	'''
 	def modelReset(self):
@@ -180,66 +180,66 @@ class pandasModel(QtCore.QAbstractTableModel):
 		return self._data.shape[1]
 
 	def data(self, index, role=QtCore.Qt.DisplayRole):
-		#print('data() role:', role)
 		if index.isValid():
-			if role == QtCore.Qt.DisplayRole:
-				#return QtCore.QVariant()
-				#return str(self._data.iloc[index.row(), index.column()])
+			if role == QtCore.Qt.ToolTipRole:
+				# get default value from bAnalysis
+				defaultDetection = sanpy.bDetection.defaultDetection
+				columnName = self._data.columns[index.column()]
+				toolTip = None
+				try:
+					toolTip = str(defaultDetection[columnName]['defaultValue'])
+					toolTip += ': ' + defaultDetection[columnName]['description']
+				except (KeyError):
+					pass
+				return toolTip
+			elif role == QtCore.Qt.DisplayRole:
 				retVal = self._data.iloc[index.row(), index.column()]
 				if isinstance(retVal, np.float64):
 					retVal = float(retVal)
-					#if np.isnan(retVal):
-					#	retVal = ''
 				elif isinstance(retVal, np.int64):
 					retVal = int(retVal)
-				elif isinstance(retVal, str) and retVal=='nan':
+				elif isinstance(retVal, str) and retVal == 'nan':
 					retVal = ''
-				#
-				#print(retVal, type(retVal))
+
 				if isinstance(retVal, float) and math.isnan(retVal):
 					# don't show 'nan' in table
-					#print('  convert to empty')
 					retVal = ''
-					#pass
 				return retVal
 			elif role == QtCore.Qt.BackgroundRole:
-				#return QtCore.QVariant()
 				if index.row() % 2 == 0:
 					return QtCore.QVariant(QtGui.QColor('#444444'))
 				else:
 					return QtCore.QVariant(QtGui.QColor('#555555'))
 
+		#
 		return None
 
-	def update(self, dataIn):
-		print('  pandasModel.update() dataIn:', dataIn)
+	# def update(self, dataIn):
+	# 	print('  pandasModel.update() dataIn:', dataIn)
 
 	def setData(self, index, value, role=QtCore.Qt.EditRole):
 		"""
-		Respond to user/keyboard edits
+		Respond to user/keyboard edits.
 
 		Will not get called if xxx
 
+		True if value is changed. Calls layoutChanged after update.
 		Returns:
-			True if value is changed. Calls layoutChanged after update.
 			False if value is not different from original value.
 		"""
-		#print(f'pandasModel.setData() row:{index.row()} column:{index.column()} value:"{value}" {type(value)}')
 		if index.isValid():
 			if role == QtCore.Qt.EditRole:
-				row = index.row()
-				column=index.column()
+				rowIdx = index.row()
+				columnIdx = index.column()
 
 				# use to check isEditable
-				columnName = self._data.columns[column]
-				if self.sanpyColumns is not None:
-					columnDict = self.sanpyColumns[columnName]
-					#print(f'  edit column: "{columnName}" {columnDict}')
-					if not columnDict['isEditable']:
-						# todo: I think this is handled in self.flags()
+				columnName = self._data.columns[columnIdx]
+				if self.isAnalysisDir:
+					isEditable = self._data.columnIsEditable(columnName)
+					if not isEditable:
 						return False
 
-				v = self._data.iloc[row, column]
+				v = self._data.iloc[rowIdx, columnIdx]
 				logger.info(f'Existing value is v: "{v}" {type(v)}')
 				if isinstance(v, np.float64):
 					try:
@@ -250,9 +250,10 @@ class pandasModel(QtCore.QAbstractTableModel):
 					except (ValueError) as e:
 						logger.info('No action -->> please enter a number')
 						return False
+
 				# set
 				logger.info(f'New value is "{value}" {type(value)}')
-				self._data.iloc[row, column] = value
+				self._data.iloc[rowIdx, columnIdx] = value
 
 				self.isDirty = True
 				return True
@@ -260,21 +261,27 @@ class pandasModel(QtCore.QAbstractTableModel):
 		return False
 
 	def flags(self, index):
-		row = index.row()
-		column=index.column()
+		rowIdx = index.row()
+		columnIdx = index.column()
 
 		# use to check isEditable
-		columnName = self._data.columns[column]
+		try:
+			columnName = self._data.columns[columnIdx]
+		except(IndexError) as e:
+			logger.warning(f'IndexError for columnIdx:{columnIdx} len:{len(self._data.columns)}')
+			print('self._data.columns:', self._data.columns)
+			raise
 
 		isEditable = False
-		if self.sanpyColumns is not None:
-			columnDict = self.sanpyColumns[columnName]
-			#print(f'  edit column: "{columnName}" {columnDict}')
-			isEditable = columnDict['isEditable']
+		#if self.sanpyColumns is not None:
+		if self.isAnalysisDir:
+			# columnsDict is a big dict, one key for each column, in analysisDir.sanpyColumns
+			#isEditable = self._data.columnsDict[columnName]['isEditable']
+			isEditable = self._data.columnIsEditable(columnName)
 		if isEditable:
 			return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 		else:
-			return QtCore.Qt.ItemIsEnabled
+			return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 		# turn on editing (limited to checkbox for now)
 		#return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled
 		#return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
@@ -283,24 +290,27 @@ class pandasModel(QtCore.QAbstractTableModel):
 
 	def headerData(self, col, orientation, role):
 		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-			return self._data.columns[col]
+			try:
+				return self._data.columns[col]
+			except(IndexError) as e:
+				logger.warning(f'IndexError for col:{col} len:{len(self._data.columns)}, shape:{self._data.shape}')
+				#raise
 		return None
 
 	def myCopyTable(self):
 		"""
 		copy model data to clipboard
 		"""
-		#print('myCopyTable()')
+		#self._data.copyToClipboard()
 		dfCopy = self._data.copy()
 		dfCopy.to_clipboard(sep='\t', index=False)
-		#print(dfCopy)
 
 	def myGetValue(self, rowIdx, colStr):
 		val = None
 		if colStr not in self._data.columns: # columns is a list
-			print('error: myGetTableValue() got bad column name:', colStr)
+			logger.error(f'got bad column name: "{colStr}"')
 		elif len(self._data)-1 < rowIdx:
-			print('error: myGetTableValue() got bad row:', row)
+			logger.error(f'Got bad row:{rowIdx} from possible {len(self._data)}')
 		else:
 			val = self._data.loc[rowIdx, colStr]
 		return val
@@ -324,36 +334,54 @@ class pandasModel(QtCore.QAbstractTableModel):
 		newRowIdx = len(self._data)
 		self.beginInsertRows(QtCore.QModelIndex(), newRowIdx, newRowIdx)
 
-		self._data = self._data.append(pd.Series(), ignore_index=True)
-		self._data = self._data.reset_index(drop=True)
+		if self.isAnalysisDir:
+			# if using analysis dir, azll actions are in-place
+			self._data.appendRow()
+		else:
+			df = self._data
+			df = df.append(pd.Series(), ignore_index=True)
+			df = df.reset_index(drop=True)
+			self._data = df
 
 		self.endInsertRows()
 
 	def myDeleteRow(self, rowIdx):
 		self.beginRemoveRows(QtCore.QModelIndex(), rowIdx, rowIdx)
-		df = self._data.drop([rowIdx])
-		df = df.reset_index(drop=True)
-		self._data = df # REQUIRED
+		#
+		if self.isAnalysisDir:
+			# if using analysis dir, azll actions are in-place
+			self._data.deleteRow(rowIdx)
+		else:
+			df = self._data
+			df = df.drop([rowIdx])
+			df = df.reset_index(drop=True)
+			self._data = df
+		#
 		self.endRemoveRows()
 
 	def myDuplicateRow(self, rowIdx):
 		self.beginInsertRows(QtCore.QModelIndex(), rowIdx+1, rowIdx+1)
+		#
+		# duplicate rowIdx
 		newIdx = rowIdx + 0.5
 		rowDict = self.myGetRowDict(rowIdx)
 		dfRow = pd.DataFrame(rowDict, index=[newIdx])
-		df = self._data
-		df = df.append(dfRow, ignore_index=False)
 
+		if self.isAnalysisDir:
+			df = self._data._df # either Dataframe or analysisDir
+			self._data.duplicateRow(rowIdx)
+		else:
+			df = self._data # either Dataframe or analysisDir
+
+			# append dfRow to the end
+			df = df.append(dfRow, ignore_index=True)
+
+			# sort by file name
+			df = df.sort_values(by=['File'], axis='index', ascending=True, inplace=False)
+			df = df.reset_index(drop=True)
+			#
+			self._data = df
 		#
-		# sort by index
-		#df = df.sort_index().reset_index(drop=True)
-
-		# sort by file name
-		df = df.sort_values('File', axis='columns', ascending=True, inplace=False)
-		df = df.reset_index(drop=True)
-
-		#
-		self._data = df # not needed?
 		self.endInsertRows()
 
 	def mySetRow(self, row, rowDict):
@@ -368,11 +396,19 @@ class pandasModel(QtCore.QAbstractTableModel):
 		self._data.to_csv(path, index=False)
 		self.isDirty = False
 
+	def mySyncDfWithPath(self):
+		if self.isAnalysisDir:
+			self.beginResetModel()
+			self._data.syncDfWithPath()
+			self.endResetModel()
+
+	'''
 	def mySetColumns(self, columnsDict):
 		"""
 		When used as a file table, set with: sanpy.analysisDir.sanpyColumns
 		"""
 		self.sanpyColumns = columnsDict
+	'''
 
 # see: https://stackoverflow.com/questions/17748546/pyqt-column-of-checkboxes-in-a-qtableview
 class myCheckBoxDelegate(QtWidgets.QItemDelegate):

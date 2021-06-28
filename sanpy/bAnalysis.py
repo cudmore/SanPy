@@ -1,16 +1,18 @@
-# Author: Robert H Cudmore
-# Date: 20190225
+"""
+Author: Robert H Cudmore
+Date: 20190225
+"""
 
 import os, sys, math, time, collections, datetime
 from collections import OrderedDict
-import warnings # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
+import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
 #from functools import wraps
 
 import numpy as np
 import pandas as pd
 import scipy.signal
 
-import pyabf # see: https://github.com/swharden/pyABF
+import pyabf  # see: https://github.com/swharden/pyABF
 
 import sanpy
 from sanpy.sanpyLogger import get_logger
@@ -1549,7 +1551,7 @@ class bAnalysis:
 			self.dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
 		else:
 			self.dfReportForScatter = None
-			
+
 		self.dfError = self.errorReport()
 
 		stopTime = time.time()

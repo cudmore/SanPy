@@ -77,7 +77,12 @@ def handle_exception(exc_type, exc_value, exc_traceback):
 		return
 
 	logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+
 sys.excepthook = handle_exception
+
+# This does not seem like a good idea, without it, we get exception calling
+# logger.error in handle_exception (above)
+logger = get_logger(__name__)
 
 def test():
 	logger.error('111')

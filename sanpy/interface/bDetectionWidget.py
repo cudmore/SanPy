@@ -238,7 +238,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#
 		# set sweep to 0
 
-		self.updateStatusBar(f'Done loading file {path}')
+		self.updateStatusBar(f'Loaded file {path}')
 
 		return True
 

@@ -130,15 +130,13 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 		called when user closes main window or selects quit
 		"""
-		#print('sanpy_app2.closeEvent()', event)
 
 		# check if our table view has been edited by uder and warn
 		doQuit = True
-		if self.myModel is not None and self.myModel.isDirty:
-			#print('  model is dirty -->> need to save')
-			#userResp = sanpy.interface.bDialog.okDialog('xxx')
+		alreadyAsked = False
+		if self.myAnalysisDir.isDirty:
+			alreadyAsked = True
 			userResp = sanpy.interface.bDialog.yesNoCancelDialog('You changed the file database, do you want to save then quit?')
-			#print('  todo: fix userResp:', userResp)
 			if userResp == QtWidgets.QMessageBox.Yes:
 				self.slotSaveFilesTable()
 				event.accept()
@@ -147,11 +145,16 @@ class MainWindow(QtWidgets.QMainWindow):
 			else:
 				event.ignore()
 				doQuit = False
-		else:
-			pass
-			#print('  model is not dirty -->> no need to save')
 		if doQuit:
-			logger.info('SanPy is quiting')
+			if not alreadyAsked:
+				userResp = sanpy.interface.bDialog.okCancelDialog('Are you sure you want to quit SanPy?', informativeText=None)
+				if userResp == QtWidgets.QMessageBox.Cancel:
+					event.ignore()
+					doQuit = False
+
+			if doQuit:
+				logger.info('SanPy is quiting')
+				QtCore.QCoreApplication.quit()
 
 	def getOptions(self):
 		return self.configDict
@@ -201,19 +204,25 @@ class MainWindow(QtWidgets.QMainWindow):
 		elif os.path.isdir(path):
 			pass
 		else:
-			#print('  returning none')
-			logger.info('  returning None')
+			logger.warning(f'Did not load path "{path}"')
 			return
-
-		self.myAnalysisDir = sanpy.analysisDir.bAnalysisDir(path)
-		dfAnalysisDir = self.myAnalysisDir.df
 
 		self.path = path # path to loaded bAnalysisDir folder
 
+		self.myAnalysisDir = sanpy.analysisDir(path)
+		#dfAnalysisDir = self.myAnalysisDir.getDataFrame()
+		#print(type(dfAnalysisDir))
+		#print(type(self.myAnalysisDir))
+		#sys.exit(1)
+
 		# set dfAnalysisDir to file list model
-		self.myModel = sanpy.interface.bFileTable.pandasModel(dfAnalysisDir)
-		columnsDict = sanpy.analysisDir.sanpyColumns
-		self.myModel.mySetColumns(columnsDict)
+		#self.myModel = sanpy.interface.bFileTable.pandasModel(dfAnalysisDir)
+		self.myModel = sanpy.interface.bFileTable.pandasModel(self.myAnalysisDir)
+
+		# this is becoming circular
+		#columnsDict = self.myAnalysisDir.getColumns()
+		#self.myModel.mySetColumns(columnsDict)
+
 		try:
 			self.tableView.setModel(self.myModel)
 		except (AttributeError) as e:
@@ -256,7 +265,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			# update error table
 			#self.dfError = data[1]
 			dfError = self.get_bAnalysis().dfError
-			print('  dfError:')
+			#print('  dfError:')
 			print(dfError)
 			errorReportModel = sanpy.interface.bFileTable.pandasModel(dfError)
 			self.myErrorTable.setModel(errorReportModel)
@@ -573,7 +582,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		# tree view of files
 		if masterDf is not None:
 			self.myModel = sanpy.interface.bFileTable.pandasModel(masterDf)
-			columnsDict = sanpy.analysisDir.sanpyColumns
+			columnsDict = self.myAnalysisDir.getColumns()
 			self.myModel.mySetColumns(columnsDict)
 
 		#
@@ -779,7 +788,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.selectSpike(spikeNumber, doZoom)
 
 	def slotCopyTable(self):
-		self.myModel.myCopyTable()
+		#self.myModel.myCopyTable()
+		self.myAnalysisDir.copyToClipboard()
 
 	def slotDeleteRow(self, rowIdx):
 		# prompt user
@@ -813,72 +823,30 @@ class MainWindow(QtWidgets.QMainWindow):
 		"""
 		Find files in self.path that are not in pandas data model
 		"""
-		logger.info(self.path)
 
-		# get all abf/csv/tif in folder
-		abfList = sanpy.analysisDir.getFileList(self.path)
-
-		# our curent database
-		abfInDb = self.myModel.myGetColumnList('File')
-
-		# files in database that are not in folder
 		'''
-		print('abfInDb:', abfInDb)
-		for abf in abfInDb:
-			if not isinstance(abf, str):
-				continue
-			abfPath = os.path.join(self.path, abf+'.abf')
-			if not os.path.isfile(abfPath):
-				print('  error: abf in database that is not in folder:', abfPath)
+		Need to move this into myAnalysisDir
+		Need to update analysis dir df and then intelligently edit pandas table view
 		'''
 
-		# files in folder that are not in db
-		for abf in abfList:
-			#if not isinstance(abf, str):
-			#	continue
-			#abf = os.path.splitext(abf)[0] # remove .abf
-			if not abf in abfInDb:
-				print('  info: file in folder that is not in db:', abf)
-				# add this abf file to main db
-
-				# add an empty row
-				self.myModel.myAppendRow()
-
-				rowCount = self.myModel.rowCount()
-				# this gives us the proper keys, iterate and fill in as necc.
-				rowDict = self.myModel.myGetRowDict(rowCount-1)
-
-				rowDict['Idx'] = ''
-				rowDict['Include'] = 1
-				rowDict['File'] = abf
-
-				# TODO: load abf to get these
-				# dur(s)
-				# kHz
-				# Mode
-
-				rowDict['Cell Type'] = ''
-				rowDict['Sex'] = ''
-				rowDict['Condition'] = ''
-				rowDict['dvdtThreshold'] = 20
-				rowDict['mvThreshold'] = -20
-
-				# TODO: insert in proper place, this is appending
-				print('	 adding to db rowDict:', rowDict)
-				self.myModel.mySetRow(rowCount-1, rowDict)
-		#
-		#print(self.myModel._data)
+		#self.myAnalysisDir.syncDfWithPath()
+		self.myModel.mySyncDfWithPath()
 
 	def slotSaveFilesTable(self):
+		self.myAnalysisDir.saveDatabase()
+		'''
 		#print('sanpy_app2.slotSaveFilesTable()')
 		dbFile = 'sanpy_recording_db.csv'
 		savePath = os.path.join(self.path, dbFile)
 		logger.info(f'Saving folder csv as {savePath}')
 		self.myModel.mySaveDb(savePath)
+		'''
 
 	def buildDatabase(self):
 		"""
 		prompt user for xls and build large per spike database
+
+		todo: put this into analysis dir
 		"""
 		print('== MainWindow.buildDatabase()')
 		print('  TODO: FIX THIS -- returning')
@@ -906,6 +874,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		QtGui.QDesktopServices.openUrl(url)
 
 def main():
+	logger.info(f'=== Starting sanpy_app.py in __main__')
 	logger.info(f'Python version is {platform.python_version()}')
 	logger.info(f'PyQt version is {QtCore.QT_VERSION_STR}')
 
@@ -951,6 +920,8 @@ def main():
 
 	w = MainWindow(csvPath=csvPath)
 	#w.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+	loadFolder = '/home/cudmore/Sites/SanPy/data'
+	w.loadFolder(loadFolder)
 
 	w.show()
 

@@ -5,7 +5,8 @@
 import os
 import numpy as np
 import pandas as pd
-import requests, io # too load from the web
+import requests, io  # too load from the web
+# from collections import OrderedDict
 
 import sanpy
 
@@ -157,19 +158,20 @@ class bAnalysisDirWeb():
 		ba.spikeDetect()
 		print(ba.numSpikes)
 
-class bAnalysisDir():
+class analysisDir():
 	"""
 	Class to manage a list of files loaded from a folder
 	"""
 	# file types we will load
-	theseFileTypes = ['.abf', '.csv', '.tif']
+	theseFileTypes = ['.abf', '.csv']
+	#theseFileTypes = ['.abf', '.csv', '.tif']
 
 	def __init__(self, path=None, myApp=None, autoLoad=True):
 		"""
-		Load and manager a list of files in a folder path.
-		Use this as the main model for file list QTableView.
+		Load and manage a list of files in a folder path.
+		Use this as the main pandasModel for file list myTableView.
 
-		TODO: extend to link to folder in cloud (start with box)
+		TODO: extend to link to folder in cloud (start with box and/or github)
 
 		Args:
 			path (str): Path to folder
@@ -183,58 +185,121 @@ class bAnalysisDir():
 				- check that each file in csv exists in the path
 				- check if there are files in the path NOT in the csv
 
+			- Some functions are so self can mimic a pandas dataframe used by pandasModel.
+				(shape, loc, loc_setter, iloc, iLoc_setter, columns, append, drop, sort_values, copy)
 		"""
 		self.path = path
 		self.myApp = myApp # used to signal on building initial db
 		self.autoLoad = autoLoad
 
+		self._isDirty = False
+
 		# keys are full path to file, if from cloud, key is 'cloud/<filename>'
 		# holds bAnalysisObjects
-		self.fileList = {} # list of dict
-		"""
-			'header': headerDict,
-			'ba': ba,
-			'sweepX': ba.abf.sweepX,
-			'sweepY': ba.abf.sweepY,
-		"""
+		# needs to be a list so we can have files more than one
+		#self.fileList = [] #OrderedDict()
 
-		self.df = None
+		# name of database file created/loaded from folder path
+		self.dbFile = 'sanpy_recording_db.csv'
 
+		self._df = None
 		if autoLoad:
-			self.df = self.loadFolder()
+			self._df = self.loadFolder()
+
+	@property
+	def isDirty(self):
+		return self._isDirty
+
+	def __len__(self):
+		return len(self._df)
+
+	@property
+	def shape(self):
+		"""
+		Can't just return shape of _df, columns (like 'ba') may have been added
+		Number of columns is based on self.columns
+		"""
+		#return self._df.shape
+		numRows = self._df.shape[0]
+		numCols = len(self.columns)
+		return (numRows, numCols)
+
+	@property
+	def loc(self):
+		# mimic pandas df.loc[]
+		return self._df.loc
+
+	@loc.setter
+	def loc_setter(self, rowIdx, colStr, value):
+		self._df.loc[rowIdx,colStr] = value
+
+	@property
+	def iloc(self):
+		# mimic pandas df.iloc[]
+		return self._df.iloc
+
+	@iloc.setter
+	def iLoc_setter(self, rowIdx, colIdx, value):
+		self._df.iloc[rowIdx,colIdx] = value
+		self._isDirty = True
+
+	@property
+	def columns(self):
+		# return list of column names
+		return list(sanpyColumns.keys())
+
+	def copy(self):
+		return self._df.copy()
+
+	@property
+	def columnsDict(self):
+		return sanpyColumns
+
+	def columnIsEditable(self, colName):
+		return sanpyColumns[colName]['isEditable']
+
+	def getDataFrame(self):
+		return self._df
 
 	def numFiles(self):
 		"""Get the number of files"""
-		return len(self.fileList)
+		return len(self._df)
+
+	def copyToClipboard(self):
+		if self.getDataFrame() is not None:
+			self.getDataFrame().to_clipboard(sep='\t', index=False)
+			logger.info('Copied to clipboard')
+
+	def saveDatabase(self):
+		""" save dbFile .csv"""
+		dbPath = os.path.join(self.path, self.dbFile)
+		if self.getDataFrame() is not None:
+			logger.info(f'Saving "{dbPath}"')
+			self.getDataFrame().to_csv(dbPath, index=False)
+			self._isDirty = False
 
 	def loadFolder(self, path=None):
 		"""
 		expensive
 
-		TODO: extand the logic to load from cloud (after we were instantiated)
+		TODO: extend the logic to load from cloud (after we were instantiated)
 		"""
 		if path is None:
 			path = self.path
 		self.path = path
 
 		# load an existing folder db or create a new one
-		dbFile = 'sanpy_recording_db.csv'
-		dbPath = os.path.join(path, dbFile)
+		dbPath = os.path.join(path, self.dbFile)
 		loadedDatabase = False
 		if os.path.isfile(dbPath):
 			logger.info(f'Loading existing folder db: {dbPath}')
 			df = pd.read_csv(dbPath, header=0, index_col=False)
-
 			#df["Idx"] = pd.to_numeric(df["Idx"])
 			df = self._setColumnType(df)
-
-			'''
-			print('=== final types')
-			print(df.dtypes)
-			'''
 			loadedDatabase = True
+			#logger.info(f'  shape is {df.shape}')
 		else:
-			logger.info(f'No existing folder db, making {dbPath}')
+			logger.info(f'No existing db file, making {dbPath}')
 			df = pd.DataFrame(columns=sanpyColumns.keys())
 			df = self._setColumnType(df)
 
@@ -258,16 +323,52 @@ class bAnalysisDir():
 			listOfDict = []
 			for rowIdx, file in enumerate(fileList):
 				self.signalApp(f'Please wait, loading "{file}"')
-				rowDict = self.getFileRow(file, rowIdx=rowIdx+1) # loads bAnalysis
+				ba, rowDict = self.getFileRow(file, rowIdx=rowIdx+1) # loads bAnalysis
 				if rowDict is not None:
 					listOfDict.append(rowDict)
+					#self.fileList[file] = ba
 			#
 			df = pd.DataFrame(listOfDict)
 			#print('=== built new db df:')
 			#print(df)
 			df = self._setColumnType(df)
 		#
+
+		# expand each to into self.fileList
+		df['_ba'] = None
+		'''
+		for rowIdx in range(len(df)):
+			file= df.at[rowIdx, 'File']
+			filePath = os.path.join(path, file)
+			#print(f'{rowIdx} {filePath}')
+			newDict = {
+						'ba': None,
+						'file': file,
+						'filePath': filePath
+						}
+			self.fileList.append(newDict)
+		'''
+		#
 		return df
+
+	def getAnalysis(self, rowIdx):
+		"""
+		Get bAnalysis object, will load if necc
+
+		Args:
+			rowIdx (int): Row index from table, corresponds to row in self._df
+		"""
+		file = self._df.loc[rowIdx, 'File']
+		filePath = os.path.join(self.path, file)
+		ba = self._df.loc[rowIdx, '_ba']
+		if ba is None:
+			# load
+			logger.info(f'Loading bAnalysis from row {rowIdx} "{filePath}"')
+			ba = sanpy.bAnalysis(filePath)
+			#self.fileList[filePath]['ba'] = ba
+			self._df.loc[rowIdx, '_ba'] = ba
+		#
+		return ba
 
 	def _setColumnType(self, df):
 		"""
@@ -276,6 +377,10 @@ class bAnalysisDir():
 		"""
 		#print('columns are:', df.columns)
 		for col in df.columns:
+			# when loading from csv, 'col' may not be in sanpyColumns
+			if not col in sanpyColumns:
+				logger.warning(f'Column "{col}" is not in sanpyColumns -->> ignoring')
+				continue
 			colType = sanpyColumns[col]['type']
 			#print(f'  _setColumnType() for "{col}" is type "{colType}"')
 			#print(f'    df[col]:', 'len:', len(df[col]))
@@ -292,68 +397,6 @@ class bAnalysisDir():
 				df[col] = df[col].astype(bool)
 		#
 		return df
-	def old_loadFolder(self, path):
-		"""
-		Load all files in folder
-
-		TODO: Curently limited to abf, extend to (txt, csv, tif)
-		"""
-		if not os.path.isdir(path):
-			logger.error(f'Path not found: "{path}"')
-			return
-
-		#
-		#
-		fileList = []
-		fileIdx = 0
-		for file in os.listdir(path):
-			if file.startswith('.'):
-				continue
-			if file.endswith('.abf'):
-				# load
-				filePath = os.path.join(path, file)
-				ba = sanpy.bAnalysis(filePath)
-
-				# header
-				headerDict = ba.api_getHeader()
-				headerDict['index'] = fileIdx
-
-				item = {
-					'header': headerDict,
-					'ba': ba,
-					'sweepX': ba.abf.sweepX,
-					'sweepY': ba.abf.sweepY,
-				}
-				fileList.append(item)
-				fileIdx += 1
-		#
-		self.fileList = fileList
-
-	def getHeaderList(self):
-		"""
-		Get list of header dict for folder
-		"""
-		theRet = []
-		for file,v in self.fileList.items():
-			item = v['header']
-			theRet.append(item)
-		return theRet
-
-	def get(self, filePath, type='header'):
-		"""
-		Get info on one file from file path
-
-		Args:
-			filePath (str): Full path to file
-			type (str): type of data to return.
-				One of ('header', 'ba', 'sweepX', 'sweepY')
-		"""
-		try:
-			theRet = self.fileList[filePath][type]
-		except (KeyError) as e:
-			theRet = None
-			logger.error(f'Did not find file key "{filePath}"')
-		return theRet
 
 	def getFileRow(self, path, rowIdx=None):
 		"""
@@ -364,23 +407,25 @@ class bAnalysisDir():
 			rowIdx (int): Optional row index to assign in column 'Idx'
 
 		Return:
+			bAnalysis:
 			dict: On success, otherwise None
 					fails when path does not lead to valid bAnalysis file.
 		"""
 		if not os.path.isfile(path):
 			logger.warning(f'Did not find file "{path}"')
-			return None
+			return None, None
 		fileType = os.path.splitext(path)[1]
-		if not fileType in self.theseFileTypes:
+		if fileType not in self.theseFileTypes:
 			logger.warning(f'Did not load file type "{fileType}"')
-			return None
+			return None, None
 
 		# load bAnalysis
+		logger.info(f'Loading bAnalysis "{path}"')
 		ba = sanpy.bAnalysis(path)
 
 		if ba.loadError:
 			logger.error(f'Error loading bAnalysis file "{path}"')
-			return None
+			return None, None
 
 		# not sufficient to default everything to empty str ''
 		# sanpyColumns can only have type in ('float', 'str')
@@ -403,32 +448,112 @@ class bAnalysisDir():
 		rowDict['dvdtThreshold'] = 20
 		rowDict['mvThreshold'] = -20
 
-		return rowDict
+		return ba, rowDict
 
-	def getFileList(self, path):
+	def getFileList(self, path=None, getFullPath=True):
 		"""
 		Get file paths from path
 		"""
+		if path is None:
+			path = self.path
 		fileList = []
 		for file in os.listdir(path):
 			if file.startswith('.'):
 				continue
-			#if file == 'sanpy_recording_db.csv':
-			#	continue
+			# ignore our database file
+			if file == self.dbFile:
+				continue
 
 			# tmpExt is like .abf, .csv, etc
 			tmpFileName, tmpExt = os.path.splitext(file)
 			if tmpExt in self.theseFileTypes:
-				file = os.path.join(path, file)
+				if getFullPath:
+					file = os.path.join(path, file)
 				fileList.append(file)
 		#
 		return fileList
 
-	def findNewFiles(self, path):
-		fileList = self.getFileList(path)
-		# (1) for each file, see if it is in df
+	def getRowDict(self, rowIdx):
+		"""
+		Return a dict with selected row as dict (includes detection parameters)
+		Use sanpyColumns, not df columns
+		"""
+		theRet = {}
+		# use columns in main sanpyColumns, not in df
+		for colStr in self.columns:
+			theRet[colStr] = self._df.loc[rowIdx, colStr]
+		return theRet
 
-		# (2) for each file in df, see if it is in path
+	def appendRow(self, rowDict=None, ba=None):
+		# append one empty row
+		rowSeries = pd.Series()
+		if rowDict is not None:
+			rowSeries = pd.Series(rowDict)
+			# self._data.iloc[row] = rowSeries
+			# self._data = self._data.reset_index(drop=True)
+
+		newRowIdx = len(self._df)
+		df = self._df
+		df = df.append(rowSeries, ignore_index=True)
+		df = df.reset_index(drop=True)
+
+		if ba is not None:
+			df.loc[newRowIdx, '_ba'] = ba
+
+		#
+		self._df = df
+
+	def deleteRow(self, rowIdx):
+		df = self._df
+		df = df.drop([rowIdx])
+		df = df.reset_index(drop=True)
+		self._df = df
+
+	def duplicateRow(self, rowIdx):
+		# duplicate rowIdx
+		newIdx = rowIdx + 0.5
+		rowDict = self.getRowDict(rowIdx)
+		dfRow = pd.DataFrame(rowDict, index=[newIdx])
+
+		df = self._df
+		df = df.append(dfRow, ignore_index=True)
+		df = df.sort_values(by=['File'], axis='index', ascending=True, inplace=False)
+		df = df.reset_index(drop=True)
+		self._df = df
+
+	def syncDfWithPath(self):
+		pathFileList = self.getFileList(getFullPath=False)
+		dfFileList = self._df['File'].tolist()
+
+		print('=== pathFileList:')
+		print(pathFileList)
+		print('=== dfFileList:')
+		print(dfFileList)
+
+		addedToDf = False
+
+		# look for files in path not in df
+		for pathFile in pathFileList:
+			if pathFile not in dfFileList:
+				logger.info(f'Found file in path "{pathFile}" not in df')
+				# load bAnalysis and get df column values
+				addedToDf = True
+				fullPathFile = os.path.join(self.path, pathFile)
+				ba, rowDict = self.getFileRow(fullPathFile) # loads bAnalysis
+				if rowDict is not None:
+					#listOfDict.append(rowDict)
+					self.appendRow(rowDict=rowDict, ba=ba)
+
+		# look for files in df not in path
+		for dfFile in dfFileList:
+			if not dfFile in pathFileList:
+				logger.info(f'Found file in df "{dfFile}" not in path')
+
+		if addedToDf:
+			df = self._df
+			df = df.sort_values(by=['File'], axis='index', ascending=True, inplace=False)
+			df = df.reset_index(drop=True)
+			self._df = df
 
 	def signalApp(self, str):
 		"""Update status bar of app"""
@@ -439,39 +564,36 @@ def _printDict(d):
 	for k,v in d.items():
 		print('  ', k, ':', v)
 
-def test2():
-	path = '/Users/cudmore/Sites/SanPy/data'
-	bad = bAnalysisDir(path)
-	df = bad.loadFolder(path)
-	print(df)
-
-def test():
-	path = '/Users/cudmore/Sites/SanPy/data'
+def test3():
 	path = '/home/cudmore/Sites/SanPy/data'
-	bad = bAnalysisDir(path)
+	bad = analysisDir(path)
 
-	# get list of dict, useful for inserting into table (pyqt, dash, vue)
-	if 0:
-		dirDictList = bad.getHeaderList()
-		for idx, itemDict in enumerate(dirDictList):
-			print('idx:', idx)
-			_printDict(itemDict)
+	#file = '19221014.abf'
+	rowIdx = 3
+	ba = bad.getAnalysis(rowIdx)
+	ba = bad.getAnalysis(rowIdx)
 
-	# get one file
-	index = 1
-	headerDict = bad.getFromIndex(index, type='header')
-	print('=== headerDict')
-	_printDict(headerDict)
+	print(bad.getDataFrame())
 
-	sweepX = bad.getFromIndex(index, type='sweepX')
-	print('  sweepX:', type(sweepX), len(sweepX), np.nanmean(sweepX))
-	sweepY = bad.getFromIndex(index, type='sweepY')
-	print('  sweepY:', type(sweepY), len(sweepY), np.nanmean(sweepY))
+	print('bad.shape', bad.shape)
+	print('bad.columns:', bad.columns)
 
-	print('== 3')
-	ba = bad.getFromIndex(index, type='ba')
-	tmpDict = ba.api_getRecording()
-	print(tmpDict.keys())
+	print('bad.iloc[rowIdx,5]:', bad.iloc[rowIdx,5])
+	print('setting to xxxyyyzzz')
+
+	# setter
+	#bad.iloc[2,5] = 'xxxyyyzzz'
+
+	print('bad.iloc[2,5]:', bad.iloc[rowIdx,5])
+	print('bad.loc[2,"File"]:', bad.loc[rowIdx,'File'])
+
+	print('bad.iloc[2]')
+	print(bad.iloc[rowIdx])
+	#bad.iloc[rowIdx] = ''
+	print('bad.loc[2]')
+	print(bad.loc[rowIdx])
+
+	#bad.saveDatabase()
 
 def testCloud():
 	cloudDict = {
@@ -482,6 +604,5 @@ def testCloud():
 	bad = bAnalysisDirWeb(cloudDict)
 
 if __name__ == '__main__':
-	test()
-	#test2()
+	test3()
 	#testCloud()
