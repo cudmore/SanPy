@@ -1,4 +1,8 @@
-# 20210522
+"""
+Class to export analysis from a bAnalysis.
+
+Created: 20210522
+"""
 import os
 from collections import OrderedDict
 
@@ -9,14 +13,14 @@ import sanpy
 
 class bExport():
 	"""
-		Once analysis is performed with sanpy.bAnalysis.spikeDetect(dDict),
-		reports can be generated with the bExport class.
+	Once analysis is performed with sanpy.bAnalysis.spikeDetect(),
+	reports can be generated with the bExport class.
 
-		Example reports are:
+	Example reports are:
 
-		- Generating reports as a Pandas DataFrame.
-		- Saving reports as a Microsoft Excel file.
-		- Saving reports as a CSV text files.
+	- Generating reports as a Pandas DataFrame.
+	- Saving reports as a Microsoft Excel file.
+	- Saving reports as a CSV text files.
 	"""
 	def __init__(self, ba):
 		"""
@@ -152,12 +156,124 @@ class bExport():
 		df = pd.DataFrame(newList)
 		return df
 
-	#################################################################################
-	# save results (e.g. report)
-	#################################################################################
+	def getSummary(self, theMin=None, theMax=None):
+		"""
+		Get analysis summary as df.
+
+		TODO: Working on this while implementing plugin 'saveAnalysis'
+		"""
+		if theMin is None or theMax is None:
+			theMin = 0
+			theMax = self.ba.abf.sweepX[-1]
+
+		#
+		# cardiac style analysis to sheet 'cardiac'
+		cardiac_df = self.report2(theMin, theMax) # report2 is more 'cardiac'
+
+		#
+		# header sheet
+		headerDict = OrderedDict()
+		filePath, fileName = os.path.split(self.ba.path)
+		headerDict['File Name'] = [fileName]
+		headerDict['File Path'] = [filePath]
+
+		headerDict['Cell Type'] = [self.ba.detectionDict['cellType']]
+		headerDict['Sex'] = [self.ba.detectionDict['sex']]
+		headerDict['Condition'] = [self.ba.detectionDict['condition']]
+
+		# todo: get these params in ONE dict inside self.ba
+		dateAnalyzed, timeAnalyzed = self.ba.dateAnalyzed.split(' ')
+		headerDict['Date Analyzed'] = [dateAnalyzed]
+		headerDict['Time Analyzed'] = [timeAnalyzed]
+		headerDict['Detection Type'] = [self.ba.detectionType]
+		headerDict['dV/dt Threshold'] = [self.ba.detectionDict['dvdtThreshold']]
+		#headerDict['mV Threshold'] = [self.ba.mvThreshold] # abb 202012
+		headerDict['Vm Threshold (mV)'] = [self.ba.detectionDict['mvThreshold']]
+		#headerDict['Median Filter (pnts)'] = [self.ba.medianFilter]
+		headerDict['Analysis Version'] = [sanpy.analysisVersion]
+		headerDict['Interface Version'] = [sanpy.interfaceVersion]
+
+		#headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
+		#headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
+		headerDict['Sweep Number'] = [self.ba.currentSweep]
+		headerDict['Number of Sweeps'] = [self.ba.numSweeps]
+		headerDict['Export Start (sec)'] = [float('%.2f'%(theMin))] # on export, x-axis of raw plot will be ouput
+		headerDict['Export Stop (sec)'] = [float('%.2f'%(theMax))] # on export, x-axis of raw plot will be ouput
+
+		# 'stats' has xxx columns (name, mean, sd, se, n)
+		headerDict['stats'] = []
+
+		for idx, col in enumerate(cardiac_df):
+			headerDict[col] = []
+
+		# mean
+		theMean = cardiac_df.mean() # skipna default is True
+		theMean['errors'] = ''
+		# sd
+		theSD = cardiac_df.std() # skipna default is True
+		theSD['errors'] = ''
+		#se
+		theSE = cardiac_df.sem() # skipna default is True
+		theSE['errors'] = ''
+		#n
+		theN = cardiac_df.count() # skipna default is True
+		theN['errors'] = ''
+
+		statCols = ['mean', 'sd', 'se', 'n']
+		for j, stat in enumerate(statCols):
+			if j == 0:
+				pass
+			else:
+				# need to append columns to keep Excel sheet columns in sync
+				#for k,v in headerDict.items():
+				#	headerDict[k].append('')
+
+				headerDict['File Name'].append('')
+				headerDict['File Path'].append('')
+				headerDict['Cell Type'].append('')
+				headerDict['Sex'].append('')
+				headerDict['Condition'].append('')
+				#
+				headerDict['Date Analyzed'].append('')
+				headerDict['Time Analyzed'].append('')
+				headerDict['Detection Type'].append('')
+				headerDict['dV/dt Threshold'].append('')
+				headerDict['Vm Threshold (mV)'].append('')
+				#headerDict['Median Filter (pnts)'].append('')
+				headerDict['Analysis Version'].append('')
+				headerDict['Interface Version'].append('')
+				headerDict['Sweep Number'].append('')
+				headerDict['Number of Sweeps'].append('')
+				headerDict['Export Start (sec)'].append('')
+				headerDict['Export Stop (sec)'].append('')
+
+			# a dictionary key for each stat
+			headerDict['stats'].append(stat)
+			for idx, col in enumerate(cardiac_df):
+				#headerDict[col].append('')
+				if stat == 'mean':
+					headerDict[col].append(theMean[col])
+				elif stat == 'sd':
+					headerDict[col].append(theSD[col])
+				elif stat == 'se':
+					headerDict[col].append(theSE[col])
+				elif stat == 'n':
+					headerDict[col].append(theN[col])
+
+		# end for j, stat
+		#print('=== headerDict')
+		#for k,v in headerDict.items():
+		#	print(k, ':', v)
+
+		# dict to pandas dataframe
+		df = pd.DataFrame(headerDict).T
+		df.insert(0, '', headerDict.keys(), allow_duplicates=True)
+
+		return df
+
 	def saveReport(self, savefile, theMin=None, theMax=None, saveExcel=True, alsoSaveTxt=True, verbose=True):
 		"""
-		Save a spike report for detected spikes between theMin (sec) and theMax (sec)
+		Save a spike report for detected spikes between theMin (sec) and theMax (sec).
 
 		Args:
 			savefile (str): path to xlsx file
@@ -170,10 +286,8 @@ class bExport():
 			str: analysisName
 			df: df
 		"""
-
-		if theMin == None:
+		if theMin is None or theMax is None:
 			theMin = 0
-		if theMax == None:
 			theMax = self.ba.abf.sweepX[-1]
 
 		# always grab a df to the entire analysis (not sure what I will do with this)
@@ -466,3 +580,14 @@ class bExport():
 		df.to_csv(textFilePath, sep=',', index_label='index', mode='w')
 
 		return analysisName, df
+
+def test():
+	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+	ba = sanpy.bAnalysis(path)
+	ba.spikeDetect()
+	be = bExport(ba)
+	df = be.getSummary()
+	print(df)
+
+if __name__ == '__main__':
+	test()

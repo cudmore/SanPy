@@ -1,12 +1,11 @@
+# from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtWidgets
 
-from PyQt5 import QtCore, QtWidgets, QtGui
+import sanpy
+from sanpy.interface.plugins import sanpyPlugin
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
-
-import sanpy
-#import sanpy.interface
-from sanpy.interface.plugins import sanpyPlugin
 
 class detectionErrors(sanpyPlugin):
 	"""

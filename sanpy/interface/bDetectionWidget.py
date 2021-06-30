@@ -268,7 +268,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			logger.info('get detection parameters from main window table')
 
 			# problem is these k/v have v that are mixture of str/float/int ... hard to parse
-			myDetectionDict = self.myMainWindow.getSelectedRowDict()
+			myDetectionDict = self.myMainWindow.getSelectedFileDict()
 
 			print('myDetectionDict:')
 			print(myDetectionDict)

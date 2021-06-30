@@ -10,6 +10,7 @@ from .plotScatter import plotScatter
 from .detectionErrors import detectionErrors
 from .spikeClips import spikeClips
 from .resultsTable import resultsTable
+from .analysisSummary import analysisSummary
 
 # see: https://stackoverflow.com/questions/1057431/how-to-load-all-modules-in-a-folder
 '''

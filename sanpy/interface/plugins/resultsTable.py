@@ -17,7 +17,7 @@ class resultsTable(sanpyPlugin):
 		QTableView: sanpy.interface.bErrorTable.errorTableView()
 		QAbstractTableModel: sanpy.interface.bFileTable.pandasModel
 	"""
-	myHumanName = 'Results Table'
+	myHumanName = 'Summary Spikes'
 
 	def __init__(self, **kwargs):
 		"""
@@ -78,20 +78,20 @@ class resultsTable(sanpyPlugin):
 
 			self.numSpikesLabel.setText(f'{len(dfPlot)} spikes')
 
+	'''
 	def keyPressEvent(self, event):
 		if (event.type() == QtCore.QEvent.KeyPress and
 							event.matches(QtGui.QKeySequence.Copy)):
 				self.copyTable()
+	'''
 
-	def copyTable(self):
+	def copyToClipboard(self):
 		ba = self.getSanPyApp().get_bAnalysis()
 		if ba is not None:
 			dfReportForScatter = ba.dfReportForScatter
 			if dfReportForScatter is not None:
-				logger.info('Copy table to clipboard')
-				dfCopy = dfReportForScatter.copy()
-				dfCopy.to_clipboard(sep='\t', index=False)
-				print(dfCopy)
+				logger.info('Copy to clipboard')
+				dfReportForScatter.to_clipboard(sep='\t', index=False)
 
 if __name__ == '__main__':
 	import sys

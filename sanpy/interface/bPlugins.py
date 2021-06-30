@@ -82,6 +82,9 @@ class bPlugins():
 					logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
 				else:
 					self.pluginDict[humanName] = pluginDict
+		# sort
+		#self.pluginDict = sorted(self.pluginDict.items())
+		self.pluginDict = dict(sorted(self.pluginDict.items()))
 
 		#
 		# user plugins from files in folder <user>/sanpy_plugins

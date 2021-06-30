@@ -6,32 +6,27 @@ import os
 import numpy as np
 import pandas as pd
 import requests, io  # too load from the web
-# from collections import OrderedDict
 
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-"""
-Columns to use in display in file table (pyqt, dash, vue).
-We require type so we can edit with QAbstractTableModel.
-Critical for qt interface to allow easy editing of values while preserving type
-"""
-sanpyColumns = {
-	'Idx': {
-		#'type': int,
-		'type': float,
+
+_sanpyColumns = {
+	#'Idx': {
+	#	#'type': int,
+	#	'type': float,
+	#	'isEditable': False,
+	#},
+	'File': {
+		'type': str,
 		'isEditable': False,
 	},
 	'Include': {
 		#'type': bool,
 		'type': float,
 		'isEditable': True,
-	},
-	'File': {
-		'type': str,
-		'isEditable': False,
 	},
 	'Dur(s)': {
 		'type': float,
@@ -91,15 +86,22 @@ sanpyColumns = {
 	},
 
 }
+"""
+Columns to use in display in file table (pyqt, dash, vue).
+We require type so we can edit with QAbstractTableModel.
+Critical for qt interface to allow easy editing of values while preserving type
+"""
 
 class bAnalysisDirWeb():
 	"""
 	Load a directory of .abf from the web (for now from GitHub).
+
 	Will etend this to Box, Dropbox, other?.
 	"""
+
 	def __init__(self, cloudDict):
 		"""
-		cloudDict (dict): {
+		Args: cloudDict (dict): {
 					'owner': 'cudmore',
 					'repo_name': 'SanPy',
 					'path': 'data'
@@ -162,9 +164,10 @@ class analysisDir():
 	"""
 	Class to manage a list of files loaded from a folder
 	"""
-	# file types we will load
+	sanpyColumns = _sanpyColumns
+
 	theseFileTypes = ['.abf', '.csv']
-	#theseFileTypes = ['.abf', '.csv', '.tif']
+	"""File types to load"""
 
 	def __init__(self, path=None, myApp=None, autoLoad=True):
 		"""
@@ -226,7 +229,7 @@ class analysisDir():
 
 	@property
 	def loc(self):
-		# mimic pandas df.loc[]
+		"""Mimic pandas df.loc[]"""
 		return self._df.loc
 
 	@loc.setter
@@ -246,19 +249,23 @@ class analysisDir():
 	@property
 	def columns(self):
 		# return list of column names
-		return list(sanpyColumns.keys())
+		return list(self.sanpyColumns.keys())
 
 	def copy(self):
 		return self._df.copy()
 
+	def sort_values(self, Ncol, order):
+		self._df = self._df.sort_values(self.columns[Ncol], ascending=not order)
+
 	@property
 	def columnsDict(self):
-		return sanpyColumns
+		return self.sanpyColumns
 
 	def columnIsEditable(self, colName):
-		return sanpyColumns[colName]['isEditable']
+		return self.sanpyColumns[colName]['isEditable']
 
 	def getDataFrame(self):
+		"""Get the underlying pandas DataFrame."""
 		return self._df
 
 	def numFiles(self):
@@ -300,16 +307,16 @@ class analysisDir():
 			#logger.info(f'  shape is {df.shape}')
 		else:
 			logger.info(f'No existing db file, making {dbPath}')
-			df = pd.DataFrame(columns=sanpyColumns.keys())
+			df = pd.DataFrame(columns=self.sanpyColumns.keys())
 			df = self._setColumnType(df)
 
 		if loadedDatabase:
 			# check columns with sanpyColumns
 			loadedColumns = df.columns
 			for col in loadedColumns:
-				if not col in sanpyColumns.keys():
+				if not col in self.sanpyColumns.keys():
 					logger.error(f'error: bAnalysisDir did not find loaded col: "{col}" in sanpyColumns.keys()')
-			for col in sanpyColumns.keys():
+			for col in self.sanpyColumns.keys():
 				if not col in loadedColumns:
 					logger.error(f'error: bAnalysisDir did not find sanpyColumns.keys() col: "{col}" in loadedColumns')
 
@@ -349,6 +356,9 @@ class analysisDir():
 			self.fileList.append(newDict)
 		'''
 		#
+		logger.info('df:')
+		print(df)
+
 		return df
 
 	def getAnalysis(self, rowIdx):
@@ -378,10 +388,10 @@ class analysisDir():
 		#print('columns are:', df.columns)
 		for col in df.columns:
 			# when loading from csv, 'col' may not be in sanpyColumns
-			if not col in sanpyColumns:
+			if not col in self.sanpyColumns:
 				logger.warning(f'Column "{col}" is not in sanpyColumns -->> ignoring')
 				continue
-			colType = sanpyColumns[col]['type']
+			colType = self.sanpyColumns[col]['type']
 			#print(f'  _setColumnType() for "{col}" is type "{colType}"')
 			#print(f'    df[col]:', 'len:', len(df[col]))
 			#print(df[col])
@@ -429,11 +439,11 @@ class analysisDir():
 
 		# not sufficient to default everything to empty str ''
 		# sanpyColumns can only have type in ('float', 'str')
-		rowDict = dict.fromkeys(sanpyColumns.keys() , '')
+		rowDict = dict.fromkeys(self.sanpyColumns.keys() , '')
 		for k in rowDict.keys():
-			if sanpyColumns[k]['type'] == str:
+			if self.sanpyColumns[k]['type'] == str:
 				rowDict[k] = ''
-			elif sanpyColumns[k]['type'] == float:
+			elif self.sanpyColumns[k]['type'] == float:
 				rowDict[k] = np.nan
 
 		if rowIdx is not None:

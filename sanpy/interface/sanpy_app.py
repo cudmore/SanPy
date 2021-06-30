@@ -27,15 +27,17 @@ logging.getLogger('qdarkstyle').setLevel(logging.WARNING)
 
 class MainWindow(QtWidgets.QMainWindow):
 
-	"""signalUpdateStatusBar (pyqtSignal): xxx"""
-	signalUpdateStatusBar = QtCore.pyqtSignal(object)
-
 	signalSetXAxis = QtCore.pyqtSignal(object)
+	"""Emit set axis."""
+
 	signalSelectSpike = QtCore.pyqtSignal(object)
-	"""
-	Signal both switch file and detect
-	"""
+	"""Emit spike selection."""
+
 	signalUpdateAnalysis = QtCore.pyqtSignal(object)
+	"""Emit both switch file and detect."""
+
+	signalUpdateStatusBar = QtCore.pyqtSignal(object)
+	"""Emit to update status bar"""
 
 	def __init__(self, csvPath=None, path=None, parent=None):
 		"""
@@ -45,9 +47,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		super(MainWindow, self).__init__(parent)
 
-		self.myModel = None
+		# create an empty model for file list
+		dfEmpty = pd.DataFrame(columns=sanpy.analysisDir.sanpyColumns.keys())
+		self.myModel = sanpy.interface.bFileTable.pandasModel(dfEmpty)
 
-		self.fileFromDatabase = True # if False then from folder
+		self.fileFromDatabase = True  # if False then from folder
 		self.csvPath = csvPath
 
 		self.startSec = None
@@ -69,7 +73,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.setWindowTitle(windowTitle)
 
 		self._rowHeight = 11
-		self.selectedRow = None
+		#self.selectedRow = None
 
 		# path to loaded folder (using bAnalysisDir)
 		self.configDict = self.preferencesLoad()
@@ -106,10 +110,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.setGeometry(self.left, self.top, self.width, self.height)
 
+		#
+		# todo: remove
 		self.csvPath = csvPath
 		masterDf = sanpy.interface.bFileTable.loadDatabase(csvPath)
 		if masterDf is not None:
-			loggerr.debug(f'Loaded csvPath: {csvPath}')
+			logger.debug(f'Loaded csvPath: {csvPath}')
 
 
 		self.myPlugins = sanpy.interface.bPlugins(sanpyApp=self)
@@ -224,10 +230,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		#self.myModel.mySetColumns(columnsDict)
 
 		try:
-			self.tableView.setModel(self.myModel)
+			#self.tableView.setModel(self.myModel)
+			self.tableView.mySetModel(self.myModel)
 		except (AttributeError) as e:
 			# needed when we call loadFolder from __init__
-			logger.info('OK exception: no tableView during load folder')
+			logger.warning('OK: no tableView during load folder')
 
 	def selectSpike(self, spikeNumber, doZoom=False):
 		eDict = {}
@@ -265,7 +272,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			# update error table
 			#self.dfError = data[1]
 			dfError = self.get_bAnalysis().dfError
-			#print('  dfError:')
+			logger.info('dfError:')
 			print(dfError)
 			errorReportModel = sanpy.interface.bFileTable.pandasModel(dfError)
 			self.myErrorTable.setModel(errorReportModel)
@@ -385,15 +392,21 @@ class MainWindow(QtWidgets.QMainWindow):
 	def get_bAnalysis(self):
 		return self.myDetectionWidget.ba
 
-	def getSelectedRowDict(self):
+	def getSelectedFileDict(self):
 		"""
-		used by detection widget
+		Used by detection widget to get info in selected file.
+		"""
+		selectedRows = self.tableView.selectionModel().selectedRows()
+		if len(selectedRows) == 0:
+			return None
+		else:
+			selectedItem = selectedRows[0]
+			selectedRow = selectedItem.row()
 
-		todo: problem is this dict has a mixture of float/int/str and hard to parse
-		"""
-		rowDict = None
-		if self.selectedRow is not None:
-			rowDict = self.myModel.myGetRowDict(self.selectedRow)
+		rowDict = self.myModel.myGetRowDict(selectedRow)
+
+		logger.info(f'row:{selectedRow} {rowDict}')
+
 		return rowDict
 
 	def old_errorTableClicked(self, index):
@@ -415,7 +428,26 @@ class MainWindow(QtWidgets.QMainWindow):
 		#print('errorTableClicked() spikeNumber:', spikeNumber, type(spikeNumber), 'modifiers:', modifiers)
 		self.selectSpike(spikeNumber, doZoom=doZoom)
 
-	def new_tableClicked(self, index):
+	def slot_fileTableClicked(self, row, column):
+		#logger.info(row)
+
+		#self.selectedRow = row
+
+		tableRowDict = self.myModel.myGetRowDict(row)
+
+		abfColumnName = 'File'
+		fileName = self.myModel.myGetValue(row, abfColumnName)
+
+		# switch file
+		path = os.path.join(self.path, fileName)
+		switchedFile = self.myDetectionWidget.switchFile(path, tableRowDict)
+		if switchedFile:
+			# TODO: This really should have payload
+			self.signalUpdateAnalysis.emit(None)
+		else:
+			self.updateStatusBar(f'Failed to load file: "{path}"')
+
+	def old_new_tableClicked(self, index):
 		"""
 		Select a roow in file table
 
@@ -432,14 +464,13 @@ class MainWindow(QtWidgets.QMainWindow):
 			return
 
 		self.selectedRow = row
-		self.tableView.selectRow(row)
+		self.tableView.mySelectRow(row)
 
 		tableRowDict = self.myModel.myGetRowDict(row)
 
 		abfColumnName = 'File'
 		fileName = self.myModel.myGetValue(row, abfColumnName)
 		if not isinstance(fileName, str):
-			#print('  error: no "ABF File" specified')
 			logger.warning('No file specified')
 			return
 
@@ -553,6 +584,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		pluginsMenu.addAction(sanpyPluginAction)
 		'''
 
+		'''
 		# windows menu to toggle scatter plot widget
 		windowsMenu = mainMenu.addMenu('&Windows')
 		mainWindowAction = QtWidgets.QAction('Main', self)
@@ -564,6 +596,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		mainWindowAction.setChecked(True)
 		windowsMenu.addAction(mainWindowAction)
 		windowsMenu.addAction(openScatterAction)
+		'''
 
 	def buildUI(self, masterDf=None):
 		self.toggleStyleSheet(buildingInterface=True)
@@ -580,21 +613,28 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		#
 		# tree view of files
+		'''
 		if masterDf is not None:
 			self.myModel = sanpy.interface.bFileTable.pandasModel(masterDf)
 			columnsDict = self.myAnalysisDir.getColumns()
 			self.myModel.mySetColumns(columnsDict)
+		'''
 
 		#
 		# table of files
-		self.tableView = sanpy.interface.bFileTable.myTableView()
+
+		#self.tableView = sanpy.interface.bFileTable.myTableView()
+		# self.myModel starts with just columns (no data)
+		self.tableView = sanpy.interface.bTableView(self.myModel)
 		self.tableView.signalDuplicateRow.connect(self.slotDuplicateRow)
 		self.tableView.signalDeleteRow.connect(self.slotDeleteRow)
 		self.tableView.signalCopyTable.connect(self.slotCopyTable)
 		self.tableView.signalFindNewFiles.connect(self.slotFindNewFiles)
 		self.tableView.signalSaveFileTable.connect(self.slotSaveFilesTable)
-		self.tableView.mySetModel(self.myModel)
-		self.tableView.clicked.connect(self.new_tableClicked)
+		#self.tableView.mySetModel(self.myModel)
+		#self.tableView.clicked.connect(self.new_tableClicked)
+		#self.tableView.selectionChanged.connect(self.new_tableclicked2)
+		self.tableView.signalSelection.connect(self.slot_fileTableClicked)
 
 		#self.myQVBoxLayout.addWidget(self.tableView)#, stretch=4)
 

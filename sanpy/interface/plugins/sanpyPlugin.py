@@ -1,10 +1,38 @@
-# 20210609
+"""
+`sanpyPlugin` is the parent class for all SanPy plugins.
+
+Derive from this class to create new plugins.
+
+Users can run a plugin with the following code
+
+```
+	import sanpy
+	import sys
+	app = QtWidgets.QApplication([])
+
+	# load and analyze sample data
+	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+	ba = sanpy.bAnalysis(path)
+	ba.spikeDetect()
+
+	# open the interface for the 'saveAnalysis' plugin.
+	sa = sanpy.interface.plugins.saveAnalysis(ba=ba, startStop=None)
+
+	sys.exit(app.exec_())
+```
+
+Created: 20210609
+"""
+
 import numpy as np
 import scipy.signal
 
 from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 # Allow this code to run with just backend
 try:
@@ -24,9 +52,6 @@ try:
 except (ModuleNotFoundError) as e:
 	qdarkstyle = None
 
-from sanpy.sanpyLogger import get_logger
-logger = get_logger(__name__)
-
 import sanpy
 
 class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
@@ -37,21 +62,22 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 		(3) file is changed
 	"""
 	if QtCore is not None:
-		"""emit signal on window close"""
+
 		signalCloseWindow = QtCore.pyqtSignal(object)
+		"""Emit signal on window close."""
 
-		"""emit signal on spike selection"""
 		signalSelectSpike = QtCore.pyqtSignal(object)
+		"""Emit signal on spike selection."""
 
-	"""Each derived class needs to implement this"""
 	myHumanName = 'UNDEFINED'
+	"""Each derived class needs to define this."""
 
-	def __init__(self, name ='', ba=None, bPlugin=None, startStop=None):
+	def __init__(self, name='', ba=None, bPlugin=None, startStop=None):
 		"""
 		Args:
 			name(str): Name of the plugin
 			ba (bAnalysis): bAnalysis object representing one file
-			bPlugin (xxx):
+			bPlugin (bPlugin): Used in Qt to get SanPy App and to set up signal/slot
 			startStop (list of float): Start and stop (s) of x-axis
 		"""
 		if QtCore is not None:
@@ -83,7 +109,25 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 		self.winWidth_inches = 4
 		self.winHeight_inches = 4
 
-		self.installSignalSlot()
+		self._installSignalSlot()
+
+	def get_bAnalysis(self):
+		"""
+		Get current bAnalysis either from SanPy app or self.
+		"""
+		theRet = None
+		if self.getSanPyApp() is not None:
+			theRet = self.getSanPyApp().get_bAnalysis()
+		else:
+			theRet = self._ba
+		return theRet
+
+	@property
+	def ba(self):
+		"""
+		todo: Depreciate and use self.get_bAnalysis().
+		"""
+		return self._ba
 
 	def get_bPlugins(self):
 		"""???"""
@@ -91,17 +135,20 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 
 	def getSanPyApp(self):
 		"""
-		Return underlying SanPy app. Only exists if running in Qt Gui
+		Return underlying SanPy app. Only exists if running in SanPy Qt Gui
 		"""
 		theRet = None
 		if self._bPlugins is not None:
 			theRet = self._bPlugins.getSanPyApp()
 		return theRet
 
-	def installSignalSlot(self):
+	def _installSignalSlot(self):
+		"""
+		Set up communication signals/slots.
+		"""
 		app = self.getSanPyApp()
 		if app is not None:
-			# receive spike selecting
+			# receive spike selection
 			app.signalSelectSpike.connect(self.slot_selectSpike)
 			# receive update analysis (both file change and detect)
 			app.signalUpdateAnalysis.connect(self.slot_updateAnalysis)
@@ -109,57 +156,70 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 			app.signalSetXAxis.connect(self.slot_set_x_axis)
 		bPlugins = self.get_bPlugins()
 		if bPlugins is not None:
-			# emit  spike select
+			# emit spike selection
 			self.signalSelectSpike.connect(bPlugins.slot_selectSpike)
 			# emit on close window
 			self.signalCloseWindow.connect(bPlugins.slot_closeWindow)
 
 	def setRespondToAnalysisChange(self, respond):
 		"""
-		If respond==True then we will update when analysis and/or file changes.
+		If 'respond' is True then update when analysis and/or file changes. Default is True.
 
 		Args:
-			respond (bool): respond or not
+			respond (bool): Respond or not.
 		"""
 		self._respondToAnalysisChange = respond
 
 	@property
-	def ba(self):
-		return self._ba
-
-	@property
 	def name(self):
+		"""
+		TODO: not used?
+		"""
 		return self._name
 
 	def plot(self):
 		"""
-		add code to plot.
+		Add code to plot.
 		"""
 		pass
 
 	def replot(self):
 		"""
-		add code to replot.
+		Add code to replot.
 		"""
 		pass
 
 	def selectSpike(self, sDict):
 		"""
-		add code to select spike from sDict.
+		Add code to select spike from sDict.
 		"""
 		pass
 
 	def getStartStop(self):
 		"""
-		Can be None
+		Ret:
+			tuple: (start, stop) in seconds. Can be None
 		"""
 		return self._startSec, self._stopSec
 
 	def keyPressEvent(self, event):
 		"""
-		Add code to handle key-press events. One example is to command+c to copy to clipboard
-		See plugin resultsTable.py
+		Used so user can turn on/off responding to analysis changes
+
+		Args:
+			event (PyQt5.QtGui.QKeyEvent): Qt event
+
+		TODO: Add to mpl windows
 		"""
+		logger.info(event)
+		key = event.key()
+		text = event.text()
+		if event.matches(QtGui.QKeySequence.Copy):
+			self.copyToClipboard()
+		elif text == '':
+			pass
+
+	def copyToClipboard(self):
 		pass
 
 	def pyqtWindow(self):
@@ -206,7 +266,7 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 		self.ax.spines['right'].set_visible(False)
 		self.ax.spines['top'].set_visible(False)
 
-		self.mySetWindowTitle()
+		self._mySetWindowTitle()
 
 		self.fig.canvas.mpl_connect('close_event', self.onClose)
 
@@ -215,7 +275,7 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 		# TODO: allow user to turn off
 		#self.cid = self.static_canvas.mpl_connect('pick_event', self.spike_pick_event)
 
-	def mySetWindowTitle(self):
+	def _mySetWindowTitle(self):
 		if self.ba is not None:
 			fileName = self.ba.getFileName()
 		else:
@@ -228,7 +288,7 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 
 		# pyqt
 		if self.mainWidget is not None:
-			self.mainWidget.mySetWindowTitle()
+			self.mainWidget._mySetWindowTitle()
 
 	def spike_pick_event(self, event):
 		"""
@@ -266,7 +326,7 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 		self.signalCloseWindow.emit(self)
 
 	def slot_updateAnalysis(self):
-		"""Used for both switch file and detection"""
+		"""Respond to both switch file and detection"""
 		if not self._respondToAnalysisChange:
 			return
 		app = self.getSanPyApp()
@@ -274,17 +334,19 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 			self._ba = app.get_bAnalysis()
 
 		# set pyqt window title
-		self.mySetWindowTitle()
+		self._mySetWindowTitle()
 
 		#
 		self.replot()
 
 	def slot_selectSpike(self, eDict):
+		"""Respond to spike selection."""
 		if not self._respondToAnalysisChange:
 			return
 		self.selectSpike(eDict)
 
 	def slot_set_x_axis(self, startStopList):
+		"""Respond to changes in x-axis."""
 		logger.info(startStopList)
 		if not self._respondToSetXAxis:
 			return
@@ -306,7 +368,7 @@ class myWidget(QtWidgets.QWidget):
 		super().__init__()
 		self._parentPlugin = parentPlugin
 
-		self.mySetWindowTitle()
+		self._mySetWindowTitle()
 
 		if doDark and qdarkstyle is not None:
 			self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
@@ -315,7 +377,7 @@ class myWidget(QtWidgets.QWidget):
 
 		self.show()
 
-	def mySetWindowTitle(self):
+	def _mySetWindowTitle(self):
 		"""
 		Set pyqt window title from current ba
 		"""
@@ -330,10 +392,12 @@ class myWidget(QtWidgets.QWidget):
 		"""
 		Used so user can turn on/off responding to analysis changes
 
+		Args:
+			event (PyQt5.QtGui.QKeyEvent): Qt event
+
 		TODO: Add to mpl windows
 		"""
-		pass
-		#logger.info('event')
+		logger.info(event)
 		self._parentPlugin.keyPressEvent(event)
 
 	def closeEvent(self, event):

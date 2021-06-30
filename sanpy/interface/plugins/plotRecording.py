@@ -15,7 +15,7 @@ class plotRecording(sanpyPlugin):
 	Example of matplotlib plugin.
 
 	"""
-	myHumanName = 'Plot Reccording'
+	myHumanName = 'Plot Recording'
 
 	def __init__(self, **kwargs):
 		super(plotRecording, self).__init__('plotRecording', **kwargs)

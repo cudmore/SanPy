@@ -1,7 +1,7 @@
-Idx,Include,File,Dur(s),kHz,Mode,Cell Type,Sex,Condition,Start(s),Stop(s),dvdtThreshold,mvThreshold,refractory_ms,peakWindow_ms,halfWidthWindow_ms,Notes
-1,1,19221014.abf,5,20,fix,,,,,,20,-20,,,,
-2,1,19114001.abf,60,20,fix,,,,,,50,-20,,,,
-4,1,19114001.csv,60,20,fix,,,,,,20,-20,,,,
-5,1,SAN-AP-example-Rs-change.abf,300,10,fix,,,,,,20,-20,,,,
-6,1,19612002.abf,269.2,20,fix,,,,,,20,-20,,,,
-7,1,171116sh_0018.abf,3,20,fix,,,,,,20,-20,,,,
+File,Include,Dur(s),kHz,Mode,Cell Type,Sex,Condition,Start(s),Stop(s),dvdtThreshold,mvThreshold,refractory_ms,peakWindow_ms,halfWidthWindow_ms,Notes
+19221014.abf,1,5,20,fix,,,,,,20,-20,,,,
+19114001.abf,1,60,20,fix,,,,,,50,-20,,,,
+19114001.csv,1,60,20,fix,,,,,,20,-20,,,,
+SAN-AP-example-Rs-change.abf,1,300,10,fix,,,,,,20,-20,,,,
+19612002.abf,1,269.2,20,fix,,,,,,20,-20,,,,
+171116sh_0018.abf,1,3,20,fix,,,,,,20,-20,,,,

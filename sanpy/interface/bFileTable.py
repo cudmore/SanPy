@@ -47,7 +47,12 @@ def printDict(d, withType=False):
 			print(f'  {k}: {v}')
 
 class myTableView(QtWidgets.QTableView):
-	"""Table view to display list of files."""
+	"""Table view to display list of files.
+
+	TODO: Try and implement the first column (filename) as a frozen column.
+
+	See: https://doc.qt.io/qt-5/qtwidgets-itemviews-frozencolumn-example.html
+	"""
 
 	signalDuplicateRow = QtCore.pyqtSignal(object) # row index
 	signalDeleteRow = QtCore.pyqtSignal(object) # row index
@@ -98,10 +103,17 @@ class myTableView(QtWidgets.QTableView):
 		self.setModel(model)
 
 		#print('---trying to hide columns')
-		self.hideColumn(1)
-		self.setColumnHidden(1,True);
-		self.setColumnHidden(1, True)
-		self.horizontalHeader().hideSection(1)
+		#self.hideColumn(1)
+		#self.setColumnHidden(1,True);
+		#self.setColumnHidden(1, True)
+		#self.horizontalHeader().hideSection(1)
+
+	'''
+	# trying to use this to remove tooltip when it comes up as empty ''
+	def viewportEvent(self, event):
+		logger.info('')
+		return True
+	'''
 
 	def contextMenuEvent(self, event):
 		"""
@@ -165,8 +177,10 @@ class pandasModel(QtCore.QAbstractTableModel):
 		elif isinstance(data, sanpy.analysisDir):
 			self.isAnalysisDir = True
 		else:
-			logger.error('Expeinting data in (xxx, yyy)')
+			logger.error('Expecting data in (DataFrame, sanpy.analysisDir)')
 		self._data = data
+
+		#self.setSortingEnabled(True)
 
 	'''
 	def modelReset(self):
@@ -185,7 +199,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 				# get default value from bAnalysis
 				defaultDetection = sanpy.bDetection.defaultDetection
 				columnName = self._data.columns[index.column()]
-				toolTip = None
+				toolTip = QtCore.QVariant()  # empty tooltip
 				try:
 					toolTip = str(defaultDetection[columnName]['defaultValue'])
 					toolTip += ': ' + defaultDetection[columnName]['description']
@@ -273,41 +287,47 @@ class pandasModel(QtCore.QAbstractTableModel):
 			raise
 
 		isEditable = False
-		#if self.sanpyColumns is not None:
 		if self.isAnalysisDir:
 			# columnsDict is a big dict, one key for each column, in analysisDir.sanpyColumns
-			#isEditable = self._data.columnsDict[columnName]['isEditable']
 			isEditable = self._data.columnIsEditable(columnName)
 		if isEditable:
 			return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 		else:
 			return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-		# turn on editing (limited to checkbox for now)
-		#return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled
-		#return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-		#else:
-		#	return QtCore.Qt.ItemIsEnabled
 
 	def headerData(self, col, orientation, role):
-		if orientation == QtCore.Qt.Horizontal and role == QtCore.Qt.DisplayRole:
-			try:
-				return self._data.columns[col]
-			except(IndexError) as e:
-				logger.warning(f'IndexError for col:{col} len:{len(self._data.columns)}, shape:{self._data.shape}')
-				#raise
-		return None
+		if role == QtCore.Qt.DisplayRole:
+			if orientation == QtCore.Qt.Horizontal:
+				try:
+					return self._data.columns[col]
+				except(IndexError) as e:
+					logger.warning(f'IndexError for col:{col} len:{len(self._data.columns)}, shape:{self._data.shape}')
+					#raise
+			elif orientation == QtCore.Qt.Vertical:
+				# this is to show pandas 'index' column
+				return col
+
+		return QtCore.QVariant()
+
+	def sort(self, Ncol, order):
+		logger.info(f'{Ncol} {order}')
+		self.layoutAboutToBeChanged.emit()
+		if self.isAnalysisDir:
+			self._data.sort_values(Ncol, order)
+		else:
+			self._data = self._data.sort_values(self._data.columns[Ncol], ascending=not order)
+		self.layoutChanged.emit()
 
 	def myCopyTable(self):
 		"""
-		copy model data to clipboard
+		Copy model data to clipboard.
 		"""
-		#self._data.copyToClipboard()
 		dfCopy = self._data.copy()
 		dfCopy.to_clipboard(sep='\t', index=False)
 
 	def myGetValue(self, rowIdx, colStr):
 		val = None
-		if colStr not in self._data.columns: # columns is a list
+		if colStr not in self._data.columns:  #  columns is a list
 			logger.error(f'got bad column name: "{colStr}"')
 		elif len(self._data)-1 < rowIdx:
 			logger.error(f'Got bad row:{rowIdx} from possible {len(self._data)}')
@@ -444,7 +464,6 @@ class myCheckBoxDelegate(QtWidgets.QItemDelegate):
 			return True
 
 		return False
-
 
 	def setModelData (self, editor, model, index):
 		'''
