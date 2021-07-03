@@ -29,8 +29,14 @@ class bTableView(QtWidgets.QTableView):
 	#signalRefreshTabe = QtCore.pyqtSignal(object) # row index
 	signalCopyTable = QtCore.pyqtSignal()
 	signalFindNewFiles = QtCore.pyqtSignal()
+
 	signalSaveFileTable = QtCore.pyqtSignal()
-	signalSelection = QtCore.pyqtSignal(object, object)  # (row, column)
+	"""Save entire database as pandas hsf. This results in a large file but easy to manage"""
+
+	signalSelectRow = QtCore.pyqtSignal(object, object, object)  # (row, column, rowDict)
+
+	signalUpdateStatus = QtCore.pyqtSignal(object)
+	"""Update status in main SanPy app."""
 
 	def __init__(self, model, parent=None):
 		super(bTableView, self).__init__(parent)
@@ -39,10 +45,12 @@ class bTableView(QtWidgets.QTableView):
 		# frozen
 		self.setModel(model)
 
+		self.numFrozenColumns = 4 # depends on columns in analysisDir
+
 		self.frozenTableView = QtWidgets.QTableView(self)
 		self.frozenTableView.setSortingEnabled(True)
 		self.frozenTableView.setSelectionBehavior(QtWidgets.QTableView.SelectRows)  # abb
-		self.init()
+		self.initFrozenColumn()
 		self.horizontalHeader().sectionResized.connect(self.updateSectionWidth)
 		self.verticalHeader().sectionResized.connect(self.updateSectionHeight)
 		self.frozenTableView.verticalScrollBar().valueChanged.connect(
@@ -50,11 +58,15 @@ class bTableView(QtWidgets.QTableView):
 		self.verticalScrollBar().valueChanged.connect(
 			self.frozenTableView.verticalScrollBar().setValue)
 
+		# rewire contextMenuEvent to self (WIERD BUT SEEMS TO WORK)
+		self.frozenTableView.contextMenuEvent = self.contextMenuEvent
+
 		#
 		# original
-		self.doIncludeCheckbox = False  # todo: turn this on
+		#self.doIncludeCheckbox = False  # todo: turn this on
 		# need a local reference to delegate else 'segmentation fault'
-		self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
+		#self.keepCheckBoxDelegate = myCheckBoxDelegate(self)
+		#self.setItemDelegateForColumn(1, self.keepCheckBoxDelegate)
 
 		self.setSortingEnabled(True)
 
@@ -66,18 +78,25 @@ class bTableView(QtWidgets.QTableView):
 		self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers
 							| QtWidgets.QAbstractItemView.DoubleClicked)
 
+		self.horizontalHeader().setStretchLastSection(True)
+
 		rowHeight = 11
 		fnt = self.font()
 		fnt.setPointSize(rowHeight)
 		self.setFont(fnt)
 		self.verticalHeader().setDefaultSectionSize(rowHeight)
 
+		# todo: minimize all column widths
+		#for col in range(showNumCol):
+		#	self.frozenTableView.setColumnWidth(col, self.columnWidth(col))
+
 		# frozen column
+		#self.frozenTableView.setFont(QtGui.QFont('Arial', 10))
 		self.frozenTableView.setFont(fnt)
 		self.frozenTableView.verticalHeader().setDefaultSectionSize(rowHeight)
 	#
 	# frozen
-	def init(self):
+	def initFrozenColumn(self):
 		self.frozenTableView.setModel(self.model())
 		self.frozenTableView.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.frozenTableView.verticalHeader().hide()
@@ -92,9 +111,14 @@ class bTableView(QtWidgets.QTableView):
 		#	}''') # for demo purposes
 
 		self.frozenTableView.setSelectionModel(self.selectionModel())
-		for col in range(1, self.model().columnCount()):
+		for col in range(self.numFrozenColumns, self.model().columnCount()):
 			self.frozenTableView.setColumnHidden(col, True)
-		self.frozenTableView.setColumnWidth(0, self.columnWidth(0))
+
+		for col in range(self.numFrozenColumns):
+			self.frozenTableView.setColumnWidth(col, self.columnWidth(col))
+		#self.frozenTableView.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+		#					QtWidgets.QSizePolicy.Expanding)
+
 		self.frozenTableView.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 		self.frozenTableView.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
 		self.frozenTableView.show()
@@ -103,17 +127,30 @@ class bTableView(QtWidgets.QTableView):
 		self.setVerticalScrollMode(self.ScrollPerPixel)
 		self.frozenTableView.setVerticalScrollMode(self.ScrollPerPixel)
 
+		# set Loaded and Analyzed columns
+		self.frozenTableView.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+		self.frozenTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
+		self.frozenTableView.horizontalHeader().setStretchLastSection(True)
+
 	def selectionChanged(self, selected, deselected):
 		super(bTableView, self).selectionChanged(selected, deselected)
-		logger.info(selected)
+		#self.frozenTableView.selectionChanged(selected, deselected)
 		modelIndexList = selected.indexes()
 		if len(modelIndexList) == 0:
 			return
 		else:
 			modelIndex = modelIndexList[0]
-			row = modelIndex.row()
+			#row = modelIndex.row()
 			column = modelIndex.column()
-			self.signalSelection.emit(row, column)
+
+			realRow = self.model()._data.index[modelIndex.row()]
+
+			# assuming model is my pandas model
+			rowDict = self.model().myGetRowDict(realRow)
+
+			logger.info(f'realRow:{realRow} col:{column} {rowDict}')
+
+			self.signalSelectRow.emit(realRow, column, rowDict)
 
 	def mySetModel(self, model):
 		"""
@@ -153,18 +190,16 @@ class bTableView(QtWidgets.QTableView):
 		contextMenu.addSeparator()
 		findNewFiles = contextMenu.addAction("Sync With Folder")
 		contextMenu.addSeparator()
-		saveTable = contextMenu.addAction("Save Table")
+		saveAllAnalysis = contextMenu.addAction("Save All Analysis")
 		#
 		action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 		#logger.info(f'  action:{action}')
 		if action == duplicateRow:
-			#print('  todo: duplicateRow')
 			tmp = self.selectedIndexes()
 			if len(tmp)>0:
 				selectedRow = tmp[0].row()
 				self.signalDuplicateRow.emit(selectedRow)
 		elif action == deleteRow:
-			#print('  todo: deleteRow')
 			tmp = self.selectedIndexes()
 			if len(tmp)>0:
 				selectedRow = tmp[0].row()
@@ -172,19 +207,16 @@ class bTableView(QtWidgets.QTableView):
 			else:
 				logger.warning('no selection?')
 		elif action == copyTable:
-			#print('  todo: copyTable')
 			self.signalCopyTable.emit()
 		elif action == findNewFiles:
-			#print('  todo: findNewFiles')
 			self.signalFindNewFiles.emit()
-		elif action == saveTable:
-			#print('  todo: saveTable')
+		elif action == saveAllAnalysis:
 			self.signalSaveFileTable.emit()
 		else:
 			logger.warning(f'action not taken "{action}"')
 
-#
-# frozen
+	#
+	# frozen
 	def updateSectionWidth(self, logicalIndex, oldSize, newSize):
 		#if self.logicalIndex == 0:
 		if logicalIndex == 0:
@@ -215,9 +247,16 @@ class bTableView(QtWidgets.QTableView):
 			super(bTableView, self).scrollTo(index, hint)
 
 	def updateFrozenTableGeometry(self):
+		#myWidth = self.columnWidth(0) + self.columnWidth(1) + self.columnWidth(2)
+		myWidth = 0
+		for i in range(self.numFrozenColumns):
+			myWidth += self.columnWidth(i)
+
 		self.frozenTableView.setGeometry(
 				self.verticalHeader().width() + self.frameWidth(),
-				self.frameWidth(), self.columnWidth(0),
+				self.frameWidth(),
+				#self.columnWidth(0),
+				myWidth,
 				self.viewport().height() + self.horizontalHeader().height())
 
 # see: https://stackoverflow.com/questions/17748546/pyqt-column-of-checkboxes-in-a-qtableview
@@ -227,6 +266,7 @@ class myCheckBoxDelegate(QtWidgets.QItemDelegate):
 	"""
 	def __init__(self, parent):
 		QtWidgets.QItemDelegate.__init__(self, parent)
+		#self.myParent = parent
 
 	def createEditor(self, parent, option, index):
 		"""
@@ -237,7 +277,16 @@ class myCheckBoxDelegate(QtWidgets.QItemDelegate):
 	def paint(self, painter, option, index):
 		"""
 		Paint a checkbox without the label.
+
+		painter: QtGui.QPainter
+		option: QtWidgets.QStyleOptionViewItem
 		"""
+		#logger.info(painter)
+		#logger.info(option.font)
+		myFont = QtGui.QFont('Arial', 6)
+		#option.font =
+		painter.setFont(myFont)
+		#option.initFrom(self.myParent)
 		self.drawCheck(painter, option, option.rect, QtCore.Qt.Unchecked if int(index.data()) == 0 else QtCore.Qt.Checked)
 
 	def editorEvent(self, event, model, option, index):

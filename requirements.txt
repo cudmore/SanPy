@@ -5,20 +5,20 @@ scipy
 PyQt5==5.15.2
 pyqtgraph
 matplotlib
-mplcursors # added 202102 for bScatterPlotWidget2 (to show popup on hover)
+mplcursors #  added 202102 for bScatterPlotWidget2 (to show popup on hover)
 
 pyabf
 XlsxWriter
 
-#qdarkstyle==2.8.1
-qdarkstyle
+qdarkstyle #  qdarkstyle==2.8.1
 
-xlrd # for loading excel files in examples/reanalyze.py
-openpyxl # flor loading .xlsx
+xlrd  # for loading excel files in examples/reanalyze.py
+openpyxl  # for loading .xlsx
 
 seaborn
 
-# to open newer xlsx files
-openpyxl
+openpyxl  # to open newer xlsx files
 
 tifffile
+
+tables  # to load/save with pandas HDFStore

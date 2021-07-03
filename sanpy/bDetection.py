@@ -1,9 +1,3 @@
-#20210618
-import numbers
-
-from sanpy.sanpyLogger import get_logger
-logger = get_logger(__name__)
-
 """
 Functions to get default detection parameters.
 
@@ -29,7 +23,13 @@ ba.spikeDetect(dDict)
 
 ```
 
+Date: 20210618
 """
+import numbers
+
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
+
 def getDefaultDetection():
 	"""
 	Get detection parameters including mapping from backend to human readable and long-format descriptions.
@@ -282,9 +282,9 @@ def _print():
 	print(str)
 
 class bDetection(object):
-	"""
-	Class to manage detection parameters
-		- get defauults
+	""" Class to manage detection parameters (experimental).
+
+		- get defaults
 		- get values
 		- set values
 	"""
@@ -300,6 +300,7 @@ class bDetection(object):
 			self.currentDict[k] = v['defaultValue']
 
 	def getValue(self, key):
+		"Get value from key. Valid keys are defined in getDefaultDetection."
 		try:
 			return self.currentDict[key]
 		except (KeyError) as e:
@@ -308,6 +309,7 @@ class bDetection(object):
 			return None
 
 	def setValue(self, key, value):
+		"Set value for key. Valid keys are defined in getDefaultDetection."
 		try:
 			valueType = type(value)
 			valueIsNumber = isinstance(value, numbers.Number)
@@ -345,7 +347,7 @@ class bDetection(object):
 		Set detection from key/values in dDict
 
 		Args:
-			dDict (dict): Usually a table row
+			dDict (dict): Usually a table row like interface/bTableView.py
 		"""
 		gotError = False
 		for k,v in dDict.items():

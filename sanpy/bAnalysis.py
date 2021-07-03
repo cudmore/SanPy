@@ -1,12 +1,29 @@
+#Author: Robert H Cudmore
+#Date: 20190225
 """
-Author: Robert H Cudmore
-Date: 20190225
+The bAnalysis class represents a whole-cell recording.
+
+This can be created in a number of ways:
+ (i) An .abf file path
+ (ii) A .csv file path with time and mV columns
+ (iii) a byteStream abf when working in the cloud.
+
+Once loaded, a number of operations can be performed including:
+  Spike detection, Error checking, Plotting, and Saving.
+
+Examples:
+
+```python
+path = 'data/19114001.abf'
+ba = bAnalysis(path)
+dDict = ba.getDefaultDetection()
+ba.spikeDetect(dDict)
+```
 """
 
 import os, sys, math, time, collections, datetime
 from collections import OrderedDict
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
-#from functools import wraps
 
 import numpy as np
 import pandas as pd
@@ -18,83 +35,42 @@ import sanpy
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-'''
-# was used to check for valid pyAbf but we are now detached from this
-def old_check_abf(func):
-	"""
-	Decorator to return None is self.abf is None
-	"""
-	@wraps(func)
-	def inner(self, *args, **kwargs):
-		if self.abf is None:
-			#raise ValueError
-			return None
-		else:
-			return func(self, *args, **kwargs)
-	return inner
-'''
 
 class bAnalysis:
-	"""
-	The bAnalysis class represents a whole-cell recording.
-
-	This can be created in a number of ways:
-		1. An .abf file path.
-		2. A .csv file path with time and mV columns.
-		3. a byteStream abf when working in the cloud.
-
-	Once loaded, a number of operations can be performed including:
-	 - Spike detection,
-	 - Error checking
-	 - Saving
-
-	Examples:
-
-	```python
-	path = 'data/19114001.abf'
-	ba = bAnalysis(path)
-	dDict = ba.getDefaultDetection()
-	ba.spikeDetect(dDict)
-	```
-	"""
-
 	def __init__(self, file=None, theTiff=None, byteStream=None):
 		"""
-		Initialize a bAnalysis object
-
 		Args:
 			file (str): Path to either .abf or .csv with time/mV columns.
 			theTiff (str): Path to .tif file.
 			byteStream (binary): Binary stream for use in the cloud.
-
 		"""
+		logger.info(f'{file}')
 
-		#
 		# mimic pyAbf
 		self._dataPointsPerMs = None
-		self._sweepList = [0] # list
-		self._currentSweep = 0 # int
-		self._sweepX = None # np.ndarray
-		self._sweepY = None # np.ndarray
+		self._sweepList = [0]  # list
+		self._currentSweep = 0  # int
+		self._sweepX = None  # np.ndarray
+		self._sweepY = None  # np.ndarray
 
-		self._recordingMode = None # str
-		self._sweepX_label = '???' # str
-		self._sweepY_label = '???' # str
+		self._recordingMode = None  # str
+		self._sweepX_label = '???'  # str
+		self._sweepY_label = '???'  # str
 
 		self.myFileType = None
 		"""str: From ('abf', 'csv', 'tif', 'bytestream')"""
 
-		self.loadError = False # abb 20201109
+		self.loadError = False
 		"""bool: True if error loading file/stream."""
 
-		self.detectionDict = None # remember the parameters of our last detection
+		self.detectionDict = None  # remember the parameters of our last detection
 		"""dict: Dictionary specifying detection parameters, see getDefaultDetection."""
 
-		self._path = file # todo: change this to filePath
+		self._path = file  # todo: change this to filePath
 		"""str: File path."""
 
 		self._abf = None
-		"""pyAbf: If loaded from binary abf file"""
+		"""pyAbf: If loaded from binary .abf file"""
 
 		self.dateAnalyzed = None
 		"""str: Date Time of analysis. TODO: make a property."""
@@ -129,7 +105,7 @@ class bAnalysis:
 		elif file.endswith('.csv'):
 			self._loadCsv()
 		else:
-			print(f'error: bAnalysis.__init__() can only open abf/csv/tif files: {file}')
+			logger.error(f'Can only open abf/csv/tif/stream files: {file}')
 			self.loadError = True
 
 		self.currentSweep = None
@@ -145,10 +121,10 @@ class bAnalysis:
 		elif self._recordingMode == 'V-Clamp':
 			self._getBaselineSubtract()
 		else:
-			logger.info('Did not take derivative')
+			logger.warning('Did not take derivative')
 
 	def _loadTif(self):
-		print('TODO: load tif file from within bAnalysis ... stop using bAbfText()')
+		#print('TODO: load tif file from within bAnalysis ... stop using bAbfText()')
 		self._abf = sanpy.bAbfText(file)
 		self._abf.sweepY = self._normalizeData(self._abf.sweepY)
 		self.myFileType = 'tif'
@@ -157,12 +133,9 @@ class bAnalysis:
 		"""
 		Load from a two column CSV file with columns of (s, mV)
 		"""
-
 		logger.info(self._path)
 
 		dfCsv = pd.read_csv(self._path)
-
-		#print(dfCsv)
 
 		# TODO: check column names make sense
 		# There must be 2 columns ('s', 'mV')
@@ -174,8 +147,8 @@ class bAnalysis:
 			return
 
 		self.myFileType = 'csv'
-		self._sweepX = dfCsv['s'].values # first col is time
-		self._sweepY = dfCsv['mV'].values # second col is values (either mV or pA)
+		self._sweepX = dfCsv['s'].values  # first col is time
+		self._sweepY = dfCsv['mV'].values  # second col is values (either mV or pA)
 
 		# TODO: infer from second column
 		self._recordingMode = 'I-Clamp'
@@ -193,7 +166,7 @@ class bAnalysis:
 		self._dataPointsPerMs = _dataPointsPerMs
 
 	def _loadAbf(self, byteStream=None):
-		"""Load pyAbf from path"""
+		"""Load pyAbf from path."""
 		try:
 			if byteStream is not None:
 				self._abf = pyabf.ABF(byteStream)
@@ -205,7 +178,7 @@ class bAnalysis:
 			# get v from pyAbf
 			self._dataPointsPerMs = self._abf.dataPointsPerMs
 
-			abfDateTime = self._abf.abfDateTime #2019-01-14 15:20:48.196000
+			abfDateTime = self._abf.abfDateTime  # 2019-01-14 15:20:48.196000
 			self.acqDate = abfDateTime.strftime("%Y-%m-%d")
 			self.acqTime = abfDateTime.strftime("%H:%M:%S")
 
@@ -220,15 +193,15 @@ class bAnalysis:
 				self._sweepY_label = self._abf.sweepUnitsY
 
 		except (NotImplementedError) as e:
-			print('error: bAnalysis.__init__() did not load abf file:', self._path)
-			print('  exception was:', e)
+			logger.error(f'did not load abf file: {self._path}')
+			logger.error(f'  NotImplementedError exception was: {e}')
 			self.loadError = True
 			self._abf = None
 
 		except (Exception) as e:
 			# some abf files throw: 'unpack requires a buffer of 234 bytes'
-			print('error: bAnalysis.__init__() did not load abf file:', self._path)
-			print('  unknown exception was:', e)
+			logger.error(f'did not load abf file: {self._path}')
+			logger.error(f'  unknown Exception was: {e}')
 			self.loadError = True
 			self._abf = None
 
@@ -245,16 +218,6 @@ class bAnalysis:
 		else:
 			return os.path.split(self._path)[1]
 
-	'''
-	@property
-	def fileName(self):
-		# singular self._path with return ('', 'filename')
-		if self._path is None:
-			return None
-		else:
-			return os.path.split(self._path)[1]
-	'''
-
 	@property
 	def abf(self):
 		"""Get the underlying pyabf object."""
@@ -262,7 +225,8 @@ class bAnalysis:
 
 	@property
 	def recodingDur(self):
-		"""Get recording frequency in kHz."""
+		"""Get recording duration in seconds."""
+		# TODO: Just return self.sweepX(-1)
 		return len(self.sweepX) / self.dataPointsPerMs / 1000
 
 	@property
@@ -272,12 +236,12 @@ class bAnalysis:
 
 	@property
 	def dataPointsPerMs(self):
-		"""Get 'data points per ms'."""
+		"""Get the number of data points per ms."""
 		return self._dataPointsPerMs
 
 	@property
 	def sweepList(self):
-		"""Get a list of sweeps."""
+		"""Get the list of sweeps."""
 		return self._sweepList
 
 	@property
@@ -295,7 +259,7 @@ class bAnalysis:
 		TODO: Set sweep of underlying abf (if we have one)
 		"""
 		if sweepNumber not in self._sweepList:
-			print('error: bAnalysis.setSweep() did not find sweep', sweepNumber, ', sweepList =', self._sweepList)
+			logger.error(f'did not find sweep {sweepNumber} with sweepList: {self._sweepList}')
 			return False
 		else:
 			self._currentSweep = sweepNumber
@@ -305,15 +269,17 @@ class bAnalysis:
 
 	@property
 	def numSpikes(self):
-		"""Get the number of detected spikes"""
+		"""Get the number of detected spikes."""
 		return len(self.spikeTimes)
 
 	@property
 	def sweepX(self):
+		"""Get the time (seconds) from recording (numpy.ndarray)."""
 		return self._sweepX
 
 	@property
 	def sweepY(self):
+		"""Get the amplitude (mV or pA) from recording (numpy.ndarray)."""
 		return self._sweepY
 
 	def get_yUnits(self):
@@ -322,12 +288,17 @@ class bAnalysis:
 	def get_xUnits(self):
 		return self._sweepX_label
 
+	def isAnalyzed(self):
+		"""Return True if this bAnalysis has been analyzed, False otherwise."""
+		return self.detectionDict is not None
+
 	def getStatMean(self, statName):
 		"""
 		Get the mean of an analysis parameter.
 
 		Args:
-			statName (str): Name of the statistic to retreive. For a list of available stats use xxx.
+			statName (str): Name of the statistic to retreive.
+				For a list of available stats use bDetection.defaultDetection.
 		"""
 		theMean = None
 		x = self.getStat(statName)
@@ -339,9 +310,10 @@ class bAnalysis:
 		"""
 		Get a list of values for one or two analysis parameters.
 
-		For a list of available parameters use xxx.
+		For a list of available analysis parameters, use [bDetection.getDefaultDetection()][sanpy.bDetection.bDetection]
 
-		If the returned list of analysis parameters are in points, convert to seconds or ms using: pnt2Sec_(pnt) or pnt2Ms_(pnt).
+		If the returned list of analysis parameters are in points,
+			convert to seconds or ms using: pnt2Sec_(pnt) or pnt2Ms_(pnt).
 
 		Args:
 			statName1 (str): Name of the first analysis parameter to retreive.
@@ -350,6 +322,7 @@ class bAnalysis:
 		Returns:
 			list: List of analysis parameter values, None if error.
 
+		TODO: Add convertToSec (bool)
 		"""
 		def clean(val):
 			if val is None:
@@ -361,13 +334,12 @@ class bAnalysis:
 		error = False
 
 		if len(self.spikeDict) == 0:
-			#print('error bAnalysis.getStat(), there are no spikes')
 			error = True
-		elif not statName1 in self.spikeDict[0].keys():
-			print('error: bAnalysis.getStat() did not find statName1', statName1, 'in spikeDict')
+		elif statName1 not in self.spikeDict[0].keys():
+			logger.warning(f'did not find statName1: "{statName1}" in spikeDict')
 			error = True
-		elif statName2 is not None and not statName2 in self.spikeDict[0].keys():
-			print('error: bAnalysis.getStat() did not find statName2', statName2, 'in spikeDict')
+		elif statName2 is not None and statName2 not in self.spikeDict[0].keys():
+			logger.warning(f'did not find statName2: "{statName2}" in spikeDict')
 			error = True
 
 		if not error:
@@ -382,10 +354,10 @@ class bAnalysis:
 
 	def _getFilteredRecording(self, dDict=None):
 		"""
-		Get a filtered version of recording, used for both V-Clamp and I-Clamp
+		Get a filtered version of recording, used for both V-Clamp and I-Clamp.
 
 		Args:
-			dDict (dict): Default detection dictionary. See getDefaultDetection()
+			dDict (dict): Default detection dictionary. See bDetection.defaultDetection
 		"""
 		if dDict is None:
 			dDict = self.getDefaultDetection()
@@ -394,15 +366,13 @@ class bAnalysis:
 		SavitzkyGolay_pnts = dDict['SavitzkyGolay_pnts']
 		SavitzkyGolay_poly = dDict['SavitzkyGolay_poly']
 
-		#print('getDerivative() medianFilter:', medianFilter)
 		if medianFilter > 0:
 			if not medianFilter % 2:
 				medianFilter += 1
-				print('*** Warning: bAnalysis.getDerivative() Please use an odd value for the median filter, bAnalysis.getDerivative() set medianFilter =', medianFilter)
+				logger.warning(f'Please use an odd value for the median filter, set medianFilter: {medianFilter}')
 			medianFilter = int(medianFilter)
 			self.filteredVm = scipy.signal.medfilt(self.sweepY, medianFilter)
 		elif SavitzkyGolay_pnts > 0:
-			#print('  bAnalysis.getDerivative() vm SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
 			self.filteredVm = scipy.signal.savgol_filter(self.sweepY, SavitzkyGolay_pnts, SavitzkyGolay_poly, mode='nearest')
 		else:
 			self.filteredVm = self.sweepY
@@ -440,15 +410,13 @@ class bAnalysis:
 		SavitzkyGolay_pnts = dDict['SavitzkyGolay_pnts']
 		SavitzkyGolay_poly = dDict['SavitzkyGolay_poly']
 
-		#print('getDerivative() medianFilter:', medianFilter)
 		if medianFilter > 0:
 			if not medianFilter % 2:
 				medianFilter += 1
-				print('*** Warning: bAnalysis.getDerivative() Please use an odd value for the median filter, bAnalysis.getDerivative() set medianFilter =', medianFilter)
+				logger.warning('Please use an odd value for the median filter, set medianFilter: {medianFilter}')
 			medianFilter = int(medianFilter)
 			self.filteredVm = scipy.signal.medfilt(self.sweepY, medianFilter)
 		elif SavitzkyGolay_pnts > 0:
-			#print('  bAnalysis.getDerivative() vm SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
 			self.filteredVm = scipy.signal.savgol_filter(self.sweepY, SavitzkyGolay_pnts, SavitzkyGolay_poly, mode='nearest')
 		else:
 			self.filteredVm = self.sweepY
@@ -458,18 +426,16 @@ class bAnalysis:
 		if medianFilter > 0:
 			if not medianFilter % 2:
 				medianFilter += 1
-				print('*** Warning: bAnalysis.getDerivative() Please use an odd value for the median filter, bAnalysis.getDerivative() set medianFilter =', medianFilter)
+				print(f'Please use an odd value for the median filter, set medianFilter: {medianFilter}')
 			medianFilter = int(medianFilter)
 			self.filteredDeriv = scipy.signal.medfilt(self.filteredDeriv, medianFilter)
 		elif SavitzkyGolay_pnts > 0:
-			#print('  bAnalysis.getDerivative() dvdt SavitzkyGolay_pnts:', SavitzkyGolay_pnts, 'SavitzkyGolay_poly:', SavitzkyGolay_poly)
 			self.filteredDeriv = scipy.signal.savgol_filter(self.filteredDeriv, SavitzkyGolay_pnts, SavitzkyGolay_poly, mode='nearest')
 		else:
 			self.filteredDeriv = self.filteredDeriv
 
 		# mV/ms
 		dataPointsPerMs = self.dataPointsPerMs
-		#print('tmp dataPointsPerMs:', dataPointsPerMs)
 		self.filteredDeriv = self.filteredDeriv * dataPointsPerMs #/ 1000
 
 		# add an initial point so it is the same length as raw data in abf.sweepY
@@ -554,9 +520,8 @@ class bAnalysis:
 	def _backupSpikeVm(self, medianFilter=None):
 		"""
 		when detecting with just mV threshold (not dv/dt)
-		backup spike time using diminishnig SD and diff b/w vm at pnt[i]-pnt[i-1]
+		backup spike time using deminishing SD and diff b/w vm at pnt[i]-pnt[i-1]
 		"""
-		#print('_backupSpikeVm() medianFilter:', medianFilter)
 		realSpikeTimePnts = [np.nan] * self.numSpikes
 
 		medianFilter = 5
@@ -593,9 +558,7 @@ class bAnalysis:
 
 				meanDiff = thisMean - nextMean
 				# logic
-				#print(f'  spike {idx} backupNumPnts:{backupNumPnts} meanDiff:{meanDiff} thisSD:{thisSD}')
 				sdMult = 0.7 # 2
-				#if meanDiff < thisSD * sdMult: #* 1.2: #* 1.5:
 				if (meanDiff < nextSD * sdMult) or (backupNumPnts==maxNumPntsToBackup):
 					# second clause will force us to terminate (this recording has a very slow rise time)
 					# bingo!
@@ -612,12 +575,7 @@ class bAnalysis:
 					else:
 						realBackupPnts = backupNumPnts - moveForwardPnts
 						realPnt = spikeTimePnts - (realBackupPnts*bin_pnts)
-					'''
-					print(f'spike {idx}')
-					print(f'  backupNumPnts:{backupNumPnts} meanDiff:{meanDiff} thisSD:{thisSD}')
-					print(f'  orig spikeTimePnts:{spikeTimePnts} realPnt:{realPnt} atBinPnt:{atBinPnt}')
-					print(f'  orig spikeTimeSec {self.pnt2Sec_(spikeTimePnts)} realSec:{self.pnt2Sec_(realPnt)}')
-					'''
+					#
 					realSpikeTimePnts[idx] = realPnt
 
 				# increment
@@ -644,8 +602,7 @@ class bAnalysis:
 		refractory_ms:
 		"""
 		before = len(spikeTimes0)
-		#print('  bAnalysis._throwOutRefractory() len(spikeTimes0)', len(spikeTimes0), 'reject shorter than refractory_ms:', refractory_ms)
-		#
+
 		# if there are doubles, throw-out the second one
 		#refractory_ms = 20 #10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
 		lastGood = 0 # first spike [0] will always be good, there is no spike [i-1]
@@ -696,11 +653,6 @@ class bAnalysis:
 			self.filteredVm:
 			self.filtereddVdt:
 		"""
-		if verbose:
-			print('bAnalysis.spikeDetect_dvdt()')
-			print('	 dvdtThreshold:', dDict['dvdtThreshold'])
-			print('	 mvThreshold:', dDict['mvThreshold'])
-			print('	 medianFilter:', dDict['medianFilter'])
 
 		#
 		# header
@@ -834,11 +786,8 @@ class bAnalysis:
 				else:
 					errType = 'dvdtPercent'
 					errStr = f"dvdtPercent error searching for dvdt_percentOfMax: {dDict['dvdt_percentOfMax']} peak dV/dt is {peakVal}"
-					#print(f'   error: bAnalysis.spikeDetect_dvdt() spike {i} looking for dvdt_percentOfMax:', dDict['dvdt_percentOfMax'], 'peak dV/dt is', peakVal)
-					#print('	  ', 'np.where did not find preDerivClip<percentMaxVal')
 					spikeTimes1.append(spikeTime)
 					eDict = self._getErrorDict(i, spikeTime, errType, errStr) # spikeTime is in pnts
-					#print('testing eDict:', eDict)
 					spikeErrorList1.append(eDict)
 			except (IndexError, ValueError) as e:
 				##
@@ -861,9 +810,6 @@ class bAnalysis:
 			self.filtereddVdt:
 		"""
 
-		if verbose:
-			print('bAnalysis.spikeDetect_vm() mvThreshold:', dDict['mvThreshold'])
-
 		#
 		# header
 		now = datetime.datetime.now()
@@ -885,8 +831,6 @@ class bAnalysis:
 		Is=np.concatenate(([0],Is))
 		Ds=Is[:-1]-Is[1:]+1
 		spikeTimes0 = Is[np.where(Ds)[0]+1]
-		if verbose:
-			print('  bAnalysis.spikeDetect_vm() spikeTimes0:', len(spikeTimes0), spikeTimes0)
 
 		#
 		# reduce spike times based on start/stop
@@ -919,8 +863,8 @@ class bAnalysis:
 		goodSpikeTimes = []
 		goodSpikeErrors = []
 		for tmpIdx, spikeTime in enumerate(spikeTimes0):
-			tmpFuckPreClip = self.sweepY[spikeTime-prePntUp:spikeTime] # not including the stop index
-			tmpFuckPostClip = self.sweepY[spikeTime+1:spikeTime+prePntUp+1] # not including the stop index
+			tmpFuckPreClip = self.sweepY[spikeTime-prePntUp:spikeTime]  # not including the stop index
+			tmpFuckPostClip = self.sweepY[spikeTime+1:spikeTime+prePntUp+1]  # not including the stop index
 			preAvg = np.average(tmpFuckPreClip)
 			postAvg = np.average(tmpFuckPostClip)
 			if postAvg > preAvg:
@@ -1039,7 +983,8 @@ class bAnalysis:
 					newSpikeTimes.append(spikeTime)
 					newSpikeErrorList.append(spikeErrorList[i])
 				else:
-					print('spikeDetect() peak height: rejecting spike', i, 'at pnt:', spikeTime, "dDict['onlyPeaksAbove_mV']:", dDict['onlyPeaksAbove_mV'])
+					#print('spikeDetect() peak height: rejecting spike', i, 'at pnt:', spikeTime, "dDict['onlyPeaksAbove_mV']:", dDict['onlyPeaksAbove_mV'])
+					pass
 			#
 			self.spikeTimes = newSpikeTimes
 			spikeErrorList = newSpikeErrorList
@@ -1192,8 +1137,6 @@ class bAnalysis:
 				except (IndexError) as e:
 					#self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
 					# sometimes preRange is empty, don't try and put min/max in error
-					#print('heroku preMinValue error !!!!!!!!!!!!!!!')
-					#print('  ', self.spikeDict[i])
 					errorStr = 'searching for preMinVal:' + str(preMinVal) #+ ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
 					eDict = self._getErrorDict(i, self.spikeTimes[i], 'preMin', errorStr) # spikeTime is in pnts
 					self.spikeDict[i]['errors'].append(eDict)
@@ -1257,7 +1200,6 @@ class bAnalysis:
 				except (ValueError) as e:
 					#self.spikeDict[i]['numError'] = self.spikeDict[i]['numError'] + 1
 					# sometimes preRange is empty, don't try and put min/max in error
-					#print('preRange:', preRange)
 					errorStr = 'searching for preSpike_dvdt_max_pnt:'
 					eDict = self._getErrorDict(i, self.spikeTimes[i], 'preSpikeDvDt', errorStr) # spikeTime is in pnts
 					self.spikeDict[i]['errors'].append(eDict)

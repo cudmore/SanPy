@@ -35,7 +35,8 @@ class analysisSummary(sanpyPlugin):
 		ba = self.get_bAnalysis()
 		if ba is not None:
 			be = sanpy.bExport(ba)
-			dfSummary = be.getSummary()
+			theMin, theMax = self.getStartStop()
+			dfSummary = be.getSummary(theMin=theMin, theMax=theMax)
 			if dfSummary is not None:
 				errorReportModel = sanpy.interface.bFileTable.pandasModel(dfSummary)
 				self.myErrorTable.setModel(errorReportModel)

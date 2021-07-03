@@ -19,7 +19,7 @@ class spikeClips(sanpyPlugin):
 
 	Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
 	"""
-	myHumanName = 'Spike Clips'
+	myHumanName = 'Spike Clips Plot'
 
 	def __init__(self, **kwargs):
 		"""
@@ -41,10 +41,12 @@ class spikeClips(sanpyPlugin):
 		# controls
 		hLayout2 = QtWidgets.QHBoxLayout()
 		#
+		'''
 		self.b1 = QtWidgets.QCheckBox("Respond To Analysis Changes")
 		self.b1.setChecked(True)
 		self.b1.stateChanged.connect(lambda:self.btnstate(self.b1))
 		hLayout2.addWidget(self.b1)
+		'''
 
 		vLayout.addLayout(hLayout2)
 
@@ -63,15 +65,14 @@ class spikeClips(sanpyPlugin):
 
 		self.replot()
 
+	'''
 	def btnstate(self,b):
 		if b.text() == "Respond To Analysis Changes":
 			state = b.isChecked()
 			self.setRespondToAnalysisChange(state) # inherited
 		else:
 			logger.warning(f'Did not respond to button "{b.text()}"')
-
-	def plot(self):
-		pass
+	'''
 
 	def replot(self):
 		"""

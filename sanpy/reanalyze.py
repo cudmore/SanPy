@@ -1,3 +1,4 @@
+#TODO: Get rid of this and use optimized analysisDir.pool_ functions !!!
 """
 use original xlsx database of cells with (detection params, start, stop),
 generate a large, one row per spike '_master.csv' database
@@ -15,7 +16,7 @@ import pandas as pd
 #from sanpy import bAnalysis
 from sanpy import bAnalysis
 
-def reanalyze(dbFile, outputFolder='newxxx', fixedDvDt=None, 
+def reanalyze(dbFile, outputFolder='newxxx', fixedDvDt=None,
 				noDvDtThreshold=False, fixedVmThreshold=None):
 	"""
 	Reanalyze all abf files in a folder following a database file

@@ -168,15 +168,18 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 			self.singleSpikeSelection.set_ydata([])
 			self.singleSpikeSelection.set_xdata([])
 		else:
-			self.lastSpikeNumber = spikeNumber
+			if self.metaLine is None:
+				pass
+			else:
+				self.lastSpikeNumber = spikeNumber
 
-			offsets = self.metaLine.get_offsets()
-			xData = offsets[spikeNumber][0]
-			yData = offsets[spikeNumber][1]
-			#print('   xData:', xData, 'yData:', yData)
+				offsets = self.metaLine.get_offsets()
+				xData = offsets[spikeNumber][0]
+				yData = offsets[spikeNumber][1]
+				#print('   xData:', xData, 'yData:', yData)
 
-			self.singleSpikeSelection.set_xdata(xData)
-			self.singleSpikeSelection.set_ydata(yData)
+				self.singleSpikeSelection.set_xdata(xData)
+				self.singleSpikeSelection.set_ydata(yData)
 
 		self.static_canvas.draw()
 		self.repaint() # this is updating the widget !!!!!!!!
@@ -330,7 +333,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		#self.static_canvas.flush_events()
 		self.repaint() # this is updating the widget !!!!!!!!
 
-	def slotSetXAxis(self, xMinMaxList):
+	def slot_setXAxis(self, xMinMaxList):
 		#print('bScatterPlotWidget.slotSetXAxis() xMinMaxList:', xMinMaxList)
 		self.selectXRange(xMinMaxList[0], xMinMaxList[1])
 

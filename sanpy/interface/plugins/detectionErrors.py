@@ -15,11 +15,9 @@ class detectionErrors(sanpyPlugin):
 		QTableView: sanpy.interface.bErrorTable.errorTableView()
 		QAbstractTableModel: sanpy.interface.bFileTable.pandasModel
 	"""
-	myHumanName = 'Detection Errors'
+	myHumanName = 'Error Summary'
 
 	def __init__(self, **kwargs):
-		"""
-		"""
 		super().__init__('detectionErrors', **kwargs)
 
 		self.pyqtWindow() # makes self.mainWidget
@@ -36,11 +34,6 @@ class detectionErrors(sanpyPlugin):
 		self.myErrorTable.signalSelectSpike.connect(fnPtr)
 
 		self.replot()
-
-	'''
-	def plot(self):
-		self.replot()
-	'''
 
 	def replot(self):
 		# update

@@ -30,11 +30,14 @@ class MainWindow(QtWidgets.QMainWindow):
 	signalSetXAxis = QtCore.pyqtSignal(object)
 	"""Emit set axis."""
 
-	signalSelectSpike = QtCore.pyqtSignal(object)
-	"""Emit spike selection."""
+	signalSwitchFile = QtCore.pyqtSignal(object, object)
+	"""Emit on switch file."""
 
 	signalUpdateAnalysis = QtCore.pyqtSignal(object)
-	"""Emit both switch file and detect."""
+	"""Emit on detect."""
+
+	signalSelectSpike = QtCore.pyqtSignal(object)
+	"""Emit spike selection."""
 
 	signalUpdateStatusBar = QtCore.pyqtSignal(object)
 	"""Emit to update status bar"""
@@ -215,26 +218,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		self.path = path # path to loaded bAnalysisDir folder
 
+		# will create/load csv and/or gzip (of all analysis)
 		self.myAnalysisDir = sanpy.analysisDir(path)
-		#dfAnalysisDir = self.myAnalysisDir.getDataFrame()
-		#print(type(dfAnalysisDir))
-		#print(type(self.myAnalysisDir))
-		#sys.exit(1)
 
 		# set dfAnalysisDir to file list model
-		#self.myModel = sanpy.interface.bFileTable.pandasModel(dfAnalysisDir)
 		self.myModel = sanpy.interface.bFileTable.pandasModel(self.myAnalysisDir)
 
-		# this is becoming circular
-		#columnsDict = self.myAnalysisDir.getColumns()
-		#self.myModel.mySetColumns(columnsDict)
-
 		try:
-			#self.tableView.setModel(self.myModel)
 			self.tableView.mySetModel(self.myModel)
 		except (AttributeError) as e:
 			# needed when we call loadFolder from __init__
-			logger.warning('OK: no tableView during load folder')
+			# logger.warning('OK: no tableView during load folder')
+			pass
 
 	def selectSpike(self, spikeNumber, doZoom=False):
 		eDict = {}
@@ -272,10 +267,11 @@ class MainWindow(QtWidgets.QMainWindow):
 			# update error table
 			#self.dfError = data[1]
 			dfError = self.get_bAnalysis().dfError
-			logger.info('dfError:')
-			print(dfError)
 			errorReportModel = sanpy.interface.bFileTable.pandasModel(dfError)
 			self.myErrorTable.setModel(errorReportModel)
+
+			# update stats of table load/analyzed columns
+			self.myAnalysisDir._updateLoadedAnalyzed()
 
 			# TODO: This really should have payload
 			self.signalUpdateAnalysis.emit(None)
@@ -304,16 +300,16 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.startSec = data[0]
 			self.stopSec = data[1]
 			# old
-			self.myScatterPlotWidget.selectXRange(data[0], data[1])
+			#self.myScatterPlotWidget.selectXRange(data[0], data[1])
 			# new
 			self.signalSetXAxis.emit([data[0], data[1]])
 
 		elif this == 'set full x axis':
 			self.startSec = None
 			self.stopSec = None
-			self.myScatterPlotWidget.selectXRange(None, None)
+			#self.myScatterPlotWidget.selectXRange(None, None)
 			logger.info('set full x axis')
-			self.signalSetXAxis.emit(None)
+			self.signalSetXAxis.emit([None, None])
 
 		elif this == 'cancel all selections':
 			self.myDetectionWidget.selectSpike(None)
@@ -395,6 +391,8 @@ class MainWindow(QtWidgets.QMainWindow):
 	def getSelectedFileDict(self):
 		"""
 		Used by detection widget to get info in selected file.
+
+		todo: remove, pass this dict in signal emit from file table
 		"""
 		selectedRows = self.tableView.selectionModel().selectedRows()
 		if len(selectedRows) == 0:
@@ -428,24 +426,33 @@ class MainWindow(QtWidgets.QMainWindow):
 		#print('errorTableClicked() spikeNumber:', spikeNumber, type(spikeNumber), 'modifiers:', modifiers)
 		self.selectSpike(spikeNumber, doZoom=doZoom)
 
-	def slot_fileTableClicked(self, row, column):
-		#logger.info(row)
+	def slot_fileTableClicked(self, row, column, rowDict):
+		"""Respond to selections in file table."""
 
-		#self.selectedRow = row
-
+		'''
 		tableRowDict = self.myModel.myGetRowDict(row)
-
 		abfColumnName = 'File'
 		fileName = self.myModel.myGetValue(row, abfColumnName)
+		'''
+		fileName = rowDict['File']
 
 		# switch file
+		# this will load ba if necc
+		ba = self.myAnalysisDir.getAnalysis(row) # if None then problem loading
+
+		self.signalSwitchFile.emit(rowDict, ba)
+		'''
 		path = os.path.join(self.path, fileName)
-		switchedFile = self.myDetectionWidget.switchFile(path, tableRowDict)
+		switchedFile = self.myDetectionWidget.switchFile(path, tableRowDict, ba=ba)
 		if switchedFile:
 			# TODO: This really should have payload
-			self.signalUpdateAnalysis.emit(None)
+			self.signalSwitchFile.emit(path)
 		else:
 			self.updateStatusBar(f'Failed to load file: "{path}"')
+		'''
+
+		# update stats of table load/analyzed columns
+		self.myAnalysisDir._updateLoadedAnalyzed()
 
 	def old_new_tableClicked(self, index):
 		"""
@@ -496,8 +503,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		saveDatabaseAction.setShortcut('Ctrl+S')
 		saveDatabaseAction.triggered.connect(self.slotSaveFilesTable)
 
-		buildDatabaseAction = QtWidgets.QAction('Build Big Database ...', self)
-		buildDatabaseAction.triggered.connect(self.buildDatabase)
+		#buildDatabaseAction = QtWidgets.QAction('Build Big Database ...', self)
+		#buildDatabaseAction.triggered.connect(self.buildDatabase)
 
 		savePreferencesAction = QtWidgets.QAction('Save Preferences', self)
 		savePreferencesAction.triggered.connect(self.preferencesSave)
@@ -510,8 +517,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		fileMenu.addSeparator()
 		fileMenu.addAction(saveDatabaseAction)
 		fileMenu.addSeparator()
-		fileMenu.addAction(buildDatabaseAction)
-		fileMenu.addSeparator()
+		#fileMenu.addAction(buildDatabaseAction)
+		#fileMenu.addSeparator()
 		fileMenu.addAction(savePreferencesAction)
 		fileMenu.addSeparator()
 		fileMenu.addAction(showLogAction)
@@ -553,7 +560,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		pluginList = self.myPlugins.pluginList()
 		#logger.info(f'pluginList: {pluginList}')
 		for plugin in pluginList:
-			logger.info(f'adding plugin: {plugin}')
+			#logger.info(f'adding plugin: {plugin}')
 			sanpyPluginAction = QtWidgets.QAction(plugin, self)
 
 			# TODO: Add spacer between system and user plugins
@@ -584,6 +591,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		pluginsMenu.addAction(sanpyPluginAction)
 		'''
 
+		#
+		# a dynamic menu to show opten plugins
+		self.windowsMenu = mainMenu.addMenu('&Windows')
+		self.windowsMenu.aboutToShow.connect(self._populateOpenPlugins)
+
 		'''
 		# windows menu to toggle scatter plot widget
 		windowsMenu = mainMenu.addMenu('&Windows')
@@ -597,6 +609,24 @@ class MainWindow(QtWidgets.QMainWindow):
 		windowsMenu.addAction(mainWindowAction)
 		windowsMenu.addAction(openScatterAction)
 		'''
+
+	def _populateOpenPlugins(self):
+		self.windowsMenu.clear()
+		actions = []
+		for plugin in self.myPlugins._openSet:
+			name = plugin.myHumanName
+			windowTitle = plugin.windowTitle
+			action = QtWidgets.QAction(windowTitle, self)
+			action.triggered.connect(partial(self._showOpenPlugin, name, plugin, windowTitle))
+			actions.append(action)
+		self.windowsMenu.addActions(actions)
+
+	def _showOpenPlugin(self, name, plugin, windowTitle, selected):
+		logger.info(name)
+		logger.info(plugin)
+		logger.info(windowTitle)
+		logger.info(selected)
+		plugin.bringToFront()
 
 	def buildUI(self, masterDf=None):
 		self.toggleStyleSheet(buildingInterface=True)
@@ -631,10 +661,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.tableView.signalCopyTable.connect(self.slotCopyTable)
 		self.tableView.signalFindNewFiles.connect(self.slotFindNewFiles)
 		self.tableView.signalSaveFileTable.connect(self.slotSaveFilesTable)
+		self.tableView.signalUpdateStatus.connect(self.slot_updateStatus)
 		#self.tableView.mySetModel(self.myModel)
 		#self.tableView.clicked.connect(self.new_tableClicked)
 		#self.tableView.selectionChanged.connect(self.new_tableclicked2)
-		self.tableView.signalSelection.connect(self.slot_fileTableClicked)
+		self.tableView.signalSelectRow.connect(self.slot_fileTableClicked)
 
 		#self.myQVBoxLayout.addWidget(self.tableView)#, stretch=4)
 
@@ -642,6 +673,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		# detect/plot widget, on the left are params and on the right are plots
 		baNone = None
 		self.myDetectionWidget = sanpy.interface.bDetectionWidget(baNone,self)
+		self.signalSwitchFile.connect(self.myDetectionWidget.slot_switchFile)
 		self.signalSelectSpike.connect(self.myDetectionWidget.slot_selectSpike) # myDetectionWidget listens to self
 		self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike) # self listens to myDetectionWidget
 		#self.myQVBoxLayout.addWidget(self.myDetectionWidget)#, stretch=6)
@@ -651,6 +683,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.myScatterPlotWidget = sanpy.interface.bScatterPlotWidget(self, self.myDetectionWidget)
 		#self.myQVBoxLayout.addWidget(self.myScatterPlotWidget)
 		self.signalSelectSpike.connect(self.myScatterPlotWidget.slotSelectSpike)
+		self.signalSetXAxis.connect(self.myScatterPlotWidget.slot_setXAxis)
 		if self.configDict['display']['showScatter']:
 			pass
 		else:
@@ -882,9 +915,13 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.myModel.mySaveDb(savePath)
 		'''
 
-	def buildDatabase(self):
+	def slot_updateStatus(self, msg):
+		self.updateStatusBar(msg)
+
+	def old_buildDatabase(self):
+		# SEE: analysisDir.pool_ funtions
 		"""
-		prompt user for xls and build large per spike database
+		prompt user for xls and build large per spike database.
 
 		todo: put this into analysis dir
 		"""

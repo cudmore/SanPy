@@ -273,7 +273,7 @@ class bAnalysisUtil:
 
 		self.configLoad()
 
-		self.top = None # used by tkinter interface
+		# self.top = None  # used by tkinter interface
 
 	@staticmethod
 	def getStatList():

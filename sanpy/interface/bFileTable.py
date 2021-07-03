@@ -207,7 +207,16 @@ class pandasModel(QtCore.QAbstractTableModel):
 					pass
 				return toolTip
 			elif role == QtCore.Qt.DisplayRole:
-				retVal = self._data.iloc[index.row(), index.column()]
+				columnName = self._data.columns[index.column()]
+				if self.isAnalysisDir and columnName == 'I':
+					return ''
+
+				# don't get col from index, get from name
+				#retVal = self._data.iloc[index.row(), index.column()]
+				#retVal = self._data.loc[index.row(), columnName]
+				realRow = self._data.index[index.row()]
+				#retVal = self._data.iloc[realRow, index.column()]
+				retVal = self._data.loc[realRow, columnName]
 				if isinstance(retVal, np.float64):
 					retVal = float(retVal)
 				elif isinstance(retVal, np.int64):
@@ -219,14 +228,59 @@ class pandasModel(QtCore.QAbstractTableModel):
 					# don't show 'nan' in table
 					retVal = ''
 				return retVal
+
+			elif role == QtCore.Qt.CheckStateRole:
+				columnName = self._data.columns[index.column()]
+				realRow = self._data.index[index.row()]
+				#retVal = self._data.iloc[index.row(), index.column()]
+				retVal = self._data.loc[realRow, columnName]
+				if columnName == 'I':
+					if retVal:
+						return QtCore.Qt.Checked
+					else:
+						return QtCore.Qt.Unchecked
+				return QtCore.QVariant()
+
+			elif role == QtCore.Qt.FontRole:
+				realRow = self._data.index[index.row()]
+				columnName = self._data.columns[index.column()]
+				if columnName == 'L':
+					if self._data.isLoaded(realRow):
+						return QtCore.QVariant(QtGui.QFont('Arial', pointSize=32))
+				elif columnName == 'A':
+					if self._data.isAnalyzed(realRow):
+						return QtCore.QVariant(QtGui.QFont('Arial', pointSize=32))
+				return QtCore.QVariant()
+			elif role == QtCore.Qt.ForegroundRole:
+				if self.isAnalysisDir:
+					realRow = self._data.index[index.row()]
+					columnName = self._data.columns[index.column()]
+					if columnName == 'L':
+						if self._data.isLoaded(realRow):
+							return QtCore.QVariant(QtGui.QColor('#4444EE'))
+					elif columnName == 'A':
+						if self._data.isAnalyzed(realRow):
+							return QtCore.QVariant(QtGui.QColor('#449944'))
+				return QtCore.QVariant()
 			elif role == QtCore.Qt.BackgroundRole:
+				'''
+				if self.isAnalysisDir:
+					realRow = self._data.index[index.row()]
+					columnName = self._data.columns[index.column()]
+					if columnName == 'L':
+						if self._data.isLoaded(realRow):
+							return QtCore.QVariant(QtGui.QColor('#444499'))
+					elif columnName == 'A':
+						if self._data.isAnalyzed(realRow):
+							return QtCore.QVariant(QtGui.QColor('#449944'))
+				'''
 				if index.row() % 2 == 0:
 					return QtCore.QVariant(QtGui.QColor('#444444'))
 				else:
 					return QtCore.QVariant(QtGui.QColor('#555555'))
 
 		#
-		return None
+		return QtCore.QVariant()
 
 	# def update(self, dataIn):
 	# 	print('  pandasModel.update() dataIn:', dataIn)
@@ -253,8 +307,13 @@ class pandasModel(QtCore.QAbstractTableModel):
 					if not isEditable:
 						return False
 
-				v = self._data.iloc[rowIdx, columnIdx]
-				logger.info(f'Existing value is v: "{v}" {type(v)}')
+				# in general, DO NOT USE iLoc, use loc as it is absolute (i,j)
+				columnName = self._data.columns[index.column()]
+				realRow = self._data.index[index.row()]
+				v = self._data.loc[realRow, columnName]
+				#v = self._data.iloc[rowIdx, columnIdx]
+				logger.info(f'Existing value for column "{columnName}" is v: "{v}" {type(v)}')
+
 				if isinstance(v, np.float64):
 					try:
 						if value == '':
@@ -263,16 +322,29 @@ class pandasModel(QtCore.QAbstractTableModel):
 							value = float(value)
 					except (ValueError) as e:
 						logger.info('No action -->> please enter a number')
+						#self.signalUpdateStatus.emit('Please enter a number')
 						return False
 
 				# set
-				logger.info(f'New value is "{value}" {type(value)}')
-				self._data.iloc[rowIdx, columnIdx] = value
+				logger.info(f'New value for column "{columnName}" is "{value}" {type(value)}')
+				self._data.loc[realRow, columnName] = value
+				#self._data.iloc[rowIdx, columnIdx] = value
 
 				self.isDirty = True
 				return True
+			elif role == QtCore.Qt.CheckStateRole:
+				rowIdx = index.row()
+				columnIdx = index.column()
+				columnName = self._data.columns[index.column()]
+				realRow = self._data.index[index.row()]
+				logger.info(f'CheckStateRole {columnName} {value}')
+				if columnName == 'I':
+					self._data.loc[realRow, columnName] = value == 2
+					self.dataChanged.emit(index, index)
+					return QtCore.Qt.Checked
+
 		#
-		return False
+		return QtCore.QVariant()
 
 	def flags(self, index):
 		rowIdx = index.row()
@@ -286,14 +358,22 @@ class pandasModel(QtCore.QAbstractTableModel):
 			print('self._data.columns:', self._data.columns)
 			raise
 
+		theRet = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
 		isEditable = False
+		isCheckbox = False
 		if self.isAnalysisDir:
 			# columnsDict is a big dict, one key for each column, in analysisDir.sanpyColumns
 			isEditable = self._data.columnIsEditable(columnName)
+			isCheckbox = self._data.columnIsCheckBox(columnName)
 		if isEditable:
-			return QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
-		else:
-			return QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
+			theRet |= QtCore.Qt.ItemIsEditable
+		if isCheckbox:
+			#logger.info(f'isCheckbox {columnIdx}')
+			theRet |= QtCore.Qt.ItemIsUserCheckable
+		#
+		return theRet
+
+		# flags |= QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsUserCheckable | Qt.ItemIsEnabled
 
 	def headerData(self, col, orientation, role):
 		if role == QtCore.Qt.DisplayRole:
@@ -310,7 +390,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 		return QtCore.QVariant()
 
 	def sort(self, Ncol, order):
-		logger.info(f'{Ncol} {order}')
+		logger.info(f'Ncol:{Ncol} order:{order}')
 		self.layoutAboutToBeChanged.emit()
 		if self.isAnalysisDir:
 			self._data.sort_values(Ncol, order)

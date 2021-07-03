@@ -25,7 +25,7 @@ def getLoggerFile():
 	logPath = os.path.join(myPath, fileName)
 	return logPath
 
-def get_logger(name):
+def get_logger(name, level=logging.DEBUG):
 	"""
 	"""
 	if getattr(sys, 'frozen', False):
@@ -33,7 +33,6 @@ def get_logger(name):
 		myPath = sys._MEIPASS
 	else:
 		# running in a normal Python environment
-		#myPath = os.path.dirname(os.path.abspath(__file__))
 		myPath = pathlib.Path(__file__).parent.absolute()
 
 	fileName = 'sanpy.log'
@@ -41,15 +40,15 @@ def get_logger(name):
 
 	# Create a custom logger
 	logger = logging.getLogger(name)
-	logger.propagate = False # don't propogate to root (o.w. prints twice)
+	logger.propagate = False  # don't propogate to root (o.w. prints twice)
 
 	if not logger.handlers:
 		# Create handlers
 		c_handler = logging.StreamHandler()
-		f_handler = RotatingFileHandler(logPath, maxBytes=2000, backupCount=0)
+		f_handler = RotatingFileHandler(logPath, maxBytes=500, backupCount=0)
 		#f_handler = logging.FileHandler(logPath)
-		c_handler.setLevel(logging.NOTSET)
-		f_handler.setLevel(logging.NOTSET)
+		c_handler.setLevel(level)
+		f_handler.setLevel(level)
 
 		# Create formatters and add it to handlers
 		consoleFormat = '%(levelname)5s %(name)8s  %(filename)s %(funcName)s() line:%(lineno)d -- %(message)s'
@@ -65,8 +64,6 @@ def get_logger(name):
 		logger.addHandler(c_handler)
 		logger.addHandler(f_handler)
 
-		#logger.info('Added console and file handlers')
-		#logger.info(f'Logging to file {logPath}')
 	#
 	return logger
 

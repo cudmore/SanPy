@@ -19,12 +19,13 @@ setup(
         'scipy',
         'pyabf',
         'XlsxWriter',
-		'xlrd', # for loading excel files in examples/reanalyze.py
+		'xlrd', #  for loading excel files in examples/reanalyze.py
 		'openpyxl',
 		'seaborn',
 		'tifffile',
 		'mplcursors',
-		'requests', # to load from the cloud (for now github)
+		'requests', #  to load from the cloud (for now github)
+		'tables'  # to load/save with pandas HDFStore
     ],
     # use pip install .[gui]
     # on Big Sur use pip install .\[gui\]

@@ -11,7 +11,7 @@ from sanpy.interface.plugins import sanpyPlugin
 
 class resultsTable(sanpyPlugin):
 	"""
-	Plugin to display detection errors
+	Plugin to display summary of all spikes, one spike per row.
 
 	Uses:
 		QTableView: sanpy.interface.bErrorTable.errorTableView()
@@ -20,8 +20,6 @@ class resultsTable(sanpyPlugin):
 	myHumanName = 'Summary Spikes'
 
 	def __init__(self, **kwargs):
-		"""
-		"""
 		super().__init__('resultsTable', **kwargs)
 
 		self.pyqtWindow() # makes self.mainWidget
@@ -29,7 +27,7 @@ class resultsTable(sanpyPlugin):
 		layout = QtWidgets.QVBoxLayout()
 
 		controlsLayout = QtWidgets.QHBoxLayout()
-		self.numSpikesLabel = QtWidgets.QLabel('xxx spikes')
+		self.numSpikesLabel = QtWidgets.QLabel('unkown spikes')
 		controlsLayout.addWidget(self.numSpikesLabel)
 		layout.addLayout(controlsLayout)
 
@@ -49,11 +47,6 @@ class resultsTable(sanpyPlugin):
 
 		self.replot()
 
-	'''
-	def plot(self):
-		self.replot()
-	'''
-
 	def replot(self):
 		# update
 		ba = self.getSanPyApp().get_bAnalysis()
@@ -61,11 +54,6 @@ class resultsTable(sanpyPlugin):
 			return
 		dfPlot = ba.dfReportForScatter
 		if dfPlot is not None:
-			'''
-			print('columns:')
-			print(dfReportForScatter.columns)
-			print(dfReportForScatter)
-			'''
 			startSec, stopSec = self.getStartStop()
 			if startSec is not None and stopSec is not None:
 				# use column thresholdSec
@@ -77,13 +65,6 @@ class resultsTable(sanpyPlugin):
 			self.myErrorTable.setModel(errorReportModel)
 
 			self.numSpikesLabel.setText(f'{len(dfPlot)} spikes')
-
-	'''
-	def keyPressEvent(self, event):
-		if (event.type() == QtCore.QEvent.KeyPress and
-							event.matches(QtGui.QKeySequence.Copy)):
-				self.copyTable()
-	'''
 
 	def copyToClipboard(self):
 		ba = self.getSanPyApp().get_bAnalysis()

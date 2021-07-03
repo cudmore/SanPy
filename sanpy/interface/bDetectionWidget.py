@@ -47,7 +47,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'humanName': 'Threshold (mV)',
 				'x': 'thresholdSec',
 				'y': 'thresholdVal',
-				'convertx_tosec': False, # some stats are in points, we need to convert to seconds
+				'convertx_tosec': False,  # some stats are in points, we need to convert to seconds
 				'color': 'r',
 				'styleColor': 'color: red',
 				'symbol': 'o',
@@ -58,7 +58,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'humanName': 'Threshold (dV/dt)',
 				'x': 'thresholdSec',
 				'y': 'thresholdVal_dvdt',
-				'convertx_tosec': False, # some stats are in points, we need to convert to seconds
+				'convertx_tosec': False,  # some stats are in points, we need to convert to seconds
 				'color': 'r',
 				'styleColor': 'color: red',
 				'symbol': 'o',
@@ -120,6 +120,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'plotOn': 'vm',
 				'plotIsOn': False,
 			},
+			{
+				'humanName': 'EDD Rate',
+				'x': None,
+				'y': None,
+				'convertx_tosec': False,
+				'color': 'm',
+				'styleColor': 'color: megenta',
+				'symbol': '--',
+				'plotOn': 'vm',
+				'plotIsOn': True,
+			},
 		]
 
 		self.buildUI()
@@ -138,110 +149,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.toggleInterface('dV/dt', showDvDt)
 			self.toggleInterface('Clips', showClips)
 
-	def switchFile(self, path, tableRowDict):
-		"""
-		set self.ba to new bAnalysis object ba
-
-		Can fail if .abf file is corrupt
-		"""
-
-		logger.info(f'path: {path}')
-
-		#if self.ba is not None and self.ba.file == path:
-		#	print('bDetectionWidget is already displaying file:', path)
-		#	return
-
-		if not os.path.isfile(path):
-			#print('  error: bDetectionWidget.switchFile() did not find file:', path)
-			logger.error(f'Did not find file: {path}')
-			return None
-
-		self.updateStatusBar(f'Loading file {path}')
-
-		# make analysis object from file
-		self.ba = sanpy.bAnalysis(file=path) # loads abf file
-
-		if self.ba.loadError:
-			# happens when .abf file is corrupt
-			pass
-		else:
-			dDict = self.ba.getDefaultDetection() # so we can fill in filtered derivartive
-			self.ba._getDerivative(dDict) # derivative
-
-		#remove vm/dvdt/clip items (even when abf file is corrupt)
-		#if self.dvdtLines is not None:
-		#	self.derivPlot.removeItem(self.dvdtLines)
-		if self.dvdtLinesFiltered is not None:
-			self.derivPlot.removeItem(self.dvdtLinesFiltered)
-		#if self.vmLines is not None:
-		#	self.vmPlot.removeItem(self.vmLines)
-		if self.vmLinesFiltered is not None:
-			self.vmPlot.removeItem(self.vmLinesFiltered)
-		if self.clipLines is not None:
-			self.clipPlot.removeItem(self.clipLines)
-
-		# abb 20201009
-		if self.ba.loadError:
-			self.replot()
-			logger.warning(f'Did not switch file, the .abf file may be corrupt: {path}')
-			self.updateStatusBar(f'Error loading file {path}')
-			self.myMainWindow.mySignal('set abfError')
-			return None
-
-		# fill in detection parameters
-		self.fillInDetectionParameters(tableRowDict) # fills in controls
-
-		self.updateStatusBar(f'Plotting file {path}')
-
-		# cancel spike selection
-		self.selectSpike(None)
-
-		# set full axis
-		#self.setAxisFull()
-
-		# update lines
-		#self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.deriv,
-		#					self, type='dvdt')
-		self.dvdtLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredDeriv,
-							self, forcePenColor=None, type='dvdtFiltered')
-		#self.derivPlot.addItem(self.dvdtLines)
-		self.derivPlot.addItem(self.dvdtLinesFiltered)
-
-		#self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY,
-		#					self, type='vm')
-		self.vmLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredVm,
-							self, forcePenColor=None, type='vmFiltered')
-		#self.vmPlot.addItem(self.vmLines)
-		self.vmPlot.addItem(self.vmLinesFiltered)
-
-		# remove and re-add plot overlays
-		for idx, plot in enumerate(self.myPlots):
-			plotItem = self.myPlotList[idx]
-			if plot['plotOn'] == 'vm':
-				self.vmPlot.removeItem(plotItem)
-				self.vmPlot.addItem(plotItem)
-			elif plot['plotOn'] == 'dvdt':
-				self.derivPlot.removeItem(plotItem)
-				self.derivPlot.addItem(plotItem)
-
-		# set full axis
-		self.setAxisFull()
-
-		# single spike selection
-		self.vmPlot.removeItem(self.mySingleSpikeScatterPlot)
-		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
-
-		#
-		# critical
-		self.replot()
-
-		#
-		# set sweep to 0
-
-		self.updateStatusBar(f'Loaded file {path}')
-
-		return True
-
 	def detect(self, dvdtThreshold, vmThreshold):
 		"""
 		Detect spikes
@@ -253,7 +160,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		logger.info(f'Detecting with dvdtThreshold:{dvdtThreshold} vmThreshold:{vmThreshold}')
 
 		if self.ba.loadError:
-			print('bDetectionWidget.detect() did not spike detect because the file was not loaded (may be corrupt .abf file?)')
+			logger.warning('Did not spike detect, the file was not loaded or may be corrupt .abf file?')
 			return
 
 		self.updateStatusBar(f'Detecting spikes dvdt:{dvdtThreshold} minVm:{vmThreshold}')
@@ -263,18 +170,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 		detectionDict['dvdtThreshold'] = dvdtThreshold
 		detectionDict['mvThreshold'] = vmThreshold
 
+		# TODO: pass this function detection params and call from sanpy_app ???
 		# grab parameters from main interface table
 		if self.myMainWindow is not None:
-			logger.info('get detection parameters from main window table')
+			logger.info('Grabbing detection parameters from main window table')
 
 			# problem is these k/v have v that are mixture of str/float/int ... hard to parse
 			myDetectionDict = self.myMainWindow.getSelectedFileDict()
-
-			print('myDetectionDict:')
-			print(myDetectionDict)
-
-			#print('  bDetecctionWidget.detect() row detection dict is:')
-			#sanpy.bUtil.printDict(myDetectionDict, withType=True)
 
 			if myDetectionDict['refractory_ms'] > 0:
 				detectionDict['refractory_ms'] = myDetectionDict['refractory_ms']
@@ -293,13 +195,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			detectionDict['sex'] = myDetectionDict['Sex']
 			detectionDict['condition'] = myDetectionDict['Condition']
 
-		#print('final detection params')
-		#sanpy.interface.bUtil.printDict(detectionDict, withType=True)
-
 		dfReportForScatter = self.ba.spikeDetect(detectionDict)
-
-		# error report
-		#dfError = self.ba.errorReport()
 
 		# show dialog when num spikes is 0
 		if self.ba.numSpikes == 0:
@@ -556,11 +452,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 		return x, y
 
 	def getHalfWidths(self):
-		#print('bDetectionWidget.getHalfWidths()')
+		"""Get x/y pair for plotting all half widths."""
 		# defer until we know how many half-widths 20/50/80
 		x = []
 		y = []
-		numPerSpike = 3 # rise/fall/nan
+		numPerSpike = 3  # rise/fall/nan
 		numSpikes = self.ba.numSpikes
 		xyIdx = 0
 		for idx, spike in enumerate(self.ba.spikeDict):
@@ -580,30 +476,23 @@ class bDetectionWidget(QtWidgets.QWidget):
 				fallingPnt = width['fallingPnt']
 				fallingVal = width['fallingVal']
 
-				#print('	spike:', idx, 'halfHeight:', halfHeight, 'risingPnt:', risingPnt)
 				if risingPnt is None or fallingPnt is None:
 					# half-height was not detected
-					#print('  getHalfWidths() skipping spike', idx, 'width', halfHeight , 'not dtected')
 					continue
 
 				risingSec = self.ba.pnt2Sec_(risingPnt)
 				fallingSec = self.ba.pnt2Sec_(fallingPnt)
 
-				#if idx==2:
-				#	print('')
-				#	print('risingSec:', risingSec, 'fallingSec:', fallingSec)
-				#	sanpy.bUtil.printDict(width)
-
 				x[xyIdx] = risingSec
 				x[xyIdx+1] = fallingSec
 				x[xyIdx+2] = np.nan
 				# y
-				y[xyIdx] = fallingVal #risingVal, to make line horizontal
+				y[xyIdx] = fallingVal  #risingVal, to make line horizontal
 				y[xyIdx+1] = fallingVal
 				y[xyIdx+2] = np.nan
 
 				# each spike has 3x pnts: rise/fall/nan
-				xyIdx += numPerSpike # accounts for rising/falling/nan
+				xyIdx += numPerSpike  # accounts for rising/falling/nan
 			# end for width
 		# end for spike
 		#print('  numSpikes:', numSpikes, 'xyIdx:', xyIdx)
@@ -621,6 +510,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 				xPlot, yPlot = self.getHalfWidths()
 			elif plot['humanName'] == 'EDD':
 				xPlot, yPlot = self.getEDD()
+			elif plot['humanName'] == 'EDD Rate':
+				xPlot, yPlot = sanpy.analysisPlot.getEddLines(self.ba)
+				logger.info(f'EDD Rate {len(xPlot)} {len(yPlot)}')
 			else:
 				xPlot, yPlot = self.ba.getStat(plot['x'], plot['y'])
 				if xPlot is not None and plot['convertx_tosec']:
@@ -862,18 +754,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 			color = plot['color']
 			symbol = plot['symbol']
 			humanName = plot['humanName']
-			if humanName == 'Half-Widths':
+			if humanName in ['Half-Widths']:
 				# PlotCurveItem
-				#myScatterPlot = pg.PlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=2)
-				#myScatterPlot = pg.PlotCurveItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=2, connect='finite')
 				myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=4, color=color), connect='finite') # default is no symbol
-				#myScatterPlot.setData(x=[], y=[]) # start empty
-				#smyScatterPlot.sigClicked.connect(self.on_scatterClicked)
+			elif humanName == 'EDD Rate':
+				# edd rate is a dashed line showing slope/rate of edd
+				myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=2, color=color, style=QtCore.Qt.DashLine), connect='finite') # default is no symbol
 			else:
 				myScatterPlot = pg.PlotDataItem(pen=None, symbol=symbol, symbolSize=4, symbolPen=None, symbolBrush=color)
-				#myScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=2)
 				myScatterPlot.setData(x=[], y=[]) # start empty
-				#myScatterPlot.sigClicked.connect(self.on_scatterClicked)
 				myScatterPlot.sigPointsClicked.connect(self.on_scatterClicked)
 
 			self.myPlotList.append(myScatterPlot)
@@ -1024,7 +913,125 @@ class bDetectionWidget(QtWidgets.QWidget):
 		spikeNumber = sDict['spikeNumber']
 		doZoom = sDict['doZoom']
 		self.selectSpike(spikeNumber, doZoom=doZoom)
+		self.detectToolbarWidget.slot_selectSpike(sDict)
 
+	def slot_switchFile(self, tableRowDict, ba=None):
+		"""
+		Set self.ba to new bAnalysis object ba
+
+		Can fail if .abf file is corrupt
+
+		Args:
+			path (str):
+			tableRowDict (dict):
+			ba (bAnalysis):
+		"""
+
+		fileName = tableRowDict['File']
+
+		#logger.info(f'path: {path}')
+
+		#if self.ba is not None and self.ba.file == path:
+		#	print('bDetectionWidget is already displaying file:', path)
+		#	return
+
+		'''
+		if not os.path.isfile(path):
+			#print('  error: bDetectionWidget.switchFile() did not find file:', path)
+			logger.error(f'Did not find file: {path}')
+			return None
+		'''
+
+		#self.updateStatusBar(f'Loading file {path}')
+		self.detectToolbarWidget.slot_selectFile(tableRowDict)
+
+		# load abAnalysis object from file
+		self.ba = ba
+		#else:
+		#	self.ba = sanpy.bAnalysis(file=path) # loads abf file
+
+		'''
+		if self.ba.loadError:
+			# happens when .abf file is corrupt
+			pass
+		else:
+			dDict = self.ba.getDefaultDetection() # so we can fill in filtered derivartive
+			self.ba._getDerivative(dDict) # derivative
+		'''
+
+		#remove vm/dvdt/clip items (even when abf file is corrupt)
+		#if self.dvdtLines is not None:
+		#	self.derivPlot.removeItem(self.dvdtLines)
+		if self.dvdtLinesFiltered is not None:
+			self.derivPlot.removeItem(self.dvdtLinesFiltered)
+		#if self.vmLines is not None:
+		#	self.vmPlot.removeItem(self.vmLines)
+		if self.vmLinesFiltered is not None:
+			self.vmPlot.removeItem(self.vmLinesFiltered)
+		if self.clipLines is not None:
+			self.clipPlot.removeItem(self.clipLines)
+
+		# abb 20201009
+		if self.ba.loadError:
+			self.replot()
+			logger.warning(f'Did not switch file, the .abf file may be corrupt: {fileName}')
+			#self.updateStatusBar(f'Error loading file {path}')
+			#self.myMainWindow.mySignal('set abfError')
+			return None
+
+		# fill in detection parameters
+		self.fillInDetectionParameters(tableRowDict) # fills in controls
+
+		#self.updateStatusBar(f'Plotting file {path}')
+
+		# cancel spike selection
+		self.selectSpike(None)
+
+		# set full axis
+		#self.setAxisFull()
+
+		# update lines
+		#self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.deriv,
+		#					self, type='dvdt')
+		self.dvdtLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredDeriv,
+							self, forcePenColor=None, type='dvdtFiltered')
+		#self.derivPlot.addItem(self.dvdtLines)
+		self.derivPlot.addItem(self.dvdtLinesFiltered)
+
+		#self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY,
+		#					self, type='vm')
+		self.vmLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredVm,
+							self, forcePenColor=None, type='vmFiltered')
+		#self.vmPlot.addItem(self.vmLines)
+		self.vmPlot.addItem(self.vmLinesFiltered)
+
+		# remove and re-add plot overlays
+		for idx, plot in enumerate(self.myPlots):
+			plotItem = self.myPlotList[idx]
+			if plot['plotOn'] == 'vm':
+				self.vmPlot.removeItem(plotItem)
+				self.vmPlot.addItem(plotItem)
+			elif plot['plotOn'] == 'dvdt':
+				self.derivPlot.removeItem(plotItem)
+				self.derivPlot.addItem(plotItem)
+
+		# set full axis
+		self.setAxisFull()
+
+		# single spike selection
+		self.vmPlot.removeItem(self.mySingleSpikeScatterPlot)
+		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
+
+		#
+		# critical
+		self.replot()
+
+		#
+		# set sweep to 0
+
+		#self.updateStatusBar(f'Loaded file {path}')
+
+		return True
 
 class myImageExporter(ImageExporter):
 	def __init__(self, item):
@@ -1135,6 +1142,10 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 			return
 		actionText = action.text()
 		if actionText == f'Export Trace {myType}':
+			#
+			# See: plugins/exportTRace.py
+			#
+
 			#print('Opening Export Trace Window')
 
 			if self.myType == 'vmFiltered':
@@ -1328,16 +1339,14 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 	@QtCore.pyqtSlot()
 	def on_start_stop(self):
-		#print('myDetectToolbarWidget.on_start_stop()')
 		start = self.startSeconds.value()
 		stop = self.stopSeconds.value()
-		#print('	start:', start, 'stop:', stop)
+		logger.info(f'start:{start}, stop:{stop}')
 		self.detectionWidget.setAxis(start, stop)
 
 	@QtCore.pyqtSlot()
 	def on_button_click(self, name):
-		#print('=== myDetectToolbarWidget2.on_button_click() name:', name)
-
+		logger.info(name)
 		modifiers = QtWidgets.QApplication.keyboardModifiers()
 		isShift = modifiers == QtCore.Qt.ShiftModifier
 
@@ -1437,6 +1446,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.setFixedWidth(300)
 		self.mainLayout = QtWidgets.QVBoxLayout(self)
 		self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
+
+		self.mySelectedFileLabel = QtWidgets.QLabel('None')
+		self.mainLayout.addWidget(self.mySelectedFileLabel)
 
 		# IMPLEMENT SWEEPS AND
 		# PUT THIS BACK IN
@@ -1748,9 +1760,13 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.mousePositionLabel.setText(labelStr)
 		self.mousePositionLabel.repaint()
 
-	def slotSelectSpike(self, eDict):
-		spikeNumber = eDict['spikeNumber']
+	def slot_selectSpike(self, sDict):
+		spikeNumber = sDict['spikeNumber']
 		self.spikeNumber.setValue(spikeNumber)
+
+	def slot_selectFile(self, rowDict):
+		file = rowDict['File']
+		self.mySelectedFileLabel.setText(file)
 
 if __name__ == '__main__':
 	# load a bAnalysis file

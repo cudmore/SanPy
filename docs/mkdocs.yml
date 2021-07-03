@@ -59,13 +59,13 @@ nav:
     - Desktop Application: desktop-application.md
     - Plugins: plugins.md
     - Scripting:
-        - Overview: scripting/overview.md
+        - Overview: scripting/overview.ipynb
         - Examples: scripting/examples.ipynb
         - Plotting Analysis: scripting/plotting-analysis.ipynb
     - API:
         - Overview: api/overview.md
         - bAnalysis: api/bAnalysis.md
-        - bAnalysisPlot: api/bAnalysisPlot.md
+        - analysisPlot: api/analysisPlot.md
         - analysisDir: api/analysisDir.md
         - bExport: api/bExport.md
         - bDetection: api/bDetection.md

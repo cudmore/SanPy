@@ -11,6 +11,9 @@ import pandas as pd
 
 import sanpy
 
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
+
 class bExport():
 	"""
 	Once analysis is performed with sanpy.bAnalysis.spikeDetect(),
@@ -69,12 +72,12 @@ class bExport():
 		'''
 
 		# want this but region/sex/condition are not defined
-		print('bExport.report()')
-		print(df.head())
+		#print('bExport.report()')
+		#print(df.head())
 		tmpNewCol = 'CellTypeSex'
 		cellTypeStr = df['cellType'].iloc[0]
 		sexStr = df['sex'].iloc[0]
-		print('cellTypeStr:', cellTypeStr, 'sexStr:', sexStr)
+		#print('cellTypeStr:', cellTypeStr, 'sexStr:', sexStr)
 		regSexEncoding = cellTypeStr + sexStr
 		df[tmpNewCol] = regSexEncoding
 
@@ -162,9 +165,14 @@ class bExport():
 
 		TODO: Working on this while implementing plugin 'saveAnalysis'
 		"""
+		logger.info(self.ba)
+
+		if self.ba.numSpikes == 0:
+			return None
+
 		if theMin is None or theMax is None:
 			theMin = 0
-			theMax = self.ba.abf.sweepX[-1]
+			theMax = self.ba.sweepX[-1]
 
 		#
 		# cardiac style analysis to sheet 'cardiac'
@@ -288,7 +296,7 @@ class bExport():
 		"""
 		if theMin is None or theMax is None:
 			theMin = 0
-			theMax = self.ba.abf.sweepX[-1]
+			theMax = self.ba.sweepX[-1]
 
 		# always grab a df to the entire analysis (not sure what I will do with this)
 		#df = self.ba.report() # report() is my own 'bob' verbiage
@@ -471,7 +479,7 @@ class bExport():
 			else:
 				first_X = theseClips_x[0] #- theseClips_x[0][0]
 				first_X = np.array(first_X)
-				first_X /= self.ba.abf.dataPointsPerMs # pnts to ms
+				first_X /= self.ba.dataPointsPerMs # pnts to ms
 				#if verbose: print('    bExport.saveReport() saving mean clip to sheet "Avg Spike" from', len(theseClips), 'clips')
 				#dfClip = pd.DataFrame(meanClip, first_X)
 				dfClip = pd.DataFrame.from_dict({
@@ -480,8 +488,7 @@ class bExport():
 					})
 				# load clip based on analysisname (with start/stop seconds)
 				analysisname = df0['analysisname'].iloc[0] # name with start/stop seconds
-				print('bExport.saveReport() analysisname:', analysisname)
-				#print('analysisname:', analysisname)
+				logger.info(f'analysisname: {analysisname}')
 				clipFileName = analysisname + '_clip.csv'
 				tmpPath, tmpFile = os.path.split(savefile)
 				tmpPath = os.path.join(tmpPath, 'analysis')
@@ -489,7 +496,7 @@ class bExport():
 				if not os.path.isdir(tmpPath):
 					os.mkdir(tmpPath)
 				clipSavePath = os.path.join(tmpPath, clipFileName)
-				print('    clipSavePath:', clipSavePath)
+				logger.info(f'clipSavePath: {clipSavePath}')
 				dfClip.to_csv(clipSavePath)
 			#
 			theRet = df0
@@ -513,7 +520,7 @@ class bExport():
 		# make an analysis folder
 		filePath = os.path.join(filePath, 'analysis')
 		if not os.path.isdir(filePath):
-			print('    getReportDf() making output folder:', filePath)
+			logger.info(f'Making output folder: {filePath}')
 			os.mkdir(filePath)
 
 		textFileBaseName, tmpExtension = os.path.splitext(fileName)
@@ -552,7 +559,6 @@ class bExport():
 		with open(textFilePath,'w') as f:
 			f.write(headerStr)
 
-		#print('Saving .txt file:', textFilePath)
 		df = self.report(theMin, theMax)
 
 		# we need a column indicating (path), the original .abf file
@@ -564,7 +570,7 @@ class bExport():
 		tmpPath, tmpFile = os.path.split(self.ba.file)
 		tmpFile, tmpExt = os.path.splitext(tmpFile)
 		analysisName = tmpFile + '_s' + minStr + '_s' + maxStr
-		print('    minStr:', minStr, 'maxStr:', maxStr, 'analysisName:', analysisName)
+		logger.info(f'minStr:{minStr} maxStr:{maxStr} analysisName:{analysisName}')
 		df['analysisname'] = analysisName
 
 		# should be filled in by self.ba.report
@@ -575,7 +581,7 @@ class bExport():
 		df['filename'] = [os.path.splitext(os.path.split(x)[1])[0] for x in 	df['file'].tolist()]
 
 		#
-		print('    bExport.getReportDf() saving text file:', textFilePath)
+		logger.info('saving text file: {textFilePath}')
 		#df.to_csv(textFilePath, sep=',', index_label='index', mode='a')
 		df.to_csv(textFilePath, sep=',', index_label='index', mode='w')
 
@@ -587,6 +593,7 @@ def test():
 	ba.spikeDetect()
 	be = bExport(ba)
 	df = be.getSummary()
+	logger.info('')
 	print(df)
 
 if __name__ == '__main__':

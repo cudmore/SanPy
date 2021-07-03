@@ -16,7 +16,7 @@ class plotScatter(sanpyPlugin):
 
 	Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
 	"""
-	myHumanName = 'Plot Scatter'
+	myHumanName = 'Scatter Plot'
 
 	def __init__(self, **kwargs):
 		"""
@@ -48,10 +48,13 @@ class plotScatter(sanpyPlugin):
 		hLayout2 = QtWidgets.QHBoxLayout()
 
 		#
+		'''
 		self.b1 = QtWidgets.QCheckBox("Respond To Analysis Changes")
 		self.b1.setChecked(True)
 		self.b1.stateChanged.connect(lambda:self.btnstate(self.b1))
 		hLayout2.addWidget(self.b1)
+		'''
+
 		#
 		self.b2 = QtWidgets.QCheckBox("Chase Plot")
 		self.b2.setChecked(False)
@@ -87,19 +90,16 @@ class plotScatter(sanpyPlugin):
 		# set the layout of the main window
 		self.mainWidget.setLayout(hLayout)
 
-	def btnstate(self,b):
+	def btnstate(self, b):
 		state = b.isChecked()
-		if b.text() == "Respond To Analysis Changes":
-			self.setRespondToAnalysisChange(state)
-		elif b.text() == 'Chase Plot':
+		#if b.text() == "Respond To Analysis Changes":
+		#	self.setRespondToAnalysisChange(state)
+		if b.text() == 'Chase Plot':
 			self.plotChasePlot = state
 			logger.info(f'plotChasePlot:{self.plotChasePlot}')
 			self.replot()
 		else:
 			logger.warning(f'Did not respond to button "{b.text()}"')
-
-	def plot(self):
-		pass
 
 	def replot(self):
 		"""
@@ -257,8 +257,7 @@ class myStatListWidget(QtWidgets.QWidget):
 		row = self.myTableWidget.currentRow()
 		if row == -1 or row is None:
 			return
-		yStat = self.myTableWidget.item(row,0).text() #
-		#print('=== myStatPlotToolbarWidget.on_scatter_toolbar_table_click', row, yStat)
+		yStat = self.myTableWidget.item(row,0).text()
 		self.myParent.replot()
 
 	'''

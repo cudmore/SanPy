@@ -6,15 +6,15 @@ With Plugins, users can easily extend the functionality of SanPy by:
  - Plotting analysis
  - Extend analysis in new ways
 
-All plugins are linked into the SanPy interface to respond to user selection, zooming, and file loading. A selection in the main interface will propagate to the plugin and visa-versa.
+All plugins are linked into the SanPy interface to respond to spike selection, zooming, and file switching. A selection in the main interface will propagate to the plugin and visa-versa.
 
-# Built-in plugins to get you started.
+# Built-in plugins.
 
 ## Plot Recording
 
 Use Matplotlib to plot a recording with spike detection overlaid.
 
-<IMG SRC="../img/plugins/plotRecording.png" width=700>
+<IMG SRC="../img/plugins/plot-recording.png" width=700>
 
 ## Spike Clips
 
@@ -34,11 +34,29 @@ A fairly complex plugin to display a number of different plots including: Scatte
 
 <IMG SRC="../img/plugins/plot-tool.png" width=700>
 
-## Detection Errors
+## Export Trace
 
-A plugin to display per-spike detection errors. Clicking on an error in the table will highlight the spike in the main interface.
+Displays a trace, allows user to modify the look and then export to a number of file formats including Png, Pdf, and SVG.
 
-<IMG SRC="../img/plugins/detection-errors.png" width=700>
+<IMG SRC="../img/plugins/export-trace.png" width=700>
+
+## Summary analysis
+
+Displays a table with a summary of analysis results and detection parameters. Can copy/paste into a spreadsheet like Excel.
+
+<IMG SRC="../img/plugins/summary-analysis.png" width=700>
+
+## Summary Spikes
+
+Displays a table of all analysis results, one row per spike. Can copy/paste into spreadsheet for further analysis. This is the same information as when saving.
+
+<IMG SRC="../img/plugins/summary-spikes.png" width=700>
+
+## Error Summary
+
+Display per-spike detection errors. Clicking on an error in the table will highlight the spike in the main interface.
+
+<IMG SRC="../img/plugins/error-summary.png" width=700>
 
 ## Sanpy Log
 

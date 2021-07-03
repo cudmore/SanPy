@@ -33,19 +33,25 @@ class plotTool(sanpyPlugin):
 							'X Statistic': 'Region',
 							'Hue': 'Region',
 							'Group By': 'File Number'}
+
 		#analysisName, masterDf = analysisName, df0 = ba.getReportDf(theMin, theMax, savefile)
-		#masterDf = self._bPlugins._sanpyApp.dfReportForScatter
-		masterDf = self.ba.dfReportForScatter
-		#print('== masterDf:')
-		#print(masterDf)
+
+		print('!!!! FIX THIS in plugin plotTool.plot()')
+		masterDf = self._bPlugins._sanpyApp.myAnalysisDir.pool_build()
+		# was this
+		#masterDf = self.ba.dfReportForScatter
+
 		if masterDf is None:
 			logger.warning('Did not get analysis df, be sure to run detectioon')
 			return
 		#bScatterPlotMainWindow
 		#self.scatterWindow = sanpy.scatterwidget.bScatterPlotMainWindow(
 		path = ''
-		self.scatterWindow = sanpy.interface.bScatterPlotMainWindow(
+		self.mainWidget = sanpy.interface.bScatterPlotMainWindow(
 						path, categoricalList, hueTypes,
 						analysisName, sortOrder, statListDict=statListDict,
 						masterDf = masterDf,
 						interfaceDefaults = interfaceDefaults)
+		# rewire existing widget into plugin architecture
+		self.mainWidget.closeEvent = self.onClose
+		self._mySetWindowTitle()

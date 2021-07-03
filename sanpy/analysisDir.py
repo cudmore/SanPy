@@ -19,14 +19,25 @@ _sanpyColumns = {
 	#	'type': float,
 	#	'isEditable': False,
 	#},
-	'File': {
+	'L': {
+		# loaded
 		'type': str,
 		'isEditable': False,
 	},
-	'Include': {
-		#'type': bool,
-		'type': float,
+	'A': {
+		# analyzed
+		'type': str,
+		'isEditable': False,
+	},
+	'I': {
+		# include
+		# problems with isinstance(bool), just using string
+		'type': 'bool',
 		'isEditable': True,
+	},
+	'File': {
+		'type': str,
+		'isEditable': False,
 	},
 	'Dur(s)': {
 		'type': float,
@@ -197,6 +208,9 @@ class analysisDir():
 
 		self._isDirty = False
 
+		self._poolDf = None
+		"""See pool_ functions"""
+
 		# keys are full path to file, if from cloud, key is 'cloud/<filename>'
 		# holds bAnalysisObjects
 		# needs to be a list so we can have files more than one
@@ -207,7 +221,15 @@ class analysisDir():
 
 		self._df = None
 		if autoLoad:
-			self._df = self.loadFolder()
+			self._df = self.loadHdf()
+			if self._df is None:
+				self._df = self.loadFolder()
+		#
+		self._checkColumns()
+		self._updateLoadedAnalyzed()
+		#
+		logger.info('_df:')
+		print(self._df)
 
 	@property
 	def isDirty(self):
@@ -243,8 +265,12 @@ class analysisDir():
 
 	@iloc.setter
 	def iLoc_setter(self, rowIdx, colIdx, value):
-		self._df.iloc[rowIdx,colIdx] = value
+		self._df.iloc[rowIdx, colIdx] = value
 		self._isDirty = True
+
+	@property
+	def index(self):
+		return self._df.index
 
 	@property
 	def columns(self):
@@ -255,7 +281,9 @@ class analysisDir():
 		return self._df.copy()
 
 	def sort_values(self, Ncol, order):
+		logger.info(f'Ncol:{Ncol} order:{order}')
 		self._df = self._df.sort_values(self.columns[Ncol], ascending=not order)
+		print(self._df)
 
 	@property
 	def columnsDict(self):
@@ -264,26 +292,66 @@ class analysisDir():
 	def columnIsEditable(self, colName):
 		return self.sanpyColumns[colName]['isEditable']
 
+	def columnIsCheckBox(self, colName):
+		"""All bool columns are checkbox
+
+		TODO: problems with using type=bool and isinstance(). Kust using str 'bool'
+		"""
+		type = self.sanpyColumns[colName]['type']
+		#isBool = isinstance(type, bool)
+		isBool = type == 'bool'
+		#logger.info(f'{colName} {type(type)}, type:{type} {isBool}')
+		return isBool
+
 	def getDataFrame(self):
 		"""Get the underlying pandas DataFrame."""
 		return self._df
 
+	@property
 	def numFiles(self):
-		"""Get the number of files"""
+		"""Get the number of files. same as len()."""
 		return len(self._df)
 
 	def copyToClipboard(self):
+		"""
+		TODO: Is this used or is copy to clipboard in pandas model?
+		"""
 		if self.getDataFrame() is not None:
 			self.getDataFrame().to_clipboard(sep='\t', index=False)
 			logger.info('Copied to clipboard')
 
 	def saveDatabase(self):
-		""" save dbFile .csv"""
+		""" save dbFile .csv and hdf .gzip"""
 		dbPath = os.path.join(self.path, self.dbFile)
 		if self.getDataFrame() is not None:
+			#
 			logger.info(f'Saving "{dbPath}"')
 			self.getDataFrame().to_csv(dbPath, index=False)
 			self._isDirty = False
+
+			#
+			hdfFile = os.path.splitext(self.dbFile)[0] + '.gzip'
+			hdfPath = os.path.join(self.path, hdfFile)
+			logger.info(f'Saving "{hdfPath}"')
+			#hdfStore = pd.HDFStore(hdfPath)
+			with pd.HDFStore(hdfPath, mode='w') as hdfStore:
+				hdfStore['df'] = self.getDataFrame()  # save it
+
+	def loadHdf(self, path=None):
+		if path is None:
+			path = self.path
+		self.path = path
+
+		df = None
+		hdfFile = os.path.splitext(self.dbFile)[0] + '.gzip'
+		hdfPath = os.path.join(self.path, hdfFile)
+		if os.path.isfile(hdfPath):
+			logger.info(f'Loading existing folder hdf: {hdfPath}')
+			#hdfStore = pd.HDFStore(hdfPath)
+			with pd.HDFStore(hdfPath) as hdfStore:
+				df = hdfStore['df']  # load it
+		#
+		return df
 
 	def loadFolder(self, path=None):
 		"""
@@ -295,9 +363,10 @@ class analysisDir():
 			path = self.path
 		self.path = path
 
+		loadedDatabase = False
+
 		# load an existing folder db or create a new one
 		dbPath = os.path.join(path, self.dbFile)
-		loadedDatabase = False
 		if os.path.isfile(dbPath):
 			logger.info(f'Loading existing folder db: {dbPath}')
 			df = pd.read_csv(dbPath, header=0, index_col=False)
@@ -329,8 +398,9 @@ class analysisDir():
 			# build new db dataframe
 			listOfDict = []
 			for rowIdx, file in enumerate(fileList):
-				self.signalApp(f'Please wait, loading "{file}"')
-				ba, rowDict = self.getFileRow(file, rowIdx=rowIdx+1) # loads bAnalysis
+				self.signalApp(f'Loading "{file}"')
+				ba, rowDict = self.getFileRow(file, rowIdx=rowIdx+1)  # loads bAnalysis
+				rowDict['_ba'] = ba
 				if rowDict is not None:
 					listOfDict.append(rowDict)
 					#self.fileList[file] = ba
@@ -342,24 +412,54 @@ class analysisDir():
 		#
 
 		# expand each to into self.fileList
-		df['_ba'] = None
-		'''
-		for rowIdx in range(len(df)):
-			file= df.at[rowIdx, 'File']
-			filePath = os.path.join(path, file)
-			#print(f'{rowIdx} {filePath}')
-			newDict = {
-						'ba': None,
-						'file': file,
-						'filePath': filePath
-						}
-			self.fileList.append(newDict)
-		'''
-		#
-		logger.info('df:')
-		print(df)
+		#df['_ba'] = None
 
 		return df
+
+	def _checkColumns(self):
+		"""Check columns in loaded vs sanpyColumns (and vica versa"""
+		loadedColumns = self._df.columns
+		for col in loadedColumns:
+			if not col in self.sanpyColumns.keys():
+				# loaded has unexpected column, leave it
+				logger.error(f'error: bAnalysisDir did not find loaded col: "{col}" in sanpyColumns.keys()')
+		for col in self.sanpyColumns.keys():
+			if not col in loadedColumns:
+				# loaded is missing expected, add it
+				logger.error(f'error: bAnalysisDir did not find sanpyColumns.keys() col: "{col}" in loadedColumns')
+				self._df[col] = ''
+
+	def _updateLoadedAnalyzed(self):
+		"""Refresh Loaded (L) and Analyzed (A) columns."""
+		# .loc[i,'col'] gets from index (wrong)
+		# .iloc[i,j] gets absolute row (correct)
+		loadedCol = self._df.columns.get_loc('L')
+		analyzedCol = self._df.columns.get_loc('A')
+		for rowIdx in range(len(self._df)):
+			# loaded
+			if self.isLoaded(rowIdx):
+				theChar = '\u2022'  # 'x'
+			else:
+				theChar = ''
+			self._df.iloc[rowIdx, loadedCol] = theChar
+			# analyzed
+			if self.isAnalyzed(rowIdx):
+				theChar = '\u2022'  # 'x'
+			else:
+				theChar = ''
+			self._df.iloc[rowIdx, analyzedCol] = theChar
+
+	def isLoaded(self, rowIdx):
+		isLoaded = self._df.loc[rowIdx, '_ba'] is not None
+		return isLoaded
+
+	def isAnalyzed(self, rowIdx):
+		isAnalyzed = False
+		ba = self._df.loc[rowIdx, '_ba']
+		#if ba is not None:
+		if isinstance(ba, sanpy.bAnalysis):
+			isAnalyzed = ba.isAnalyzed()
+		return isAnalyzed
 
 	def getAnalysis(self, rowIdx):
 		"""
@@ -417,8 +517,10 @@ class analysisDir():
 			rowIdx (int): Optional row index to assign in column 'Idx'
 
 		Return:
-			bAnalysis:
-			dict: On success, otherwise None
+			(tuple): tuple containing:
+
+			- ba (bAnalysis): [sanpy.bAnalysis](/api/bAnalysis).
+			- rowDict (dict): On success, otherwise None.
 					fails when path does not lead to valid bAnalysis file.
 		"""
 		if not os.path.isfile(path):
@@ -532,13 +634,17 @@ class analysisDir():
 		self._df = df
 
 	def syncDfWithPath(self):
+		"""
+		Sync path with existing df. Used to pick up new/removed files"""
 		pathFileList = self.getFileList(getFullPath=False)
 		dfFileList = self._df['File'].tolist()
 
+		'''
 		print('=== pathFileList:')
 		print(pathFileList)
 		print('=== dfFileList:')
 		print(dfFileList)
+		'''
 
 		addedToDf = False
 
@@ -565,10 +671,38 @@ class analysisDir():
 			df = df.reset_index(drop=True)
 			self._df = df
 
+	def pool_build(self):
+		"""Build one df with all anlysis. Use this in plot tool plugin.
+		"""
+		masterDf = None
+		for row in range(self.numFiles):
+			if not self.isAnalyzed(row):
+				continue
+			ba = self.getAnalysis(row)
+			if ba.dfReportForScatter is not None:
+				self.signalApp(f'adding "{ba.getFileName()}"')
+				ba.dfReportForScatter['File Number'] = row
+				if masterDf is None:
+					masterDf = ba.dfReportForScatter
+				else:
+					masterDf = pd.concat([masterDf, ba.dfReportForScatter])
+		#
+		logger.info(f'final {len(masterDf)}')
+		print(masterDf.head())
+		self._poolDf = masterDf
+
+		return self._poolDf
+
 	def signalApp(self, str):
-		"""Update status bar of app"""
+		"""Update status bar of SanPy app.
+
+		TODO make this a signal and connect app to it.
+			Will not be able to do this, we need to run outside Qt
+		"""
 		if self.myApp is not None:
 			self.myApp.updateStatusBar(str)
+		else:
+			logger.info(str)
 
 def _printDict(d):
 	for k,v in d.items():
@@ -605,6 +739,41 @@ def test3():
 
 	#bad.saveDatabase()
 
+def test_hd5_2():
+	path = '/home/cudmore/Sites/SanPy/data'
+	bad = analysisDir(path)
+	print(bad._df)
+
+def test_hd5():
+	import time
+	start = time.time()
+	hdfStore = pd.HDFStore('store.gzip')
+	if 1:
+		path = '/home/cudmore/Sites/SanPy/data'
+		bad = analysisDir(path)
+
+		# load all bAnalysis
+		for idx in range(len(bad)):
+			bad.getAnalysis(idx)
+
+		hdfStore['df'] = bad.getDataFrame()  # save it
+		bad.saveDatabase()
+
+	if 0:
+		df = hdfStore['df']  # load it
+		print('loaded df:')
+		print(df)
+	stop = time.time()
+	print(f'took {stop-start}')
+
+def test_pool():
+	path = '/home/cudmore/Sites/SanPy/data'
+	bad = analysisDir(path)
+	print('loaded df:')
+	print(bad._df)
+
+	bad.pool_build()
+
 def testCloud():
 	cloudDict = {
 		'owner': 'cudmore',
@@ -614,5 +783,8 @@ def testCloud():
 	bad = bAnalysisDirWeb(cloudDict)
 
 if __name__ == '__main__':
-	test3()
+	#test3()
+	#test_hd5()
+	#test_hd5_2()
+	test_pool()
 	#testCloud()

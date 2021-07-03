@@ -1001,6 +1001,10 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		# self.updatePlotSize() # calls update2()
 		self.update2()
 
+	def _mySetWindowTitle(self, windowTitle):
+		"""Required to interact with sanpyPlugin."""
+		self.setWindowTitle(windowTitle)
+
 	def buildUI(self, interfaceDefaults):
 		if self.darkTheme:
 			plt.style.use('dark_background')

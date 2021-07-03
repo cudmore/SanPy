@@ -49,24 +49,26 @@ class bPlugins():
 	def loadPlugins(self):
 		"""
 		Load plugins from both:
-		 - sanpy.interface.plugins
-		 - <user>/sanpy_plugins
+		 - Package: sanpy.interface.plugins
+		 - Folder: <user>/sanpy_plugins
 		"""
 		self.pluginDict = {}
 
-		ignoreModuleList = ['sanpyPlugin', 'myWidget']
+		# Enum is to ignore bPlugins.py class ResponseType(Enum)
+		ignoreModuleList = ['sanpyPlugin', 'myWidget', 'ResponseType']
 
 		#
 		# system plugins from sanpy.interface.plugins
 		#print('loadPlugins sanpy.interface.plugins:', sanpy.interface.plugins)
+		loadedList = []
 		for moduleName, obj in inspect.getmembers(sanpy.interface.plugins):
 			#print('moduleName:', moduleName, 'obj:', obj)
 			if inspect.isclass(obj):
-				#print('  class')
+				#logger.info(f'moduleName: {moduleName}')
 				if moduleName in ignoreModuleList:
 					# our base plugin class
 					continue
-				#print('sys plugin:', moduleName, ':', obj)
+				loadedList.append(moduleName)
 				fullModuleName = 'sanpy.interface.plugins.' + moduleName
 				humanName = obj.myHumanName
 				pluginDict = {
@@ -77,13 +79,12 @@ class bPlugins():
 					'constructor': obj,
 					'humanName': humanName
 				}
-				#if moduleName in self.pluginDict.keys():
 				if humanName in self.pluginDict.keys():
 					logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
 				else:
 					self.pluginDict[humanName] = pluginDict
+		logger.info(f'Loaded plugins: {loadedList}')
 		# sort
-		#self.pluginDict = sorted(self.pluginDict.items())
 		self.pluginDict = dict(sorted(self.pluginDict.items()))
 
 		#
@@ -188,14 +189,14 @@ class bPlugins():
 		return module
 
 	def slot_closeWindow(self, pluginObj):
-		"""
-		close named plugin window
+		"""Close named plugin window.
 
 		Args:
-			id (int): The running plugin .id()
+			pluginObj (object): The running plugin object reference.
 			"""
 		logger.info(pluginObj)
 		try:
+			logger.info(f'Removing plugin from _openSet: {pluginObj}')
 			self._openSet.remove(pluginObj)
 		except (KeyError) as e:
 			logger.exception(e)
@@ -211,7 +212,7 @@ class bPlugins():
 		if app is not None:
 			spikeNumber = sDict['spikeNumber']
 			doZoom = sDict['doZoom']
-			app.selectSpike(spikeNumber, doZoom=False)
+			app.selectSpike(spikeNumber, doZoom=doZoom)
 
 def test_print_classes():
 	"""testing"""
