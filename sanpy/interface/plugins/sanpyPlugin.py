@@ -70,6 +70,8 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 	myHumanName = 'UNDEFINED'
 	"""Each derived class needs to define this."""
 
+	responseTypes = ResponseType
+
 	def __init__(self, name='', ba=None, bPlugin=None, startStop=None, options=None):
 		"""
 		Args:
@@ -97,7 +99,7 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 		#
 		# build a dict of boolean from ResponseType enum class
 		self.responseOptions = {}
-		for option in (ResponseType):
+		for option in (self.responseTypes):
 			#print(type(option))
 			self.responseOptions[option.name] = True
 
@@ -369,7 +371,7 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 
 	def slot_switchFile(self, path):
 		"""Respond to switch file."""
-		if not self.getResponseOption(ResponseType.switchFile):
+		if not self.getResponseOption(self.responseTypes.switchFile):
 			return
 		logger.info(path)
 		app = self.getSanPyApp()
@@ -379,30 +381,44 @@ class sanpyPlugin(QtCore.QObject if QtCore is not None else object):
 		# set pyqt window title
 		self._mySetWindowTitle()
 
-	def slot_updateAnalysis(self):
+	def slot_updateAnalysis(self, ba):
 		"""Respond to detection"""
-		if not self.getResponseOption(ResponseType.analysisChange):
+		if not self.getResponseOption(self.responseTypes.analysisChange):
 			return
-		app = self.getSanPyApp()
-		if app is not None:
-			self._ba = app.get_bAnalysis()
+		# don't update analysis if we are showing different ba
+		if self._ba != ba:
+			return
+		#self._ba = app.get_bAnalysis()
 
 		# set pyqt window title
-		self._mySetWindowTitle()
+		#self._mySetWindowTitle()
 
 		#
 		self.replot()
 
 	def slot_selectSpike(self, eDict):
 		"""Respond to spike selection."""
-		if not self.getResponseOption(ResponseType.selectSpike):
+		if not self.getResponseOption(self.responseTypes.selectSpike):
 			return
+
+		print('====== TODO: fix sanpyPlugin.slot_selectSpike() only update if ba that is selected is the same as self._ba')
+		# don't select spike if we are showing different ba
+		#if self._ba != ba:
+		#	return
+
 		self.selectSpike(eDict)
 
 	def slot_set_x_axis(self, startStopList):
 		"""Respond to changes in x-axis."""
-		if not self.getResponseOption(ResponseType.setAxis):
+		if not self.getResponseOption(self.responseTypes.setAxis):
 			return
+		# don't set axis if we are showing different ba
+		app = self.getSanPyApp()
+		if app is not None:
+			ba = app.get_bAnalysis()
+			if self._ba != ba:
+				return
+
 		logger.info(startStopList)
 		if startStopList is None:
 			self._startSec = None
@@ -486,13 +502,13 @@ class myWidget(QtWidgets.QWidget):
 		action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 
 		if action == switchFile:
-			self.parentPlugin.toggleResponseOptions(ResponseType.switchFile)
+			self.parentPlugin.toggleResponseOptions(self.parentPlugin.responseTypes.switchFile)
 		elif action == analysisChange:
-			self.parentPlugin.toggleResponseOptions(ResponseType.analysisChange)
+			self.parentPlugin.toggleResponseOptions(self.parentPlugin.responseTypes.analysisChange)
 		elif action == selectSpike:
-			self.parentPlugin.toggleResponseOptions(ResponseType.selectSpike)
+			self.parentPlugin.toggleResponseOptions(self.parentPlugin.responseTypes.selectSpike)
 		elif action == axisChange:
-			self.parentPlugin.toggleResponseOptions(ResponseType.setAxis)
+			self.parentPlugin.toggleResponseOptions(self.parentPlugin.responseTypes.setAxis)
 		elif action is not None:
 			logger.warning(f'Action not taken "{action}"')
 

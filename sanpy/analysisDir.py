@@ -2,16 +2,20 @@
 # Author: Robert H Cudmore
 # Date: 20210603
 
-import os
+import os, time
+import copy  # For copy.deepcopy() of bAnalysis
+import uuid  # to generate unique key on bAnalysis spike detect
 import numpy as np
 import pandas as pd
 import requests, io  # too load from the web
+from subprocess import call # to call ptrepack (might fail on windows???)
 
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
+testTimingNumFiles = None
 
 _sanpyColumns = {
 	#'Idx': {
@@ -228,8 +232,12 @@ class analysisDir():
 		self._checkColumns()
 		self._updateLoadedAnalyzed()
 		#
-		logger.info('_df:')
-		print(self._df)
+		logger.info(self)
+
+	def __str__(self):
+		totalDurSec = self._df['Dur(s)'].sum()
+		theStr = f'Num Files: {len(self)} Total Dur(s): {totalDurSec}'
+		return theStr
 
 	@property
 	def isDirty(self):
@@ -281,9 +289,9 @@ class analysisDir():
 		return self._df.copy()
 
 	def sort_values(self, Ncol, order):
-		logger.info(f'Ncol:{Ncol} order:{order}')
+		logger.info(f'sorting by column {self.columns[Ncol]} with order:{order}')
 		self._df = self._df.sort_values(self.columns[Ncol], ascending=not order)
-		print(self._df)
+		#print(self._df)
 
 	@property
 	def columnsDict(self):
@@ -320,7 +328,7 @@ class analysisDir():
 			self.getDataFrame().to_clipboard(sep='\t', index=False)
 			logger.info('Copied to clipboard')
 
-	def saveDatabase(self):
+	def old_saveDatabase(self):
 		""" save dbFile .csv and hdf .gzip"""
 		dbPath = os.path.join(self.path, self.dbFile)
 		if self.getDataFrame() is not None:
@@ -330,12 +338,69 @@ class analysisDir():
 			self._isDirty = False
 
 			#
-			hdfFile = os.path.splitext(self.dbFile)[0] + '.gzip'
+			'''
+			hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
 			hdfPath = os.path.join(self.path, hdfFile)
 			logger.info(f'Saving "{hdfPath}"')
 			#hdfStore = pd.HDFStore(hdfPath)
-			with pd.HDFStore(hdfPath, mode='w') as hdfStore:
+			start = time.time()
+			complevel = 9
+			complib = 'blosc:blosclz'
+			with pd.HDFStore(hdfPath, mode='w', complevel=complevel, complib=complib) as hdfStore:
 				hdfStore['df'] = self.getDataFrame()  # save it
+			stop = time.time()
+			logger.info(f'Saving took {round(stop-start,2)} seconds')
+			'''
+
+	def saveHdf(self):
+		"""
+		"""
+		start = time.time()
+
+		tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
+		tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+		logger.info(f'Saving Tmp {tmpHdfPath}')
+
+		#
+		# save file database
+		with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
+			dbKey = os.path.splitext(self.dbFile)[0]
+			logger.info(f'Storing file db into key "{dbKey}"')
+			df = self.getDataFrame()
+			df = df.drop('_ba', axis=1)  # don't ever save _ba
+			hdfStore[dbKey] = df  # save it
+			#
+			self._isDirty = False  # if true, prompt to save on quit
+
+		# save each bAnalysis
+		df = self.getDataFrame()
+		for row in range(len(df)):
+			# do not call this, it will load
+			#ba = self.getAnalysis(row)
+			ba = df.at[row, '_ba']
+			if ba is not None:
+				ba._saveToHdf(tmpHdfPath) # will only save if ba.detectionDirty
+
+		#
+		# rebuild the file to remove old changes and reduce size
+		hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
+		hdfPath = os.path.join(self.path, hdfFile)
+		logger.info(f'Compressing h5 to {hdfPath}')
+		#command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", '--complevel=9', '--complib=blosc:blosclz', tmpHdfPath, hdfPath]
+		command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", tmpHdfPath, hdfPath]
+		call(command)
+
+		logger.info(f'Removing temporary file {tmpHdfPath}')
+		os.remove(tmpHdfPath)
+
+		stop = time.time()
+		logger.info(f'Saving took {round(stop-start,2)} seconds')
+
+	def deleteFromHdf(self, uuid):
+		"""Delete uuid from h5 file. id corresponds to a bAnalysis detection."""
+		if not uuid:
+			return
+		logger.info(f'TODO: Delete from h5 file uuid:{uuid}')
 
 	def loadHdf(self, path=None):
 		if path is None:
@@ -343,22 +408,46 @@ class analysisDir():
 		self.path = path
 
 		df = None
-		hdfFile = os.path.splitext(self.dbFile)[0] + '.gzip'
+		hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
 		hdfPath = os.path.join(self.path, hdfFile)
-		if os.path.isfile(hdfPath):
-			logger.info(f'Loading existing folder hdf: {hdfPath}')
-			#hdfStore = pd.HDFStore(hdfPath)
-			with pd.HDFStore(hdfPath) as hdfStore:
-				df = hdfStore['df']  # load it
+		if not os.path.isfile(hdfPath):
+			return
+
+		logger.info(f'Loading existing folder hdf: {hdfPath}')
+		#hdfStore = pd.HDFStore(hdfPath)
+		start = time.time()
+		with pd.HDFStore(hdfPath) as hdfStore:
+			dbKey = os.path.splitext(self.dbFile)[0]
+			df = hdfStore[dbKey]  # load it
+			df['_ba'] = None
+
+			# load each bAnalysis from hdf
+			for row in range(len(df)):
+				ba_uuid = df.at[row, 'uuid']
+				if not ba_uuid:
+					# ba was not saved in h5 file
+					continue
+				try:
+					dfAnalysis = hdfStore[ba_uuid]
+					ba = sanpy.bAnalysis(fromDf=dfAnalysis)
+					logger.info(f'Loaded row {row} uuid:{ba.uuid} bAnalysis {ba}')
+					df.at[row, '_ba'] = ba # can be none
+				except(KeyError):
+					logger.info(f'hdf uuid key for row {row} not found in .h5 file, uuid:"{ba_uuid}"')
+
+		stop = time.time()
+		logger.info(f'Loading took {round(stop-start,2)} seconds')
 		#
 		return df
 
 	def loadFolder(self, path=None):
 		"""
-		expensive
+		Parse a folder and load all (abf, csv, ...). Only called if no h5 file.
 
+		TODO: get rid of loading database from .csv (it is replaced by .h5 file)
 		TODO: extend the logic to load from cloud (after we were instantiated)
 		"""
+		start = time.time()
 		if path is None:
 			path = self.path
 		self.path = path
@@ -399,11 +488,23 @@ class analysisDir():
 			listOfDict = []
 			for rowIdx, file in enumerate(fileList):
 				self.signalApp(f'Loading "{file}"')
-				ba, rowDict = self.getFileRow(file, rowIdx=rowIdx+1)  # loads bAnalysis
+				ba, rowDict = self.getFileRow(file)  # loads bAnalysis
+
+				# TODO: calculating time, remove this
+				# This is 2x faster than loading frmo pandas gzip ???
+				#dDict = ba.getDefaultDetection()
+				#dDict['dvdtThreshold'] = 2
+				#ba.spikeDetect(dDict)
+
 				rowDict['_ba'] = ba
-				if rowDict is not None:
-					listOfDict.append(rowDict)
-					#self.fileList[file] = ba
+				# do not assign uuid until bAnalysis is saved in h5 file
+				rowDict['uuid'] = ''
+
+				listOfDict.append(rowDict)
+
+				if testTimingNumFiles is not None and rowIdx>testTimingNumFiles-1:
+					logger.warning(f'Breaking after testTimingNumFiles:{testTimingNumFiles}')
+					break
 			#
 			df = pd.DataFrame(listOfDict)
 			#print('=== built new db df:')
@@ -414,6 +515,8 @@ class analysisDir():
 		# expand each to into self.fileList
 		#df['_ba'] = None
 
+		stop = time.time()
+		logger.info(f'Load took {round(stop-start,2)} seconds.')
 		return df
 
 	def _checkColumns(self):
@@ -463,7 +566,7 @@ class analysisDir():
 
 	def getAnalysis(self, rowIdx):
 		"""
-		Get bAnalysis object, will load if necc
+		Get bAnalysis object, will load if necc.
 
 		Args:
 			rowIdx (int): Row index from table, corresponds to row in self._df
@@ -475,8 +578,7 @@ class analysisDir():
 			# load
 			logger.info(f'Loading bAnalysis from row {rowIdx} "{filePath}"')
 			ba = sanpy.bAnalysis(filePath)
-			#self.fileList[filePath]['ba'] = ba
-			self._df.loc[rowIdx, '_ba'] = ba
+			#self._df.loc[rowIdx, '_ba'] = ba
 		#
 		return ba
 
@@ -508,13 +610,13 @@ class analysisDir():
 		#
 		return df
 
-	def getFileRow(self, path, rowIdx=None):
+	def getFileRow(self, path):
 		"""
 		Get dict representing one file (row in table). Loads bAnalysis to get headers.
 
 		Args:
 			path (Str): Full path to file.
-			rowIdx (int): Optional row index to assign in column 'Idx'
+			#rowIdx (int): Optional row index to assign in column 'Idx'
 
 		Return:
 			(tuple): tuple containing:
@@ -548,10 +650,10 @@ class analysisDir():
 			elif self.sanpyColumns[k]['type'] == float:
 				rowDict[k] = np.nan
 
-		if rowIdx is not None:
-			rowDict['Idx'] = rowIdx
+		#if rowIdx is not None:
+		#	rowDict['Idx'] = rowIdx
 
-		rowDict['Include'] = 1 # causes error if not here !!!!, can't be string
+		rowDict['I'] = 2 # need 2 because checkbox value is in (0,2)
 		rowDict['File'] = ba.getFileName() #os.path.split(ba.path)[1]
 		rowDict['Dur(s)'] = ba.recodingDur
 		rowDict['kHz'] = ba.recordingFrequency
@@ -587,13 +689,20 @@ class analysisDir():
 
 	def getRowDict(self, rowIdx):
 		"""
-		Return a dict with selected row as dict (includes detection parameters)
-		Use sanpyColumns, not df columns
+		Return a dict with selected row as dict (includes detection parameters).
+
+		Important to return a copy as our '_ba' is a pointer to bAnalysis.
+
+		Returns:
+			theRet (dict): Be sure to make a deep copy of ['_ba'] if neccessary.
 		"""
 		theRet = {}
 		# use columns in main sanpyColumns, not in df
-		for colStr in self.columns:
+		#for colStr in self.columns:
+		for colStr in self._df.columns:
+			#theRet[colStr] = self._df.loc[rowIdx, colStr]
 			theRet[colStr] = self._df.loc[rowIdx, colStr]
+		#theRet['_ba'] = theRet['_ba'].copy()
 		return theRet
 
 	def appendRow(self, rowDict=None, ba=None):
@@ -617,6 +726,12 @@ class analysisDir():
 
 	def deleteRow(self, rowIdx):
 		df = self._df
+
+		# delete from h5 file
+		uuid = df.at[rowIdx, 'uuid']
+		self.deleteFromHdf(uuid)
+
+		# delete from df/model
 		df = df.drop([rowIdx])
 		df = df.reset_index(drop=True)
 		self._df = df
@@ -624,7 +739,19 @@ class analysisDir():
 	def duplicateRow(self, rowIdx):
 		# duplicate rowIdx
 		newIdx = rowIdx + 0.5
+
 		rowDict = self.getRowDict(rowIdx)
+
+		# CRITICAL: Need to make a deep copy of the _ba pointer to bAnalysis object
+		baNew = copy.deepcopy(rowDict['_ba'])
+
+		# copy of bAnalysis needs a new uuid
+		new_uuid = str(uuid.uuid4())
+		logger.info(f'assigning new uuid {new_uuid} to {baNew}')
+		baNew.uuid = new_uuid
+
+		rowDict['_ba'] = baNew
+
 		dfRow = pd.DataFrame(rowDict, index=[newIdx])
 
 		df = self._df
@@ -740,9 +867,90 @@ def test3():
 	#bad.saveDatabase()
 
 def test_hd5_2():
-	path = '/home/cudmore/Sites/SanPy/data'
-	bad = analysisDir(path)
-	print(bad._df)
+	folderPath = '/home/cudmore/Sites/SanPy/data'
+	if 1:
+		# save analysisDir hdf
+		bad = analysisDir(folderPath)
+		print('bad._df:')
+		print(bad._df)
+		#bad.saveDatabase()  # save .csv
+		bad.saveHdf()  # save ALL bAnalysis in .h5
+
+	if 0:
+		# load h5 and reconstruct a bAnalysis object
+		start = time.time()
+		hdfPath = '/home/cudmore/Sites/SanPy/data/sanpy_recording_db.h5'
+		with pd.HDFStore(hdfPath, 'r') as hdfStore:
+			for key in hdfStore.keys():
+
+				dfTmp = hdfStore[key]
+				#path = dfTmp.iloc[0]['path']
+
+				print('===', key)
+				#if not key.startswith('/r6'):
+				#	continue
+				#for col in dfTmp.columns:
+				#	print('  ', col, dfTmp[col])
+				#print(key, type(dfTmp), dfTmp.shape)
+				#print('dfTmp:')
+				#print(dfTmp)
+
+
+				#print(dfTmp.iloc[0]['_sweepX'])
+
+				# load bAnalysis from a pandas DataFrame
+				ba = sanpy.bAnalysis(fromDf=dfTmp)
+
+				print(ba)
+
+				ba.spikeDetect()  # this should reproduce exactly what was save ... It WORKS !!!
+
+				'''
+				ba = sanpy.bAnalysis(path)
+				#instanceDict = vars(ba)
+				ba.detectionDict = dfTmp.iloc[0]['detectionDict']
+				ba.spikeDict = dfTmp.iloc[0]['spikeDict']
+				ba.spikeTimes = dfTmp.iloc[0]['spikeTimes']
+				ba.spikeClips = dfTmp.iloc[0]['spikeClips']
+				ba.dfError = dfTmp.iloc[0]['dfError']
+				ba.dfReportForScatter = dfTmp.iloc[0]['dfReportForScatter']
+				ba._sweepX = dfTmp.iloc[0]['_sweepX']
+				ba._sweepY = dfTmp.iloc[0]['_sweepY']
+				'''
+
+				'''
+				memberName = key.split('_')[1]
+				if memberName == 'path':
+					path = dfTmp[0]  # .to_string()
+					print('= loaded path:', path)
+				elif memberName == 'detectionDict':
+					detectionDict = dfTmp.iloc[0].to_dict()
+					print('= loaded detectionDict:', detectionDict)
+				elif memberName == 'spikeDict':
+					spikeDict = dfTmp.to_dict('records')
+					print('= loaded spikeDict:', type(spikeDict))
+					#print(spikeDict[1])
+				elif memberName == 'spikeTimes':
+					spikeTimes = dfTmp.to_numpy().ravel()  # convert shape[1,0] to shape[1,]
+					print('= loaded spikeTimes:', type(spikeTimes), spikeTimes.shape, spikeTimes.dtype)
+				elif memberName == 'spikeClips':
+					spikeClips = dfTmp.to_numpy()
+					print('= loaded spikeClips:', type(spikeClips), spikeClips.shape, spikeClips.dtype)
+				elif memberName == 'dfError':
+					dfError = dfTmp
+					print('= loaded dfError:', type(dfError), dfError.shape)
+				elif memberName == 'dfReportForScatter':
+					dfReportForScatter = dfTmp
+					print('= loaded dfReportForScatter:', type(dfReportForScatter), dfReportForScatter.shape)
+				elif memberName == 'sweepX':
+					sweepX = dfTmp.to_numpy().ravel()  # convert shape[1,0] to shape[1,]
+					print('= loaded sweepX:', type(sweepX), sweepX.shape, sweepX.dtype)
+				elif memberName == 'sweepY':
+					sweepY = dfTmp.to_numpy().ravel()
+					print('= loaded sweepY:', type(sweepY), sweepY.shape, sweepY.dtype)
+				'''
+		stop = time.time()
+		logger.info(f'h5 load took {round(stop-start,3)} seconds')
 
 def test_hd5():
 	import time
@@ -774,6 +982,117 @@ def test_pool():
 
 	bad.pool_build()
 
+def test_timing():
+	# not sure how to set logging level across all files
+	#import logging
+	#global logger
+	#logger = get_logger(__name__, level=logging.DEBUG)
+
+	global testTimingNumFiles
+	path = '/home/cudmore/Sites/SanPy/data/timing'
+	csvPath = os.path.join(path, 'sanpy_recording_db.csv')
+	gzipPath = os.path.join(path, 'sanpy_recording_db.h5')
+
+	maxFiles = 20
+	loadBrute = []
+	loadBruteSec = []
+	saveHdf = []
+	saveHdfSec = []
+	loadHdf = []
+	loadHdfSec = []
+	hdfSize = []
+	hdfSizeMb = []
+	totalDurSec = []
+	for i in range(maxFiles):
+		print(f'====== {i}')
+		start = time.time()
+		testTimingNumFiles = i # limit number of files loaded by analysisDir
+		bad = analysisDir(path)
+		stop = time.time()
+		seconds = round(stop-start,3)
+		str = f'{i} Loading files took {seconds} seconds. {bad}'
+		print(str)
+		loadBrute.append(str)
+		loadBruteSec.append(seconds)
+
+		durSec = bad._df['Dur(s)'].sum()
+		totalDurSec.append(durSec)
+
+		start = time.time()
+		bad.saveDatabase()
+		stop = time.time()
+		seconds = round(stop-start,3)
+		str = f'  {i} saving hdf took: {seconds} seconds. {bad}'
+		print(str)
+		saveHdf.append(str)
+		saveHdfSec.append(seconds)
+
+		start = time.time()
+		bad = analysisDir(path)
+		stop = time.time()
+		seconds = round(stop-start,3)
+		str = f'  {i} loading hdf took: {seconds} seconds. {bad}'
+		print(str)
+		loadHdf.append(str)
+		loadHdfSec.append(seconds)
+
+		# size of gzip
+		size = os.path.getsize(gzipPath)
+		mbSize = size/(1024*1024)
+		str = f'   {i} gzip mb:{mbSize}'
+		print(str)
+		hdfSize.append(str)
+		hdfSizeMb.append(mbSize)
+
+		# remove database(s) for next iteration
+		os.remove(csvPath)
+		os.remove(gzipPath)
+
+	#
+	for line in loadBrute:
+		print(line)
+	for line in saveHdf:
+		print(line)
+	for line in loadHdf:
+		print(line)
+	for line in hdfSize:
+		print(line)
+
+	print('loadBruteSec =', loadBruteSec)
+	print('saveHdfSec =', saveHdfSec)
+	print('loadHdfSec =', loadHdfSec)
+	print('hdfSizeMb =', hdfSizeMb)
+	print('totalDurSec =', totalDurSec)
+
+def plotTiming():
+
+	# before compression
+	'''
+	loadBruteSec = [1.181, 2.383, 3.518, 4.697, 5.825, 6.868, 8.059, 9.164, 10.228, 11.483, 12.566, 13.7, 14.77, 16.15, 17.163, 18.647, 19.871, 21.481, 23.251, 24.383]
+	saveHdfSec = [0.136, 0.157, 0.228, 0.298, 0.363, 0.435, 0.529, 0.618, 0.645, 0.733, 0.795, 0.876, 0.933, 0.999, 1.046, 1.122, 1.2, 1.253, 1.453, 1.492]
+	loadHdfSec = [0.185, 0.351, 0.51, 0.675, 0.837, 1.002, 1.123, 1.281, 1.484, 1.599, 1.761, 1.917, 2.077, 2.245, 2.469, 2.673, 2.761, 2.925, 4.605, 3.413]
+	hdfSizeMb = [50.20532989501953, 99.39323425292969, 148.58114624023438, 197.76905059814453, 246.95687103271484, 296.14469146728516, 345.3325958251953, 394.52050018310547, 443.7084045410156, 492.89622497558594, 542.0840530395508, 591.2718734741211, 640.4596939086914, 689.6475982666016, 738.8355884552002, 788.0252990722656, 837.2132034301758, 886.4011077880859, 935.5889358520508, 984.7768402099609]
+	totalDurSec = [60.0, 120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 540.0, 600.0, 660.0, 720.0, 780.0, 840.0, 900.0, 960.0, 1020.0, 1080.0, 1140.0, 1200.0]
+	'''
+
+	loadBruteSec = [1.202, 2.413, 3.567, 4.774, 6.0, 7.144, 8.36, 9.41, 10.61, 11.884, 12.969, 14.097, 15.32, 17.472, 18.197, 19.077, 20.117, 21.372, 22.427, 23.826]
+	saveHdfSec = [0.14, 0.166, 0.238, 0.309, 0.38, 0.449, 0.541, 0.609, 0.659, 0.742, 0.816, 0.883, 0.956, 1.112, 1.058, 1.155, 1.224, 1.316, 1.363, 1.42]
+	loadHdfSec = [0.198, 0.374, 0.533, 0.706, 0.862, 1.03, 1.146, 1.306, 1.51, 1.62, 1.778, 1.939, 2.289, 2.447, 2.483, 2.588, 2.741, 2.925, 3.073, 3.23]
+	hdfSizeMb = [50.22023582458496, 99.40814876556396, 148.5960636138916, 197.7839708328247, 246.97179412841797, 296.15961742401123, 345.34752464294434, 394.53543186187744, 443.72333908081055, 492.9111614227295, 542.0989923477173, 591.2868156433105, 640.4746389389038, 689.6625461578369, 738.85045337677, 788.0382776260376, 837.2261848449707, 886.4140920639038, 935.6019229888916, 984.7898292541504]
+	totalDurSec = [60.0, 120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 540.0, 600.0, 660.0, 720.0, 780.0, 840.0, 900.0, 960.0, 1020.0, 1080.0, 1140.0, 1200.0]
+
+	# with compression
+
+	totalDurMin = [x/60 for x in totalDurSec]
+
+	import matplotlib.pyplot as plt
+	plt.plot(totalDurMin, loadBruteSec, 'o-k')
+	plt.plot(totalDurMin, loadHdfSec, 'o-r')
+	plt.show()
+
+	plt.plot(totalDurMin, hdfSizeMb, 'o-r')
+	plt.show()
+
 def testCloud():
 	cloudDict = {
 		'owner': 'cudmore',
@@ -785,6 +1104,9 @@ def testCloud():
 if __name__ == '__main__':
 	#test3()
 	#test_hd5()
-	#test_hd5_2()
-	test_pool()
+	test_hd5_2()
+	#test_pool()
 	#testCloud()
+
+	#test_timing()
+	#plotTiming()

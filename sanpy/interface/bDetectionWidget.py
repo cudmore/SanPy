@@ -129,7 +129,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'styleColor': 'color: megenta',
 				'symbol': '--',
 				'plotOn': 'vm',
-				'plotIsOn': True,
+				'plotIsOn': False,
 			},
 		]
 
@@ -289,7 +289,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			start = stop
 			stop = tmp
 
-		#print('bDetectionWidget.setAxis() start:', start, 'stop:', stop)
+		logger.info(f'start:{start} stop:{stop} set_xyBoth:{set_xyBoth} whichPlot:{whichPlot}')
 
 		padding = 0
 		if set_xyBoth == 'xAxis':
@@ -300,7 +300,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			elif whichPlot in ['vm', 'vmFiltered']:
 				self.vmPlot.setYRange(start, stop) # linked to Vm
 			else:
-				print('bDetectionWidget._setAxis() did not understand whichPlot:', whichPlot)
+				logger.error(f'did not understand whichPlot: {whichPlot}')
 
 		# update detection toolbar
 		if set_xyBoth == 'xAxis':
@@ -344,6 +344,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		start = 0
 		stop = self.ba.sweepX[-1]
 		start, stop = self._setAxis(start, stop, set_xyBoth='xAxis')
+
+		logger.info(f'start:{start} stop:{stop}')
 
 		# y-axis is NOT shared
 		# dvdt
@@ -505,15 +507,19 @@ class bDetectionWidget(QtWidgets.QWidget):
 			return
 
 		for idx, plot in enumerate(self.myPlots):
-			if plot['humanName'] == 'Half-Widths':
-				# new 20210212
+			xPlot = []
+			yPlot = []
+			plotIsOn = plot['plotIsOn']
+			#  TODO: fix the logic here, we are not calling replot() when user toggles plot radio checkboxes
+			plotIsOn = True
+			if plotIsOn and plot['humanName'] == 'Half-Widths':
 				xPlot, yPlot = self.getHalfWidths()
-			elif plot['humanName'] == 'EDD':
+			elif plotIsOn and plot['humanName'] == 'EDD':
 				xPlot, yPlot = self.getEDD()
-			elif plot['humanName'] == 'EDD Rate':
+			elif plotIsOn and plot['humanName'] == 'EDD Rate':
 				xPlot, yPlot = sanpy.analysisPlot.getEddLines(self.ba)
-				logger.info(f'EDD Rate {len(xPlot)} {len(yPlot)}')
-			else:
+				#logger.info(f'EDD Rate {len(xPlot)} {len(yPlot)}')
+			elif plotIsOn:
 				xPlot, yPlot = self.ba.getStat(plot['x'], plot['y'])
 				if xPlot is not None and plot['convertx_tosec']:
 					xPlot = [self.ba.pnt2Sec_(x) for x in xPlot] # convert pnt to sec
@@ -536,6 +542,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 			meanSpikeFreq = round(meanSpikeFreq,2)
 		self.detectToolbarWidget.spikeFreqLabel.setText('Frequency: ' + str(meanSpikeFreq))
 		self.detectToolbarWidget.spikeFreqLabel.repaint()
+
+		# num errors
+		self.detectToolbarWidget.numErrorsLabel.setText('Errors: ' + str(self.ba.numErrors()))
+		self.detectToolbarWidget.numErrorsLabel.repaint()
 
 	def togglePlot(self, idx, on):
 		"""
@@ -979,7 +989,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			#self.myMainWindow.mySignal('set abfError')
 			return None
 
-		# fill in detection parameters
+		# fill in detection parameters (dvdt, vm, start, stop)
 		self.fillInDetectionParameters(tableRowDict) # fills in controls
 
 		#self.updateStatusBar(f'Plotting file {path}')
@@ -1016,7 +1026,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 				self.derivPlot.addItem(plotItem)
 
 		# set full axis
-		self.setAxisFull()
+		# full axis was causing start/stop to get over-written
+		#self.setAxisFull()
+		self.detectToolbarWidget.on_start_stop()
 
 		# single spike selection
 		self.vmPlot.removeItem(self.mySingleSpikeScatterPlot)
@@ -1302,27 +1314,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		startSeconds = tableRowDict['Start(s)']
 		stopSeconds = tableRowDict['Stop(s)']
 
-		# NOTE: This was fixed on loading .csv into pandas and converting columns to str or float
-		'''
-		# when number values are set to 'empty' they come in as str ''
-		if isinstance(dvdtThreshold,str) and len(dvdtThreshold)==0:
-			# empy dvdThreshold means detect with mV
-			dvdtThreshold = -1
-		if isinstance(startSeconds,str) and len(startSeconds)==0:
-			startSeconds = 0
-		if isinstance(stopSeconds,str) and len(stopSeconds)==0:
-			stopSeconds = self.detectionWidget.ba.sweepX[-1] # max seconds
-
-		if isinstance(dvdtThreshold, str):
-			dvdtThreshold = float(dvdtThreshold)
-		if isinstance(mvThreshold, str):
-			mvThreshold = float(mvThreshold)
-
-		if isinstance(startSeconds, str):
-			startSeconds = float(startSeconds)
-		if isinstance(mvThreshold, str):
-			stopSeconds = float(stopSeconds)
-		'''
+		logger.info(f'startSeconds:{startSeconds} stopSeconds:{stopSeconds}')
 
 		# in table we specify 'nan' but float spin box will not show that
 		if np.isnan(dvdtThreshold):
@@ -1330,6 +1322,12 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		self.dvdtThreshold.setValue(dvdtThreshold)
 		self.vmThreshold.setValue(mvThreshold)
+
+		if np.isnan(startSeconds):
+			startSeconds = 0
+		if np.isnan(stopSeconds):
+			stopSeconds = self.detectionWidget.ba.sweepX[-1]
+
 		self.startSeconds.setValue(startSeconds)
 		self.stopSeconds.setValue(stopSeconds)
 
@@ -1712,7 +1710,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		spikeGridLayout.addWidget(self.numSpikesLabel, row, 0, tmpRowSpan, tmpColSpan)
 
 		self.spikeFreqLabel = QtWidgets.QLabel('Frequency: None')
-		spikeGridLayout.addWidget(self.spikeFreqLabel, row, 2, tmpRowSpan, tmpColSpan)
+		spikeGridLayout.addWidget(self.spikeFreqLabel, row, 1, tmpRowSpan, tmpColSpan)
+
+		self.numErrorsLabel = QtWidgets.QLabel('Errors: None')
+		spikeGridLayout.addWidget(self.numErrorsLabel, row, 2, tmpRowSpan, tmpColSpan)
 
 		# finalize
 		spikeGroupBox.setLayout(spikeGridLayout)

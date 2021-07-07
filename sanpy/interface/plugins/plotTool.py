@@ -1,57 +1,16 @@
-import numpy as np
-import scipy.signal
-
-import matplotlib.pyplot as plt
+import sanpy
+from sanpy.interface.plugins import basePlotTool
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-import sanpy
-from sanpy.interface.plugins import sanpyPlugin
-
-from sanpy.bAnalysisUtil import statList
-
-class plotTool(sanpyPlugin):
+class plotTool(basePlotTool):
 	"""
+	Plot tool for one bAnalysis
 	"""
 	myHumanName = 'Plot Tool'
 
 	def __init__(self, **kwargs):
-		super(plotTool, self).__init__('plotTool', **kwargs)
+		super(plotTool, self).__init__(**kwargs)
+		self.masterDf = self.ba.dfReportForScatter
 		self.plot()
-
-	def plot(self):
-		if self.ba is None:
-			return
-
-		analysisName = 'analysisname'
-		statListDict = statList # maps human readable to comments
-		categoricalList = ['include', 'Condition', 'Region', 'Sex', 'RegSex', 'File Number', 'analysisname']#, 'File Name']
-		hueTypes = ['Region', 'Sex', 'RegSex', 'Condition', 'File Number', 'analysisname'] #, 'File Name'] #, 'None']
-		sortOrder = ['Region', 'Sex', 'Condition']
-		interfaceDefaults = {'Y Statistic': 'Spike Frequency (Hz)',
-							'X Statistic': 'Region',
-							'Hue': 'Region',
-							'Group By': 'File Number'}
-
-		#analysisName, masterDf = analysisName, df0 = ba.getReportDf(theMin, theMax, savefile)
-
-		print('!!!! FIX THIS in plugin plotTool.plot()')
-		masterDf = self._bPlugins._sanpyApp.myAnalysisDir.pool_build()
-		# was this
-		#masterDf = self.ba.dfReportForScatter
-
-		if masterDf is None:
-			logger.warning('Did not get analysis df, be sure to run detectioon')
-			return
-		#bScatterPlotMainWindow
-		#self.scatterWindow = sanpy.scatterwidget.bScatterPlotMainWindow(
-		path = ''
-		self.mainWidget = sanpy.interface.bScatterPlotMainWindow(
-						path, categoricalList, hueTypes,
-						analysisName, sortOrder, statListDict=statListDict,
-						masterDf = masterDf,
-						interfaceDefaults = interfaceDefaults)
-		# rewire existing widget into plugin architecture
-		self.mainWidget.closeEvent = self.onClose
-		self._mySetWindowTitle()

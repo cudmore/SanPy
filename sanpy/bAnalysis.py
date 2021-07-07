@@ -22,6 +22,7 @@ ba.spikeDetect(dDict)
 """
 
 import os, sys, math, time, collections, datetime
+import uuid
 from collections import OrderedDict
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
 
@@ -37,12 +38,13 @@ logger = get_logger(__name__)
 
 
 class bAnalysis:
-	def __init__(self, file=None, theTiff=None, byteStream=None):
+	def __init__(self, file=None, theTiff=None, byteStream=None, fromDf=None):
 		"""
 		Args:
 			file (str): Path to either .abf or .csv with time/mV columns.
 			theTiff (str): Path to .tif file.
 			byteStream (binary): Binary stream for use in the cloud.
+			fromDf: (pd.DataFrame) one row df with columns as instance variables
 		"""
 		logger.info(f'{file}')
 
@@ -81,11 +83,11 @@ class bAnalysis:
 		self.filteredVm = None
 		self.filteredDeriv = None
 
-		self.spikeDict = [] # a list of dict
-		self.spikeTimes = [] # created in self.spikeDetect()
-		self.spikeClips = [] # created in self.spikeDetect()
-		self.dfError = None
-		self.dfReportForScatter = None
+		self.spikeDict = []  # a list of dict
+		self.spikeTimes = []  # created in self.spikeDetect()
+		self.spikeClips = []  # created in self.spikeDetect()
+		self.dfError = None  # dataframe with a list of detection errors
+		self.dfReportForScatter = None  # dataframe to be used by scatterplotwidget
 
 		if file is not None and not os.path.isfile(file):
 			logger.error(f'File does not exist: "{file}"')
@@ -95,8 +97,22 @@ class bAnalysis:
 		self.acqDate = None
 		self.acqTime = None
 
+		self.currentSweep = None
+		self.setSweep(0)
+
+		self._detectionDirty = False
+
+		# will be overwritten by existing uuid in self._loadFromDf()
+		self.uuid = str(uuid.uuid4())
+
+		# IMPORTANT:
+		#		All instance variable MUST be declared before we load
+		#		In particular for self._loadFromDf()
+
 		# instantiate and load abf file
-		if byteStream is not None:
+		if fromDf is not None:
+			self._loadFromDf(fromDf)
+		elif byteStream is not None:
 			self._loadAbf(byteStream=byteStream)
 		elif file.endswith('.abf'):
 			self._loadAbf()
@@ -108,13 +124,6 @@ class bAnalysis:
 			logger.error(f'Can only open abf/csv/tif/stream files: {file}')
 			self.loadError = True
 
-		self.currentSweep = None
-		self.setSweep(0)
-
-		self.filteredVm = []
-		self.filteredDeriv = []
-		self.spikeTimes = []
-
 		# get default derivative
 		if self._recordingMode == 'I-Clamp':
 			self._getDerivative()
@@ -122,6 +131,9 @@ class bAnalysis:
 			self._getBaselineSubtract()
 		else:
 			logger.warning('Did not take derivative')
+
+	def __str__(self):
+		return f'ba: {self.getFileName()} dur:{round(self.recodingDur,3)} spikes:{self.numSpikes}'
 
 	def _loadTif(self):
 		#print('TODO: load tif file from within bAnalysis ... stop using bAbfText()')
@@ -164,6 +176,48 @@ class bAnalysis:
 		diff_ms = diff_seconds * 1000
 		_dataPointsPerMs = 1 / diff_ms
 		self._dataPointsPerMs = _dataPointsPerMs
+
+	def _loadFromDf(self, fromDf):
+		#logger.info(fromDf.columns)
+
+		# vars(class) retuns a dict with all instance variables
+		iDict = vars(self)
+		for col in fromDf.columns:
+			value = fromDf.iloc[0][col]
+			#logger.info(f'col:{col} {type(value)}')
+			if col not in iDict.keys():
+				logger.warning(f'col "{col}" not in iDict')
+			iDict[col] = value
+
+	def _saveToHdf(self, hdfPath):
+		"""Save to h5 file with key self.uuid."""
+
+		if not self.detectionDirty:
+			# Do not save it detection has not changed
+			logger.info(f'NOT SAVING uuid:{self.uuid} {self}')
+			return
+
+		logger.info(f'SAVING uuid:{self.uuid} {self}')
+
+		#complevel = 9
+		#complib = 'blosc:blosclz'
+		#with pd.HDFStore(hdfPath, mode='a', complevel=complevel, complib=complib) as hdfStore:
+		with pd.HDFStore(hdfPath, mode='a') as hdfStore:
+			# vars(class) retuns a dict with all instance variables
+			iDict = vars(self)
+
+			oneDf = pd.DataFrame(columns=iDict.keys())
+			#oneDf['path'] = [self.path]  # seed oneDf with one row (critical)
+
+			# do not save these instance variables (e.g. self._ba)
+			noneKeys = ['_abf', 'filteredVm', 'filteredDeriv']
+
+			for k,v in iDict.items():
+				if k in noneKeys:
+					v = None
+				oneDf.at[0, k] = v
+			# save into file
+			hdfStore[self.uuid] = oneDf
 
 	def _loadAbf(self, byteStream=None):
 		"""Load pyAbf from path."""
@@ -209,6 +263,10 @@ class bAnalysis:
 		self.myFileType = 'abf'
 
 	@property
+	def detectionDirty(self):
+		return self._detectionDirty
+
+	@property
 	def path(self):
 		return self._path
 
@@ -227,7 +285,8 @@ class bAnalysis:
 	def recodingDur(self):
 		"""Get recording duration in seconds."""
 		# TODO: Just return self.sweepX(-1)
-		return len(self.sweepX) / self.dataPointsPerMs / 1000
+		#return len(self.sweepX) / self.dataPointsPerMs / 1000
+		return self.sweepX[-1]
 
 	@property
 	def recordingFrequency(self):
@@ -291,6 +350,7 @@ class bAnalysis:
 	def isAnalyzed(self):
 		"""Return True if this bAnalysis has been analyzed, False otherwise."""
 		return self.detectionDict is not None
+		#return self.numSpikes > 0
 
 	def getStatMean(self, statName):
 		"""
@@ -484,6 +544,7 @@ class bAnalysis:
 			'cellType': '',
 			'sex': '',
 			'condition': '',
+			'verbose': False,
 		}
 		return theDict.copy()
 
@@ -624,8 +685,10 @@ class bAnalysis:
 			goodSpikeErrors = [goodSpikeErrors[idx] for idx, spikeTime in enumerate(spikeTimes0) if spikeTime]
 		spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if spikeTime]
 
+		# TODO: put back in and log if detection ['verbose']
 		after = len(spikeTimes0)
-		logger.info(f'From {before} to {after} spikes with refractory_ms:{refractory_ms}')
+		if self.detectionDict['verbose']:
+			logger.info(f'From {before} to {after} spikes with refractory_ms:{refractory_ms}')
 
 		return spikeTimes0, goodSpikeErrors
 
@@ -928,7 +991,9 @@ class bAnalysis:
 		logger.info('start detection')
 
 		if dDict is None:
-			dDict = self.getDefaultDetection()
+			dDict = self.detectionDict
+			if dDict is None:
+				dDict = self.getDefaultDetection()
 
 		self.detectionDict = dDict # remember the parameters of our last detection
 
@@ -1496,10 +1561,11 @@ class bAnalysis:
 
 		self.dfError = self.errorReport()
 
+		self._detectionDirty = True
+
 		stopTime = time.time()
 		#print('bAnalysis.spikeDetect() for file', self.getFileName())
-		logger.info(f'Detected {len(self.spikeTimes)} spikes in {round(stopTime-startTime,2)} seconds')
-
+		logger.info(f'Detected {len(self.spikeTimes)} spikes in {round(stopTime-startTime,3)} seconds')
 
 		return self.dfReportForScatter
 
@@ -1591,7 +1657,13 @@ class bAnalysis:
 
 		return theseClips, theseClips_x, meanClip
 
-	def errorReport(self, ):
+	def numErrors(self):
+		if self.dfError is None:
+			return 'N/A'
+		else:
+			return len(self.dfError)
+
+	def errorReport(self):
 		"""
 		Generate an error report, one row per error. Spikes can have more than one error.
 
@@ -1617,7 +1689,8 @@ class bAnalysis:
 			dfError = pd.DataFrame(dictList)
 
 		#print('bAnalysis.errorReport() returning len(dfError):', len(dfError))
-		logger.info(f'Found {len(dfError)} errors in spike detection')
+		if self.detectionDict['verbose']:
+			logger.info(f'Found {len(dfError)} errors in spike detection')
 
 		#
 		return dfError
@@ -2092,5 +2165,13 @@ def main():
 		for k,v in recDict.items():
 			print('  ', k, 'len:', len(v), np.nanmean(v))
 
+def test_hdf():
+	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+	ba = sanpy.bAnalysis(path)
+	ba.spikeDetect()
+
+
 if __name__ == '__main__':
-	main()
+	# was using this for manuscript
+	#main()
+	test_hdf()

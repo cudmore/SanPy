@@ -274,7 +274,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			self.myAnalysisDir._updateLoadedAnalyzed()
 
 			# TODO: This really should have payload
-			self.signalUpdateAnalysis.emit(None)
+			self.signalUpdateAnalysis.emit(self.get_bAnalysis())
 
 		elif this == 'saved':
 			pass
@@ -487,7 +487,7 @@ class MainWindow(QtWidgets.QMainWindow):
 		switchedFile = self.myDetectionWidget.switchFile(path, tableRowDict)
 		if switchedFile:
 			# TODO: This really should have payload
-			self.signalUpdateAnalysis.emit(None)
+			self.signalUpdateAnalysis.emit(self.get_bAnalysis())
 		else:
 			self.updateStatusBar(f'Failed to load file: "{path}"')
 
@@ -881,7 +881,7 @@ class MainWindow(QtWidgets.QMainWindow):
 			#df = df.reset_index(drop=True)
 			#self.myModel._data = df # REQUIRED
 			# todo: select row none
-			self.selectedRow = None
+			#self.selectedRow = None
 			self.tableView.clearSelection()
 		else:
 			pass
@@ -906,40 +906,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.myModel.mySyncDfWithPath()
 
 	def slotSaveFilesTable(self):
-		self.myAnalysisDir.saveDatabase()
-		'''
-		#print('sanpy_app2.slotSaveFilesTable()')
-		dbFile = 'sanpy_recording_db.csv'
-		savePath = os.path.join(self.path, dbFile)
-		logger.info(f'Saving folder csv as {savePath}')
-		self.myModel.mySaveDb(savePath)
-		'''
+		#self.myAnalysisDir.saveDatabase()
+		self.myAnalysisDir.saveHdf()
 
 	def slot_updateStatus(self, msg):
 		self.updateStatusBar(msg)
-
-	def old_buildDatabase(self):
-		# SEE: analysisDir.pool_ funtions
-		"""
-		prompt user for xls and build large per spike database.
-
-		todo: put this into analysis dir
-		"""
-		print('== MainWindow.buildDatabase()')
-		print('  TODO: FIX THIS -- returning')
-		return
-
-		dbFile = '/Users/cudmore/data/laura-ephys/sanap20210412/Superior vs Inferior database_13_Feb.xlsx'
-		#dataPath = '/Users/cudmore/data/laura-ephys/sanap20210412'
-		#outputFolder='new_20210129'
-		outputFolder='new_20210425'
-		fixedDvDt = None
-		fixedVmThreshold = None
-		noDvDtThreshold = False
-
-		baList = sanpy.reanalyze(dbFile, outputFolder=outputFolder,
-				fixedDvDt=fixedDvDt, noDvDtThreshold=noDvDtThreshold,
-				fixedVmThreshold=fixedVmThreshold)
 
 	def openLog(self):
 		"""

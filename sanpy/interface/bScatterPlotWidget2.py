@@ -1999,7 +1999,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		# select in plot
 		#self._selectInd(row) # !!!! visually, index start at 1
 
-if __name__ == '__main__':
+def test():
 	"""
 	20210112, extending this to work with any csv. Starting with nodes/edges from bimpy
 	"""
@@ -2114,3 +2114,6 @@ if __name__ == '__main__':
 					interfaceDefaults = interfaceDefaults)
 
 	sys.exit(app.exec_())
+
+if __name__ == '__main__':
+	test()

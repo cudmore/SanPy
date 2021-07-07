@@ -10,12 +10,22 @@ import matplotlib.pyplot as plt
 
 import sanpy
 
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
+
 def getEddLines(ba):
 	"""Get lines representing linear fit of EDD rate.
 
 	Args:
 		ba (bAnalysis): bAnalysis object
 	"""
+	logger.info(ba)
+
+	x = []
+	y = []
+	if ba is None or ba.numSpikes == 0:
+		return x, y
+
 	preLinearFitPnt0 = ba.getStat('preLinearFitPnt0')
 	preLinearFitSec0 = [ba.pnt2Sec_(x) for x in preLinearFitPnt0]
 	preLinearFitVal0 = ba.getStat('preLinearFitVal0')
@@ -24,8 +34,6 @@ def getEddLines(ba):
 	preLinearFitSec1 = [ba.pnt2Sec_(x) for x in preLinearFitPnt1]
 	preLinearFitVal1 = ba.getStat('preLinearFitVal1')
 
-	x = []
-	y = []
 	for idx, spike in enumerate(range(ba.numSpikes)):
 		dx = preLinearFitSec1[idx] - preLinearFitSec0[idx]
 		dy = preLinearFitVal1[idx] - preLinearFitVal0[idx]

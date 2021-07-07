@@ -55,7 +55,7 @@ class bPlugins():
 		self.pluginDict = {}
 
 		# Enum is to ignore bPlugins.py class ResponseType(Enum)
-		ignoreModuleList = ['sanpyPlugin', 'myWidget', 'ResponseType']
+		ignoreModuleList = ['sanpyPlugin', 'myWidget', 'ResponseType', 'basePlotTool']
 
 		#
 		# system plugins from sanpy.interface.plugins

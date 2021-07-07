@@ -1,9 +1,0 @@
-File,Include,Dur(s),kHz,Mode,Cell Type,Sex,Condition,Start(s),Stop(s),dvdtThreshold,mvThreshold,refractory_ms,peakWindow_ms,halfWidthWindow_ms,Notes,Idx,_ba,L,A,I
-10o30027.abf,False,5.2,20.0,fix,,,,,,20.0,-20.0,,,,,1,<sanpy.bAnalysis.bAnalysis object at 0x7f96d4d40100>,•,•,
-10o30025.abf,False,5.2,20.0,fix,,,,,,20.0,-20.0,,,,,2,<sanpy.bAnalysis.bAnalysis object at 0x7f96d4be1b50>,•,•,
-10o30031.abf,False,5.2,20.0,fix,,,,,,20.0,-20.0,,,,,3,<sanpy.bAnalysis.bAnalysis object at 0x7f96d5008820>,•,•,
-10o30029.abf,1.0,5.2,20.0,fix,,,,,,20.0,-20.0,,,,,4,<sanpy.bAnalysis.bAnalysis object at 0x7f96d5022790>,•,•,
-17321009.abf,1.0,300.0,10.0,fix,,,,,,20.0,-20.0,,,,,5,<sanpy.bAnalysis.bAnalysis object at 0x7f96d5008580>,•,•,
-10o30030.abf,1.0,5.2,20.0,fix,,,,,,20.0,-20.0,,,,,6,<sanpy.bAnalysis.bAnalysis object at 0x7f96d44bfd30>,•,•,
-10o30026.abf,1.0,5.2,20.0,fix,,,,,,20.0,-20.0,,,,,7,<sanpy.bAnalysis.bAnalysis object at 0x7f96d7619130>,•,•,
-10o30028.abf,1.0,5.2,20.0,fix,,,,,,20.0,-20.0,,,,,8,<sanpy.bAnalysis.bAnalysis object at 0x7f979c06e130>,•,•,

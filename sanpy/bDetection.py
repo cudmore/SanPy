@@ -249,6 +249,16 @@ def getDefaultDetection():
 	theDict[key]['errors'] = ('')
 	theDict[key]['description'] = 'Condition'
 
+	key = 'verbose'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = False
+	theDict[key]['type'] = 'string'
+	theDict[key]['allowNone'] = False
+	theDict[key]['units'] = 'bool'
+	theDict[key]['humanName'] = 'Verbose'
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'Verbose Detection Reporting'
+
 	return theDict.copy()
 
 

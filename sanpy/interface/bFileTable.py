@@ -446,6 +446,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 		self.endInsertRows()
 
 	def myDeleteRow(self, rowIdx):
+		rowIdx = self._data.index[rowIdx]  # assume rows are sorted
 		self.beginRemoveRows(QtCore.QModelIndex(), rowIdx, rowIdx)
 		#
 		if self.isAnalysisDir:
@@ -460,6 +461,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 		self.endRemoveRows()
 
 	def myDuplicateRow(self, rowIdx):
+		rowIdx = self._data.index[rowIdx]  # assume rows are sorted
 		self.beginInsertRows(QtCore.QModelIndex(), rowIdx+1, rowIdx+1)
 		#
 		# duplicate rowIdx
@@ -484,10 +486,10 @@ class pandasModel(QtCore.QAbstractTableModel):
 		#
 		self.endInsertRows()
 
-	def mySetRow(self, row, rowDict):
-		#print('mySetRow() row:', row, 'rowDict:', rowDict)
+	def mySetRow(self, rowIdx, rowDict):
+		rowIdx = self._data.index[rowIdx]  # assume rows are sorted
 		rowSeries = pd.Series(rowDict)
-		self._data.iloc[row] = rowSeries
+		self._data.iloc[rowIdx] = rowSeries
 		self._data = self._data.reset_index(drop=True)
 
 	def mySaveDb(self, path):
