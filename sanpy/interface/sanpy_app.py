@@ -25,6 +25,9 @@ logger = get_logger(__name__)
 import logging
 logging.getLogger('qdarkstyle').setLevel(logging.WARNING)
 
+# turn off numexpr 'INFO' logging
+logging.getLogger('numexpr').setLevel(logging.WARNING)
+
 class MainWindow(QtWidgets.QMainWindow):
 
 	signalSetXAxis = QtCore.pyqtSignal(object)
@@ -436,23 +439,11 @@ class MainWindow(QtWidgets.QMainWindow):
 		'''
 		fileName = rowDict['File']
 
-		# switch file
 		# this will load ba if necc
 		ba = self.myAnalysisDir.getAnalysis(row) # if None then problem loading
 
-		self.signalSwitchFile.emit(rowDict, ba)
-		'''
-		path = os.path.join(self.path, fileName)
-		switchedFile = self.myDetectionWidget.switchFile(path, tableRowDict, ba=ba)
-		if switchedFile:
-			# TODO: This really should have payload
-			self.signalSwitchFile.emit(path)
-		else:
-			self.updateStatusBar(f'Failed to load file: "{path}"')
-		'''
-
-		# update stats of table load/analyzed columns
-		self.myAnalysisDir._updateLoadedAnalyzed()
+		if ba is not None:
+			self.signalSwitchFile.emit(rowDict, ba)
 
 	def old_new_tableClicked(self, index):
 		"""

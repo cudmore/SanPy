@@ -245,10 +245,13 @@ class pandasModel(QtCore.QAbstractTableModel):
 				realRow = self._data.index[index.row()]
 				columnName = self._data.columns[index.column()]
 				if columnName == 'L':
-					if self._data.isLoaded(realRow):
+					if self._data.isLoaded(realRow):  # or self._data.isSaved(realRow):
 						return QtCore.QVariant(QtGui.QFont('Arial', pointSize=32))
 				elif columnName == 'A':
-					if self._data.isAnalyzed(realRow):
+					if self._data.isAnalyzed(realRow):  # or self._data.isSaved(realRow):
+						return QtCore.QVariant(QtGui.QFont('Arial', pointSize=32))
+				elif columnName == 'S':
+					if self._data.isSaved(realRow):
 						return QtCore.QVariant(QtGui.QFont('Arial', pointSize=32))
 				return QtCore.QVariant()
 			elif role == QtCore.Qt.ForegroundRole:
@@ -261,19 +264,11 @@ class pandasModel(QtCore.QAbstractTableModel):
 					elif columnName == 'A':
 						if self._data.isAnalyzed(realRow):
 							return QtCore.QVariant(QtGui.QColor('#449944'))
+					elif columnName == 'S':
+						if self._data.isSaved(realRow):
+							return QtCore.QVariant(QtGui.QColor('#999944'))
 				return QtCore.QVariant()
 			elif role == QtCore.Qt.BackgroundRole:
-				'''
-				if self.isAnalysisDir:
-					realRow = self._data.index[index.row()]
-					columnName = self._data.columns[index.column()]
-					if columnName == 'L':
-						if self._data.isLoaded(realRow):
-							return QtCore.QVariant(QtGui.QColor('#444499'))
-					elif columnName == 'A':
-						if self._data.isAnalyzed(realRow):
-							return QtCore.QVariant(QtGui.QColor('#449944'))
-				'''
 				if index.row() % 2 == 0:
 					return QtCore.QVariant(QtGui.QColor('#444444'))
 				else:

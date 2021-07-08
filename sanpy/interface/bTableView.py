@@ -45,7 +45,8 @@ class bTableView(QtWidgets.QTableView):
 		# frozen
 		self.setModel(model)
 
-		self.numFrozenColumns = 4 # depends on columns in analysisDir
+		# (L, A, S, I, File)
+		self.numFrozenColumns = 5 # depends on columns in analysisDir
 
 		self.frozenTableView = QtWidgets.QTableView(self)
 		self.frozenTableView.setSortingEnabled(True)
@@ -100,8 +101,7 @@ class bTableView(QtWidgets.QTableView):
 		self.frozenTableView.setModel(self.model())
 		self.frozenTableView.setFocusPolicy(QtCore.Qt.NoFocus)
 		self.frozenTableView.verticalHeader().hide()
-		self.frozenTableView.horizontalHeader().setSectionResizeMode(
-				QtWidgets.QHeaderView.Fixed)
+		#self.frozenTableView.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
 		self.viewport().stackUnder(self.frozenTableView)
 
 		#self.frozenTableView.setStyleSheet('''
@@ -111,11 +111,17 @@ class bTableView(QtWidgets.QTableView):
 		#	}''') # for demo purposes
 
 		self.frozenTableView.setSelectionModel(self.selectionModel())
+
+		# hide trailing column
 		for col in range(self.numFrozenColumns, self.model().columnCount()):
 			self.frozenTableView.setColumnHidden(col, True)
 
+		# set width of remaining columns
 		for col in range(self.numFrozenColumns):
-			self.frozenTableView.setColumnWidth(col, self.columnWidth(col))
+			print('  col:', col, 'widht:', self.columnWidth(col))
+			columnWidth = self.columnWidth(col)
+			columnWidth = 32
+			self.frozenTableView.setColumnWidth(col, columnWidth)
 		#self.frozenTableView.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
 		#					QtWidgets.QSizePolicy.Expanding)
 

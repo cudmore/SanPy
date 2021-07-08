@@ -38,6 +38,9 @@ logger = get_logger(__name__)
 
 
 class bAnalysis:
+	def getNewUuid():
+		return 't' + str(uuid.uuid4()).replace('-', '_')
+
 	def __init__(self, file=None, theTiff=None, byteStream=None, fromDf=None):
 		"""
 		Args:
@@ -46,7 +49,7 @@ class bAnalysis:
 			byteStream (binary): Binary stream for use in the cloud.
 			fromDf: (pd.DataFrame) one row df with columns as instance variables
 		"""
-		logger.info(f'{file}')
+		#logger.info(f'{file}')
 
 		# mimic pyAbf
 		self._dataPointsPerMs = None
@@ -85,7 +88,11 @@ class bAnalysis:
 
 		self.spikeDict = []  # a list of dict
 		self.spikeTimes = []  # created in self.spikeDetect()
+
 		self.spikeClips = []  # created in self.spikeDetect()
+		self.spikeClips_x = []  #
+		self.spikeClips_x2 = []  #
+
 		self.dfError = None  # dataframe with a list of detection errors
 		self.dfReportForScatter = None  # dataframe to be used by scatterplotwidget
 
@@ -103,7 +110,7 @@ class bAnalysis:
 		self._detectionDirty = False
 
 		# will be overwritten by existing uuid in self._loadFromDf()
-		self.uuid = str(uuid.uuid4())
+		self.uuid = bAnalysis.getNewUuid()
 
 		# IMPORTANT:
 		#		All instance variable MUST be declared before we load
@@ -132,8 +139,10 @@ class bAnalysis:
 		else:
 			logger.warning('Did not take derivative')
 
+		self._detectionDirty = False
+
 	def __str__(self):
-		return f'ba: {self.getFileName()} dur:{round(self.recodingDur,3)} spikes:{self.numSpikes}'
+		return f'ba: {self.getFileName()} dur:{round(self.recodingDur,3)} spikes:{self.numSpikes} isAnalyzed:{self.isAnalyzed()} detectionDirty:{self.detectionDirty}'
 
 	def _loadTif(self):
 		#print('TODO: load tif file from within bAnalysis ... stop using bAbfText()')
@@ -178,7 +187,9 @@ class bAnalysis:
 		self._dataPointsPerMs = _dataPointsPerMs
 
 	def _loadFromDf(self, fromDf):
-		#logger.info(fromDf.columns)
+		"""Load from a pandas df saved into a .h5 file.
+		"""
+		logger.info(fromDf['uuid'][0])
 
 		# vars(class) retuns a dict with all instance variables
 		iDict = vars(self)
@@ -190,18 +201,17 @@ class bAnalysis:
 			iDict[col] = value
 
 	def _saveToHdf(self, hdfPath):
-		"""Save to h5 file with key self.uuid."""
-
+		"""Save to h5 file with key self.uuid.
+		Only save if detection has changed (e.g. self.detectionDirty)
+		"""
+		didSave = False
 		if not self.detectionDirty:
 			# Do not save it detection has not changed
 			logger.info(f'NOT SAVING uuid:{self.uuid} {self}')
-			return
+			return didSave
 
 		logger.info(f'SAVING uuid:{self.uuid} {self}')
 
-		#complevel = 9
-		#complib = 'blosc:blosclz'
-		#with pd.HDFStore(hdfPath, mode='a', complevel=complevel, complib=complib) as hdfStore:
 		with pd.HDFStore(hdfPath, mode='a') as hdfStore:
 			# vars(class) retuns a dict with all instance variables
 			iDict = vars(self)
@@ -210,7 +220,8 @@ class bAnalysis:
 			#oneDf['path'] = [self.path]  # seed oneDf with one row (critical)
 
 			# do not save these instance variables (e.g. self._ba)
-			noneKeys = ['_abf', 'filteredVm', 'filteredDeriv']
+			noneKeys = ['_abf', 'filteredVm', 'filteredDeriv',
+						'spikeClips', 'spikeClips_x', 'spikeClips_x2']
 
 			for k,v in iDict.items():
 				if k in noneKeys:
@@ -218,6 +229,12 @@ class bAnalysis:
 				oneDf.at[0, k] = v
 			# save into file
 			hdfStore[self.uuid] = oneDf
+
+			#
+			self._detectionDirty = False
+			didSave= True
+		#
+		return didSave
 
 	def _loadAbf(self, byteStream=None):
 		"""Load pyAbf from path."""
@@ -1509,10 +1526,22 @@ class bAnalysis:
 		# look between threshold crossing to get minima
 		# we will ignore the first and last spike
 
-		# todo: call self.makeSpikeClips()
 		#
-		# build a list of spike clips
-		#clipWidth_ms = 500
+		# spike clips
+		self.spikeClips = None
+		self.spikeClips_x = None
+		self.spikeClips_x2 = None
+		'''
+		spikeClipWidth_ms = dDict['spikeClipWidth_ms']
+		#clipStartSec = dDict['startSeconds']
+		#clipStopSec = dDict['stopSeconds']
+		#theseTime_sec = [clipStartSec, clipStopSec]
+		theseTime_sec = None
+		self._makeSpikeClips(spikeClipWidth_ms, theseTime_sec=theseTime_sec)
+		'''
+
+		# TODO: Remove this comment block
+		'''
 		clipWidth_pnts = dDict['spikeClipWidth_ms'] * self.dataPointsPerMs
 		clipWidth_pnts = round(clipWidth_pnts)
 		if clipWidth_pnts % 2 == 0:
@@ -1547,7 +1576,7 @@ class bAnalysis:
 					print('  ERROR: bAnalysis.spikeDetect() did not add clip for spike index', idx, 'at time', spikeTime, 'currentClip:', len(currentClip), 'numPointsInClip:', numPointsInClip)
 				##
 				##
-
+		'''
 		# 20210426
 		# generate a df holding stats (used by scatterplotwidget)
 		startSeconds = dDict['startSeconds']
@@ -1569,7 +1598,7 @@ class bAnalysis:
 
 		return self.dfReportForScatter
 
-	def makeSpikeClips(self, spikeClipWidth_ms, theseTime_sec=None):
+	def _makeSpikeClips(self, spikeClipWidth_ms=None, theseTime_sec=None):
 		"""
 		(Internal) Make small clips for each spike.
 
@@ -1581,6 +1610,9 @@ class bAnalysis:
 			spikeClips_x2: ms
 			spikeClips: sweepY
 		"""
+
+		if spikeClipWidth_ms is None:
+			spikeClipWidth_ms = self.detectionDict['spikeClipWidth_ms']
 
 		#print('makeSpikeClips() spikeClipWidth_ms:', spikeClipWidth_ms, 'theseTime_sec:', theseTime_sec)
 		if theseTime_sec is None:
@@ -1633,6 +1665,8 @@ class bAnalysis:
 		Args:
 			theMin (float): Start seconds.
 			theMax (float): Stop seconds.
+
+		Requires: self.spikeDetect() and self._makeSpikeClips()
 		"""
 		if theMin is None or theMax is None:
 			theMin = 0

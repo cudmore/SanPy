@@ -33,6 +33,11 @@ _sanpyColumns = {
 		'type': str,
 		'isEditable': False,
 	},
+	'S': {
+		# saved
+		'type': str,
+		'isEditable': False,
+	},
 	'I': {
 		# include
 		# problems with isinstance(bool), just using string
@@ -99,6 +104,16 @@ _sanpyColumns = {
 		'type': str,
 		'isEditable': True,
 	},
+	# If added, this reaks havok on the code
+	# TODO: For debug, remove these
+	#'_ba': {
+	#	'type': str,
+	#	'isEditable': False,
+	#},
+	'uuid': {
+		'type': str,
+		'isEditable': False,
+	},
 
 }
 """
@@ -106,6 +121,13 @@ Columns to use in display in file table (pyqt, dash, vue).
 We require type so we can edit with QAbstractTableModel.
 Critical for qt interface to allow easy editing of values while preserving type
 """
+
+def h5_printKey(hdfPath):
+	print('\n=== h5_printKey() hdfPath:', hdfPath)
+	with pd.HDFStore(hdfPath, mode='r') as store:
+		for key in store.keys():
+			print('  ', key)
+	print('\n')
 
 class bAnalysisDirWeb():
 	"""
@@ -277,6 +299,28 @@ class analysisDir():
 		self._isDirty = True
 
 	@property
+	def at(self):
+		# mimic pandas df.at[]
+		return self._df.at
+
+	@at.setter
+	def at_setter(self, rowIdx, colStr, value):
+		self._df.at[rowIdx, colStr] = value
+		self._isDirty = True
+
+	'''
+	@property
+	def iat(self):
+		# mimic pandas df.iat[]
+		return self._df.iat
+
+	@iat.setter
+	def iat_setter(self, rowIdx, colStr, value):
+		self._df.iat[rowIdx, colStr] = value
+		self._isDirty = True
+	'''
+
+	@property
 	def index(self):
 		return self._df.index
 
@@ -354,7 +398,14 @@ class analysisDir():
 
 	def saveHdf(self):
 		"""
-		"""
+		Save file table and any number of loaded and analyzed bAnalysis.
+
+		Set file table 'uuid' column when we actually save a bAnalysis
+
+		Important: Order matters
+				(1) Save bAnalysis first, it updates uuid in file table.
+				(2) Save file table with updated uuid
+				"""
 		start = time.time()
 
 		tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
@@ -362,16 +413,6 @@ class analysisDir():
 		logger.info(f'Saving Tmp {tmpHdfPath}')
 
 		#
-		# save file database
-		with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
-			dbKey = os.path.splitext(self.dbFile)[0]
-			logger.info(f'Storing file db into key "{dbKey}"')
-			df = self.getDataFrame()
-			df = df.drop('_ba', axis=1)  # don't ever save _ba
-			hdfStore[dbKey] = df  # save it
-			#
-			self._isDirty = False  # if true, prompt to save on quit
-
 		# save each bAnalysis
 		df = self.getDataFrame()
 		for row in range(len(df)):
@@ -379,28 +420,46 @@ class analysisDir():
 			#ba = self.getAnalysis(row)
 			ba = df.at[row, '_ba']
 			if ba is not None:
-				ba._saveToHdf(tmpHdfPath) # will only save if ba.detectionDirty
+				didSave = ba._saveToHdf(tmpHdfPath) # will only save if ba.detectionDirty
+				if didSave:
+					# we are now saved into h5 file, remember uuid to load
+					df.at[row, 'uuid'] = ba.uuid
+
+		# rebuild (L, A, S) columns
+		self._updateLoadedAnalyzed()
+
+		#
+		# save file database
+		with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
+			dbKey = os.path.splitext(self.dbFile)[0]
+			logger.info(f'Storing file db into key "{dbKey}"')
+			df = self.getDataFrame()
+			df = df.drop('_ba', axis=1)  # don't ever save _ba, use it for runtime
+
+			logger.info('saving db df')
+			#print(df[['File', 'uuid']])
+
+			hdfStore[dbKey] = df  # save it
+			#
+			self._isDirty = False  # if true, prompt to save on quit
+
+		h5_printKey(tmpHdfPath)
 
 		#
 		# rebuild the file to remove old changes and reduce size
 		hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
 		hdfPath = os.path.join(self.path, hdfFile)
-		logger.info(f'Compressing h5 to {hdfPath}')
+		logger.info(f'Rebuilding h5 to {hdfPath}')
 		#command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", '--complevel=9', '--complib=blosc:blosclz', tmpHdfPath, hdfPath]
-		command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", tmpHdfPath, hdfPath]
+		#command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", tmpHdfPath, hdfPath]
+		command = ["ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
 		call(command)
 
-		logger.info(f'Removing temporary file {tmpHdfPath}')
-		os.remove(tmpHdfPath)
+		#logger.info(f'Removing temporary file {tmpHdfPath}')
+		#os.remove(tmpHdfPath)
 
 		stop = time.time()
 		logger.info(f'Saving took {round(stop-start,2)} seconds')
-
-	def deleteFromHdf(self, uuid):
-		"""Delete uuid from h5 file. id corresponds to a bAnalysis detection."""
-		if not uuid:
-			return
-		logger.info(f'TODO: Delete from h5 file uuid:{uuid}')
 
 	def loadHdf(self, path=None):
 		if path is None:
@@ -414,31 +473,47 @@ class analysisDir():
 			return
 
 		logger.info(f'Loading existing folder hdf: {hdfPath}')
-		#hdfStore = pd.HDFStore(hdfPath)
 		start = time.time()
 		with pd.HDFStore(hdfPath) as hdfStore:
 			dbKey = os.path.splitext(self.dbFile)[0]
 			df = hdfStore[dbKey]  # load it
+
+			# _ba is for runtime, assign after loading from either (abf or h5)
 			df['_ba'] = None
 
+			'''
+			logger.info('loaded db df')
+			print(df[['File', 'uuid', '_ba']])
+			'''
 			# load each bAnalysis from hdf
+			# No, don't load anything until user clicks
+			'''
 			for row in range(len(df)):
 				ba_uuid = df.at[row, 'uuid']
 				if not ba_uuid:
 					# ba was not saved in h5 file
 					continue
 				try:
+					# TODO: Get rid of this, don't load all data on init, wait for user to click
+					print(f'xxx not loading uuid {ba_uuid} ... wait for user click')
 					dfAnalysis = hdfStore[ba_uuid]
 					ba = sanpy.bAnalysis(fromDf=dfAnalysis)
 					logger.info(f'Loaded row {row} uuid:{ba.uuid} bAnalysis {ba}')
 					df.at[row, '_ba'] = ba # can be none
 				except(KeyError):
-					logger.info(f'hdf uuid key for row {row} not found in .h5 file, uuid:"{ba_uuid}"')
+					logger.error(f'hdf uuid key for row {row} not found in .h5 file, uuid:"{ba_uuid}"')
+			'''
 
 		stop = time.time()
 		logger.info(f'Loading took {round(stop-start,2)} seconds')
 		#
 		return df
+
+	def deleteFromHdf(self, uuid):
+		"""Delete uuid from h5 file. id corresponds to a bAnalysis detection."""
+		if not uuid:
+			return
+		logger.info(f'TODO: Delete from h5 file uuid:{uuid}')
 
 	def loadFolder(self, path=None):
 		"""
@@ -488,6 +563,8 @@ class analysisDir():
 			listOfDict = []
 			for rowIdx, file in enumerate(fileList):
 				self.signalApp(f'Loading "{file}"')
+
+				# rowDict is what we are showing in the file table
 				ba, rowDict = self.getFileRow(file)  # loads bAnalysis
 
 				# TODO: calculating time, remove this
@@ -496,9 +573,11 @@ class analysisDir():
 				#dDict['dvdtThreshold'] = 2
 				#ba.spikeDetect(dDict)
 
-				rowDict['_ba'] = ba
+				# as we parse the folder, don't load ALL files (will run out of memory)
+				rowDict['_ba'] = None  # ba
+
 				# do not assign uuid until bAnalysis is saved in h5 file
-				rowDict['uuid'] = ''
+				#rowDict['uuid'] = ''
 
 				listOfDict.append(rowDict)
 
@@ -536,21 +615,41 @@ class analysisDir():
 		"""Refresh Loaded (L) and Analyzed (A) columns."""
 		# .loc[i,'col'] gets from index (wrong)
 		# .iloc[i,j] gets absolute row (correct)
-		loadedCol = self._df.columns.get_loc('L')
-		analyzedCol = self._df.columns.get_loc('A')
+		#loadedCol = self._df.columns.get_loc('L')
+		#analyzedCol = self._df.columns.get_loc('A')
+		#savedCol = self._df.columns.get_loc('S')
 		for rowIdx in range(len(self._df)):
+			#uuid = self._df.at[rowIdx, 'uuid']
+			#
 			# loaded
 			if self.isLoaded(rowIdx):
-				theChar = '\u2022'  # 'x'
+				theChar = '\u2022'  # FILLED BULLET
+			#elif uuid:
+			#	#theChar = '\u25CB'  # open circle
+			#	theChar = '\u25e6'  # white bullet
 			else:
 				theChar = ''
-			self._df.iloc[rowIdx, loadedCol] = theChar
+			#self._df.iloc[rowIdx, loadedCol] = theChar
+			self._df.loc[rowIdx, 'L'] = theChar
+			#
 			# analyzed
 			if self.isAnalyzed(rowIdx):
-				theChar = '\u2022'  # 'x'
+				theChar = '\u2022'  # FILLED BULLET
+			#elif uuid:
+			#	#theChar = '\u25CB'
+			#	theChar = '\u25e6'  # white bullet
 			else:
 				theChar = ''
-			self._df.iloc[rowIdx, analyzedCol] = theChar
+			#self._df.iloc[rowIdx, analyzedCol] = theChar
+			self._df.loc[rowIdx, 'A'] = theChar
+			#
+			# saved
+			if self.isSaved(rowIdx):
+				theChar = '\u2022'  # FILLED BULLET
+			else:
+				theChar = ''
+			#self._df.iloc[rowIdx, savedCol] = theChar
+			self._df.loc[rowIdx, 'S'] = theChar
 
 	def isLoaded(self, rowIdx):
 		isLoaded = self._df.loc[rowIdx, '_ba'] is not None
@@ -559,10 +658,15 @@ class analysisDir():
 	def isAnalyzed(self, rowIdx):
 		isAnalyzed = False
 		ba = self._df.loc[rowIdx, '_ba']
+		#print('isAnalyzed()', rowIdx, ba)
 		#if ba is not None:
 		if isinstance(ba, sanpy.bAnalysis):
 			isAnalyzed = ba.isAnalyzed()
 		return isAnalyzed
+
+	def isSaved(self, rowIdx):
+		uuid = self._df.at[rowIdx, 'uuid']
+		return len(uuid) > 0
 
 	def getAnalysis(self, rowIdx):
 		"""
@@ -572,14 +676,52 @@ class analysisDir():
 			rowIdx (int): Row index from table, corresponds to row in self._df
 		"""
 		file = self._df.loc[rowIdx, 'File']
-		filePath = os.path.join(self.path, file)
 		ba = self._df.loc[rowIdx, '_ba']
-		if ba is None:
+		uuid = self._df.loc[rowIdx, 'uuid']  # if we have a uuid bAnalysis is saved in h5f
+		filePath = os.path.join(self.path, file)
+		if ba is None or ba=='':
+			ba = self.loadOneAnalysis(filePath, uuid)
 			# load
+			'''
 			logger.info(f'Loading bAnalysis from row {rowIdx} "{filePath}"')
 			ba = sanpy.bAnalysis(filePath)
-			#self._df.loc[rowIdx, '_ba'] = ba
-		#
+			'''
+			if ba is not None:
+				self._df.at[rowIdx, '_ba'] = ba
+				# does not get a uuid until save into h5
+				if uuid:
+					# there was an original uuid (in table), means we are saved into h5
+					self._df.at[rowIdx, 'uuid'] = uuid
+					if uuid != ba.uuid:
+						logger.error('Loaded uuid does not match existing in file table')
+						logger.error(f'Loaded {ba.uuid}')
+						logger.error(f'Existing {uuid}')
+				#
+				# update stats of table load/analyzed columns
+				self._updateLoadedAnalyzed()
+
+		return ba
+
+	def loadOneAnalysis(self, path, uuid=None):
+		"""Load one bAnalysis either from original file path or uuid of h5 file."""
+		ba = None
+		if uuid is not None and uuid:
+			# load from h5
+			hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
+			hdfPath = os.path.join(self.path, hdfFile)
+			with pd.HDFStore(hdfPath) as hdfStore:
+				try:
+					dfAnalysis = hdfStore[uuid]
+					ba = sanpy.bAnalysis(fromDf=dfAnalysis)
+					logger.info(f'Loaded from h5 uuid {uuid}')
+					logger.info(f'    {ba}')
+				except (KeyError):
+					logger.error(f'Did not find uuid in h5 file, uuid:{uuid}')
+		else:
+			# load from path
+			ba = sanpy.bAnalysis(path)
+			logger.info(f'Loaded from path {path}')
+			logger.info(f'    {ba}')
 		return ba
 
 	def _setColumnType(self, df):
@@ -746,7 +888,7 @@ class analysisDir():
 		baNew = copy.deepcopy(rowDict['_ba'])
 
 		# copy of bAnalysis needs a new uuid
-		new_uuid = str(uuid.uuid4())
+		new_uuid = sanpy.bAnalysis.getNewUuid()  # 't' + str(uuid.uuid4())   #.replace('-', '_')
 		logger.info(f'assigning new uuid {new_uuid} to {baNew}')
 		baNew.uuid = new_uuid
 

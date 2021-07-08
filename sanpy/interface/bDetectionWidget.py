@@ -204,7 +204,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.replot() # replot statistics over traces
 
-		self.refreshClips() # replot clips
+		#self.refreshClips() # replot clips
 
 		if self.myMainWindow is not None:
 			# signal to main window so it can update (file list, scatter plot)
@@ -615,6 +615,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 			# clips are not being displayed
 			return
 
+		print('\n!!! TODO: fix logic of bDetectionWidget.refreshClips()\n')
+		return
+		
 		# remove existing
 		if self.clipLines is not None:
 			self.clipPlot.removeItem(self.clipLines)
