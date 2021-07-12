@@ -1,0 +1,2517 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Current Clamp Analysis For Cardiac Myocytes">
+      
+      
+      
+        <meta name="author" content="Robert H Cudmore">
+      
+      
+      <link rel="icon" href="../../img/sanpy-transparent.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
+    
+    
+      
+        <title>analysisDir - SanPy Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.bde7dde4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ef6f36e2.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../css/style.css">
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sanpy.analysisDir.analysisDir" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="SanPy Documentation" class="md-header__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
+      
+  <img src="../../img/sanpy-transparent.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SanPy Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              analysisDir
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SanPy Repository
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="SanPy Documentation" class="md-nav__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
+      
+  <img src="../../img/sanpy-transparent.png" alt="logo">
+
+    </a>
+    SanPy Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SanPy Repository
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        SanPy
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        Install
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../desktop-application/" class="md-nav__link">
+        Desktop Application
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../plugins/" class="md-nav__link">
+        Plugins
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      <label class="md-nav__link" for="__nav_5">
+        Scripting
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Scripting" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Scripting
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scripting/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scripting/examples/" class="md-nav__link">
+        Examples
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../scripting/plotting-analysis/" class="md-nav__link">
+        Plotting Analysis
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
+      
+      <label class="md-nav__link" for="__nav_6">
+        API
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="API" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bAnalysis/" class="md-nav__link">
+        bAnalysis
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../analysisPlot/" class="md-nav__link">
+        analysisPlot
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          analysisDir
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        analysisDir
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir" class="md-nav__link">
+    analysisDir
+  </a>
+  
+    <nav class="md-nav" aria-label="analysisDir">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.columnIsCheckBox" class="md-nav__link">
+    columnIsCheckBox()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.copyToClipboard" class="md-nav__link">
+    copyToClipboard()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.getAnalysis" class="md-nav__link">
+    getAnalysis()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.getDataFrame" class="md-nav__link">
+    getDataFrame()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.getFileList" class="md-nav__link">
+    getFileList()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.getFileRow" class="md-nav__link">
+    getFileRow()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.getRowDict" class="md-nav__link">
+    getRowDict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.loadFolder" class="md-nav__link">
+    loadFolder()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.loadOneAnalysis" class="md-nav__link">
+    loadOneAnalysis()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.loc" class="md-nav__link">
+    loc
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.loc_setter" class="md-nav__link">
+    loc_setter
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.numFiles" class="md-nav__link">
+    numFiles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.old_saveDatabase" class="md-nav__link">
+    old_saveDatabase()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.pool_build" class="md-nav__link">
+    pool_build()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.saveHdf" class="md-nav__link">
+    saveHdf()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.shape" class="md-nav__link">
+    shape
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.signalApp" class="md-nav__link">
+    signalApp()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.syncDfWithPath" class="md-nav__link">
+    syncDfWithPath()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.theseFileTypes" class="md-nav__link">
+    theseFileTypes
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.bAnalysisDirWeb" class="md-nav__link">
+    bAnalysisDirWeb
+  </a>
+  
+    <nav class="md-nav" aria-label="bAnalysisDirWeb">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.bAnalysisDirWeb.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.bAnalysisDirWeb.loadFolder" class="md-nav__link">
+    loadFolder()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.plotTiming" class="md-nav__link">
+    plotTiming()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bExport/" class="md-nav__link">
+        bExport
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bDetection/" class="md-nav__link">
+        bDetection
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bAnalysisUtil/" class="md-nav__link">
+        bAnalysisUtil
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8" type="checkbox" id="__nav_6_8" >
+      
+      <label class="md-nav__link" for="__nav_6_8">
+        interface
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="interface" data-md-level="2">
+        <label class="md-nav__title" for="__nav_6_8">
+          <span class="md-nav__icon md-icon"></span>
+          interface
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface/sanpy_app/" class="md-nav__link">
+        sanp_app
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8_2" type="checkbox" id="__nav_6_8_2" >
+      
+      <label class="md-nav__link" for="__nav_6_8_2">
+        plugins
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="plugins" data-md-level="3">
+        <label class="md-nav__title" for="__nav_6_8_2">
+          <span class="md-nav__icon md-icon"></span>
+          plugins
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface/plugins/sanpyPlugin/" class="md-nav__link">
+        sanpyPlugin
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../methods/" class="md-nav__link">
+        Methods
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../web-application/" class="md-nav__link">
+        Web Application
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../open-source/" class="md-nav__link">
+        Open Source
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../about/" class="md-nav__link">
+        About
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir" class="md-nav__link">
+    analysisDir
+  </a>
+  
+    <nav class="md-nav" aria-label="analysisDir">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.columnIsCheckBox" class="md-nav__link">
+    columnIsCheckBox()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.copyToClipboard" class="md-nav__link">
+    copyToClipboard()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.getAnalysis" class="md-nav__link">
+    getAnalysis()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.getDataFrame" class="md-nav__link">
+    getDataFrame()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.getFileList" class="md-nav__link">
+    getFileList()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.getFileRow" class="md-nav__link">
+    getFileRow()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.getRowDict" class="md-nav__link">
+    getRowDict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.loadFolder" class="md-nav__link">
+    loadFolder()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.loadOneAnalysis" class="md-nav__link">
+    loadOneAnalysis()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.loc" class="md-nav__link">
+    loc
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.loc_setter" class="md-nav__link">
+    loc_setter
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.numFiles" class="md-nav__link">
+    numFiles
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.old_saveDatabase" class="md-nav__link">
+    old_saveDatabase()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.pool_build" class="md-nav__link">
+    pool_build()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.saveHdf" class="md-nav__link">
+    saveHdf()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.shape" class="md-nav__link">
+    shape
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.signalApp" class="md-nav__link">
+    signalApp()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.syncDfWithPath" class="md-nav__link">
+    syncDfWithPath()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.analysisDir.theseFileTypes" class="md-nav__link">
+    theseFileTypes
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.bAnalysisDirWeb" class="md-nav__link">
+    bAnalysisDirWeb
+  </a>
+  
+    <nav class="md-nav" aria-label="bAnalysisDirWeb">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.bAnalysisDirWeb.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.bAnalysisDirWeb.loadFolder" class="md-nav__link">
+    loadFolder()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.analysisDir.plotTiming" class="md-nav__link">
+    plotTiming()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>analysisDir</h1>
+                
+                <div class="doc doc-object doc-module">
+
+
+    <div class="doc doc-contents first">
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="sanpy.analysisDir.analysisDir" class="doc doc-heading">
+        <code>analysisDir</code>
+
+
+
+<a href="#sanpy.analysisDir.analysisDir" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Class to manage a list of files loaded from a folder</p>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.__init__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">myApp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autoLoad</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+<a href="#sanpy.analysisDir.analysisDir.__init__" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Load and manage a list of files in a folder path.
+Use this as the main pandasModel for file list myTableView.</p>
+<p>TODO: extend to link to folder in cloud (start with box and/or github)</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>path</code></td>
+        <td><code>str</code></td>
+        <td><p>Path to folder</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>myApp</code></td>
+        <td><code>sanpy_app</code></td>
+        <td><p>Optional</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>autoLoad</code></td>
+        <td><code>boolean</code></td>
+        <td></td>
+        <td><code>True</code></td>
+      </tr>
+      <tr>
+        <td><code>cloudDict</code></td>
+        <td><code>dict</code></td>
+        <td><p>To load frmo cloud, for now  just github</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>      <div class="admonition notes">
+<p class="admonition-title">Notes<ul>
+<li>
+<p>on load existing .csv
+        - match columns in file with 'sanpyColumns'
+        - check that each file in csv exists in the path
+        - check if there are files in the path NOT in the csv</p>
+</li>
+<li>
+<p>Some functions are so self can mimic a pandas dataframe used by pandasModel.
+        (shape, loc, loc_setter, iloc, iLoc_setter, columns, append, drop, sort_values, copy)</p>
+</li>
+</ul>
+</p>
+</div>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">myApp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">autoLoad</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Load and manage a list of files in a folder path.</span>
+<span class="sd">	Use this as the main pandasModel for file list myTableView.</span>
+
+<span class="sd">	TODO: extend to link to folder in cloud (start with box and/or github)</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		path (str): Path to folder</span>
+<span class="sd">		myApp (sanpy_app): Optional</span>
+<span class="sd">		autoLoad (boolean):</span>
+<span class="sd">		cloudDict (dict): To load frmo cloud, for now  just github</span>
+
+<span class="sd">	Notes:</span>
+<span class="sd">		- on load existing .csv</span>
+<span class="sd">			- match columns in file with &#39;sanpyColumns&#39;</span>
+<span class="sd">			- check that each file in csv exists in the path</span>
+<span class="sd">			- check if there are files in the path NOT in the csv</span>
+
+<span class="sd">		- Some functions are so self can mimic a pandas dataframe used by pandasModel.</span>
+<span class="sd">			(shape, loc, loc_setter, iloc, iLoc_setter, columns, append, drop, sort_values, copy)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">myApp</span> <span class="o">=</span> <span class="n">myApp</span> <span class="c1"># used to signal on building initial db</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">autoLoad</span> <span class="o">=</span> <span class="n">autoLoad</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">_isDirty</span> <span class="o">=</span> <span class="kc">False</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">_poolDf</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="sd">&quot;&quot;&quot;See pool_ functions&quot;&quot;&quot;</span>
+
+	<span class="c1"># keys are full path to file, if from cloud, key is &#39;cloud/&lt;filename&gt;&#39;</span>
+	<span class="c1"># holds bAnalysisObjects</span>
+	<span class="c1"># needs to be a list so we can have files more than one</span>
+	<span class="c1">#self.fileList = [] #OrderedDict()</span>
+
+	<span class="c1"># name of database file created/loaded from folder path</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">dbFile</span> <span class="o">=</span> <span class="s1">&#39;sanpy_recording_db.csv&#39;</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">_df</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="k">if</span> <span class="n">autoLoad</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadHdf</span><span class="p">()</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadFolder</span><span class="p">()</span>
+	<span class="c1">#</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_checkColumns</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_updateLoadedAnalyzed</span><span class="p">()</span>
+	<span class="c1">#</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.columnIsCheckBox" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">columnIsCheckBox</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">colName</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.columnIsCheckBox" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>All bool columns are checkbox</p>
+<p>TODO: problems with using type=bool and isinstance(). Kust using str 'bool'</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">columnIsCheckBox</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">colName</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;All bool columns are checkbox</span>
+
+<span class="sd">	TODO: problems with using type=bool and isinstance(). Kust using str &#39;bool&#39;</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="nb">type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sanpyColumns</span><span class="p">[</span><span class="n">colName</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span>
+	<span class="c1">#isBool = isinstance(type, bool)</span>
+	<span class="n">isBool</span> <span class="o">=</span> <span class="nb">type</span> <span class="o">==</span> <span class="s1">&#39;bool&#39;</span>
+	<span class="c1">#logger.info(f&#39;{colName} {type(type)}, type:{type} {isBool}&#39;)</span>
+	<span class="k">return</span> <span class="n">isBool</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.copyToClipboard" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">copyToClipboard</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.copyToClipboard" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>TODO: Is this used or is copy to clipboard in pandas model?</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">copyToClipboard</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	TODO: Is this used or is copy to clipboard in pandas model?</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDataFrame</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">getDataFrame</span><span class="p">()</span><span class="o">.</span><span class="n">to_clipboard</span><span class="p">(</span><span class="n">sep</span><span class="o">=</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Copied to clipboard&#39;</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.getAnalysis" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.getAnalysis" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get bAnalysis object, will load if necc.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>rowIdx</code></td>
+        <td><code>int</code></td>
+        <td><p>Row index from table, corresponds to row in self._df</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get bAnalysis object, will load if necc.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		rowIdx (int): Row index from table, corresponds to row in self._df</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">file</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowIdx</span><span class="p">,</span> <span class="s1">&#39;File&#39;</span><span class="p">]</span>
+	<span class="n">ba</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowIdx</span><span class="p">,</span> <span class="s1">&#39;_ba&#39;</span><span class="p">]</span>
+	<span class="n">uuid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowIdx</span><span class="p">,</span> <span class="s1">&#39;uuid&#39;</span><span class="p">]</span>  <span class="c1"># if we have a uuid bAnalysis is saved in h5f</span>
+	<span class="n">filePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">ba</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ba</span><span class="o">==</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
+		<span class="n">ba</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadOneAnalysis</span><span class="p">(</span><span class="n">filePath</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
+		<span class="c1"># load</span>
+		<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">		logger.info(f&#39;Loading bAnalysis from row {rowIdx} &quot;{filePath}&quot;&#39;)</span>
+<span class="sd">		ba = sanpy.bAnalysis(filePath)</span>
+<span class="sd">		&#39;&#39;&#39;</span>
+		<span class="k">if</span> <span class="n">ba</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">rowIdx</span><span class="p">,</span> <span class="s1">&#39;_ba&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span>
+			<span class="c1"># does not get a uuid until save into h5</span>
+			<span class="k">if</span> <span class="n">uuid</span><span class="p">:</span>
+				<span class="c1"># there was an original uuid (in table), means we are saved into h5</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">rowIdx</span><span class="p">,</span> <span class="s1">&#39;uuid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">uuid</span>
+				<span class="k">if</span> <span class="n">uuid</span> <span class="o">!=</span> <span class="n">ba</span><span class="o">.</span><span class="n">uuid</span><span class="p">:</span>
+					<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Loaded uuid does not match existing in file table&#39;</span><span class="p">)</span>
+					<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loaded </span><span class="si">{</span><span class="n">ba</span><span class="o">.</span><span class="n">uuid</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+					<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Existing </span><span class="si">{</span><span class="n">uuid</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+			<span class="c1">#</span>
+			<span class="c1"># update stats of table load/analyzed columns</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">_updateLoadedAnalyzed</span><span class="p">()</span>
+
+	<span class="k">return</span> <span class="n">ba</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.getDataFrame" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getDataFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.getDataFrame" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get the underlying pandas DataFrame.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getDataFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Get the underlying pandas DataFrame.&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.getFileList" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getFileList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">getFullPath</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.getFileList" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get file paths from path</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getFileList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">getFullPath</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get file paths from path</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+	<span class="n">fileList</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">file</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">):</span>
+			<span class="k">continue</span>
+		<span class="c1"># ignore our database file</span>
+		<span class="k">if</span> <span class="n">file</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbFile</span><span class="p">:</span>
+			<span class="k">continue</span>
+
+		<span class="c1"># tmpExt is like .abf, .csv, etc</span>
+		<span class="n">tmpFileName</span><span class="p">,</span> <span class="n">tmpExt</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">tmpExt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">theseFileTypes</span><span class="p">:</span>
+			<span class="k">if</span> <span class="n">getFullPath</span><span class="p">:</span>
+				<span class="n">file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+			<span class="n">fileList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+	<span class="c1">#</span>
+	<span class="k">return</span> <span class="n">fileList</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.getFileRow" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getFileRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.getFileRow" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get dict representing one file (row in table). Loads bAnalysis to get headers.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>path</code></td>
+        <td><code>Str</code></td>
+        <td><p>Full path to file.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>#rowIdx</code></td>
+        <td><code>int</code></td>
+        <td><p>Optional row index to assign in column 'Idx'</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>(tuple)</code></td>
+      <td><p>tuple containing:</p>
+<ul>
+<li>ba (bAnalysis): <a href="/api/bAnalysis">sanpy.bAnalysis</a>.</li>
+<li>rowDict (dict): On success, otherwise None.
+                fails when path does not lead to valid bAnalysis file.</li>
+</ul></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getFileRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get dict representing one file (row in table). Loads bAnalysis to get headers.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		path (Str): Full path to file.</span>
+<span class="sd">		#rowIdx (int): Optional row index to assign in column &#39;Idx&#39;</span>
+
+<span class="sd">	Return:</span>
+<span class="sd">		(tuple): tuple containing:</span>
+
+<span class="sd">		- ba (bAnalysis): [sanpy.bAnalysis](/api/bAnalysis).</span>
+<span class="sd">		- rowDict (dict): On success, otherwise None.</span>
+<span class="sd">				fails when path does not lead to valid bAnalysis file.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not find file &quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+		<span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+	<span class="n">fileType</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+	<span class="k">if</span> <span class="n">fileType</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">theseFileTypes</span><span class="p">:</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not load file type &quot;</span><span class="si">{</span><span class="n">fileType</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+		<span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+	<span class="c1"># load bAnalysis</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loading bAnalysis &quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+	<span class="n">ba</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">ba</span><span class="o">.</span><span class="n">loadError</span><span class="p">:</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error loading bAnalysis file &quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+		<span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+
+	<span class="c1"># not sufficient to default everything to empty str &#39;&#39;</span>
+	<span class="c1"># sanpyColumns can only have type in (&#39;float&#39;, &#39;str&#39;)</span>
+	<span class="n">rowDict</span> <span class="o">=</span> <span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sanpyColumns</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">rowDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sanpyColumns</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">str</span><span class="p">:</span>
+			<span class="n">rowDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+		<span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">sanpyColumns</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="nb">float</span><span class="p">:</span>
+			<span class="n">rowDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+	<span class="c1">#if rowIdx is not None:</span>
+	<span class="c1">#	rowDict[&#39;Idx&#39;] = rowIdx</span>
+
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="c1"># need 2 because checkbox value is in (0,2)</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;File&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">getFileName</span><span class="p">()</span> <span class="c1">#os.path.split(ba.path)[1]</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Dur(s)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">recodingDur</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;kHz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">recordingFrequency</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fix&#39;</span>
+
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
+
+	<span class="k">return</span> <span class="n">ba</span><span class="p">,</span> <span class="n">rowDict</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.getRowDict" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getRowDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.getRowDict" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Return a dict with selected row as dict (includes detection parameters).</p>
+<p>Important to return a copy as our '_ba' is a pointer to bAnalysis.</p>
+
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>theRet (dict)</code></td>
+      <td><p>Be sure to make a deep copy of ['_ba'] if neccessary.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getRowDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Return a dict with selected row as dict (includes detection parameters).</span>
+
+<span class="sd">	Important to return a copy as our &#39;_ba&#39; is a pointer to bAnalysis.</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		theRet (dict): Be sure to make a deep copy of [&#39;_ba&#39;] if neccessary.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">theRet</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="c1"># use columns in main sanpyColumns, not in df</span>
+	<span class="c1">#for colStr in self.columns:</span>
+	<span class="k">for</span> <span class="n">colStr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+		<span class="c1">#theRet[colStr] = self._df.loc[rowIdx, colStr]</span>
+		<span class="n">theRet</span><span class="p">[</span><span class="n">colStr</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowIdx</span><span class="p">,</span> <span class="n">colStr</span><span class="p">]</span>
+	<span class="c1">#theRet[&#39;_ba&#39;] = theRet[&#39;_ba&#39;].copy()</span>
+	<span class="k">return</span> <span class="n">theRet</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.loadFolder" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.loadFolder" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Parse a folder and load all (abf, csv, ...). Only called if no h5 file.</p>
+<p>TODO: get rid of loading database from .csv (it is replaced by .h5 file)
+TODO: extend the logic to load from cloud (after we were instantiated)</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Parse a folder and load all (abf, csv, ...). Only called if no h5 file.</span>
+
+<span class="sd">	TODO: get rid of loading database from .csv (it is replaced by .h5 file)</span>
+<span class="sd">	TODO: extend the logic to load from cloud (after we were instantiated)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+	<span class="n">loadedDatabase</span> <span class="o">=</span> <span class="kc">False</span>
+
+	<span class="c1"># load an existing folder db or create a new one</span>
+	<span class="n">dbPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbFile</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">dbPath</span><span class="p">):</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loading existing folder db: </span><span class="si">{</span><span class="n">dbPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">dbPath</span><span class="p">,</span> <span class="n">header</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">index_col</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+		<span class="c1">#df[&quot;Idx&quot;] = pd.to_numeric(df[&quot;Idx&quot;])</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setColumnType</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+		<span class="n">loadedDatabase</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="c1">#logger.info(f&#39;  shape is {df.shape}&#39;)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No existing db file, making </span><span class="si">{</span><span class="n">dbPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sanpyColumns</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setColumnType</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">loadedDatabase</span><span class="p">:</span>
+		<span class="c1"># check columns with sanpyColumns</span>
+		<span class="n">loadedColumns</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">columns</span>
+		<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">loadedColumns</span><span class="p">:</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sanpyColumns</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+				<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;error: bAnalysisDir did not find loaded col: &quot;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s1">&quot; in sanpyColumns.keys()&#39;</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sanpyColumns</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+			<span class="k">if</span> <span class="ow">not</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">loadedColumns</span><span class="p">:</span>
+				<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;error: bAnalysisDir did not find sanpyColumns.keys() col: &quot;</span><span class="si">{</span><span class="n">col</span><span class="si">}</span><span class="s1">&quot; in loadedColumns&#39;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">loadedDatabase</span><span class="p">:</span>
+		<span class="c1"># seach existing db for missing abf files</span>
+		<span class="k">pass</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="c1"># get list of all abf/csv/tif</span>
+		<span class="n">fileList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileList</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+		<span class="c1"># build new db dataframe</span>
+		<span class="n">listOfDict</span> <span class="o">=</span> <span class="p">[]</span>
+		<span class="k">for</span> <span class="n">rowIdx</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fileList</span><span class="p">):</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">signalApp</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loading &quot;</span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+
+			<span class="c1"># rowDict is what we are showing in the file table</span>
+			<span class="n">ba</span><span class="p">,</span> <span class="n">rowDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileRow</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>  <span class="c1"># loads bAnalysis</span>
+
+			<span class="c1"># TODO: calculating time, remove this</span>
+			<span class="c1"># This is 2x faster than loading frmo pandas gzip ???</span>
+			<span class="c1">#dDict = sanpy.bAnalysis.getDefaultDetection()</span>
+			<span class="c1">#dDict[&#39;dvdtThreshold&#39;] = 2</span>
+			<span class="c1">#ba.spikeDetect(dDict)</span>
+
+			<span class="c1"># as we parse the folder, don&#39;t load ALL files (will run out of memory)</span>
+			<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;_ba&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># ba</span>
+
+			<span class="c1"># do not assign uuid until bAnalysis is saved in h5 file</span>
+			<span class="c1">#rowDict[&#39;uuid&#39;] = &#39;&#39;</span>
+
+			<span class="n">listOfDict</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rowDict</span><span class="p">)</span>
+
+			<span class="k">if</span> <span class="n">testTimingNumFiles</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">rowIdx</span><span class="o">&gt;</span><span class="n">testTimingNumFiles</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+				<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Breaking after testTimingNumFiles:</span><span class="si">{</span><span class="n">testTimingNumFiles</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+				<span class="k">break</span>
+		<span class="c1">#</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">listOfDict</span><span class="p">)</span>
+		<span class="c1">#print(&#39;=== built new db df:&#39;)</span>
+		<span class="c1">#print(df)</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_setColumnType</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+	<span class="c1">#</span>
+
+	<span class="c1"># expand each to into self.fileList</span>
+	<span class="c1">#df[&#39;_ba&#39;] = None</span>
+
+	<span class="n">stop</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Load took </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">stop</span><span class="o">-</span><span class="n">start</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1"> seconds.&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">df</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.loadOneAnalysis" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">loadOneAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">uuid</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.loadOneAnalysis" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Load one bAnalysis either from original file path or uuid of h5 file.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">loadOneAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">uuid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Load one bAnalysis either from original file path or uuid of h5 file.&quot;&quot;&quot;</span>
+	<span class="n">ba</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="k">if</span> <span class="n">uuid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">uuid</span><span class="p">:</span>
+		<span class="c1"># load from h5</span>
+		<span class="n">hdfFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbFile</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.h5&#39;</span>
+		<span class="n">hdfPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">hdfFile</span><span class="p">)</span>
+		<span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">hdfPath</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdfStore</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">dfAnalysis</span> <span class="o">=</span> <span class="n">hdfStore</span><span class="p">[</span><span class="n">uuid</span><span class="p">]</span>
+				<span class="n">ba</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">(</span><span class="n">fromDf</span><span class="o">=</span><span class="n">dfAnalysis</span><span class="p">)</span>
+				<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loaded from h5 uuid </span><span class="si">{</span><span class="n">uuid</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+				<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    </span><span class="si">{</span><span class="n">ba</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+			<span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">):</span>
+				<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not find uuid in h5 file, uuid:</span><span class="si">{</span><span class="n">uuid</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="c1"># load from path</span>
+		<span class="n">ba</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loaded from path </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    </span><span class="si">{</span><span class="n">ba</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="k">return</span> <span class="n">ba</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.loc" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">loc</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-property"><code>property</code></small>
+      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
+  </span>
+
+<a href="#sanpy.analysisDir.analysisDir.loc" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Mimic pandas df.loc[]</p>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.loc_setter" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">loc_setter</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-property"><code>property</code></small>
+      <small class="doc doc-property doc-property-writable"><code>writable</code></small>
+  </span>
+
+<a href="#sanpy.analysisDir.analysisDir.loc_setter" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Mimic pandas df.loc[]</p>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.numFiles" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">numFiles</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-property"><code>property</code></small>
+      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
+  </span>
+
+<a href="#sanpy.analysisDir.analysisDir.numFiles" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get the number of files. same as len().</p>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.old_saveDatabase" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">old_saveDatabase</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.old_saveDatabase" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>save dbFile .csv and hdf .gzip</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">old_saveDatabase</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot; save dbFile .csv and hdf .gzip&quot;&quot;&quot;</span>
+	<span class="n">dbPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dbFile</span><span class="p">)</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDataFrame</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="c1">#</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Saving &quot;</span><span class="si">{</span><span class="n">dbPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">getDataFrame</span><span class="p">()</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">dbPath</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_isDirty</span> <span class="o">=</span> <span class="kc">False</span>
+
+		<span class="c1">#</span>
+		<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">		hdfFile = os.path.splitext(self.dbFile)[0] + &#39;.h5&#39;</span>
+<span class="sd">		hdfPath = os.path.join(self.path, hdfFile)</span>
+<span class="sd">		logger.info(f&#39;Saving &quot;{hdfPath}&quot;&#39;)</span>
+<span class="sd">		#hdfStore = pd.HDFStore(hdfPath)</span>
+<span class="sd">		start = time.time()</span>
+<span class="sd">		complevel = 9</span>
+<span class="sd">		complib = &#39;blosc:blosclz&#39;</span>
+<span class="sd">		with pd.HDFStore(hdfPath, mode=&#39;w&#39;, complevel=complevel, complib=complib) as hdfStore:</span>
+<span class="sd">			hdfStore[&#39;df&#39;] = self.getDataFrame()  # save it</span>
+<span class="sd">		stop = time.time()</span>
+<span class="sd">		logger.info(f&#39;Saving took {round(stop-start,2)} seconds&#39;)</span>
+<span class="sd">		&#39;&#39;&#39;</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.pool_build" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">pool_build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.pool_build" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Build one df with all anlysis. Use this in plot tool plugin.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">pool_build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Build one df with all anlysis. Use this in plot tool plugin.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">masterDf</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numFiles</span><span class="p">):</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isAnalyzed</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
+			<span class="k">continue</span>
+		<span class="n">ba</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getAnalysis</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+		<span class="k">if</span> <span class="n">ba</span><span class="o">.</span><span class="n">dfReportForScatter</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">signalApp</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;adding &quot;</span><span class="si">{</span><span class="n">ba</span><span class="o">.</span><span class="n">getFileName</span><span class="p">()</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+			<span class="n">ba</span><span class="o">.</span><span class="n">dfReportForScatter</span><span class="p">[</span><span class="s1">&#39;File Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">row</span>
+			<span class="k">if</span> <span class="n">masterDf</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="n">masterDf</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">dfReportForScatter</span>
+			<span class="k">else</span><span class="p">:</span>
+				<span class="n">masterDf</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">masterDf</span><span class="p">,</span> <span class="n">ba</span><span class="o">.</span><span class="n">dfReportForScatter</span><span class="p">])</span>
+	<span class="c1">#</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;final </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">masterDf</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="nb">print</span><span class="p">(</span><span class="n">masterDf</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_poolDf</span> <span class="o">=</span> <span class="n">masterDf</span>
+
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_poolDf</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.saveHdf" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">saveHdf</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.saveHdf" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Save file table and any number of loaded and analyzed bAnalysis.</p>
+<p>Set file table 'uuid' column when we actually save a bAnalysis</p>
+<div class="admonition important">
+<p class="admonition-title">Order matters<pre><code>    (1) Save bAnalysis first, it updates uuid in file table.
+    (2) Save file table with updated uuid
+</code></pre>
+</p>
+</div>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">saveHdf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Save file table and any number of loaded and analyzed bAnalysis.</span>
+
+<span class="sd">	Set file table &#39;uuid&#39; column when we actually save a bAnalysis</span>
+
+<span class="sd">	Important: Order matters</span>
+<span class="sd">			(1) Save bAnalysis first, it updates uuid in file table.</span>
+<span class="sd">			(2) Save file table with updated uuid</span>
+<span class="sd">			&quot;&quot;&quot;</span>
+	<span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+	<span class="n">tmpHdfFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbFile</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_tmp.h5&#39;</span>
+	<span class="n">tmpHdfPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">tmpHdfFile</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Saving Tmp </span><span class="si">{</span><span class="n">tmpHdfPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+	<span class="c1">#</span>
+	<span class="c1"># save each bAnalysis</span>
+	<span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDataFrame</span><span class="p">()</span>
+	<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
+	<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)):</span>
+		<span class="c1"># do not call this, it will load</span>
+		<span class="c1">#ba = self.getAnalysis(row)</span>
+		<span class="n">ba</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;_ba&#39;</span><span class="p">]</span>
+		<span class="k">if</span> <span class="n">ba</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="n">didSave</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">_saveToHdf</span><span class="p">(</span><span class="n">tmpHdfPath</span><span class="p">)</span> <span class="c1"># will only save if ba.detectionDirty</span>
+			<span class="k">if</span> <span class="n">didSave</span><span class="p">:</span>
+				<span class="c1"># we are now saved into h5 file, remember uuid to load</span>
+				<span class="n">df</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;uuid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">uuid</span>
+
+	<span class="c1"># rebuild (L, A, S) columns</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_updateLoadedAnalyzed</span><span class="p">()</span>
+
+	<span class="c1">#</span>
+	<span class="c1"># save file database</span>
+	<span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">tmpHdfPath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdfStore</span><span class="p">:</span>
+		<span class="n">dbKey</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbFile</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Storing file db into key &quot;</span><span class="si">{</span><span class="n">dbKey</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDataFrame</span><span class="p">()</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;_ba&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># don&#39;t ever save _ba, use it for runtime</span>
+
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving db df&#39;</span><span class="p">)</span>
+		<span class="c1">#print(df[[&#39;File&#39;, &#39;uuid&#39;]])</span>
+
+		<span class="n">hdfStore</span><span class="p">[</span><span class="n">dbKey</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span>  <span class="c1"># save it</span>
+		<span class="c1">#</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_isDirty</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># if true, prompt to save on quit</span>
+
+	<span class="n">h5_printKey</span><span class="p">(</span><span class="n">tmpHdfPath</span><span class="p">)</span>
+
+	<span class="c1">#</span>
+	<span class="c1"># rebuild the file to remove old changes and reduce size</span>
+	<span class="n">hdfFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbFile</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.h5&#39;</span>
+	<span class="n">hdfPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">hdfFile</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Rebuilding h5 to </span><span class="si">{</span><span class="n">hdfPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="c1">#command = [&quot;ptrepack&quot;, &quot;-o&quot;, &quot;--chunkshape=auto&quot;, &quot;--propindexes&quot;, &#39;--complevel=9&#39;, &#39;--complib=blosc:blosclz&#39;, tmpHdfPath, hdfPath]</span>
+	<span class="c1">#command = [&quot;ptrepack&quot;, &quot;-o&quot;, &quot;--chunkshape=auto&quot;, &quot;--propindexes&quot;, tmpHdfPath, hdfPath]</span>
+	<span class="n">command</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ptrepack&quot;</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;--chunkshape=auto&quot;</span><span class="p">,</span> <span class="n">tmpHdfPath</span><span class="p">,</span> <span class="n">hdfPath</span><span class="p">]</span>
+	<span class="n">call</span><span class="p">(</span><span class="n">command</span><span class="p">)</span>
+
+	<span class="c1">#logger.info(f&#39;Removing temporary file {tmpHdfPath}&#39;)</span>
+	<span class="c1">#os.remove(tmpHdfPath)</span>
+
+	<span class="n">stop</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Saving took </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">stop</span><span class="o">-</span><span class="n">start</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1"> seconds&#39;</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.shape" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">shape</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-property"><code>property</code></small>
+      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
+  </span>
+
+<a href="#sanpy.analysisDir.analysisDir.shape" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Can't just return shape of _df, columns (like 'ba') may have been added
+Number of columns is based on self.columns</p>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.signalApp" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">signalApp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.signalApp" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Update status bar of SanPy app.</p>
+<p>TODO make this a signal and connect app to it.
+        Will not be able to do this, we need to run outside Qt</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">signalApp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Update status bar of SanPy app.</span>
+
+<span class="sd">	TODO make this a signal and connect app to it.</span>
+<span class="sd">		Will not be able to do this, we need to run outside Qt</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">myApp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">myApp</span><span class="o">.</span><span class="n">updateStatusBar</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.syncDfWithPath" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">syncDfWithPath</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.syncDfWithPath" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Sync path with existing df. Used to pick up new/removed files</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">syncDfWithPath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Sync path with existing df. Used to pick up new/removed files&quot;&quot;&quot;</span>
+	<span class="n">pathFileList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileList</span><span class="p">(</span><span class="n">getFullPath</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+	<span class="n">dfFileList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="p">[</span><span class="s1">&#39;File&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+	<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">	print(&#39;=== pathFileList:&#39;)</span>
+<span class="sd">	print(pathFileList)</span>
+<span class="sd">	print(&#39;=== dfFileList:&#39;)</span>
+<span class="sd">	print(dfFileList)</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+
+	<span class="n">addedToDf</span> <span class="o">=</span> <span class="kc">False</span>
+
+	<span class="c1"># look for files in path not in df</span>
+	<span class="k">for</span> <span class="n">pathFile</span> <span class="ow">in</span> <span class="n">pathFileList</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">pathFile</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dfFileList</span><span class="p">:</span>
+			<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Found file in path &quot;</span><span class="si">{</span><span class="n">pathFile</span><span class="si">}</span><span class="s1">&quot; not in df&#39;</span><span class="p">)</span>
+			<span class="c1"># load bAnalysis and get df column values</span>
+			<span class="n">addedToDf</span> <span class="o">=</span> <span class="kc">True</span>
+			<span class="n">fullPathFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">pathFile</span><span class="p">)</span>
+			<span class="n">ba</span><span class="p">,</span> <span class="n">rowDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileRow</span><span class="p">(</span><span class="n">fullPathFile</span><span class="p">)</span> <span class="c1"># loads bAnalysis</span>
+			<span class="k">if</span> <span class="n">rowDict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="c1">#listOfDict.append(rowDict)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">appendRow</span><span class="p">(</span><span class="n">rowDict</span><span class="o">=</span><span class="n">rowDict</span><span class="p">,</span> <span class="n">ba</span><span class="o">=</span><span class="n">ba</span><span class="p">)</span>
+
+	<span class="c1"># look for files in df not in path</span>
+	<span class="k">for</span> <span class="n">dfFile</span> <span class="ow">in</span> <span class="n">dfFileList</span><span class="p">:</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">dfFile</span> <span class="ow">in</span> <span class="n">pathFileList</span><span class="p">:</span>
+			<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Found file in df &quot;</span><span class="si">{</span><span class="n">dfFile</span><span class="si">}</span><span class="s1">&quot; not in path&#39;</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">addedToDf</span><span class="p">:</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">sort_values</span><span class="p">(</span><span class="n">by</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;File&#39;</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">ascending</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+		<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">reset_index</span><span class="p">(</span><span class="n">drop</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_df</span> <span class="o">=</span> <span class="n">df</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.analysisDir.analysisDir.theseFileTypes" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">theseFileTypes</span></code>
+
+
+<a href="#sanpy.analysisDir.analysisDir.theseFileTypes" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>File types to load</p>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="sanpy.analysisDir.bAnalysisDirWeb" class="doc doc-heading">
+        <code>bAnalysisDirWeb</code>
+
+
+
+<a href="#sanpy.analysisDir.bAnalysisDirWeb" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Load a directory of .abf from the web (for now from GitHub).</p>
+<p>Will etend this to Box, Dropbox, other?.</p>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.bAnalysisDirWeb.__init__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cloudDict</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+<a href="#sanpy.analysisDir.bAnalysisDirWeb.__init__" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <div class="admonition args">
+<p class="admonition-title">cloudDict (dict): {<pre><code>            'owner': 'cudmore',
+            'repo_name': 'SanPy',
+            'path': 'data'
+            }
+</code></pre>
+</p>
+</div>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cloudDict</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Args: cloudDict (dict): {</span>
+<span class="sd">				&#39;owner&#39;: &#39;cudmore&#39;,</span>
+<span class="sd">				&#39;repo_name&#39;: &#39;SanPy&#39;,</span>
+<span class="sd">				&#39;path&#39;: &#39;data&#39;</span>
+<span class="sd">				}</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_cloudDict</span> <span class="o">=</span> <span class="n">cloudDict</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">loadFolder</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.analysisDir.bAnalysisDirWeb.loadFolder" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.analysisDir.bAnalysisDirWeb.loadFolder" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Load using cloudDict</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Load using cloudDict</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	# use [&#39;download_url&#39;] to download abf file (no byte conversion)</span>
+<span class="sd">	response[0] = {</span>
+<span class="sd">		name : 171116sh_0018.abf</span>
+<span class="sd">		path : data/171116sh_0018.abf</span>
+<span class="sd">		sha : 5f3322b08d86458bf7ac8b5c12564933142ffd17</span>
+<span class="sd">		size : 2047488</span>
+<span class="sd">		url : https://api.github.com/repos/cudmore/SanPy/contents/data/171116sh_0018.abf?ref=master</span>
+<span class="sd">		html_url : https://github.com/cudmore/SanPy/blob/master/data/171116sh_0018.abf</span>
+<span class="sd">		git_url : https://api.github.com/repos/cudmore/SanPy/git/blobs/5f3322b08d86458bf7ac8b5c12564933142ffd17</span>
+<span class="sd">		download_url : https://raw.githubusercontent.com/cudmore/SanPy/master/data/171116sh_0018.abf</span>
+<span class="sd">		type : file</span>
+<span class="sd">		_links : {&#39;self&#39;: &#39;https://api.github.com/repos/cudmore/SanPy/contents/data/171116sh_0018.abf?ref=master&#39;, &#39;git&#39;: &#39;https://api.github.com/repos/cudmore/SanPy/git/blobs/5f3322b08d86458bf7ac8b5c12564933142ffd17&#39;, &#39;html&#39;: &#39;https://github.com/cudmore/SanPy/blob/master/data/171116sh_0018.abf&#39;}</span>
+<span class="sd">	}</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">owner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cloudDict</span><span class="p">[</span><span class="s1">&#39;owner&#39;</span><span class="p">]</span>
+	<span class="n">repo_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cloudDict</span><span class="p">[</span><span class="s1">&#39;repo_name&#39;</span><span class="p">]</span>
+	<span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cloudDict</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]</span>
+	<span class="n">url</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;https://api.github.com/repos/</span><span class="si">{</span><span class="n">owner</span><span class="si">}</span><span class="s1">/</span><span class="si">{</span><span class="n">repo_name</span><span class="si">}</span><span class="s1">/contents/</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span>
+
+	<span class="c1"># response is a list of dict</span>
+	<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+	<span class="c1">#print(&#39;response:&#39;, type(response))</span>
+
+	<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">item</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">response</span><span class="p">):</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">item</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abf&#39;</span><span class="p">):</span>
+			<span class="k">continue</span>
+		<span class="nb">print</span><span class="p">(</span><span class="n">idx</span><span class="p">)</span>
+		<span class="c1"># use item[&#39;git_url&#39;]</span>
+		<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="s1">&#39;:&#39;</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+
+	<span class="c1">#</span>
+	<span class="c1"># test load</span>
+	<span class="n">download_url</span> <span class="o">=</span> <span class="n">response</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;download_url&#39;</span><span class="p">]</span>
+	<span class="n">content</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">download_url</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
+
+	<span class="n">fileLikeObject</span> <span class="o">=</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+	<span class="n">ba</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">(</span><span class="n">byteStream</span><span class="o">=</span><span class="n">fileLikeObject</span><span class="p">)</span>
+	<span class="c1">#print(ba._abf)</span>
+	<span class="c1">#print(ba.api_getHeader())</span>
+	<span class="n">ba</span><span class="o">.</span><span class="n">spikeDetect</span><span class="p">()</span>
+	<span class="nb">print</span><span class="p">(</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h2 id="sanpy.analysisDir.plotTiming" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">plotTiming</span><span class="p">()</span></code>
+
+
+<a href="#sanpy.analysisDir.plotTiming" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>loadBruteSec = [1.181, 2.383, 3.518, 4.697, 5.825, 6.868, 8.059, 9.164, 10.228, 11.483, 12.566, 13.7, 14.77, 16.15, 17.163, 18.647, 19.871, 21.481, 23.251, 24.383]
+saveHdfSec = [0.136, 0.157, 0.228, 0.298, 0.363, 0.435, 0.529, 0.618, 0.645, 0.733, 0.795, 0.876, 0.933, 0.999, 1.046, 1.122, 1.2, 1.253, 1.453, 1.492]
+loadHdfSec = [0.185, 0.351, 0.51, 0.675, 0.837, 1.002, 1.123, 1.281, 1.484, 1.599, 1.761, 1.917, 2.077, 2.245, 2.469, 2.673, 2.761, 2.925, 4.605, 3.413]
+hdfSizeMb = [50.20532989501953, 99.39323425292969, 148.58114624023438, 197.76905059814453, 246.95687103271484, 296.14469146728516, 345.3325958251953, 394.52050018310547, 443.7084045410156, 492.89622497558594, 542.0840530395508, 591.2718734741211, 640.4596939086914, 689.6475982666016, 738.8355884552002, 788.0252990722656, 837.2132034301758, 886.4011077880859, 935.5889358520508, 984.7768402099609]
+totalDurSec = [60.0, 120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 540.0, 600.0, 660.0, 720.0, 780.0, 840.0, 900.0, 960.0, 1020.0, 1080.0, 1140.0, 1200.0]</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">plotTiming</span><span class="p">():</span>
+
+	<span class="c1"># before compression</span>
+	<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">	loadBruteSec = [1.181, 2.383, 3.518, 4.697, 5.825, 6.868, 8.059, 9.164, 10.228, 11.483, 12.566, 13.7, 14.77, 16.15, 17.163, 18.647, 19.871, 21.481, 23.251, 24.383]</span>
+<span class="sd">	saveHdfSec = [0.136, 0.157, 0.228, 0.298, 0.363, 0.435, 0.529, 0.618, 0.645, 0.733, 0.795, 0.876, 0.933, 0.999, 1.046, 1.122, 1.2, 1.253, 1.453, 1.492]</span>
+<span class="sd">	loadHdfSec = [0.185, 0.351, 0.51, 0.675, 0.837, 1.002, 1.123, 1.281, 1.484, 1.599, 1.761, 1.917, 2.077, 2.245, 2.469, 2.673, 2.761, 2.925, 4.605, 3.413]</span>
+<span class="sd">	hdfSizeMb = [50.20532989501953, 99.39323425292969, 148.58114624023438, 197.76905059814453, 246.95687103271484, 296.14469146728516, 345.3325958251953, 394.52050018310547, 443.7084045410156, 492.89622497558594, 542.0840530395508, 591.2718734741211, 640.4596939086914, 689.6475982666016, 738.8355884552002, 788.0252990722656, 837.2132034301758, 886.4011077880859, 935.5889358520508, 984.7768402099609]</span>
+<span class="sd">	totalDurSec = [60.0, 120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 540.0, 600.0, 660.0, 720.0, 780.0, 840.0, 900.0, 960.0, 1020.0, 1080.0, 1140.0, 1200.0]</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+
+	<span class="n">loadBruteSec</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.202</span><span class="p">,</span> <span class="mf">2.413</span><span class="p">,</span> <span class="mf">3.567</span><span class="p">,</span> <span class="mf">4.774</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mf">7.144</span><span class="p">,</span> <span class="mf">8.36</span><span class="p">,</span> <span class="mf">9.41</span><span class="p">,</span> <span class="mf">10.61</span><span class="p">,</span> <span class="mf">11.884</span><span class="p">,</span> <span class="mf">12.969</span><span class="p">,</span> <span class="mf">14.097</span><span class="p">,</span> <span class="mf">15.32</span><span class="p">,</span> <span class="mf">17.472</span><span class="p">,</span> <span class="mf">18.197</span><span class="p">,</span> <span class="mf">19.077</span><span class="p">,</span> <span class="mf">20.117</span><span class="p">,</span> <span class="mf">21.372</span><span class="p">,</span> <span class="mf">22.427</span><span class="p">,</span> <span class="mf">23.826</span><span class="p">]</span>
+	<span class="n">saveHdfSec</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.14</span><span class="p">,</span> <span class="mf">0.166</span><span class="p">,</span> <span class="mf">0.238</span><span class="p">,</span> <span class="mf">0.309</span><span class="p">,</span> <span class="mf">0.38</span><span class="p">,</span> <span class="mf">0.449</span><span class="p">,</span> <span class="mf">0.541</span><span class="p">,</span> <span class="mf">0.609</span><span class="p">,</span> <span class="mf">0.659</span><span class="p">,</span> <span class="mf">0.742</span><span class="p">,</span> <span class="mf">0.816</span><span class="p">,</span> <span class="mf">0.883</span><span class="p">,</span> <span class="mf">0.956</span><span class="p">,</span> <span class="mf">1.112</span><span class="p">,</span> <span class="mf">1.058</span><span class="p">,</span> <span class="mf">1.155</span><span class="p">,</span> <span class="mf">1.224</span><span class="p">,</span> <span class="mf">1.316</span><span class="p">,</span> <span class="mf">1.363</span><span class="p">,</span> <span class="mf">1.42</span><span class="p">]</span>
+	<span class="n">loadHdfSec</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.198</span><span class="p">,</span> <span class="mf">0.374</span><span class="p">,</span> <span class="mf">0.533</span><span class="p">,</span> <span class="mf">0.706</span><span class="p">,</span> <span class="mf">0.862</span><span class="p">,</span> <span class="mf">1.03</span><span class="p">,</span> <span class="mf">1.146</span><span class="p">,</span> <span class="mf">1.306</span><span class="p">,</span> <span class="mf">1.51</span><span class="p">,</span> <span class="mf">1.62</span><span class="p">,</span> <span class="mf">1.778</span><span class="p">,</span> <span class="mf">1.939</span><span class="p">,</span> <span class="mf">2.289</span><span class="p">,</span> <span class="mf">2.447</span><span class="p">,</span> <span class="mf">2.483</span><span class="p">,</span> <span class="mf">2.588</span><span class="p">,</span> <span class="mf">2.741</span><span class="p">,</span> <span class="mf">2.925</span><span class="p">,</span> <span class="mf">3.073</span><span class="p">,</span> <span class="mf">3.23</span><span class="p">]</span>
+	<span class="n">hdfSizeMb</span> <span class="o">=</span> <span class="p">[</span><span class="mf">50.22023582458496</span><span class="p">,</span> <span class="mf">99.40814876556396</span><span class="p">,</span> <span class="mf">148.5960636138916</span><span class="p">,</span> <span class="mf">197.7839708328247</span><span class="p">,</span> <span class="mf">246.97179412841797</span><span class="p">,</span> <span class="mf">296.15961742401123</span><span class="p">,</span> <span class="mf">345.34752464294434</span><span class="p">,</span> <span class="mf">394.53543186187744</span><span class="p">,</span> <span class="mf">443.72333908081055</span><span class="p">,</span> <span class="mf">492.9111614227295</span><span class="p">,</span> <span class="mf">542.0989923477173</span><span class="p">,</span> <span class="mf">591.2868156433105</span><span class="p">,</span> <span class="mf">640.4746389389038</span><span class="p">,</span> <span class="mf">689.6625461578369</span><span class="p">,</span> <span class="mf">738.85045337677</span><span class="p">,</span> <span class="mf">788.0382776260376</span><span class="p">,</span> <span class="mf">837.2261848449707</span><span class="p">,</span> <span class="mf">886.4140920639038</span><span class="p">,</span> <span class="mf">935.6019229888916</span><span class="p">,</span> <span class="mf">984.7898292541504</span><span class="p">]</span>
+	<span class="n">totalDurSec</span> <span class="o">=</span> <span class="p">[</span><span class="mf">60.0</span><span class="p">,</span> <span class="mf">120.0</span><span class="p">,</span> <span class="mf">180.0</span><span class="p">,</span> <span class="mf">240.0</span><span class="p">,</span> <span class="mf">300.0</span><span class="p">,</span> <span class="mf">360.0</span><span class="p">,</span> <span class="mf">420.0</span><span class="p">,</span> <span class="mf">480.0</span><span class="p">,</span> <span class="mf">540.0</span><span class="p">,</span> <span class="mf">600.0</span><span class="p">,</span> <span class="mf">660.0</span><span class="p">,</span> <span class="mf">720.0</span><span class="p">,</span> <span class="mf">780.0</span><span class="p">,</span> <span class="mf">840.0</span><span class="p">,</span> <span class="mf">900.0</span><span class="p">,</span> <span class="mf">960.0</span><span class="p">,</span> <span class="mf">1020.0</span><span class="p">,</span> <span class="mf">1080.0</span><span class="p">,</span> <span class="mf">1140.0</span><span class="p">,</span> <span class="mf">1200.0</span><span class="p">]</span>
+
+	<span class="c1"># with compression</span>
+
+	<span class="n">totalDurMin</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="o">/</span><span class="mi">60</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">totalDurSec</span><span class="p">]</span>
+
+	<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+	<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">totalDurMin</span><span class="p">,</span> <span class="n">loadBruteSec</span><span class="p">,</span> <span class="s1">&#39;o-k&#39;</span><span class="p">)</span>
+	<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">totalDurMin</span><span class="p">,</span> <span class="n">loadHdfSec</span><span class="p">,</span> <span class="s1">&#39;o-r&#39;</span><span class="p">)</span>
+	<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+	<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">totalDurMin</span><span class="p">,</span> <span class="n">hdfSizeMb</span><span class="p">,</span> <span class="s1">&#39;o-r&#39;</span><span class="p">)</span>
+	<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        my footer
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.a1609d9a.min.js"></script>
+      
+    
+  </body>
+</html>

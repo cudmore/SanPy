@@ -14,18 +14,18 @@
       
       
       <link rel="icon" href="../../img/sanpy-transparent.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.6">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
     
     
       
-        <title>detectionParams - SanPy Documentation</title>
+        <title>bDetection - SanPy Documentation</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.875de78c.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.bde7dde4.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.f1a3b89f.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ef6f36e2.min.css">
         
       
     
@@ -96,7 +96,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              detectionParams
+              bDetection
             
           </span>
         </div>
@@ -374,8 +374,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../bAnalysisPlot/" class="md-nav__link">
-        bAnalysisPlot
+      <a href="../analysisPlot/" class="md-nav__link">
+        analysisPlot
       </a>
     </li>
   
@@ -386,8 +386,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../bAnalysisDir/" class="md-nav__link">
-        bAnalysisDir
+      <a href="../analysisDir/" class="md-nav__link">
+        analysisDir
       </a>
     </li>
   
@@ -420,12 +420,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          detectionParams
+          bDetection
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        detectionParams
+        bDetection
       </a>
       
         
@@ -443,7 +443,41 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#sanpy.detectionParams.getDefaultDetection" class="md-nav__link">
+  <a href="#sanpy.bDetection.bDetection" class="md-nav__link">
+    bDetection
+  </a>
+  
+    <nav class="md-nav" aria-label="bDetection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bDetection.bDetection.getValue" class="md-nav__link">
+    getValue()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bDetection.bDetection.setFromDict" class="md-nav__link">
+    setFromDict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bDetection.bDetection.setValue" class="md-nav__link">
+    setValue()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bDetection.getDefaultDetection" class="md-nav__link">
     getDefaultDetection()
   </a>
   
@@ -498,6 +532,45 @@
       <a href="../interface/sanpy_app/" class="md-nav__link">
         sanp_app
       </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8_2" type="checkbox" id="__nav_6_8_2" >
+      
+      <label class="md-nav__link" for="__nav_6_8_2">
+        plugins
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="plugins" data-md-level="3">
+        <label class="md-nav__title" for="__nav_6_8_2">
+          <span class="md-nav__icon md-icon"></span>
+          plugins
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface/plugins/sanpyPlugin/" class="md-nav__link">
+        sanpyPlugin
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -600,7 +673,41 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#sanpy.detectionParams.getDefaultDetection" class="md-nav__link">
+  <a href="#sanpy.bDetection.bDetection" class="md-nav__link">
+    bDetection
+  </a>
+  
+    <nav class="md-nav" aria-label="bDetection">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bDetection.bDetection.getValue" class="md-nav__link">
+    getValue()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bDetection.bDetection.setFromDict" class="md-nav__link">
+    setFromDict()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bDetection.bDetection.setValue" class="md-nav__link">
+    setValue()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bDetection.getDefaultDetection" class="md-nav__link">
     getDefaultDetection()
   </a>
   
@@ -632,7 +739,7 @@
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">sanpy</span>
 
 <span class="c1"># dDict is a dictionary with default parameters</span>
-<span class="n">dDict</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">detectionParams</span><span class="o">.</span><span class="n">getDefaultDetection</span><span class="p">()</span>
+<span class="n">dDict</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bDetection</span><span class="o">.</span><span class="n">getDefaultDetection</span><span class="p">()</span>
 
 <span class="c1"># set to your liking</span>
 <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span>
@@ -646,6 +753,7 @@
 
 <span class="c1"># browse results</span>
 </code></pre></div>
+<p>Date: 20210618</p>
 
 
 
@@ -654,15 +762,210 @@
 
 
 
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="sanpy.bDetection.bDetection" class="doc doc-heading">
+        <code>bDetection</code>
+
+
+
+<a href="#sanpy.bDetection.bDetection" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Class to manage detection parameters (experimental).</p>
+<ul>
+<li>get defaults</li>
+<li>get values</li>
+<li>set values</li>
+</ul>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.bDetection.bDetection.getValue" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.bDetection.bDetection.getValue" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get value from key. Valid keys are defined in getDefaultDetection.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bDetection.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+	<span class="s2">&quot;Get value from key. Valid keys are defined in getDefaultDetection.&quot;</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">currentDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not find key &quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+		<span class="c1"># TODO: define default when not found ???</span>
+		<span class="k">return</span> <span class="kc">None</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.bDetection.bDetection.setFromDict" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">setFromDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dDict</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.bDetection.bDetection.setFromDict" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Set detection from key/values in dDict</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>dDict</code></td>
+        <td><code>dict</code></td>
+        <td><p>Usually a table row like interface/bTableView.py</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bDetection.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">setFromDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dDict</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Set detection from key/values in dDict</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		dDict (dict): Usually a table row like interface/bTableView.py</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">gotError</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">dDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+		<span class="n">ok</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">setValue</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
+		<span class="k">if</span> <span class="ow">not</span> <span class="n">ok</span><span class="p">:</span>
+			<span class="n">gotError</span> <span class="o">=</span> <span class="kc">True</span>
+	<span class="k">return</span> <span class="n">gotError</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.bDetection.bDetection.setValue" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">setValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.bDetection.bDetection.setValue" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Set value for key. Valid keys are defined in getDefaultDetection.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bDetection.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">setValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+	<span class="s2">&quot;Set value for key. Valid keys are defined in getDefaultDetection.&quot;</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">valueType</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+		<span class="n">valueIsNumber</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Number</span><span class="p">)</span>
+		<span class="n">valueIsString</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+		<span class="n">valueIsBool</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+		<span class="n">valueIsList</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span>
+		<span class="n">valueIsNone</span> <span class="o">=</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span>
+
+		<span class="n">expectedType</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="c1"># (number, string, boolean)</span>
+		<span class="n">allowNone</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="c1"># (number, string, boolean)</span>
+		<span class="k">if</span> <span class="n">allowNone</span> <span class="ow">and</span> <span class="n">valueIsNone</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">elif</span> <span class="n">expectedType</span><span class="o">==</span><span class="s1">&#39;number&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">valueIsNumber</span><span class="p">:</span>
+			<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Type mismatch (number) setting key &quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&quot;, got </span><span class="si">{</span><span class="n">valueType</span><span class="si">}</span><span class="s1">, expecting </span><span class="si">{</span><span class="n">expectedType</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+			<span class="k">return</span> <span class="kc">False</span>
+		<span class="k">elif</span> <span class="n">expectedType</span><span class="o">==</span><span class="s1">&#39;string&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">valueIsString</span><span class="p">:</span>
+			<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Type mismatch (string) setting &quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&quot;, got </span><span class="si">{</span><span class="n">valueType</span><span class="si">}</span><span class="s1">, expecting </span><span class="si">{</span><span class="n">expectedType</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+			<span class="k">return</span> <span class="kc">False</span>
+		<span class="k">elif</span> <span class="n">expectedType</span><span class="o">==</span><span class="s1">&#39;boolean&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">valueIsBool</span><span class="p">:</span>
+			<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Type mismatch (bool) setting &quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&quot;, got </span><span class="si">{</span><span class="n">valueType</span><span class="si">}</span><span class="s1">, expecting </span><span class="si">{</span><span class="n">expectedType</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+			<span class="k">return</span> <span class="kc">False</span>
+		<span class="k">elif</span> <span class="n">expectedType</span><span class="o">==</span><span class="s1">&#39;list&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">valueIsList</span><span class="p">:</span>
+			<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Type mismatch (list) setting &quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&quot;, got </span><span class="si">{</span><span class="n">valueType</span><span class="si">}</span><span class="s1">, expecting </span><span class="si">{</span><span class="n">expectedType</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+			<span class="k">return</span> <span class="kc">False</span>
+		<span class="c1"># set</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">currentDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+		<span class="k">return</span> <span class="kc">True</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not find key &quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&quot; to set to &quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+		<span class="k">return</span> <span class="kc">False</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
   <div class="doc doc-object doc-function">
 
 
 
-<h2 class="doc doc-heading" id="sanpy.detectionParams.getDefaultDetection">
+<h2 id="sanpy.bDetection.getDefaultDetection" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">getDefaultDetection</span><span class="p">()</span></code>
 
 
-<a class="headerlink" href="#sanpy.detectionParams.getDefaultDetection" title="Permanent link">¤</a></h2>
+<a href="#sanpy.bDetection.getDefaultDetection" class="headerlink" title="Permanent link">¤</a></h2>
 
     <div class="doc doc-contents ">
 
@@ -684,7 +987,7 @@
   </tbody>
 </table>
         <details class="quote">
-          <summary>Source code in <code>sanpy/detectionParams.py</code></summary>
+          <summary>Source code in <code>sanpy/bDetection.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getDefaultDetection</span><span class="p">():</span>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Get detection parameters including mapping from backend to human readable and long-format descriptions.</span>
@@ -697,6 +1000,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;dvdtThreshold&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;dVdt&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;dV/dt Threshold&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -705,6 +1010,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;mvThreshold&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;mV&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;mV Threshold&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -713,6 +1020,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;dvdt_percentOfMax&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.1</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Percent&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;dV/dt Percent of max&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -721,6 +1030,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;onlyPeaksAbove_mV&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;mV&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Accept Peaks Above (mV)&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -729,6 +1040,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;doBackupSpikeVm&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;boolean&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Boolean&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Backup Vm Spikes&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -737,14 +1050,18 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;refractory_ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">170</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Minimum AP interval (ms)&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;APs with interval (with respect to previous AP) less than this will be removed&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;APs with interval (wrt previous AP) less than this will be removed&#39;</span>
 
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;peakWindow_ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Peak Window (ms)&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -753,6 +1070,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;dvdtPreWindow_ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">10</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;dV/dt Pre Window (ms)&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -761,6 +1080,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;mdp_ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">250</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Pre AP MDP window (ms)&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -769,6 +1090,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;avgWindow_ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -777,6 +1100,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;halfHeights&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">90</span><span class="p">]</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;list&#39;</span> <span class="c1"># list of number</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;AP Durations (%)&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -785,6 +1110,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;halfWidthWindow_ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Half Width Window (ms)&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -793,6 +1120,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;medianFilter&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># 0 is no median filter (see SavitzkyGolay_pnts)</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;points&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Median Filter Points&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -801,6 +1130,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;SavitzkyGolay_pnts&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span> <span class="c1"># 0 is no filter</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;points&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;SavitzkyGolay Filter Points&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -809,6 +1140,8 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;SavitzkyGolay_poly&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Savitzky-Golay Filter Polynomial Degree&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
@@ -817,11 +1150,72 @@
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;spikeClipWidth_ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">500</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;ms&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;AP Clip Width (ms)&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;The width/duration of generated AP clips&#39;</span>
 
+	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;startSeconds&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;s&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Start(s)&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Used to save reports (entire recording is always detected)&#39;</span>
+
+	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;stopSeconds&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;s&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Stop(s)&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Used to save reports (entire recording is always detected)&#39;</span>
+
+	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;cellType&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;string&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;s&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Cell Type&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Cell Type&#39;</span>
+
+	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;sex&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;string&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;s&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Sex&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Sex&#39;</span>
+
+	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;condition&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;string&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;s&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Condition&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Condition&#39;</span>
+
+	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;verbose&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;string&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;bool&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Verbose&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Verbose Detection Reporting&#39;</span>
 
 	<span class="k">return</span> <span class="n">theDict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 </code></pre></div>
@@ -829,6 +1223,12 @@
     </div>
 
   </div>
+
+
+
+
+
+
 
 
 
@@ -861,7 +1261,7 @@
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.34eae1b6.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a1609d9a.min.js"></script>
       
     
   </body>

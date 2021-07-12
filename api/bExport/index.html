@@ -14,7 +14,7 @@
       
       
       <link rel="icon" href="../../img/sanpy-transparent.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.6">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
     
     
       
@@ -22,10 +22,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.875de78c.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.bde7dde4.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.f1a3b89f.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ef6f36e2.min.css">
         
       
     
@@ -374,8 +374,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../bAnalysisPlot/" class="md-nav__link">
-        bAnalysisPlot
+      <a href="../analysisPlot/" class="md-nav__link">
+        analysisPlot
       </a>
     </li>
   
@@ -386,8 +386,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../bAnalysisDir/" class="md-nav__link">
-        bAnalysisDir
+      <a href="../analysisDir/" class="md-nav__link">
+        analysisDir
       </a>
     </li>
   
@@ -449,6 +449,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.bExport.bExport.getSummary" class="md-nav__link">
+    getSummary()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.bExport.bExport.report" class="md-nav__link">
     report()
   </a>
@@ -487,8 +494,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../detectionParams/" class="md-nav__link">
-        detectionParams
+      <a href="../bDetection/" class="md-nav__link">
+        bDetection
       </a>
     </li>
   
@@ -535,6 +542,45 @@
       <a href="../interface/sanpy_app/" class="md-nav__link">
         sanp_app
       </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8_2" type="checkbox" id="__nav_6_8_2" >
+      
+      <label class="md-nav__link" for="__nav_6_8_2">
+        plugins
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="plugins" data-md-level="3">
+        <label class="md-nav__title" for="__nav_6_8_2">
+          <span class="md-nav__icon md-icon"></span>
+          plugins
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../interface/plugins/sanpyPlugin/" class="md-nav__link">
+        sanpyPlugin
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -657,6 +703,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.bExport.bExport.getSummary" class="md-nav__link">
+    getSummary()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.bExport.bExport.report" class="md-nav__link">
     report()
   </a>
@@ -702,6 +755,8 @@
 
     <div class="doc doc-contents first">
 
+      <p>Class to export analysis from a bAnalysis.</p>
+<p>Created: 20210522</p>
 
 
 
@@ -714,16 +769,16 @@
 
 
 
-<h2 class="doc doc-heading" id="sanpy.bExport.bExport">
+<h2 id="sanpy.bExport.bExport" class="doc doc-heading">
         <code>bExport</code>
 
 
 
-<a class="headerlink" href="#sanpy.bExport.bExport" title="Permanent link">¤</a></h2>
+<a href="#sanpy.bExport.bExport" class="headerlink" title="Permanent link">¤</a></h2>
 
     <div class="doc doc-contents ">
 
-      <p>Once analysis is performed with sanpy.bAnalysis.spikeDetect(dDict),
+      <p>Once analysis is performed with sanpy.bAnalysis.spikeDetect(),
 reports can be generated with the bExport class.</p>
 <p>Example reports are:</p>
 <ul>
@@ -744,14 +799,14 @@ reports can be generated with the bExport class.</p>
 
 
 
-<h3 class="doc doc-heading" id="sanpy.bExport.bExport.__init__">
+<h3 id="sanpy.bExport.bExport.__init__" class="doc doc-heading">
 <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="p">)</span></code>
 
   <span class="doc doc-properties">
       <small class="doc doc-property doc-property-special"><code>special</code></small>
   </span>
 
-<a class="headerlink" href="#sanpy.bExport.bExport.__init__" title="Permanent link">¤</a></h3>
+<a href="#sanpy.bExport.bExport.__init__" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -797,11 +852,11 @@ reports can be generated with the bExport class.</p>
 
 
 
-<h3 class="doc doc-heading" id="sanpy.bExport.bExport.getReportDf">
+<h3 id="sanpy.bExport.bExport.getReportDf" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">getReportDf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">,</span> <span class="n">savefile</span><span class="p">)</span></code>
 
 
-<a class="headerlink" href="#sanpy.bExport.bExport.getReportDf" title="Permanent link">¤</a></h3>
+<a href="#sanpy.bExport.bExport.getReportDf" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -872,7 +927,7 @@ reports can be generated with the bExport class.</p>
 	<span class="c1"># make an analysis folder</span>
 	<span class="n">filePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">filePath</span><span class="p">,</span> <span class="s1">&#39;analysis&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">filePath</span><span class="p">):</span>
-		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    getReportDf() making output folder:&#39;</span><span class="p">,</span> <span class="n">filePath</span><span class="p">)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Making output folder: </span><span class="si">{</span><span class="n">filePath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 		<span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">filePath</span><span class="p">)</span>
 
 	<span class="n">textFileBaseName</span><span class="p">,</span> <span class="n">tmpExtension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">fileName</span><span class="p">)</span>
@@ -880,7 +935,7 @@ reports can be generated with the bExport class.</p>
 
 	<span class="c1"># save header</span>
 	<span class="n">textFileHeader</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
-	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">file</span> <span class="c1"># this is actuall file path</span>
+	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">getFileName</span><span class="p">()</span>
 	<span class="c1">#textFileHeader[&#39;condition1&#39;] = self.ba.condition1</span>
 	<span class="c1">#textFileHeader[&#39;condition2&#39;] = self.ba.condition2</span>
 	<span class="c1">#textFileHeader[&#39;condition3&#39;] = self.ba.condition3</span>
@@ -911,7 +966,6 @@ reports can be generated with the bExport class.</p>
 	<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">textFilePath</span><span class="p">,</span><span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
 		<span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">headerStr</span><span class="p">)</span>
 
-	<span class="c1">#print(&#39;Saving .txt file:&#39;, textFilePath)</span>
 	<span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">)</span>
 
 	<span class="c1"># we need a column indicating (path), the original .abf file</span>
@@ -923,7 +977,7 @@ reports can be generated with the bExport class.</p>
 	<span class="n">tmpPath</span><span class="p">,</span> <span class="n">tmpFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">file</span><span class="p">)</span>
 	<span class="n">tmpFile</span><span class="p">,</span> <span class="n">tmpExt</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">tmpFile</span><span class="p">)</span>
 	<span class="n">analysisName</span> <span class="o">=</span> <span class="n">tmpFile</span> <span class="o">+</span> <span class="s1">&#39;_s&#39;</span> <span class="o">+</span> <span class="n">minStr</span> <span class="o">+</span> <span class="s1">&#39;_s&#39;</span> <span class="o">+</span> <span class="n">maxStr</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    minStr:&#39;</span><span class="p">,</span> <span class="n">minStr</span><span class="p">,</span> <span class="s1">&#39;maxStr:&#39;</span><span class="p">,</span> <span class="n">maxStr</span><span class="p">,</span> <span class="s1">&#39;analysisName:&#39;</span><span class="p">,</span> <span class="n">analysisName</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;minStr:</span><span class="si">{</span><span class="n">minStr</span><span class="si">}</span><span class="s1"> maxStr:</span><span class="si">{</span><span class="n">maxStr</span><span class="si">}</span><span class="s1"> analysisName:</span><span class="si">{</span><span class="n">analysisName</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 	<span class="n">df</span><span class="p">[</span><span class="s1">&#39;analysisname&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">analysisName</span>
 
 	<span class="c1"># should be filled in by self.ba.report</span>
@@ -934,7 +988,7 @@ reports can be generated with the bExport class.</p>
 	<span class="n">df</span><span class="p">[</span><span class="s1">&#39;filename&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> 	<span class="n">df</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()]</span>
 
 	<span class="c1">#</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    bExport.getReportDf() saving text file:&#39;</span><span class="p">,</span> <span class="n">textFilePath</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving text file: </span><span class="si">{textFilePath}</span><span class="s1">&#39;</span><span class="p">)</span>
 	<span class="c1">#df.to_csv(textFilePath, sep=&#39;,&#39;, index_label=&#39;index&#39;, mode=&#39;a&#39;)</span>
 	<span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">textFilePath</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;w&#39;</span><span class="p">)</span>
 
@@ -953,11 +1007,157 @@ reports can be generated with the bExport class.</p>
 
 
 
-<h3 class="doc doc-heading" id="sanpy.bExport.bExport.report">
+<h3 id="sanpy.bExport.bExport.getSummary" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getSummary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theMax</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.bExport.bExport.getSummary" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get analysis summary as df.</p>
+<p>TODO: Working on this while implementing plugin 'saveAnalysis'</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bExport.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getSummary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theMax</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get analysis summary as df.</span>
+
+<span class="sd">	TODO: Working on this while implementing plugin &#39;saveAnalysis&#39;</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="k">return</span> <span class="kc">None</span>
+
+	<span class="k">if</span> <span class="n">theMin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">theMax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">theMin</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">theMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">sweepX</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+	<span class="c1">#</span>
+	<span class="c1"># cardiac style analysis to sheet &#39;cardiac&#39;</span>
+	<span class="n">cardiac_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">report2</span><span class="p">(</span><span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">)</span> <span class="c1"># report2 is more &#39;cardiac&#39;</span>
+
+	<span class="c1">#</span>
+	<span class="c1"># header sheet</span>
+	<span class="n">headerDict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+	<span class="n">filePath</span><span class="p">,</span> <span class="n">fileName</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;File Name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">fileName</span><span class="p">]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;File Path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">filePath</span><span class="p">]</span>
+
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Cell Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;cellType&#39;</span><span class="p">]]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Sex&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;sex&#39;</span><span class="p">]]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Condition&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;condition&#39;</span><span class="p">]]</span>
+
+	<span class="c1"># todo: get these params in ONE dict inside self.ba</span>
+	<span class="n">dateAnalyzed</span><span class="p">,</span> <span class="n">timeAnalyzed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">dateAnalyzed</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Date Analyzed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">dateAnalyzed</span><span class="p">]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Time Analyzed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">timeAnalyzed</span><span class="p">]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Detection Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionType</span><span class="p">]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;dV/dt Threshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]]</span>
+	<span class="c1">#headerDict[&#39;mV Threshold&#39;] = [self.ba.mvThreshold] # abb 202012</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Vm Threshold (mV)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]]</span>
+	<span class="c1">#headerDict[&#39;Median Filter (pnts)&#39;] = [self.ba.medianFilter]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Analysis Version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">sanpy</span><span class="o">.</span><span class="n">analysisVersion</span><span class="p">]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Interface Version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">sanpy</span><span class="o">.</span><span class="n">interfaceVersion</span><span class="p">]</span>
+
+	<span class="c1">#headerDict[&#39;Analysis Start (sec)&#39;] = [self.ba.startSeconds]</span>
+	<span class="c1">#headerDict[&#39;Analysis Stop (sec)&#39;] = [self.ba.stopSeconds]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Sweep Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">currentSweep</span><span class="p">]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Number of Sweeps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSweeps</span><span class="p">]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Export Start (sec)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">theMin</span><span class="p">))]</span> <span class="c1"># on export, x-axis of raw plot will be ouput</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Export Stop (sec)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">theMax</span><span class="p">))]</span> <span class="c1"># on export, x-axis of raw plot will be ouput</span>
+
+	<span class="c1"># &#39;stats&#39; has xxx columns (name, mean, sd, se, n)</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;stats&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cardiac_df</span><span class="p">):</span>
+		<span class="n">headerDict</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+	<span class="c1"># mean</span>
+	<span class="n">theMean</span> <span class="o">=</span> <span class="n">cardiac_df</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="c1"># skipna default is True</span>
+	<span class="n">theMean</span><span class="p">[</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+	<span class="c1"># sd</span>
+	<span class="n">theSD</span> <span class="o">=</span> <span class="n">cardiac_df</span><span class="o">.</span><span class="n">std</span><span class="p">()</span> <span class="c1"># skipna default is True</span>
+	<span class="n">theSD</span><span class="p">[</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+	<span class="c1">#se</span>
+	<span class="n">theSE</span> <span class="o">=</span> <span class="n">cardiac_df</span><span class="o">.</span><span class="n">sem</span><span class="p">()</span> <span class="c1"># skipna default is True</span>
+	<span class="n">theSE</span><span class="p">[</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+	<span class="c1">#n</span>
+	<span class="n">theN</span> <span class="o">=</span> <span class="n">cardiac_df</span><span class="o">.</span><span class="n">count</span><span class="p">()</span> <span class="c1"># skipna default is True</span>
+	<span class="n">theN</span><span class="p">[</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+
+	<span class="n">statCols</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="s1">&#39;sd&#39;</span><span class="p">,</span> <span class="s1">&#39;se&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">]</span>
+	<span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">stat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">statCols</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="c1"># need to append columns to keep Excel sheet columns in sync</span>
+			<span class="c1">#for k,v in headerDict.items():</span>
+			<span class="c1">#	headerDict[k].append(&#39;&#39;)</span>
+
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;File Name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;File Path&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Cell Type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Sex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Condition&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="c1">#</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Date Analyzed&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Time Analyzed&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Detection Type&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;dV/dt Threshold&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Vm Threshold (mV)&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="c1">#headerDict[&#39;Median Filter (pnts)&#39;].append(&#39;&#39;)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Analysis Version&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Interface Version&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Sweep Number&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Number of Sweeps&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Export Start (sec)&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Export Stop (sec)&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+		<span class="c1"># a dictionary key for each stat</span>
+		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;stats&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stat</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cardiac_df</span><span class="p">):</span>
+			<span class="c1">#headerDict[col].append(&#39;&#39;)</span>
+			<span class="k">if</span> <span class="n">stat</span> <span class="o">==</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span>
+				<span class="n">headerDict</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theMean</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+			<span class="k">elif</span> <span class="n">stat</span> <span class="o">==</span> <span class="s1">&#39;sd&#39;</span><span class="p">:</span>
+				<span class="n">headerDict</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theSD</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+			<span class="k">elif</span> <span class="n">stat</span> <span class="o">==</span> <span class="s1">&#39;se&#39;</span><span class="p">:</span>
+				<span class="n">headerDict</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theSE</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+			<span class="k">elif</span> <span class="n">stat</span> <span class="o">==</span> <span class="s1">&#39;n&#39;</span><span class="p">:</span>
+				<span class="n">headerDict</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theN</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
+
+	<span class="c1"># end for j, stat</span>
+	<span class="c1">#print(&#39;=== headerDict&#39;)</span>
+	<span class="c1">#for k,v in headerDict.items():</span>
+	<span class="c1">#	print(k, &#39;:&#39;, v)</span>
+
+	<span class="c1"># dict to pandas dataframe</span>
+	<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">headerDict</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+	<span class="n">df</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">headerDict</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">allow_duplicates</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+	<span class="k">return</span> <span class="n">df</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.bExport.bExport.report" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">report</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">)</span></code>
 
 
-<a class="headerlink" href="#sanpy.bExport.bExport.report" title="Permanent link">¤</a></h3>
+<a href="#sanpy.bExport.bExport.report" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1045,12 +1245,12 @@ reports can be generated with the bExport class.</p>
 <span class="sd">	&#39;&#39;&#39;</span>
 
 	<span class="c1"># want this but region/sex/condition are not defined</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;bExport.report()&#39;</span><span class="p">)</span>
-	<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="o">.</span><span class="n">head</span><span class="p">())</span>
+	<span class="c1">#print(&#39;bExport.report()&#39;)</span>
+	<span class="c1">#print(df.head())</span>
 	<span class="n">tmpNewCol</span> <span class="o">=</span> <span class="s1">&#39;CellTypeSex&#39;</span>
 	<span class="n">cellTypeStr</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;cellType&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 	<span class="n">sexStr</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s1">&#39;sex&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;cellTypeStr:&#39;</span><span class="p">,</span> <span class="n">cellTypeStr</span><span class="p">,</span> <span class="s1">&#39;sexStr:&#39;</span><span class="p">,</span> <span class="n">sexStr</span><span class="p">)</span>
+	<span class="c1">#print(&#39;cellTypeStr:&#39;, cellTypeStr, &#39;sexStr:&#39;, sexStr)</span>
 	<span class="n">regSexEncoding</span> <span class="o">=</span> <span class="n">cellTypeStr</span> <span class="o">+</span> <span class="n">sexStr</span>
 	<span class="n">df</span><span class="p">[</span><span class="n">tmpNewCol</span><span class="p">]</span> <span class="o">=</span> <span class="n">regSexEncoding</span>
 
@@ -1084,11 +1284,11 @@ reports can be generated with the bExport class.</p>
 
 
 
-<h3 class="doc doc-heading" id="sanpy.bExport.bExport.report2">
+<h3 id="sanpy.bExport.bExport.report2" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">report2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">)</span></code>
 
 
-<a class="headerlink" href="#sanpy.bExport.bExport.report2" title="Permanent link">¤</a></h3>
+<a href="#sanpy.bExport.bExport.report2" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
@@ -1210,15 +1410,15 @@ reports can be generated with the bExport class.</p>
 
 
 
-<h3 class="doc doc-heading" id="sanpy.bExport.bExport.saveReport">
+<h3 id="sanpy.bExport.bExport.saveReport" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">saveReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">savefile</span><span class="p">,</span> <span class="n">theMin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theMax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">saveExcel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alsoSaveTxt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
 
 
-<a class="headerlink" href="#sanpy.bExport.bExport.saveReport" title="Permanent link">¤</a></h3>
+<a href="#sanpy.bExport.bExport.saveReport" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
-      <p>Save a spike report for detected spikes between theMin (sec) and theMax (sec)</p>
+      <p>Save a spike report for detected spikes between theMin (sec) and theMax (sec).</p>
 
 <p><strong>Parameters:</strong></p>
 <table>
@@ -1283,7 +1483,7 @@ df: df</p></td>
           <summary>Source code in <code>sanpy/bExport.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">saveReport</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">savefile</span><span class="p">,</span> <span class="n">theMin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">theMax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">saveExcel</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">alsoSaveTxt</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Save a spike report for detected spikes between theMin (sec) and theMax (sec)</span>
+<span class="sd">	Save a spike report for detected spikes between theMin (sec) and theMax (sec).</span>
 
 <span class="sd">	Args:</span>
 <span class="sd">		savefile (str): path to xlsx file</span>
@@ -1296,11 +1496,9 @@ df: df</p></td>
 <span class="sd">		str: analysisName</span>
 <span class="sd">		df: df</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-
-	<span class="k">if</span> <span class="n">theMin</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">theMin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">theMax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="n">theMin</span> <span class="o">=</span> <span class="mi">0</span>
-	<span class="k">if</span> <span class="n">theMax</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-		<span class="n">theMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">sweepX</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+		<span class="n">theMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">sweepX</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
 	<span class="c1"># always grab a df to the entire analysis (not sure what I will do with this)</span>
 	<span class="c1">#df = self.ba.report() # report() is my own &#39;bob&#39; verbiage</span>
@@ -1319,7 +1517,7 @@ df: df</p></td>
 		<span class="c1">#</span>
 		<span class="c1"># header sheet</span>
 		<span class="n">headerDict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
-		<span class="n">filePath</span><span class="p">,</span> <span class="n">fileName</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">file</span><span class="p">)</span>
+		<span class="n">filePath</span><span class="p">,</span> <span class="n">fileName</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;File Name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">fileName</span><span class="p">]</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;File Path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">filePath</span><span class="p">]</span>
 
@@ -1483,7 +1681,7 @@ df: df</p></td>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="n">first_X</span> <span class="o">=</span> <span class="n">theseClips_x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#- theseClips_x[0][0]</span>
 			<span class="n">first_X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">first_X</span><span class="p">)</span>
-			<span class="n">first_X</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">abf</span><span class="o">.</span><span class="n">dataPointsPerMs</span> <span class="c1"># pnts to ms</span>
+			<span class="n">first_X</span> <span class="o">/=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">dataPointsPerMs</span> <span class="c1"># pnts to ms</span>
 			<span class="c1">#if verbose: print(&#39;    bExport.saveReport() saving mean clip to sheet &quot;Avg Spike&quot; from&#39;, len(theseClips), &#39;clips&#39;)</span>
 			<span class="c1">#dfClip = pd.DataFrame(meanClip, first_X)</span>
 			<span class="n">dfClip</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span>
@@ -1492,8 +1690,7 @@ df: df</p></td>
 				<span class="p">})</span>
 			<span class="c1"># load clip based on analysisname (with start/stop seconds)</span>
 			<span class="n">analysisname</span> <span class="o">=</span> <span class="n">df0</span><span class="p">[</span><span class="s1">&#39;analysisname&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># name with start/stop seconds</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;bExport.saveReport() analysisname:&#39;</span><span class="p">,</span> <span class="n">analysisname</span><span class="p">)</span>
-			<span class="c1">#print(&#39;analysisname:&#39;, analysisname)</span>
+			<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;analysisname: </span><span class="si">{</span><span class="n">analysisname</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 			<span class="n">clipFileName</span> <span class="o">=</span> <span class="n">analysisname</span> <span class="o">+</span> <span class="s1">&#39;_clip.csv&#39;</span>
 			<span class="n">tmpPath</span><span class="p">,</span> <span class="n">tmpFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">savefile</span><span class="p">)</span>
 			<span class="n">tmpPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpPath</span><span class="p">,</span> <span class="s1">&#39;analysis&#39;</span><span class="p">)</span>
@@ -1501,7 +1698,7 @@ df: df</p></td>
 			<span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">tmpPath</span><span class="p">):</span>
 				<span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">tmpPath</span><span class="p">)</span>
 			<span class="n">clipSavePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpPath</span><span class="p">,</span> <span class="n">clipFileName</span><span class="p">)</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    clipSavePath:&#39;</span><span class="p">,</span> <span class="n">clipSavePath</span><span class="p">)</span>
+			<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;clipSavePath: </span><span class="si">{</span><span class="n">clipSavePath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 			<span class="n">dfClip</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">clipSavePath</span><span class="p">)</span>
 		<span class="c1">#</span>
 		<span class="n">theRet</span> <span class="o">=</span> <span class="n">df0</span>
@@ -1522,6 +1719,12 @@ df: df</p></td>
     </div>
 
   </div>
+
+
+
+
+
+
 
 
 
@@ -1554,7 +1757,7 @@ df: df</p></td>
     <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.34eae1b6.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a1609d9a.min.js"></script>
       
     
   </body>

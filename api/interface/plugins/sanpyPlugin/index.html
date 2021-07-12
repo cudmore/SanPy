@@ -1,0 +1,2577 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Current Clamp Analysis For Cardiac Myocytes">
+      
+      
+      
+        <meta name="author" content="Robert H Cudmore">
+      
+      
+      <link rel="icon" href="../../../../img/sanpy-transparent.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-7.1.5">
+    
+    
+      
+        <title>sanpyPlugin - SanPy Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../../assets/stylesheets/main.bde7dde4.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../../assets/stylesheets/palette.ef6f36e2.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../../css/style.css">
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("../../../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sanpy.interface.plugins.sanpyPlugin.myWidget" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../../.." title="SanPy Documentation" class="md-header__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
+      
+  <img src="../../../../img/sanpy-transparent.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SanPy Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              sanpyPlugin
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SanPy Repository
+  </div>
+</a>
+      </div>
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../../.." title="SanPy Documentation" class="md-nav__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
+      
+  <img src="../../../../img/sanpy-transparent.png" alt="logo">
+
+    </a>
+    SanPy Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SanPy Repository
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../.." class="md-nav__link">
+        SanPy
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../install/" class="md-nav__link">
+        Install
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../desktop-application/" class="md-nav__link">
+        Desktop Application
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../plugins/" class="md-nav__link">
+        Plugins
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      <label class="md-nav__link" for="__nav_5">
+        Scripting
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Scripting" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Scripting
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../scripting/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../scripting/examples/" class="md-nav__link">
+        Examples
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../scripting/plotting-analysis/" class="md-nav__link">
+        Plotting Analysis
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
+      
+      <label class="md-nav__link" for="__nav_6">
+        API
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="API" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bAnalysis/" class="md-nav__link">
+        bAnalysis
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../analysisPlot/" class="md-nav__link">
+        analysisPlot
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../analysisDir/" class="md-nav__link">
+        analysisDir
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bExport/" class="md-nav__link">
+        bExport
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bDetection/" class="md-nav__link">
+        bDetection
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../bAnalysisUtil/" class="md-nav__link">
+        bAnalysisUtil
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8" type="checkbox" id="__nav_6_8" checked>
+      
+      <label class="md-nav__link" for="__nav_6_8">
+        interface
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="interface" data-md-level="2">
+        <label class="md-nav__title" for="__nav_6_8">
+          <span class="md-nav__icon md-icon"></span>
+          interface
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../sanpy_app/" class="md-nav__link">
+        sanp_app
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_8_2" type="checkbox" id="__nav_6_8_2" checked>
+      
+      <label class="md-nav__link" for="__nav_6_8_2">
+        plugins
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="plugins" data-md-level="3">
+        <label class="md-nav__title" for="__nav_6_8_2">
+          <span class="md-nav__icon md-icon"></span>
+          plugins
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          sanpyPlugin
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        sanpyPlugin
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.myWidget" class="md-nav__link">
+    myWidget
+  </a>
+  
+    <nav class="md-nav" aria-label="myWidget">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.closeEvent" class="md-nav__link">
+    closeEvent()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.contextMenuEvent" class="md-nav__link">
+    contextMenuEvent()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.keyPressEvent" class="md-nav__link">
+    keyPressEvent()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.ResponseType" class="md-nav__link">
+    ResponseType
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin" class="md-nav__link">
+    sanpyPlugin
+  </a>
+  
+    <nav class="md-nav" aria-label="sanpyPlugin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.ba" class="md-nav__link">
+    ba
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.get_bAnalysis" class="md-nav__link">
+    get_bAnalysis()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.get_bPlugins" class="md-nav__link">
+    get_bPlugins()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getResponseOption" class="md-nav__link">
+    getResponseOption()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getSanPyApp" class="md-nav__link">
+    getSanPyApp()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getStartStop" class="md-nav__link">
+    getStartStop()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.keyPressEvent" class="md-nav__link">
+    keyPressEvent()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.mplWindow" class="md-nav__link">
+    mplWindow()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.myHumanName" class="md-nav__link">
+    myHumanName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.onClose" class="md-nav__link">
+    onClose()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.plot" class="md-nav__link">
+    plot()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.pyqtWindow" class="md-nav__link">
+    pyqtWindow()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.replot" class="md-nav__link">
+    replot()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.responseTypes" class="md-nav__link">
+    responseTypes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.selectSpike" class="md-nav__link">
+    selectSpike()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.signalCloseWindow" class="md-nav__link">
+    signalCloseWindow
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.signalSelectSpike" class="md-nav__link">
+    signalSelectSpike
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_selectSpike" class="md-nav__link">
+    slot_selectSpike()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_set_x_axis" class="md-nav__link">
+    slot_set_x_axis()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_switchFile" class="md-nav__link">
+    slot_switchFile()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_updateAnalysis" class="md-nav__link">
+    slot_updateAnalysis()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.spike_pick_event" class="md-nav__link">
+    spike_pick_event()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.toggleResponseOptions" class="md-nav__link">
+    toggleResponseOptions()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.turnOffAllSignalSlot" class="md-nav__link">
+    turnOffAllSignalSlot()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../methods/" class="md-nav__link">
+        Methods
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../web-application/" class="md-nav__link">
+        Web Application
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../open-source/" class="md-nav__link">
+        Open Source
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../about/" class="md-nav__link">
+        About
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.myWidget" class="md-nav__link">
+    myWidget
+  </a>
+  
+    <nav class="md-nav" aria-label="myWidget">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.closeEvent" class="md-nav__link">
+    closeEvent()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.contextMenuEvent" class="md-nav__link">
+    contextMenuEvent()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.keyPressEvent" class="md-nav__link">
+    keyPressEvent()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.ResponseType" class="md-nav__link">
+    ResponseType
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin" class="md-nav__link">
+    sanpyPlugin
+  </a>
+  
+    <nav class="md-nav" aria-label="sanpyPlugin">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.ba" class="md-nav__link">
+    ba
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.get_bAnalysis" class="md-nav__link">
+    get_bAnalysis()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.get_bPlugins" class="md-nav__link">
+    get_bPlugins()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getResponseOption" class="md-nav__link">
+    getResponseOption()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getSanPyApp" class="md-nav__link">
+    getSanPyApp()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getStartStop" class="md-nav__link">
+    getStartStop()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.keyPressEvent" class="md-nav__link">
+    keyPressEvent()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.mplWindow" class="md-nav__link">
+    mplWindow()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.myHumanName" class="md-nav__link">
+    myHumanName
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.onClose" class="md-nav__link">
+    onClose()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.plot" class="md-nav__link">
+    plot()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.pyqtWindow" class="md-nav__link">
+    pyqtWindow()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.replot" class="md-nav__link">
+    replot()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.responseTypes" class="md-nav__link">
+    responseTypes
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.selectSpike" class="md-nav__link">
+    selectSpike()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.signalCloseWindow" class="md-nav__link">
+    signalCloseWindow
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.signalSelectSpike" class="md-nav__link">
+    signalSelectSpike
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_selectSpike" class="md-nav__link">
+    slot_selectSpike()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_set_x_axis" class="md-nav__link">
+    slot_set_x_axis()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_switchFile" class="md-nav__link">
+    slot_switchFile()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_updateAnalysis" class="md-nav__link">
+    slot_updateAnalysis()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.spike_pick_event" class="md-nav__link">
+    spike_pick_event()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.toggleResponseOptions" class="md-nav__link">
+    toggleResponseOptions()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.turnOffAllSignalSlot" class="md-nav__link">
+    turnOffAllSignalSlot()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>sanpyPlugin</h1>
+                
+                <div class="doc doc-object doc-module">
+
+
+    <div class="doc doc-contents first">
+
+      <p><code>sanpyPlugin</code> is the parent class for all SanPy plugins. Derive from this class to create new plugins.</p>
+<p>Users can run a plugin with the following code</p>
+<div class="highlight"><pre><span></span><code>import sys
+from PyQt5 import QtCore, QtWidgets, QtGui
+import sanpy
+import sanpy.interface
+
+# create a PyQt application
+app = QtWidgets.QApplication([])
+
+# load and analyze sample data
+path = &#39;/home/cudmore/Sites/SanPy/data/19114001.abf&#39;
+ba = sanpy.bAnalysis(path)
+ba.spikeDetect()
+
+# open the interface for the &#39;saveAnalysis&#39; plugin.
+sa = sanpy.interface.plugins.plotScatter(ba=ba, startStop=None)
+
+sys.exit(app.exec_())
+</code></pre></div>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="sanpy.interface.plugins.sanpyPlugin.myWidget" class="doc doc-heading">
+        <code>myWidget</code>
+
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.myWidget" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Helper class to open a PyQt window from within a plugin.</p>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.myWidget.__init__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parentPlugin</span><span class="p">,</span> <span class="n">doDark</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.__init__" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>parentPlugin</code></td>
+        <td><code>sanpyPlugin</code></td>
+        <td><p>[sanpyPlugin][sanpy.interface.plugins.sanpyPlugin.sanpyPlugin#sanpyPlugin]</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>doDark</code></td>
+        <td><code>bool</code></td>
+        <td><p>If True then use dark theme, False use light theme.</p></td>
+        <td><code>True</code></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parentPlugin</span><span class="p">,</span> <span class="n">doDark</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Arguments:</span>
+<span class="sd">		parentPlugin (sanpyPlugin): [sanpyPlugin][sanpy.interface.plugins.sanpyPlugin.sanpyPlugin#sanpyPlugin]</span>
+<span class="sd">		doDark (bool): If True then use dark theme, False use light theme.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_parentPlugin</span> <span class="o">=</span> <span class="n">parentPlugin</span>
+
+	<span class="c1">#self._mySetWindowTitle()</span>
+
+	<span class="k">if</span> <span class="n">doDark</span> <span class="ow">and</span> <span class="n">qdarkstyle</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="n">qdarkstyle</span><span class="o">.</span><span class="n">load_stylesheet</span><span class="p">(</span><span class="n">qt_api</span><span class="o">=</span><span class="s1">&#39;pyqt5&#39;</span><span class="p">))</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.myWidget.closeEvent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">closeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.closeEvent" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>closeEvent(self, QCloseEvent)</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">closeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_parentPlugin</span><span class="o">.</span><span class="n">onClose</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.myWidget.contextMenuEvent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">contextMenuEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.contextMenuEvent" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Right-click context menu depends on enum ReponseType.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">contextMenuEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Right-click context menu depends on enum ReponseType.&quot;&quot;&quot;</span>
+	<span class="c1">#logger.info(event)</span>
+
+	<span class="n">contextMenu</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+	<span class="n">switchFile</span> <span class="o">=</span> <span class="n">contextMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Respond to switch file&quot;</span><span class="p">)</span>
+	<span class="n">switchFile</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+	<span class="n">switchFile</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">responseOptions</span><span class="p">[</span><span class="s1">&#39;switchFile&#39;</span><span class="p">])</span>
+
+	<span class="n">analysisChange</span> <span class="o">=</span> <span class="n">contextMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Respond to analysis change&quot;</span><span class="p">)</span>
+	<span class="n">analysisChange</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+	<span class="n">analysisChange</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">responseOptions</span><span class="p">[</span><span class="s1">&#39;analysisChange&#39;</span><span class="p">])</span>
+
+	<span class="n">selectSpike</span> <span class="o">=</span> <span class="n">contextMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Respond to select spike&quot;</span><span class="p">)</span>
+	<span class="n">selectSpike</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+	<span class="n">selectSpike</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">responseOptions</span><span class="p">[</span><span class="s1">&#39;selectSpike&#39;</span><span class="p">])</span>
+
+	<span class="n">axisChange</span> <span class="o">=</span> <span class="n">contextMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Respond to axis change&quot;</span><span class="p">)</span>
+	<span class="n">axisChange</span><span class="o">.</span><span class="n">setCheckable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+	<span class="n">axisChange</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">responseOptions</span><span class="p">[</span><span class="s1">&#39;setAxis&#39;</span><span class="p">])</span>
+
+	<span class="n">contextMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
+	<span class="n">copyTable</span> <span class="o">=</span> <span class="n">contextMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Copy Table&quot;</span><span class="p">)</span>
+
+	<span class="n">contextMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
+	<span class="n">saveTable</span> <span class="o">=</span> <span class="n">contextMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Save Table&quot;</span><span class="p">)</span>
+	<span class="c1">#</span>
+	<span class="n">action</span> <span class="o">=</span> <span class="n">contextMenu</span><span class="o">.</span><span class="n">exec_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mapToGlobal</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">()))</span>
+
+	<span class="k">if</span> <span class="n">action</span> <span class="o">==</span> <span class="n">switchFile</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">toggleResponseOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">switchFile</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="n">analysisChange</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">toggleResponseOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">analysisChange</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="n">selectSpike</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">toggleResponseOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">selectSpike</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="n">axisChange</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">toggleResponseOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">setAxis</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">action</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Action not taken &quot;</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.myWidget.keyPressEvent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.myWidget.keyPressEvent" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Used so user can turn on/off responding to analysis changes</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>event</code></td>
+        <td><code>PyQt5.QtGui.QKeyEvent</code></td>
+        <td><p>Qt event</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>      <p>TODO: Add to mpl windows</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Used so user can turn on/off responding to analysis changes</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		event (PyQt5.QtGui.QKeyEvent): Qt event</span>
+
+<span class="sd">	TODO: Add to mpl windows</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_parentPlugin</span><span class="o">.</span><span class="n">keyPressEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="sanpy.interface.plugins.sanpyPlugin.ResponseType" class="doc doc-heading">
+        <code>ResponseType</code>
+
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.ResponseType" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Enum representing the types of events a Plugin will respond to.</p>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin" class="doc doc-heading">
+        <code>sanpyPlugin</code>
+
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Base class for all SanPy plugins. Provides general purpose API to build plugings including:</p>
+<ul>
+<li>Open PyQt and Matplotlib plots</li>
+<li>Set up signal/slots for:
+        (1) file is changed
+        (2) detection is run
+        (3) spike is selected
+        (4) Axis is changed</li>
+</ul>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.__init__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bPlugin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">startStop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.__init__" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>ba</code></td>
+        <td><code>sanpy.bAnalysis</code></td>
+        <td><p><a href="../../../bAnalysis/#sanpy.bAnalysis.bAnalysis">bAnalysis</a> object representing one file.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>bPlugin</code></td>
+        <td><code>sanpy.interface.bPlugin</code></td>
+        <td><p>Used in Qt to get SanPy App and to set up signal/slot.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>startStop</code></td>
+        <td><code>list of float</code></td>
+        <td><p>Start and stop (s) of x-axis.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>options</code></td>
+        <td><code>dict</code></td>
+        <td><p>Dictionary of optional plugins.
+                        Used by 'plot tool' to plot a pool using app analysisDir dfMaster.
+                        Note: NOT USED.</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">bPlugin</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">startStop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Args:</span>
+<span class="sd">		ba (sanpy.bAnalysis): [bAnalysis][sanpy.bAnalysis.bAnalysis] object representing one file.</span>
+<span class="sd">		bPlugin (sanpy.interface.bPlugin): Used in Qt to get SanPy App and to set up signal/slot.</span>
+<span class="sd">		startStop (list of float): Start and stop (s) of x-axis.</span>
+<span class="sd">		options (dict): Dictionary of optional plugins.</span>
+<span class="sd">						Used by &#39;plot tool&#39; to plot a pool using app analysisDir dfMaster.</span>
+<span class="sd">						Note: NOT USED.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="nb">super</span><span class="p">(</span><span class="n">sanpyPlugin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_ba</span> <span class="o">=</span> <span class="n">ba</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_bPlugins</span> <span class="o">=</span> <span class="n">bPlugin</span> <span class="c1"># pointer to object, send signal back on close</span>
+
+	<span class="k">if</span> <span class="n">startStop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_startSec</span> <span class="o">=</span> <span class="n">startStop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_stopSec</span> <span class="o">=</span> <span class="n">startStop</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_startSec</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_stopSec</span> <span class="o">=</span> <span class="kc">None</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">windowTitle</span> <span class="o">=</span> <span class="s1">&#39;xxx&#39;</span>
+
+	<span class="c1">#</span>
+	<span class="c1"># build a dict of boolean from ResponseType enum class</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">responseOptions</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="k">for</span> <span class="n">option</span> <span class="ow">in</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="p">):</span>
+		<span class="c1">#print(type(option))</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">responseOptions</span><span class="p">[</span><span class="n">option</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+	<span class="c1"># created in self.pyqtWindow()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">mainWidget</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">layout</span> <span class="o">=</span> <span class="kc">None</span>
+
+	<span class="c1"># created in self.mplWindow()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="kc">None</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">winWidth_inches</span> <span class="o">=</span> <span class="mi">4</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">winHeight_inches</span> <span class="o">=</span> <span class="mi">4</span>
+
+	<span class="c1"># connect self to main app with signals/slots</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_installSignalSlot</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.ba" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">ba</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-property"><code>property</code></small>
+      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
+  </span>
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.ba" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>todo: Depreciate and use self.get_bAnalysis().</p>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.get_bAnalysis" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">get_bAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.get_bAnalysis" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get current bAnalysis either from SanPy app or self.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">get_bAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get current bAnalysis either from SanPy app or self.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">theRet</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSanPyApp</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">theRet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSanPyApp</span><span class="p">()</span><span class="o">.</span><span class="n">get_bAnalysis</span><span class="p">()</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">theRet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ba</span>
+	<span class="k">return</span> <span class="n">theRet</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.get_bPlugins" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">get_bPlugins</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.get_bPlugins" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>???</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">get_bPlugins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;???&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bPlugins</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getResponseOption" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getResponseOption</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thisOption</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getResponseOption" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get the state of a plot option from responseOptions.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getResponseOption</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thisOption</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get the state of a plot option from responseOptions.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		thisOption (enum ResponseType)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseOptions</span><span class="p">[</span><span class="n">thisOption</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getSanPyApp" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getSanPyApp</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getSanPyApp" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Return underlying SanPy app. Only exists if running in SanPy Qt Gui</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getSanPyApp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Return underlying SanPy app. Only exists if running in SanPy Qt Gui</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">theRet</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bPlugins</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">theRet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bPlugins</span><span class="o">.</span><span class="n">getSanPyApp</span><span class="p">()</span>
+	<span class="k">return</span> <span class="n">theRet</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getStartStop" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getStartStop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.getStartStop" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <div class="admonition ret">
+<p class="admonition-title">Ret<p>tuple: (start, stop) in seconds. Can be None</p>
+</p>
+</div>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getStartStop</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Ret:</span>
+<span class="sd">		tuple: (start, stop) in seconds. Can be None</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_startSec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stopSec</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.keyPressEvent" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.keyPressEvent" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Used so user can turn on/off responding to analysis changes</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>event</code></td>
+        <td><code>QtGui.QKeyEvent</code></td>
+        <td><p>Qt event
+(matplotlib.backend_bases.KeyEvent): Matplotlib event</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Used so user can turn on/off responding to analysis changes</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		event (QtGui.QKeyEvent): Qt event</span>
+<span class="sd">			(matplotlib.backend_bases.KeyEvent): Matplotlib event</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">event</span><span class="p">))</span>
+	<span class="n">isQt</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QKeyEvent</span><span class="p">)</span>
+	<span class="n">isMpl</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">mpl</span><span class="o">.</span><span class="n">backend_bases</span><span class="o">.</span><span class="n">KeyEvent</span><span class="p">)</span>
+
+	<span class="n">key</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">text</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">doCopy</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="k">if</span> <span class="n">isQt</span><span class="p">:</span>
+		<span class="n">key</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
+		<span class="n">text</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+		<span class="n">doCopy</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">matches</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QKeySequence</span><span class="o">.</span><span class="n">Copy</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">isMpl</span><span class="p">:</span>
+		<span class="c1"># q will quit !!!!</span>
+		<span class="n">text</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;mpl key: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown event type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="k">return</span>
+
+	<span class="k">if</span> <span class="n">doCopy</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">copyToClipboard</span><span class="p">()</span>
+	<span class="k">elif</span> <span class="n">key</span><span class="o">==</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Key_Escape</span> <span class="ow">or</span> <span class="n">text</span><span class="o">==</span><span class="s1">&#39;esc&#39;</span><span class="p">:</span>
+		<span class="n">sDict</span> <span class="o">=</span> <span class="p">{</span>
+			<span class="s1">&#39;spikeNumber&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+			<span class="s1">&#39;doZoom&#39;</span><span class="p">:</span> <span class="kc">False</span>
+		<span class="p">}</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">signalSelectSpike</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">sDict</span><span class="p">)</span>
+
+	<span class="k">elif</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
+		<span class="k">pass</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.mplWindow" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">mplWindow</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.mplWindow" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Create an mpl (MatPlotLib) window.
+User can then plot to window with self.ax.plot(x,y)</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">mplWindow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create an mpl (MatPlotLib) window.</span>
+<span class="sd">	User can then plot to window with self.ax.plot(x,y)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">grid</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">GridSpec</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">hspace</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+
+	<span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">winWidth_inches</span>
+	<span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">winHeight_inches</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">))</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="n">grid</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">:])</span> <span class="c1">#Vm, entire sweep</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;right&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">ax</span><span class="o">.</span><span class="n">spines</span><span class="p">[</span><span class="s1">&#39;top&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">_mySetWindowTitle</span><span class="p">()</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">mpl_connect</span><span class="p">(</span><span class="s1">&#39;key_press_event&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">keyPressEvent</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">fig</span><span class="o">.</span><span class="n">canvas</span><span class="o">.</span><span class="n">mpl_connect</span><span class="p">(</span><span class="s1">&#39;close_event&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">onClose</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.myHumanName" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">myHumanName</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.myHumanName" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Each derived class needs to define this.</p>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.onClose" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">onClose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.onClose" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Signal back to parent bPlugin object.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>event</code></td>
+        <td><code>matplotlib.backend_bases.CloseEvent</code></td>
+        <td><p>The close event</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">onClose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Signal back to parent bPlugin object.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		event (matplotlib.backend_bases.CloseEvent): The close event</span>
+<span class="sd">		or</span>
+<span class="sd">		event (PyQt5.QtGui.QCloseEvent)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">signalCloseWindow</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.plot" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.plot" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Add code to plot.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Add code to plot.&quot;&quot;&quot;</span>
+	<span class="k">pass</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.pyqtWindow" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">pyqtWindow</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.pyqtWindow" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Create and show a PyQt Window (QWidget)
+User can then add to it</p>
+<p>Creates: self.mainWidget</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">pyqtWindow</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Create and show a PyQt Window (QWidget)</span>
+<span class="sd">	User can then add to it</span>
+
+<span class="sd">	Creates: self.mainWidget</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">doDark</span> <span class="o">=</span> <span class="kc">True</span>
+
+	<span class="c1">#self.mainWidget = QtWidgets.QWidget()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">mainWidget</span> <span class="o">=</span> <span class="n">myWidget</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doDark</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_mySetWindowTitle</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.replot" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">replot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.replot" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Add code to replot.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">replot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Add code to replot.&quot;&quot;&quot;</span>
+	<span class="k">pass</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.responseTypes" class="doc doc-heading">
+        <code>responseTypes</code>
+
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.responseTypes" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Enum representing the types of events a Plugin will respond to.</p>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.selectSpike" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">selectSpike</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sDict</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.selectSpike" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Add code to select spike from sDict.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">selectSpike</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sDict</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Add code to select spike from sDict.&quot;&quot;&quot;</span>
+	<span class="k">pass</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.signalCloseWindow" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">signalCloseWindow</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.signalCloseWindow" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Emit signal on window close.</p>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.signalSelectSpike" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">signalSelectSpike</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.signalSelectSpike" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Emit signal on spike selection.</p>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_selectSpike" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">slot_selectSpike</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eDict</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_selectSpike" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Respond to spike selection.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_selectSpike</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">eDict</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Respond to spike selection.&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getResponseOption</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">selectSpike</span><span class="p">):</span>
+		<span class="k">return</span>
+
+	<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;====== TODO: fix sanpyPlugin.slot_selectSpike() only update if ba that is selected is the same as self._ba&#39;</span><span class="p">)</span>
+	<span class="c1"># don&#39;t select spike if we are showing different ba</span>
+	<span class="c1">#if self._ba != ba:</span>
+	<span class="c1">#	return</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">selectSpike</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_set_x_axis" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">slot_set_x_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">startStopList</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_set_x_axis" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Respond to changes in x-axis.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_set_x_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">startStopList</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Respond to changes in x-axis.&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getResponseOption</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">setAxis</span><span class="p">):</span>
+		<span class="k">return</span>
+	<span class="c1"># don&#39;t set axis if we are showing different ba</span>
+	<span class="n">app</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSanPyApp</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">app</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">ba</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">get_bAnalysis</span><span class="p">()</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ba</span> <span class="o">!=</span> <span class="n">ba</span><span class="p">:</span>
+			<span class="k">return</span>
+
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">startStopList</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">startStopList</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_startSec</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_stopSec</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_startSec</span> <span class="o">=</span> <span class="n">startStopList</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_stopSec</span> <span class="o">=</span> <span class="n">startStopList</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+	<span class="c1">#</span>
+	<span class="c1">#self.setAxis()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">replot</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_switchFile" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">slot_switchFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_switchFile" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Respond to switch file.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_switchFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Respond to switch file.&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getResponseOption</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">switchFile</span><span class="p">):</span>
+		<span class="k">return</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+	<span class="n">app</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSanPyApp</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">app</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_ba</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">get_bAnalysis</span><span class="p">()</span>
+
+	<span class="c1"># reset start/stop</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_startSec</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_stopSec</span> <span class="o">=</span> <span class="kc">None</span>
+
+	<span class="c1"># set pyqt window title</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_mySetWindowTitle</span><span class="p">()</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">replot</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_updateAnalysis" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">slot_updateAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_updateAnalysis" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Respond to detection</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_updateAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Respond to detection&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getResponseOption</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">analysisChange</span><span class="p">):</span>
+		<span class="k">return</span>
+	<span class="c1"># don&#39;t update analysis if we are showing different ba</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ba</span> <span class="o">!=</span> <span class="n">ba</span><span class="p">:</span>
+		<span class="k">return</span>
+	<span class="c1">#self._ba = app.get_bAnalysis()</span>
+
+	<span class="c1"># set pyqt window title</span>
+	<span class="c1">#self._mySetWindowTitle()</span>
+
+	<span class="c1">#</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">replot</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.spike_pick_event" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">spike_pick_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.spike_pick_event" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Respond to user clicks in mpl plot
+Assumes plot(..., picker=5)</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">spike_pick_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Respond to user clicks in mpl plot</span>
+<span class="sd">	Assumes plot(..., picker=5)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">ind</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+		<span class="k">return</span>
+
+	<span class="n">spikeNumber</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">ind</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+	<span class="n">doZoom</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">modifiers</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">keyboardModifiers</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">modifiers</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ShiftModifier</span><span class="p">:</span>
+		<span class="n">doZoom</span> <span class="o">=</span> <span class="kc">True</span>
+
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;spike:</span><span class="si">{</span><span class="n">spikeNumber</span><span class="si">}</span><span class="s1"> doZoom:</span><span class="si">{</span><span class="n">doZoom</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+	<span class="c1"># propagate a signal to parent</span>
+	<span class="n">sDict</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s1">&#39;spikeNumber&#39;</span><span class="p">:</span> <span class="n">spikeNumber</span><span class="p">,</span>
+		<span class="s1">&#39;doZoom&#39;</span><span class="p">:</span> <span class="n">doZoom</span>
+	<span class="p">}</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">signalSelectSpike</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">sDict</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.toggleResponseOptions" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">toggleResponseOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thisOption</span><span class="p">,</span> <span class="n">newValue</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.toggleResponseOptions" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Sets underlying responseOptions based on name of thisOption (a ResponseType enum).</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>newValue</code></td>
+        <td><code>boolean or None</code></td>
+        <td><p>If boolean then set, if None then toggle.</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">toggleResponseOptions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thisOption</span><span class="p">,</span> <span class="n">newValue</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Sets underlying responseOptions based on name of thisOption (a ResponseType enum).</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		thisOption (enum ResponseType)</span>
+<span class="sd">		newValue (boolean or None): If boolean then set, if None then toggle.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">thisOption</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">newValue</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">newValue</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="n">newValue</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseOptions</span><span class="p">[</span><span class="n">thisOption</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">responseOptions</span><span class="p">[</span><span class="n">thisOption</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">newValue</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.turnOffAllSignalSlot" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">turnOffAllSignalSlot</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.turnOffAllSignalSlot" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Utility function to make plugin not respond to changes in interface.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">turnOffAllSignalSlot</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Utility function to make plugin not respond to changes in interface.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1"># turn off all signal/slot</span>
+	<span class="n">switchFile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">switchFile</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">toggleResponseOptions</span><span class="p">(</span><span class="n">switchFile</span><span class="p">,</span> <span class="n">newValue</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+	<span class="n">analysisChange</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">switchFile</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">toggleResponseOptions</span><span class="p">(</span><span class="n">analysisChange</span><span class="p">,</span> <span class="n">newValue</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+	<span class="n">switchFile</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">switchFile</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">toggleResponseOptions</span><span class="p">(</span><span class="n">switchFile</span><span class="p">,</span> <span class="n">newValue</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+	<span class="n">selectSpike</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">switchFile</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">toggleResponseOptions</span><span class="p">(</span><span class="n">selectSpike</span><span class="p">,</span> <span class="n">newValue</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        my footer
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../../../..", "features": ["navigation.instant"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}, "search": "../../../../assets/javascripts/workers/search.d351de03.min.js", "version": null}</script>
+    
+    
+      <script src="../../../../assets/javascripts/bundle.a1609d9a.min.js"></script>
+      
+    
+  </body>
+</html>
