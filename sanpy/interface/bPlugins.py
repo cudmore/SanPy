@@ -128,7 +128,7 @@ class bPlugins():
 
 	def runPlugin(self, pluginName, ba):
 		"""
-		Run one plugin with given ba (bAnalysis)
+		Run one plugin with given ba (bAnalysis).
 
 		Args:
 			pluginName (str):
@@ -193,10 +193,16 @@ class bPlugins():
 
 		Args:
 			pluginObj (object): The running plugin object reference.
-			"""
+
+		Important:
+			Need to disconnect signal/slot using _disconnectSignalSlot().
+			Mostly connections to main SanPy app signals
+		"""
 		logger.info(pluginObj)
 		try:
 			logger.info(f'Removing plugin from _openSet: {pluginObj}')
+			# Critical to detatch signal/slot, removing from set does not seem to do this?
+			pluginObj._disconnectSignalSlot()
 			self._openSet.remove(pluginObj)
 		except (KeyError) as e:
 			logger.exception(e)

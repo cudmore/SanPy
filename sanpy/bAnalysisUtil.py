@@ -156,30 +156,35 @@ statList['AP Duration (ms)'] = {
 
 # new 20210211
 statList['Half Width 10 (ms)'] = {
+	'name': 'widths_10',
 	'yStat': 'widths_10',
 	'yStatUnits': 'ms',
 	'xStat': '',
 	'xStatUnits': ''
 	}
 statList['Half Width 20 (ms)'] = {
+	'name': 'widths_20',
 	'yStat': 'widths_20',
 	'yStatUnits': 'ms',
 	'xStat': '',
 	'xStatUnits': ''
 	}
 statList['Half Width 50 (ms)'] = {
+	'name': 'widths_50',
 	'yStat': 'widths_50',
 	'yStatUnits': 'ms',
 	'xStat': '',
 	'xStatUnits': ''
 	}
 statList['Half Width 80 (ms)'] = {
+	'name': 'widths_80',
 	'yStat': 'widths_80',
 	'yStatUnits': 'ms',
 	'xStat': '',
 	'xStatUnits': ''
 	}
 statList['Half Width 90 (ms)'] = {
+	'name': 'widths_90',
 	'yStat': 'widths_90',
 	'yStatUnits': 'ms',
 	'xStat': '',

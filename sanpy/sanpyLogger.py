@@ -12,6 +12,15 @@ ERROR
 CRITICAL
 """
 
+'''
+LOGLEVEL = os.environ.get('LOGLEVEL', 'WARNING').upper()
+print('LOGLEVEL:', LOGLEVEL)
+print('os.environ')
+for k,v in os.environ.items():
+	print(f'  {k}: {v}')
+sys.exit(1)
+'''
+
 def getLoggerFile():
 	if getattr(sys, 'frozen', False):
 		# running in a bundle (frozen)
@@ -25,7 +34,7 @@ def getLoggerFile():
 	logPath = os.path.join(myPath, fileName)
 	return logPath
 
-def get_logger(name, level=logging.DEBUG):
+def get_logger(name, level=logging.WARNING):
 	"""
 	"""
 	if getattr(sys, 'frozen', False):
@@ -41,12 +50,16 @@ def get_logger(name, level=logging.DEBUG):
 	# Create a custom logger
 	logger = logging.getLogger(name)
 	logger.propagate = False  # don't propogate to root (o.w. prints twice)
-
+	#print('   ', logger)
 	if not logger.handlers:
+		#print('=== sanpyLogger.get_logger() creating handlers')
+		#print('    ', logger.handlers)
+
 		# Create handlers
 		c_handler = logging.StreamHandler()
 		f_handler = RotatingFileHandler(logPath, maxBytes=500, backupCount=0)
 		#f_handler = logging.FileHandler(logPath)
+
 		c_handler.setLevel(level)
 		f_handler.setLevel(level)
 

@@ -18,7 +18,7 @@ class plotRecording(sanpyPlugin):
 	myHumanName = 'Plot Recording (matplotlib)'
 
 	def __init__(self, **kwargs):
-		super(plotRecording, self).__init__('plotRecording', **kwargs)
+		super(plotRecording, self).__init__(**kwargs)
 		self.plot()
 
 	def plot(self):

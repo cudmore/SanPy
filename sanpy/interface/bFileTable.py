@@ -68,7 +68,7 @@ class myTableView(QtWidgets.QTableView):
 
 		self.doIncludeCheckbox = False  # todo: turn this on
 		# need a local reference to delegate else 'segmentation fault'
-		self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
+		#self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
 
 		self.setFont(QtGui.QFont('Arial', 10))
 		self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
@@ -270,7 +270,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 				return QtCore.QVariant()
 			elif role == QtCore.Qt.BackgroundRole:
 				if index.row() % 2 == 0:
-					return QtCore.QVariant(QtGui.QColor('#444444'))
+					return QtCore.QVariant(QtGui.QColor('#333333'))
 				else:
 					return QtCore.QVariant(QtGui.QColor('#555555'))
 
@@ -342,6 +342,9 @@ class pandasModel(QtCore.QAbstractTableModel):
 		return QtCore.QVariant()
 
 	def flags(self, index):
+		if not index.isValid():
+			logger.info('not valid')
+
 		rowIdx = index.row()
 		columnIdx = index.column()
 
@@ -403,7 +406,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 	def myGetValue(self, rowIdx, colStr):
 		val = None
 		if colStr not in self._data.columns:  #  columns is a list
-			logger.error(f'got bad column name: "{colStr}"')
+			logger.error(f'Got bad column name: "{colStr}"')
 		elif len(self._data)-1 < rowIdx:
 			logger.error(f'Got bad row:{rowIdx} from possible {len(self._data)}')
 		else:
@@ -455,19 +458,50 @@ class pandasModel(QtCore.QAbstractTableModel):
 		#
 		self.endRemoveRows()
 
+	def myUnloadRow(self, rowIdx):
+		"""Unload raw data by setting column ['_ba'] = None
+		"""
+		rowIdx = self._data.index[rowIdx]  # assume rows are sorted
+		#self._data.loc[rowIdx, '_ba'] = None
+		if self.isAnalysisDir:
+			# if using analysis dir, azll actions are in-place
+			self._data.unloadRow(rowIdx)
+
+			# we changed the model, we need to emit dataChanged
+			indexStart = self.createIndex(rowIdx, 0)
+			indexStop = self.createIndex(rowIdx+1, 0)
+			self.dataChanged.emit(indexStart, indexStop)
+
+	def myRemoveFromDatabase(self, rowIdx):
+		"""Remove bAnalysis from h5 database
+		"""
+		rowIdx = self._data.index[rowIdx]  # assume rows are sorted
+		#self.beginInsertRows(QtCore.QModelIndex(), rowIdx, rowIdx)
+		if self.isAnalysisDir:
+			# if using analysis dir, azll actions are in-place
+			self._data.removeRowFromDatabase(rowIdx)
+
+			# we changed the model, we need to emit dataChanged
+			indexStart = self.createIndex(rowIdx, 0)
+			indexStop = self.createIndex(rowIdx+1, 0)
+			self.dataChanged.emit(indexStart, indexStop)
+		#self.endInsertRows()
+
 	def myDuplicateRow(self, rowIdx):
 		rowIdx = self._data.index[rowIdx]  # assume rows are sorted
 		self.beginInsertRows(QtCore.QModelIndex(), rowIdx+1, rowIdx+1)
 		#
 		# duplicate rowIdx
-		newIdx = rowIdx + 0.5
-		rowDict = self.myGetRowDict(rowIdx)
-		dfRow = pd.DataFrame(rowDict, index=[newIdx])
 
 		if self.isAnalysisDir:
 			df = self._data._df # either Dataframe or analysisDir
 			self._data.duplicateRow(rowIdx)
 		else:
+			# make copy
+			rowDict = self.myGetRowDict(rowIdx)
+			newIdx = rowIdx + 0.5
+			dfRow = pd.DataFrame(rowDict, index=[newIdx])
+
 			df = self._data # either Dataframe or analysisDir
 
 			# append dfRow to the end
@@ -482,10 +516,15 @@ class pandasModel(QtCore.QAbstractTableModel):
 		self.endInsertRows()
 
 	def mySetRow(self, rowIdx, rowDict):
+		"""Only set keys already in self._data.columns
+		"""
 		rowIdx = self._data.index[rowIdx]  # assume rows are sorted
-		rowSeries = pd.Series(rowDict)
-		self._data.iloc[rowIdx] = rowSeries
-		self._data = self._data.reset_index(drop=True)
+		#rowSeries = pd.Series(rowDict)
+		#self._data.loc[rowIdx] = rowSeries
+		#self._data = self._data.reset_index(drop=True)
+		for k,v in rowDict.items():
+			if k in self._data.columns:
+				self._data.at[rowIdx, k] = v
 
 	def mySaveDb(self, path):
 		#print('pandasModel.mySaveDb() path:', path)
@@ -499,6 +538,35 @@ class pandasModel(QtCore.QAbstractTableModel):
 			self._data.syncDfWithPath()
 			self.endResetModel()
 
+	def myUpdateLoadedAnalyzed(self, ba, rowIdx):
+		if self.isAnalysisDir:
+			rowIdx = self._data.index[rowIdx]  # assume rows are sorted
+			self._data._updateLoadedAnalyzed(rowIdx)
+
+			# we changed the model, we need to emit dataChanged
+			indexStart = self.createIndex(rowIdx, 0)
+			indexStop = self.createIndex(rowIdx+1, 0)
+			self.dataChanged.emit(indexStart, indexStop)
+
+	def mySetDetectionParams(self, rowIdx, cellType):
+		# get existing row
+		print(self._data._df['_ba'])
+		rowDict = self.myGetRowDict(rowIdx)
+		print('[1] rowDict:', rowDict)
+		# get defaults
+		dDict = sanpy.bAnalysis.getDefaultDetection(cellType=cellType)
+		for k,v in dDict.items():
+			if k in rowDict.keys():
+				rowDict[k] = v
+		print('[2] rowDict:', rowDict)
+		self.mySetRow(rowIdx, rowDict)
+		print(self._data._df['_ba'])
+
+		# signal data change
+		indexStart = self.createIndex(rowIdx, 0)
+		indexStop = self.createIndex(rowIdx+1, 0)
+		self.dataChanged.emit(indexStart, indexStop)
+
 	'''
 	def mySetColumns(self, columnsDict):
 		"""
@@ -508,7 +576,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 	'''
 
 # see: https://stackoverflow.com/questions/17748546/pyqt-column-of-checkboxes-in-a-qtableview
-class myCheckBoxDelegate(QtWidgets.QItemDelegate):
+class old_myCheckBoxDelegate(QtWidgets.QItemDelegate):
 	"""
 	A delegate that places a fully functioning QCheckBox cell of the column to which it's applied.
 	"""

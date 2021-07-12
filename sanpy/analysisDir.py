@@ -100,6 +100,10 @@ _sanpyColumns = {
 		'type': float,
 		'isEditable': True,
 	},
+	'spikeClipWidth_ms': {
+		'type': float,
+		'isEditable': True,
+	},
 	'Notes': {
 		'type': str,
 		'isEditable': True,
@@ -258,7 +262,7 @@ class analysisDir():
 
 	def __str__(self):
 		totalDurSec = self._df['Dur(s)'].sum()
-		theStr = f'Num Files: {len(self)} Total Dur(s): {totalDurSec}'
+		theStr = f'analysisDir Num Files: {len(self)} Total Dur(s): {totalDurSec}'
 		return theStr
 
 	@property
@@ -396,6 +400,20 @@ class analysisDir():
 			logger.info(f'Saving took {round(stop-start,2)} seconds')
 			'''
 
+	def _rebuildHdf(self):
+		#
+		# rebuild the file to remove old changes and reduce size
+		tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
+		tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+
+		hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
+		hdfPath = os.path.join(self.path, hdfFile)
+		logger.info(f'Rebuilding h5 to {hdfPath}')
+		#command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", '--complevel=9', '--complib=blosc:blosclz', tmpHdfPath, hdfPath]
+		#command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", tmpHdfPath, hdfPath]
+		command = ["ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
+		call(command)
+
 	def saveHdf(self):
 		"""
 		Save file table and any number of loaded and analyzed bAnalysis.
@@ -415,6 +433,7 @@ class analysisDir():
 		#
 		# save each bAnalysis
 		df = self.getDataFrame()
+		print(df)
 		for row in range(len(df)):
 			# do not call this, it will load
 			#ba = self.getAnalysis(row)
@@ -509,11 +528,26 @@ class analysisDir():
 		#
 		return df
 
-	def deleteFromHdf(self, uuid):
+	def _deleteFromHdf(self, uuid):
 		"""Delete uuid from h5 file. id corresponds to a bAnalysis detection."""
-		if not uuid:
+		if uuid is None or not uuid:
 			return
 		logger.info(f'TODO: Delete from h5 file uuid:{uuid}')
+
+		tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
+		tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+		removed = False
+		with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
+			try:
+				hdfStore.remove(uuid)
+				removed = True
+			except (KeyError):
+				logger.error(f'Did not find uuid {uuid} in h5 file.')
+
+		#
+		if removed:
+			self._rebuildHdf()
+			self._updateLoadedAnalyzed()
 
 	def loadFolder(self, path=None):
 		"""
@@ -569,7 +603,7 @@ class analysisDir():
 
 				# TODO: calculating time, remove this
 				# This is 2x faster than loading frmo pandas gzip ???
-				#dDict = ba.getDefaultDetection()
+				#dDict = sanpy.bAnalysis.getDefaultDetection()
 				#dDict['dvdtThreshold'] = 2
 				#ba.spikeDetect(dDict)
 
@@ -611,14 +645,15 @@ class analysisDir():
 				logger.error(f'error: bAnalysisDir did not find sanpyColumns.keys() col: "{col}" in loadedColumns')
 				self._df[col] = ''
 
-	def _updateLoadedAnalyzed(self):
-		"""Refresh Loaded (L) and Analyzed (A) columns."""
-		# .loc[i,'col'] gets from index (wrong)
-		# .iloc[i,j] gets absolute row (correct)
-		#loadedCol = self._df.columns.get_loc('L')
-		#analyzedCol = self._df.columns.get_loc('A')
-		#savedCol = self._df.columns.get_loc('S')
+	def _updateLoadedAnalyzed(self, theRowIdx=None):
+		"""Refresh Loaded (L) and Analyzed (A) columns.
+
+		Arguments:
+			theRowIdx (int): Update just one row
+		"""
 		for rowIdx in range(len(self._df)):
+			if theRowIdx is not None and theRowIdx != rowIdx:
+				continue
 			#uuid = self._df.at[rowIdx, 'uuid']
 			#
 			# loaded
@@ -866,12 +901,24 @@ class analysisDir():
 		#
 		self._df = df
 
+	def unloadRow(self, rowIdx):
+		self._df.loc[rowIdx, '_ba'] = None
+		self._updateLoadedAnalyzed()
+
+	def removeRowFromDatabase(self, rowIdx):
+		# delete from h5 file
+		uuid = self._df.at[rowIdx, 'uuid']
+		self._deleteFromHdf(uuid)
+
+		# clear uuid
+		self._df.at[rowIdx, 'uuid'] = ''
+
 	def deleteRow(self, rowIdx):
 		df = self._df
 
 		# delete from h5 file
 		uuid = df.at[rowIdx, 'uuid']
-		self.deleteFromHdf(uuid)
+		self._deleteFromHdf(uuid)
 
 		# delete from df/model
 		df = df.drop([rowIdx])

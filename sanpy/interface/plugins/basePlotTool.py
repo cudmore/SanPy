@@ -17,7 +17,7 @@ class basePlotTool(sanpyPlugin):
 	myHumanName = 'Base Plot Tool'
 
 	def __init__(self, **kwargs):
-		super(basePlotTool, self).__init__('basePlotTool', **kwargs)
+		super(basePlotTool, self).__init__(**kwargs)
 
 		self.masterDf = None
 		# one

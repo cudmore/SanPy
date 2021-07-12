@@ -8,9 +8,10 @@
         "plotEveryPoint": 10,
         "showClips": false,
         "showDvDt": true,
-        "showScatter": false
+		"showScatter": false,
+		"showErrors": false
     },
-    "lastPath": "/home/cudmore/Sites/SanPy/data/tests",
+    "lastPath": "/home/cudmore/Sites/SanPy/data/synthetic",
     "useDarkStyle": true,
     "windowGeometry": {
         "height": 1118,

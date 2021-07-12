@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 
 class bDetectionWidget(QtWidgets.QWidget):
 	signalSelectSpike = QtCore.Signal(object) # spike number, doZoom
+	signalDetect = QtCore.Signal(object) #
 
 	def __init__(self, ba=None, mainWindow=None, parent=None):
 		"""
@@ -155,6 +156,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		"""
 
 		if self.ba is None:
+			str = 'Please select a file to analyze'
+			self.updateStatusBar(str)
 			return
 
 		logger.info(f'Detecting with dvdtThreshold:{dvdtThreshold} vmThreshold:{vmThreshold}')
@@ -166,7 +169,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.updateStatusBar(f'Detecting spikes dvdt:{dvdtThreshold} minVm:{vmThreshold}')
 
 		# get default detection parammeters and tweek
-		detectionDict = self.ba.getDefaultDetection()
+		detectionDict = sanpy.bAnalysis.getDefaultDetection()
 		detectionDict['dvdtThreshold'] = dvdtThreshold
 		detectionDict['mvThreshold'] = vmThreshold
 
@@ -180,16 +183,24 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 			if myDetectionDict['refractory_ms'] > 0:
 				detectionDict['refractory_ms'] = myDetectionDict['refractory_ms']
+			if myDetectionDict['peakWindow_ms'] > 0:
+				detectionDict['peakWindow_ms'] = myDetectionDict['peakWindow_ms']
+
 			if myDetectionDict['halfWidthWindow_ms'] > 0:
 				# default is 50 ms
 				detectionDict['halfWidthWindow_ms'] = myDetectionDict['halfWidthWindow_ms']
+			if myDetectionDict['spikeClipWidth_ms'] > 0:
+				# default is 50 ms
+				detectionDict['spikeClipWidth_ms'] = myDetectionDict['spikeClipWidth_ms']
 			#
+			'''
 			if myDetectionDict['Start(s)'] >= 0:
 				# default is 50 ms
 				detectionDict['startSeconds'] = myDetectionDict['Start(s)']
 			if myDetectionDict['Stop(s)'] >= 0:
 				# default is 50 ms
 				detectionDict['stopSeconds'] = myDetectionDict['Stop(s)']
+			'''
 			#
 			detectionDict['cellType'] = myDetectionDict['Cell Type']
 			detectionDict['sex'] = myDetectionDict['Sex']
@@ -198,20 +209,18 @@ class bDetectionWidget(QtWidgets.QWidget):
 		dfReportForScatter = self.ba.spikeDetect(detectionDict)
 
 		# show dialog when num spikes is 0
+		'''
 		if self.ba.numSpikes == 0:
-			informativeText = 'dV/dt Threshold: ' + str(dvdtThreshold) + '\r' + ' Vm Threshold (mV): '  + str(vmThreshold)
+			informativeText = f'dV/dt Threshold:{dvdtThreshold}\nVm Threshold (mV):{vmThreshold}'
 			sanpy.interface.bDialog.okDialog('No Spikes Detected', informativeText=informativeText)
+		'''
 
 		self.replot() # replot statistics over traces
 
-		#self.refreshClips() # replot clips
-
-		if self.myMainWindow is not None:
-			# signal to main window so it can update (file list, scatter plot)
-			self.myMainWindow.mySignal('detect') #, data=(dfReportForScatter, dfError))
-
-		#QtCore.QCoreApplication.processEvents()
-		self.updateStatusBar(f'Detected {self.ba.numSpikes} spikes')
+		self.signalDetect.emit(self.ba)
+		#if self.myMainWindow is not None:
+		#	# signal to main window so it can update (file list, scatter plot)
+		#	self.myMainWindow.mySignal('detect') #, data=(dfReportForScatter, dfError))
 
 	def mySetTheme(self):
 		if self.myMainWindow is not None and self.myMainWindow.useDarkStyle:
@@ -393,7 +402,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 	def updateStatusBar(self, text):
 		if self.myMainWindow is not None:
-			self.myMainWindow.updateStatusBar(text)
+			self.myMainWindow.slot_updateStatus(text)
 
 	def on_scatterClicked(self, item, points, ev=None):
 		"""
@@ -608,6 +617,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.signalSelectSpike.emit(eDict)
 
 	def refreshClips(self, xMin=None, xMax=None):
+		logger.info('                    1')
 		if self.ba is None:
 			return
 
@@ -615,9 +625,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 			# clips are not being displayed
 			return
 
-		print('\n!!! TODO: fix logic of bDetectionWidget.refreshClips()\n')
-		return
-		
+		logger.info('                    1')
+		options = self.getMainWindowOptions()
+		if options is not None:
+			print(options)
+			if not options['display']['showClips']:
+				return
+		logger.info('                    1')
+
+
 		# remove existing
 		if self.clipLines is not None:
 			self.clipPlot.removeItem(self.clipLines)
@@ -652,6 +668,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#print('toggle_Interface()', item, on)
 		if item == 'Clips':
 			#self.toggleClips(on)
+			if self.myMainWindow is not None:
+				#self.myMainWindow.toggleStatisticsPlot(on)
+				self.myMainWindow.preferencesSet('display', 'showClips', on)
 			if on:
 				self.clipPlot.show()
 				self.refreshClips() # refresh if they exist (e.g. analysis has been done)
@@ -659,23 +678,28 @@ class bDetectionWidget(QtWidgets.QWidget):
 				self.clipPlot.hide()
 		elif item == 'dV/dt':
 			#self.toggle_dvdt(on)
+			if self.myMainWindow is not None:
+				#self.myMainWindow.toggleStatisticsPlot(on)
+				self.myMainWindow.preferencesSet('display', 'showDvDt', on)
 			if on:
 				self.derivPlot.show()
 			else:
 				self.derivPlot.hide()
-		elif item == 'vM':
-			if on:
-				self.vmPlot.show()
-			else:
-				self.vmPlot.hide()
+		#elif item == 'vM':
+		#	if on:
+		#		self.vmPlot.show()
+		#	else:
+		#		self.vmPlot.hide()
 		elif item == 'Scatter':
 			#self.toggle_scatter(on)
 			if self.myMainWindow is not None:
-				self.myMainWindow.toggleStatisticsPlot(on)
+				#self.myMainWindow.toggleStatisticsPlot(on)
+				self.myMainWindow.preferencesSet('display', 'showScatter', on)
 		elif item == 'Errors':
 			#self.toggle_errorTable(on)
 			if self.myMainWindow is not None:
-				self.myMainWindow.toggleErrorTable(on)
+				#self.myMainWindow.toggleErrorTable(on)
+				self.myMainWindow.preferencesSet('display', 'showErrors', on)
 		else:
 			# Toggle overlay of stats like (TOP, spike peak).
 			self.togglePlot(item, on) # assuming item is int !!!
@@ -968,7 +992,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			# happens when .abf file is corrupt
 			pass
 		else:
-			dDict = self.ba.getDefaultDetection() # so we can fill in filtered derivartive
+			dDict = sanpy.bAnalysis.getDefaultDetection() # so we can fill in filtered derivartive
 			self.ba._getDerivative(dDict) # derivative
 		'''
 
@@ -1345,7 +1369,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		logger.info(f'start:{start}, stop:{stop}')
 		self.detectionWidget.setAxis(start, stop)
 
-	@QtCore.pyqtSlot()
+	#@QtCore.pyqtSlot()
 	def on_button_click(self, name):
 		logger.info(name)
 		modifiers = QtWidgets.QApplication.keyboardModifiers()
@@ -1357,7 +1381,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			#print('	dvdtThreshold:', dvdtThreshold)
 			#print('	vmThreshold:', vmThreshold)
 			if dvdtThreshold==-1:
-				print('please set a threshold greater than 0')
+				str = 'Please set a threshold greater than 0'
+				self.detectionWidget.updateStatusBar(str)
 				return
 			self.detectionWidget.detect(dvdtThreshold, vmThreshold)
 
@@ -1437,6 +1462,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			showDvDt = windowOptions['display']['showDvDt']
 			showClips = windowOptions['display']['showClips']
 			showScatter = windowOptions['display']['showScatter']
+			showErrors = windowOptions['display']['showErrors']
 
 		mystylesheet_css = os.path.join(myPath, 'css', 'mystylesheet.css')
 		myStyleSheet = None
@@ -1692,7 +1718,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		row = 0
 		col = 3
 		checkbox = QtWidgets.QCheckBox('Errors')
-		checkbox.setChecked(False)
+		checkbox.setChecked(showErrors)
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Errors'))
 		plotGridLayout.addWidget(checkbox, row, col)
 
@@ -1766,6 +1792,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 	def slot_selectSpike(self, sDict):
 		spikeNumber = sDict['spikeNumber']
+		# arbitrarily chosing spike 0 when no spike selection
+		# spin boxes can not have 'no value'
+		if spikeNumber is None:
+			spikeNumber = 0
 		self.spikeNumber.setValue(spikeNumber)
 
 	def slot_selectFile(self, rowDict):

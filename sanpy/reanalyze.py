@@ -164,7 +164,7 @@ def reanalyze(dbFile, outputFolder='newxxx', fixedDvDt=None,
 		ba.condition3 = maleFemale
 		ba.condition4 = superiorInferior
 
-		detectionDict = ba.getDefaultDetection()
+		detectionDict = sanpy.bAnalysis.getDefaultDetection()
 		detectionDict['dvdtThreshold'] = dvdtThreshold
 		detectionDict['mvThreshold'] = minVmThreshold
 		if refractory_ms > 0:

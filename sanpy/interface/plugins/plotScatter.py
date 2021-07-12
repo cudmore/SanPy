@@ -1,3 +1,5 @@
+import numpy as np
+
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from matplotlib.backends import backend_qt5agg
@@ -23,9 +25,10 @@ class plotScatter(sanpyPlugin):
 		Args:
 			ba (bAnalysis): Not required
 		"""
-		super().__init__('plotScatter', **kwargs)
+		super().__init__(**kwargs)
 
 		self.plotChasePlot = False # i vs i-1
+		self.plotColorTime = True
 		# keep track of what we are plotting, use this in replot()
 		self.xStatName = None
 		self.yStatName = None
@@ -48,25 +51,25 @@ class plotScatter(sanpyPlugin):
 		hLayout2 = QtWidgets.QHBoxLayout()
 
 		#
-		'''
-		self.b1 = QtWidgets.QCheckBox("Respond To Analysis Changes")
-		self.b1.setChecked(True)
-		self.b1.stateChanged.connect(lambda:self.btnstate(self.b1))
-		hLayout2.addWidget(self.b1)
-		'''
-
-		#
 		self.b2 = QtWidgets.QCheckBox("Chase Plot")
-		self.b2.setChecked(False)
+		self.b2.setChecked(self.plotChasePlot)
 		self.b2.stateChanged.connect(lambda:self.btnstate(self.b2))
 		hLayout2.addWidget(self.b2)
+
+		#
+		self.colorTime = QtWidgets.QCheckBox("Color Time")
+		self.colorTime.setChecked(self.plotColorTime)
+		self.colorTime.stateChanged.connect(lambda:self.btnstate(self.colorTime))
+		hLayout2.addWidget(self.colorTime)
 
 		vLayout.addLayout(hLayout2)
 
 		# x and y stat lists
 		hLayout3 = QtWidgets.QHBoxLayout()
-		self.xPlotWidget = myStatListWidget(self)
-		self.yPlotWidget = myStatListWidget(self)
+		self.xPlotWidget = myStatListWidget(self, headerStr='X Stat')
+		self.xPlotWidget.myTableWidget.selectRow(0)
+		self.yPlotWidget = myStatListWidget(self, headerStr='Y Stat')
+		self.yPlotWidget.myTableWidget.selectRow(1)
 		hLayout3.addWidget(self.xPlotWidget)
 		hLayout3.addWidget(self.yPlotWidget)
 		vLayout.addLayout(hLayout3)
@@ -76,10 +79,19 @@ class plotScatter(sanpyPlugin):
 		#
 		# create a mpl plot (self._static_ax, self.static_canvas)
 		self.mplWindow2()
+
 		# make initial empty scatter plot
-		self.lines, = self._static_ax.plot([], [], 'ow', picker=5)
+		#self.lines, = self._static_ax.plot([], [], 'ow', picker=5)
+		self.cmap = mpl.pyplot.cm.coolwarm
+		self.cmap.set_under("white") # only works for dark theme
+		self.lines = self._static_ax.scatter([], [], c=[], cmap=self.cmap, picker=5)
+
 		# make initial empty spike selection plot
 		self.linesSel, = self._static_ax.plot([], [], 'oy')
+
+		# despine top/right
+		self._static_ax.spines['right'].set_visible(False)
+		self._static_ax.spines['top'].set_visible(False)
 
 		#
 		# finalize
@@ -90,6 +102,8 @@ class plotScatter(sanpyPlugin):
 		# set the layout of the main window
 		self.mainWidget.setLayout(hLayout)
 
+		self.replot()
+
 	def btnstate(self, b):
 		state = b.isChecked()
 		#if b.text() == "Respond To Analysis Changes":
@@ -98,6 +112,10 @@ class plotScatter(sanpyPlugin):
 			self.plotChasePlot = state
 			logger.info(f'plotChasePlot:{self.plotChasePlot}')
 			self.replot()
+		elif b.text() == 'Color Time':
+			self.plotColorTime = state
+			logger.info(f'plotColorTime:{self.plotColorTime}')
+			self.replot()
 		else:
 			logger.warning(f'Did not respond to button "{b.text()}"')
 
@@ -105,26 +123,27 @@ class plotScatter(sanpyPlugin):
 		"""
 		Replot when analysis changes or file changes
 		"""
-		xStat = self.xPlotWidget.getCurrentStat()
-		yStat = self.yPlotWidget.getCurrentStat()
+		xHumanStat, xStat = self.xPlotWidget.getCurrentStat()
+		yHumanStat, yStat = self.yPlotWidget.getCurrentStat()
 
-		logger.info(xStat + ' ' + yStat)
+		logger.info(f'x:"{xHumanStat}" y:"{yHumanStat}"')
 
 		self.xStatName = xStat
 		self.yStatName = yStat
 
 		if self.ba is None:
-			xData = []
-			yData = []
+			xData = None
+			yData = None
 		else:
 			xData = self.ba.getStat(xStat)
 			yData = self.ba.getStat(yStat)
 
-		if xData is None:
-			logger.warning(f'Did not find xStat: "{xStat}"')
-			return
-		if yData is None:
-			logger.warning(f'Did not find yStat: "{yStat}"')
+		# return if we got no data, happend when there is no analysis
+		if xData is None or yData is None:
+			logger.warning(f'Did not find either xStat: "{xStat}" or yStat: "{yStat}"')
+			self.lines.set_offsets([np.nan, np.nan])
+			self.static_canvas.draw()
+			self.mainWidget.repaint() # update the widget
 			return
 
 		if self.plotChasePlot:
@@ -133,21 +152,55 @@ class plotScatter(sanpyPlugin):
 			yData = yData[0:-2]
 			# on selection, ind will refer to y-axis spike
 
-		self.lines.set_data(xData, yData)
+		# was used for plot(), not scatter()
+		#self.lines.set_data(xData, yData)
+		# data
+		data = np.stack([xData, yData], axis=1)
+		self.lines.set_offsets(data)
+		# color
+		if self.plotColorTime:
+			tmpColor = np.array(range(len(xData)))
+			self.lines.set_array(tmpColor)
+			self.lines.set_cmap(self.cmap)  # mpl.pyplot.cm.coolwarm
+		else:
+			tmpColor = np.array(range(len(xData)))
+			# assuming self.cmap.set_under("white")
+			self.lines.set_array(np.ones_like(tmpColor)*np.nanmin(tmpColor)-1)
 
-		xStatLabel = xStat
-		yStatLabel = yStat
+		xStatLabel = xHumanStat
+		yStatLabel = yHumanStat
 		if self.plotChasePlot:
-			xStatLabel += ' (i)'
-			yStatLabel += ' (i-1)'
+			xStatLabel += ' [i]'
+			yStatLabel += ' [i-1]'
 		self._static_ax.set_xlabel(xStatLabel)
 		self._static_ax.set_ylabel(yStatLabel)
 
 		# cancel any selections
 		self.linesSel.set_data([], [])
 
-		self._static_ax.relim()
-		self._static_ax.autoscale_view(True,True,True)
+		xMin = np.nanmin(xData)
+		xMax = np.nanmax(xData)
+		yMin = np.nanmin(yData)
+		yMax = np.nanmax(yData)
+		# expand by 5%
+		xSpan = abs(xMax - xMin)
+		percentSpan = xSpan * 0.05
+		xMin -= percentSpan
+		xMax += percentSpan
+		#
+		ySpan = abs(yMax - yMin)
+		percentSpan = ySpan * 0.05
+		yMin -= percentSpan
+		yMax += percentSpan
+		#
+		self._static_ax.set_xlim([xMin, xMax])
+		self._static_ax.set_ylim([yMin, yMax])
+
+		# this was for lines (not scatter)
+		#self._static_ax.relim()
+		#self._static_ax.autoscale_view(True,True,True)
+
+		# redraw
 		self.static_canvas.draw()
 		self.mainWidget.repaint() # update the widget
 
@@ -162,7 +215,7 @@ class plotScatter(sanpyPlugin):
 		if self.xStatName is None or self.yStatName is None:
 			return
 
-		if spikeNumber >= 0:
+		if spikeNumber is not None and spikeNumber >= 0:
 			xData = self.ba.getStat(self.xStatName)
 			xData = [xData[spikeNumber]]
 
@@ -186,7 +239,7 @@ class myStatListWidget(QtWidgets.QWidget):
 
 	Gets list of stats from: sanpy.bAnalysisUtil.getStatList()
 	"""
-	def __init__(self, myParent, parent=None):
+	def __init__(self, myParent, headerStr='Stat', parent=None):
 		super().__init__(parent)
 
 		self.myParent = myParent
@@ -208,7 +261,7 @@ class myStatListWidget(QtWidgets.QWidget):
 		fnt.setPointSize(self._rowHeight)
 		self.myTableWidget.setFont(fnt)
 
-		headerLabels = ['Stat']
+		headerLabels = [headerStr]
 		self.myTableWidget.setHorizontalHeaderLabels(headerLabels)
 
 		header = self.myTableWidget.horizontalHeader()
@@ -222,14 +275,16 @@ class myStatListWidget(QtWidgets.QWidget):
 			self.myTableWidget.setRowHeight(idx, self._rowHeight)
 
 		# assuming dark theme
+		# does not work
+		'''
 		p = self.myTableWidget.palette()
-		color1 = QtGui.QColor('#444444')
+		color1 = QtGui.QColor('#222222')
 		color2 = QtGui.QColor('#555555')
 		p.setColor(QtGui.QPalette.Base, color1)
 		p.setColor(QtGui.QPalette.AlternateBase, color2)
 		self.myTableWidget.setPalette(p)
 		self.myTableWidget.setAlternatingRowColors(True)
-
+		'''
 		self.myQVBoxLayout.addWidget(self.myTableWidget)
 
 		# select a default stat
@@ -241,12 +296,12 @@ class myStatListWidget(QtWidgets.QWidget):
 	def getCurrentStat(self):
 		# assuming single selection
 		row = self.getCurrentRow()
-		stat = self.myTableWidget.item(row,0).text()
+		humanStat = self.myTableWidget.item(row,0).text()
 
 		# convert from human readbale to backend
-		stat = self.statList[stat]['name']
+		stat = self.statList[humanStat]['name']
 
-		return stat
+		return humanStat, stat
 
 	@QtCore.pyqtSlot()
 	def on_scatter_toolbar_table_click(self):
@@ -267,12 +322,12 @@ class myStatListWidget(QtWidgets.QWidget):
 	'''
 
 if __name__ == '__main__':
-	path = '/Users/cudmore/Sites/SanPy/data/19114001.abf'
+	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
 	ba = sanpy.bAnalysis(path)
 	ba.spikeDetect()
 	print(ba.numSpikes)
 
 	import sys
 	app = QtWidgets.QApplication([])
-	sp = scatterPlot(ba=ba)
+	sp = plotScatter(ba=ba)
 	sys.exit(app.exec_())

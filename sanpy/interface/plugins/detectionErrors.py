@@ -1,4 +1,5 @@
-# from PyQt5 import QtCore, QtWidgets, QtGui
+import pandas as pd
+
 from PyQt5 import QtWidgets
 
 import sanpy
@@ -18,7 +19,7 @@ class detectionErrors(sanpyPlugin):
 	myHumanName = 'Error Summary'
 
 	def __init__(self, **kwargs):
-		super().__init__('detectionErrors', **kwargs)
+		super().__init__(**kwargs)
 
 		self.pyqtWindow() # makes self.mainWidget
 
@@ -37,14 +38,16 @@ class detectionErrors(sanpyPlugin):
 
 	def replot(self):
 		# update
+		# todo: get default columns from ???
+		dfError = pd.DataFrame(columns=['Spike', 'Seconds', 'Type', 'Details'])
+
 		ba = self.getSanPyApp().get_bAnalysis()
 		if ba is not None:
-			dfError = ba.dfError
-			if dfError is not None:
-				logger.info('dfError')
-				print(dfError)
-				errorReportModel = sanpy.interface.bFileTable.pandasModel(dfError)
-				self.myErrorTable.setModel(errorReportModel)
+			if ba.dfError is not None:
+				dfError = ba.dfError
+		#
+		errorReportModel = sanpy.interface.bFileTable.pandasModel(dfError)
+		self.myErrorTable.setModel(errorReportModel)
 
 if __name__ == '__main__':
 	import sys

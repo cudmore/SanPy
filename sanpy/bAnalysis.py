@@ -1,12 +1,12 @@
 #Author: Robert H Cudmore
 #Date: 20190225
 """
-The bAnalysis class represents a whole-cell recording.
+The bAnalysis class represents a whole-cell recording and provides functions for analysis.
 
-This can be created in a number of ways:
- (i) An .abf file path
- (ii) A .csv file path with time and mV columns
- (iii) a byteStream abf when working in the cloud.
+A bAnalysis object can be created in a number of ways:
+ (i) From a file path including .abf and .csv
+ (ii) From a pandas DataFrame when loading from a h5 file.
+ (iii) From a byteStream abf when working in the cloud.
 
 Once loaded, a number of operations can be performed including:
   Spike detection, Error checking, Plotting, and Saving.
@@ -16,7 +16,7 @@ Examples:
 ```python
 path = 'data/19114001.abf'
 ba = bAnalysis(path)
-dDict = ba.getDefaultDetection()
+dDict = sanpy.bAnalysis.getDefaultDetection()
 ba.spikeDetect(dDict)
 ```
 """
@@ -40,6 +40,77 @@ logger = get_logger(__name__)
 class bAnalysis:
 	def getNewUuid():
 		return 't' + str(uuid.uuid4()).replace('-', '_')
+
+	def getDefaultDetection(cellType=None):
+		"""
+		Get default detection dictionary, pass this to [bAnalysis.spikeDetect()][sanpy.bAnalysis.bAnalysis.spikeDetect]
+
+		Returns:
+			dict: Dictionary of detection parameters.
+		"""
+
+		#cellType = 'neuron'
+
+		mvThreshold = -20
+		theDict = {
+			'dvdtThreshold': 100, #if None then detect only using mvThreshold
+			'mvThreshold': mvThreshold,
+			'medianFilter': 0,
+			'SavitzkyGolay_pnts': 5, # shoould correspond to about 0.5 ms
+			'SavitzkyGolay_poly': 2,
+			'halfHeights': [10, 20, 50, 80, 90],
+			# new 20210501
+			'mdp_ms': 250, # window before/after peak to look for MDP
+			'refractory_ms': 170, # rreject spikes with instantaneous frequency
+			'peakWindow_ms': 100, #10, # time after spike to look for AP peak
+			'dvdtPreWindow_ms': 10, #5, # used in dvdt, pre-roll to then search for real threshold crossing
+			'avgWindow_ms': 5,
+			# 20210425, trying 0.15
+			#'dvdt_percentOfMax': 0.1, # only used in dvdt detection, used to back up spike threshold to more meaningful value
+			'dvdt_percentOfMax': 0.1, # only used in dvdt detection, used to back up spike threshold to more meaningful value
+			# 20210413, was 50 for manuscript, we were missing lots of 1/2 widths
+			'halfWidthWindow_ms': 200, #200, #20,
+			# add 20210413 to turn of doBackupSpikeVm on pure vm detection
+			'doBackupSpikeVm': True,
+			'spikeClipWidth_ms': 500,
+			'onlyPeaksAbove_mV': mvThreshold,
+			'startSeconds': None, # not used ???
+			'stopSeconds': None,
+
+			# for detection of Ca from line scans
+			#'caThresholdPos': 0.01,
+			#'caMinSpike': 0.5,
+
+			# todo: get rid of this
+			# book keeping like ('cellType', 'sex', 'condition')
+			'cellType': '',
+			'sex': '',
+			'condition': '',
+			'verbose': False,
+		}
+
+		if cellType is not None:
+			if cellType == 'SA Node Params':
+				# these are defaults from above
+				pass
+			elif cellType == 'Ventricular Params':
+				theDict['dvdtThreshold'] = 100
+				theDict['mvThreshold'] = -20
+				theDict['refractory_ms'] = 200  # max freq of 5 Hz
+				theDict['peakWindow_ms'] = 100
+				theDict['halfWidthWindow_ms'] = 300
+				theDict['spikeClipWidth_ms'] = 200
+			elif cellType == 'Neuron Params':
+				theDict['dvdtThreshold'] = 100
+				theDict['mvThreshold'] = -20
+				theDict['refractory_ms'] = 7
+				theDict['peakWindow_ms'] = 5
+				theDict['halfWidthWindow_ms'] = 4
+				theDict['spikeClipWidth_ms'] = 20
+			else:
+				logger.error(f'Did not understand cell type "{cellType}"')
+
+		return theDict.copy()
 
 	def __init__(self, file=None, theTiff=None, byteStream=None, fromDf=None):
 		"""
@@ -185,6 +256,7 @@ class bAnalysis:
 		diff_ms = diff_seconds * 1000
 		_dataPointsPerMs = 1 / diff_ms
 		self._dataPointsPerMs = _dataPointsPerMs
+		logger.info(f'_dataPointsPerMs: {_dataPointsPerMs}')
 
 	def _loadFromDf(self, fromDf):
 		"""Load from a pandas df saved into a .h5 file.
@@ -411,6 +483,7 @@ class bAnalysis:
 		error = False
 
 		if len(self.spikeDict) == 0:
+			logger.warning(f'did not find spikeDict')
 			error = True
 		elif statName1 not in self.spikeDict[0].keys():
 			logger.warning(f'did not find statName1: "{statName1}" in spikeDict')
@@ -437,7 +510,7 @@ class bAnalysis:
 			dDict (dict): Default detection dictionary. See bDetection.defaultDetection
 		"""
 		if dDict is None:
-			dDict = self.getDefaultDetection()
+			dDict = bAnalysis.getDefaultDetection()
 
 		medianFilter = dDict['medianFilter']
 		SavitzkyGolay_pnts = dDict['SavitzkyGolay_pnts']
@@ -462,7 +535,7 @@ class bAnalysis:
 			dDict (dict): Default detection dictionary. See getDefaultDetection()
 		"""
 		if dDict is None:
-			dDict = self.getDefaultDetection()
+			dDict = bAnalysis.getDefaultDetection()
 
 		dDict['medianFilter'] = 5
 
@@ -481,7 +554,7 @@ class bAnalysis:
 			dDict (dict): Default detection dictionary. See getDefaultDetection()
 		"""
 		if dDict is None:
-			dDict = self.getDefaultDetection()
+			dDict = bAnalysis.getDefaultDetection()
 
 		medianFilter = dDict['medianFilter']
 		SavitzkyGolay_pnts = dDict['SavitzkyGolay_pnts']
@@ -519,52 +592,6 @@ class bAnalysis:
 		#self.deriv = np.concatenate(([0],self.deriv))
 		self.filteredDeriv = np.concatenate(([0],self.filteredDeriv))
 
-	def getDefaultDetection(self):
-		"""
-		Get default detection dictionary, pass this to [bAnalysis.spikeDetect()][sanpy.bAnalysis.bAnalysis.spikeDetect]
-
-		Returns:
-			dict: Dictionary of detection parameters.
-		"""
-		mvThreshold = -20
-		theDict = {
-			'dvdtThreshold': 100, #if None then detect only using mvThreshold
-			'mvThreshold': mvThreshold,
-			'medianFilter': 0,
-			'SavitzkyGolay_pnts': 5, # shoould correspond to about 0.5 ms
-			'SavitzkyGolay_poly': 2,
-			'halfHeights': [10, 20, 50, 80, 90],
-			# new 20210501
-			'mdp_ms': 250, # window before/after peak to look for MDP
-			'refractory_ms': 170, # rreject spikes with instantaneous frequency
-			'peakWindow_ms': 100, #10, # time after spike to look for AP peak
-			'dvdtPreWindow_ms': 10, #5, # used in dvdt, pre-roll to then search for real threshold crossing
-			'avgWindow_ms': 5,
-			# 20210425, trying 0.15
-			#'dvdt_percentOfMax': 0.1, # only used in dvdt detection, used to back up spike threshold to more meaningful value
-			'dvdt_percentOfMax': 0.1, # only used in dvdt detection, used to back up spike threshold to more meaningful value
-			# 20210413, was 50 for manuscript, we were missing lots of 1/2 widths
-			'halfWidthWindow_ms': 200, #200, #20,
-			# add 20210413 to turn of doBackupSpikeVm on pure vm detection
-			'doBackupSpikeVm': True,
-			'spikeClipWidth_ms': 500,
-			'onlyPeaksAbove_mV': mvThreshold,
-			'startSeconds': None, # not used ???
-			'stopSeconds': None,
-
-			# for detection of Ca from line scans
-			#'caThresholdPos': 0.01,
-			#'caMinSpike': 0.5,
-
-			# todo: get rid of this
-			# book keeping like ('cellType', 'sex', 'condition')
-			'cellType': '',
-			'sex': '',
-			'condition': '',
-			'verbose': False,
-		}
-		return theDict.copy()
-
 	def getDefaultDetection_ca(self):
 		"""
 		Get default detection for Ca analysis. Warning, this is currently experimental.
@@ -572,7 +599,7 @@ class bAnalysis:
 		Returns:
 			dict: Dictionary of detection parameters.
 		"""
-		theDict = self.getDefaultDetection()
+		theDict = bAnalysis.getDefaultDetection()
 		theDict['dvdtThreshold'] = 0.01 #if None then detect only using mvThreshold
 		theDict['mvThreshold'] = 0.5
 		#
@@ -1010,9 +1037,12 @@ class bAnalysis:
 		if dDict is None:
 			dDict = self.detectionDict
 			if dDict is None:
-				dDict = self.getDefaultDetection()
+				dDict = bAnalysis.getDefaultDetection()
 
 		self.detectionDict = dDict # remember the parameters of our last detection
+
+		#for k,v in self.detectionDict.items():
+		#	print(f'  {k}: {v}')
 
 		startTime = time.time()
 
@@ -1658,7 +1688,7 @@ class bAnalysis:
 		#
 		return self.spikeClips_x2, self.spikeClips
 
-	def getSpikeClips(self, theMin, theMax):
+	def getSpikeClips(self, theMin, theMax, spikeClipWidth_ms=None):
 		"""
 		get 2d list of spike clips, spike clips x, and 1d mean spike clip
 
@@ -1668,9 +1698,16 @@ class bAnalysis:
 
 		Requires: self.spikeDetect() and self._makeSpikeClips()
 		"""
+
+		#spikeClipWidth_ms = 20
+
 		if theMin is None or theMax is None:
 			theMin = 0
 			theMax = self.sweepX[-1]
+
+		# new interface, spike detect no longer auto generates these
+		if self.spikeClips is None:
+			self._makeSpikeClips(spikeClipWidth_ms=spikeClipWidth_ms)
 
 		# make a list of clips within start/stop (Seconds)
 		theseClips = []
@@ -2097,7 +2134,7 @@ def test_load_abf():
 	print('=== test_load_abf() path:', path)
 	ba = bAnalysis(path)
 
-	dDict = ba.getDefaultDetection()
+	dDict = sanpy.bAnalysis.getDefaultDetection()
 	ba.spikeDetect(dDict)
 
 	print('  ba.numSpikes:', ba.numSpikes)
@@ -2108,7 +2145,7 @@ def test_load_csv():
 	print('=== test_load_csv() path:', path)
 	ba = bAnalysis(path)
 
-	dDict = ba.getDefaultDetection()
+	dDict = sanpy.bAnalysis.getDefaultDetection()
 	ba.spikeDetect(dDict)
 
 	print('  ba.numSpikes:', ba.numSpikes)
@@ -2117,7 +2154,7 @@ def test_save():
 	path = 'data/19114001.abf' # needs to be run fron SanPy
 	ba = bAnalysis(path)
 
-	dDict = ba.getDefaultDetection()
+	dDict = sanpy.bAnalysis.getDefaultDetection()
 	ba.spikeDetect(dDict)
 
 	#ba.save_csv()
@@ -2158,7 +2195,7 @@ def main():
 	if 0:
 		path = '/Users/cudmore/Sites/SanPy/examples/dual-analysis/dual-data/20210129/2021_01_29_0007.abf'
 		ba = bAnalysis(path)
-		dDict = ba.getDefaultDetection()
+		dDict = sanpy.bAnalysis.getDefaultDetection()
 		#dDict['dvdtThreshold'] = None # detect using just Vm
 		print('dDict:', dDict)
 		ba.spikeDetect(dDict)
@@ -2167,7 +2204,7 @@ def main():
 	if 1:
 		path = 'data/19114001.abf'
 		ba = bAnalysis(path)
-		dDict = ba.getDefaultDetection()
+		dDict = sanpy.bAnalysis.getDefaultDetection()
 		#dDict['dvdtThreshold'] = None # detect using just Vm
 
 		recordingFrequency = ba.recordingFrequency

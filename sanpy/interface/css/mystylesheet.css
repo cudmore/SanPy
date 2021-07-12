@@ -64,3 +64,10 @@ QTableWidget {
 QHeaderView::section {
 	font-size: 11px;
 }
+
+/*
+QTableView:!active {
+    selection-background-color: palette(Highlight);
+    selection-color: palette(HighlightedText)
+}
+*/

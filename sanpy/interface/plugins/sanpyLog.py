@@ -20,7 +20,7 @@ class sanpyLog(sanpyPlugin):
 		Args:
 			ba (bAnalysis): Not required
 		"""
-		super(sanpyLog, self).__init__('sanpyLog', **kwargs)
+		super(sanpyLog, self).__init__(**kwargs)
 
 		self.pyqtWindow() # makes self.mainWidget
 

@@ -356,7 +356,7 @@ def test_plot(path):
 	ba = sanpy.bAnalysis(path)
 
 	# detect
-	dDict = ba.getDefaultDetection()
+	dDict = sanpy.bAnalysis.getDefaultDetection()
 	dDict['dvdThreshold'] = 50
 	ba.spikeDetect(dDict)
 

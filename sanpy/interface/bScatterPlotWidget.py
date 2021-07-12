@@ -220,7 +220,6 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		#print('bScatterPlotWidget.metaPlotStat() yStatHuman:', yStatHuman)
 		# todo: we need to tweek xStat based on particular yStat
 
-
 		if self.myDetectionWidget.ba is None:
 			#print('bScatterPlotWidget.metaPlotStat() got empty ba ???')
 			return

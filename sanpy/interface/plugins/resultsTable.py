@@ -20,7 +20,7 @@ class resultsTable(sanpyPlugin):
 	myHumanName = 'Summary Spikes'
 
 	def __init__(self, **kwargs):
-		super().__init__('resultsTable', **kwargs)
+		super().__init__(**kwargs)
 
 		self.pyqtWindow() # makes self.mainWidget
 

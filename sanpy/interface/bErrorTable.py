@@ -19,6 +19,7 @@ class errorTableView(QtWidgets.QTableView):
 		self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
 								  QtWidgets.QSizePolicy.Expanding)
 		self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+		self.setSelectionMode(QtWidgets.QTableView.SingleSelection)
 
 		self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers |
 							 QtWidgets.QAbstractItemView.DoubleClicked)
@@ -37,53 +38,8 @@ class errorTableView(QtWidgets.QTableView):
 
 		self.clicked.connect(self.errorTableClicked)
 
-	def old_selectionChanged(self, selected, deselected):
-		super(errorTableView, self).selectionChanged(selected, deselected)
-		logger.info(selected)
-		modelIndexList = selected.indexes()
-		if len(modelIndexList) == 0:
-			return
-
-		doZoom = False
-		modifiers = QtGui.QApplication.keyboardModifiers()
-		if modifiers == QtCore.Qt.ShiftModifier:
-			# zoomm on shift+click
-			doZoom = True
-
-		modelIndex = modelIndexList[0]
-		row = modelIndex.row()
-		#column = modelIndex.column()
-
-		try:
-			# .loc[i,'col'] gets from index (wrong)
-			# .iloc[i,j] gets absolute row (correct)
-			spikeCol = self.model()._data.columns.get_loc('Spike')
-			spikeNumber = self.model()._data.iloc[row, spikeCol]
-		except (KeyError) as e:
-			# for results plugin
-			try:
-				spikeNumberCol = self.model()._data.columns.get_loc('Spike')
-				spikeNumber = self.model()._data.iloc[row, spikeNumberCol]
-			except (KeyError) as e:
-				logger.warning(f'KeyError looking for column "Spike" or "spikeNumber"')
-				return
-		spikeNumber = int(spikeNumber)
-
-		#self.selectSpike(spikeNumber, doZoom=doZoom)
-		dDict = {
-			'spikeNumber': spikeNumber,
-			'doZoom': doZoom,
-		}
-		logger.info(dDict)
-		self.signalSelectSpike.emit(dDict)
-
-
 	def errorTableClicked(self, index):
-		row = index.row()
-		#column = index.column()
-
-		# was this
-		#self.myErrorTable.selectRow(row)
+		row = self.model()._data.index[index.row()] # take sorting into account
 
 		doZoom = False
 		modifiers = QtGui.QApplication.keyboardModifiers()
@@ -92,21 +48,18 @@ class errorTableView(QtWidgets.QTableView):
 			doZoom = True
 
 		try:
-			# .loc[i,'col'] gets from index (wrong)
-			# .iloc[i,j] gets absolute row (correct)
-			spikeCol = self.model()._data.columns.get_loc('Spike')
-			spikeNumber = self.model()._data.iloc[row, spikeCol]
+			# .loc[i,'col'] gets from index label (correct)
+			# .iloc[i,j] gets absolute row (wrong)
+			spikeNumber = self.model()._data.loc[row, 'Spike']
 		except (KeyError) as e:
 			# for results plugin
 			try:
-				spikeNumberCol = self.model()._data.columns.get_loc('spikeNumber')
-				spikeNumber = self.model()._data.iloc[row, spikeNumberCol]
+				spikeNumber = self.model()._data.loc[row, 'spikeNumber']
 			except (KeyError) as e:
 				logger.warning(f'KeyError looking for column "Spike" or "spikeNumber"')
 				return
 		spikeNumber = int(spikeNumber)
 
-		#self.selectSpike(spikeNumber, doZoom=doZoom)
 		dDict = {
 			'spikeNumber': spikeNumber,
 			'doZoom': doZoom,

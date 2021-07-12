@@ -26,7 +26,7 @@ class spikeClips(sanpyPlugin):
 		Args:
 			ba (bAnalysis): Not required
 		"""
-		super().__init__('plotScatter', **kwargs)
+		super().__init__(**kwargs)
 
 		self.clipLines = None
 		self.meanClipLine = None
@@ -40,13 +40,29 @@ class spikeClips(sanpyPlugin):
 		#
 		# controls
 		hLayout2 = QtWidgets.QHBoxLayout()
+
+		# TODO:
+		aLabel = QtWidgets.QLabel('Clip Width (ms)')
+		self.clipWidth_ms = QtWidgets.QSpinBox()
+		hLayout2.addWidget(aLabel)
+		hLayout2.addWidget(self.clipWidth_ms)
+
+		self.meanCheckBox = QtWidgets.QCheckBox('Mean Trace (red)')
+		self.meanCheckBox.setChecked(True)
+		self.meanCheckBox.stateChanged.connect(lambda:self.replot())
+		hLayout2.addWidget(self.meanCheckBox)
+
+		self.waterfallCheckBox = QtWidgets.QCheckBox('Waterfall')
+		self.waterfallCheckBox.setChecked(False)
+		self.waterfallCheckBox.stateChanged.connect(lambda:self.replot())
+		hLayout2.addWidget(self.waterfallCheckBox)
+
+		self.phasePlotCheckBox = QtWidgets.QCheckBox('Phase')
+		self.phasePlotCheckBox.setChecked(False)
+		self.phasePlotCheckBox.stateChanged.connect(lambda:self.replot())
+		hLayout2.addWidget(self.phasePlotCheckBox)
+
 		#
-		'''
-		self.b1 = QtWidgets.QCheckBox("Respond To Analysis Changes")
-		self.b1.setChecked(True)
-		self.b1.stateChanged.connect(lambda:self.btnstate(self.b1))
-		hLayout2.addWidget(self.b1)
-		'''
 
 		vLayout.addLayout(hLayout2)
 
@@ -64,15 +80,6 @@ class spikeClips(sanpyPlugin):
 		self.mainWidget.setLayout(vLayout)
 
 		self.replot()
-
-	'''
-	def btnstate(self,b):
-		if b.text() == "Respond To Analysis Changes":
-			state = b.isChecked()
-			self.setRespondToAnalysisChange(state) # inherited
-		else:
-			logger.warning(f'Did not respond to button "{b.text()}"')
-	'''
 
 	def replot(self):
 		"""
@@ -106,25 +113,57 @@ class spikeClips(sanpyPlugin):
 			stopSec = self.ba.sweepX[-1]
 
 		# this returns x-axis in ms
+		#_makeSpikeClips
 		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(startSec, stopSec)
 		dataPointsPerMs = self.ba.dataPointsPerMs
 
 		# convert clips to 2d ndarray ???
 		xTmp = np.array(theseClips_x)
 		xTmp /= dataPointsPerMs # pnt to ms
-		yTmp = np.array(theseClips)
+		yTmp = np.array(theseClips)  # mV
+
+		#print(xTmp.shape, yTmp.shape)
+		if self.phasePlotCheckBox.isChecked():
+			# plot x mV versus y dV/dt
+			dvdt = np.zeros((yTmp.shape[0], yTmp.shape[1]-1))  #
+			for i in range(dvdt.shape[0]):
+				dvdt[i,:] = np.diff(yTmp[i,:])
+				# drop first pnt in x
+
+			#
+			xTmp = yTmp[:, 1:] # drop first column of mV and swap to x-axis
+			yTmp = dvdt
+			#print(xTmp.shape, yTmp.shape)
+
+		if self.waterfallCheckBox.isChecked():
+			#print(xTmp.shape, yTmp.shape)
+			# xTmp and yTmp are 2D with rows/clips and cols/data_pnts
+			xMin = np.nanmin(xTmp)
+			xMax = np.nanmax(xTmp)
+			xRange = xMax - xMin
+			xOffset = 0
+			yOffset = 0
+			xInc = xRange * 0.1 # ms, xInc is 10% of x-range
+			yInc = 2 # mV
+			for i in range(xTmp.shape[0]):
+				xTmp[i,:] += xOffset
+				yTmp[i,:] += yOffset
+				xOffset += xInc # ms
+				yOffset += yInc # mV
+
 		self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type='clip')
 		self.clipPlot.addItem(self.clipLines)
 
-		#print(xTmp.shape) # (num spikes, time)
-		self.xMeanClip = xTmp
-		if len(self.xMeanClip) > 0:
-			self.xMeanClip = np.nanmean(xTmp, axis=0) # xTmp is in ms
-		self.yMeanClip = yTmp
-		if len(self.yMeanClip) > 0:
-			self.yMeanClip = np.nanmean(yTmp, axis=0)
-		self.meanClipLine = MultiLine(self.xMeanClip, self.yMeanClip, self, allowXAxisDrag=False, type='meanclip')
-		self.clipPlot.addItem(self.meanClipLine)
+		if self.meanCheckBox.isChecked():
+			#print(xTmp.shape) # (num spikes, time)
+			self.xMeanClip = xTmp
+			if len(self.xMeanClip) > 0:
+				self.xMeanClip = np.nanmean(xTmp, axis=0) # xTmp is in ms
+			self.yMeanClip = yTmp
+			if len(self.yMeanClip) > 0:
+				self.yMeanClip = np.nanmean(yTmp, axis=0)
+			self.meanClipLine = MultiLine(self.xMeanClip, self.yMeanClip, self, allowXAxisDrag=False, type='meanclip')
+			self.clipPlot.addItem(self.meanClipLine)
 
 	def selectSpike(self, sDict):
 		"""

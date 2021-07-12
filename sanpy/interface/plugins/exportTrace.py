@@ -17,7 +17,11 @@ class exportTrace(sanpyPlugin):
 	myHumanName = 'Export Trace'
 
 	def __init__(self, **kwargs):
-		super(exportTrace, self).__init__('exportTrace', **kwargs)
+		super(exportTrace, self).__init__(**kwargs)
+
+		# this plugin will not respond to any interface changes
+		self.turnOffAllSignalSlot()
+
 		self.plot()
 
 	def plot(self):
