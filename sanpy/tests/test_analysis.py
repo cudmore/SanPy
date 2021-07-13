@@ -1,4 +1,6 @@
 """
+Test bAnalysis.py
+
 Run this file with
 
 ```
@@ -6,11 +8,12 @@ python -m unittest sanpy/tests/test_analysis.py
 ```
 """
 
-import logging
+import os, shutil, tempfile
 import unittest
 
 import sanpy
 
+import logging
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__, level=logging.DEBUG)
 
@@ -20,9 +23,6 @@ class Test_Analysis(unittest.TestCase):
 	ba = sanpy.bAnalysis(path)
 	expectedNumSpikes = 102
 	expectedNumErrors = 1
-
-	#def __init__(self, *args, **kwargs):
-	#	super(Test_Analysis, self).__init__(*args, **kwargs)
 
 	def test_0_load(self):
 		logger.info('')

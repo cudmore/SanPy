@@ -433,7 +433,7 @@ class analysisDir():
 		#
 		# save each bAnalysis
 		df = self.getDataFrame()
-		print(df)
+		#print(df)
 		for row in range(len(df)):
 			# do not call this, it will load
 			#ba = self.getAnalysis(row)
@@ -462,7 +462,7 @@ class analysisDir():
 			#
 			self._isDirty = False  # if true, prompt to save on quit
 
-		h5_printKey(tmpHdfPath)
+		#h5_printKey(tmpHdfPath)
 
 		#
 		# rebuild the file to remove old changes and reduce size
