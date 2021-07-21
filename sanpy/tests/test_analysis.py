@@ -17,7 +17,7 @@ import logging
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__, level=logging.DEBUG)
 
-class Test_Analysis(unittest.TestCase):
+class xxx_Test_Analysis(unittest.TestCase):
 	# this patter is wierd to me?
 	path = 'data/19114001.abf'
 	ba = sanpy.bAnalysis(path)
