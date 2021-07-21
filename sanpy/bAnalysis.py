@@ -477,7 +477,7 @@ class bAnalysis:
 	@property
 	def filteredDeriv(self):
 		"""Get the command waveform DAC (numpy.ndarray). Units will depend on mode"""
-		logger.info(self._filteredDeriv.shape)
+		#logger.info(self._filteredDeriv.shape)
 		return self._filteredDeriv[:,self._currentSweep]
 
 	@property

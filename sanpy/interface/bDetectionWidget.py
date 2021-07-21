@@ -17,8 +17,8 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class bDetectionWidget(QtWidgets.QWidget):
-	signalSelectSpike = QtCore.Signal(object) # spike number, doZoom
-	signalDetect = QtCore.Signal(object) #
+	signalSelectSpike = QtCore.pyqtSignal(object) # spike number, doZoom
+	signalDetect = QtCore.pyqtSignal(object) #
 
 	def __init__(self, ba=None, mainWindow=None, parent=None):
 		"""
