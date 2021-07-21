@@ -444,19 +444,29 @@ class pandasModel(QtCore.QAbstractTableModel):
 		self.endInsertRows()
 
 	def myDeleteRow(self, rowIdx):
-		rowIdx = self._data.index[rowIdx]  # assume rows are sorted
-		self.beginRemoveRows(QtCore.QModelIndex(), rowIdx, rowIdx)
-		#
-		if self.isAnalysisDir:
-			# if using analysis dir, azll actions are in-place
-			self._data.deleteRow(rowIdx)
-		else:
-			df = self._data
-			df = df.drop([rowIdx])
-			df = df.reset_index(drop=True)
-			self._data = df
-		#
-		self.endRemoveRows()
+		msg = QtWidgets.QMessageBox()
+		msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+		msg.setDefaultButton(QtWidgets.QMessageBox.Ok)
+		msg.setIcon(QtWidgets.QMessageBox.Warning)
+		msg.setText(f'Are you sure you want to delete row {rowIdx}?')
+		msg.setWindowTitle("Delete Row")
+		returnValue = msg.exec_()
+		if returnValue == QtWidgets.QMessageBox.Ok:
+			#
+			#
+			rowIdx = self._data.index[rowIdx]  # assume rows are sorted
+			self.beginRemoveRows(QtCore.QModelIndex(), rowIdx, rowIdx)
+			#
+			if self.isAnalysisDir:
+				# if using analysis dir, azll actions are in-place
+				self._data.deleteRow(rowIdx)
+			else:
+				df = self._data
+				df = df.drop([rowIdx])
+				df = df.reset_index(drop=True)
+				self._data = df
+			#
+			self.endRemoveRows()
 
 	def myUnloadRow(self, rowIdx):
 		"""Unload raw data by setting column ['_ba'] = None
@@ -531,6 +541,10 @@ class pandasModel(QtCore.QAbstractTableModel):
 		#logger.info(f'Saving csv {path}')
 		self._data.to_csv(path, index=False)
 		self.isDirty = False
+
+	def saveHdf(self):
+		if self.isAnalysisDir:
+			self._data.saveHdf()
 
 	def mySyncDfWithPath(self):
 		if self.isAnalysisDir:

@@ -7,11 +7,12 @@
     "display": {
         "plotEveryPoint": 10,
         "showClips": false,
-        "showDvDt": true,
-		"showScatter": false,
-		"showErrors": false
+		"showDvDt": true,
+		"showDAC": false,
+        "showErrors": false,
+        "showScatter": false
     },
-    "lastPath": "/home/cudmore/Sites/SanPy/data/synthetic",
+    "lastPath": "/home/cudmore/Sites/SanPy/data/tests",
     "useDarkStyle": true,
     "windowGeometry": {
         "height": 1118,

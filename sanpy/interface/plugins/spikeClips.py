@@ -28,8 +28,8 @@ class spikeClips(sanpyPlugin):
 		"""
 		super().__init__(**kwargs)
 
-		self.clipLines = None
-		self.meanClipLine = None
+		#self.clipLines = None
+		#self.meanClipLine = None
 
 		# makes self.mainWidget and calls show()
 		self.pyqtWindow()
@@ -99,10 +99,12 @@ class spikeClips(sanpyPlugin):
 
 	def _myReplotClips(self):
 		# remove existing
-		if self.clipLines is not None:
+		self.clipPlot.clear()
+		'''if self.clipLines is not None:
 			self.clipPlot.removeItem(self.clipLines)
 		if self.meanClipLine is not None:
 			self.clipPlot.removeItem(self.meanClipLine)
+		'''
 
 		#
 		# TODO
@@ -151,8 +153,38 @@ class spikeClips(sanpyPlugin):
 				xOffset += xInc # ms
 				yOffset += yInc # mV
 
-		self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type='clip')
-		self.clipPlot.addItem(self.clipLines)
+		# color map to give each clip different color
+		'''
+		colormap = 'rainbow'
+		cmap = cm.get_cmap(colormap);
+		n = len(uids);
+		colors = cmap(range(n), bytes = True);
+		'''
+
+		#
+		# original, one multiline for all clips (super fast)
+		#self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type='clip')
+		#
+		# each clip so we can set color
+		colors = [
+			(0, 0, 0),
+			(4, 5, 61),
+			(84, 42, 55),
+			(15, 87, 60),
+			(208, 17, 141),
+			(255, 255, 255)
+		]
+
+		# color map
+		cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 6), color=colors)
+		#colors = ['r', 'g', 'b']
+		for i in range(xTmp.shape[0]):
+			forcePenColor = cmap.getByIndex(i)
+			#print('forcePenColor:', forcePenColor)
+			xPlot = xTmp[i,:]
+			yPlot = yTmp[i,:]
+			tmpClipLines = MultiLine(xPlot, yPlot, self, allowXAxisDrag=False, forcePenColor=forcePenColor, type='clip')
+			self.clipPlot.addItem(tmpClipLines)
 
 		if self.meanCheckBox.isChecked():
 			#print(xTmp.shape) # (num spikes, time)
@@ -162,8 +194,8 @@ class spikeClips(sanpyPlugin):
 			self.yMeanClip = yTmp
 			if len(self.yMeanClip) > 0:
 				self.yMeanClip = np.nanmean(yTmp, axis=0)
-			self.meanClipLine = MultiLine(self.xMeanClip, self.yMeanClip, self, allowXAxisDrag=False, type='meanclip')
-			self.clipPlot.addItem(self.meanClipLine)
+			tmpMeanClipLine = MultiLine(self.xMeanClip, self.yMeanClip, self, allowXAxisDrag=False, type='meanclip')
+			self.clipPlot.addItem(tmpMeanClipLine)
 
 	def selectSpike(self, sDict):
 		"""
@@ -239,8 +271,19 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 		if self.myType == 'meanclip':
 			penColor = 'r'
 			width = 3
-		#
-		self.setPen(pg.mkPen(color=penColor, width=width))
+
+		print('MultiLine penColor:', penColor)
+		pen = pg.mkPen(color=penColor, width=width)
+
+		# testing gradient pen
+		'''
+		cm = pg.colormap.get('CET-L17') # prepare a linear color map
+		#cm.reverse()                    # reverse it to put light colors at the top
+		pen = cm.getPen( span=(0.0,1.0), width=5 ) # gradient from blue (y=0) to white (y=1)
+		'''
+
+		# this works
+		self.setPen(pen)
 
 	def shape(self):
 		# override because QGraphicsPathItem.shape is too expensive.

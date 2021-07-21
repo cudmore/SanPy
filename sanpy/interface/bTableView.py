@@ -24,6 +24,7 @@ class bTableView(QtWidgets.QTableView):
 		https://github.com/PyQt5/Examples/tree/master/PyQt5/itemviews/frozencolumn
 	"""
 
+	'''
 	signalUnloadRow = QtCore.pyqtSignal(object)  # row index
 	signalRemoveFromDatabase = QtCore.pyqtSignal(object)  # row index
 	signalDuplicateRow = QtCore.pyqtSignal(object)  # row index
@@ -34,8 +35,9 @@ class bTableView(QtWidgets.QTableView):
 
 	signalSaveFileTable = QtCore.pyqtSignal()
 	"""Save entire database as pandas hsf."""
+	'''
 
-	signalSelectRow = QtCore.pyqtSignal(object, object, object)  # (row, column, rowDict)
+	signalSelectRow = QtCore.pyqtSignal(object, object)  # (row, rowDict)
 
 	signalUpdateStatus = QtCore.pyqtSignal(object)
 	"""Update status in main SanPy app."""
@@ -45,6 +47,9 @@ class bTableView(QtWidgets.QTableView):
 	def __init__(self, model, parent=None):
 		super(bTableView, self).__init__(parent)
 
+		self.lastSeletedRow = None
+		self.clicked.connect(self.onLeftClick)
+
 		#
 		# frozen
 		self.setModel(model)
@@ -53,6 +58,7 @@ class bTableView(QtWidgets.QTableView):
 		self.numFrozenColumns = 5 # depends on columns in analysisDir
 
 		self.frozenTableView = QtWidgets.QTableView(self)
+		self.frozenTableView.clicked.connect(self.onLeftClick)
 		self.frozenTableView.setSortingEnabled(True)
 		self.frozenTableView.setSelectionBehavior(QtWidgets.QTableView.SelectRows)  # abb
 		# only allow one row to be selected
@@ -197,7 +203,26 @@ class bTableView(QtWidgets.QTableView):
 		self.frozenTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
 		self.frozenTableView.horizontalHeader().setStretchLastSection(True)
 
-	def selectionChanged(self, selected, deselected):
+	# does not work ???
+	def onLeftClick(self, item):
+		"""Hanlde user left-click on a row. Keep track of lastSelected row to differentiate between
+		switch-file and click again.
+		"""
+		row = item.row()
+		realRow = self.model()._data.index[row] # sort order
+		logger.info(f'User clicked row:{row} realRow:{realRow}')
+		if self.lastSeletedRow is None or self.lastSeletedRow != realRow:
+			# new row selection
+			#print('  new row selection')
+			rowDict = self.model().myGetRowDict(realRow)
+			logger.info(f'realRow:{realRow} rowDict:{rowDict}')
+			self.signalSelectRow.emit(realRow, rowDict)
+		else:
+			#print('  handle another click on already selected row')
+			pass
+		self.lastSeletedRow = realRow
+
+	def old_selectionChanged(self, selected, deselected):
 		logger.info('')
 		modelIndexList = selected.indexes()
 		if len(modelIndexList) == 0:
@@ -216,7 +241,7 @@ class bTableView(QtWidgets.QTableView):
 
 		logger.info(f'realRow:{realRow} col:{column} {rowDict}')
 
-		self.signalSelectRow.emit(realRow, column, rowDict)
+		self.signalSelectRow.emit(realRow, rowDict)
 
 	def mySetModel(self, model):
 		"""
@@ -279,30 +304,26 @@ class bTableView(QtWidgets.QTableView):
 			selectedRow = tmp[0].row() # not in sort order
 
 		if action == unloadData:
-			tmp = self.selectedIndexes()
-			if len(tmp)>0:
-				selectedRow = tmp[0].row()
-				self.signalUnloadRow.emit(selectedRow) # not in sort order
+			#self.signalUnloadRow.emit(selectedRow) # not in sort order
+				self.model().myUnloadRow(selectedRow)
 		elif action == removeFromDatabase:
-			self.signalRemoveFromDatabase.emit(selectedRow) # not in sort order
+			#self.signalRemoveFromDatabase.emit(selectedRow) # not in sort order
+			self.model().myRemoveFromDatabase(selectedRow)
 		elif action == duplicateRow:
-			tmp = self.selectedIndexes()
-			if len(tmp)>0:
-				selectedRow = tmp[0].row()
-				self.signalDuplicateRow.emit(selectedRow) # not in sort order
+			#self.signalDuplicateRow.emit(selectedRow) # not in sort order
+			self.model().myDuplicateRow(selectedRow)
 		elif action == deleteRow:
-			tmp = self.selectedIndexes()
-			if len(tmp)>0:
-				selectedRow = tmp[0].row()
-				self.signalDeleteRow.emit(selectedRow)
-			else:
-				logger.warning('no selection?')
+			#self.signalDeleteRow.emit(selectedRow)
+			self.model().myDeleteRow(selectedRow)
 		elif action == copyTable:
-			self.signalCopyTable.emit()
+			#self.signalCopyTable.emit()
+			self.model().myCopyTable()
 		elif action == findNewFiles:
-			self.signalFindNewFiles.emit()
+			#self.signalFindNewFiles.emit()
+			self.model().mySyncDfWithPath()
 		elif action == saveAllAnalysis:
-			self.signalSaveFileTable.emit()
+			#self.signalSaveFileTable.emit()
+			self.model().saveHdf()
 		elif action in [saNodeParams, neuronParams]:
 			#print(action, action.text())
 			if selectedRow is not None:
@@ -365,59 +386,6 @@ class bTableView(QtWidgets.QTableView):
 			selectedRow = tmp[0].row() # not in sort order
 		self.model().myUpdateLoadedAnalyzed(ba, selectedRow)
 
-# see: https://stackoverflow.com/questions/17748546/pyqt-column-of-checkboxes-in-a-qtableview
-class old_myCheckBoxDelegate(QtWidgets.QItemDelegate):
-	"""
-	A delegate that places a fully functioning QCheckBox cell of the column to which it's applied.
-	"""
-	def __init__(self, parent):
-		QtWidgets.QItemDelegate.__init__(self, parent)
-		#self.myParent = parent
-
-	def createEditor(self, parent, option, index):
-		"""
-		Important, otherwise an editor is created if the user clicks in this cell.
-		"""
-		return None
-
-	def paint(self, painter, option, index):
-		"""
-		Paint a checkbox without the label.
-
-		painter: QtGui.QPainter
-		option: QtWidgets.QStyleOptionViewItem
-		"""
-		#logger.info(painter)
-		#logger.info(option.font)
-		myFont = QtGui.QFont('Arial', 6)
-		#option.font =
-		painter.setFont(myFont)
-		#option.initFrom(self.myParent)
-		self.drawCheck(painter, option, option.rect, QtCore.Qt.Unchecked if int(index.data()) == 0 else QtCore.Qt.Checked)
-
-	def editorEvent(self, event, model, option, index):
-		'''
-		Change the data in the model and the state of the checkbox
-		if the user presses the left mousebutton and this cell is editable. Otherwise do nothing.
-		'''
-		if not int(index.flags() & QtCore.Qt.ItemIsEditable) > 0:
-			return False
-
-		if event.type() == QtCore.QEvent.MouseButtonRelease and event.button() == QtCore.Qt.LeftButton:
-			# Change the checkbox-state
-			self.setModelData(None, model, index)
-			return True
-
-		return False
-
-
-	def setModelData(self, editor, model, index):
-		'''
-		The user wanted to change the old state in the opposite.
-		'''
-		print('myCheckBoxDelegate.setModelData()')
-		model.setData(index, 1 if int(index.data()) == 0 else 0, QtCore.Qt.EditRole)
-
 def test():
 	import sys
 	app = QtWidgets.QApplication([])
@@ -428,7 +396,7 @@ def test():
 	df = ad.getDataFrame()
 	print('df:')
 	print(df)
-	model = sanpy.interface.bFileTable.pandasModel(df)
+	model = sanpy.interface.bFileTable.pandasModel(ad)
 
 	# make an empty dataframe with just headers !!!
 	dfEmpty = pd.DataFrame(columns=sanpy.analysisDir.sanpyColumns.keys())
@@ -438,7 +406,7 @@ def test():
 	print(dfEmpty)
 	emptyModel = sanpy.interface.bFileTable.pandasModel(dfEmpty)
 
-	btv = bTableView(emptyModel)
+	btv = bTableView(model)
 	#btv.mySetModel(model)
 
 	btv.show()

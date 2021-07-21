@@ -34,6 +34,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.dvdtLines = None
 		self.dvdtLinesFiltered = None
+		self.dacLines = None
 		self.vmLines = None
 		self.vmLinesFiltered = None
 		self.clipLines = None
@@ -142,12 +143,14 @@ class bDetectionWidget(QtWidgets.QWidget):
 		showScatter = True
 		if windowOptions is not None:
 			showDvDt = windowOptions['display']['showDvDt']
+			showDAC = windowOptions['display']['showDAC']
 			showClips = windowOptions['display']['showClips']
 			showScatter = windowOptions['display']['showScatter']
 
 			#self.toggle_dvdt(showDvDt)
 			#self.toggleClips(showClips)
 			self.toggleInterface('dV/dt', showDvDt)
+			self.toggleInterface('DAC', showDAC)
 			self.toggleInterface('Clips', showClips)
 
 	def detect(self, dvdtThreshold, vmThreshold):
@@ -685,6 +688,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 				self.derivPlot.show()
 			else:
 				self.derivPlot.hide()
+		elif item == 'DAC':
+			#self.toggle_dvdt(on)
+			if self.myMainWindow is not None:
+				#self.myMainWindow.toggleStatisticsPlot(on)
+				self.myMainWindow.preferencesSet('display', 'showDAC', on)
+			if on:
+				self.dacPlot.show()
+			else:
+				self.dacPlot.hide()
 		#elif item == 'vM':
 		#	if on:
 		#		self.vmPlot.show()
@@ -728,12 +740,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.view.show()
 
 		self.derivPlot = self.view.addPlot(row=0, col=0)
-		self.vmPlot = self.view.addPlot(row=1, col=0)
-		self.clipPlot = self.view.addPlot(row=2, col=0)
+		self.dacPlot = self.view.addPlot(row=1, col=0)
+		self.vmPlot = self.view.addPlot(row=2, col=0)
+		self.clipPlot = self.view.addPlot(row=3, col=0)
 
 		#
 		# mouse crosshair
-		crosshairPlots = ['derivPlot', 'vmPlot', 'clipPlot']
+		crosshairPlots = ['derivPlot', 'dacPlot', 'vmPlot', 'clipPlot']
 		self.crosshairDict = {}
 		for crosshairPlot in crosshairPlots:
 			self.crosshairDict[crosshairPlot] = {
@@ -748,6 +761,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 			if crosshairPlot == 'derivPlot':
 				self.derivPlot.addItem(self.crosshairDict[crosshairPlot]['h'], ignoreBounds=True)
 				self.derivPlot.addItem(self.crosshairDict[crosshairPlot]['v'], ignoreBounds=True)
+			elif crosshairPlot == 'dacPlot':
+				self.dacPlot.addItem(self.crosshairDict[crosshairPlot]['h'], ignoreBounds=True)
+				self.dacPlot.addItem(self.crosshairDict[crosshairPlot]['v'], ignoreBounds=True)
 			elif crosshairPlot == 'vmPlot':
 				self.vmPlot.addItem(self.crosshairDict[crosshairPlot]['h'], ignoreBounds=True)
 				self.vmPlot.addItem(self.crosshairDict[crosshairPlot]['v'], ignoreBounds=True)
@@ -766,20 +782,27 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# hide the little 'A' button to rescale axis
 		self.derivPlot.hideButtons()
+		self.dacPlot.hideButtons()
 		self.vmPlot.hideButtons()
 		self.clipPlot.hideButtons()
 
 		# turn off right-click menu
 		self.derivPlot.setMenuEnabled(False)
+		self.dacPlot.setMenuEnabled(False)
 		self.vmPlot.setMenuEnabled(False)
 		self.clipPlot.setMenuEnabled(False)
 
 		# link x-axis of deriv and vm
 		self.derivPlot.setXLink(self.vmPlot)
+		self.derivPlot.setXLink(self.dacPlot)
+		self.dacPlot.setXLink(self.derivPlot)
+		self.dacPlot.setXLink(self.vmPlot)
 		self.vmPlot.setXLink(self.derivPlot)
+		self.vmPlot.setXLink(self.dacPlot)
 
 		# turn off x/y dragging of deriv and vm
 		self.derivPlot.setMouseEnabled(x=False, y=False)
+		self.dacPlot.setMouseEnabled(x=False, y=False)
 		self.vmPlot.setMouseEnabled(x=False, y=False)
 		self.clipPlot.setMouseEnabled(x=False, y=False)
 
@@ -872,6 +895,22 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.crosshairDict[inPlot]['h'].show()
 			self.crosshairDict[inPlot]['v'].show()
 			mousePoint = self.derivPlot.vb.mapSceneToView(pos)
+			# hide the horizontal in dacPlot
+			self.crosshairDict['dacPlot']['v'].show()
+			self.crosshairDict['dacPlot']['h'].hide()
+			# hide the horizontal in vmPlot
+			self.crosshairDict['vmPlot']['v'].show()
+			self.crosshairDict['vmPlot']['h'].hide()
+
+		elif self.dacPlot.sceneBoundingRect().contains(pos):
+			# dac
+			inPlot = 'dacPlot'
+			self.crosshairDict[inPlot]['h'].show()
+			self.crosshairDict[inPlot]['v'].show()
+			mousePoint = self.dacPlot.vb.mapSceneToView(pos)
+			# hide the horizontal in derivPlot
+			self.crosshairDict['derivPlot']['v'].show()
+			self.crosshairDict['derivPlot']['h'].hide()
 			# hide the horizontal in vmPlot
 			self.crosshairDict['vmPlot']['v'].show()
 			self.crosshairDict['vmPlot']['h'].hide()
@@ -882,6 +921,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.crosshairDict[inPlot]['h'].show()
 			self.crosshairDict[inPlot]['v'].show()
 			mousePoint = self.vmPlot.vb.mapSceneToView(pos)
+			# hide the horizontal in dacPlot
+			self.crosshairDict['dacPlot']['v'].show()
+			self.crosshairDict['dacPlot']['h'].hide()
 			# hide the horizontal in derivPlot
 			self.crosshairDict['derivPlot']['v'].show()
 			self.crosshairDict['derivPlot']['h'].hide()
@@ -899,12 +941,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.crosshairDict[inPlot]['v'].setPos(mousePoint.x())
 
 		if inPlot == 'derivPlot':
+			self.crosshairDict['dacPlot']['v'].setPos(mousePoint.x())
+			self.crosshairDict['vmPlot']['v'].setPos(mousePoint.x())
+		elif inPlot == 'dacPlot':
+			self.crosshairDict['derivPlot']['v'].setPos(mousePoint.x())
 			self.crosshairDict['vmPlot']['v'].setPos(mousePoint.x())
 		if inPlot == 'vmPlot':
 			self.crosshairDict['derivPlot']['v'].setPos(mousePoint.x())
+			self.crosshairDict['dacPlot']['v'].setPos(mousePoint.x())
 
 		# hide
-		if inPlot in ['derivPlot', 'vmPlot']:
+		if inPlot in ['derivPlot', 'dacPlot', 'vmPlot']:
 			# hide h/v in clipPlot
 			self.crosshairDict['clipPlot']['h'].hide()
 			self.crosshairDict['clipPlot']['v'].hide()
@@ -912,6 +959,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 			# hide h/v in derivPlot and vmPlot
 			self.crosshairDict['derivPlot']['h'].hide()
 			self.crosshairDict['derivPlot']['v'].hide()
+			self.crosshairDict['dacPlot']['h'].hide()
+			self.crosshairDict['dacPlot']['v'].hide()
 			self.crosshairDict['vmPlot']['h'].hide()
 			self.crosshairDict['vmPlot']['v'].hide()
 
@@ -979,13 +1028,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 			return None
 		'''
 
-		#self.updateStatusBar(f'Loading file {path}')
-		self.detectToolbarWidget.slot_selectFile(tableRowDict)
-
 		# load abAnalysis object from file
 		self.ba = ba
 		#else:
 		#	self.ba = sanpy.bAnalysis(file=path) # loads abf file
+
+		#self.updateStatusBar(f'Loading file {path}')
+		self.detectToolbarWidget.slot_selectFile(tableRowDict)
 
 		'''
 		if self.ba.loadError:
@@ -996,17 +1045,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.ba._getDerivative(dDict) # derivative
 		'''
 
-		#remove vm/dvdt/clip items (even when abf file is corrupt)
-		#if self.dvdtLines is not None:
-		#	self.derivPlot.removeItem(self.dvdtLines)
-		if self.dvdtLinesFiltered is not None:
-			self.derivPlot.removeItem(self.dvdtLinesFiltered)
-		#if self.vmLines is not None:
-		#	self.vmPlot.removeItem(self.vmLines)
-		if self.vmLinesFiltered is not None:
-			self.vmPlot.removeItem(self.vmLinesFiltered)
-		if self.clipLines is not None:
-			self.clipPlot.removeItem(self.clipLines)
+		#
+		# moved into _replot()
+		#
 
 		# abb 20201009
 		if self.ba.loadError:
@@ -1027,6 +1068,37 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# set full axis
 		#self.setAxisFull()
 
+		#
+		# abb implement sweep, move to function()
+		#
+		self._replot()
+
+		#
+		# set sweep to 0
+
+		#self.updateStatusBar(f'Loaded file {path}')
+
+		return True
+
+	def slot_selectSweep(self,sweepNumber):
+		logger.info(f'sweepNumber:{sweepNumber}')
+		self.ba.setSweep(sweepNumber)
+		logger.info(f'sweepNumber:{sweepNumber} max:{np.nanmax(self.ba.sweepY)}')
+		self._replot()
+
+	def _replot(self):
+		#remove vm/dvdt/clip items (even when abf file is corrupt)
+		#if self.dvdtLines is not None:
+		#	self.derivPlot.removeItem(self.dvdtLines)
+		if self.dvdtLinesFiltered is not None:
+			self.derivPlot.removeItem(self.dvdtLinesFiltered)
+		if self.dacLines is not None:
+			self.dacPlot.removeItem(self.dacLines)
+		if self.vmLinesFiltered is not None:
+			self.vmPlot.removeItem(self.vmLinesFiltered)
+		if self.clipLines is not None:
+			self.clipPlot.removeItem(self.clipLines)
+
 		# update lines
 		#self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.deriv,
 		#					self, type='dvdt')
@@ -1035,11 +1107,14 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#self.derivPlot.addItem(self.dvdtLines)
 		self.derivPlot.addItem(self.dvdtLinesFiltered)
 
+		self.dacLines = MultiLine(self.ba.sweepX, self.ba.sweepC,
+							self, forcePenColor=None, type='dac')
+		self.dacPlot.addItem(self.dacLines)
+
 		#self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY,
 		#					self, type='vm')
 		self.vmLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredVm,
 							self, forcePenColor=None, type='vmFiltered')
-		#self.vmPlot.addItem(self.vmLines)
 		self.vmPlot.addItem(self.vmLinesFiltered)
 
 		# remove and re-add plot overlays
@@ -1064,13 +1139,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#
 		# critical
 		self.replot()
-
-		#
-		# set sweep to 0
-
-		#self.updateStatusBar(f'Loaded file {path}')
-
-		return True
 
 class myImageExporter(ImageExporter):
 	def __init__(self, item):
@@ -1358,9 +1426,18 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.startSeconds.setValue(startSeconds)
 		self.stopSeconds.setValue(stopSeconds)
 
+	'''
 	def sweepSelectionChange(self,i):
 		sweepNumber = int(self.cb.currentText())
 		print('	todo: implement sweep number:', sweepNumber)
+	'''
+
+	def on_sweep_change(self, sweepNumber):
+		logger.info(sweepNumber)
+		if sweepNumber < 0:
+			return
+		#self.detectionWidget.ba.setSweep(sweepNumber)
+		self.detectionWidget.slot_selectSweep(sweepNumber)
 
 	@QtCore.pyqtSlot()
 	def on_start_stop(self):
@@ -1460,6 +1537,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			detectDvDt = windowOptions['detect']['detectDvDt']
 			detectMv = windowOptions['detect']['detectMv']
 			showDvDt = windowOptions['display']['showDvDt']
+			showDAC = windowOptions['display']['showDAC']
 			showClips = windowOptions['display']['showClips']
 			showScatter = windowOptions['display']['showScatter']
 			showErrors = windowOptions['display']['showErrors']
@@ -1642,7 +1720,19 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		'''
 
 		row = 0
+		# sweeps
+		tmpSweepLabel = QtWidgets.QLabel('Sweep')
+		self.sweepComboBox = QtWidgets.QComboBox()
+		self.sweepComboBox.currentIndexChanged.connect(self.on_sweep_change)
+		# will be set in self.slot_selectFile()
+		#for sweep in range(self.detectionWidget.ba.numSweeps):
+		#	self.sweepComboBox.addItem(str(sweep))
+		tmpRowSpan = 1
+		tmpColSpan = 1
+		displayGridLayout.addWidget(tmpSweepLabel, row, 0, tmpRowSpan, tmpColSpan)
+		displayGridLayout.addWidget(self.sweepComboBox, row, 1, tmpRowSpan, tmpColSpan)
 
+		row += 1
 		self.crossHairCheckBox = QtWidgets.QCheckBox('Crosshair')
 		self.crossHairCheckBox.setChecked(False)
 		self.crossHairCheckBox.stateChanged.connect(self.on_crosshair_clicked)
@@ -1703,20 +1793,27 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		row = 0
 		col = 1
+		show_dac_checkbox = QtWidgets.QCheckBox('DAC')
+		show_dac_checkbox.setChecked(showDAC)
+		show_dac_checkbox.stateChanged.connect(partial(self.on_check_click,show_dac_checkbox,'DAC'))
+		plotGridLayout.addWidget(show_dac_checkbox, row, col)
+
+		row = 0
+		col = 2
 		checkbox = QtWidgets.QCheckBox('Clips')
 		checkbox.setChecked(showClips)
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Clips'))
 		plotGridLayout.addWidget(checkbox, row, col)
 
 		row = 0
-		col = 2
+		col = 3
 		checkbox = QtWidgets.QCheckBox('Scatter')
 		checkbox.setChecked(showScatter)
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Scatter'))
 		plotGridLayout.addWidget(checkbox, row, col)
 
 		row = 0
-		col = 3
+		col = 4
 		checkbox = QtWidgets.QCheckBox('Errors')
 		checkbox.setChecked(showErrors)
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Errors'))
@@ -1801,6 +1898,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 	def slot_selectFile(self, rowDict):
 		file = rowDict['File']
 		self.mySelectedFileLabel.setText(file)
+
+		#self.updateStatusBar(f'Loading file {path}')
+		self.sweepComboBox.clear()
+		for sweep in range(self.detectionWidget.ba.numSweeps):
+			self.sweepComboBox.addItem(str(sweep))
 
 if __name__ == '__main__':
 	# load a bAnalysis file

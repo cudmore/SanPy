@@ -34,7 +34,7 @@ def getLoggerFile():
 	logPath = os.path.join(myPath, fileName)
 	return logPath
 
-def get_logger(name, level=logging.WARNING):
+def get_logger(name, level=logging.DEBUG):
 	"""
 	"""
 	if getattr(sys, 'frozen', False):

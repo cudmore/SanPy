@@ -128,10 +128,11 @@ class bAnalysis:
 		self._currentSweep = 0  # int
 		self._sweepX = None  # np.ndarray
 		self._sweepY = None  # np.ndarray
+		self._sweepC = None # the command waveform (DAC)
 
 		self._recordingMode = None  # str
-		self._sweepX_label = '???'  # str
-		self._sweepY_label = '???'  # str
+		self._sweepLabelX = '???'  # str
+		self._sweepLabelY = '???'  # str
 
 		self.myFileType = None
 		"""str: From ('abf', 'csv', 'tif', 'bytestream')"""
@@ -154,8 +155,8 @@ class bAnalysis:
 		self.detectionType = None
 		"""str: From ('dvdt', 'mv')"""
 
-		self.filteredVm = None
-		self.filteredDeriv = None
+		self._filteredVm = None
+		self._filteredDeriv = None
 
 		self.spikeDict = []  # a list of dict
 		self.spikeTimes = []  # created in self.spikeDetect()
@@ -203,12 +204,15 @@ class bAnalysis:
 			self.loadError = True
 
 		# get default derivative
+		self.rebuildFiltered()
+		'''
 		if self._recordingMode == 'I-Clamp':
 			self._getDerivative()
 		elif self._recordingMode == 'V-Clamp':
 			self._getBaselineSubtract()
 		else:
 			logger.warning('Did not take derivative')
+		'''
 
 		self._detectionDirty = False
 
@@ -246,8 +250,8 @@ class bAnalysis:
 		self._recordingMode = 'I-Clamp'
 
 		# TODO: infer from columns
-		self._sweepY_label = 'mV' # TODO: get from column
-		self._sweepX_label = 's' # TODO: get from column
+		self._sweepLabelX = 's' # TODO: get from column
+		self._sweepLabelY = 'mV' # TODO: get from column
 
 		# TODO: infer from first column as ('s', 'ms')
 		firstPnt = self._sweepX[0]
@@ -272,6 +276,10 @@ class bAnalysis:
 				logger.warning(f'col "{col}" not in iDict')
 			iDict[col] = value
 
+		logger.info(f'sweepX:{self.sweepX.shape}')
+		logger.info(f'sweepList:{self.sweepList}')
+		logger.info(f'_currentSweep:{self._currentSweep}')
+
 	def _saveToHdf(self, hdfPath):
 		"""Save to h5 file with key self.uuid.
 		Only save if detection has changed (e.g. self.detectionDirty)
@@ -292,12 +300,13 @@ class bAnalysis:
 			#oneDf['path'] = [self.path]  # seed oneDf with one row (critical)
 
 			# do not save these instance variables (e.g. self._ba)
-			noneKeys = ['_abf', 'filteredVm', 'filteredDeriv',
+			noneKeys = ['_abf', '_filteredVm', '_filteredDeriv',
 						'spikeClips', 'spikeClips_x', 'spikeClips_x2']
 
 			for k,v in iDict.items():
 				if k in noneKeys:
 					v = None
+				#print(f'saving h5 k:{k} {type(v)}')
 				oneDf.at[0, k] = v
 			# save into file
 			hdfStore[self.uuid] = oneDf
@@ -315,8 +324,28 @@ class bAnalysis:
 				self._abf = pyabf.ABF(byteStream)
 			else:
 				self._abf = pyabf.ABF(self._path)
-			self._sweepX = self._abf.sweepX
-			self._sweepY = self._abf.sweepY
+
+			self._sweepList = self._abf.sweepList
+
+			# on load, sweep is 0
+			tmpRows = self._abf.sweepX.shape[0]
+			numSweeps = len(self._sweepList)
+			self._sweepX = np.zeros((tmpRows,numSweeps))
+			self._sweepY = np.zeros((tmpRows,numSweeps))
+			self._sweepC = np.zeros((tmpRows,numSweeps))
+			'''
+			print('=== _loadAbf')
+			print(f'self._sweepX is {self._sweepX.shape}')
+			print(f'self._sweepY is {self._sweepY.shape}')
+			print(f'self._sweepC is {self._sweepC.shape}')
+			'''
+			for sweep in self._sweepList:
+				self._abf.setSweep(sweep)
+				self._sweepX[:, sweep] = self._abf.sweepX  # <class 'numpy.ndarray'>, (60000,)
+				self._sweepY[:, sweep] = self._abf.sweepY
+				self._sweepC[:, sweep] = self._abf.sweepC
+			#print(f'self._sweepX is {self._sweepX.shape}')
+			self._abf.setSweep(0)
 
 			# get v from pyAbf
 			self._dataPointsPerMs = self._abf.dataPointsPerMs
@@ -326,7 +355,9 @@ class bAnalysis:
 			self.acqTime = abfDateTime.strftime("%H:%M:%S")
 
 			# TODO: fix this
-			self._sweepX_label = 's'
+			#self._sweepX_label = 's'
+			self._sweepLabelX = self._abf.sweepLabelX
+			self._sweepLabelY = self._abf.sweepLabelY
 
 			if self._abf.sweepUnitsY in ['pA']:
 				self._recordingMode = 'V-Clamp'
@@ -404,7 +435,10 @@ class bAnalysis:
 		Args:
 			sweepNumber (int): The sweep number to set.
 
-		TODO: Set sweep of underlying abf (if we have one)
+		TODO:
+			- Set sweep of underlying abf (if we have one)
+			- take channel into account with:
+				abf.setSweep(sweepNumber: 3, channel: 0)
 		"""
 		if sweepNumber not in self._sweepList:
 			logger.error(f'did not find sweep {sweepNumber} with sweepList: {self._sweepList}')
@@ -413,28 +447,49 @@ class bAnalysis:
 			self._currentSweep = sweepNumber
 			if self.abf is not None:
 				self.abf.setSweep(sweepNumber)
+				#self._sweepX = self.abf.sweepX
+				#self._sweepY = self.abf.sweepY
+				self.rebuildFiltered()
+				#logger.info(f'_sweepY:{np.nanmax(self._sweepY)}')
 			return True
 
 	@property
 	def numSpikes(self):
 		"""Get the number of detected spikes."""
-		return len(self.spikeTimes)
+		#return len(self.spikeTimes) # spikeTimes is tmp per sweep
+		return len(self.spikeDict) # spikeDict has all spikes for all sweeps
 
 	@property
 	def sweepX(self):
 		"""Get the time (seconds) from recording (numpy.ndarray)."""
-		return self._sweepX
+		return self._sweepX[:,self._currentSweep]
 
 	@property
 	def sweepY(self):
-		"""Get the amplitude (mV or pA) from recording (numpy.ndarray)."""
-		return self._sweepY
+		"""Get the amplitude (mV or pA) from recording (numpy.ndarray). Units wil depend on mode"""
+		return self._sweepY[:,self._currentSweep]
+
+	@property
+	def sweepC(self):
+		"""Get the command waveform DAC (numpy.ndarray). Units will depend on mode"""
+		return self._sweepC[:,self._currentSweep]
+
+	@property
+	def filteredDeriv(self):
+		"""Get the command waveform DAC (numpy.ndarray). Units will depend on mode"""
+		logger.info(self._filteredDeriv.shape)
+		return self._filteredDeriv[:,self._currentSweep]
+
+	@property
+	def filteredVm(self):
+		"""Get the command waveform DAC (numpy.ndarray). Units will depend on mode"""
+		return self._filteredVm[:,self._currentSweep]
 
 	def get_yUnits(self):
-		return self._sweepY_label
+		return self._sweepLabelY
 
 	def get_xUnits(self):
-		return self._sweepX_label
+		return self._sweepLabelX
 
 	def isAnalyzed(self):
 		"""Return True if this bAnalysis has been analyzed, False otherwise."""
@@ -502,6 +557,14 @@ class bAnalysis:
 		else:
 			return x
 
+	def rebuildFiltered(self):
+		if self._recordingMode == 'I-Clamp':
+			self._getDerivative()
+		elif self._recordingMode == 'V-Clamp':
+			self._getBaselineSubtract()
+		else:
+			logger.warning('Did not take derivative')
+
 	def _getFilteredRecording(self, dDict=None):
 		"""
 		Get a filtered version of recording, used for both V-Clamp and I-Clamp.
@@ -521,11 +584,13 @@ class bAnalysis:
 				medianFilter += 1
 				logger.warning(f'Please use an odd value for the median filter, set medianFilter: {medianFilter}')
 			medianFilter = int(medianFilter)
-			self.filteredVm = scipy.signal.medfilt(self.sweepY, medianFilter)
+			self._filteredVm = scipy.signal.medfilt2d(self.sweepY, [medianFilter,1])
 		elif SavitzkyGolay_pnts > 0:
-			self.filteredVm = scipy.signal.savgol_filter(self.sweepY, SavitzkyGolay_pnts, SavitzkyGolay_poly, mode='nearest')
+			self._filteredVm = scipy.signal.savgol_filter(self.sweepY,
+								SavitzkyGolay_pnts, SavitzkyGolay_poly,
+								mode='nearest', axis=0)
 		else:
-			self.filteredVm = self.sweepY
+			self._filteredVm = self.sweepY
 
 	def _getBaselineSubtract(self, dDict=None):
 		"""
@@ -565,33 +630,47 @@ class bAnalysis:
 				medianFilter += 1
 				logger.warning('Please use an odd value for the median filter, set medianFilter: {medianFilter}')
 			medianFilter = int(medianFilter)
-			self.filteredVm = scipy.signal.medfilt(self.sweepY, medianFilter)
+			self._filteredVm = scipy.signal.medfilt2d(self._sweepY, [medianFilter,1])
 		elif SavitzkyGolay_pnts > 0:
-			self.filteredVm = scipy.signal.savgol_filter(self.sweepY, SavitzkyGolay_pnts, SavitzkyGolay_poly, mode='nearest')
+			self._filteredVm = scipy.signal.savgol_filter(self._sweepY,
+								SavitzkyGolay_pnts, SavitzkyGolay_poly,
+								axis=0,
+								mode='nearest')
 		else:
-			self.filteredVm = self.sweepY
+			self._filteredVm = self._sweepY
 
-		self.filteredDeriv = np.diff(self.filteredVm)
+		self._filteredDeriv = np.diff(self._filteredVm, axis=0)
 
+		# filter the derivative
 		if medianFilter > 0:
 			if not medianFilter % 2:
 				medianFilter += 1
 				print(f'Please use an odd value for the median filter, set medianFilter: {medianFilter}')
 			medianFilter = int(medianFilter)
-			self.filteredDeriv = scipy.signal.medfilt(self.filteredDeriv, medianFilter)
+			self._filteredDeriv = scipy.signal.medfilt2d(self._filteredDeriv, [medianFilter,1])
 		elif SavitzkyGolay_pnts > 0:
-			self.filteredDeriv = scipy.signal.savgol_filter(self.filteredDeriv, SavitzkyGolay_pnts, SavitzkyGolay_poly, mode='nearest')
+			self._filteredDeriv = scipy.signal.savgol_filter(self._filteredDeriv,
+									SavitzkyGolay_pnts, SavitzkyGolay_poly,
+									axis = 0,
+									mode='nearest')
 		else:
-			self.filteredDeriv = self.filteredDeriv
+			#self._filteredDeriv = self.filteredDeriv
+			pass
 
 		# mV/ms
 		dataPointsPerMs = self.dataPointsPerMs
-		self.filteredDeriv = self.filteredDeriv * dataPointsPerMs #/ 1000
+		self._filteredDeriv = self._filteredDeriv * dataPointsPerMs #/ 1000
 
-		# add an initial point so it is the same length as raw data in abf.sweepY
+		# insert an initial point (rw) so it is the same length as raw data in abf.sweepY
+		# three options (concatenate, insert, vstack)
+		# could only get vstack working
 		#self.deriv = np.concatenate(([0],self.deriv))
-		self.filteredDeriv = np.concatenate(([0],self.filteredDeriv))
-
+		rowOfZeros = np.zeros(self.numSweeps)
+		rowZero = 0
+		self._filteredDeriv = np.vstack([rowOfZeros, self._filteredDeriv])
+		#self._filteredDeriv = np.insert(self.filteredDeriv, rowZero, rowOfZeros, axis=0)
+		#self._filteredDeriv = np.concatenate((zeroRow,self.filteredDeriv))
+		#print('  self._filteredDeriv:', self._filteredDeriv[0:4,:])
 	def getDefaultDetection_ca(self):
 		"""
 		Get default detection for Ca analysis. Warning, this is currently experimental.
@@ -1046,6 +1125,8 @@ class bAnalysis:
 
 		startTime = time.time()
 
+		self.rebuildFiltered()
+		'''
 		if self._recordingMode == 'I-Clamp':
 			self._getDerivative(dDict)
 		elif self._recordingMode == 'V-Clamp':
@@ -1053,6 +1134,7 @@ class bAnalysis:
 		else:
 			# in case recordingMode is ill defined
 			self._getDerivative(dDict)
+		'''
 
 		self.spikeDict = [] # we are filling this in, one dict for each spike
 
@@ -1124,6 +1206,8 @@ class bAnalysis:
 			spikeDict['cellType'] = dDict['cellType']
 			spikeDict['sex'] = dDict['sex']
 			spikeDict['condition'] = dDict['condition']
+
+			spikeDict['sweep'] = self._currentSweep
 
 			spikeDict['spikeNumber'] = i
 
@@ -2241,8 +2325,31 @@ def test_hdf():
 	ba = sanpy.bAnalysis(path)
 	ba.spikeDetect()
 
+def test_sweeps():
+	path = '/home/cudmore/Sites/SanPy/data/tests/171116sh_0018.abf'
+	ba = sanpy.bAnalysis(path)
+	logger.info(ba.numSweeps)
+	logger.info(ba.sweepList)
+
+	# plot all sweeps
+	import matplotlib.pyplot as plt
+	numSpikes = []
+	for sweepNumber in ba.abf.sweepList:
+		sweepSet = ba.setSweep(sweepNumber)
+		ba.spikeDetect()
+		print(f'   sweepNumber:{sweepNumber} numSpikes:{ba.numSpikes} maxY:{np.nanmax(ba.sweepY)}')
+		numSpikes.append(ba.numSpikes)
+		offset = 0 #140*sweepNumber
+		print(f'   {type(ba.abf.sweepX)}, {ba.abf.sweepX.shape}')
+		plt.plot(ba.abf.sweepX, ba.abf.sweepY+offset, color='C0')
+	print(f'numSpikes:{numSpikes}')
+	#plt.gca().get_yaxis().set_visible(False)  # hide Y axis
+	plt.xlabel(ba.abf.sweepLabelX)
+	plt.show()
 
 if __name__ == '__main__':
 	# was using this for manuscript
 	#main()
-	test_hdf()
+	#test_hdf()
+
+	test_sweeps()

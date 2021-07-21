@@ -428,7 +428,7 @@ class analysisDir():
 
 		tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
 		tmpHdfPath = os.path.join(self.path, tmpHdfFile)
-		logger.info(f'Saving Tmp {tmpHdfPath}')
+		logger.critical(f'Saving tmp db (will be compressed) {tmpHdfPath}')
 
 		#
 		# save each bAnalysis
@@ -451,11 +451,11 @@ class analysisDir():
 		# save file database
 		with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
 			dbKey = os.path.splitext(self.dbFile)[0]
-			logger.info(f'Storing file db into key "{dbKey}"')
+			#logger.critical(f'Storing file database into key "{dbKey}"')
 			df = self.getDataFrame()
 			df = df.drop('_ba', axis=1)  # don't ever save _ba, use it for runtime
 
-			logger.info('saving db df')
+			logger.critical(f'saving file db with {len(df)} rows')
 			#print(df[['File', 'uuid']])
 
 			hdfStore[dbKey] = df  # save it
@@ -468,7 +468,7 @@ class analysisDir():
 		# rebuild the file to remove old changes and reduce size
 		hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
 		hdfPath = os.path.join(self.path, hdfFile)
-		logger.info(f'Rebuilding h5 to {hdfPath}')
+		logger.critical(f'Rebuilding h5 to {hdfPath}')
 		#command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", '--complevel=9', '--complib=blosc:blosclz', tmpHdfPath, hdfPath]
 		#command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", tmpHdfPath, hdfPath]
 		command = ["ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]

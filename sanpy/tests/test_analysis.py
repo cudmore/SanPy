@@ -25,7 +25,7 @@ class Test_Analysis(unittest.TestCase):
 	expectedNumErrors = 1
 
 	def test_0_load(self):
-		logger.info('')
+		logger.info('RUNNING')
 
 		self.assertFalse(self.ba.loadError)
 		self.assertIsNotNone(self.ba.sweepX)
@@ -33,7 +33,7 @@ class Test_Analysis(unittest.TestCase):
 		self.assertEqual(len(self.ba.sweepX), len(self.ba.sweepY))
 
 	def test_1_detect(self):
-		logger.info('')
+		logger.info('RUNNING')
 		# grab detection parameters
 		dDict = sanpy.bAnalysis.getDefaultDetection()
 		# detect
@@ -43,7 +43,7 @@ class Test_Analysis(unittest.TestCase):
 		self.assertEqual(len(self.ba.dfError), self.expectedNumErrors) # expecting 102 spikes
 
 	def test_2_stats(self):
-		logger.info('')
+		logger.info('RUNNING')
 		thresholdSec = self.ba.getStat('thresholdSec')
 
 		self.assertEqual(len(thresholdSec), self.expectedNumSpikes) # expecting 102 spikes

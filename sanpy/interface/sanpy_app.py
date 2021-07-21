@@ -384,7 +384,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		return rowDict
 
-	def slot_fileTableClicked(self, row, column, rowDict):
+	def slot_fileTableClicked(self, row, rowDict):
 		"""Respond to selections in file table."""
 
 		'''
@@ -392,7 +392,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		abfColumnName = 'File'
 		fileName = self.myModel.myGetValue(row, abfColumnName)
 		'''
-		fileName = rowDict['File']
+		#fileName = rowDict['File']
 
 		# this will load ba if necc
 		ba = self.myAnalysisDir.getAnalysis(row) # if None then problem loading
@@ -555,6 +555,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		#self.tableView = sanpy.interface.bFileTable.myTableView()
 		# self.myModel starts with just columns (no data)
 		self.tableView = sanpy.interface.bTableView(self.myModel)
+		'''
 		self.tableView.signalUnloadRow.connect(self.slotUnloadRow)
 		self.tableView.signalRemoveFromDatabase.connect(self.slotRemoveFromDatabase)
 		self.tableView.signalDuplicateRow.connect(self.slotDuplicateRow)
@@ -562,6 +563,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.tableView.signalCopyTable.connect(self.slotCopyTable)
 		self.tableView.signalFindNewFiles.connect(self.slotFindNewFiles)
 		self.tableView.signalSaveFileTable.connect(self.slotSaveFilesTable)
+		'''
 		self.tableView.signalUpdateStatus.connect(self.slot_updateStatus)
 		#self.tableView.mySetModel(self.myModel)
 		#self.tableView.clicked.connect(self.new_tableClicked)
@@ -691,10 +693,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		configDict['display'] = {}
 		configDict['display']['plotEveryPoint'] = 10 # not used?
-		configDict['display']['showDvDt'] = True # not used?
-		configDict['display']['showClips'] = False # not used?
-		configDict['display']['showScatter'] = False # not used?
-		configDict['display']['showErrors'] = False # not used?
+		configDict['display']['showDvDt'] = True #
+		configDict['display']['showDAC'] = True #
+		configDict['display']['showClips'] = False #
+		configDict['display']['showScatter'] = False #
+		configDict['display']['showErrors'] = False #
 
 		return configDict
 
@@ -733,57 +736,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		doZoom = sDict['doZoom']
 		self.selectSpike(spikeNumber, doZoom)
 
-	def slotCopyTable(self):
-		#self.myModel.myCopyTable()
-		self.myAnalysisDir.copyToClipboard()
-
-	def slotDeleteRow(self, rowIdx):
-		# prompt user
-		msg = QtWidgets.QMessageBox()
-		msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
-		msg.setDefaultButton(QtWidgets.QMessageBox.Ok)
-		msg.setIcon(QtWidgets.QMessageBox.Warning)
-		msg.setText(f'Are you sure you want to delete row {rowIdx}?')
-		#msg.setInformativeText('informative text xxx')
-		msg.setWindowTitle("Delete Row")
-		returnValue = msg.exec_()
-		if returnValue == QtWidgets.QMessageBox.Ok:
-			#print('  deleting row:', rowIdx)
-			logger.info(f'Deleting file table row {rowIdx}')
-			self.myModel.myDeleteRow(rowIdx)
-			#df = self.myModel._data.drop([rowIdx])
-			#df = df.reset_index(drop=True)
-			#self.myModel._data = df # REQUIRED
-			# todo: select row none
-			#self.selectedRow = None
-			self.tableView.clearSelection()
-		else:
-			pass
-			#print('  no action taken')
-
-	def slotUnloadRow(self, row):
-		logger.info(f'Unload row {row}')
-		self.myModel.myUnloadRow(row)
-
-	def slotRemoveFromDatabase(self, row):
-		logger.info(f'Remove from db, row {row}')
-		self.myModel.myRemoveFromDatabase(row)
-
-	def slotDuplicateRow(self, row):
-		#print('MainWindow.slotDuplicateRow() row:', row, type(row))
-		logger.info(f'Duplicating row {row}')
-		self.myModel.myDuplicateRow(row)
-
-	def slotFindNewFiles(self):
-		"""
-		Find files in self.path that are not in pandas data model
-		"""
-		#self.myAnalysisDir.syncDfWithPath()
-		self.myModel.mySyncDfWithPath()
-
 	def slotSaveFilesTable(self):
-		logger.info('')
-		#self.myAnalysisDir.saveDatabase()
+		"""Needed on user keyboard Ctrl+S
+		"""
+		#logger.info('')
 		self.myAnalysisDir.saveHdf()
 
 	def slot_updateStatus(self, text):

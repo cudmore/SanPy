@@ -1,5 +1,5 @@
 
-As all open-source projects are, we are indebted to an enormous number of underlying open-source projects. Without these projects, SanPy would not be possible.
+As all open-source projects are, we are indebted to an enormous number of underlying open-source projects, countless contributors, and even more person hours. Without these projects and all who have contributed, SanPy would not be possible.
 
 To contribute to the open-source community, we are following the [FAIR][fair]{target=_blank} principles of software development to promote: **(F)**indability, **(A)**ccessibility, **(I)**nteroperability, and **(R)**eusability.
 
