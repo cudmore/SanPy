@@ -26,6 +26,7 @@ def getEddLines(ba):
 	if ba is None or ba.numSpikes == 0:
 		return x, y
 
+	# these are getting for current sweep
 	preLinearFitPnt0 = ba.getStat('preLinearFitPnt0')
 	preLinearFitSec0 = [ba.pnt2Sec_(x) for x in preLinearFitPnt0]
 	preLinearFitVal0 = ba.getStat('preLinearFitVal0')
@@ -34,7 +35,9 @@ def getEddLines(ba):
 	preLinearFitSec1 = [ba.pnt2Sec_(x) for x in preLinearFitPnt1]
 	preLinearFitVal1 = ba.getStat('preLinearFitVal1')
 
-	for idx, spike in enumerate(range(ba.numSpikes)):
+	thisNumSpikes = len(preLinearFitPnt0)
+	#for idx, spike in enumerate(range(ba.numSpikes)):
+	for idx, spike in enumerate(range(thisNumSpikes)):
 		dx = preLinearFitSec1[idx] - preLinearFitSec0[idx]
 		dy = preLinearFitVal1[idx] - preLinearFitVal0[idx]
 
@@ -63,9 +66,12 @@ def getHalfWidths(ba):
 	x = []
 	y = []
 	numPerSpike = 3  # rise/fall/nan
-	numSpikes = ba.numSpikes
+	#numSpikes = ba.numSpikes
 	xyIdx = 0
-	for idx, spike in enumerate(ba.spikeDict):
+	spikeDictionaries = ba.getSpikeDictionaries() # for current sweep
+	numSpikes = len(spikeDictionaries)
+	#for idx, spike in enumerate(ba.spikeDict):
+	for idx, spike in enumerate(spikeDictionaries):
 		if idx ==0:
 			# make x/y from first spike using halfHeights = [20,50,80]
 			halfHeights = spike['halfHeights'] # will be same for all spike, like [20, 50, 80]

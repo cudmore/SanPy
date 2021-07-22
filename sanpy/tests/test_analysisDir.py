@@ -47,5 +47,5 @@ class Test_Analysis(unittest.TestCase):
 		self.assertEqual(len(ad._df), 2)
 
 if __name__ == '__main__':
-    #unittest.main()
+    unittest.main()
 	pass

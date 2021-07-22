@@ -38,9 +38,9 @@ class Test(unittest.TestCase):
 
 if __name__ == "__main__":
 
-	#unittest.main()
+	unittest.main()
 	pass
-	
+
 	# I want to use this as both unit-test and direct command line to check my clicking???
 	#btv.show()
 	#sys.exit(app.exec_())

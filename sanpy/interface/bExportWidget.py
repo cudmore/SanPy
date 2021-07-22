@@ -342,6 +342,7 @@ class bExportWidget(QtWidgets.QWidget):
 		hBoxRow0.addWidget(self.xMinSpinBox, myAlignLeft)
 
 		# x max
+		xMax = np.nanmax(self.mySweepX_Downsample)  # self.mySweepX_Downsample[-1]
 		xMaxLabel = QtWidgets.QLabel('X-Max')
 		hBoxRow0.addWidget(xMaxLabel, myAlignLeft)
 		self.xMaxSpinBox = QtWidgets.QDoubleSpinBox()
@@ -349,7 +350,7 @@ class bExportWidget(QtWidgets.QWidget):
 		self.xMaxSpinBox.setSingleStep(0.1)
 		self.xMaxSpinBox.setMinimum(-1e6)
 		self.xMaxSpinBox.setMaximum(1e6)
-		self.xMaxSpinBox.setValue(self.mySweepX_Downsample[-1])
+		self.xMaxSpinBox.setValue(xMax)
 		self.xMaxSpinBox.setToolTip('X-Axis Maximum')
 		self.xMaxSpinBox.setKeyboardTracking(False)
 		self.xMaxSpinBox.valueChanged.connect(self._setXAxis)
@@ -825,7 +826,7 @@ class bExportWidget(QtWidgets.QWidget):
 			self.plotRaw()
 
 			# refresh scale-bar
-			xPos = self.mySweepX_Downsample[-1]
+			xPos = np.nanmax(self.mySweepX_Downsample)  # self.mySweepX_Downsample[-1]
 			yPos = np.nanmax(self.mySweepY_Downsample)
 			#self.scaleBars.setPos(xPos, yPos, fromMax=True)
 
@@ -1000,7 +1001,7 @@ class bExportWidget(QtWidgets.QWidget):
 
 		if firstPlot:
 			xMinOrig = sweepX[0]
-			xMaxOrig = sweepX[-1]
+			xMaxOrig = np.nanmax(sweepX)  # sweepX[-1]
 		else:
 			xMinOrig, xMaxOrig = self.myAxis.get_xlim()
 
@@ -1020,6 +1021,9 @@ class bExportWidget(QtWidgets.QWidget):
 
 		sweepX = np.ma.masked_where( (sweepX>maxClip), sweepX)
 		sweepY = np.ma.masked_where( (sweepX>maxClip), sweepY)
+
+		#print('sweepX:', sweepX.shape, type(sweepX))
+		#print('sweepY:', sweepY.shape, type(sweepY))
 
 		if firstPlot:
 			# using label 'myTrace' to differentiate from x/y scale bar

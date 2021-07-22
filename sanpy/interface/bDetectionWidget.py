@@ -19,6 +19,7 @@ logger = get_logger(__name__)
 class bDetectionWidget(QtWidgets.QWidget):
 	signalSelectSpike = QtCore.pyqtSignal(object) # spike number, doZoom
 	signalDetect = QtCore.pyqtSignal(object) #
+	signalSelectSweep = QtCore.pyqtSignal(object, object)  # (bAnalysis, sweepNumber)
 
 	def __init__(self, ba=None, mainWindow=None, parent=None):
 		"""
@@ -31,6 +32,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.myMainWindow = mainWindow
 
 		self.mySetTheme()
+
+		self._sweepNumber = 'All'
 
 		self.dvdtLines = None
 		self.dvdtLinesFiltered = None
@@ -153,6 +156,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.toggleInterface('DAC', showDAC)
 			self.toggleInterface('Clips', showClips)
 
+	@property
+	def sweepNumber(self):
+		return self._sweepNumber
+
 	def detect(self, dvdtThreshold, vmThreshold):
 		"""
 		Detect spikes
@@ -209,7 +216,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 			detectionDict['sex'] = myDetectionDict['Sex']
 			detectionDict['condition'] = myDetectionDict['Condition']
 
-		dfReportForScatter = self.ba.spikeDetect(detectionDict)
+		#dfReportForScatter = self.ba.spikeDetect(detectionDict)
+		self.ba.spikeDetect(detectionDict)
 
 		# show dialog when num spikes is 0
 		'''
@@ -335,15 +343,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# y-axis is NOT shared
 		# dvdt
 		if thisAxis == 'dvdt':
-			top = np.nanmax(self.ba.filteredDeriv)
-			bottom = np.nanmin(self.ba.filteredDeriv)
+			filteredDeriv = self.ba.filteredDeriv(sweepNumber=self.sweepNumber)
+			top = np.nanmax(filteredDeriv)
+			bottom = np.nanmin(filteredDeriv)
 			start, stop = self._setAxis(bottom, top,
 									set_xyBoth='yAxis',
 									whichPlot='dvdt')
 		# vm
 		if thisAxis == 'vm':
-			top = np.nanmax(self.ba.sweepY)
-			bottom = np.nanmin(self.ba.sweepY)
+			sweepY = self.ba.sweepY(sweepNumber=self.sweepNumber)
+			top = np.nanmax(sweepY)
+			bottom = np.nanmin(sweepY)
 			start, stop = self._setAxis(bottom, top,
 									set_xyBoth='yAxis',
 									whichPlot='vm')
@@ -354,21 +364,24 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# x-axis is shared between (dvdt, vm)
 		start = 0
-		stop = self.ba.sweepX[-1]
+		#stop = self.ba.sweepX[-1]
+		stop = self.ba.recordingDur
 		start, stop = self._setAxis(start, stop, set_xyBoth='xAxis')
 
 		logger.info(f'start:{start} stop:{stop}')
 
 		# y-axis is NOT shared
 		# dvdt
-		top = np.nanmax(self.ba.filteredDeriv)
-		bottom = np.nanmin(self.ba.filteredDeriv)
+		filteredDeriv = self.ba.filteredDeriv(sweepNumber=self.sweepNumber)
+		top = np.nanmax(filteredDeriv)
+		bottom = np.nanmin(filteredDeriv)
 		start, stop = self._setAxis(bottom, top,
 									set_xyBoth='yAxis',
 									whichPlot='dvdt')
 		# vm
-		top = np.nanmax(self.ba.sweepY)
-		bottom = np.nanmin(self.ba.sweepY)
+		sweepY = self.ba.sweepY(sweepNumber=self.sweepNumber)
+		top = np.nanmax(sweepY)
+		bottom = np.nanmin(sweepY)
 		start, stop = self._setAxis(bottom, top,
 									set_xyBoth='yAxis',
 									whichPlot='vm')
@@ -437,7 +450,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#print('bDetectionWidget.getEDD()')
 		x = []
 		y = []
-		for idx, spike in enumerate(self.ba.spikeDict):
+		#for idx, spike in enumerate(self.ba.spikeDict:
+		spikeDictionaries = self.ba.getSpikeDictionaries(sweepNumber=self.sweepNumber)
+		for idx, spike in enumerate(spikeDictionaries):
+
 			preLinearFitPnt0 = spike['preLinearFitPnt0']
 			preLinearFitPnt1 = spike['preLinearFitPnt1']
 
@@ -473,7 +489,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 		numPerSpike = 3  # rise/fall/nan
 		numSpikes = self.ba.numSpikes
 		xyIdx = 0
-		for idx, spike in enumerate(self.ba.spikeDict):
+		#for idx, spike in enumerate(self.ba.spikeDict):
+		spikeDictionaries = self.ba.getSpikeDictionaries(sweepNumber=self.sweepNumber)
+		for idx, spike in enumerate(spikeDictionaries):
 			if idx ==0:
 				# make x/y from first spike using halfHeights = [20,50,80]
 				halfHeights = spike['halfHeights'] # will be same for all spike, like [20, 50, 80]
@@ -483,6 +501,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 				y = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
 				#print('  len(x):', len(x), 'numHalfHeights:', numHalfHeights, 'numSpikes:', numSpikes, 'halfHeights:', halfHeights)
 
+			if 'widths' not in spike:
+				print(f'=== Did not find "widths" key in spike {idx}')
+				#print(spike)
 			for idx2, width in enumerate(spike['widths']):
 				halfHeight = width['halfHeight'] # [20,50,80]
 				risingPnt = width['risingPnt']
@@ -532,7 +553,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				xPlot, yPlot = sanpy.analysisPlot.getEddLines(self.ba)
 				#logger.info(f'EDD Rate {len(xPlot)} {len(yPlot)}')
 			elif plotIsOn:
-				xPlot, yPlot = self.ba.getStat(plot['x'], plot['y'])
+				xPlot, yPlot = self.ba.getStat(plot['x'], plot['y'], sweepNumber=self.sweepNumber)
 				if xPlot is not None and plot['convertx_tosec']:
 					xPlot = [self.ba.pnt2Sec_(x) for x in xPlot] # convert pnt to sec
 			#
@@ -549,7 +570,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# spike freq
 		#print('todo: bDetectionWidget.replot(), make spikeFreqLabel respond to signal/slot')
-		meanSpikeFreq = self.ba.getStatMean('spikeFreq_hz')
+		meanSpikeFreq = self.ba.getStatMean('spikeFreq_hz', sweepNumber=self.sweepNumber)
 		if meanSpikeFreq is not None:
 			meanSpikeFreq = round(meanSpikeFreq,2)
 		self.detectToolbarWidget.spikeFreqLabel.setText('Frequency: ' + str(meanSpikeFreq))
@@ -582,6 +603,23 @@ class bDetectionWidget(QtWidgets.QWidget):
 			# removed for half-width
 			#self.myPlotList[idx].setSize(0)
 
+	def selectSweep(self, sweepNumber):
+		"""
+		sweepNumber (str): from ('All', 0, 1, 2, 3, ...)
+		"""
+		logger.info(f'sweepNumber:"{sweepNumber}" {type(sweepNumber)}')
+		#self.ba.setSweep(sweepNumber)
+		if sweepNumber == '':
+			logger.error('')
+
+		if sweepNumber == 'All':
+			pass
+		else:
+			sweepNumber = int(sweepNumber)
+		self._sweepNumber = sweepNumber
+		self._replot()
+		self.signalSelectSweep.emit(self.ba, sweepNumber)
+
 	def selectSpike(self, spikeNumber, doZoom=False, doEmit=False):
 		if spikeNumber is not None:
 			logger.info(f'spikeNumber: {spikeNumber}, doZoom {doZoom}')
@@ -590,27 +628,29 @@ class bDetectionWidget(QtWidgets.QWidget):
 			return
 		if self.ba.numSpikes == 0:
 			return
+
 		x = None
 		y = None
-		xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal')
+		xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=self.sweepNumber)
+
 		if spikeNumber is not None and spikeNumber < len(xPlot):
 			x = [xPlot[spikeNumber]]
 			y = [yPlot[spikeNumber]]
 
 		self.mySingleSpikeScatterPlot.setData(x=x, y=y)
 
+		# zoom
 		if spikeNumber is not None and doZoom:
-			thresholdSeconds = self.ba.getStat('thresholdSec')
-			#if spikeNumber > len(thresholdSeconds)-1:
-			#	return
-			thresholdSecond = thresholdSeconds[spikeNumber]
-			thresholdSecond = round(thresholdSecond, 3)
-			startSec = thresholdSecond - 0.5
-			startSec = round(startSec, 2)
-			stopSec = thresholdSecond + 0.5
-			stopSec = round(stopSec, 2)
-			#print('  spikeNumber:', spikeNumber, 'thresholdSecond:', thresholdSecond, 'startSec:', startSec, 'stopSec:', stopSec)
-			start = self.setAxis(startSec, stopSec)
+			thresholdSeconds = self.ba.getStat('thresholdSec', sweepNumber=self.sweepNumber)
+			if spikeNumber < len(thresholdSeconds):
+				thresholdSecond = thresholdSeconds[spikeNumber]
+				thresholdSecond = round(thresholdSecond, 3)
+				startSec = thresholdSecond - 0.5
+				startSec = round(startSec, 2)
+				stopSec = thresholdSecond + 0.5
+				stopSec = round(stopSec, 2)
+				#print('  spikeNumber:', spikeNumber, 'thresholdSecond:', thresholdSecond, 'startSec:', startSec, 'stopSec:', stopSec)
+				start = self.setAxis(startSec, stopSec)
 
 		if doEmit:
 			eDict = {
@@ -620,37 +660,40 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.signalSelectSpike.emit(eDict)
 
 	def refreshClips(self, xMin=None, xMax=None):
-		logger.info('                    1')
-		if self.ba is None:
-			return
+		logger.info('                    XXXXXXXXXXXXXXXXXXXXXXX')
 
-		if self.view.getItem(2,0) is None:
-			# clips are not being displayed
-			return
-
-		logger.info('                    1')
-		options = self.getMainWindowOptions()
-		if options is not None:
-			print(options)
-			if not options['display']['showClips']:
-				return
-		logger.info('                    1')
-
-
-		# remove existing
+		# always remove existing, if there are no clips and we bail we will at least clear display
+		self.clipPlot.clear()
+		'''
 		if self.clipLines is not None:
 			self.clipPlot.removeItem(self.clipLines)
 		if self.meanClipLine is not None:
 			self.clipPlot.removeItem(self.meanClipLine)
+		'''
+
+		if self.ba is None:
+			return
+
+		#if self.view.getItem(2,0) is None:
+		if not self.clipPlot.isVisible():
+			# clips are not being displayed
+			logger.info('Clips not visible --- ABORTING')
+			return
+
+		if self.ba.numSpikes == 0:
+			return
 
 		# this returns x-axis in ms
-		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(xMin, xMax)
-		dataPointsPerMs = self.ba.dataPointsPerMs
+		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(xMin, xMax, sweepNumber=self.sweepNumber)
 
 		# convert clips to 2d ndarray ???
 		xTmp = np.array(theseClips_x)
-		xTmp /= dataPointsPerMs # pnt to ms
+		xTmp /= self.ba.dataPointsPerMs # pnt to ms
 		yTmp = np.array(theseClips)
+
+		print('refreshClips() xTmp:', xTmp.shape)
+		print('refreshClips() yTmp:', yTmp.shape)
+
 		self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type='clip')
 		self.clipPlot.addItem(self.clipLines)
 
@@ -1011,51 +1054,23 @@ class bDetectionWidget(QtWidgets.QWidget):
 			path (str):
 			tableRowDict (dict):
 			ba (bAnalysis):
+
+		Returns: True/False
 		"""
-
-		fileName = tableRowDict['File']
-
-		#logger.info(f'path: {path}')
-
-		#if self.ba is not None and self.ba.file == path:
-		#	print('bDetectionWidget is already displaying file:', path)
-		#	return
-
-		'''
-		if not os.path.isfile(path):
-			#print('  error: bDetectionWidget.switchFile() did not find file:', path)
-			logger.error(f'Did not find file: {path}')
-			return None
-		'''
 
 		# load abAnalysis object from file
 		self.ba = ba
 		#else:
 		#	self.ba = sanpy.bAnalysis(file=path) # loads abf file
 
-		#self.updateStatusBar(f'Loading file {path}')
 		self.detectToolbarWidget.slot_selectFile(tableRowDict)
-
-		'''
-		if self.ba.loadError:
-			# happens when .abf file is corrupt
-			pass
-		else:
-			dDict = sanpy.bAnalysis.getDefaultDetection() # so we can fill in filtered derivartive
-			self.ba._getDerivative(dDict) # derivative
-		'''
-
-		#
-		# moved into _replot()
-		#
 
 		# abb 20201009
 		if self.ba.loadError:
 			self.replot()
+			fileName = tableRowDict['File']
 			logger.warning(f'Did not switch file, the .abf file may be corrupt: {fileName}')
-			#self.updateStatusBar(f'Error loading file {path}')
-			#self.myMainWindow.mySignal('set abfError')
-			return None
+			return False
 
 		# fill in detection parameters (dvdt, vm, start, stop)
 		self.fillInDetectionParameters(tableRowDict) # fills in controls
@@ -1065,26 +1080,16 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# cancel spike selection
 		self.selectSpike(None)
 
+		# set sweep to 0
+		self.selectSweep('All') # calls self._replot()
+
 		# set full axis
 		#self.setAxisFull()
 
-		#
 		# abb implement sweep, move to function()
-		#
-		self._replot()
-
-		#
-		# set sweep to 0
-
-		#self.updateStatusBar(f'Loaded file {path}')
+		#self._replot()
 
 		return True
-
-	def slot_selectSweep(self,sweepNumber):
-		logger.info(f'sweepNumber:{sweepNumber}')
-		self.ba.setSweep(sweepNumber)
-		logger.info(f'sweepNumber:{sweepNumber} max:{np.nanmax(self.ba.sweepY)}')
-		self._replot()
 
 	def _replot(self):
 		#remove vm/dvdt/clip items (even when abf file is corrupt)
@@ -1102,19 +1107,29 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# update lines
 		#self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.deriv,
 		#					self, type='dvdt')
-		self.dvdtLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredDeriv,
-							self, forcePenColor=None, type='dvdtFiltered')
+
+		# shared by all plot
+		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
+
+		filteredDeriv = self.ba.filteredDeriv(sweepNumber=self.sweepNumber)
+		self.dvdtLinesFiltered = MultiLine(sweepX, filteredDeriv,
+							self, forcePenColor=None, type='dvdtFiltered',
+							columnOrder=True)
 		#self.derivPlot.addItem(self.dvdtLines)
 		self.derivPlot.addItem(self.dvdtLinesFiltered)
 
-		self.dacLines = MultiLine(self.ba.sweepX, self.ba.sweepC,
-							self, forcePenColor=None, type='dac')
+		sweepC = self.ba.sweepC(sweepNumber=self.sweepNumber)
+		self.dacLines = MultiLine(sweepX, sweepC,
+							self, forcePenColor=None, type='dac',
+							columnOrder=True)
 		self.dacPlot.addItem(self.dacLines)
 
 		#self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY,
 		#					self, type='vm')
-		self.vmLinesFiltered = MultiLine(self.ba.sweepX, self.ba.filteredVm,
-							self, forcePenColor=None, type='vmFiltered')
+		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+		self.vmLinesFiltered = MultiLine(sweepX, filteredVm,
+							self, forcePenColor=None, type='vmFiltered',
+							columnOrder=True)
 		self.vmPlot.addItem(self.vmLinesFiltered)
 
 		# remove and re-add plot overlays
@@ -1164,10 +1179,14 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 
 	see: https://stackoverflow.com/questions/17103698/plotting-large-arrays-in-pyqtgraph/17108463#17108463
 	"""
-	def __init__(self, x, y, detectionWidget, type, forcePenColor=None, allowXAxisDrag=True):
+	def __init__(self, x, y, detectionWidget, type, forcePenColor=None, allowXAxisDrag=True, columnOrder=False):
 		"""
 		x and y are 2D arrays of shape (Nplots, Nsamples)
+
 		type: (dvdt, vm)
+		forcePenColor
+		allowXAxisDrag
+		columnOrder (bool): if True then data is in columns (like multi sweep abf file)
 		"""
 
 		self.exportWidgetList = []
@@ -1185,7 +1204,10 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 
 		if len(x.shape) == 2:
 			connect = np.ones(x.shape, dtype=bool)
-			connect[:,-1] = 0 # don't draw the segment between each trace
+			if columnOrder:
+				connect[-1,:] = 0 # don't draw the segment between each trace
+			else:
+				connect[:,-1] = 0 # don't draw the segment between each trace
 			self.path = pg.arrayToQPath(x.flatten(), y.flatten(), connect.flatten())
 		else:
 			self.path = pg.arrayToQPath(x.flatten(), y.flatten(), connect='all')
@@ -1421,7 +1443,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		if np.isnan(startSeconds):
 			startSeconds = 0
 		if np.isnan(stopSeconds):
-			stopSeconds = self.detectionWidget.ba.sweepX[-1]
+			#stopSeconds = self.detectionWidget.ba.sweepX[-1]
+			stopSeconds = self.detectionWidget.ba.recordingDur
 
 		self.startSeconds.setValue(startSeconds)
 		self.stopSeconds.setValue(stopSeconds)
@@ -1433,11 +1456,17 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 	'''
 
 	def on_sweep_change(self, sweepNumber):
-		logger.info(sweepNumber)
-		if sweepNumber < 0:
+		"""
+		Args:
+			sweepNumber (str): The current selected item, from ('All', 0, 1, 2, ...)
+		"""
+		#logger.debug(f'sweepNumber:"{sweepNumber}" {type(sweepNumber)}')
+		if sweepNumber == '':
+			# we receive this as we rebuild xxx on switching file
+			#logger.error('Got empty sweep -- ABORTING')
 			return
 		#self.detectionWidget.ba.setSweep(sweepNumber)
-		self.detectionWidget.slot_selectSweep(sweepNumber)
+		self.detectionWidget.selectSweep(sweepNumber)
 
 	@QtCore.pyqtSlot()
 	def on_start_stop(self):
@@ -1554,28 +1583,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		self.mySelectedFileLabel = QtWidgets.QLabel('None')
 		self.mainLayout.addWidget(self.mySelectedFileLabel)
-
-		# IMPLEMENT SWEEPS AND
-		# PUT THIS BACK IN
-		'''
-		#
-		# sweeps
-		sweepLayout = QtWidgets.QHBoxLayout(self)
-
-		sweepLabel = QtWidgets.QLabel('Sweep')
-		sweepLayout.addWidget(sweepLabel)
-
-		sweeps = [0,1,2,3,4]
-		self.cb = QtWidgets.QComboBox()
-		#self.cb.addItems(sweeps)
-		for sweep in sweeps:
-			self.cb.addItem(str(sweep))
-		self.cb.currentIndexChanged.connect(self.sweepSelectionChange)
-		sweepLayout.addWidget(self.cb)
-
-		# finalize
-		self.mainLayout.addLayout(sweepLayout)
-		'''
 
 		#
 		# detection parameters group
@@ -1723,7 +1730,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		# sweeps
 		tmpSweepLabel = QtWidgets.QLabel('Sweep')
 		self.sweepComboBox = QtWidgets.QComboBox()
-		self.sweepComboBox.currentIndexChanged.connect(self.on_sweep_change)
+		self.sweepComboBox.currentTextChanged.connect(self.on_sweep_change)
 		# will be set in self.slot_selectFile()
 		#for sweep in range(self.detectionWidget.ba.numSweeps):
 		#	self.sweepComboBox.addItem(str(sweep))
@@ -1901,6 +1908,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		#self.updateStatusBar(f'Loading file {path}')
 		self.sweepComboBox.clear()
+		self.sweepComboBox.addItem('All')
 		for sweep in range(self.detectionWidget.ba.numSweeps):
 			self.sweepComboBox.addItem(str(sweep))
 

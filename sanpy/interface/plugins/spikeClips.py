@@ -98,7 +98,11 @@ class spikeClips(sanpyPlugin):
 	'''
 
 	def _myReplotClips(self):
-		# remove existing
+		"""
+		Note: This is the same code as in bDetectionWidget.refreshClips() MERGE THEM.
+		"""
+
+		# always remove existing
 		self.clipPlot.clear()
 		'''if self.clipLines is not None:
 			self.clipPlot.removeItem(self.clipLines)
@@ -106,23 +110,28 @@ class spikeClips(sanpyPlugin):
 			self.clipPlot.removeItem(self.meanClipLine)
 		'''
 
+		if self.ba.numSpikes == 0:
+			return
+
 		#
-		# TODO
-		# plugins need to respond to x-axis selectioon !!!
+		# respond to x-axis selection
 		startSec, stopSec = self.getStartStop()
 		if startSec is None or stopSec is None:
 			startSec = 0
-			stopSec = self.ba.sweepX[-1]
+			stopSec = self.ba.recordingDur
 
 		# this returns x-axis in ms
-		#_makeSpikeClips
-		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(startSec, stopSec)
-		dataPointsPerMs = self.ba.dataPointsPerMs
+		# theseClips is a [list] of clips
+		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(startSec, stopSec, sweepNumber=self.sweepNumber)
 
 		# convert clips to 2d ndarray ???
+		dataPointsPerMs = self.ba.dataPointsPerMs
 		xTmp = np.array(theseClips_x)
 		xTmp /= dataPointsPerMs # pnt to ms
 		yTmp = np.array(theseClips)  # mV
+
+		#print('xTmp:', xTmp.shape)
+		#print('yTmp:', yTmp.shape)
 
 		#print(xTmp.shape, yTmp.shape)
 		if self.phasePlotCheckBox.isChecked():
@@ -179,7 +188,8 @@ class spikeClips(sanpyPlugin):
 		cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 6), color=colors)
 		#colors = ['r', 'g', 'b']
 		for i in range(xTmp.shape[0]):
-			forcePenColor = cmap.getByIndex(i)
+			#forcePenColor = cmap.getByIndex(i)
+			forcePenColor = None
 			#print('forcePenColor:', forcePenColor)
 			xPlot = xTmp[i,:]
 			yPlot = yTmp[i,:]

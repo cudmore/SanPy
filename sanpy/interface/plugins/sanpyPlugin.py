@@ -91,6 +91,8 @@ class sanpyPlugin(QtCore.QObject):
 		self._ba = ba
 		self._bPlugins = bPlugin # pointer to object, send signal back on close
 
+		self._sweepNumber = 'All'
+
 		if startStop is not None:
 			self._startSec = startStop[0]
 			self._stopSec = startStop[1]
@@ -120,6 +122,10 @@ class sanpyPlugin(QtCore.QObject):
 
 		# connect self to main app with signals/slots
 		self._installSignalSlot()
+
+	@property
+	def sweepNumber(self):
+		return self._sweepNumber
 
 	def get_bAnalysis(self):
 		"""
@@ -164,6 +170,8 @@ class sanpyPlugin(QtCore.QObject):
 			# receive update analysis (both file change and detect)
 			app.signalSwitchFile.connect(self.slot_switchFile)
 			app.signalUpdateAnalysis.connect(self.slot_updateAnalysis)
+			# recieve set sweep
+			app.signalSelectSweep.connect(self.slot_setSweep)
 			# recieve set x axis
 			app.signalSetXAxis.connect(self.slot_set_x_axis)
 		bPlugins = self.get_bPlugins()
@@ -186,6 +194,8 @@ class sanpyPlugin(QtCore.QObject):
 			# receive update analysis (both file change and detect)
 			app.signalSwitchFile.disconnect(self.slot_switchFile)
 			app.signalUpdateAnalysis.disconnect(self.slot_updateAnalysis)
+			# recieve set sweep
+			app.signalSelectSweep.disconnect(self.slot_setSweep)
 			# recieve set x axis
 			app.signalSetXAxis.disconnect(self.slot_set_x_axis)
 
@@ -423,6 +433,10 @@ class sanpyPlugin(QtCore.QObject):
 		#self._mySetWindowTitle()
 
 		#
+		self.replot()
+
+	def slot_setSweep(self, ba, sweepNumber):
+		self._sweepNumber = sweepNumber
 		self.replot()
 
 	def slot_selectSpike(self, eDict):

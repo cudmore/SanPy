@@ -42,6 +42,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 	signalSelectSpike = QtCore.pyqtSignal(object)
 	"""Emit spike selection."""
 
+	signalSelectSweep = QtCore.pyqtSignal(object, object)  # (ba, sweepNumber)
+	"""Emit set sweep."""
+
 	def _getBundledDir():
 		"""
 		TODO: use this in all cases
@@ -580,6 +583,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.signalSwitchFile.connect(self.myDetectionWidget.slot_switchFile)
 		self.signalSelectSpike.connect(self.myDetectionWidget.slot_selectSpike) # myDetectionWidget listens to self
 		self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike) # self listens to myDetectionWidget
+		self.myDetectionWidget.signalSelectSweep.connect(self.slot_selectSweep) # self listens to myDetectionWidget
 		self.myDetectionWidget.signalDetect.connect(self.slot_detect)
 		self.myDetectionWidget.signalDetect.connect(self.tableView.slot_detect)
 
@@ -589,6 +593,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		#self.myQVBoxLayout.addWidget(self.myScatterPlotWidget)
 		self.signalSelectSpike.connect(self.myScatterPlotWidget.slotSelectSpike)
 		self.signalSetXAxis.connect(self.myScatterPlotWidget.slot_setXAxis)
+		self.signalSelectSweep.connect(self.myScatterPlotWidget.slot_selectSweep)
+		self.signalUpdateAnalysis.connect(self.myScatterPlotWidget.slot_updateAnalysis)
 		if self.configDict['display']['showScatter']:
 			pass
 		else:
@@ -736,6 +742,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		doZoom = sDict['doZoom']
 		self.selectSpike(spikeNumber, doZoom)
 
+	def slot_selectSweep(self, ba, sweepNumber):
+		self.signalSelectSweep.emit(ba, sweepNumber)
+
 	def slotSaveFilesTable(self):
 		"""Needed on user keyboard Ctrl+S
 		"""
@@ -758,7 +767,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.myModel.mySetDetectionParams(row, cellType)
 
 	def slot_detect(self, ba):
-			self.myScatterPlotWidget.plotToolbarWidget.on_scatter_toolbar_table_click()
+			#self.myScatterPlotWidget.plotToolbarWidget.on_scatter_toolbar_table_click()
 
 			dfError = ba.dfError
 			errorReportModel = sanpy.interface.bFileTable.pandasModel(dfError)
@@ -769,7 +778,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			#self.myModel.myUpdateLoadedAnalyzed(ba)
 
 			# TODO: This really should have payload
-			self.signalUpdateAnalysis.emit(ba)
+			self.signalUpdateAnalysis.emit(ba)  # sweep number does not change
 
 			self.slot_updateStatus(f'Detected {ba.numSpikes} spikes')
 

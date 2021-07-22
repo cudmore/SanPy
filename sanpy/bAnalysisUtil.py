@@ -36,6 +36,38 @@ statList['Spike Time (s)'] = {
 	'xStat': 'thresholdSec',
 	'xStatUnits': 's'
 	}
+statList['Spike Number'] = {
+	'name': 'spikeNumber',
+	'units': '',
+	'yStat': '',
+	'yStatUnits': '',
+	'xStat': 'spikeNumber',
+	'xStatUnits': ''
+	}
+statList['Sweep Spike Number'] = {
+	'name': 'sweepSpikeNumber',
+	'units': '',
+	'yStat': '',
+	'yStatUnits': '',
+	'xStat': 'sweepSpikeNumber',
+	'xStatUnits': ''
+	}
+statList['Sweep Number'] = {
+	'name': 'sweep',
+	'units': '',
+	'yStat': 'sweep',
+	'yStatUnits': '',
+	'xStat': '',
+	'xStatUnits': ''
+	}
+statList['DAC Command'] = {
+	'name': 'dacCommand',
+	'units': '',
+	'yStat': 'dacCommand',
+	'yStatUnits': '',
+	'xStat': '',
+	'xStatUnits': ''
+	}
 statList['Take Off Potential (mV)'] = {
 	'name': 'thresholdVal',
 	'units': 'mV',

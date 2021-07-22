@@ -46,7 +46,7 @@ class bExport():
 		if theMin is None or theMax is None:
 			#return None
 			theMin = 0
-			theMax = self.ba.sweepX[-1]
+			theMax = self.ba.recordingDur  # self.ba.sweepX[-1]
 
 		df = pd.DataFrame(self.ba.spikeDict)
 		df = df[df['thresholdSec'].between(theMin, theMax, inclusive=True)]
@@ -103,8 +103,8 @@ class bExport():
 		Generate a report of spikes with spike times between theMin (sec) and theMax (sec).
 
 		Args:
-			theMin (float): Start seconds to save
-			theMax (float): Stop seconds to save
+			theMin (float): Start seconds to save, inclusive
+			theMax (float): Stop seconds to save, inclusive
 
 		Returns:
 			df: Pandas DataFrame
@@ -172,7 +172,7 @@ class bExport():
 
 		if theMin is None or theMax is None:
 			theMin = 0
-			theMax = self.ba.sweepX[-1]
+			theMax = self.ba.recordingDur  # self.ba.sweepX[-1]
 
 		#
 		# cardiac style analysis to sheet 'cardiac'
@@ -296,7 +296,7 @@ class bExport():
 		"""
 		if theMin is None or theMax is None:
 			theMin = 0
-			theMax = self.ba.sweepX[-1]
+			theMax = self.ba.recordingDur  # self.ba.sweepX[-1]
 
 		# always grab a df to the entire analysis (not sure what I will do with this)
 		#df = self.ba.report() # report() is my own 'bob' verbiage

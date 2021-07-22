@@ -135,22 +135,27 @@ class plotScatter(sanpyPlugin):
 			xData = None
 			yData = None
 		else:
-			xData = self.ba.getStat(xStat)
-			yData = self.ba.getStat(yStat)
+			xData = self.ba.getStat(xStat, sweepNumber=self.sweepNumber)
+			yData = self.ba.getStat(yStat, sweepNumber=self.sweepNumber)
 
 		# return if we got no data, happend when there is no analysis
-		if xData is None or yData is None:
+		#if xData is None or yData is None:
+		if not xData or not yData:
 			logger.warning(f'Did not find either xStat: "{xStat}" or yStat: "{yStat}"')
 			self.lines.set_offsets([np.nan, np.nan])
 			self.static_canvas.draw()
 			self.mainWidget.repaint() # update the widget
 			return
 
+		#print(f'ba: {self.ba}')
+		#print(f'sweepNumber: {self.sweepNumber} {type(self.sweepNumber)}')
+		#print(f'xData: {xData}')
+
 		if self.plotChasePlot:
 			#print('todo: tweek x/y to plot i (x) versus i-1 (y)')
+			# on selection, ind will refer to y-axis spike
 			xData = xData[1:-1]
 			yData = yData[0:-2]
-			# on selection, ind will refer to y-axis spike
 
 		# was used for plot(), not scatter()
 		#self.lines.set_data(xData, yData)
@@ -216,10 +221,10 @@ class plotScatter(sanpyPlugin):
 			return
 
 		if spikeNumber is not None and spikeNumber >= 0:
-			xData = self.ba.getStat(self.xStatName)
+			xData = self.ba.getStat(self.xStatName, self.sweepNumber)
 			xData = [xData[spikeNumber]]
 
-			yData = self.ba.getStat(self.yStatName)
+			yData = self.ba.getStat(self.yStatName, self.sweepNumber)
 			yData = [yData[spikeNumber]]
 		else:
 			xData = []

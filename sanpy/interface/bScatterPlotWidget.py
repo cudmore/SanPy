@@ -11,17 +11,22 @@ from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
 import matplotlib.pyplot as plt # used to set global plot options in defaultPlotLayout()
 
-#import qdarkstyle
-
-#from bAnalysisUtil import bAnalysisUtil
 import sanpy
+
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 class bScatterPlotWidget(QtWidgets.QWidget):
 	def __init__(self, mainWindow=None, detectionWidget=None, parent=None):
 		super(bScatterPlotWidget, self).__init__(parent)
 
 		self.myMainWindow = mainWindow
+
+		# TODO: get rid of this dependency and use signal/slot
 		self.myDetectionWidget = detectionWidget
+
+		self._sweepNumber = 'All'
+		self.current_ystat = 'Spike Frequency (Hz)'
 
 		#self.colorTable = plt.cm.coolwarm
 		self.colorTable = mpl.pyplot.cm.coolwarm
@@ -29,10 +34,6 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		#self.static_canvas = None # debug, adding defaultPlotLayout
 
 		self.buildUI()
-
-		# default stat
-		# does not work
-		#self.metaPlotStat('Spike Frequency (Hz)')
 
 	def on_pick_event(self, event):
 		#print('=== bScatterWidget.on_pick_event() event:', event, 'event.ind:', event.ind)
@@ -134,7 +135,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 
 		self.metaLine = None
 		self.singleSpikeSelection = None
-		self.metaPlotStat('peakVal') # x='peakSec'
+		self.replot() # x='peakSec'
 
 		# works
 		'''
@@ -174,6 +175,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 				self.lastSpikeNumber = spikeNumber
 
 				offsets = self.metaLine.get_offsets()
+				print('offsets:', offsets)
 				xData = offsets[spikeNumber][0]
 				yData = offsets[spikeNumber][1]
 				#print('   xData:', xData, 'yData:', yData)
@@ -197,12 +199,11 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 			self.plotMeta_selection.set_ydata([])
 			self.plotMeta_selection.set_xdata([])
 		else:
-			xData = []
+			xData = []  # x/y of multi-spike selection
 			yData = []
-			for i, spikeTime in enumerate(self.myDetectionWidget.ba.spikeTimes):
-				spikeSeconds = spikeTime / self.myDetectionWidget.ba.dataPointsPerMs / 1000 # pnts to seconds
-				#print(spikeSeconds)
-				if spikeSeconds >= xMin and spikeSeconds <= xMax:
+			spikeSeconds = self.myDetectionWidget.ba.getSpikeSeconds(self._sweepNumber)
+			for i, spikeSecond in enumerate(spikeSeconds):
+				if spikeSecond >= xMin and spikeSecond <= xMax:
 					'''
 					line, = self._static_ax.plot(self.my_xPlot[i], self.my_yPlot[i], 'oy', markersize=10)
 					self.plotMeta_selection.append(line)
@@ -216,55 +217,35 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		self.static_canvas.draw()
 		self.repaint() # this is updating the widget !!!!!!!!
 
-	def metaPlotStat(self, yStatHuman):
-		#print('bScatterPlotWidget.metaPlotStat() yStatHuman:', yStatHuman)
-		# todo: we need to tweek xStat based on particular yStat
+	def replot(self, yStatHuman=None):
 
 		if self.myDetectionWidget.ba is None:
-			#print('bScatterPlotWidget.metaPlotStat() got empty ba ???')
 			return
 
-		# works
-		'''
-		self.myCanvas.update_figure()
-		return
-		'''
+		# convert human readable yStat to backend
+		if yStatHuman is None:
+			yStatHuman = self.current_ystat
+		else:
+			self.current_ystat = yStatHuman
+		statList = sanpy.bAnalysisUtil.getStatList()
+		yStat = statList[yStatHuman]['name'] # the name of the backend stat
 
-		# todo
-		# for now, always plot versus take off potential
-		'''
-		convertPntToSec = False
-		if yStat == 'peakVal':
-			xStat = 'peakSec'
-		elif yStat == 'thresholdVal':
-			xStat = 'thresholdPnt'
-			convertPntToSec = True
-		elif yStat == 'preMinVal':
-			xStat = 'preMinPnt'
-			convertPntToSec = True
-		'''
 		if len(self.lastFileName)==0 or (self.lastFileName != self.myDetectionWidget.ba.getFileName()):
 			self.lastSpikeNumber = None
 			self.lastFileName = self.myDetectionWidget.ba.getFileName()
 
-		# convert human readable yStat to backend
-		statList = sanpy.bAnalysisUtil.getStatList()
-		yStat = statList[yStatHuman]['name'] # the name of the backend stat
 
 		# todo for now always plot seconds versus take off potential
 		xStatLabel = 'Seconds'
 		xStat = 'thresholdSec'
 
-		#print('  bScatterPlotWidget.metaPlotStat() xStat:', xStat, 'yStat:', yStat)
-
-		xPlot, yPlot = self.myDetectionWidget.ba.getStat(xStat, yStat)
+		xPlot, yPlot = self.myDetectionWidget.ba.getStat(xStat, yStat, sweepNumber=self._sweepNumber)
+		# no need for this, if impty, xPlot and yPlot are []
+		'''
 		if xPlot is None or yPlot is None or len(xPlot)==0 or len(yPlot)==0:
 			#print('    got empty stat?')
 			return
-
-		#if convertPntToSec:
-		#	xPlot = [self.myDetectionWidget.ba.pnt2Sec_(x) for x in xPlot]
-		#
+		'''
 
 		# todo add to constructor
 		self.my_xPlot = xPlot
@@ -272,16 +253,12 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 
 		tmpColor = range(len(xPlot))
 		markersize = 3
-		#print('  markersize=', markersize)
 		if self.metaLine is None:
-			#self.metaLine, = self._static_ax.plot(xPlot, yPlot, ".", picker=5)
 			self.metaLine = self._static_ax.scatter(xPlot, yPlot, c=tmpColor, cmap=self.colorTable,
 								s=markersize,
 								picker=5)
 		else:
-			#print('	metaPlotStat() set ydata/xdata')
 			self._static_ax.cla()
-			#self.metaLine, = self._static_ax.plot(xPlot, yPlot, ".")
 			self.metaLine = self._static_ax.scatter(xPlot, yPlot, c=tmpColor, cmap=self.colorTable,
 								s=markersize,
 								picker=5)
@@ -303,25 +280,27 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 
 		# xmin/xmax will always be time of recording in seconds
 		xMin = 0
-		xMax = self.myDetectionWidget.ba.sweepX[-1]
+		#xMax = self.myDetectionWidget.ba.sweepX[-1]
+		xMax = self.myDetectionWidget.ba.recordingDur
 		self._static_ax.set_xlim([xMin, xMax])
 
-		yMin = np.nanmin(yPlot)
-		yMax = np.nanmax(yPlot)
+		# set y-axis
+		if xPlot and yPlot:
+			yMin = np.nanmin(yPlot)
+			yMax = np.nanmax(yPlot)
 
-		# expand by 5%
-		ySpan = abs(yMax - yMin)
-		percentSpan = ySpan * 0.05
-		yMin -= percentSpan
-		yMax += percentSpan
+			# expand by 5%
+			ySpan = abs(yMax - yMin)
+			percentSpan = ySpan * 0.05
+			yMin -= percentSpan
+			yMax += percentSpan
 
-		#print('metaplotstat() ymin:', yMin, 'yMax:', yMax)
+			if math.isnan(yMin) or math.isnan(xMin):
+				pass
+			else:
+				self._static_ax.set_ylim([yMin, yMax])
 
-		if math.isnan(yMin) or math.isnan(xMin):
-			pass
-		else:
-			self._static_ax.set_ylim([yMin, yMax])
-
+		# x-label, for now always seconds
 		self._static_ax.set_xlabel(xStatLabel)
 
 		# will rely on seleted stat in list
@@ -340,6 +319,14 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		#print('bScatterPlotWidget.slotSelectSpike() eDict:', eDict)
 		spikeNumber = eDict['spikeNumber']
 		self.selectSpike(spikeNumber)
+
+	def slot_selectSweep(self, ba, sweepNumber):
+		self._sweepNumber = sweepNumber
+		self.replot()
+
+	def slot_updateAnalysis(self, ba):
+		# sweepNumber does not change
+		self.replot()
 
 # todo: not used
 #class MyMplCanvas(backend_qt5agg.FigureCanvas):
