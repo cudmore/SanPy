@@ -273,6 +273,10 @@ class analysisDir():
 		return len(self._df)
 
 	@property
+	def numFiles(self):
+		return len(self._df)
+
+	@property
 	def shape(self):
 		"""
 		Can't just return shape of _df, columns (like 'ba') may have been added
@@ -634,6 +638,8 @@ class analysisDir():
 
 	def _checkColumns(self):
 		"""Check columns in loaded vs sanpyColumns (and vica versa"""
+		if self._df is None:
+			return
 		loadedColumns = self._df.columns
 		for col in loadedColumns:
 			if not col in self.sanpyColumns.keys():
@@ -651,6 +657,8 @@ class analysisDir():
 		Arguments:
 			theRowIdx (int): Update just one row
 		"""
+		if self._df is None:
+			return
 		for rowIdx in range(len(self._df)):
 			if theRowIdx is not None and theRowIdx != rowIdx:
 				continue
@@ -832,7 +840,7 @@ class analysisDir():
 
 		rowDict['I'] = 2 # need 2 because checkbox value is in (0,2)
 		rowDict['File'] = ba.getFileName() #os.path.split(ba.path)[1]
-		rowDict['Dur(s)'] = ba.recodingDur
+		rowDict['Dur(s)'] = ba.recordingDur
 		rowDict['kHz'] = ba.recordingFrequency
 		rowDict['Mode'] = 'fix'
 

@@ -1030,6 +1030,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#print('== bDetectionWidget.keyPressEvent() key:', key, 'text:', text)
 		#logger.info(f'key:{key} text:{text}')
 
+		if text == 'h':
+			if self.detectToolbarWidget.isVisible():
+				self.detectToolbarWidget.hide()
+			else:
+				self.detectToolbarWidget.show()
+
 		if text == 'a':
 			#self.detectToolbarWidget.keyPressEvent(event)
 			self.setAxisFull()
