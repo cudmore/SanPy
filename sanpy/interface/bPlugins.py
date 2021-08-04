@@ -55,7 +55,9 @@ class bPlugins():
 		self.pluginDict = {}
 
 		# Enum is to ignore bPlugins.py class ResponseType(Enum)
-		ignoreModuleList = ['sanpyPlugin', 'myWidget', 'ResponseType', 'basePlotTool']
+		ignoreModuleList = ['sanpyPlugin', 'myWidget',
+							'ResponseType', 'basePlotTool',
+							'NavigationToolbar2QT']
 
 		#
 		# system plugins from sanpy.interface.plugins
@@ -64,7 +66,7 @@ class bPlugins():
 		for moduleName, obj in inspect.getmembers(sanpy.interface.plugins):
 			#print('moduleName:', moduleName, 'obj:', obj)
 			if inspect.isclass(obj):
-				#logger.info(f'moduleName: {moduleName}')
+				logger.info(f'moduleName: {moduleName}')
 				if moduleName in ignoreModuleList:
 					# our base plugin class
 					continue
@@ -153,8 +155,12 @@ class bPlugins():
 
 			logger.info(f'Running plugin: "{pluginName}" {humanName}')
 			# TODO: to open PyQt windows, we need to keep a local (persistent) variable
-			newPlugin = \
+			try:
+				newPlugin = \
 					self.pluginDict[pluginName]['constructor'](ba=ba, bPlugin=self, startStop=startStop)
+			except(TypeError) as e:
+				logger.error(f'error opening pluging: {e}')
+				return
 			self._openSet.add(newPlugin)
 
 	def getType(self, pluginName):

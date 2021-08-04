@@ -32,8 +32,8 @@ class exportTrace(sanpyPlugin):
 
 		if self.myType == 'vmFiltered':
 			xyUnits = ('Time (sec)', 'Vm (mV)')# todo: pass xMin,xMax to constructor
-			x = self.ba.sweepX
-			y = self.ba.sweepY
+			x = self.ba.sweepX()
+			y = self.ba.sweepY()
 		elif self.myType == 'dvdtFiltered':
 			xyUnits = ('Time (sec)', 'dV/dt (mV/ms)')# todo: pass xMin,xMax to constructor
 		elif self.myType == 'meanclip':

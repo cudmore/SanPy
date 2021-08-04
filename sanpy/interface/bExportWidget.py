@@ -1132,8 +1132,8 @@ if __name__ == '__main__':
 		app = QtWidgets.QApplication(sys.argv)
 		app.aboutToQuit.connect(app.deleteLater)
 
-		sweepX = ba.abf.sweepX
-		sweepY = ba.abf.sweepY
+		sweepX = ba.abf.sweepX()
+		sweepY = ba.abf.sweepY()
 		xyUnits = ('Time (sec)', 'Vm (mV)')
 		type = 'vm'
 		GUI = bExportWidget(sweepX, sweepY, path=path, xyUnits=xyUnits, type=type)

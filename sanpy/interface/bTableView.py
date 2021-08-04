@@ -215,7 +215,7 @@ class bTableView(QtWidgets.QTableView):
 			# new row selection
 			#print('  new row selection')
 			rowDict = self.model().myGetRowDict(realRow)
-			logger.info(f'realRow:{realRow} rowDict:{rowDict}')
+			#logger.info(f'realRow:{realRow} rowDict:{rowDict}')
 			self.signalSelectRow.emit(realRow, rowDict)
 		else:
 			#print('  handle another click on already selected row')
@@ -293,8 +293,10 @@ class bTableView(QtWidgets.QTableView):
 		saveAllAnalysis = contextMenu.addAction("Save All Analysis")
 		contextMenu.addSeparator()
 		saNodeParams = contextMenu.addAction('SA Node Params')
-		saNodeParams = contextMenu.addAction('Ventricular Params')
+		ventricularParams = contextMenu.addAction('Ventricular Params')
 		neuronParams = contextMenu.addAction('Neuron Params')
+		subthresholdParams = contextMenu.addAction('Subthreshold Params')
+
 		#
 		action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 		#logger.info(f'  action:{action}')
@@ -324,13 +326,16 @@ class bTableView(QtWidgets.QTableView):
 		elif action == saveAllAnalysis:
 			#self.signalSaveFileTable.emit()
 			self.model().saveHdf()
-		elif action in [saNodeParams, neuronParams]:
+		elif action in [saNodeParams, ventricularParams, neuronParams, subthresholdParams]:
 			#print(action, action.text())
 			if selectedRow is not None:
 				self.signalSetDefaultDetection.emit(selectedRow, action.text())
+		elif action is not None:
+			logger.warning(f'Action not taken "{action.text()}"')
 		else:
-			logger.warning(f'action not taken "{action}"')
-
+			# user did not select acctioin
+			pass
+			
 	#
 	# frozen
 	def updateSectionWidth(self, logicalIndex, oldSize, newSize):
@@ -347,7 +352,7 @@ class bTableView(QtWidgets.QTableView):
 		self.updateFrozenTableGeometry()
 
 	def moveCursor(self, cursorAction, modifiers):
-		logger.info('')
+		#logger.info('')
 		current = super(bTableView, self).moveCursor(cursorAction, modifiers)
 		if (cursorAction == self.MoveLeft and
 				self.current.column() > 0 and

@@ -31,6 +31,7 @@ class bExport():
 			ba (sanpy.bAnalysis): A bAnalysis object that has had spikes detected with detectSpikes().
 		"""
 		self.ba = ba
+		self.sweepNumber = 0
 
 	def report(self, theMin, theMax):
 		"""
@@ -337,7 +338,7 @@ class bExport():
 
 			#headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
 			#headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
-			headerDict['Sweep Number'] = [self.ba.currentSweep]
+			headerDict['Sweep Number'] = ['Default 0']  # [self.ba.currentSweep]
 			headerDict['Number of Sweeps'] = [self.ba.numSweeps]
 			headerDict['Export Start (sec)'] = [float('%.2f'%(theMin))] # on export, x-axis of raw plot will be ouput
 			headerDict['Export Stop (sec)'] = [float('%.2f'%(theMax))] # on export, x-axis of raw plot will be ouput
@@ -450,7 +451,7 @@ class bExport():
 
 			#
 			# mean spike clip
-			theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(theMin, theMax)
+			theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(theMin, theMax, sweepNumber=self.sweepNumber)
 			try:
 				first_X = theseClips_x[0] #- theseClips_x[0][0]
 				#if verbose: print('    bExport.saveReport() saving mean clip to sheet "Avg Spike" from', len(theseClips), 'clips')
@@ -473,7 +474,7 @@ class bExport():
 			#
 			# save mean spike clip
 
-			theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(theMin, theMax)
+			theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(theMin, theMax, sweepNumber=self.sweepNumber)
 			if len(theseClips_x) == 0:
 				pass
 			else:
@@ -545,7 +546,7 @@ class bExport():
 		textFileHeader['stopSeconds'] = '%.2f'%(theMax)
 		#textFileHeader['startSeconds'] = self.ba.startSeconds
 		#textFileHeader['stopSeconds'] = self.ba.stopSeconds
-		textFileHeader['currentSweep'] = self.ba.currentSweep
+		textFileHeader['currentSweep'] = 'Default 0' # self.ba.currentSweep
 		textFileHeader['numSweeps'] = self.ba.numSweeps
 		#textFileHeader['theMin'] = theMin
 		#textFileHeader['theMax'] = theMax

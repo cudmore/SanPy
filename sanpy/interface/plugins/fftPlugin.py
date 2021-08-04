@@ -1,8 +1,22 @@
-import sys, math
+"""
+To be complete, I need:
+	- PSD
+	- FFT
+	- Auto Corelation (on detected spikes?)
+
+See:
+	https://stackoverflow.com/questions/59265603/how-to-find-period-of-signal-autocorrelation-vs-fast-fourier-transform-vs-power
+"""
+
+import sys, math, time
 from math import exp
+from functools import partial
+
 import numpy as np
 from scipy.signal import butter, lfilter, freqz
 import scipy.signal
+
+from PyQt5 import QtCore, QtWidgets, QtGui
 import matplotlib.pyplot as plt
 
 import sanpy
@@ -103,7 +117,7 @@ def spikeDetect(t, dataFiltered, dataThreshold2, startPoint=None, stopPoint=None
 	#
 	# backup each spike until pre/post is not changing
 	# uses g_backupFraction to get percent of dv/dt at spike veruus each backup window
-	backupWindow_pnts = 10
+	backupWindow_pnts = 30
 	maxSteps = 30  # 30 steps at 20 pnts (2ms) per step gives 60 ms
 	backupSpikes = []
 	for idx, spikePoint in enumerate(spikePoints):
@@ -123,15 +137,16 @@ def spikeDetect(t, dataFiltered, dataThreshold2, startPoint=None, stopPoint=None
 			# if diffMean is 1/2 initial AP slope then accept
 			if diffMean < (initialDiff * g_backupFraction):
 				# stop
-				foundBackupPoint = tmpPnt
+				if foundBackupPoint is None:
+					foundBackupPoint = tmpPnt
 				#break
 		#
 		if foundBackupPoint is not None:
 			backupSpikes.append(foundBackupPoint)
 		else:
 			# needed to keep spike parity
-			logger.warning(f'appending nan to backupSpike for spike {idx}')
-			backupSpikes.append(np.nan)
+			logger.warning(f'Did not find backupSpike for spike {idx} at {t[spikePoint]}(s)')
+			backupSpikes.append(spikePoint)
 
 	#
 	# use backupSpikes (points) to get each spike amplitude
@@ -146,10 +161,18 @@ def spikeDetect(t, dataFiltered, dataThreshold2, startPoint=None, stopPoint=None
 		spikeAmps.append(spikeAmp)
 
 	# TODO: use foot and peak to get real half/width
+	theseWidths=[10,20,50,80,90]
+	window_ms=100
+	spikeDictList = _getHalfWidths(t, dataFiltered,
+						backupSpikes, peakPoints,
+						theseWidths=theseWidths, window_ms=window_ms)
+	#for idx, spikeDict in enumerate(spikeDictList):
+	#	print(idx, spikeDict)
 
 	#
 	# get estimate of duration
 	# for each spike, find next downward crossing (starting at peak)
+	'''
 	minDurationPoints = 10
 	windowPoints = 1000  # 100 ms
 	fallingPoints = []
@@ -179,12 +202,113 @@ def spikeDetect(t, dataFiltered, dataThreshold2, startPoint=None, stopPoint=None
 			print(f'    did not find falling pnt for spike {idx} at {spikeSecond}(s) point {spikePoint}, assume it is longer than windowPoints')
 			pass
 			#fallingPoints.append(np.nan)
+	'''
 
-	# TODO: Pacckage all results into a dictionary
-
+	# TODO: Package all results into a dictionary
+	spikeDictList = [{}] * len(spikePoints)
+	for idx, spikePoint in enumerate(spikePoints):
+		'''
+		spikeSecond = spikeSeconds[idx]
+		peakPoint = peakPoints[idx]
+		peakVal = peakVals[idx]
+		fallingPoint = fallingPoints[idx]  # get rid of this
+		backupSpike = backupSpikes[idx]  # get rid of this
+		spikeAmp = spikeAmps[idx]  # get rid of this
+		'''
+		spikeDictList[idx]['spikePoint'] = spikePoint
+		spikeDictList[idx]['spikeSecond'] = spikeSeconds[idx]
+		spikeDictList[idx]['peakPoint'] = peakPoints[idx]
+		spikeDictList[idx]['peakVal'] = peakVals[idx]
+		#spikeDictList[idx]['fallingPoint'] = fallingPoints[idx]
+		spikeDictList[idx]['backupSpike'] = backupSpikes[idx]
+		spikeDictList[idx]['spikeAmp'] = spikeAmps[idx]
 	#
 	spikeSeconds = t[spikePoints]
-	return spikeSeconds, spikePoints, peakPoints, peakVals, fallingPoints, backupSpikes, spikeAmps
+	#return spikeSeconds, spikePoints, peakPoints, peakVals, fallingPoints, backupSpikes, spikeAmps
+	# removved fallingPoints
+	return spikeDictList, spikeSeconds, spikePoints, peakPoints, peakVals, backupSpikes, spikeAmps
+
+def _getHalfWidths(t, v, spikePoints, peakPoints, theseWidths=[10,20,50,80,90], window_ms=50):
+	"""Get half widths.
+
+	Args:
+		t (ndarray): Time
+		v (ndaray): Recording (usually curent clamp Vm)
+		spikePoints (list of int): List of spike threshold crossings.
+							Usually the back-up version
+		peakPoints (list of int):
+		theseWidths (list of int): Specifies full-width-half maximal to calculate
+		window_ms (int): Number of ms to look after the peak for downward 1/2 height crossing
+
+	Returns:
+		List of dict, one elemennt per spike
+	"""
+	logger.info(f'theseWidths:{theseWidths} window_ms:{window_ms} spikePoints:{len(spikePoints)} peakPoints:{len(peakPoints)}')
+
+	pointsPerMs = 10  # ToDo: generalize this
+	window_pnts = window_ms * pointsPerMs
+
+	spikeDictList = [{}] * len(spikePoints) # an empy list of dict with proper size
+	for idx, spikePoint in enumerate(spikePoints):
+		#print(f'Spike {idx} pnt:{spikePoint}')
+
+		# each spike has a list of dict for each width result
+		spikeDictList[idx]['widths'] = []
+
+		# check each pre/post pnt is before next spike
+		nextSpikePnt = None
+		if idx < len(spikePoints)-1:
+			nextSpikePnt = spikePoints[idx+1]
+
+		peakPoint = peakPoints[idx]
+		try:
+			vSpike = v[spikePoint]
+		except (IndexError) as e:
+			logger.error(f'spikePoint:{spikePoint} {type(spikePoint)}')
+		vPeak = v[peakPoint]
+		height = vPeak-vSpike
+		preStartPnt = spikePoint+1
+		preClip = v[preStartPnt:peakPoint-1]
+		postStartPnt = peakPoint+1
+		postClip = v[postStartPnt:peakPoint+window_pnts]
+		for width in theseWidths:
+			thisHeight = vSpike + (height / width)  # search for a percent of height
+			prePnt = np.where(preClip>=thisHeight)[0]
+			if len(prePnt) > 0:
+				prePnt = preStartPnt + prePnt[0]
+			else:
+				#print(f'  Error: Spike {idx} "prePnt" width:{width} vSpike:{vSpike} height:{height} thisHeight:{thisHeight}')
+				prePnt = None
+			postPnt = np.where(postClip<thisHeight)[0]
+			if len(postPnt) > 0:
+				postPnt = postStartPnt + postPnt[0]
+			else:
+				#print(f'  Error: Spike {idx} "postPnt" width:{width} vSpike:{vSpike} height:{height} thisHeight:{thisHeight}')
+				postPnt = None
+			widthMs = None
+			if prePnt is not None and postPnt is not None:
+				widthPnts = postPnt - prePnt
+				widthMs = widthPnts / pointsPerMs
+				#print(f'  width:{width} tPre:{t[prePnt]} tPost:{t[postPnt]} widthMs:{widthMs}')
+				if nextSpikePnt is not None and prePnt >= nextSpikePnt:
+					print(f'  Error: Spike {idx} widthMs:{widthMs} prePnt:{prePnt} is after nextSpikePnt:{nextSpikePnt}')
+				if nextSpikePnt is not None and postPnt >= nextSpikePnt:
+					print(f'  Error: Spike {idx} widthMs:{widthMs} postPnt:{postPnt} is after nextSpikePnt:{nextSpikePnt}')
+
+			# put into dict
+			widthDict = {
+				'halfHeight': width,
+				'risingPnt': prePnt,
+				#'risingVal': defaultVal,
+				'fallingPnt': postPnt,
+				#'fallingVal': defaultVal,
+				#'widthPnts': None,
+				'widthMs': widthMs
+			}
+			spikeDictList[idx]['widths_' + str(width)] = widthMs
+			spikeDictList[idx]['widths'].append(widthDict)
+	#
+	return spikeDictList
 
 def _throwOutRefractory(spikePoints, refractory_ms=100):
 	"""
@@ -222,35 +346,94 @@ def _throwOutRefractory(spikePoints, refractory_ms=100):
 
 	return spikePoints
 
-#class fftPlugin(sanpyPlugin):
-class fftPlugin():
+def getKernel(type='sumExp', amp=5, tau1=30, tau2=70):
+	"""Get a kernel for convolution with a spike train."""
+	N = 500  # pnts
+	t = [x for x in range(N)]
+	y = t
+
+	if type == 'sumExp':
+		for i in t:
+			y[i] = -amp * ( exp(-t[i]/tau1) - (exp(-t[i]/tau2)) )
+	#
+	return y
+
+def getSpikeTrain(numSeconds=1, fs=10000, spikeFreq=3, amp=10, noiseAmp=10):
+	"""Get a spike train at given frequency.
+
+	Arguments:
+		numSeconds (int): Total number of seconds
+		fs (int): Sampling frequency, 10000 for 10 kH
+		spikeFreq (int): Frequency of events in spike train, e.g. simulated EPSPs
+		amp (float): Amplitude of sum exponential kernel (getKernel)
+	"""
+	n = int(numSeconds * fs) # total number of samples
+	numSpikes = int(numSeconds * spikeFreq)
+	spikeTrain = np.zeros(n)
+	start = fs / spikeFreq
+	spikeTimes = np.linspace(start, n, numSpikes, endpoint=False)
+	for idx, spike in enumerate(spikeTimes):
+		#print(idx, spike)
+		spike = int(spike)
+		spikeTrain[spike] = 1
+
+	expKernel = getKernel(amp=amp)
+	epspTrain = scipy.signal.convolve(spikeTrain, expKernel, mode='same')
+	# shift to -60 mV
+	epspTrain -= 60
+
+	# add noise
+	if noiseAmp == 0:
+		pass
+	else:
+		noise_power = 0.001 * fs / noiseAmp
+		epspTrain += np.random.normal(scale=np.sqrt(noise_power), size=epspTrain.shape)
+
+	#
+	t = np.linspace(0, numSeconds, n, endpoint=True)
+	#
+	return t, spikeTrain, epspTrain
+
+class fftPlugin(sanpyPlugin):
 	myHumanName = 'FFT'
 
-	def __init__(self, myAnalysisDir, **kwargs):
+	def __init__(self, myAnalysisDir=None, **kwargs):
 		"""
 		Args:
 			ba (bAnalysis): Not required
 		"""
-		#super().__init__(myAnalysisDir, **kwargs)
+		super(fftPlugin, self).__init__(**kwargs)
+
+		# only defined when running without SanPy app
 		self._analysisDir = myAnalysisDir
 
+		self.fs = self.ba.recordingFrequency * 1000
+		# rebuild filter based on loaded fs
+		self.cutoff = 20  # 20, cutoff of filter (Hz)
+		self.order = 50 # 40  # order of filter
+		self.sos = butter_lowpass_sos(self.cutoff, self.fs, self.order)
+
+
 		self.signalHz = None  # assign when using fake data
-		self.xPlotHz = 50  # limit x-axis frequenccy
+		self.xPlotHz = self.cutoff + 7  # limit x-axis frequenccy
 
 		self.sos = None
 
 		self.lastLeft = None
 		self.lastRight = None
 
-		self.loadData(2)
+		if self._analysisDir is not None:
+			# running lpugin without sanpy
+			self.loadData(2)  # load the 3rd file in analysis dir
 
 		self._buildInterface()
 
-		self.spikeSeconds = None
-		self.spikePoints = None
-		self.peakPoints = None
-		self.peakVals = None
-		self.fallingPoints = None
+		#self.spikeSeconds = None
+		#self.spikePoints = None
+		#self.backupSpikes = None  # points
+		#self.peakPoints = None
+		#self.peakVals = None
+		#self.fallingPoints = None
 
 		self._getPsd()
 
@@ -258,7 +441,7 @@ class fftPlugin():
 		self.dataFilteredLine = None
 		self.spikesLine = None
 		self.peaksLine = None
-		self.fallingLine = None
+		#self.fallingLine = None
 		self.dataMeanLine = None
 		self.thresholdLine2 = None
 		self.thresholdLine3 = None
@@ -272,146 +455,442 @@ class fftPlugin():
 		return self._ba
 
 	def _buildInterface(self):
-		width = 10
-		height = 6
-		self.fig = plt.figure(figsize=(width, height))
-		self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
+		self.pyqtWindow()
 
-		numPlots = 2
-		# This is for filter responnse
-		plotNum = 1
-		#self.ax1 = self.fig.add_subplot(3,1,1) # filter response
-		self.ax2 = self.fig.add_subplot(numPlots,1,plotNum) # raw data
-		plotNum += 1
-		self.ax3 = self.fig.add_subplot(numPlots,1,plotNum) # psd
+		# main layout
+		vLayout = QtWidgets.QVBoxLayout()
 
-		self.ax2.callbacks.connect('xlim_changed', self.on_xlims_change)
+		self.controlLayout = QtWidgets.QHBoxLayout()
+		#
+		#aLabel = QtWidgets.QLabel('fft')
+		#self.controlLayout.addWidget(aLabel)
 
-		#self.ax1 = plt.subplot(3, 1, 1)  # filter response
-		#self.ax2 = plt.subplot(3, 1, 2)  # raw data
-		#self.ax3 = plt.subplot(3, 1, 3)  # psd
+		buttonName = 'Detect'
+		aButton = QtWidgets.QPushButton(buttonName)
+		aButton.clicked.connect(partial(self.on_button_click,buttonName))
+		self.controlLayout.addWidget(aButton)
 
-		#plt.show()
-		#self.fig.show()
+		aLabel = QtWidgets.QLabel('mV Threshold')
+		self.controlLayout.addWidget(aLabel)
 
-	def replot2(self, firstPlot=False, switchFile=False):
-		logger.info(f'firstPlot:{firstPlot}')
+		self.mvThresholdSpinBox = QtWidgets.QDoubleSpinBox()
+		self.mvThresholdSpinBox.setRange(-1e9, 1e9)
+		self.controlLayout.addWidget(self.mvThresholdSpinBox)
 
-		self.replotData(firstPlot=firstPlot, switchFile=switchFile)
-		self.replotPsd()
+		checkboxName = 'PSD'
+		aCheckBox = QtWidgets.QCheckBox(checkboxName)
+		aCheckBox.setChecked(True)
+		aCheckBox.stateChanged.connect(partial(self.on_checkbox_clicked, checkboxName))
+		self.controlLayout.addWidget(aCheckBox)
 
-		plt.draw()
+		checkboxName = 'Auto-Correlation'
+		aCheckBox = QtWidgets.QCheckBox(checkboxName)
+		aCheckBox.setChecked(True)
+		aCheckBox.stateChanged.connect(partial(self.on_checkbox_clicked, checkboxName))
+		self.controlLayout.addWidget(aCheckBox)
 
-	def replotData(self, firstPlot=False, switchFile=False):
-		#logger.info(f'firstPlot:{firstPlot}')
+		buttonName = 'Filter Response'
+		aButton = QtWidgets.QPushButton(buttonName)
+		aButton.clicked.connect(partial(self.on_button_click,buttonName))
+		self.controlLayout.addWidget(aButton)
+
+		buttonName = 'Rebuild Auto-Corr'
+		aButton = QtWidgets.QPushButton(buttonName)
+		aButton.clicked.connect(partial(self.on_button_click,buttonName))
+		self.controlLayout.addWidget(aButton)
+
 
 		#
+		vLayout.addLayout(self.controlLayout) # add mpl canvas
+
+		#
+		# second row of controls (for model)
+		controlLayout_row2 = QtWidgets.QHBoxLayout()
+
+		checkboxName = 'Model Data'
+		self.modelDataCheckBox = QtWidgets.QCheckBox(checkboxName)
+		self.modelDataCheckBox.setChecked(False)
+		self.modelDataCheckBox.stateChanged.connect(partial(self.on_checkbox_clicked, checkboxName))
+		controlLayout_row2.addWidget(self.modelDataCheckBox)
+
+		# numSeconds, spikeFreq, amp, noise
+		aLabel = QtWidgets.QLabel('Seconds')
+		controlLayout_row2.addWidget(aLabel)
+
+		self.modelSecondsSpinBox = QtWidgets.QDoubleSpinBox()
+		self.modelSecondsSpinBox.setValue(20)
+		self.modelSecondsSpinBox.setRange(0, 1000)
+		controlLayout_row2.addWidget(self.modelSecondsSpinBox)
+
+		aLabel = QtWidgets.QLabel('Spike Frequency')
+		controlLayout_row2.addWidget(aLabel)
+
+		self.modelFrequencySpinBox = QtWidgets.QDoubleSpinBox()
+		self.modelFrequencySpinBox.setValue(1)
+		self.modelFrequencySpinBox.setRange(0, 100)
+		controlLayout_row2.addWidget(self.modelFrequencySpinBox)
+
+		aLabel = QtWidgets.QLabel('Amplitude')
+		controlLayout_row2.addWidget(aLabel)
+
+		self.modelAmpSpinBox = QtWidgets.QDoubleSpinBox()
+		self.modelAmpSpinBox.setValue(10)
+		self.modelAmpSpinBox.setRange(-100, 100)
+		controlLayout_row2.addWidget(self.modelAmpSpinBox)
+
+		aLabel = QtWidgets.QLabel('Noise Amp')
+		controlLayout_row2.addWidget(aLabel)
+
+		self.modelNoiseAmpSpinBox = QtWidgets.QDoubleSpinBox()
+		self.modelNoiseAmpSpinBox.setValue(5)
+		self.modelNoiseAmpSpinBox.setRange(0, 1000)
+		controlLayout_row2.addWidget(self.modelNoiseAmpSpinBox)
+
+		#
+		vLayout.addLayout(controlLayout_row2) # add mpl canvas
+
+		vSplitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
+		vLayout.addWidget(vSplitter)
+
+		self.mplWindow2(numRow=4)  # makes self.axs[] and self.static_canvas
+		self.vmAxes = self.axs[0]
+		self.psdAxes = self.axs[1]
+		self.fftAxes = self.axs[2]
+		self.autoCorrAxes = self.axs[3]  # uses spike detection
+
+		# first subplot is of Vm
+		self.vmAxes.callbacks.connect('xlim_changed', self.on_xlims_change)
+
+		vSplitter.addWidget(self.static_canvas) # add mpl canvas
+		vSplitter.addWidget(self.mplToolbar) # add mpl canvas
+
+		# this works
+		#self.mplToolbar.hide()
+
+		# set the layout of the main window
+		self.mainWidget.setLayout(vLayout)
+
+		self.getMean()
+		self.plot()
+
+	def getMean(self):
+		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+		dataMean = np.nanmean(filteredVm)
+		dataStd = np.nanstd(filteredVm)
+		self.dataMean = dataMean
+		self.dataThreshold2 = dataMean + (2 * dataStd)
+		self.dataThreshold3 = dataMean + (3 * dataStd)
+
+	def replot(self):
+
+		self.getMean()
+		self.replot2(switchFile=True)
+
+	def replot2(self, mvThreshold=None, firstPlot=False, switchFile=False):
+		logger.info(f'firstPlot:{firstPlot}')
+
+		if mvThreshold is None:
+			mvThreshold = self.dataThreshold2
+
+		self.replotData(mvThreshold=mvThreshold, firstPlot=firstPlot, switchFile=switchFile)
+		self.replotPsd()
+		self.replot_fft()
+		#self.replotAutoCorr()
+
+		self._mySetWindowTitle()
+
+		self.static_canvas.draw()
+		#plt.draw()
+
+	def plot(self):
+		"""First plot"""
+		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
+		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+		thresholdSec = self.ba.getStat('thresholdSec', sweepNumber=self.sweepNumber)
+		thresholdVal = self.ba.getStat('thresholdVal', sweepNumber=self.sweepNumber)
+		peakSec = self.ba.getStat('peakSec', sweepNumber=self.sweepNumber)
+		peakVal = self.ba.getStat('peakVal', sweepNumber=self.sweepNumber)
+
+		#self.dataLine, = self.vmAxes.plot(t, data, 'k', label='data')
+		self.dataFilteredLine, = self.vmAxes.plot(t, filteredVm, 'b-', linewidth=0.5, label='filtered')
+
+		self.spikesLine, = self.vmAxes.plot(thresholdSec, thresholdVal, '.r')
+		#self.fallingLine, = self.vmAxes.plot(t[fallingPoints], dataFiltered[fallingPoints], '.y')
+
+		self.peaksLine, = self.vmAxes.plot(peakSec, peakVal, '.g')
+
+		#self.backupLine, = self.vmAxes.plot(t[backupSpikes], dataFiltered[backupSpikes], '.g')
+
+		self.dataMeanLine = self.vmAxes.axhline(self.dataMean, color='r', linestyle='--', linewidth=0.5)
+		self.thresholdLine2 = self.vmAxes.axhline(self.dataThreshold2, color='r', linestyle='--', linewidth=0.5)
+		self.thresholdLine3 = self.vmAxes.axhline(self.dataThreshold3, color='r', linestyle='--', linewidth=0.5)
+
+		self.vmAxes.set_xlabel('Time (s)')
+		self.vmAxes.set_ylabel('Vm (mV)')
+
+	def replotData(self, mvThreshold=None, switchFile=False):
+		#logger.info(f'firstPlot:{firstPlot}')
+
+		#if mvThreshold is None:
+		#	mvThreshold = self.dataThreshold2
+		#
 		# spike detect
-		self.spikeSeconds, self.spikePoints, self.peakPoints, self.peakVals, self.fallingPoints, self.backupSpikes, self.spikeAmps = spikeDetect(
+		'''
+		self.spikeDictList, self.spikeSeconds, self.spikePoints, self.peakPoints, self.peakVals, self.backupSpikes, self.spikeAmps = spikeDetect(
 										self.t,
 										self.dataFiltered,
-										self.dataThreshold2,
+										mvThreshold,
 										self.lastLeft,
 										self.lastRight)
+		'''
 
-		# strip np.nan from backupSpikes
-		self.backupSpikes = [tmpSpike for tmpSpike in self.backupSpikes if not math.isnan(tmpSpike)]
-		#print('self.backupSpikes:', self.backupSpikes)
+		# grab class attributes
+		#t = self.t
+		#data = self.data
+		#dataFiltered = self.dataFiltered
+		# Grab these from self.spikeDictList
+		#spikeSeconds = self.spikeSeconds
+		#spikePoints = self.spikePoints
+		# just use spikePoints
+		#backupSpikes = self.backupSpikes
+		#peakPoints = self.peakPoints
+		#peakVals = self.peakVals
 
-		# grab attributes
-		t = self.t
-		data = self.data
-		dataFiltered = self.dataFiltered
-		spikeSeconds = self.spikeSeconds
-		spikePoints = self.spikePoints
-		backupSpikes = self.backupSpikes
-		peakPoints = self.peakPoints
-		peakVals = self.peakVals
-		fallingPoints = self.fallingPoints
 
-		#backupSpikes = xxx
+		#elif self.thresholdLine2 is not None:
 
-		if firstPlot:
-			#ax2.clear()
+		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
+		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+		thresholdSec = self.ba.getStat('thresholdSec', sweepNumber=self.sweepNumber)
+		thresholdVal = self.ba.getStat('thresholdVal', sweepNumber=self.sweepNumber)
+		peakSec = self.ba.getStat('peakSec', sweepNumber=self.sweepNumber)
+		peakVal = self.ba.getStat('peakVal', sweepNumber=self.sweepNumber)
 
-			#self.ax2.callbacks.connect('xlim_changed', self.on_xlims_change)
-			self.dataLine, = self.ax2.plot(t, data, 'k', label='data')
-			self.dataFilteredLine, = self.ax2.plot(t, self.dataFiltered, 'b', linewidth=0.5, label='savgol filtered')
-			#ax2.plot(t, y_sos, 'r', label='filter response')
+		self.spikesLine.set_xdata(thresholdSec)
+		self.spikesLine.set_ydata(thresholdVal)
 
-			self.spikesLine, = self.ax2.plot(t[spikePoints], dataFiltered[spikePoints], '.r')
-			self.fallingLine, = self.ax2.plot(t[fallingPoints], dataFiltered[fallingPoints], '.y')
+		#self.backupLine.set_xdata(t[backupSpikes])
+		#self.backupLine.set_ydata(dataFiltered[backupSpikes])
 
-			self.peaksLine, = self.ax2.plot(t[peakPoints], dataFiltered[peakPoints], '.g')
+		self.peaksLine.set_xdata(peakSec)
+		self.peaksLine.set_ydata(peakVal)
 
-			self.backupLine, = self.ax2.plot(t[backupSpikes], dataFiltered[backupSpikes], '.g')
+		#self.fallingLine.set_xdata(t[fallingPoints])
+		#self.fallingLine.set_ydata(dataFiltered[fallingPoints])
 
-			self.dataMeanLine = self.ax2.axhline(self.dataMean, color='k', linestyle='--', linewidth=0.5)
-			self.thresholdLine2 = self.ax2.axhline(self.dataThreshold2, color='r', linestyle='--', linewidth=0.5)
-			self.thresholdLine3 = self.ax2.axhline(self.dataThreshold3, color='r', linestyle='--', linewidth=0.5)
-
-			#plt.show()
-
-		elif self.thresholdLine2 is not None:
-
-			self.spikesLine.set_xdata(t[spikePoints])
-			self.spikesLine.set_ydata(dataFiltered[spikePoints])
-
-			self.backupLine.set_xdata(t[backupSpikes])
-			self.backupLine.set_ydata(dataFiltered[backupSpikes])
-
-			self.peaksLine.set_xdata(t[peakPoints])
-			self.peaksLine.set_ydata(dataFiltered[peakPoints])
-
-			self.fallingLine.set_xdata(t[fallingPoints])
-			self.fallingLine.set_ydata(dataFiltered[fallingPoints])
-
-			#logger.info(f'setting dataThreshold:{self.dataThreshold2} {self.dataThreshold3}')
-			self.dataMeanLine.set_ydata(self.dataMean)
-			self.thresholdLine2.set_ydata(self.dataThreshold2)
-			self.thresholdLine3.set_ydata(self.dataThreshold3)
+		#logger.info(f'setting dataThreshold:{self.dataThreshold2} {self.dataThreshold3}')
+		self.dataMeanLine.set_ydata(self.dataMean)
+		self.thresholdLine2.set_ydata(self.dataThreshold2)
+		self.thresholdLine3.set_ydata(self.dataThreshold3)
 
 		autoScaleX = False
-		if switchFile:
+		if 1 or switchFile:
 			autoScaleX = True
-			self.dataLine.set_xdata(t)
-			self.dataLine.set_ydata(data)
+			#self.dataLine.set_xdata(t)
+			#self.dataLine.set_ydata(data)
 			self.dataFilteredLine.set_xdata(t)
 			self.dataFilteredLine.set_ydata(dataFiltered)
 
-		self.ax2.relim()
-		self.ax2.autoscale_view(True, autoScaleX, True)  # (tight, x, y)
+			self.vmAxes.relim()
+			self.vmAxes.autoscale_view(True, autoScaleX, True)  # (tight, x, y)
+
+		#
 		#plt.draw()
+		self.static_canvas.draw()
 
 	def replotPsd(self):
 		#logger.info(f'len(f):{len(self.f)} Pxx_den max:{np.nanmax(self.Pxx_den)}')
-		self.ax3.clear()
-		self.ax3.semilogy(self.f, self.Pxx_den)
+		self.psdAxes.clear()
+		self.psdAxes.semilogy(self.f, self.Pxx_den)
 		if self.signalHz is not None:
-			ax3.axvline(self.signalHz, color='k', linestyle='--', linewidth=0.5)
-		self.ax3.set_ylim([1e-7, 1e2])
-		self.ax3.set_xlabel('frequency [Hz]')
-		self.ax3.set_ylabel('PSD [V**2/Hz]')
+			ax3.axvline(self.signalHz, color='r', linestyle='--', linewidth=0.5)
+		self.psdAxes.set_ylim([1e-7, 1e2])
+		self.psdAxes.set_xlabel('Frequency (Hz)')
+		self.psdAxes.set_ylabel('PSD')  # (V**2/Hz)
 		#plt.xlim(0, 0.01*fs)
-		self.ax3.set_xlim(0, self.xPlotHz)  # Hz
+		self.psdAxes.set_xlim(0, self.xPlotHz)  # Hz
 
-		self.ax3.relim()
-		self.ax3.autoscale_view(True,True,True)
+		self.psdAxes.relim()
+		self.psdAxes.autoscale_view(True,True,True)
 		#plt.draw()
+		self.static_canvas.draw()
 
-	def loadData(self, fileIdx=0):
-		self._ba = self._analysisDir.getAnalysis(fileIdx)
-		#print(self.ba)
+	def replotAutoCorr(self):
+		logger.info('')
+
+		# Auto-Cor takes 418.542 seconds.
+		# auto-corr on spike detec
+		print('  PUT BACK IN')
+		return
+
+		if self.backupSpikes is None or len(self.backupSpikes)==0:
+			# don't perform for no spikes
+			print('replotAutoCorr() is bailing on no spikes')
+			return
+
+		leftPoint = self.lastLeft
+		rightPoint = self.lastRight
+
+		#x = self.dataFiltered
+		x = np.zeros(self.t.shape[0])
+		x[self.backupSpikes] = 1
+		x = x[leftPoint:rightPoint]
+		t = self.t[leftPoint:rightPoint]
+
+		logger.info(f'x:{len(x)} {x.shape}')
+		logger.info(f'backupSpikes:{len(self.backupSpikes)}')
+
+		if leftPoint == 0:
+			print('replotAutoCorr() is bailing on left point == 0')
+			return
+
+		start = time.time()
+
+		acf = np.correlate(x, x, 'full')[-len(x):] # acs is symmetric with 2*len(x) pnts
+
+		stop = time.time()
+		logger.info(f'autocorr took {round(stop-start,3)} seconds.')
+
+		#print('acf:', acf[0:20])
+
+		lagInSeconds = t / self.fs
+
+		self.autoCorrAxes.clear()
+		self.autoCorrAxes.plot(lagInSeconds[1:-1], acf[1:-1], '-')
+		#self.autoCorrAxes.set_ylim([0, 3])
+
+		# find the largest peak, lag 0 is max but not largest
+		inflection = np.diff(np.sign(np.diff(acf))) # Find the second-order differences
+		peaks = (inflection < 0).nonzero()[0] + 1 # Find where they are negative
+		delay = peaks[acf[peaks].argmax()] # Of those, find the index with the maximum value
+
+		# delay == 20, tells us that the signal has
+		# a frequency of 1/20 of its sampling rate
+		signal_freq = self.fs/delay # Gives 0.05
+		logger.info(f'AutoCor signal frequency is:{signal_freq}')
+
+		self.autoCorrAxes.set_xlabel('Lag (s)')
+		self.autoCorrAxes.set_ylabel('Auto Corr')
+
+		#
+		self.autoCorrAxes.relim()
+		self.autoCorrAxes.autoscale_view(True,True,True)
+		self.static_canvas.draw()
+
+	def replot_fft(self):
+		logger.info('')
+		print('  PUT BACK IN')
+		return
+
+		# do fft
+		leftPoint = self.lastLeft
+		rightPoint = self.lastRight
+
+		x = self.dataFiltered[leftPoint:rightPoint]
+		t = self.t[leftPoint:rightPoint]
+
+		ft = np.fft.rfft(x)
+		# not sure to use diff b/w [1]-[0] or fs=10000 ???
+		#tmpFs = self.fs #t[1]-t[0]
+		tmpFs = t[1]-t[0]
+		logger.info(f'  fft tmpFs:{tmpFs}')
+		freqs = np.fft.rfftfreq(len(x), tmpFs) # Get frequency axis from the time axis
+		mags = abs(ft) # We don't care about the phase information here
+		#print('mags:', mags[0:10])
+
+		inflection = np.diff(np.sign(np.diff(mags)))
+		peaks = (inflection < 0).nonzero()[0] + 1
+		peak = peaks[mags[peaks].argmax()]
+		signal_freq = freqs[peak] # Gives 0.05
+		logger.info(f'fft signal frequency is:{signal_freq}')
+
+		self.fftAxes.clear()
+		# dropping first point
+		self.fftAxes.semilogy(freqs[1:-1], mags[1:-1], '-')
+
+		self.fftAxes.set_xlim(0, self.xPlotHz)  # Hz
+
+		self.fftAxes.set_xlabel('Freq')
+		self.fftAxes.set_ylabel('FFT Magnitude')
+
+		#
+		self.fftAxes.relim()
+		self.fftAxes.autoscale_view(True,True,True)
+		self.static_canvas.draw()
+
+	def replotFilter(self):
+		"""Plot frequency response of filter."""
+		cutoff = self.cutoff  # cutoff frequency of the filter
+
+		w,H = scipy.signal.sosfreqz(self.sos, fs=self.fs)
+
+		fig = plt.figure(figsize=(3, 3))
+
+		ax1 = fig.add_subplot(1,1,1) #
+
+		#plt.plot(0.5*fs*w/np.pi, np.abs(H), 'b')
+		ax1.plot(w, 20*np.log10(np.maximum(1e-10, np.abs(H))))
+		ax1.axvline(self.cutoff, color='r', linestyle='--', linewidth=0.5)
+		#y_sos = signal.sosfilt(sos, x)
+		ax1.set_xlim(0, self.xPlotHz)
+
+		ax1.set_xlabel('Frequency (Hz)')
+		ax1.set_ylabel('Decibles (dB)')
+
+		plt.show()
+
+	def _getPsd(self):
+		"""Get psd from selected x-axes range.
+		"""
+		#logger.info(f'self.lastLeft:{self.lastLeft} self.lastRight:{self.lastRight}')
+		dataFiltered = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+		leftPoint = self.lastLeft
+		rightPoint = self.lastRight
+		y_sos = scipy.signal.sosfilt(self.sos, dataFiltered[leftPoint:rightPoint])
+		self.f, self.Pxx_den = scipy.signal.periodogram(y_sos, self.fs)
+
+	def loadData(self, fileIdx=0, modelData=False):
+		"""Load from an analysis directory. Only used when no SanPyApp."""
+		if not modelData:
+			if self._analysisDir is not None:
+				self._ba = self._analysisDir.getAnalysis(fileIdx)
+
+		else:
+			#
+			# load from a model
+			#numSeconds = 50
+			#spikeFreq = 1
+			#amp = 20
+			#  TODO: ensure we separate interface from backend !!!
+			numSeconds = self.modelSecondsSpinBox.value()
+			spikeFreq = self.modelFrequencySpinBox.value()
+			amp = self.modelAmpSpinBox.value()
+			noiseAmp = self.modelNoiseAmpSpinBox.value()
+			fs = 10000  # 10 kHz
+			t, spikeTrain, data = getSpikeTrain(numSeconds=numSeconds,
+									spikeFreq=spikeFreq,
+									fs=fs,
+									amp=amp,
+									noiseAmp=noiseAmp)
+			# (t, data) need to be one column (for bAnalysis)
+			t = t.reshape(t.shape[0],-1)
+			data = data.reshape(data.shape[0],-1)
+			#print('t:', t.shape)
+			#print('data:', data.shape)
+
+			modelDict = {
+				'sweepX': t,
+				'sweepY': data,
+				'mode': 'I-Clamp'
+			}
+			self._ba = sanpy.bAnalysis(fromDict=modelDict)
+
+		print(self.ba)
+
 		self.t = self.ba.sweepX()[:,0]
 		self.fs = self.ba.recordingFrequency * 1000
 		self.data = self.ba.sweepY()[:,0]
 		self.data = self.data.copy()
-
-		# normalize data
-		'''
-		dataMean = np.nanmean(data)
-		data -= dataMean
-		'''
 
 		SavitzkyGolay_pnts = 5
 		SavitzkyGolay_poly = 2
@@ -431,21 +910,56 @@ class fftPlugin():
 		#self.lastRight = len(self.dataFiltered)
 
 		# rebuild filter based on loaded fs
-		cutoff = 20
-		order = 40
-		self.sos = butter_lowpass_sos(cutoff, self.fs, order=5)
+		self.sos = butter_lowpass_sos(self.cutoff, self.fs, self.order)
+
+	def on_checkbox_clicked(self, name, value):
+		#print('on_crosshair_clicked() value:', value)
+		logger.info(f'name:"{name}" value:{value}')
+		isOn = value==2
+		if name == 'PSD':
+			self.psdAxes.set_visible(isOn)
+			if isOn:
+				self.vmAxes.change_geometry(2,1,1)
+				self.replotPsd()
+			else:
+				self.vmAxes.change_geometry(1,1,1)
+			self.static_canvas.draw()
+		elif name == 'Auto-Correlation':
+			pass
+		elif name == 'Model Data':
+			self.loadData(fileIdx=0, modelData=isOn)
+			self.replot2(switchFile=True)
+		else:
+			logger.warning(f'name:"{name}" not understood')
+
+	def on_button_click(self, name):
+		if name == 'Detect':
+			mvThreshold = self.mvThresholdSpinBox.value()
+			logger.info(f'{name} mvThreshold:{mvThreshold}')
+			self.replot2(mvThreshold=mvThreshold)
+		elif name == 'Filter Response':
+			# popup new window
+			self.replotFilter()
+		elif name == 'Rebuild Auto-Corr':
+			self.replotAutoCorr()
+		else:
+			logger.warning(f'name:"{name}" not understood')
 
 	def on_xlims_change(self, event_ax):
 		#slogger.info(f'event_ax:{event_ax}')
 		left, right = event_ax.get_xlim()
 		logger.info(f'left:{left} right:{right}')
 
+		print('  PUT BACK IN')
+		return
+
 		# find start/stop point from seconds in 't'
-		leftPoint = np.where(self.t >= left)[0]
+		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
+		leftPoint = np.where(t >= left)[0]
 		leftPoint = leftPoint[0]
-		rightPoint = np.where(self.t >= right)[0]
+		rightPoint = np.where(t >= right)[0]
 		if len(rightPoint) == 0:
-			rightPoint = len(self.t)  # assuming we use [left:right]
+			rightPoint = len(t)  # assuming we use [left:right]
 		else:
 			rightPoint = rightPoint[0]
 		#print('leftPoint:', leftPoint, 'rightPoint:', rightPoint, 'len(t):', len(self.t))
@@ -457,10 +971,11 @@ class fftPlugin():
 			self.lastLeft = leftPoint
 			self.lastRight = rightPoint
 
+		#
 		# get threshold fromm selection
-		dataFiltered = self.dataFiltered
-		theMean = np.nanmean(dataFiltered[leftPoint:rightPoint])
-		theStd = np.nanstd(dataFiltered[leftPoint:rightPoint])
+		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+		theMean = np.nanmean(filteredVm[leftPoint:rightPoint])
+		theStd = np.nanstd(filteredVm[leftPoint:rightPoint])
 		self.dataMean = theMean
 		self.dataThreshold2 = theMean + (2 * theStd)
 		self.dataThreshold3 = theMean + (3 * theStd)
@@ -469,35 +984,44 @@ class fftPlugin():
 		# psd depends on x-axis
 		self._getPsd()
 
-		self.replot2(firstPlot=False)
-		#self.replotData(firstPlot=False)
-		#self.replotPsd()
+		# update interface
+		#print('dataThreshold2:', self.dataThreshold2)
+		self.mvThresholdSpinBox.setValue(self.dataThreshold2)
+		self.mvThresholdSpinBox.repaint()
 
-	def _getPsd(self):
-		"""Get psd from selected x-axes range.
-		"""
-		#logger.info(f'self.lastLeft:{self.lastLeft} self.lastRight:{self.lastRight}')
-		dataFiltered = self.dataFiltered
-		leftPoint = self.lastLeft
-		rightPoint = self.lastRight
-		y_sos = scipy.signal.sosfilt(self.sos, dataFiltered[leftPoint:rightPoint])
-		self.f, self.Pxx_den = scipy.signal.periodogram(y_sos, self.fs)
+		# now with detect button
+		#self.replot2(firstPlot=False)
+
+		#self.replotData(firstPlot=False)
+		self.replotPsd()
+		self.replot_fft()
+		#self.replotAutoCorr()  # slow, requires bbutton push
 
 	def keyPressEvent(self, event):
 		logger.info(event)
-		#super().keyPressEvent(event)
+		text = super().keyPressEvent(event)
 
 		#isMpl = isinstance(event, mpl.backend_bases.KeyEvent)
-		text = event.key
-		logger.info(f'mpl key: {text}')
+		#text = event.key
+		logger.info(f'xxx mpl key: "{text}"')
 
-		if text in ['0', '1', '2', '3', '4', '5']:
+		if text in ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']:
+			#self.loadData yyy
 			fileIdx = int(text)
 			self.loadData(fileIdx)
 			self.replot2(switchFile=True)
 
+		elif text == 'f':
+			self.replotFilter()
+
 if __name__ == '__main__':
+	from PyQt5 import QtWidgets
+	app = QtWidgets.QApplication([])
+
 	path = '/Users/cudmore/Sites/Sanpy/data/fft'
 	ad = sanpy.analysisDir(path, autoLoad=True)
+
 	fft = fftPlugin(ad)
-	plt.show()
+	#plt.show()
+
+	sys.exit(app.exec_())

@@ -1,7 +1,8 @@
 # Created: 20210609
 
 """
-`sanpyPlugin` is the parent class for all SanPy plugins. Derive from this class to create new plugins.
+`sanpyPlugin` is the parent class for all SanPy plugins.
+Derive from this class to create new plugins.
 
 Users can run a plugin with the following code
 
@@ -29,6 +30,7 @@ sys.exit(app.exec_())
 #import numpy as np
 #import scipy.signal
 
+#from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -117,7 +119,7 @@ class sanpyPlugin(QtCore.QObject):
 		self.fig = None
 		self.ax = None
 
-		self.winWidth_inches = 4
+		self.winWidth_inches = 4  # used by mpl
 		self.winHeight_inches = 4
 
 		# connect self to main app with signals/slots
@@ -279,6 +281,8 @@ class sanpyPlugin(QtCore.QObject):
 		elif text == '':
 			pass
 
+		return text
+
 	def copyToClipboard(self):
 		pass
 
@@ -309,21 +313,42 @@ class sanpyPlugin(QtCore.QObject):
 		#self.mainWidget.setWindowTitle(self.name)
 		#self.mainWidget.show()
 
-	def mplWindow2(self):
+	def mplWindow2(self, numRow=1, numCol=1):
 		plt.style.use('dark_background')
-		tmpFig = mpl.figure.Figure()
-		self.static_canvas = backend_qt5agg.FigureCanvas(tmpFig)
-		self._static_ax = self.static_canvas.figure.subplots()
-		#
-		#self.lines, = self._static_ax.plot([], [], 'ow', picker=5)
-		#self.linesSel, = self._static_ax.plot([], [], 'oy')
+		# this is dangerous, collides with self.mplWindow()
+		self.fig = mpl.figure.Figure()
 
-		#windowTitle = self.myHumanName + ':' + self.name
-		#self.fig.canvas.manager.set_window_title(windowTitle)
+		# not working
+		#self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
+
+		self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
+		# this is really triccky and annoying
+		self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
+		self.static_canvas.setFocus()
+		self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
+
+		self.axs = [None] * numRow  # empty list
+		if numRow==1 and numCol==1:
+			self._static_ax = self.static_canvas.figure.subplots()
+			self.axs = self._static_ax
+		else:
+
+			for idx in range(numRow):
+				plotNum = idx + 1
+				#print('mplWindow2()', idx)
+				self.axs[idx] = self.static_canvas.figure.add_subplot(numRow,1,plotNum)
+
 		self._mySetWindowTitle()
+
+		# does not work
+		#self.static_canvas.mpl_connect('key_press_event', self.keyPressEvent)
 
 		# pick_event assumes 'picker=5' in any .plot()
 		self.cid = self.static_canvas.mpl_connect('pick_event', self.spike_pick_event)
+
+		# toolbar need to be added to layout
+		#from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+		self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(self.static_canvas, self.static_canvas)
 
 	def mplWindow(self):
 		"""
@@ -360,7 +385,8 @@ class sanpyPlugin(QtCore.QObject):
 
 		# mpl
 		if self.fig is not None:
-			self.fig.canvas.manager.set_window_title(self.windowTitle)
+			if self.fig.canvas.manager is not None:
+				self.fig.canvas.manager.set_window_title(self.windowTitle)
 
 		# pyqt
 		if self.mainWidget is not None:
@@ -452,7 +478,11 @@ class sanpyPlugin(QtCore.QObject):
 		self.selectSpike(eDict)
 
 	def slot_set_x_axis(self, startStopList):
-		"""Respond to changes in x-axis."""
+		"""Respond to changes in x-axis.
+
+		Args:
+			startStopList (list of float): Start stop in seconds
+		"""
 		if not self.getResponseOption(self.responseTypes.setAxis):
 			return
 		# don't set axis if we are showing different ba

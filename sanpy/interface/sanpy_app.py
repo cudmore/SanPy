@@ -100,17 +100,18 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		logger.info(f'json preferences file lastPath "{lastPath}"')
 		if path is not None:
 			self.path = path
-		#elif csvPath is not None:
-		#	self.path = os.path.split(csvPath)[0]
 		elif lastPath is not None and os.path.isdir(lastPath):
 			self.path = lastPath
 		else:
 			self.path = None
-		#print('  self.path:', self.path)
+
+		'''
 		if self.path is not None and len(self.path)>0:
 			self.loadFolder(self.path)
+		'''
 
-		# I changed saved preferences file, try not to screw up Laura's analysis
+		# I changed saved preferences file,
+		# try not to screw up Laura's analysis
 		if 'useDarkStyle' in self.configDict.keys():
 			self.useDarkStyle = self.configDict['useDarkStyle']
 		else:
@@ -118,35 +119,29 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			self.useDarkStyle = True
 			self.configDict['useDarkStyle'] = True
 
+		#
 		# set window geometry
 		self.setMinimumSize(640, 480)
-
 		self.left = self.configDict['windowGeometry']['x']
 		self.top = self.configDict['windowGeometry']['y']
 		self.width = self.configDict['windowGeometry']['width']
 		self.height = self.configDict['windowGeometry']['height']
-
 		self.setGeometry(self.left, self.top, self.width, self.height)
-
-		#
-		# todo: remove
-		'''
-		self.csvPath = csvPath
-		masterDf = sanpy.interface.bFileTable.loadDatabase(csvPath)
-		if masterDf is not None:
-			logger.debug(f'Loaded csvPath: {csvPath}')
-		'''
 
 		self.myPlugins = sanpy.interface.bPlugins(sanpyApp=self)
 
 		self.buildMenus()
-
 		self.buildUI()
 
-		self.myExportWidget = None
+		#self.myExportWidget = None
 
-		self.dfReportForScatter = None
-		self.dfError = None
+		#self.dfReportForScatter = None
+		#self.dfError = None
+
+		# 20210803, loadFolder was above? Still works down here
+		# needed to update detection widget after buildUI()
+		if self.path is not None and len(self.path)>0:
+			self.loadFolder(self.path)
 
 		self.slot_updateStatus('Ready')
 		logger.info('SanPy started')
@@ -237,16 +232,27 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		# will create/load csv and/or gzip (of all analysis)
 		self.myAnalysisDir = sanpy.analysisDir(path)
 
-		# set dfAnalysisDir to file list model
+		# set myAnalysisDir to file list model
 		self.myModel = sanpy.interface.bFileTable.pandasModel(self.myAnalysisDir)
+		#self.myModel.signalMyDataChanged.connect(self.slot_dataChanged)
+		#self.myModel.signalMyDataChanged.connect(self.myDetectionWidget.slot_dataChanged)
 
 		try:
 			self.tableView.mySetModel(self.myModel)
+			self.myModel.signalMyDataChanged.connect(self.myDetectionWidget.slot_dataChanged)
 		except (AttributeError) as e:
 			# needed when we call loadFolder from __init__
 			# logger.warning('OK: no tableView during load folder')
 			pass
 
+	'''
+	def slot_dataChanged(self, columnName, value, rowDict):
+		"""User has edited main file table.
+		Update detection widget for columns (Start(s), Stop(s), dvdtThreshold, mvThreshold)
+		"""
+		logger.info(f'{columnName} {value}')
+		print('  ', rowDict)
+	'''
 	def selectSpike(self, spikeNumber, doZoom=False):
 		eDict = {}
 		eDict['spikeNumber'] = spikeNumber
@@ -317,7 +323,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		elif this == 'cancel all selections':
 			self.myDetectionWidget.selectSpike(None)
-			self.myScatterPlotWidget.selectSpike(None)
+
+			if self.myScatterPlotWidget.isVisible():
+				self.myScatterPlotWidget.selectSpike(None)
 			# removing this may cause problems on file change ?
 			#self.myScatterPlotWidget.selectXRange(None, None)
 
@@ -383,7 +391,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		rowDict = self.myModel.myGetRowDict(selectedRow)
 
-		logger.info(f'row:{selectedRow} {rowDict}')
+		#logger.info(f'row:{selectedRow} {rowDict}')
 
 		return rowDict
 
@@ -397,11 +405,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		'''
 		#fileName = rowDict['File']
 
-		# this will load ba if necc
+		self.slot_updateStatus(f'Loading file "{rowDict["File"]}" ... please wait')# this will load ba if necc
+
 		ba = self.myAnalysisDir.getAnalysis(row) # if None then problem loading
 
 		if ba is not None:
 			self.signalSwitchFile.emit(rowDict, ba)
+			self.slot_updateStatus(f'Loaded file "{ba.getFileName()}"')# this will load ba if necc
 
 	def buildMenus(self):
 
@@ -585,6 +595,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike) # self listens to myDetectionWidget
 		self.myDetectionWidget.signalSelectSweep.connect(self.slot_selectSweep) # self listens to myDetectionWidget
 		self.myDetectionWidget.signalDetect.connect(self.slot_detect)
+		# update dvdtThreshold, mvThreshold Start(s), Stop(s)
 		self.myDetectionWidget.signalDetect.connect(self.tableView.slot_detect)
 
 		#
@@ -752,9 +763,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.myAnalysisDir.saveHdf()
 
 	def slot_updateStatus(self, text):
+		logger.info(text)
 		self.statusBar.showMessage(text)
 		self.statusBar.repaint()
-		self.statusBar.update()
+		#self.statusBar.update()
+		self.repaint()
+		#self.update()
+		QtWidgets.qApp.processEvents()
 
 	def slot_setDetectionParams(self, row, cellType):
 		"""Set detection parameters to presets.

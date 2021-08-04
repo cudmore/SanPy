@@ -33,7 +33,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.mySetTheme()
 
-		self._sweepNumber = 'All'
+		self._sweepNumber = None  # 'All'
 
 		self.dvdtLines = None
 		self.dvdtLinesFiltered = None
@@ -160,7 +160,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 	def sweepNumber(self):
 		return self._sweepNumber
 
-	def detect(self, dvdtThreshold, vmThreshold):
+	def detect(self, dvdtThreshold, mvThreshold):
 		"""
 		Detect spikes
 		"""
@@ -170,18 +170,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.updateStatusBar(str)
 			return
 
-		logger.info(f'Detecting with dvdtThreshold:{dvdtThreshold} vmThreshold:{vmThreshold}')
-
 		if self.ba.loadError:
 			logger.warning('Did not spike detect, the file was not loaded or may be corrupt .abf file?')
 			return
 
-		self.updateStatusBar(f'Detecting spikes dvdt:{dvdtThreshold} minVm:{vmThreshold}')
+		#logger.info(f'Detecting with dvdtThreshold:{dvdtThreshold} mvThreshold:{mvThreshold}')
+		self.updateStatusBar(f'Detecting spikes dvdt:{dvdtThreshold} minVm:{mvThreshold}')
 
 		# get default detection parammeters and tweek
 		detectionDict = sanpy.bAnalysis.getDefaultDetection()
 		detectionDict['dvdtThreshold'] = dvdtThreshold
-		detectionDict['mvThreshold'] = vmThreshold
+		detectionDict['mvThreshold'] = mvThreshold
 
 		# TODO: pass this function detection params and call from sanpy_app ???
 		# grab parameters from main interface table
@@ -197,11 +196,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 				detectionDict['peakWindow_ms'] = myDetectionDict['peakWindow_ms']
 
 			if myDetectionDict['halfWidthWindow_ms'] > 0:
-				# default is 50 ms
 				detectionDict['halfWidthWindow_ms'] = myDetectionDict['halfWidthWindow_ms']
+
 			if myDetectionDict['spikeClipWidth_ms'] > 0:
-				# default is 50 ms
 				detectionDict['spikeClipWidth_ms'] = myDetectionDict['spikeClipWidth_ms']
+
+			if myDetectionDict['onlyPeaksAbove_mV'] is not None:
+				detectionDict['onlyPeaksAbove_mV'] = myDetectionDict['onlyPeaksAbove_mV']
+
+			if myDetectionDict['onlyPeaksBelow_mV'] is not None:
+				detectionDict['onlyPeaksBelow_mV'] = myDetectionDict['onlyPeaksBelow_mV']
+
 			#
 			'''
 			if myDetectionDict['Start(s)'] >= 0:
@@ -222,7 +227,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# show dialog when num spikes is 0
 		'''
 		if self.ba.numSpikes == 0:
-			informativeText = f'dV/dt Threshold:{dvdtThreshold}\nVm Threshold (mV):{vmThreshold}'
+			informativeText = f'dV/dt Threshold:{dvdtThreshold}\nVm Threshold (mV):{mvThreshold}'
 			sanpy.interface.bDialog.okDialog('No Spikes Detected', informativeText=informativeText)
 		'''
 
@@ -481,7 +486,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#print ('  returning', len(x), len(y))
 		return x, y
 
-	def getHalfWidths(self):
+	def old_getHalfWidths(self):
 		"""Get x/y pair for plotting all half widths."""
 		# defer until we know how many half-widths 20/50/80
 		x = []
@@ -534,24 +539,30 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#
 		return x, y
 
-	def replot(self):
+	def replot(self, oneIndex=None):
 
 		if self.ba is None:
 			return
 
 		for idx, plot in enumerate(self.myPlots):
+			if oneIndex is not None and idx!=oneIndex:
+				continue
 			xPlot = []
 			yPlot = []
 			plotIsOn = plot['plotIsOn']
 			#  TODO: fix the logic here, we are not calling replot() when user toggles plot radio checkboxes
-			plotIsOn = True
+			#plotIsOn = True
 			if plotIsOn and plot['humanName'] == 'Half-Widths':
-				xPlot, yPlot = self.getHalfWidths()
+				spikeDictionaries = self.ba.getSpikeDictionaries(sweepNumber=self.sweepNumber)
+				sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
+				filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+				#filteredVm = filteredVm[:,0]
+				xPlot, yPlot = sanpy.getHalfWidthLines(sweepX, filteredVm, spikeDictionaries)
 			elif plotIsOn and plot['humanName'] == 'EDD':
 				xPlot, yPlot = self.getEDD()
 			elif plotIsOn and plot['humanName'] == 'EDD Rate':
-				xPlot, yPlot = sanpy.analysisPlot.getEddLines(self.ba)
-				#logger.info(f'EDD Rate {len(xPlot)} {len(yPlot)}')
+				#xPlot, yPlot = sanpy.analysisPlot.getEddLines(self.ba)
+				xPlot, yPlot = sanpy.getEddLines(self.ba)
 			elif plotIsOn:
 				xPlot, yPlot = self.ba.getStat(plot['x'], plot['y'], sweepNumber=self.sweepNumber)
 				if xPlot is not None and plot['convertx_tosec']:
@@ -559,13 +570,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 			#
 			# added connect='finite' to respect nan in half-width
 			# not sure how connect='finite' affect all other plots using scatter???
+			#print(f'{plot}')
+			#print('  ', xPlot, yPlot)
 			self.myPlotList[idx].setData(x=xPlot, y=yPlot)
-			self.togglePlot(idx, plot['plotIsOn'])
+			#self.togglePlot(idx, plot['plotIsOn'])
 
 		# update label with number of spikes detected
 		#print('todo: bDetectionWidget.replot(), make numSpikesLabel respond to signal/slot')
 		numSpikesStr = str(self.ba.numSpikes)
-		self.detectToolbarWidget.numSpikesLabel.setText('# Spikes: ' + numSpikesStr)
+		self.detectToolbarWidget.numSpikesLabel.setText('Spikes: ' + numSpikesStr)
 		self.detectToolbarWidget.numSpikesLabel.repaint()
 
 		# spike freq
@@ -573,7 +586,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		meanSpikeFreq = self.ba.getStatMean('spikeFreq_hz', sweepNumber=self.sweepNumber)
 		if meanSpikeFreq is not None:
 			meanSpikeFreq = round(meanSpikeFreq,2)
-		self.detectToolbarWidget.spikeFreqLabel.setText('Frequency: ' + str(meanSpikeFreq))
+		self.detectToolbarWidget.spikeFreqLabel.setText('Freq: ' + str(meanSpikeFreq))
 		self.detectToolbarWidget.spikeFreqLabel.repaint()
 
 		# num errors
@@ -584,8 +597,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 		"""
 		Toggle overlay of stats like spike peak.
 
-		idx: overlay index into self.myPlots
-		on: boolean
+		Arg:
+			idx (int): overlay index into self.myPlots
+			on (bool):
 		"""
 		# toggle the plot on/off
 		self.myPlots[idx]['plotIsOn'] = on
@@ -603,19 +617,28 @@ class bDetectionWidget(QtWidgets.QWidget):
 			# removed for half-width
 			#self.myPlotList[idx].setSize(0)
 
+		# always replot everything
+		self.replot(oneIndex=idx)
+
 	def selectSweep(self, sweepNumber):
 		"""
 		sweepNumber (str): from ('All', 0, 1, 2, 3, ...)
 		"""
-		logger.info(f'sweepNumber:"{sweepNumber}" {type(sweepNumber)}')
-		#self.ba.setSweep(sweepNumber)
 		if sweepNumber == '':
 			logger.error('')
+			return
 
 		if sweepNumber == 'All':
 			pass
 		else:
 			sweepNumber = int(sweepNumber)
+
+		logger.info(f'sweepNumber:"{sweepNumber}" {type(sweepNumber)}')
+
+		#if self._sweepNumber == sweepNumber:
+		#	logger.info(f'Already showing sweep:{sweepNumber}      RETURNING')
+		#	return
+
 		self._sweepNumber = sweepNumber
 		self._replot()
 		self.signalSelectSweep.emit(self.ba, sweepNumber)
@@ -660,9 +683,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.signalSelectSpike.emit(eDict)
 
 	def refreshClips(self, xMin=None, xMax=None):
-		logger.info('                    XXXXXXXXXXXXXXXXXXXXXXX')
+		#logger.info('                    XXXXXXXXXXXXXXXXXXXXXXX')
 
-		# always remove existing, if there are no clips and we bail we will at least clear display
+		if not self.clipPlot.isVisible():
+			# clips are not being displayed
+			logger.info('Clips not visible --- RETURNING')
+			return
+
+		# always remove existing
+		# if there are no clips and we bail we will at least clear display
 		self.clipPlot.clear()
 		'''
 		if self.clipLines is not None:
@@ -672,12 +701,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 		'''
 
 		if self.ba is None:
-			return
-
-		#if self.view.getItem(2,0) is None:
-		if not self.clipPlot.isVisible():
-			# clips are not being displayed
-			logger.info('Clips not visible --- ABORTING')
 			return
 
 		if self.ba.numSpikes == 0:
@@ -756,7 +779,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 				#self.myMainWindow.toggleErrorTable(on)
 				self.myMainWindow.preferencesSet('display', 'showErrors', on)
 		else:
-			# Toggle overlay of stats like (TOP, spike peak).
+			# Toggle overlay of stats like (TOP, spike peak, half-width, ...)
 			self.togglePlot(item, on) # assuming item is int !!!
 
 	def buildUI(self):
@@ -1087,7 +1110,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.selectSpike(None)
 
 		# set sweep to 0
-		self.selectSweep('All') # calls self._replot()
+		self.selectSweep(0) # calls self._replot()
 
 		# set full axis
 		#self.setAxisFull()
@@ -1096,6 +1119,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#self._replot()
 
 		return True
+
+	def slot_dataChanged(self, columnName, value, rowDict):
+		"""User has edited main file table."""
+		self.detectToolbarWidget.slot_dataChanged(columnName, value, rowDict)
 
 	def _replot(self):
 		#remove vm/dvdt/clip items (even when abf file is corrupt)
@@ -1440,15 +1467,15 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		logger.info(f'startSeconds:{startSeconds} stopSeconds:{stopSeconds}')
 
 		# in table we specify 'nan' but float spin box will not show that
-		if np.isnan(dvdtThreshold):
+		if math.isnan(dvdtThreshold):
 			dvdtThreshold = -1
 
 		self.dvdtThreshold.setValue(dvdtThreshold)
-		self.vmThreshold.setValue(mvThreshold)
+		self.mvThreshold.setValue(mvThreshold)
 
-		if np.isnan(startSeconds):
+		if math.isnan(startSeconds):
 			startSeconds = 0
-		if np.isnan(stopSeconds):
+		if math.isnan(stopSeconds):
 			#stopSeconds = self.detectionWidget.ba.sweepX[-1]
 			stopSeconds = self.detectionWidget.ba.recordingDur
 
@@ -1471,7 +1498,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			# we receive this as we rebuild xxx on switching file
 			#logger.error('Got empty sweep -- ABORTING')
 			return
-		#self.detectionWidget.ba.setSweep(sweepNumber)
+		logger.info(f'Calling selectSweep() {sweepNumber}')
 		self.detectionWidget.selectSweep(sweepNumber)
 
 	@QtCore.pyqtSlot()
@@ -1489,23 +1516,25 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		if name == 'Detect dV/dt':
 			dvdtThreshold = self.dvdtThreshold.value()
-			vmThreshold = self.vmThreshold.value()
+			#print(f'  dvdtThreshold:', dvdtThreshold, type(dvdtThreshold))
+			mvThreshold = self.mvThreshold.value()
 			#print('	dvdtThreshold:', dvdtThreshold)
-			#print('	vmThreshold:', vmThreshold)
-			if dvdtThreshold==-1:
+			#print('	mvThreshold:', mvThreshold)
+			if dvdtThreshold==0:
+				# 0 is special value shown as 'None'
 				str = 'Please set a threshold greater than 0'
 				self.detectionWidget.updateStatusBar(str)
 				return
-			self.detectionWidget.detect(dvdtThreshold, vmThreshold)
+			self.detectionWidget.detect(dvdtThreshold, mvThreshold)
 
 		elif name =='Detect mV':
-			vmThreshold = self.vmThreshold.value()
-			#print('	vmThreshold:', vmThreshold)
-			# passing dvdtThreshold=None we will detect suing vmThreshold
+			mvThreshold = self.mvThreshold.value()
+			#print('	mvThreshold:', mvThreshold)
+			# passing dvdtThreshold=None we will detect suing mvThreshold
 			dvdtThreshold = None
 			#print('	dvdtThreshold:', dvdtThreshold)
-			#print('	vmThreshold:', vmThreshold)
-			self.detectionWidget.detect(dvdtThreshold, vmThreshold)
+			#print('	mvThreshold:', mvThreshold)
+			self.detectionWidget.detect(dvdtThreshold, mvThreshold)
 
 		elif name == 'Reset All Axes':
 			self.detectionWidget.setAxisFull()
@@ -1608,9 +1637,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)
 
 		self.dvdtThreshold = QtWidgets.QDoubleSpinBox()
-		self.dvdtThreshold.setMinimum(-1e6)
+		self.dvdtThreshold.setMinimum(0)
 		self.dvdtThreshold.setMaximum(+1e6)
 		self.dvdtThreshold.setValue(detectDvDt)
+		self.dvdtThreshold.setSpecialValueText("None")
 		#self.dvdtThreshold.setValue(np.nan)
 		detectionGridLayout.addWidget(self.dvdtThreshold, row, 2, rowSpan, columnSpan)
 
@@ -1624,42 +1654,71 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)
 
 		# Vm Threshold (mV)
-		#vmThresholdLabel = QtWidgets.QLabel('Vm Threshold (mV)')
-		#self.addWidget(vmThresholdLabel, row, 1)
+		#mvThresholdLabel = QtWidgets.QLabel('Vm Threshold (mV)')
+		#self.addWidget(mvThresholdLabel, row, 1)
 
 		#row += 1
-		self.vmThreshold = QtWidgets.QDoubleSpinBox()
-		self.vmThreshold.setMinimum(-1e6)
-		self.vmThreshold.setMaximum(+1e6)
-		self.vmThreshold.setValue(detectMv)
-		detectionGridLayout.addWidget(self.vmThreshold, row, 2, rowSpan, columnSpan)
+		self.mvThreshold = QtWidgets.QDoubleSpinBox()
+		self.mvThreshold.setMinimum(-1e6)
+		self.mvThreshold.setMaximum(+1e6)
+		self.mvThreshold.setValue(detectMv)
+		detectionGridLayout.addWidget(self.mvThreshold, row, 2, rowSpan, columnSpan)
 
-		tmpRowSpan = 1
-		tmpColSpan = 2
-
-		# always the last row
-		# todo: move this to status after detect
-		'''
+		#tmpRowSpan = 1
+		#tmpColSpan = 2
 		row += 1
-		self.numSpikesLabel = QtWidgets.QLabel('Number of Spikes: None')
-		#self.numSpikesLabel.setObjectName('numSpikesLabel')
-		detectionGridLayout.addWidget(self.numSpikesLabel, row, 0, tmpRowSpan, tmpColSpan)
-		'''
+		startSeconds = QtWidgets.QLabel('From (Sec)')
+		detectionGridLayout.addWidget(startSeconds, row, 0)
+		#
+		self.startSeconds = QtWidgets.QDoubleSpinBox()
+		self.startSeconds.setMinimum(-1e6)
+		self.startSeconds.setMaximum(+1e6)
+		self.startSeconds.setKeyboardTracking(False)
+		self.startSeconds.setValue(0)
+		#self.startSeconds.valueChanged.connect(self.on_start_stop)
+		self.startSeconds.editingFinished.connect(self.on_start_stop)
+		detectionGridLayout.addWidget(self.startSeconds, row, 1)
+		#
+		stopSeconds = QtWidgets.QLabel('To (Sec)')
+		detectionGridLayout.addWidget(stopSeconds, row, 2)
 
-		# todo: move this to status after detect
-		'''
-		self.spikeFreqLabel = QtWidgets.QLabel('Frequency: None')
-		detectionGridLayout.addWidget(self.spikeFreqLabel, row, 2, tmpRowSpan, tmpColSpan)
-		'''
+		self.stopSeconds = QtWidgets.QDoubleSpinBox()
+		self.stopSeconds.setMinimum(-1e6)
+		self.stopSeconds.setMaximum(+1e6)
+		self.stopSeconds.setKeyboardTracking(False)
+		self.stopSeconds.setValue(0)
+		#self.stopSeconds.valueChanged.connect(self.on_start_stop)
+		self.stopSeconds.editingFinished.connect(self.on_start_stop)
+		detectionGridLayout.addWidget(self.stopSeconds, row, 3)
 
-
-		'''
-		hBoxSpikeBrowser = self.buildSpikeBrowser()
 		row += 1
-		rowSpan = 1
-		columnSpan = 4
-		detectionGridLayout.addLayout(hBoxSpikeBrowser, row, 0, rowSpan, columnSpan)
-		'''
+		tmpHLayout = QtWidgets.QHBoxLayout(self)
+
+		self.numSpikesLabel = QtWidgets.QLabel('Spikes: None')
+		tmpHLayout.addWidget(self.numSpikesLabel)
+		#detectionGridLayout.addWidget(self.numSpikesLabel, row, 0, tmpRowSpan, tmpColSpan)
+
+		self.spikeFreqLabel = QtWidgets.QLabel('Freq: None')
+		tmpHLayout.addWidget(self.spikeFreqLabel)
+		#detectionGridLayout.addWidget(self.spikeFreqLabel, row, 1, tmpRowSpan, tmpColSpan)
+
+		self.numErrorsLabel = QtWidgets.QLabel('Errors: None')
+		tmpHLayout.addWidget(self.numErrorsLabel)
+		#detectionGridLayout.addWidget(self.numErrorsLabel, row, 2, tmpRowSpan, tmpColSpan)
+		col = 0
+		rowSpan=1
+		colSpan = 4
+		detectionGridLayout.addLayout(tmpHLayout, row, col, rowSpan, colSpan)
+
+		row += 1
+		buttonName = 'Save Spike Report'
+		button = QtWidgets.QPushButton(buttonName)
+		button.setToolTip('Save Detected Spikes to Excel file')
+		button.setStyleSheet("background-color: green")
+		button.clicked.connect(partial(self.on_button_click,buttonName))
+		rowSpan=1
+		colSpan = 4
+		detectionGridLayout.addWidget(button, row , 0, rowSpan, colSpan)
 
 		# finalize
 		detectionGroupBox.setLayout(detectionGridLayout)
@@ -1668,6 +1727,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		#
 		# save with range
 		#
+		# got rid of save group
+		'''
 		saveGroupBox = QtWidgets.QGroupBox('Save')
 		saveGroupBox.setStyleSheet(myStyleSheet)
 
@@ -1688,7 +1749,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		startSeconds = QtWidgets.QLabel('From (Sec)')
 		saveGridLayout.addWidget(startSeconds, row, 0)
 		#
-		#row += 1
 		self.startSeconds = QtWidgets.QDoubleSpinBox()
 		self.startSeconds.setMinimum(-1e6)
 		self.startSeconds.setMaximum(+1e6)
@@ -1713,9 +1773,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		# final
 		saveGroupBox.setLayout(saveGridLayout)
 		self.mainLayout.addWidget(saveGroupBox)
+		'''
 
 		#
-		# display  group
+		# display group
 		displayGroupBox = QtWidgets.QGroupBox('Display')
 		displayGroupBox.setStyleSheet(myStyleSheet)
 
@@ -1838,6 +1899,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		#
 		# selected spike info
+		# move into detectioin group box
+		'''
 		spikeGroupBox = QtWidgets.QGroupBox('Spikes')
 		spikeGroupBox.setStyleSheet(myStyleSheet)
 		spikeGridLayout = QtWidgets.QGridLayout()
@@ -1857,10 +1920,13 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		# finalize
 		spikeGroupBox.setLayout(spikeGridLayout)
 		self.mainLayout.addWidget(spikeGroupBox)
-
+		'''
 	def buildSpikeBrowser(self):
 		"""Build interface to go to spike number, previous <<, and next >>"""
 		hBoxSpikeBrowser = QtWidgets.QHBoxLayout()
+
+		aLabel = QtWidgets.QLabel('Spike')
+		hBoxSpikeBrowser.addWidget(aLabel)
 
 		# spike number
 		self.spikeNumber = QtWidgets.QSpinBox()
@@ -1912,11 +1978,65 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		file = rowDict['File']
 		self.mySelectedFileLabel.setText(file)
 
-		#self.updateStatusBar(f'Loading file {path}')
+		# block signals as we update
+		self.sweepComboBox.blockSignals(True)
+		#
+
+		# populate sweep combo box
 		self.sweepComboBox.clear()
 		self.sweepComboBox.addItem('All')
 		for sweep in range(self.detectionWidget.ba.numSweeps):
 			self.sweepComboBox.addItem(str(sweep))
+		if self.detectionWidget.ba.numSweeps == 1:
+			# select sweep 0
+			self.sweepComboBox.setCurrentIndex(1)
+
+		# turn off sweep ccombo box if just one sweep
+		if self.detectionWidget.ba.numSweeps == 1:
+			self.sweepComboBox.setEnabled(False)
+		else:
+			self.sweepComboBox.setEnabled(True)
+
+		#
+		self.sweepComboBox.blockSignals(False)
+		#
+
+	def slot_dataChanged(self, columnName, value, rowDict):
+		"""User has edited main file table.
+		Update detection widget for columns (Start(s), Stop(s), dvdtThreshold, mvThreshold)
+		"""
+		logger.info(f'{columnName} {value} {type(value)}')
+
+		#for k,v in rowDict.items():
+		#	print(f'  {k}:"{v}" {type(v)}')
+
+		if columnName is not None:
+			# user has made a change in one cell
+			if columnName == 'dvdtThreshold':
+				if value is None or math.isnan(value):
+					value = -1
+				self.dvdtThreshold.setValue(value)
+			elif columnName == 'mvThreshold':
+				self.mvThreshold.setValue(value)
+			elif columnName == 'Start(s)' and not math.isnan(value):
+				self.startSeconds.setValue(value)
+			elif columnName == 'Stop(s)' and not math.isnan(value):
+				self.stopSeconds.setValue(value)
+		else:
+			# entire row has updated
+			dvdtThreshold = rowDict['dvdtThreshold']
+			# I really need to make 'no value' np.nan
+			if dvdtThreshold is None or math.isnan(dvdtThreshold):
+				dvdtThreshold = 0  # 0 corresponds to 'None'
+			self.dvdtThreshold.setValue(dvdtThreshold)
+			mvThreshold = rowDict['mvThreshold']
+			self.mvThreshold.setValue(mvThreshold)
+			startSeconds = rowDict['Start(s)']
+			if not math.isnan(startSeconds):
+				self.startSeconds.setValue(startSeconds)
+			stopSeconds = rowDict['Stop(s)']
+			if not math.isnan(stopSeconds):
+				self.stopSeconds.setValue(stopSeconds)
 
 if __name__ == '__main__':
 	# load a bAnalysis file

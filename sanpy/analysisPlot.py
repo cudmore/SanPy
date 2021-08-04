@@ -13,7 +13,7 @@ import sanpy
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def getEddLines(ba):
+def old_getEddLines(ba):
 	"""Get lines representing linear fit of EDD rate.
 
 	Args:
@@ -41,7 +41,7 @@ def getEddLines(ba):
 		dx = preLinearFitSec1[idx] - preLinearFitSec0[idx]
 		dy = preLinearFitVal1[idx] - preLinearFitVal0[idx]
 
-		lineLength = 4  # TODO: make this a function of spike frequency?
+		lineLength = 8  # TODO: make this a function of spike frequency?
 
 		x.append(preLinearFitSec0[idx])
 		x.append(preLinearFitSec1[idx] + lineLength*dx)
@@ -51,9 +51,11 @@ def getEddLines(ba):
 		y.append(preLinearFitVal1[idx] + lineLength*dy)
 		y.append(np.nan)
 
+		print('here')
+
 	return x, y
 
-def getHalfWidths(ba):
+def old_getHalfWidths(ba):
 	"""Get lines representing half-widhts (AP Dur).
 
 	Args:

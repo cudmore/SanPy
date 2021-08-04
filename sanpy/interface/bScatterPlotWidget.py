@@ -175,7 +175,7 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 				self.lastSpikeNumber = spikeNumber
 
 				offsets = self.metaLine.get_offsets()
-				print('offsets:', offsets)
+				#print('offsets:', offsets)
 				xData = offsets[spikeNumber][0]
 				yData = offsets[spikeNumber][1]
 				#print('   xData:', xData, 'yData:', yData)
@@ -312,21 +312,23 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		self.repaint() # this is updating the widget !!!!!!!!
 
 	def slot_setXAxis(self, xMinMaxList):
-		#print('bScatterPlotWidget.slotSetXAxis() xMinMaxList:', xMinMaxList)
-		self.selectXRange(xMinMaxList[0], xMinMaxList[1])
+		if self.isVisible():
+			self.selectXRange(xMinMaxList[0], xMinMaxList[1])
 
 	def slotSelectSpike(self, eDict):
-		#print('bScatterPlotWidget.slotSelectSpike() eDict:', eDict)
-		spikeNumber = eDict['spikeNumber']
-		self.selectSpike(spikeNumber)
+		if self.isVisible():
+			spikeNumber = eDict['spikeNumber']
+			self.selectSpike(spikeNumber)
 
 	def slot_selectSweep(self, ba, sweepNumber):
-		self._sweepNumber = sweepNumber
-		self.replot()
+		if self.isVisible():
+			self._sweepNumber = sweepNumber
+			self.replot()
 
 	def slot_updateAnalysis(self, ba):
-		# sweepNumber does not change
-		self.replot()
+		if self.isVisible():
+			# sweepNumber does not change
+			self.replot()
 
 # todo: not used
 #class MyMplCanvas(backend_qt5agg.FigureCanvas):

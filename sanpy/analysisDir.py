@@ -104,6 +104,14 @@ _sanpyColumns = {
 		'type': float,
 		'isEditable': True,
 	},
+	'onlyPeaksAbove_mV': {
+		'type': float,
+		'isEditable': True,
+	},
+	'onlyPeaksBelow_mV': {
+		'type': float,
+		'isEditable': True,
+	},
 	'Notes': {
 		'type': str,
 		'isEditable': True,
@@ -207,7 +215,9 @@ class analysisDir():
 	"""
 	sanpyColumns = _sanpyColumns
 
-	theseFileTypes = ['.abf', '.csv']
+	# abb 20210803
+	#theseFileTypes = ['.abf', '.csv']
+	theseFileTypes = ['.abf']
 	"""File types to load"""
 
 	def __init__(self, path=None, myApp=None, autoLoad=True):
@@ -763,8 +773,8 @@ class analysisDir():
 		else:
 			# load from path
 			ba = sanpy.bAnalysis(path)
-			logger.info(f'Loaded from path {path}')
-			logger.info(f'    {ba}')
+			#logger.info(f'Loaded from path {path}')
+			logger.info(f'  Loaded: {ba}')
 		return ba
 
 	def _setColumnType(self, df):
@@ -842,7 +852,7 @@ class analysisDir():
 		rowDict['File'] = ba.getFileName() #os.path.split(ba.path)[1]
 		rowDict['Dur(s)'] = ba.recordingDur
 		rowDict['kHz'] = ba.recordingFrequency
-		rowDict['Mode'] = 'fix'
+		rowDict['Mode'] = ba.recordingMode
 
 		rowDict['dvdtThreshold'] = 20
 		rowDict['mvThreshold'] = -20

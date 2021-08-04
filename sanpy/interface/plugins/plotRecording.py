@@ -27,8 +27,8 @@ class plotRecording(sanpyPlugin):
 
 		self.mplWindow() # assigns (self.fig, self.ax)
 
-		sweepX = self.ba.sweepX
-		sweepY = self.ba.filteredVm  # sweepY
+		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
+		sweepY = self.ba.filteredVm(sweepNumber=self.sweepNumber)  # sweepY
 		# comma is critical
 		self.line, = self.ax.plot(sweepX, sweepY, '-', linewidth=0.5)
 
@@ -41,7 +41,6 @@ class plotRecording(sanpyPlugin):
 			self.lineDetection, = self.ax.plot(thresholdSec, thresholdVal, 'or')
 
 		peakSec = self.ba.getStat('peakSec')
-		#peakSec = [self.ba.pnt2Sec_(x) for x in peakPnt] # convert pnt to sec
 		peakVal = self.ba.getStat('peakVal')
 		if peakSec is None and peakVal is None:
 			self.linePeak, = self.ax.plot([], [], 'o')
@@ -94,8 +93,8 @@ class plotRecording(sanpyPlugin):
 		"""
 		logger.info('')
 
-		sweepX = self.ba.sweepX
-		sweepY = self.ba.sweepY
+		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
+		sweepY = self.ba.sweepY(sweepNumber=self.sweepNumber)
 		self.line.set_data(sweepX, sweepY)
 
 		thresholdSec = self.ba.getStat('thresholdSec')
@@ -120,19 +119,27 @@ class plotRecording(sanpyPlugin):
 
 		x = []
 		y = []
-		for idx, spike in enumerate(range(self.ba.numSpikes)):
-			dx = preLinearFitSec1[idx] - preLinearFitSec0[idx]
-			dy = preLinearFitVal1[idx] - preLinearFitVal0[idx]
+		for idx in range(self.ba.numSpikes):
+			try:
+				dx = preLinearFitSec1[idx] - preLinearFitSec0[idx]
+				dy = preLinearFitVal1[idx] - preLinearFitVal0[idx]
+			except (IndexError) as e:
+				logger.error(f'spike {idx} preLinearFitSec1:{len(preLinearFitSec1)} preLinearFitSec0:{len(preLinearFitSec0)}')
+				logger.error(f'spike {idx} preLinearFitPnt1:{len(preLinearFitPnt1)} preLinearFitPnt0:{len(preLinearFitPnt0)}')
 
 			lineLength = 4  # TODO: make this a function of spike frequency?
 
-			x.append(preLinearFitSec0[idx])
-			x.append(preLinearFitSec1[idx] + lineLength*dx)
-			x.append(np.nan)
+			try:
+				x.append(preLinearFitSec0[idx])
+				x.append(preLinearFitSec1[idx] + lineLength*dx)
+				x.append(np.nan)
 
-			y.append(preLinearFitVal0[idx])
-			y.append(preLinearFitVal1[idx] + lineLength*dy)
-			y.append(np.nan)
+				y.append(preLinearFitVal0[idx])
+				y.append(preLinearFitVal1[idx] + lineLength*dy)
+				y.append(np.nan)
+			except (IndexError) as e:
+				logger.error(f'preLinearFitSec0:{len(preLinearFitSec0)} preLinearFitSec1:{len(preLinearFitSec1)}')
+				logger.error(e)
 
 		return x, y
 

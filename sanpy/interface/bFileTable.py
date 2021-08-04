@@ -160,6 +160,10 @@ class myTableView(QtWidgets.QTableView):
 
 
 class pandasModel(QtCore.QAbstractTableModel):
+
+	signalMyDataChanged = QtCore.pyqtSignal(object, object, object)
+	"""Emit on user editing a cell."""
+
 	def __init__(self, data):
 		"""
 		Data model for a pandas dataframe or sanpy.analysisDir.
@@ -206,7 +210,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 				except (KeyError):
 					pass
 				return toolTip
-			elif role == QtCore.Qt.DisplayRole:
+			elif role in [QtCore.Qt.DisplayRole, QtCore.Qt.EditRole]:
 				columnName = self._data.columns[index.column()]
 				if self.isAnalysisDir and columnName == 'I':
 					return ''
@@ -324,6 +328,10 @@ class pandasModel(QtCore.QAbstractTableModel):
 				logger.info(f'New value for column "{columnName}" is "{value}" {type(value)}')
 				self._data.loc[realRow, columnName] = value
 				#self._data.iloc[rowIdx, columnIdx] = value
+
+				# emit change
+				emitRowDict = self.myGetRowDict(realRow)
+				self.signalMyDataChanged.emit(columnName, value, emitRowDict)
 
 				self.isDirty = True
 				return True
@@ -563,23 +571,29 @@ class pandasModel(QtCore.QAbstractTableModel):
 			self.dataChanged.emit(indexStart, indexStop)
 
 	def mySetDetectionParams(self, rowIdx, cellType):
-		# get existing row
-		print(self._data._df['_ba'])
+		"""Set predefined detection paramers.
+		For example: SA Node, Neuron, Subthreshold, etc
+		"""
+		logger.info(f'rowIdx:{rowIdx} cellType:{cellType}')
 		rowDict = self.myGetRowDict(rowIdx)
-		print('[1] rowDict:', rowDict)
+		#print('  [1] rowDict:', rowDict)
 		# get defaults
 		dDict = sanpy.bAnalysis.getDefaultDetection(cellType=cellType)
 		for k,v in dDict.items():
 			if k in rowDict.keys():
 				rowDict[k] = v
-		print('[2] rowDict:', rowDict)
+		#print('  [2] rowDict:', rowDict)
 		self.mySetRow(rowIdx, rowDict)
-		print(self._data._df['_ba'])
+		#print(self._data._df['_ba'])
 
 		# signal data change
 		indexStart = self.createIndex(rowIdx, 0)
 		indexStop = self.createIndex(rowIdx+1, 0)
 		self.dataChanged.emit(indexStart, indexStop)
+
+		# detection widget needs to update (dvdtThreshold, mVThreshold, ...)
+		#emitRowDict = self.myGetRowDict(rowIdx)
+		self.signalMyDataChanged.emit(None, None, rowDict)
 
 	'''
 	def mySetColumns(self, columnsDict):

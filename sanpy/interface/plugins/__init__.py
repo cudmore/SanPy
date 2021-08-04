@@ -16,3 +16,8 @@ from .spikeClips import spikeClips
 from .resultsTable import resultsTable
 from .analysisSummary import analysisSummary
 from .exportTrace import exportTrace
+
+from .fftPlugin import fftPlugin
+
+# TODO: make this just one line, so user can drop a bplugin inn and restart
+from . import *

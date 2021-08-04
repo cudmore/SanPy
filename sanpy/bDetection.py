@@ -77,7 +77,17 @@ def getDefaultDetection():
 	theDict[key]['units'] = 'mV'
 	theDict[key]['humanName'] = 'Accept Peaks Above (mV)'
 	theDict[key]['errors'] = ('')
-	theDict[key]['description'] = 'For dV/dt detection, only accept APs above this value (mV)'
+	theDict[key]['description'] = 'Only accept APs with peaks above this value (mV)'
+
+	key = 'onlyPeaksBelow_mV'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = None
+	theDict[key]['type'] = 'number'
+	theDict[key]['allowNone'] = False
+	theDict[key]['units'] = 'mV'
+	theDict[key]['humanName'] = 'Accept Peaks Below (mV)'
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'Only accept APs below this value (mV)'
 
 	key = 'doBackupSpikeVm'
 	theDict[key] = {}
