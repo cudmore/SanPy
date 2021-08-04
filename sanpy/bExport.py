@@ -204,7 +204,7 @@ class bExport():
 
 		#headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
 		#headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
-		headerDict['Sweep Number'] = [self.ba.currentSweep]
+		headerDict['Sweep Number'] = ['Default 0']  # [self.ba.currentSweep]
 		headerDict['Number of Sweeps'] = [self.ba.numSweeps]
 		headerDict['Export Start (sec)'] = [float('%.2f'%(theMin))] # on export, x-axis of raw plot will be ouput
 		headerDict['Export Stop (sec)'] = [float('%.2f'%(theMax))] # on export, x-axis of raw plot will be ouput

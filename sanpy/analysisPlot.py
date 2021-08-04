@@ -51,7 +51,7 @@ def old_getEddLines(ba):
 		y.append(preLinearFitVal1[idx] + lineLength*dy)
 		y.append(np.nan)
 
-		print('here')
+		#print('here')
 
 	return x, y
 
