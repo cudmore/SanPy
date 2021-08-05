@@ -477,7 +477,10 @@ class myStatPlotToolbarWidget(QtWidgets.QWidget):
 			return
 		yStat = self.myTableWidget.item(row,0).text() #
 		#print('=== myStatPlotToolbarWidget.on_scatter_toolbar_table_click', row, yStat)
-		self.myParent.metaPlotStat(yStat)
+
+		# where did this go?
+		#self.myParent.metaPlotStat(yStat)
+		self.myParent.replot(yStat)
 
 	@QtCore.pyqtSlot()
 	def on_button_click(self, name):

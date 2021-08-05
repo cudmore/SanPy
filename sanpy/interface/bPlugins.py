@@ -204,7 +204,7 @@ class bPlugins():
 			Need to disconnect signal/slot using _disconnectSignalSlot().
 			Mostly connections to main SanPy app signals
 		"""
-		logger.info(pluginObj)
+		#logger.info(pluginObj)
 		try:
 			logger.info(f'Removing plugin from _openSet: {pluginObj}')
 			# Critical to detatch signal/slot, removing from set does not seem to do this?

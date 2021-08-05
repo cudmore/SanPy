@@ -83,9 +83,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		# todo: update this with selected folder
 		if path is not None and os.path.isdir(path):
 			windowTitle = f'SanPy {path}'
-		#elif csvPath is not None:
-		#	csvName = os.path.split(csvPath)[1]
-		#	windowTitle = f'SanPy {csvName}'
 		else:
 			windowTitle = 'SanPy'
 		self.setWindowTitle(windowTitle)
@@ -244,6 +241,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			# needed when we call loadFolder from __init__
 			# logger.warning('OK: no tableView during load folder')
 			pass
+
+		# set window title
+		if self.path is not None and os.path.isdir(self.path):
+			windowTitle = f'SanPy: {self.path}'
+		else:
+			windowTitle = 'SanPy'
+		self.setWindowTitle(windowTitle)
 
 	'''
 	def slot_dataChanged(self, columnName, value, rowDict):

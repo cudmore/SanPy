@@ -23,6 +23,8 @@ class detectionErrors(sanpyPlugin):
 
 		self.pyqtWindow() # makes self.mainWidget
 
+		self._dfError = None
+
 		layout = QtWidgets.QVBoxLayout()
 		self.myErrorTable = sanpy.interface.bErrorTable.errorTableView()
 		layout.addWidget(self.myErrorTable)
@@ -39,15 +41,23 @@ class detectionErrors(sanpyPlugin):
 	def replot(self):
 		# update
 		# todo: get default columns from ???
-		dfError = pd.DataFrame(columns=['Spike', 'Seconds', 'Type', 'Details'])
+		self._dfError = pd.DataFrame(columns=['Spike', 'Seconds', 'Type', 'Details'])
 
 		ba = self.getSanPyApp().get_bAnalysis()
 		if ba is not None:
 			if ba.dfError is not None:
-				dfError = ba.dfError
+				self._dfError = ba.dfError
 		#
-		errorReportModel = sanpy.interface.bFileTable.pandasModel(dfError)
-		self.myErrorTable.setModel(errorReportModel)
+		if self._dfError is not None:
+			errorReportModel = sanpy.interface.bFileTable.pandasModel(self._dfError)
+			self.myErrorTable.setModel(errorReportModel)
+		else:
+			logger.error('Did not get error df from bAnalysis')
+
+	def copyToClipboard(self):
+		if self._dfError is not None:
+			self._dfError.to_clipboard(sep='\t', index=False)
+			logger.info('Error table copied to clipboard')
 
 if __name__ == '__main__':
 	import sys

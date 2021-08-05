@@ -282,7 +282,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		excelFileName = os.path.join(filePath, fileBaseName)
 
 		#print('Asking user for file name to save...')
-		savefile, tmp = QtGui.QFileDialog.getSaveFileName(self, 'Save File', excelFileName)
+		#savefile, tmp = QtGui.QFileDialog.getSaveFileName(self, 'Save File', excelFileName)
+		savefile, tmp = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', excelFileName)
 
 		if len(savefile) > 0:
 			logger.info(f'savefile: {savefile}')
@@ -907,6 +908,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# axis labels
 		self.derivPlot.getAxis('left').setLabel('dV/dt (mV/ms)')
+
+		# although called vmPlot, this does double time for current-cclamp and voltage clamp
+		# todo: rename to reccordingPlot
 		self.vmPlot.getAxis('left').setLabel('Vm (mV)')
 		self.vmPlot.getAxis('bottom').setLabel('Seconds')
 
@@ -1087,10 +1091,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		Returns: True/False
 		"""
 
-		# load abAnalysis object from file
+		# bAnalysis object
 		self.ba = ba
-		#else:
-		#	self.ba = sanpy.bAnalysis(file=path) # loads abf file
 
 		self.detectToolbarWidget.slot_selectFile(tableRowDict)
 
@@ -1117,6 +1119,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# abb implement sweep, move to function()
 		#self._replot()
+
+		yLabel = self.ba._sweepLabelY
+		self.derivPlot.getAxis('left').setLabel('d/dt')
+		self.vmPlot.getAxis('left').setLabel(yLabel)
+		self.vmPlot.getAxis('bottom').setLabel('Seconds')
 
 		return True
 

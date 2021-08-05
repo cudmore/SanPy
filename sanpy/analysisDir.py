@@ -607,6 +607,7 @@ class analysisDir():
 		else:
 			# get list of all abf/csv/tif
 			fileList = self.getFileList(path)
+			start = time.time()
 			# build new db dataframe
 			listOfDict = []
 			for rowIdx, file in enumerate(fileList):
@@ -616,7 +617,7 @@ class analysisDir():
 				ba, rowDict = self.getFileRow(file)  # loads bAnalysis
 
 				# TODO: calculating time, remove this
-				# This is 2x faster than loading frmo pandas gzip ???
+				# This is 2x faster than loading from pandas gzip ???
 				#dDict = sanpy.bAnalysis.getDefaultDetection()
 				#dDict['dvdtThreshold'] = 2
 				#ba.spikeDetect(dDict)
@@ -632,6 +633,9 @@ class analysisDir():
 				if testTimingNumFiles is not None and rowIdx>testTimingNumFiles-1:
 					logger.warning(f'Breaking after testTimingNumFiles:{testTimingNumFiles}')
 					break
+			stop = time.time()
+			logger.info(f'Load took {round(stop-start,3)} seconds.')
+
 			#
 			df = pd.DataFrame(listOfDict)
 			#print('=== built new db df:')
@@ -830,7 +834,7 @@ class analysisDir():
 
 		# load bAnalysis
 		logger.info(f'Loading bAnalysis "{path}"')
-		ba = sanpy.bAnalysis(path)
+		ba = sanpy.bAnalysis(path, loadData=False)
 
 		if ba.loadError:
 			logger.error(f'Error loading bAnalysis file "{path}"')

@@ -25,11 +25,11 @@ from sanpy.interface.plugins import sanpyPlugin
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def butter_lowpass_sos(cutoff, fs, order=5):
+def butter_lowpass_sos(cutOff, fs, order=5):
 	nyq = 0.5 * fs
-	normal_cutoff = cutoff / nyq
+	normal_cutoff = cutOff / nyq
 	#sos = butter(order, normal_cutoff, btype='low', analog=False, output='sos')
-	sos = butter(order, cutoff, fs=fs, btype='lowpass', analog=False, output='sos')
+	sos = butter(order, cutOff, fs=fs, btype='lowpass', analog=False, output='sos')
 	return sos
 
 def spikeDetect(t, dataFiltered, dataThreshold2, startPoint=None, stopPoint=None):
@@ -404,20 +404,24 @@ class fftPlugin(sanpyPlugin):
 		"""
 		super(fftPlugin, self).__init__(**kwargs)
 
+		self._isInited = False
+
 		# only defined when running without SanPy app
 		self._analysisDir = myAnalysisDir
 
+		self._store_ba = None  # allow switching between model and self.ba
+
 		self.fs = self.ba.recordingFrequency * 1000
 		# rebuild filter based on loaded fs
-		self.cutoff = 20  # 20, cutoff of filter (Hz)
+		self.cutOff = 50 #20  # 20, cutOff of filter (Hz)
 		self.order = 50 # 40  # order of filter
-		self.sos = butter_lowpass_sos(self.cutoff, self.fs, self.order)
+		self.sos = butter_lowpass_sos(self.cutOff, self.fs, self.order)
 
 
 		self.signalHz = None  # assign when using fake data
-		self.xPlotHz = self.cutoff + 7  # limit x-axis frequenccy
+		self.xPlotHz = self.cutOff + 7  # limit x-axis frequenccy
 
-		self.sos = None
+		#self.sos = None
 
 		self.lastLeft = None
 		self.lastRight = None
@@ -428,27 +432,24 @@ class fftPlugin(sanpyPlugin):
 
 		self._buildInterface()
 
-		#self.spikeSeconds = None
-		#self.spikePoints = None
-		#self.backupSpikes = None  # points
-		#self.peakPoints = None
-		#self.peakVals = None
-		#self.fallingPoints = None
-
 		self._getPsd()
 
 		self.dataLine = None
 		self.dataFilteredLine = None
 		self.spikesLine = None
 		self.peaksLine = None
-		#self.fallingLine = None
 		self.dataMeanLine = None
 		self.thresholdLine2 = None
 		self.thresholdLine3 = None
 
-		self.replot2(firstPlot=True)
-		#self.replotData(firstPlot=True)
+
+		self.getMean()
+		self.plot()  # first plot of data
+		self.replot2(switchFile=True)
 		#self.replotPsd()
+		#self.replot_fft()
+
+		self._isInited = True
 
 	@property
 	def ba(self):
@@ -465,29 +466,53 @@ class fftPlugin(sanpyPlugin):
 		#aLabel = QtWidgets.QLabel('fft')
 		#self.controlLayout.addWidget(aLabel)
 
+		'''
 		buttonName = 'Detect'
 		aButton = QtWidgets.QPushButton(buttonName)
 		aButton.clicked.connect(partial(self.on_button_click,buttonName))
 		self.controlLayout.addWidget(aButton)
+		'''
 
+		'''
 		aLabel = QtWidgets.QLabel('mV Threshold')
 		self.controlLayout.addWidget(aLabel)
 
 		self.mvThresholdSpinBox = QtWidgets.QDoubleSpinBox()
 		self.mvThresholdSpinBox.setRange(-1e9, 1e9)
 		self.controlLayout.addWidget(self.mvThresholdSpinBox)
+		'''
 
+		'''
 		checkboxName = 'PSD'
 		aCheckBox = QtWidgets.QCheckBox(checkboxName)
 		aCheckBox.setChecked(True)
 		aCheckBox.stateChanged.connect(partial(self.on_checkbox_clicked, checkboxName))
 		self.controlLayout.addWidget(aCheckBox)
+		'''
 
+		'''
 		checkboxName = 'Auto-Correlation'
 		aCheckBox = QtWidgets.QCheckBox(checkboxName)
 		aCheckBox.setChecked(True)
 		aCheckBox.stateChanged.connect(partial(self.on_checkbox_clicked, checkboxName))
 		self.controlLayout.addWidget(aCheckBox)
+		'''
+
+		aLabel = QtWidgets.QLabel('Cutoff (Hz)')
+		self.controlLayout.addWidget(aLabel)
+		self.cutOffSpinBox = QtWidgets.QDoubleSpinBox()
+		self.cutOffSpinBox.setRange(-1e9, 1e9)
+		self.cutOffSpinBox.setValue(self.cutOff)
+		self.cutOffSpinBox.editingFinished.connect(partial(self.on_cutoff_spinbox, aLabel))
+		self.controlLayout.addWidget(self.cutOffSpinBox)
+
+		aLabel = QtWidgets.QLabel('Order')
+		self.controlLayout.addWidget(aLabel)
+		self.orderSpinBox = QtWidgets.QDoubleSpinBox()
+		self.orderSpinBox.setRange(-1e9, 1e9)
+		self.orderSpinBox.setValue(self.order)
+		self.orderSpinBox.editingFinished.connect(partial(self.on_cutoff_spinbox, aLabel))
+		self.controlLayout.addWidget(self.orderSpinBox)
 
 		buttonName = 'Filter Response'
 		aButton = QtWidgets.QPushButton(buttonName)
@@ -513,6 +538,19 @@ class fftPlugin(sanpyPlugin):
 		self.modelDataCheckBox.stateChanged.connect(partial(self.on_checkbox_clicked, checkboxName))
 		controlLayout_row2.addWidget(self.modelDataCheckBox)
 
+		buttonName = 'Detect'
+		aButton = QtWidgets.QPushButton(buttonName)
+		aButton.clicked.connect(partial(self.on_button_click,buttonName))
+		controlLayout_row2.addWidget(aButton)
+
+		aLabel = QtWidgets.QLabel('mvThreshold')
+		controlLayout_row2.addWidget(aLabel)
+
+		self.mvThresholdSpinBox = QtWidgets.QDoubleSpinBox()
+		self.mvThresholdSpinBox.setValue(-52)
+		self.mvThresholdSpinBox.setRange(-1000, 1000)
+		controlLayout_row2.addWidget(self.mvThresholdSpinBox)
+
 		# numSeconds, spikeFreq, amp, noise
 		aLabel = QtWidgets.QLabel('Seconds')
 		controlLayout_row2.addWidget(aLabel)
@@ -534,7 +572,7 @@ class fftPlugin(sanpyPlugin):
 		controlLayout_row2.addWidget(aLabel)
 
 		self.modelAmpSpinBox = QtWidgets.QDoubleSpinBox()
-		self.modelAmpSpinBox.setValue(10)
+		self.modelAmpSpinBox.setValue(100)
 		self.modelAmpSpinBox.setRange(-100, 100)
 		controlLayout_row2.addWidget(self.modelAmpSpinBox)
 
@@ -542,7 +580,7 @@ class fftPlugin(sanpyPlugin):
 		controlLayout_row2.addWidget(aLabel)
 
 		self.modelNoiseAmpSpinBox = QtWidgets.QDoubleSpinBox()
-		self.modelNoiseAmpSpinBox.setValue(5)
+		self.modelNoiseAmpSpinBox.setValue(50)
 		self.modelNoiseAmpSpinBox.setRange(0, 1000)
 		controlLayout_row2.addWidget(self.modelNoiseAmpSpinBox)
 
@@ -570,11 +608,19 @@ class fftPlugin(sanpyPlugin):
 		# set the layout of the main window
 		self.mainWidget.setLayout(vLayout)
 
-		self.getMean()
-		self.plot()
+	def on_cutoff_spinbox(self, name):
+		"""When user sets values, rebuild low-pass filter.
+		"""
+		self.cutOff = self.cutOffSpinBox.value()
+		self.order = self.orderSpinBox.value()
+		self.sos = butter_lowpass_sos(self.cutOff, self.fs, self.order)
 
 	def getMean(self):
+		""" Get mean of current view.
+		"""
 		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+		if self.lastLeft is not None:
+			filteredVm = filteredVm[self.lastLeft:self.lastRight]
 		dataMean = np.nanmean(filteredVm)
 		dataStd = np.nanstd(filteredVm)
 		self.dataMean = dataMean
@@ -582,28 +628,27 @@ class fftPlugin(sanpyPlugin):
 		self.dataThreshold3 = dataMean + (3 * dataStd)
 
 	def replot(self):
-
+		logger.info('')
 		self.getMean()
 		self.replot2(switchFile=True)
 
-	def replot2(self, mvThreshold=None, firstPlot=False, switchFile=False):
-		logger.info(f'firstPlot:{firstPlot}')
+	def replot2(self, switchFile=False):
+		logger.info(f'switchFile:{switchFile}')
 
-		if mvThreshold is None:
-			mvThreshold = self.dataThreshold2
-
-		self.replotData(mvThreshold=mvThreshold, firstPlot=firstPlot, switchFile=switchFile)
+		self.replotData(switchFile=switchFile)
 		self.replotPsd()
 		self.replot_fft()
 		#self.replotAutoCorr()
 
-		self._mySetWindowTitle()
+		if switchFile:
+			self._mySetWindowTitle()
 
 		self.static_canvas.draw()
 		#plt.draw()
 
 	def plot(self):
 		"""First plot"""
+		logger.info('')
 		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
 		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
 		thresholdSec = self.ba.getStat('thresholdSec', sweepNumber=self.sweepNumber)
@@ -614,12 +659,8 @@ class fftPlugin(sanpyPlugin):
 		#self.dataLine, = self.vmAxes.plot(t, data, 'k', label='data')
 		self.dataFilteredLine, = self.vmAxes.plot(t, filteredVm, 'b-', linewidth=0.5, label='filtered')
 
-		self.spikesLine, = self.vmAxes.plot(thresholdSec, thresholdVal, '.r')
-		#self.fallingLine, = self.vmAxes.plot(t[fallingPoints], dataFiltered[fallingPoints], '.y')
-
-		self.peaksLine, = self.vmAxes.plot(peakSec, peakVal, '.g')
-
-		#self.backupLine, = self.vmAxes.plot(t[backupSpikes], dataFiltered[backupSpikes], '.g')
+		self.spikesLine, = self.vmAxes.plot(thresholdSec, thresholdVal, 'ro')
+		self.peaksLine, = self.vmAxes.plot(peakSec, peakVal, 'go')
 
 		self.dataMeanLine = self.vmAxes.axhline(self.dataMean, color='r', linestyle='--', linewidth=0.5)
 		self.thresholdLine2 = self.vmAxes.axhline(self.dataThreshold2, color='r', linestyle='--', linewidth=0.5)
@@ -628,36 +669,8 @@ class fftPlugin(sanpyPlugin):
 		self.vmAxes.set_xlabel('Time (s)')
 		self.vmAxes.set_ylabel('Vm (mV)')
 
-	def replotData(self, mvThreshold=None, switchFile=False):
-		#logger.info(f'firstPlot:{firstPlot}')
-
-		#if mvThreshold is None:
-		#	mvThreshold = self.dataThreshold2
-		#
-		# spike detect
-		'''
-		self.spikeDictList, self.spikeSeconds, self.spikePoints, self.peakPoints, self.peakVals, self.backupSpikes, self.spikeAmps = spikeDetect(
-										self.t,
-										self.dataFiltered,
-										mvThreshold,
-										self.lastLeft,
-										self.lastRight)
-		'''
-
-		# grab class attributes
-		#t = self.t
-		#data = self.data
-		#dataFiltered = self.dataFiltered
-		# Grab these from self.spikeDictList
-		#spikeSeconds = self.spikeSeconds
-		#spikePoints = self.spikePoints
-		# just use spikePoints
-		#backupSpikes = self.backupSpikes
-		#peakPoints = self.peakPoints
-		#peakVals = self.peakVals
-
-
-		#elif self.thresholdLine2 is not None:
+	def replotData(self, switchFile=False):
+		logger.info(f'switchFile:{switchFile} {self.ba}')
 
 		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
 		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
@@ -669,39 +682,33 @@ class fftPlugin(sanpyPlugin):
 		self.spikesLine.set_xdata(thresholdSec)
 		self.spikesLine.set_ydata(thresholdVal)
 
-		#self.backupLine.set_xdata(t[backupSpikes])
-		#self.backupLine.set_ydata(dataFiltered[backupSpikes])
-
 		self.peaksLine.set_xdata(peakSec)
 		self.peaksLine.set_ydata(peakVal)
-
-		#self.fallingLine.set_xdata(t[fallingPoints])
-		#self.fallingLine.set_ydata(dataFiltered[fallingPoints])
 
 		#logger.info(f'setting dataThreshold:{self.dataThreshold2} {self.dataThreshold3}')
 		self.dataMeanLine.set_ydata(self.dataMean)
 		self.thresholdLine2.set_ydata(self.dataThreshold2)
 		self.thresholdLine3.set_ydata(self.dataThreshold3)
 
-		autoScaleX = False
-		if 1 or switchFile:
-			autoScaleX = True
-			#self.dataLine.set_xdata(t)
-			#self.dataLine.set_ydata(data)
-			self.dataFilteredLine.set_xdata(t)
-			self.dataFilteredLine.set_ydata(dataFiltered)
+		#self.dataLine.set_xdata(t)
+		#self.dataLine.set_ydata(data)
+		self.dataFilteredLine.set_xdata(t)
+		self.dataFilteredLine.set_ydata(filteredVm)
 
-			self.vmAxes.relim()
-			self.vmAxes.autoscale_view(True, autoScaleX, True)  # (tight, x, y)
+		if switchFile:
+			autoScaleX = True
+		else:
+			autoScaleX = False
+		self.vmAxes.relim()
+		self.vmAxes.autoscale_view(True, autoScaleX, True)  # (tight, x, y)
 
 		#
-		#plt.draw()
 		self.static_canvas.draw()
 
 	def replotPsd(self):
 		#logger.info(f'len(f):{len(self.f)} Pxx_den max:{np.nanmax(self.Pxx_den)}')
 		self.psdAxes.clear()
-		self.psdAxes.semilogy(self.f, self.Pxx_den)
+		self.psdAxes.semilogy(self.f, self.Pxx_den, '-')
 		if self.signalHz is not None:
 			ax3.axvline(self.signalHz, color='r', linestyle='--', linewidth=0.5)
 		self.psdAxes.set_ylim([1e-7, 1e2])
@@ -720,10 +727,8 @@ class fftPlugin(sanpyPlugin):
 
 		# Auto-Cor takes 418.542 seconds.
 		# auto-corr on spike detec
-		print('  PUT BACK IN')
-		return
 
-		if self.backupSpikes is None or len(self.backupSpikes)==0:
+		if self.ba.numSpikes == 0:
 			# don't perform for no spikes
 			print('replotAutoCorr() is bailing on no spikes')
 			return
@@ -731,14 +736,18 @@ class fftPlugin(sanpyPlugin):
 		leftPoint = self.lastLeft
 		rightPoint = self.lastRight
 
+		thresholdPnt = self.ba.getStat('thresholdPnt')
+
+		t = self.ba.sweepX()
+
 		#x = self.dataFiltered
-		x = np.zeros(self.t.shape[0])
-		x[self.backupSpikes] = 1
+		x = np.zeros(t.shape)
+		x[thresholdPnt] = 1
 		x = x[leftPoint:rightPoint]
-		t = self.t[leftPoint:rightPoint]
+		t = t[leftPoint:rightPoint]
 
 		logger.info(f'x:{len(x)} {x.shape}')
-		logger.info(f'backupSpikes:{len(self.backupSpikes)}')
+		logger.info(f'thresholdPnt:{len(thresholdPnt)}')
 
 		if leftPoint == 0:
 			print('replotAutoCorr() is bailing on left point == 0')
@@ -779,15 +788,18 @@ class fftPlugin(sanpyPlugin):
 
 	def replot_fft(self):
 		logger.info('')
-		print('  PUT BACK IN')
-		return
 
 		# do fft
 		leftPoint = self.lastLeft
 		rightPoint = self.lastRight
 
-		x = self.dataFiltered[leftPoint:rightPoint]
-		t = self.t[leftPoint:rightPoint]
+		#x = self.dataFiltered[leftPoint:rightPoint]
+		#t = self.t[leftPoint:rightPoint]
+
+		x = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+		x = x[leftPoint:rightPoint]
+		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
+		t = t[leftPoint:rightPoint]
 
 		ft = np.fft.rfft(x)
 		# not sure to use diff b/w [1]-[0] or fs=10000 ???
@@ -815,12 +827,12 @@ class fftPlugin(sanpyPlugin):
 
 		#
 		self.fftAxes.relim()
-		self.fftAxes.autoscale_view(True,True,True)
+		self.fftAxes.autoscale_view(True,True,True)  # (tight,x,y)
 		self.static_canvas.draw()
 
 	def replotFilter(self):
 		"""Plot frequency response of filter."""
-		cutoff = self.cutoff  # cutoff frequency of the filter
+		cutOff = self.cutOff  # cutOff frequency of the filter
 
 		w,H = scipy.signal.sosfreqz(self.sos, fs=self.fs)
 
@@ -830,7 +842,7 @@ class fftPlugin(sanpyPlugin):
 
 		#plt.plot(0.5*fs*w/np.pi, np.abs(H), 'b')
 		ax1.plot(w, 20*np.log10(np.maximum(1e-10, np.abs(H))))
-		ax1.axvline(self.cutoff, color='r', linestyle='--', linewidth=0.5)
+		ax1.axvline(self.cutOff, color='r', linestyle='--', linewidth=0.5)
 		#y_sos = signal.sosfilt(sos, x)
 		ax1.set_xlim(0, self.xPlotHz)
 
@@ -855,7 +867,12 @@ class fftPlugin(sanpyPlugin):
 			if self._analysisDir is not None:
 				self._ba = self._analysisDir.getAnalysis(fileIdx)
 
+			if self._store_ba is not None:
+				self._ba = self._store_ba
 		else:
+			# store bAnalysis so we can bring it back
+			self._store_ba = self._ba
+
 			#
 			# load from a model
 			#numSeconds = 50
@@ -875,8 +892,12 @@ class fftPlugin(sanpyPlugin):
 			# (t, data) need to be one column (for bAnalysis)
 			t = t.reshape(t.shape[0],-1)
 			data = data.reshape(data.shape[0],-1)
-			#print('t:', t.shape)
-			#print('data:', data.shape)
+
+			#t = t[:,0]
+			#data = data[:,0]
+
+			print('  model t:', t.shape)
+			print('  model data:', data.shape)
 
 			modelDict = {
 				'sweepX': t,
@@ -885,18 +906,28 @@ class fftPlugin(sanpyPlugin):
 			}
 			self._ba = sanpy.bAnalysis(fromDict=modelDict)
 
+			self.modelDetect()
+
+		# either real ba or model
 		print(self.ba)
 
-		self.t = self.ba.sweepX()[:,0]
+		#self.t = self.ba.sweepX()
 		self.fs = self.ba.recordingFrequency * 1000
-		self.data = self.ba.sweepY()[:,0]
-		self.data = self.data.copy()
+		#self.data = self.ba.sweepY()
+		#self.data = self.data.copy()
 
+		self.replot2(switchFile=True)
+		'''
 		SavitzkyGolay_pnts = 5
 		SavitzkyGolay_poly = 2
 		self.dataFiltered = scipy.signal.savgol_filter(self.data,
 							SavitzkyGolay_pnts, SavitzkyGolay_poly,
 							mode='nearest', axis=0)
+		'''
+
+		'''
+		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
+		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
 
 		# thresholds based on std
 		dataMean = np.nanmean(self.dataFiltered)
@@ -904,13 +935,28 @@ class fftPlugin(sanpyPlugin):
 		self.dataMean = dataMean
 		self.dataThreshold2 = dataMean + (2 * dataStd)
 		self.dataThreshold3 = dataMean + (3 * dataStd)
+		'''
+
+		self.getMean()
 
 		# these are in points
 		#self.lastLeft = 0
 		#self.lastRight = len(self.dataFiltered)
 
 		# rebuild filter based on loaded fs
-		self.sos = butter_lowpass_sos(self.cutoff, self.fs, self.order)
+		self.sos = butter_lowpass_sos(self.cutOff, self.fs, self.order)
+
+		self.replot2(switchFile=True)
+
+	def modelDetect(self):
+		mvThreshold = self.mvThresholdSpinBox.value() # for detection
+
+		dDict = sanpy.bAnalysis.getDefaultDetection() # maybe specify a model epsp type?
+		dDict['dvdtThreshold'] = np.nan
+		dDict['mvThreshold'] = mvThreshold
+		dDict['onlyPeaksAbove_mV'] = None
+		dDict['doBackupSpikeVm'] = False
+		self._ba.spikeDetect(dDict)
 
 	def on_checkbox_clicked(self, name, value):
 		#print('on_crosshair_clicked() value:', value)
@@ -919,7 +965,7 @@ class fftPlugin(sanpyPlugin):
 		if name == 'PSD':
 			self.psdAxes.set_visible(isOn)
 			if isOn:
-				self.vmAxes.change_geometry(2,1,1)
+				self.vmAxes.change_.geometry(2,1,1)
 				self.replotPsd()
 			else:
 				self.vmAxes.change_geometry(1,1,1)
@@ -928,15 +974,15 @@ class fftPlugin(sanpyPlugin):
 			pass
 		elif name == 'Model Data':
 			self.loadData(fileIdx=0, modelData=isOn)
-			self.replot2(switchFile=True)
 		else:
 			logger.warning(f'name:"{name}" not understood')
 
 	def on_button_click(self, name):
 		if name == 'Detect':
-			mvThreshold = self.mvThresholdSpinBox.value()
-			logger.info(f'{name} mvThreshold:{mvThreshold}')
-			self.replot2(mvThreshold=mvThreshold)
+			#mvThreshold = self.mvThresholdSpinBox.value()
+			#logger.info(f'{name} mvThreshold:{mvThreshold}')
+			self.modelDetect()
+			self.replot2()
 		elif name == 'Filter Response':
 			# popup new window
 			self.replotFilter()
@@ -946,12 +992,12 @@ class fftPlugin(sanpyPlugin):
 			logger.warning(f'name:"{name}" not understood')
 
 	def on_xlims_change(self, event_ax):
-		#slogger.info(f'event_ax:{event_ax}')
-		left, right = event_ax.get_xlim()
-		logger.info(f'left:{left} right:{right}')
+		if not self._isInited:
+			return
 
-		print('  PUT BACK IN')
-		return
+		#slogger.info(f'event_ax:{event_ax}')
+		left, right = event_ax.get_xlim()  # seconds
+		logger.info(f'left:{left} right:{right}')
 
 		# find start/stop point from seconds in 't'
 		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
@@ -966,6 +1012,7 @@ class fftPlugin(sanpyPlugin):
 
 		# keep track of last setting, if it does not change then do nothing
 		if self.lastLeft==leftPoint and self.lastRight==rightPoint:
+			logger.info('left/right point same doing nothng -- RETURNING')
 			return
 		else:
 			self.lastLeft = leftPoint
@@ -973,6 +1020,8 @@ class fftPlugin(sanpyPlugin):
 
 		#
 		# get threshold fromm selection
+		self.getMean()
+		'''
 		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
 		theMean = np.nanmean(filteredVm[leftPoint:rightPoint])
 		theStd = np.nanstd(filteredVm[leftPoint:rightPoint])
@@ -980,6 +1029,7 @@ class fftPlugin(sanpyPlugin):
 		self.dataThreshold2 = theMean + (2 * theStd)
 		self.dataThreshold3 = theMean + (3 * theStd)
 		#logger.info(f'dataThreshold:{self.dataThreshold2} {self.dataThreshold3}')
+		'''
 
 		# psd depends on x-axis
 		self._getPsd()
@@ -992,7 +1042,7 @@ class fftPlugin(sanpyPlugin):
 		# now with detect button
 		#self.replot2(firstPlot=False)
 
-		#self.replotData(firstPlot=False)
+		self.replotData(switchFile=False)
 		self.replotPsd()
 		self.replot_fft()
 		#self.replotAutoCorr()  # slow, requires bbutton push
@@ -1014,7 +1064,7 @@ class fftPlugin(sanpyPlugin):
 		elif text == 'f':
 			self.replotFilter()
 
-if __name__ == '__main__':
+def testPlugin():
 	from PyQt5 import QtWidgets
 	app = QtWidgets.QApplication([])
 
@@ -1025,3 +1075,26 @@ if __name__ == '__main__':
 	#plt.show()
 
 	sys.exit(app.exec_())
+
+def test_fft():
+	# 20-30 sec
+	path = '/Users/cudmore/Sites/SanPy/data/fft/2020_07_07_0000.abf'
+	ba = sanpy.bAnalysis(path)
+
+	x = ba.sweepX()
+	y = ba.sweepY()
+
+	startSec = 20
+	stopSec = 30
+	dataPointsPerMs = ba.dataPointsPerMs  # 10 for 10 kHz
+	startPnt = startSec * 1000 * dataPointsPerMs
+	stopPnt = stopSec * 1000 * dataPointsPerMs
+
+	xPlot = x[startPnt:stopPnt]
+	yPlot = y[startPnt:stopPnt]
+
+	plt.plot(xPlot, yPlot)
+	plt.show()
+
+if __name__ == '__main__':
+	test_fft()

@@ -42,7 +42,7 @@ class errorTableView(QtWidgets.QTableView):
 		row = self.model()._data.index[index.row()] # take sorting into account
 
 		doZoom = False
-		modifiers = QtGui.QApplication.keyboardModifiers()
+		modifiers = QtWidgets.QApplication.keyboardModifiers()
 		if modifiers == QtCore.Qt.ShiftModifier:
 			# zoomm on shift+click
 			doZoom = True

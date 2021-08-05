@@ -587,8 +587,8 @@ class myWidget(QtWidgets.QWidget):
 		contextMenu.addSeparator()
 		copyTable = contextMenu.addAction("Copy Table")
 
-		contextMenu.addSeparator()
-		saveTable = contextMenu.addAction("Save Table")
+		#contextMenu.addSeparator()
+		#saveTable = contextMenu.addAction("Save Table")
 		#
 		action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 
@@ -600,6 +600,11 @@ class myWidget(QtWidgets.QWidget):
 			self.parentPlugin.toggleResponseOptions(self.parentPlugin.responseTypes.selectSpike)
 		elif action == axisChange:
 			self.parentPlugin.toggleResponseOptions(self.parentPlugin.responseTypes.setAxis)
+		elif action == copyTable:
+			self.parentPlugin.copyToClipboard()
+		#elif action == saveTable:
+		#	#self.saveToFile()
+		#	logger.info('NOT IMPLEMENTED')
 		elif action is not None:
 			logger.warning(f'Action not taken "{action}"')
 

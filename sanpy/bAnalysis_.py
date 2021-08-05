@@ -256,7 +256,9 @@ class bAnalysis:
 
 		return theDict.copy()
 
-	def __init__(self, file=None, theTiff=None, byteStream=None, fromDf=None, fromDict=None):
+	def __init__(self, file=None, theTiff=None, byteStream=None,
+					fromDf=None, fromDict=None,
+					loadData=True):
 		"""
 		Args:
 			file (str): Path to either .abf or .csv with time/mV columns.
@@ -270,6 +272,7 @@ class bAnalysis:
 		# mimic pyAbf
 		self._dataPointsPerMs = None
 		self._sweepList = [0]  # list
+		self._sweepLengthSec = None
 		#self._currentSweep = 0  # int
 		self._sweepX = None  # np.ndarray
 		self._sweepY = None  # np.ndarray
@@ -341,7 +344,7 @@ class bAnalysis:
 		elif byteStream is not None:
 			self._loadAbf(byteStream=byteStream)
 		elif file.endswith('.abf'):
-			self._loadAbf()
+			self._loadAbf(loadData=loadData)
 		elif file.endswith('.tif'):
 			self._loadTif()
 		elif file.endswith('.csv'):
@@ -365,7 +368,7 @@ class bAnalysis:
 
 	def __str__(self):
 		#return f'ba: {self.getFileName()} dur:{round(self.recordingDur,3)} spikes:{self.numSpikes} isAnalyzed:{self.isAnalyzed()} detectionDirty:{self.detectionDirty}'
-		return f'ba: {self.getFileName()} dur:{round(self.recordingDur,3)} spikes:{self.numSpikes}'
+		return f'ba: {self.getFileName()} sweep dur:{round(self.recordingDur,3)} spikes:{self.numSpikes}'
 
 	def _loadTif(self):
 		#print('TODO: load tif file from within bAnalysis ... stop using bAbfText()')
@@ -398,7 +401,7 @@ class bAnalysis:
 		self._recordingMode = 'I-Clamp'
 
 		# TODO: infer from columns
-		self._sweepLabelX = 's' # TODO: get from column
+		self._sweepLabelX = 'sec' # TODO: get from column
 		self._sweepLabelY = 'mV' # TODO: get from column
 
 		# TODO: infer from first column as ('s', 'ms')
@@ -476,47 +479,49 @@ class bAnalysis:
 		"""
 		self._sweepX = theDict['sweepX']
 		self._sweepY = theDict['sweepY']
-		#self._sweepC = None
+		self._sweepC = np.zeros(self._sweepX.shape)
+
+		self._sweepLengthSec = self._sweepX[-1][0]
+
+		# assuming _sweepX is 2d with one column
 
 		# for 10 kHz will be 0.0001
-		dtSeconds = self._sweepX[1] - self._sweepX[0]
+		dtSeconds = self._sweepX[1,0] - self._sweepX[0,0]
 		self._dataPointsPerMs = 1 / (dtSeconds*1000)
-		print('_dataPointsPerMs:', self._dataPointsPerMs)
+		print('_dataPointsPerMs:', self._dataPointsPerMs, type(self._dataPointsPerMs))
 
 		self._recordingMode = theDict['mode'] #'I-Clamp'
 
 		self._path = 'Model_Data'
 		self.myFileType = 'fromDict'
 
-	def _loadAbf(self, byteStream=None):
+	def _loadAbf(self, byteStream=None, loadData=True):
 		"""Load pyAbf from path."""
 		try:
+			#logger.info(f'loadData:{loadData}')
 			if byteStream is not None:
 				self._abf = pyabf.ABF(byteStream)
 			else:
-				self._abf = pyabf.ABF(self._path)
+				self._abf = pyabf.ABF(self._path, loadData=loadData)
 
 			self._sweepList = self._abf.sweepList
+			self._sweepLengthSec = self._abf.sweepLengthSec
 
 			# on load, sweep is 0
-			tmpRows = self._abf.sweepX.shape[0]
-			numSweeps = len(self._sweepList)
-			self._sweepX = np.zeros((tmpRows,numSweeps))
-			self._sweepY = np.zeros((tmpRows,numSweeps))
-			self._sweepC = np.zeros((tmpRows,numSweeps))
-			'''
-			print('=== _loadAbf')
-			print(f'self._sweepX is {self._sweepX.shape}')
-			print(f'self._sweepY is {self._sweepY.shape}')
-			print(f'self._sweepC is {self._sweepC.shape}')
-			'''
-			for sweep in self._sweepList:
-				self._abf.setSweep(sweep)
-				self._sweepX[:, sweep] = self._abf.sweepX  # <class 'numpy.ndarray'>, (60000,)
-				self._sweepY[:, sweep] = self._abf.sweepY
-				self._sweepC[:, sweep] = self._abf.sweepC
-			#print(f'self._sweepX is {self._sweepX.shape}')
-			self._abf.setSweep(0)
+			if loadData:
+				tmpRows = self._abf.sweepX.shape[0]
+				numSweeps = len(self._sweepList)
+				self._sweepX = np.zeros((tmpRows,numSweeps))
+				self._sweepY = np.zeros((tmpRows,numSweeps))
+				self._sweepC = np.zeros((tmpRows,numSweeps))
+
+				for sweep in self._sweepList:
+					self._abf.setSweep(sweep)
+					self._sweepX[:, sweep] = self._abf.sweepX  # <class 'numpy.ndarray'>, (60000,)
+					self._sweepY[:, sweep] = self._abf.sweepY
+					self._sweepC[:, sweep] = self._abf.sweepC
+				# not needed
+				self._abf.setSweep(0)
 
 			# get v from pyAbf
 			self._dataPointsPerMs = self._abf.dataPointsPerMs
@@ -525,17 +530,31 @@ class bAnalysis:
 			self.acqDate = abfDateTime.strftime("%Y-%m-%d")
 			self.acqTime = abfDateTime.strftime("%H:%M:%S")
 
-			# TODO: fix this
-			#self._sweepX_label = 's'
-			self._sweepLabelX = self._abf.sweepLabelX
-			self._sweepLabelY = self._abf.sweepLabelY
+			#self.sweepUnitsY = self.adcUnits[channel]
+			channel = 0
+			#dacUnits = self._abf.dacUnits[channel]
+			adcUnits = self._abf.adcUnits[channel]
+			#print('  adcUnits:', adcUnits)  # 'mV'
+			self._sweepLabelY = adcUnits
+			self._sweepLabelX = "sec'"
 
+			#self._sweepLabelX = self._abf.sweepLabelX
+			#self._sweepLabelY = self._abf.sweepLabelY
+			if self._sweepLabelY in ['pA']:
+				self._recordingMode = 'V-Clamp'
+				#self._sweepY_label = self._abf.sweepUnitsY
+			elif self._sweepLabelY in ['mV']:
+				self._recordingMode = 'I-Clamp'
+				#self._sweepY_label = self._abf.sweepUnitsY
+
+			'''
 			if self._abf.sweepUnitsY in ['pA']:
 				self._recordingMode = 'V-Clamp'
 				self._sweepY_label = self._abf.sweepUnitsY
 			elif self._abf.sweepUnitsY in ['mV']:
 				self._recordingMode = 'I-Clamp'
 				self._sweepY_label = self._abf.sweepUnitsY
+			'''
 
 		except (NotImplementedError) as e:
 			logger.error(f'did not load abf file: {self._path}')
@@ -581,7 +600,11 @@ class bAnalysis:
 		"""Get recording duration in seconds."""
 		# TODO: Just return self.sweepX(-1)
 		#return len(self.sweepX) / self.dataPointsPerMs / 1000
-		theDur = self._sweepX[-1,0] # last point in first sweep ???
+
+		# don't use sweep
+		#theDur = self._sweepX[-1,0] # last point in first sweep ???
+
+		theDur = self._sweepLengthSec
 		#logger.info(f'theDur:{theDur} {type(theDur)}')
 		return theDur
 
@@ -820,6 +843,10 @@ class bAnalysis:
 		return theRet
 
 	def rebuildFiltered(self):
+		if self._sweepX is None:
+			# no data
+			return
+
 		if self._recordingMode == 'I-Clamp':
 			self._getDerivative()
 		elif self._recordingMode == 'V-Clamp':
@@ -846,9 +873,9 @@ class bAnalysis:
 				medianFilter += 1
 				logger.warning(f'Please use an odd value for the median filter, set medianFilter: {medianFilter}')
 			medianFilter = int(medianFilter)
-			self._filteredVm = scipy.signal.medfilt2d(self.sweepY, [medianFilter,1])
+			self._filteredVm = scipy.signal.medfilt2d(self.sweepY(), [medianFilter,1])
 		elif SavitzkyGolay_pnts > 0:
-			self._filteredVm = scipy.signal.savgol_filter(self.sweepY,
+			self._filteredVm = scipy.signal.savgol_filter(self.sweepY(),
 								SavitzkyGolay_pnts, SavitzkyGolay_poly,
 								mode='nearest', axis=0)
 		else:
@@ -861,14 +888,25 @@ class bAnalysis:
 		Args:
 			dDict (dict): Default detection dictionary. See getDefaultDetection()
 		"""
-		print('\n\n THIS IS BROKEN BECAUSE OF SWEEPS IN FILTERED DERIV\n\n')
+		#print('\n\n _getBaselineSubtract for v-clamp IS BROKEN BECAUSE OF SWEEPS IN FILTERED DERIV\n\n')
+
+		logger.info('XXX TODO: Need to add a way to baseline subtract for spontaneous V-Clamp data !!!')
+
+		# temporary fix, makes no sense for V-Clamp
+		self._getDerivative()
+
+		#
+		return
+		#
 
 		if dDict is None:
 			dDict = bAnalysis.getDefaultDetection()
 
-		dDict['medianFilter'] = 5
+		# work on a copy
+		dDictCopy = dDict.copy()
+		dDictCopy['medianFilter'] = 5
 
-		self._getFilteredRecording(dDict)
+		self._getFilteredRecording(dDictCopy)
 
 		# baseline subtract filtered recording
 		theMean = np.nanmean(self.filteredVm)
@@ -931,6 +969,10 @@ class bAnalysis:
 		#self.deriv = np.concatenate(([0],self.deriv))
 		rowOfZeros = np.zeros(self.numSweeps)
 		rowZero = 0
+
+		#print('  rowOfZeros:', rowOfZeros.shape)
+		#print('  _filteredDeriv:', self._filteredDeriv.shape)
+
 		self._filteredDeriv = np.vstack([rowOfZeros, self._filteredDeriv])
 		#self._filteredDeriv = np.insert(self.filteredDeriv, rowZero, rowOfZeros, axis=0)
 		#self._filteredDeriv = np.concatenate((zeroRow,self.filteredDeriv))
@@ -990,7 +1032,7 @@ class bAnalysis:
 
 		maxNumPntsToBackup = 20 # todo: add _ms
 		bin_ms = 1
-		bin_pnts = bin_ms * self.dataPointsPerMs
+		bin_pnts = round(bin_ms * self.dataPointsPerMs)
 		half_bin_pnts = math.floor(bin_pnts/2)
 		for idx, spikeTimePnts in enumerate(spikeTimes):
 			foundRealThresh = False
