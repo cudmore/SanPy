@@ -36,14 +36,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
 	signalSwitchFile = QtCore.pyqtSignal(object, object)
 	"""Emit on switch file."""
 
+	signalSelectSweep = QtCore.pyqtSignal(object, object)  # (ba, sweepNumber)
+	"""Emit set sweep."""
+
 	signalUpdateAnalysis = QtCore.pyqtSignal(object)
 	"""Emit on detect."""
 
 	signalSelectSpike = QtCore.pyqtSignal(object)
 	"""Emit spike selection."""
-
-	signalSelectSweep = QtCore.pyqtSignal(object, object)  # (ba, sweepNumber)
-	"""Emit set sweep."""
 
 	def _getBundledDir():
 		"""
@@ -316,14 +316,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			# old
 			#self.myScatterPlotWidget.selectXRange(data[0], data[1])
 			# new
-			self.signalSetXAxis.emit([data[0], data[1]])
+			self.signalSetXAxis.emit([data[0], data[1]])  # emits to scatter plot ONLY
 
 		elif this == 'set full x axis':
 			self.startSec = None
 			self.stopSec = None
 			#self.myScatterPlotWidget.selectXRange(None, None)
 			logger.info('set full x axis')
-			self.signalSetXAxis.emit([None, None])
+			self.signalSetXAxis.emit([None, None])  # emits to scatter plot ONLY
 
 		elif this == 'cancel all selections':
 			self.myDetectionWidget.selectSpike(None)
@@ -560,11 +560,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.statusBar = QtWidgets.QStatusBar()
 		self.setStatusBar(self.statusBar)
 
-		self.centralwidget = QtWidgets.QWidget(self)
-		self.centralwidget.setObjectName("centralwidget")
+		# was this
+		#self.centralwidget = QtWidgets.QWidget(self)
+		#self.centralwidget.setObjectName("centralwidget")
 
-		self.myQVBoxLayout = QtWidgets.QVBoxLayout(self.centralwidget)
-		self.myQVBoxLayout.setAlignment(QtCore.Qt.AlignTop)
+		# was this
+		#self.myQVBoxLayout = QtWidgets.QVBoxLayout(self.centralwidget)
+		#self.myQVBoxLayout.setAlignment(QtCore.Qt.AlignTop)
 
 		#
 		# table of files
@@ -632,11 +634,19 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.main_splitter.addWidget(self.myDetectionWidget)
 		self.main_splitter.addWidget(self.myScatterPlotWidget)
 		self.main_splitter.addWidget(self.myErrorTable)
-		self.myQVBoxLayout.addWidget(self.main_splitter)
 
+		# was this
+		#self.myQVBoxLayout.addWidget(self.main_splitter)
+
+		centralwidget = QtWidgets.QWidget(self)
+		myHBoxLayout = QtWidgets.QHBoxLayout(centralwidget)
+		myHBoxLayout.addWidget(self.main_splitter)
 		#
 		# leave here, critical
-		self.setCentralWidget(self.centralwidget)
+		# was this
+		self.setCentralWidget(centralwidget)
+		#self.setCentralWidget(self.main_splitter)
+		#self.setLayout(myHBoxLayout)
 
 	def preferencesSet(self, key1, key2, val):
 		"""Set a preference. See `preferencesDefaults()` for key values."""
@@ -810,6 +820,30 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		url = QtCore.QUrl(logFilePath)
 		QtGui.QDesktopServices.openUrl(url)
 
+def runFft(sanpyWindow):
+	logger.info('')
+	sanpyWindow.tableView._onLeftClick(0)
+	sanpyWindow.myDetectionWidget.setAxis(2.1,156.8)
+
+	ba = sanpyWindow.get_bAnalysis()
+	pluginName = 'FFT'
+	fftPlugin = sanpyWindow.myPlugins.runPlugin(pluginName, ba)
+	resultsStr = fftPlugin.getResultStr()
+
+	print('BINGO')
+	print(resultsStr)
+
+	sanpyWindow.tableView._onLeftClick(1)
+	sanpyWindow.myDetectionWidget.setAxis(0, 103.7)
+	resultsStr = fftPlugin.getResultStr()
+
+	sanpyWindow.tableView._onLeftClick(2)
+	sanpyWindow.myDetectionWidget.setAxis(16.4, 28.7)
+	resultsStr = fftPlugin.getResultStr()
+
+	print('BINGO')
+	print(resultsStr)
+
 def main():
 	logger.info(f'=== Starting sanpy_app.py in __main__')
 	logger.info(f'Python version is {platform.python_version()}')
@@ -845,6 +879,8 @@ def main():
 	#w.loadFolder(loadFolder)
 
 	w.show()
+
+	#runFft(w)
 
 	sys.exit(app.exec_())
 

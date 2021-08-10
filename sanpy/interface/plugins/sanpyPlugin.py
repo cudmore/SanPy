@@ -430,9 +430,10 @@ class sanpyPlugin(QtCore.QObject):
 
 	def slot_switchFile(self, path):
 		"""Respond to switch file."""
+		logger.info('')
 		if not self.getResponseOption(self.responseTypes.switchFile):
 			return
-		logger.info(path)
+		#logger.info(path)
 		app = self.getSanPyApp()
 		if app is not None:
 			self._ba = app.get_bAnalysis()
@@ -446,8 +447,26 @@ class sanpyPlugin(QtCore.QObject):
 
 		self.replot()
 
+	def slot_switchFile2(self, ba, startStop):
+		"""Respond to switch file."""
+		logger.info('')
+		if not self.getResponseOption(self.responseTypes.switchFile):
+			return
+		#logger.info(path)
+		self._ba = ba
+
+		# reset start/stop
+		self._startSec = startStop[0]
+		self._stopSec = startStop[1]
+
+		# set pyqt window title
+		self._mySetWindowTitle()
+
+		self.replot()
+
 	def slot_updateAnalysis(self, ba):
 		"""Respond to detection"""
+		logger.info('')
 		if not self.getResponseOption(self.responseTypes.analysisChange):
 			return
 		# don't update analysis if we are showing different ba
@@ -462,6 +481,7 @@ class sanpyPlugin(QtCore.QObject):
 		self.replot()
 
 	def slot_setSweep(self, ba, sweepNumber):
+		logger.info('')
 		self._sweepNumber = sweepNumber
 		self.replot()
 

@@ -163,6 +163,8 @@ class bPlugins():
 				return
 			self._openSet.add(newPlugin)
 
+			return newPlugin
+
 	def getType(self, pluginName):
 		"""
 		returns one of ('system', 'user')

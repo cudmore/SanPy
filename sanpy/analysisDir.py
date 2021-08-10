@@ -217,7 +217,7 @@ class analysisDir():
 
 	# abb 20210803
 	#theseFileTypes = ['.abf', '.csv']
-	theseFileTypes = ['.abf']
+	theseFileTypes = ['.abf', '.csv']
 	"""File types to load"""
 
 	def __init__(self, path=None, myApp=None, autoLoad=True):
@@ -778,7 +778,7 @@ class analysisDir():
 			# load from path
 			ba = sanpy.bAnalysis(path)
 			#logger.info(f'Loaded from path {path}')
-			logger.info(f'  Loaded: {ba}')
+			#logger.info(f'  Loaded: {ba}')
 		return ba
 
 	def _setColumnType(self, df):
@@ -813,6 +813,8 @@ class analysisDir():
 		"""
 		Get dict representing one file (row in table). Loads bAnalysis to get headers.
 
+		On load error of proper file type (abf, csv), ba.loadError==True
+
 		Args:
 			path (Str): Full path to file.
 			#rowIdx (int): Optional row index to assign in column 'Idx'
@@ -833,12 +835,12 @@ class analysisDir():
 			return None, None
 
 		# load bAnalysis
-		logger.info(f'Loading bAnalysis "{path}"')
+		#logger.info(f'Loading bAnalysis "{path}"')
 		ba = sanpy.bAnalysis(path, loadData=False)
 
 		if ba.loadError:
 			logger.error(f'Error loading bAnalysis file "{path}"')
-			return None, None
+			#return None, None
 
 		# not sufficient to default everything to empty str ''
 		# sanpyColumns can only have type in ('float', 'str')
@@ -852,7 +854,10 @@ class analysisDir():
 		#if rowIdx is not None:
 		#	rowDict['Idx'] = rowIdx
 
-		rowDict['I'] = 2 # need 2 because checkbox value is in (0,2)
+		if ba.loadError:
+			rowDict['I'] = 0
+		else:
+			rowDict['I'] = 2 # need 2 because checkbox value is in (0,2)
 		rowDict['File'] = ba.getFileName() #os.path.split(ba.path)[1]
 		rowDict['Dur(s)'] = ba.recordingDur
 		rowDict['kHz'] = ba.recordingFrequency
@@ -1010,7 +1015,7 @@ class analysisDir():
 			self._df = df
 
 	def pool_build(self):
-		"""Build one df with all anlysis. Use this in plot tool plugin.
+		"""Build one df with all analysis. Use this in plot tool plugin.
 		"""
 		masterDf = None
 		for row in range(self.numFiles):

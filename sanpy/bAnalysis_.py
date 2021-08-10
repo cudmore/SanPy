@@ -272,7 +272,7 @@ class bAnalysis:
 		# mimic pyAbf
 		self._dataPointsPerMs = None
 		self._sweepList = [0]  # list
-		self._sweepLengthSec = None
+		self._sweepLengthSec = np.nan
 		#self._currentSweep = 0  # int
 		self._sweepX = None  # np.ndarray
 		self._sweepY = None  # np.ndarray
@@ -394,24 +394,54 @@ class bAnalysis:
 			return
 
 		self.myFileType = 'csv'
-		self._sweepX = dfCsv['s'].values  # first col is time
-		self._sweepY = dfCsv['mV'].values  # second col is values (either mV or pA)
+
+		firstColStr = dfCsv.columns[0]
+		secondColStr = dfCsv.columns[1]
+
+		if firstColStr in ['s', 'sec', 'seconds']:
+			timeMult = 1
+		elif firstColStr in ['ms']:
+			timeMult = 1/1000
+		else:
+			logger.warning(f'The first column is "{firstColStr}" but must be one of ("s", "sec", "seconds", "ms")')
+			self.loadError = True
+			return
+
+		self._sweepX = dfCsv[firstColStr].values  # first col is time
+		self._sweepY = dfCsv[secondColStr].values  # second col is values (either mV or pA)
+		self._sweepC = np.zeros(len(self._sweepX))
+
+		self._sweepX *= timeMult
+
+		self._sweepX = self._sweepX.reshape((self._sweepX.shape[0],1))
+		self._sweepY = self._sweepY.reshape((self._sweepY.shape[0],1))
+		self._sweepC = self._sweepC.reshape((self._sweepC.shape[0],1))
+		#print('self._sweepX:', self._sweepX.shape)
 
 		# TODO: infer from second column
-		self._recordingMode = 'I-Clamp'
+		if secondColStr == 'mV':
+			self._recordingMode = 'I-Clamp'
+			self._sweepLabelY = 'mV' # TODO: get from column
+		elif secondColStr == 'pA':
+			self._recordingMode = 'V-Clamp'
+			self._sweepLabelY = 'pA' # TODO: get from column
+		else:
+			logger.warning(f'The seconds column is "{xxx}" but muse be one of ("mV", "pA")')
 
-		# TODO: infer from columns
+		# always seconds
 		self._sweepLabelX = 'sec' # TODO: get from column
-		self._sweepLabelY = 'mV' # TODO: get from column
 
 		# TODO: infer from first column as ('s', 'ms')
-		firstPnt = self._sweepX[0]
-		secondPnt = self._sweepX[1]
+		firstPnt = self._sweepX[0][0]
+		secondPnt = self._sweepX[1][0]
 		diff_seconds = secondPnt - firstPnt
 		diff_ms = diff_seconds * 1000
 		_dataPointsPerMs = 1 / diff_ms
 		self._dataPointsPerMs = _dataPointsPerMs
-		logger.info(f'_dataPointsPerMs: {_dataPointsPerMs}')
+		#logger.info(f'_dataPointsPerMs: {_dataPointsPerMs}')
+
+		#self._recordingMode = 'I-Clamp'
+		self._sweepLengthSec = self._sweepX[-1][0]
 
 	def _loadFromDf(self, fromDf):
 		"""Load from a pandas df saved into a .h5 file.

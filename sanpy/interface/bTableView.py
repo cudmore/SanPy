@@ -203,7 +203,6 @@ class bTableView(QtWidgets.QTableView):
 		self.frozenTableView.horizontalHeader().setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeToContents)
 		self.frozenTableView.horizontalHeader().setStretchLastSection(True)
 
-	# does not work ???
 	def onLeftClick(self, item):
 		"""Hanlde user left-click on a row. Keep track of lastSelected row to differentiate between
 		switch-file and click again.
@@ -211,6 +210,9 @@ class bTableView(QtWidgets.QTableView):
 		row = item.row()
 		realRow = self.model()._data.index[row] # sort order
 		logger.info(f'User clicked row:{row} realRow:{realRow}')
+		self._onLeftClick(realRow)
+
+	def _onLeftClick(self, realRow):
 		if self.lastSeletedRow is None or self.lastSeletedRow != realRow:
 			# new row selection
 			#print('  new row selection')
@@ -335,7 +337,7 @@ class bTableView(QtWidgets.QTableView):
 		else:
 			# user did not select acctioin
 			pass
-			
+
 	#
 	# frozen
 	def updateSectionWidth(self, logicalIndex, oldSize, newSize):

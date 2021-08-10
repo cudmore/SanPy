@@ -48,6 +48,10 @@ QPushButton {
 	min-width: 30px;
 }
 
+QCheckBox {
+	font-size: 11px;
+}
+
 QLabel {
 	font-size: 11px;
 }
