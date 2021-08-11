@@ -13,7 +13,7 @@ from math import exp
 from functools import partial
 
 import numpy as np
-from scipy.signal import butter, lfilter, freqz
+from scipy.signal import lfilter, freqz
 import scipy.signal
 
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -26,11 +26,23 @@ from sanpy.interface.plugins import sanpyPlugin
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def butter_lowpass_sos(cutOff, fs, order=5):
-	nyq = 0.5 * fs
+def butter_sos(cutOff, fs, order=50, passType='lowpass'):
+	"""
+	passType (str): ('lowpass', 'highpass')
+	"""
+
+	nyq = fs * 0.5
 	normal_cutoff = cutOff / nyq
+
+	logger.info('')
+	print('  order:', order)
+	print('  cutOff:',cutOff)
+	print('  normal_cutoff:', normal_cutoff, type(normal_cutoff))
+	print('  fs:',fs)
+	print('  passType:',passType)
+
 	#sos = butter(order, normal_cutoff, btype='low', analog=False, output='sos')
-	sos = butter(order, cutOff, fs=fs, btype='lowpass', analog=False, output='sos')
+	sos = scipy.signal.butter(N=order, Wn=normal_cutoff, btype=passType, analog=False, fs=fs, output='sos')
 	return sos
 
 def spikeDetect(t, dataFiltered, dataThreshold2, startPoint=None, stopPoint=None):
@@ -417,6 +429,7 @@ class fftPlugin(sanpyPlugin):
 		self._store_ba = None  # allow switching between model and self.ba
 
 		self.fs = self.ba.recordingFrequency * 1000
+		self.psdWindowStr = 'Hanning'  # mpl.mlab.window_hanning
 
 		# fft Freq (Hz) resolution is fs/nfft --> resolution 0.2 Hz = 10000/50000
 		self.nfft = 50000 #512 * 100
@@ -517,6 +530,12 @@ class fftPlugin(sanpyPlugin):
 		self.resultsLabel = QtWidgets.QLabel('Results: Peak Hz=??? Ampplitude=???')
 		self.controlLayout.addWidget(self.resultsLabel)
 
+		psdWindowComboBox = QtWidgets.QComboBox()
+		psdWindowComboBox.addItem('Hanning')
+		psdWindowComboBox.addItem('Blackman')
+		psdWindowComboBox.currentTextChanged.connect(self.on_psd_window_changed)
+		self.controlLayout.addWidget(psdWindowComboBox)
+
 		#
 		vLayout.addLayout(self.controlLayout) # add mpl canvas
 
@@ -562,12 +581,10 @@ class fftPlugin(sanpyPlugin):
 		self.controlLayout1_5.addWidget(self.orderSpinBox)
 		'''
 
-		'''
 		buttonName = 'Filter Response'
 		aButton = QtWidgets.QPushButton(buttonName)
 		aButton.clicked.connect(partial(self.on_button_click,buttonName))
 		self.controlLayout1_5.addWidget(aButton)
-		'''
 
 		'''
 		buttonName = 'Rebuild Auto-Corr'
@@ -694,6 +711,25 @@ class fftPlugin(sanpyPlugin):
 
 		# set the layout of the main window
 		self.mainWidget.setLayout(vLayout)
+
+	def on_psd_window_changed(self, item):
+		"""User selected window dropdown
+
+		Args:
+			item (str):
+		"""
+		logger.info(f'item:"{item}" {type(item)}')
+		self.psdWindowStr = item
+		'''
+		if item == 'Hanning':
+			self.psdWindow = mpl.mlab.window_hanning
+		if item == 'Blackman':
+			self.psdWindow = np.blackman(51)
+		else:
+			logger.warning(f'Item not understood {item}')
+		'''
+		#
+		self.replot2(switchFile=False)
 
 	def old_getMean(self):
 		""" Get mean of current view.
@@ -943,6 +979,14 @@ class fftPlugin(sanpyPlugin):
 		# replot the clip +/- std we analyzed, after detrend
 		yDetrend = myDetrend(yFiltered)
 
+		#
+		self.butterCutoff = 7  # Hz
+		self.butterOrder = 50
+		self.sos = butter_sos(self.butterCutoff, self.fs, order=self.butterOrder, passType='lowpass')
+		yFiltered_Butter = scipy.signal.sosfilt(self.sos, yDetrend, axis=0)
+		print('yDetrend:', yDetrend.shape, np.nanmin(yDetrend), np.nanmax(yDetrend))
+		print('yFiltered_Butter:', yFiltered_Butter.shape, np.nanmin(yFiltered_Butter), np.nanmax(yFiltered_Butter))
+
 		dataMean = np.nanmean(yDetrend)
 		dataStd = np.nanstd(yDetrend)
 		dataThreshold2 = dataMean + (2 * dataStd)
@@ -954,6 +998,11 @@ class fftPlugin(sanpyPlugin):
 		self.rawZoomAxes.axhline(dataThreshold2, marker='', color='r', linestyle='--', linewidth=0.5)
 		self.rawZoomAxes.axhline(dataThreshold3, marker='', color='r', linestyle='--', linewidth=0.5)
 		self.rawZoomAxes.set_xlim([t[0], t[-1]])
+		#
+		self.rawZoomAxes.plot(t, yFiltered_Butter, '-r', linewidth=1)
+
+		#plt.plot(t, yFiltered_Butter)
+		#plt.show()
 
 		minPlotFreq = 0
 		maxPlotFreq = self.maxPlotHz #15
@@ -992,7 +1041,19 @@ class fftPlugin(sanpyPlugin):
 
 		#
 		# matplotlib psd
-		Pxx, freqs = self.psdAxes.psd(yFiltered, NFFT=nfft, Fs=fs, detrend=myDetrend, marker='', linestyle='-')
+		if self.psdWindowStr == 'Hanning':
+			psdWindow = mpl.mlab.window_hanning
+		elif self.psdWindowStr == 'Blackman':
+			psdWindow = np.blackman(nfft)
+		else:
+			logger.warning(f'psdWindowStr not understood {self.psdWindowStr}')
+		print('=== calling mpl psd()')
+		print('  nfft:', nfft)
+		print('  fs:', fs)
+		print('  myDetrend:', myDetrend)
+		print('  psdWindowStr:', self.psdWindowStr)
+		print('  psdWindow:', psdWindow)
+		Pxx, freqs = self.psdAxes.psd(yFiltered, marker='', linestyle='-', NFFT=nfft, Fs=fs, detrend=myDetrend, window=psdWindow)
 
 		#
 		# replot matplotlib psd
@@ -1146,19 +1207,25 @@ class fftPlugin(sanpyPlugin):
 		self.fftAxes.autoscale_view(True,True,True)  # (tight,x,y)
 		self.static_canvas.draw()
 
-	def old_replotFilter(self):
-		"""Plot frequency response of filter."""
-		cutOff = self.maxPlotHz  # cutOff frequency of the filter
+	def replotFilter(self):
+		"""Plot frequency response of butter sos filter."""
+
+		logger.info('')
+
+		self.sos = butter_sos(self.butterCutoff, self.fs, self.butterOrder, passType='lowpass')
 
 		w,H = scipy.signal.sosfreqz(self.sos, fs=self.fs)
 
-		fig = plt.figure(figsize=(3, 3))
+		print('w:', w)
+		print('H:', np.abs(H))
 
+		fig = plt.figure(figsize=(3, 3))
 		ax1 = fig.add_subplot(1,1,1) #
 
 		#plt.plot(0.5*fs*w/np.pi, np.abs(H), 'b')
-		ax1.plot(w, 20*np.log10(np.maximum(1e-10, np.abs(H))))
-		ax1.axvline(self.cutOff, color='r', linestyle='--', linewidth=0.5)
+		y = np.abs(H)  # 10*np.log10(np.maximum(1e-10, np.abs(H)))
+		ax1.plot(w, y, '-')
+		ax1.axvline(self.butterCutoff, color='r', linestyle='--', linewidth=0.5)
 		#y_sos = signal.sosfilt(sos, x)
 		ax1.set_xlim(0, self.maxPlotHz)
 
@@ -1329,6 +1396,9 @@ class fftPlugin(sanpyPlugin):
 				#self.replot2(switchFile=False)
 			#
 			self.replot2(switchFile=False)
+		elif name == 'Filter Response':
+			# popup new window
+			self.replotFilter()
 		else:
 			logger.warning(f'name:"{name}" not understood')
 		'''
@@ -1337,9 +1407,6 @@ class fftPlugin(sanpyPlugin):
 			#logger.info(f'{name} mvThreshold:{mvThreshold}')
 			self.modelDetect()
 			self.replot2()
-		elif name == 'Filter Response':
-			# popup new window
-			self.replotFilter()
 		elif name == 'Rebuild Auto-Corr':
 			self.replotAutoCorr()
 		'''

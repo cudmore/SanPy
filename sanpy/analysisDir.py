@@ -736,6 +736,7 @@ class analysisDir():
 		ba = self._df.loc[rowIdx, '_ba']
 		uuid = self._df.loc[rowIdx, 'uuid']  # if we have a uuid bAnalysis is saved in h5f
 		filePath = os.path.join(self.path, file)
+		logger.info(f'Found "{ba}"')
 		if ba is None or ba=='':
 			ba = self.loadOneAnalysis(filePath, uuid)
 			# load

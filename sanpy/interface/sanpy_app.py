@@ -844,6 +844,14 @@ def runFft(sanpyWindow):
 	print('BINGO')
 	print(resultsStr)
 
+def testFFT(sanpyWindow):
+	sanpyWindow.tableView._onLeftClick(1)
+	#sanpyWindow.myDetectionWidget.setAxis(2.1,156.8)
+
+	ba = sanpyWindow.get_bAnalysis()
+	pluginName = 'FFT'
+	fftPlugin = sanpyWindow.myPlugins.runPlugin(pluginName, ba)
+
 def main():
 	logger.info(f'=== Starting sanpy_app.py in __main__')
 	logger.info(f'Python version is {platform.python_version()}')
@@ -874,6 +882,8 @@ def main():
 	#path = '/Users/cudmore/data/laura-ephys/sanap20210412'
 
 	w = SanPyWindow()
+
+	testFFT(w)
 
 	#loadFolder = '/home/cudmore/Sites/SanPy/data'
 	#w.loadFolder(loadFolder)

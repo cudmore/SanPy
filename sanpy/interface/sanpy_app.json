@@ -12,12 +12,12 @@
         "showErrors": false,
         "showScatter": false
     },
-    "lastPath": "/Users/cudmore/Sites/SanPy/data/fft",
+    "lastPath": "/home/cudmore/Sites/SanPy/data/fft",
     "useDarkStyle": true,
     "windowGeometry": {
         "height": 855,
         "width": 1109,
         "x": 331,
-        "y": 45
+        "y": 64
     }
 }
