@@ -326,12 +326,17 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			self.signalSetXAxis.emit([None, None])  # emits to scatter plot ONLY
 
 		elif this == 'cancel all selections':
+			'''
 			self.myDetectionWidget.selectSpike(None)
 
 			if self.myScatterPlotWidget.isVisible():
 				self.myScatterPlotWidget.selectSpike(None)
+			'''
+			
 			# removing this may cause problems on file change ?
 			#self.myScatterPlotWidget.selectXRange(None, None)
+			#signalSelectSpike.emit xxx
+			self.selectSpike(None)
 
 		else:
 			logger.error(f'Did not understand this: "{this}"')

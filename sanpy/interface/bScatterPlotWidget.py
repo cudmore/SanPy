@@ -43,7 +43,8 @@ class bScatterPlotWidget(QtWidgets.QWidget):
 		spikeNumber = event.ind[0]
 
 		doZoom = False
-		modifiers = QtGui.QApplication.keyboardModifiers()
+		#modifiers = QtGui.QApplication.keyboardModifiers()
+		modifiers = QtWidgets.QApplication.keyboardModifiers()
 		if modifiers == QtCore.Qt.ShiftModifier:
 			print('Shift+Click')
 			doZoom = True

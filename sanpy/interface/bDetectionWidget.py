@@ -419,7 +419,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.derivPlot.autoRange()
 		self.dacPlot.autoRange()
-		self.vmPlot.autoRange()
+		self.vmPlot.autoRange(items=[self.vmLinesFiltered])
 		self.vmPlotGlobal.autoRange(items=[self.vmLinesFiltered2])  # we never zoom this
 		self.clipPlot.autoRange()
 
@@ -507,7 +507,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 	def on_scatterClicked(self, item, points, ev=None):
 		"""
 		item: PlotDataItem that was clicked
-		points: list of points clicked
+		points: list of points clicked (pyqtgraph.graphicsItems.ScatterPlotItem.SpotItem)
 		"""
 		print('=== bDetectionWidget.on_scatterClicked')
 		print('  item:', item)
@@ -516,7 +516,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 		indexes = []
 		#print('item.data:', item.data())
 		for idx, p in enumerate(points):
-			print(f'  points[{idx}].data(): {p.data()} p.pos: {p.pos()}')
+			print(f'    points[{idx}].data():{p.data()} p.index:{p.index()} p.pos:{p.pos()}')
+
+		if len(points) > 0:
+			spikeNumber = points[0].index()
+
+			eDict = {
+				'spikeNumber': spikeNumber,
+				'doZoom': False
+			}
+			self.signalSelectSpike.emit(eDict)
+
 		'''
 		for p in points:
 			p = p.pos()
@@ -1003,7 +1013,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 			else:
 				myScatterPlot = pg.PlotDataItem(pen=None, symbol=symbol, symbolSize=4, symbolPen=None, symbolBrush=color)
 				myScatterPlot.setData(x=[], y=[]) # start empty
-				myScatterPlot.sigPointsClicked.connect(self.on_scatterClicked)
+				if humanName in ['Threshold (mV)', 'AP Peak (mV)']:
+					myScatterPlot.sigPointsClicked.connect(self.on_scatterClicked)
 
 			self.myPlotList.append(myScatterPlot)
 
@@ -1701,7 +1712,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			self.detectionWidget.detect(dvdtThreshold, mvThreshold, startSec, stopSec)
 
 		# Reset Axes
-		elif name == 'Reset Axes':
+		#elif name == 'Reset Axes':
+		elif name == '[]':
 			self.detectionWidget.setAxisFull()
 
 		elif name == 'Save Spike Report':
@@ -1739,7 +1751,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			self.on_button_click('Go')
 
 		else:
-			logger.warning(f'Did not understand button: {name}')
+			logger.warning(f'Did not understand button: "{name}"')
 
 	def on_check_click(self, checkbox, idx):
 		isChecked = checkbox.isChecked()
@@ -2138,6 +2150,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		buttonName = '>>'
 		button = QtWidgets.QPushButton(buttonName)
 		button.setToolTip('Next Spike')
+		button.clicked.connect(partial(self.on_button_click,buttonName))
+		hBoxSpikeBrowser.addWidget(button)
+
+		buttonName = '[]'
+		button = QtWidgets.QPushButton(buttonName)
 		button.clicked.connect(partial(self.on_button_click,buttonName))
 		hBoxSpikeBrowser.addWidget(button)
 

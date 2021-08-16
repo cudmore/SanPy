@@ -71,6 +71,15 @@ class plotScatter(sanpyPlugin):
 
 		vLayout.addLayout(hLayout2)
 
+		# second row of controls
+		hLayout2_2 = QtWidgets.QHBoxLayout()
+
+		aName = 'Spike: None'
+		self.spikeNumberLabel = QtWidgets.QLabel(aName)
+		hLayout2_2.addWidget(self.spikeNumberLabel)
+
+		vLayout.addLayout(hLayout2_2)
+
 		# x and y stat lists
 		hLayout3 = QtWidgets.QHBoxLayout()
 		self.xPlotWidget = myStatListWidget(self, headerStr='X Stat')
@@ -182,7 +191,7 @@ class plotScatter(sanpyPlugin):
 		self.cmap.set_under("white") # only works for dark theme
 		self.lines = self.axScatter.scatter([], [], c=[], cmap=self.cmap, picker=5)
 		# make initial empty spike selection plot
-		self.linesSel, = self.axScatter.plot([], [], 'oy')
+		self.linesSel, = self.axScatter.plot([], [], 'o', markerfacecolor='none', color='y', markersize=10)  # no picker for selection
 		# despine top/right
 		self.axScatter.spines['right'].set_visible(False)
 		self.axScatter.spines['top'].set_visible(False)
@@ -278,6 +287,7 @@ class plotScatter(sanpyPlugin):
 
 		# cancel any selections
 		self.linesSel.set_data([], [])
+		#self.linesSel.set_offsets([], [])
 
 		xMin = np.nanmin(xData)
 		xMax = np.nanmax(xData)
@@ -381,6 +391,9 @@ class plotScatter(sanpyPlugin):
 			yData = []
 
 		self.linesSel.set_data(xData, yData)
+		#self.linesSel.set_offsets(xData, yData)
+
+		self.spikeNumberLabel.setText(f'Spike: {spikeNumber}')
 
 		self.static_canvas.draw()
 		self.mainWidget.repaint() # update the widget

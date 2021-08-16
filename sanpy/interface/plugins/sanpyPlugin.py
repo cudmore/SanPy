@@ -403,7 +403,8 @@ class sanpyPlugin(QtCore.QObject):
 		spikeNumber = event.ind[0]
 
 		doZoom = False
-		modifiers = QtGui.QApplication.keyboardModifiers()
+		#modifiers = QtGui.QApplication.keyboardModifiers()
+		modifiers = QtWidgets.QApplication.keyboardModifiers()
 		if modifiers == QtCore.Qt.ShiftModifier:
 			doZoom = True
 

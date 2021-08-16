@@ -1777,6 +1777,13 @@ class bAnalysis:
 					try:
 						mLinear, bLinear = np.polyfit(xFit, yFit, 1) # m is slope, b is intercept
 						self.spikeDict[iIdx]['earlyDiastolicDurationRate'] = mLinear
+						# todo: make an error if edd rate is too low
+						lowestEddRate = 6
+						if mLinear <= lowestEddRate:
+							errorStr = 'earlyDiastolicDurationRate fit - TooLow'
+							eDict = self._getErrorDict(i, spikeTimes[i], 'fitEDD', errorStr) # spikeTime is in pnts
+							self.spikeDict[iIdx]['errors'].append(eDict)
+
 					except (TypeError) as e:
 						#catching exception: raise TypeError("expected non-empty vector for x")
 						#print('TypeError')

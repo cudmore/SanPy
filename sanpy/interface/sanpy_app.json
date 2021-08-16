@@ -7,18 +7,18 @@
     "display": {
         "plotEveryPoint": 10,
         "showClips": false,
-		"showGlobalVm": false,
-		"showDAC": false,
+        "showDAC": false,
         "showDvDt": true,
         "showErrors": false,
+        "showGlobalVm": false,
         "showScatter": false
     },
-    "lastPath": "/home/cudmore/Sites/SanPy/data/fft",
+    "lastPath": "/home/cudmore/Sites/SanPy/data",
     "useDarkStyle": true,
     "windowGeometry": {
-        "height": 855,
-        "width": 1109,
-        "x": 331,
-        "y": 64
+        "height": 1107,
+        "width": 1956,
+        "x": 125,
+        "y": 69
     }
 }
