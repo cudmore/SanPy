@@ -430,12 +430,26 @@ class stimGen(sanpyPlugin):
 	def replot(self):
 		logger.info(f't:{len(self._t)}, data:{len(self._data)}')
 
+		yMin = 1e9
+		yMax = -1e9
+
 		for i in range(self.numSweeps):
 			self.plotLine[i].set_xdata(self._t)
 			self.plotLine[i].set_ydata(self._data[i])
 			#
 			self.rawAxes[i].relim()
 			self.rawAxes[i].autoscale_view(True,True,True)
+
+			thisMin = np.nanmin(self._data[i])
+			thisMax = np.nanmax(self._data[i])
+			if thisMin < yMin:
+				yMin = thisMin
+			if thisMax > yMax:
+				yMax = thisMax
+
+		for i in range(self.numSweeps):
+			self.rawAxes[i].set_ylim([yMin, yMax])
+
 		#
 		self.static_canvas.draw()
 

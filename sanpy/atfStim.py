@@ -166,7 +166,8 @@ def _makeChirp(durSec=10, amp=10, maxFreqHz=10, fs=10000):
 
 def _makeNoise(durSec, noiseAmp, fs=10000):
 	Xs = np.arange(fs*durSec) / fs  # x/time axis, we should always be able to create this from (dur, fs)
-	data = np.random.normal(scale=np.sqrt(noiseAmp), size=Xs.shape)
+	#data = np.random.normal(scale=np.sqrt(noiseAmp), size=Xs.shape)
+	data = np.random.normal(scale=noiseAmp, size=Xs.shape)
 	return data
 
 def _addNoise(data, noiseAmp):
@@ -175,7 +176,8 @@ def _addNoise(data, noiseAmp):
 	Args:
 		noiseAmp (float): After sqrt(noiseAmp) specifies the STD of noise.
 	"""
-	data += np.random.normal(scale=np.sqrt(noiseAmp), size=data.shape)
+	#data += np.random.normal(scale=np.sqrt(noiseAmp), size=data.shape)
+	data += np.random.normal(scale=noiseAmp, size=data.shape)
 	return data
 
 def makeStim(type, amp=10, durSec=10, freq=10, fs=10000, noiseAmp=1, rectify=True, autoPad=True, autoSave=True):
