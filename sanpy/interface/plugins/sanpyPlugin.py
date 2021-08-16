@@ -427,19 +427,25 @@ class sanpyPlugin(QtCore.QObject):
 		"""
 		self.signalCloseWindow.emit(self)
 
-	def slot_switchFile(self, path):
+	def slot_switchFile(self, rowDict, ba):
 		"""Respond to switch file."""
 		logger.info('')
 		if not self.getResponseOption(self.responseTypes.switchFile):
 			return
-		#logger.info(path)
+
+		'''
 		app = self.getSanPyApp()
 		if app is not None:
 			self._ba = app.get_bAnalysis()
+		'''
+		self._ba = ba
 
 		# reset start/stop
-		self._startSec = None
-		self._stopSec = None
+		startSec = rowDict['Start(s)']
+		stopSec = rowDict['Stop(s)']
+		logger.info(f'startSec:{startSec} {type(startSec)} stopSec:{stopSec} {type(stopSec)}')
+		self._startSec = startSec
+		self._stopSec = stopSec
 
 		# set pyqt window title
 		self._mySetWindowTitle()

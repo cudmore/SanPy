@@ -310,9 +310,8 @@ class pandasModel(QtCore.QAbstractTableModel):
 				columnName = self._data.columns[index.column()]
 				realRow = self._data.index[index.row()]
 				v = self._data.loc[realRow, columnName]
-				#v = self._data.iloc[rowIdx, columnIdx]
 				logger.info(f'Existing value for column "{columnName}" is v: "{v}" {type(v)}')
-
+				logger.info(f'  proposed value:"{value}" {type(value)}')
 				if isinstance(v, np.float64):
 					try:
 						if value == '':
@@ -320,12 +319,12 @@ class pandasModel(QtCore.QAbstractTableModel):
 						else:
 							value = float(value)
 					except (ValueError) as e:
-						logger.info('No action -->> please enter a number')
+						logger.info('  No action -->> please enter a number')
 						#self.signalUpdateStatus.emit('Please enter a number')
 						return False
 
 				# set
-				logger.info(f'New value for column "{columnName}" is "{value}" {type(value)}')
+				logger.info(f'  New value for column "{columnName}" is "{value}" {type(value)}')
 				self._data.loc[realRow, columnName] = value
 				#self._data.iloc[rowIdx, columnIdx] = value
 

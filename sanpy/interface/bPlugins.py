@@ -153,7 +153,7 @@ class bPlugins():
 				else:
 					startStop = [startSec, stopSec]
 
-			logger.info(f'Running plugin: "{pluginName}" {humanName}')
+			logger.info(f'Running plugin: "{pluginName}" {humanName} startStop:{startStop}')
 			# TODO: to open PyQt windows, we need to keep a local (persistent) variable
 			try:
 				newPlugin = \

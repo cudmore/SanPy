@@ -966,8 +966,10 @@ class fftPlugin(sanpyPlugin):
 
 		startSec, stopSec = self.getStartStop()
 		if startSec is None or stopSec is None:
+			logger.info('Resetting start/stop seconds to max')
 			startSec = 0
 			stopSec = self.ba.sweepX()[-1]
+		logger.info(f'Using start(s):{startSec} stop(s):{stopSec}')
 		self.lastLeft = round(startSec*1000*self.ba.dataPointsPerMs)
 		self.lastRight = round(stopSec*1000*self.ba.dataPointsPerMs)
 
@@ -988,7 +990,7 @@ class fftPlugin(sanpyPlugin):
 			logger.info(f'Median filter with pnts={medianPnts}')
 			yFiltered = scipy.ndimage.median_filter(y, medianPnts)
 		else:
-			logger.info('NO FILTER')
+			logger.info('No median filter')
 			yFiltered = y
 
 		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
@@ -998,7 +1000,7 @@ class fftPlugin(sanpyPlugin):
 		dt = t[1] - t[0] #0.0001
 		fs = round(1/dt)  # samples per second
 		nfft = self.nfft  # The number of data points used in each block for the FFT
-		print(f'  fs:{fs} nfft:{nfft}')
+		#print(f'  fs:{fs} nfft:{nfft}')
 
 		self.rawAxes.clear()
 		self.rawAxes.plot(sweepX, sweepY, '-', linewidth=1)
@@ -1155,6 +1157,7 @@ class fftPlugin(sanpyPlugin):
 
 		printStr = f'Type\tFile\tstartSec\tstopSec\tmaxFreqPsd\tmaxPsd'  #\tmaxFreqFft\tmaxFft'
 		#self.appendResultsStr(printStr)
+		print('=== FFT results are:')
 		print(printStr)
 		printStr = f'fftPlugin\t{self.ba.getFileName()}\t{pStart}\t{pStop}\t{pMaxFreq}\t{pMaxPsd}'
 		self.appendResultsStr(printStr, maxFreq=pMaxFreq, maxPsd=pMaxPsd, freqs=freqsLog10, psd=pxxLog10)

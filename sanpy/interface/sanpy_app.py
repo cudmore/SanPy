@@ -411,6 +411,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		self.slot_updateStatus(f'Loading file "{rowDict["File"]}" ... please wait')# this will load ba if necc
 
+		self.startSec = rowDict['Start(s)']
+		self.stopSec = rowDict['Stop(s)']
+
 		ba = self.myAnalysisDir.getAnalysis(row) # if None then problem loading
 
 		if ba is not None:

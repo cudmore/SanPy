@@ -178,6 +178,12 @@ class stimGen(sanpyPlugin):
 		self.doRectify = self.rectifyCheckBox.isChecked()
 		self._fs = self.fsSpinBox.value()
 
+		rmsMult = 1/np.sqrt(2)
+		sinRms = self.amplitude * rmsMult
+		sinRms = round(sinRms,2)
+		aName = f'RMS:{sinRms}'
+		self.sinRms.setText(aName)
+
 	def updateStim(self):
 		self._grabParams()
 		self.makeStim()
@@ -264,6 +270,14 @@ class stimGen(sanpyPlugin):
 		self.frequencySpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
 		controlLayout.addWidget(self.frequencySpinBox)
 
+		# rms of sin (amp and freq)
+		rmsMult = 1/np.sqrt(2)
+		sinRms = self.amplitude * rmsMult
+		sinRms = round(sinRms,2)
+		aName = f'RMS:{sinRms}'
+		self.sinRms = QtWidgets.QLabel(aName)
+		controlLayout.addWidget(self.sinRms)
+
 		aName = 'Noise Amplitude'
 		aLabel = QtWidgets.QLabel(aName)
 		controlLayout.addWidget(aLabel)
@@ -274,6 +288,11 @@ class stimGen(sanpyPlugin):
 		self.noiseAmpSpinBox.setValue(self.noiseAmplitude)
 		self.noiseAmpSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
 		controlLayout.addWidget(self.noiseAmpSpinBox)
+
+		noiseRms = 'TODO'
+		aName = f'RMS:{noiseRms}'
+		self.noiseRms = QtWidgets.QLabel(aName)
+		controlLayout.addWidget(self.noiseRms)
 
 		#
 		vLayout.addLayout(controlLayout) # add mpl canvas
