@@ -84,6 +84,14 @@ statList['Spike Frequency (Hz)'] = {
 	'xStat': 'thresholdPnt',
 	'xStatUnits': 'Points'
 	}
+statList['Inter-Spike-Interval (ms)'] = {
+	'name': 'isi_ms',
+	'units': 'ms',
+	'yStat': 'isi_ms',
+	'yStatUnits': 'ms',
+	'xStat': 'thresholdPnt',
+	'xStatUnits': 'Points'
+	}
 statList['Cycle Length (ms)'] = {
 	'name': 'cycleLength_ms',
 	'units': 'ms',

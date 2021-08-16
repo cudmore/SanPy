@@ -38,6 +38,11 @@ _sanpyColumns = {
 		'type': str,
 		'isEditable': False,
 	},
+	'N': {
+		# number of spikes
+		'type': int,
+		'isEditable': False,
+	},
 	'I': {
 		# include
 		# problems with isinstance(bool), just using string
@@ -217,7 +222,7 @@ class analysisDir():
 
 	# abb 20210803
 	#theseFileTypes = ['.abf', '.csv']
-	theseFileTypes = ['.abf', '.csv']
+	theseFileTypes = ['.abf', '.atf', '.csv']
 	"""File types to load"""
 
 	def __init__(self, path=None, myApp=None, autoLoad=True):
@@ -444,29 +449,33 @@ class analysisDir():
 		tmpHdfPath = os.path.join(self.path, tmpHdfFile)
 		logger.critical(f'Saving tmp db (will be compressed) {tmpHdfPath}')
 
+		df = self.getDataFrame()
+
 		#
 		# save each bAnalysis
-		df = self.getDataFrame()
 		#print(df)
-		for row in range(len(df)):
-			# do not call this, it will load
-			#ba = self.getAnalysis(row)
-			ba = df.at[row, '_ba']
-			if ba is not None:
-				didSave = ba._saveToHdf(tmpHdfPath) # will only save if ba.detectionDirty
-				if didSave:
-					# we are now saved into h5 file, remember uuid to load
-					df.at[row, 'uuid'] = ba.uuid
+		doSaveAnalysis = False
+		logger.info(f'doSaveAnalysis:{doSaveAnalysis}')
+		if doSaveAnalysis:
+			for row in range(len(df)):
+				# do not call this, it will load
+				#ba = self.getAnalysis(row)
+				ba = df.at[row, '_ba']
+				if ba is not None:
+					didSave = ba._saveToHdf(tmpHdfPath) # will only save if ba.detectionDirty
+					if didSave:
+						# we are now saved into h5 file, remember uuid to load
+						df.at[row, 'uuid'] = ba.uuid
 
-		# rebuild (L, A, S) columns
-		self._updateLoadedAnalyzed()
+			# rebuild (L, A, S) columns
+			self._updateLoadedAnalyzed()
 
 		#
 		# save file database
 		with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
 			dbKey = os.path.splitext(self.dbFile)[0]
 			#logger.critical(f'Storing file database into key "{dbKey}"')
-			df = self.getDataFrame()
+			#df = self.getDataFrame()
 			df = df.drop('_ba', axis=1)  # don't ever save _ba, use it for runtime
 
 			logger.critical(f'saving file db with {len(df)} rows')
@@ -676,6 +685,9 @@ class analysisDir():
 		for rowIdx in range(len(self._df)):
 			if theRowIdx is not None and theRowIdx != rowIdx:
 				continue
+
+			ba = self._df.loc[rowIdx, '_ba']  # Can be None
+
 			#uuid = self._df.at[rowIdx, 'uuid']
 			#
 			# loaded
@@ -692,11 +704,13 @@ class analysisDir():
 			# analyzed
 			if self.isAnalyzed(rowIdx):
 				theChar = '\u2022'  # FILLED BULLET
+				self._df.loc[rowIdx, 'N'] = ba.numSpikes
 			#elif uuid:
 			#	#theChar = '\u25CB'
 			#	theChar = '\u25e6'  # white bullet
 			else:
 				theChar = ''
+				self._df.loc[rowIdx, 'A'] = ''
 			#self._df.iloc[rowIdx, analyzedCol] = theChar
 			self._df.loc[rowIdx, 'A'] = theChar
 			#
@@ -707,6 +721,24 @@ class analysisDir():
 				theChar = ''
 			#self._df.iloc[rowIdx, savedCol] = theChar
 			self._df.loc[rowIdx, 'S'] = theChar
+			#
+			# start(s) and stop(s) from ba detectionDict
+			if self.isAnalyzed(rowIdx):
+				# set table to values we just detected with
+				startSec = ba.detectionDict['startSeconds']
+				stopSec = ba.detectionDict['stopSeconds']
+				self._df.loc[rowIdx, 'Start(s)'] = startSec
+				self._df.loc[rowIdx, 'Stop(s)'] = stopSec
+
+				dvdtThreshold = ba.detectionDict['dvdtThreshold']
+				mvThreshold = ba.detectionDict['mvThreshold']
+				self._df.loc[rowIdx, 'dvdtThreshold'] = dvdtThreshold
+				self._df.loc[rowIdx, 'mvThreshold'] = mvThreshold
+
+	'''
+	def setCellValue(self, rowIdx, colStr, value):
+		self._df.loc[rowIdx, colStr] = value
+	'''
 
 	def isLoaded(self, rowIdx):
 		isLoaded = self._df.loc[rowIdx, '_ba'] is not None
@@ -801,12 +833,16 @@ class analysisDir():
 				df[col] = df[col].replace(np.nan, '', regex=True)
 				df[col] = df[col].astype(str)
 			elif colType == int:
-				df[col] = df[col].astype(int)
+				pass
+				#print('!!! df[col]:', df[col])
+				#df[col] = df[col].astype(int)
 			elif colType == float:
 				# error if ''
 				df[col] = df[col].astype(float)
 			elif colType == bool:
 				df[col] = df[col].astype(bool)
+			else:
+				logger.warning(f'Did not parse col "{col}" with type "{colType}"')
 		#
 		return df
 

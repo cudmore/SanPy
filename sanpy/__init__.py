@@ -20,3 +20,5 @@ from .bExport import bExport
 
 from .version import analysisVersion
 from .version import interfaceVersion
+
+from .atfStim import *

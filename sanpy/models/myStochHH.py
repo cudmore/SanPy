@@ -15,7 +15,8 @@ see:
 	https://senselab.med.yale.edu/modeldb/showModel.cshtml?model=144499&file=/StochasticHH/README.html
 """
 
-from __future__ import division
+#from __future__ import division
+import time
 from numpy import *
 from pylab import *
 from scipy import linalg
@@ -604,10 +605,37 @@ def MarkovChainFraction(V, NaStateIn, KStateIn, t,dt):
 """
 End of helper function definitions
 """
-def myRun():
+def myRun2(durSec=10, amp=8, baseLineShift=-60, fs=10000, doPlot=False):
+	"""
+	amp (float): uA/cm2
+	"""
+
+	durMs = durSec * 1000
+	durMs += 0.01
+	stepMs = 1/fs*1000 / 10  # TODO: fix trailing '/ 10'
+	print(f'myRun2() durSec:{durSec} amp:{amp} baseLineShift:{baseLineShift} durMs:{durMs} stepMs:{stepMs}')
+	timeArray = arange(0, durMs, stepMs)
+	inputCurrent = zeros(len(timeArray))
+	startStepMs = 5
+	stopStepMs = durMs - 10
+	for i, t in enumerate(timeArray):
+		if startStepMs <= t <= stopStepMs: inputCurrent[i] = amp # 10 # uA/cm2
+
+	noiseModel = None  # 'Subunit'
+	n = Neuron(timeArray=timeArray, inputCurrent=inputCurrent, noiseModel=noiseModel)
+	n.solveStochasticModel()
+	n.voltageArray -= baseLineShift
+
+	if doPlot:
+		n.plotVoltage()
+
+	return n.voltageArray
+
+def myRun(doPlot=True):
 	# added by robert cudmore, abb
 	durMs = 500.01  # 100.01
 	stepMs = 0.01
+	print(f'myRun() durMs:{durMs} stepMs:{stepMs}')
 	timeArray = arange(0, durMs, stepMs)
 	inputCurrent = zeros(len(timeArray))
 	startStepMs = 5
@@ -619,9 +647,11 @@ def myRun():
 	#n()
 	n.solveStochasticModel()
 	n.voltageArray -= 60
+
 	n.plotVoltage()
 	#n.plotChannelFractions()
 
+	'''
 	import pandas as pd
 	outFile = 'hh1.csv'
 	df = pd.DataFrame(columns=['s', 'mV'])
@@ -629,6 +659,10 @@ def myRun():
 	df['mV'] = n.voltageArray
 	print('saving outFile:', outFile)
 	df.to_csv(outFile, index=False)
+	'''
 
 if __name__ == '__main__':
-	myRun()
+	# works
+	#myRun(doPlot=True)
+
+	myRun2(durSec=50, amp=8, baseLineShift=-60, fs=10000, doPlot=True)

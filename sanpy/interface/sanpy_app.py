@@ -724,8 +724,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		configDict['display'] = {}
 		configDict['display']['plotEveryPoint'] = 10 # not used?
+		configDict['display']['showGlobalVm'] = True #
 		configDict['display']['showDvDt'] = True #
 		configDict['display']['showDAC'] = True #
+		configDict['display']['showGlobalVm'] = True #
 		configDict['display']['showClips'] = False #
 		configDict['display']['showScatter'] = False #
 		configDict['display']['showErrors'] = False #
@@ -883,7 +885,7 @@ def main():
 
 	w = SanPyWindow()
 
-	testFFT(w)
+	#testFFT(w)
 
 	#loadFolder = '/home/cudmore/Sites/SanPy/data'
 	#w.loadFolder(loadFolder)

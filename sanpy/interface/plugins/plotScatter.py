@@ -29,6 +29,7 @@ class plotScatter(sanpyPlugin):
 
 		self.plotChasePlot = False # i vs i-1
 		self.plotColorTime = True
+		self.plotHistograms = True
 		# keep track of what we are plotting, use this in replot()
 		self.xStatName = None
 		self.yStatName = None
@@ -62,6 +63,12 @@ class plotScatter(sanpyPlugin):
 		self.colorTime.stateChanged.connect(lambda:self.btnstate(self.colorTime))
 		hLayout2.addWidget(self.colorTime)
 
+		#
+		self.histogramCheckbox = QtWidgets.QCheckBox("Histograms")
+		self.histogramCheckbox.setChecked(self.plotHistograms)
+		self.histogramCheckbox.stateChanged.connect(lambda:self.btnstate(self.histogramCheckbox))
+		hLayout2.addWidget(self.histogramCheckbox)
+
 		vLayout.addLayout(hLayout2)
 
 		# x and y stat lists
@@ -69,7 +76,7 @@ class plotScatter(sanpyPlugin):
 		self.xPlotWidget = myStatListWidget(self, headerStr='X Stat')
 		self.xPlotWidget.myTableWidget.selectRow(0)
 		self.yPlotWidget = myStatListWidget(self, headerStr='Y Stat')
-		self.yPlotWidget.myTableWidget.selectRow(1)
+		self.yPlotWidget.myTableWidget.selectRow(7)
 		hLayout3.addWidget(self.xPlotWidget)
 		hLayout3.addWidget(self.yPlotWidget)
 		vLayout.addLayout(hLayout3)
@@ -78,20 +85,49 @@ class plotScatter(sanpyPlugin):
 
 		#
 		# create a mpl plot (self._static_ax, self.static_canvas)
-		self.mplWindow2()
+		#self.mplWindow2()
+		plt.style.use('dark_background')
+		# this is dangerous, collides with self.mplWindow()
+		self.fig = mpl.figure.Figure()
+		self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
+		self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus ) # this is really triccky and annoying
+		self.static_canvas.setFocus()
+		# self.axs[idx] = self.static_canvas.figure.add_subplot(numRow,1,plotNum)
+
+		self._switchScatter()
+		'''
+		# gridspec for scatter + hist
+		self.gs = self.fig.add_gridspec(2, 2,  width_ratios=(7, 2), height_ratios=(2, 7),
+								left=0.1, right=0.9, bottom=0.1, top=0.9,
+								wspace=0.05, hspace=0.05)
+
+		self.axScatter = self.static_canvas.figure.add_subplot(self.gs[1, 0])
+		self.axHistX = self.static_canvas.figure.add_subplot(self.gs[0, 0], sharex=self.axScatter)
+		self.axHistY = self.static_canvas.figure.add_subplot(self.gs[1, 1], sharey=self.axScatter)
+
 
 		# make initial empty scatter plot
 		#self.lines, = self._static_ax.plot([], [], 'ow', picker=5)
 		self.cmap = mpl.pyplot.cm.coolwarm
 		self.cmap.set_under("white") # only works for dark theme
-		self.lines = self._static_ax.scatter([], [], c=[], cmap=self.cmap, picker=5)
+		#self.lines = self._static_ax.scatter([], [], c=[], cmap=self.cmap, picker=5)
+		self.lines = self.axScatter.scatter([], [], c=[], cmap=self.cmap, picker=5)
 
 		# make initial empty spike selection plot
-		self.linesSel, = self._static_ax.plot([], [], 'oy')
+		#self.linesSel, = self._static_ax.plot([], [], 'oy')
+		self.linesSel, = self.axScatter.plot([], [], 'oy')
 
 		# despine top/right
-		self._static_ax.spines['right'].set_visible(False)
-		self._static_ax.spines['top'].set_visible(False)
+		self.axScatter.spines['right'].set_visible(False)
+		self.axScatter.spines['top'].set_visible(False)
+		self.axHistX.spines['right'].set_visible(False)
+		self.axHistX.spines['top'].set_visible(False)
+		self.axHistY.spines['right'].set_visible(False)
+		self.axHistY.spines['top'].set_visible(False)
+		'''
+
+		#can do self.mplToolbar.hide()
+		self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(self.static_canvas, self.static_canvas)
 
 		#
 		# finalize
@@ -103,6 +139,59 @@ class plotScatter(sanpyPlugin):
 		self.mainWidget.setLayout(hLayout)
 
 		self.replot()
+
+	def _switchScatter(self):
+		"""
+		Switch between single scatter plot and scatter + marginal histograms
+		"""
+		if self.plotHistograms:
+			# gridspec for scatter + hist
+			self.gs = self.fig.add_gridspec(2, 2,  width_ratios=(7, 2), height_ratios=(2, 7),
+									left=0.1, right=0.9, bottom=0.1, top=0.9,
+									wspace=0.05, hspace=0.05)
+		else:
+			self.gs = self.fig.add_gridspec(1, 1,
+									left=0.1, right=0.9, bottom=0.1, top=0.9,
+									wspace=0.05, hspace=0.05)
+
+		self.static_canvas.figure.clear()
+		if self.plotHistograms:
+			self.axScatter = self.static_canvas.figure.add_subplot(self.gs[1, 0])
+
+			# x/y hist
+			self.axHistX = self.static_canvas.figure.add_subplot(self.gs[0, 0], sharex=self.axScatter)
+			self.axHistY = self.static_canvas.figure.add_subplot(self.gs[1, 1], sharey=self.axScatter)
+			#
+			self.axHistX.spines['right'].set_visible(False)
+			self.axHistX.spines['top'].set_visible(False)
+			self.axHistY.spines['right'].set_visible(False)
+			self.axHistY.spines['top'].set_visible(False)
+
+			#self.axHistX.tick_params(axis="x", labelbottom=False) # no labels
+			#self.axHistX.tick_params(axis="y", labelleft=False) # no labels
+		else:
+			self.axScatter = self.static_canvas.figure.add_subplot(self.gs[0, 0])
+			self.axHistX = None
+			self.axHistY = None
+
+		#
+		# we wil always have axScatter
+		#
+		# make initial empty scatter plot
+		self.cmap = mpl.pyplot.cm.coolwarm
+		self.cmap.set_under("white") # only works for dark theme
+		self.lines = self.axScatter.scatter([], [], c=[], cmap=self.cmap, picker=5)
+		# make initial empty spike selection plot
+		self.linesSel, = self.axScatter.plot([], [], 'oy')
+		# despine top/right
+		self.axScatter.spines['right'].set_visible(False)
+		self.axScatter.spines['top'].set_visible(False)
+
+		self.cid = self.static_canvas.mpl_connect('pick_event', self.spike_pick_event)
+		self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
+
+		#
+		#self.replot()
 
 	def btnstate(self, b):
 		state = b.isChecked()
@@ -116,6 +205,11 @@ class plotScatter(sanpyPlugin):
 			self.plotColorTime = state
 			logger.info(f'plotColorTime:{self.plotColorTime}')
 			self.replot()
+		elif b.text() == 'Histograms':
+			self.plotHistograms = state
+			self._switchScatter()
+			logger.info(f'plotHistograms:{self.plotHistograms}')
+			self.replot()
 		else:
 			logger.warning(f'Did not respond to button "{b.text()}"')
 
@@ -127,22 +221,24 @@ class plotScatter(sanpyPlugin):
 		yHumanStat, yStat = self.yPlotWidget.getCurrentStat()
 
 		logger.info(f'x:"{xHumanStat}" y:"{yHumanStat}"')
+		logger.info(f'x:"{xStat}" y:"{yStat}"')
 
-		self.xStatName = xStat
-		self.yStatName = yStat
-
-		if self.ba is None:
+		if self.ba is None or xHumanStat is None or yHumanStat is None:
 			xData = None
 			yData = None
 		else:
 			xData = self.ba.getStat(xStat, sweepNumber=self.sweepNumber)
 			yData = self.ba.getStat(yStat, sweepNumber=self.sweepNumber)
 
+		self.xStatName = xStat
+		self.yStatName = yStat
+
 		# return if we got no data, happend when there is no analysis
 		#if xData is None or yData is None:
 		if not xData or not yData:
 			logger.warning(f'Did not find either xStat: "{xStat}" or yStat: "{yStat}"')
 			self.lines.set_offsets([np.nan, np.nan])
+			self.scatter_hist([], [], self.axScatter, self.axHistX, self.axHistY)
 			self.static_canvas.draw()
 			self.mainWidget.repaint() # update the widget
 			return
@@ -177,8 +273,8 @@ class plotScatter(sanpyPlugin):
 		if self.plotChasePlot:
 			xStatLabel += ' [i]'
 			yStatLabel += ' [i-1]'
-		self._static_ax.set_xlabel(xStatLabel)
-		self._static_ax.set_ylabel(yStatLabel)
+		self.axScatter.set_xlabel(xStatLabel)
+		self.axScatter.set_ylabel(yStatLabel)
 
 		# cancel any selections
 		self.linesSel.set_data([], [])
@@ -198,16 +294,67 @@ class plotScatter(sanpyPlugin):
 		yMin -= percentSpan
 		yMax += percentSpan
 		#
-		self._static_ax.set_xlim([xMin, xMax])
-		self._static_ax.set_ylim([yMin, yMax])
+		self.axScatter.set_xlim([xMin, xMax])
+		self.axScatter.set_ylim([yMin, yMax])
 
 		# this was for lines (not scatter)
-		#self._static_ax.relim()
-		#self._static_ax.autoscale_view(True,True,True)
+		#self.axScatter.relim()
+		#self.axScatter.autoscale_view(True,True,True)
+
+		'''
+		# x-hist
+		self.axHistX.clear()
+		self.axHistX.hist(xData)
+		# y-hist
+		self.axHistY.clear()
+		self.axHistY.hist(xData)
+		'''
+
+		self.scatter_hist(xData, yData, self.axScatter, self.axHistX, self.axHistY)
 
 		# redraw
 		self.static_canvas.draw()
 		self.mainWidget.repaint() # update the widget
+
+	def scatter_hist(self, x, y, ax, ax_histx, ax_histy):
+		"""
+		plot a scatter with x/y histograms in margin
+
+		Args:
+			ax (axes) Scatter Axes
+		"""
+
+		# the scatter plot:
+		#self.lines = ax.scatter(x, y)
+
+		# now determine nice limits by hand:
+		'''
+		binwidth = 0.25
+		xymax = max(np.max(np.abs(x)), np.max(np.abs(y)))
+		lim = (int(xymax/binwidth) + 1) * binwidth
+		bins = np.arange(-lim, lim + binwidth, binwidth)
+		'''
+
+		bins = 'doane'
+
+		# x
+		if ax_histx is not None:
+			ax_histx.clear()
+			nHistX, binsHistX, patchesHistX = ax_histx.hist(x, bins=bins, ec="gray")
+			ax_histx.tick_params(axis="x", labelbottom=False) # no labels
+			#ax_histx.spines['right'].set_visible(False)
+			#ax_histx.spines['top'].set_visible(False)
+			#ax_histx.yaxis.set_ticks_position('left')
+			#ax_histx.xaxis.set_ticks_position('bottom')
+			print('binsHistX:', len(binsHistX))
+		# y
+		if ax_histy is not None:
+			ax_histy.clear()
+			nHistY, binsHistY, patchesHistY = ax_histy.hist(y, bins=bins, orientation='horizontal', ec="gray")
+			ax_histy.tick_params(axis="y", labelleft=False)
+			#ax_histy.yaxis.set_ticks_position('left')
+			#ax_histy.xaxis.set_ticks_position('bottom')
+			print('binsHistY:', len(binsHistY))
 
 	def selectSpike(self, sDict):
 		"""
@@ -217,14 +364,17 @@ class plotScatter(sanpyPlugin):
 
 		spikeNumber = sDict['spikeNumber']
 
+		logger.info(sDict)
+		logger.info(f'{spikeNumber} {type(spikeNumber)}')
+
 		if self.xStatName is None or self.yStatName is None:
 			return
 
 		if spikeNumber is not None and spikeNumber >= 0:
-			xData = self.ba.getStat(self.xStatName, self.sweepNumber)
+			xData = self.ba.getStat(self.xStatName, sweepNumber=self.sweepNumber)
 			xData = [xData[spikeNumber]]
 
-			yData = self.ba.getStat(self.yStatName, self.sweepNumber)
+			yData = self.ba.getStat(self.yStatName, sweepNumber=self.sweepNumber)
 			yData = [yData[spikeNumber]]
 		else:
 			xData = []
@@ -304,7 +454,11 @@ class myStatListWidget(QtWidgets.QWidget):
 		humanStat = self.myTableWidget.item(row,0).text()
 
 		# convert from human readbale to backend
-		stat = self.statList[humanStat]['name']
+		try:
+			stat = self.statList[humanStat]['name']
+		except (KeyError) as e:
+			humanStat = None
+			stat = None
 
 		return humanStat, stat
 

@@ -31,18 +31,21 @@ def butter_sos(cutOff, fs, order=50, passType='lowpass'):
 	passType (str): ('lowpass', 'highpass')
 	"""
 
+	'''
 	nyq = fs * 0.5
 	normal_cutoff = cutOff / nyq
+	'''
 
 	logger.info('')
 	print('  order:', order)
 	print('  cutOff:',cutOff)
-	print('  normal_cutoff:', normal_cutoff, type(normal_cutoff))
+	#print('  normal_cutoff:', normal_cutoff, type(normal_cutoff))
 	print('  fs:',fs)
 	print('  passType:',passType)
 
 	#sos = butter(order, normal_cutoff, btype='low', analog=False, output='sos')
-	sos = scipy.signal.butter(N=order, Wn=normal_cutoff, btype=passType, analog=False, fs=fs, output='sos')
+	#sos = scipy.signal.butter(N=order, Wn=normal_cutoff, btype=passType, analog=False, fs=fs, output='sos')
+	sos = scipy.signal.butter(N=order, Wn=cutOff, btype=passType, analog=False, fs=fs, output='sos')
 	return sos
 
 def spikeDetect(t, dataFiltered, dataThreshold2, startPoint=None, stopPoint=None):
@@ -419,6 +422,11 @@ class fftPlugin(sanpyPlugin):
 
 		self._isInited = False
 
+		self.doButterFilter = True
+		self.butterOrder = 70
+		self.butterCutoff = [0.7, 10]  # [low freq, high freq] for bandpass
+
+		self._resultsDictList = []
 		self._resultStr = ''
 
 		self.isModel = False
@@ -444,7 +452,7 @@ class fftPlugin(sanpyPlugin):
 
 		#self.sos = None
 
-		self.medianFilterPnts = 50
+		self.medianFilterPnts = 0
 
 		# points
 		self.lastLeft = 0
@@ -529,6 +537,36 @@ class fftPlugin(sanpyPlugin):
 
 		self.resultsLabel = QtWidgets.QLabel('Results: Peak Hz=??? Ampplitude=???')
 		self.controlLayout.addWidget(self.resultsLabel)
+
+		checkboxName = 'Butter Filter'
+		butterCheckBox = QtWidgets.QCheckBox(checkboxName)
+		butterCheckBox.setChecked(self.doButterFilter)
+		butterCheckBox.stateChanged.connect(partial(self.on_checkbox_clicked, checkboxName))
+		self.controlLayout.addWidget(butterCheckBox)
+
+		aLabel = QtWidgets.QLabel('Order')
+		self.controlLayout.addWidget(aLabel)
+		self.butterOrderSpinBox = QtWidgets.QSpinBox()
+		self.butterOrderSpinBox.setRange(0, 1e9)
+		self.butterOrderSpinBox.setValue(self.butterOrder)
+		self.butterOrderSpinBox.editingFinished.connect(partial(self.on_cutoff_spinbox, aLabel))
+		self.controlLayout.addWidget(self.butterOrderSpinBox)
+
+		aLabel = QtWidgets.QLabel('Low (Hz)')
+		self.controlLayout.addWidget(aLabel)
+		self.lowCutoffSpinBox = QtWidgets.QDoubleSpinBox()
+		self.lowCutoffSpinBox.setRange(0, 1e9)
+		self.lowCutoffSpinBox.setValue(self.butterCutoff[0])
+		self.lowCutoffSpinBox.editingFinished.connect(partial(self.on_cutoff_spinbox, aLabel))
+		self.controlLayout.addWidget(self.lowCutoffSpinBox)
+
+		aLabel = QtWidgets.QLabel('High')
+		self.controlLayout.addWidget(aLabel)
+		self.highCutoffSpinBox = QtWidgets.QDoubleSpinBox()
+		self.highCutoffSpinBox.setRange(0, 1e9)
+		self.highCutoffSpinBox.setValue(self.butterCutoff[1])
+		self.highCutoffSpinBox.editingFinished.connect(partial(self.on_cutoff_spinbox, aLabel))
+		self.controlLayout.addWidget(self.highCutoffSpinBox)
 
 		psdWindowComboBox = QtWidgets.QComboBox()
 		psdWindowComboBox.addItem('Hanning')
@@ -980,12 +1018,20 @@ class fftPlugin(sanpyPlugin):
 		yDetrend = myDetrend(yFiltered)
 
 		#
-		self.butterCutoff = 7  # Hz
-		self.butterOrder = 50
-		self.sos = butter_sos(self.butterCutoff, self.fs, order=self.butterOrder, passType='lowpass')
-		yFiltered_Butter = scipy.signal.sosfilt(self.sos, yDetrend, axis=0)
-		print('yDetrend:', yDetrend.shape, np.nanmin(yDetrend), np.nanmax(yDetrend))
-		print('yFiltered_Butter:', yFiltered_Butter.shape, np.nanmin(yFiltered_Butter), np.nanmax(yFiltered_Butter))
+		if self.doButterFilter:
+			#self.butterCutoff = 10  # Hz
+			#self.butterOrder = 70
+			#self.sos = butter_sos(self.butterCutoff, self.fs, order=self.butterOrder, passType='lowpass')
+			#self.butterCutoff = [0.7, 10]
+			logger.info(f'butterOrder:{self.butterOrder} butterCutoff:{self.butterCutoff}')
+			self.sos = butter_sos(self.butterCutoff, self.fs, order=self.butterOrder, passType='bandpass')
+			# filtfilt should remove phase delay in time. A forward-backward digital filter using cascaded second-order sections.
+			yFiltered_Butter = scipy.signal.sosfiltfilt(self.sos, yDetrend, axis=0)
+			#print('yDetrend:', yDetrend.shape, np.nanmin(yDetrend), np.nanmax(yDetrend))
+			#print('yFiltered_Butter:', yFiltered_Butter.shape, np.nanmin(yFiltered_Butter), np.nanmax(yFiltered_Butter))
+
+			# we use this for remaining
+			yFiltered = yFiltered_Butter
 
 		dataMean = np.nanmean(yDetrend)
 		dataStd = np.nanstd(yDetrend)
@@ -999,19 +1045,22 @@ class fftPlugin(sanpyPlugin):
 		self.rawZoomAxes.axhline(dataThreshold3, marker='', color='r', linestyle='--', linewidth=0.5)
 		self.rawZoomAxes.set_xlim([t[0], t[-1]])
 		#
-		self.rawZoomAxes.plot(t, yFiltered_Butter, '-r', linewidth=1)
+		if self.doButterFilter:
+			self.rawZoomAxes.plot(t, yFiltered, '-r', linewidth=1)
 
-		#plt.plot(t, yFiltered_Butter)
-		#plt.show()
-
-		minPlotFreq = 0
-		maxPlotFreq = self.maxPlotHz #15
+		# we will still scale a freq plots to [0, self.maxPlotHz]
+		if self.doButterFilter:
+			minPlotFreq = self.butterCutoff[0]
+			maxPlotFreq = self.butterCutoff[1]
+		else:
+			minPlotFreq = 0
+			maxPlotFreq = self.maxPlotHz #15
 
 		#
 		# spectrogram
 		#self.fftAxes.clear()
 		nfft2 = int(nfft / 4)
-		specSpectrum, specFreqs, spec_t, specIm = plt.specgram(yFiltered, NFFT=nfft2, Fs=fs, detrend=myDetrend)
+		specSpectrum, specFreqs, spec_t, specIm = self.spectrogramAxes.specgram(yFiltered, NFFT=nfft2, Fs=fs, detrend=myDetrend)
 		'''
 		print('=== specgram')
 		print('  yFiltered:', yFiltered.shape)
@@ -1028,12 +1077,15 @@ class fftPlugin(sanpyPlugin):
 		print('    ', np.nanmin(specSpectrum), np.nanmax(specSpectrum))
 		'''
 
+		# careful: I want to eventually scale y-axis to [0, self.maxPlotHz]
+		# for now use [minPlotFreq, maxPlotFreq]
 		x_min = startSec
 		x_max = stopSec
 		y_min = maxPlotFreq  # minPlotFreq
 		y_max = minPlotFreq  # maxPlotFreq
 		extent = [x_min , x_max, y_min , y_max]
 
+		self.spectrogramAxes.clear()
 		self.spectrogramAxes.imshow(specSpectrum, extent=extent, aspect='auto', cmap='viridis')
 		self.spectrogramAxes.invert_yaxis()
 		self.spectrogramAxes.set_xlabel('Time (s)')
@@ -1047,12 +1099,14 @@ class fftPlugin(sanpyPlugin):
 			psdWindow = np.blackman(nfft)
 		else:
 			logger.warning(f'psdWindowStr not understood {self.psdWindowStr}')
+		'''
 		print('=== calling mpl psd()')
 		print('  nfft:', nfft)
 		print('  fs:', fs)
 		print('  myDetrend:', myDetrend)
 		print('  psdWindowStr:', self.psdWindowStr)
 		print('  psdWindow:', psdWindow)
+		'''
 		Pxx, freqs = self.psdAxes.psd(yFiltered, marker='', linestyle='-', NFFT=nfft, Fs=fs, detrend=myDetrend, window=psdWindow)
 
 		#
@@ -1063,7 +1117,7 @@ class fftPlugin(sanpyPlugin):
 		freqsLog10 = freqs[mask] # order matters
 		self.psdAxes.clear()
 		self.psdAxes.plot(freqsLog10, pxxLog10, '-', linewidth=1)
-		self.psdAxes.set_xlim([minPlotFreq, maxPlotFreq])  # x-axes is frequency
+		self.psdAxes.set_xlim([0, self.maxPlotHz])  # x-axes is frequency
 		self.psdAxes.grid(True)
 		#self.psdAxes.set_ylabel('10*log10(Pxx)')
 		self.psdAxes.set_ylabel('PSD (dB)')
@@ -1079,7 +1133,7 @@ class fftPlugin(sanpyPlugin):
 			maxFreq = round(freqsLog10[peak],3) # Gives 0.05
 			maxPsd = round(pxxLog10[peak],3) # Gives 0.05
 		except(ValueError) as e:
-			logger.errror('BAD PEAK in pxx')
+			logger.error('BAD PEAK in pxx')
 			maxFreq = []
 			maxPsd =[]
 
@@ -1100,10 +1154,10 @@ class fftPlugin(sanpyPlugin):
 		pMaxPsd = round(maxPsd,3)
 
 		printStr = f'Type\tFile\tstartSec\tstopSec\tmaxFreqPsd\tmaxPsd'  #\tmaxFreqFft\tmaxFft'
-		self.appendResultsStr(printStr)
+		#self.appendResultsStr(printStr)
 		print(printStr)
 		printStr = f'fftPlugin\t{self.ba.getFileName()}\t{pStart}\t{pStop}\t{pMaxFreq}\t{pMaxPsd}'
-		self.appendResultsStr(printStr)
+		self.appendResultsStr(printStr, maxFreq=pMaxFreq, maxPsd=pMaxPsd, freqs=freqsLog10, psd=pxxLog10)
 		print(printStr)
 
 		#
@@ -1160,8 +1214,25 @@ class fftPlugin(sanpyPlugin):
 		#
 		self.static_canvas.draw()
 
-	def appendResultsStr(self, str):
+	def appendResultsStr(self, str, maxFreq='', maxPsd='', freqs='', psd=''):
 		self._resultStr += str + '\n'
+		resultDict = {
+			'file': self.ba.getFileName(),
+			'startSec': self.getStartStop()[0],
+			'stopSec': self.getStartStop()[1],
+			'butterFilter': self.doButterFilter,
+			'butterOrder': self.butterOrder,
+			'lowFreqCutoff': self.butterCutoff[0],
+			'highFreqCutoff': self.butterCutoff[1],
+			'maxFreq': maxFreq,
+			'maxPSD': maxPsd,
+			'freqs': freqs,
+			'psd': psd,
+		}
+		self._resultsDictList.append(resultDict)
+
+	def getResultsDictList(self):
+		return self._resultsDictList
 
 	def getResultStr(self):
 		return self._resultStr
@@ -1212,22 +1283,30 @@ class fftPlugin(sanpyPlugin):
 
 		logger.info('')
 
-		self.sos = butter_sos(self.butterCutoff, self.fs, self.butterOrder, passType='lowpass')
+		#self.sos = butter_sos(self.butterCutoff, self.fs, self.butterOrder, passType='lowpass')
 
-		w,H = scipy.signal.sosfreqz(self.sos, fs=self.fs)
+		fs = self.fs
+
+		if self.sos is None:
+			# filter has not been created
+			self.sos = butter_sos(self.butterCutoff, self.fs, order=self.butterOrder, passType='bandpass')
+
+		w,h = scipy.signal.sosfreqz(self.sos, worN=fs*5, fs=fs)
 
 		print('w:', w)
-		print('H:', np.abs(H))
+		print('h:', np.abs(h))
 
 		fig = plt.figure(figsize=(3, 3))
 		ax1 = fig.add_subplot(1,1,1) #
 
 		#plt.plot(0.5*fs*w/np.pi, np.abs(H), 'b')
-		y = np.abs(H)  # 10*np.log10(np.maximum(1e-10, np.abs(H)))
-		ax1.plot(w, y, '-')
-		ax1.axvline(self.butterCutoff, color='r', linestyle='--', linewidth=0.5)
+		db = 20*np.log10(np.maximum(np.abs(h), 1e-5))
+		#y = np.abs(H)  # 10*np.log10(np.maximum(1e-10, np.abs(H)))
+		ax1.plot(w, db, '-')
+		ax1.axvline(self.butterCutoff[0], color='r', linestyle='--', linewidth=0.5)
+		ax1.axvline(self.butterCutoff[1], color='r', linestyle='--', linewidth=0.5)
 		#y_sos = signal.sosfilt(sos, x)
-		ax1.set_xlim(0, self.maxPlotHz)
+		ax1.set_xlim(0, self.maxPlotHz * 2)
 
 		ax1.set_xlabel('Frequency (Hz)')
 		ax1.set_ylabel('Decibles (dB)')
@@ -1365,6 +1444,12 @@ class fftPlugin(sanpyPlugin):
 		self.maxPlotHz = self.maxPlotHzSpinBox.value()
 		self.medianFilterPnts = self.medianFilterPntsSpinBox.value()  # int
 
+		self.butterOrder = self.butterOrderSpinBox.value()
+
+		lowCutoff = self.lowCutoffSpinBox.value()  # int
+		highCutoff = self.highCutoffSpinBox.value()  # int
+		self.butterCutoff = [lowCutoff, highCutoff]
+
 		self.freqResLabel.setText(f'Freq Resolution (Hz) {round(self.fs/self.nfft, 3)}')
 
 		#self.order = self.orderSpinBox.value()
@@ -1386,6 +1471,9 @@ class fftPlugin(sanpyPlugin):
 			pass
 		elif name == 'Model Data':
 			self.loadData(fileIdx=0, modelData=isOn)
+		elif name == 'Butter Filter':
+			self.doButterFilter = value==2
+			self.replot2(switchFile=False)
 		else:
 			logger.warning(f'name:"{name}" not understood')
 
@@ -1649,5 +1737,33 @@ def test_fft():
 	#
 	plt.show()
 
+def testFilter():
+	butterOrder = 50
+	butterCutoff = [0.7, 10]
+	fs = 10000
+	#nyq = fs * 0.5
+	#normal_cutoff = butterCutoff / nyq
+	#normal_cutoff = butterCutoff
+	passType = 'bandpass'
+
+	#sos = scipy.signal.butter(N=butterOrder, Wn=butterCutoff, btype=passType, analog=False, fs=fs, output='sos')
+	sos = butter_sos(butterCutoff, fs, order=butterOrder, passType='bandpass')
+
+	w,h = scipy.signal.sosfreqz(sos, worN=fs*5, fs=fs)
+
+	db = 20*np.log10(np.maximum(np.abs(h), 1e-5))
+
+	print('w:', w)
+	print('db:', db)
+
+	fig = plt.figure(figsize=(3, 3))
+	ax1 = fig.add_subplot(1,1,1) #
+
+	ax1.plot(w, db, '-')
+	ax1.set_xlim([0, 15])
+
+	plt.show()
+
 if __name__ == '__main__':
-	test_fft()
+	#test_fft()
+	testFilter()

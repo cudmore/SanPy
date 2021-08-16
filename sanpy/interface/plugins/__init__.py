@@ -18,6 +18,7 @@ from .analysisSummary import analysisSummary
 from .exportTrace import exportTrace
 
 from .fftPlugin import fftPlugin
+from .stimGen import stimGen
 
 # TODO: make this just one line, so user can drop a bplugin inn and restart
 from . import *

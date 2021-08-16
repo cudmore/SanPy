@@ -55,7 +55,7 @@ class bTableView(QtWidgets.QTableView):
 		self.setModel(model)
 
 		# (L, A, S, I, File)
-		self.numFrozenColumns = 5 # depends on columns in analysisDir
+		self.numFrozenColumns = 6 # depends on columns in analysisDir
 
 		self.frozenTableView = QtWidgets.QTableView(self)
 		self.frozenTableView.clicked.connect(self.onLeftClick)

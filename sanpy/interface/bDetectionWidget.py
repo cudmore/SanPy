@@ -40,6 +40,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.dacLines = None
 		self.vmLines = None
 		self.vmLinesFiltered = None
+		self.vmLinesFiltered2 = None
+		self.linearRegionItem2 = None  # rectangle over global Vm
 		self.clipLines = None
 		self.meanClipLine = None
 
@@ -48,6 +50,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# a list of possible x/y plots (overlay over dvdt and Vm)
 		# order here determines order in interface
 		self.myPlots = [
+			{
+				'humanName': 'Global Threshold (mV)',
+				'x': 'thresholdSec',
+				'y': 'thresholdVal',
+				'convertx_tosec': False,  # some stats are in points, we need to convert to seconds
+				'color': 'r',
+				'styleColor': 'color: red',
+				'symbol': 'o',
+				'plotOn': 'vmGlobal', # which plot to overlay (vm, dvdt)
+				'plotIsOn': True,
+			},
 			{
 				'humanName': 'Threshold (mV)',
 				'x': 'thresholdSec',
@@ -160,7 +173,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 	def sweepNumber(self):
 		return self._sweepNumber
 
-	def detect(self, dvdtThreshold, mvThreshold):
+	def detect(self, dvdtThreshold, mvThreshold, startSec, stopSec):
 		"""
 		Detect spikes
 		"""
@@ -171,7 +184,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 			return
 
 		if self.ba.loadError:
-			logger.warning('Did not spike detect, the file was not loaded or may be corrupt .abf file?')
+			str = 'Did not spike detect, the file was not loaded or may be corrupt?'
+			self.updateStatusBar(str)
 			return
 
 		#logger.info(f'Detecting with dvdtThreshold:{dvdtThreshold} mvThreshold:{mvThreshold}')
@@ -183,8 +197,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		detectionDict['mvThreshold'] = mvThreshold
 
 		# TODO: pass this function detection params and call from sanpy_app ???
-		# grab parameters from main interface table
 		if self.myMainWindow is not None:
+			# grab parameters from main interface table
 			logger.info('Grabbing detection parameters from main window table')
 
 			# problem is these k/v have v that are mixture of str/float/int ... hard to parse
@@ -208,6 +222,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 				detectionDict['onlyPeaksBelow_mV'] = myDetectionDict['onlyPeaksBelow_mV']
 
 			#
+			# fill in detectionDict from *this interface
+			detectionDict['startSeconds'] = startSec
+			detectionDict['stopSeconds'] = stopSec
+
 			'''
 			if myDetectionDict['Start(s)'] >= 0:
 				# default is 50 ms
@@ -221,7 +239,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 			detectionDict['sex'] = myDetectionDict['Sex']
 			detectionDict['condition'] = myDetectionDict['Condition']
 
-		#dfReportForScatter = self.ba.spikeDetect(detectionDict)
+		'''
+		if self.myMainWindow is not None:
+			# grab parameters from main interface table
+			logger.info('setting start/stop seconds in main window table')
+			self.myMainWindow.xxx.setCellValue(rowIdx, colStr, value)
+		'''
+
+		#
+		# detect
 		self.ba.spikeDetect(detectionDict)
 
 		# show dialog when num spikes is 0
@@ -230,6 +256,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 			informativeText = f'dV/dt Threshold:{dvdtThreshold}\nVm Threshold (mV):{mvThreshold}'
 			sanpy.interface.bDialog.okDialog('No Spikes Detected', informativeText=informativeText)
 		'''
+
+		#
+		# fill in our start/stop in the main table
+		# this is done in analysisDir.xxx()
+		#setCellValue(self, rowIdx, colStr, value)
 
 		self.replot() # replot statistics over traces
 
@@ -328,6 +359,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 			else:
 				logger.error(f'did not understand whichPlot: {whichPlot}')
 
+		# update rectangle in vmPlotGlobal
+		self.linearRegionItem2.setRegion([start,stop])
+
 		# update detection toolbar
 		if set_xyBoth == 'xAxis':
 			self.detectToolbarWidget.startSeconds.setValue(start)
@@ -341,6 +375,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.refreshClips(start, stop)
 
 		return start, stop
+
+	def setAxis_OnFileChange(self, startSec, stopSec):
+		if startSec is None or stopSec is None or math.isnan(startSec) or math.isnan(stopSec):
+			startSec = 0
+			stopSec = self.ba.recordingDur
+
+		self.vmPlotGlobal.autoRange(items=[self.vmLinesFiltered2])  # always full view
+		self.linearRegionItem2.setRegion([startSec, stopSec])
+
+		padding = 0
+		self.derivPlot.setXRange(startSec, stopSec, padding=padding) # linked to Vm
 
 	def setAxisFull_y(self, thisAxis):
 		"""
@@ -375,7 +420,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.derivPlot.autoRange()
 		self.dacPlot.autoRange()
 		self.vmPlot.autoRange()
+		self.vmPlotGlobal.autoRange(items=[self.vmLinesFiltered2])  # we never zoom this
 		self.clipPlot.autoRange()
+
+		# rectangle region on vmPlotGlobal
+		self.linearRegionItem2.setRegion([0, self.ba.recordingDur])
 
 		#
 		# update detection toolbar
@@ -420,7 +469,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 	def setAxis(self, start, stop, set_xyBoth='xAxis', whichPlot='vm'):
 		"""
-		Callen when user click+drag in a pyQtGraph plot.
+		Called when user click+drag in a pyQtGraph plot.
 
 		Args:
 			start
@@ -433,7 +482,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if set_xyBoth == 'xAxis':
 			if self.myMainWindow is not None:
 				self.myMainWindow.mySignal('set x axis', data=[start,stop])
-		# no nned to emit change in y-axis, no other widgets change
+		# no need to emit change in y-axis, no other widgets change
 		'''
 		elif set_xyBoth == 'yAxis':
 			# todo: this needs to know which plot
@@ -631,6 +680,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 			idx (int): overlay index into self.myPlots
 			on (bool):
 		"""
+		if isinstance(idx, str):
+			logger.error(f'Unexpected type for parameter idx "{idx}" with type {typeidx}')
+			return
+
 		# toggle the plot on/off
 		self.myPlots[idx]['plotIsOn'] = on
 
@@ -650,7 +703,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# always replot everything
 		self.replot(oneIndex=idx)
 
-	def selectSweep(self, sweepNumber, doEmit=True):
+	def selectSweep(self, sweepNumber, startSec=None, stopSec=None, doEmit=True):
 		"""
 		sweepNumber (str): from ('All', 0, 1, 2, 3, ...)
 		"""
@@ -663,7 +716,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		else:
 			sweepNumber = int(sweepNumber)
 
-		logger.info(f'sweepNumber:"{sweepNumber}" {type(sweepNumber)} doEmit:{doEmit}')
+		logger.info(f'sweepNumber:"{sweepNumber}" {type(sweepNumber)} doEmit:{doEmit} startSec:"{startSec}" stopSec:"{stopSec}"')
 
 		#if self._sweepNumber == sweepNumber:
 		#	logger.info(f'Already showing sweep:{sweepNumber}      RETURNING')
@@ -673,7 +726,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		#self.setAxisFull()
 
-		self._replot()  # will set full axis
+		self._replot(startSec, stopSec)  # will set full axis
 
 		if doEmit:
 			self.signalSelectSweep.emit(self.ba, sweepNumber)
@@ -797,6 +850,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 				self.dacPlot.show()
 			else:
 				self.dacPlot.hide()
+		elif item == 'Global Vm':
+			#self.toggle_dvdt(on)
+			if self.myMainWindow is not None:
+				#self.myMainWindow.toggleStatisticsPlot(on)
+				self.myMainWindow.preferencesSet('display', 'showGlobalVm', on)
+			if on:
+				self.vmPlotGlobal.show()
+			else:
+				self.vmPlotGlobal.hide()
 		#elif item == 'vM':
 		#	if on:
 		#		self.vmPlot.show()
@@ -842,10 +904,22 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#self.view.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 		self.view.show()
 
-		self.derivPlot = self.view.addPlot(row=0, col=0)
-		self.dacPlot = self.view.addPlot(row=1, col=0)
-		self.vmPlot = self.view.addPlot(row=2, col=0)
-		self.clipPlot = self.view.addPlot(row=3, col=0)
+		row = 0
+		colSpan = 1
+		rowSpan = 1
+		self.vmPlotGlobal = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
+		row += rowSpan
+		rowSpan = 1
+		self.derivPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
+		row += rowSpan
+		rowSpan = 1
+		self.dacPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
+		row += rowSpan
+		rowSpan = 2  # make Vm plot taller than others
+		self.vmPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
+		row += rowSpan
+		rowSpan = 1
+		self.clipPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
 
 		#
 		# mouse crosshair
@@ -884,12 +958,14 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#self.derivPlot.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 
 		# hide the little 'A' button to rescale axis
+		self.vmPlotGlobal.hideButtons()
 		self.derivPlot.hideButtons()
 		self.dacPlot.hideButtons()
 		self.vmPlot.hideButtons()
 		self.clipPlot.hideButtons()
 
 		# turn off right-click menu
+		self.vmPlotGlobal.setMenuEnabled(False)
 		self.derivPlot.setMenuEnabled(False)
 		self.dacPlot.setMenuEnabled(False)
 		self.vmPlot.setMenuEnabled(False)
@@ -904,6 +980,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.vmPlot.setXLink(self.dacPlot)
 
 		# turn off x/y dragging of deriv and vm
+		self.vmPlotGlobal.setMouseEnabled(x=False, y=False)
 		self.derivPlot.setMouseEnabled(x=False, y=False)
 		self.dacPlot.setMouseEnabled(x=False, y=False)
 		self.vmPlot.setMouseEnabled(x=False, y=False)
@@ -933,6 +1010,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 			# add plot to pyqtgraph
 			if plot['plotOn'] == 'vm':
 				self.vmPlot.addItem(myScatterPlot)
+			elif plot['plotOn'] == 'vmGlobal':
+				self.vmPlotGlobal.addItem(myScatterPlot)
 			elif plot['plotOn'] == 'dvdt':
 				self.derivPlot.addItem(myScatterPlot)
 
@@ -940,13 +1019,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 		color = 'y'
 		symbol = 'o'
 		self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=4)
+		#mySingleSpikeScatterPlotCopy = self.mySingleSpikeScatterPlot.copy()
+		#self.vmPlotGlobal.addItem(self.mySingleSpikeScatterPlotCopy)
 		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
 
 		# axis labels
 		self.derivPlot.getAxis('left').setLabel('dV/dt (mV/ms)')
 
 		# although called vmPlot, this does double time for current-cclamp and voltage clamp
-		# todo: rename to reccordingPlot
+		# todo: rename to recordingPlot
+		self.vmPlotGlobal.getAxis('left').setLabel('Vm (mV)')
+		self.vmPlotGlobal.getAxis('bottom').setLabel('Seconds')
 		self.vmPlot.getAxis('left').setLabel('Vm (mV)')
 		self.vmPlot.getAxis('bottom').setLabel('Seconds')
 
@@ -1148,8 +1231,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# cancel spike selection
 		self.selectSpike(None)
 
+		startSec = tableRowDict['Start(s)']
+		stopSec = tableRowDict['Stop(s)']
+
+		if startSec=='' or stopSec=='':
+			startSec = 0
+			stopSec = self.ba.recordingDur
+
 		# set sweep to 0
-		self.selectSweep(0, doEmit=False) # calls self._replot()
+		self.selectSweep(0, startSec, stopSec, doEmit=False) # calls self._replot()
 
 		# set full axis
 		#self.setAxisFull()
@@ -1159,7 +1249,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# update x/y axis labels
 		yLabel = self.ba._sweepLabelY
+		self.dacPlot.getAxis('left').setLabel('DAC')
 		self.derivPlot.getAxis('left').setLabel('d/dt')
+		self.vmPlotGlobal.getAxis('left').setLabel(yLabel)
+		self.vmPlotGlobal.getAxis('bottom').setLabel('Seconds')
 		self.vmPlot.getAxis('left').setLabel(yLabel)
 		self.vmPlot.getAxis('bottom').setLabel('Seconds')
 
@@ -1169,7 +1262,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		"""User has edited main file table."""
 		self.detectToolbarWidget.slot_dataChanged(columnName, value, rowDict)
 
-	def _replot(self):
+	def _replot(self, startSec, stopSec):
 		#remove vm/dvdt/clip items (even when abf file is corrupt)
 		#if self.dvdtLines is not None:
 		#	self.derivPlot.removeItem(self.dvdtLines)
@@ -1179,6 +1272,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 			self.dacPlot.removeItem(self.dacLines)
 		if self.vmLinesFiltered is not None:
 			self.vmPlot.removeItem(self.vmLinesFiltered)
+		if self.vmLinesFiltered2 is not None:
+			self.vmPlotGlobal.removeItem(self.vmLinesFiltered2)
+		if self.linearRegionItem2 is not None:
+			self.vmPlotGlobal.removeItem(self.linearRegionItem2)
 		if self.clipLines is not None:
 			self.clipPlot.removeItem(self.clipLines)
 
@@ -1210,6 +1307,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 							columnOrder=True)
 		self.vmPlot.addItem(self.vmLinesFiltered)
 
+		# can't add a multi line to 2 different plots???
+		self.vmLinesFiltered2 = MultiLine(sweepX, filteredVm,
+							self, forcePenColor='b', type='vmFiltered',
+							columnOrder=True)
+		self.vmPlotGlobal.addItem(self.vmLinesFiltered2)
+		self.linearRegionItem2 = pg.LinearRegionItem(values=(0,self.ba.recordingDur), orientation=pg.LinearRegionItem.Vertical)
+		#self.linearRegionItem2.setMovable(False)
+		self.vmPlotGlobal.addItem(self.linearRegionItem2)
+
 		#
 		# remove and re-add plot overlays
 		for idx, plot in enumerate(self.myPlots):
@@ -1217,21 +1323,27 @@ class bDetectionWidget(QtWidgets.QWidget):
 			if plot['plotOn'] == 'vm':
 				self.vmPlot.removeItem(plotItem)
 				self.vmPlot.addItem(plotItem)
+			elif plot['plotOn'] == 'vmGlobal':
+				self.vmPlotGlobal.removeItem(plotItem)
+				self.vmPlotGlobal.addItem(plotItem)
 			elif plot['plotOn'] == 'dvdt':
 				self.derivPlot.removeItem(plotItem)
 				self.derivPlot.addItem(plotItem)
 
-		# set full axis
-		# setAxisFull was causing start/stop to get over-written
-		self.setAxisFull()
-		#self.detectToolbarWidget.on_start_stop()
-
 		# single spike selection
+		self.vmPlotGlobal.removeItem(self.mySingleSpikeScatterPlot)
+		self.vmPlotGlobal.addItem(self.mySingleSpikeScatterPlot)
 		self.vmPlot.removeItem(self.mySingleSpikeScatterPlot)
 		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
 
+		# set full axis
+		# setAxisFull was causing start/stop to get over-written
+		#self.setAxisFull()
+		self.setAxis_OnFileChange(startSec, stopSec)
+		#self.detectToolbarWidget.on_start_stop()
+
 		#
-		# critical
+		# critical, replot() is inherited
 		self.replot()
 
 class myImageExporter(ImageExporter):
@@ -1571,7 +1683,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 				str = 'Please set a threshold greater than 0'
 				self.detectionWidget.updateStatusBar(str)
 				return
-			self.detectionWidget.detect(dvdtThreshold, mvThreshold)
+			startSec = self.startSeconds.value()
+			stopSec = self.stopSeconds.value()
+			#
+			self.detectionWidget.detect(dvdtThreshold, mvThreshold, startSec, stopSec)
 
 		elif name =='Detect mV':
 			mvThreshold = self.mvThreshold.value()
@@ -1580,7 +1695,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			dvdtThreshold = None
 			#print('	dvdtThreshold:', dvdtThreshold)
 			#print('	mvThreshold:', mvThreshold)
-			self.detectionWidget.detect(dvdtThreshold, mvThreshold)
+			startSec = self.startSeconds.value()
+			stopSec = self.stopSeconds.value()
+			#
+			self.detectionWidget.detect(dvdtThreshold, mvThreshold, startSec, stopSec)
 
 		# Reset Axes
 		elif name == 'Reset Axes':
@@ -1641,6 +1759,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		windowOptions = self.detectionWidget.getMainWindowOptions()
 		detectDvDt = 20
 		detectMv = -20
+		showGlobalVm = True
 		showDvDt = True
 		showClips = False
 		showScatter = True
@@ -1649,6 +1768,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			detectMv = windowOptions['detect']['detectMv']
 			showDvDt = windowOptions['display']['showDvDt']
 			showDAC = windowOptions['display']['showDAC']
+			showGlobalVm = windowOptions['display']['showGlobalVm']
 			showClips = windowOptions['display']['showClips']
 			showScatter = windowOptions['display']['showScatter']
 			showErrors = windowOptions['display']['showErrors']
@@ -1864,7 +1984,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		aPushButton.clicked.connect(partial(self.on_button_click,buttonName))
 		displayGridLayout.addWidget(aPushButton, row, 2, tmpRowSpan, tmpColSpan)
 		'''
-		
+
 		row += 1
 		self.crossHairCheckBox = QtWidgets.QCheckBox('Crosshair')
 		self.crossHairCheckBox.setChecked(False)
@@ -1919,34 +2039,41 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		# add widgets
 		row = 0
 		col = 0
+		aCheckbox = QtWidgets.QCheckBox('Global Vm')
+		aCheckbox.setChecked(showGlobalVm)
+		aCheckbox.stateChanged.connect(partial(self.on_check_click,aCheckbox,'Global Vm'))
+		plotGridLayout.addWidget(aCheckbox, row, col)
+
+		row = 0
+		col += 1
 		show_dvdt_checkbox = QtWidgets.QCheckBox('dV/dt')
 		show_dvdt_checkbox.setChecked(showDvDt)
 		show_dvdt_checkbox.stateChanged.connect(partial(self.on_check_click,show_dvdt_checkbox,'dV/dt'))
 		plotGridLayout.addWidget(show_dvdt_checkbox, row, col)
 
 		row = 0
-		col = 1
+		col += 1
 		show_dac_checkbox = QtWidgets.QCheckBox('DAC')
 		show_dac_checkbox.setChecked(showDAC)
 		show_dac_checkbox.stateChanged.connect(partial(self.on_check_click,show_dac_checkbox,'DAC'))
 		plotGridLayout.addWidget(show_dac_checkbox, row, col)
 
 		row = 0
-		col = 2
+		col += 1
 		checkbox = QtWidgets.QCheckBox('Clips')
 		checkbox.setChecked(showClips)
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Clips'))
 		plotGridLayout.addWidget(checkbox, row, col)
 
 		row = 0
-		col = 3
+		col += 1
 		checkbox = QtWidgets.QCheckBox('Scatter')
 		checkbox.setChecked(showScatter)
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Scatter'))
 		plotGridLayout.addWidget(checkbox, row, col)
 
 		row = 0
-		col = 4
+		col += 1
 		checkbox = QtWidgets.QCheckBox('Errors')
 		checkbox.setChecked(showErrors)
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Errors'))

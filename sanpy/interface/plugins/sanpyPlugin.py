@@ -264,14 +264,14 @@ class sanpyPlugin(QtCore.QObject):
 		elif isMpl:
 			# q will quit !!!!
 			text = event.key
-			logger.info(f'mpl key: {text}')
+			logger.info(f'mpl key: "{text}"')
 		else:
 			logger.warning(f'Unknown event type: {type(event)}')
 			return
 
 		if doCopy:
 			self.copyToClipboard()
-		elif key==QtCore.Qt.Key_Escape or text=='esc':
+		elif key==QtCore.Qt.Key_Escape or text=='esc' or text=='escape':
 			sDict = {
 				'spikeNumber': None,
 				'doZoom': False
@@ -322,8 +322,7 @@ class sanpyPlugin(QtCore.QObject):
 		#self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
 
 		self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
-		# this is really triccky and annoying
-		self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
+		self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus ) # this is really triccky and annoying
 		self.static_canvas.setFocus()
 		self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
 
@@ -447,8 +446,14 @@ class sanpyPlugin(QtCore.QObject):
 
 		self.replot()
 
-	def slot_switchFile2(self, ba, startStop):
-		"""Respond to switch file."""
+	def slot_switchFile2(self, ba, startStop, fileTableRowDict=None):
+		"""Respond to switch file.
+
+		Args:
+			ba (bAnalysis):
+			startStop (list of float): start/stop seconds of analysis
+			fileTableRowDict (dict): Dictionary of values from main sanpy file table (like, 'File', 'Cell Type', etc)
+		"""
 		logger.info('')
 		if not self.getResponseOption(self.responseTypes.switchFile):
 			return

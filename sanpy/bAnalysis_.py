@@ -345,6 +345,8 @@ class bAnalysis:
 			self._loadAbf(byteStream=byteStream)
 		elif file.endswith('.abf'):
 			self._loadAbf(loadData=loadData)
+		elif file.endswith('.atf'):
+			self._loadAtf(loadData=loadData)
 		elif file.endswith('.tif'):
 			self._loadTif()
 		elif file.endswith('.csv'):
@@ -525,6 +527,69 @@ class bAnalysis:
 		self._path = 'Model_Data'
 		self.myFileType = 'fromDict'
 
+	def _loadAtf(self, loadData):
+		# We cant't get dataPointsPerMs without loading the data
+		loadData = True
+
+		self._abf = pyabf.ATF(self._path)  # , loadData=loadData)
+		print('  self._abf:', self._abf.sweepList)
+		#try:
+		if 1:
+			self._sweepList = self._abf.sweepList
+			self._sweepLengthSec = self._abf.sweepLengthSec
+			if loadData:
+				tmpRows = self._abf.sweepX.shape[0]
+				numSweeps = len(self._sweepList)
+				self._sweepX = np.zeros((tmpRows,numSweeps))
+				self._sweepY = np.zeros((tmpRows,numSweeps))
+				self._sweepC = np.zeros((tmpRows,numSweeps))
+
+				for sweep in self._sweepList:
+					self._abf.setSweep(sweep)
+					self._sweepX[:, sweep] = self._abf.sweepX  # <class 'numpy.ndarray'>, (60000,)
+					self._sweepY[:, sweep] = self._abf.sweepY
+					#self._sweepC[:, sweep] = self._abf.sweepC
+				# not needed
+				self._abf.setSweep(0)
+
+			print('  self._sweepX:', self._sweepX.shape)
+			# get v from pyAbf
+			if len(self.sweepX().shape) > 1:
+				t0 = self.sweepX()[0][0]
+				t1 = self.sweepX()[1][0]
+			else:
+				t0 = self.sweepX()[0]
+				t1 = self.sweepX()[1]
+			dt = (t1-t0) * 1000
+			dataPointsPerMs = 1 / dt
+			dataPointsPerMs = round(dataPointsPerMs)
+			self._dataPointsPerMs = dataPointsPerMs
+
+			'''
+			channel = 0
+			adcUnits = self._abf.adcUnits[channel]
+			self._sweepLabelY = adcUnits
+			self._sweepLabelX = "sec'"
+			'''
+			self._sweepLabelY = 'mV'
+			self._sweepLabelX = "sec'"
+
+			if self._sweepLabelY in ['pA']:
+				self._recordingMode = 'V-Clamp'
+			elif self._sweepLabelY in ['mV']:
+				self._recordingMode = 'I-Clamp'
+
+		'''
+		except (Exception) as e:
+			# some abf files throw: 'unpack requires a buffer of 234 bytes'
+			logger.error(f'did not load ATF file: {self._path}')
+			logger.error(f'  unknown Exception was: {e}')
+			self.loadError = True
+			self._abf = None
+		'''
+
+		self.myFileType = 'atf'
+
 	def _loadAbf(self, byteStream=None, loadData=True):
 		"""Load pyAbf from path."""
 		try:
@@ -703,7 +768,11 @@ class bAnalysis:
 			return d
 
 	def _safeOneSweep(self, d):
-		return d[:,0]
+		if d is None or len(d.shape) != 2:
+			logger.error(f'Expecing shape len of 2 but got "{d.shape}"')
+			return d
+		else:
+			return d[:,0]
 
 	#@property
 	def sweepX(self, sweepNumber=None):
@@ -1191,10 +1260,6 @@ class bAnalysis:
 
 		#
 		# analyze full recording
-		#startPnt = 0
-		#stopPnt = len(self.sweepX) - 1
-		#secondsOffset = 0
-
 		filteredDeriv = self.filteredDeriv(sweepNumber)
 		Is=np.where(filteredDeriv>dDict['dvdtThreshold'])[0]
 		Is=np.concatenate(([0],Is))
@@ -1203,8 +1268,11 @@ class bAnalysis:
 
 		#
 		# reduce spike times based on start/stop
-		# only include spike times between startPnt and stopPnt
-		#spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if (spikeTime>=startPnt and spikeTime<=stopPnt)]
+		if dDict['startSeconds'] is not None and dDict['stopSeconds'] is not None:
+			startPnt = self.dataPointsPerMs * (dDict['startSeconds']*1000) # seconds to pnt
+			stopPnt = self.dataPointsPerMs * (dDict['stopSeconds']*1000) # seconds to pnt
+			tmpSpikeTimes = [spikeTime for spikeTime in spikeTimes0 if (spikeTime>=startPnt and spikeTime<=stopPnt)]
+			spikeTimes0 = tmpSpikeTimes
 
 		#
 		# throw out all spikes that are below a threshold Vm (usually below -20 mV)
@@ -1320,16 +1388,6 @@ class bAnalysis:
 		self.dateAnalyzed = dateStr
 		self.detectionType = 'mvThreshold'
 
-		#
-		#startPnt = 0
-		#stopPnt = len(self.sweepX) - 1
-		#secondsOffset = 0
-		'''
-		if dDict['startSeconds'] is not None and dDict['stopSeconds'] is not None:
-			startPnt = self.dataPointsPerMs * (dDict['startSeconds']*1000) # seconds to pnt
-			stopPnt = self.dataPointsPerMs * (dDict['stopSeconds']*1000) # seconds to pnt
-		'''
-
 		filteredVm = self.filteredVm(sweepNumber=sweepNumber)  # sweep number is not optional here
 		Is=np.where(filteredVm>dDict['mvThreshold'])[0] # returns boolean array
 		Is=np.concatenate(([0],Is))
@@ -1338,7 +1396,12 @@ class bAnalysis:
 
 		#
 		# reduce spike times based on start/stop
-		#spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if (spikeTime>=startPnt and spikeTime<=stopPnt)]
+		if dDict['startSeconds'] is not None and dDict['stopSeconds'] is not None:
+			startPnt = self.dataPointsPerMs * (dDict['startSeconds']*1000) # seconds to pnt
+			stopPnt = self.dataPointsPerMs * (dDict['stopSeconds']*1000) # seconds to pnt
+			tmpSpikeTimes = [spikeTime for spikeTime in spikeTimes0 if (spikeTime>=startPnt and spikeTime<=stopPnt)]
+			spikeTimes0 = tmpSpikeTimes
+
 		spikeErrorList = [None] * len(spikeTimes0)
 
 		#
@@ -2555,10 +2618,25 @@ def test_save():
 
 	#ba.save_csv()
 
+def test_load_atf():
+	path = '/home/cudmore/Sites/SanPy/data/atf/sin_a5.0_f7.0.atf'
+	ba = bAnalysis(path)
+	print(ba)
+	print('sweepList:', ba.sweepList)
+	print('_sweepX:', ba._sweepX.shape)
+	print('dataPointsPerMs:', ba.dataPointsPerMs)
+	t0 = ba.sweepX()[0]
+	t1 = ba.sweepX()[1]
+	dt = (t1 - t0) * 1000
+	datapointsperms = 1 / dt
+	print(t0*1000, t1*1000, dt, datapointsperms)
+
 def main():
 	import matplotlib.pyplot as plt
 
-	test_load_abf()
+	test_load_atf()
+
+	#test_load_abf()
 
 	#test_load_csv()
 
