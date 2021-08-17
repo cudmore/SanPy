@@ -1035,7 +1035,17 @@
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;mV&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Accept Peaks Above (mV)&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;For dV/dt detection, only accept APs above this value (mV)&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Only accept APs with peaks above this value (mV)&#39;</span>
+
+	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;onlyPeaksBelow_mV&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;defaultValue&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;number&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;allowNone&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;mV&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;humanName&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Accept Peaks Below (mV)&#39;</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;description&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Only accept APs below this value (mV)&#39;</span>
 
 	<span class="n">key</span> <span class="o">=</span> <span class="s1">&#39;doBackupSpikeVm&#39;</span>
 	<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>

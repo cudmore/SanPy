@@ -1331,6 +1331,7 @@ Use this as the main pandasModel for file list myTableView.</p>
 	<span class="n">ba</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowIdx</span><span class="p">,</span> <span class="s1">&#39;_ba&#39;</span><span class="p">]</span>
 	<span class="n">uuid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowIdx</span><span class="p">,</span> <span class="s1">&#39;uuid&#39;</span><span class="p">]</span>  <span class="c1"># if we have a uuid bAnalysis is saved in h5f</span>
 	<span class="n">filePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Found &quot;</span><span class="si">{</span><span class="n">ba</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="n">ba</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ba</span><span class="o">==</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
 		<span class="n">ba</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadOneAnalysis</span><span class="p">(</span><span class="n">filePath</span><span class="p">,</span> <span class="n">uuid</span><span class="p">)</span>
 		<span class="c1"># load</span>
@@ -1453,6 +1454,7 @@ Use this as the main pandasModel for file list myTableView.</p>
     <div class="doc doc-contents ">
 
       <p>Get dict representing one file (row in table). Loads bAnalysis to get headers.</p>
+<p>On load error of proper file type (abf, csv), ba.loadError==True</p>
 
 <p><strong>Parameters:</strong></p>
 <table>
@@ -1505,6 +1507,8 @@ Use this as the main pandasModel for file list myTableView.</p>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Get dict representing one file (row in table). Loads bAnalysis to get headers.</span>
 
+<span class="sd">	On load error of proper file type (abf, csv), ba.loadError==True</span>
+
 <span class="sd">	Args:</span>
 <span class="sd">		path (Str): Full path to file.</span>
 <span class="sd">		#rowIdx (int): Optional row index to assign in column &#39;Idx&#39;</span>
@@ -1525,12 +1529,12 @@ Use this as the main pandasModel for file list myTableView.</p>
 		<span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
 
 	<span class="c1"># load bAnalysis</span>
-	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loading bAnalysis &quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-	<span class="n">ba</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+	<span class="c1">#logger.info(f&#39;Loading bAnalysis &quot;{path}&quot;&#39;)</span>
+	<span class="n">ba</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">loadData</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 	<span class="k">if</span> <span class="n">ba</span><span class="o">.</span><span class="n">loadError</span><span class="p">:</span>
 		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error loading bAnalysis file &quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-		<span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+		<span class="c1">#return None, None</span>
 
 	<span class="c1"># not sufficient to default everything to empty str &#39;&#39;</span>
 	<span class="c1"># sanpyColumns can only have type in (&#39;float&#39;, &#39;str&#39;)</span>
@@ -1544,11 +1548,14 @@ Use this as the main pandasModel for file list myTableView.</p>
 	<span class="c1">#if rowIdx is not None:</span>
 	<span class="c1">#	rowDict[&#39;Idx&#39;] = rowIdx</span>
 
-	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="c1"># need 2 because checkbox value is in (0,2)</span>
+	<span class="k">if</span> <span class="n">ba</span><span class="o">.</span><span class="n">loadError</span><span class="p">:</span>
+		<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;I&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span> <span class="c1"># need 2 because checkbox value is in (0,2)</span>
 	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;File&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">getFileName</span><span class="p">()</span> <span class="c1">#os.path.split(ba.path)[1]</span>
-	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Dur(s)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">recodingDur</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Dur(s)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">recordingDur</span>
 	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;kHz&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">recordingFrequency</span>
-	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;fix&#39;</span>
+	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Mode&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">recordingMode</span>
 
 	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
 	<span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
@@ -1706,6 +1713,7 @@ TODO: extend the logic to load from cloud (after we were instantiated)</p>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="c1"># get list of all abf/csv/tif</span>
 		<span class="n">fileList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileList</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+		<span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 		<span class="c1"># build new db dataframe</span>
 		<span class="n">listOfDict</span> <span class="o">=</span> <span class="p">[]</span>
 		<span class="k">for</span> <span class="n">rowIdx</span><span class="p">,</span> <span class="n">file</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">fileList</span><span class="p">):</span>
@@ -1715,7 +1723,7 @@ TODO: extend the logic to load from cloud (after we were instantiated)</p>
 			<span class="n">ba</span><span class="p">,</span> <span class="n">rowDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileRow</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>  <span class="c1"># loads bAnalysis</span>
 
 			<span class="c1"># TODO: calculating time, remove this</span>
-			<span class="c1"># This is 2x faster than loading frmo pandas gzip ???</span>
+			<span class="c1"># This is 2x faster than loading from pandas gzip ???</span>
 			<span class="c1">#dDict = sanpy.bAnalysis.getDefaultDetection()</span>
 			<span class="c1">#dDict[&#39;dvdtThreshold&#39;] = 2</span>
 			<span class="c1">#ba.spikeDetect(dDict)</span>
@@ -1731,6 +1739,9 @@ TODO: extend the logic to load from cloud (after we were instantiated)</p>
 			<span class="k">if</span> <span class="n">testTimingNumFiles</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">rowIdx</span><span class="o">&gt;</span><span class="n">testTimingNumFiles</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span>
 				<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Breaking after testTimingNumFiles:</span><span class="si">{</span><span class="n">testTimingNumFiles</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 				<span class="k">break</span>
+		<span class="n">stop</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Load took </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">stop</span><span class="o">-</span><span class="n">start</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span><span class="si">}</span><span class="s1"> seconds.&#39;</span><span class="p">)</span>
+
 		<span class="c1">#</span>
 		<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">listOfDict</span><span class="p">)</span>
 		<span class="c1">#print(&#39;=== built new db df:&#39;)</span>
@@ -1791,8 +1802,8 @@ TODO: extend the logic to load from cloud (after we were instantiated)</p>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="c1"># load from path</span>
 		<span class="n">ba</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loaded from path </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    </span><span class="si">{</span><span class="n">ba</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="c1">#logger.info(f&#39;Loaded from path {path}&#39;)</span>
+		<span class="c1">#logger.info(f&#39;  Loaded: {ba}&#39;)</span>
 	<span class="k">return</span> <span class="n">ba</span>
 </code></pre></div>
         </details>
@@ -1940,12 +1951,12 @@ TODO: extend the logic to load from cloud (after we were instantiated)</p>
 
     <div class="doc doc-contents ">
 
-      <p>Build one df with all anlysis. Use this in plot tool plugin.</p>
+      <p>Build one df with all analysis. Use this in plot tool plugin.</p>
 
         <details class="quote">
           <summary>Source code in <code>sanpy/analysisDir.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">pool_build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Build one df with all anlysis. Use this in plot tool plugin.</span>
+	<span class="sd">&quot;&quot;&quot;Build one df with all analysis. Use this in plot tool plugin.</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">masterDf</span> <span class="o">=</span> <span class="kc">None</span>
 	<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">numFiles</span><span class="p">):</span>
@@ -2018,47 +2029,51 @@ TODO: extend the logic to load from cloud (after we were instantiated)</p>
 
 	<span class="n">tmpHdfFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbFile</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;_tmp.h5&#39;</span>
 	<span class="n">tmpHdfPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">tmpHdfFile</span><span class="p">)</span>
-	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Saving Tmp </span><span class="si">{</span><span class="n">tmpHdfPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Saving tmp db (will be compressed) </span><span class="si">{</span><span class="n">tmpHdfPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+	<span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDataFrame</span><span class="p">()</span>
 
 	<span class="c1">#</span>
 	<span class="c1"># save each bAnalysis</span>
-	<span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDataFrame</span><span class="p">()</span>
-	<span class="nb">print</span><span class="p">(</span><span class="n">df</span><span class="p">)</span>
-	<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)):</span>
-		<span class="c1"># do not call this, it will load</span>
-		<span class="c1">#ba = self.getAnalysis(row)</span>
-		<span class="n">ba</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;_ba&#39;</span><span class="p">]</span>
-		<span class="k">if</span> <span class="n">ba</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-			<span class="n">didSave</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">_saveToHdf</span><span class="p">(</span><span class="n">tmpHdfPath</span><span class="p">)</span> <span class="c1"># will only save if ba.detectionDirty</span>
-			<span class="k">if</span> <span class="n">didSave</span><span class="p">:</span>
-				<span class="c1"># we are now saved into h5 file, remember uuid to load</span>
-				<span class="n">df</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;uuid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">uuid</span>
+	<span class="c1">#print(df)</span>
+	<span class="n">doSaveAnalysis</span> <span class="o">=</span> <span class="kc">False</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;doSaveAnalysis:</span><span class="si">{</span><span class="n">doSaveAnalysis</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="n">doSaveAnalysis</span><span class="p">:</span>
+		<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)):</span>
+			<span class="c1"># do not call this, it will load</span>
+			<span class="c1">#ba = self.getAnalysis(row)</span>
+			<span class="n">ba</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;_ba&#39;</span><span class="p">]</span>
+			<span class="k">if</span> <span class="n">ba</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+				<span class="n">didSave</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">_saveToHdf</span><span class="p">(</span><span class="n">tmpHdfPath</span><span class="p">)</span> <span class="c1"># will only save if ba.detectionDirty</span>
+				<span class="k">if</span> <span class="n">didSave</span><span class="p">:</span>
+					<span class="c1"># we are now saved into h5 file, remember uuid to load</span>
+					<span class="n">df</span><span class="o">.</span><span class="n">at</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="s1">&#39;uuid&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">uuid</span>
 
-	<span class="c1"># rebuild (L, A, S) columns</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">_updateLoadedAnalyzed</span><span class="p">()</span>
+		<span class="c1"># rebuild (L, A, S) columns</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_updateLoadedAnalyzed</span><span class="p">()</span>
 
 	<span class="c1">#</span>
 	<span class="c1"># save file database</span>
 	<span class="k">with</span> <span class="n">pd</span><span class="o">.</span><span class="n">HDFStore</span><span class="p">(</span><span class="n">tmpHdfPath</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hdfStore</span><span class="p">:</span>
 		<span class="n">dbKey</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbFile</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Storing file db into key &quot;</span><span class="si">{</span><span class="n">dbKey</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-		<span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getDataFrame</span><span class="p">()</span>
+		<span class="c1">#logger.critical(f&#39;Storing file database into key &quot;{dbKey}&quot;&#39;)</span>
+		<span class="c1">#df = self.getDataFrame()</span>
 		<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;_ba&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># don&#39;t ever save _ba, use it for runtime</span>
 
-		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;saving db df&#39;</span><span class="p">)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;saving file db with </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">df</span><span class="p">)</span><span class="si">}</span><span class="s1"> rows&#39;</span><span class="p">)</span>
 		<span class="c1">#print(df[[&#39;File&#39;, &#39;uuid&#39;]])</span>
 
 		<span class="n">hdfStore</span><span class="p">[</span><span class="n">dbKey</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span>  <span class="c1"># save it</span>
 		<span class="c1">#</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_isDirty</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># if true, prompt to save on quit</span>
 
-	<span class="n">h5_printKey</span><span class="p">(</span><span class="n">tmpHdfPath</span><span class="p">)</span>
+	<span class="c1">#h5_printKey(tmpHdfPath)</span>
 
 	<span class="c1">#</span>
 	<span class="c1"># rebuild the file to remove old changes and reduce size</span>
 	<span class="n">hdfFile</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dbFile</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.h5&#39;</span>
 	<span class="n">hdfPath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">hdfFile</span><span class="p">)</span>
-	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Rebuilding h5 to </span><span class="si">{</span><span class="n">hdfPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">critical</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Rebuilding h5 to </span><span class="si">{</span><span class="n">hdfPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 	<span class="c1">#command = [&quot;ptrepack&quot;, &quot;-o&quot;, &quot;--chunkshape=auto&quot;, &quot;--propindexes&quot;, &#39;--complevel=9&#39;, &#39;--complib=blosc:blosclz&#39;, tmpHdfPath, hdfPath]</span>
 	<span class="c1">#command = [&quot;ptrepack&quot;, &quot;-o&quot;, &quot;--chunkshape=auto&quot;, &quot;--propindexes&quot;, tmpHdfPath, hdfPath]</span>
 	<span class="n">command</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;ptrepack&quot;</span><span class="p">,</span> <span class="s2">&quot;-o&quot;</span><span class="p">,</span> <span class="s2">&quot;--chunkshape=auto&quot;</span><span class="p">,</span> <span class="n">tmpHdfPath</span><span class="p">,</span> <span class="n">hdfPath</span><span class="p">]</span>

@@ -724,6 +724,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_switchFile2" class="md-nav__link">
+    slot_switchFile2()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_updateAnalysis" class="md-nav__link">
     slot_updateAnalysis()
   </a>
@@ -1069,6 +1076,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_switchFile2" class="md-nav__link">
+    slot_switchFile2()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_updateAnalysis" class="md-nav__link">
     slot_updateAnalysis()
   </a>
@@ -1121,7 +1135,8 @@
 
     <div class="doc doc-contents first">
 
-      <p><code>sanpyPlugin</code> is the parent class for all SanPy plugins. Derive from this class to create new plugins.</p>
+      <p><code>sanpyPlugin</code> is the parent class for all SanPy plugins.
+Derive from this class to create new plugins.</p>
 <p>Users can run a plugin with the following code</p>
 <div class="highlight"><pre><span></span><code>import sys
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -1314,8 +1329,8 @@ sys.exit(app.exec_())
 	<span class="n">contextMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
 	<span class="n">copyTable</span> <span class="o">=</span> <span class="n">contextMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Copy Table&quot;</span><span class="p">)</span>
 
-	<span class="n">contextMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
-	<span class="n">saveTable</span> <span class="o">=</span> <span class="n">contextMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="s2">&quot;Save Table&quot;</span><span class="p">)</span>
+	<span class="c1">#contextMenu.addSeparator()</span>
+	<span class="c1">#saveTable = contextMenu.addAction(&quot;Save Table&quot;)</span>
 	<span class="c1">#</span>
 	<span class="n">action</span> <span class="o">=</span> <span class="n">contextMenu</span><span class="o">.</span><span class="n">exec_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mapToGlobal</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">pos</span><span class="p">()))</span>
 
@@ -1327,6 +1342,11 @@ sys.exit(app.exec_())
 		<span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">toggleResponseOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">selectSpike</span><span class="p">)</span>
 	<span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="n">axisChange</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">toggleResponseOptions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">setAxis</span><span class="p">)</span>
+	<span class="k">elif</span> <span class="n">action</span> <span class="o">==</span> <span class="n">copyTable</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">parentPlugin</span><span class="o">.</span><span class="n">copyToClipboard</span><span class="p">()</span>
+	<span class="c1">#elif action == saveTable:</span>
+	<span class="c1">#	#self.saveToFile()</span>
+	<span class="c1">#	logger.info(&#39;NOT IMPLEMENTED&#39;)</span>
 	<span class="k">elif</span> <span class="n">action</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Action not taken &quot;</span><span class="si">{</span><span class="n">action</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 </code></pre></div>
@@ -1515,7 +1535,7 @@ sys.exit(app.exec_())
       <tr>
         <td><code>ba</code></td>
         <td><code>sanpy.bAnalysis</code></td>
-        <td><p><a href="../../../bAnalysis/#sanpy.bAnalysis.bAnalysis">bAnalysis</a> object representing one file.</p></td>
+        <td><p>[bAnalysis][sanpy.bAnalysis.bAnalysis] object representing one file.</p></td>
         <td><code>None</code></td>
       </tr>
       <tr>
@@ -1556,6 +1576,8 @@ sys.exit(app.exec_())
 	<span class="bp">self</span><span class="o">.</span><span class="n">_ba</span> <span class="o">=</span> <span class="n">ba</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">_bPlugins</span> <span class="o">=</span> <span class="n">bPlugin</span> <span class="c1"># pointer to object, send signal back on close</span>
 
+	<span class="bp">self</span><span class="o">.</span><span class="n">_sweepNumber</span> <span class="o">=</span> <span class="s1">&#39;All&#39;</span>
+
 	<span class="k">if</span> <span class="n">startStop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_startSec</span> <span class="o">=</span> <span class="n">startStop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_stopSec</span> <span class="o">=</span> <span class="n">startStop</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
@@ -1580,7 +1602,7 @@ sys.exit(app.exec_())
 	<span class="bp">self</span><span class="o">.</span><span class="n">fig</span> <span class="o">=</span> <span class="kc">None</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">ax</span> <span class="o">=</span> <span class="kc">None</span>
 
-	<span class="bp">self</span><span class="o">.</span><span class="n">winWidth_inches</span> <span class="o">=</span> <span class="mi">4</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">winWidth_inches</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># used by mpl</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">winHeight_inches</span> <span class="o">=</span> <span class="mi">4</span>
 
 	<span class="c1"># connect self to main app with signals/slots</span>
@@ -1852,14 +1874,14 @@ sys.exit(app.exec_())
 	<span class="k">elif</span> <span class="n">isMpl</span><span class="p">:</span>
 		<span class="c1"># q will quit !!!!</span>
 		<span class="n">text</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span>
-		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;mpl key: </span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;mpl key: &quot;</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown event type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 		<span class="k">return</span>
 
 	<span class="k">if</span> <span class="n">doCopy</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">copyToClipboard</span><span class="p">()</span>
-	<span class="k">elif</span> <span class="n">key</span><span class="o">==</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Key_Escape</span> <span class="ow">or</span> <span class="n">text</span><span class="o">==</span><span class="s1">&#39;esc&#39;</span><span class="p">:</span>
+	<span class="k">elif</span> <span class="n">key</span><span class="o">==</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">Key_Escape</span> <span class="ow">or</span> <span class="n">text</span><span class="o">==</span><span class="s1">&#39;esc&#39;</span> <span class="ow">or</span> <span class="n">text</span><span class="o">==</span><span class="s1">&#39;escape&#39;</span><span class="p">:</span>
 		<span class="n">sDict</span> <span class="o">=</span> <span class="p">{</span>
 			<span class="s1">&#39;spikeNumber&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
 			<span class="s1">&#39;doZoom&#39;</span><span class="p">:</span> <span class="kc">False</span>
@@ -1868,6 +1890,8 @@ sys.exit(app.exec_())
 
 	<span class="k">elif</span> <span class="n">text</span> <span class="o">==</span> <span class="s1">&#39;&#39;</span><span class="p">:</span>
 		<span class="k">pass</span>
+
+	<span class="k">return</span> <span class="n">text</span>
 </code></pre></div>
         </details>
     </div>
@@ -2269,10 +2293,33 @@ User can then add to it</p>
 
       <p>Respond to changes in x-axis.</p>
 
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>startStopList</code></td>
+        <td><code>list of float</code></td>
+        <td><p>Start stop in seconds</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
         <details class="quote">
           <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_set_x_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">startStopList</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Respond to changes in x-axis.&quot;&quot;&quot;</span>
+	<span class="sd">&quot;&quot;&quot;Respond to changes in x-axis.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		startStopList (list of float): Start stop in seconds</span>
+<span class="sd">	&quot;&quot;&quot;</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getResponseOption</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">setAxis</span><span class="p">):</span>
 		<span class="k">return</span>
 	<span class="c1"># don&#39;t set axis if we are showing different ba</span>
@@ -2302,12 +2349,15 @@ User can then add to it</p>
 
 
 
+
+
+
   <div class="doc doc-object doc-method">
 
 
 
 <h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_switchFile" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">slot_switchFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">slot_switchFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">,</span> <span class="n">ba</span><span class="p">)</span></code>
 
 
 <a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_switchFile" class="headerlink" title="Permanent link">¤</a></h3>
@@ -2318,18 +2368,104 @@ User can then add to it</p>
 
         <details class="quote">
           <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_switchFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_switchFile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">,</span> <span class="n">ba</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Respond to switch file.&quot;&quot;&quot;</span>
+	<span class="c1">#logger.info(&#39;&#39;)</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getResponseOption</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">switchFile</span><span class="p">):</span>
 		<span class="k">return</span>
-	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-	<span class="n">app</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSanPyApp</span><span class="p">()</span>
-	<span class="k">if</span> <span class="n">app</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">_ba</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">get_bAnalysis</span><span class="p">()</span>
+
+	<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">	app = self.getSanPyApp()</span>
+<span class="sd">	if app is not None:</span>
+<span class="sd">		self._ba = app.get_bAnalysis()</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_ba</span> <span class="o">=</span> <span class="n">ba</span>
 
 	<span class="c1"># reset start/stop</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">_startSec</span> <span class="o">=</span> <span class="kc">None</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">_stopSec</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="n">startSec</span> <span class="o">=</span> <span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Start(s)&#39;</span><span class="p">]</span>
+	<span class="n">stopSec</span> <span class="o">=</span> <span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Stop(s)&#39;</span><span class="p">]</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;startSec:</span><span class="si">{</span><span class="n">startSec</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">startSec</span><span class="p">)</span><span class="si">}</span><span class="s1"> stopSec:</span><span class="si">{</span><span class="n">stopSec</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">stopSec</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_startSec</span> <span class="o">=</span> <span class="n">startSec</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_stopSec</span> <span class="o">=</span> <span class="n">stopSec</span>
+
+	<span class="c1"># set pyqt window title</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_mySetWindowTitle</span><span class="p">()</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">replot</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_switchFile2" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">slot_switchFile2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="p">,</span> <span class="n">startStop</span><span class="p">,</span> <span class="n">fileTableRowDict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.plugins.sanpyPlugin.sanpyPlugin.slot_switchFile2" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Respond to switch file.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>ba</code></td>
+        <td><code>bAnalysis</code></td>
+        <td></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>startStop</code></td>
+        <td><code>list of float</code></td>
+        <td><p>start/stop seconds of analysis</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>fileTableRowDict</code></td>
+        <td><code>dict</code></td>
+        <td><p>Dictionary of values from main sanpy file table (like, 'File', 'Cell Type', etc)</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_switchFile2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="p">,</span> <span class="n">startStop</span><span class="p">,</span> <span class="n">fileTableRowDict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Respond to switch file.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		ba (bAnalysis):</span>
+<span class="sd">		startStop (list of float): start/stop seconds of analysis</span>
+<span class="sd">		fileTableRowDict (dict): Dictionary of values from main sanpy file table (like, &#39;File&#39;, &#39;Cell Type&#39;, etc)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getResponseOption</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">switchFile</span><span class="p">):</span>
+		<span class="k">return</span>
+	<span class="c1">#logger.info(path)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_ba</span> <span class="o">=</span> <span class="n">ba</span>
+
+	<span class="c1"># reset start/stop</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_startSec</span> <span class="o">=</span> <span class="n">startStop</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_stopSec</span> <span class="o">=</span> <span class="n">startStop</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
 	<span class="c1"># set pyqt window title</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">_mySetWindowTitle</span><span class="p">()</span>
@@ -2363,6 +2499,7 @@ User can then add to it</p>
           <summary>Source code in <code>sanpy/interface/plugins/sanpyPlugin.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_updateAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Respond to detection&quot;&quot;&quot;</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">getResponseOption</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">responseTypes</span><span class="o">.</span><span class="n">analysisChange</span><span class="p">):</span>
 		<span class="k">return</span>
 	<span class="c1"># don&#39;t update analysis if we are showing different ba</span>
@@ -2413,7 +2550,8 @@ Assumes plot(..., picker=5)</p>
 	<span class="n">spikeNumber</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">ind</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
 	<span class="n">doZoom</span> <span class="o">=</span> <span class="kc">False</span>
-	<span class="n">modifiers</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">keyboardModifiers</span><span class="p">()</span>
+	<span class="c1">#modifiers = QtGui.QApplication.keyboardModifiers()</span>
+	<span class="n">modifiers</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="o">.</span><span class="n">keyboardModifiers</span><span class="p">()</span>
 	<span class="k">if</span> <span class="n">modifiers</span> <span class="o">==</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">ShiftModifier</span><span class="p">:</span>
 		<span class="n">doZoom</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -2430,6 +2568,9 @@ Assumes plot(..., picker=5)</p>
     </div>
 
   </div>
+
+
+
 
 
 

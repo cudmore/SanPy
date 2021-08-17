@@ -578,6 +578,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.signalSelectSweep" class="md-nav__link">
+    signalSelectSweep
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.interface.sanpy_app.SanPyWindow.signalSetXAxis" class="md-nav__link">
     signalSetXAxis
   </a>
@@ -613,8 +620,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slotFindNewFiles" class="md-nav__link">
-    slotFindNewFiles()
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slotSaveFilesTable" class="md-nav__link">
+    slotSaveFilesTable()
   </a>
   
 </li>
@@ -859,6 +866,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.signalSelectSweep" class="md-nav__link">
+    signalSelectSweep
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.interface.sanpy_app.SanPyWindow.signalSetXAxis" class="md-nav__link">
     signalSetXAxis
   </a>
@@ -894,8 +908,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slotFindNewFiles" class="md-nav__link">
-    slotFindNewFiles()
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slotSaveFilesTable" class="md-nav__link">
+    slotSaveFilesTable()
   </a>
   
 </li>
@@ -929,6 +943,9 @@
 
 
   <div class="doc doc-children">
+
+
+
 
 
 
@@ -1024,9 +1041,6 @@
 	<span class="c1"># todo: update this with selected folder</span>
 	<span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
 		<span class="n">windowTitle</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;SanPy </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span>
-	<span class="c1">#elif csvPath is not None:</span>
-	<span class="c1">#	csvName = os.path.split(csvPath)[1]</span>
-	<span class="c1">#	windowTitle = f&#39;SanPy {csvName}&#39;</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="n">windowTitle</span> <span class="o">=</span> <span class="s1">&#39;SanPy&#39;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="n">windowTitle</span><span class="p">)</span>
@@ -1041,17 +1055,18 @@
 	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;json preferences file lastPath &quot;</span><span class="si">{</span><span class="n">lastPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 	<span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
-	<span class="c1">#elif csvPath is not None:</span>
-	<span class="c1">#	self.path = os.path.split(csvPath)[0]</span>
 	<span class="k">elif</span> <span class="n">lastPath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">lastPath</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">lastPath</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="kc">None</span>
-	<span class="c1">#print(&#39;  self.path:&#39;, self.path)</span>
-	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 
-	<span class="c1"># I changed saved preferences file, try not to screw up Laura&#39;s analysis</span>
+	<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">	if self.path is not None and len(self.path)&gt;0:</span>
+<span class="sd">		self.loadFolder(self.path)</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+
+	<span class="c1"># I changed saved preferences file,</span>
+	<span class="c1"># try not to screw up Laura&#39;s analysis</span>
 	<span class="k">if</span> <span class="s1">&#39;useDarkStyle&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;useDarkStyle&#39;</span><span class="p">]</span>
 	<span class="k">else</span><span class="p">:</span>
@@ -1059,35 +1074,29 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span> <span class="o">=</span> <span class="kc">True</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;useDarkStyle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 
+	<span class="c1">#</span>
 	<span class="c1"># set window geometry</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">setMinimumSize</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">480</span><span class="p">)</span>
-
 	<span class="bp">self</span><span class="o">.</span><span class="n">left</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;windowGeometry&#39;</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">top</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;windowGeometry&#39;</span><span class="p">][</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;windowGeometry&#39;</span><span class="p">][</span><span class="s1">&#39;width&#39;</span><span class="p">]</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;windowGeometry&#39;</span><span class="p">][</span><span class="s1">&#39;height&#39;</span><span class="p">]</span>
-
 	<span class="bp">self</span><span class="o">.</span><span class="n">setGeometry</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">left</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">top</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">height</span><span class="p">)</span>
-
-	<span class="c1">#</span>
-	<span class="c1"># todo: remove</span>
-	<span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">	self.csvPath = csvPath</span>
-<span class="sd">	masterDf = sanpy.interface.bFileTable.loadDatabase(csvPath)</span>
-<span class="sd">	if masterDf is not None:</span>
-<span class="sd">		logger.debug(f&#39;Loaded csvPath: {csvPath}&#39;)</span>
-<span class="sd">	&#39;&#39;&#39;</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">myPlugins</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bPlugins</span><span class="p">(</span><span class="n">sanpyApp</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">buildMenus</span><span class="p">()</span>
-
 	<span class="bp">self</span><span class="o">.</span><span class="n">buildUI</span><span class="p">()</span>
 
-	<span class="bp">self</span><span class="o">.</span><span class="n">myExportWidget</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="c1">#self.myExportWidget = None</span>
 
-	<span class="bp">self</span><span class="o">.</span><span class="n">dfReportForScatter</span> <span class="o">=</span> <span class="kc">None</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">dfError</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="c1">#self.dfReportForScatter = None</span>
+	<span class="c1">#self.dfError = None</span>
+
+	<span class="c1"># 20210803, loadFolder was above? Still works down here</span>
+	<span class="c1"># needed to update detection widget after buildUI()</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">slot_updateStatus</span><span class="p">(</span><span class="s1">&#39;Ready&#39;</span><span class="p">)</span>
 	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;SanPy started&#39;</span><span class="p">)</span>
@@ -1200,7 +1209,7 @@
 
 	<span class="n">rowDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">myGetRowDict</span><span class="p">(</span><span class="n">selectedRow</span><span class="p">)</span>
 
-	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;row:</span><span class="si">{</span><span class="n">selectedRow</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">rowDict</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="c1">#logger.info(f&#39;row:{selectedRow} {rowDict}&#39;)</span>
 
 	<span class="k">return</span> <span class="n">rowDict</span>
 </code></pre></div>
@@ -1313,15 +1322,25 @@
 	<span class="c1"># will create/load csv and/or gzip (of all analysis)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">myAnalysisDir</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">analysisDir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
-	<span class="c1"># set dfAnalysisDir to file list model</span>
+	<span class="c1"># set myAnalysisDir to file list model</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">myModel</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bFileTable</span><span class="o">.</span><span class="n">pandasModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myAnalysisDir</span><span class="p">)</span>
+	<span class="c1">#self.myModel.signalMyDataChanged.connect(self.slot_dataChanged)</span>
+	<span class="c1">#self.myModel.signalMyDataChanged.connect(self.myDetectionWidget.slot_dataChanged)</span>
 
 	<span class="k">try</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">tableView</span><span class="o">.</span><span class="n">mySetModel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">signalMyDataChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">slot_dataChanged</span><span class="p">)</span>
 	<span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
 		<span class="c1"># needed when we call loadFolder from __init__</span>
 		<span class="c1"># logger.warning(&#39;OK: no tableView during load folder&#39;)</span>
 		<span class="k">pass</span>
+
+	<span class="c1"># set window title</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">):</span>
+		<span class="n">windowTitle</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;SanPy: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">windowTitle</span> <span class="o">=</span> <span class="s1">&#39;SanPy&#39;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="n">windowTitle</span><span class="p">)</span>
 </code></pre></div>
         </details>
     </div>
@@ -1405,20 +1424,27 @@
 		<span class="c1"># old</span>
 		<span class="c1">#self.myScatterPlotWidget.selectXRange(data[0], data[1])</span>
 		<span class="c1"># new</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">signalSetXAxis</span><span class="o">.</span><span class="n">emit</span><span class="p">([</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">signalSetXAxis</span><span class="o">.</span><span class="n">emit</span><span class="p">([</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>  <span class="c1"># emits to scatter plot ONLY</span>
 
 	<span class="k">elif</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;set full x axis&#39;</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">startSec</span> <span class="o">=</span> <span class="kc">None</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">stopSec</span> <span class="o">=</span> <span class="kc">None</span>
 		<span class="c1">#self.myScatterPlotWidget.selectXRange(None, None)</span>
 		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;set full x axis&#39;</span><span class="p">)</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">signalSetXAxis</span><span class="o">.</span><span class="n">emit</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">signalSetXAxis</span><span class="o">.</span><span class="n">emit</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>  <span class="c1"># emits to scatter plot ONLY</span>
 
 	<span class="k">elif</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;cancel all selections&#39;</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">selectSpike</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">myScatterPlotWidget</span><span class="o">.</span><span class="n">selectSpike</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+		<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">		self.myDetectionWidget.selectSpike(None)</span>
+
+<span class="sd">		if self.myScatterPlotWidget.isVisible():</span>
+<span class="sd">			self.myScatterPlotWidget.selectSpike(None)</span>
+<span class="sd">		&#39;&#39;&#39;</span>
+
 		<span class="c1"># removing this may cause problems on file change ?</span>
 		<span class="c1">#self.myScatterPlotWidget.selectXRange(None, None)</span>
+		<span class="c1">#signalSelectSpike.emit xxx</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">selectSpike</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
 	<span class="k">else</span><span class="p">:</span>
 		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not understand this: &quot;</span><span class="si">{</span><span class="n">this</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
@@ -1666,6 +1692,27 @@
 
 
 
+<h3 id="sanpy.interface.sanpy_app.SanPyWindow.signalSelectSweep" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">signalSelectSweep</span></code>
+
+
+<a href="#sanpy.interface.sanpy_app.SanPyWindow.signalSelectSweep" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Emit set sweep.</p>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
 <h3 id="sanpy.interface.sanpy_app.SanPyWindow.signalSetXAxis" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">signalSetXAxis</span></code>
 
@@ -1733,7 +1780,7 @@
 
 
 <h3 id="sanpy.interface.sanpy_app.SanPyWindow.slot_fileTableClicked" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">slot_fileTableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">slot_fileTableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">)</span></code>
 
 
 <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_fileTableClicked" class="headerlink" title="Permanent link">¤</a></h3>
@@ -1744,7 +1791,7 @@
 
         <details class="quote">
           <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_fileTableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_fileTableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Respond to selections in file table.&quot;&quot;&quot;</span>
 
 	<span class="sd">&#39;&#39;&#39;</span>
@@ -1752,18 +1799,26 @@
 <span class="sd">	abfColumnName = &#39;File&#39;</span>
 <span class="sd">	fileName = self.myModel.myGetValue(row, abfColumnName)</span>
 <span class="sd">	&#39;&#39;&#39;</span>
-	<span class="n">fileName</span> <span class="o">=</span> <span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;File&#39;</span><span class="p">]</span>
+	<span class="c1">#fileName = rowDict[&#39;File&#39;]</span>
 
-	<span class="c1"># this will load ba if necc</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">slot_updateStatus</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loading file &quot;</span><span class="si">{</span><span class="n">rowDict</span><span class="p">[</span><span class="s2">&quot;File&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&quot; ... please wait&#39;</span><span class="p">)</span><span class="c1"># this will load ba if necc</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">startSec</span> <span class="o">=</span> <span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Start(s)&#39;</span><span class="p">]</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">stopSec</span> <span class="o">=</span> <span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Stop(s)&#39;</span><span class="p">]</span>
+
 	<span class="n">ba</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myAnalysisDir</span><span class="o">.</span><span class="n">getAnalysis</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="c1"># if None then problem loading</span>
 
 	<span class="k">if</span> <span class="n">ba</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">signalSwitchFile</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">rowDict</span><span class="p">,</span> <span class="n">ba</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">slot_updateStatus</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loaded file &quot;</span><span class="si">{</span><span class="n">ba</span><span class="o">.</span><span class="n">getFileName</span><span class="p">()</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span><span class="c1"># this will load ba if necc</span>
 </code></pre></div>
         </details>
     </div>
 
   </div>
+
+
+
 
 
 
@@ -1835,37 +1890,27 @@
 
 
 
-
-
-
-
-
-
-
-
-
   <div class="doc doc-object doc-method">
 
 
 
-<h3 id="sanpy.interface.sanpy_app.SanPyWindow.slotFindNewFiles" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">slotFindNewFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+<h3 id="sanpy.interface.sanpy_app.SanPyWindow.slotSaveFilesTable" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">slotSaveFilesTable</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.interface.sanpy_app.SanPyWindow.slotFindNewFiles" class="headerlink" title="Permanent link">¤</a></h3>
+<a href="#sanpy.interface.sanpy_app.SanPyWindow.slotSaveFilesTable" class="headerlink" title="Permanent link">¤</a></h3>
 
     <div class="doc doc-contents ">
 
-      <p>Find files in self.path that are not in pandas data model</p>
+      <p>Needed on user keyboard Ctrl+S</p>
 
         <details class="quote">
           <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slotFindNewFiles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Find files in self.path that are not in pandas data model</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slotSaveFilesTable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Needed on user keyboard Ctrl+S</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="c1">#self.myAnalysisDir.syncDfWithPath()</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">mySyncDfWithPath</span><span class="p">()</span>
+	<span class="c1">#logger.info(&#39;&#39;)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">myAnalysisDir</span><span class="o">.</span><span class="n">saveHdf</span><span class="p">()</span>
 </code></pre></div>
         </details>
     </div>
@@ -1879,20 +1924,14 @@
 
 
 
-
-
-
-
-
-
-
-
-
   </div>
 
     </div>
 
   </div>
+
+
+
 
 
 

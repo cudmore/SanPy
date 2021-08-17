@@ -838,6 +838,7 @@ reports can be generated with the bExport class.</p>
 <span class="sd">		ba (sanpy.bAnalysis): A bAnalysis object that has had spikes detected with detectSpikes().</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">ba</span> <span class="o">=</span> <span class="n">ba</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">sweepNumber</span> <span class="o">=</span> <span class="mi">0</span>
 </code></pre></div>
         </details>
     </div>
@@ -952,7 +953,7 @@ reports can be generated with the bExport class.</p>
 	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;stopSeconds&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">theMax</span><span class="p">)</span>
 	<span class="c1">#textFileHeader[&#39;startSeconds&#39;] = self.ba.startSeconds</span>
 	<span class="c1">#textFileHeader[&#39;stopSeconds&#39;] = self.ba.stopSeconds</span>
-	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;currentSweep&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">currentSweep</span>
+	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;currentSweep&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Default 0&#39;</span> <span class="c1"># self.ba.currentSweep</span>
 	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;numSweeps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSweeps</span>
 	<span class="c1">#textFileHeader[&#39;theMin&#39;] = theMin</span>
 	<span class="c1">#textFileHeader[&#39;theMax&#39;] = theMax</span>
@@ -1033,7 +1034,7 @@ reports can be generated with the bExport class.</p>
 
 	<span class="k">if</span> <span class="n">theMin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">theMax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="n">theMin</span> <span class="o">=</span> <span class="mi">0</span>
-		<span class="n">theMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">sweepX</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+		<span class="n">theMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">recordingDur</span>  <span class="c1"># self.ba.sweepX[-1]</span>
 
 	<span class="c1">#</span>
 	<span class="c1"># cardiac style analysis to sheet &#39;cardiac&#39;</span>
@@ -1064,7 +1065,7 @@ reports can be generated with the bExport class.</p>
 
 	<span class="c1">#headerDict[&#39;Analysis Start (sec)&#39;] = [self.ba.startSeconds]</span>
 	<span class="c1">#headerDict[&#39;Analysis Stop (sec)&#39;] = [self.ba.stopSeconds]</span>
-	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Sweep Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">currentSweep</span><span class="p">]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Sweep Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Default 0&#39;</span><span class="p">]</span>  <span class="c1"># [self.ba.currentSweep]</span>
 	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Number of Sweeps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSweeps</span><span class="p">]</span>
 	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Export Start (sec)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">theMin</span><span class="p">))]</span> <span class="c1"># on export, x-axis of raw plot will be ouput</span>
 	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Export Stop (sec)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">theMax</span><span class="p">))]</span> <span class="c1"># on export, x-axis of raw plot will be ouput</span>
@@ -1219,7 +1220,7 @@ reports can be generated with the bExport class.</p>
 	<span class="k">if</span> <span class="n">theMin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">theMax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="c1">#return None</span>
 		<span class="n">theMin</span> <span class="o">=</span> <span class="mi">0</span>
-		<span class="n">theMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">sweepX</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+		<span class="n">theMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">recordingDur</span>  <span class="c1"># self.ba.sweepX[-1]</span>
 
 	<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">)</span>
 	<span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="s1">&#39;thresholdSec&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">,</span> <span class="n">inclusive</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
@@ -1308,13 +1309,13 @@ reports can be generated with the bExport class.</p>
       <tr>
         <td><code>theMin</code></td>
         <td><code>float</code></td>
-        <td><p>Start seconds to save</p></td>
+        <td><p>Start seconds to save, inclusive</p></td>
         <td><em>required</em></td>
       </tr>
       <tr>
         <td><code>theMax</code></td>
         <td><code>float</code></td>
-        <td><p>Stop seconds to save</p></td>
+        <td><p>Stop seconds to save, inclusive</p></td>
         <td><em>required</em></td>
       </tr>
   </tbody>
@@ -1341,8 +1342,8 @@ reports can be generated with the bExport class.</p>
 <span class="sd">	Generate a report of spikes with spike times between theMin (sec) and theMax (sec).</span>
 
 <span class="sd">	Args:</span>
-<span class="sd">		theMin (float): Start seconds to save</span>
-<span class="sd">		theMax (float): Stop seconds to save</span>
+<span class="sd">		theMin (float): Start seconds to save, inclusive</span>
+<span class="sd">		theMax (float): Stop seconds to save, inclusive</span>
 
 <span class="sd">	Returns:</span>
 <span class="sd">		df: Pandas DataFrame</span>
@@ -1498,7 +1499,7 @@ df: df</p></td>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="k">if</span> <span class="n">theMin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">theMax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="n">theMin</span> <span class="o">=</span> <span class="mi">0</span>
-		<span class="n">theMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">sweepX</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+		<span class="n">theMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">recordingDur</span>  <span class="c1"># self.ba.sweepX[-1]</span>
 
 	<span class="c1"># always grab a df to the entire analysis (not sure what I will do with this)</span>
 	<span class="c1">#df = self.ba.report() # report() is my own &#39;bob&#39; verbiage</span>
@@ -1539,7 +1540,7 @@ df: df</p></td>
 
 		<span class="c1">#headerDict[&#39;Analysis Start (sec)&#39;] = [self.ba.startSeconds]</span>
 		<span class="c1">#headerDict[&#39;Analysis Stop (sec)&#39;] = [self.ba.stopSeconds]</span>
-		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Sweep Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">currentSweep</span><span class="p">]</span>
+		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Sweep Number&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Default 0&#39;</span><span class="p">]</span>  <span class="c1"># [self.ba.currentSweep]</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Number of Sweeps&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSweeps</span><span class="p">]</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Export Start (sec)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">theMin</span><span class="p">))]</span> <span class="c1"># on export, x-axis of raw plot will be ouput</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Export Stop (sec)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%.2f</span><span class="s1">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">theMax</span><span class="p">))]</span> <span class="c1"># on export, x-axis of raw plot will be ouput</span>
@@ -1652,7 +1653,7 @@ df: df</p></td>
 
 		<span class="c1">#</span>
 		<span class="c1"># mean spike clip</span>
-		<span class="n">theseClips</span><span class="p">,</span> <span class="n">theseClips_x</span><span class="p">,</span> <span class="n">meanClip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">getSpikeClips</span><span class="p">(</span><span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">)</span>
+		<span class="n">theseClips</span><span class="p">,</span> <span class="n">theseClips_x</span><span class="p">,</span> <span class="n">meanClip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">getSpikeClips</span><span class="p">(</span><span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sweepNumber</span><span class="p">)</span>
 		<span class="k">try</span><span class="p">:</span>
 			<span class="n">first_X</span> <span class="o">=</span> <span class="n">theseClips_x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1">#- theseClips_x[0][0]</span>
 			<span class="c1">#if verbose: print(&#39;    bExport.saveReport() saving mean clip to sheet &quot;Avg Spike&quot; from&#39;, len(theseClips), &#39;clips&#39;)</span>
@@ -1675,7 +1676,7 @@ df: df</p></td>
 		<span class="c1">#</span>
 		<span class="c1"># save mean spike clip</span>
 
-		<span class="n">theseClips</span><span class="p">,</span> <span class="n">theseClips_x</span><span class="p">,</span> <span class="n">meanClip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">getSpikeClips</span><span class="p">(</span><span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">)</span>
+		<span class="n">theseClips</span><span class="p">,</span> <span class="n">theseClips_x</span><span class="p">,</span> <span class="n">meanClip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">getSpikeClips</span><span class="p">(</span><span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sweepNumber</span><span class="p">)</span>
 		<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">theseClips_x</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 			<span class="k">pass</span>
 		<span class="k">else</span><span class="p">:</span>

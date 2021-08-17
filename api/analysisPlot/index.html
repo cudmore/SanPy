@@ -479,15 +479,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sanpy.analysisPlot.getEddLines" class="md-nav__link">
-    getEddLines()
+  <a href="#sanpy.analysisPlot.old_getEddLines" class="md-nav__link">
+    old_getEddLines()
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#sanpy.analysisPlot.getHalfWidths" class="md-nav__link">
-    getHalfWidths()
+  <a href="#sanpy.analysisPlot.old_getHalfWidths" class="md-nav__link">
+    old_getHalfWidths()
   </a>
   
 </li>
@@ -792,15 +792,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sanpy.analysisPlot.getEddLines" class="md-nav__link">
-    getEddLines()
+  <a href="#sanpy.analysisPlot.old_getEddLines" class="md-nav__link">
+    old_getEddLines()
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#sanpy.analysisPlot.getHalfWidths" class="md-nav__link">
-    getHalfWidths()
+  <a href="#sanpy.analysisPlot.old_getHalfWidths" class="md-nav__link">
+    old_getHalfWidths()
   </a>
   
 </li>
@@ -825,7 +825,7 @@
 
     <div class="doc doc-contents first">
 
-      <p>General purpose plugins to plot from a <a href="../bAnalysis/#sanpy.bAnalysis.bAnalysis">sanpy.bAnalysis</a> object.</p>
+      <p>General purpose plugins to plot from a [sanpy.bAnalysis][sanpy.bAnalysis.bAnalysis] object.</p>
 
 
 
@@ -847,7 +847,7 @@
 
     <div class="doc doc-contents ">
 
-      <p>Class to plot results of <a href="../bAnalysis/#sanpy.bAnalysis.bAnalysis">sanpy.bAnalysis</a> spike detection.</p>
+      <p>Class to plot results of [sanpy.bAnalysis][sanpy.bAnalysis.bAnalysis] spike detection.</p>
 
 
 
@@ -1369,15 +1369,18 @@ ax (xxx): If specified will plot into a MatPlotLib axes</p>
 
 
 
+
+
+
   <div class="doc doc-object doc-function">
 
 
 
-<h2 id="sanpy.analysisPlot.getEddLines" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">getEddLines</span><span class="p">(</span><span class="n">ba</span><span class="p">)</span></code>
+<h2 id="sanpy.analysisPlot.old_getEddLines" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">old_getEddLines</span><span class="p">(</span><span class="n">ba</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.analysisPlot.getEddLines" class="headerlink" title="Permanent link">¤</a></h2>
+<a href="#sanpy.analysisPlot.old_getEddLines" class="headerlink" title="Permanent link">¤</a></h2>
 
     <div class="doc doc-contents ">
 
@@ -1404,7 +1407,7 @@ ax (xxx): If specified will plot into a MatPlotLib axes</p>
 </table>
         <details class="quote">
           <summary>Source code in <code>sanpy/analysisPlot.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getEddLines</span><span class="p">(</span><span class="n">ba</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">old_getEddLines</span><span class="p">(</span><span class="n">ba</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Get lines representing linear fit of EDD rate.</span>
 
 <span class="sd">	Args:</span>
@@ -1417,6 +1420,7 @@ ax (xxx): If specified will plot into a MatPlotLib axes</p>
 	<span class="k">if</span> <span class="n">ba</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
 
+	<span class="c1"># these are getting for current sweep</span>
 	<span class="n">preLinearFitPnt0</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">getStat</span><span class="p">(</span><span class="s1">&#39;preLinearFitPnt0&#39;</span><span class="p">)</span>
 	<span class="n">preLinearFitSec0</span> <span class="o">=</span> <span class="p">[</span><span class="n">ba</span><span class="o">.</span><span class="n">pnt2Sec_</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">preLinearFitPnt0</span><span class="p">]</span>
 	<span class="n">preLinearFitVal0</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">getStat</span><span class="p">(</span><span class="s1">&#39;preLinearFitVal0&#39;</span><span class="p">)</span>
@@ -1425,11 +1429,13 @@ ax (xxx): If specified will plot into a MatPlotLib axes</p>
 	<span class="n">preLinearFitSec1</span> <span class="o">=</span> <span class="p">[</span><span class="n">ba</span><span class="o">.</span><span class="n">pnt2Sec_</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">preLinearFitPnt1</span><span class="p">]</span>
 	<span class="n">preLinearFitVal1</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">getStat</span><span class="p">(</span><span class="s1">&#39;preLinearFitVal1&#39;</span><span class="p">)</span>
 
-	<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">spike</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span><span class="p">)):</span>
+	<span class="n">thisNumSpikes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">preLinearFitPnt0</span><span class="p">)</span>
+	<span class="c1">#for idx, spike in enumerate(range(ba.numSpikes)):</span>
+	<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">spike</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">thisNumSpikes</span><span class="p">)):</span>
 		<span class="n">dx</span> <span class="o">=</span> <span class="n">preLinearFitSec1</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">preLinearFitSec0</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 		<span class="n">dy</span> <span class="o">=</span> <span class="n">preLinearFitVal1</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="n">preLinearFitVal0</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
 
-		<span class="n">lineLength</span> <span class="o">=</span> <span class="mi">4</span>  <span class="c1"># TODO: make this a function of spike frequency?</span>
+		<span class="n">lineLength</span> <span class="o">=</span> <span class="mi">8</span>  <span class="c1"># TODO: make this a function of spike frequency?</span>
 
 		<span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">preLinearFitSec0</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
 		<span class="n">x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">preLinearFitSec1</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">lineLength</span><span class="o">*</span><span class="n">dx</span><span class="p">)</span>
@@ -1438,6 +1444,8 @@ ax (xxx): If specified will plot into a MatPlotLib axes</p>
 		<span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">preLinearFitVal0</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
 		<span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">preLinearFitVal1</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">lineLength</span><span class="o">*</span><span class="n">dy</span><span class="p">)</span>
 		<span class="n">y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+		<span class="c1">#print(&#39;here&#39;)</span>
 
 	<span class="k">return</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span>
 </code></pre></div>
@@ -1454,11 +1462,11 @@ ax (xxx): If specified will plot into a MatPlotLib axes</p>
 
 
 
-<h2 id="sanpy.analysisPlot.getHalfWidths" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">getHalfWidths</span><span class="p">(</span><span class="n">ba</span><span class="p">)</span></code>
+<h2 id="sanpy.analysisPlot.old_getHalfWidths" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">old_getHalfWidths</span><span class="p">(</span><span class="n">ba</span><span class="p">)</span></code>
 
 
-<a href="#sanpy.analysisPlot.getHalfWidths" class="headerlink" title="Permanent link">¤</a></h2>
+<a href="#sanpy.analysisPlot.old_getHalfWidths" class="headerlink" title="Permanent link">¤</a></h2>
 
     <div class="doc doc-contents ">
 
@@ -1500,7 +1508,7 @@ ax (xxx): If specified will plot into a MatPlotLib axes</p>
 </table>
         <details class="quote">
           <summary>Source code in <code>sanpy/analysisPlot.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getHalfWidths</span><span class="p">(</span><span class="n">ba</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">old_getHalfWidths</span><span class="p">(</span><span class="n">ba</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Get lines representing half-widhts (AP Dur).</span>
 
 <span class="sd">	Args:</span>
@@ -1513,9 +1521,12 @@ ax (xxx): If specified will plot into a MatPlotLib axes</p>
 	<span class="n">x</span> <span class="o">=</span> <span class="p">[]</span>
 	<span class="n">y</span> <span class="o">=</span> <span class="p">[]</span>
 	<span class="n">numPerSpike</span> <span class="o">=</span> <span class="mi">3</span>  <span class="c1"># rise/fall/nan</span>
-	<span class="n">numSpikes</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span>
+	<span class="c1">#numSpikes = ba.numSpikes</span>
 	<span class="n">xyIdx</span> <span class="o">=</span> <span class="mi">0</span>
-	<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">spike</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">):</span>
+	<span class="n">spikeDictionaries</span> <span class="o">=</span> <span class="n">ba</span><span class="o">.</span><span class="n">getSpikeDictionaries</span><span class="p">()</span> <span class="c1"># for current sweep</span>
+	<span class="n">numSpikes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spikeDictionaries</span><span class="p">)</span>
+	<span class="c1">#for idx, spike in enumerate(ba.spikeDict):</span>
+	<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">spike</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spikeDictionaries</span><span class="p">):</span>
 		<span class="k">if</span> <span class="n">idx</span> <span class="o">==</span><span class="mi">0</span><span class="p">:</span>
 			<span class="c1"># make x/y from first spike using halfHeights = [20,50,80]</span>
 			<span class="n">halfHeights</span> <span class="o">=</span> <span class="n">spike</span><span class="p">[</span><span class="s1">&#39;halfHeights&#39;</span><span class="p">]</span> <span class="c1"># will be same for all spike, like [20, 50, 80]</span>
@@ -1557,9 +1568,6 @@ ax (xxx): If specified will plot into a MatPlotLib axes</p>
     </div>
 
   </div>
-
-
-
 
 
 
