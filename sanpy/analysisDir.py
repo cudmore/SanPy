@@ -517,6 +517,8 @@ class analysisDir():
 		logger.info(f'Loading existing folder hdf: {hdfPath}')
 		start = time.time()
 		with pd.HDFStore(hdfPath) as hdfStore:
+			print('hdfStore has keys:', hdfStore.keys())
+
 			dbKey = os.path.splitext(self.dbFile)[0]
 			df = hdfStore[dbKey]  # load it
 

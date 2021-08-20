@@ -13,12 +13,12 @@
         "showGlobalVm": false,
         "showScatter": false
     },
-    "lastPath": "/home/cudmore/Sites/SanPy/data",
+    "lastPath": "/home/cudmore/Sites/SanPy/data/fft",
     "useDarkStyle": true,
     "windowGeometry": {
         "height": 1107,
-        "width": 1956,
-        "x": 125,
-        "y": 69
+        "width": 1518,
+        "x": 1022,
+        "y": 86
     }
 }

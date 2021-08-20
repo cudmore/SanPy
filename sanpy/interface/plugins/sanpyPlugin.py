@@ -56,6 +56,7 @@ class ResponseType(enum.Enum):
 	selectSpike = 3
 	setAxis = 4
 
+#class sanpyPlugin(QtWidgets.QWidget):
 class sanpyPlugin(QtCore.QObject):
 	"""
 	Base class for all SanPy plugins. Provides general purpose API to build plugings including:
@@ -72,6 +73,9 @@ class sanpyPlugin(QtCore.QObject):
 	"""Emit signal on window close."""
 
 	signalSelectSpike = QtCore.pyqtSignal(object)
+	"""Emit signal on spike selection."""
+
+	signalSelectSpikeList = QtCore.pyqtSignal(object)
 	"""Emit signal on spike selection."""
 
 	myHumanName = 'UNDEFINED-PLUGIN-NAME'
@@ -118,6 +122,9 @@ class sanpyPlugin(QtCore.QObject):
 		# created in self.mplWindow()
 		self.fig = None
 		self.ax = None
+		self.mplToolbar = None
+
+		self.keyIsDown = None
 
 		self.winWidth_inches = 4  # used by mpl
 		self.winHeight_inches = 4
@@ -169,6 +176,7 @@ class sanpyPlugin(QtCore.QObject):
 		if app is not None:
 			# receive spike selection
 			app.signalSelectSpike.connect(self.slot_selectSpike)
+			app.signalSelectSpikeList.connect(self.slot_selectSpikeList)
 			# receive update analysis (both file change and detect)
 			app.signalSwitchFile.connect(self.slot_switchFile)
 			app.signalUpdateAnalysis.connect(self.slot_updateAnalysis)
@@ -180,10 +188,12 @@ class sanpyPlugin(QtCore.QObject):
 		if bPlugins is not None:
 			# emit spike selection
 			self.signalSelectSpike.connect(bPlugins.slot_selectSpike)
+			self.signalSelectSpikeList.connect(bPlugins.slot_selectSpikeList)
 			# emit on close window
 			self.signalCloseWindow.connect(bPlugins.slot_closeWindow)
 		# connect to self
 		self.signalSelectSpike.connect(self.slot_selectSpike)
+		self.signalSelectSpikeList.connect(self.slot_selectSpikeList)
 
 	def _disconnectSignalSlot(self):
 		"""
@@ -242,6 +252,10 @@ class sanpyPlugin(QtCore.QObject):
 		"""
 		return self._startSec, self._stopSec
 
+	def keyReleaseEvent(self, event):
+		#logger.info(type(event))
+		self.keyIsDown = None
+
 	def keyPressEvent(self, event):
 		"""
 		Used so user can turn on/off responding to analysis changes
@@ -250,7 +264,8 @@ class sanpyPlugin(QtCore.QObject):
 			event (QtGui.QKeyEvent): Qt event
 				(matplotlib.backend_bases.KeyEvent): Matplotlib event
 		"""
-		logger.info(type(event))
+		#logger.info(type(event))
+
 		isQt = isinstance(event, QtGui.QKeyEvent)
 		isMpl = isinstance(event, mpl.backend_bases.KeyEvent)
 
@@ -264,19 +279,29 @@ class sanpyPlugin(QtCore.QObject):
 		elif isMpl:
 			# q will quit !!!!
 			text = event.key
+			doCopy = text == 'ctrl+c'
 			logger.info(f'mpl key: "{text}"')
 		else:
 			logger.warning(f'Unknown event type: {type(event)}')
 			return
 
+		self.keyIsDown = text
+
 		if doCopy:
 			self.copyToClipboard()
 		elif key==QtCore.Qt.Key_Escape or text=='esc' or text=='escape':
+			# single spike
 			sDict = {
 				'spikeNumber': None,
 				'doZoom': False
 			}
 			self.signalSelectSpike.emit(sDict)
+			# spike list
+			sDict = {
+				'spikeList': [],
+				'doZoom': False
+			}
+			self.signalSelectSpikeList.emit(sDict)
 
 		elif text == '':
 			pass
@@ -368,6 +393,7 @@ class sanpyPlugin(QtCore.QObject):
 		self._mySetWindowTitle()
 
 		self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
+		self.fig.canvas.mpl_connect('key_release_event', self.keyReleaseEvent)
 		self.fig.canvas.mpl_connect('close_event', self.onClose)
 
 		# spike selection
@@ -396,6 +422,7 @@ class sanpyPlugin(QtCore.QObject):
 		"""
 		Respond to user clicks in mpl plot
 		Assumes plot(..., picker=5)
+
 		"""
 		if len(event.ind) < 1:
 			return
@@ -403,7 +430,6 @@ class sanpyPlugin(QtCore.QObject):
 		spikeNumber = event.ind[0]
 
 		doZoom = False
-		#modifiers = QtGui.QApplication.keyboardModifiers()
 		modifiers = QtWidgets.QApplication.keyboardModifiers()
 		if modifiers == QtCore.Qt.ShiftModifier:
 			doZoom = True
@@ -430,7 +456,7 @@ class sanpyPlugin(QtCore.QObject):
 
 	def slot_switchFile(self, rowDict, ba):
 		"""Respond to switch file."""
-		logger.info('')
+		#logger.info('')
 		if not self.getResponseOption(self.responseTypes.switchFile):
 			return
 
@@ -497,12 +523,16 @@ class sanpyPlugin(QtCore.QObject):
 		self._sweepNumber = sweepNumber
 		self.replot()
 
+	def slot_selectSpikeList(self, eDict):
+		"""Respond to spike selection."""
+		self.selectSpikeList(eDict)
+
 	def slot_selectSpike(self, eDict):
 		"""Respond to spike selection."""
 		if not self.getResponseOption(self.responseTypes.selectSpike):
 			return
 
-		print('====== TODO: fix sanpyPlugin.slot_selectSpike() only update if ba that is selected is the same as self._ba')
+		#print('====== TODO: fix sanpyPlugin.slot_selectSpike() only update if ba that is selected is the same as self._ba')
 		# don't select spike if we are showing different ba
 		#if self._ba != ba:
 		#	return
@@ -548,6 +578,89 @@ class sanpyPlugin(QtCore.QObject):
 		selectSpike = self.responseTypes.switchFile
 		self.toggleResponseOptions(selectSpike, newValue=False)
 
+	def contextMenuEvent(self, event):
+		"""
+		Handle right-click
+
+		Args:
+			event (xxx): USed to position popup
+		"""
+		if self.mplToolbar is not None:
+			state = self.mplToolbar.mode
+			if state in ['zoom rect', 'pan/zoom']:
+				# don't process right-click when toolbar is active
+				return
+
+		logger.info(event)
+
+		mainWidget = self.mainWidget
+
+		contextMenu = QtWidgets.QMenu(mainWidget)
+
+		# prepend any menu from derived classes
+		self.prependMenus(contextMenu)
+
+		# TODO: Put these in parant sanPyPlugin
+		switchFile = contextMenu.addAction("Respond to switch file")
+		switchFile.setCheckable(True)
+		switchFile.setChecked(self.responseOptions['switchFile'])
+
+		analysisChange = contextMenu.addAction("Respond to analysis change")
+		analysisChange.setCheckable(True)
+		analysisChange.setChecked(self.responseOptions['analysisChange'])
+
+		selectSpike = contextMenu.addAction("Respond to select spike")
+		selectSpike.setCheckable(True)
+		selectSpike.setChecked(self.responseOptions['selectSpike'])
+
+		axisChange = contextMenu.addAction("Respond to axis change")
+		axisChange.setCheckable(True)
+		axisChange.setChecked(self.responseOptions['setAxis'])
+
+		contextMenu.addSeparator()
+		copyTable = contextMenu.addAction("Copy Table")
+
+		#contextMenu.addSeparator()
+		#saveTable = contextMenu.addAction("Save Table")
+
+		#
+		# open the menu
+		action = contextMenu.exec_(mainWidget.mapToGlobal(event.pos()))
+
+		if action is None:
+			# n menu selected
+			return
+
+		#
+		# handle actions
+		handled = self.handleContextMenu(action)
+
+		if handled:
+			return
+
+		if action == switchFile:
+			self.toggleResponseOptions(self.responseTypes.switchFile)
+		elif action == analysisChange:
+			self.toggleResponseOptions(self.responseTypes.analysisChange)
+		elif action == selectSpike:
+			self.toggleResponseOptions(self.responseTypes.selectSpike)
+		elif action == axisChange:
+			self.toggleResponseOptions(self.responseTypes.setAxis)
+		elif action == copyTable:
+			self.copyToClipboard()
+		#elif action == saveTable:
+		#	#self.saveToFile()
+		#	logger.info('NOT IMPLEMENTED')
+
+		elif action is not None:
+				logger.warning(f'Menu action not taken "{action.text}"')
+
+	def prependMenus(self, contextMenu):
+		pass
+
+	def handleContextMenu(self, action):
+		pass
+
 class myWidget(QtWidgets.QWidget):
 	"""
 	Helper class to open a PyQt window from within a plugin.
@@ -586,59 +699,20 @@ class myWidget(QtWidgets.QWidget):
 		"""
 		Used so user can turn on/off responding to analysis changes
 
-		Args:
-			event (PyQt5.QtGui.QKeyEvent): Qt event
+		Args: event (PyQt5.QtGui.QKeyEvent): Qt event
 
 		TODO: Add to mpl windows
 		"""
-		logger.info(event)
+		#logger.info(event)
 		self._parentPlugin.keyPressEvent(event)
+
+	def keyReleaseEvent(self, event):
+		#logger.info(event)
+		self._parentPlugin.keyReleaseEvent(event)
 
 	def contextMenuEvent(self, event):
 		"""Right-click context menu depends on enum ReponseType."""
-		#logger.info(event)
-
-		contextMenu = QtWidgets.QMenu(self)
-
-		switchFile = contextMenu.addAction("Respond to switch file")
-		switchFile.setCheckable(True)
-		switchFile.setChecked(self.parentPlugin.responseOptions['switchFile'])
-
-		analysisChange = contextMenu.addAction("Respond to analysis change")
-		analysisChange.setCheckable(True)
-		analysisChange.setChecked(self.parentPlugin.responseOptions['analysisChange'])
-
-		selectSpike = contextMenu.addAction("Respond to select spike")
-		selectSpike.setCheckable(True)
-		selectSpike.setChecked(self.parentPlugin.responseOptions['selectSpike'])
-
-		axisChange = contextMenu.addAction("Respond to axis change")
-		axisChange.setCheckable(True)
-		axisChange.setChecked(self.parentPlugin.responseOptions['setAxis'])
-
-		contextMenu.addSeparator()
-		copyTable = contextMenu.addAction("Copy Table")
-
-		#contextMenu.addSeparator()
-		#saveTable = contextMenu.addAction("Save Table")
-		#
-		action = contextMenu.exec_(self.mapToGlobal(event.pos()))
-
-		if action == switchFile:
-			self.parentPlugin.toggleResponseOptions(self.parentPlugin.responseTypes.switchFile)
-		elif action == analysisChange:
-			self.parentPlugin.toggleResponseOptions(self.parentPlugin.responseTypes.analysisChange)
-		elif action == selectSpike:
-			self.parentPlugin.toggleResponseOptions(self.parentPlugin.responseTypes.selectSpike)
-		elif action == axisChange:
-			self.parentPlugin.toggleResponseOptions(self.parentPlugin.responseTypes.setAxis)
-		elif action == copyTable:
-			self.parentPlugin.copyToClipboard()
-		#elif action == saveTable:
-		#	#self.saveToFile()
-		#	logger.info('NOT IMPLEMENTED')
-		elif action is not None:
-			logger.warning(f'Action not taken "{action}"')
+		self._parentPlugin.contextMenuEvent(event)
 
 	def closeEvent(self, event):
 		self._parentPlugin.onClose(event)

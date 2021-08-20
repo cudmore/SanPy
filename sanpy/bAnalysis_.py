@@ -862,6 +862,23 @@ class bAnalysis:
 			theMean = np.nanmean(x)
 		return theMean
 
+	def setSpikeStat(self, spikeList, stat, value):
+		"""Used to set simple things like ('isBad', 'userType1', ...)
+		"""
+		if len(spikeList) == 0:
+			return
+
+		count = 0
+		for idx, spike in enumerate(self.spikeDict):
+			if idx in spikeList:
+				try:
+					spike[stat] = value
+					count += 1
+				except (KeyError) as e:
+					logger.info(e)
+		#
+		logger.info(f'Given {len(spikeList)} and set {count}')
+
 	def getStat(self, statName1, statName2=None, sweepNumber=None):
 		"""
 		Get a list of values for one or two analysis parameters.
@@ -1595,7 +1612,7 @@ class bAnalysis:
 
 			spikeDict = OrderedDict() # use OrderedDict so Pandas output is in the correct order
 
-			spikeDict['include'] = 1
+			#spikeDict['isBad'] = False
 			spikeDict['analysisVersion'] = sanpy.analysisVersion
 			spikeDict['interfaceVersion'] = sanpy.interfaceVersion
 			spikeDict['file'] = self.getFileName()
@@ -1609,6 +1626,11 @@ class bAnalysis:
 			# TODO: keep track of per sweep spike and total spike ???
 			spikeDict['sweepSpikeNumber'] = i
 			spikeDict['spikeNumber'] = self.numSpikes
+
+			spikeDict['isBad'] = False
+			spikeDict['userType'] = 0
+			#spikeDict['userType2'] = False
+			#spikeDict['userType3'] = False
 
 			spikeDict['errors'] = []
 			# append existing spikeErrorList from spikeDetect_dvdt() or spikeDetect_mv()

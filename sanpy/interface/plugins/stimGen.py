@@ -59,6 +59,8 @@ class stimGen(sanpyPlugin):
 
 		self.doRectify = False
 
+		self.savePath = ''  # remember last save folder
+
 		self.buildUI()
 
 		self.updateStim()
@@ -250,25 +252,44 @@ class stimGen(sanpyPlugin):
 		self.durationSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
 		controlLayout.addWidget(self.durationSpinBox)
 
-		aName = 'Amplitude'
+		aName = 'Number Of Sweeps'
 		aLabel = QtWidgets.QLabel(aName)
 		controlLayout.addWidget(aLabel)
+		self.numSweepsSpinBox = QtWidgets.QSpinBox()
+		self.numSweepsSpinBox.setKeyboardTracking(False)
+		self.numSweepsSpinBox.setRange(1, 1e9)
+		self.numSweepsSpinBox.setValue(self.numSweeps)
+		self.numSweepsSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
+		controlLayout.addWidget(self.numSweepsSpinBox)
+
+		vLayout.addLayout(controlLayout) # add mpl canvas
+
+		# 2nd row
+		controlLayout_row2 = QtWidgets.QGridLayout()
+		rowSpan = 1
+		colSpan = 1
+		row = 0
+		col = 0
+
+		aName = 'Amplitude'
+		aLabel = QtWidgets.QLabel(aName)
+		controlLayout_row2.addWidget(aLabel, row, col, rowSpan, colSpan)
 		self.amplitudeSpinBox = QtWidgets.QDoubleSpinBox()
 		self.amplitudeSpinBox.setKeyboardTracking(False)
 		self.amplitudeSpinBox.setRange(0, 1e9)
 		self.amplitudeSpinBox.setValue(self.amplitude)
 		self.amplitudeSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		controlLayout.addWidget(self.amplitudeSpinBox)
+		controlLayout_row2.addWidget(self.amplitudeSpinBox, 0, 1, rowSpan, colSpan)
 
 		aName = 'Frequency (Hz)'
 		aLabel = QtWidgets.QLabel(aName)
-		controlLayout.addWidget(aLabel)
+		controlLayout_row2.addWidget(aLabel, 0, 2, rowSpan, colSpan)
 		self.frequencySpinBox = QtWidgets.QDoubleSpinBox()
 		self.frequencySpinBox.setKeyboardTracking(False)
 		self.frequencySpinBox.setRange(0, 1e9)
 		self.frequencySpinBox.setValue(self.frequency)
 		self.frequencySpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		controlLayout.addWidget(self.frequencySpinBox)
+		controlLayout_row2.addWidget(self.frequencySpinBox, 0, 3, rowSpan, colSpan)
 
 		# rms of sin (amp and freq)
 		rmsMult = 1/np.sqrt(2)
@@ -276,73 +297,57 @@ class stimGen(sanpyPlugin):
 		sinRms = round(sinRms,2)
 		aName = f'RMS:{sinRms}'
 		self.sinRms = QtWidgets.QLabel(aName)
-		controlLayout.addWidget(self.sinRms)
+		controlLayout_row2.addWidget(self.sinRms, 0, 4, rowSpan, colSpan)
 
 		aName = 'Noise Amplitude'
 		aLabel = QtWidgets.QLabel(aName)
-		controlLayout.addWidget(aLabel)
+		controlLayout_row2.addWidget(aLabel, 0, 5, rowSpan, colSpan)
 		self.noiseAmpSpinBox = QtWidgets.QDoubleSpinBox()
 		self.noiseAmpSpinBox.setKeyboardTracking(False)
 		self.noiseAmpSpinBox.setSingleStep(0.1)
 		self.noiseAmpSpinBox.setRange(0, 1e9)
 		self.noiseAmpSpinBox.setValue(self.noiseAmplitude)
 		self.noiseAmpSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		controlLayout.addWidget(self.noiseAmpSpinBox)
-
-		noiseRms = 'TODO'
-		aName = f'RMS:{noiseRms}'
-		self.noiseRms = QtWidgets.QLabel(aName)
-		controlLayout.addWidget(self.noiseRms)
-
-		#
-		vLayout.addLayout(controlLayout) # add mpl canvas
+		controlLayout_row2.addWidget(self.noiseAmpSpinBox, 0, 6, rowSpan, colSpan)
 
 		#
 		# row 2
-		controlLayout_row2 = QtWidgets.QHBoxLayout()
-
-		aName = 'Number Of Sweeps'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel)
-		self.numSweepsSpinBox = QtWidgets.QSpinBox()
-		self.numSweepsSpinBox.setKeyboardTracking(False)
-		self.numSweepsSpinBox.setRange(1, 1e9)
-		self.numSweepsSpinBox.setValue(self.numSweeps)
-		self.numSweepsSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		controlLayout_row2.addWidget(self.numSweepsSpinBox)
+		#controlLayout_row2 = QtWidgets.QHBoxLayout()
 
 		aName = 'Amplitude Step'
 		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel)
+		controlLayout_row2.addWidget(aLabel, 1, 0, rowSpan, colSpan)
 		self.amplitudeStepSpinBox = QtWidgets.QDoubleSpinBox()
 		self.amplitudeStepSpinBox.setKeyboardTracking(False)
 		self.amplitudeStepSpinBox.setSingleStep(0.1)
 		self.amplitudeStepSpinBox.setRange(0, 1e9)
 		self.amplitudeStepSpinBox.setValue(self.amplitudeStep)
 		self.amplitudeStepSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		controlLayout_row2.addWidget(self.amplitudeStepSpinBox)
+		controlLayout_row2.addWidget(self.amplitudeStepSpinBox, 1, 1, rowSpan, colSpan)
 
 		aName = 'Frequency Step'
 		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel)
+		controlLayout_row2.addWidget(aLabel, 1, 2, rowSpan, colSpan)
 		self.frequencyStepSpinBox = QtWidgets.QDoubleSpinBox()
 		self.frequencyStepSpinBox.setKeyboardTracking(False)
 		self.frequencyStepSpinBox.setSingleStep(0.1)
 		self.frequencyStepSpinBox.setRange(0, 1e9)
 		self.frequencyStepSpinBox.setValue(self.frequencyStep)
 		self.frequencyStepSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		controlLayout_row2.addWidget(self.frequencyStepSpinBox)
+		controlLayout_row2.addWidget(self.frequencyStepSpinBox, 1, 3, rowSpan, colSpan)
+
+		# first row in grid has freq rms
 
 		aName = 'Noise Step'
 		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel)
+		controlLayout_row2.addWidget(aLabel, 1, 5, rowSpan, colSpan)
 		self.noiseStepSpinBox = QtWidgets.QDoubleSpinBox()
 		self.noiseStepSpinBox.setKeyboardTracking(False)
 		self.noiseStepSpinBox.setSingleStep(0.1)
 		self.noiseStepSpinBox.setRange(0, 1e9)
 		self.noiseStepSpinBox.setValue(self.frequencyStep)
 		self.noiseStepSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		controlLayout_row2.addWidget(self.noiseStepSpinBox)
+		controlLayout_row2.addWidget(self.noiseStepSpinBox, 1, 6, rowSpan, colSpan)
 
 		#
 		vLayout.addLayout(controlLayout_row2) # add mpl canvas
@@ -469,14 +474,15 @@ class stimGen(sanpyPlugin):
 		"""
 		fileName = self.getFileName()
 		options = QtWidgets.QFileDialog.Options()
+		savePath = os.path.join(self.savePath, fileName)
 		fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self.mainWidget,"Save .atf file",
-							fileName,"Atf Files (*.atf)", options=options)
+							savePath,"Atf Files (*.atf);;CSV Files (*.csv)", options=options)
 		if not fileName:
 			return
 
-		if fileName.endswith('.atf'):
-			print('\n\nDEBUGGING ATF WITH MULTIPLE CHANNELS\n\n')
+		self.savePath = os.path.split(fileName)[0]
 
+		if fileName.endswith('.atf'):
 			numSweeps = self.numSweeps
 			out = self.getAtfHeader(numChannels=numSweeps)
 			data = self._data  # list of sweeps

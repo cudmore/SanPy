@@ -228,6 +228,19 @@ class bPlugins():
 			doZoom = sDict['doZoom']
 			app.selectSpike(spikeNumber, doZoom=doZoom)
 
+	def slot_selectSpikeList(self, sDict):
+		"""
+		On user selection of spike in a plugin
+
+		Tell main app to select a spike everywhere
+		"""
+		logger.info(sDict)
+		app = self.getSanPyApp()
+		if app is not None:
+			spikeList = sDict['spikeList']
+			doZoom = sDict['doZoom']
+			app.selectSpikeList(spikeList, doZoom=doZoom)
+
 def test_print_classes():
 	"""testing"""
 	print('__name__:', __name__)

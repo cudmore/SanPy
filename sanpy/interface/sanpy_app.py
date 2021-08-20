@@ -45,6 +45,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 	signalSelectSpike = QtCore.pyqtSignal(object)
 	"""Emit spike selection."""
 
+	signalSelectSpikeList = QtCore.pyqtSignal(object)
+	"""Emit spike list selection."""
+
 	def _getBundledDir():
 		"""
 		TODO: use this in all cases
@@ -263,6 +266,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		eDict['doZoom'] = doZoom
 		self.signalSelectSpike.emit(eDict)
 
+	def selectSpikeList(self, spikeList, doZoom=False):
+		eDict = {}
+		eDict['spikeList'] = spikeList
+		eDict['doZoom'] = doZoom
+		self.signalSelectSpikeList.emit(eDict)
+
 	def mySignal(self, this, data=None):
 		"""
 		this: the signal
@@ -332,11 +341,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			if self.myScatterPlotWidget.isVisible():
 				self.myScatterPlotWidget.selectSpike(None)
 			'''
-			
+
 			# removing this may cause problems on file change ?
 			#self.myScatterPlotWidget.selectXRange(None, None)
 			#signalSelectSpike.emit xxx
 			self.selectSpike(None)
+			self.selectSpikeList(None)
 
 		else:
 			logger.error(f'Did not understand this: "{this}"')
@@ -606,6 +616,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.myDetectionWidget = sanpy.interface.bDetectionWidget(baNone,self)
 		self.signalSwitchFile.connect(self.myDetectionWidget.slot_switchFile)
 		self.signalSelectSpike.connect(self.myDetectionWidget.slot_selectSpike) # myDetectionWidget listens to self
+		self.signalSelectSpikeList.connect(self.myDetectionWidget.slot_selectSpikeList) # myDetectionWidget listens to self
 		self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike) # self listens to myDetectionWidget
 		self.myDetectionWidget.signalSelectSweep.connect(self.slot_selectSweep) # self listens to myDetectionWidget
 		self.myDetectionWidget.signalDetect.connect(self.slot_detect)
@@ -614,8 +625,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		#
 		# scatter plot
+		'''
 		self.myScatterPlotWidget = sanpy.interface.bScatterPlotWidget(self, self.myDetectionWidget)
-		#self.myQVBoxLayout.addWidget(self.myScatterPlotWidget)
 		self.signalSelectSpike.connect(self.myScatterPlotWidget.slotSelectSpike)
 		self.signalSetXAxis.connect(self.myScatterPlotWidget.slot_setXAxis)
 		self.signalSelectSweep.connect(self.myScatterPlotWidget.slot_selectSweep)
@@ -624,6 +635,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			pass
 		else:
 			self.myScatterPlotWidget.hide()
+		'''
 
 		#
 		# error report
@@ -640,7 +652,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		#self.main_splitter.setAlignment(QtCore.Qt.AlignTop) # trying to get vertical alignment to be tighter
 		self.main_splitter.addWidget(self.tableView)
 		self.main_splitter.addWidget(self.myDetectionWidget)
-		self.main_splitter.addWidget(self.myScatterPlotWidget)
+		#self.main_splitter.addWidget(self.myScatterPlotWidget)
 		self.main_splitter.addWidget(self.myErrorTable)
 
 		# was this
@@ -662,12 +674,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			self.configDict[key1][key2] = val
 
 			# actually show hide some widgets
-			if key1=='display' and key2=='showScatter':
-				if val:
-					self.myScatterPlotWidget.show()
-				else:
-					self.myScatterPlotWidget.hide()
-			elif key1=='display' and key2=='showErrors':
+			#if key1=='display' and key2=='showScatter':
+			#	if val:
+			#		self.myScatterPlotWidget.show()
+			#	else:
+			#		self.myScatterPlotWidget.hide()
+			if key1=='display' and key2=='showErrors':
 				if val:
 					self.myErrorTable.show()
 				else:

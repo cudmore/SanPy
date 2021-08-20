@@ -36,12 +36,7 @@ def butter_sos(cutOff, fs, order=50, passType='lowpass'):
 	normal_cutoff = cutOff / nyq
 	'''
 
-	logger.info('')
-	print('  order:', order)
-	print('  cutOff:',cutOff)
-	#print('  normal_cutoff:', normal_cutoff, type(normal_cutoff))
-	print('  fs:',fs)
-	print('  passType:',passType)
+	logger.info(f'Making butter file with order:{order} cutOff:{cutOff} passType:{passType} fs:{fs}')
 
 	#sos = butter(order, normal_cutoff, btype='low', analog=False, output='sos')
 	#sos = scipy.signal.butter(N=order, Wn=normal_cutoff, btype=passType, analog=False, fs=fs, output='sos')
@@ -402,8 +397,9 @@ def getSpikeTrain(numSeconds=1, fs=10000, spikeFreq=3, amp=10, noiseAmp=10):
 	if noiseAmp == 0:
 		pass
 	else:
-		noise_power = 0.001 * fs / noiseAmp
-		epspTrain += np.random.normal(scale=np.sqrt(noise_power), size=epspTrain.shape)
+		#noise_power = 0.001 * fs / noiseAmp
+		#epspTrain += np.random.normal(scale=np.sqrt(noise_power), size=epspTrain.shape)
+		epspTrain += np.random.normal(scale=noiseAmp, size=epspTrain.shape)
 
 	#
 	t = np.linspace(0, numSeconds, n, endpoint=True)
@@ -987,10 +983,10 @@ class fftPlugin(sanpyPlugin):
 
 		medianPnts = self.medianFilterPnts  # 50
 		if medianPnts > 0:
-			logger.info(f'Median filter with pnts={medianPnts}')
+			logger.info(f'  Median filter with pnts={medianPnts}')
 			yFiltered = scipy.ndimage.median_filter(y, medianPnts)
 		else:
-			logger.info('No median filter')
+			logger.info('  No median filter')
 			yFiltered = y
 
 		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
@@ -1025,7 +1021,7 @@ class fftPlugin(sanpyPlugin):
 			#self.butterOrder = 70
 			#self.sos = butter_sos(self.butterCutoff, self.fs, order=self.butterOrder, passType='lowpass')
 			#self.butterCutoff = [0.7, 10]
-			logger.info(f'butterOrder:{self.butterOrder} butterCutoff:{self.butterCutoff}')
+			#logger.info(f'  butterOrder:{self.butterOrder} butterCutoff:{self.butterCutoff}')
 			self.sos = butter_sos(self.butterCutoff, self.fs, order=self.butterOrder, passType='bandpass')
 			# filtfilt should remove phase delay in time. A forward-backward digital filter using cascaded second-order sections.
 			yFiltered_Butter = scipy.signal.sosfiltfilt(self.sos, yDetrend, axis=0)
@@ -1049,6 +1045,22 @@ class fftPlugin(sanpyPlugin):
 		#
 		if self.doButterFilter:
 			self.rawZoomAxes.plot(t, yFiltered, '-r', linewidth=1)
+
+		# save yDetrend, yFiltered as csv
+		print('=== FOR FERNANDO')
+		import pandas as pd
+		print('  t:', t.shape)
+		print('  yDetrend:', yDetrend.shape)
+		print('  yFiltered:', yFiltered.shape)
+		tmpDf = pd.DataFrame(columns=['s', 'yDetrend', 'yFiltered'])
+		tmpDf['s'] = t
+		tmpDf['yDetrend'] = yDetrend
+		tmpDf['yFiltered'] = yFiltered
+		print(tmpDf.head())
+		dfFile = 'fft-20200707-0000-16sec-31sec.csv'
+		print('saving dfFile:', dfFile)
+		tmpDf.to_csv(dfFile, index=False)
+		print('=== END')
 
 		# we will still scale a freq plots to [0, self.maxPlotHz]
 		if self.doButterFilter:
@@ -1109,7 +1121,10 @@ class fftPlugin(sanpyPlugin):
 		print('  psdWindowStr:', self.psdWindowStr)
 		print('  psdWindow:', psdWindow)
 		'''
-		Pxx, freqs = self.psdAxes.psd(yFiltered, marker='', linestyle='-', NFFT=nfft, Fs=fs, detrend=myDetrend, window=psdWindow)
+		# default scale_by_freq=True
+		scale_by_freq = True
+		Pxx, freqs = self.psdAxes.psd(yFiltered, marker='', linestyle='-', NFFT=nfft, Fs=fs,
+									scale_by_freq=scale_by_freq, detrend=myDetrend, window=psdWindow)
 
 		#
 		# replot matplotlib psd

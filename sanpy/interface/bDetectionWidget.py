@@ -18,6 +18,7 @@ logger = get_logger(__name__)
 
 class bDetectionWidget(QtWidgets.QWidget):
 	signalSelectSpike = QtCore.pyqtSignal(object) # spike number, doZoom
+	signalSelectSpikeList = QtCore.pyqtSignal(object) # spike number, doZoom
 	signalDetect = QtCore.pyqtSignal(object) #
 	signalSelectSweep = QtCore.pyqtSignal(object, object)  # (bAnalysis, sweepNumber)
 
@@ -156,12 +157,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 		windowOptions = self.getMainWindowOptions()
 		showDvDt = True
 		showClips = False
-		showScatter = True
+		#showScatter = True
 		if windowOptions is not None:
 			showDvDt = windowOptions['display']['showDvDt']
 			showDAC = windowOptions['display']['showDAC']
 			showClips = windowOptions['display']['showClips']
-			showScatter = windowOptions['display']['showScatter']
+			#showScatter = windowOptions['display']['showScatter']
 
 			#self.toggle_dvdt(showDvDt)
 			#self.toggleClips(showClips)
@@ -527,7 +528,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			}
 			self.signalSelectSpike.emit(eDict)
 
-		'''
+		"""
 		for p in points:
 			p = p.pos()
 			x, y = p.x(), p.y()
@@ -537,7 +538,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			indexes += i
 		indexes = list(set(indexes))
 		print('spike(s):', indexes)
-		'''
+		"""
 
 	def getEDD(self):
 		# get x/y plot position of all EDD from all spikes
@@ -750,13 +751,19 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if self.ba.numSpikes == 0:
 			return
 
+		spikeList = [spikeNumber]
+
 		x = None
 		y = None
-		xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=self.sweepNumber)
 
-		if spikeNumber is not None and spikeNumber < len(xPlot):
-			x = [xPlot[spikeNumber]]
-			y = [yPlot[spikeNumber]]
+		# removed second clause while adding multiple spike selection
+		#if spikeNumber is not None and spikeNumber < len(xPlot):
+		if spikeNumber is not None:
+			xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=self.sweepNumber)
+			xPlot = np.array(xPlot)
+			yPlot = np.array(yPlot)
+			x = xPlot[spikeList]
+			y = yPlot[spikeList]
 
 		self.mySingleSpikeScatterPlot.setData(x=x, y=y)
 
@@ -779,6 +786,27 @@ class bDetectionWidget(QtWidgets.QWidget):
 				'doZoom': doZoom
 			}
 			self.signalSelectSpike.emit(eDict)
+
+	def selectSpikeList(self, spikeList, doZoom=False, doEmit=False):
+		x = None
+		y = None
+
+		if len(spikeList) > 0:
+			xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=self.sweepNumber)
+			xPlot = np.array(xPlot)
+			yPlot = np.array(yPlot)
+			x = xPlot[spikeList]
+			y = yPlot[spikeList]
+
+		self.mySpikeListScatterPlot.setData(x=x, y=y)
+
+		# I don't think anybody is listening to this
+		if doEmit:
+			eDict = {
+				'spikeList': spikeList,
+				'doZoom': doZoom
+			}
+			self.signalSelectSpikeList.emit(eDict)
 
 	def refreshClips(self, xMin=None, xMax=None):
 
@@ -874,11 +902,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#		self.vmPlot.show()
 		#	else:
 		#		self.vmPlot.hide()
-		elif item == 'Scatter':
-			#self.toggle_scatter(on)
-			if self.myMainWindow is not None:
-				#self.myMainWindow.toggleStatisticsPlot(on)
-				self.myMainWindow.preferencesSet('display', 'showScatter', on)
+		#elif item == 'Scatter':
+		#	#self.toggle_scatter(on)
+		#	if self.myMainWindow is not None:
+		#		#self.myMainWindow.toggleStatisticsPlot(on)
+		#		self.myMainWindow.preferencesSet('display', 'showScatter', on)
 		elif item == 'Errors':
 			#self.toggle_errorTable(on)
 			if self.myMainWindow is not None:
@@ -891,7 +919,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 	def buildUI(self):
 		# left is toolbar, right is PYQtGraph (self.view)
 		self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
-		#self.myHBoxLayout_detect.setAlignment(QtCore.Qt.AlignTop)
+		self.myHBoxLayout_detect.setAlignment(QtCore.Qt.AlignTop)
 
 		# detection widget toolbar
 		# abb 20201110, switching over to a better layout
@@ -918,15 +946,19 @@ class bDetectionWidget(QtWidgets.QWidget):
 		colSpan = 1
 		rowSpan = 1
 		self.vmPlotGlobal = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
+		self.vmPlotGlobal.enableAutoRange()
 		row += rowSpan
 		rowSpan = 1
 		self.derivPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
+		self.derivPlot.enableAutoRange()
 		row += rowSpan
 		rowSpan = 1
 		self.dacPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
+		self.dacPlot.enableAutoRange()
 		row += rowSpan
 		rowSpan = 2  # make Vm plot taller than others
 		self.vmPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
+		self.vmPlot.enableAutoRange()
 		row += rowSpan
 		rowSpan = 1
 		self.clipPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
@@ -1030,9 +1062,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 		color = 'y'
 		symbol = 'o'
 		self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=4)
-		#mySingleSpikeScatterPlotCopy = self.mySingleSpikeScatterPlot.copy()
-		#self.vmPlotGlobal.addItem(self.mySingleSpikeScatterPlotCopy)
 		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
+
+		# mult spiek selection (spikeList)
+		color = 'c'
+		symbol = 'o'
+		self.mySpikeListScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=4)
+		self.vmPlot.addItem(self.mySpikeListScatterPlot)
 
 		# axis labels
 		self.derivPlot.getAxis('left').setLabel('dV/dt (mV/ms)')
@@ -1208,6 +1244,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.selectSpike(spikeNumber, doZoom=doZoom)
 		self.detectToolbarWidget.slot_selectSpike(sDict)
 
+	def slot_selectSpikeList(self, sDict):
+		#print('detectionWidget.slotSelectSpike() sDict:', sDict)
+		spikeList = sDict['spikeList']
+		doZoom = sDict['doZoom']
+		self.selectSpikeList(spikeList, doZoom=doZoom)
+		#self.detectToolbarWidget.slot_selectSpike(sDict)
+
 	def slot_switchFile(self, tableRowDict, ba=None):
 		"""
 		Set self.ba to new bAnalysis object ba
@@ -1323,8 +1366,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 							self, forcePenColor='b', type='vmFiltered',
 							columnOrder=True)
 		self.vmPlotGlobal.addItem(self.vmLinesFiltered2)
-		self.linearRegionItem2 = pg.LinearRegionItem(values=(0,self.ba.recordingDur), orientation=pg.LinearRegionItem.Vertical)
-		#self.linearRegionItem2.setMovable(False)
+		self.linearRegionItem2 = pg.LinearRegionItem(values=(0,self.ba.recordingDur),
+									orientation=pg.LinearRegionItem.Vertical,
+									brush=pg.mkBrush(100,100,100,100),
+									pen=pg.mkPen(None))
+		self.linearRegionItem2.setMovable(False)
 		self.vmPlotGlobal.addItem(self.linearRegionItem2)
 
 		#
@@ -1342,10 +1388,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 				self.derivPlot.addItem(plotItem)
 
 		# single spike selection
+		'''
 		self.vmPlotGlobal.removeItem(self.mySingleSpikeScatterPlot)
 		self.vmPlotGlobal.addItem(self.mySingleSpikeScatterPlot)
 		self.vmPlot.removeItem(self.mySingleSpikeScatterPlot)
 		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
+		'''
 
 		# set full axis
 		# setAxisFull was causing start/stop to get over-written
@@ -1774,7 +1822,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		showGlobalVm = True
 		showDvDt = True
 		showClips = False
-		showScatter = True
+		#showScatter = True
 		if windowOptions is not None:
 			detectDvDt = windowOptions['detect']['detectDvDt']
 			detectMv = windowOptions['detect']['detectMv']
@@ -1782,7 +1830,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			showDAC = windowOptions['display']['showDAC']
 			showGlobalVm = windowOptions['display']['showGlobalVm']
 			showClips = windowOptions['display']['showClips']
-			showScatter = windowOptions['display']['showScatter']
+			#showScatter = windowOptions['display']['showScatter']
 			showErrors = windowOptions['display']['showErrors']
 
 		mystylesheet_css = os.path.join(myPath, 'css', 'mystylesheet.css')
@@ -1794,7 +1842,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 		self.setFixedWidth(300)
 		self.mainLayout = QtWidgets.QVBoxLayout(self)
-		#self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
+		self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
 
 		# Show selected file
 		self.mySelectedFileLabel = QtWidgets.QLabel('None')
@@ -2077,12 +2125,14 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Clips'))
 		plotGridLayout.addWidget(checkbox, row, col)
 
+		'''
 		row = 0
 		col += 1
 		checkbox = QtWidgets.QCheckBox('Scatter')
 		checkbox.setChecked(showScatter)
 		checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Scatter'))
 		plotGridLayout.addWidget(checkbox, row, col)
+		'''
 
 		row = 0
 		col += 1
@@ -2171,6 +2221,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 	def slot_selectSpike(self, sDict):
 		spikeNumber = sDict['spikeNumber']
+		# don't respond to a list of spikes
+		if isinstance(spikeNumber, list):
+			return
 		# arbitrarily chosing spike 0 when no spike selection
 		# spin boxes can not have 'no value'
 		if spikeNumber is None:
