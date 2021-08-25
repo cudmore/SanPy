@@ -161,11 +161,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if windowOptions is not None:
 			showDvDt = windowOptions['display']['showDvDt']
 			showDAC = windowOptions['display']['showDAC']
+			showGlobalVm = windowOptions['display']['showGlobalVm']
 			showClips = windowOptions['display']['showClips']
 			#showScatter = windowOptions['display']['showScatter']
 
 			#self.toggle_dvdt(showDvDt)
 			#self.toggleClips(showClips)
+			self.toggleInterface('Global Vm', showGlobalVm)
 			self.toggleInterface('dV/dt', showDvDt)
 			self.toggleInterface('DAC', showDAC)
 			self.toggleInterface('Clips', showClips)
@@ -174,9 +176,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 	def sweepNumber(self):
 		return self._sweepNumber
 
-	def detect(self, dvdtThreshold, mvThreshold, startSec, stopSec):
+	def detect(self, detectionType, dvdtThreshold, mvThreshold, startSec, stopSec):
 		"""
 		Detect spikes
+
+		Args:
+			detectionType (sanpy.bDetection.detectionTypes): The type of detection (dvdt, vm)
 		"""
 
 		if self.ba is None:
@@ -190,10 +195,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 			return
 
 		#logger.info(f'Detecting with dvdtThreshold:{dvdtThreshold} mvThreshold:{mvThreshold}')
-		self.updateStatusBar(f'Detecting spikes dvdt:{dvdtThreshold} minVm:{mvThreshold}')
+		self.updateStatusBar(f'Detecting spikes detectionType:{detectionType} dvdt:{dvdtThreshold} minVm:{mvThreshold}')
 
 		# get default detection parammeters and tweek
-		detectionDict = sanpy.bAnalysis.getDefaultDetection()
+		#detectionDict = sanpy.bAnalysis.getDefaultDetection()
+		detectionDict = sanpy.bDetection() # gets default detection class
+		detectionDict['detectionType'] = detectionType  # set detection type to ('dvdt', 'vm')
 		detectionDict['dvdtThreshold'] = dvdtThreshold
 		detectionDict['mvThreshold'] = mvThreshold
 
@@ -264,6 +271,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#setCellValue(self, rowIdx, colStr, value)
 
 		self.replot() # replot statistics over traces
+
+		# 20210821
+		# refresh spike clips
+		self.refreshClips(None, None)
 
 		self.signalDetect.emit(self.ba)
 		#if self.myMainWindow is not None:
@@ -347,7 +358,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			start = stop
 			stop = tmp
 
-		logger.info(f'start:{start} stop:{stop} set_xyBoth:{set_xyBoth} whichPlot:{whichPlot}')
+		#logger.info(f'start:{start} stop:{stop} set_xyBoth:{set_xyBoth} whichPlot:{whichPlot}')
 
 		padding = 0
 		if set_xyBoth == 'xAxis':
@@ -392,7 +403,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		"""
 		thisAxis: (vm, dvdt)
 		"""
-		logger.info(f'thisAxis:"{thisAxis}"')
+		#logger.info(f'thisAxis:"{thisAxis}"')
 		# y-axis is NOT shared
 		# dvdt
 		if thisAxis in ['dvdt', 'dvdtFiltered']:
@@ -422,6 +433,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.dacPlot.autoRange()
 		self.vmPlot.autoRange(items=[self.vmLinesFiltered])
 		self.vmPlotGlobal.autoRange(items=[self.vmLinesFiltered2])  # we never zoom this
+
+		self.refreshClips(None, None)
 		self.clipPlot.autoRange()
 
 		# rectangle region on vmPlotGlobal
@@ -435,33 +448,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.detectToolbarWidget.startSeconds.repaint()
 		self.detectToolbarWidget.stopSeconds.setValue(stop)
 		self.detectToolbarWidget.stopSeconds.repaint()
-
-		# 20210806 was this, way too complicated
-		'''
-		# x-axis is shared between (dvdt, vm)
-		start = 0
-		#stop = self.ba.sweepX[-1]
-		stop = self.ba.recordingDur
-		start, stop = self._setAxis(start, stop, set_xyBoth='xAxis')
-
-		logger.info(f'start:{start} stop:{stop}')
-
-		# y-axis is NOT shared
-		# dvdt
-		filteredDeriv = self.ba.filteredDeriv(sweepNumber=self.sweepNumber)
-		top = np.nanmax(filteredDeriv)
-		bottom = np.nanmin(filteredDeriv)
-		start, stop = self._setAxis(bottom, top,
-									set_xyBoth='yAxis',
-									whichPlot='dvdt')
-		# vm
-		sweepY = self.ba.sweepY(sweepNumber=self.sweepNumber)
-		top = np.nanmax(sweepY)
-		bottom = np.nanmin(sweepY)
-		start, stop = self._setAxis(bottom, top,
-									set_xyBoth='yAxis',
-									whichPlot='vm')
-		'''
 
 		# todo: make this a signal, with slot in main window
 		if self.myMainWindow is not None:
@@ -510,21 +496,26 @@ class bDetectionWidget(QtWidgets.QWidget):
 		item: PlotDataItem that was clicked
 		points: list of points clicked (pyqtgraph.graphicsItems.ScatterPlotItem.SpotItem)
 		"""
+
+		'''
 		print('=== bDetectionWidget.on_scatterClicked')
 		print('  item:', item)
 		print('  points:', points)
 		print('  ev:', ev)
+		'''
 		indexes = []
 		#print('item.data:', item.data())
-		for idx, p in enumerate(points):
-			print(f'    points[{idx}].data():{p.data()} p.index:{p.index()} p.pos:{p.pos()}')
+		#for idx, p in enumerate(points):
+		#	print(f'    points[{idx}].data():{p.data()} p.index:{p.index()} p.pos:{p.pos()}')
 
 		if len(points) > 0:
 			spikeNumber = points[0].index()
 
+			logger.info(f'spikeNumber:{spikeNumber}')
 			eDict = {
 				'spikeNumber': spikeNumber,
-				'doZoom': False
+				'doZoom': False,
+				'ba': self.ba,
 			}
 			self.signalSelectSpike.emit(eDict)
 
@@ -783,7 +774,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if doEmit:
 			eDict = {
 				'spikeNumber': spikeNumber,
-				'doZoom': doZoom
+				'doZoom': doZoom,
+				'ba': self.ba,
 			}
 			self.signalSelectSpike.emit(eDict)
 
@@ -804,7 +796,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if doEmit:
 			eDict = {
 				'spikeList': spikeList,
-				'doZoom': doZoom
+				'doZoom': doZoom,
+				'ba': self.ba,
 			}
 			self.signalSelectSpikeList.emit(eDict)
 
@@ -812,18 +805,19 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		if not self.clipPlot.isVisible():
 			# clips are not being displayed
-			logger.info('Clips not visible --- RETURNING')
+			#logger.info('Clips not visible --- RETURNING')
 			return
+
+		logger.info('')
 
 		# always remove existing
 		# if there are no clips and we bail we will at least clear display
 		self.clipPlot.clear()
-		'''
-		if self.clipLines is not None:
-			self.clipPlot.removeItem(self.clipLines)
-		if self.meanClipLine is not None:
-			self.clipPlot.removeItem(self.meanClipLine)
-		'''
+
+		#if self.clipLines is not None:
+		#	self.clipPlot.removeItem(self.clipLines)
+		#if self.meanClipLine is not None:
+		#	self.clipPlot.removeItem(self.meanClipLine)
 
 		if self.ba is None:
 			return
@@ -836,11 +830,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# convert clips to 2d ndarray ???
 		xTmp = np.array(theseClips_x)
-		xTmp /= self.ba.dataPointsPerMs # pnt to ms
+		#xTmp /= self.ba.dataPointsPerMs # pnt to ms
+		xTmp /= self.ba.dataPointsPerMs * 1000  # pnt to seconds
 		yTmp = np.array(theseClips)
 
-		print('refreshClips() xTmp:', xTmp.shape)
-		print('refreshClips() yTmp:', yTmp.shape)
+		#print('refreshClips() xTmp:', xTmp.shape)
+		#print('refreshClips() yTmp:', yTmp.shape)
 
 		self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type='clip')
 		self.clipPlot.addItem(self.clipLines)
@@ -1060,14 +1055,14 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# single spike selection
 		color = 'y'
-		symbol = 'o'
-		self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=4)
+		symbol = 'x'
+		self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=2, color=color), symbol=symbol, size=10)
 		self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
 
-		# mult spiek selection (spikeList)
+		# mult spike selection (spikeList)
 		color = 'c'
 		symbol = 'o'
-		self.mySpikeListScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=5, color=color), symbol=symbol, size=4)
+		self.mySpikeListScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=2, color=color), symbol=symbol, size=10)
 		self.vmPlot.addItem(self.mySpikeListScatterPlot)
 
 		# axis labels
@@ -1075,10 +1070,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# although called vmPlot, this does double time for current-cclamp and voltage clamp
 		# todo: rename to recordingPlot
-		self.vmPlotGlobal.getAxis('left').setLabel('Vm (mV)')
-		self.vmPlotGlobal.getAxis('bottom').setLabel('Seconds')
-		self.vmPlot.getAxis('left').setLabel('Vm (mV)')
+		self.vmPlotGlobal.getAxis('left').setLabel('mV')
+		#self.vmPlotGlobal.getAxis('bottom').setLabel('Seconds')
+		self.vmPlot.getAxis('left').setLabel('mV')
 		self.vmPlot.getAxis('bottom').setLabel('Seconds')
+		self.clipPlot.getAxis('left').setLabel('Vm (mV)')
 
 		self.replot()
 
@@ -1301,14 +1297,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# abb implement sweep, move to function()
 		#self._replot()
 
+		self.refreshClips(startSec, stopSec)
+
 		# update x/y axis labels
 		yLabel = self.ba._sweepLabelY
 		self.dacPlot.getAxis('left').setLabel('DAC')
 		self.derivPlot.getAxis('left').setLabel('d/dt')
 		self.vmPlotGlobal.getAxis('left').setLabel(yLabel)
-		self.vmPlotGlobal.getAxis('bottom').setLabel('Seconds')
+		#self.vmPlotGlobal.getAxis('bottom').setLabel('Seconds')
 		self.vmPlot.getAxis('left').setLabel(yLabel)
 		self.vmPlot.getAxis('bottom').setLabel('Seconds')
+		self.clipPlot.getAxis('left').setLabel(yLabel)
 
 		return True
 
@@ -1504,7 +1503,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 		myType = self.myType
 
 		if myType == 'clip':
-			print('WARNING: no export for clips, try clicking again')
+			logger.warning('No export for clips, try clicking again')
 			return
 
 		contextMenu = QtWidgets.QMenu()
@@ -1629,7 +1628,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 			self.xStart = None
 			self.xCurrent = None
 
-			'''
+			# 20210821, not sure ???
 			if self.myType == 'clip':
 				if self.xDrag:
 					self.clipPlot.setXRange(self.xStart, self.xCurrent, padding=padding)
@@ -1637,7 +1636,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 					self.clipPlot.setYRange(self.xStart, self.xCurrent, padding=padding)
 			else:
 				self.parentWidget().removeItem(self.linearRegionItem)
-			'''
+
 			self.parentWidget().removeItem(self.linearRegionItem)
 
 			self.linearRegionItem = None
@@ -1745,19 +1744,25 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			startSec = self.startSeconds.value()
 			stopSec = self.stopSeconds.value()
 			#
-			self.detectionWidget.detect(dvdtThreshold, mvThreshold, startSec, stopSec)
+			detectionType = sanpy.bDetection.detectionTypes.dvdt
+			self.detectionWidget.detect(detectionType, dvdtThreshold, mvThreshold, startSec, stopSec)
 
 		elif name =='Detect mV':
+			dvdtThreshold = self.dvdtThreshold.value()
 			mvThreshold = self.mvThreshold.value()
 			#print('	mvThreshold:', mvThreshold)
 			# passing dvdtThreshold=None we will detect suing mvThreshold
-			dvdtThreshold = None
+
+			# was this, switching to detection class
+			#dvdtThreshold = None
+
 			#print('	dvdtThreshold:', dvdtThreshold)
 			#print('	mvThreshold:', mvThreshold)
 			startSec = self.startSeconds.value()
 			stopSec = self.stopSeconds.value()
 			#
-			self.detectionWidget.detect(dvdtThreshold, mvThreshold, startSec, stopSec)
+			detectionType = sanpy.bDetection.detectionTypes.mv
+			self.detectionWidget.detect(detectionType, dvdtThreshold, mvThreshold, startSec, stopSec)
 
 		# Reset Axes
 		#elif name == 'Reset Axes':
@@ -1833,12 +1838,15 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 			#showScatter = windowOptions['display']['showScatter']
 			showErrors = windowOptions['display']['showErrors']
 
+		# breeze
+		'''
 		mystylesheet_css = os.path.join(myPath, 'css', 'mystylesheet.css')
 		myStyleSheet = None
 		if os.path.isfile(mystylesheet_css):
 			logger.info(f'Loading stye sheet {mystylesheet_css}')
 			with open(mystylesheet_css) as f:
 				myStyleSheet = f.read()
+		'''
 
 		self.setFixedWidth(300)
 		self.mainLayout = QtWidgets.QVBoxLayout(self)
@@ -1851,7 +1859,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		#
 		# detection parameters group
 		detectionGroupBox = QtWidgets.QGroupBox('Detection')
-		detectionGroupBox.setStyleSheet(myStyleSheet)
+
+		# breeze
+		#detectionGroupBox.setStyleSheet(myStyleSheet)
+
 		#detectionGroupBox.setAlignment(QtCore.Qt.AlignTop)
 
 		detectionGridLayout = QtWidgets.QGridLayout()
@@ -1945,7 +1956,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		buttonName = 'Save Spike Report'
 		button = QtWidgets.QPushButton(buttonName)
 		button.setToolTip('Save Detected Spikes to Excel file')
-		button.setStyleSheet("background-color: green")
+		#button.setStyleSheet("background-color: green")
 		button.clicked.connect(partial(self.on_button_click,buttonName))
 		rowSpan=1
 		colSpan = 4
@@ -2009,7 +2020,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		#
 		# display group
 		displayGroupBox = QtWidgets.QGroupBox('Display')
-		displayGroupBox.setStyleSheet(myStyleSheet)
+
+		# breeze
+		#displayGroupBox.setStyleSheet(myStyleSheet)
 
 		displayGridLayout = QtWidgets.QGridLayout()
 
@@ -2092,7 +2105,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		#
 		# plots  group
 		plotGroupBox = QtWidgets.QGroupBox('Plots')
-		plotGroupBox.setStyleSheet(myStyleSheet)
+
+		# breeze
+		#plotGroupBox.setStyleSheet(myStyleSheet)
 
 		plotGridLayout = QtWidgets.QGridLayout()
 

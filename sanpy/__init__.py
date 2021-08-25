@@ -22,3 +22,6 @@ from .version import analysisVersion
 from .version import interfaceVersion
 
 from .atfStim import *
+
+from .bDetection import bDetection
+#from .bDetection import bDetection

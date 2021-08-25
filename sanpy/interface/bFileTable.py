@@ -200,6 +200,10 @@ class pandasModel(QtCore.QAbstractTableModel):
 	def data(self, index, role=QtCore.Qt.DisplayRole):
 		if index.isValid():
 			if role == QtCore.Qt.ToolTipRole:
+				# removed
+				# swapped sanpy.bDetection.defaultDetection to a class
+				# do not want to instantiate every time
+				'''
 				# get default value from bAnalysis
 				defaultDetection = sanpy.bDetection.defaultDetection
 				columnName = self._data.columns[index.column()]
@@ -210,6 +214,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 				except (KeyError):
 					pass
 				return toolTip
+				'''
 			elif role in [QtCore.Qt.DisplayRole, QtCore.Qt.EditRole]:
 				columnName = self._data.columns[index.column()]
 				if self.isAnalysisDir and columnName == 'I':
@@ -274,9 +279,9 @@ class pandasModel(QtCore.QAbstractTableModel):
 				return QtCore.QVariant()
 			elif role == QtCore.Qt.BackgroundRole:
 				if index.row() % 2 == 0:
-					return QtCore.QVariant(QtGui.QColor('#333333'))
+					return QtCore.QVariant(QtGui.QColor('#444444'))
 				else:
-					return QtCore.QVariant(QtGui.QColor('#555555'))
+					return QtCore.QVariant(QtGui.QColor('#666666'))
 
 		#
 		return QtCore.QVariant()

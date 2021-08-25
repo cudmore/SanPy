@@ -22,7 +22,7 @@ class resultsTable(sanpyPlugin):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 
-		self.pyqtWindow() # makes self.mainWidget
+		#self.pyqtWindow() # makes self.mainWidget
 
 		layout = QtWidgets.QVBoxLayout()
 
@@ -38,21 +38,21 @@ class resultsTable(sanpyPlugin):
 
 		layout.addWidget(self.myErrorTable)
 
-		self.mainWidget.setLayout(layout)
+		self.setLayout(layout)
 
 		#
 		# connect clicks in error table to siganl main sanpy_app with slot_selectSpike()
-		fnPtr = self.getSanPyApp().slot_selectSpike
-		self.myErrorTable.signalSelectSpike.connect(fnPtr)
+		if self.getSanPyApp() is not None:
+			fnPtr = self.getSanPyApp().slot_selectSpike
+			self.myErrorTable.signalSelectSpike.connect(fnPtr)
 
 		self.replot()
 
 	def replot(self):
 		# update
-		ba = self.getSanPyApp().get_bAnalysis()
-		if ba is None:
+		if self.ba is None:
 			return
-		dfPlot = ba.dfReportForScatter
+		dfPlot = self.ba.dfReportForScatter
 		if dfPlot is not None:
 			startSec, stopSec = self.getStartStop()
 			if startSec is not None and stopSec is not None:
@@ -67,15 +67,23 @@ class resultsTable(sanpyPlugin):
 			self.numSpikesLabel.setText(f'{len(dfPlot)} spikes')
 
 	def copyToClipboard(self):
-		ba = self.getSanPyApp().get_bAnalysis()
-		if ba is not None:
-			dfReportForScatter = ba.dfReportForScatter
+		if self.ba is not None:
+			dfReportForScatter = self.ba.dfReportForScatter
 			if dfReportForScatter is not None:
 				logger.info('Copy to clipboard')
 				dfReportForScatter.to_clipboard(sep='\t', index=False)
 
-if __name__ == '__main__':
+def main():
+	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+	ba = sanpy.bAnalysis(path)
+	ba.spikeDetect()
+	print(ba.numSpikes)
+
 	import sys
 	app = QtWidgets.QApplication([])
-	rt = resultsTable()
+	rt = resultsTable(ba=ba)
+	rt.show()
 	sys.exit(app.exec_())
+
+if __name__ == '__main__':
+	main()

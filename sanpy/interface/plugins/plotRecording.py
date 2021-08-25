@@ -2,11 +2,14 @@
 import numpy as np
 import scipy.signal
 
+from PyQt5 import QtCore, QtWidgets, QtGui
+
 import matplotlib.pyplot as plt
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
+import sanpy
 from sanpy import bAnalysis
 from sanpy.interface.plugins import sanpyPlugin
 from sanpy.bAnalysisUtil import statList
@@ -25,67 +28,67 @@ class plotRecording(sanpyPlugin):
 		if self.ba is None:
 			return
 
-		self.mplWindow() # assigns (self.fig, self.ax)
+		self.mplWindow2() # assigns (self.fig, self.ax)
 
 		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
 		sweepY = self.ba.filteredVm(sweepNumber=self.sweepNumber)  # sweepY
 		# comma is critical
-		self.line, = self.ax.plot(sweepX, sweepY, '-', linewidth=0.5)
+		self.line, = self.axs.plot(sweepX, sweepY, '-', linewidth=0.5)
 
 		thresholdSec = self.ba.getStat('thresholdSec')
 		thresholdVal = self.ba.getStat('thresholdVal')
 		if thresholdSec is None and thresholdVal is None:
-			self.lineDetection, = self.ax.plot([], [], 'o')
+			self.lineDetection, = self.axs.plot([], [], 'o')
 		else:
 			# comma is critical
-			self.lineDetection, = self.ax.plot(thresholdSec, thresholdVal, 'or')
+			self.lineDetection, = self.axs.plot(thresholdSec, thresholdVal, 'or')
 
 		peakSec = self.ba.getStat('peakSec')
 		peakVal = self.ba.getStat('peakVal')
 		if peakSec is None and peakVal is None:
-			self.linePeak, = self.ax.plot([], [], 'o')
+			self.linePeak, = self.axs.plot([], [], 'o')
 		else:
 			# comma is critical
-			self.linePeak, = self.ax.plot(peakSec, peakVal, 'or')
+			self.linePeak, = self.axs.plot(peakSec, peakVal, 'or')
 
 		preMinPnt = self.ba.getStat('preMinPnt')
 		preMinSec = [self.ba.pnt2Sec_(x) for x in preMinPnt]
 		preMinVal = self.ba.getStat('preMinVal')
 		if preMinSec is None and preMinVal is None:
-			self.linePreMin, = self.ax.plot([], [], 'og')
+			self.linePreMin, = self.axs.plot([], [], 'og')
 		else:
 			# comma is critical
-			self.linePreMin, = self.ax.plot(preMinSec, preMinVal, 'og')
+			self.linePreMin, = self.axs.plot(preMinSec, preMinVal, 'og')
 
 		# 0 edd
 		preLinearFitPnt0 = self.ba.getStat('preLinearFitPnt0')
 		preLinearFitSec0 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt0]
 		preLinearFitVal0 = self.ba.getStat('preLinearFitVal0')
 		if preLinearFitSec0 is None and preLinearFitVal0 is None:
-			self.linePreLinear0, = self.ax.plot([], [], 'o')
+			self.linePreLinear0, = self.axs.plot([], [], 'o')
 		else:
 			# comma is critical
-			self.linePreLinear0, = self.ax.plot(preLinearFitSec0, preLinearFitVal0, 'ob')
+			self.linePreLinear0, = self.axs.plot(preLinearFitSec0, preLinearFitVal0, 'ob')
 
 		# 1 edd
 		preLinearFitPnt1 = self.ba.getStat('preLinearFitPnt1')
 		preLinearFitSec1 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt1]
 		preLinearFitVal1 = self.ba.getStat('preLinearFitVal1')
 		if preLinearFitSec1 is None and preLinearFitVal1 is None:
-			self.linePreLinear1, = self.ax.plot([], [], 'o')
+			self.linePreLinear1, = self.axs.plot([], [], 'o')
 		else:
 			# comma is critical
-			self.linePreLinear1, = self.ax.plot(preLinearFitSec1, preLinearFitVal1, 'ob')
+			self.linePreLinear1, = self.axs.plot(preLinearFitSec1, preLinearFitVal1, 'ob')
 
 		# draw line for edd
 		xEdd, yEdd = self.getEddLines()
-		self.lineEdd, = self.ax.plot(xEdd, yEdd, '--b')
+		self.lineEdd, = self.axs.plot(xEdd, yEdd, '--b')
 
 		# hw(s)
 		xHW, yHW = self.getHalfWidths()
-		self.lineHW, = self.ax.plot(xHW, yHW, '-')
+		self.lineHW, = self.axs.plot(xHW, yHW, '-')
 
-		plt.show()
+		#plt.show()
 
 	def replot(self):
 		"""
@@ -229,6 +232,18 @@ def testPlot():
 
 	#ap.slotUpdateAnalysis()
 
+def main():
+	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+	ba = sanpy.bAnalysis(path)
+	ba.spikeDetect()
+	print(ba.numSpikes)
+
+	import sys
+	app = QtWidgets.QApplication([])
+	pr = plotRecording(ba=ba)
+	pr.show()
+	sys.exit(app.exec_())
+
 def testLoad():
 	import os, glob
 	pluginFolder = '/Users/cudmore/sanpy_plugins'
@@ -240,5 +255,6 @@ def testLoad():
 			continue
 		print(file)
 if __name__ == '__main__':
-	testPlot()
+	#testPlot()
 	#testLoad()
+	main()

@@ -56,8 +56,8 @@ class ResponseType(enum.Enum):
 	selectSpike = 3
 	setAxis = 4
 
-#class sanpyPlugin(QtWidgets.QWidget):
-class sanpyPlugin(QtCore.QObject):
+#class sanpyPlugin(QtCore.QObject):
+class sanpyPlugin(QtWidgets.QWidget):
 	"""
 	Base class for all SanPy plugins. Provides general purpose API to build plugings including:
 
@@ -83,7 +83,7 @@ class sanpyPlugin(QtCore.QObject):
 
 	responseTypes = ResponseType
 
-	def __init__(self, ba=None, bPlugin=None, startStop=None, options=None):
+	def __init__(self, ba=None, bPlugin=None, startStop=None, options=None, parent=None):
 		"""
 		Args:
 			ba (sanpy.bAnalysis): [bAnalysis][sanpy.bAnalysis.bAnalysis] object representing one file.
@@ -93,7 +93,7 @@ class sanpyPlugin(QtCore.QObject):
 							Used by 'plot tool' to plot a pool using app analysisDir dfMaster.
 							Note: NOT USED.
 		"""
-		super(sanpyPlugin, self).__init__()
+		super(sanpyPlugin, self).__init__(parent)
 		self._ba = ba
 		self._bPlugins = bPlugin # pointer to object, send signal back on close
 
@@ -106,6 +106,13 @@ class sanpyPlugin(QtCore.QObject):
 			self._startSec = None
 			self._stopSec = None
 
+		# keep track of analysis parameters
+		#self.fileRowDict = None  # for detectionParams plugin
+
+		# TODO: keep track of spike selection
+		self.selectedSpike = None
+		self.selectedSpikeList = []
+
 		self.windowTitle = 'xxx'
 
 		#
@@ -116,7 +123,7 @@ class sanpyPlugin(QtCore.QObject):
 			self.responseOptions[option.name] = True
 
 		# created in self.pyqtWindow()
-		self.mainWidget = None
+		#self.mainWidget = None
 		self.layout = None
 
 		# created in self.mplWindow()
@@ -129,12 +136,33 @@ class sanpyPlugin(QtCore.QObject):
 		self.winWidth_inches = 4  # used by mpl
 		self.winHeight_inches = 4
 
+		doDark = True
+		if doDark and qdarkstyle is not None:
+			self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+		else:
+			self.setStyleSheet("")
+
 		# connect self to main app with signals/slots
 		self._installSignalSlot()
 
 	@property
 	def sweepNumber(self):
 		return self._sweepNumber
+
+	def insertIntoScrollArea(self):
+		"""
+		When inserting this widget into an interface, may want to wrap it in a ScrollArea
+
+		This is used in main SanPy interface to insert this widget into a tab
+
+		Example in inherited class:
+			```
+			scrollArea = QtWidgets.QScrollArea()
+			scrollArea.setWidget(self)
+			return scrollArea
+			```
+		"""
+		return None
 
 	def get_bAnalysis(self):
 		"""
@@ -241,7 +269,11 @@ class sanpyPlugin(QtCore.QObject):
 		"""Add code to replot."""
 		pass
 
-	def selectSpike(self, sDict):
+	def selectSpike(self, sDict=None):
+		"""Add code to select spike from sDict."""
+		pass
+
+	def selectSpikeList(self, sDict=None):
 		"""Add code to select spike from sDict."""
 		pass
 
@@ -293,29 +325,37 @@ class sanpyPlugin(QtCore.QObject):
 			# single spike
 			sDict = {
 				'spikeNumber': None,
-				'doZoom': False
+				'doZoom': False,
+				'ba': self.ba,
+
 			}
 			self.signalSelectSpike.emit(sDict)
 			# spike list
 			sDict = {
 				'spikeList': [],
-				'doZoom': False
+				'doZoom': False,
+				'ba': self.ba,
 			}
 			self.signalSelectSpikeList.emit(sDict)
 
 		elif text == '':
 			pass
 
-		return text
+		#logger.info('')
+
+		if isMpl:
+			return text
+		else:
+			#return event
+			return
 
 	def copyToClipboard(self):
 		pass
 
 	def bringToFront(self):
 		# Qt
-		if self.mainWidget is not None:
-			self.mainWidget.show()
-			self.mainWidget.activateWindow()
+		self.show()
+		self.activateWindow()
 
 		# Matplotlib
 		if self.fig is not None:
@@ -333,7 +373,11 @@ class sanpyPlugin(QtCore.QObject):
 		doDark = True
 
 		#self.mainWidget = QtWidgets.QWidget()
-		self.mainWidget = myWidget(self, doDark)
+		#self.mainWidget = myWidget(self, doDark)
+
+		# testing testDock.py
+		#self.setCentralWidget(self.mainWidget)
+
 		self._mySetWindowTitle()
 		#self.mainWidget.setWindowTitle(self.name)
 		#self.mainWidget.show()
@@ -374,6 +418,11 @@ class sanpyPlugin(QtCore.QObject):
 		#from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 		self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(self.static_canvas, self.static_canvas)
 
+		layout = QtWidgets.QVBoxLayout()
+		layout.addWidget(self.static_canvas)
+		layout.addWidget(self.mplToolbar)
+		self.setLayout(layout)
+
 	def mplWindow(self):
 		"""
 		Create an mpl (MatPlotLib) window.
@@ -394,7 +443,7 @@ class sanpyPlugin(QtCore.QObject):
 
 		self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
 		self.fig.canvas.mpl_connect('key_release_event', self.keyReleaseEvent)
-		self.fig.canvas.mpl_connect('close_event', self.onClose)
+		self.fig.canvas.mpl_connect('close_event', self.closeEvent)
 
 		# spike selection
 		# TODO: epand this to other type of objects
@@ -414,9 +463,8 @@ class sanpyPlugin(QtCore.QObject):
 				self.fig.canvas.manager.set_window_title(self.windowTitle)
 
 		# pyqt
-		if self.mainWidget is not None:
-			#self.mainWidget._mySetWindowTitle(self.windowTitle)
-			self.mainWidget.setWindowTitle(self.windowTitle)
+		#self.mainWidget._mySetWindowTitle(self.windowTitle)
+		self.setWindowTitle(self.windowTitle)
 
 	def spike_pick_event(self, event):
 		"""
@@ -439,11 +487,12 @@ class sanpyPlugin(QtCore.QObject):
 		# propagate a signal to parent
 		sDict = {
 			'spikeNumber': spikeNumber,
-			'doZoom': doZoom
+			'doZoom': doZoom,
+			'ba': self.ba,
 		}
 		self.signalSelectSpike.emit(sDict)
 
-	def onClose(self, event):
+	def closeEvent(self, event):
 		"""
 		Signal back to parent bPlugin object.
 
@@ -454,7 +503,7 @@ class sanpyPlugin(QtCore.QObject):
 		"""
 		self.signalCloseWindow.emit(self)
 
-	def slot_switchFile(self, rowDict, ba):
+	def slot_switchFile(self, rowDict, ba, replot=True):
 		"""Respond to switch file."""
 		#logger.info('')
 		if not self.getResponseOption(self.responseTypes.switchFile):
@@ -466,6 +515,13 @@ class sanpyPlugin(QtCore.QObject):
 			self._ba = app.get_bAnalysis()
 		'''
 		self._ba = ba
+		#self.fileRowDict = rowDict  # for detectionParams plugin
+
+		# reset spike and spike list selection
+		self.selectedSpikeList = []
+		self.selectedSpike = None
+		self.selectSpike()
+		self.selectSpikeList()
 
 		# reset start/stop
 		startSec = rowDict['Start(s)']
@@ -477,7 +533,8 @@ class sanpyPlugin(QtCore.QObject):
 		# set pyqt window title
 		self._mySetWindowTitle()
 
-		self.replot()
+		if replot:
+			self.replot()
 
 	def slot_switchFile2(self, ba, startStop, fileTableRowDict=None):
 		"""Respond to switch file.
@@ -521,21 +578,39 @@ class sanpyPlugin(QtCore.QObject):
 	def slot_setSweep(self, ba, sweepNumber):
 		logger.info('')
 		self._sweepNumber = sweepNumber
+
+		# reset selection
+		self.selectedSpikeList = []
+		self.selectedSpike = None
+
 		self.replot()
 
 	def slot_selectSpikeList(self, eDict):
 		"""Respond to spike selection."""
+
+		# don't respond if we are showing a different ba (bAnalysis)
+		ba = eDict['ba']
+		if self.ba != ba:
+			return
+
+		spikeList = eDict['spikeList']
+		self.selectedSpikeList = spikeList  # [] on no selection
+
 		self.selectSpikeList(eDict)
 
 	def slot_selectSpike(self, eDict):
 		"""Respond to spike selection."""
+
+		# don't respond if user/code has turned this off
 		if not self.getResponseOption(self.responseTypes.selectSpike):
 			return
 
-		#print('====== TODO: fix sanpyPlugin.slot_selectSpike() only update if ba that is selected is the same as self._ba')
-		# don't select spike if we are showing different ba
-		#if self._ba != ba:
-		#	return
+		# don't respond if we are showing a different ba (bAnalysis)
+		ba = eDict['ba']
+		if self.ba != ba:
+			return
+
+		self.selectedSpike = eDict['spikeNumber']
 
 		self.selectSpike(eDict)
 
@@ -562,8 +637,14 @@ class sanpyPlugin(QtCore.QObject):
 			self._startSec = startStopList[0]
 			self._stopSec = startStopList[1]
 		#
-		#self.setAxis()
-		self.replot()
+		# we do not always want to replot on set axis
+		self.setAxis()
+		#self.replot()
+
+	def setAxis(self):
+		"""Respond to set axis
+		"""
+		pass
 
 	def turnOffAllSignalSlot(self):
 		"""Utility function to make plugin not respond to changes in interface.
@@ -593,9 +674,9 @@ class sanpyPlugin(QtCore.QObject):
 
 		logger.info(event)
 
-		mainWidget = self.mainWidget
+		#mainWidget = self.mainWidget
 
-		contextMenu = QtWidgets.QMenu(mainWidget)
+		contextMenu = QtWidgets.QMenu(self)
 
 		# prepend any menu from derived classes
 		self.prependMenus(contextMenu)
@@ -625,7 +706,7 @@ class sanpyPlugin(QtCore.QObject):
 
 		#
 		# open the menu
-		action = contextMenu.exec_(mainWidget.mapToGlobal(event.pos()))
+		action = contextMenu.exec_(self.mapToGlobal(event.pos()))
 
 		if action is None:
 			# n menu selected
@@ -661,7 +742,7 @@ class sanpyPlugin(QtCore.QObject):
 	def handleContextMenu(self, action):
 		pass
 
-class myWidget(QtWidgets.QWidget):
+class old_myWidget(QtWidgets.QWidget):
 	"""
 	Helper class to open a PyQt window from within a plugin.
 	"""
@@ -676,12 +757,13 @@ class myWidget(QtWidgets.QWidget):
 
 		#self._mySetWindowTitle()
 
+		# breeze
 		if doDark and qdarkstyle is not None:
 			self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 		else:
 			self.setStyleSheet("")
 
-		self.show()
+		#self.show()
 
 	'''
 	def _mySetWindowTitle(self, windowTitle):

@@ -29,8 +29,6 @@ class sanpyLog(sanpyPlugin):
 		widget.setReadOnly(True)
 		layout.addWidget(widget)
 
-		self.mainWidget.setLayout(layout)
-
 		# load sanpy.log
 		logFilePath = sanpy.sanpyLogger.getLoggerFile()
 		with open(logFilePath, 'r') as f:
@@ -42,8 +40,15 @@ class sanpyLog(sanpyPlugin):
 		# add text to widget
 		widget.document().setPlainText(text);
 
+		print(logFilePath)
+
+		self._mySetWindowTitle()
+
+		self.setLayout(layout)
+
 if __name__ == '__main__':
 	import sys
 	app = QtWidgets.QApplication([])
 	spl = sanpyLog()
+	spl.show()
 	sys.exit(app.exec_())

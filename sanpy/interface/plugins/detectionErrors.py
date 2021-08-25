@@ -29,12 +29,13 @@ class detectionErrors(sanpyPlugin):
 		self.myErrorTable = sanpy.interface.bErrorTable.errorTableView()
 		layout.addWidget(self.myErrorTable)
 
-		self.mainWidget.setLayout(layout)
+		self.setLayout(layout)
 
 		#
 		# connect clicks in error table to siganl main sanpy_app with slot_selectSpike()
-		fnPtr = self.getSanPyApp().slot_selectSpike
-		self.myErrorTable.signalSelectSpike.connect(fnPtr)
+		if self.getSanPyApp() is not None:
+			fnPtr = self.getSanPyApp().slot_selectSpike
+			self.myErrorTable.signalSelectSpike.connect(fnPtr)
 
 		self.replot()
 
@@ -43,10 +44,9 @@ class detectionErrors(sanpyPlugin):
 		# todo: get default columns from ???
 		self._dfError = pd.DataFrame(columns=['Spike', 'Seconds', 'Type', 'Details'])
 
-		ba = self.getSanPyApp().get_bAnalysis()
-		if ba is not None:
-			if ba.dfError is not None:
-				self._dfError = ba.dfError
+		if self.ba is not None:
+			if self.ba.dfError is not None:
+				self._dfError = self.ba.dfError
 		#
 		if self._dfError is not None:
 			errorReportModel = sanpy.interface.bFileTable.pandasModel(self._dfError)
@@ -63,4 +63,5 @@ if __name__ == '__main__':
 	import sys
 	app = QtWidgets.QApplication([])
 	spl = detectionErrors()
+	spl.show()
 	sys.exit(app.exec_())

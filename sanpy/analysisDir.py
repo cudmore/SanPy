@@ -79,11 +79,11 @@ _sanpyColumns = {
 	},
 	'Start(s)': {
 		'type': float,
-		'isEditable': True,
+		'isEditable': False,
 	},
 	'Stop(s)': {
 		'type': float,
-		'isEditable': True,
+		'isEditable': False,
 	},
 	'dvdtThreshold': {
 		'type': float,
@@ -727,13 +727,13 @@ class analysisDir():
 			# start(s) and stop(s) from ba detectionDict
 			if self.isAnalyzed(rowIdx):
 				# set table to values we just detected with
-				startSec = ba.detectionDict['startSeconds']
-				stopSec = ba.detectionDict['stopSeconds']
+				startSec = ba.detectionClass['startSeconds']
+				stopSec = ba.detectionClass['stopSeconds']
 				self._df.loc[rowIdx, 'Start(s)'] = startSec
 				self._df.loc[rowIdx, 'Stop(s)'] = stopSec
 
-				dvdtThreshold = ba.detectionDict['dvdtThreshold']
-				mvThreshold = ba.detectionDict['mvThreshold']
+				dvdtThreshold = ba.detectionClass['dvdtThreshold']
+				mvThreshold = ba.detectionClass['mvThreshold']
 				self._df.loc[rowIdx, 'dvdtThreshold'] = dvdtThreshold
 				self._df.loc[rowIdx, 'mvThreshold'] = mvThreshold
 
@@ -909,12 +909,14 @@ class analysisDir():
 
 	def getFileList(self, path=None, getFullPath=True):
 		"""
-		Get file paths from path
+		Get file paths from path.
+
+		Uses self.theseFileTypes
 		"""
 		if path is None:
 			path = self.path
 		fileList = []
-		for file in os.listdir(path):
+		for file in sorted(os.listdir(path)):
 			if file.startswith('.'):
 				continue
 			# ignore our database file
@@ -1160,50 +1162,6 @@ def test_hd5_2():
 
 				ba.spikeDetect()  # this should reproduce exactly what was save ... It WORKS !!!
 
-				'''
-				ba = sanpy.bAnalysis(path)
-				#instanceDict = vars(ba)
-				ba.detectionDict = dfTmp.iloc[0]['detectionDict']
-				ba.spikeDict = dfTmp.iloc[0]['spikeDict']
-				ba.spikeTimes = dfTmp.iloc[0]['spikeTimes']
-				ba.spikeClips = dfTmp.iloc[0]['spikeClips']
-				ba.dfError = dfTmp.iloc[0]['dfError']
-				ba.dfReportForScatter = dfTmp.iloc[0]['dfReportForScatter']
-				ba._sweepX = dfTmp.iloc[0]['_sweepX']
-				ba._sweepY = dfTmp.iloc[0]['_sweepY']
-				'''
-
-				'''
-				memberName = key.split('_')[1]
-				if memberName == 'path':
-					path = dfTmp[0]  # .to_string()
-					print('= loaded path:', path)
-				elif memberName == 'detectionDict':
-					detectionDict = dfTmp.iloc[0].to_dict()
-					print('= loaded detectionDict:', detectionDict)
-				elif memberName == 'spikeDict':
-					spikeDict = dfTmp.to_dict('records')
-					print('= loaded spikeDict:', type(spikeDict))
-					#print(spikeDict[1])
-				elif memberName == 'spikeTimes':
-					spikeTimes = dfTmp.to_numpy().ravel()  # convert shape[1,0] to shape[1,]
-					print('= loaded spikeTimes:', type(spikeTimes), spikeTimes.shape, spikeTimes.dtype)
-				elif memberName == 'spikeClips':
-					spikeClips = dfTmp.to_numpy()
-					print('= loaded spikeClips:', type(spikeClips), spikeClips.shape, spikeClips.dtype)
-				elif memberName == 'dfError':
-					dfError = dfTmp
-					print('= loaded dfError:', type(dfError), dfError.shape)
-				elif memberName == 'dfReportForScatter':
-					dfReportForScatter = dfTmp
-					print('= loaded dfReportForScatter:', type(dfReportForScatter), dfReportForScatter.shape)
-				elif memberName == 'sweepX':
-					sweepX = dfTmp.to_numpy().ravel()  # convert shape[1,0] to shape[1,]
-					print('= loaded sweepX:', type(sweepX), sweepX.shape, sweepX.dtype)
-				elif memberName == 'sweepY':
-					sweepY = dfTmp.to_numpy().ravel()
-					print('= loaded sweepY:', type(sweepY), sweepY.shape, sweepY.dtype)
-				'''
 		stop = time.time()
 		logger.info(f'h5 load took {round(stop-start,3)} seconds')
 

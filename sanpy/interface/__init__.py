@@ -17,3 +17,5 @@ from .bPlugins import *
 
 # critical for plugins to be loaded dynamically
 #from .plugins import *
+
+#from .breeze_resources import *

@@ -1,4 +1,7 @@
+from functools import partial
+
 import numpy as np
+import pandas as pd
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
@@ -28,8 +31,25 @@ class spikeClips(sanpyPlugin):
 		"""
 		super().__init__(**kwargs)
 
+		self.clipWidth_ms = 50
+		if self.ba is not None:
+			self.clipWidth_ms = self.ba.detectionClass['spikeClipWidth_ms']
+
+		self.respondTo = 'All' # ('All', 'X-Axis', 'Spike Selection')
+
+		# keep track so we can export to clipboard
+		self.x = None
+		self.y = None
+		self.yMean = None
+
+		# todo: mode these to sanpyPlugin
+		self.selectedSpikeList = []
+		self.selectedSpike = None
+
 		#self.clipLines = None
 		#self.meanClipLine = None
+		self.singleSpikeMultiLine = None
+		self.spikeListMultiLine = None
 
 		# makes self.mainWidget and calls show()
 		self.pyqtWindow()
@@ -42,10 +62,9 @@ class spikeClips(sanpyPlugin):
 		hLayout2 = QtWidgets.QHBoxLayout()
 
 		# TODO:
-		aLabel = QtWidgets.QLabel('Clip Width (ms)')
-		self.clipWidth_ms = QtWidgets.QSpinBox()
-		hLayout2.addWidget(aLabel)
-		hLayout2.addWidget(self.clipWidth_ms)
+
+		self.numSpikesLabel = QtWidgets.QLabel('Num Spikes:None')
+		hLayout2.addWidget(self.numSpikesLabel)
 
 		self.meanCheckBox = QtWidgets.QCheckBox('Mean Trace (red)')
 		self.meanCheckBox.setChecked(True)
@@ -62,6 +81,32 @@ class spikeClips(sanpyPlugin):
 		self.phasePlotCheckBox.stateChanged.connect(lambda:self.replot())
 		hLayout2.addWidget(self.phasePlotCheckBox)
 
+		aLabel = QtWidgets.QLabel('Clip Width (ms)')
+		hLayout2.addWidget(aLabel)
+		self.clipWidthSpinBox = QtWidgets.QSpinBox()
+		self.clipWidthSpinBox.setRange(1, 1e9)
+		self.clipWidthSpinBox.setValue(self.clipWidth_ms)
+		#self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
+		self.clipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
+		hLayout2.addWidget(self.clipWidthSpinBox)
+
+		#
+		# radio buttons
+		self.respondToAll = QtWidgets.QRadioButton('All')
+		self.respondToAll.setChecked(True)
+		self.respondToAll.toggled.connect(self.on_radio)
+		hLayout2.addWidget(self.respondToAll)
+
+		self.respondToAxisRange = QtWidgets.QRadioButton('X-Axis')
+		self.respondToAxisRange.setChecked(False)
+		self.respondToAxisRange.toggled.connect(self.on_radio)
+		hLayout2.addWidget(self.respondToAxisRange)
+
+		self.respondToSpikeSel = QtWidgets.QRadioButton('Spike Selection')
+		self.respondToSpikeSel.setChecked(False)
+		self.respondToSpikeSel.toggled.connect(self.on_radio)
+		hLayout2.addWidget(self.respondToSpikeSel)
+
 		#
 
 		vLayout.addLayout(hLayout2)
@@ -74,11 +119,46 @@ class spikeClips(sanpyPlugin):
 		#self.clipPlot.setMenuEnabled(False)
 		#self.clipPlot.setMouseEnabled(x=False, y=False)
 
+		self.clipPlot.getAxis('left').setLabel('mV')
+		self.clipPlot.getAxis('bottom').setLabel('time (ms)')
+
 		vLayout.addWidget(self.view) #, stretch=8)
 
 		# set the layout of the main window
-		self.mainWidget.setLayout(vLayout)
+		#self.mainWidget.setLayout(vLayout)
+		self.setLayout(vLayout)
 
+		self.replot()
+
+	def on_radio(self):
+		"""
+		Will receive this callback n times where n is # buttons/checkboxes in group
+		Only one callback will have isChecked, all other will be !isChecked
+		"""
+		#logger.info('')
+		sender = self.sender()
+		senderText = sender.text()
+		isChecked = sender.isChecked()
+
+		if senderText == 'All' and isChecked:
+			self.respondTo = 'All'
+		elif senderText == 'X-Axis' and isChecked:
+			self.respondTo = 'X-Axis'
+		elif senderText == 'Spike Selection' and isChecked:
+			self.respondTo = 'Spike Selection'
+			# debug
+			#self.selectedSpikeList = [5, 7, 10]
+
+		#
+		if isChecked:
+			self.replot()
+
+	def on_spinbox(self, label):
+		logger.info('')
+		self.clipWidth_ms = self.clipWidthSpinBox.value()
+		self.replot()
+
+	def setAxis(self):
 		self.replot()
 
 	def replot(self):
@@ -87,7 +167,7 @@ class spikeClips(sanpyPlugin):
 		"""
 		self._myReplotClips()
 		#
-		self.mainWidget.repaint() # update the widget
+		#self.mainWidget.repaint() # update the widget
 
 	'''
 	def setAxis(self):
@@ -102,39 +182,56 @@ class spikeClips(sanpyPlugin):
 		Note: This is the same code as in bDetectionWidget.refreshClips() MERGE THEM.
 		"""
 
+		logger.info('')
+
+		isPhasePlot = self.phasePlotCheckBox.isChecked()
+
 		# always remove existing
 		self.clipPlot.clear()
-		'''if self.clipLines is not None:
-			self.clipPlot.removeItem(self.clipLines)
-		if self.meanClipLine is not None:
-			self.clipPlot.removeItem(self.meanClipLine)
-		'''
 
-		if self.ba.numSpikes == 0:
+		if self.ba is None or self.ba.numSpikes == 0:
 			return
+
+		# TODO: Add option to select by selectSpikeList
 
 		#
 		# respond to x-axis selection
-		startSec, stopSec = self.getStartStop()
-		if startSec is None or stopSec is None:
+		startSec = None
+		stopSec = None
+		selectedSpikeList = []
+		if self.respondTo == 'All':
 			startSec = 0
 			stopSec = self.ba.recordingDur
+		elif self.respondTo == 'X-Axis':
+			startSec, stopSec = self.getStartStop()
+			if startSec is None or stopSec is None:
+				startSec = 0
+				stopSec = self.ba.recordingDur
+		elif self.respondTo == 'Spike Selection':
+			selectedSpikeList = self.selectedSpikeList
+
+		#print('=== selectedSpikeList:', selectedSpikeList)
 
 		# this returns x-axis in ms
 		# theseClips is a [list] of clips
-		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(startSec, stopSec, sweepNumber=self.sweepNumber)
+		# theseClips_x is in ms
+		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(startSec, stopSec, spikeSelection=selectedSpikeList,
+												spikeClipWidth_ms=self.clipWidth_ms, sweepNumber=self.sweepNumber)
+		numClips = len(theseClips)
+		self.numSpikesLabel.setText(f'Num Spikes: {numClips}')
 
 		# convert clips to 2d ndarray ???
-		dataPointsPerMs = self.ba.dataPointsPerMs
+		#dataPointsPerMs = self.ba.dataPointsPerMs
 		xTmp = np.array(theseClips_x)
-		xTmp /= dataPointsPerMs # pnt to ms
+		#xTmp /= dataPointsPerMs # pnt to ms
+		xTmp /= self.ba.dataPointsPerMs * 1000  # pnt to seconds
 		yTmp = np.array(theseClips)  # mV
 
 		#print('xTmp:', xTmp.shape)
 		#print('yTmp:', yTmp.shape)
 
 		#print(xTmp.shape, yTmp.shape)
-		if self.phasePlotCheckBox.isChecked():
+		if isPhasePlot:
 			# plot x mV versus y dV/dt
 			dvdt = np.zeros((yTmp.shape[0], yTmp.shape[1]-1))  #
 			for i in range(dvdt.shape[0]):
@@ -146,6 +243,7 @@ class spikeClips(sanpyPlugin):
 			yTmp = dvdt
 			#print(xTmp.shape, yTmp.shape)
 
+		# for waterfall we need x-axis to have different values for each spike
 		if self.waterfallCheckBox.isChecked():
 			#print(xTmp.shape, yTmp.shape)
 			# xTmp and yTmp are 2D with rows/clips and cols/data_pnts
@@ -187,7 +285,8 @@ class spikeClips(sanpyPlugin):
 		# color map
 		cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 6), color=colors)
 		#colors = ['r', 'g', 'b']
-		for i in range(xTmp.shape[0]):
+		numSpikes = xTmp.shape[0]
+		for i in range(numSpikes):
 			#forcePenColor = cmap.getByIndex(i)
 			forcePenColor = None
 			#print('forcePenColor:', forcePenColor)
@@ -196,44 +295,127 @@ class spikeClips(sanpyPlugin):
 			tmpClipLines = MultiLine(xPlot, yPlot, self, allowXAxisDrag=False, forcePenColor=forcePenColor, type='clip')
 			self.clipPlot.addItem(tmpClipLines)
 
+		#
+		# always calculate mean clip
+		# x mean is redundant but works well for waterfall
+		xMeanClip = np.nanmean(xTmp, axis=0) # xTmp is in ms
+		yMeanClip = np.nanmean(yTmp, axis=0)
+
+		# plot if checkbox is on
 		if self.meanCheckBox.isChecked():
-			#print(xTmp.shape) # (num spikes, time)
-			self.xMeanClip = xTmp
-			if len(self.xMeanClip) > 0:
-				self.xMeanClip = np.nanmean(xTmp, axis=0) # xTmp is in ms
-			self.yMeanClip = yTmp
-			if len(self.yMeanClip) > 0:
-				self.yMeanClip = np.nanmean(yTmp, axis=0)
-			tmpMeanClipLine = MultiLine(self.xMeanClip, self.yMeanClip, self, allowXAxisDrag=False, type='meanclip')
+			tmpMeanClipLine = MultiLine(xMeanClip, yMeanClip, self, width=3, allowXAxisDrag=False, type='meanclip')
 			self.clipPlot.addItem(tmpMeanClipLine)
 
-	def selectSpike(self, sDict):
+		# set axis
+		xLabel = 'time (s)'
+		yLabel = 'mV'
+		if isPhasePlot:
+			xLabel = 'mV'
+			yLabel = 'dV/dt'
+		self.clipPlot.getAxis('left').setLabel(yLabel)
+		self.clipPlot.getAxis('bottom').setLabel(xLabel)
+
+		#
+		# store so we can export
+		#print('  xTmp:', xTmp.shape)
+		#print('  yTmp:', yTmp.shape)
+		#print('  yMeanClip:', yMeanClip.shape)
+		self.x = xTmp  # 1D
+		self.y = yTmp  # 2D
+		self.yMean = yMeanClip
+
+		#
+		# replot any selected spikes
+		self.selectSpike()
+		self.selectSpikeList()
+
+	def copyToClipboard(self):
 		"""
-		Select a spike
+		Save instead
+		Copy to clipboard is not going to work, data is too big
+		"""
+
+		numSpikes = self.y.shape[0]
+
+		columns = ['time(ms)', 'meanClip']
+		# iterate through spikes
+		for i in range(numSpikes):
+			columns.append(f'clip_{i}')
+		df = pd.DataFrame(columns=columns)
+
+		#print('self.x:', type(self.x), self.x.shape)
+
+		df['time(ms)'] = self.x[0,:]
+		df['meanClip'] = self.yMean
+		for i in range(numSpikes):
+			df[f'clip_{i}'] = self.y[i]
+
+		print(df.head())
+
+		fileName = self.ba.getFileName()
+		fileName += '.csv'
+		savePath = fileName
+		options = QtWidgets.QFileDialog.Options()
+		fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self,"Save .csv file",
+							savePath,"CSV Files (*.csv)", options=options)
+		if not fileName:
+			return
+
+		logger.info(f'Saving: "{fileName}"')
+		df.to_csv(fileName, index=False)
+
+	def selectSpike(self, sDict=None):
+		"""
+		Leave existing spikes and select one spike with a different color.
+		The one spike might not be displayed, then do nothing.
+		sDict (dict): NOT USED
 		"""
 		logger.info(sDict)
 
-		'''
-		spikeNumber = sDict['spikeNumber']
+		#if self.ba != sDict['ba']:
+		#	return
 
-		if self.xStatName is None or self.yStatName is None:
-			return
-
-		if spikeNumber >= 0:
-			xData = self.ba.getStat(self.xStatName)
-			xData = [xData[spikeNumber]]
-
-			yData = self.ba.getStat(self.yStatName)
-			yData = [yData[spikeNumber]]
+		if sDict is not None:
+			spikeNumber = sDict['spikeNumber']
 		else:
-			xData = []
-			yData = []
+			spikeNumber = self.selectedSpike
 
-		self.linesSel.set_data(xData, yData)
+		x = np.zeros(1) * np.nan
+		y = np.zeros(1) * np.nan
+		if spikeNumber is not None:
+			try:
+				x = self.x[spikeNumber]
+				y = self.y[spikeNumber]
+			except (IndexError) as e:
+				pass
 
-		self.static_canvas.draw()
-		self.mainWidget.repaint() # update the widget
-		'''
+		# TODO: Fix this. Not sure how to recycle single spike selection
+		#    replot is calling self.clipPlot.clear()
+		if self.singleSpikeMultiLine is not None:
+			self.clipPlot.removeItem(self.singleSpikeMultiLine)
+		self.singleSpikeMultiLine = MultiLine(x, y, self, width=3, allowXAxisDrag=False, forcePenColor='y', type='spike selection')
+		self.clipPlot.addItem(self.singleSpikeMultiLine)
+
+	def selectSpikeList(self, sDict=None):
+		"""
+		Select spikes based on self.selectedSpikeList.
+		sDict (dict): NOT USED
+		"""
+		logger.info(sDict)
+
+		x = np.zeros(1) * np.nan
+		y = np.zeros(1) * np.nan
+
+		if len(self.selectedSpikeList) >0:
+			try:
+				x = self.x[self.selectedSpikeList]
+				y = self.y[self.selectedSpikeList]
+			except (IndexError) as e:
+				pass
+		if self.spikeListMultiLine is not None:
+			self.clipPlot.removeItem(self.spikeListMultiLine)
+		self.spikeListMultiLine = MultiLine(x, y, self, width=3, allowXAxisDrag=False, forcePenColor='c', type='spike list selection')
+		self.clipPlot.addItem(self.spikeListMultiLine)
 
 class MultiLine(pg.QtGui.QGraphicsPathItem):
 	"""
@@ -242,7 +424,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 
 	see: https://stackoverflow.com/questions/17103698/plotting-large-arrays-in-pyqtgraph/17108463#17108463
 	"""
-	def __init__(self, x, y, detectionWidget, type, forcePenColor=None, allowXAxisDrag=True):
+	def __init__(self, x, y, detectionWidget, type, width=1, forcePenColor=None, allowXAxisDrag=True):
 		"""
 		x and y are 2D arrays of shape (Nplots, Nsamples)
 		type: (dvdt, vm)
@@ -277,12 +459,11 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 		else:
 			penColor = 'k'
 		#
-		width = 1
 		if self.myType == 'meanclip':
 			penColor = 'r'
 			width = 3
 
-		print('MultiLine penColor:', penColor)
+		#print('MultiLine penColor:', penColor)
 		pen = pg.mkPen(color=penColor, width=width)
 
 		# testing gradient pen
@@ -462,7 +643,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 		ev.accept()
 
 if __name__ == '__main__':
-	path = '/Users/cudmore/Sites/SanPy/data/19114001.abf'
+	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
 	ba = sanpy.bAnalysis(path)
 	ba.spikeDetect()
 	print(ba.numSpikes)
@@ -470,4 +651,5 @@ if __name__ == '__main__':
 	import sys
 	app = QtWidgets.QApplication([])
 	sc = spikeClips(ba=ba)
+	sc.show()
 	sys.exit(app.exec_())

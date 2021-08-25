@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.signal
 
+from PyQt5 import QtCore, QtWidgets, QtGui
+
 import matplotlib.pyplot as plt
 
 from sanpy.sanpyLogger import get_logger
@@ -59,6 +61,8 @@ class exportTrace(sanpyPlugin):
 		else:
 			xMargin = 2
 
+		tmpLayout = QtWidgets.QVBoxLayout()
+
 		self.mainWidget = sanpy.interface.bExportWidget(x, y,
 						xyUnits=xyUnits,
 						path=path,
@@ -68,6 +72,23 @@ class exportTrace(sanpyPlugin):
 						darkTheme = True)
 						#darkTheme=self.detectionWidget.useDarkStyle)
 
+		tmpLayout.addWidget(self.mainWidget)
+
 		# rewire existing widget into plugin architecture
-		self.mainWidget.closeEvent = self.onClose
+		#self.mainWidget.closeEvent = self.onClose
 		self._mySetWindowTitle()
+
+		#self.setCentralWidget(self.mainWidget)
+		self.setLayout(tmpLayout)
+
+if __name__ == '__main__':
+	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+	ba = sanpy.bAnalysis(path)
+	ba.spikeDetect()
+	print(ba.numSpikes)
+
+	import sys
+	app = QtWidgets.QApplication([])
+	et = exportTrace(ba=ba)
+	et.show()
+	sys.exit(app.exec_())

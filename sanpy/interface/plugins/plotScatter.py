@@ -46,8 +46,8 @@ class plotScatter(sanpyPlugin):
 		self.yData = []
 		self.xAxisSpikeNumber = []  # We need to keep track of this for 'Chase Plot'
 
-		self.selectedSpike = None
-		self.selectedSpikeList = []  # Always a list, if empy then None
+		#self.selectedSpike = None
+		#self.selectedSpikeList = []  # Always a list, if empy then None
 
 		self.pyqtWindow()  # makes self.mainWidget and calls show()
 
@@ -169,16 +169,26 @@ class plotScatter(sanpyPlugin):
 		# matplotlib.backends.backend_qt5.NavigationToolbar2QT
 		self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(self.static_canvas, self.static_canvas)
 
+		# put toolbar and static_canvas in a V layout
+		plotWidget = QtWidgets.QWidget()
+		vLayoutPlot = QtWidgets.QVBoxLayout()
+		vLayoutPlot.addWidget(self.static_canvas)
+		vLayoutPlot.addWidget(self.mplToolbar)
+		plotWidget.setLayout(vLayoutPlot)
+
 		#
 		# finalize
 		#hLayout.addLayout(vLayout)
 		hSplitter.addWidget(controlWidget)
-		hSplitter.addWidget(self.static_canvas) # add mpl canvas
+		#hSplitter.addWidget(self.static_canvas) # add mpl canvas
+		hSplitter.addWidget(plotWidget)
 
 		# set the layout of the main window
-		self.mainWidget.setLayout(hLayout)
+		# playing with dock
+		#self.mainWidget.setLayout(hLayout)
+		self.setLayout(hLayout)
 
-		self.mainWidget.setGeometry(100, 100, 1200, 600)
+		#self.mainWidget.setGeometry(100, 100, 1200, 600)
 
 		self.replot()
 
@@ -295,7 +305,7 @@ class plotScatter(sanpyPlugin):
 			self.lines.set_offsets([np.nan, np.nan])
 			self.scatter_hist([], [], self.axHistX, self.axHistY)
 			self.static_canvas.draw()
-			self.mainWidget.repaint() # update the widget
+			self.repaint() # update the widget
 			return
 
 		self.xStatName = xStat
@@ -418,11 +428,14 @@ class plotScatter(sanpyPlugin):
 		self.axScatter.set_xlabel(xStatLabel)
 		self.axScatter.set_ylabel(yStatLabel)
 
+		# don't cancel on replot
+		'''
 		# cancel any selections
 		self.spikeSel.set_data([], [])
 		#self.spikeSel.set_offsets([], [])
 		self.spikeListSel.set_data([], [])
 		#self.spikeListSel.set_offsets([], [])
+		'''
 
 		xMin = np.nanmin(xData)
 		xMax = np.nanmax(xData)
@@ -447,7 +460,7 @@ class plotScatter(sanpyPlugin):
 
 		# redraw
 		self.static_canvas.draw()
-		self.mainWidget.repaint() # update the widget
+		self.repaint() # update the widget
 
 	#def scatter_hist(self, x, y, ax, ax_histx, ax_histy):
 	def scatter_hist(self, x, y, ax_histx, ax_histy):
@@ -499,17 +512,24 @@ class plotScatter(sanpyPlugin):
 			#ax_histy.xaxis.set_ticks_position('bottom')
 			print('  binsHistY:', len(binsHistY))
 
-	def selectSpikeList(self, sDict):
-		spikeList = sDict['spikeList']
-
-		logger.info(sDict)
+	def selectSpikeList(self, sDict=None):
+		"""
+		sDict (dict): NOT USED
+		"""
+		#spikeList = sDict['spikeList']
+		#logger.info(sDict)
 
 		if self.xStatName is None or self.yStatName is None:
 			return
 
-		self.selectedSpikeList = spikeList  # [] on no selection
+		#self.selectedSpikeList = spikeList  # [] on no selection
 
-		if spikeList is not None:
+		spikeList = self.selectedSpikeList
+
+		logger.info(f'spikeList:{spikeList}')
+
+		#if spikeList is not None:
+		if len(spikeList) > 0:
 			#xData = self.ba.getStat(self.xStatName, sweepNumber=self.sweepNumber)
 			#xData = np.array(xData)
 			xData = [self.xData[spikeList]]
@@ -524,16 +544,19 @@ class plotScatter(sanpyPlugin):
 		self.spikeListSel.set_data(xData, yData)
 
 		self.static_canvas.draw()
-		self.mainWidget.repaint() # update the widget
+		self.repaint() # update the widget
 
-	def selectSpike(self, sDict):
+	def selectSpike(self, sDict=None):
 		"""
 		Select a spike
+		sDict (dict): NOT USED
 		"""
 		logger.info(sDict)
 
-		spikeNumber = sDict['spikeNumber']
-		spikeList = [spikeNumber]
+		#spikeNumber = sDict['spikeNumber']
+		#spikeList = [spikeNumber]
+
+		spikeNumber = self.selectedSpike
 
 		if self.xStatName is None or self.yStatName is None:
 			return
@@ -541,11 +564,11 @@ class plotScatter(sanpyPlugin):
 		if spikeNumber is not None:
 			#xData = self.ba.getStat(self.xStatName, sweepNumber=self.sweepNumber)
 			#xData = np.array(xData)
-			xData = [self.xData[spikeList]]
+			xData = [self.xData[spikeNumber]]
 
 			#yData = self.ba.getStat(self.yStatName, sweepNumber=self.sweepNumber)
 			#yData = np.array(yData)
-			yData = [self.yData[spikeList]]
+			yData = [self.yData[spikeNumber]]
 		else:
 			xData = []
 			yData = []
@@ -556,7 +579,7 @@ class plotScatter(sanpyPlugin):
 		self.spikeNumberLabel.setText(f'Spike: {spikeNumber}')
 
 		self.static_canvas.draw()
-		self.mainWidget.repaint() # update the widget
+		self.repaint() # update the widget
 
 	def selectSpikesFromHighlighter(self, selectedSpikeList):
 		"""
@@ -567,7 +590,8 @@ class plotScatter(sanpyPlugin):
 			self.selectedSpikeList = selectedSpikeList
 			sDict = {
 				'spikeList': selectedSpikeList,
-				'doZoom': False # never zoom on multiple spike selection
+				'doZoom': False, # never zoom on multiple spike selection
+				'ba': self.ba,
 			}
 			self.signalSelectSpikeList.emit(sDict)
 
@@ -943,4 +967,5 @@ if __name__ == '__main__':
 	import sys
 	app = QtWidgets.QApplication([])
 	sp = plotScatter(ba=ba)
+	sp.show()
 	sys.exit(app.exec_())

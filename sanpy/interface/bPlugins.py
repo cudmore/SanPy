@@ -55,7 +55,7 @@ class bPlugins():
 		self.pluginDict = {}
 
 		# Enum is to ignore bPlugins.py class ResponseType(Enum)
-		ignoreModuleList = ['sanpyPlugin', 'myWidget',
+		ignoreModuleList = ['sanpyPlugin', 'old_myWidget',
 							'ResponseType', 'basePlotTool',
 							'NavigationToolbar2QT']
 
@@ -128,7 +128,7 @@ class bPlugins():
 					#self.pluginDict[moduleName] = pluginDict
 					self.pluginDict[humanName] = pluginDict
 
-	def runPlugin(self, pluginName, ba):
+	def runPlugin(self, pluginName, ba, show=True):
 		"""
 		Run one plugin with given ba (bAnalysis).
 
@@ -158,8 +158,10 @@ class bPlugins():
 			try:
 				newPlugin = \
 					self.pluginDict[pluginName]['constructor'](ba=ba, bPlugin=self, startStop=startStop)
+				if show:
+					newPlugin.show()
 			except(TypeError) as e:
-				logger.error(f'error opening pluging: {e}')
+				logger.error(f'Error opening plugin: {e}')
 				return
 			self._openSet.add(newPlugin)
 

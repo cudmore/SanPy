@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 
 import qdarkstyle
+#import breeze_resources
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -67,6 +68,16 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		"""
 
 		super(SanPyWindow, self).__init__(parent)
+
+		# breeze_resources
+		'''
+		breezePath = '/home/cudmore/Sites/BreezeStyleSheets/dist/dark/stylesheet.qss'
+		#file = QtCore.QFile(":/dark/stylesheet.qss")
+		file = QtCore.QFile(breezePath)
+		file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
+		stream = QtCore.QTextStream(file)
+		self.setStyleSheet(stream.readAll())
+		'''
 
 		# create an empty model for file list
 		dfEmpty = pd.DataFrame(columns=sanpy.analysisDir.sanpyColumns.keys())
@@ -131,7 +142,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.myPlugins = sanpy.interface.bPlugins(sanpyApp=self)
 
 		self.buildMenus()
-		self.buildUI()
+		#self.buildUI()
+		self.buildUI2()
 
 		#self.myExportWidget = None
 
@@ -180,6 +192,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		return self.configDict
 
 	def toggleStyleSheet(self, doDark=None, buildingInterface=False):
+		# breeze
+		return
+
 		if doDark is None:
 			doDark = self.useDarkStyle
 		self.useDarkStyle = doDark
@@ -261,15 +276,19 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		print('  ', rowDict)
 	'''
 	def selectSpike(self, spikeNumber, doZoom=False):
-		eDict = {}
-		eDict['spikeNumber'] = spikeNumber
-		eDict['doZoom'] = doZoom
+		eDict = {
+				'spikeNumber': spikeNumber,
+				'doZoom': doZoom,
+				'ba': self.get_bAnalysis(),
+				}
 		self.signalSelectSpike.emit(eDict)
 
 	def selectSpikeList(self, spikeList, doZoom=False):
-		eDict = {}
-		eDict['spikeList'] = spikeList
-		eDict['doZoom'] = doZoom
+		eDict = {
+				'spikeList': spikeList,
+				'doZoom': doZoom,
+				'ba': self.get_bAnalysis(),
+				}
 		self.signalSelectSpikeList.emit(eDict)
 
 	def mySignal(self, this, data=None):
@@ -346,7 +365,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			#self.myScatterPlotWidget.selectXRange(None, None)
 			#signalSelectSpike.emit xxx
 			self.selectSpike(None)
-			self.selectSpikeList(None)
+			self.selectSpikeList([])
 
 		else:
 			logger.error(f'Did not understand this: "{this}"')
@@ -572,7 +591,109 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		logger.info(selected)
 		plugin.bringToFront()
 
+	def buildUI2(self):
+		self.toggleStyleSheet(buildingInterface=True)
+
+		self.statusBar = QtWidgets.QStatusBar()
+		self.setStatusBar(self.statusBar)
+
+		baNone = None
+		self.myDetectionWidget = sanpy.interface.bDetectionWidget(baNone,self)
+		self.signalSwitchFile.connect(self.myDetectionWidget.slot_switchFile)
+		self.signalSelectSpike.connect(self.myDetectionWidget.slot_selectSpike) # myDetectionWidget listens to self
+		self.signalSelectSpikeList.connect(self.myDetectionWidget.slot_selectSpikeList) # myDetectionWidget listens to self
+		self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike) # self listens to myDetectionWidget
+		self.myDetectionWidget.signalSelectSweep.connect(self.slot_selectSweep) # self listens to myDetectionWidget
+		self.myDetectionWidget.signalDetect.connect(self.slot_detect)
+
+		# detection widget is persistent
+		self.setCentralWidget(self.myDetectionWidget)
+
+		# list of files
+		self.tableView = sanpy.interface.bTableView(self.myModel)
+		self.tableView.signalUpdateStatus.connect(self.slot_updateStatus)
+		self.tableView.signalSelectRow.connect(self.slot_fileTableClicked)
+		self.tableView.signalSetDefaultDetection.connect(self.slot_setDetectionParams)
+
+		# update dvdtThreshold, mvThreshold Start(s), Stop(s)
+		self.myDetectionWidget.signalDetect.connect(self.tableView.slot_detect)
+
+		#
+		self.fileDock = QtWidgets.QDockWidget('Files',self)
+		self.fileDock.setWidget(self.tableView)
+		self.fileDock.setFloating(False)
+		self.fileDock.topLevelChanged.connect(self.slot_topLevelChanged)
+		self.fileDock.dockLocationChanged.connect(self.slot_dockLocationChanged)
+		self.fileDock.setAllowedAreas(QtCore.Qt.TopDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
+		self.addDockWidget(QtCore.Qt.TopDockWidgetArea,self.fileDock)
+
+		# 2x docks for plugins
+
+		# always show scatter
+		self.myPluginTab1 = QtWidgets.QTabWidget()
+		self.myPluginTab1.setMovable(True)
+		self.myPluginTab1.setTabsClosable(True)
+		self.myPluginTab1.tabCloseRequested.connect(partial(self.slot_closeTab, sender=self.myPluginTab1))
+		self.myPluginTab1.currentChanged.connect(partial(self.slot_changeTab, sender=self.myPluginTab1))
+		# re-wire right-click
+		self.myPluginTab1.setContextMenuPolicy(QtCore.Qt.CustomContextMenu);
+		self.myPluginTab1.customContextMenuRequested.connect(partial(self.slot_contextMenu, sender=self.myPluginTab1))
+
+		scatterPlugin = self.myPlugins.runPlugin('Scatter Plot', ba=None, show=False)
+		self.myPluginTab1.addTab(scatterPlugin, 'Scatter')
+
+		self.scatterDock = QtWidgets.QDockWidget('Plugins 1',self)
+		self.scatterDock.setWidget(self.myPluginTab1)
+		self.scatterDock.setFloating(False)
+		self.addDockWidget(QtCore.Qt.RightDockWidgetArea,self.scatterDock)
+
+		#
+		# tabs
+		self.myTab = QtWidgets.QTabWidget()
+		self.myTab.setMovable(True)
+		self.myTab.setTabsClosable(True)
+		self.myTab.tabCloseRequested.connect(partial(self.slot_closeTab, sender=self.myTab))
+		self.myTab.currentChanged.connect(partial(self.slot_changeTab, sender=self.myPluginTab1))
+		# reroute right-click on tab, popup a menu to open plugins
+		self.myTab.setContextMenuPolicy(QtCore.Qt.CustomContextMenu);
+		self.myTab.customContextMenuRequested.connect(partial(self.slot_contextMenu, sender=self.myTab))
+
+		# Open some default plugins
+		clipsPlugin = self.myPlugins.runPlugin('Spike Clips Plot', ba=None, show=False)
+		errorSummaryPlugin = self.myPlugins.runPlugin('Error Summary', ba=None, show=False)
+		summaryAnalysisPlugin = self.myPlugins.runPlugin('Summary Analysis', ba=None, show=False)
+		self.myTab.addTab(clipsPlugin, 'Clips')
+		self.myTab.addTab(errorSummaryPlugin, 'Errors')
+		self.myTab.addTab(summaryAnalysisPlugin, 'Summary Analysis')
+
+
+		self.pluginsDock = QtWidgets.QDockWidget('Plugins 2',self)
+		self.pluginsDock.setWidget(self.myTab)
+		self.pluginsDock.setFloating(False)
+		self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.pluginsDock)
+
+		#self.setLayout(layout)
+		self.setWindowTitle('SanPy v3')
+
+	def slot_dockLocationChanged(self, area):
+		"""
+		area (enum): QtCore.Qt.DockWidgetArea, basically left/top/right/bottom.
+
+		Not triggered when user 'floats' a dock (See self.slot_topLevelChanged())
+		"""
+		logger.info(f'area enum: {area}')
+
+	def slot_topLevelChanged(self, topLevel):
+		"""
+		topLevel (bool): True if the dock widget is now floating; otherwise False.
+
+		This is triggered twice, once while dragging and once when finished
+		"""
+		sender = self.sender()  # PyQt5.QtWidgets.QDockWidget
+		logger.info(f'topLevel:{topLevel} sender:{sender}')
+
 	def buildUI(self):
+		# switching to breeze
 		self.toggleStyleSheet(buildingInterface=True)
 
 		self.statusBar = QtWidgets.QStatusBar()
@@ -747,9 +868,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		configDict['display']['showGlobalVm'] = True #
 		configDict['display']['showDvDt'] = True #
 		configDict['display']['showDAC'] = True #
-		configDict['display']['showGlobalVm'] = True #
+		#configDict['display']['showGlobalVm'] = True #
 		configDict['display']['showClips'] = False #
-		configDict['display']['showScatter'] = False #
+		#configDict['display']['showScatter'] = False #
 		configDict['display']['showErrors'] = False #
 
 		return configDict
@@ -820,9 +941,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
 	def slot_detect(self, ba):
 			#self.myScatterPlotWidget.plotToolbarWidget.on_scatter_toolbar_table_click()
 
-			dfError = ba.dfError
-			errorReportModel = sanpy.interface.bFileTable.pandasModel(dfError)
-			self.myErrorTable.setModel(errorReportModel)
+			# not used in buildUI2()
+			#dfError = ba.dfError
+			#errorReportModel = sanpy.interface.bFileTable.pandasModel(dfError)
+			#self.myErrorTable.setModel(errorReportModel)
 
 			# update stats of table load/analyzed columns
 			#self.myAnalysisDir._updateLoadedAnalyzed()
@@ -832,6 +954,75 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			self.signalUpdateAnalysis.emit(ba)  # sweep number does not change
 
 			self.slot_updateStatus(f'Detected {ba.numSpikes} spikes')
+
+	def slot_contextMenu(self, point, sender):
+		"""
+		Build a menu of plugins
+
+		Args:
+			point (): Not sure
+			sender (QTabWidget):
+		"""
+		#sender = self.sender()  # PyQt5.QtWidgets.QDockWidget
+
+		logger.info(f'point:{point}, sender:{sender}')
+
+		# list of available plugins
+		pluginList = self.myPlugins.pluginList()
+
+		#contextMenu = QtWidgets.QMenu(self.myTab)
+		contextMenu = QtWidgets.QMenu(self)
+
+		for plugin in pluginList:
+			contextMenu.addAction(plugin)
+
+		# get current mouse/cursor position, not sure what 'point' is?
+		pos = QtGui.QCursor.pos()
+		action = contextMenu.exec_(pos)
+
+		if action is None:
+			# n menu selected
+			return
+
+		#print(action.text())
+		pluginName = action.text()
+		ba = self.get_bAnalysis()
+		newPlugin = self.myPlugins.runPlugin(pluginName, ba, show=False)
+
+		# add tab
+		#print('newPlugin:', newPlugin)
+		#scrollArea = QtWidgets.QScrollArea()
+		#scrollArea.setWidget(newPlugin)
+		scrollArea = newPlugin.insertIntoScrollArea()
+		if scrollArea is not None:
+			sender.addTab(scrollArea, pluginName)
+		else:
+			sender.addTab(newPlugin, pluginName)
+		# bring tab to front
+		count = sender.count()
+		sender.setCurrentIndex(count-1)
+		#sender.setCurrentWidget()
+
+	def slot_closeTab(self, index, sender):
+		"""
+		Close an open plugin tab
+		"""
+
+		# remove plugin from self.xxx
+		widgetPointer = sender.widget(index)
+		print('widgetPointer:', widgetPointer)
+		self.myPlugins.slot_closeWindow(widgetPointer)
+
+		# remove the tab
+		sender.removeTab(index)
+
+	def slot_changeTab(self, index, sender):
+		"""
+		User brought a different tab to the front
+
+		Make sure only front tab (plugins) receive signals
+		"""
+		logger.info(f'Turn of all other tab signals !!!')
 
 	def openLog(self):
 		"""
@@ -879,6 +1070,8 @@ def main():
 	logger.info(f'Python version is {platform.python_version()}')
 	logger.info(f'PyQt version is {QtCore.QT_VERSION_STR}')
 
+	os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt5'
+
 	app = QtWidgets.QApplication(sys.argv)
 
 	'''
@@ -898,6 +1091,19 @@ def main():
 		app.setWindowIcon(QtGui.QIcon(appIconPath))
 	else:
 		logger.error(f'Did not find appIconPath: {appIconPath}')
+
+	#app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+	app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api=os.environ['PYQTGRAPH_QT_LIB']))
+
+	# breeze_resources
+	'''
+	breezePath = '/home/cudmore/Sites/BreezeStyleSheets/dist/dark/stylesheet.qss'
+	#file = QtCore.QFile(":/dark/stylesheet.qss")
+	file = QtCore.QFile(breezePath)
+	file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
+	stream = QtCore.QTextStream(file)
+	app.setStyleSheet(stream.readAll())
+	'''
 
 	# can specify with 'path='
 	#path = '/Users/cudmore/data/laura-ephys/test1_sanpy2'

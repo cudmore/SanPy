@@ -10,7 +10,7 @@
         "showDAC": false,
         "showDvDt": true,
         "showErrors": false,
-        "showGlobalVm": false,
+        "showGlobalVm": true,
         "showScatter": false
     },
     "lastPath": "/home/cudmore/Sites/SanPy/data/fft",

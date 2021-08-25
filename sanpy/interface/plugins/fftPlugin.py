@@ -409,14 +409,17 @@ def getSpikeTrain(numSeconds=1, fs=10000, spikeFreq=3, amp=10, noiseAmp=10):
 class fftPlugin(sanpyPlugin):
 	myHumanName = 'FFT'
 
-	def __init__(self, myAnalysisDir=None, **kwargs):
+	#def __init__(self, myAnalysisDir=None, **kwargs):
+	def __init__(self, plotRawAxis=False, ba=None, **kwargs):
 		"""
 		Args:
 			ba (bAnalysis): Not required
 		"""
-		super(fftPlugin, self).__init__(**kwargs)
+		super(fftPlugin, self).__init__(ba=ba, **kwargs)
 
 		self._isInited = False
+
+		self.plotRawAxis = plotRawAxis
 
 		self.doButterFilter = True
 		self.butterOrder = 70
@@ -428,20 +431,18 @@ class fftPlugin(sanpyPlugin):
 		self.isModel = False
 
 		# only defined when running without SanPy app
-		self._analysisDir = myAnalysisDir
+		#self._analysisDir = myAnalysisDir
 
 		self._store_ba = None  # allow switching between model and self.ba
 
-		self.fs = self.ba.recordingFrequency * 1000
+		if self.ba is not None:
+			self.fs = self.ba.recordingFrequency * 1000
+		else:
+			self.fs = None
 		self.psdWindowStr = 'Hanning'  # mpl.mlab.window_hanning
 
 		# fft Freq (Hz) resolution is fs/nfft --> resolution 0.2 Hz = 10000/50000
 		self.nfft = 50000 #512 * 100
-		'''
-		self.cutOff = 20 #20  # 20, cutOff of filter (Hz)
-		self.order = 50 # 40  # order of filter
-		self.sos = butter_lowpass_sos(self.cutOff, self.fs, self.order)
-		'''
 
 		self.signalHz = None  # assign when using fake data
 		self.maxPlotHz = 10  # limit x-axis frequenccy
@@ -451,12 +452,12 @@ class fftPlugin(sanpyPlugin):
 		self.medianFilterPnts = 0
 
 		# points
-		self.lastLeft = 0
-		self.lastRight = len(self.ba.sweepX())
+		self.lastLeft = None  # 0
+		self.lastRight = None  # len(self.ba.sweepX())
 
-		if self._analysisDir is not None:
-			# running lpugin without sanpy
-			self.loadData(2)  # load the 3rd file in analysis dir
+		#if self._analysisDir is not None:
+		#	# running lpugin without sanpy
+		#	self.loadData(2)  # load the 3rd file in analysis dir
 
 		self._buildInterface()
 
@@ -586,7 +587,8 @@ class fftPlugin(sanpyPlugin):
 		self.nfftSpinBox.editingFinished.connect(partial(self.on_cutoff_spinbox, aLabel))
 		self.controlLayout1_5.addWidget(self.nfftSpinBox)
 
-		self.freqResLabel = QtWidgets.QLabel(f'Freq Resolution (Hz) {round(self.fs/self.nfft,3)}')
+		#self.freqResLabel = QtWidgets.QLabel(f'Freq Resolution (Hz) {round(self.fs/self.nfft,3)}')
+		self.freqResLabel = QtWidgets.QLabel(f'Freq Resolution (Hz) Unknown')
 		self.controlLayout1_5.addWidget(self.freqResLabel)
 
 		aLabel = QtWidgets.QLabel('Median Filter (Pnts)')
@@ -724,18 +726,25 @@ class fftPlugin(sanpyPlugin):
 
 		self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(self.static_canvas, self.static_canvas)
 
-		gs = self.fig.add_gridspec(3, 3)
-		#self.rawAxes = self.fig.addsubplot(gs[0,:])
-		self.rawAxes = self.static_canvas.figure.add_subplot(gs[0,:])
-		#self.rawZoomAxes = self.fig.addsubplot(gs[1,:])
-		self.rawZoomAxes = self.static_canvas.figure.add_subplot(gs[1,:])
-		# 3rd row has 3 subplots
-		self.psdAxes = self.static_canvas.figure.add_subplot(gs[2,0])
-		self.spectrogramAxes = self.static_canvas.figure.add_subplot(gs[2,-2])
-		#self.fftAxes = self.static_canvas.figure.add_subplot(gs[2,2])
+		if self.plotRawAxis:
+			numRow = 3
+		else:
+			numRow = 2
 
-		# first subplot is of Vm
-		#self.vmAxes.callbacks.connect('xlim_changed', self.on_xlims_change)
+		gs = self.fig.add_gridspec(numRow, 3)
+		#self.rawAxes = self.fig.addsubplot(gs[0,:])
+		if self.plotRawAxis:
+			self.rawAxes = self.static_canvas.figure.add_subplot(gs[0,:])
+			self.rawZoomAxes = self.static_canvas.figure.add_subplot(gs[1,:])
+			# 3rd row has 3 subplots
+			self.psdAxes = self.static_canvas.figure.add_subplot(gs[2,0])
+			self.spectrogramAxes = self.static_canvas.figure.add_subplot(gs[2,-2])
+		else:
+			self.rawAxes = None
+			self.rawZoomAxes = self.static_canvas.figure.add_subplot(gs[0,:])
+			# 3rd row has 3 subplots
+			self.psdAxes = self.static_canvas.figure.add_subplot(gs[1,0])
+			self.spectrogramAxes = self.static_canvas.figure.add_subplot(gs[1,-2])
 
 		vSplitter.addWidget(self.static_canvas) # add mpl canvas
 		vSplitter.addWidget(self.mplToolbar) # add mpl canvas
@@ -744,7 +753,7 @@ class fftPlugin(sanpyPlugin):
 		#self.mplToolbar.hide()
 
 		# set the layout of the main window
-		self.mainWidget.setLayout(vLayout)
+		self.setLayout(vLayout)
 
 	def on_psd_window_changed(self, item):
 		"""User selected window dropdown
@@ -777,6 +786,9 @@ class fftPlugin(sanpyPlugin):
 		self.dataThreshold2 = dataMean + (2 * dataStd)
 		self.dataThreshold3 = dataMean + (3 * dataStd)
 
+	def setAxis(self):
+		self.replot()
+
 	def replot(self):
 		logger.info('')
 
@@ -798,7 +810,7 @@ class fftPlugin(sanpyPlugin):
 		self.static_canvas.draw()
 		#plt.draw()
 
-	def plot(self):
+	def old_plot(self):
 		return
 
 		"""First plot"""
@@ -960,6 +972,9 @@ class fftPlugin(sanpyPlugin):
 
 		start = time.time()
 
+		if self.ba is None:
+			return
+
 		startSec, stopSec = self.getStartStop()
 		if startSec is None or stopSec is None:
 			logger.info('Resetting start/stop seconds to max')
@@ -998,18 +1013,19 @@ class fftPlugin(sanpyPlugin):
 		nfft = self.nfft  # The number of data points used in each block for the FFT
 		#print(f'  fs:{fs} nfft:{nfft}')
 
-		self.rawAxes.clear()
-		self.rawAxes.plot(sweepX, sweepY, '-', linewidth=1)
-		# draw a rectangle to show left/right time selecction
-		yMin = np.nanmin(sweepY)
-		yMax = np.nanmax(sweepY)
-		xRect = startSec
-		yRect = yMin
-		wRect = stopSec-startSec
-		hRect = yMax-yMin
-		rect1 = mpl.patches.Rectangle((xRect,yRect), wRect, hRect, color='gray')
-		self.rawAxes.add_patch(rect1)
-		self.rawAxes.set_xlim([sweepX[0], sweepX[-1]])
+		if self.plotRawAxis:
+			self.rawAxes.clear()
+			self.rawAxes.plot(sweepX, sweepY, '-', linewidth=1)
+			# draw a rectangle to show left/right time selecction
+			yMin = np.nanmin(sweepY)
+			yMax = np.nanmax(sweepY)
+			xRect = startSec
+			yRect = yMin
+			wRect = stopSec-startSec
+			hRect = yMax-yMin
+			rect1 = mpl.patches.Rectangle((xRect,yRect), wRect, hRect, color='gray')
+			self.rawAxes.add_patch(rect1)
+			self.rawAxes.set_xlim([sweepX[0], sweepX[-1]])
 
 		#
 		# replot the clip +/- std we analyzed, after detrend
@@ -1047,6 +1063,7 @@ class fftPlugin(sanpyPlugin):
 			self.rawZoomAxes.plot(t, yFiltered, '-r', linewidth=1)
 
 		# save yDetrend, yFiltered as csv
+		'''
 		print('=== FOR FERNANDO')
 		import pandas as pd
 		print('  t:', t.shape)
@@ -1061,6 +1078,7 @@ class fftPlugin(sanpyPlugin):
 		print('saving dfFile:', dfFile)
 		tmpDf.to_csv(dfFile, index=False)
 		print('=== END')
+		'''
 
 		# we will still scale a freq plots to [0, self.maxPlotHz]
 		if self.doButterFilter:
@@ -1448,7 +1466,7 @@ class fftPlugin(sanpyPlugin):
 		#mvThreshold = self.mvThresholdSpinBox.value() # for detection
 		mvThreshold = -20
 
-		dDict = sanpy.bAnalysis.getDefaultDetection() # maybe specify a model epsp type?
+		dDict = sanpy.bDetection.getDefaultDetection() # maybe specify a model epsp type?
 		dDict['dvdtThreshold'] = np.nan
 		dDict['mvThreshold'] = mvThreshold
 		dDict['onlyPeaksAbove_mV'] = None
@@ -1595,6 +1613,15 @@ class fftPlugin(sanpyPlugin):
 
 		elif text == 'f':
 			self.replotFilter()
+
+	def slot_switchFile(self, rowDict, ba):
+		super().slot_switchFile(rowDict, ba, replot=False)
+
+		self.fs = self.ba.recordingFrequency * 1000
+
+		self.freqResLabel.setText(f'Freq Resolution (Hz) {round(self.fs/self.nfft, 3)}')
+
+		self.replot()
 
 def testPlugin():
 	from PyQt5 import QtWidgets
@@ -1782,6 +1809,19 @@ def testFilter():
 
 	plt.show()
 
+def main():
+	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+	ba = sanpy.bAnalysis(path)
+	ba.spikeDetect()
+	print(ba.numSpikes)
+
+	import sys
+	app = QtWidgets.QApplication([])
+	fft = fftPlugin(ba=ba)
+	fft.show()
+	sys.exit(app.exec_())
+
 if __name__ == '__main__':
 	#test_fft()
-	testFilter()
+	#testFilter()
+	main()

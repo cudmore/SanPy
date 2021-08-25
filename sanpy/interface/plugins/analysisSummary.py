@@ -1,3 +1,5 @@
+import pandas as pd
+
 from PyQt5 import QtWidgets
 
 import sanpy
@@ -25,14 +27,18 @@ class analysisSummary(sanpyPlugin):
 
 		layout = QtWidgets.QVBoxLayout()
 		self.myErrorTable = sanpy.interface.bErrorTable.errorTableView()
+		self.myErrorTable.setSortingEnabled(False)
+
 		layout.addWidget(self.myErrorTable)
 
-		self.mainWidget.setLayout(layout)
+		self.setLayout(layout)
 
 		self.replot()
 
 	def replot(self):
-		ba = self.get_bAnalysis()
+		logger.info('')
+		#ba = self.get_bAnalysis()
+		ba = self.ba
 		if ba is not None:
 			be = sanpy.bExport(ba)
 			theMin, theMax = self.getStartStop()
@@ -40,11 +46,23 @@ class analysisSummary(sanpyPlugin):
 			if dfSummary is not None:
 				errorReportModel = sanpy.interface.bFileTable.pandasModel(dfSummary)
 				self.myErrorTable.setModel(errorReportModel)
+			else:
+				# no spikes
+				dfSummary = pd.DataFrame(columns=['', '', '', '', ''])
+				errorReportModel = sanpy.interface.bFileTable.pandasModel(dfSummary)
+				self.myErrorTable.setModel(errorReportModel)
+
+			# hard-cde column widths
+			self.myErrorTable.setColumnWidth(0,300)
+			self.myErrorTable.setColumnWidth(1,300)
+
+			#
 			self.df = dfSummary
 
 	def copyToClipboard(self):
 		if self.df is not None:
-			self.df.to_clipboard(sep='\t', index=True)
+			print(self.df.head())
+			self.df.to_clipboard(sep='\t', index=False)  # index=False so we do not duplicate 1s column
 			logger.info('Copied to clipboard')
 
 if __name__ == '__main__':
@@ -58,5 +76,6 @@ if __name__ == '__main__':
 
 	# open a plugin
 	sa = analysisSummary(ba=ba, startStop=None)
+	sa.show()
 
 	sys.exit(app.exec_())

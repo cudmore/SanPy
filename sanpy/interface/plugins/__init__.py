@@ -20,5 +20,7 @@ from .exportTrace import exportTrace
 from .fftPlugin import fftPlugin
 from .stimGen import stimGen
 
+from .detectionParams import detectionParams
+
 # TODO: make this just one line, so user can drop a bplugin inn and restart
 from . import *

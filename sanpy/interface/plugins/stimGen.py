@@ -395,15 +395,15 @@ class stimGen(sanpyPlugin):
 
 		#
 		# finalize
-		self.mainWidget = QtWidgets.QWidget()
+		#self.mainWidget = QtWidgets.QWidget()
 		if qdarkstyle is not None:
-			self.mainWidget.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+			self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 		else:
-			self.mainWidget.setStyleSheet("")
+			self.setStyleSheet("")
 
 		# set the layout of the main window
-		self.mainWidget.setLayout(vLayout)
-		self.mainWidget.show()
+		self.setLayout(vLayout)
+		#self.mainWidget.show()
 
 
 	def _updateNumSweeps(self, numSweeps):
