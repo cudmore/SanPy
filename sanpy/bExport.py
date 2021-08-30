@@ -111,7 +111,7 @@ class bExport():
 			df: Pandas DataFrame
 		"""
 		newList = []
-		for spike in self.ba.spikeDict:
+		for spikeIdx, spike in enumerate(self.ba.spikeDict):
 
 			# if current spike time is out of bounds then continue (e.g. it is not between theMin (sec) and theMax (sec)
 			spikeTime_sec = self.ba.pnt2Sec_(spike['thresholdPnt'])
@@ -119,6 +119,7 @@ class bExport():
 				continue
 
 			spikeDict = OrderedDict() # use OrderedDict so Pandas output is in the correct order
+			spikeDict['Spike'] = spikeIdx
 			spikeDict['Take Off Potential (s)'] = self.ba.pnt2Sec_(spike['thresholdPnt'])
 			spikeDict['Take Off Potential (ms)'] = self.ba.pnt2Ms_(spike['thresholdPnt'])
 			spikeDict['Take Off Potential (mV)'] = spike['thresholdVal']
@@ -135,6 +136,7 @@ class bExport():
 			#
 			spikeDict['Inter-Spike-Interval (ms)'] = spike['isi_ms']
 			spikeDict['Spike Frequency (Hz)'] = spike['spikeFreq_hz']
+			spikeDict['ISI (ms)'] = spike['isi_ms']
 
 			spikeDict['Cycle Length (ms)'] = spike['cycleLength_ms']
 
@@ -148,6 +150,8 @@ class bExport():
 			for widthDict in spike['widths']:
 				keyName = 'width_' + str(widthDict['halfHeight'])
 				spikeDict[keyName] = widthDict['widthMs']
+
+			spikeDict['File'] = self.ba.getFileName()
 
 			# errors
 			#spikeDict['numError'] = spike['numError']
@@ -166,7 +170,7 @@ class bExport():
 
 		TODO: Working on this while implementing plugin 'saveAnalysis'
 		"""
-		logger.info(self.ba)
+		#logger.info(self.ba)
 
 		if self.ba.numSpikes == 0:
 			return None
@@ -194,7 +198,7 @@ class bExport():
 		dateAnalyzed, timeAnalyzed = self.ba.dateAnalyzed.split(' ')
 		headerDict['Date Analyzed'] = [dateAnalyzed]
 		headerDict['Time Analyzed'] = [timeAnalyzed]
-		headerDict['Detection Type'] = [self.ba.detectionType]
+		headerDict['Detection Type'] = [self.ba.getDetectionType()]
 		headerDict['dV/dt Threshold'] = [self.ba.detectionDict['dvdtThreshold']]
 		#headerDict['mV Threshold'] = [self.ba.mvThreshold] # abb 202012
 		headerDict['Vm Threshold (mV)'] = [self.ba.detectionDict['mvThreshold']]
@@ -212,7 +216,11 @@ class bExport():
 		# 'stats' has xxx columns (name, mean, sd, se, n)
 		headerDict['stats'] = []
 
+		ignoreColumns = ['Spike', 'File']
 		for idx, col in enumerate(cardiac_df):
+			if col in ignoreColumns:
+				# in general, skip non numerical columns
+				continue
 			headerDict[col] = []
 
 		# mean
@@ -259,6 +267,10 @@ class bExport():
 			# a dictionary key for each stat
 			headerDict['stats'].append(stat)
 			for idx, col in enumerate(cardiac_df):
+				if col in ignoreColumns:
+					# in general, need to ignore string columns
+					#headerDict[col].append('')
+					continue
 				#headerDict[col].append('')
 				if stat == 'mean':
 					headerDict[col].append(theMean[col])
@@ -328,7 +340,7 @@ class bExport():
 			dateAnalyzed, timeAnalyzed = self.ba.dateAnalyzed.split(' ')
 			headerDict['Date Analyzed'] = [dateAnalyzed]
 			headerDict['Time Analyzed'] = [timeAnalyzed]
-			headerDict['Detection Type'] = [self.ba.detectionType]
+			headerDict['Detection Type'] = [self.ba.getDetectionType()]
 			headerDict['dV/dt Threshold'] = [self.ba.detectionDict['dvdtThreshold']]
 			#headerDict['mV Threshold'] = [self.ba.mvThreshold] # abb 202012
 			headerDict['Vm Threshold (mV)'] = [self.ba.detectionDict['mvThreshold']]
@@ -346,7 +358,12 @@ class bExport():
 			# 'stats' has xxx columns (name, mean, sd, se, n)
 			headerDict['stats'] = []
 
+			ignoreColumns = ['Spike', 'File']
 			for idx, col in enumerate(cardiac_df):
+				if col in ignoreColumns:
+					# in general, need to ignore string columns
+					#headerDict[col].append('')
+					continue
 				headerDict[col] = []
 
 			# mean
@@ -393,6 +410,10 @@ class bExport():
 				# a dictionary key for each stat
 				headerDict['stats'].append(stat)
 				for idx, col in enumerate(cardiac_df):
+					if col in ignoreColumns:
+						# in general, need to ignore string columns
+						#headerDict[col].append('')
+						continue
 					#headerDict[col].append('')
 					if stat == 'mean':
 						headerDict[col].append(theMean[col])
@@ -538,7 +559,7 @@ class bExport():
 		textFileHeader['condition'] = self.ba.detectionDict['condition']
 		#
 		textFileHeader['dateAnalyzed'] = self.ba.dateAnalyzed
-		textFileHeader['detectionType'] = self.ba.detectionType
+		textFileHeader['detectionType'] = self.ba.getDetectionType()
 		textFileHeader['dvdtThreshold'] = [self.ba.detectionDict['dvdtThreshold']]
 		textFileHeader['mvThreshold'] = [self.ba.detectionDict['mvThreshold']]
 		#textFileHeader['medianFilter'] = self.ba.medianFilter

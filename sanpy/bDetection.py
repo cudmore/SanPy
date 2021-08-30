@@ -70,7 +70,7 @@ def getDefaultDetection(detectionPreset):
 
 	key = 'dvdtThreshold'
 	theDict[key] = {}
-	theDict[key]['defaultValue'] = 100
+	theDict[key]['defaultValue'] = 20
 	theDict[key]['type'] = 'float'
 	theDict[key]['allowNone'] = True  # To do, have 2x entry points to bAnalysis detect, never set this to nan
 	theDict[key]['units'] = 'dVdt'
@@ -87,6 +87,56 @@ def getDefaultDetection(detectionPreset):
 	theDict[key]['humanName'] = 'mV Threshold'
 	theDict[key]['errors'] = ('')
 	theDict[key]['description'] = 'mV threshold for spike AND minimum spike mV when detecting with dV/dt'
+
+	key = 'startSeconds'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = None
+	theDict[key]['type'] = 'float'
+	theDict[key]['allowNone'] = True
+	theDict[key]['units'] = 's'
+	theDict[key]['humanName'] = 'Start(s)'
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'Start seconds of analysis'
+
+	key = 'stopSeconds'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = None
+	theDict[key]['type'] = 'float'
+	theDict[key]['allowNone'] = True
+	theDict[key]['units'] = 's'
+	theDict[key]['humanName'] = 'Stop(s)'
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'Stop seconds of analysis'
+
+	key = 'cellType'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = ''
+	theDict[key]['type'] = 'string'
+	theDict[key]['allowNone'] = False
+	theDict[key]['units'] = ''
+	theDict[key]['humanName'] = 'Cell Type'
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'Cell Type'
+
+	key = 'sex'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = ''
+	theDict[key]['type'] = 'string'
+	theDict[key]['allowNone'] = False
+	theDict[key]['units'] = ''
+	theDict[key]['humanName'] = 'Sex'
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'Sex'
+
+	key = 'condition'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = ''
+	theDict[key]['type'] = 'string'
+	theDict[key]['allowNone'] = False
+	theDict[key]['units'] = ''
+	theDict[key]['humanName'] = 'Condition'
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'Condition'
 
 	key = 'dvdt_percentOfMax'
 	theDict[key] = {}
@@ -158,6 +208,16 @@ def getDefaultDetection(detectionPreset):
 	theDict[key]['errors'] = ('')
 	theDict[key]['description'] = 'Window (ms) to search before each TOP for real threshold crossing'
 
+	key = 'dvdtPostWindow_ms'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = 20
+	theDict[key]['type'] = 'float'
+	theDict[key]['allowNone'] = False
+	theDict[key]['units'] = 'ms'
+	theDict[key]['humanName'] = 'dV/dt Post Window (ms)'
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'Window (ms) to search after each AP peak for minimum in dv/dt'
+
 	key = 'mdp_ms'
 	theDict[key] = {}
 	theDict[key]['defaultValue'] = 250
@@ -178,6 +238,16 @@ def getDefaultDetection(detectionPreset):
 	theDict[key]['errors'] = ('')
 	theDict[key]['description'] = 'Window (ms) to calculate MDP (mV) as a mean rather than mV at single point for MDP'
 
+	key = 'lowEddRate_warning'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = 8
+	theDict[key]['type'] = 'float'
+	theDict[key]['allowNone'] = False
+	theDict[key]['units'] = 'EDD slope'
+	theDict[key]['humanName'] = ''
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'Generate warning when EED slope is lower than this value.'
+
 	key = 'halfHeights'
 	theDict[key] = {}
 	theDict[key]['defaultValue'] = [10, 20, 50, 80, 90]
@@ -197,6 +267,16 @@ def getDefaultDetection(detectionPreset):
 	theDict[key]['humanName'] = 'Half Width Window (ms)'
 	theDict[key]['errors'] = ('')
 	theDict[key]['description'] = 'Window (ms) after TOP to look for AP Durations'
+
+	key = 'spikeClipWidth_ms'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = 500
+	theDict[key]['type'] = 'float'
+	theDict[key]['allowNone'] = False
+	theDict[key]['units'] = 'ms'
+	theDict[key]['humanName'] = 'AP Clip Width (ms)'
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'The width/duration of generated AP clips'
 
 	key = 'medianFilter'
 	theDict[key] = {}
@@ -227,66 +307,6 @@ def getDefaultDetection(detectionPreset):
 	theDict[key]['humanName'] = 'SavitzkyGolay Poly Deg'
 	theDict[key]['errors'] = ('')
 	theDict[key]['description'] = 'The degree of the polynomial for Savitzky-Golay filter'
-
-	key = 'spikeClipWidth_ms'
-	theDict[key] = {}
-	theDict[key]['defaultValue'] = 500
-	theDict[key]['type'] = 'float'
-	theDict[key]['allowNone'] = False
-	theDict[key]['units'] = 'ms'
-	theDict[key]['humanName'] = 'AP Clip Width (ms)'
-	theDict[key]['errors'] = ('')
-	theDict[key]['description'] = 'The width/duration of generated AP clips'
-
-	key = 'startSeconds'
-	theDict[key] = {}
-	theDict[key]['defaultValue'] = None
-	theDict[key]['type'] = 'float'
-	theDict[key]['allowNone'] = True
-	theDict[key]['units'] = 's'
-	theDict[key]['humanName'] = 'Start(s)'
-	theDict[key]['errors'] = ('')
-	theDict[key]['description'] = 'Start seconds of analysis'
-
-	key = 'stopSeconds'
-	theDict[key] = {}
-	theDict[key]['defaultValue'] = None
-	theDict[key]['type'] = 'float'
-	theDict[key]['allowNone'] = True
-	theDict[key]['units'] = 's'
-	theDict[key]['humanName'] = 'Stop(s)'
-	theDict[key]['errors'] = ('')
-	theDict[key]['description'] = 'Stop seconds of analysis'
-
-	key = 'cellType'
-	theDict[key] = {}
-	theDict[key]['defaultValue'] = ''
-	theDict[key]['type'] = 'string'
-	theDict[key]['allowNone'] = False
-	theDict[key]['units'] = ''
-	theDict[key]['humanName'] = 'Cell Type'
-	theDict[key]['errors'] = ('')
-	theDict[key]['description'] = 'Cell Type'
-
-	key = 'sex'
-	theDict[key] = {}
-	theDict[key]['defaultValue'] = ''
-	theDict[key]['type'] = 'string'
-	theDict[key]['allowNone'] = False
-	theDict[key]['units'] = ''
-	theDict[key]['humanName'] = 'Sex'
-	theDict[key]['errors'] = ('')
-	theDict[key]['description'] = 'Sex'
-
-	key = 'condition'
-	theDict[key] = {}
-	theDict[key]['defaultValue'] = ''
-	theDict[key]['type'] = 'string'
-	theDict[key]['allowNone'] = False
-	theDict[key]['units'] = ''
-	theDict[key]['humanName'] = 'Condition'
-	theDict[key]['errors'] = ('')
-	theDict[key]['description'] = 'Condition'
 
 	key = 'verbose'
 	theDict[key] = {}
@@ -425,7 +445,11 @@ class bDetection(object):
 			return None
 
 	def setValue(self, key, value):
-		"Set current value for key. Valid keys are defined in getDefaultDetection."
+		"""
+		Set current value for key. Valid keys are defined in getDefaultDetection.
+
+		For float values that need to take on none, vlue comes in as -1e9
+		"""
 		try:
 			valueType = type(value)
 			valueIsNumber = isinstance(value, numbers.Number)
@@ -437,7 +461,7 @@ class bDetection(object):
 			expectedType = self._dDict[key]['type'] # (number, string, boolean)
 			allowNone = self._dDict[key]['allowNone'] # used to turn off a detection param
 
-			logger.info(f'expectedType:{expectedType}')
+			#logger.info(f'expectedType:{expectedType} value type is {type(value)}')
 
 			if allowNone and valueIsNone:
 				pass
@@ -464,7 +488,7 @@ class bDetection(object):
 			# set
 			self._dDict[key]['currentValue'] = value
 
-			logger.info(f"NOW:{key}: {self._dDict[key]['currentValue']}")
+			logger.info(f"now key:{key}: {self._dDict[key]['currentValue']} {type(self._dDict[key]['currentValue'])}")
 
 			return True
 		except (KeyError) as e:

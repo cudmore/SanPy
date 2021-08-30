@@ -23,10 +23,12 @@ Requires (need to make local copies of (pandas model, checkbox delegate)
 """
 
 import os, sys, io, csv
+from functools import partial
 from collections import OrderedDict
 import traceback
 import pandas as pd
 import numpy as np
+
 from PyQt5 import QtCore, QtGui, QtWidgets
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -36,14 +38,11 @@ import matplotlib.pyplot as plt # abb 202012 added to set theme
 import seaborn as sns
 import mplcursors # popup on hover
 
-#sysPath = os.path.dirname(sys.path[0])
-#sysPath = os.path.join(sysPath, 'sanpy')
-#print('bScatterPlotWidget2.py sysPath:', sysPath)
-#sys.path.append(sysPath)
+# originally, I wanted this to not rely on sanpy
+import sanpy
 
-#print('os.getcwd():', os.getcwd())
-#import sanpy
-#import bUtil # from sanpy folder, for pandas model
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 def loadDatabase(path):
 	"""
@@ -353,6 +352,106 @@ class myTableView(QtWidgets.QTableView):
 			#self.tableView.setItemDelegateForColumn(includeColIndex, myCheckBoxDelegate(None))
 			self.setItemDelegateForColumn(includeColIndex, self.keepCheckBoxDelegate)
 
+class myStatListWidget(QtWidgets.QWidget):
+	"""
+	Widget to display a table with selectable stats.
+
+	Gets list of stats from: sanpy.bAnalysisUtil.getStatList()
+	"""
+	def __init__(self, myParent, statList=None, headerStr='Stat', parent=None):
+		super().__init__(parent)
+
+		self.myParent = myParent
+		if statList is not None:
+			self.statList = statList
+		else:
+			# from main sanpy
+			# for pooling we have some addition columns like 'file number'
+			self.statList = sanpy.bAnalysisUtil.getStatList()
+
+		self._rowHeight = 9
+
+		self.myQVBoxLayout = QtWidgets.QVBoxLayout(self)
+
+		self.myTableWidget = QtWidgets.QTableWidget()
+		self.myTableWidget.setWordWrap(False)
+		self.myTableWidget.setRowCount(len(self.statList))
+		self.myTableWidget.setColumnCount(1)
+		self.myTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+		self.myTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+		self.myTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+		self.myTableWidget.cellClicked.connect(self.on_scatter_toolbar_table_click)
+
+		# set font size of table (default seems to be 13 point)
+		fnt = self.font()
+		fnt.setPointSize(self._rowHeight)
+		self.myTableWidget.setFont(fnt)
+
+		headerLabels = [headerStr]
+		self.myTableWidget.setHorizontalHeaderLabels(headerLabels)
+
+		header = self.myTableWidget.horizontalHeader()
+		header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+		# QHeaderView will automatically resize the section to fill the available space. The size cannot be changed by the user or programmatically.
+		header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+
+		for idx, stat in enumerate(self.statList):
+			item = QtWidgets.QTableWidgetItem(stat)
+			self.myTableWidget.setItem(idx, 0, item)
+			self.myTableWidget.setRowHeight(idx, self._rowHeight)
+
+		# assuming dark theme
+		# does not work
+		'''
+		p = self.myTableWidget.palette()
+		color1 = QtGui.QColor('#222222')
+		color2 = QtGui.QColor('#555555')
+		p.setColor(QtGui.QPalette.Base, color1)
+		p.setColor(QtGui.QPalette.AlternateBase, color2)
+		self.myTableWidget.setPalette(p)
+		self.myTableWidget.setAlternatingRowColors(True)
+		'''
+		self.myQVBoxLayout.addWidget(self.myTableWidget)
+
+		# select a default stat
+		self.myTableWidget.selectRow(0) # hard coding 'Spike Frequency (Hz)'
+
+	def getCurrentRow(self):
+		return self.myTableWidget.currentRow()
+
+	def getCurrentStat(self):
+		# assuming single selection
+		row = self.getCurrentRow()
+		humanStat = self.myTableWidget.item(row,0).text()
+
+		# convert from human readbale to backend
+		try:
+			stat = self.statList[humanStat]['name']
+		except (KeyError) as e:
+			logger.error(f'Did not find humanStat:"{humanStat}"')
+			humanStat = None
+			stat = None
+
+		return humanStat, stat
+
+	@QtCore.pyqtSlot()
+	def on_scatter_toolbar_table_click(self):
+		"""
+		replot the stat based on selected row
+		"""
+		#print('*** on table click ***')
+		row = self.myTableWidget.currentRow()
+		if row == -1 or row is None:
+			return
+		yStat = self.myTableWidget.item(row,0).text()
+		self.myParent.replot()
+
+	'''
+	@QtCore.pyqtSlot()
+	def on_button_click(self, name):
+		print('=== myStatPlotToolbarWidget.on_button_click() name:', name)
+	'''
+
 #class myMplCanvas(FigureCanvas):
 class myMplCanvas(QtWidgets.QFrame):
 	"""
@@ -398,12 +497,22 @@ class myMplCanvas(QtWidgets.QFrame):
 		#gs1.tight_layout(self.fig, rect=[0.5, 0, 1, 1], h_pad=0.5)
 		#self.canvas.axes = self.fig.add_subplot(gs1[0])
 
+		# user clicks on plot point
 		self.cid2 = self.canvas.mpl_connect('pick_event', self.on_pick_event)
+		# user clicks in the figure
+		self.cid3 = self.canvas.mpl_connect('button_press_event', self.on_pick_event2)
 
 		self.scatterPlotSelection = None
 
 		self.mplToolbar = NavigationToolbar2QT(self.canvas, self.canvas) # params are (canvas, parent)
 		self.mplToolbar.hide() # initially hidden
+
+		# 20210829
+		'''
+		print('1 creating empty legend')
+		self.myLegend = self.canvas.axes.legend()
+		self.myLegend.set_visible(False)  #hide()
+		'''
 
 		self.canvas.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
 								  QtWidgets.QSizePolicy.Expanding)
@@ -423,7 +532,7 @@ class myMplCanvas(QtWidgets.QFrame):
 		pass
 
 	def mousePressEvent(self, event):
-		print('myMplCanvas.mousePressEvent()')
+		logger.info('===')
 		print('  todo: set all controls to match the plot just clicked on using self.stateDict!!!')
 		#print('  stateDict:', self.stateDict)
 		self.signalSelectSquare.emit(self.plotNumber, self.stateDict)
@@ -439,19 +548,30 @@ class myMplCanvas(QtWidgets.QFrame):
 
 	def on_pick_event(self, event):
 		try:
-			print('myMplCanvas.on_pick_event() event:', event)
-			print('  event.ind:', event.ind)
+			logger.info(f'=== event: "{event.ind}"')
 
 			if len(event.ind) < 1:
 				return
 			spikeNumber = event.ind[0]
-			print('  selected:', spikeNumber)
+			#print('  selected:', spikeNumber)
 
 			# propagate a signal to parent
 			#self.myMainWindow.mySignal('select spike', data=spikeNumber)
 			#self.selectSpike(spikeNumber)
 		except (AttributeError) as e:
 			pass
+
+	def on_pick_event2(self, event):
+		logger.info('===')
+
+		#print(self.stateDict)
+		for k,v in self.stateDict.items():
+			if k == 'masterDf':
+				print(f'  {k}: length is {len(v)}')
+			else:
+				print(f'  {k}: {v}')
+		#
+		self.signalSelectSquare.emit(self.plotNumber, self.stateDict)
 
 	def onPick(self, event):
 		"""
@@ -568,8 +688,11 @@ class myMplCanvas(QtWidgets.QFrame):
 	def myUpdateGlobal(self, stateDict):
 		"""
 		update globals but do not plot
+
+		globals are things shared across all plots like mpl toolbar and legend (???)
 		"""
 		self.canvas.axes.legend().set_visible(stateDict['showLegend'])
+		#self.myLegend.set_visible(stateDict['showLegend'])
 
 		if stateDict['showMplToolbar']:
 			self.mplToolbar.show()
@@ -756,11 +879,14 @@ class myMplCanvas(QtWidgets.QFrame):
 							zorder=1)
 
 
-					#g.legend().remove()
+					#logger.error('!!!!!!!!!!!! grabbing get_legend_handles_labels()')
 					self.canvas.axes.legend().remove()
 
+					#logger.error('!!!!!!!!!!!! grabbing get_legend_handles_labels()')
+					print('\n\n\nREMAKING LEGEND\n\n\n')
 					handles, labels = self.canvas.axes.get_legend_handles_labels()
 					l = self.canvas.axes.legend(handles[0:2], labels[0:2], bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+					#self.myLegend = self.canvas.axes.Legend(handles[0:2], labels[0:2], bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
 					'''
 					if self.darkTheme:
@@ -833,7 +959,12 @@ class myMplCanvas(QtWidgets.QFrame):
 		self.canvas.axes.spines['top'].set_visible(False)
 
 		if not stateDict['showLegend']:
-			self.canvas.axes.legend().remove()
+			#print('self.canvas.axes.legend():', self.canvas.axes.legend())
+			#print('self.canvas.axes.legend:', self.canvas.axes.legend)
+			#if self.canvas.axes.legend() is not None:
+			if 1:
+				#logger.error('!!!!!!!!!!!! grabbing get_legend_handles_labels()')
+				self.canvas.axes.legend().remove()
 
 		#print('myUpdate() self.plotSize:', self.plotSize)
 		self.canvas.axes.set_xlabel(xStatHuman)
@@ -915,6 +1046,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 			if categoricalList is not None:
 				for categorical in categoricalList:
 					self.statListDict[categorical] = {'yStat':categorical}
+					self.statListDict[categorical] = {'name':categorical}  # we need both yStat and name !!!
+
+		# statListDict now has categorical like 'File Number'
+		for k,v in self.statListDict.items():
+			print('    ', k, v)
+
 		'''
 		if statListDict is None:
 			# build statListDict from columns of csv path
@@ -996,7 +1133,8 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		#bar = self.menuBar()
 		#file = bar.addMenu("Load")
 
-		self.show()
+		# abb removed 20210828
+		#self.show()
 
 		# self.updatePlotSize() # calls update2()
 		self.update2()
@@ -1055,6 +1193,8 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 				theRet = 0
 			return theRet
 
+		# removed 20210828
+		'''
 		keys = list(self.statListDict.keys())
 		#keys += self.hueTypes
 		self.xDropdown = QtWidgets.QComboBox()
@@ -1064,6 +1204,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		else:
 			defaultIdx = 0
 		self.xDropdown.setCurrentIndex(defaultIdx)
+		self.xDropdown.currentIndexChanged.connect(self.update2)
 
 		self.yDropdown = QtWidgets.QComboBox()
 		self.yDropdown.addItems(keys)
@@ -1072,6 +1213,8 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		else:
 			defaultIdx = 0
 		self.yDropdown.setCurrentIndex(defaultIdx)
+		self.yDropdown.currentIndexChanged.connect(self.update2)
+		'''
 
 		#
 		# hue, to control colors in plot
@@ -1113,24 +1256,27 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		self.typeDropdown = QtWidgets.QComboBox()
 		self.typeDropdown.addItems(['Scatter Plot', 'Scatter + Raw + Mean', 'Regression Plot', 'Violin Plot', 'Box Plot', 'Raw + Mean Plot', 'Histogram', 'Cumulative Histogram'])
 		self.typeDropdown.setCurrentIndex(0)
+		self.typeDropdown.currentIndexChanged.connect(self.updatePlotType)
 
 		self.dataTypeDropdown = QtWidgets.QComboBox()
 		self.dataTypeDropdown.setToolTip('All Spikes is all spikes \n File Mean is the mean within each analysis file')
 		self.dataTypeDropdown.addItems(self.dataTypes)
 		self.dataTypeDropdown.setCurrentIndex(1)
-
-		self.xDropdown.currentIndexChanged.connect(self.update2)
-		self.yDropdown.currentIndexChanged.connect(self.update2)
-		self.typeDropdown.currentIndexChanged.connect(self.updatePlotType)
 		self.dataTypeDropdown.currentIndexChanged.connect(self.updateDataType)
+
+		#self.xDropdown.currentIndexChanged.connect(self.update2)
+		#self.yDropdown.currentIndexChanged.connect(self.update2)
+		#self.typeDropdown.currentIndexChanged.connect(self.updatePlotType)
+		#self.dataTypeDropdown.currentIndexChanged.connect(self.updateDataType)
 
 		showLegendCheckBox = QtWidgets.QCheckBox('Legend')
 		showLegendCheckBox.setChecked(self.showLegend)
 		showLegendCheckBox.stateChanged.connect(self.setShowLegend)
 
 		# swap the sort order
-		swapSortButton = QtWidgets.QPushButton('Swap Sort Order')
-		swapSortButton.clicked.connect(self.setSwapSort)
+		aName = 'Swap Sort Order'
+		swapSortButton = QtWidgets.QPushButton(aName)
+		swapSortButton.clicked.connect(partial(self.on_button_click, aName))
 		# works fine
 		'''
 		darkThemeCheckBox = QtWidgets.QCheckBox('Dark Theme')
@@ -1183,27 +1329,55 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		self.plotUpdateDropdown.currentIndexChanged.connect(self.updatePlotUpdate)
 		'''
 
-		self.layout.addWidget(QtWidgets.QLabel("X Statistic"), 0, 0)
-		self.layout.addWidget(self.xDropdown, 0, 1)
-		self.layout.addWidget(QtWidgets.QLabel("Y Statistic"), 1, 0)
-		self.layout.addWidget(self.yDropdown, 1, 1)
-		self.layout.addWidget(QtWidgets.QLabel("Hue"), 2, 0)
-		self.layout.addWidget(self.hueDropdown, 2, 1)
-		self.layout.addWidget(QtWidgets.QLabel("Group By"), 3, 0)
-		self.layout.addWidget(self.groupByDropdown, 3, 1)
+		# 20210828
+		# table view of x stat
+		row = 4
+		col = 0
+		rowSpan = 1
+		colSpan = 2
+		self.xStatTableView = myStatListWidget(myParent=self, headerStr='X-Stat', statList=self.statListDict)
+		self.layout.addWidget(self.xStatTableView, row, col, rowSpan, colSpan)
+		# table view of x stat
+		row = 4
+		col = 2
+		rowSpan = 1
+		colSpan = 2
+		self.yStatTableView = myStatListWidget(myParent=self, headerStr='Y-Stat', statList=self.statListDict)
+		self.layout.addWidget(self.yStatTableView, row, col, rowSpan, colSpan)
+
+		col = 0
+		# removed 20210828
+		'''
+		self.layout.addWidget(QtWidgets.QLabel("X Statistic"), 0, col)
+		self.layout.addWidget(self.xDropdown, 0, col+1)
+		self.layout.addWidget(QtWidgets.QLabel("Y Statistic"), 1, col)
+		self.layout.addWidget(self.yDropdown, 1, col+1)
+		'''
+
+		aName = 'Replot'
+		aButton = QtWidgets.QPushButton(aName)
+		aButton.clicked.connect(partial(self.on_button_click, aName))
+		self.layout.addWidget(aButton, 0, 0)
+
+		self.layout.addWidget(QtWidgets.QLabel("Hue (Plot)"), 2, col)
+		self.layout.addWidget(self.hueDropdown, 2, col+1)
+		self.layout.addWidget(QtWidgets.QLabel("Group By (Stats)"), 3, col)
+		self.layout.addWidget(self.groupByDropdown, 3, col+1)
 		#self.layout.addWidget(QtWidgets.QLabel("Color"), 3, 0)
 		#self.layout.addWidget(self.colorDropdown, 3, 1)
 		#
-		self.layout.addWidget(QtWidgets.QLabel("Plot Type"), 0, 2)
-		self.layout.addWidget(self.typeDropdown, 0, 3)
-		self.layout.addWidget(QtWidgets.QLabel("Data Type"), 1, 2)
-		self.layout.addWidget(self.dataTypeDropdown, 1, 3)
-		self.layout.addWidget(showLegendCheckBox, 2, 2)
+		col += 2
+		self.layout.addWidget(QtWidgets.QLabel("Plot Type"), 0, col)
+		self.layout.addWidget(self.typeDropdown, 0, col+1)
+		self.layout.addWidget(QtWidgets.QLabel("Data Type"), 1, col)
+		self.layout.addWidget(self.dataTypeDropdown, 1, col+1)
+		self.layout.addWidget(showLegendCheckBox, 2, col)
 		# works fine
 		#self.layout.addWidget(darkThemeCheckBox, 2, 3)
-		self.layout.addWidget(swapSortButton, 2, 3)
-		self.layout.addWidget(mplToolbar, 3, 2)
-		self.layout.addWidget(hoverCheckbox, 3, 3)
+		self.layout.addWidget(swapSortButton, 2, col+1)
+		self.layout.addWidget(mplToolbar, 3, col)
+		self.layout.addWidget(hoverCheckbox, 3, col+1)
+
 		# works fine
 		#self.layout.addWidget(QtWidgets.QLabel("Plot Size"), 4, 2)
 		#self.layout.addWidget(self.plotSizeDropdown, 4, 3)
@@ -1216,7 +1390,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		nextRow = 5 # for text table
 		rowSpan = 1
-		colSpan = 4
+		colSpan = 5
 		#self.layout.addWidget(self.canvas, 3, 0, rowSpan, colSpan)
 
 		#
@@ -1241,9 +1415,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		self.addToolBar(QtCore.Qt.RightToolBarArea, self.myToolbar)
 		'''
 
+		#
+		# tabs to show (raw, x, y) stat tables
 		tabwidget = QtWidgets.QTabWidget()
 
 		# hold main df database (imutable except for 'include'
+		# table-view to insert into tab
 		self.rawTableView = myTableView('All Spikes')
 		self.rawTableView.clicked.connect(self.slotTableViewClicked)
 		self.signalCancelSelection.connect(self.rawTableView.clearSelection)
@@ -1253,6 +1430,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		self.rawTableView.slotSwitchTableDf(self.masterDf)
 
 		# self.xDf
+		# table-view to insert into tab
 		self.xTableView = myTableView('File Mean')
 		self.xTableView.clicked.connect(self.slotTableViewClicked)
 		self.signalCancelSelection.connect(self.xTableView.clearSelection)
@@ -1263,6 +1441,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		# self.yDf
 		self.yTableView = myTableView('File Mean')
+		# table-view to insert into tab
 		self.yTableView.clicked.connect(self.slotTableViewClicked)
 		self.signalCancelSelection.connect(self.yTableView.clearSelection)
 		self.signalSelectFromPlot.connect(self.yTableView.slotSelectRow)
@@ -1282,11 +1461,16 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
 		#
 		#self.layout.addWidget(self.tableView, nextRow, 0, rowSpan, colSpan)
-		tabwidget.addTab(self.rawTableView, "Raw")
+		tabwidget.addTab(self.xTableView, 'X-Stats')
+		tabwidget.addTab(self.yTableView, 'Y-Stats')
+		tabwidget.addTab(self.rawTableView, 'Raw')
 		#tabwidget.addTab(self.tableView, "Mean")
-		tabwidget.addTab(self.xTableView, "X-Stats")
-		tabwidget.addTab(self.yTableView, "Y-Stats")
-		self.layout.addWidget(tabwidget, nextRow, 0, rowSpan, colSpan)
+		rowSpan = 1
+		colSpan = 5
+		self.layout.addWidget(tabwidget, nextRow, 0, rowSpan, colSpan) # add widget takes ownership
+
+		# 20210828
+		#self.setLayout(self.layout)
 
 	def updatePlotLayoutGrid(self):
 		"""
@@ -1427,12 +1611,16 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		plotType = self.plotType
 		stateDict['plotType'] = plotType
 
-		xStatHuman = self.xDropdown.currentText()
-		yStatHuman = self.yDropdown.currentText()
+		# was this, replacing dropdown with listview
+		#xStatHuman = self.xDropdown.currentText()
+		#yStatHuman = self.yDropdown.currentText()
+		xStatHuman, xStat = self.xStatTableView.getCurrentStat()
+		yStatHuman, yStat = self.yStatTableView.getCurrentStat()
+
 		stateDict['xStatHuman'] = xStatHuman
 		stateDict['yStatHuman'] = yStatHuman
-		xStat = self.statListDict[xStatHuman]['yStat'] # statListDict always used yStat
-		yStat = self.statListDict[yStatHuman]['yStat']
+		#xStat = self.statListDict[xStatHuman]['yStat'] # statListDict always used yStat
+		#yStat = self.statListDict[yStatHuman]['yStat']
 		stateDict['xStat'] = xStat
 		stateDict['yStat'] = yStat
 		stateDict['xIsCategorical'] = pd.api.types.is_string_dtype(self.masterDf[xStat].dtype)
@@ -1595,18 +1783,24 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		# todo: put this somewhere better
 		self.setWindowTitle(path)
 
-	def setSwapSort(self):
+	def on_button_click(self, name):
 		"""
-		rotate the sort key to be able to sort by different keys, like 'sex' versus 'region'
 		"""
-		#print('=== setSwapSort()')
-		#print('  sortOrder was:', self.sortOrder)
-		self.sortOrder = self.sortOrder[1:] + self.sortOrder[:1]
-		#print('  sortOrder now:', self.sortOrder)
-		self.mySetStatusBar(f'Sort order is now: {self.sortOrder}')
+		logger.info(f'=== {name}')
+
+		if name == 'Replot':
+			self.update2()
+		elif name == 'Swap Sort Order':
+			# rotate the sort key to be able to sort by different keys, like 'sex' versus 'region'
+			#print('  sortOrder was:', self.sortOrder)
+			self.sortOrder = self.sortOrder[1:] + self.sortOrder[:1]
+			#print('  sortOrder now:', self.sortOrder)
+			self.mySetStatusBar(f'Sort order is now: {self.sortOrder}')
+		else:
+			logger.warning(f'Did not understand button: "{name}"')
 
 	def setShowLegend(self, state):
-		print('setShowLegend() state:', state)
+		logger.info(f'setShowLegend() state: {state}')
 		self.showLegend = state
 		self.updateGlobal()
 
@@ -1887,11 +2081,15 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 			if self.myPlotCanvasList[i] is not None:
 				self.myPlotCanvasList[i].myUpdateGlobal(state)
 
+	def replot(self):
+		self.update2()
+
 	def update2(self):
 		#self.updatePlot is the plot to update 1,2,3,4
+		logger.info('')
 		updateIndex = self.updatePlot
 		if updateIndex is None:
-			print('update2() found no plots to update with self.updatePlot:', self.updatePlot)
+			logger.info(f'Found no plots to update with self.updatePlot: {self.updatePlot}')
 			self.mySetStatusBar('Please select a plot to update')
 			return
 
@@ -1982,7 +2180,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		print('bScatterPlotMainWindow.slotSelectFromPlot() ', selectDict)
 
 	def slotSelectSquare(self, plotNumber, stateDict):
-		print('bScatterPlotMainWindow.slotSelectSquare()', plotNumber)
+		logger.info(f'plotNumber:{plotNumber}')
 		#print('  stateDict:', stateDict)
 		print('  todo: fill in all interface using stateDict')
 		self.updatePlot = plotNumber
@@ -1994,7 +2192,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 		"""
 		row=clickedIndex.row()
 		model=clickedIndex.model()
-		print('bScatterPlotMainWindow.slotTableViewClicked() row:', row, 'clickedIndex:', clickedIndex)
+		logger.info(f'row:{row} clickedIndex:{clickedIndex}')
 
 		# select in plot
 		#self._selectInd(row) # !!!! visually, index start at 1

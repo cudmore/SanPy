@@ -35,7 +35,7 @@ class bPlugins():
 			self.userPluginFolder = userPluginFolder
 			sys.path.append(self.userPluginFolder)
 		else:
-			logger.warning(f'Did not find pluginFolder "{userPluginFolder}"')
+			logger.info(f'It is OK but did not find pluginFolder "{userPluginFolder}"')
 
 		#
 		self.loadPlugins()
@@ -55,7 +55,7 @@ class bPlugins():
 		self.pluginDict = {}
 
 		# Enum is to ignore bPlugins.py class ResponseType(Enum)
-		ignoreModuleList = ['sanpyPlugin', 'old_myWidget',
+		ignoreModuleList = ['sanpyPlugin', 'myWidget',
 							'ResponseType', 'basePlotTool',
 							'NavigationToolbar2QT']
 
@@ -66,7 +66,7 @@ class bPlugins():
 		for moduleName, obj in inspect.getmembers(sanpy.interface.plugins):
 			#print('moduleName:', moduleName, 'obj:', obj)
 			if inspect.isclass(obj):
-				logger.info(f'moduleName: {moduleName}')
+				#logger.info(f'moduleName: {moduleName}')
 				if moduleName in ignoreModuleList:
 					# our base plugin class
 					continue
@@ -85,7 +85,10 @@ class bPlugins():
 					logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
 				else:
 					self.pluginDict[humanName] = pluginDict
+
+		# print the loaded plugins
 		logger.info(f'Loaded plugins: {loadedList}')
+
 		# sort
 		self.pluginDict = dict(sorted(self.pluginDict.items()))
 

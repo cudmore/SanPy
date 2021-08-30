@@ -27,7 +27,7 @@ class resultsTable(sanpyPlugin):
 		layout = QtWidgets.QVBoxLayout()
 
 		controlsLayout = QtWidgets.QHBoxLayout()
-		self.numSpikesLabel = QtWidgets.QLabel('unkown spikes')
+		self.numSpikesLabel = QtWidgets.QLabel('unknown spikes')
 		controlsLayout.addWidget(self.numSpikesLabel)
 		layout.addLayout(controlsLayout)
 
@@ -41,14 +41,19 @@ class resultsTable(sanpyPlugin):
 		self.setLayout(layout)
 
 		#
-		# connect clicks in error table to siganl main sanpy_app with slot_selectSpike()
+		# connect clicks in error table to signal main sanpy_app with slot_selectSpike()
 		if self.getSanPyApp() is not None:
 			fnPtr = self.getSanPyApp().slot_selectSpike
 			self.myErrorTable.signalSelectSpike.connect(fnPtr)
 
 		self.replot()
 
+	def setAxis(self):
+		# inherited, resopnd to user setting x-axis
+		self.replot()
+
 	def replot(self):
+		logger.info('')
 		# update
 		if self.ba is None:
 			return
@@ -58,7 +63,7 @@ class resultsTable(sanpyPlugin):
 			if startSec is not None and stopSec is not None:
 				# use column thresholdSec
 				dfPlot = dfPlot[ (dfPlot['thresholdSec']>=startSec) & (dfPlot['thresholdSec']<=stopSec)]
-				pass
+				#pass
 			#
 			logger.info(f'dfReportForScatter {startSec} {stopSec}')
 			errorReportModel = sanpy.interface.bFileTable.pandasModel(dfPlot)

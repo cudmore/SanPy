@@ -23,7 +23,7 @@ class analysisSummary(sanpyPlugin):
 
 		self.df = None
 
-		self.pyqtWindow()  # makes self.mainWidget
+		#self.pyqtWindow()  # makes self.mainWidget
 
 		layout = QtWidgets.QVBoxLayout()
 		self.myErrorTable = sanpy.interface.bErrorTable.errorTableView()
@@ -36,7 +36,7 @@ class analysisSummary(sanpyPlugin):
 		self.replot()
 
 	def replot(self):
-		logger.info('')
+		#logger.info('')
 		#ba = self.get_bAnalysis()
 		ba = self.ba
 		if ba is not None:
@@ -58,6 +58,11 @@ class analysisSummary(sanpyPlugin):
 
 			#
 			self.df = dfSummary
+
+	def setAxis(self):
+		# inherited
+		# regenerate summary with new range
+		self.replot()
 
 	def copyToClipboard(self):
 		if self.df is not None:

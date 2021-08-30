@@ -27,8 +27,7 @@ sys.exit(app.exec_())
 ```
 """
 
-#import numpy as np
-#import scipy.signal
+import math, enum
 
 #from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.backends import backend_qt5agg
@@ -40,8 +39,6 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
 
 import qdarkstyle
-
-import enum
 
 import sanpy
 
@@ -78,10 +75,14 @@ class sanpyPlugin(QtWidgets.QWidget):
 	signalSelectSpikeList = QtCore.pyqtSignal(object)
 	"""Emit signal on spike selection."""
 
+	signalDetect = QtCore.pyqtSignal(object)
+	"""Emit signal on spike selection."""
+
 	myHumanName = 'UNDEFINED-PLUGIN-NAME'
 	"""Each derived class needs to define this."""
 
 	responseTypes = ResponseType
+	"""Defines how a plugin will response to interface changes. Includes (switchFile, analysisChange, selectSpike, setAxis)."""
 
 	def __init__(self, ba=None, bPlugin=None, startStop=None, options=None, parent=None):
 		"""
@@ -123,7 +124,17 @@ class sanpyPlugin(QtWidgets.QWidget):
 			self.responseOptions[option.name] = True
 
 		# created in self.pyqtWindow()
-		#self.mainWidget = None
+		#self.mainWidget = QtWidgets.QWidget()
+
+		doDark = True
+		if doDark and qdarkstyle is not None:
+			self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+		else:
+			self.setStyleSheet("")
+
+		#self.scrollArea = QtWidgets.QScrollArea()
+		#self.scrollArea.setWidget(self)
+
 		self.layout = None
 
 		# created in self.mplWindow()
@@ -136,14 +147,20 @@ class sanpyPlugin(QtWidgets.QWidget):
 		self.winWidth_inches = 4  # used by mpl
 		self.winHeight_inches = 4
 
-		doDark = True
-		if doDark and qdarkstyle is not None:
-			self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
-		else:
-			self.setStyleSheet("")
-
 		# connect self to main app with signals/slots
 		self._installSignalSlot()
+
+	'''
+	def _setLayout(self, layout):
+		#self.mainWidget.setLayout(layout)
+		super().setLayout(layout)
+
+		#self.scrollArea.setWidget(self.mainWidget)
+		self.scrollArea.setWidget(self)
+
+		#self.mainWidget.show()
+		#self.scrollArea.show()
+	'''
 
 	@property
 	def sweepNumber(self):
@@ -212,6 +229,10 @@ class sanpyPlugin(QtWidgets.QWidget):
 			app.signalSelectSweep.connect(self.slot_setSweep)
 			# recieve set x axis
 			app.signalSetXAxis.connect(self.slot_set_x_axis)
+
+			# emit when we spike detect (used in detectionParams plugin)
+			self.signalDetect.connect(app.slot_detect)
+
 		bPlugins = self.get_bPlugins()
 		if bPlugins is not None:
 			# emit spike selection
@@ -219,6 +240,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 			self.signalSelectSpikeList.connect(bPlugins.slot_selectSpikeList)
 			# emit on close window
 			self.signalCloseWindow.connect(bPlugins.slot_closeWindow)
+
 		# connect to self
 		self.signalSelectSpike.connect(self.slot_selectSpike)
 		self.signalSelectSpikeList.connect(self.slot_selectSpikeList)
@@ -337,12 +359,10 @@ class sanpyPlugin(QtWidgets.QWidget):
 				'ba': self.ba,
 			}
 			self.signalSelectSpikeList.emit(sDict)
-
 		elif text == '':
 			pass
 
-		#logger.info('')
-
+		# critical difference between mpl and qt
 		if isMpl:
 			return text
 		else:
@@ -350,6 +370,9 @@ class sanpyPlugin(QtWidgets.QWidget):
 			return
 
 	def copyToClipboard(self):
+		"""
+		Add code to copy plugin to clipboard
+		"""
 		pass
 
 	def bringToFront(self):
@@ -363,22 +386,21 @@ class sanpyPlugin(QtWidgets.QWidget):
 			FigureManagerQT.window.activateWindow()
 			FigureManagerQT.window.raise_()
 
-	def pyqtWindow(self):
+	def old_pyqtWindow(self):
 		"""
 		Create and show a PyQt Window (QWidget)
 		User can then add to it
 
 		Creates: self.mainWidget
 		"""
-		doDark = True
-
+		#doDark = True
 		#self.mainWidget = QtWidgets.QWidget()
 		#self.mainWidget = myWidget(self, doDark)
 
 		# testing testDock.py
 		#self.setCentralWidget(self.mainWidget)
 
-		self._mySetWindowTitle()
+		#self._mySetWindowTitle()
 		#self.mainWidget.setWindowTitle(self.name)
 		#self.mainWidget.show()
 
@@ -423,7 +445,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 		layout.addWidget(self.mplToolbar)
 		self.setLayout(layout)
 
-	def mplWindow(self):
+	def old_mplWindow(self):
 		"""
 		Create an mpl (MatPlotLib) window.
 		User can then plot to window with self.ax.plot(x,y)
@@ -526,7 +548,13 @@ class sanpyPlugin(QtWidgets.QWidget):
 		# reset start/stop
 		startSec = rowDict['Start(s)']
 		stopSec = rowDict['Stop(s)']
-		logger.info(f'startSec:{startSec} {type(startSec)} stopSec:{stopSec} {type(stopSec)}')
+		if math.isnan(startSec):
+			startSec = None
+		if math.isnan(stopSec):
+			stopSec = None
+
+		#logger.info(f'startSec:{startSec} {type(startSec)} stopSec:{stopSec} {type(stopSec)}')
+
 		self._startSec = startSec
 		self._stopSec = stopSec
 
@@ -629,7 +657,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 			if self._ba != ba:
 				return
 
-		logger.info(startStopList)
+		#logger.info(startStopList)
 		if startStopList is None:
 			self._startSec = None
 			self._stopSec = None
@@ -642,22 +670,26 @@ class sanpyPlugin(QtWidgets.QWidget):
 		#self.replot()
 
 	def setAxis(self):
-		"""Respond to set axis
+		"""
+		Respond to set axis.
+
+		Some plugins want to replot() when x-axis changes.
 		"""
 		pass
 
 	def turnOffAllSignalSlot(self):
-		"""Utility function to make plugin not respond to changes in interface.
+		"""
+	 	Make plugin not respond to any changes in interface.
 		"""
 		# turn off all signal/slot
 		switchFile = self.responseTypes.switchFile
 		self.toggleResponseOptions(switchFile, newValue=False)
-		analysisChange = self.responseTypes.switchFile
+		analysisChange = self.responseTypes.analysisChange
 		self.toggleResponseOptions(analysisChange, newValue=False)
-		switchFile = self.responseTypes.switchFile
-		self.toggleResponseOptions(switchFile, newValue=False)
-		selectSpike = self.responseTypes.switchFile
+		selectSpike = self.responseTypes.selectSpike
 		self.toggleResponseOptions(selectSpike, newValue=False)
+		setAxis = self.responseTypes.setAxis
+		self.toggleResponseOptions(setAxis, newValue=False)
 
 	def contextMenuEvent(self, event):
 		"""
@@ -742,7 +774,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 	def handleContextMenu(self, action):
 		pass
 
-class old_myWidget(QtWidgets.QWidget):
+class myWidget(QtWidgets.QWidget):
 	"""
 	Helper class to open a PyQt window from within a plugin.
 	"""

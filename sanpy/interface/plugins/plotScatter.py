@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 
@@ -21,7 +22,7 @@ class plotScatter(sanpyPlugin):
 
 	Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
 	"""
-	myHumanName = 'Scatter Plot'
+	myHumanName = 'Plot Scatter'
 
 	def __init__(self, **kwargs):
 		"""
@@ -49,7 +50,7 @@ class plotScatter(sanpyPlugin):
 		#self.selectedSpike = None
 		#self.selectedSpikeList = []  # Always a list, if empy then None
 
-		self.pyqtWindow()  # makes self.mainWidget and calls show()
+		#self.pyqtWindow()  # makes self.mainWidget and calls show()
 
 		# main layout
 		hLayout = QtWidgets.QHBoxLayout()
@@ -234,7 +235,7 @@ class plotScatter(sanpyPlugin):
 		# we wil always have axScatter
 		#
 		# make initial empty scatter plot
-		self.cmap = mpl.pyplot.cm.coolwarm
+		self.cmap = mpl.pyplot.cm.coolwarm.copy()
 		self.cmap.set_under("white") # only works for dark theme
 		# do not specify 'c' argument, we set colors using set_facecolor, set_color
 		self.lines = self.axScatter.scatter([], [], picker=5)
@@ -279,6 +280,22 @@ class plotScatter(sanpyPlugin):
 		else:
 			logger.warning(f'Did not respond to button "{b.text()}"')
 
+	def setAxis(self):
+		# inherited, resopnd to user setting x-axis
+		#self.replot()
+
+		# generate a list of spike and select
+
+		startSec, stopSec = self.getStartStop()
+		if startSec is None or stopSec is None:
+			return
+
+		thresholdSec = self.ba.getStat('thresholdSec')
+
+		self.selectedSpikeList = [spikeIdx for spikeIdx,spikeSec in enumerate(thresholdSec) if (spikeSec>startSec and spikeSec<stopSec)]
+
+		self.selectSpikeList()
+
 	def replot(self):
 		"""
 		Replot when analysis changes or file changes
@@ -288,35 +305,36 @@ class plotScatter(sanpyPlugin):
 		xHumanStat, xStat = self.xPlotWidget.getCurrentStat()
 		yHumanStat, yStat = self.yPlotWidget.getCurrentStat()
 
-		logger.info(f'x:"{xHumanStat}" y:"{yHumanStat}"')
-		logger.info(f'x:"{xStat}" y:"{yStat}"')
+		#logger.info(f'x:"{xHumanStat}" y:"{yHumanStat}"')
+		#logger.info(f'x:"{xStat}" y:"{yStat}"')
 
 		if self.ba is None or xHumanStat is None or yHumanStat is None:
-			xData = None
-			yData = None
+			xData = []
+			yData = []
 		else:
 			xData = self.ba.getStat(xStat, sweepNumber=self.sweepNumber)
 			yData = self.ba.getStat(yStat, sweepNumber=self.sweepNumber)
 
+
+		#
+		# convert to numpy
+		xData = np.array(xData)
+		yData = np.array(yData)
+
 		#
 		# return if we got no data, happend when there is no analysis
-		if not xData or not yData:
-			logger.warning(f'Did not find either xStat: "{xStat}" or yStat: "{yStat}"')
+		if xData is None or yData is None or np.isnan(xData).all() or np.isnan(yData).all():
+			# We get here when there is no analysis
+			#logger.warning(f'Did not find either xStat: "{xStat}" or yStat: "{yStat}"')
 			self.lines.set_offsets([np.nan, np.nan])
 			self.scatter_hist([], [], self.axHistX, self.axHistY)
 			self.static_canvas.draw()
-			self.repaint() # update the widget
 			return
 
 		self.xStatName = xStat
 		self.yStatName = yStat
 		self.xStatHumanName = xHumanStat
 		self.yStatHumanName = yHumanStat
-
-		#
-		# convert to numpy
-		xData = np.array(xData)
-		yData = np.array(yData)
 
 		# keep track of x-axis spike number (for chae plot)
 		xAxisSpikeNumber = self.ba.getStat('spikeNumber', sweepNumber=self.sweepNumber)
@@ -334,17 +352,6 @@ class plotScatter(sanpyPlugin):
 		self.xData = xData
 		self.yData = yData
 		self.xAxisSpikeNumber = xAxisSpikeNumber
-
-		#
-		# look for nan in xData/yData
-		#xNanIdx = np.argwhere(np.isnan(xData))
-		#print('xData.shape:', xData.shape, 'xNanIdx:', xNanIdx)
-		#yNanIdx = np.argwhere(np.isnan(yData))
-		#print('yData.shape:', yData.shape, 'yNanIdx:', yNanIdx)
-
-		# testing what happens with nan
-		#xData[5] = np.nan
-		#yData[6] = np.nan
 
 		# data
 		data = np.stack([xData, yData], axis=1)
@@ -383,21 +390,21 @@ class plotScatter(sanpyPlugin):
 			#cm = ListedColormap([color_dict[x] for x in color_dict.keys()])
 			#self.lines.set_cmap(cm)
 
-			badSpikes = self.ba.getStat('isBad', sweepNumber=self.sweepNumber)
+			goodSpikes = self.ba.getStat('include', sweepNumber=self.sweepNumber)
 			userTypeList = self.ba.getStat('userType', sweepNumber=self.sweepNumber)
 
 			if self.plotChasePlot:
 				#xData = xData[1:-1] # x is the reference spike for marking (bad, type)
-				#badSpikes = badSpikes[1:-1]
+				#goodSpikes = goodSpikes[1:-1]
 				#userTypeList = userTypeList[1:-1]
-				badSpikes = badSpikes[0:-2]
+				goodSpikes = goodSpikes[0:-2]
 				userTypeList = userTypeList[0:-2]
 
-			tmpColors = [color_dict['good']] * len(xData) # start as all good
+			tmpColors = [color_dict['bad']] * len(xData) # start as all good
 			# user types will use symbols
 			#tmpColors = [color_dict['type'+num2str(x)] if x>0 else tmpColors[idx] for idx,x in enumerate(userTypeList)]
 			# bad needs to trump user type !!!
-			tmpColors = [color_dict['bad'] if x else tmpColors[idx] for idx,x in enumerate(badSpikes)]
+			tmpColors = [color_dict['good'] if x else tmpColors[idx] for idx,x in enumerate(goodSpikes)]
 			tmpColors = np.array(tmpColors)
 			#print('tmpColors', type(tmpColors), tmpColors.shape, tmpColors)
 
@@ -451,7 +458,7 @@ class plotScatter(sanpyPlugin):
 		percentSpan = ySpan * 0.05
 		yMin -= percentSpan
 		yMax += percentSpan
-		#
+
 		self.axScatter.set_xlim([xMin, xMax])
 		self.axScatter.set_ylim([yMin, yMax])
 
@@ -460,7 +467,8 @@ class plotScatter(sanpyPlugin):
 
 		# redraw
 		self.static_canvas.draw()
-		self.repaint() # update the widget
+		# was this
+		#self.repaint() # update the widget
 
 	#def scatter_hist(self, x, y, ax, ax_histx, ax_histy):
 	def scatter_hist(self, x, y, ax_histx, ax_histy):
@@ -502,7 +510,7 @@ class plotScatter(sanpyPlugin):
 			#ax_histx.spines['top'].set_visible(False)
 			#ax_histx.yaxis.set_ticks_position('left')
 			#ax_histx.xaxis.set_ticks_position('bottom')
-			print('  binsHistX:', len(binsHistX))
+			#print('  binsHistX:', len(binsHistX))
 		# y
 		if ax_histy is not None:
 			ax_histy.clear()
@@ -510,7 +518,7 @@ class plotScatter(sanpyPlugin):
 			ax_histy.tick_params(axis="y", labelleft=False)
 			#ax_histy.yaxis.set_ticks_position('left')
 			#ax_histy.xaxis.set_ticks_position('bottom')
-			print('  binsHistY:', len(binsHistY))
+			#print('  binsHistY:', len(binsHistY))
 
 	def selectSpikeList(self, sDict=None):
 		"""
@@ -526,7 +534,7 @@ class plotScatter(sanpyPlugin):
 
 		spikeList = self.selectedSpikeList
 
-		logger.info(f'spikeList:{spikeList}')
+		#logger.info(f'spikeList:{spikeList}')
 
 		#if spikeList is not None:
 		if len(spikeList) > 0:
@@ -544,14 +552,16 @@ class plotScatter(sanpyPlugin):
 		self.spikeListSel.set_data(xData, yData)
 
 		self.static_canvas.draw()
-		self.repaint() # update the widget
+		# was this
+		#self.repaint() # update the widget
 
 	def selectSpike(self, sDict=None):
 		"""
 		Select a spike
 		sDict (dict): NOT USED
 		"""
-		logger.info(sDict)
+
+		#logger.info(sDict)
 
 		#spikeNumber = sDict['spikeNumber']
 		#spikeList = [spikeNumber]
@@ -561,17 +571,14 @@ class plotScatter(sanpyPlugin):
 		if self.xStatName is None or self.yStatName is None:
 			return
 
+		xData = []
+		yData = []
 		if spikeNumber is not None:
-			#xData = self.ba.getStat(self.xStatName, sweepNumber=self.sweepNumber)
-			#xData = np.array(xData)
-			xData = [self.xData[spikeNumber]]
-
-			#yData = self.ba.getStat(self.yStatName, sweepNumber=self.sweepNumber)
-			#yData = np.array(yData)
-			yData = [self.yData[spikeNumber]]
-		else:
-			xData = []
-			yData = []
+			try:
+				xData = [self.xData[spikeNumber]]
+				yData = [self.yData[spikeNumber]]
+			except (IndexError) as e:
+				logger.error(e)
 
 		self.spikeSel.set_data(xData, yData)
 		#self.spikeSel.set_offsets(xData, yData)
@@ -579,7 +586,8 @@ class plotScatter(sanpyPlugin):
 		self.spikeNumberLabel.setText(f'Spike: {spikeNumber}')
 
 		self.static_canvas.draw()
-		self.repaint() # update the widget
+		#was this
+		#self.repaint() # update the widget
 
 	def selectSpikesFromHighlighter(self, selectedSpikeList):
 		"""
@@ -685,17 +693,17 @@ class plotScatter(sanpyPlugin):
 		xStat = self.ba.getStat(self.xStatName, sweepNumber=self.sweepNumber)
 		yStat = self.ba.getStat(self.yStatName, sweepNumber=self.sweepNumber)
 		#
-		badSpikes = self.ba.getStat('isBad', sweepNumber=self.sweepNumber)
+		goodSpikes = self.ba.getStat('include', sweepNumber=self.sweepNumber)
 		userType = self.ba.getStat('userType', sweepNumber=self.sweepNumber)
 		file = self.ba.getStat('file', sweepNumber=self.sweepNumber)
 
-		columns = ['Spike Number', 'Spike Time(s)', self.xStatHumanName, self.yStatHumanName, 'Is Bad', 'User Type', 'File']
+		columns = ['Spike Number', 'Spike Time(s)', self.xStatHumanName, self.yStatHumanName, 'Include', 'User Type', 'File']
 		df = pd.DataFrame(columns=columns)
 		df['Spike Number'] = spikeNumber
 		df['Spike Time(s)'] = spikeTimeSec
 		df[self.xStatHumanName] = xStat
 		df[self.yStatHumanName] = yStat
-		df['Is Bad'] = badSpikes
+		df['Include'] = goodSpikes
 		df['User Type'] = userType
 		df['File'] = file
 
@@ -719,11 +727,12 @@ class myStatListWidget(QtWidgets.QWidget):
 
 		self.myParent = myParent
 		self.statList = sanpy.bAnalysisUtil.getStatList()
-		self._rowHeight = 10
+		self._rowHeight = 9
 
 		self.myQVBoxLayout = QtWidgets.QVBoxLayout(self)
 
 		self.myTableWidget = QtWidgets.QTableWidget()
+		self.myTableWidget.setWordWrap(False)
 		self.myTableWidget.setRowCount(len(self.statList))
 		self.myTableWidget.setColumnCount(1)
 		self.myTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
@@ -899,7 +908,8 @@ class Highlighter(object):
 		event1 = self.mouseDownEvent
 		event2 = event
 
-		#logger.info(self.mouseDownEvent)
+		if event1 is None or event2 is None:
+			return
 
 		self.mask |= self.inside(event1, event2)
 		xy = np.column_stack([self.x[self.mask], self.y[self.mask]])
@@ -938,7 +948,7 @@ class Highlighter(object):
 		selectedSpikes = np.where(self.mask==True)
 		selectedSpikes = selectedSpikes[0]  # why does np do this ???
 
-		logger.info(f'Num Spikes Select:{len(selectedSpikes)}')
+		#logger.info(f'Num Spikes Select:{len(selectedSpikes)}')
 
 		selectedSpikesList = selectedSpikes.tolist()
 		self._parentPlot.selectSpikesFromHighlighter(selectedSpikesList)

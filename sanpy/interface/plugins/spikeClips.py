@@ -22,7 +22,7 @@ class spikeClips(sanpyPlugin):
 
 	Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
 	"""
-	myHumanName = 'Spike Clips Plot'
+	myHumanName = 'Plot Spike Clips'
 
 	def __init__(self, **kwargs):
 		"""
@@ -52,7 +52,7 @@ class spikeClips(sanpyPlugin):
 		self.spikeListMultiLine = None
 
 		# makes self.mainWidget and calls show()
-		self.pyqtWindow()
+		#self.pyqtWindow()
 
 		# main layout
 		vLayout = QtWidgets.QVBoxLayout()
@@ -60,8 +60,6 @@ class spikeClips(sanpyPlugin):
 		#
 		# controls
 		hLayout2 = QtWidgets.QHBoxLayout()
-
-		# TODO:
 
 		self.numSpikesLabel = QtWidgets.QLabel('Num Spikes:None')
 		hLayout2.addWidget(self.numSpikesLabel)
@@ -81,35 +79,40 @@ class spikeClips(sanpyPlugin):
 		self.phasePlotCheckBox.stateChanged.connect(lambda:self.replot())
 		hLayout2.addWidget(self.phasePlotCheckBox)
 
+		vLayout.addLayout(hLayout2)
+
+		#
+		hLayout3 = QtWidgets.QHBoxLayout()
+
 		aLabel = QtWidgets.QLabel('Clip Width (ms)')
-		hLayout2.addWidget(aLabel)
+		hLayout3.addWidget(aLabel)
 		self.clipWidthSpinBox = QtWidgets.QSpinBox()
+		self.clipWidthSpinBox.setKeyboardTracking(False)
 		self.clipWidthSpinBox.setRange(1, 1e9)
 		self.clipWidthSpinBox.setValue(self.clipWidth_ms)
 		#self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
 		self.clipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
-		hLayout2.addWidget(self.clipWidthSpinBox)
+		hLayout3.addWidget(self.clipWidthSpinBox)
 
 		#
 		# radio buttons
 		self.respondToAll = QtWidgets.QRadioButton('All')
 		self.respondToAll.setChecked(True)
 		self.respondToAll.toggled.connect(self.on_radio)
-		hLayout2.addWidget(self.respondToAll)
+		hLayout3.addWidget(self.respondToAll)
 
 		self.respondToAxisRange = QtWidgets.QRadioButton('X-Axis')
 		self.respondToAxisRange.setChecked(False)
 		self.respondToAxisRange.toggled.connect(self.on_radio)
-		hLayout2.addWidget(self.respondToAxisRange)
+		hLayout3.addWidget(self.respondToAxisRange)
 
 		self.respondToSpikeSel = QtWidgets.QRadioButton('Spike Selection')
 		self.respondToSpikeSel.setChecked(False)
 		self.respondToSpikeSel.toggled.connect(self.on_radio)
-		hLayout2.addWidget(self.respondToSpikeSel)
+		hLayout3.addWidget(self.respondToSpikeSel)
 
 		#
-
-		vLayout.addLayout(hLayout2)
+		vLayout.addLayout(hLayout3)
 
 		#
 		# pyqt graph
@@ -154,7 +157,7 @@ class spikeClips(sanpyPlugin):
 			self.replot()
 
 	def on_spinbox(self, label):
-		logger.info('')
+		#logger.info('')
 		self.clipWidth_ms = self.clipWidthSpinBox.value()
 		self.replot()
 
@@ -182,7 +185,7 @@ class spikeClips(sanpyPlugin):
 		Note: This is the same code as in bDetectionWidget.refreshClips() MERGE THEM.
 		"""
 
-		logger.info('')
+		#logger.info('')
 
 		isPhasePlot = self.phasePlotCheckBox.isChecked()
 
@@ -220,6 +223,9 @@ class spikeClips(sanpyPlugin):
 		numClips = len(theseClips)
 		self.numSpikesLabel.setText(f'Num Spikes: {numClips}')
 
+		if numClips == 0:
+			return
+			
 		# convert clips to 2d ndarray ???
 		#dataPointsPerMs = self.ba.dataPointsPerMs
 		xTmp = np.array(theseClips_x)
@@ -370,7 +376,8 @@ class spikeClips(sanpyPlugin):
 		The one spike might not be displayed, then do nothing.
 		sDict (dict): NOT USED
 		"""
-		logger.info(sDict)
+
+		#logger.info(sDict)
 
 		#if self.ba != sDict['ba']:
 		#	return
@@ -401,7 +408,7 @@ class spikeClips(sanpyPlugin):
 		Select spikes based on self.selectedSpikeList.
 		sDict (dict): NOT USED
 		"""
-		logger.info(sDict)
+		#logger.info(sDict)
 
 		x = np.zeros(1) * np.nan
 		y = np.zeros(1) * np.nan

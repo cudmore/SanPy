@@ -166,13 +166,15 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		# check if our table view has been edited by uder and warn
 		doQuit = True
 		alreadyAsked = False
-		if self.myAnalysisDir.isDirty:
+		tableIsDirty = self.myAnalysisDir.isDirty
+		analysisIsDirty = self.myAnalysisDir.hasDirty()
+		if tableIsDirty or analysisIsDirty:
 			alreadyAsked = True
-			userResp = sanpy.interface.bDialog.yesNoCancelDialog('You changed the file database, do you want to save then quit?')
+			userResp = sanpy.interface.bDialog.yesNoCancelDialog('You changed the file database or have analyzed but not saved.\nDo you want to save then quit?')
 			if userResp == QtWidgets.QMessageBox.Yes:
 				self.slotSaveFilesTable()
 				event.accept()
-			if userResp == QtWidgets.QMessageBox.No:
+			elif userResp == QtWidgets.QMessageBox.No:
 				event.accept()
 			else:
 				event.ignore()
@@ -381,7 +383,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 	def keyPressEvent(self, event):
 		key = event.key()
 		text = event.text()
-		logger.info(f'key:{key} event:{event}')
+		logger.info(f'text:{text} key:{key} event:{event}')
 
 		# set full axis
 		if key in [70, 82]: # 'r' or 'f'
@@ -433,26 +435,33 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		return rowDict
 
-	def slot_fileTableClicked(self, row, rowDict):
+	def slot_fileTableClicked(self, row, rowDict, selectingAgain):
 		"""Respond to selections in file table."""
 
 		'''
-		tableRowDict = self.myModel.myGetRowDict(row)
-		abfColumnName = 'File'
-		fileName = self.myModel.myGetValue(row, abfColumnName)
+		row (int):
+		rowDict (dict):
+		selectingAgain (bool): True if row was already selected
 		'''
-		#fileName = rowDict['File']
 
-		self.slot_updateStatus(f'Loading file "{rowDict["File"]}" ... please wait')# this will load ba if necc
+		if selectingAgain:
+			self.slot_updateStatus(f'Refreshing file "{rowDict["File"]}"')
+		else:
+			self.slot_updateStatus(f'Loading file "{rowDict["File"]}" ... please wait')
 
+		# TODO: try and remove this
 		self.startSec = rowDict['Start(s)']
 		self.stopSec = rowDict['Stop(s)']
 
+		# This will load if necc, otherwise just fetch a pointer
 		ba = self.myAnalysisDir.getAnalysis(row) # if None then problem loading
 
 		if ba is not None:
 			self.signalSwitchFile.emit(rowDict, ba)
-			self.slot_updateStatus(f'Loaded file "{ba.getFileName()}"')# this will load ba if necc
+			if selectingAgain:
+				pass
+			else:
+				self.slot_updateStatus(f'Loaded file "{ba.getFileName()}"')# this will load ba if necc
 
 	def buildMenus(self):
 
@@ -602,6 +611,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.signalSwitchFile.connect(self.myDetectionWidget.slot_switchFile)
 		self.signalSelectSpike.connect(self.myDetectionWidget.slot_selectSpike) # myDetectionWidget listens to self
 		self.signalSelectSpikeList.connect(self.myDetectionWidget.slot_selectSpikeList) # myDetectionWidget listens to self
+
+		self.signalUpdateAnalysis.connect(self.myDetectionWidget.slot_updateAnalysis) # myDetectionWidget listens to self
+
 		self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike) # self listens to myDetectionWidget
 		self.myDetectionWidget.signalSelectSweep.connect(self.slot_selectSweep) # self listens to myDetectionWidget
 		self.myDetectionWidget.signalDetect.connect(self.slot_detect)
@@ -616,20 +628,21 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.tableView.signalSetDefaultDetection.connect(self.slot_setDetectionParams)
 
 		# update dvdtThreshold, mvThreshold Start(s), Stop(s)
-		self.myDetectionWidget.signalDetect.connect(self.tableView.slot_detect)
+		self.signalUpdateAnalysis.connect(self.tableView.slot_detect)
+		#self.myDetectionWidget.signalDetect.connect(self.tableView.slot_detect)
 
 		#
 		self.fileDock = QtWidgets.QDockWidget('Files',self)
 		self.fileDock.setWidget(self.tableView)
 		self.fileDock.setFloating(False)
 		self.fileDock.topLevelChanged.connect(self.slot_topLevelChanged)
-		self.fileDock.dockLocationChanged.connect(self.slot_dockLocationChanged)
 		self.fileDock.setAllowedAreas(QtCore.Qt.TopDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
+		self.fileDock.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.fileDock))
 		self.addDockWidget(QtCore.Qt.TopDockWidgetArea,self.fileDock)
 
 		# 2x docks for plugins
 
-		# always show scatter
+		# xxx
 		self.myPluginTab1 = QtWidgets.QTabWidget()
 		self.myPluginTab1.setMovable(True)
 		self.myPluginTab1.setTabsClosable(True)
@@ -639,60 +652,54 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.myPluginTab1.setContextMenuPolicy(QtCore.Qt.CustomContextMenu);
 		self.myPluginTab1.customContextMenuRequested.connect(partial(self.slot_contextMenu, sender=self.myPluginTab1))
 
-		scatterPlugin = self.myPlugins.runPlugin('Scatter Plot', ba=None, show=False)
-		self.myPluginTab1.addTab(scatterPlugin, 'Scatter')
+		# add a number of plugins to QDockWidget 'Plugins 1'
+		# we need to know the recice human name like 'xxx'
+		clipsPlugin = self.myPlugins.runPlugin('Plot Spike Clips', ba=None, show=False)
+		scatterPlugin = self.myPlugins.runPlugin('Plot Scatter', ba=None, show=False)
+		errorSummaryPlugin = self.myPlugins.runPlugin('Error Summary', ba=None, show=False)
+		summaryAnalysisPlugin = self.myPlugins.runPlugin('Summary Analysis', ba=None, show=False)
 
-		self.scatterDock = QtWidgets.QDockWidget('Plugins 1',self)
-		self.scatterDock.setWidget(self.myPluginTab1)
-		self.scatterDock.setFloating(False)
-		self.addDockWidget(QtCore.Qt.RightDockWidgetArea,self.scatterDock)
+		# on add tab, the QTabWIdget makes a copy !!!
+		self.myPluginTab1.addTab(clipsPlugin, clipsPlugin.myHumanName)
+		self.myPluginTab1.addTab(scatterPlugin, scatterPlugin.myHumanName)
+		self.myPluginTab1.addTab(errorSummaryPlugin, errorSummaryPlugin.myHumanName)
+		self.myPluginTab1.addTab(summaryAnalysisPlugin, summaryAnalysisPlugin.myHumanName)
+
+		#
+		#detectionPlugin = self.myPlugins.runPlugin('Detection Parameters', ba=None, show=False)
+		#self.myPluginTab1.addTab(detectionPlugin, 'Detection')
+
+		self.pluginDock1 = QtWidgets.QDockWidget('Plugins 1',self)
+		self.pluginDock1.setWidget(self.myPluginTab1)
+		self.pluginDock1.setFloating(False)
+		self.pluginDock1.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.pluginDock1))
+		self.addDockWidget(QtCore.Qt.RightDockWidgetArea,self.pluginDock1)
 
 		#
 		# tabs
-		self.myTab = QtWidgets.QTabWidget()
-		self.myTab.setMovable(True)
-		self.myTab.setTabsClosable(True)
-		self.myTab.tabCloseRequested.connect(partial(self.slot_closeTab, sender=self.myTab))
-		self.myTab.currentChanged.connect(partial(self.slot_changeTab, sender=self.myPluginTab1))
-		# reroute right-click on tab, popup a menu to open plugins
-		self.myTab.setContextMenuPolicy(QtCore.Qt.CustomContextMenu);
-		self.myTab.customContextMenuRequested.connect(partial(self.slot_contextMenu, sender=self.myTab))
+		self.myPluginTab2 = QtWidgets.QTabWidget()
+		self.myPluginTab2.setMovable(True)
+		self.myPluginTab2.setTabsClosable(True)
+		self.myPluginTab2.tabCloseRequested.connect(partial(self.slot_closeTab, sender=self.myPluginTab2))
+		self.myPluginTab2.currentChanged.connect(partial(self.slot_changeTab, sender=self.myPluginTab2))
+		# re-wire right-click
+		self.myPluginTab2.setContextMenuPolicy(QtCore.Qt.CustomContextMenu);
+		self.myPluginTab2.customContextMenuRequested.connect(partial(self.slot_contextMenu, sender=self.myPluginTab2))
 
 		# Open some default plugins
-		clipsPlugin = self.myPlugins.runPlugin('Spike Clips Plot', ba=None, show=False)
-		errorSummaryPlugin = self.myPlugins.runPlugin('Error Summary', ba=None, show=False)
-		summaryAnalysisPlugin = self.myPlugins.runPlugin('Summary Analysis', ba=None, show=False)
-		self.myTab.addTab(clipsPlugin, 'Clips')
-		self.myTab.addTab(errorSummaryPlugin, 'Errors')
-		self.myTab.addTab(summaryAnalysisPlugin, 'Summary Analysis')
+		# no plugins
 
-
-		self.pluginsDock = QtWidgets.QDockWidget('Plugins 2',self)
-		self.pluginsDock.setWidget(self.myTab)
-		self.pluginsDock.setFloating(False)
-		self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.pluginsDock)
+		self.pluginsDock2 = QtWidgets.QDockWidget('Plugins 2',self)
+		self.pluginsDock2.setWidget(self.myPluginTab2)
+		self.pluginsDock2.setFloating(False)
+		self.pluginsDock2.hide() # initially hide 'Plugins 2'
+		self.pluginsDock2.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.pluginsDock2))
+		self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.pluginsDock2)
 
 		#self.setLayout(layout)
-		self.setWindowTitle('SanPy v3')
+		#self.setWindowTitle('SanPy v3')
 
-	def slot_dockLocationChanged(self, area):
-		"""
-		area (enum): QtCore.Qt.DockWidgetArea, basically left/top/right/bottom.
-
-		Not triggered when user 'floats' a dock (See self.slot_topLevelChanged())
-		"""
-		logger.info(f'area enum: {area}')
-
-	def slot_topLevelChanged(self, topLevel):
-		"""
-		topLevel (bool): True if the dock widget is now floating; otherwise False.
-
-		This is triggered twice, once while dragging and once when finished
-		"""
-		sender = self.sender()  # PyQt5.QtWidgets.QDockWidget
-		logger.info(f'topLevel:{topLevel} sender:{sender}')
-
-	def buildUI(self):
+	def old_buildUI(self):
 		# switching to breeze
 		self.toggleStyleSheet(buildingInterface=True)
 
@@ -800,11 +807,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			#		self.myScatterPlotWidget.show()
 			#	else:
 			#		self.myScatterPlotWidget.hide()
-			if key1=='display' and key2=='showErrors':
-				if val:
-					self.myErrorTable.show()
-				else:
-					self.myErrorTable.hide()
+
+			#if key1=='display' and key2=='showErrors':
+			#	if val:
+			#		self.myErrorTable.show()
+			#	else:
+			#		self.myErrorTable.hide()
 
 		except (KeyError) as e:
 			logger.error(f'Did not set preference with keys "{key1}" and "{key2}"')
@@ -988,20 +996,48 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		pluginName = action.text()
 		ba = self.get_bAnalysis()
 		newPlugin = self.myPlugins.runPlugin(pluginName, ba, show=False)
+		#scatterPlugin = self.myPlugins.runPlugin('Scatter Plot', ba=None, show=False)
 
 		# add tab
 		#print('newPlugin:', newPlugin)
-		#scrollArea = QtWidgets.QScrollArea()
-		#scrollArea.setWidget(newPlugin)
+		# 1) either this
+		#newPlugin.insertIntoScrollArea()
+		'''
 		scrollArea = newPlugin.insertIntoScrollArea()
 		if scrollArea is not None:
-			sender.addTab(scrollArea, pluginName)
+			newTabIndex = sender.addTab(scrollArea, pluginName)
 		else:
-			sender.addTab(newPlugin, pluginName)
+			newTabIndex = sender.addTab(newPlugin, pluginName)
+		'''
+		# 2) or this
+		newTabIndex = sender.addTab(newPlugin, pluginName)  # addTab takes ownership
+
+		#widgetPointer = sender.widget(newTabIndex)
+		#widgetPointer.insertIntoScrollArea()
+
 		# bring tab to front
-		count = sender.count()
-		sender.setCurrentIndex(count-1)
-		#sender.setCurrentWidget()
+		#count = sender.count()
+		#sender.setCurrentIndex(count-1)
+		sender.setCurrentIndex(newTabIndex)
+
+	def slot_dockLocationChanged(self, dock, area):
+		"""
+		area (enum): QtCore.Qt.DockWidgetArea, basically left/top/right/bottom.
+
+		Not triggered when user 'floats' a dock (See self.slot_topLevelChanged())
+		"""
+		#logger.info(f'dock:"{dock.windowTitle()}" area enum: {area}')
+		pass
+
+	def slot_topLevelChanged(self, topLevel):
+		"""
+		topLevel (bool): True if the dock widget is now floating; otherwise False.
+
+		This is triggered twice, once while dragging and once when finished
+		"""
+		#sender = self.sender()  # PyQt5.QtWidgets.QDockWidget
+		#logger.info(f'topLevel:{topLevel} sender:{sender}')
+		pass
 
 	def slot_closeTab(self, index, sender):
 		"""
@@ -1010,7 +1046,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		# remove plugin from self.xxx
 		widgetPointer = sender.widget(index)
-		print('widgetPointer:', widgetPointer)
+		#print('widgetPointer:', widgetPointer)
 		self.myPlugins.slot_closeWindow(widgetPointer)
 
 		# remove the tab
@@ -1022,7 +1058,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		Make sure only front tab (plugins) receive signals
 		"""
-		logger.info(f'Turn of all other tab signals !!!')
+		#logger.info(f'Turn of all other tab signals !!!')
+		pass
 
 	def openLog(self):
 		"""

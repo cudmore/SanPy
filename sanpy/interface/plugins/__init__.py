@@ -14,6 +14,7 @@ from .plotScatter import plotScatter
 from .detectionErrors import detectionErrors
 from .spikeClips import spikeClips
 from .resultsTable import resultsTable
+from .resultsTable2 import resultsTable2
 from .analysisSummary import analysisSummary
 from .exportTrace import exportTrace
 

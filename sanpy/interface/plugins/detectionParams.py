@@ -1,4 +1,4 @@
-import numbers
+import numbers, math
 from functools import partial
 import copy
 
@@ -34,9 +34,21 @@ class detectionParams(sanpyPlugin):
 		#
 		self.detectionClass = detectionClass
 
-		# put *this widget into a scroll area
-		#self.myScrollArea = QtWidgets.QScrollArea()
-		#self.myScrollArea.setWidget(self)
+		self.buildUI()
+
+		#self.insertIntoScrollArea()
+
+	def old_insertIntoScrollArea(self):
+		"""
+		When inserting this widget into an interface, may want to wrap it in a ScrollArea
+
+		This is used in main SanPy interface to insert this widget into a tab
+		"""
+		self.scrollArea = QtWidgets.QScrollArea()
+		self.scrollArea.setWidget(self)
+		return self.scrollArea
+
+	def buildUI(self):
 
 		self.vLayout = QtWidgets.QVBoxLayout()
 
@@ -87,36 +99,31 @@ class detectionParams(sanpyPlugin):
 		#
 		self.vLayout.addLayout(hControlLayout)
 
-		vLayoutParams = self.buildUI()
-		self.vLayout.addLayout(vLayoutParams)
+		self.vLayoutParams = self.buildUI2()
+		self.vLayout.addLayout(self.vLayoutParams)
 
-		# final widget
-		'''
-		finalLayout = QtWidgets.QVBoxLayout()
-		scrollArea = QtWidgets.QScrollArea()
-		scrollArea.setWidget(finalLayout)
-		finalLayout.addWidget(scrollArea)
-		'''
+		# finalize
+		#self.setLayout(self.vLayout)
 
 		#
-		self.setLayout(self.vLayout)
-		#self.setLayout(finalLayout)
+		# scroll area again
+		self.fuckWidget = QtWidgets.QWidget()
+		self.fuckWidget.setLayout(self.vLayout)
 
-	def insertIntoScrollArea(self):
-		"""
-		When inserting this widget into an interface, may want to wrap it in a ScrollArea
+		self.scrollArea = QtWidgets.QScrollArea()
+		self.scrollArea.setWidgetResizable(True);
+		self.scrollArea.setWidget(self.fuckWidget)
 
-		This is used in main SanPy interface to insert this widget into a tab
-		"""
-		scrollArea = QtWidgets.QScrollArea()
-		scrollArea.setWidget(self)
-		return scrollArea
+		self.finalLayout = QtWidgets.QVBoxLayout()
+		self.finalLayout.addWidget(self.scrollArea)
 
-	def buildUI(self):
+		# finalize
+		self.setLayout(self.finalLayout)
+
+	def buildUI2(self):
 
 		# list of keys/columns in main analysis dir file list
 		analysisDirDict = sanpy.analysisDir.sanpyColumns
-
 		#dDict = self.dDict
 		dDict = self.detectionClass
 
@@ -133,8 +140,9 @@ class detectionParams(sanpyPlugin):
 
 			# k is the name in spike dictionary
 			paramName = k
-			defaultValue = v['defaultValue']
-			type = v['type']  # from ('int', 'float', 'boolean', 'string', detectionTypes_)
+			#defaultValue = v['defaultValue']
+			currentValue = v['currentValue']
+			valueType = v['type']  # from ('int', 'float', 'boolean', 'string', detectionTypes_)
 			units = v['units']
 			humanName = v['humanName']
 			description = v['description']
@@ -151,69 +159,79 @@ class detectionParams(sanpyPlugin):
 			col += 1
 
 			# for debugging
+			'''
 			aLabel = QtWidgets.QLabel(paramName)
 			vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
 			col += 1
+			'''
 
 			aLabel = QtWidgets.QLabel(humanName)
 			vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
 			col += 1
-			aLabel = QtWidgets.QLabel(type)
+
+			# for debugging
+			'''
+			aLabel = QtWidgets.QLabel(valueType)
 			vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
 			col += 1
+			'''
+
 			aLabel = QtWidgets.QLabel(units)
 			vLayoutParams.addWidget(aLabel, row, col, rowSpan, colSpan)
 			col += 1
 
 			aWidget = None
-			if type == 'int':
+			if valueType == 'int':
 				aWidget = QtWidgets.QSpinBox()
 				aWidget.setRange(0, 2**16)  # minimum is used for setSpecialValueText()
 				aWidget.setSpecialValueText("None")  # displayed when widget is set to minimum
-				if defaultValue is None:
+				if currentValue is None or math.isnan(currentValue):
 					aWidget.setValue(0)
 				else:
-					aWidget.setValue(defaultValue)
+					aWidget.setValue(currentValue)
 				aWidget.setKeyboardTracking(False) # don't trigger signal as user edits
 				aWidget.valueChanged.connect(partial(self.on_spin_box, paramName))
-			elif type == 'float':
+			elif valueType == 'float':
 				aWidget = QtWidgets.QDoubleSpinBox()
 				aWidget.setRange(-1e9, +1e9)  # minimum is used for setSpecialValueText()
 				aWidget.setSpecialValueText("None")  # displayed when widget is set to minimum
-				if defaultValue is None:
+
+				logger.info(f'XXXXX paramName:{paramName} currentValue:{currentValue} {type(currentValue)}')
+
+				if currentValue is None or math.isnan(currentValue):
 					aWidget.setValue(-1e9)
 				else:
-					aWidget.setValue(defaultValue)
+					aWidget.setValue(currentValue)
 				aWidget.setKeyboardTracking(False) # don't trigger signal as user edits
 				aWidget.valueChanged.connect(partial(self.on_spin_box, paramName))
-			elif type == 'list':
+			elif valueType == 'list':
 				# text edit a list
 				pass
-			elif type == 'boolean':
+			elif valueType == 'boolean':
 				# popup of True/False
 				aWidget = QtWidgets.QComboBox()
 				aWidget.addItem('True')
 				aWidget.addItem('False')
-				aWidget.setCurrentText(str(defaultValue))
+				aWidget.setCurrentText(str(currentValue))
 				aWidget.currentTextChanged.connect(partial(self.on_bool_combo_box, paramName))
-			elif type == 'string':
+			elif valueType == 'string':
 				# text edit
-				aWidget = QtWidgets.QLineEdit(defaultValue)
+				aWidget = QtWidgets.QLineEdit(currentValue)
 				#aWidget.setKeyboardTracking(False) # don't trigger signal as user edits
 				#aWidget.setValidator(QIntValidator())
 				#aWidget.setMaxLength(4)
 				aWidget.setAlignment(QtCore.Qt.AlignLeft)
 				#aWidget.setFont(QFont("Arial",20))
 				aWidget.editingFinished.connect(partial(self.on_text_edit, aWidget, paramName))
-			elif type == 'sanpy.bDetection.detectionTypes':
+			elif valueType == 'sanpy.bDetection.detectionTypes':
 				aWidget = QtWidgets.QComboBox()
 				detectionTypes = sanpy.bDetection.detectionTypes
 				for theType in detectionTypes:
 					aWidget.addItem(theType.name)
-				aWidget.setCurrentText(str(defaultValue))
+				aWidget.setCurrentText(str(currentValue))
 				aWidget.currentTextChanged.connect(partial(self.on_detection_type_combo_box, paramName))
 			else:
-				logger.error(f'Did not understand type:"{type}" for parameter:"{paramName}"')
+				logger.error(f'Did not understand valueType:"{valueType}" for parameter:"{paramName}"')
 
 			if aWidget is not None:
 				self.widgetDict[paramName] = aWidget
@@ -241,6 +259,9 @@ class detectionParams(sanpyPlugin):
 	def _setDict(self, paramName, value):
 		logger.info(f'Setting dDict key:"{paramName}" to value "{value}" type:{type(value)}')
 		#self.dDict[paramName] = value
+		if value == -1e9:
+			#print(f'TWEAK paramName:{paramName} --->>> value:', value)
+			value = None
 		ok = self.detectionClass.setValue(paramName, value)
 		if not ok:
 			logger.error('')
@@ -251,7 +272,7 @@ class detectionParams(sanpyPlugin):
 		self._setDict(paramName, value)
 
 	def on_detection_type_combo_box(self, paramName, text):
-		logger.info(f'paramName:"{paramName}" text:"{text}"')
+		#logger.info(f'paramName:"{paramName}" text:"{text}"')
 		self._setDict(paramName, text)
 
 	def on_text_edit(self, aWidget, paramName):
@@ -260,17 +281,31 @@ class detectionParams(sanpyPlugin):
 		self._setDict(paramName, text)
 
 	def on_spin_box(self, paramName, value):
+		"""
+		When QDoubldeSpinBox accepts None, value is -1e9
+		"""
 		#logger.info(f'paramName:{paramName} value:"{value}" {type(value)}')
 		self._setDict(paramName, value)
 
+	def detect(self):
+		logger.info('detecting spikes')
+
+		detectionClass = self.detectionClass
+
+		# spike detect
+		self.ba.spikeDetect(detectionClass)
+
+		# update interface
+		self.signalDetect.emit(self.ba)
+
 	def on_button_click(self, buttonName):
-		logger.info(f'buttonNme:{buttonName}')
+		#logger.info(f'buttonNme:{buttonName}')
 		# set to a defined preset
 		# self.dDict = sanpy.bDetection.getDefaultDetection()
 		if buttonName == 'Detect':
 			# take our current dDict and ba.detectSpikes
 			# need to signal main interface we did this
-			logger.info('NOT IMPLEMENTED')
+			self.detect()
 		elif buttonName == 'Set Defaults':
 			detectionPreset = sanpy.bDetection.detectionPresets.default
 			self.detectionClass.setToType(detectionPreset)
@@ -320,6 +355,9 @@ class detectionParams(sanpyPlugin):
 		# todo: do this on switch file
 		#detectionClass = self.ba.detectionClass
 
+		# was this
+		#detectionClass = self.detectionClass
+		self.detectionClass = self.ba.detectionClass
 		detectionClass = self.detectionClass
 
 		fileName = self.ba.getFileName()
@@ -328,17 +366,20 @@ class detectionParams(sanpyPlugin):
 		#for k,v in self.widgetDict.items():
 		for detectionParam in detectionClass.keys():
 			if detectionParam not in self.widgetDict.keys():
+				logger.warning(f'XXX detectionParam:{detectionParam} missing')
 				continue
 
 			#currentValue = v['currentValue']
 			currentValue = detectionClass.getValue(detectionParam)
 
-			#print(f'  set {detectionParam} {self.widgetDict[detectionParam]} to "{currentValue}" {type(currentValue)}')
+			if currentValue == -1e9:
+				logger.error(f'XXXXX detectionParam:{detectionParam} currentValue:{currentValue} {type(currentValue)}')
+				currentValue = None
 
 			aWidget = self.widgetDict[detectionParam]
 			if isinstance(aWidget, QtWidgets.QSpinBox):
 				try:
-					if currentValue is None:
+					if currentValue is None or math.isnan(currentValue):
 						aWidget.setValue(0)
 					else:
 						aWidget.setValue(currentValue)
@@ -346,7 +387,7 @@ class detectionParams(sanpyPlugin):
 					logger.error(f'QSpinBox detectionParam:{detectionParam} ... {e}')
 			elif isinstance(aWidget, QtWidgets.QDoubleSpinBox):
 				try:
-					if currentValue is None:
+					if currentValue is None or math.isnan(currentValue):
 						aWidget.setValue(-1e9)
 					else:
 						aWidget.setValue(currentValue)
@@ -380,12 +421,14 @@ if __name__ == '__main__':
 	app = QtWidgets.QApplication([])
 
 	dp = detectionParams(ba=ba)
-	#dp.show()
+	dp.show()
 
+	'''
 	scrollArea = dp.insertIntoScrollArea()
 	if scrollArea is not None:
 		scrollArea.show()
 	else:
 		dp.show()
+	'''
 
 	sys.exit(app.exec_())

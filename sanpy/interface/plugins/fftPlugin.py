@@ -485,7 +485,7 @@ class fftPlugin(sanpyPlugin):
 		return self._ba
 
 	def _buildInterface(self):
-		self.pyqtWindow()
+		#self.pyqtWindow()
 
 		# main layout
 		vLayout = QtWidgets.QVBoxLayout()
@@ -979,7 +979,7 @@ class fftPlugin(sanpyPlugin):
 		if startSec is None or stopSec is None:
 			logger.info('Resetting start/stop seconds to max')
 			startSec = 0
-			stopSec = self.ba.sweepX()[-1]
+			stopSec = self.ba.recordingDur()  #self.ba.sweepX()[-1]
 		logger.info(f'Using start(s):{startSec} stop(s):{stopSec}')
 		self.lastLeft = round(startSec*1000*self.ba.dataPointsPerMs)
 		self.lastRight = round(stopSec*1000*self.ba.dataPointsPerMs)

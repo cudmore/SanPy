@@ -15,7 +15,13 @@ import sanpy
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-testTimingNumFiles = None
+# Turn off pandas save h5 performance warnnig
+# see: https://github.com/pandas-dev/pandas/issues/3622
+#/home/cudmore/Sites/SanPy/sanpy/analysisDir.py:478: PerformanceWarning:
+#your performance may suffer as PyTables will pickle object types that it cannot
+#map directly to c-types [inferred_type->mixed-integer,key->block0_values] [items->Index(['detectionClass', '_isAnalyzed', '_dataPointsPerMs', '_sweepList',
+import warnings
+warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 
 _sanpyColumns = {
 	#'Idx': {
@@ -65,18 +71,6 @@ _sanpyColumns = {
 		'type': str,
 		'isEditable': False,
 	},
-	'Cell Type': {
-		'type': str,
-		'isEditable': True,
-	},
-	'Sex': {
-		'type': str,
-		'isEditable': True,
-	},
-	'Condition': {
-		'type': str,
-		'isEditable': True,
-	},
 	'Start(s)': {
 		'type': float,
 		'isEditable': False,
@@ -93,6 +87,30 @@ _sanpyColumns = {
 		'type': float,
 		'isEditable': True,
 	},
+	'Cell Type': {
+		'type': str,
+		'isEditable': True,
+	},
+	'Sex': {
+		'type': str,
+		'isEditable': True,
+	},
+	'Condition': {
+		'type': str,
+		'isEditable': True,
+	},
+	'Notes': {
+		'type': str,
+		'isEditable': True,
+	},
+	'uuid': {
+		'type': str,
+		'isEditable': False,
+	},
+
+}
+
+"""
 	'refractory_ms': {
 		'type': float,
 		'isEditable': True,
@@ -133,6 +151,8 @@ _sanpyColumns = {
 	},
 
 }
+"""
+
 """
 Columns to use in display in file table (pyqt, dash, vue).
 We require type so we can edit with QAbstractTableModel.
@@ -268,7 +288,7 @@ class analysisDir():
 		if autoLoad:
 			self._df = self.loadHdf()
 			if self._df is None:
-				self._df = self.loadFolder()
+				self._df = self.loadFolder()  # only used if no h5 file
 		#
 		self._checkColumns()
 		self._updateLoadedAnalyzed()
@@ -447,19 +467,18 @@ class analysisDir():
 
 		tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
 		tmpHdfPath = os.path.join(self.path, tmpHdfFile)
-		logger.critical(f'Saving tmp db (will be compressed) {tmpHdfPath}')
 
 		df = self.getDataFrame()
 
 		#
 		# save each bAnalysis
 		#print(df)
-		doSaveAnalysis = False
-		logger.info(f'doSaveAnalysis:{doSaveAnalysis}')
+		doSaveAnalysis = True
+		logger.info(f'Saving tmp db with doSaveAnalysis:{doSaveAnalysis} (will be compressed) {tmpHdfPath}')
+
 		if doSaveAnalysis:
 			for row in range(len(df)):
-				# do not call this, it will load
-				#ba = self.getAnalysis(row)
+				#ba = self.getAnalysis(row)  # do not call this, it will load
 				ba = df.at[row, '_ba']
 				if ba is not None:
 					didSave = ba._saveToHdf(tmpHdfPath) # will only save if ba.detectionDirty
@@ -478,8 +497,14 @@ class analysisDir():
 			#df = self.getDataFrame()
 			df = df.drop('_ba', axis=1)  # don't ever save _ba, use it for runtime
 
-			logger.critical(f'saving file db with {len(df)} rows')
+			logger.info(f'saving file db with {len(df)} rows')
+
 			#print(df[['File', 'uuid']])
+			print(df)
+			'''
+			for col in df.columns:
+				print(col, df[col])
+			'''
 
 			hdfStore[dbKey] = df  # save it
 			#
@@ -515,12 +540,19 @@ class analysisDir():
 			return
 
 		logger.info(f'Loading existing folder hdf: {hdfPath}')
+
 		start = time.time()
 		with pd.HDFStore(hdfPath) as hdfStore:
-			print('hdfStore has keys:', hdfStore.keys())
+			print('  hdfStore has keys:')
+			for k in hdfStore.keys():
+				print(f'  {k}')
 
 			dbKey = os.path.splitext(self.dbFile)[0]
-			df = hdfStore[dbKey]  # load it
+
+			try:
+				df = hdfStore[dbKey]  # load it
+			except (KeyError) as e:
+				logger.error(f'Did not find dbKey:"{dbKey}" {e}')
 
 			# _ba is for runtime, assign after loading from either (abf or h5)
 			df['_ba'] = None
@@ -641,9 +673,6 @@ class analysisDir():
 
 				listOfDict.append(rowDict)
 
-				if testTimingNumFiles is not None and rowIdx>testTimingNumFiles-1:
-					logger.warning(f'Breaking after testTimingNumFiles:{testTimingNumFiles}')
-					break
 			stop = time.time()
 			logger.info(f'Load took {round(stop-start,3)} seconds.')
 
@@ -755,6 +784,26 @@ class analysisDir():
 			isAnalyzed = ba.isAnalyzed()
 		return isAnalyzed
 
+	def analysisIsDirty(self, rowIdx):
+		"""Analysis is dirty when there has been detection but not saved to h5.
+		"""
+		isDirty = False
+		ba = self._df.loc[rowIdx, '_ba']
+		if isinstance(ba, sanpy.bAnalysis):
+			isDirty = ba.isDirty()
+		return isDirty
+
+	def hasDirty(self):
+		"""Return true if any bAnalysis in list has been analyzed but not saved (e.g. is dirty)
+		"""
+		haveDirty = False
+		numRows = len(self._df)
+		for rowIdx in range(numRows):
+			if self.analysisIsDirty(rowIdx):
+				haveDirty = True
+
+		return haveDirty
+
 	def isSaved(self, rowIdx):
 		uuid = self._df.at[rowIdx, 'uuid']
 		return len(uuid) > 0
@@ -770,7 +819,9 @@ class analysisDir():
 		ba = self._df.loc[rowIdx, '_ba']
 		uuid = self._df.loc[rowIdx, 'uuid']  # if we have a uuid bAnalysis is saved in h5f
 		filePath = os.path.join(self.path, file)
-		logger.info(f'Found "{ba}"')
+
+		#logger.info(f'Found _ba in file db with ba:"{ba}" {type(ba)}')
+
 		if ba is None or ba=='':
 			ba = self.loadOneAnalysis(filePath, uuid)
 			# load
@@ -786,8 +837,8 @@ class analysisDir():
 					self._df.at[rowIdx, 'uuid'] = uuid
 					if uuid != ba.uuid:
 						logger.error('Loaded uuid does not match existing in file table')
-						logger.error(f'Loaded {ba.uuid}')
-						logger.error(f'Existing {uuid}')
+						logger.error(f'  Loaded {ba.uuid}')
+						logger.error(f'  Existing {uuid}')
 				#
 				# update stats of table load/analyzed columns
 				self._updateLoadedAnalyzed()
@@ -795,7 +846,12 @@ class analysisDir():
 		return ba
 
 	def loadOneAnalysis(self, path, uuid=None):
-		"""Load one bAnalysis either from original file path or uuid of h5 file."""
+		"""
+		Load one bAnalysis either from original file path or uuid of h5 file.
+
+		If from h5, we still need to reload sweeps !!!
+		They are binary and fast, saving to h5 (in this case) is slow.
+		"""
 		ba = None
 		if uuid is not None and uuid:
 			# load from h5
@@ -805,15 +861,24 @@ class analysisDir():
 				try:
 					dfAnalysis = hdfStore[uuid]
 					ba = sanpy.bAnalysis(fromDf=dfAnalysis)
-					logger.info(f'Loaded from h5 uuid {uuid}')
-					logger.info(f'    {ba}')
+
+
+
+					# WHY IS THIS BROKEN ?????????????????????????????????????????????????????????????
+					# This is SLOPPY ON MY PART, WE ALWAYS NEED TO RELOAD FILTER
+					# ADD SOME COD  THAT CHECKS THIS AND REBUILDS AS NECC !!!!!!!!!!
+					ba._loadAbf()
+					ba.rebuildFiltered()
+
+
+					logger.info(f'Loaded ba from h5 uuid {uuid} and now ba:{ba}')
 				except (KeyError):
 					logger.error(f'Did not find uuid in h5 file, uuid:{uuid}')
-		else:
+		if ba is None:
 			# load from path
 			ba = sanpy.bAnalysis(path)
-			#logger.info(f'Loaded from path {path}')
-			#logger.info(f'  Loaded: {ba}')
+			logger.info(f'Loaded ba from path {path} and now ba:{ba}')
+		#
 		return ba
 
 	def _setColumnType(self, df):
@@ -1005,9 +1070,14 @@ class analysisDir():
 		# copy of bAnalysis needs a new uuid
 		new_uuid = sanpy.bAnalysis.getNewUuid()  # 't' + str(uuid.uuid4())   #.replace('-', '_')
 		logger.info(f'assigning new uuid {new_uuid} to {baNew}')
+
+		if baNew.uuid == new_uuid:
+			logger.error('!!!!!!!!!!!!!!!!!!!!!!!!!CRITICAL, new uuid is same as old')
+
 		baNew.uuid = new_uuid
 
 		rowDict['_ba'] = baNew
+		rowDict['uuid'] = baNew.uuid  # new row can never have same uuid as old
 
 		dfRow = pd.DataFrame(rowDict, index=[newIdx])
 
@@ -1071,8 +1141,11 @@ class analysisDir():
 				else:
 					masterDf = pd.concat([masterDf, ba.dfReportForScatter])
 		#
-		logger.info(f'final {len(masterDf)}')
-		print(masterDf.head())
+		if masterDf is None:
+			logger.error('Did not find any analysis.')
+		else:
+			logger.info(f'final num spikes {len(masterDf)}')
+		#print(masterDf.head())
 		self._poolDf = masterDf
 
 		return self._poolDf
@@ -1194,117 +1267,6 @@ def test_pool():
 	print(bad._df)
 
 	bad.pool_build()
-
-def test_timing():
-	# not sure how to set logging level across all files
-	#import logging
-	#global logger
-	#logger = get_logger(__name__, level=logging.DEBUG)
-
-	global testTimingNumFiles
-	path = '/home/cudmore/Sites/SanPy/data/timing'
-	csvPath = os.path.join(path, 'sanpy_recording_db.csv')
-	gzipPath = os.path.join(path, 'sanpy_recording_db.h5')
-
-	maxFiles = 20
-	loadBrute = []
-	loadBruteSec = []
-	saveHdf = []
-	saveHdfSec = []
-	loadHdf = []
-	loadHdfSec = []
-	hdfSize = []
-	hdfSizeMb = []
-	totalDurSec = []
-	for i in range(maxFiles):
-		print(f'====== {i}')
-		start = time.time()
-		testTimingNumFiles = i # limit number of files loaded by analysisDir
-		bad = analysisDir(path)
-		stop = time.time()
-		seconds = round(stop-start,3)
-		str = f'{i} Loading files took {seconds} seconds. {bad}'
-		print(str)
-		loadBrute.append(str)
-		loadBruteSec.append(seconds)
-
-		durSec = bad._df['Dur(s)'].sum()
-		totalDurSec.append(durSec)
-
-		start = time.time()
-		bad.saveDatabase()
-		stop = time.time()
-		seconds = round(stop-start,3)
-		str = f'  {i} saving hdf took: {seconds} seconds. {bad}'
-		print(str)
-		saveHdf.append(str)
-		saveHdfSec.append(seconds)
-
-		start = time.time()
-		bad = analysisDir(path)
-		stop = time.time()
-		seconds = round(stop-start,3)
-		str = f'  {i} loading hdf took: {seconds} seconds. {bad}'
-		print(str)
-		loadHdf.append(str)
-		loadHdfSec.append(seconds)
-
-		# size of gzip
-		size = os.path.getsize(gzipPath)
-		mbSize = size/(1024*1024)
-		str = f'   {i} gzip mb:{mbSize}'
-		print(str)
-		hdfSize.append(str)
-		hdfSizeMb.append(mbSize)
-
-		# remove database(s) for next iteration
-		os.remove(csvPath)
-		os.remove(gzipPath)
-
-	#
-	for line in loadBrute:
-		print(line)
-	for line in saveHdf:
-		print(line)
-	for line in loadHdf:
-		print(line)
-	for line in hdfSize:
-		print(line)
-
-	print('loadBruteSec =', loadBruteSec)
-	print('saveHdfSec =', saveHdfSec)
-	print('loadHdfSec =', loadHdfSec)
-	print('hdfSizeMb =', hdfSizeMb)
-	print('totalDurSec =', totalDurSec)
-
-def plotTiming():
-
-	# before compression
-	'''
-	loadBruteSec = [1.181, 2.383, 3.518, 4.697, 5.825, 6.868, 8.059, 9.164, 10.228, 11.483, 12.566, 13.7, 14.77, 16.15, 17.163, 18.647, 19.871, 21.481, 23.251, 24.383]
-	saveHdfSec = [0.136, 0.157, 0.228, 0.298, 0.363, 0.435, 0.529, 0.618, 0.645, 0.733, 0.795, 0.876, 0.933, 0.999, 1.046, 1.122, 1.2, 1.253, 1.453, 1.492]
-	loadHdfSec = [0.185, 0.351, 0.51, 0.675, 0.837, 1.002, 1.123, 1.281, 1.484, 1.599, 1.761, 1.917, 2.077, 2.245, 2.469, 2.673, 2.761, 2.925, 4.605, 3.413]
-	hdfSizeMb = [50.20532989501953, 99.39323425292969, 148.58114624023438, 197.76905059814453, 246.95687103271484, 296.14469146728516, 345.3325958251953, 394.52050018310547, 443.7084045410156, 492.89622497558594, 542.0840530395508, 591.2718734741211, 640.4596939086914, 689.6475982666016, 738.8355884552002, 788.0252990722656, 837.2132034301758, 886.4011077880859, 935.5889358520508, 984.7768402099609]
-	totalDurSec = [60.0, 120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 540.0, 600.0, 660.0, 720.0, 780.0, 840.0, 900.0, 960.0, 1020.0, 1080.0, 1140.0, 1200.0]
-	'''
-
-	loadBruteSec = [1.202, 2.413, 3.567, 4.774, 6.0, 7.144, 8.36, 9.41, 10.61, 11.884, 12.969, 14.097, 15.32, 17.472, 18.197, 19.077, 20.117, 21.372, 22.427, 23.826]
-	saveHdfSec = [0.14, 0.166, 0.238, 0.309, 0.38, 0.449, 0.541, 0.609, 0.659, 0.742, 0.816, 0.883, 0.956, 1.112, 1.058, 1.155, 1.224, 1.316, 1.363, 1.42]
-	loadHdfSec = [0.198, 0.374, 0.533, 0.706, 0.862, 1.03, 1.146, 1.306, 1.51, 1.62, 1.778, 1.939, 2.289, 2.447, 2.483, 2.588, 2.741, 2.925, 3.073, 3.23]
-	hdfSizeMb = [50.22023582458496, 99.40814876556396, 148.5960636138916, 197.7839708328247, 246.97179412841797, 296.15961742401123, 345.34752464294434, 394.53543186187744, 443.72333908081055, 492.9111614227295, 542.0989923477173, 591.2868156433105, 640.4746389389038, 689.6625461578369, 738.85045337677, 788.0382776260376, 837.2261848449707, 886.4140920639038, 935.6019229888916, 984.7898292541504]
-	totalDurSec = [60.0, 120.0, 180.0, 240.0, 300.0, 360.0, 420.0, 480.0, 540.0, 600.0, 660.0, 720.0, 780.0, 840.0, 900.0, 960.0, 1020.0, 1080.0, 1140.0, 1200.0]
-
-	# with compression
-
-	totalDurMin = [x/60 for x in totalDurSec]
-
-	import matplotlib.pyplot as plt
-	plt.plot(totalDurMin, loadBruteSec, 'o-k')
-	plt.plot(totalDurMin, loadHdfSec, 'o-r')
-	plt.show()
-
-	plt.plot(totalDurMin, hdfSizeMb, 'o-r')
-	plt.show()
 
 def testCloud():
 	cloudDict = {

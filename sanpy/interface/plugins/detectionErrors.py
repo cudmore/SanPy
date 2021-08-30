@@ -21,12 +21,15 @@ class detectionErrors(sanpyPlugin):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 
-		self.pyqtWindow() # makes self.mainWidget
+		#self.pyqtWindow() # makes self.mainWidget
 
 		self._dfError = None
 
 		layout = QtWidgets.QVBoxLayout()
+
 		self.myErrorTable = sanpy.interface.bErrorTable.errorTableView()
+		self.myErrorTable.setWordWrap(False)
+
 		layout.addWidget(self.myErrorTable)
 
 		self.setLayout(layout)

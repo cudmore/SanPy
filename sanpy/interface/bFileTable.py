@@ -271,11 +271,14 @@ class pandasModel(QtCore.QAbstractTableModel):
 						if self._data.isLoaded(realRow):
 							return QtCore.QVariant(QtGui.QColor('#4444EE'))
 					elif columnName == 'A':
-						if self._data.isAnalyzed(realRow):
-							return QtCore.QVariant(QtGui.QColor('#449944'))
+						if self._data.analysisIsDirty(realRow):
+							# has been analyzed but not saved
+							return QtCore.QVariant(QtGui.QColor('#994444'))  # red
+						elif self._data.isAnalyzed(realRow):
+							return QtCore.QVariant(QtGui.QColor('#449944'))  # green
 					elif columnName == 'S':
 						if self._data.isSaved(realRow):
-							return QtCore.QVariant(QtGui.QColor('#999944'))
+							return QtCore.QVariant(QtGui.QColor('#999944'))  # mustard yellow
 				return QtCore.QVariant()
 			elif role == QtCore.Qt.BackgroundRole:
 				if index.row() % 2 == 0:
@@ -400,7 +403,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 		return QtCore.QVariant()
 
 	def sort(self, Ncol, order):
-		logger.info(f'Ncol:{Ncol} order:{order}')
+		#logger.info(f'Ncol:{Ncol} order:{order}')
 		self.layoutAboutToBeChanged.emit()
 		if self.isAnalysisDir:
 			self._data.sort_values(Ncol, order)

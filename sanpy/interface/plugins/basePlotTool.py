@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.signal
 
+from PyQt5 import QtCore, QtGui, QtWidgets
+
 import matplotlib.pyplot as plt
 
 from sanpy.sanpyLogger import get_logger
@@ -25,29 +27,34 @@ class basePlotTool(sanpyPlugin):
 		# pool of bAnalysis
 		#self.masterDf = self._bPlugins._sanpyApp.myAnalysisDir.pool_build()
 
+		self.mainWidget2 = None
+
 		# turn off all signal/slot
 		switchFile = self.responseTypes.switchFile
 		self.toggleResponseOptions(switchFile, newValue=False)
-		analysisChange = self.responseTypes.switchFile
+		analysisChange = self.responseTypes.analysisChange
 		self.toggleResponseOptions(analysisChange, newValue=False)
-		switchFile = self.responseTypes.switchFile
-		self.toggleResponseOptions(switchFile, newValue=False)
-		selectSpike = self.responseTypes.switchFile
+		selectSpike = self.responseTypes.selectSpike
 		self.toggleResponseOptions(selectSpike, newValue=False)
+		setAxis = self.responseTypes.setAxis
+		self.toggleResponseOptions(setAxis, newValue=False)
 
 		#self.plot()
 
 	def plot(self):
-		if self.ba is None:
-			return
+		logger.info('')
+
+		# this plugin does not rely on underlying self.ba
+		#if self.ba is None:
+		#	return
 
 		analysisName = 'analysisname'
 		statListDict = statList # maps human readable to comments
 		categoricalList = ['include', 'Condition', 'Region', 'Sex', 'RegSex', 'File Number', 'analysisname']#, 'File Name']
 		hueTypes = ['Region', 'Sex', 'RegSex', 'Condition', 'File Number', 'analysisname'] #, 'File Name'] #, 'None']
-		sortOrder = ['Region', 'Sex', 'Condition']
+		sortOrder = ['Region', 'Sex', 'Condition', 'File Number']
 		interfaceDefaults = {'Y Statistic': 'Spike Frequency (Hz)',
-							'X Statistic': 'Region',
+							'X Statistic': 'File Number',
 							'Hue': 'Region',
 							'Group By': 'File Number'}
 
@@ -59,16 +66,24 @@ class basePlotTool(sanpyPlugin):
 		#masterDf = self.ba.dfReportForScatter
 
 		if self.masterDf is None:
-			logger.warning('Did not get analysis df, be sure to run detectioon')
+			logger.error('Did not get analysis df, be sure to run detectioon')
 			return
 		#bScatterPlotMainWindow
 		#self.scatterWindow = sanpy.scatterwidget.bScatterPlotMainWindow(
 		path = ''
-		self.mainWidget = sanpy.interface.bScatterPlotMainWindow(
+		self.mainWidget2 = sanpy.interface.bScatterPlotMainWindow(
 						path, categoricalList, hueTypes,
 						analysisName, sortOrder, statListDict=statListDict,
 						masterDf = self.masterDf,
 						interfaceDefaults = interfaceDefaults)
 		# rewire existing widget into plugin architecture
-		self.mainWidget.closeEvent = self.onClose
+		#self.mainWidget.closeEvent = self.onClose
 		self._mySetWindowTitle()
+
+		#self.mainWidget2.show()
+
+		tmpLayout = QtWidgets.QVBoxLayout()
+		tmpLayout.addWidget(self.mainWidget2)
+
+		#
+		self.setLayout(tmpLayout)

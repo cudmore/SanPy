@@ -22,7 +22,7 @@ class sanpyLog(sanpyPlugin):
 		"""
 		super(sanpyLog, self).__init__(**kwargs)
 
-		self.pyqtWindow() # makes self.mainWidget
+		#self.pyqtWindow() # makes self.mainWidget
 
 		layout = QtWidgets.QVBoxLayout()
 		widget = QtWidgets.QPlainTextEdit()

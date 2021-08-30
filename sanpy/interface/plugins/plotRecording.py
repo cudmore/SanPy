@@ -22,6 +22,17 @@ class plotRecording(sanpyPlugin):
 
 	def __init__(self, **kwargs):
 		super(plotRecording, self).__init__(**kwargs)
+
+		# this is a very simple plugin, do not respond to changes in interface
+		switchFile = self.responseTypes.switchFile
+		self.toggleResponseOptions(switchFile, newValue=False)
+		analysisChange = self.responseTypes.analysisChange
+		self.toggleResponseOptions(analysisChange, newValue=False)
+		#selectSpike = self.responseTypes.selectSpike
+		#self.toggleResponseOptions(selectSpike, newValue=False)
+		setAxis = self.responseTypes.setAxis
+		self.toggleResponseOptions(setAxis, newValue=False)
+
 		self.plot()
 
 	def plot(self):
@@ -32,6 +43,10 @@ class plotRecording(sanpyPlugin):
 
 		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
 		sweepY = self.ba.filteredVm(sweepNumber=self.sweepNumber)  # sweepY
+
+		self.sweepX = sweepX
+		self.sweepY = sweepY
+
 		# comma is critical
 		self.line, = self.axs.plot(sweepX, sweepY, '-', linewidth=0.5)
 
@@ -98,6 +113,10 @@ class plotRecording(sanpyPlugin):
 
 		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
 		sweepY = self.ba.sweepY(sweepNumber=self.sweepNumber)
+
+		self.sweepX = sweepX
+		self.sweepY = sweepY
+
 		self.line.set_data(sweepX, sweepY)
 
 		thresholdSec = self.ba.getStat('thresholdSec')
@@ -167,9 +186,11 @@ class plotRecording(sanpyPlugin):
 			for idx2, width in enumerate(spike['widths']):
 				halfHeight = width['halfHeight'] # [20,50,80]
 				risingPnt = width['risingPnt']
-				risingVal = width['risingVal']
+				#risingVal = width['risingVal']
+				risingVal = self.sweepY[risingPnt]
 				fallingPnt = width['fallingPnt']
-				fallingVal = width['fallingVal']
+				#fallingVal = width['fallingVal']
+				fallingVal = self.sweepY[fallingPnt]
 
 				if risingPnt is None or fallingPnt is None:
 					# half-height was not detected
@@ -208,7 +229,7 @@ class plotRecording(sanpyPlugin):
 		xMin = spikeTime - 0.5
 		xMax = spikeTime + 0.5
 
-		self.ax.set_xlim(xMin, xMax)
+		self.axs.set_xlim(xMin, xMax)
 
 		self.fig.canvas.draw()
 		self.fig.canvas.flush_events()
