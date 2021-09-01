@@ -101,7 +101,7 @@ class bExport():
 
 	def report2(self, theMin, theMax):
 		"""
-		Generate a report of spikes with spike times between theMin (sec) and theMax (sec).
+		Generate a human readable report of spikes with spike times between theMin (sec) and theMax (sec).
 
 		Args:
 			theMin (float): Start seconds to save, inclusive
@@ -296,6 +296,8 @@ class bExport():
 		"""
 		Save a spike report for detected spikes between theMin (sec) and theMax (sec).
 
+		This is used by main interface 'Export Spike Report'
+
 		Args:
 			savefile (str): path to xlsx file
 			theMin (float): start/stop seconds of the analysis
@@ -443,20 +445,24 @@ class bExport():
 			# need to convert list values in dict to string (o.w. we get one row per item in list)
 			exportDetectionDict = {}
 			for k, v in self.ba.detectionDict.items():
+				# v is a dict from bDetection
 				if isinstance(v, list):
 					v = f'"{v}"'
 				exportDetectionDict[k] = v
 			#print('  === "params" sheet exportDetectionDict:', exportDetectionDict)
-			df = pd.DataFrame(exportDetectionDict, index=[0]).T # index=[0] needed when dict has all scalar values
-			#print('  df:')
-			#print(df)
-			df.to_excel(writer, sheet_name='params')
-			columnWidth = 25
+			#df = pd.DataFrame(exportDetectionDict, index=[0]).T # index=[0] needed when dict has all scalar values
+			detection_df = pd.DataFrame(exportDetectionDict).T
+			detection_df.to_excel(writer, sheet_name='params')
+			# worksheet is <class 'xlsxwriter.worksheet.Worksheet'>
 			worksheet = writer.sheets['params']  # pull worksheet object
-			worksheet.set_column(0, 0, columnWidth)  # set column width
+			# set first 20 columns to columnWidth
+			columnWidth = 18
+			startCol = 0
+			stopCol = 20 # xlswriter.worksheet does not care about the stop column
+			worksheet.set_column(0, stopCol, columnWidth)  # set column width
 
 			#
-			# 'cardiac' sheet
+			# 'cardiac' sheet with human readable stat names
 			cardiac_df.to_excel(writer, sheet_name='cardiac')
 
 			# set the column widths in excel sheet 'cardiac'
@@ -467,10 +473,6 @@ class bExport():
 
 
 			#
-			# entire (verbose) analysis to sheet 'bob'
-			#df.to_excel(writer, sheet_name='bob')
-
-			#
 			# mean spike clip
 			theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(theMin, theMax, sweepNumber=self.sweepNumber)
 			try:
@@ -479,8 +481,7 @@ class bExport():
 				df = pd.DataFrame(meanClip, first_X)
 				df.to_excel(writer, sheet_name='Avg Spike')
 			except (IndexError) as e:
-				print('warning: got bad spike clips in saveReport(). Usually happend when 1-2 spikes')
-			#print('df:', df)
+				logger.warning('Got bad spike clips. Usually happend when 1-2 spikes')
 
 			writer.save()
 

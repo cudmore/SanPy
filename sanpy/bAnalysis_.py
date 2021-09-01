@@ -1395,12 +1395,13 @@ class bAnalysis:
 				#widthDict['widthMs2'] = widthPnts2 / dataPointsPerMs
 
 			except (IndexError) as e:
-				errorStr = (f'half width {halfHeight} error in "{tmpErrorType}" '
+				errorType = 'Spike Width'
+				errorStr = (f'Half width {halfHeight} error in "{tmpErrorType}" '
 						f"with halfWidthWindow_ms:{halfWidthWindow_ms} "
 						f'searching for Vm:{round(thisVm,2)} from peak sec {round(peakSec,2)}'
 						)
 
-				eDict = self._getErrorDict(spikeNumber, thresholdPnt, 'Spike Width', errorStr) # spikeTime is in pnts
+				eDict = self._getErrorDict(spikeNumber, thresholdPnt, errorType, errorStr) # spikeTime is in pnts
 				self.spikeDict[dictNumber]['errors'].append(eDict)
 
 			#
@@ -1532,9 +1533,9 @@ class bAnalysis:
 					spikeErrorList1.append(None)
 
 				else:
-					errType = 'dvdt Percent'
+					errorType = 'dvdt Percent'
 					errStr = f"Did not find dvdt_percentOfMax: {dDict['dvdt_percentOfMax']} peak dV/dt is {round(peakVal,2)}"
-					eDict = self._getErrorDict(i, spikeTime, errType, errStr) # spikeTime is in pnts
+					eDict = self._getErrorDict(i, spikeTime, errorType, errStr) # spikeTime is in pnts
 					spikeErrorList1.append(eDict)
 					# always append, do not REJECT spike if we can't find % in dv/dt
 					spikeTimes1.append(spikeTime)
@@ -1882,8 +1883,9 @@ class bAnalysis:
 				self.spikeDict[iIdx]['preMinVal'] = preMinVal
 
 			except (IndexError) as e:
+				errorType = 'Pre spike min (mdp)'
 				errorStr = 'Did not find preMinVal: ' + str(round(preMinVal,3)) #+ ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
-				eDict = self._getErrorDict(i, spikeTimes[i], 'Pre spike min', errorStr) # spikeTime is in pnts
+				eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
 				self.spikeDict[iIdx]['errors'].append(eDict)
 
 			#
@@ -1894,8 +1896,8 @@ class bAnalysis:
 			stopLinearFit = 0.5 #
 			timeInterval_pnts = spikeTimes[i] - preMinPnt
 			# taking round() so we always get an integer # points
-			preLinearFitPnt0 = preMinPnt + math.round(timeInterval_pnts * startLinearFit)
-			preLinearFitPnt1 = preMinPnt + math.round(timeInterval_pnts * stopLinearFit)
+			preLinearFitPnt0 = preMinPnt + round(timeInterval_pnts * startLinearFit)
+			preLinearFitPnt1 = preMinPnt + round(timeInterval_pnts * stopLinearFit)
 			preLinearFitVal0 = filteredVm[preLinearFitPnt0]
 			preLinearFitVal1 = filteredVm[preLinearFitPnt1]
 
@@ -1923,19 +1925,26 @@ class bAnalysis:
 					# todo: make an error if edd rate is too low
 					lowestEddRate = dDict['lowEddRate_warning']  #8
 					if mLinear <= lowestEddRate:
+						errorType = 'Fit EDD'
 						errorStr = 'Early diastolic duration rate fit - Too low'
-						eDict = self._getErrorDict(i, spikeTimes[i], 'Fit EDD', errorStr) # spikeTime is in pnts
+						eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
 						self.spikeDict[iIdx]['errors'].append(eDict)
 
 				except (TypeError) as e:
-					#catching exception: raise TypeError("expected non-empty vector for x")
-					#logger.error(f'== FIX spike {iIdx} preLinearFitPnt0/preLinearFitPnt1 TypeError')
-					#logger.error(f'  error is: {e}')
-					#print('  preLinearFitPnt0:', preLinearFitPnt0, 'preLinearFitPnt1:', preLinearFitPnt1)
-					#print(f'  xFit:{len(xFit)} yFit:{len(yFit)}')
+					#catching exception:  expected non-empty vector for x
+					# xFit/yFit turn up empty when mdp and TOP points are within 1 point
+					'''
+					print('!!!!!! ERROR is e:', e)
+					print ('  xFit:', xFit)
+					print ('  yFit:', yFit)
+					print('  preLinearFitPnt0:', preLinearFitPnt0)
+					print('  preLinearFitPnt1:', preLinearFitPnt1)
+					'''
 					self.spikeDict[iIdx]['earlyDiastolicDurationRate'] = defaultVal
-					errorStr = 'Early diastolic duration rate fit - TypeError'
-					eDict = self._getErrorDict(i, spikeTimes[i], 'Fit EDD', errorStr) # spikeTime is in pnts
+					errorType = 'Fit EDD'
+					#errorStr = 'Early diastolic duration rate fit - TypeError'
+					errorStr = 'Early diastolic duration rate fit - preMinPnt == spikePnt'
+					eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
 					self.spikeDict[iIdx]['errors'].append(eDict)
 				except (np.RankWarning) as e:
 					#logger.error('== FIX preLinearFitPnt0/preLinearFitPnt1 RankWarning')
@@ -1943,11 +1952,16 @@ class bAnalysis:
 					#print('RankWarning')
 					# also throws: RankWarning: Polyfit may be poorly conditioned
 					self.spikeDict[iIdx]['earlyDiastolicDurationRate'] = defaultVal
+					errorType = 'Fit EDD'
 					errorStr = 'Early diastolic duration rate fit - RankWarning'
-					eDict = self._getErrorDict(i, spikeTimes[i], 'Fit EDD', errorStr) # spikeTime is in pnts
+					eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
 					self.spikeDict[iIdx]['errors'].append(eDict)
 				except:
-					logger.error(f' !!!!!!!!!!!!!!!!!!!!!!!!!!! EXCEPTION DURING LINEAR FIT for spike {i}')
+					logger.error(f' !!!!!!!!!!!!!!!!!!!!!!!!!!! UNKNOWN EXCEPTION DURING EDD LINEAR FIT for spike {i}')
+					self.spikeDict[iIdx]['earlyDiastolicDurationRate'] = defaultVal
+					errorType = 'Fit EDD'
+					errorStr = 'Early diastolic duration rate fit - Unknown Exception'
+					eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
 
 			# not implemented
 			#self.spikeDict[i]['lateDiastolicDuration'] = ???
@@ -1964,8 +1978,9 @@ class bAnalysis:
 			except (ValueError) as e:
 				#self.spikeDict[iIdx]['numError'] = self.spikeDict[iIdx]['numError'] + 1
 				# sometimes preRange is empty, don't try and put min/max in error
-				errorStr = 'Searching for preSpike_dvdt_max_pnt - ValueError'
-				eDict = self._getErrorDict(i, spikeTimes[i], 'Pre spike DvDt', errorStr) # spikeTime is in pnts
+				errorType = 'Pre Spike dvdt'
+				errorStr = 'Searching for dvdt max - ValueError'
+				eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
 				self.spikeDict[iIdx]['errors'].append(eDict)
 
 			#
@@ -1974,7 +1989,7 @@ class bAnalysis:
 			#postSpike_ms = 20 # 10
 			#postSpike_pnts = self.ms2Pnt_(postSpike_ms)
 			dvdtPostWindow_ms = dDict['dvdtPostWindow_ms']
-			dvdtPostWindow_pnts = self.ms2Pnt(dvdtPostWindow_ms)
+			dvdtPostWindow_pnts = self.ms2Pnt_(dvdtPostWindow_ms)
 			postRange = filteredDeriv[peakPnt:peakPnt+dvdtPostWindow_pnts] # fixed window after spike
 
 			postSpike_dvdt_min_pnt = np.argmin(postRange)
@@ -2011,8 +2026,9 @@ class bAnalysis:
 					prevPreMinSec = self.pnt2Sec_(prevPreMinPnt)
 					thisPreMinSec = self.pnt2Sec_(thisPreMinPnt)
 					#errorStr = f'Previous spike preMinPnt is {prevPreMinPnt} and this preMinPnt: {thisPreMinPnt}'
+					errorType = 'Cycle Length'
 					errorStr = f'Previous spike preMinPnt (s) is {prevPreMinSec} and this preMinPnt: {thisPreMinSec}'
-					eDict = self._getErrorDict(i, spikeTimes[i], 'Cycle length', errorStr) # spikeTime is in pnts
+					eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
 					self.spikeDict[iIdx]['errors'].append(eDict)
 
 			#

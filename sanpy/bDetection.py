@@ -364,7 +364,7 @@ def getDefaultDetection(detectionPreset):
 
 	return theDict.copy()
 
-def _print():
+def printDetectionParams_Docs():
 	"""
 	Print out human readable detection parameters and convert to markdown table.
 
@@ -373,7 +373,8 @@ def _print():
 	"""
 	import pandas as pd
 
-	d = getDefaultDetection()
+	detectionPreset = detectionPresets_.default
+	d = getDefaultDetection(detectionPreset=detectionPreset)
 	dictList = []
 	for k,v in d.items():
 		parameter = k
@@ -510,6 +511,10 @@ class bDetection(object):
 		return gotError
 
 def test_0():
+	"""
+	Testing get/set of detection params
+	"""
+
 	bd = bDetection()
 
 	#xxx = bd.getValue('xxx')
@@ -545,4 +550,6 @@ def test_0():
 	okSetFromDict = bd.setFromDict(tmpDict)
 
 if __name__ == '__main__':
-	test_0()
+	#test_0()
+
+	printDetectionParams_Docs()
