@@ -63,6 +63,10 @@ _sanpyColumns = {
 		'type': float,
 		'isEditable': False,
 	},
+	'Sweeps': {
+		'type': int,
+		'isEditable': False,
+	},
 	'kHz': {
 		'type': float,
 		'isEditable': False,
@@ -964,6 +968,7 @@ class analysisDir():
 			rowDict['I'] = 2 # need 2 because checkbox value is in (0,2)
 		rowDict['File'] = ba.getFileName() #os.path.split(ba.path)[1]
 		rowDict['Dur(s)'] = ba.recordingDur
+		rowDict['Sweeps'] = ba.numSweeps
 		rowDict['kHz'] = ba.recordingFrequency
 		rowDict['Mode'] = ba.recordingMode
 

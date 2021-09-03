@@ -42,6 +42,10 @@ class spikeClips(sanpyPlugin):
 		self.y = None
 		self.yMean = None
 
+		# for waterfall
+		self.xMult = 0.1
+		self.yMult = 0.1
+
 		# todo: mode these to sanpyPlugin
 		self.selectedSpikeList = []
 		self.selectedSpike = None
@@ -69,15 +73,37 @@ class spikeClips(sanpyPlugin):
 		self.meanCheckBox.stateChanged.connect(lambda:self.replot())
 		hLayout2.addWidget(self.meanCheckBox)
 
+		self.phasePlotCheckBox = QtWidgets.QCheckBox('Phase')
+		self.phasePlotCheckBox.setChecked(False)
+		self.phasePlotCheckBox.stateChanged.connect(lambda:self.replot())
+		hLayout2.addWidget(self.phasePlotCheckBox)
+
 		self.waterfallCheckBox = QtWidgets.QCheckBox('Waterfall')
 		self.waterfallCheckBox.setChecked(False)
 		self.waterfallCheckBox.stateChanged.connect(lambda:self.replot())
 		hLayout2.addWidget(self.waterfallCheckBox)
 
-		self.phasePlotCheckBox = QtWidgets.QCheckBox('Phase')
-		self.phasePlotCheckBox.setChecked(False)
-		self.phasePlotCheckBox.stateChanged.connect(lambda:self.replot())
-		hLayout2.addWidget(self.phasePlotCheckBox)
+		# x mult for waterfall
+		aLabel = QtWidgets.QLabel('X-Mult')
+		hLayout2.addWidget(aLabel)
+		self.xMultSpinBox = QtWidgets.QDoubleSpinBox()
+		self.xMultSpinBox.setKeyboardTracking(False)
+		self.xMultSpinBox.setSingleStep(0.05)
+		self.xMultSpinBox.setRange(0, 1)
+		self.xMultSpinBox.setValue(self.xMult)
+		self.xMultSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
+		hLayout2.addWidget(self.xMultSpinBox)
+
+		# y mult for waterfall
+		aLabel = QtWidgets.QLabel('Y-Mult')
+		hLayout2.addWidget(aLabel)
+		self.yMultSpinBox = QtWidgets.QDoubleSpinBox()
+		self.yMultSpinBox.setKeyboardTracking(False)
+		self.yMultSpinBox.setSingleStep(0.05)
+		self.yMultSpinBox.setRange(0, 1)
+		self.yMultSpinBox.setValue(self.yMult)
+		self.yMultSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
+		hLayout2.addWidget(self.yMultSpinBox)
 
 		vLayout.addLayout(hLayout2)
 
@@ -158,7 +184,11 @@ class spikeClips(sanpyPlugin):
 
 	def on_spinbox(self, label):
 		#logger.info('')
+		# grab from interface
 		self.clipWidth_ms = self.clipWidthSpinBox.value()
+		self.xMult = self.xMultSpinBox.value()
+		self.yMult = self.yMultSpinBox.value()
+
 		self.replot()
 
 	def setAxis(self):
@@ -225,7 +255,7 @@ class spikeClips(sanpyPlugin):
 
 		if numClips == 0:
 			return
-			
+
 		# convert clips to 2d ndarray ???
 		#dataPointsPerMs = self.ba.dataPointsPerMs
 		xTmp = np.array(theseClips_x)
@@ -256,10 +286,13 @@ class spikeClips(sanpyPlugin):
 			xMin = np.nanmin(xTmp)
 			xMax = np.nanmax(xTmp)
 			xRange = xMax - xMin
+			yMin = np.nanmin(yTmp)
+			yMax = np.nanmax(yTmp)
+			yRange = yMax - yMin
 			xOffset = 0
 			yOffset = 0
-			xInc = xRange * 0.1 # ms, xInc is 10% of x-range
-			yInc = 2 # mV
+			xInc = xRange * self.xMult # ms, xInc is 10% of x-range
+			yInc = yRange * self.yMult
 			for i in range(xTmp.shape[0]):
 				xTmp[i,:] += xOffset
 				yTmp[i,:] += yOffset

@@ -98,7 +98,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 		self._ba = ba
 		self._bPlugins = bPlugin # pointer to object, send signal back on close
 
-		self._sweepNumber = 'All'
+		self._sweepNumber = 0
 
 		if startStop is not None:
 			self._startSec = startStop[0]

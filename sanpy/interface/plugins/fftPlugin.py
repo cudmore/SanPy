@@ -975,11 +975,16 @@ class fftPlugin(sanpyPlugin):
 		if self.ba is None:
 			return
 
+		if self.sweepNumber == 'All':
+			logger.warning(f'fft plugin can only show one sweep, received sweepNumber:{self.sweepNumber}')
+			return
+			
+		#logger.info(f'using ba: {self.ba}')
 		startSec, stopSec = self.getStartStop()
-		if startSec is None or stopSec is None:
-			logger.info('Resetting start/stop seconds to max')
+		if startSec is None or stopSec is None or math.isnan(startSec) or math.isnan(stopSec):
+			logger.info(f'Resetting start/stop seconds to max')
 			startSec = 0
-			stopSec = self.ba.recordingDur()  #self.ba.sweepX()[-1]
+			stopSec = self.ba.recordingDur  #self.ba.sweepX()[-1]
 		logger.info(f'Using start(s):{startSec} stop(s):{stopSec}')
 		self.lastLeft = round(startSec*1000*self.ba.dataPointsPerMs)
 		self.lastRight = round(stopSec*1000*self.ba.dataPointsPerMs)
@@ -1004,7 +1009,11 @@ class fftPlugin(sanpyPlugin):
 			logger.info('  No median filter')
 			yFiltered = y
 
+		#logger.info(f'Fetching sweepX with sweepNumber: {self.sweepNumber}')
+
 		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
+
+		#logger.info(f'  sweepX: {sweepX.shape}')
 		#logger.info(f'  leftSec:{sweepX[leftPoint]} rightSec:{sweepX[rightPoint-1]}')
 		t = sweepX[leftPoint:rightPoint]
 

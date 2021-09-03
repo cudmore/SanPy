@@ -349,11 +349,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
 			self.signalSetXAxis.emit([data[0], data[1]])  # emits to scatter plot ONLY
 
 		elif this == 'set full x axis':
-			self.startSec = None
-			self.stopSec = None
-			#self.myScatterPlotWidget.selectXRange(None, None)
-			logger.info('set full x axis')
-			self.signalSetXAxis.emit([None, None])  # emits to scatter plot ONLY
+			self.startSec = 0
+			if self.get_bAnalysis() is not None:
+				self.stopSec = self.get_bAnalysis().recordingDur
+			else:
+				self.stopSec = None
+			logger.info(f'set full x axis {self.startSec} {self.stopSec}')
+			self.signalSetXAxis.emit([self.startSec, self.stopSec])  # emits to scatter plot ONLY
 
 		elif this == 'cancel all selections':
 			'''

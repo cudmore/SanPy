@@ -19,7 +19,7 @@ With this, our software is designed to be flexible in how it is used.
  - [NumPy][NumPy]{target=_blank} - The fundamental package for scientific computing with Python.
  - [Pandas][Pandas]{target=_blank} - A data analysis and manipulation tool.
  - [pyABF][pyABF]{target=_blank} - Package to open Axon Binary Format (ABF) files.
- - [heka_reader][heka_reader]{target=_blank} - To read Heka Data files.
+ - [heka_reader][heka_reader]{target=_blank} - To read Heka Data files. Not currently used.
  - [XlsxWriter][XlsxWriter]{target=_blank} - To read and write Microsoft Excel files.
 
 ### Desktop Application

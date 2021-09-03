@@ -58,6 +58,10 @@ class stimGen(sanpyPlugin):
 		self.noiseStep = 0
 
 		self.doRectify = False
+		""" remove all <0 from output stim """
+
+		self.scale = 1
+		""" scale output stim by this factor"""
 
 		self.savePath = ''  # remember last save folder
 
@@ -150,6 +154,9 @@ class stimGen(sanpyPlugin):
 							autoPad=True, autoSave=False)
 			if self._data[sweepNum] is None:
 				print(f'makeStim() error making {type} at sweep number {sweepNum}')
+			#
+			# scale
+			self._data[sweepNum] *= self.scale
 
 		self._t = np.arange(len(self._data[0])) / fs  # just using first sweep
 
@@ -202,6 +209,11 @@ class stimGen(sanpyPlugin):
 	def on_stim_type(self, type):
 		logger.info(type)
 		self.stimType = type
+		self.updateStim()
+
+	def on_scale(self, scale):
+		logger.info(type)
+		self.scale = float(scale)
 		self.updateStim()
 
 	def on_button_click(self, name):
@@ -281,23 +293,23 @@ class stimGen(sanpyPlugin):
 		self.amplitudeSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
 		controlLayout_row2.addWidget(self.amplitudeSpinBox, 0, 1, rowSpan, colSpan)
 
-		aName = 'Frequency (Hz)'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel, 0, 2, rowSpan, colSpan)
-		self.frequencySpinBox = QtWidgets.QDoubleSpinBox()
-		self.frequencySpinBox.setKeyboardTracking(False)
-		self.frequencySpinBox.setRange(0, 1e9)
-		self.frequencySpinBox.setValue(self.frequency)
-		self.frequencySpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		controlLayout_row2.addWidget(self.frequencySpinBox, 0, 3, rowSpan, colSpan)
-
 		# rms of sin (amp and freq)
 		rmsMult = 1/np.sqrt(2)
 		sinRms = self.amplitude * rmsMult
 		sinRms = round(sinRms,2)
 		aName = f'RMS:{sinRms}'
 		self.sinRms = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(self.sinRms, 0, 4, rowSpan, colSpan)
+		controlLayout_row2.addWidget(self.sinRms, 0, 2, rowSpan, colSpan)
+
+		aName = 'Frequency (Hz)'
+		aLabel = QtWidgets.QLabel(aName)
+		controlLayout_row2.addWidget(aLabel, 0, 3, rowSpan, colSpan)
+		self.frequencySpinBox = QtWidgets.QDoubleSpinBox()
+		self.frequencySpinBox.setKeyboardTracking(False)
+		self.frequencySpinBox.setRange(0, 1e9)
+		self.frequencySpinBox.setValue(self.frequency)
+		self.frequencySpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
+		controlLayout_row2.addWidget(self.frequencySpinBox, 0, 4, rowSpan, colSpan)
 
 		aName = 'Noise Amplitude'
 		aLabel = QtWidgets.QLabel(aName)
@@ -327,14 +339,14 @@ class stimGen(sanpyPlugin):
 
 		aName = 'Frequency Step'
 		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel, 1, 2, rowSpan, colSpan)
+		controlLayout_row2.addWidget(aLabel, 1, 3, rowSpan, colSpan)
 		self.frequencyStepSpinBox = QtWidgets.QDoubleSpinBox()
 		self.frequencyStepSpinBox.setKeyboardTracking(False)
 		self.frequencyStepSpinBox.setSingleStep(0.1)
 		self.frequencyStepSpinBox.setRange(0, 1e9)
 		self.frequencyStepSpinBox.setValue(self.frequencyStep)
 		self.frequencyStepSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		controlLayout_row2.addWidget(self.frequencyStepSpinBox, 1, 3, rowSpan, colSpan)
+		controlLayout_row2.addWidget(self.frequencyStepSpinBox, 1, 4, rowSpan, colSpan)
 
 		# first row in grid has freq rms
 
@@ -369,6 +381,19 @@ class stimGen(sanpyPlugin):
 		self.fsSpinBox.setValue(self._fs)
 		self.fsSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
 		controlLayout_row3.addWidget(self.fsSpinBox)
+
+		aName = 'Scale'
+		aLabel = QtWidgets.QLabel(aName)
+		controlLayout_row3.addWidget(aLabel)
+		self.scaleDropdown = QtWidgets.QComboBox()
+		scales = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
+		for scale in scales:
+			scaleStr = str(scale)
+			self.scaleDropdown.addItem(scaleStr)
+		startIndex = 3
+		self.scaleDropdown.setCurrentIndex(startIndex)
+		self.scaleDropdown.currentTextChanged.connect(self.on_scale)
+		controlLayout_row3.addWidget(self.scaleDropdown)
 
 		#
 		vLayout.addLayout(controlLayout_row3) # add mpl canvas
@@ -475,7 +500,7 @@ class stimGen(sanpyPlugin):
 		fileName = self.getFileName()
 		options = QtWidgets.QFileDialog.Options()
 		savePath = os.path.join(self.savePath, fileName)
-		fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self.mainWidget,"Save .atf file",
+		fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self,"Save .atf file",
 							savePath,"Atf Files (*.atf);;CSV Files (*.csv)", options=options)
 		if not fileName:
 			return
@@ -545,7 +570,8 @@ class stimGen(sanpyPlugin):
 def run():
 	app = QtWidgets.QApplication(sys.argv)
 
-	msp = stimGen()
+	sg = stimGen()
+	sg.show()
 
 	sys.exit(app.exec_())
 

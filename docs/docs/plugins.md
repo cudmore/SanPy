@@ -10,26 +10,6 @@ All plugins are linked into the SanPy interface to respond to spike selection, z
 
 # Built-in plugins.
 
-### Browsing analysis
-
- - [Plot Recording](#plot-recording): Plot a recording with an overlay of spike detection parameters.
- - [Spike Clips](#spike-clips): Plot all spikes aligned to their threshold.
- - [Plot Scatter](#plot-scatter): Plot x/y scatter of spike detection parameters.
- - [Plot Analysis](#plot-analysis): Visualize a number of plot types.
- - [Export Traces](#export-traces): Plot a trace, set some display parameters and export to a file.
-
-### Exporting analysis
-
- - [Summary Analysis](#summary-analysis): Display a table with a summary of analysis results and detection parameters.
- - [Summary Spikes](#summary-spikes): Display a table of all per-spike analysis results.
- - [Error Summary](#error-summary): Display per-spike detection errors.
- - [SanPy Log](#sanpy-log): Display the SanPy log
-
-### Additional Analysis
-
- - [FFT](#fft)
- - [Stimulus Generation](#stim-gen)
-
 ## Plot Recording
 
 Plot a recording with an overlay of spike detection parameters.
@@ -53,6 +33,12 @@ Plot x/y scatter of spike detection parameters. Includes x/y histograms and 'sho
 Visualize a number of plot types including: Scatter, Histograms, Mean , etc. Basically 'Plot Scatter' on steroids.
 
 <IMG SRC="../img/plugins/plot-tool.png" width=700>
+
+## Detection Parameters
+
+Allows setting of all detection parameters, includes a description of each as well as presets for different types of cells and recordings.
+
+<IMG SRC="../img/plugins/detection-parameters.png" width=700>
 
 ## Export Trace
 

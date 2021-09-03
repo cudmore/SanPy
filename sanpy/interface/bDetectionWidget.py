@@ -1703,7 +1703,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		except (KeyError) as e:
 			logger.error(e)
 			return
-		logger.info(f'startSeconds:{startSeconds} stopSeconds:{stopSeconds}')
+		#logger.info(f'startSeconds:{startSeconds} stopSeconds:{stopSeconds}')
 
 		# in table we specify 'nan' but float spin box will not show that
 		if math.isnan(dvdtThreshold):
@@ -2201,9 +2201,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.sweepComboBox.addItem('All')
 		for sweep in range(self.detectionWidget.ba.numSweeps):
 			self.sweepComboBox.addItem(str(sweep))
-		if self.detectionWidget.ba.numSweeps == 1:
-			# select sweep 0
-			self.sweepComboBox.setCurrentIndex(1)
+		# always select sweep 0
+		self.sweepComboBox.setCurrentIndex(1)
+		#if self.detectionWidget.ba.numSweeps == 1:
+		#	# select sweep 0
+		#	self.sweepComboBox.setCurrentIndex(1)
 
 		# turn off sweep combo box if just one sweep
 		if self.detectionWidget.ba.numSweeps == 1:

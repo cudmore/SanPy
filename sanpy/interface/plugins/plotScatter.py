@@ -290,8 +290,8 @@ class plotScatter(sanpyPlugin):
 		if startSec is None or stopSec is None:
 			return
 
+		# select spike in range
 		thresholdSec = self.ba.getStat('thresholdSec')
-
 		self.selectedSpikeList = [spikeIdx for spikeIdx,spikeSec in enumerate(thresholdSec) if (spikeSec>startSec and spikeSec<stopSec)]
 
 		self.selectSpikeList()

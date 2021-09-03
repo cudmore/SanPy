@@ -39,3 +39,8 @@ units???
 
 13) add a common QVLayout to all plugins to show: (file, start sec, stop sec, num spikes)
 	Do this for: (plot scatter, error summary, summary analysis, ... OTHERS)
+
+14) Modify ALL QTableView to retain blue selection when disabled. Like main file QTableView
+
+15) Look into abf convert
+	https://github.com/swharden/AbfConvert
