@@ -945,7 +945,7 @@ reports can be generated with the bExport class.</p>
 	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;condition&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;condition&#39;</span><span class="p">]</span>
 	<span class="c1">#</span>
 	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;dateAnalyzed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">dateAnalyzed</span>
-	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;detectionType&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionType</span>
+	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;detectionType&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">getDetectionType</span><span class="p">()</span>
 	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]]</span>
 	<span class="n">textFileHeader</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]]</span>
 	<span class="c1">#textFileHeader[&#39;medianFilter&#39;] = self.ba.medianFilter</span>
@@ -1027,7 +1027,7 @@ reports can be generated with the bExport class.</p>
 
 <span class="sd">	TODO: Working on this while implementing plugin &#39;saveAnalysis&#39;</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="p">)</span>
+	<span class="c1">#logger.info(self.ba)</span>
 
 	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 		<span class="k">return</span> <span class="kc">None</span>
@@ -1055,7 +1055,7 @@ reports can be generated with the bExport class.</p>
 	<span class="n">dateAnalyzed</span><span class="p">,</span> <span class="n">timeAnalyzed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">dateAnalyzed</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
 	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Date Analyzed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">dateAnalyzed</span><span class="p">]</span>
 	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Time Analyzed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">timeAnalyzed</span><span class="p">]</span>
-	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Detection Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionType</span><span class="p">]</span>
+	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Detection Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">getDetectionType</span><span class="p">()]</span>
 	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;dV/dt Threshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]]</span>
 	<span class="c1">#headerDict[&#39;mV Threshold&#39;] = [self.ba.mvThreshold] # abb 202012</span>
 	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Vm Threshold (mV)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]]</span>
@@ -1073,7 +1073,11 @@ reports can be generated with the bExport class.</p>
 	<span class="c1"># &#39;stats&#39; has xxx columns (name, mean, sd, se, n)</span>
 	<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;stats&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
+	<span class="n">ignoreColumns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Spike&#39;</span><span class="p">,</span> <span class="s1">&#39;File&#39;</span><span class="p">]</span>
 	<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cardiac_df</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">ignoreColumns</span><span class="p">:</span>
+			<span class="c1"># in general, skip non numerical columns</span>
+			<span class="k">continue</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
 	<span class="c1"># mean</span>
@@ -1120,6 +1124,10 @@ reports can be generated with the bExport class.</p>
 		<span class="c1"># a dictionary key for each stat</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;stats&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stat</span><span class="p">)</span>
 		<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cardiac_df</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">ignoreColumns</span><span class="p">:</span>
+				<span class="c1"># in general, need to ignore string columns</span>
+				<span class="c1">#headerDict[col].append(&#39;&#39;)</span>
+				<span class="k">continue</span>
 			<span class="c1">#headerDict[col].append(&#39;&#39;)</span>
 			<span class="k">if</span> <span class="n">stat</span> <span class="o">==</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span>
 				<span class="n">headerDict</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theMean</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
@@ -1293,7 +1301,7 @@ reports can be generated with the bExport class.</p>
 
     <div class="doc doc-contents ">
 
-      <p>Generate a report of spikes with spike times between theMin (sec) and theMax (sec).</p>
+      <p>Generate a human readable report of spikes with spike times between theMin (sec) and theMax (sec).</p>
 
 <p><strong>Parameters:</strong></p>
 <table>
@@ -1339,7 +1347,7 @@ reports can be generated with the bExport class.</p>
           <summary>Source code in <code>sanpy/bExport.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">report2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Generate a report of spikes with spike times between theMin (sec) and theMax (sec).</span>
+<span class="sd">	Generate a human readable report of spikes with spike times between theMin (sec) and theMax (sec).</span>
 
 <span class="sd">	Args:</span>
 <span class="sd">		theMin (float): Start seconds to save, inclusive</span>
@@ -1349,7 +1357,7 @@ reports can be generated with the bExport class.</p>
 <span class="sd">		df: Pandas DataFrame</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">newList</span> <span class="o">=</span> <span class="p">[]</span>
-	<span class="k">for</span> <span class="n">spike</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">:</span>
+	<span class="k">for</span> <span class="n">spikeIdx</span><span class="p">,</span> <span class="n">spike</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">):</span>
 
 		<span class="c1"># if current spike time is out of bounds then continue (e.g. it is not between theMin (sec) and theMax (sec)</span>
 		<span class="n">spikeTime_sec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">pnt2Sec_</span><span class="p">(</span><span class="n">spike</span><span class="p">[</span><span class="s1">&#39;thresholdPnt&#39;</span><span class="p">])</span>
@@ -1357,6 +1365,7 @@ reports can be generated with the bExport class.</p>
 			<span class="k">continue</span>
 
 		<span class="n">spikeDict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span> <span class="c1"># use OrderedDict so Pandas output is in the correct order</span>
+		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;Spike&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spikeIdx</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;Take Off Potential (s)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">pnt2Sec_</span><span class="p">(</span><span class="n">spike</span><span class="p">[</span><span class="s1">&#39;thresholdPnt&#39;</span><span class="p">])</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;Take Off Potential (ms)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">pnt2Ms_</span><span class="p">(</span><span class="n">spike</span><span class="p">[</span><span class="s1">&#39;thresholdPnt&#39;</span><span class="p">])</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;Take Off Potential (mV)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spike</span><span class="p">[</span><span class="s1">&#39;thresholdVal&#39;</span><span class="p">]</span>
@@ -1373,6 +1382,7 @@ reports can be generated with the bExport class.</p>
 		<span class="c1">#</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;Inter-Spike-Interval (ms)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spike</span><span class="p">[</span><span class="s1">&#39;isi_ms&#39;</span><span class="p">]</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;Spike Frequency (Hz)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spike</span><span class="p">[</span><span class="s1">&#39;spikeFreq_hz&#39;</span><span class="p">]</span>
+		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;ISI (ms)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spike</span><span class="p">[</span><span class="s1">&#39;isi_ms&#39;</span><span class="p">]</span>
 
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;Cycle Length (ms)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spike</span><span class="p">[</span><span class="s1">&#39;cycleLength_ms&#39;</span><span class="p">]</span>
 
@@ -1386,6 +1396,8 @@ reports can be generated with the bExport class.</p>
 		<span class="k">for</span> <span class="n">widthDict</span> <span class="ow">in</span> <span class="n">spike</span><span class="p">[</span><span class="s1">&#39;widths&#39;</span><span class="p">]:</span>
 			<span class="n">keyName</span> <span class="o">=</span> <span class="s1">&#39;width_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">widthDict</span><span class="p">[</span><span class="s1">&#39;halfHeight&#39;</span><span class="p">])</span>
 			<span class="n">spikeDict</span><span class="p">[</span><span class="n">keyName</span><span class="p">]</span> <span class="o">=</span> <span class="n">widthDict</span><span class="p">[</span><span class="s1">&#39;widthMs&#39;</span><span class="p">]</span>
+
+		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;File&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">getFileName</span><span class="p">()</span>
 
 		<span class="c1"># errors</span>
 		<span class="c1">#spikeDict[&#39;numError&#39;] = spike[&#39;numError&#39;]</span>
@@ -1420,6 +1432,7 @@ reports can be generated with the bExport class.</p>
     <div class="doc doc-contents ">
 
       <p>Save a spike report for detected spikes between theMin (sec) and theMax (sec).</p>
+<p>This is used by main interface 'Export Spike Report'</p>
 
 <p><strong>Parameters:</strong></p>
 <table>
@@ -1486,6 +1499,8 @@ df: df</p></td>
 	<span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">	Save a spike report for detected spikes between theMin (sec) and theMax (sec).</span>
 
+<span class="sd">	This is used by main interface &#39;Export Spike Report&#39;</span>
+
 <span class="sd">	Args:</span>
 <span class="sd">		savefile (str): path to xlsx file</span>
 <span class="sd">		theMin (float): start/stop seconds of the analysis</span>
@@ -1530,7 +1545,7 @@ df: df</p></td>
 		<span class="n">dateAnalyzed</span><span class="p">,</span> <span class="n">timeAnalyzed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">dateAnalyzed</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39; &#39;</span><span class="p">)</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Date Analyzed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">dateAnalyzed</span><span class="p">]</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Time Analyzed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">timeAnalyzed</span><span class="p">]</span>
-		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Detection Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionType</span><span class="p">]</span>
+		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Detection Type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">getDetectionType</span><span class="p">()]</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;dV/dt Threshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]]</span>
 		<span class="c1">#headerDict[&#39;mV Threshold&#39;] = [self.ba.mvThreshold] # abb 202012</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;Vm Threshold (mV)&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]]</span>
@@ -1548,7 +1563,12 @@ df: df</p></td>
 		<span class="c1"># &#39;stats&#39; has xxx columns (name, mean, sd, se, n)</span>
 		<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;stats&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
+		<span class="n">ignoreColumns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Spike&#39;</span><span class="p">,</span> <span class="s1">&#39;File&#39;</span><span class="p">]</span>
 		<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cardiac_df</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">ignoreColumns</span><span class="p">:</span>
+				<span class="c1"># in general, need to ignore string columns</span>
+				<span class="c1">#headerDict[col].append(&#39;&#39;)</span>
+				<span class="k">continue</span>
 			<span class="n">headerDict</span><span class="p">[</span><span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 
 		<span class="c1"># mean</span>
@@ -1595,6 +1615,10 @@ df: df</p></td>
 			<span class="c1"># a dictionary key for each stat</span>
 			<span class="n">headerDict</span><span class="p">[</span><span class="s1">&#39;stats&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stat</span><span class="p">)</span>
 			<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">col</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cardiac_df</span><span class="p">):</span>
+				<span class="k">if</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">ignoreColumns</span><span class="p">:</span>
+					<span class="c1"># in general, need to ignore string columns</span>
+					<span class="c1">#headerDict[col].append(&#39;&#39;)</span>
+					<span class="k">continue</span>
 				<span class="c1">#headerDict[col].append(&#39;&#39;)</span>
 				<span class="k">if</span> <span class="n">stat</span> <span class="o">==</span> <span class="s1">&#39;mean&#39;</span><span class="p">:</span>
 					<span class="n">headerDict</span><span class="p">[</span><span class="n">col</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">theMean</span><span class="p">[</span><span class="n">col</span><span class="p">])</span>
@@ -1624,20 +1648,24 @@ df: df</p></td>
 		<span class="c1"># need to convert list values in dict to string (o.w. we get one row per item in list)</span>
 		<span class="n">exportDetectionDict</span> <span class="o">=</span> <span class="p">{}</span>
 		<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">detectionDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+			<span class="c1"># v is a dict from bDetection</span>
 			<span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
 				<span class="n">v</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1">&quot;&#39;</span>
 			<span class="n">exportDetectionDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
 		<span class="c1">#print(&#39;  === &quot;params&quot; sheet exportDetectionDict:&#39;, exportDetectionDict)</span>
-		<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">exportDetectionDict</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">T</span> <span class="c1"># index=[0] needed when dict has all scalar values</span>
-		<span class="c1">#print(&#39;  df:&#39;)</span>
-		<span class="c1">#print(df)</span>
-		<span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;params&#39;</span><span class="p">)</span>
-		<span class="n">columnWidth</span> <span class="o">=</span> <span class="mi">25</span>
+		<span class="c1">#df = pd.DataFrame(exportDetectionDict, index=[0]).T # index=[0] needed when dict has all scalar values</span>
+		<span class="n">detection_df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">exportDetectionDict</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+		<span class="n">detection_df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;params&#39;</span><span class="p">)</span>
+		<span class="c1"># worksheet is &lt;class &#39;xlsxwriter.worksheet.Worksheet&#39;&gt;</span>
 		<span class="n">worksheet</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">sheets</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span>  <span class="c1"># pull worksheet object</span>
-		<span class="n">worksheet</span><span class="o">.</span><span class="n">set_column</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">columnWidth</span><span class="p">)</span>  <span class="c1"># set column width</span>
+		<span class="c1"># set first 20 columns to columnWidth</span>
+		<span class="n">columnWidth</span> <span class="o">=</span> <span class="mi">18</span>
+		<span class="n">startCol</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">stopCol</span> <span class="o">=</span> <span class="mi">20</span> <span class="c1"># xlswriter.worksheet does not care about the stop column</span>
+		<span class="n">worksheet</span><span class="o">.</span><span class="n">set_column</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">stopCol</span><span class="p">,</span> <span class="n">columnWidth</span><span class="p">)</span>  <span class="c1"># set column width</span>
 
 		<span class="c1">#</span>
-		<span class="c1"># &#39;cardiac&#39; sheet</span>
+		<span class="c1"># &#39;cardiac&#39; sheet with human readable stat names</span>
 		<span class="n">cardiac_df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;cardiac&#39;</span><span class="p">)</span>
 
 		<span class="c1"># set the column widths in excel sheet &#39;cardiac&#39;</span>
@@ -1648,10 +1676,6 @@ df: df</p></td>
 
 
 		<span class="c1">#</span>
-		<span class="c1"># entire (verbose) analysis to sheet &#39;bob&#39;</span>
-		<span class="c1">#df.to_excel(writer, sheet_name=&#39;bob&#39;)</span>
-
-		<span class="c1">#</span>
 		<span class="c1"># mean spike clip</span>
 		<span class="n">theseClips</span><span class="p">,</span> <span class="n">theseClips_x</span><span class="p">,</span> <span class="n">meanClip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">getSpikeClips</span><span class="p">(</span><span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">sweepNumber</span><span class="p">)</span>
 		<span class="k">try</span><span class="p">:</span>
@@ -1660,8 +1684,7 @@ df: df</p></td>
 			<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">meanClip</span><span class="p">,</span> <span class="n">first_X</span><span class="p">)</span>
 			<span class="n">df</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="n">writer</span><span class="p">,</span> <span class="n">sheet_name</span><span class="o">=</span><span class="s1">&#39;Avg Spike&#39;</span><span class="p">)</span>
 		<span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;warning: got bad spike clips in saveReport(). Usually happend when 1-2 spikes&#39;</span><span class="p">)</span>
-		<span class="c1">#print(&#39;df:&#39;, df)</span>
+			<span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Got bad spike clips. Usually happend when 1-2 spikes&#39;</span><span class="p">)</span>
 
 		<span class="n">writer</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 

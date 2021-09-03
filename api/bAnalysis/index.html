@@ -461,20 +461,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sanpy.bAnalysis_.bAnalysis.getDefaultDetection" class="md-nav__link">
-    getDefaultDetection()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#sanpy.bAnalysis_.bAnalysis.getDefaultDetection_ca" class="md-nav__link">
-    getDefaultDetection_ca()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#sanpy.bAnalysis_.bAnalysis.getSpikeClips" class="md-nav__link">
     getSpikeClips()
   </a>
@@ -538,6 +524,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis_.bAnalysis.old_getDefaultDetection" class="md-nav__link">
+    old_getDefaultDetection()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis_.bAnalysis.old_getDefaultDetection_ca" class="md-nav__link">
+    old_getDefaultDetection_ca()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sanpy.bAnalysis_.bAnalysis.openHeaderInBrowser" class="md-nav__link">
     openHeaderInBrowser()
   </a>
@@ -575,6 +575,13 @@
         <li class="md-nav__item">
   <a href="#sanpy.bAnalysis_.bAnalysis.save_csv" class="md-nav__link">
     save_csv()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis_.bAnalysis.setSpikeStat" class="md-nav__link">
+    setSpikeStat()
   </a>
   
 </li>
@@ -927,20 +934,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#sanpy.bAnalysis_.bAnalysis.getDefaultDetection" class="md-nav__link">
-    getDefaultDetection()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#sanpy.bAnalysis_.bAnalysis.getDefaultDetection_ca" class="md-nav__link">
-    getDefaultDetection_ca()
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#sanpy.bAnalysis_.bAnalysis.getSpikeClips" class="md-nav__link">
     getSpikeClips()
   </a>
@@ -1004,6 +997,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis_.bAnalysis.old_getDefaultDetection" class="md-nav__link">
+    old_getDefaultDetection()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis_.bAnalysis.old_getDefaultDetection_ca" class="md-nav__link">
+    old_getDefaultDetection_ca()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#sanpy.bAnalysis_.bAnalysis.openHeaderInBrowser" class="md-nav__link">
     openHeaderInBrowser()
   </a>
@@ -1041,6 +1048,13 @@
         <li class="md-nav__item">
   <a href="#sanpy.bAnalysis_.bAnalysis.save_csv" class="md-nav__link">
     save_csv()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysis_.bAnalysis.setSpikeStat" class="md-nav__link">
+    setSpikeStat()
   </a>
   
 </li>
@@ -1189,6 +1203,8 @@
 <span class="sd">		fromDict: (dict): Dict has keys [&#39;sweepX&#39;, &#39;sweepY&#39;, &#39;mode&#39;]</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="c1">#logger.info(f&#39;{file}&#39;)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">detectionClass</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bDetection</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_isAnalyzed</span> <span class="o">=</span> <span class="kc">False</span>
 
 	<span class="c1"># mimic pyAbf</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">_dataPointsPerMs</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1209,8 +1225,8 @@
 	<span class="bp">self</span><span class="o">.</span><span class="n">loadError</span> <span class="o">=</span> <span class="kc">False</span>
 	<span class="sd">&quot;&quot;&quot;bool: True if error loading file/stream.&quot;&quot;&quot;</span>
 
-	<span class="bp">self</span><span class="o">.</span><span class="n">detectionDict</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># remember the parameters of our last detection</span>
-	<span class="sd">&quot;&quot;&quot;dict: Dictionary specifying detection parameters, see getDefaultDetection.&quot;&quot;&quot;</span>
+	<span class="c1">#self.detectionDict = None  # remember the parameters of our last detection</span>
+	<span class="sd">&quot;&quot;&quot;dict: Dictionary specifying detection parameters, see bDetection.getDefaultDetection.&quot;&quot;&quot;</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">_path</span> <span class="o">=</span> <span class="n">file</span>  <span class="c1"># todo: change this to filePath</span>
 	<span class="sd">&quot;&quot;&quot;str: File path.&quot;&quot;&quot;</span>
@@ -1221,7 +1237,7 @@
 	<span class="bp">self</span><span class="o">.</span><span class="n">dateAnalyzed</span> <span class="o">=</span> <span class="kc">None</span>
 	<span class="sd">&quot;&quot;&quot;str: Date Time of analysis. TODO: make a property.&quot;&quot;&quot;</span>
 
-	<span class="bp">self</span><span class="o">.</span><span class="n">detectionType</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="c1">#self.detectionType = None</span>
 	<span class="sd">&quot;&quot;&quot;str: From (&#39;dvdt&#39;, &#39;mv&#39;)&quot;&quot;&quot;</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">_filteredVm</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1242,8 +1258,8 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">loadError</span> <span class="o">=</span> <span class="kc">True</span>
 
 	<span class="c1"># only defined when loading abf files</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">acqDate</span> <span class="o">=</span> <span class="kc">None</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span> <span class="o">=</span> <span class="kc">None</span>
+	<span class="c1">#self.acqDate = None</span>
+	<span class="c1">#self.acqTime = None</span>
 
 	<span class="c1">#self._currentSweep = None</span>
 	<span class="c1">#self.setSweep(0)</span>
@@ -1264,17 +1280,18 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">_loadFromDf</span><span class="p">(</span><span class="n">fromDf</span><span class="p">)</span>
 	<span class="k">elif</span> <span class="n">byteStream</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_loadAbf</span><span class="p">(</span><span class="n">byteStream</span><span class="o">=</span><span class="n">byteStream</span><span class="p">)</span>
-	<span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abf&#39;</span><span class="p">):</span>
+	<span class="k">elif</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.abf&#39;</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_loadAbf</span><span class="p">(</span><span class="n">loadData</span><span class="o">=</span><span class="n">loadData</span><span class="p">)</span>
-	<span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.atf&#39;</span><span class="p">):</span>
+	<span class="k">elif</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.atf&#39;</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_loadAtf</span><span class="p">(</span><span class="n">loadData</span><span class="o">=</span><span class="n">loadData</span><span class="p">)</span>
-	<span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.tif&#39;</span><span class="p">):</span>
+	<span class="k">elif</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.tif&#39;</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_loadTif</span><span class="p">()</span>
-	<span class="k">elif</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
+	<span class="k">elif</span> <span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">file</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;.csv&#39;</span><span class="p">):</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">_loadCsv</span><span class="p">()</span>
 	<span class="k">else</span><span class="p">:</span>
-		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Can only open abf/csv/tif/stream files: </span><span class="si">{</span><span class="n">file</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">loadError</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="k">pass</span>
+		<span class="c1">#logger.error(f&#39;Can only open abf/csv/tif/stream files: {file}&#39;)</span>
+		<span class="c1">#self.loadError = True</span>
 
 	<span class="c1"># get default derivative</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">rebuildFiltered</span><span class="p">()</span>
@@ -1379,13 +1396,13 @@
 	<span class="n">ret</span> <span class="o">=</span> <span class="p">{</span>
 		<span class="s1">&#39;myFileType&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">myFileType</span><span class="p">,</span> <span class="c1"># (&#39;abf&#39;, &#39;tif&#39;, &#39;bytestream&#39;, &#39;csv&#39;)</span>
 		<span class="s1">&#39;loadError&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadError</span><span class="p">,</span>
-		<span class="s1">&#39;detectionDict&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">,</span>
+		<span class="s1">&#39;detectionDict&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectionClass</span><span class="p">,</span>
 		<span class="s1">&#39;path&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="p">,</span>
 		<span class="s1">&#39;file&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileName</span><span class="p">(),</span>
 		<span class="s1">&#39;dateAnalyzed&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">dateAnalyzed</span><span class="p">,</span>
-		<span class="s1">&#39;detectionType&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectionType</span><span class="p">,</span>
-		<span class="s1">&#39;acqDate&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqDate</span><span class="p">,</span>
-		<span class="s1">&#39;acqTime&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">acqTime</span><span class="p">,</span>
+		<span class="c1">#&#39;detectionType&#39;: self.detectionType,</span>
+		<span class="c1">#&#39;acqDate&#39;: self.acqDate,</span>
+		<span class="c1">#&#39;acqTime&#39;: self.acqTime,</span>
 		<span class="c1">#</span>
 		<span class="s1">&#39;_recordingMode&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_recordingMode</span><span class="p">,</span>
 		<span class="s1">&#39;get_yUnits&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_yUnits</span><span class="p">,</span>
@@ -1643,6 +1660,9 @@
 
 
 
+
+
+
   <div class="doc doc-object doc-method">
 
 
@@ -1700,7 +1720,7 @@
 		<span class="n">dfError</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">dictList</span><span class="p">)</span>
 
 	<span class="c1">#print(&#39;bAnalysis.errorReport() returning len(dfError):&#39;, len(dfError))</span>
-	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectionDict</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
+	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectionClass</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
 		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">dfError</span><span class="p">)</span><span class="si">}</span><span class="s1"> errors in spike detection&#39;</span><span class="p">)</span>
 
 	<span class="c1">#</span>
@@ -1795,193 +1815,7 @@
 
 
 
-  <div class="doc doc-object doc-method">
 
-
-
-<h2 id="sanpy.bAnalysis_.bAnalysis.getDefaultDetection" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">getDefaultDetection</span><span class="p">(</span><span class="n">cellType</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
-
-
-<a href="#sanpy.bAnalysis_.bAnalysis.getDefaultDetection" class="headerlink" title="Permanent link">¤</a></h2>
-
-    <div class="doc doc-contents ">
-
-      <p>Get default detection dictionary, pass this to [bAnalysis.spikeDetect()][sanpy.bAnalysis.bAnalysis.spikeDetect]</p>
-
-<p><strong>Returns:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>dict</code></td>
-      <td><p>Dictionary of detection parameters.</p></td>
-    </tr>
-  </tbody>
-</table>
-        <details class="quote">
-          <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getDefaultDetection</span><span class="p">(</span><span class="n">cellType</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Get default detection dictionary, pass this to [bAnalysis.spikeDetect()][sanpy.bAnalysis.bAnalysis.spikeDetect]</span>
-
-<span class="sd">	Returns:</span>
-<span class="sd">		dict: Dictionary of detection parameters.</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-
-	<span class="c1">#cellType = &#39;neuron&#39;</span>
-
-	<span class="n">mvThreshold</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
-	<span class="n">theDict</span> <span class="o">=</span> <span class="p">{</span>
-		<span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="c1">#if None then detect only using mvThreshold</span>
-		<span class="s1">&#39;mvThreshold&#39;</span><span class="p">:</span> <span class="n">mvThreshold</span><span class="p">,</span>
-		<span class="s1">&#39;medianFilter&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-		<span class="s1">&#39;SavitzkyGolay_pnts&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="c1"># shoould correspond to about 0.5 ms</span>
-		<span class="s1">&#39;SavitzkyGolay_poly&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-		<span class="s1">&#39;halfHeights&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">90</span><span class="p">],</span>
-		<span class="c1"># new 20210501</span>
-		<span class="s1">&#39;mdp_ms&#39;</span><span class="p">:</span> <span class="mi">250</span><span class="p">,</span> <span class="c1"># window before/after peak to look for MDP</span>
-		<span class="s1">&#39;refractory_ms&#39;</span><span class="p">:</span> <span class="mi">170</span><span class="p">,</span> <span class="c1"># rreject spikes with instantaneous frequency</span>
-		<span class="s1">&#39;peakWindow_ms&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="c1">#10, # time after spike to look for AP peak</span>
-		<span class="s1">&#39;dvdtPreWindow_ms&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="c1">#5, # used in dvdt, pre-roll to then search for real threshold crossing</span>
-		<span class="s1">&#39;avgWindow_ms&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
-		<span class="c1"># 20210425, trying 0.15</span>
-		<span class="c1">#&#39;dvdt_percentOfMax&#39;: 0.1, # only used in dvdt detection, used to back up spike threshold to more meaningful value</span>
-		<span class="s1">&#39;dvdt_percentOfMax&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="c1"># only used in dvdt detection, used to back up spike threshold to more meaningful value</span>
-		<span class="c1"># 20210413, was 50 for manuscript, we were missing lots of 1/2 widths</span>
-		<span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="c1">#200, #20,</span>
-		<span class="c1"># add 20210413 to turn of doBackupSpikeVm on pure vm detection</span>
-		<span class="s1">&#39;doBackupSpikeVm&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-		<span class="s1">&#39;spikeClipWidth_ms&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
-		<span class="s1">&#39;onlyPeaksAbove_mV&#39;</span><span class="p">:</span> <span class="n">mvThreshold</span><span class="p">,</span>
-		<span class="s1">&#39;onlyPeaksBelow_mV&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># added when working on subthreshold</span>
-		<span class="s1">&#39;startSeconds&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="c1"># not used ???</span>
-		<span class="s1">&#39;stopSeconds&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-
-		<span class="c1"># for detection of Ca from line scans</span>
-		<span class="c1">#&#39;caThresholdPos&#39;: 0.01,</span>
-		<span class="c1">#&#39;caMinSpike&#39;: 0.5,</span>
-
-		<span class="c1"># todo: get rid of this</span>
-		<span class="c1"># book keeping like (&#39;cellType&#39;, &#39;sex&#39;, &#39;condition&#39;)</span>
-		<span class="s1">&#39;cellType&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-		<span class="s1">&#39;sex&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-		<span class="s1">&#39;condition&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-		<span class="s1">&#39;verbose&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-	<span class="p">}</span>
-
-	<span class="k">if</span> <span class="n">cellType</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-		<span class="k">if</span> <span class="n">cellType</span> <span class="o">==</span> <span class="s1">&#39;SA Node Params&#39;</span><span class="p">:</span>
-			<span class="c1"># these are defaults from above</span>
-			<span class="k">pass</span>
-		<span class="k">elif</span> <span class="n">cellType</span> <span class="o">==</span> <span class="s1">&#39;Ventricular Params&#39;</span><span class="p">:</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;refractory_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>  <span class="c1"># max freq of 5 Hz</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;peakWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">300</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;spikeClipWidth_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>
-		<span class="k">elif</span> <span class="n">cellType</span> <span class="o">==</span> <span class="s1">&#39;Neuron Params&#39;</span><span class="p">:</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;refractory_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">7</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;peakWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;spikeClipWidth_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
-		<span class="k">elif</span> <span class="n">cellType</span> <span class="o">==</span> <span class="s1">&#39;Subthreshold Params&#39;</span><span class="p">:</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>  <span class="c1"># user specifies</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;refractory_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># max freq is 10 Hz</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;peakWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;spikeClipWidth_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;onlyPeaksAbove_mV&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;onlyPeaksBelow_mV&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
-			<span class="c1"># todo: add onlyPeaksBelow_mV</span>
-		<span class="k">else</span><span class="p">:</span>
-			<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not understand cell type &quot;</span><span class="si">{</span><span class="n">cellType</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-
-	<span class="k">return</span> <span class="n">theDict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-</code></pre></div>
-        </details>
-    </div>
-
-  </div>
-
-
-
-
-
-  <div class="doc doc-object doc-method">
-
-
-
-<h2 id="sanpy.bAnalysis_.bAnalysis.getDefaultDetection_ca" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">getDefaultDetection_ca</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
-
-
-<a href="#sanpy.bAnalysis_.bAnalysis.getDefaultDetection_ca" class="headerlink" title="Permanent link">¤</a></h2>
-
-    <div class="doc doc-contents ">
-
-      <p>Get default detection for Ca analysis. Warning, this is currently experimental.</p>
-
-<p><strong>Returns:</strong></p>
-<table>
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>Description</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td><code>dict</code></td>
-      <td><p>Dictionary of detection parameters.</p></td>
-    </tr>
-  </tbody>
-</table>
-        <details class="quote">
-          <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getDefaultDetection_ca</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Get default detection for Ca analysis. Warning, this is currently experimental.</span>
-
-<span class="sd">	Returns:</span>
-<span class="sd">		dict: Dictionary of detection parameters.</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">theDict</span> <span class="o">=</span> <span class="n">bAnalysis</span><span class="o">.</span><span class="n">getDefaultDetection</span><span class="p">()</span>
-	<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="c1">#if None then detect only using mvThreshold</span>
-	<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
-	<span class="c1">#</span>
-	<span class="c1">#theDict[&#39;medianFilter&#39;: 0</span>
-	<span class="c1">#&#39;halfHeights&#39;: [20,50,80]</span>
-	<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;refractory_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span> <span class="c1">#170 # reject spikes with instantaneous frequency</span>
-	<span class="c1">#theDict[&#39;peakWindow_ms&#39;: 100 #10, # time after spike to look for AP peak</span>
-	<span class="c1">#theDict[&#39;dvdtPreWindow_ms&#39;: 2 # used in dvdt, pre-roll to then search for real threshold crossing</span>
-	<span class="c1">#theDict[&#39;avgWindow_ms&#39;: 5</span>
-	<span class="c1">#theDict[&#39;dvdt_percentOfMax&#39;: 0.1</span>
-	<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span> <span class="c1">#was 20</span>
-	<span class="c1">#theDict[&#39;spikeClipWidth_ms&#39;: 500</span>
-	<span class="c1">#theDict[&#39;onlyPeaksAbove_mV&#39;: None</span>
-	<span class="c1">#theDict[&#39;startSeconds&#39;: None</span>
-	<span class="c1">#theDict[&#39;stopSeconds&#39;: None</span>
-
-	<span class="c1"># for detection of Ca from line scans</span>
-	<span class="c1">#theDict[&#39;caThresholdPos&#39;] = 0.01</span>
-	<span class="c1">#theDict[&#39;caMinSpike&#39;] = 0.5</span>
-
-	<span class="k">return</span> <span class="n">theDict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-</code></pre></div>
-        </details>
-    </div>
-
-  </div>
 
 
 
@@ -1998,14 +1832,14 @@
 
 
 <h2 id="sanpy.bAnalysis_.bAnalysis.getSpikeClips" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">getSpikeClips</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">,</span> <span class="n">spikeClipWidth_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">getSpikeClips</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">,</span> <span class="n">spikeSelection</span><span class="o">=</span><span class="p">[],</span> <span class="n">spikeClipWidth_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
 <a href="#sanpy.bAnalysis_.bAnalysis.getSpikeClips" class="headerlink" title="Permanent link">¤</a></h2>
 
     <div class="doc doc-contents ">
 
-      <p>get 2d list of spike clips, spike clips x, and 1d mean spike clip</p>
+      <p>Get 2d list of spike clips, spike clips x, and 1d mean spike clip</p>
 
 <p><strong>Parameters:</strong></p>
 <table>
@@ -2030,26 +1864,66 @@
         <td><p>Stop seconds.</p></td>
         <td><em>required</em></td>
       </tr>
+      <tr>
+        <td><code>spikeSelection</code></td>
+        <td><code>list</code></td>
+        <td><p>List of spike numbers</p></td>
+        <td><code>[]</code></td>
+      </tr>
+      <tr>
+        <td><code>spikeClipWidth_ms</code></td>
+        <td><code>float</code></td>
+        <td></td>
+        <td><code>None</code></td>
+      </tr>
   </tbody>
 </table>      <p>Requires: self.spikeDetect() and self._makeSpikeClips()</p>
 
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>theseClips (list)</code></td>
+      <td><p>List of clip
+theseClips_x (list): ms
+meanClip (list)</p></td>
+    </tr>
+  </tbody>
+</table>
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getSpikeClips</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">,</span> <span class="n">spikeClipWidth_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getSpikeClips</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theMin</span><span class="p">,</span> <span class="n">theMax</span><span class="p">,</span> <span class="n">spikeSelection</span><span class="o">=</span><span class="p">[],</span> <span class="n">spikeClipWidth_ms</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	get 2d list of spike clips, spike clips x, and 1d mean spike clip</span>
+<span class="sd">	Get 2d list of spike clips, spike clips x, and 1d mean spike clip</span>
 
 <span class="sd">	Args:</span>
 <span class="sd">		theMin (float): Start seconds.</span>
 <span class="sd">		theMax (float): Stop seconds.</span>
+<span class="sd">		spikeSelection (list): List of spike numbers</span>
+<span class="sd">		spikeClipWidth_ms (float):</span>
 
 <span class="sd">	Requires: self.spikeDetect() and self._makeSpikeClips()</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		theseClips (list): List of clip</span>
+<span class="sd">		theseClips_x (list): ms</span>
+<span class="sd">		meanClip (list)</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 
 	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">numSpikes</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
 		<span class="k">return</span>
 
-	<span class="k">if</span> <span class="n">theMin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">theMax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+	<span class="n">doSpikeSelection</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spikeSelection</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+
+	<span class="k">if</span> <span class="n">doSpikeSelection</span><span class="p">:</span>
+		<span class="k">pass</span>
+	<span class="k">elif</span> <span class="n">theMin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">theMax</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="n">theMin</span> <span class="o">=</span> <span class="mi">0</span>
 		<span class="n">theMax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">recordingDur</span>  <span class="c1"># self.sweepX[-1]</span>
 
@@ -2057,9 +1931,8 @@
 	<span class="c1"># need to do this every time because we get here when sweepNumber changes</span>
 	<span class="c1">#if self.spikeClips is None:</span>
 	<span class="c1">#	self._makeSpikeClips(spikeClipWidth_ms=spikeClipWidth_ms, sweepNumber=sweepNumber)</span>
+	<span class="c1"># TODO: don&#39;t make all clips</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">_makeSpikeClips</span><span class="p">(</span><span class="n">spikeClipWidth_ms</span><span class="o">=</span><span class="n">spikeClipWidth_ms</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="o">=</span><span class="n">sweepNumber</span><span class="p">)</span>
-
-	<span class="c1">#logger.info(f&#39;self.spikeClips: {self.spikeClips}&#39;)</span>
 
 	<span class="c1"># make a list of clips within start/stop (Seconds)</span>
 	<span class="n">theseClips</span> <span class="o">=</span> <span class="p">[]</span>
@@ -2069,13 +1942,19 @@
 	<span class="n">spikeTimes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getSpikeTimes</span><span class="p">(</span><span class="n">sweepNumber</span><span class="o">=</span><span class="n">sweepNumber</span><span class="p">)</span>
 
 	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">spikeTimes</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spikeClips</span><span class="p">):</span>
-		<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;ERROR getSpikeClips() len spikeTimes !=  spikeClips </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">spikeTimes</span><span class="p">)</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spikeClips</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;len spikeTimes !=  spikeClips </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">spikeTimes</span><span class="p">)</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spikeClips</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
 	<span class="c1"># self.spikeClips is a list of clips</span>
 	<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">clip</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spikeClips</span><span class="p">):</span>
-		<span class="n">spikeTime</span> <span class="o">=</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
-		<span class="n">spikeTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pnt2Sec_</span><span class="p">(</span><span class="n">spikeTime</span><span class="p">)</span>
-		<span class="k">if</span> <span class="n">spikeTime</span><span class="o">&gt;=</span><span class="n">theMin</span> <span class="ow">and</span> <span class="n">spikeTime</span><span class="o">&lt;=</span><span class="n">theMax</span><span class="p">:</span>
+		<span class="n">doThisSpike</span> <span class="o">=</span> <span class="kc">False</span>
+		<span class="k">if</span> <span class="n">doSpikeSelection</span><span class="p">:</span>
+			<span class="n">doThisSpike</span> <span class="o">=</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">spikeSelection</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">spikeTime</span> <span class="o">=</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+			<span class="n">spikeTime</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pnt2Sec_</span><span class="p">(</span><span class="n">spikeTime</span><span class="p">)</span>
+			<span class="k">if</span> <span class="n">spikeTime</span><span class="o">&gt;=</span><span class="n">theMin</span> <span class="ow">and</span> <span class="n">spikeTime</span><span class="o">&lt;=</span><span class="n">theMax</span><span class="p">:</span>
+				<span class="n">doThisSpike</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="k">if</span> <span class="n">doThisSpike</span><span class="p">:</span>
 			<span class="n">theseClips</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clip</span><span class="p">)</span>
 			<span class="n">theseClips_x</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spikeClips_x2</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="c1"># remember, all _x are the same</span>
 			<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spikeClips_x</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">clip</span><span class="p">):</span>
@@ -2367,12 +2246,17 @@ For a list of available stats use bDetection.defaultDetection.</p></td>
           <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">isAnalyzed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Return True if this bAnalysis has been analyzed, False otherwise.&quot;&quot;&quot;</span>
-	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectionDict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+	<span class="c1">#return self.detectionDict is not None</span>
+	<span class="c1">#return self.numSpikes &gt; 0</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_isAnalyzed</span>
 </code></pre></div>
         </details>
     </div>
 
   </div>
+
+
+
 
 
 
@@ -2439,7 +2323,8 @@ For a list of available stats use bDetection.defaultDetection.</p></td>
 <span class="sd">		int: The point in the recording</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">theRet</span> <span class="o">=</span> <span class="n">ms</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span>
-	<span class="n">theRet</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">theRet</span><span class="p">)</span>
+	<span class="c1">#theRet = int(theRet)</span>
+	<span class="n">theRet</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">theRet</span><span class="p">)</span>
 	<span class="k">return</span> <span class="n">theRet</span>
 </code></pre></div>
         </details>
@@ -2496,6 +2381,198 @@ For a list of available stats use bDetection.defaultDetection.</p></td>
     <div class="doc doc-contents ">
 
       <p>Get the number of sweeps.</p>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="sanpy.bAnalysis_.bAnalysis.old_getDefaultDetection" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">old_getDefaultDetection</span><span class="p">(</span><span class="n">cellType</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.bAnalysis_.bAnalysis.old_getDefaultDetection" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Get default detection dictionary, pass this to [bAnalysis.spikeDetect()][sanpy.bAnalysis.bAnalysis.spikeDetect]</p>
+
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>dict</code></td>
+      <td><p>Dictionary of detection parameters.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">old_getDefaultDetection</span><span class="p">(</span><span class="n">cellType</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get default detection dictionary, pass this to [bAnalysis.spikeDetect()][sanpy.bAnalysis.bAnalysis.spikeDetect]</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		dict: Dictionary of detection parameters.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="c1">#cellType = &#39;neuron&#39;</span>
+
+	<span class="n">mvThreshold</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
+	<span class="n">theDict</span> <span class="o">=</span> <span class="p">{</span>
+		<span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="c1">#if None then detect only using mvThreshold</span>
+		<span class="s1">&#39;mvThreshold&#39;</span><span class="p">:</span> <span class="n">mvThreshold</span><span class="p">,</span>
+		<span class="s1">&#39;medianFilter&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+		<span class="s1">&#39;SavitzkyGolay_pnts&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="c1"># shoould correspond to about 0.5 ms</span>
+		<span class="s1">&#39;SavitzkyGolay_poly&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+		<span class="s1">&#39;halfHeights&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">90</span><span class="p">],</span>
+		<span class="c1"># new 20210501</span>
+		<span class="s1">&#39;mdp_ms&#39;</span><span class="p">:</span> <span class="mi">250</span><span class="p">,</span> <span class="c1"># window before/after peak to look for MDP</span>
+		<span class="s1">&#39;refractory_ms&#39;</span><span class="p">:</span> <span class="mi">170</span><span class="p">,</span> <span class="c1"># rreject spikes with instantaneous frequency</span>
+		<span class="s1">&#39;peakWindow_ms&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span> <span class="c1">#10, # time after spike to look for AP peak</span>
+		<span class="s1">&#39;dvdtPreWindow_ms&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="c1">#5, # used in dvdt, pre-roll to then search for real threshold crossing</span>
+		<span class="s1">&#39;avgWindow_ms&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+		<span class="c1"># 20210425, trying 0.15</span>
+		<span class="c1">#&#39;dvdt_percentOfMax&#39;: 0.1, # only used in dvdt detection, used to back up spike threshold to more meaningful value</span>
+		<span class="s1">&#39;dvdt_percentOfMax&#39;</span><span class="p">:</span> <span class="mf">0.1</span><span class="p">,</span> <span class="c1"># only used in dvdt detection, used to back up spike threshold to more meaningful value</span>
+		<span class="c1"># 20210413, was 50 for manuscript, we were missing lots of 1/2 widths</span>
+		<span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">:</span> <span class="mi">200</span><span class="p">,</span> <span class="c1">#200, #20,</span>
+		<span class="c1"># add 20210413 to turn of doBackupSpikeVm on pure vm detection</span>
+		<span class="s1">&#39;doBackupSpikeVm&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+		<span class="s1">&#39;spikeClipWidth_ms&#39;</span><span class="p">:</span> <span class="mi">500</span><span class="p">,</span>
+		<span class="s1">&#39;onlyPeaksAbove_mV&#39;</span><span class="p">:</span> <span class="n">mvThreshold</span><span class="p">,</span>
+		<span class="s1">&#39;onlyPeaksBelow_mV&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># added when working on subthreshold</span>
+		<span class="s1">&#39;startSeconds&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="c1"># not used ???</span>
+		<span class="s1">&#39;stopSeconds&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+
+		<span class="c1"># for detection of Ca from line scans</span>
+		<span class="c1">#&#39;caThresholdPos&#39;: 0.01,</span>
+		<span class="c1">#&#39;caMinSpike&#39;: 0.5,</span>
+
+		<span class="c1"># todo: get rid of this</span>
+		<span class="c1"># book keeping like (&#39;cellType&#39;, &#39;sex&#39;, &#39;condition&#39;)</span>
+		<span class="s1">&#39;cellType&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;sex&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;condition&#39;</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
+		<span class="s1">&#39;verbose&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+	<span class="p">}</span>
+
+	<span class="k">if</span> <span class="n">cellType</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="k">if</span> <span class="n">cellType</span> <span class="o">==</span> <span class="s1">&#39;SA Node Params&#39;</span><span class="p">:</span>
+			<span class="c1"># these are defaults from above</span>
+			<span class="k">pass</span>
+		<span class="k">elif</span> <span class="n">cellType</span> <span class="o">==</span> <span class="s1">&#39;Ventricular Params&#39;</span><span class="p">:</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;refractory_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>  <span class="c1"># max freq of 5 Hz</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;peakWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">300</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;spikeClipWidth_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>
+		<span class="k">elif</span> <span class="n">cellType</span> <span class="o">==</span> <span class="s1">&#39;Neuron Params&#39;</span><span class="p">:</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;refractory_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">7</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;peakWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">4</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;spikeClipWidth_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">20</span>
+		<span class="k">elif</span> <span class="n">cellType</span> <span class="o">==</span> <span class="s1">&#39;Subthreshold Params&#39;</span><span class="p">:</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>  <span class="c1"># user specifies</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;refractory_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>  <span class="c1"># max freq is 10 Hz</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;peakWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;spikeClipWidth_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;onlyPeaksAbove_mV&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+			<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;onlyPeaksBelow_mV&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">20</span>
+			<span class="c1"># todo: add onlyPeaksBelow_mV</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not understand cell type &quot;</span><span class="si">{</span><span class="n">cellType</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+
+	<span class="k">return</span> <span class="n">theDict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 id="sanpy.bAnalysis_.bAnalysis.old_getDefaultDetection_ca" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">old_getDefaultDetection_ca</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.bAnalysis_.bAnalysis.old_getDefaultDetection_ca" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Get default detection for Ca analysis. Warning, this is currently experimental.</p>
+
+<p><strong>Returns:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>dict</code></td>
+      <td><p>Dictionary of detection parameters.</p></td>
+    </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">old_getDefaultDetection_ca</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get default detection for Ca analysis. Warning, this is currently experimental.</span>
+
+<span class="sd">	Returns:</span>
+<span class="sd">		dict: Dictionary of detection parameters.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="n">theDict</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bDetection</span><span class="o">.</span><span class="n">getDefaultDetection</span><span class="p">()</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.01</span> <span class="c1">#if None then detect only using mvThreshold</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;mvThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span>
+	<span class="c1">#</span>
+	<span class="c1">#theDict[&#39;medianFilter&#39;: 0</span>
+	<span class="c1">#&#39;halfHeights&#39;: [20,50,80]</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;refractory_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span> <span class="c1">#170 # reject spikes with instantaneous frequency</span>
+	<span class="c1">#theDict[&#39;peakWindow_ms&#39;: 100 #10, # time after spike to look for AP peak</span>
+	<span class="c1">#theDict[&#39;dvdtPreWindow_ms&#39;: 2 # used in dvdt, pre-roll to then search for real threshold crossing</span>
+	<span class="c1">#theDict[&#39;avgWindow_ms&#39;: 5</span>
+	<span class="c1">#theDict[&#39;dvdt_percentOfMax&#39;: 0.1</span>
+	<span class="n">theDict</span><span class="p">[</span><span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">200</span> <span class="c1">#was 20</span>
+	<span class="c1">#theDict[&#39;spikeClipWidth_ms&#39;: 500</span>
+	<span class="c1">#theDict[&#39;onlyPeaksAbove_mV&#39;: None</span>
+	<span class="c1">#theDict[&#39;startSeconds&#39;: None</span>
+	<span class="c1">#theDict[&#39;stopSeconds&#39;: None</span>
+
+	<span class="c1"># for detection of Ca from line scans</span>
+	<span class="c1">#theDict[&#39;caThresholdPos&#39;] = 0.01</span>
+	<span class="c1">#theDict[&#39;caMinSpike&#39;] = 0.5</span>
+
+	<span class="k">return</span> <span class="n">theDict</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+</code></pre></div>
+        </details>
     </div>
 
   </div>
@@ -2678,7 +2755,8 @@ For a list of available stats use bDetection.defaultDetection.</p></td>
 <span class="sd">		float: The point in seconds</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="k">if</span> <span class="n">pnt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-		<span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">pnt</span><span class="p">)</span>
+		<span class="c1">#return math.isnan(pnt)</span>
+		<span class="k">return</span> <span class="n">math</span><span class="o">.</span><span class="n">nan</span>
 	<span class="k">else</span><span class="p">:</span>
 		<span class="k">return</span> <span class="n">pnt</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span> <span class="o">/</span> <span class="mi">1000</span>
 </code></pre></div>
@@ -2796,31 +2874,87 @@ TODO: Load <path>_analysis.csv</p>
 
 
 
+<h2 id="sanpy.bAnalysis_.bAnalysis.setSpikeStat" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">setSpikeStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeList</span><span class="p">,</span> <span class="n">stat</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.bAnalysis_.bAnalysis.setSpikeStat" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Used to set simple things like ('isBad', 'userType1', ...)</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">setSpikeStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeList</span><span class="p">,</span> <span class="n">stat</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Used to set simple things like (&#39;isBad&#39;, &#39;userType1&#39;, ...)</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">spikeList</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+		<span class="k">return</span>
+
+	<span class="n">count</span> <span class="o">=</span> <span class="mi">0</span>
+	<span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">spike</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">):</span>
+		<span class="k">if</span> <span class="n">idx</span> <span class="ow">in</span> <span class="n">spikeList</span><span class="p">:</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">spike</span><span class="p">[</span><span class="n">stat</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+				<span class="n">count</span> <span class="o">+=</span> <span class="mi">1</span>
+			<span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+				<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+	<span class="c1">#</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Given </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">spikeList</span><span class="p">)</span><span class="si">}</span><span class="s1"> and set </span><span class="si">{</span><span class="n">count</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
 <h2 id="sanpy.bAnalysis_.bAnalysis.spikeDetect" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">spikeDetect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dDict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">spikeDetect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detectionClass</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
 
 <a href="#sanpy.bAnalysis_.bAnalysis.spikeDetect" class="headerlink" title="Permanent link">¤</a></h2>
 
     <div class="doc doc-contents ">
 
-      <p>Spike Detet all sweeps.</p>
+      <p>Spike Detect all sweeps.</p>
+<p>When we are instantiated we create a default self.detectionClass</p>
 <p>Each spike is a row and has 'sweep'</p>
 
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">spikeDetect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dDict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Spike Detet all sweeps.</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">spikeDetect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">detectionClass</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Spike Detect all sweeps.</span>
+
+<span class="sd">	When we are instantiated we create a default self.detectionClass</span>
 
 <span class="sd">	Each spike is a row and has &#39;sweep&#39;</span>
 <span class="sd">	&quot;&quot;&quot;</span>
-	<span class="n">startTime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
 	<span class="c1">#rememberSweep = self.currentSweep  # This is BAD we are mixing analysis with interface !!!</span>
 
+	<span class="n">startTime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+	<span class="k">if</span> <span class="n">detectionClass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">detectionClass</span> <span class="o">=</span> <span class="n">detectionClass</span>
+
+	<span class="c1">#</span>
+	<span class="c1"># todo: ask user if they want to remove their settings for (isBad, userType)</span>
+	<span class="c1">#</span>
+
+	<span class="bp">self</span><span class="o">.</span><span class="n">_isAnalyzed</span> <span class="o">=</span> <span class="kc">True</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># we are filling this in, one dict for each spike</span>
+
 	<span class="k">for</span> <span class="n">sweepNumber</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sweepList</span><span class="p">:</span>
 		<span class="c1">#self.setSweep(sweep)</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDetect__</span><span class="p">(</span><span class="n">sweepNumber</span><span class="p">,</span> <span class="n">dDict</span><span class="o">=</span><span class="n">dDict</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDetect__</span><span class="p">(</span><span class="n">sweepNumber</span><span class="p">,</span> <span class="n">dDict</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">detectionClass</span><span class="p">)</span>
 
 	<span class="c1">#</span>
 	<span class="c1">#self.setSweep(rememberSweep)</span>
@@ -2842,15 +2976,14 @@ TODO: Load <path>_analysis.csv</p>
 
 
 <h2 id="sanpy.bAnalysis_.bAnalysis.spikeDetect__" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">spikeDetect__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">,</span> <span class="n">dDict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">spikeDetect__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">,</span> <span class="n">dDict</span><span class="p">)</span></code>
 
 
 <a href="#sanpy.bAnalysis_.bAnalysis.spikeDetect__" class="headerlink" title="Permanent link">¤</a></h2>
 
     <div class="doc doc-contents ">
 
-      <p>Spike detect the current sweep and
-put results into list of dict <code>self.spikeDict[]</code>.</p>
+      <p>Spike detect the current sweep and put results into list of dict <code>self.spikeDict[]</code>.</p>
 
 <p><strong>Parameters:</strong></p>
 <table>
@@ -2865,62 +2998,53 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
   <tbody>
       <tr>
         <td><code>dDict</code></td>
-        <td><code>dict</code></td>
-        <td><p>A detection dictionary from [bAnalysis.getDefaultDetection()][sanpy.bAnalysis.bAnalysis.getDefaultDetection]</p></td>
-        <td><code>None</code></td>
+        <td><code>bDetection</code></td>
+        <td><p>A detection class/dictionary from [bDetection()][sanpy.bDetection]</p></td>
+        <td><em>required</em></td>
       </tr>
   </tbody>
 </table>
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">spikeDetect__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">,</span> <span class="n">dDict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">spikeDetect__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">,</span> <span class="n">dDict</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Spike detect the current sweep and</span>
-<span class="sd">	put results into list of dict `self.spikeDict[]`.</span>
+<span class="sd">	Spike detect the current sweep and put results into list of dict `self.spikeDict[]`.</span>
 
 <span class="sd">	Args:</span>
-<span class="sd">		dDict (dict): A detection dictionary from [bAnalysis.getDefaultDetection()][sanpy.bAnalysis.bAnalysis.getDefaultDetection]</span>
+<span class="sd">		dDict (bDetection): A detection class/dictionary from [bDetection()][sanpy.bDetection]</span>
 <span class="sd">	&quot;&quot;&quot;</span>
 
 	<span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
 
-	<span class="n">startTime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
-
-	<span class="k">if</span> <span class="n">dDict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-		<span class="n">dDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detectionDict</span>
-		<span class="k">if</span> <span class="n">dDict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-			<span class="n">dDict</span> <span class="o">=</span> <span class="n">bAnalysis</span><span class="o">.</span><span class="n">getDefaultDetection</span><span class="p">()</span>
-
-	<span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+	<span class="k">if</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;verbose&#39;</span><span class="p">]:</span>
 		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;dDict is:&#39;</span><span class="p">)</span>
-		<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">dDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-			<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s1"> &quot;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+		<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dDict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+			<span class="n">value</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+			<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s1"> &quot;</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 
-	<span class="bp">self</span><span class="o">.</span><span class="n">detectionDict</span> <span class="o">=</span> <span class="n">dDict</span> <span class="c1"># remember the parameters of our last detection</span>
-
+	<span class="c1"># in case dDict has new filter values</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">rebuildFiltered</span><span class="p">()</span>
-
-	<span class="c1"># was this before adding detection per sweep</span>
-	<span class="c1">#self.spikeDict = [] # we are filling this in, one dict for each spike</span>
 
 	<span class="c1">#</span>
 	<span class="c1"># spike detect</span>
-	<span class="n">detectionType</span> <span class="o">=</span> <span class="kc">None</span>
-	<span class="k">if</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]):</span>
+	<span class="n">detectionType</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;detectionType&#39;</span><span class="p">]</span>
+	<span class="c1">#logger.info(f&#39;detectionType: &quot;{detectionType}&#39;)</span>
+
+	<span class="c1"># detect all spikes either with dvdt or mv</span>
+	<span class="k">if</span> <span class="n">detectionType</span> <span class="o">==</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bDetection</span><span class="o">.</span><span class="n">detectionTypes</span><span class="o">.</span><span class="n">mv</span><span class="p">:</span>
 		<span class="c1"># detect using mV threshold</span>
-		<span class="n">detectionType</span> <span class="o">=</span> <span class="s1">&#39;mv&#39;</span>
-		<span class="c1">#self.spikeTimes, spikeErrorList = self._spikeDetect_vm(dDict)</span>
 		<span class="n">spikeTimes</span><span class="p">,</span> <span class="n">spikeErrorList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spikeDetect_vm</span><span class="p">(</span><span class="n">dDict</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">)</span>
 
 		<span class="c1"># backup childish vm threshold</span>
 		<span class="k">if</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;doBackupSpikeVm&#39;</span><span class="p">]:</span>
 			<span class="c1">#self.spikeTimes = self._backupSpikeVm(dDict[&#39;medianFilter&#39;])</span>
 			<span class="n">spikeTimes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_backupSpikeVm</span><span class="p">(</span><span class="n">spikeTimes</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">,</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;medianFilter&#39;</span><span class="p">])</span>
-	<span class="k">else</span><span class="p">:</span>
+	<span class="k">elif</span> <span class="n">detectionType</span> <span class="o">==</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bDetection</span><span class="o">.</span><span class="n">detectionTypes</span><span class="o">.</span><span class="n">dvdt</span><span class="p">:</span>
 		<span class="c1"># detect using dv/dt threshold AND min mV</span>
-		<span class="n">detectionType</span> <span class="o">=</span> <span class="s1">&#39;dvdt&#39;</span>
-		<span class="c1">#self.spikeTimes, spikeErrorList = self._spikeDetect_dvdt(dDict)</span>
 		<span class="n">spikeTimes</span><span class="p">,</span> <span class="n">spikeErrorList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spikeDetect_dvdt</span><span class="p">(</span><span class="n">dDict</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown detection type &quot;</span><span class="si">{</span><span class="n">detectionType</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+		<span class="k">return</span>
 
 	<span class="c1"># set up</span>
 	<span class="n">sweepX</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sweepX</span><span class="p">(</span><span class="n">sweepNumber</span><span class="p">)</span>  <span class="c1"># sweepNumber is not optional</span>
@@ -2929,74 +3053,51 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
 	<span class="n">sweepC</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sweepC</span><span class="p">(</span><span class="n">sweepNumber</span><span class="p">)</span>
 
 	<span class="c1">#</span>
-	<span class="c1"># look in a window after each threshold crossing to get AP peak</span>
-	<span class="n">peakWindow_pnts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span> <span class="o">*</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;peakWindow_ms&#39;</span><span class="p">]</span>
-	<span class="n">peakWindow_pnts</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">peakWindow_pnts</span><span class="p">)</span>
+	<span class="n">now</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+	<span class="n">dateStr</span> <span class="o">=</span> <span class="n">now</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S&#39;</span><span class="p">)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">dateAnalyzed</span> <span class="o">=</span> <span class="n">dateStr</span>
 
 	<span class="c1">#</span>
-	<span class="c1">#</span>
-	<span class="c1"># TODO: Write function to throw out above/below</span>
-	<span class="c1">#</span>
-	<span class="c1">#</span>
+	<span class="c1"># look in a window after each threshold crossing to get AP peak</span>
+	<span class="n">peakWindow_pnts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms2Pnt_</span><span class="p">(</span><span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;peakWindow_ms&#39;</span><span class="p">])</span>
 
 	<span class="c1">#</span>
 	<span class="c1"># throw out spikes that have peak BELOW onlyPeaksAbove_mV</span>
-	<span class="n">newSpikeTimes</span> <span class="o">=</span> <span class="p">[]</span>
-	<span class="n">newSpikeErrorList</span> <span class="o">=</span> <span class="p">[]</span>
-	<span class="n">onlyPeaksAbove_mV</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;onlyPeaksAbove_mV&#39;</span><span class="p">]</span>
-	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  onlyPeaksAbove_mV:&quot;</span><span class="si">{</span><span class="n">onlyPeaksAbove_mV</span><span class="si">}</span><span class="s1">&quot; </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">onlyPeaksAbove_mV</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">onlyPeaksAbove_mV</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">onlyPeaksAbove_mV</span><span class="p">):</span>
-		<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  xxx here&#39;</span><span class="p">)</span>
-		<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">spikeTime</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spikeTimes</span><span class="p">):</span>
-			<span class="n">peakPnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">filteredVm</span><span class="p">[</span><span class="n">spikeTime</span><span class="p">:</span><span class="n">spikeTime</span><span class="o">+</span><span class="n">peakWindow_pnts</span><span class="p">])</span>
-			<span class="n">peakPnt</span> <span class="o">+=</span> <span class="n">spikeTime</span>
-			<span class="n">peakVal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">filteredVm</span><span class="p">[</span><span class="n">spikeTime</span><span class="p">:</span><span class="n">spikeTime</span><span class="o">+</span><span class="n">peakWindow_pnts</span><span class="p">])</span>
-			<span class="k">if</span> <span class="n">peakVal</span> <span class="o">&gt;</span> <span class="n">onlyPeaksAbove_mV</span><span class="p">:</span>
-				<span class="n">newSpikeTimes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spikeTime</span><span class="p">)</span>
-				<span class="n">newSpikeErrorList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spikeErrorList</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-			<span class="k">else</span><span class="p">:</span>
-				<span class="c1">#print(&#39;spikeDetect() peak height: rejecting spike&#39;, i, &#39;at pnt:&#39;, spikeTime, &quot;dDict[&#39;onlyPeaksAbove_mV&#39;]:&quot;, dDict[&#39;onlyPeaksAbove_mV&#39;])</span>
-				<span class="k">pass</span>
-		<span class="n">spikeTimes</span> <span class="o">=</span> <span class="n">newSpikeTimes</span>
-		<span class="n">spikeErrorList</span> <span class="o">=</span> <span class="n">newSpikeErrorList</span>
-
-	<span class="c1">#</span>
 	<span class="c1"># throw out spikes that have peak ABOVE onlyPeaksBelow_mV</span>
-	<span class="n">newSpikeTimes</span> <span class="o">=</span> <span class="p">[]</span>
-	<span class="n">newSpikeErrorList</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="n">onlyPeaksAbove_mV</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;onlyPeaksAbove_mV&#39;</span><span class="p">]</span>
 	<span class="n">onlyPeaksBelow_mV</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;onlyPeaksBelow_mV&#39;</span><span class="p">]</span>
-	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  onlyPeaksBelow_mV:&quot;</span><span class="si">{</span><span class="n">onlyPeaksBelow_mV</span><span class="si">}</span><span class="s1">&quot; </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">onlyPeaksBelow_mV</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-	<span class="k">if</span> <span class="n">onlyPeaksBelow_mV</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">math</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">onlyPeaksBelow_mV</span><span class="p">):</span>
-		<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">spikeTime</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spikeTimes</span><span class="p">):</span>
-			<span class="n">peakPnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">filteredVm</span><span class="p">[</span><span class="n">spikeTime</span><span class="p">:</span><span class="n">spikeTime</span><span class="o">+</span><span class="n">peakWindow_pnts</span><span class="p">])</span>
-			<span class="n">peakPnt</span> <span class="o">+=</span> <span class="n">spikeTime</span>
-			<span class="n">peakVal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">filteredVm</span><span class="p">[</span><span class="n">spikeTime</span><span class="p">:</span><span class="n">spikeTime</span><span class="o">+</span><span class="n">peakWindow_pnts</span><span class="p">])</span>
-			<span class="k">if</span> <span class="n">peakVal</span> <span class="o">&lt;</span> <span class="n">onlyPeaksBelow_mV</span><span class="p">:</span>
-				<span class="n">newSpikeTimes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spikeTime</span><span class="p">)</span>
-				<span class="n">newSpikeErrorList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spikeErrorList</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-			<span class="k">else</span><span class="p">:</span>
-				<span class="c1">#print(&#39;spikeDetect() peak height: rejecting spike&#39;, i, &#39;at pnt:&#39;, spikeTime, &quot;dDict[&#39;onlyPeaksAbove_mV&#39;]:&quot;, dDict[&#39;onlyPeaksAbove_mV&#39;])</span>
-				<span class="k">pass</span>
-		<span class="n">spikeTimes</span> <span class="o">=</span> <span class="n">newSpikeTimes</span>
-		<span class="n">spikeErrorList</span> <span class="o">=</span> <span class="n">newSpikeErrorList</span>
+	<span class="n">spikeTimes</span><span class="p">,</span><span class="n">spikeErrorList</span><span class="p">,</span> <span class="n">newSpikePeakPnt</span><span class="p">,</span> <span class="n">newSpikePeakVal</span> \
+	 				<span class="o">=</span> <span class="n">throwOutAboveBelow_</span><span class="p">(</span><span class="n">filteredVm</span><span class="p">,</span>
+							<span class="n">spikeTimes</span><span class="p">,</span> <span class="n">spikeErrorList</span><span class="p">,</span>
+							<span class="n">peakWindow_pnts</span><span class="p">,</span>
+							<span class="n">onlyPeaksAbove_mV</span><span class="o">=</span><span class="n">onlyPeaksAbove_mV</span><span class="p">,</span>
+							<span class="n">onlyPeaksBelow_mV</span><span class="o">=</span><span class="n">onlyPeaksBelow_mV</span><span class="p">)</span>
 
 	<span class="c1">#</span>
-	<span class="c1"># throw out spikes on a down-slope</span>
-	<span class="n">avgWindow_pnts</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;avgWindow_ms&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span>
+	<span class="c1"># small window to average Vm to calculate MDP (itself in a window before spike)</span>
+	<span class="n">avgWindow_pnts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms2Pnt_</span><span class="p">(</span><span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;avgWindow_ms&#39;</span><span class="p">])</span>
 	<span class="n">avgWindow_pnts</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">avgWindow_pnts</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
 
 	<span class="c1">#</span>
 	<span class="c1"># for each spike</span>
+	<span class="n">numSpikes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spikeTimes</span><span class="p">)</span>
 	<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">spikeTime</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spikeTimes</span><span class="p">):</span>
 		<span class="c1"># spikeTime units is ALWAYS points</span>
 
-		<span class="n">peakPnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">filteredVm</span><span class="p">[</span><span class="n">spikeTime</span><span class="p">:</span><span class="n">spikeTime</span><span class="o">+</span><span class="n">peakWindow_pnts</span><span class="p">])</span>
-		<span class="n">peakPnt</span> <span class="o">+=</span> <span class="n">spikeTime</span>
-		<span class="n">peakVal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">filteredVm</span><span class="p">[</span><span class="n">spikeTime</span><span class="p">:</span><span class="n">spikeTime</span><span class="o">+</span><span class="n">peakWindow_pnts</span><span class="p">])</span>
+		<span class="c1"># get the AP peak</span>
+		<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">		peakPnt = np.argmax(filteredVm[spikeTime:spikeTime+peakWindow_pnts])</span>
+<span class="sd">		peakPnt += spikeTime</span>
+<span class="sd">		peakVal = np.max(filteredVm[spikeTime:spikeTime+peakWindow_pnts])</span>
+<span class="sd">		&#39;&#39;&#39;</span>
+		<span class="n">peakPnt</span> <span class="o">=</span> <span class="n">newSpikePeakPnt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+		<span class="n">peakVal</span> <span class="o">=</span> <span class="n">newSpikePeakVal</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+		<span class="n">peakSec</span> <span class="o">=</span> <span class="p">(</span><span class="n">newSpikePeakPnt</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1000</span>
 
+		<span class="c1"># create one spike dictionary</span>
 		<span class="n">spikeDict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span> <span class="c1"># use OrderedDict so Pandas output is in the correct order</span>
 
-		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;include&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+		<span class="c1">#spikeDict[&#39;isBad&#39;] = False</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;analysisVersion&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">analysisVersion</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;interfaceVersion&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interfaceVersion</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileName</span><span class="p">()</span>
@@ -3007,9 +3108,14 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;condition&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;condition&#39;</span><span class="p">]</span>
 
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;sweep&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sweepNumber</span>
-		<span class="c1"># TODO: keep track of per sweep spike and total spike ???</span>
+		<span class="c1"># keep track of per sweep spike and total spike</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;sweepSpikeNumber&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
-		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;spikeNumber&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">numSpikes</span>
+		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;spikeNumber&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>  <span class="c1"># self.numSpikes</span>
+
+		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;include&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;userType&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="c1">#spikeDict[&#39;userType2&#39;] = False</span>
+		<span class="c1">#spikeDict[&#39;userType3&#39;] = False</span>
 
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 		<span class="c1"># append existing spikeErrorList from spikeDetect_dvdt() or spikeDetect_mv()</span>
@@ -3017,7 +3123,7 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
 		<span class="k">if</span> <span class="n">tmpError</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">tmpError</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">:</span>
 			<span class="c1">#spikeDict[&#39;numError&#39;] += 1</span>
 			<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmpError</span><span class="p">)</span> <span class="c1"># tmpError is from:</span>
-						<span class="c1">#eDict = self._getErrorDict(i, spikeTime, errType, errStr) # spikeTime is in pnts</span>
+			<span class="c1">#eDict = self._getErrorDict(i, spikeTime, errType, errStr) # spikeTime is in pnts</span>
 
 		<span class="c1">#</span>
 		<span class="c1"># detection params</span>
@@ -3026,6 +3132,7 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;medianFilter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;medianFilter&#39;</span><span class="p">]</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;halfHeights&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;halfHeights&#39;</span><span class="p">]</span>
 
+		<span class="c1"># DAC command at the precise spike point</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;dacCommand&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sweepC</span><span class="p">[</span><span class="n">spikeTime</span><span class="p">]</span>  <span class="c1"># spikeTime is in points</span>
 
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;thresholdPnt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spikeTime</span>
@@ -3035,11 +3142,10 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
 
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;peakPnt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">peakPnt</span>
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;peakVal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">peakVal</span>
-		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;peakSec&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">peakPnt</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span><span class="p">)</span> <span class="o">/</span> <span class="mi">1000</span>
+		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;peakSec&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">peakSec</span>
 
 		<span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;peakHeight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;peakVal&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;thresholdVal&#39;</span><span class="p">]</span>
 
-		<span class="c1">#</span>
 		<span class="c1">#</span>
 		<span class="c1"># only append to spikeDict after we are done (accounting for spikes within a sweep)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">spikeDict</span><span class="p">)</span>
@@ -3094,133 +3200,126 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
 				<span class="s1">&#39;widthPnts&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
 				<span class="s1">&#39;widthMs&#39;</span><span class="p">:</span> <span class="n">defaultVal</span>
 			<span class="p">}</span>
-			<span class="c1"># abb 20210125, make column width_&lt;n&gt; where &lt;n&gt; is &#39;halfHeight&#39;</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;widths_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">halfHeight</span><span class="p">)]</span> <span class="o">=</span> <span class="n">defaultVal</span>
-			<span class="c1"># was this</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;widths&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">widthDict</span><span class="p">)</span>
 
-		<span class="c1"># The nonlinear late diastolic depolarization phase was</span>
-		<span class="c1"># estimated as the duration between 1% and 10% dV/dt</span>
-		<span class="c1"># todo: not done !!!!!!!!!!</span>
+		<span class="c1">#</span>
+		<span class="n">mdp_ms</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;mdp_ms&#39;</span><span class="p">]</span>
+		<span class="n">mdp_pnts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms2Pnt_</span><span class="p">(</span><span class="n">mdp_ms</span><span class="p">)</span>  <span class="c1"># mdp_ms * self.dataPointsPerMs</span>
+		<span class="n">mdp_pnts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">mdp_pnts</span><span class="p">)</span>
 
-		<span class="k">if</span> <span class="n">i</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-			<span class="c1"># was continue but moved half width out of here</span>
-			<span class="k">pass</span>
-		<span class="k">else</span><span class="p">:</span>
-			<span class="n">mdp_ms</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;mdp_ms&#39;</span><span class="p">]</span>
-			<span class="n">mdp_pnts</span> <span class="o">=</span> <span class="n">mdp_ms</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span>
-			<span class="n">mdp_pnts</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">mdp_pnts</span><span class="p">)</span>
+		<span class="c1"># pre spike min</span>
+		<span class="c1"># other algorithms look between spike[i-1] and spike[i]</span>
+		<span class="c1"># here we are looking in a predefined window</span>
+		<span class="n">startPnt</span> <span class="o">=</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">mdp_pnts</span>
+		<span class="k">if</span> <span class="n">startPnt</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+			<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;TODO: add an official warning, we went past 0 for pre spike mdp ms window&#39;</span><span class="p">)</span>
+			<span class="n">startPnt</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="n">preRange</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">startPnt</span><span class="p">:</span><span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="c1"># EXCEPTION</span>
+		<span class="n">preMinPnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">preRange</span><span class="p">)</span>
+		<span class="n">preMinPnt</span> <span class="o">+=</span> <span class="n">startPnt</span>
+		<span class="c1"># the pre min is actually an average around the real minima</span>
+		<span class="n">avgRange</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">preMinPnt</span><span class="o">-</span><span class="n">avgWindow_pnts</span><span class="p">:</span><span class="n">preMinPnt</span><span class="o">+</span><span class="n">avgWindow_pnts</span><span class="p">]</span>
+		<span class="n">preMinVal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">avgRange</span><span class="p">)</span>
 
-			<span class="c1"># like 5000 pnts</span>
-			<span class="c1">#print(&#39;mdp_pnts:&#39;, mdp_pnts)#</span>
+		<span class="c1"># search backward from spike to find when vm reaches preMinVal (avg)</span>
+		<span class="n">preRange</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">preMinPnt</span><span class="p">:</span><span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+		<span class="n">preRange</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">preRange</span><span class="p">)</span> <span class="c1"># we want to search backwards from peak</span>
+		<span class="k">try</span><span class="p">:</span>
+			<span class="n">preMinPnt2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">preRange</span><span class="o">&lt;</span><span class="n">preMinVal</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+			<span class="n">preMinPnt</span> <span class="o">=</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">preMinPnt2</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preMinPnt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preMinPnt</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preMinVal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preMinVal</span>
 
-			<span class="c1"># pre spike min</span>
-			<span class="c1">#preRange = vm[self.spikeTimes[i-1]:self.spikeTimes[iIdx]]</span>
-			<span class="c1">#startPnt = self.spikeTimes[iIdx]-mdp_pnts</span>
-			<span class="n">startPnt</span> <span class="o">=</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-</span><span class="n">mdp_pnts</span>
-			<span class="k">if</span> <span class="n">startPnt</span><span class="o">&lt;</span><span class="mi">0</span><span class="p">:</span>
-				<span class="c1"># for V-Clammp</span>
-				<span class="n">startPnt</span> <span class="o">=</span> <span class="mi">0</span>
-			<span class="c1">#preRange = vm[startPnt:self.spikeTimes[i]] # EXCEPTION</span>
-			<span class="n">preRange</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">startPnt</span><span class="p">:</span><span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="c1"># EXCEPTION</span>
-			<span class="n">preMinPnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">preRange</span><span class="p">)</span>
-			<span class="c1">#preMinPnt += self.spikeTimes[i-1]</span>
-			<span class="n">preMinPnt</span> <span class="o">+=</span> <span class="n">startPnt</span>
-			<span class="c1"># the pre min is actually an average around the real minima</span>
-			<span class="n">avgRange</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">preMinPnt</span><span class="o">-</span><span class="n">avgWindow_pnts</span><span class="p">:</span><span class="n">preMinPnt</span><span class="o">+</span><span class="n">avgWindow_pnts</span><span class="p">]</span>
-			<span class="n">preMinVal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">avgRange</span><span class="p">)</span>
-
-			<span class="c1"># search backward from spike to find when vm reaches preMinVal (avg)</span>
-			<span class="c1">#preRange = vm[preMinPnt:self.spikeTimes[i]]</span>
-			<span class="n">preRange</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">preMinPnt</span><span class="p">:</span><span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
-			<span class="n">preRange</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">preRange</span><span class="p">)</span> <span class="c1"># we want to search backwards from peak</span>
-			<span class="k">try</span><span class="p">:</span>
-				<span class="n">preMinPnt2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">preRange</span><span class="o">&lt;</span><span class="n">preMinVal</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-				<span class="c1">#preMinPnt = self.spikeTimes[i] - preMinPnt2</span>
-				<span class="n">preMinPnt</span> <span class="o">=</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">preMinPnt2</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preMinPnt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preMinPnt</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preMinVal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preMinVal</span>
-
-			<span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-				<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;searching for preMinVal:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">preMinVal</span><span class="p">)</span> <span class="c1">#+ &#39; postRange min:&#39; + str(np.min(postRange)) + &#39; max &#39; + str(np.max(postRange))</span>
-				<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;preMin&#39;</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span> <span class="c1"># spikeTime is in pnts</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
-
-			<span class="c1">#</span>
-			<span class="c1"># linear fit on 10% - 50% of the time from preMinPnt to self.spikeTimes[i]</span>
-			<span class="n">startLinearFit</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="c1"># percent of time between pre spike min and AP peak</span>
-			<span class="n">stopLinearFit</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="c1">#</span>
-			<span class="c1"># taking floor() so we always get an integer # points</span>
-			<span class="n">timeInterval_pnts</span> <span class="o">=</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">preMinPnt</span><span class="p">)</span>
-			<span class="n">preLinearFitPnt0</span> <span class="o">=</span> <span class="n">preMinPnt</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">timeInterval_pnts</span> <span class="o">*</span> <span class="n">startLinearFit</span><span class="p">)</span>
-			<span class="n">preLinearFitPnt1</span> <span class="o">=</span> <span class="n">preMinPnt</span> <span class="o">+</span> <span class="n">math</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">timeInterval_pnts</span> <span class="o">*</span> <span class="n">stopLinearFit</span><span class="p">)</span>
-			<span class="n">preLinearFitVal0</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">preLinearFitPnt0</span><span class="p">]</span>
-			<span class="n">preLinearFitVal1</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">preLinearFitPnt1</span><span class="p">]</span>
-
-			<span class="c1"># linear fit before spike</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preLinearFitPnt0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preLinearFitPnt0</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preLinearFitPnt1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preLinearFitPnt1</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;earlyDiastolicDuration_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pnt2Ms_</span><span class="p">(</span><span class="n">preLinearFitPnt1</span> <span class="o">-</span> <span class="n">preLinearFitPnt0</span><span class="p">)</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preLinearFitVal0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preLinearFitVal0</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preLinearFitVal1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preLinearFitVal1</span>
-
-			<span class="c1"># a linear fit where &#39;m,b = np.polyfit(x, y, 1)&#39;</span>
-			<span class="c1"># m*x+b&quot;</span>
-			<span class="n">xFit</span> <span class="o">=</span> <span class="n">sweepX</span><span class="p">[</span><span class="n">preLinearFitPnt0</span><span class="p">:</span><span class="n">preLinearFitPnt1</span><span class="p">]</span>  <span class="c1"># abb added +1</span>
-			<span class="n">yFit</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">preLinearFitPnt0</span><span class="p">:</span><span class="n">preLinearFitPnt1</span><span class="p">]</span>
-
-			<span class="c1"># sometimes xFit/yFit have 0 length --&gt;&gt; TypeError</span>
-			<span class="c1">#print(f&#39; {iIdx} preLinearFitPnt0:{preLinearFitPnt0}, preLinearFitPnt1:{preLinearFitPnt1}&#39;)</span>
-			<span class="c1">#print(f&#39;    xFit:{len(xFit)} yFit:{len(yFit)}&#39;)</span>
-
-			<span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
-				<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
-				<span class="k">try</span><span class="p">:</span>
-					<span class="n">mLinear</span><span class="p">,</span> <span class="n">bLinear</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">xFit</span><span class="p">,</span> <span class="n">yFit</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># m is slope, b is intercept</span>
-					<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;earlyDiastolicDurationRate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mLinear</span>
-					<span class="c1"># todo: make an error if edd rate is too low</span>
-					<span class="n">lowestEddRate</span> <span class="o">=</span> <span class="mi">6</span>
-					<span class="k">if</span> <span class="n">mLinear</span> <span class="o">&lt;=</span> <span class="n">lowestEddRate</span><span class="p">:</span>
-						<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;earlyDiastolicDurationRate fit - TooLow&#39;</span>
-						<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;fitEDD&#39;</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span> <span class="c1"># spikeTime is in pnts</span>
-						<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
-
-				<span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-					<span class="c1">#catching exception: raise TypeError(&quot;expected non-empty vector for x&quot;)</span>
-					<span class="c1">#print(&#39;TypeError&#39;)</span>
-					<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;== FIX spike </span><span class="si">{</span><span class="n">iIdx</span><span class="si">}</span><span class="s1"> preLinearFitPnt0/preLinearFitPnt1 TypeError&#39;</span><span class="p">)</span>
-					<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  error is: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-					<span class="c1">#print(&#39;  preLinearFitPnt0:&#39;, preLinearFitPnt0, &#39;preLinearFitPnt1:&#39;, preLinearFitPnt1)</span>
-					<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  xFit:</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">xFit</span><span class="p">)</span><span class="si">}</span><span class="s1"> yFit:</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">yFit</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-					<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;earlyDiastolicDurationRate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultVal</span>
-					<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;earlyDiastolicDurationRate fit - TypeError&#39;</span>
-					<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;fitEDD&#39;</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span> <span class="c1"># spikeTime is in pnts</span>
-					<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
-				<span class="k">except</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">RankWarning</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-					<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;== FIX preLinearFitPnt0/preLinearFitPnt1 RankWarning&#39;</span><span class="p">)</span>
-					<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  error is: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-					<span class="c1">#print(&#39;RankWarning&#39;)</span>
-					<span class="c1"># also throws: RankWarning: Polyfit may be poorly conditioned</span>
-					<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;earlyDiastolicDurationRate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultVal</span>
-					<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;earlyDiastolicDurationRate fit - RankWarning&#39;</span>
-					<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;fitEDD2&#39;</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span> <span class="c1"># spikeTime is in pnts</span>
-					<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
-				<span class="k">except</span><span class="p">:</span>
-					<span class="nb">print</span><span class="p">(</span><span class="s1">&#39; !!!!!!!!!!!!!!!!!!!!!!!!!!! EXCEPTION DURING LINEAR FIT&#39;</span><span class="p">)</span>
-
-			<span class="c1"># not implemented</span>
-			<span class="c1">#self.spikeDict[i][&#39;lateDiastolicDuration&#39;] = ???</span>
+		<span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+			<span class="n">errorType</span> <span class="o">=</span> <span class="s1">&#39;Pre spike min (mdp)&#39;</span>
+			<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;Did not find preMinVal: &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">preMinVal</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span> <span class="c1">#+ &#39; postRange min:&#39; + str(np.min(postRange)) + &#39; max &#39; + str(np.max(postRange))</span>
+			<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">errorType</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span> <span class="c1"># spikeTime is in pnts</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
 
 		<span class="c1">#</span>
-		<span class="c1"># maxima in dv/dt before spike</span>
-		<span class="c1"># added try/except sunday april 14, seems to break spike detection???</span>
+		<span class="c1"># The nonlinear late diastolic depolarization phase was</span>
+		<span class="c1"># estimated as the duration between 1% and 10% dV/dt</span>
+		<span class="c1"># linear fit on 10% - 50% of the time from preMinPnt to self.spikeTimes[i]</span>
+		<span class="n">startLinearFit</span> <span class="o">=</span> <span class="mf">0.1</span> <span class="c1"># percent of time between pre spike min and AP peak</span>
+		<span class="n">stopLinearFit</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="c1">#</span>
+		<span class="n">timeInterval_pnts</span> <span class="o">=</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">preMinPnt</span>
+		<span class="c1"># taking round() so we always get an integer # points</span>
+		<span class="n">preLinearFitPnt0</span> <span class="o">=</span> <span class="n">preMinPnt</span> <span class="o">+</span> <span class="nb">round</span><span class="p">(</span><span class="n">timeInterval_pnts</span> <span class="o">*</span> <span class="n">startLinearFit</span><span class="p">)</span>
+		<span class="n">preLinearFitPnt1</span> <span class="o">=</span> <span class="n">preMinPnt</span> <span class="o">+</span> <span class="nb">round</span><span class="p">(</span><span class="n">timeInterval_pnts</span> <span class="o">*</span> <span class="n">stopLinearFit</span><span class="p">)</span>
+		<span class="n">preLinearFitVal0</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">preLinearFitPnt0</span><span class="p">]</span>
+		<span class="n">preLinearFitVal1</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">preLinearFitPnt1</span><span class="p">]</span>
+
+		<span class="c1"># linear fit before spike</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preLinearFitPnt0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preLinearFitPnt0</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preLinearFitPnt1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preLinearFitPnt1</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;earlyDiastolicDuration_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pnt2Ms_</span><span class="p">(</span><span class="n">preLinearFitPnt1</span> <span class="o">-</span> <span class="n">preLinearFitPnt0</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preLinearFitVal0&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preLinearFitVal0</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preLinearFitVal1&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preLinearFitVal1</span>
+
+		<span class="c1"># a linear fit where &#39;m,b = np.polyfit(x, y, 1)&#39;</span>
+		<span class="c1"># m*x+b&quot;</span>
+		<span class="n">xFit</span> <span class="o">=</span> <span class="n">sweepX</span><span class="p">[</span><span class="n">preLinearFitPnt0</span><span class="p">:</span><span class="n">preLinearFitPnt1</span><span class="p">]</span>  <span class="c1"># abb added +1</span>
+		<span class="n">yFit</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">preLinearFitPnt0</span><span class="p">:</span><span class="n">preLinearFitPnt1</span><span class="p">]</span>
+
+		<span class="c1"># sometimes xFit/yFit have 0 length --&gt;&gt; TypeError</span>
+		<span class="c1">#print(f&#39; {iIdx} preLinearFitPnt0:{preLinearFitPnt0}, preLinearFitPnt1:{preLinearFitPnt1}&#39;)</span>
+		<span class="c1">#print(f&#39;    xFit:{len(xFit)} yFit:{len(yFit)}&#39;)</span>
+
+		<span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+			<span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">&#39;error&#39;</span><span class="p">)</span>
+			<span class="k">try</span><span class="p">:</span>
+				<span class="n">mLinear</span><span class="p">,</span> <span class="n">bLinear</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">polyfit</span><span class="p">(</span><span class="n">xFit</span><span class="p">,</span> <span class="n">yFit</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="c1"># m is slope, b is intercept</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;earlyDiastolicDurationRate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mLinear</span>
+				<span class="c1"># todo: make an error if edd rate is too low</span>
+				<span class="n">lowestEddRate</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;lowEddRate_warning&#39;</span><span class="p">]</span>  <span class="c1">#8</span>
+				<span class="k">if</span> <span class="n">mLinear</span> <span class="o">&lt;=</span> <span class="n">lowestEddRate</span><span class="p">:</span>
+					<span class="n">errorType</span> <span class="o">=</span> <span class="s1">&#39;Fit EDD&#39;</span>
+					<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;Early diastolic duration rate fit - Too low&#39;</span>
+					<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">errorType</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span> <span class="c1"># spikeTime is in pnts</span>
+					<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
+
+			<span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+				<span class="c1">#catching exception:  expected non-empty vector for x</span>
+				<span class="c1"># xFit/yFit turn up empty when mdp and TOP points are within 1 point</span>
+				<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">				print(&#39;!!!!!! ERROR is e:&#39;, e)</span>
+<span class="sd">				print (&#39;  xFit:&#39;, xFit)</span>
+<span class="sd">				print (&#39;  yFit:&#39;, yFit)</span>
+<span class="sd">				print(&#39;  preLinearFitPnt0:&#39;, preLinearFitPnt0)</span>
+<span class="sd">				print(&#39;  preLinearFitPnt1:&#39;, preLinearFitPnt1)</span>
+<span class="sd">				&#39;&#39;&#39;</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;earlyDiastolicDurationRate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultVal</span>
+				<span class="n">errorType</span> <span class="o">=</span> <span class="s1">&#39;Fit EDD&#39;</span>
+				<span class="c1">#errorStr = &#39;Early diastolic duration rate fit - TypeError&#39;</span>
+				<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;Early diastolic duration rate fit - preMinPnt == spikePnt&#39;</span>
+				<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">errorType</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
+			<span class="k">except</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">RankWarning</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+				<span class="c1">#logger.error(&#39;== FIX preLinearFitPnt0/preLinearFitPnt1 RankWarning&#39;)</span>
+				<span class="c1">#logger.error(f&#39;  error is: {e}&#39;)</span>
+				<span class="c1">#print(&#39;RankWarning&#39;)</span>
+				<span class="c1"># also throws: RankWarning: Polyfit may be poorly conditioned</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;earlyDiastolicDurationRate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultVal</span>
+				<span class="n">errorType</span> <span class="o">=</span> <span class="s1">&#39;Fit EDD&#39;</span>
+				<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;Early diastolic duration rate fit - RankWarning&#39;</span>
+				<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">errorType</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
+			<span class="k">except</span><span class="p">:</span>
+				<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; !!!!!!!!!!!!!!!!!!!!!!!!!!! UNKNOWN EXCEPTION DURING EDD LINEAR FIT for spike </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;earlyDiastolicDurationRate&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultVal</span>
+				<span class="n">errorType</span> <span class="o">=</span> <span class="s1">&#39;Fit EDD&#39;</span>
+				<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;Early diastolic duration rate fit - Unknown Exception&#39;</span>
+				<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">errorType</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span>
+
+		<span class="c1"># not implemented</span>
+		<span class="c1">#self.spikeDict[i][&#39;lateDiastolicDuration&#39;] = ???</span>
+
+		<span class="c1">#</span>
+		<span class="c1"># maxima in dv/dt before spike (between TOP and peak)</span>
 		<span class="k">try</span><span class="p">:</span>
-			<span class="c1"># 20210415 was this</span>
-			<span class="c1">#preRange = dvdt[self.spikeTimes[i]:peakPnt]</span>
-			<span class="c1">#preRange = dvdt[self.spikeTimes[i]:peakPnt+1]</span>
 			<span class="n">preRange</span> <span class="o">=</span> <span class="n">filteredDeriv</span><span class="p">[</span><span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">peakPnt</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
 			<span class="n">preSpike_dvdt_max_pnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">preRange</span><span class="p">)</span>
-			<span class="c1">#preSpike_dvdt_max_pnt += self.spikeTimes[i]</span>
 			<span class="n">preSpike_dvdt_max_pnt</span> <span class="o">+=</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preSpike_dvdt_max_pnt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preSpike_dvdt_max_pnt</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;preSpike_dvdt_max_val&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">preSpike_dvdt_max_pnt</span><span class="p">]</span> <span class="c1"># in units mV</span>
@@ -3228,19 +3327,19 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
 		<span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
 			<span class="c1">#self.spikeDict[iIdx][&#39;numError&#39;] = self.spikeDict[iIdx][&#39;numError&#39;] + 1</span>
 			<span class="c1"># sometimes preRange is empty, don&#39;t try and put min/max in error</span>
-			<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;searching for preSpike_dvdt_max_pnt:&#39;</span>
-			<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;preSpikeDvDt&#39;</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span> <span class="c1"># spikeTime is in pnts</span>
+			<span class="n">errorType</span> <span class="o">=</span> <span class="s1">&#39;Pre Spike dvdt&#39;</span>
+			<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;Searching for dvdt max - ValueError&#39;</span>
+			<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">errorType</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span> <span class="c1"># spikeTime is in pnts</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
 
 		<span class="c1">#</span>
 		<span class="c1"># minima in dv/dt after spike</span>
 		<span class="c1">#postRange = dvdt[self.spikeTimes[i]:postMinPnt]</span>
-		<span class="n">postSpike_ms</span> <span class="o">=</span> <span class="mi">10</span>
-		<span class="n">postSpike_pnts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span> <span class="o">*</span> <span class="n">postSpike_ms</span>
-		<span class="c1"># abb 20210130 lcr analysis</span>
-		<span class="n">postSpike_pnts</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">postSpike_pnts</span><span class="p">)</span>
-		<span class="c1">#postRange = dvdt[self.spikeTimes[i]:self.spikeTimes[i]+postSpike_pnts] # fixed window after spike</span>
-		<span class="n">postRange</span> <span class="o">=</span> <span class="n">filteredDeriv</span><span class="p">[</span><span class="n">peakPnt</span><span class="p">:</span><span class="n">peakPnt</span><span class="o">+</span><span class="n">postSpike_pnts</span><span class="p">]</span> <span class="c1"># fixed window after spike</span>
+		<span class="c1">#postSpike_ms = 20 # 10</span>
+		<span class="c1">#postSpike_pnts = self.ms2Pnt_(postSpike_ms)</span>
+		<span class="n">dvdtPostWindow_ms</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;dvdtPostWindow_ms&#39;</span><span class="p">]</span>
+		<span class="n">dvdtPostWindow_pnts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ms2Pnt_</span><span class="p">(</span><span class="n">dvdtPostWindow_ms</span><span class="p">)</span>
+		<span class="n">postRange</span> <span class="o">=</span> <span class="n">filteredDeriv</span><span class="p">[</span><span class="n">peakPnt</span><span class="p">:</span><span class="n">peakPnt</span><span class="o">+</span><span class="n">dvdtPostWindow_pnts</span><span class="p">]</span> <span class="c1"># fixed window after spike</span>
 
 		<span class="n">postSpike_dvdt_min_pnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">postRange</span><span class="p">)</span>
 		<span class="n">postSpike_dvdt_min_pnt</span> <span class="o">+=</span> <span class="n">peakPnt</span>
@@ -3248,20 +3347,15 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
 		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;postSpike_dvdt_min_val&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">postSpike_dvdt_min_pnt</span><span class="p">]</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;postSpike_dvdt_min_val2&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">filteredDeriv</span><span class="p">[</span><span class="n">postSpike_dvdt_min_pnt</span><span class="p">]</span>
 
+		<span class="c1">#</span>
+		<span class="c1"># diastolic duration was defined as the interval between MDP and TOP</span>
+		<span class="c1"># one off error when preMinPnt is not defined</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;diastolicDuration_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pnt2Ms_</span><span class="p">(</span><span class="n">spikeTime</span> <span class="o">-</span> <span class="n">preMinPnt</span><span class="p">)</span>
 
 		<span class="c1">#</span>
-		<span class="c1"># diastolic duration was defined as</span>
-		<span class="c1"># the interval between MDP and TOP</span>
-
-
-		<span class="c1">#</span>
-		<span class="c1"># WTF IS THIS</span>
-		<span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-			<span class="c1"># one off error when preMinPnt is not defined</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;diastolicDuration_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pnt2Ms_</span><span class="p">(</span><span class="n">spikeTime</span> <span class="o">-</span> <span class="n">preMinPnt</span><span class="p">)</span>
-
+		<span class="c1"># calculate instantaneous spike frequency and ISI</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;cycleLength_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
-		<span class="k">if</span> <span class="n">i</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span> <span class="c1">#20190627, was i&gt;1</span>
+		<span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
 			<span class="n">isiPnts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;thresholdPnt&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s1">&#39;thresholdPnt&#39;</span><span class="p">]</span>
 			<span class="n">isi_ms</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pnt2Ms_</span><span class="p">(</span><span class="n">isiPnts</span><span class="p">)</span>
 			<span class="n">isi_hz</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="n">isi_ms</span> <span class="o">/</span> <span class="mi">1000</span><span class="p">)</span>
@@ -3278,118 +3372,24 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
 				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;cycleLength_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pnt2Ms_</span><span class="p">(</span><span class="n">cycleLength_pnts</span><span class="p">)</span>
 			<span class="k">else</span><span class="p">:</span>
 				<span class="c1"># error</span>
-				<span class="c1">#self.spikeDict[iIdx][&#39;numError&#39;] = self.spikeDict[iIdx][&#39;numError&#39;] + 1</span>
-				<span class="n">errorStr</span> <span class="o">=</span> <span class="s1">&#39;previous spike preMinPnt is &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">prevPreMinPnt</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39; this preMinPnt:&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">thisPreMinPnt</span><span class="p">)</span>
-				<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;cycleLength&#39;</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span> <span class="c1"># spikeTime is in pnts</span>
+				<span class="n">prevPreMinSec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pnt2Sec_</span><span class="p">(</span><span class="n">prevPreMinPnt</span><span class="p">)</span>
+				<span class="n">thisPreMinSec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pnt2Sec_</span><span class="p">(</span><span class="n">thisPreMinPnt</span><span class="p">)</span>
+				<span class="c1">#errorStr = f&#39;Previous spike preMinPnt is {prevPreMinPnt} and this preMinPnt: {thisPreMinPnt}&#39;</span>
+				<span class="n">errorType</span> <span class="o">=</span> <span class="s1">&#39;Cycle Length&#39;</span>
+				<span class="n">errorStr</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Previous spike preMinPnt (s) is </span><span class="si">{</span><span class="n">prevPreMinSec</span><span class="si">}</span><span class="s1"> and this preMinPnt: </span><span class="si">{</span><span class="n">thisPreMinSec</span><span class="si">}</span><span class="s1">&#39;</span>
+				<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">errorType</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span> <span class="c1"># spikeTime is in pnts</span>
 				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
 
+		<span class="c1">#</span>
 		<span class="c1"># TODO: Move half-width to a function !!!</span>
-		<span class="n">doWidthVersion2</span> <span class="o">=</span> <span class="kc">False</span>
+		<span class="c1">#</span>
 		<span class="n">hwWindowPnts</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span>
 		<span class="n">hwWindowPnts</span> <span class="o">=</span> <span class="nb">round</span><span class="p">(</span><span class="n">hwWindowPnts</span><span class="p">)</span>
-
-		<span class="n">tmpPeakSec</span> <span class="o">=</span> <span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;peakSec&#39;</span><span class="p">]</span>
-		<span class="n">tmpErrorType</span> <span class="o">=</span> <span class="kc">None</span>
-		<span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">halfHeight</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;halfHeights&#39;</span><span class="p">]):</span>
-			<span class="c1"># halfHeight in [20, 50, 80]</span>
-			<span class="k">if</span> <span class="n">doWidthVersion2</span><span class="p">:</span>
-				<span class="n">tmpThreshVm</span> <span class="o">=</span> <span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;thresholdVal&#39;</span><span class="p">]</span>
-				<span class="n">thisVm</span> <span class="o">=</span> <span class="n">tmpThreshVm</span> <span class="o">+</span> <span class="p">(</span><span class="n">peakVal</span> <span class="o">-</span> <span class="n">tmpThreshVm</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">halfHeight</span> <span class="o">*</span> <span class="mf">0.01</span><span class="p">)</span>
-			<span class="k">else</span><span class="p">:</span>
-				<span class="c1"># 20210413 was this</span>
-				<span class="c1">#thisVm = postMinVal + (peakVal - postMinVal) * (halfHeight * 0.01)</span>
-				<span class="n">tmpThreshVm2</span> <span class="o">=</span> <span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;thresholdVal&#39;</span><span class="p">]</span>
-				<span class="n">thisVm</span> <span class="o">=</span> <span class="n">tmpThreshVm2</span> <span class="o">+</span> <span class="p">(</span><span class="n">peakVal</span> <span class="o">-</span> <span class="n">tmpThreshVm2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">halfHeight</span> <span class="o">*</span> <span class="mf">0.01</span><span class="p">)</span>
-			<span class="c1">#todo: logic is broken, this get over-written in following try</span>
-			<span class="n">widthDict</span> <span class="o">=</span> <span class="p">{</span>
-				<span class="s1">&#39;halfHeight&#39;</span><span class="p">:</span> <span class="n">halfHeight</span><span class="p">,</span>
-				<span class="s1">&#39;risingPnt&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-				<span class="s1">&#39;risingVal&#39;</span><span class="p">:</span> <span class="n">defaultVal</span><span class="p">,</span>
-				<span class="s1">&#39;fallingPnt&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-				<span class="s1">&#39;fallingVal&#39;</span><span class="p">:</span> <span class="n">defaultVal</span><span class="p">,</span>
-				<span class="s1">&#39;widthPnts&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-				<span class="s1">&#39;widthMs&#39;</span><span class="p">:</span> <span class="n">defaultVal</span>
-			<span class="p">}</span>
-			<span class="n">widthMs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
-			<span class="k">try</span><span class="p">:</span>
-				<span class="k">if</span> <span class="n">doWidthVersion2</span><span class="p">:</span>
-					<span class="n">postRange</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">peakPnt</span><span class="p">:</span><span class="n">peakPnt</span><span class="o">+</span><span class="n">hwWindowPnts</span><span class="p">]</span>
-				<span class="k">else</span><span class="p">:</span>
-					<span class="c1"># 20210413 was this</span>
-					<span class="c1">#postRange = filteredVm[peakPnt:postMinPnt]</span>
-					<span class="n">postRange</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">peakPnt</span><span class="p">:</span><span class="n">peakPnt</span><span class="o">+</span><span class="n">hwWindowPnts</span><span class="p">]</span>
-				<span class="n">fallingPnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">postRange</span><span class="o">&lt;</span><span class="n">thisVm</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># less than</span>
-				<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fallingPnt</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-					<span class="c1">#error</span>
-					<span class="n">tmpErrorType</span> <span class="o">=</span> <span class="s1">&#39;falling point&#39;</span>
-					<span class="k">raise</span> <span class="ne">IndexError</span>
-				<span class="n">fallingPnt</span> <span class="o">=</span> <span class="n">fallingPnt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># first falling point</span>
-				<span class="n">fallingPnt</span> <span class="o">+=</span> <span class="n">peakPnt</span>
-				<span class="n">fallingVal</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">fallingPnt</span><span class="p">]</span>
-
-				<span class="c1"># use the post/falling to find pre/rising</span>
-				<span class="k">if</span> <span class="n">doWidthVersion2</span><span class="p">:</span>
-					<span class="n">preRange</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">peakPnt</span><span class="o">-</span><span class="n">hwWindowPnts</span><span class="p">:</span><span class="n">peakPnt</span><span class="p">]</span>
-				<span class="k">else</span><span class="p">:</span>
-					<span class="n">tmpPreMinPnt2</span> <span class="o">=</span> <span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;thresholdPnt&#39;</span><span class="p">]</span>
-					<span class="n">preRange</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">tmpPreMinPnt2</span><span class="p">:</span><span class="n">peakPnt</span><span class="p">]</span>
-				<span class="n">risingPnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">preRange</span><span class="o">&gt;</span><span class="n">fallingVal</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># greater than</span>
-				<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">risingPnt</span><span class="p">)</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
-					<span class="c1">#error</span>
-					<span class="n">tmpErrorType</span> <span class="o">=</span> <span class="s1">&#39;rising point&#39;</span>
-					<span class="k">raise</span> <span class="ne">IndexError</span>
-				<span class="n">risingPnt</span> <span class="o">=</span> <span class="n">risingPnt</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="c1"># first falling point</span>
-
-				<span class="k">if</span> <span class="n">doWidthVersion2</span><span class="p">:</span>
-					<span class="n">risingPnt</span> <span class="o">+=</span> <span class="n">peakPnt</span><span class="o">-</span><span class="n">hwWindowPnts</span>
-				<span class="k">else</span><span class="p">:</span>
-					<span class="n">risingPnt</span> <span class="o">+=</span> <span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;thresholdPnt&#39;</span><span class="p">]</span>
-				<span class="n">risingVal</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">risingPnt</span><span class="p">]</span>
-
-				<span class="c1"># width (pnts)</span>
-				<span class="n">widthPnts</span> <span class="o">=</span> <span class="n">fallingPnt</span> <span class="o">-</span> <span class="n">risingPnt</span>
-				<span class="c1"># 20210413</span>
-				<span class="n">widthPnts2</span> <span class="o">=</span> <span class="n">fallingPnt</span> <span class="o">-</span> <span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;thresholdPnt&#39;</span><span class="p">]</span>
-				<span class="n">tmpRisingPnt</span> <span class="o">=</span> <span class="n">spikeDict</span><span class="p">[</span><span class="s1">&#39;thresholdPnt&#39;</span><span class="p">]</span>
-				<span class="c1"># assign</span>
-				<span class="n">widthDict</span><span class="p">[</span><span class="s1">&#39;halfHeight&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">halfHeight</span>
-				<span class="c1"># 20210413, put back in</span>
-				<span class="c1">#widthDict[&#39;risingPnt&#39;] = risingPnt</span>
-				<span class="n">widthDict</span><span class="p">[</span><span class="s1">&#39;risingPnt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmpRisingPnt</span>
-				<span class="n">widthDict</span><span class="p">[</span><span class="s1">&#39;risingVal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">risingVal</span>
-				<span class="n">widthDict</span><span class="p">[</span><span class="s1">&#39;fallingPnt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fallingPnt</span>
-				<span class="n">widthDict</span><span class="p">[</span><span class="s1">&#39;fallingVal&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fallingVal</span>
-				<span class="n">widthDict</span><span class="p">[</span><span class="s1">&#39;widthPnts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">widthPnts</span>
-				<span class="n">widthDict</span><span class="p">[</span><span class="s1">&#39;widthMs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">widthPnts</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span>
-				<span class="n">widthMs</span> <span class="o">=</span> <span class="n">widthPnts</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span> <span class="c1"># abb 20210125</span>
-				<span class="c1"># 20210413, todo: make these end in 2</span>
-				<span class="n">widthDict</span><span class="p">[</span><span class="s1">&#39;widthPnts&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">widthPnts2</span>
-				<span class="n">widthDict</span><span class="p">[</span><span class="s1">&#39;widthMs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">widthPnts</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span>
-
-			<span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-				<span class="c1">##</span>
-				<span class="c1">##</span>
-				<span class="c1">#print(&#39;  EXCEPTION: bAnalysis.spikeDetect() spike&#39;, i, &#39;half height&#39;, halfHeight)</span>
-				<span class="c1">##</span>
-				<span class="c1">##</span>
-
-				<span class="c1">#self.spikeDict[iIdx][&#39;numError&#39;] = self.spikeDict[iIdx][&#39;numError&#39;] + 1</span>
-				<span class="c1">#errorStr = &#39;spike &#39; + str(i) + &#39; half width &#39; + str(tmpErrorType) + &#39; &#39; + str(halfHeight) + &#39; halfWidthWindow_ms:&#39; + str(dDict[&#39;halfWidthWindow_ms&#39;])</span>
-				<span class="n">errorStr</span> <span class="o">=</span> <span class="p">(</span><span class="sa">f</span><span class="s1">&#39;half width </span><span class="si">{</span><span class="n">halfHeight</span><span class="si">}</span><span class="s1"> error in </span><span class="si">{</span><span class="n">tmpErrorType</span><span class="si">}</span><span class="s1"> &#39;</span>
-						<span class="sa">f</span><span class="s2">&quot;with halfWidthWindow_ms:</span><span class="si">{</span><span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;halfWidthWindow_ms&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> &quot;</span>
-						<span class="sa">f</span><span class="s1">&#39;searching for Vm:</span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">thisVm</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1"> from peak sec </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="n">tmpPeakSec</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
-						<span class="p">)</span>
-
-				<span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;spikeWidth&#39;</span><span class="p">,</span> <span class="n">errorStr</span><span class="p">)</span> <span class="c1"># spikeTime is in pnts</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s1">&#39;errors&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
-
-			<span class="c1"># abb 20210125</span>
-			<span class="c1"># wtf is hapenning on Heroku????</span>
-			<span class="c1">#print(&#39;**** heroku debug i:&#39;, i, &#39;j:&#39;, j, &#39;len:&#39;, len(self.spikeDict), &#39;halfHeight:&#39;, halfHeight)</span>
-			<span class="c1">#print(&#39;  self.spikeDict[i]&#39;, self.spikeDict[i][&#39;widths_&#39;+str(halfHeight)])</span>
-
-			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;widths_&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">halfHeight</span><span class="p">)]</span> <span class="o">=</span> <span class="n">widthMs</span>
-			<span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s1">&#39;widths&#39;</span><span class="p">][</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">widthDict</span>
+		<span class="n">halfHeightList</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;halfHeights&#39;</span><span class="p">]</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">_getHalfWidth</span><span class="p">(</span><span class="n">filteredVm</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">iIdx</span><span class="p">,</span> <span class="n">spikeTime</span><span class="p">,</span> <span class="n">peakPnt</span><span class="p">,</span> <span class="n">hwWindowPnts</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataPointsPerMs</span><span class="p">,</span> <span class="n">halfHeightList</span><span class="p">)</span>
+		<span class="c1">#for i in range(1):</span>
+		<span class="c1">#	self.spikeDict[iIdx][&#39;widths_&#39;+str(halfHeight)] = widthMs</span>
+		<span class="c1">#	self.spikeDict[iIdx][&#39;widths&#39;][j] = widthDict</span>
 
 	<span class="c1">#</span>
 	<span class="c1"># look between threshold crossing to get minima</span>
@@ -3446,11 +3446,11 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
 <span class="sd">			##</span>
 <span class="sd">			##</span>
 <span class="sd">	&#39;&#39;&#39;</span>
-	<span class="c1"># 20210426</span>
+
+	<span class="c1">#</span>
 	<span class="c1"># generate a df holding stats (used by scatterplotwidget)</span>
 	<span class="n">startSeconds</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;startSeconds&#39;</span><span class="p">]</span>
 	<span class="n">stopSeconds</span> <span class="o">=</span> <span class="n">dDict</span><span class="p">[</span><span class="s1">&#39;stopSeconds&#39;</span><span class="p">]</span>
-	<span class="c1">#tmpAnalysisName, df0 = self.getReportDf(theMin, theMax, savefile)</span>
 	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">numSpikes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
 		<span class="n">exportObject</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bExport</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">dfReportForScatter</span> <span class="o">=</span> <span class="n">exportObject</span><span class="o">.</span><span class="n">report</span><span class="p">(</span><span class="n">startSeconds</span><span class="p">,</span> <span class="n">stopSeconds</span><span class="p">)</span>
@@ -3459,9 +3459,7 @@ put results into list of dict <code>self.spikeDict[]</code>.</p>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">dfError</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">errorReport</span><span class="p">()</span>
 
-	<span class="bp">self</span><span class="o">.</span><span class="n">_detectionDirty</span> <span class="o">=</span> <span class="kc">True</span>
-
-	<span class="n">stopTime</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">_detectionDirty</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># e.g. bAnalysis needs to be saved</span>
 </code></pre></div>
         </details>
     </div>

@@ -578,6 +578,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.signalSelectSpikeList" class="md-nav__link">
+    signalSelectSpikeList
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.interface.sanpy_app.SanPyWindow.signalSelectSweep" class="md-nav__link">
     signalSelectSweep
   </a>
@@ -606,6 +613,34 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_changeTab" class="md-nav__link">
+    slot_changeTab()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_closeTab" class="md-nav__link">
+    slot_closeTab()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_contextMenu" class="md-nav__link">
+    slot_contextMenu()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_dockLocationChanged" class="md-nav__link">
+    slot_dockLocationChanged()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_fileTableClicked" class="md-nav__link">
     slot_fileTableClicked()
   </a>
@@ -615,6 +650,13 @@
           <li class="md-nav__item">
   <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_setDetectionParams" class="md-nav__link">
     slot_setDetectionParams()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_topLevelChanged" class="md-nav__link">
+    slot_topLevelChanged()
   </a>
   
 </li>
@@ -866,6 +908,13 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.signalSelectSpikeList" class="md-nav__link">
+    signalSelectSpikeList
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.interface.sanpy_app.SanPyWindow.signalSelectSweep" class="md-nav__link">
     signalSelectSweep
   </a>
@@ -894,6 +943,34 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_changeTab" class="md-nav__link">
+    slot_changeTab()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_closeTab" class="md-nav__link">
+    slot_closeTab()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_contextMenu" class="md-nav__link">
+    slot_contextMenu()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_dockLocationChanged" class="md-nav__link">
+    slot_dockLocationChanged()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_fileTableClicked" class="md-nav__link">
     slot_fileTableClicked()
   </a>
@@ -903,6 +980,13 @@
           <li class="md-nav__item">
   <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_setDetectionParams" class="md-nav__link">
     slot_setDetectionParams()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_topLevelChanged" class="md-nav__link">
+    slot_topLevelChanged()
   </a>
   
 </li>
@@ -1023,6 +1107,16 @@
 
 	<span class="nb">super</span><span class="p">(</span><span class="n">SanPyWindow</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
 
+	<span class="c1"># breeze_resources</span>
+	<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">	breezePath = &#39;/home/cudmore/Sites/BreezeStyleSheets/dist/dark/stylesheet.qss&#39;</span>
+<span class="sd">	#file = QtCore.QFile(&quot;:/dark/stylesheet.qss&quot;)</span>
+<span class="sd">	file = QtCore.QFile(breezePath)</span>
+<span class="sd">	file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)</span>
+<span class="sd">	stream = QtCore.QTextStream(file)</span>
+<span class="sd">	self.setStyleSheet(stream.readAll())</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+
 	<span class="c1"># create an empty model for file list</span>
 	<span class="n">dfEmpty</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">sanpy</span><span class="o">.</span><span class="n">analysisDir</span><span class="o">.</span><span class="n">sanpyColumns</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">myModel</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bFileTable</span><span class="o">.</span><span class="n">pandasModel</span><span class="p">(</span><span class="n">dfEmpty</span><span class="p">)</span>
@@ -1086,7 +1180,8 @@
 	<span class="bp">self</span><span class="o">.</span><span class="n">myPlugins</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bPlugins</span><span class="p">(</span><span class="n">sanpyApp</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
 
 	<span class="bp">self</span><span class="o">.</span><span class="n">buildMenus</span><span class="p">()</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">buildUI</span><span class="p">()</span>
+	<span class="c1">#self.buildUI()</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">buildUI2</span><span class="p">()</span>
 
 	<span class="c1">#self.myExportWidget = None</span>
 
@@ -1140,13 +1235,15 @@
 	<span class="c1"># check if our table view has been edited by uder and warn</span>
 	<span class="n">doQuit</span> <span class="o">=</span> <span class="kc">True</span>
 	<span class="n">alreadyAsked</span> <span class="o">=</span> <span class="kc">False</span>
-	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">myAnalysisDir</span><span class="o">.</span><span class="n">isDirty</span><span class="p">:</span>
+	<span class="n">tableIsDirty</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myAnalysisDir</span><span class="o">.</span><span class="n">isDirty</span>
+	<span class="n">analysisIsDirty</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myAnalysisDir</span><span class="o">.</span><span class="n">hasDirty</span><span class="p">()</span>
+	<span class="k">if</span> <span class="n">tableIsDirty</span> <span class="ow">or</span> <span class="n">analysisIsDirty</span><span class="p">:</span>
 		<span class="n">alreadyAsked</span> <span class="o">=</span> <span class="kc">True</span>
-		<span class="n">userResp</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bDialog</span><span class="o">.</span><span class="n">yesNoCancelDialog</span><span class="p">(</span><span class="s1">&#39;You changed the file database, do you want to save then quit?&#39;</span><span class="p">)</span>
+		<span class="n">userResp</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">bDialog</span><span class="o">.</span><span class="n">yesNoCancelDialog</span><span class="p">(</span><span class="s1">&#39;You changed the file database or have analyzed but not saved.</span><span class="se">\n</span><span class="s1">Do you want to save then quit?&#39;</span><span class="p">)</span>
 		<span class="k">if</span> <span class="n">userResp</span> <span class="o">==</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Yes</span><span class="p">:</span>
 			<span class="bp">self</span><span class="o">.</span><span class="n">slotSaveFilesTable</span><span class="p">()</span>
 			<span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
-		<span class="k">if</span> <span class="n">userResp</span> <span class="o">==</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">No</span><span class="p">:</span>
+		<span class="k">elif</span> <span class="n">userResp</span> <span class="o">==</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">No</span><span class="p">:</span>
 			<span class="n">event</span><span class="o">.</span><span class="n">accept</span><span class="p">()</span>
 		<span class="k">else</span><span class="p">:</span>
 			<span class="n">event</span><span class="o">.</span><span class="n">ignore</span><span class="p">()</span>
@@ -1241,7 +1338,7 @@
           <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 	<span class="n">key</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">key</span><span class="p">()</span>
 	<span class="n">text</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
-	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;key:</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1"> event:</span><span class="si">{</span><span class="n">event</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;text:</span><span class="si">{</span><span class="n">text</span><span class="si">}</span><span class="s1"> key:</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1"> event:</span><span class="si">{</span><span class="n">event</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
 	<span class="c1"># set full axis</span>
 	<span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">70</span><span class="p">,</span> <span class="mi">82</span><span class="p">]:</span> <span class="c1"># &#39;r&#39; or &#39;f&#39;</span>
@@ -1427,11 +1524,13 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">signalSetXAxis</span><span class="o">.</span><span class="n">emit</span><span class="p">([</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">data</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>  <span class="c1"># emits to scatter plot ONLY</span>
 
 	<span class="k">elif</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;set full x axis&#39;</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">startSec</span> <span class="o">=</span> <span class="kc">None</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">stopSec</span> <span class="o">=</span> <span class="kc">None</span>
-		<span class="c1">#self.myScatterPlotWidget.selectXRange(None, None)</span>
-		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;set full x axis&#39;</span><span class="p">)</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">signalSetXAxis</span><span class="o">.</span><span class="n">emit</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">])</span>  <span class="c1"># emits to scatter plot ONLY</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">startSec</span> <span class="o">=</span> <span class="mi">0</span>
+		<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bAnalysis</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">stopSec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bAnalysis</span><span class="p">()</span><span class="o">.</span><span class="n">recordingDur</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">stopSec</span> <span class="o">=</span> <span class="kc">None</span>
+		<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;set full x axis </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">startSec</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stopSec</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">signalSetXAxis</span><span class="o">.</span><span class="n">emit</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">startSec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stopSec</span><span class="p">])</span>  <span class="c1"># emits to scatter plot ONLY</span>
 
 	<span class="k">elif</span> <span class="n">this</span> <span class="o">==</span> <span class="s1">&#39;cancel all selections&#39;</span><span class="p">:</span>
 		<span class="sd">&#39;&#39;&#39;</span>
@@ -1445,6 +1544,7 @@
 		<span class="c1">#self.myScatterPlotWidget.selectXRange(None, None)</span>
 		<span class="c1">#signalSelectSpike.emit xxx</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">selectSpike</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">selectSpikeList</span><span class="p">([])</span>
 
 	<span class="k">else</span><span class="p">:</span>
 		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not understand this: &quot;</span><span class="si">{</span><span class="n">this</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
@@ -1453,6 +1553,9 @@
     </div>
 
   </div>
+
+
+
 
 
 
@@ -1608,16 +1711,17 @@
 		<span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="n">key1</span><span class="p">][</span><span class="n">key2</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
 
 		<span class="c1"># actually show hide some widgets</span>
-		<span class="k">if</span> <span class="n">key1</span><span class="o">==</span><span class="s1">&#39;display&#39;</span> <span class="ow">and</span> <span class="n">key2</span><span class="o">==</span><span class="s1">&#39;showScatter&#39;</span><span class="p">:</span>
-			<span class="k">if</span> <span class="n">val</span><span class="p">:</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">myScatterPlotWidget</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-			<span class="k">else</span><span class="p">:</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">myScatterPlotWidget</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
-		<span class="k">elif</span> <span class="n">key1</span><span class="o">==</span><span class="s1">&#39;display&#39;</span> <span class="ow">and</span> <span class="n">key2</span><span class="o">==</span><span class="s1">&#39;showErrors&#39;</span><span class="p">:</span>
-			<span class="k">if</span> <span class="n">val</span><span class="p">:</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">myErrorTable</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-			<span class="k">else</span><span class="p">:</span>
-				<span class="bp">self</span><span class="o">.</span><span class="n">myErrorTable</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+		<span class="c1">#if key1==&#39;display&#39; and key2==&#39;showScatter&#39;:</span>
+		<span class="c1">#	if val:</span>
+		<span class="c1">#		self.myScatterPlotWidget.show()</span>
+		<span class="c1">#	else:</span>
+		<span class="c1">#		self.myScatterPlotWidget.hide()</span>
+
+		<span class="c1">#if key1==&#39;display&#39; and key2==&#39;showErrors&#39;:</span>
+		<span class="c1">#	if val:</span>
+		<span class="c1">#		self.myErrorTable.show()</span>
+		<span class="c1">#	else:</span>
+		<span class="c1">#		self.myErrorTable.hide()</span>
 
 	<span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
 		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not set preference with keys &quot;</span><span class="si">{</span><span class="n">key1</span><span class="si">}</span><span class="s1">&quot; and &quot;</span><span class="si">{</span><span class="n">key2</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
@@ -1667,6 +1771,9 @@
 
 
 
+
+
+
   <div class="doc doc-object doc-attribute">
 
 
@@ -1680,6 +1787,27 @@
     <div class="doc doc-contents ">
 
       <p>Emit spike selection.</p>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.interface.sanpy_app.SanPyWindow.signalSelectSpikeList" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">signalSelectSpikeList</span></code>
+
+
+<a href="#sanpy.interface.sanpy_app.SanPyWindow.signalSelectSpikeList" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Emit spike list selection.</p>
     </div>
 
   </div>
@@ -1772,6 +1900,221 @@
 
 
 
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.sanpy_app.SanPyWindow.slot_changeTab" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">slot_changeTab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">sender</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_changeTab" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>User brought a different tab to the front</p>
+<p>Make sure only front tab (plugins) receive signals</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_changeTab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">sender</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	User brought a different tab to the front</span>
+
+<span class="sd">	Make sure only front tab (plugins) receive signals</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1">#logger.info(f&#39;Turn of all other tab signals !!!&#39;)</span>
+	<span class="k">pass</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.sanpy_app.SanPyWindow.slot_closeTab" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">slot_closeTab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">sender</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_closeTab" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Close an open plugin tab</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_closeTab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">sender</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Close an open plugin tab</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="c1"># remove plugin from self.xxx</span>
+	<span class="n">widgetPointer</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">widget</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+	<span class="c1">#print(&#39;widgetPointer:&#39;, widgetPointer)</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">myPlugins</span><span class="o">.</span><span class="n">slot_closeWindow</span><span class="p">(</span><span class="n">widgetPointer</span><span class="p">)</span>
+
+	<span class="c1"># remove the tab</span>
+	<span class="n">sender</span><span class="o">.</span><span class="n">removeTab</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.sanpy_app.SanPyWindow.slot_contextMenu" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">slot_contextMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">sender</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_contextMenu" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Build a menu of plugins</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>point</code></td>
+        <td><code></code></td>
+        <td><p>Not sure</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>sender</code></td>
+        <td><code>QTabWidget</code></td>
+        <td></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_contextMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">sender</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Build a menu of plugins</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		point (): Not sure</span>
+<span class="sd">		sender (QTabWidget):</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1">#sender = self.sender()  # PyQt5.QtWidgets.QDockWidget</span>
+
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;point:</span><span class="si">{</span><span class="n">point</span><span class="si">}</span><span class="s1">, sender:</span><span class="si">{</span><span class="n">sender</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+	<span class="c1"># list of available plugins</span>
+	<span class="n">pluginList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myPlugins</span><span class="o">.</span><span class="n">pluginList</span><span class="p">()</span>
+
+	<span class="c1">#contextMenu = QtWidgets.QMenu(self.myTab)</span>
+	<span class="n">contextMenu</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+	<span class="k">for</span> <span class="n">plugin</span> <span class="ow">in</span> <span class="n">pluginList</span><span class="p">:</span>
+		<span class="n">contextMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">plugin</span><span class="p">)</span>
+
+	<span class="c1"># get current mouse/cursor position, not sure what &#39;point&#39; is?</span>
+	<span class="n">pos</span> <span class="o">=</span> <span class="n">QtGui</span><span class="o">.</span><span class="n">QCursor</span><span class="o">.</span><span class="n">pos</span><span class="p">()</span>
+	<span class="n">action</span> <span class="o">=</span> <span class="n">contextMenu</span><span class="o">.</span><span class="n">exec_</span><span class="p">(</span><span class="n">pos</span><span class="p">)</span>
+
+	<span class="k">if</span> <span class="n">action</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+		<span class="c1"># n menu selected</span>
+		<span class="k">return</span>
+
+	<span class="c1">#print(action.text())</span>
+	<span class="n">pluginName</span> <span class="o">=</span> <span class="n">action</span><span class="o">.</span><span class="n">text</span><span class="p">()</span>
+	<span class="n">ba</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_bAnalysis</span><span class="p">()</span>
+	<span class="n">newPlugin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myPlugins</span><span class="o">.</span><span class="n">runPlugin</span><span class="p">(</span><span class="n">pluginName</span><span class="p">,</span> <span class="n">ba</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+	<span class="c1">#scatterPlugin = self.myPlugins.runPlugin(&#39;Scatter Plot&#39;, ba=None, show=False)</span>
+
+	<span class="c1"># add tab</span>
+	<span class="c1">#print(&#39;newPlugin:&#39;, newPlugin)</span>
+	<span class="c1"># 1) either this</span>
+	<span class="c1">#newPlugin.insertIntoScrollArea()</span>
+	<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">	scrollArea = newPlugin.insertIntoScrollArea()</span>
+<span class="sd">	if scrollArea is not None:</span>
+<span class="sd">		newTabIndex = sender.addTab(scrollArea, pluginName)</span>
+<span class="sd">	else:</span>
+<span class="sd">		newTabIndex = sender.addTab(newPlugin, pluginName)</span>
+<span class="sd">	&#39;&#39;&#39;</span>
+	<span class="c1"># 2) or this</span>
+	<span class="n">newTabIndex</span> <span class="o">=</span> <span class="n">sender</span><span class="o">.</span><span class="n">addTab</span><span class="p">(</span><span class="n">newPlugin</span><span class="p">,</span> <span class="n">pluginName</span><span class="p">)</span>  <span class="c1"># addTab takes ownership</span>
+
+	<span class="c1">#widgetPointer = sender.widget(newTabIndex)</span>
+	<span class="c1">#widgetPointer.insertIntoScrollArea()</span>
+
+	<span class="c1"># bring tab to front</span>
+	<span class="c1">#count = sender.count()</span>
+	<span class="c1">#sender.setCurrentIndex(count-1)</span>
+	<span class="n">sender</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">newTabIndex</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.sanpy_app.SanPyWindow.slot_dockLocationChanged" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">slot_dockLocationChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dock</span><span class="p">,</span> <span class="n">area</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_dockLocationChanged" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>area (enum): QtCore.Qt.DockWidgetArea, basically left/top/right/bottom.</p>
+<p>Not triggered when user 'floats' a dock (See self.slot_topLevelChanged())</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_dockLocationChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dock</span><span class="p">,</span> <span class="n">area</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	area (enum): QtCore.Qt.DockWidgetArea, basically left/top/right/bottom.</span>
+
+<span class="sd">	Not triggered when user &#39;floats&#39; a dock (See self.slot_topLevelChanged())</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1">#logger.info(f&#39;dock:&quot;{dock.windowTitle()}&quot; area enum: {area}&#39;)</span>
+	<span class="k">pass</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
 
 
 
@@ -1780,7 +2123,7 @@
 
 
 <h3 id="sanpy.interface.sanpy_app.SanPyWindow.slot_fileTableClicked" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">slot_fileTableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">slot_fileTableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">,</span> <span class="n">selectingAgain</span><span class="p">)</span></code>
 
 
 <a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_fileTableClicked" class="headerlink" title="Permanent link">¤</a></h3>
@@ -1791,26 +2134,33 @@
 
         <details class="quote">
           <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_fileTableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">):</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_fileTableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">,</span> <span class="n">selectingAgain</span><span class="p">):</span>
 	<span class="sd">&quot;&quot;&quot;Respond to selections in file table.&quot;&quot;&quot;</span>
 
 	<span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">	tableRowDict = self.myModel.myGetRowDict(row)</span>
-<span class="sd">	abfColumnName = &#39;File&#39;</span>
-<span class="sd">	fileName = self.myModel.myGetValue(row, abfColumnName)</span>
+<span class="sd">	row (int):</span>
+<span class="sd">	rowDict (dict):</span>
+<span class="sd">	selectingAgain (bool): True if row was already selected</span>
 <span class="sd">	&#39;&#39;&#39;</span>
-	<span class="c1">#fileName = rowDict[&#39;File&#39;]</span>
 
-	<span class="bp">self</span><span class="o">.</span><span class="n">slot_updateStatus</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loading file &quot;</span><span class="si">{</span><span class="n">rowDict</span><span class="p">[</span><span class="s2">&quot;File&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&quot; ... please wait&#39;</span><span class="p">)</span><span class="c1"># this will load ba if necc</span>
+	<span class="k">if</span> <span class="n">selectingAgain</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">slot_updateStatus</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Refreshing file &quot;</span><span class="si">{</span><span class="n">rowDict</span><span class="p">[</span><span class="s2">&quot;File&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+	<span class="k">else</span><span class="p">:</span>
+		<span class="bp">self</span><span class="o">.</span><span class="n">slot_updateStatus</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loading file &quot;</span><span class="si">{</span><span class="n">rowDict</span><span class="p">[</span><span class="s2">&quot;File&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">&quot; ... please wait&#39;</span><span class="p">)</span>
 
+	<span class="c1"># TODO: try and remove this</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">startSec</span> <span class="o">=</span> <span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Start(s)&#39;</span><span class="p">]</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">stopSec</span> <span class="o">=</span> <span class="n">rowDict</span><span class="p">[</span><span class="s1">&#39;Stop(s)&#39;</span><span class="p">]</span>
 
+	<span class="c1"># This will load if necc, otherwise just fetch a pointer</span>
 	<span class="n">ba</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myAnalysisDir</span><span class="o">.</span><span class="n">getAnalysis</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="c1"># if None then problem loading</span>
 
 	<span class="k">if</span> <span class="n">ba</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 		<span class="bp">self</span><span class="o">.</span><span class="n">signalSwitchFile</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">rowDict</span><span class="p">,</span> <span class="n">ba</span><span class="p">)</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">slot_updateStatus</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loaded file &quot;</span><span class="si">{</span><span class="n">ba</span><span class="o">.</span><span class="n">getFileName</span><span class="p">()</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span><span class="c1"># this will load ba if necc</span>
+		<span class="k">if</span> <span class="n">selectingAgain</span><span class="p">:</span>
+			<span class="k">pass</span>
+		<span class="k">else</span><span class="p">:</span>
+			<span class="bp">self</span><span class="o">.</span><span class="n">slot_updateStatus</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Loaded file &quot;</span><span class="si">{</span><span class="n">ba</span><span class="o">.</span><span class="n">getFileName</span><span class="p">()</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span><span class="c1"># this will load ba if necc</span>
 </code></pre></div>
         </details>
     </div>
@@ -1877,6 +2227,42 @@
 <span class="sd">	&quot;&quot;&quot;</span>
 	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;row:</span><span class="si">{</span><span class="n">row</span><span class="si">}</span><span class="s1"> cellType:</span><span class="si">{</span><span class="n">cellType</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 	<span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">mySetDetectionParams</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">cellType</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.interface.sanpy_app.SanPyWindow.slot_topLevelChanged" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">slot_topLevelChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topLevel</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_topLevelChanged" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>topLevel (bool): True if the dock widget is now floating; otherwise False.</p>
+<p>This is triggered twice, once while dragging and once when finished</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">slot_topLevelChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topLevel</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	topLevel (bool): True if the dock widget is now floating; otherwise False.</span>
+
+<span class="sd">	This is triggered twice, once while dragging and once when finished</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="c1">#sender = self.sender()  # PyQt5.QtWidgets.QDockWidget</span>
+	<span class="c1">#logger.info(f&#39;topLevel:{topLevel} sender:{sender}&#39;)</span>
+	<span class="k">pass</span>
 </code></pre></div>
         </details>
     </div>
