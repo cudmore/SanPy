@@ -234,7 +234,7 @@ def getDefaultDetection(detectionPreset):
 	theDict[key]['type'] = 'float'
 	theDict[key]['allowNone'] = False
 	theDict[key]['units'] = 'ms'
-	theDict[key]['humanName'] = ''
+	theDict[key]['humanName'] = 'MDP averaging window (ms)'
 	theDict[key]['errors'] = ('')
 	theDict[key]['description'] = 'Window (ms) to calculate MDP (mV) as a mean rather than mV at single point for MDP'
 
@@ -244,7 +244,7 @@ def getDefaultDetection(detectionPreset):
 	theDict[key]['type'] = 'float'
 	theDict[key]['allowNone'] = False
 	theDict[key]['units'] = 'EDD slope'
-	theDict[key]['humanName'] = ''
+	theDict[key]['humanName'] = 'EDD slope warning'
 	theDict[key]['errors'] = ('')
 	theDict[key]['description'] = 'Generate warning when EED slope is lower than this value.'
 
@@ -268,15 +268,25 @@ def getDefaultDetection(detectionPreset):
 	theDict[key]['errors'] = ('')
 	theDict[key]['description'] = 'Window (ms) after TOP to look for AP Durations'
 
-	key = 'spikeClipWidth_ms'
+	key = 'preSpikeClipWidth_ms'
 	theDict[key] = {}
 	theDict[key]['defaultValue'] = 500
 	theDict[key]['type'] = 'float'
 	theDict[key]['allowNone'] = False
 	theDict[key]['units'] = 'ms'
-	theDict[key]['humanName'] = 'AP Clip Width (ms)'
+	theDict[key]['humanName'] = 'Pre AP Clip Width (ms)'
 	theDict[key]['errors'] = ('')
-	theDict[key]['description'] = 'The width/duration of generated AP clips'
+	theDict[key]['description'] = 'The pre duration of generated AP clips (Before AP)'
+
+	key = 'postSpikeClipWidth_ms'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = 500
+	theDict[key]['type'] = 'float'
+	theDict[key]['allowNone'] = False
+	theDict[key]['units'] = 'ms'
+	theDict[key]['humanName'] = 'Post AP Clip Width (ms)'
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'The post duration of generated AP clips (After AP)'
 
 	key = 'medianFilter'
 	theDict[key] = {}
@@ -330,21 +340,24 @@ def getDefaultDetection(detectionPreset):
 		theDict['refractory_ms']['defaultValue'] = 200  # max freq of 5 Hz
 		theDict['peakWindow_ms']['defaultValue'] = 100
 		theDict['halfWidthWindow_ms']['defaultValue'] = 300
-		theDict['spikeClipWidth_ms']['defaultValue'] = 200
+		theDict['preSpikeClipWidth_ms']['defaultValue'] = 200
+		theDict['postSpikeClipWidth_ms']['defaultValue'] = 500
 	elif detectionPreset == bDetection.detectionPresets.neuron:
 		theDict['dvdtThreshold']['defaultValue'] = 100
 		theDict['mvThreshold']['defaultValue'] = -20
 		theDict['refractory_ms']['defaultValue'] = 7
 		theDict['peakWindow_ms']['defaultValue'] = 5
 		theDict['halfWidthWindow_ms']['defaultValue'] = 4
-		theDict['spikeClipWidth_ms']['defaultValue'] = 20
+		theDict['preSpikeClipWidth_ms']['defaultValue'] = 20
+		theDict['postSpikeClipWidth_ms']['defaultValue'] = 20
 	elif detectionPreset == bDetection.detectionPresets.subthreshold:
 		theDict['dvdtThreshold']['defaultValue'] = math.nan
 		theDict['mvThreshold']['defaultValue'] = -20  # user specifies
 		theDict['refractory_ms']['defaultValue'] = 100  # max freq is 10 Hz
 		theDict['peakWindow_ms']['defaultValue'] = 50
 		theDict['halfWidthWindow_ms']['defaultValue'] = 100
-		theDict['spikeClipWidth_ms']['defaultValue'] = 200
+		theDict['preSpikeClipWidth_ms']['defaultValue'] = 100
+		theDict['postSpikeClipWidth_ms']['defaultValue'] = 200
 		theDict['onlyPeaksAbove_mV']['defaultValue'] = None
 		theDict['onlyPeaksBelow_mV']['defaultValue'] = -20
 		# todo: add onlyPeaksBelow_mV

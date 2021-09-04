@@ -38,16 +38,6 @@ class detectionParams(sanpyPlugin):
 
 		#self.insertIntoScrollArea()
 
-	def old_insertIntoScrollArea(self):
-		"""
-		When inserting this widget into an interface, may want to wrap it in a ScrollArea
-
-		This is used in main SanPy interface to insert this widget into a tab
-		"""
-		self.scrollArea = QtWidgets.QScrollArea()
-		self.scrollArea.setWidget(self)
-		return self.scrollArea
-
 	def buildUI(self):
 
 		self.vLayout = QtWidgets.QVBoxLayout()

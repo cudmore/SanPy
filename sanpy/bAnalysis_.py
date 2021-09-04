@@ -208,88 +208,6 @@ class bAnalysis:
 	def getNewUuid():
 		return 't' + str(uuid.uuid4()).replace('-', '_')
 
-	def old_getDefaultDetection(cellType=None):
-		"""
-		Get default detection dictionary, pass this to [bAnalysis.spikeDetect()][sanpy.bAnalysis.bAnalysis.spikeDetect]
-
-		Returns:
-			dict: Dictionary of detection parameters.
-		"""
-
-		#cellType = 'neuron'
-
-		mvThreshold = -20
-		theDict = {
-			'dvdtThreshold': 50, #if None then detect only using mvThreshold
-			'mvThreshold': mvThreshold,
-			'medianFilter': 0,
-			'SavitzkyGolay_pnts': 5, # shoould correspond to about 0.5 ms
-			'SavitzkyGolay_poly': 2,
-			'halfHeights': [10, 20, 50, 80, 90],
-			# new 20210501
-			'mdp_ms': 250, # window before/after peak to look for MDP
-			'refractory_ms': 170, # rreject spikes with instantaneous frequency
-			'peakWindow_ms': 100, #10, # time after spike to look for AP peak
-			'dvdtPreWindow_ms': 10, #5, # used in dvdt, pre-roll to then search for real threshold crossing
-			'avgWindow_ms': 5,
-			# 20210425, trying 0.15
-			#'dvdt_percentOfMax': 0.1, # only used in dvdt detection, used to back up spike threshold to more meaningful value
-			'dvdt_percentOfMax': 0.1, # only used in dvdt detection, used to back up spike threshold to more meaningful value
-			# 20210413, was 50 for manuscript, we were missing lots of 1/2 widths
-			'halfWidthWindow_ms': 200, #200, #20,
-			# add 20210413 to turn of doBackupSpikeVm on pure vm detection
-			'doBackupSpikeVm': True,
-			'spikeClipWidth_ms': 500,
-			'onlyPeaksAbove_mV': mvThreshold,
-			'onlyPeaksBelow_mV': None,  # added when working on subthreshold
-			'startSeconds': None, # not used ???
-			'stopSeconds': None,
-
-			# for detection of Ca from line scans
-			#'caThresholdPos': 0.01,
-			#'caMinSpike': 0.5,
-
-			# todo: get rid of this
-			# book keeping like ('cellType', 'sex', 'condition')
-			'cellType': '',
-			'sex': '',
-			'condition': '',
-			'verbose': False,
-		}
-
-		if cellType is not None:
-			if cellType == 'SA Node Params':
-				# these are defaults from above
-				pass
-			elif cellType == 'Ventricular Params':
-				theDict['dvdtThreshold'] = 100
-				theDict['mvThreshold'] = -20
-				theDict['refractory_ms'] = 200  # max freq of 5 Hz
-				theDict['peakWindow_ms'] = 100
-				theDict['halfWidthWindow_ms'] = 300
-				theDict['spikeClipWidth_ms'] = 200
-			elif cellType == 'Neuron Params':
-				theDict['dvdtThreshold'] = 100
-				theDict['mvThreshold'] = -20
-				theDict['refractory_ms'] = 7
-				theDict['peakWindow_ms'] = 5
-				theDict['halfWidthWindow_ms'] = 4
-				theDict['spikeClipWidth_ms'] = 20
-			elif cellType == 'Subthreshold Params':
-				theDict['dvdtThreshold'] = np.nan
-				theDict['mvThreshold'] = -20  # user specifies
-				theDict['refractory_ms'] = 100  # max freq is 10 Hz
-				theDict['peakWindow_ms'] = 50
-				theDict['halfWidthWindow_ms'] = 100
-				theDict['spikeClipWidth_ms'] = 200
-				theDict['onlyPeaksAbove_mV'] = None
-				theDict['onlyPeaksBelow_mV'] = -20
-				# todo: add onlyPeaksBelow_mV
-			else:
-				logger.error(f'Did not understand cell type "{cellType}"')
-
-		return theDict.copy()
-
 	def __init__(self, file=None, theTiff=None, byteStream=None,
 					fromDf=None, fromDict=None,
 					loadData=True):
@@ -1158,36 +1076,6 @@ class bAnalysis:
 		#self._filteredDeriv = np.concatenate((zeroRow,self.filteredDeriv))
 		#print('  self._filteredDeriv:', self._filteredDeriv[0:4,:])
 
-	def old_getDefaultDetection_ca(self):
-		"""
-		Get default detection for Ca analysis. Warning, this is currently experimental.
-
-		Returns:
-			dict: Dictionary of detection parameters.
-		"""
-		theDict = sanpy.bDetection.getDefaultDetection()
-		theDict['dvdtThreshold'] = 0.01 #if None then detect only using mvThreshold
-		theDict['mvThreshold'] = 0.5
-		#
-		#theDict['medianFilter': 0
-		#'halfHeights': [20,50,80]
-		theDict['refractory_ms'] = 200 #170 # reject spikes with instantaneous frequency
-		#theDict['peakWindow_ms': 100 #10, # time after spike to look for AP peak
-		#theDict['dvdtPreWindow_ms': 2 # used in dvdt, pre-roll to then search for real threshold crossing
-		#theDict['avgWindow_ms': 5
-		#theDict['dvdt_percentOfMax': 0.1
-		theDict['halfWidthWindow_ms'] = 200 #was 20
-		#theDict['spikeClipWidth_ms': 500
-		#theDict['onlyPeaksAbove_mV': None
-		#theDict['startSeconds': None
-		#theDict['stopSeconds': None
-
-		# for detection of Ca from line scans
-		#theDict['caThresholdPos'] = 0.01
-		#theDict['caMinSpike'] = 0.5
-
-		return theDict.copy()
-
 	def _backupSpikeVm(self, spikeTimes, sweepNumber, medianFilter=None):
 		"""
 		Backup spike time using deminishing SD and diff b/w vm at pnt[i]-pnt[i-1]
@@ -2051,52 +1939,6 @@ class bAnalysis:
 		self.spikeClips = None
 		self.spikeClips_x = None
 		self.spikeClips_x2 = None
-		'''
-		spikeClipWidth_ms = dDict['spikeClipWidth_ms']
-		#clipStartSec = dDict['startSeconds']
-		#clipStopSec = dDict['stopSeconds']
-		#theseTime_sec = [clipStartSec, clipStopSec]
-		theseTime_sec = None
-		self._makeSpikeClips(spikeClipWidth_ms, theseTime_sec=theseTime_sec)
-		'''
-
-		# TODO: Remove this comment block
-		'''
-		clipWidth_pnts = dDict['spikeClipWidth_ms'] * self.dataPointsPerMs
-		clipWidth_pnts = round(clipWidth_pnts)
-		if clipWidth_pnts % 2 == 0:
-			pass # Even
-		else:
-			clipWidth_pnts += 1 # Odd
-
-		halfClipWidth_pnts = int(clipWidth_pnts/2)
-
-		#print('  spikeDetect() clipWidth_pnts:', clipWidth_pnts, 'halfClipWidth_pnts:', halfClipWidth_pnts)
-		# make one x axis clip with the threshold crossing at 0
-		self.spikeClips_x = [(x-halfClipWidth_pnts)/self.dataPointsPerMs for x in range(clipWidth_pnts)]
-
-		#20190714, added this to make all clips same length, much easier to plot in MultiLine
-		numPointsInClip = len(self.spikeClips_x)
-
-		self.spikeClips = []
-		self.spikeClips_x2 = []
-		for idx, spikeTime in enumerate(self.spikeTimes):
-			#currentClip = vm[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts]
-			currentClip = vm[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts]
-			if len(currentClip) == numPointsInClip:
-				self.spikeClips.append(currentClip)
-				self.spikeClips_x2.append(self.spikeClips_x) # a 2D version to make pyqtgraph multiline happy
-			else:
-				##
-				##
-				if idx==0 or idx==len(self.spikeTimes)-1:
-					# don't report spike clip errors for first/last spike
-					pass
-				else:
-					print('  ERROR: bAnalysis.spikeDetect() did not add clip for spike index', idx, 'at time', spikeTime, 'currentClip:', len(currentClip), 'numPointsInClip:', numPointsInClip)
-				##
-				##
-		'''
 
 		#
 		# generate a df holding stats (used by scatterplotwidget)
@@ -2114,12 +1956,13 @@ class bAnalysis:
 
 		# done
 
-	def _makeSpikeClips(self, spikeClipWidth_ms=None, theseTime_sec=None, sweepNumber=None):
+	def _makeSpikeClips(self, preSpikeClipWidth_ms, postSpikeClipWidth_ms=None, theseTime_sec=None, sweepNumber=None):
 		"""
 		(Internal) Make small clips for each spike.
 
 		Args:
-			spikeClipWidth_ms (int): Width of each spike clip in milliseconds.
+			preSpikeClipWidth_ms (int): Width of each spike clip in milliseconds.
+			postSpikeClipWidth_ms (int): Width of each spike clip in milliseconds.
 			theseTime_sec (list of float): [NOT USED] List of seconds to make clips from.
 
 		Returns:
@@ -2127,8 +1970,10 @@ class bAnalysis:
 			self.spikeClips (list): List of spike clips
 		"""
 
-		if spikeClipWidth_ms is None:
-			spikeClipWidth_ms = self.detectionClass['spikeClipWidth_ms']
+		if preSpikeClipWidth_ms is None:
+			preSpikeClipWidth_ms = self.detectionClass['preSpikeClipWidth_ms']
+		if postSpikeClipWidth_ms is None:
+			postSpikeClipWidth_ms = self.detectionClass['postSpikeClipWidth_ms']
 
 		if sweepNumber is None:
 			sweepNumber = 'All'
@@ -2142,18 +1987,23 @@ class bAnalysis:
 			theseTime_pnts = [x*self.dataPointsPerMs for x in theseTime_ms]
 			theseTime_pnts = [round(x) for x in theseTime_pnts]
 
-		clipWidth_pnts = spikeClipWidth_ms * self.dataPointsPerMs
-		clipWidth_pnts = round(clipWidth_pnts)
-		if clipWidth_pnts % 2 == 0:
-			pass # Even
-		else:
-			clipWidth_pnts += 1 # Make odd even
+		preClipWidth_pnts = self.ms2Pnt_(preSpikeClipWidth_ms)
+		#if preClipWidth_pnts % 2 == 0:
+		#	pass # Even
+		#else:
+		#	clipWidth_pnts += 1 # Make odd even
+		postClipWidth_pnts = self.ms2Pnt_(postSpikeClipWidth_ms)
 
-		halfClipWidth_pnts = int(clipWidth_pnts/2)
+		#halfClipWidth_pnts = int(clipWidth_pnts/2)
 
 		#print('  makeSpikeClips() clipWidth_pnts:', clipWidth_pnts, 'halfClipWidth_pnts:', halfClipWidth_pnts)
 		# make one x axis clip with the threshold crossing at 0
-		self.spikeClips_x = [(x-halfClipWidth_pnts)/self.dataPointsPerMs for x in range(clipWidth_pnts)]
+		# was this, in ms
+		#self.spikeClips_x = [(x-halfClipWidth_pnts)/self.dataPointsPerMs for x in range(clipWidth_pnts)]
+
+		# in ms
+		self.spikeClips_x = [(x-preClipWidth_pnts)/self.dataPointsPerMs for x in range(preClipWidth_pnts)]
+		self.spikeClips_x += [(x)/self.dataPointsPerMs for x in range(postClipWidth_pnts)]
 
 		#20190714, added this to make all clips same length, much easier to plot in MultiLine
 		numPointsInClip = len(self.spikeClips_x)
@@ -2174,10 +2024,12 @@ class bAnalysis:
 
 			if len(sweepY.shape) == 1:
 				# 1D case where recording has only oone sweep
-				currentClip = sweepY[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts]
+				#currentClip = sweepY[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts]
+				currentClip = sweepY[spikeTime-preClipWidth_pnts:spikeTime+postClipWidth_pnts]
 			else:
 				# 2D case where recording has multiple sweeps
-				currentClip = sweepY[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts, sweep]
+				#currentClip = sweepY[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts, sweep]
+				currentClip = sweepY[spikeTime-preClipWidth_pnts:spikeTime+preClipWidth_pnts, sweep]
 
 			if len(currentClip) == numPointsInClip:
 				self.spikeClips.append(currentClip)
@@ -2189,7 +2041,7 @@ class bAnalysis:
 		#
 		return self.spikeClips_x2, self.spikeClips
 
-	def getSpikeClips(self, theMin, theMax, spikeSelection=[], spikeClipWidth_ms=None, sweepNumber=None):
+	def getSpikeClips(self, theMin, theMax, spikeSelection=[], preSpikeClipWidth_ms=None, postSpikeClipWidth_ms=None, sweepNumber=None):
 		"""
 		Get 2d list of spike clips, spike clips x, and 1d mean spike clip
 
@@ -2197,7 +2049,8 @@ class bAnalysis:
 			theMin (float): Start seconds.
 			theMax (float): Stop seconds.
 			spikeSelection (list): List of spike numbers
-			spikeClipWidth_ms (float):
+			preSpikeClipWidth_ms (float):
+			postSpikeClipWidth_ms (float):
 
 		Requires: self.spikeDetect() and self._makeSpikeClips()
 
@@ -2223,7 +2076,8 @@ class bAnalysis:
 		#if self.spikeClips is None:
 		#	self._makeSpikeClips(spikeClipWidth_ms=spikeClipWidth_ms, sweepNumber=sweepNumber)
 		# TODO: don't make all clips
-		self._makeSpikeClips(spikeClipWidth_ms=spikeClipWidth_ms, sweepNumber=sweepNumber)
+		#self._makeSpikeClips(spikeClipWidth_ms=spikeClipWidth_ms, sweepNumber=sweepNumber)
+		self._makeSpikeClips(preSpikeClipWidth_ms=preSpikeClipWidth_ms, postSpikeClipWidth_ms=postSpikeClipWidth_ms, sweepNumber=sweepNumber)
 
 		# make a list of clips within start/stop (Seconds)
 		theseClips = []

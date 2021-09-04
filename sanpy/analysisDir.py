@@ -114,48 +114,6 @@ _sanpyColumns = {
 
 }
 
-"""
-	'refractory_ms': {
-		'type': float,
-		'isEditable': True,
-	},
-	'peakWindow_ms': {
-		'type': float,
-		'isEditable': True,
-	},
-	'halfWidthWindow_ms': {
-		'type': float,
-		'isEditable': True,
-	},
-	'spikeClipWidth_ms': {
-		'type': float,
-		'isEditable': True,
-	},
-	'onlyPeaksAbove_mV': {
-		'type': float,
-		'isEditable': True,
-	},
-	'onlyPeaksBelow_mV': {
-		'type': float,
-		'isEditable': True,
-	},
-	'Notes': {
-		'type': str,
-		'isEditable': True,
-	},
-	# If added, this reaks havok on the code
-	# TODO: For debug, remove these
-	#'_ba': {
-	#	'type': str,
-	#	'isEditable': False,
-	#},
-	'uuid': {
-		'type': str,
-		'isEditable': False,
-	},
-
-}
-"""
 
 """
 Columns to use in display in file table (pyqt, dash, vue).

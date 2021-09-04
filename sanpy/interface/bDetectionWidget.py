@@ -212,50 +212,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 			# problem is these k/v have v that are mixture of str/float/int ... hard to parse
 			myDetectionDict = self.myMainWindow.getSelectedFileDict()
 
-			# removed 20210825
-			'''
-			if myDetectionDict['refractory_ms'] > 0:
-				detectionDict['refractory_ms'] = myDetectionDict['refractory_ms']
-			if myDetectionDict['peakWindow_ms'] > 0:
-				detectionDict['peakWindow_ms'] = myDetectionDict['peakWindow_ms']
-
-			if myDetectionDict['halfWidthWindow_ms'] > 0:
-				detectionDict['halfWidthWindow_ms'] = myDetectionDict['halfWidthWindow_ms']
-
-			if myDetectionDict['spikeClipWidth_ms'] > 0:
-				detectionDict['spikeClipWidth_ms'] = myDetectionDict['spikeClipWidth_ms']
-
-			if myDetectionDict['onlyPeaksAbove_mV'] is not None:
-				detectionDict['onlyPeaksAbove_mV'] = myDetectionDict['onlyPeaksAbove_mV']
-
-			if myDetectionDict['onlyPeaksBelow_mV'] is not None:
-				detectionDict['onlyPeaksBelow_mV'] = myDetectionDict['onlyPeaksBelow_mV']
-			'''
-
 			#
 			# fill in detectionDict from *this interface
 			detectionDict['startSeconds'] = startSec
 			detectionDict['stopSeconds'] = stopSec
 
-			'''
-			if myDetectionDict['Start(s)'] >= 0:
-				# default is 50 ms
-				detectionDict['startSeconds'] = myDetectionDict['Start(s)']
-			if myDetectionDict['Stop(s)'] >= 0:
-				# default is 50 ms
-				detectionDict['stopSeconds'] = myDetectionDict['Stop(s)']
-			'''
 			#
 			detectionDict['cellType'] = myDetectionDict['Cell Type']
 			detectionDict['sex'] = myDetectionDict['Sex']
 			detectionDict['condition'] = myDetectionDict['Condition']
-
-		'''
-		if self.myMainWindow is not None:
-			# grab parameters from main interface table
-			logger.info('setting start/stop seconds in main window table')
-			self.myMainWindow.xxx.setCellValue(rowIdx, colStr, value)
-		'''
 
 		#
 		# detect

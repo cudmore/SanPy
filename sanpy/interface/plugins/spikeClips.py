@@ -31,9 +31,12 @@ class spikeClips(sanpyPlugin):
 		"""
 		super().__init__(**kwargs)
 
-		self.clipWidth_ms = 50
+		self.preClipWidth_ms = 50
+		self.postClipWidth_ms = 50
 		if self.ba is not None:
-			self.clipWidth_ms = self.ba.detectionClass['spikeClipWidth_ms']
+			#self.clipWidth_ms = self.ba.detectionClass['spikeClipWidth_ms']
+			self.preClipWidth_ms = self.ba.detectionClass['preSpikeClipWidth_ms']
+			self.postClipWidth_ms = self.ba.detectionClass['postSpikeClipWidth_ms']
 
 		self.respondTo = 'All' # ('All', 'X-Axis', 'Spike Selection')
 
@@ -110,15 +113,25 @@ class spikeClips(sanpyPlugin):
 		#
 		hLayout3 = QtWidgets.QHBoxLayout()
 
-		aLabel = QtWidgets.QLabel('Clip Width (ms)')
+		aLabel = QtWidgets.QLabel('Pre Clip Width (ms)')
 		hLayout3.addWidget(aLabel)
-		self.clipWidthSpinBox = QtWidgets.QSpinBox()
-		self.clipWidthSpinBox.setKeyboardTracking(False)
-		self.clipWidthSpinBox.setRange(1, 1e9)
-		self.clipWidthSpinBox.setValue(self.clipWidth_ms)
+		self.preClipWidthSpinBox = QtWidgets.QSpinBox()
+		self.preClipWidthSpinBox.setKeyboardTracking(False)
+		self.preClipWidthSpinBox.setRange(1, 1e9)
+		self.preClipWidthSpinBox.setValue(self.preClipWidth_ms)
 		#self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
-		self.clipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
-		hLayout3.addWidget(self.clipWidthSpinBox)
+		self.preClipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
+		hLayout3.addWidget(self.preClipWidthSpinBox)
+
+		aLabel = QtWidgets.QLabel('Post Clip Width (ms)')
+		hLayout3.addWidget(aLabel)
+		self.postClipWidthSpinBox = QtWidgets.QSpinBox()
+		self.postClipWidthSpinBox.setKeyboardTracking(False)
+		self.postClipWidthSpinBox.setRange(1, 1e9)
+		self.postClipWidthSpinBox.setValue(self.postClipWidth_ms)
+		#self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
+		self.postClipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
+		hLayout3.addWidget(self.postClipWidthSpinBox)
 
 		#
 		# radio buttons
@@ -185,7 +198,8 @@ class spikeClips(sanpyPlugin):
 	def on_spinbox(self, label):
 		#logger.info('')
 		# grab from interface
-		self.clipWidth_ms = self.clipWidthSpinBox.value()
+		self.preClipWidth_ms = self.preClipWidthSpinBox.value()
+		self.postClipWidth_ms = self.postClipWidthSpinBox.value()
 		self.xMult = self.xMultSpinBox.value()
 		self.yMult = self.yMultSpinBox.value()
 
@@ -249,7 +263,9 @@ class spikeClips(sanpyPlugin):
 		# theseClips is a [list] of clips
 		# theseClips_x is in ms
 		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(startSec, stopSec, spikeSelection=selectedSpikeList,
-												spikeClipWidth_ms=self.clipWidth_ms, sweepNumber=self.sweepNumber)
+												preSpikeClipWidth_ms=self.preClipWidth_ms,
+												postSpikeClipWidth_ms=self.postClipWidth_ms,
+												sweepNumber=self.sweepNumber)
 		numClips = len(theseClips)
 		self.numSpikesLabel.setText(f'Num Spikes: {numClips}')
 

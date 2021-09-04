@@ -8,9 +8,9 @@
         "plotEveryPoint": 10,
         "showClips": false,
         "showDAC": false,
-        "showDvDt": false,
+        "showDvDt": true,
         "showErrors": false,
-        "showGlobalVm": false,
+        "showGlobalVm": true,
         "showScatter": false
     },
     "lastPath": "/home/cudmore/Sites/SanPy/data",
