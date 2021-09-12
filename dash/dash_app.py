@@ -395,7 +395,8 @@ def linked_graph(relayoutData, selected_rows, values, errorRowSelection,
 	if relayoutData is None:
 		return dash.no_update, dash.no_update, dash.no_update
 
-	logger.info(ba)
+	#global ba
+	#logger.info(ba)
 	sweepX = ba.sweepX2
 	xMin = 0
 	xMax = sweepX[-1]  # ba.abf.sweepX[-1]
