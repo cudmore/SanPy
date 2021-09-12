@@ -1,6 +1,6 @@
 # requirements for dash
 
-gunicorn # required to run on Heroku
+gunicorn  # required to run on Heroku
 wheel
 dash
 dash-bootstrap-components
@@ -20,6 +20,6 @@ dash-daq
 #pip install "git+https://github.com/cudmore/pyABF#egg=pyabf&subdirectory=src"
 
 # works
-#git+git://github.com/cudmore/SanPy
+git+git://github.com/cudmore/SanPy
 
 git+git://github.com/cudmore/pyABF.git#egg=pyabf&subdirectory=src
