@@ -76,3 +76,26 @@ Seemed to get fixed with myStyleDataConditional()
  - Condition plotting is not working when condition is a string
 
  - Finish code to connect 'mean lines b/w condition 1/2/3'
+
+## Deploy to Heroku
+
+`git push` main git repo then manually 'deploy' heroku app from heroku web interface.
+
+
+### Install heroku cli
+
+Run locally
+
+```
+heroku local
+```
+
+View logs
+
+```
+heroku logs --app=sanpy
+```
+
+### Save as an excel file:
+
+https://dash.plotly.com/dash-core-components/download
