@@ -8,10 +8,12 @@ import io, base64 # to handle drag and drop of binary abf files
 from textwrap import dedent as d
 
 import dash
-import dash_core_components as dcc
-import dash_html_components as html
+#import dash_core_components as dcc
+#import dash_html_components as html
+from dash import dcc, html
 from dash.dependencies import Input, Output, State
-import dash_table
+#import dash_table
+from dash import dash_table
 
 import numpy as np
 import pandas as pd
@@ -25,6 +27,9 @@ import myDashUtils
 import sanpy
 from sanpy.bAnalysisUtil import statList
 statDict = statList
+
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 # see: https://codepen.io/chriddyp/pen/bWLwgP
 '''
@@ -49,16 +54,22 @@ def loadFile(path, name, rowIdx):
 	ba = baList[rowIdx]
 
 	start = 0
-	stop = len(ba.sweepX) - 1
+	#stop = len(ba.sweepX()) - 1
+	stop = len(ba.sweepX2) - 1
 	global subSetOfPnts
 	subSetOfPnts = range(start, stop, plotEveryPoint)
 	print('  load file subSetOfPnts:', subSetOfPnts)
 
 def myDetect(dvdtThreshold):
 	print('app2.myDetect() dvdtThreshold:', dvdtThreshold)
-	dDict = ba.getDefaultDetection()
-	dDict['dvdtThreshold'] = dvdtThreshold
-	ba.spikeDetect(dDict)
+	#dDict = ba.getDefaultDetection()
+	#dDict['dvdtThreshold'] = dvdtThreshold
+	detectionDict = sanpy.bDetection() # gets default detection class
+	detectionType = sanpy.bDetection.detectionTypes.dvdt
+	detectionDict['detectionType'] = detectionType  # set detection type to ('dvdt', 'vm')
+	detectionDict['dvdtThreshold'] = dvdtThreshold
+	ba.spikeDetect(detectionDict)
+
 
 myPath = '../data'
 
@@ -214,12 +225,19 @@ def _regenerateFig(xMin, xMax, statList=None):
 	doDeriv = 'Derivative' in statList
 
 	try:
+		sweepX = ba.sweepX2
+		sweepY = ba.sweepY2
+		filteredDeriv = ba.filteredDeriv2
 		if doDeriv:
-			dvdtTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts],
+			#dvdtTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts],
+			#				line=lineDict, showlegend=False)
+			dvdtTrace = go.Scattergl(x=sweepX[subSetOfPnts], y=filteredDeriv[subSetOfPnts],
 							line=lineDict, showlegend=False)
 		else:
 			dvdtTrace = None
-		vmTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.abf.sweepY[subSetOfPnts],
+		#vmTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.abf.sweepY[subSetOfPnts],
+		#					line=lineDict, showlegend=False)
+		vmTrace = go.Scattergl(x=sweepX[subSetOfPnts], y=sweepY[subSetOfPnts],
 							line=lineDict, showlegend=False)
 	except (TypeError) as e:
 		print('EXCEPTION: _regenerateFig() got TypeError ... reploting WITHOUT subSetOfPnts')
@@ -377,8 +395,11 @@ def linked_graph(relayoutData, selected_rows, values, errorRowSelection,
 	if relayoutData is None:
 		return dash.no_update, dash.no_update, dash.no_update
 
+	logger.info(ba)
+	sweepX = ba.sweepX2
 	xMin = 0
-	xMax = ba.abf.sweepX[-1]
+	xMax = sweepX[-1]  # ba.abf.sweepX[-1]
+	logger.info(f'xMin:{xMin} xMax:{xMax} sweepX.shape:{sweepX.shape}')
 	if relayoutData is not None:
 		if 'xaxis.range[0]' in relayoutData and 'xaxis.range[1]' in relayoutData:
 			xMin = relayoutData['xaxis.range[0]']
@@ -431,7 +452,7 @@ def linked_graph(relayoutData, selected_rows, values, errorRowSelection,
 
 	#if triggeredControlId in ['file-list-table', 'upload-data']:
 	if triggeredControlId in ['detect-button', 'file-list-table', 'upload-data']:
-		print('  grabbing errors')
+		logger.info('getting detection errors')
 		dfError = ba.errorReport()
 		if dfError is not None:
 			dataError =  dfError.to_dict('records')
@@ -477,7 +498,8 @@ def parse_contents_abf(contents, filename, date):
 
 		# todo: get rid of this weirdness
 		start = 0
-		stop = len(ba.abf.sweepX) - 1
+		#stop = len(ba.abf.sweepX) - 1
+		stop = len(ba.sweepX2) - 1
 		print('	stop:', stop)
 		print('	plotEveryPoint:', plotEveryPoint)
 		global subSetOfPnts

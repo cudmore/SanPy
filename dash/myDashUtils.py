@@ -28,8 +28,8 @@ def getFileList(path):
 	fileDict['File Name'] = ''
 	#fileDict['path'] = ''
 	fileDict['kHz'] = ''
-	fileDict['Duration (Sec)'] = ''
-	fileDict['Number of Sweeps'] = ''
+	fileDict['Dur(s)'] = ''
+	fileDict['Sweeps'] = ''
 	error = False
 	if not os.path.isdir(path):
 		# ERROR
@@ -65,8 +65,8 @@ def getFileList(path):
 				recordingDur_sec = baHeader['recordingDur_sec'] #max(ba.abf.sweepX)
 
 				fileDict['kHz'] = recording_kHz
-				fileDict['Duration (Sec)'] = round(recordingDur_sec,3)
-				fileDict['Number of Sweeps'] = numSweeps
+				fileDict['Dur(s)'] = round(recordingDur_sec,3)
+				fileDict['Sweeps'] = numSweeps
 
 				retFileList.append(fileDict)
 				videoFileIdx += 1
@@ -241,4 +241,3 @@ def old_test_requests():
 if __name__ == '__main__':
 	#test_requests()
 	pass
-	

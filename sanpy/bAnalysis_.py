@@ -323,6 +323,8 @@ class bAnalysis:
 
 		self._detectionDirty = False
 
+		self.setSweep2()
+
 	@property
 	def detectionDict(self):
 		# TODO: remove this and just use 'detectionClass'
@@ -805,6 +807,24 @@ class bAnalysis:
 			theFilteredVm = self._filteredVm[:,sweepNumber]
 			theFilteredVm = self._getOneColumns(theFilteredVm)
 			return theFilteredVm
+
+	def setSweep2(self, sweep=0):
+		self._sweepX2 = self._sweepX[:,sweep]
+		self._sweepY2 = self._sweepY[:,sweep]
+		self._sweepC2 = self._sweepC[:,sweep]
+		self._filteredDeriv2 = self._filteredDeriv[:,sweep]
+
+	@property
+	def sweepX2(self):
+		return self._sweepX2
+
+	@property
+	def sweepY2(self):
+		return self._sweepY2
+
+	@property
+	def filteredDeriv2(self):
+		return self._filteredDeriv2
 
 	def get_yUnits(self):
 		return self._sweepLabelY
@@ -2223,7 +2243,7 @@ class bAnalysis:
 		Returns:
 			dict: Dictionary of information about loaded file.
 		"""
-		recordingDir_sec = len(self.sweepX) / self.dataPointsPerMs / 1000
+		#recordingDir_sec = len(self.sweepX) / self.dataPointsPerMs / 1000
 		recordingFrequency = self.dataPointsPerMs
 
 		ret = {
@@ -2241,7 +2261,7 @@ class bAnalysis:
 			'get_yUnits': self.get_yUnits,
 			#'currentSweep': self.currentSweep,
 			'recording_kHz': recordingFrequency,
-			'recordingDur_sec': recordingDir_sec
+			'recordingDur_sec': self.recordingDur
 		}
 		return ret
 
