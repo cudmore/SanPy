@@ -44,11 +44,11 @@ from app import server # needed for heroku
 def loadFile(path, name, rowIdx):
 	print('app2.loadFile() name:', name, 'rowIdx:', rowIdx)
 
-	global ba
+	#global ba
 
 	if rowIdx > len(baList)-1:
 		# error
-		return
+		return None
 
 	# already loaded when page was initialized
 	ba = baList[rowIdx]
@@ -60,10 +60,15 @@ def loadFile(path, name, rowIdx):
 	subSetOfPnts = range(start, stop, plotEveryPoint)
 	print('  load file subSetOfPnts:', subSetOfPnts)
 
+	return ba
+
 def myDetect(dvdtThreshold):
 	print('app2.myDetect() dvdtThreshold:', dvdtThreshold)
 	#dDict = ba.getDefaultDetection()
 	#dDict['dvdtThreshold'] = dvdtThreshold
+	if ba is None:
+		return
+
 	detectionDict = sanpy.bDetection() # gets default detection class
 	detectionType = sanpy.bDetection.detectionTypes.dvdt
 	detectionDict['detectionType'] = detectionType  # set detection type to ('dvdt', 'vm')
@@ -71,7 +76,7 @@ def myDetect(dvdtThreshold):
 	ba.spikeDetect(detectionDict)
 
 
-myPath = '../data'
+myPath = 'data'
 
 # detect spikes
 myThreshold = 20
@@ -89,7 +94,8 @@ dfFileList, baList = myDashUtils.getFileList(myPath) # used to build file list D
 # load first file in list
 loadFirstFile = dfFileList['File Name'][0]
 print('loadFirstFile:', loadFirstFile)
-loadFile(myPath, loadFirstFile, 0)
+global ba
+ba = loadFile(myPath, loadFirstFile, 0)
 
 myOptionsList = list(statDict.keys())
 
@@ -178,8 +184,17 @@ def saveButton(saveButton):
 	#if triggeredControlId == 'detect-button':
 	#	myDetect(dvdtThreshold)
 	if triggeredControlId == 'save-button':
-		print('  todo: save')
-
+		print('  === save:', ba.getInfo())
+		#global ba
+		savefile = 'xxx.xlsx'
+		xMin = 0
+		xMax = 10
+		alsoSaveTxt = True
+		exportObj = sanpy.bExport(ba)
+		analysisName, df = exportObj.saveReport(savefile, xMin, xMax, alsoSaveTxt=alsoSaveTxt)
+		print('  analysisName:', analysisName)
+		print('  df:', df)
+		#print(df.head())
 '''
 @app.callback(
 	Output('tmpdivRadio', 'children'),
@@ -211,16 +226,6 @@ def _regenerateFig(xMin, xMax, statList=None):
 		'color': 'white', # for dark layout
 		'width': 0.7,
 	}
-
-	#print('	type(subSetOfPnts):', type(subSetOfPnts), len(subSetOfPnts))
-	'''
-	print('	type(ba.abf.sweepX)', type(ba.abf.sweepX), len(ba.abf.sweepX))
-	print('	type(ba.abf.sweepY)', type(ba.abf.sweepY), len(ba.abf.sweepY))
-	print('	type(ba.filteredDeriv)', type(ba.filteredDeriv), len(ba.filteredDeriv))
-	#print('subSetOfPntsgg:', subSetOfPnts)
-	print('	sweepY:', np.min(ba.abf.sweepY), np.max(ba.abf.sweepY))
-	print('	filteredDeriv:', np.min(ba.filteredDeriv), np.max(ba.filteredDeriv))
-	'''
 
 	doDeriv = 'Derivative' in statList
 
@@ -418,7 +423,7 @@ def linked_graph(relayoutData, selected_rows, values, errorRowSelection,
 		fileSelection = dfFileList.at[selRow, 'File Name']
 		print('   file selection is:', fileSelection)
 		print('     XXX LOADING FILE THIS IS WHERE I NEED REDIS !!!!!!!!!!!!!!!!!!!!!!!!!')
-		loadFile(myPath, fileSelection, selRow)
+		ba = loadFile(myPath, fileSelection, selRow)
 	elif triggeredControlId=='upload-data':
 		print('  user uploaded an abf:', list_of_names)
 		# todo: fix this syntax, really weird !!!

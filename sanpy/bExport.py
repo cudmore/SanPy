@@ -590,7 +590,7 @@ class bExport():
 		maxStr = '%.2f'%(theMax)
 		minStr = minStr.replace('.', '_')
 		maxStr = maxStr.replace('.', '_')
-		tmpPath, tmpFile = os.path.split(self.ba.file)
+		tmpPath, tmpFile = os.path.split(self.ba.path)
 		tmpFile, tmpExt = os.path.splitext(tmpFile)
 		analysisName = tmpFile + '_s' + minStr + '_s' + maxStr
 		logger.info(f'minStr:{minStr} maxStr:{maxStr} analysisName:{analysisName}')
