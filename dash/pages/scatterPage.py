@@ -17,6 +17,8 @@ def getScatterPageLayout(statDict):
 	statsDf['idx'] = [i for i in range(len(statDict.keys()))]
 	statsDf['stat'] = [x for x in statDict.keys()]
 
+	heaight = 400
+	
 	scatterPageLayout = html.Div(
 		[
 			dbc.Row(
@@ -24,7 +26,7 @@ def getScatterPageLayout(statDict):
 				dbc.Col(
 					html.Div([
 						html.Label('X-Stat'),
-						myDashUtils.makeTable('x-stat-table', statsDf, height=180, defaultRow=0)
+						myDashUtils.makeTable('x-stat-table', statsDf, height=heaight, defaultRow=0)
 					]) # div
 					,width=3,style={"border":boxBorder}
 				), # col
@@ -32,7 +34,7 @@ def getScatterPageLayout(statDict):
 				dbc.Col(
 					html.Div([
 						html.Label('Y-Stat'),
-						myDashUtils.makeTable('y-stat-table', statsDf, height=180, defaultRow=0)
+						myDashUtils.makeTable('y-stat-table', statsDf, height=heaight, defaultRow=7)
 					]) # div
 					,width=3,style={"border":boxBorder}
 				), # col

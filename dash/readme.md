@@ -84,13 +84,17 @@ Seemed to get fixed with myStyleDataConditional()
 
 ### Install heroku cli
 
+```
+brew tap heroku/brew && brew install heroku
+```
+
 Run locally
 
 ```
 heroku local
 ```
 
-View logs
+View logs ( from online web version)
 
 ```
 heroku logs --app=sanpy

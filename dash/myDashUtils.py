@@ -91,7 +91,7 @@ def makeCheckList(id, itemList, defaultItem=None):
 	return ret
 
 # todo: put this is myDashUtil.py
-def makeTable(id, df, height=200, row_selectable='single', defaultRow=0):
+def makeTable(id, df, height=300, row_selectable='single', defaultRow=0):
 	"""
 	defaultRow: row index selected on __init__
 	"""

@@ -25,8 +25,11 @@ import myDashUtils
 
 #from sanpy import *
 import sanpy
-from sanpy.bAnalysisUtil import statList
-statDict = statList
+
+# keys are human name statDict[<human name>']['name'] is backend
+statDict = sanpy.bAnalysisUtil.getStatList()
+#from sanpy.bAnalysisUtil import statList
+#statDict = statList
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -113,7 +116,7 @@ app.layout = html.Div([
 
 	detectionPage.getDetectionLayout(),
 
-	scatterPage.getScatterPageLayout(statList),
+	scatterPage.getScatterPageLayout(statDict),
 
 ]) # app.layout = html.Div([
 
@@ -278,7 +281,6 @@ def _regenerateFig(xMin, xMax, statList=None):
 			if stat == 'AP Amp (mV)':
 				x = [spike['peakSec'] for spike in ba.spikeDict]
 				y = [spike['peakVal'] for spike in ba.spikeDict]
-
 			elif stat == 'Take Off Potential (mV)':
 				x = [spike['thresholdSec'] for spike in ba.spikeDict]
 				y = [spike['thresholdVal'] for spike in ba.spikeDict]
@@ -519,6 +521,7 @@ def parse_contents_abf(contents, filename, date):
 		html.H5(f'Loaded file: {filename}'),
 	])
 
+#  'life-exp-vs-gdp' is the scatter
 @app.callback(
 	Output('life-exp-vs-gdp', 'figure'),
 	[
@@ -527,6 +530,8 @@ def parse_contents_abf(contents, filename, date):
 	])
 def myTableSelect(y_activeCell, x_activeCell):
 	"""
+	Update the scatter plot.
+
 	y_activeCell: {'row': 1, 'column': 1, 'column_id': 'stat'}
 	x_activeCell: {'row': 3, 'column': 1, 'column_id': 'stat'}
 	"""
@@ -537,11 +542,11 @@ def myTableSelect(y_activeCell, x_activeCell):
 	if y_activeCell is not None:
 		yRow = y_activeCell[0]
 		ySelHuman = myOptionsList[yRow] # human readable
-		ySel = statDict[ySelHuman]['yStat'] # convert back to backend names
+		ySel = statDict[ySelHuman]['name'] # convert back to backend names
 	if x_activeCell is not None:
 		xRow = x_activeCell[0]
 		xSelHuman = myOptionsList[xRow]
-		xSel = statDict[xSelHuman]['yStat'] # convert back to backend names
+		xSel = statDict[xSelHuman]['name'] # convert back to backend names
 	print('myTableSelect ySel:', ySel, 'xSrl:', xSel)
 	xaxis_type = 'Linear'
 	yaxis_type = 'Linear'
