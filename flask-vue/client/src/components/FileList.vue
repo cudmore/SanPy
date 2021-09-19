@@ -15,6 +15,7 @@
         small
         striped
         :hover=true
+        @row-clicked="myRowClickHandler"
       ></b-table>
     </div>
   </div> <!-- container -->
@@ -70,6 +71,18 @@ export default {
           console.error(error);
         });
     },
+    myRowClickHandler(item, index) {
+      // 'item' will be the row data from items
+      // `index` will be the visible row number (available in the v-model 'shownItems')
+      console.log('myRowClickHandler'); // This will be the item data for the row
+      console.log(item); // This will be the item data for the row
+      console.log(index); // This will be the item data for the row
+      // this.$set(item, '_showDetails', !item._showDetails);
+      // this.$set(item, '_showDetails', true);
+      // load from index
+      this.$root.$emit('myPlotlyLoadFile', index, item);
+    },
+
   },
   created() {
     this.fileList();

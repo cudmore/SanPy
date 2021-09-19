@@ -100,6 +100,25 @@ View logs ( from online web version)
 heroku logs --app=sanpy
 ```
 
+Use command line to push to git and heroku
+
+```
+heroku git:remote -a sanpy
+# responds: set git remote heroku to https://git.heroku.com/sanpy.git
+```
+
+We now have
+
+```
+git remote -v
+
+heroku	https://git.heroku.com/sanpy.git (fetch)
+heroku	https://git.heroku.com/sanpy.git (push)
+origin	https://github.com/cudmore/bAnalysis.git (fetch)
+origin	https://github.com/cudmore/bAnalysis.git (push)
+```
+
 ### Save as an excel file:
 
 https://dash.plotly.com/dash-core-components/download
+

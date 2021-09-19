@@ -1,6 +1,6 @@
 ## Flask app to have proper client-server
 
-For now using this to test Rest API of sanpy.bbAnalysis.
+For now using this to test Rest API of sanpy.bAnalysis.
 
 Remember, I can retrieve directly from the command-line with curl:
 
@@ -48,7 +48,17 @@ Vue CLI v3.7.0
 ? Save this as a preset for future projects? (y/N) No
 ```
 
-Run the server, this will be at: http://127.0.0.1:8080/
+Run the server
+
+1) run backend flask (on 5000)
+```
+cd server
+python app.py
+```
+
+2) run vue
+
+this will be at: http://127.0.0.1:8080/
 
 ```
 cd client
@@ -72,4 +82,17 @@ plotly.js-dist
 Modify frontend/src/main.js
 
 ```
+```
+
+## To turn off linting in vs Code
+
+```
+// eslint-disable-line prefer-template
+```
+
+## Try to unzip in vuejs
+
+```
+npm install original-fs
+npm install adm-zip
 ```

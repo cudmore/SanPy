@@ -250,7 +250,7 @@ class analysisDir():
 		if autoLoad:
 			self._df = self.loadHdf()
 			if self._df is None:
-				self._df = self.loadFolder()  # only used if no h5 file
+				self._df = self.loadFolder(loadData=True)  # only used if no h5 file
 		#
 		self._checkColumns()
 		self._updateLoadedAnalyzed()
@@ -568,7 +568,7 @@ class analysisDir():
 			self._rebuildHdf()
 			self._updateLoadedAnalyzed()
 
-	def loadFolder(self, path=None):
+	def loadFolder(self, path=None, loadData=False):
 		"""
 		Parse a folder and load all (abf, csv, ...). Only called if no h5 file.
 
@@ -619,7 +619,8 @@ class analysisDir():
 				self.signalApp(f'Loading "{file}"')
 
 				# rowDict is what we are showing in the file table
-				ba, rowDict = self.getFileRow(file)  # loads bAnalysis
+				# abb debug vue, set loadData=True
+				ba, rowDict = self.getFileRow(file, loadData=loadData)  # loads bAnalysis
 
 				# TODO: calculating time, remove this
 				# This is 2x faster than loading from pandas gzip ???
@@ -628,7 +629,10 @@ class analysisDir():
 				#ba.spikeDetect(dDict)
 
 				# as we parse the folder, don't load ALL files (will run out of memory)
-				rowDict['_ba'] = None  # ba
+				if loadData:
+					rowDict['_ba'] = ba
+				else:
+					rowDict['_ba'] = None  # ba
 
 				# do not assign uuid until bAnalysis is saved in h5 file
 				#rowDict['uuid'] = ''
@@ -776,6 +780,9 @@ class analysisDir():
 
 		Args:
 			rowIdx (int): Row index from table, corresponds to row in self._df
+
+		Return:
+			bAnalysis
 		"""
 		file = self._df.loc[rowIdx, 'File']
 		ba = self._df.loc[rowIdx, '_ba']
@@ -875,7 +882,7 @@ class analysisDir():
 		#
 		return df
 
-	def getFileRow(self, path):
+	def getFileRow(self, path, loadData=False):
 		"""
 		Get dict representing one file (row in table). Loads bAnalysis to get headers.
 
@@ -902,7 +909,7 @@ class analysisDir():
 
 		# load bAnalysis
 		#logger.info(f'Loading bAnalysis "{path}"')
-		ba = sanpy.bAnalysis(path, loadData=False)
+		ba = sanpy.bAnalysis(path, loadData=loadData)
 
 		if ba.loadError:
 			logger.error(f'Error loading bAnalysis file "{path}"')
@@ -1123,6 +1130,18 @@ class analysisDir():
 			self.myApp.updateStatusBar(str)
 		else:
 			logger.info(str)
+
+	def api_getFileHeaders(self):
+		headerList = []
+		df = self.getDataFrame()
+		for row in range(len(df)):
+			#ba = self.getAnalysis(row)  # do not call this, it will load
+			ba = df.at[row, '_ba']
+			if ba is not None:
+				headerDict = ba.api_getHeader()
+				headerList.append(headerDict)
+		#
+		return headerList
 
 def _printDict(d):
 	for k,v in d.items():

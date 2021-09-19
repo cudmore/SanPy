@@ -28,8 +28,22 @@ export default {
   },
   data() {
     return {
-      username: '',
+      username: 'qqq',
+      myFileName: 'myNone',
     };
   },
+  mounted() {
+    this.$root.$on('analysis_setFileName', (filename) => {
+      // your code goes here
+      this.setFileName(filename);
+    });
+  },
+  methods: {
+    setFileName(filename) {
+      // `this` will refer to the component instance
+      this.myFileName = filename;
+    },
+  },
+
 };
 </script>

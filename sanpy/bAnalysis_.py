@@ -2249,7 +2249,7 @@ class bAnalysis:
 		ret = {
 			'myFileType': self.myFileType, # ('abf', 'tif', 'bytestream', 'csv')
 			'loadError': self.loadError,
-			'detectionDict': self.detectionClass,
+			#'detectionDict': self.detectionClass,
 			'path': self._path,
 			'file': self.getFileName(),
 			'dateAnalyzed': self.dateAnalyzed,
@@ -2258,7 +2258,7 @@ class bAnalysis:
 			#'acqTime': self.acqTime,
 			#
 			'_recordingMode': self._recordingMode,
-			'get_yUnits': self.get_yUnits,
+			'get_yUnits': self.get_yUnits(),
 			#'currentSweep': self.currentSweep,
 			'recording_kHz': recordingFrequency,
 			'recordingDur_sec': self.recordingDur
@@ -2307,8 +2307,8 @@ class bAnalysis:
 		#start = time.time()
 		ret = {
 			'header': self.api_getHeader(),
-			'sweepX': self.sweepX,
-			'sweepY': self.sweepY,
+			'sweepX': self.sweepX2.tolist(),
+			'sweepY': self.sweepY2.tolist(),
 		}
 		#stop = time.time()
 		#print(stop-start)
