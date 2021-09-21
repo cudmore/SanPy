@@ -19,7 +19,7 @@ def fetchFileList(bucketName, folder='.', s3=None):
 	myBucket = s3.Bucket(bucketName)
 
 	numFiles = 0
-	maxNumFiles = 2
+	maxNumFiles = 1
 	keyList = []
 	for myBucketObject in myBucket.objects.all():
 		if numFiles > maxNumFiles:
