@@ -15,6 +15,26 @@ pip install dash-bootstrap-components
 pip install dash-daq
 ```
 
+## Install heroku cli
+
+First had to manually update brew with the following.
+
+```
+git -C /usr/local/Homebrew/Library/Taps/homebrew/homebrew-core fetch --unshallow
+
+# then, Took 20-30 minutes.
+brew update
+```
+
+See: https://devcenter.heroku.com/articles/heroku-cli
+```
+brew tap heroku/brew && brew install heroku
+```
+
+## Install amazon aws cli
+
+## To Do: Install amazon elastic beanstalk
+
 ## To Do (backend)
 
  - Add header to saved text file and add
@@ -121,4 +141,3 @@ origin	https://github.com/cudmore/bAnalysis.git (push)
 ### Save as an excel file:
 
 https://dash.plotly.com/dash-core-components/download
-
