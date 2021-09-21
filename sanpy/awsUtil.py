@@ -18,14 +18,19 @@ def fetchFileList(bucketName, folder='.', s3=None):
 
 	myBucket = s3.Bucket(bucketName)
 
+	numFiles = 0
+	maxNumFiles = 3
 	keyList = []
 	for myBucketObject in myBucket.objects.all():
+		if numFiles > maxNumFiles:
+			break
 		key = myBucketObject.key
 		depth = key.count('/') # depth of 1 is 'root', e.g. '.'
 		if folder=='.' and depth>1:
 			continue
 		if key.endswith('.abf'):
 			keyList.append(key)
+			numFiles += 1
 	#
 	print(f'  found {len(keyList)} abf files')
 	return keyList
