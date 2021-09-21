@@ -92,13 +92,16 @@ global baList
 baList = []
 
 #fileList = getFileList(myPath)
-dfFileList, baList = myDashUtils.getFileList(myPath) # used to build file list DataTable ('file-list-table')
+bucketName = 'sanpy-data'
+dfFileList, baList = myDashUtils.getFileList(myPath, bucketName=bucketName) # used to build file list DataTable ('file-list-table')
 
 # load first file in list
 loadFirstFile = dfFileList['File Name'][0]
 print('loadFirstFile:', loadFirstFile)
 global ba
-ba = loadFile(myPath, loadFirstFile, 0)
+# was this
+#ba = loadFile(myPath, loadFirstFile, 0)
+ba = baList[0]
 
 myOptionsList = list(statDict.keys())
 

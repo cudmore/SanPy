@@ -25,3 +25,5 @@ from .atfStim import *
 
 from .bDetection import bDetection
 #from .bDetection import bDetection
+
+from .awsUtil import *

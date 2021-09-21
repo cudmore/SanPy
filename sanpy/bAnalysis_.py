@@ -215,7 +215,7 @@ class bAnalysis:
 		Args:
 			file (str): Path to either .abf or .csv with time/mV columns.
 			theTiff (str): Path to .tif file.
-			byteStream (binary): Binary stream for use in the cloud.
+			byteStream (io.BytesIO): Binary stream for use in the cloud.
 			fromDf: (pd.DataFrame): One row df with columns as instance variables
 			fromDict: (dict): Dict has keys ['sweepX', 'sweepY', 'mode']
 		"""
@@ -291,12 +291,13 @@ class bAnalysis:
 		#		In particular for self._loadFromDf()
 
 		# instantiate and load abf file
+		self.isBytesIO = False
 		if fromDict is not None:
 			self._loadFromDict(fromDict)
 		elif fromDf is not None:
 			self._loadFromDf(fromDf)
 		elif byteStream is not None:
-			self._loadAbf(byteStream=byteStream)
+			self._loadAbf(byteStream=byteStream, loadData=loadData)
 		elif file is not None and file.endswith('.abf'):
 			self._loadAbf(loadData=loadData)
 		elif file is not None and file.endswith('.atf'):
@@ -323,6 +324,7 @@ class bAnalysis:
 
 		self._detectionDirty = False
 
+		# switching back to faster version (no parsing when we cell self.sweepX2
 		self.setSweep2()
 
 	@property
@@ -332,8 +334,12 @@ class bAnalysis:
 
 	def __str__(self):
 		#return f'ba: {self.getFileName()} dur:{round(self.recordingDur,3)} spikes:{self.numSpikes} isAnalyzed:{self.isAnalyzed()} detectionDirty:{self.detectionDirty}'
-		 txt = f'ba: {self.getFileName()} sweep dur:{round(self.recordingDur,3)} spikes:{self.numSpikes}'
-		 return txt
+		if self.isBytesIO:
+			 filename = '<BytesIO>'
+		else:
+			filename = self.getFileName()
+		txt = f'ba: {filename} sweep dur:{round(self.recordingDur,3)} spikes:{self.numSpikes}'
+		return txt
 
 	def getInfo(self):
 		txt = self.__str__()
@@ -567,9 +573,24 @@ class bAnalysis:
 			#logger.info(f'loadData:{loadData}')
 			if byteStream is not None:
 				self._abf = pyabf.ABF(byteStream)
+				self.isBytesIO = True
 			else:
 				self._abf = pyabf.ABF(self._path, loadData=loadData)
 
+		except (NotImplementedError) as e:
+			logger.error(f'did not load abf file: {self._path}')
+			logger.error(f'  NotImplementedError exception was: {e}')
+			self.loadError = True
+			self._abf = None
+
+		except (Exception) as e:
+			# some abf files throw: 'unpack requires a buffer of 234 bytes'
+			logger.error(f'did not load abf file: {self._path}')
+			logger.error(f'  unknown Exception was: {e}')
+			self.loadError = True
+			self._abf = None
+
+		if 1:
 			self._sweepList = self._abf.sweepList
 			self._sweepLengthSec = self._abf.sweepLengthSec
 
@@ -622,18 +643,6 @@ class bAnalysis:
 				self._sweepY_label = self._abf.sweepUnitsY
 			'''
 
-		except (NotImplementedError) as e:
-			logger.error(f'did not load abf file: {self._path}')
-			logger.error(f'  NotImplementedError exception was: {e}')
-			self.loadError = True
-			self._abf = None
-
-		except (Exception) as e:
-			# some abf files throw: 'unpack requires a buffer of 234 bytes'
-			logger.error(f'did not load abf file: {self._path}')
-			logger.error(f'  unknown Exception was: {e}')
-			self.loadError = True
-			self._abf = None
 
 		#
 		self.myFileType = 'abf'

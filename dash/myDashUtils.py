@@ -10,13 +10,15 @@ import sanpy
 
 boxBorder = "1px gray solid"
 
-def getFileList(path):
+def getFileList(path, bucketName=None):
 	"""
 	Get list of bAnalysis from path
 
 	Returns:
 		list of bAnalysis
 	"""
+	print('myDashUtils.getFileList() path:', path, 'bucketName:', bucketName)
+
 	baList = []
 	retFileList = []
 	useExtension = '.abf'
@@ -29,24 +31,42 @@ def getFileList(path):
 	fileDict['kHz'] = ''
 	fileDict['Dur(s)'] = ''
 	fileDict['Sweeps'] = ''
+
 	error = False
-	if not os.path.isdir(path):
-		# ERROR
-		error = True
+
+	doAws = bucketName is not None
+	fileList = []
+	if doAws:
+		#bucket = 'sanpy-data'
+		s3 = sanpy.awsUtil.getConnection()
+		fileList = sanpy.awsUtil.fetchFileList(bucketName, folder='.', s3=s3)
+	else:
+		if not os.path.isdir(path):
+			# ERROR
+			error = True
+		else:
+			fileList = os.listdir(path)
+
 
 	if not error:
-		for file in os.listdir(path):
+		for file in fileList:
 			if file.startswith('.'):
 				continue
 			if file.endswith(useExtension):
-				fullPath = os.path.join(path, file)
+				if doAws:
+					pass
+				else:
+					fullPath = os.path.join(path, file)
 
 				fileDict = {} # WOW, I need this here !!!!!!!!
 				fileDict['Type'] = 'file'
 				fileDict['File Name'] = file
 				#fileDict['path'] = fullPath
 
-				ba = sanpy.bAnalysis(file=fullPath)
+				if doAws:
+					ba = sanpy.awsUtil.loadOneFile(bucketName, file, s3=s3)
+				else:
+					ba = sanpy.bAnalysis(file=fullPath)
 
 				baList.append(ba)
 				'''

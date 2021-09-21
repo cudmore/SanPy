@@ -1,3 +1,25 @@
+## Getting amazon aws s3 buckets working
+
+Download and install aws command line
+
+```
+https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2-mac.html
+```
+
+Configure aws command line
+
+```
+aws configure
+# AWS Access Key ID [None]: <access key>
+# AWS Secret Access Key [None]: <secret key>
+# Default region name [None]: us-west-1
+# Default output format [None]: json
+```
+From aws cli, list data
+
+```
+aws s3 ls s3://sanpy-data/data/
+```
 
 ## Update 202106
 
