@@ -150,6 +150,23 @@ class sanpyPlugin(QtWidgets.QWidget):
 		# connect self to main app with signals/slots
 		self._installSignalSlot()
 
+	def getSweep(self, type):
+		theRet = None
+		if self.ba is None:
+			return theRet
+		if type == 'X':
+			theRet = self.ba.sweepX
+		elif type == 'Y':
+			theRet = self.ba.sweepY
+		elif type == 'C':
+			theRet = self.ba.sweepC
+		elif type == 'filteredDeriv':
+			theRet = self.ba.filteredDeriv
+		else:
+			logger.error(f'Did not understand type: "{type}"')
+		#
+		return theRet
+
 	'''
 	def _setLayout(self, layout):
 		#self.mainWidget.setLayout(layout)

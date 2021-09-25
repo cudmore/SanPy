@@ -41,8 +41,8 @@ class plotRecording(sanpyPlugin):
 
 		self.mplWindow2() # assigns (self.fig, self.ax)
 
-		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
-		sweepY = self.ba.filteredVm(sweepNumber=self.sweepNumber)  # sweepY
+		sweepX = self.getSweep('x')  # self.ba.sweepX(sweepNumber=self.sweepNumber)
+		sweepY = self.getSweep('y')  # self.ba.filteredVm(sweepNumber=self.sweepNumber)  # sweepY
 
 		self.sweepX = sweepX
 		self.sweepY = sweepY
@@ -111,8 +111,8 @@ class plotRecording(sanpyPlugin):
 		"""
 		logger.info('')
 
-		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
-		sweepY = self.ba.sweepY(sweepNumber=self.sweepNumber)
+		sweepX = self.getSweep('x')  # self.ba.sweepX(sweepNumber=self.sweepNumber)
+		sweepY = self.getSweep('y')  # self.ba.sweepY(sweepNumber=self.sweepNumber)
 
 		self.sweepX = sweepX
 		self.sweepY = sweepY

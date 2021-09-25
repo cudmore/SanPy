@@ -4,7 +4,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output, State
-import plotly.plotly as py
+#import plotly.plotly as py
 import plotly.graph_objs as go
 import datashader as ds
 import datashader.transfer_functions as tf
@@ -45,18 +45,21 @@ data['Signal'][locs] *= 2
 
 ###
 ###
-import sys
-sys.path.append("..") # Adds higher directory to python modules path.
-from bAnalysisApp import bAnalysis
+#import sys
+#sys.path.append("..") # Adds higher directory to python modules path.
+#from bAnalysisApp import bAnalysis
 
-myFilePath = '../data/19221021.abf' # 300 sec
+import sanpy
+
+myFilePath = '../../data/19114001.abf' # 300 sec
 #myFilePath = '../data/19114001.abf' # 60 sec
-ba = bAnalysis.bAnalysis(myFilePath)
-ba.getDerivative(medianFilter=5)
-ba.spikeDetect(dVthresholdPos=50, medianFilter=5, halfHeights=[20, 50, 80])
+ba = sanpy.bAnalysis(myFilePath)
+#ba.getDerivative(medianFilter=5)
+#ba.spikeDetect(dVthresholdPos=50, medianFilter=5, halfHeights=[20, 50, 80])
+ba.spikeDetect()
 
-myX = ba.abf.sweepX
-signal = ba.abf.sweepY
+myX = ba.sweepX2
+signal = ba.sweepY2
 
 cols = ['Signal']  # Column name of signal
 data = {c: signal for c in cols}
@@ -222,7 +225,7 @@ app.layout = html.Div([
 				}
 			)
 			#], type="default"),
-			
+
 		], className='twelve columns')
 	], className='row'),
 
@@ -323,17 +326,17 @@ def draw_undecimated_data(selection):
 			'xaxis.range[1]' in selection:
 		x0 = selection['xaxis.range[0]']
 		x1 = selection['xaxis.range[1]']
-		
+
 		print('draw_undecimated_data() x0:', x0, 'x1:', x1)
-		
+
 		sub_df = df[(df.Time >= x0) & (df.Time <= x1)]
 		num_pts = len(sub_df)
-		
+
 		sub_df2 = df2[(df2.Time >= x0) & (df2.Time <= x1)]
 		num_pts2 = len(sub_df2)
-		
+
 		#print('sub_df2:', sub_df2)
-		
+
 		if num_pts < max_points:
 			high_res_data = [
 				dict(

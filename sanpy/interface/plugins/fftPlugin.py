@@ -774,18 +774,6 @@ class fftPlugin(sanpyPlugin):
 		#
 		self.replot2(switchFile=False)
 
-	def old_getMean(self):
-		""" Get mean of current view.
-		"""
-		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
-		if self.lastLeft is not None:
-			filteredVm = filteredVm[self.lastLeft:self.lastRight]
-		dataMean = np.nanmean(filteredVm)
-		dataStd = np.nanstd(filteredVm)
-		self.dataMean = dataMean
-		self.dataThreshold2 = dataMean + (2 * dataStd)
-		self.dataThreshold3 = dataMean + (3 * dataStd)
-
 	def setAxis(self):
 		self.replot()
 
@@ -810,158 +798,6 @@ class fftPlugin(sanpyPlugin):
 		self.static_canvas.draw()
 		#plt.draw()
 
-	def old_plot(self):
-		return
-
-		"""First plot"""
-		logger.info('')
-		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
-		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
-		thresholdSec = self.ba.getStat('thresholdSec', sweepNumber=self.sweepNumber)
-		thresholdVal = self.ba.getStat('thresholdVal', sweepNumber=self.sweepNumber)
-		peakSec = self.ba.getStat('peakSec', sweepNumber=self.sweepNumber)
-		peakVal = self.ba.getStat('peakVal', sweepNumber=self.sweepNumber)
-
-		#self.dataLine, = self.vmAxes.plot(t, data, 'k', label='data')
-		self.dataFilteredLine, = self.vmAxes.plot(t, filteredVm, 'b-', linewidth=0.5, label='filtered')
-
-		self.spikesLine, = self.vmAxes.plot(thresholdSec, thresholdVal, 'ro')
-		self.peaksLine, = self.vmAxes.plot(peakSec, peakVal, 'go')
-
-		self.dataMeanLine = self.vmAxes.axhline(self.dataMean, color='r', linestyle='--', linewidth=0.5)
-		self.thresholdLine2 = self.vmAxes.axhline(self.dataThreshold2, color='r', linestyle='--', linewidth=0.5)
-		self.thresholdLine3 = self.vmAxes.axhline(self.dataThreshold3, color='r', linestyle='--', linewidth=0.5)
-
-		self.vmAxes.set_xlabel('Time (s)')
-		self.vmAxes.set_ylabel('Vm (mV)')
-
-	def old_replotData(self, switchFile=False):
-		return
-
-		logger.info(f'switchFile:{switchFile} {self.ba}')
-
-		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
-		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
-		thresholdSec = self.ba.getStat('thresholdSec', sweepNumber=self.sweepNumber)
-		thresholdVal = self.ba.getStat('thresholdVal', sweepNumber=self.sweepNumber)
-		peakSec = self.ba.getStat('peakSec', sweepNumber=self.sweepNumber)
-		peakVal = self.ba.getStat('peakVal', sweepNumber=self.sweepNumber)
-
-		self.spikesLine.set_xdata(thresholdSec)
-		self.spikesLine.set_ydata(thresholdVal)
-
-		self.peaksLine.set_xdata(peakSec)
-		self.peaksLine.set_ydata(peakVal)
-
-		#logger.info(f'setting dataThreshold:{self.dataThreshold2} {self.dataThreshold3}')
-		self.dataMeanLine.set_ydata(self.dataMean)
-		self.thresholdLine2.set_ydata(self.dataThreshold2)
-		self.thresholdLine3.set_ydata(self.dataThreshold3)
-
-		#self.dataLine.set_xdata(t)
-		#self.dataLine.set_ydata(data)
-		self.dataFilteredLine.set_xdata(t)
-		self.dataFilteredLine.set_ydata(filteredVm)
-
-		#self.vmAxes.relim()
-		#self.vmAxes.autoscale_view()  # (tight, x, y)
-		'''
-		if switchFile:
-			autoScaleX = True
-		else:
-			autoScaleX = False
-		self.vmAxes.autoscale_view(True, autoScaleX, True)  # (tight, x, y)
-		'''
-
-		#
-		self.static_canvas.draw()
-
-	def old_replotPsd(self):
-		return
-
-		#logger.info(f'len(f):{len(self.f)} Pxx_den max:{np.nanmax(self.Pxx_den)}')
-		self.psdAxes.clear()
-		self.psdAxes.semilogy(self.f, self.Pxx_den, '-')
-		if self.signalHz is not None:
-			ax3.axvline(self.signalHz, color='r', linestyle='--', linewidth=0.5)
-		self.psdAxes.set_ylim([1e-7, 1e2])
-		self.psdAxes.set_xlabel('Frequency (Hz)')
-		self.psdAxes.set_ylabel('PSD')  # (V**2/Hz)
-		#plt.xlim(0, 0.01*fs)
-		#self.psdAxes.set_xlim(0, self.maxPlotHz)  # Hz
-		self.psdAxes.set_xlim(0, 20)  # Hz
-
-		self.psdAxes.relim()
-		self.psdAxes.autoscale_view(True,True,True)
-		#plt.draw()
-		self.static_canvas.draw()
-
-	def old_replotAutoCorr(self):
-		logger.info('')
-
-		return
-
-		# Auto-Cor takes 418.542 seconds.
-		# auto-corr on spike detec
-
-		if self.ba.numSpikes == 0:
-			# don't perform for no spikes
-			print('replotAutoCorr() is bailing on no spikes')
-			return
-
-		leftPoint = self.lastLeft
-		rightPoint = self.lastRight
-
-		thresholdPnt = self.ba.getStat('thresholdPnt')
-
-		t = self.ba.sweepX()
-
-		#x = self.dataFiltered
-		x = np.zeros(t.shape)
-		x[thresholdPnt] = 1
-		x = x[leftPoint:rightPoint]
-		t = t[leftPoint:rightPoint]
-
-		logger.info(f'x:{len(x)} {x.shape}')
-		logger.info(f'thresholdPnt:{len(thresholdPnt)}')
-
-		if leftPoint == 0:
-			print('replotAutoCorr() is bailing on left point == 0')
-			return
-
-		start = time.time()
-
-		acf = np.correlate(x, x, 'full')[-len(x):] # acs is symmetric with 2*len(x) pnts
-
-		stop = time.time()
-		logger.info(f'autocorr took {round(stop-start,3)} seconds.')
-
-		#print('acf:', acf[0:20])
-
-		lagInSeconds = t / self.fs
-
-		self.autoCorrAxes.clear()
-		self.autoCorrAxes.plot(lagInSeconds[1:-1], acf[1:-1], '-')
-		#self.autoCorrAxes.set_ylim([0, 3])
-
-		# find the largest peak, lag 0 is max but not largest
-		inflection = np.diff(np.sign(np.diff(acf))) # Find the second-order differences
-		peaks = (inflection < 0).nonzero()[0] + 1 # Find where they are negative
-		delay = peaks[acf[peaks].argmax()] # Of those, find the index with the maximum value
-
-		# delay == 20, tells us that the signal has
-		# a frequency of 1/20 of its sampling rate
-		signal_freq = self.fs/delay # Gives 0.05
-		logger.info(f'AutoCor signal frequency is:{signal_freq}')
-
-		self.autoCorrAxes.set_xlabel('Lag (s)')
-		self.autoCorrAxes.set_ylabel('Auto Corr')
-
-		#
-		self.autoCorrAxes.relim()
-		self.autoCorrAxes.autoscale_view(True,True,True)
-		self.static_canvas.draw()
-
 	def replot_fft2(self):
 
 		def myDetrend(x):
@@ -978,7 +814,7 @@ class fftPlugin(sanpyPlugin):
 		if self.sweepNumber == 'All':
 			logger.warning(f'fft plugin can only show one sweep, received sweepNumber:{self.sweepNumber}')
 			return
-			
+
 		#logger.info(f'using ba: {self.ba}')
 		startSec, stopSec = self.getStartStop()
 		if startSec is None or stopSec is None or math.isnan(startSec) or math.isnan(stopSec):

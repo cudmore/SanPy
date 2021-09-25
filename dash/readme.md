@@ -35,6 +35,10 @@ brew tap heroku/brew && brew install heroku
 
 ## To Do: Install amazon elastic beanstalk
 
+## To Do: Look into using datashader to plot e-phys traces
+
+See dash/sandbox/myShader.py
+
 ## To Do (backend)
 
  - Add header to saved text file and add

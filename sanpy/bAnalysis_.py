@@ -225,12 +225,16 @@ class bAnalysis:
 
 		# mimic pyAbf
 		self._dataPointsPerMs = None
+		self._currentSweep = 0
 		self._sweepList = [0]  # list
 		self._sweepLengthSec = np.nan
 		#self._currentSweep = 0  # int
 		self._sweepX = None  # np.ndarray
 		self._sweepY = None  # np.ndarray
 		self._sweepC = None # the command waveform (DAC)
+
+		self._filteredVm = None
+		self._filteredDeriv = None
 
 		self._recordingMode = 'Unknown'  # str
 		self._sweepLabelX = '???'  # str
@@ -256,9 +260,6 @@ class bAnalysis:
 
 		#self.detectionType = None
 		"""str: From ('dvdt', 'mv')"""
-
-		self._filteredVm = None
-		self._filteredDeriv = None
 
 		self.spikeDict = []  # a list of dict
 		#self.spikeTimes = []  # created in self.spikeDetect()
@@ -325,7 +326,10 @@ class bAnalysis:
 		self._detectionDirty = False
 
 		# switching back to faster version (no parsing when we cell self.sweepX2
-		self.setSweep2()
+		self.setSweep()
+
+		#mySize = sys.getsizeof(self._sweepX)  # bytes
+		#print('bAnalysis mySize:', mySize)
 
 	@property
 	def detectionDict(self):
@@ -389,6 +393,7 @@ class bAnalysis:
 
 		self._sweepX *= timeMult
 
+		# imported csv will always have 1 sweep (1 column)
 		self._sweepX = self._sweepX.reshape((self._sweepX.shape[0],1))
 		self._sweepY = self._sweepY.reshape((self._sweepY.shape[0],1))
 		self._sweepC = self._sweepC.reshape((self._sweepC.shape[0],1))
@@ -529,7 +534,7 @@ class bAnalysis:
 				# not needed
 				self._abf.setSweep(0)
 
-			print('  self._sweepX:', self._sweepX.shape)
+			logger.info(f'Loaded abf self._sweepX: {self._sweepX.shape}')
 			# get v from pyAbf
 			if len(self.sweepX().shape) > 1:
 				t0 = self.sweepX()[0][0]
@@ -817,12 +822,16 @@ class bAnalysis:
 			theFilteredVm = self._getOneColumns(theFilteredVm)
 			return theFilteredVm
 
-	def setSweep2(self, sweep=0):
+	def setSweep(self, sweep=0):
+		self._currentSweep = sweep
+		'''
 		self._sweepX2 = self._sweepX[:,sweep]
 		self._sweepY2 = self._sweepY[:,sweep]
 		self._sweepC2 = self._sweepC[:,sweep]
 		self._filteredDeriv2 = self._filteredDeriv[:,sweep]
+		'''
 
+	'''
 	@property
 	def sweepX2(self):
 		return self._sweepX2
@@ -834,6 +843,7 @@ class bAnalysis:
 	@property
 	def filteredDeriv2(self):
 		return self._filteredDeriv2
+	'''
 
 	def get_yUnits(self):
 		return self._sweepLabelY
@@ -2323,7 +2333,7 @@ class bAnalysis:
 		#print(stop-start)
 		return ret
 
-	def openHeaderInBrowser(self):
+	def donotuse_openHeaderInBrowser(self):
 		"""Open abf file header in browser. Only works for actual abf files."""
 		#ba.abf.headerLaunch()
 		if self.abf is None:
