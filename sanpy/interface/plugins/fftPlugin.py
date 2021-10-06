@@ -828,7 +828,7 @@ class fftPlugin(sanpyPlugin):
 		leftPoint = self.lastLeft
 		rightPoint = self.lastRight
 
-		sweepY = self.ba.sweepY(sweepNumber=self.sweepNumber)
+		sweepY = self.getSweep('y')
 		if leftPoint<0:
 			leftPoint = 0
 		if rightPoint > sweepY.shape[0]:
@@ -847,7 +847,7 @@ class fftPlugin(sanpyPlugin):
 
 		#logger.info(f'Fetching sweepX with sweepNumber: {self.sweepNumber}')
 
-		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
+		sweepX = self.getSweep('x')
 
 		#logger.info(f'  sweepX: {sweepX.shape}')
 		#logger.info(f'  leftSec:{sweepX[leftPoint]} rightSec:{sweepX[rightPoint-1]}')
@@ -1127,9 +1127,9 @@ class fftPlugin(sanpyPlugin):
 		# trim down data based on start/stop
 		leftPoint = self.lastLeft
 		rightPoint = self.lastRight
-		x = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+		x = self.ba.filteredVm
 		x = x[leftPoint:rightPoint]
-		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
+		t = self.ba.sweepX
 		t = t[leftPoint:rightPoint]
 
 		ft = np.fft.rfft(x)
@@ -1198,7 +1198,7 @@ class fftPlugin(sanpyPlugin):
 		"""Get psd from selected x-axes range.
 		"""
 		#logger.info(f'self.lastLeft:{self.lastLeft} self.lastRight:{self.lastRight}')
-		dataFiltered = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+		dataFiltered = self.getSweep('filteredVm')
 		leftPoint = self.lastLeft
 		rightPoint = self.lastRight
 		y_sos = scipy.signal.sosfilt(self.sos, dataFiltered[leftPoint:rightPoint])
@@ -1275,37 +1275,6 @@ class fftPlugin(sanpyPlugin):
 		self.replot2(switchFile=True)
 
 		return
-
-		'''
-		SavitzkyGolay_pnts = 5
-		SavitzkyGolay_poly = 2
-		self.dataFiltered = scipy.signal.savgol_filter(self.data,
-							SavitzkyGolay_pnts, SavitzkyGolay_poly,
-							mode='nearest', axis=0)
-		'''
-
-		'''
-		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
-		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
-
-		# thresholds based on std
-		dataMean = np.nanmean(self.dataFiltered)
-		dataStd = np.nanstd(self.dataFiltered)
-		self.dataMean = dataMean
-		self.dataThreshold2 = dataMean + (2 * dataStd)
-		self.dataThreshold3 = dataMean + (3 * dataStd)
-		'''
-
-		#self.getMean()
-
-		# these are in points
-		#self.lastLeft = 0
-		#self.lastRight = len(self.dataFiltered)
-
-		# rebuild filter based on loaded fs
-		#self.sos = butter_lowpass_sos(self.cutOff, self.fs, self.order)
-
-		self.replot2(switchFile=True)
 
 	def modelDetect(self):
 		#mvThreshold = self.mvThresholdSpinBox.value() # for detection
@@ -1391,7 +1360,7 @@ class fftPlugin(sanpyPlugin):
 		logger.info(f'left:{left} right:{right}')
 
 		# find start/stop point from seconds in 't'
-		t = self.ba.sweepX(sweepNumber=self.sweepNumber)
+		t = self.getSweep('x')
 		leftPoint = np.where(t >= left)[0]
 		leftPoint = leftPoint[0]
 		rightPoint = np.where(t >= right)[0]
@@ -1412,31 +1381,10 @@ class fftPlugin(sanpyPlugin):
 		#
 		# get threshold fromm selection
 		self.getMean()
-		'''
-		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
-		theMean = np.nanmean(filteredVm[leftPoint:rightPoint])
-		theStd = np.nanstd(filteredVm[leftPoint:rightPoint])
-		self.dataMean = theMean
-		self.dataThreshold2 = theMean + (2 * theStd)
-		self.dataThreshold3 = theMean + (3 * theStd)
-		#logger.info(f'dataThreshold:{self.dataThreshold2} {self.dataThreshold3}')
-		'''
 
-		# psd depends on x-axis
-		#self._getPsd()
-
-		# update interface
-		#print('dataThreshold2:', self.dataThreshold2)
-		#self.mvThresholdSpinBox.setValue(self.dataThreshold2)
-		#self.mvThresholdSpinBox.repaint()
-
-		# now with detect button
-		#self.replot2(firstPlot=False)
-
-		#self.replotData(switchFile=False)
 		self.replotPsd()
 		self.replot_fft()
-		#self.replotAutoCorr()  # slow, requires bbutton push
+		#self.replotAutoCorr()  # slow, requires button push
 
 	def keyPressEvent(self, event):
 		logger.info(event)

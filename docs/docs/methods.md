@@ -19,7 +19,9 @@ myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 11
 
 ## Detection Parameters
 
-To detect action potentials, we use a number of parameters. These can all be configured using the default setting using [sanpy/detectionParams](../api/detectionParams).
+To detect action potentials, we use a number of parameters. These can all be configured using the default setting using [sanpy/detectionParams](../api/bDetection).
+
+Note: To update this table use sanpy/bDetection.py
 
 |    | Parameter          | Default Value        | Units   | Human Readable                          | Description                                                                                            |
 |---:|:-------------------|:---------------------|:--------|:----------------------------------------|:-------------------------------------------------------------------------------------------------------|
@@ -80,3 +82,9 @@ Once spike are detected/analyzed, we have a number of parameters.
 | 19 | Half Width 90 (ms)                | nan                        | nan     | widths_90                  | ms           |                        |              |
 | 20 | Ca++ Delay (s)                    | nan                        | nan     | caDelay_sec                | s            |                        |              |
 | 21 | Ca++ Width (ms)                   | nan                        | nan     | caWidth_ms                 | ms           |                        |              |
+
+# Analysis output (full)
+
+Note: To update this table use sanpy/bAnalysisResults.py
+
+<iframe src="../static/analysis-output-full.html" width="800" height="800" style="border: 0" seamless></iframe>

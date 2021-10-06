@@ -1,6 +1,8 @@
 ### Please note, this is experimental and under active development.
 
-The browser based web application provides the same interface for analysis as the desktop application.
+The browser based web application uses the same backend code as the desktop interface. The web interface itself is a seperate set of code. We will move more and more interface to the web version, for now it is sufficient to browse, analyse, and save results.
+
+Local files can also be dragged and dropped to the web interface.
 
 <IMG SRC="../img/dash-june4.png" width=900 border=1>
 

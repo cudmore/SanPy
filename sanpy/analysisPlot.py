@@ -292,7 +292,7 @@ class bAnalysisPlot():
 		""" Plot the inter-spike-interval (sec) between each spike threshold"""
 		#
 		# pull
-		spikeTimes_sec = [x/ba.abf.dataPointsPerMs/1000 for x in ba.spikeTimes]
+		spikeTimes_sec = [x/ba.dataPointsPerMs/1000 for x in ba.spikeTimes]
 		isi = np.diff(spikeTimes_sec)
 		isi_x = spikeTimes_sec[0:-1]
 

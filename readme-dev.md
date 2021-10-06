@@ -1,3 +1,50 @@
+## Update 202109
+
+- Split FFT plugin into front-end and back-end. Currrently it is all front-end. This includes moving to back end: creation of bessel filter, filtering the signal, calculating FFT/PSD. Once this is done, write example notebook on how to do it programatically with API.
+
+- Fix scaling in main interface. Switching between files is not resetting previous zoom properly
+
+- Re-examine my user of filtering. Am I filtering out fast peaks in dvdt? Test this by turning filtering off. If I am removing fast peaks, expand API to include filtered and non-filter versions of Vm and dvdt.
+
+- merge duplicate copies of stat list, it is defined at least 2x places. Make detection widget read from modified version of bAnalysisUtil. This was will include user defined stats.
+
+1) In bDetection widget (get rid of this list)
+
+```
+self.myPlots = [
+	{
+		'humanName': 'Global Threshold (mV)',
+		'x': 'thresholdSec',
+		'y': 'thresholdVal',
+		'convertx_tosec': False,  # some stats are in points, we need to convert to seconds
+		'color': 'r',
+		'styleColor': 'color: red',
+		'symbol': 'o',
+		'plotOn': 'vmGlobal', # which plot to overlay (vm, dvdt)
+		'plotIsOn': True,
+	},
+```
+
+2) expand bAnalysisUtil to include some of above fields, like to turn on/off a plot in detection widget. Also need another boolean to show/hide in detection widget.
+
+Add all this to plotRecording.py plugin (add list widget to show stat ilst) so user can turn on/off
+
+```
+statList = OrderedDict()
+statList['Spike Time (s)'] = {
+	'name': 'thresholdSec',
+	'units': 's',
+	'yStat': 'thresholdVal',
+	'yStatUnits': 'mV',
+	'xStat': 'thresholdSec',
+	'xStatUnits': 's'
+	}
+```
+
+- GOTCHA. When filtering with median/golay we are reducing dvdt and thus detection parameter. Using Detection plugin DOES NOT refresh dvdt in main display and can be misleading!
+
+- After detection with detect parameters plugin need to refresh ALL detection widget plot because filtering could have changed.
+
 ## Getting amazon aws s3 buckets working
 
 Download and install aws command line

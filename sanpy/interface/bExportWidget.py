@@ -701,32 +701,6 @@ class bExportWidget(QtWidgets.QWidget):
 		self.myAxis.set_xlim(xMin, xMax)
 		self.myAxis.set_ylim(yMin, yMax)
 
-	'''
-	def old_setFile(self, filePath, plotRaw=False):
-		"""
-		when main application changes file
-		"""
-		if not os.path.isfile(filePath):
-			print('bExportWidget.setFile did not find path:', filePath)
-			return False
-
-		self.filePath = filePath
-		self.ba = bAnalysis(filePath)
-		if self.ba.loadError:
-			print('there was an error loading file', filePath)
-			return False
-
-		self.mySweepX = self.ba.abf.sweepX
-		self.mySweepY = self.ba.abf.sweepY
-
-		self.mySweepX_Downsample = self.ba.abf.sweepX
-		self.mySweepY_Downsample = self.ba.abf.sweepY
-
-		if plotRaw:
-			self.plotRaw()
-		return True
-	'''
-
 	def _setXMargin(self):
 		self.xMarginSpinBox.setEnabled(False)
 		self.xMargin = self.xMarginSpinBox.value()
@@ -1132,8 +1106,8 @@ if __name__ == '__main__':
 		app = QtWidgets.QApplication(sys.argv)
 		app.aboutToQuit.connect(app.deleteLater)
 
-		sweepX = ba.abf.sweepX()
-		sweepY = ba.abf.sweepY()
+		sweepX = ba.sweepX
+		sweepY = ba.sweepY
 		xyUnits = ('Time (sec)', 'Vm (mV)')
 		type = 'vm'
 		GUI = bExportWidget(sweepX, sweepY, path=path, xyUnits=xyUnits, type=type)

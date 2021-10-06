@@ -305,7 +305,7 @@ class plotScatter(sanpyPlugin):
 		xHumanStat, xStat = self.xPlotWidget.getCurrentStat()
 		yHumanStat, yStat = self.yPlotWidget.getCurrentStat()
 
-		#logger.info(f'x:"{xHumanStat}" y:"{yHumanStat}"')
+		logger.info(f'x:"{xHumanStat}" y:"{yHumanStat}"')
 		#logger.info(f'x:"{xStat}" y:"{yStat}"')
 
 		if self.ba is None or xHumanStat is None or yHumanStat is None:
@@ -788,6 +788,8 @@ class myStatListWidget(QtWidgets.QWidget):
 		except (KeyError) as e:
 			humanStat = None
 			stat = None
+			logger.error(f'Did not find humanStat "{humanStat}" exception:{e}')
+			#for k,v in
 
 		return humanStat, stat
 

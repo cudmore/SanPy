@@ -65,11 +65,13 @@ nav:
     - API:
         - Overview: api/overview.md
         - bAnalysis: api/bAnalysis.md
+        - bAnalysisResults: api/bAnalysisResults.md
         - analysisPlot: api/analysisPlot.md
         - analysisDir: api/analysisDir.md
         - bExport: api/bExport.md
         - bDetection: api/bDetection.md
         - bAnalysisUtil: api/bAnalysisUtil.md
+        - userAnalysis: api/userAnalysis.md
         - interface:
             - sanp_app: api/interface/sanpy_app.md
             - plugins:

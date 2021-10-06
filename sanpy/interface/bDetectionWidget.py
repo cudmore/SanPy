@@ -34,7 +34,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.mySetTheme()
 
-		self._sweepNumber = None  # 'All'
+		#self._sweepNumber = None  # 'All'
 
 		self.dvdtLines = None
 		self.dvdtLinesFiltered = None
@@ -174,7 +174,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 	@property
 	def sweepNumber(self):
-		return self._sweepNumber
+		#return self._sweepNumber
+		return self.ba.currentSweep
 
 	def detect(self, detectionType, dvdtThreshold, mvThreshold, startSec, stopSec):
 		"""
@@ -377,14 +378,14 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# y-axis is NOT shared
 		# dvdt
 		if thisAxis in ['dvdt', 'dvdtFiltered']:
-			filteredDeriv = self.ba.filteredDeriv(sweepNumber=self.sweepNumber)
+			filteredDeriv = self.ba.filteredDeriv
 			top = np.nanmax(filteredDeriv)
 			bottom = np.nanmin(filteredDeriv)
 			start, stop = self._setAxis(bottom, top,
 									set_xyBoth='yAxis',
 									whichPlot='dvdt')
 		elif thisAxis in ['vm', 'vmFiltered']:
-			sweepY = self.ba.sweepY(sweepNumber=self.sweepNumber)
+			sweepY = self.ba.sweepY
 			top = np.nanmax(sweepY)
 			bottom = np.nanmin(sweepY)
 			start, stop = self._setAxis(bottom, top,
@@ -413,7 +414,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#
 		# update detection toolbar
 		start = 0
-		stop = self.ba.sweepX()[-1]
+		stop = self.ba.recordingDur
 		self.detectToolbarWidget.startSeconds.setValue(start)
 		self.detectToolbarWidget.startSeconds.repaint()
 		self.detectToolbarWidget.stopSeconds.setValue(stop)
@@ -605,8 +606,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 			#plotIsOn = True
 			if plotIsOn and plot['humanName'] == 'Half-Widths':
 				spikeDictionaries = self.ba.getSpikeDictionaries(sweepNumber=self.sweepNumber)
-				sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
-				filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
+				sweepX = self.ba.sweepX
+				filteredVm = self.ba.filteredVm
 				#filteredVm = filteredVm[:,0]
 				xPlot, yPlot = sanpy.getHalfWidthLines(sweepX, filteredVm, spikeDictionaries)
 			elif plotIsOn and plot['humanName'] == 'EDD':
@@ -694,7 +695,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#	logger.info(f'Already showing sweep:{sweepNumber}      RETURNING')
 		#	return
 
-		self._sweepNumber = sweepNumber
+		#self._sweepNumber = sweepNumber
+		self.ba.setSweep(sweepNumber)
 
 		#self.setAxisFull()
 
@@ -1317,24 +1319,28 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#					self, type='dvdt')
 
 		# shared by all plot
-		sweepX = self.ba.sweepX(sweepNumber=self.sweepNumber)
+		sweepX = self.ba.sweepX
+		filteredDeriv = self.ba.filteredDeriv
+		sweepC = self.ba.sweepC
+		filteredVm = self.ba.filteredVm
 
-		filteredDeriv = self.ba.filteredDeriv(sweepNumber=self.sweepNumber)
+		# debug
+		logger.info(f'sweepX: {sweepX.shape}')
+		logger.info(f'filteredDeriv: {filteredDeriv.shape}')
+		logger.info(f'sweepC: {sweepC.shape}')
+		logger.info(f'filteredVm: {filteredVm.shape}')
+
 		self.dvdtLinesFiltered = MultiLine(sweepX, filteredDeriv,
 							self, forcePenColor=None, type='dvdtFiltered',
 							columnOrder=True)
 		#self.derivPlot.addItem(self.dvdtLines)
 		self.derivPlot.addItem(self.dvdtLinesFiltered)
 
-		sweepC = self.ba.sweepC(sweepNumber=self.sweepNumber)
 		self.dacLines = MultiLine(sweepX, sweepC,
 							self, forcePenColor=None, type='dac',
 							columnOrder=True)
 		self.dacPlot.addItem(self.dacLines)
 
-		#self.vmLines = MultiLine(self.ba.abf.sweepX, self.ba.abf.sweepY,
-		#					self, type='vm')
-		filteredVm = self.ba.filteredVm(sweepNumber=self.sweepNumber)
 		self.vmLinesFiltered = MultiLine(sweepX, filteredVm,
 							self, forcePenColor=None, type='vmFiltered',
 							columnOrder=True)
@@ -1712,6 +1718,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		logger.info(f'start:{start}, stop:{stop}')
 		self.detectionWidget.setAxis(start, stop)
 
+	def on_plot_every(self):
+		logger.info('TODO: update plots with plot every.')
+		
 	#@QtCore.pyqtSlot()
 	def on_button_click(self, name):
 		logger.info(name)
@@ -1969,6 +1978,22 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		displayGridLayout.addWidget(tmpSweepLabel, row, 0, tmpRowSpan, tmpColSpan)
 		displayGridLayout.addWidget(self.sweepComboBox, row, 1, tmpRowSpan, tmpColSpan)
 
+		# plot every x th pnts, value of 10 would plot every 10th point
+		row += 1
+		tmpPlotEveryLabel = QtWidgets.QLabel('Plot Every')
+
+		self.plotEverySpinBox = QtWidgets.QSpinBox()
+		self.plotEverySpinBox.setMinimum(1)
+		self.plotEverySpinBox.setMaximum(20)
+		self.plotEverySpinBox.setKeyboardTracking(False)
+		self.plotEverySpinBox.setValue(1)
+		#self.stopSeconds.valueChanged.connect(self.on_start_stop)
+		self.plotEverySpinBox.editingFinished.connect(self.on_plot_every)
+
+		displayGridLayout.addWidget(tmpPlotEveryLabel, row, 0, tmpRowSpan, tmpColSpan)
+		displayGridLayout.addWidget(self.plotEverySpinBox, row, 1, tmpRowSpan, tmpColSpan)
+
+
 		row += 1
 		self.crossHairCheckBox = QtWidgets.QCheckBox('Crosshair')
 		self.crossHairCheckBox.setChecked(False)
@@ -1981,7 +2006,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		self.mousePositionLabel = QtWidgets.QLabel('x:None\ty:None')
 		displayGridLayout.addWidget(self.mousePositionLabel, row, 1, tmpRowSpan, tmpColSpan)
 
-		hBoxSpikeBrowser = self._buildSpikeBrowser()
+		hBoxSpikeBrowser = self._buildSpikeBrowser()  # includes (Spike, Go, <<, >>, [])
 		row += 1
 		rowSpan = 1
 		columnSpan = 2

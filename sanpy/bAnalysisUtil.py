@@ -8,13 +8,18 @@ from collections import OrderedDict
 # A list of human readable stats and how to map them to backend
 # Each key, like 'Take Off Potential (mV)' is a y-stat
 
+import sanpy
 
-""" A dictionary of detection parameters.
-"""
-statList = OrderedDict()
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
+
 
 """
-Functions to map human readable name to backen stat name and vica versa.
+A dictionary of detection parameters.
+"""
+
+"""
+Functions to map human readable name to backend stat name and vica versa.
 
 See [xxx-methods](../../Methods) section for a list of available stats
 
@@ -26,8 +31,17 @@ from sanpy.bAnalysisUtil import getHumandFromStat, getStatFromHuman
 humanStr = getHumandFromStat('thresholdSec')
 statStr = getStatFromHuman('Spike Time (s)')
 ```
+
 """
 
+# add this to keep al key VALUES the same
+# or maybe make a class??? like bDetection (which holds detection parameters?)
+'''
+def _defaultStatDict():
+	return
+'''
+
+statList = OrderedDict()
 statList['Spike Time (s)'] = {
 	'name': 'thresholdSec',
 	'units': 's',
@@ -322,7 +336,25 @@ class bAnalysisUtil:
 
 	@staticmethod
 	def getStatList():
-		return statList
+		"""20210929 working on extending stat list with sanpy.userAnalysis
+
+		We first define stat list in this function as statList
+		We then ask for user defined stat functions static members xxx
+		"""
+		coreStateList = statList  # from global withing function
+
+		userStatList = sanpy.findUserAnalysis()
+
+		for k, v in userStatList.items():
+			# check if key exists !!!
+			if k in coreStateList.keys():
+				logger.error(f'key {k} already exists in statList')
+			else:
+				name = v['name']
+				coreStateList[k] = {}
+				coreStateList[k][name] = name
+
+		return coreStateList
 
 	'''
 	@staticmethod

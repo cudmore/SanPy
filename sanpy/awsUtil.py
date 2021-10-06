@@ -1,3 +1,9 @@
+"""
+Quick and dirty functions to load files from Amazon AWS.
+
+I really don't want to use this but should provide support for users.
+"""
+
 import sys, io
 import boto3
 import sanpy

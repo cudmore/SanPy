@@ -152,6 +152,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
 	def getSweep(self, type):
 		theRet = None
+		type = type.upper()
 		if self.ba is None:
 			return theRet
 		if type == 'X':
@@ -161,6 +162,8 @@ class sanpyPlugin(QtWidgets.QWidget):
 		elif type == 'C':
 			theRet = self.ba.sweepC
 		elif type == 'filteredDeriv':
+			theRet = self.ba.filteredDeriv
+		elif type == 'filteredVm':
 			theRet = self.ba.filteredDeriv
 		else:
 			logger.error(f'Did not understand type: "{type}"')

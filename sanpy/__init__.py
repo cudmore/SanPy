@@ -24,6 +24,8 @@ from .version import interfaceVersion
 from .atfStim import *
 
 from .bDetection import bDetection
-#from .bDetection import bDetection
+from .bAnalysisResults import *
 
 from .awsUtil import *
+
+from .userAnalysis import *

@@ -47,9 +47,14 @@ class bExport():
 		if theMin is None or theMax is None:
 			#return None
 			theMin = 0
-			theMax = self.ba.recordingDur  # self.ba.sweepX[-1]
+			theMax = self.ba.recordingDur
 
-		df = pd.DataFrame(self.ba.spikeDict)
+		#logger.info(f'theMin:{theMin} theMax:{theMax}')
+
+		# 20210929, implementing bAnalysisResults
+		#df = pd.DataFrame(self.ba.spikeDict
+		#df = pd.DataFrame(self.ba.spikeDict.aslist())
+		df = self.ba.asDataFrame()
 		df = df[df['thresholdSec'].between(theMin, theMax, inclusive=True)]
 
 		# added when trying to make scatterwidget for one file
@@ -177,7 +182,7 @@ class bExport():
 
 		if theMin is None or theMax is None:
 			theMin = 0
-			theMax = self.ba.recordingDur  # self.ba.sweepX[-1]
+			theMax = self.ba.recordingDur
 
 		#
 		# cardiac style analysis to sheet 'cardiac'
@@ -311,7 +316,7 @@ class bExport():
 		"""
 		if theMin is None or theMax is None:
 			theMin = 0
-			theMax = self.ba.recordingDur  # self.ba.sweepX[-1]
+			theMax = self.ba.recordingDur
 
 		# always grab a df to the entire analysis (not sure what I will do with this)
 		#df = self.ba.report() # report() is my own 'bob' verbiage

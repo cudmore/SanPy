@@ -64,12 +64,6 @@ Display per-spike detection errors. Clicking on an error in the table will highl
 
 <IMG SRC="../img/plugins/error-summary.png" width=700>
 
-## Sanpy Log
-
-Display the SanPy log. As a user interacts with SanPY, most actions are logged to a file. This is useful for debugging and communicating with developers :)
-
-<IMG SRC="../img/plugins/sanpy-log.png" width=700>
-
 ## FFT
 
 Calculate and display the Power-Spectral-Density (PSD) of any recording using the Fast-Fourier-Transform (FFT).
@@ -81,3 +75,9 @@ Calculate and display the Power-Spectral-Density (PSD) of any recording using th
 A plugin to generate stimuli and save them as csv or Axon Text Files (ATF). Optimized to generate noisy sin waves!
 
 <IMG SRC="../img/plugins/stimgen.png" width=700>
+
+## Sanpy Log
+
+Display the SanPy log. As a user interacts with SanPY, most actions are logged to a file. This is useful for debugging and communicating with developers :)
+
+<IMG SRC="../img/plugins/sanpy-log.png" width=700>

@@ -656,13 +656,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		# add a number of plugins to QDockWidget 'Plugins 1'
 		# we need to know the recice human name like 'xxx'
-		clipsPlugin = self.myPlugins.runPlugin('Plot Spike Clips', ba=None, show=False)
+		#clipsPlugin = self.myPlugins.runPlugin('Plot Spike Clips', ba=None, show=False)
 		scatterPlugin = self.myPlugins.runPlugin('Plot Scatter', ba=None, show=False)
 		errorSummaryPlugin = self.myPlugins.runPlugin('Error Summary', ba=None, show=False)
 		summaryAnalysisPlugin = self.myPlugins.runPlugin('Summary Analysis', ba=None, show=False)
 
 		# on add tab, the QTabWIdget makes a copy !!!
-		self.myPluginTab1.addTab(clipsPlugin, clipsPlugin.myHumanName)
+		#self.myPluginTab1.addTab(clipsPlugin, clipsPlugin.myHumanName)
 		self.myPluginTab1.addTab(scatterPlugin, scatterPlugin.myHumanName)
 		self.myPluginTab1.addTab(errorSummaryPlugin, errorSummaryPlugin.myHumanName)
 		self.myPluginTab1.addTab(summaryAnalysisPlugin, summaryAnalysisPlugin.myHumanName)
@@ -1028,8 +1028,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		Not triggered when user 'floats' a dock (See self.slot_topLevelChanged())
 		"""
-		#logger.info(f'dock:"{dock.windowTitle()}" area enum: {area}')
-		pass
+		logger.info(f'dock:"{dock.windowTitle()}" area enum: {area}')
+		return
 
 	def slot_topLevelChanged(self, topLevel):
 		"""
@@ -1038,17 +1038,23 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		This is triggered twice, once while dragging and once when finished
 		"""
 		#sender = self.sender()  # PyQt5.QtWidgets.QDockWidget
-		#logger.info(f'topLevel:{topLevel} sender:{sender}')
-		pass
+		logger.info(f'topLevel:{topLevel} sender:{sender}')
+		return
 
 	def slot_closeTab(self, index, sender):
 		"""
-		Close an open plugin tab
+		Close an open plugin tab.
+
+		Args:
+			sender (<PyQt5.QtWidgets.QTabWidget): The tab group where a single tab was was closed
+			index (int): The index into sender that gives us the tab, sender.widget(index)
 		"""
+
+		logger.info(f'index:{index} sender:{sender}')
 
 		# remove plugin from self.xxx
 		widgetPointer = sender.widget(index)
-		#print('widgetPointer:', widgetPointer)
+
 		self.myPlugins.slot_closeWindow(widgetPointer)
 
 		# remove the tab

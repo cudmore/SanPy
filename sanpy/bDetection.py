@@ -34,16 +34,28 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class detectionTypes_(enum.Enum):
-    dvdt = 1
-    mv = 2
+	"""
+	Detection type is one of (dvdt, mv)
+	"""
+	dvdt = 1
+	mv = 2
 
 class detectionPresets_(enum.Enum):
-    default = 1
-    saNode = 2
-    ventricular = 3
-    neuron = 4
-    subthreshold = 5
-    caSpikes = 6
+	"""
+	Detection presets is one of:
+		default
+		saNode
+		ventricular
+		neuron
+		subtreshold
+		caSpikes
+	"""
+	default = 1
+	saNode = 2
+	ventricular = 3
+	neuron = 4
+	subthreshold = 5
+	caSpikes = 6
 
 #def getDefaultDetection(cellType=None):
 def getDefaultDetection(detectionPreset):
@@ -300,7 +312,7 @@ def getDefaultDetection(detectionPreset):
 
 	key = 'SavitzkyGolay_pnts'
 	theDict[key] = {}
-	theDict[key]['defaultValue'] = 5
+	theDict[key]['defaultValue'] = 0 #20211001 was 5
 	theDict[key]['type'] = 'int'
 	theDict[key]['allowNone'] = True # 0 is no filter
 	theDict[key]['units'] = 'points'
@@ -377,16 +389,18 @@ def getDefaultDetection(detectionPreset):
 
 	return theDict.copy()
 
-def printDetectionParams_Docs():
+def printDocs():
 	"""
 	Print out human readable detection parameters and convert to markdown table.
 
 	Requires:
 		pip install tabulate
+
+	See: bAnalysisResults.printDocs()
 	"""
 	import pandas as pd
 
-	detectionPreset = detectionPresets_.default
+	detectionPreset = detectionPresets_.default  # detectionPresets_ is an enum class
 	d = getDefaultDetection(detectionPreset=detectionPreset)
 	dictList = []
 	for k,v in d.items():
@@ -565,4 +579,4 @@ def test_0():
 if __name__ == '__main__':
 	#test_0()
 
-	printDetectionParams_Docs()
+	printDocs()

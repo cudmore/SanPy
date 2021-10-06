@@ -55,8 +55,8 @@ def fftPlotRaw(ad):
 
 		ba = ad.getAnalysis(idx)
 
-		sweepX = ba.sweepX()
-		sweepY = ba.sweepY()
+		sweepX = ba.sweepX
+		sweepY = ba.sweepY
 		ax[idx].plot(sweepX, sweepY, '-', linewidth=1)
 
 	#
