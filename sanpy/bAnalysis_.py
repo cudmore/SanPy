@@ -573,6 +573,8 @@ class bAnalysis:
 
 		self.myFileType = 'atf'
 
+		# don't keep _abf, we grabbed every thing we needed
+		
 	def _loadAbf(self, byteStream=None, loadData=True):
 		"""Load pyAbf from path."""
 		try:
@@ -653,6 +655,8 @@ class bAnalysis:
 		#
 		self.myFileType = 'abf'
 
+		self._abf = None
+		
 	@property
 	def detectionDirty(self):
 		return self._detectionDirty
