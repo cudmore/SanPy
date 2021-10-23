@@ -2,4 +2,11 @@
 # server = app.server
 
 #web: gunicorn app:server
+
+# my main dash code is in file dash_app.py, thus 'dash_app'
+# in that file I import
+# from app import server # needed for heroku
+# then server.run(...)
+# thus 'server'
+#
 web: gunicorn dash_app:server
