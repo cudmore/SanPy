@@ -142,6 +142,16 @@ origin	https://github.com/cudmore/bAnalysis.git (fetch)
 origin	https://github.com/cudmore/bAnalysis.git (push)
 ```
 
+## Heroku available runtime
+
+```
+python-3.10.0 on all supported stacks
+python-3.9.7 on all supported stacks
+python-3.8.12 on all supported stacks
+python-3.7.12 on all supported stacks
+python-3.6.15 on all supported stacks
+```
+
 ### Save as an excel file:
 
 https://dash.plotly.com/dash-core-components/download

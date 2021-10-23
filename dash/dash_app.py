@@ -45,7 +45,7 @@ from app import app
 from app import server # needed for heroku
 
 def loadFile(path, name, rowIdx):
-	print('app2.loadFile() name:', name, 'rowIdx:', rowIdx)
+	logger.info(f'name: {name} rowIdx: {rowIdx}')
 
 	#global ba
 
@@ -61,7 +61,7 @@ def loadFile(path, name, rowIdx):
 	stop = len(ba.sweepX) - 1
 	global subSetOfPnts
 	subSetOfPnts = range(start, stop, plotEveryPoint)
-	print('  load file subSetOfPnts:', subSetOfPnts)
+	logger.info(f'  subSetOfPnts: {subSetOfPnts}')
 
 	return ba
 
@@ -98,7 +98,7 @@ dfFileList, baList = myDashUtils.getFileList(myPath, bucketName=bucketName) # us
 
 # load first file in list
 loadFirstFile = dfFileList['File Name'][0]
-print('loadFirstFile:', loadFirstFile)
+logger.info(f'  loadFirstFile: {loadFirstFile}')
 global ba
 # was this
 #ba = loadFile(myPath, loadFirstFile, 0)
