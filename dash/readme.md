@@ -152,6 +152,19 @@ python-3.7.12 on all supported stacks
 python-3.6.15 on all supported stacks
 ```
 
+## Clear heroku build cache
+
+See: https://help.heroku.com/18PI5RSY/how-do-i-clear-the-build-cache
+
+```
+heroku plugins:install heroku-builds
+heroku builds:cache:purge -a sanpy --confirm sanpy
+
+# push an empty commit
+git commit --allow-empty -m "Purge cache"
+git push
+```
+
 ### Save as an excel file:
 
 https://dash.plotly.com/dash-core-components/download

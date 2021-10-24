@@ -574,7 +574,7 @@ class bAnalysis:
 		self.myFileType = 'atf'
 
 		# don't keep _abf, we grabbed every thing we needed
-		
+
 	def _loadAbf(self, byteStream=None, loadData=True):
 		"""Load pyAbf from path."""
 		try:
@@ -656,7 +656,7 @@ class bAnalysis:
 		self.myFileType = 'abf'
 
 		self._abf = None
-		
+
 	@property
 	def detectionDirty(self):
 		return self._detectionDirty
@@ -966,7 +966,7 @@ class bAnalysis:
 			x = np.array(x)
 			if statName2 is not None:
 				y = np.array(y)
-				
+
 		if statName2 is not None:
 			return x, y
 		else:
@@ -2057,7 +2057,7 @@ class bAnalysis:
 		self._detectionDirty = True  # e.g. bAnalysis needs to be saved
 
 		# run all user analysis ... what if this fails ???
-		sanpy.userAnalysis.runAllUserAnalysis(self)
+		sanpy.useranalysis.runAllUserAnalysis(self)
 
 		## done
 
