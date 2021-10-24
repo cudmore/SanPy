@@ -9,7 +9,7 @@ from collections import OrderedDict
 # Each key, like 'Take Off Potential (mV)' is a y-stat
 
 import sanpy
-import sanpy.userAnalysis
+import sanpy.useranalysis
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -344,7 +344,7 @@ class bAnalysisUtil:
 		"""
 		coreStateList = statList  # from global withing function
 
-		userStatList = sanpy.userAnalysis.findUserAnalysis()
+		userStatList = sanpy.useranalysis.findUserAnalysis()
 
 		for k, v in userStatList.items():
 			# check if key exists !!!
