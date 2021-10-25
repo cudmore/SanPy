@@ -14,8 +14,10 @@ from .analysisDir import *
 #from .bAnalysisPlot import getHalfWidths
 from .analysisPlot import *
 
-from .bAnalysisUtil import bAnalysisUtil
-from .bAnalysisUtil import statList
+# 20211025
+#from .bAnalysisUtil import bAnalysisUtil
+#from .bAnalysisUtil import statList
+from .bAnalysisUtil import *
 
 from .bAbfText import bAbfText
 
