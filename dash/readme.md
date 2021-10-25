@@ -165,6 +165,18 @@ git commit --allow-empty -m "Purge cache"
 git push
 ```
 
+## HEroku imports are failing
+
+See: https://stackoverflow.com/questions/41412917/getting-error-importerror-no-module-named-on-heroku-but-not-locally
+
+```
+2021-10-24T21:24:24.600261+00:00 app[web.1]:     from .bAnalysisUtil import bAnalysisUtil
+2021-10-24T21:24:24.600262+00:00 app[web.1]:   File "/app/.heroku/python/lib/python3.9/site-packages/sanpy/bAnalysisUtil.py", line 12, in <module>
+2021-10-24T21:24:24.600262+00:00 app[web.1]:     import sanpy.useranalysis
+2021-10-24T21:24:24.600262+00:00 app[web.1]: ModuleNotFoundError: No module named 'sanpy.useranalysis'
+```
+
+
 ### Save as an excel file:
 
 https://dash.plotly.com/dash-core-components/download
