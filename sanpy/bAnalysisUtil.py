@@ -11,6 +11,7 @@ from collections import OrderedDict
 import sanpy
 import sanpy.useranalysis
 #from . import useranalysis
+from .useranalysis import findUserAnalysis
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -345,7 +346,8 @@ class bAnalysisUtil:
 		"""
 		coreStateList = statList  # from global withing function
 
-		userStatList = sanpy.useranalysis.findUserAnalysis()
+		#userStatList = sanpy.useranalysis.findUserAnalysis()
+		userStatList = findUserAnalysis()
 
 		for k, v in userStatList.items():
 			# check if key exists !!!
