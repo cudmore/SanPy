@@ -1,3 +1,6 @@
+# this is a folder, problems with heroku
+#from .useranalysis import *
+
 # only export base sanpy, no GUI
 from .bAnalysis_ import *
 #from .bAnalysis import bAnalysis
