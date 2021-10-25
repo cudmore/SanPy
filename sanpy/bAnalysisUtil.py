@@ -10,6 +10,7 @@ from collections import OrderedDict
 
 import sanpy
 import sanpy.useranalysis
+import sanpy.useranalysis.baseUserAnalysis
 #from . import useranalysis
 #from .useranalysis import findUserAnalysis
 
@@ -346,7 +347,7 @@ class bAnalysisUtil:
 		"""
 		coreStateList = statList  # from global withing function
 
-		userStatList = sanpy.useranalysis.findUserAnalysis()
+		userStatList = sanpy.useranalysis.baseUserAnalysis.findUserAnalysis()
 		#userStatList = findUserAnalysis()
 
 		for k, v in userStatList.items():
