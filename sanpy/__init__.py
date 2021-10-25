@@ -17,7 +17,7 @@ from .analysisPlot import *
 # 20211025
 #from .bAnalysisUtil import bAnalysisUtil
 #from .bAnalysisUtil import statList
-from .bAnalysisUtil import *
+#from .bAnalysisUtil import *
 
 from .bAbfText import bAbfText
 
