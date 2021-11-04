@@ -12,7 +12,7 @@ import sanpy
 import sanpy.useranalysis
 import sanpy.useranalysis.baseUserAnalysis
 #from . import useranalysis
-#from .useranalysis import findUserAnalysis
+from .useranalysis import findUserAnalysis
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -347,7 +347,7 @@ class bAnalysisUtil:
 		"""
 		coreStateList = statList  # from global withing function
 
-		userStatList = sanpy.useranalysis.baseUserAnalysis.findUserAnalysis()
+		userStatList = sanpy.useranalysis.findUserAnalysis()
 		#userStatList = findUserAnalysis()
 
 		for k, v in userStatList.items():
