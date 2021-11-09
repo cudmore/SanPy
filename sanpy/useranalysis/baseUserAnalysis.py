@@ -20,7 +20,7 @@ def getObjectList():
 	Each of these is an object and we can construct or interrogate statis class members
 	"""
 
-	logger.info('')
+	#logger.info('')
 
 	ignoreModuleList = ['baseUserAnalysis']
 

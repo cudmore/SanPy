@@ -1617,7 +1617,9 @@ class bAnalysis:
 		self.setSweep(rememberSweep)
 
 		stopTime = time.time()
-		logger.info(f'Detected {len(self.spikeDict)} spikes in {round(stopTime-startTime,3)} seconds')
+
+		if detectionClass['verbose']:
+			logger.info(f'Detected {len(self.spikeDict)} spikes in {round(stopTime-startTime,3)} seconds')
 
 	def spikeDetect2__(self, sweepNumber, dDict):
 		"""
