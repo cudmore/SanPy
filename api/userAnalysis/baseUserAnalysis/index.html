@@ -1,0 +1,1549 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Current Clamp Analysis For Cardiac Myocytes">
+      
+      
+      
+        <meta name="author" content="Robert H Cudmore">
+      
+      
+      <link rel="icon" href="../../../img/sanpy-transparent.png">
+      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-7.3.6">
+    
+    
+      
+        <title>baseUserAnalysis - SanPy Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.a57b2b03.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.3f5d1f46.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../../../css/style.css">
+    
+    
+      
+
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+  
+    
+    <script>function __prefix(e){return new URL("../../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="SanPy Documentation" class="md-header__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
+      
+  <img src="../../../img/sanpy-transparent.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SanPy Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              baseUserAnalysis
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        
+<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SanPy Repository
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="SanPy Documentation" class="md-nav__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
+      
+  <img src="../../../img/sanpy-transparent.png" alt="logo">
+
+    </a>
+    SanPy Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      
+<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    SanPy Repository
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        SanPy
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../install/" class="md-nav__link">
+        Install
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../desktop-application/" class="md-nav__link">
+        Desktop Application
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../plugins/" class="md-nav__link">
+        Plugins
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5">
+          Scripting
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Scripting" data-md-level="1">
+        <label class="md-nav__title" for="__nav_5">
+          <span class="md-nav__icon md-icon"></span>
+          Scripting
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../scripting/overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../scripting/examples/" class="md-nav__link">
+        Examples
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../scripting/plotting-analysis/" class="md-nav__link">
+        Plotting Analysis
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6">
+          API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="API" data-md-level="1">
+        <label class="md-nav__title" for="__nav_6">
+          <span class="md-nav__icon md-icon"></span>
+          API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bAnalysis/" class="md-nav__link">
+        bAnalysis
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bAnalysisResults/" class="md-nav__link">
+        bAnalysisResults
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../analysisPlot/" class="md-nav__link">
+        analysisPlot
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../analysisDir/" class="md-nav__link">
+        analysisDir
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bExport/" class="md-nav__link">
+        bExport
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bDetection/" class="md-nav__link">
+        bDetection
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../bAnalysisUtil/" class="md-nav__link">
+        bAnalysisUtil
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          baseUserAnalysis
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        baseUserAnalysis
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis" class="md-nav__link">
+    baseUserAnalysis
+  </a>
+  
+    <nav class="md-nav" aria-label="baseUserAnalysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.addKey" class="md-nav__link">
+    addKey()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.ba" class="md-nav__link">
+    ba
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSpikeValue" class="md-nav__link">
+    getSpikeValue()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepC" class="md-nav__link">
+    getSweepC()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepX" class="md-nav__link">
+    getSweepX()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepY" class="md-nav__link">
+    getSweepY()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.run" class="md-nav__link">
+    run()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.setSpikeValue" class="md-nav__link">
+    setSpikeValue()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.userStatDict" class="md-nav__link">
+    userStatDict
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis" class="md-nav__link">
+    findUserAnalysis()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.getObjectList" class="md-nav__link">
+    getObjectList()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.runAllUserAnalysis" class="md-nav__link">
+    runAllUserAnalysis()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_10" type="checkbox" id="__nav_6_10" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_10">
+          interface
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="interface" data-md-level="2">
+        <label class="md-nav__title" for="__nav_6_10">
+          <span class="md-nav__icon md-icon"></span>
+          interface
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interface/sanpy_app/" class="md-nav__link">
+        sanp_app
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_10_2" type="checkbox" id="__nav_6_10_2" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_10_2">
+          plugins
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="plugins" data-md-level="3">
+        <label class="md-nav__title" for="__nav_6_10_2">
+          <span class="md-nav__icon md-icon"></span>
+          plugins
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interface/plugins/sanpyPlugin/" class="md-nav__link">
+        sanpyPlugin
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../methods/" class="md-nav__link">
+        Methods
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../web-application/" class="md-nav__link">
+        Web Application
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../open-source/" class="md-nav__link">
+        Open Source
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../about/" class="md-nav__link">
+        About
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis" class="md-nav__link">
+    baseUserAnalysis
+  </a>
+  
+    <nav class="md-nav" aria-label="baseUserAnalysis">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.addKey" class="md-nav__link">
+    addKey()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.ba" class="md-nav__link">
+    ba
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSpikeValue" class="md-nav__link">
+    getSpikeValue()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepC" class="md-nav__link">
+    getSweepC()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepX" class="md-nav__link">
+    getSweepX()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepY" class="md-nav__link">
+    getSweepY()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.run" class="md-nav__link">
+    run()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.setSpikeValue" class="md-nav__link">
+    setSpikeValue()
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.userStatDict" class="md-nav__link">
+    userStatDict
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis" class="md-nav__link">
+    findUserAnalysis()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.getObjectList" class="md-nav__link">
+    getObjectList()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.userAnalysis.baseUserAnalysis.runAllUserAnalysis" class="md-nav__link">
+    runAllUserAnalysis()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content" data-md-component="content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  <h1>baseUserAnalysis</h1>
+                
+                <div class="doc doc-object doc-module">
+
+
+    <div class="doc doc-contents first">
+
+      <p>Implement a base class so users can add additional analysis.</p>
+<p>Author: Robert Cudmore</p>
+<p>Date: 20210929</p>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+  <div class="doc doc-object doc-class">
+
+
+
+<h2 id="sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis" class="doc doc-heading">
+        <code>
+baseUserAnalysis        </code>
+
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Create a userAnalysis object after bAnalysis has been analyzed with the core analysis results.</p>
+
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.addKey" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">addKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theKey</span><span class="p">,</span> <span class="n">theDefault</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.addKey" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Add a new key to analysis results.</p>
+<p>Will add key to each spike in self.ba.spikeDict</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/userAnalysis/baseUserAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">addKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theKey</span><span class="p">,</span> <span class="n">theDefault</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Add a new key to analysis results.</span>
+
+<span class="sd">	Will add key to each spike in self.ba.spikeDict</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="o">.</span><span class="n">addAnalysisResult</span><span class="p">(</span><span class="n">theKey</span><span class="p">,</span> <span class="n">theDefault</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.ba" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">ba</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-property"><code>property</code></small>
+      <small class="doc doc-property doc-property-readonly"><code>readonly</code></small>
+  </span>
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.ba" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get the underlying sanpy.bAnalysis object</p>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSpikeValue" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getSpikeValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeIdx</span><span class="p">,</span> <span class="n">theKey</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSpikeValue" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get a single spike analysis result from key.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>spikeIdx</code></td>
+        <td><code>int</code></td>
+        <td><p>The spike index, 0 based</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>theKey</code></td>
+        <td><code>str</code></td>
+        <td><p>xxx</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Exceptions:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>KeyError</code></td>
+        <td><p>If theKey is not a key in analysis results.</p></td>
+      </tr>
+      <tr>
+        <td><code>IndexError</code></td>
+        <td><p>If spikeIdx is beyond number of spikes -1.</p></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/userAnalysis/baseUserAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getSpikeValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeIdx</span><span class="p">,</span> <span class="n">theKey</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Get a single spike analysis result from key.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		spikeIdx (int): The spike index, 0 based</span>
+<span class="sd">		theKey (str): xxx</span>
+
+<span class="sd">	Raises:</span>
+<span class="sd">		KeyError: If theKey is not a key in analysis results.</span>
+<span class="sd">		IndexError: If spikeIdx is beyond number of spikes -1.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="k">try</span><span class="p">:</span>
+		<span class="n">theRet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">spikeIdx</span><span class="p">][</span><span class="n">theKey</span><span class="p">]</span>
+		<span class="k">return</span> <span class="n">theRet</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+		<span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+	<span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+		<span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepC" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getSweepC</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepC" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get the DAC axis of a recording.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/userAnalysis/baseUserAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getSweepC</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Get the DAC axis of a recording.&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">sweepC</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepX" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getSweepX</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepX" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get the x-axis of a recording.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/userAnalysis/baseUserAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getSweepX</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Get the x-axis of a recording.&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">sweepX</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepY" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getSweepY</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.getSweepY" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Get the y-axis of a recording.</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/userAnalysis/baseUserAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getSweepY</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;Get the y-axis of a recording.&quot;&quot;&quot;</span>
+	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">sweepY</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.run" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.run" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Run user analysis. Add a key to analysis results and fill in its values.</p>
+<p>Try not to re-use existing keys</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/userAnalysis/baseUserAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Run user analysis. Add a key to analysis results and fill in its values.</span>
+
+<span class="sd">	Try not to re-use existing keys</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h3 id="sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.setSpikeValue" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">setSpikeValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeIdx</span><span class="p">,</span> <span class="n">theKey</span><span class="p">,</span> <span class="n">theVal</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.setSpikeValue" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>Set the value of a spike key.</p>
+
+<p><strong>Parameters:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>spikeIdx</code></td>
+        <td><code>int</code></td>
+        <td><p>The spike index , 0 based.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>theKey</code></td>
+        <td><code>str</code></td>
+        <td><p>Name of the key.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>theVal</code></td>
+        <td></td>
+        <td><p>The value for the key, can be almost any type like
+                (float, int, bool, dict, list)</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
+</table>
+<p><strong>Exceptions:</strong></p>
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>KeyError</code></td>
+        <td><p>xxx.</p></td>
+      </tr>
+      <tr>
+        <td><code>IndexError</code></td>
+        <td><p>xxx.</p></td>
+      </tr>
+  </tbody>
+</table>
+        <details class="quote">
+          <summary>Source code in <code>sanpy/userAnalysis/baseUserAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">setSpikeValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeIdx</span><span class="p">,</span> <span class="n">theKey</span><span class="p">,</span> <span class="n">theVal</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Set the value of a spike key.</span>
+
+<span class="sd">	Args:</span>
+<span class="sd">		spikeIdx (int): The spike index , 0 based.</span>
+<span class="sd">		theKey (str): Name of the key.</span>
+<span class="sd">		theVal (): The value for the key, can be almost any type like</span>
+<span class="sd">					(float, int, bool, dict, list)</span>
+
+<span class="sd">	Raises:</span>
+<span class="sd">		KeyError: xxx.</span>
+<span class="sd">		IndexError: xxx.</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+	<span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">spikeIdx</span><span class="p">][</span><span class="n">theKey</span><span class="p">]</span> <span class="o">=</span> <span class="n">theVal</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.userStatDict" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">userStatDict</span></code>
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.baseUserAnalysis.userStatDict" class="headerlink" title="Permanent link">¤</a></h3>
+
+    <div class="doc doc-contents ">
+
+      <p>User needs to fill this in see xxx for example</p>
+    </div>
+
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h2 id="sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">findUserAnalysis</span><span class="p">()</span></code>
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Find files in 'sanpy/userAnalysis' and populate a dict with stat names
+this will be appended to bAnalysisUtil.statList</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/userAnalysis/baseUserAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">findUserAnalysis</span><span class="p">():</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Find files in &#39;sanpy/userAnalysis&#39; and populate a dict with stat names</span>
+<span class="sd">	this will be appended to bAnalysisUtil.statList</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+
+	<span class="n">ignoreModuleList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;baseUserAnalysis&#39;</span><span class="p">]</span>
+
+	<span class="n">userStatDict</span> <span class="o">=</span> <span class="p">{}</span>
+	<span class="k">for</span> <span class="n">moduleName</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="n">sanpy</span><span class="o">.</span><span class="n">userAnalysis</span><span class="p">):</span>
+		<span class="c1">#print(&#39;moduleName:&#39;, moduleName, &#39;obj:&#39;, obj)</span>
+		<span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">moduleName</span> <span class="ow">in</span> <span class="n">ignoreModuleList</span><span class="p">:</span>
+				<span class="k">continue</span>
+			<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39; is class moduleName </span><span class="si">{</span><span class="n">moduleName</span><span class="si">}</span><span class="s1"> obj:</span><span class="si">{</span><span class="n">obj</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+			<span class="c1"># obj is a constructor function</span>
+			<span class="c1"># &lt;class &#39;sanpy.userAnalysis.userAnalysis.exampleUserAnalysis&#39;&gt;</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">userStatDict</span><span class="p">)</span>
+			<span class="n">oneStatDict</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">userStatDict</span>
+			<span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">oneStatDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+				<span class="n">userStatDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+				<span class="n">userStatDict</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="s1">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+
+	<span class="c1">#</span>
+	<span class="k">return</span> <span class="n">userStatDict</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h2 id="sanpy.userAnalysis.baseUserAnalysis.getObjectList" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getObjectList</span><span class="p">()</span></code>
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.getObjectList" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Return a list of classes defined in sanpy.userAnalysis.</p>
+<p>Each of these is an object and we can construct or interrogate statis class members</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/userAnalysis/baseUserAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">getObjectList</span><span class="p">():</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	Return a list of classes defined in sanpy.userAnalysis.</span>
+
+<span class="sd">	Each of these is an object and we can construct or interrogate statis class members</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="c1">#logger.info(&#39;&#39;)</span>
+
+	<span class="n">ignoreModuleList</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;baseUserAnalysis&#39;</span><span class="p">]</span>
+
+	<span class="n">objList</span> <span class="o">=</span> <span class="p">[]</span>
+	<span class="c1">#userStatDict = {}</span>
+	<span class="k">for</span> <span class="n">moduleName</span><span class="p">,</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getmembers</span><span class="p">(</span><span class="n">sanpy</span><span class="o">.</span><span class="n">userAnalysis</span><span class="p">):</span>
+		<span class="c1">#print(&#39;moduleName:&#39;, moduleName, &#39;obj:&#39;, obj)</span>
+		<span class="k">if</span> <span class="n">inspect</span><span class="o">.</span><span class="n">isclass</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+			<span class="k">if</span> <span class="n">moduleName</span> <span class="ow">in</span> <span class="n">ignoreModuleList</span><span class="p">:</span>
+				<span class="k">continue</span>
+			<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  is class moduleName </span><span class="si">{</span><span class="n">moduleName</span><span class="si">}</span><span class="s1"> obj:</span><span class="si">{</span><span class="n">obj</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+			<span class="c1"># obj is a constructor function</span>
+			<span class="c1"># &lt;class &#39;sanpy.userAnalysis.userAnalysis.exampleUserAnalysis&#39;&gt;</span>
+			<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">,</span> <span class="n">obj</span><span class="o">.</span><span class="n">userStatDict</span><span class="p">)</span>
+
+			<span class="c1"># from findUserAnalysis</span>
+			<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">			oneStatDict = obj.userStatDict</span>
+<span class="sd">			for k,v in oneStatDict.items():</span>
+<span class="sd">				userStatDict[k] = {}</span>
+<span class="sd">				userStatDict[k][&#39;name&#39;] = v[&#39;name&#39;]</span>
+<span class="sd">			&#39;&#39;&#39;</span>
+			<span class="n">objList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>  <span class="c1"># obj is a class constructor</span>
+
+	<span class="c1">#</span>
+	<span class="k">return</span> <span class="n">objList</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-function">
+
+
+
+<h2 id="sanpy.userAnalysis.baseUserAnalysis.runAllUserAnalysis" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">runAllUserAnalysis</span><span class="p">(</span><span class="n">ba</span><span class="p">)</span></code>
+
+
+<a href="#sanpy.userAnalysis.baseUserAnalysis.runAllUserAnalysis" class="headerlink" title="Permanent link">¤</a></h2>
+
+    <div class="doc doc-contents ">
+
+      <p>call at end of bAnalysis</p>
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/userAnalysis/baseUserAnalysis.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">runAllUserAnalysis</span><span class="p">(</span><span class="n">ba</span><span class="p">):</span>
+	<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">	call at end of bAnalysis</span>
+<span class="sd">	&quot;&quot;&quot;</span>
+
+	<span class="c1"># step through each</span>
+	<span class="n">objList</span> <span class="o">=</span> <span class="n">getObjectList</span><span class="p">()</span>
+	<span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objList</span><span class="p">:</span>
+		<span class="c1"># instantiate and call run (will add values for stats</span>
+		<span class="n">userObj</span> <span class="o">=</span> <span class="n">obj</span><span class="p">(</span><span class="n">ba</span><span class="p">)</span>
+		<span class="n">userObj</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+        
+      </main>
+      
+        my footer
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.instant"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../../assets/javascripts/workers/search.fcfe8b6d.min.js", "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.b1047164.min.js"></script>
+      
+    
+  </body>
+</html>
