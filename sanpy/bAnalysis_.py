@@ -2059,7 +2059,7 @@ class bAnalysis:
 		self._detectionDirty = True  # e.g. bAnalysis needs to be saved
 
 		# run all user analysis ... what if this fails ???
-		sanpy.useranalysis.runAllUserAnalysis(self)
+		sanpy.userAnalysis.runAllUserAnalysis(self)
 
 		## done
 

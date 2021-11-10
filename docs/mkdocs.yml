@@ -71,7 +71,7 @@ nav:
         - bExport: api/bExport.md
         - bDetection: api/bDetection.md
         - bAnalysisUtil: api/bAnalysisUtil.md
-        - userAnalysis: api/userAnalysis.md
+        - baseUserAnalysis: api/userAnalysis/baseUserAnalysis.md
         - interface:
             - sanp_app: api/interface/sanpy_app.md
             - plugins:
