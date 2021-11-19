@@ -268,7 +268,10 @@ class stimGen(sanpyPlugin):
 		if name == 'Number Of Sweeps':
 			numSweeps = self.numSweepsSpinBox.value()
 			self._updateNumSweeps(numSweeps)
-		#
+		elif name == 'Save Index':
+			saveStimIndex = self.saveIndexSpinBox.value()
+			self.saveStimIndex = saveStimIndex
+			#
 		self.updateStim()
 
 	def on_stim_type(self, type):
@@ -309,6 +312,16 @@ class stimGen(sanpyPlugin):
 		aButton = QtWidgets.QPushButton(aName)
 		aButton.clicked.connect(partial(self.on_button_click,aName))
 		controlLayout.addWidget(aButton)
+
+		aName = 'Save Index'
+		aLabel = QtWidgets.QLabel(aName)
+		controlLayout.addWidget(aLabel)
+		self.saveIndexSpinBox = QtWidgets.QSpinBox()
+		self.saveIndexSpinBox.setKeyboardTracking(False)
+		self.saveIndexSpinBox.setRange(0, 9999)
+		self.saveIndexSpinBox.setValue(self.saveStimIndex)
+		self.saveIndexSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
+		controlLayout.addWidget(self.saveIndexSpinBox)
 
 		aName = 'Stim Type'
 		aLabel = QtWidgets.QLabel(aName)
@@ -635,7 +648,7 @@ class stimGen(sanpyPlugin):
 		return filename
 		"""
 
-		filename = datetime.today().strftime('%Y%m%d')
+		filename = 'sanpy_' + datetime.today().strftime('%Y%m%d')
 		filename += '_'
 
 		saveStimIndex = self.saveStimIndex
@@ -647,7 +660,7 @@ class stimGen(sanpyPlugin):
 		self.saveStimIndex += 1
 
 		return filename
-		
+
 def run():
 	app = QtWidgets.QApplication(sys.argv)
 
