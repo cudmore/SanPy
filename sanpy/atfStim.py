@@ -180,7 +180,8 @@ def _addNoise(data, noiseAmp):
 	data += np.random.normal(scale=noiseAmp, size=data.shape)
 	return data
 
-def makeStim(type, amp=10, durSec=10, freq=10, fs=10000, noiseAmp=1, rectify=True, autoPad=True, autoSave=True):
+def makeStim(type, amp=10, durSec=10, freq=10, fs=10000,
+					noiseAmp=1, rectify=True, autoPad=False, autoSave=True):
 	"""
 	Make a different number of stim
 
