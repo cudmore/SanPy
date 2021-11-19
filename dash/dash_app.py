@@ -25,9 +25,10 @@ import myDashUtils
 
 #from sanpy import *
 import sanpy
+import sanpy.bAnalysisUtil
 
 # keys are human name statDict[<human name>']['name'] is backend
-statDict = sanpy.bAnalysisUtil.getStatList()
+statDict = sanpy.bAnalysisUtil.bAnalysisUtil.getStatList()
 #from sanpy.bAnalysisUtil import statList
 #statDict = statList
 
@@ -45,7 +46,7 @@ from app import app
 from app import server # needed for heroku
 
 def loadFile(path, name, rowIdx):
-	print('app2.loadFile() name:', name, 'rowIdx:', rowIdx)
+	logger.info(f'name: {name} rowIdx: {rowIdx}')
 
 	#global ba
 
@@ -58,10 +59,10 @@ def loadFile(path, name, rowIdx):
 
 	start = 0
 	#stop = len(ba.sweepX()) - 1
-	stop = len(ba.sweepX2) - 1
+	stop = len(ba.sweepX) - 1
 	global subSetOfPnts
 	subSetOfPnts = range(start, stop, plotEveryPoint)
-	print('  load file subSetOfPnts:', subSetOfPnts)
+	logger.info(f'  subSetOfPnts: {subSetOfPnts}')
 
 	return ba
 
@@ -93,11 +94,12 @@ baList = []
 
 #fileList = getFileList(myPath)
 bucketName = 'sanpy-data'
+bucketName = None
 dfFileList, baList = myDashUtils.getFileList(myPath, bucketName=bucketName) # used to build file list DataTable ('file-list-table')
 
 # load first file in list
 loadFirstFile = dfFileList['File Name'][0]
-print('loadFirstFile:', loadFirstFile)
+logger.info(f'  loadFirstFile: {loadFirstFile}')
 global ba
 # was this
 #ba = loadFile(myPath, loadFirstFile, 0)
@@ -236,9 +238,9 @@ def _regenerateFig(xMin, xMax, statList=None):
 	doDeriv = 'Derivative' in statList
 
 	try:
-		sweepX = ba.sweepX2
-		sweepY = ba.sweepY2
-		filteredDeriv = ba.filteredDeriv2
+		sweepX = ba.sweepX
+		sweepY = ba.sweepY
+		filteredDeriv = ba.filteredDeriv
 		if doDeriv:
 			#dvdtTrace = go.Scattergl(x=ba.abf.sweepX[subSetOfPnts], y=ba.filteredDeriv[subSetOfPnts],
 			#				line=lineDict, showlegend=False)
@@ -407,9 +409,9 @@ def linked_graph(relayoutData, selected_rows, values, errorRowSelection,
 
 	global ba
 	logger.info(ba)
-	sweepX = ba.sweepX2
+	sweepX = ba.sweepX
 	xMin = 0
-	xMax = sweepX[-1]  # ba.abf.sweepX[-1]
+	xMax = ba.recordingDur  # sweepX[-1]  # ba.abf.sweepX[-1]
 	logger.info(f'xMin:{xMin} xMax:{xMax} sweepX.shape:{sweepX.shape}')
 	if relayoutData is not None:
 		if 'xaxis.range[0]' in relayoutData and 'xaxis.range[1]' in relayoutData:
@@ -510,7 +512,7 @@ def parse_contents_abf(contents, filename, date):
 		# todo: get rid of this weirdness
 		start = 0
 		#stop = len(ba.abf.sweepX) - 1
-		stop = len(ba.sweepX2) - 1
+		stop = len(ba.sweepX) - 1
 		print('	stop:', stop)
 		print('	plotEveryPoint:', plotEveryPoint)
 		global subSetOfPnts
@@ -588,5 +590,5 @@ def myTableSelect(y_activeCell, x_activeCell):
 	}
 
 if __name__ == '__main__':
-	app.run_server(debug=True)
-	#app.run_server(debug=True, host='0.0.0.0', port=8000)
+	#app.run_server(debug=True)
+	app.run_server(debug=True, host='0.0.0.0', port=8050)

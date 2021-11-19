@@ -8,6 +8,9 @@ import dash_bootstrap_components as dbc
 
 import sanpy
 
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
+
 boxBorder = "1px gray solid"
 
 def getFileList(path, bucketName=None):
@@ -17,7 +20,7 @@ def getFileList(path, bucketName=None):
 	Returns:
 		list of bAnalysis
 	"""
-	print('myDashUtils.getFileList() path:', path, 'bucketName:', bucketName)
+	logger.info(f'path: {path} bucketName: {bucketName}')
 
 	baList = []
 	retFileList = []

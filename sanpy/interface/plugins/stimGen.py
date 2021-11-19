@@ -1,9 +1,27 @@
 """
 Plugin to create and save Axon ATF files
+
+File looks like this 20211119
+
+ATF	1.0
+8	11
+"AcquisitionMode=Episodic Stimulation"
+"Comment="
+"YTop=20000"
+"YBottom=-20000"
+"SyncTimeUnits=100"
+"SweepStartTimesMS=21.000,221.000,421.000,621.000,821.000,1021.000,1221.000,1421.000,1621.000,1821.000"
+"SignalsExported=IN 0"
+"Signals="	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"
+"Time (s)"	"Trace #1 (pA)"	"Trace #2 (pA)"	"Trace #3 (pA)"	"Trace #4 (pA)"	"Trace #5 (pA)"	"Trace #6 (pA)"	"Trace #7 (pA)"	"Trace #8 (pA)"	"Trace #9 (pA)"	"Trace #10 (pA)"
+0	1.2207	1.2207	5.49316	2.44141	3.66211	0.610352	2.44141	5.49316	1.83105	2.44141
+1e-4	2.44141	1.2207	0.610352	2.44141	2.44141	0.610352	0.610352	1.2207	3.05176	3.05176
 """
 
 import os, sys
 from functools import partial
+
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -31,6 +49,8 @@ class stimGen(sanpyPlugin):
 			ba (bAnalysis): Not required
 		"""
 		super(stimGen, self).__init__(**kwargs)
+
+		self.saveStimIndex = 0
 
 		self.numSweeps = 5
 
@@ -72,30 +92,74 @@ class stimGen(sanpyPlugin):
 	def getAtfHeader(self, numChannels=1):
 		"""
 		See: https://github.com/christianrickert/Axon-Text-File/blob/master/data.atf
+
+		File looks like this 20211119
+
+		ATF	1.0
+		8	11
+		"AcquisitionMode=Episodic Stimulation"
+		"Comment="
+		"YTop=20000"
+		"YBottom=-20000"
+		"SyncTimeUnits=100"
+		"SweepStartTimesMS=21.000,221.000,421.000,621.000,821.000,1021.000,1221.000,1421.000,1621.000,1821.000"
+		"SignalsExported=IN 0"
+		"Signals="	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"
+		"Time (s)"	"Trace #1 (pA)"	"Trace #2 (pA)"	"Trace #3 (pA)"	"Trace #4 (pA)"	"Trace #5 (pA)"	"Trace #6 (pA)"	"Trace #7 (pA)"	"Trace #8 (pA)"	"Trace #9 (pA)"	"Trace #10 (pA)"
+		0	1.2207	1.2207	5.49316	2.44141	3.66211	0.610352	2.44141	5.49316	1.83105	2.44141
+		1e-4	2.44141	1.2207	0.610352	2.44141	2.44141	0.610352	0.610352	1.2207	3.05176	3.05176
 		"""
+
+		myUnits = 'pA'
+		myComment = 'fill in with stim params'
+
 		numDataColumns = numChannels + 1  # time + number of channels
 		eol = '\n'
 		tab = '\t'
 		ATF_HEADER = "ATF	1.0" + eol
 		ATF_HEADER += f'8\t{numDataColumns}' + eol
-		ATF_HEADER += """
-		"AcquisitionMode=Episodic Stimulation"
-		"Comment="
-		"YTop=2000"
-		"YBottom=-2000"
-		"SyncTimeUnits=20"
-		"SweepStartTimesMS=0.000"
-		"SignalsExported=IN 0"
-		"Signals="	"IN 0"
-		""".strip()
-		ATF_HEADER += eol
-		ATF_HEADER += f'"Time (s)"' + tab
-		for channel in range(numChannels):
-			traceStr = f'"Trace #{channel+1}"' + tab  # not sure if trailing tab is ok???
-			ATF_HEADER += traceStr
-		ATF_HEADER += eol
 
-		print('ATF_HEADER:')
+		ATF_HEADER += '"AcquisitionMode=Episodic Stimulation"' + eol
+		ATF_HEADER += f'"Comment={myComment}"' + eol
+		ATF_HEADER += '"YTop=20000"' + eol
+		ATF_HEADER += '"YBottom=-20000"' + eol
+		ATF_HEADER += '"SyncTimeUnits=100"' + eol
+
+		# for a 200 ms sweep, looks like this
+		# "SweepStartTimesMS=21.000,221.000,421.000,621.000,821.000,1021.000,1221.000,1421.000,1621.000,1821.000"
+		durMs = self.durSeconds *1000
+		numSweeps = self.numSweeps
+		sweepRange = range(numSweeps)
+		SweepStartTimesMS = '"SweepStartTimesMS='
+		preRollMs = 21
+		for sweepIdx, sweep in enumerate(sweepRange):
+			currStartTime = preRollMs + (sweepIdx * durMs)
+			SweepStartTimesMS += f'{round(float(currStartTime),3)}' + ','
+		# remove last comma
+		SweepStartTimesMS = SweepStartTimesMS[0:-1]
+		SweepStartTimesMS += '"'
+		ATF_HEADER += SweepStartTimesMS + eol
+
+		ATF_HEADER += '"SignalsExported=IN 0"' + eol
+
+		# signals looks like this
+		# "Signals="	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"	"IN 0"
+		Signals = '"Signals="' + '\t'
+		for sweepIdx, sweep in enumerate(sweepRange):
+			Signals += '"IN 0"' + '\t'
+		# remove last tab
+		Signals = Signals[0:-1]
+		ATF_HEADER += Signals + eol
+
+		ATF_HEADER += f'"Time (s)"' + tab
+		traceStr = ''
+		for channel in range(numChannels):
+			traceStr += f'"Trace #{channel+1} ({myUnits})"' + tab  # not sure if trailing tab is ok???
+		# remove last tab
+		traceStr = traceStr[0:-1]
+		ATF_HEADER += traceStr + eol
+
+		print('=== ATF_HEADER:')
 		print(ATF_HEADER)
 
 		'''
@@ -148,10 +212,11 @@ class stimGen(sanpyPlugin):
 			currAmp = amp + (sweepNum * amplitudeStep)
 			currFreq = freq + (sweepNum * frequencyStep)
 			currNoiseAmp = noiseAmp + (sweepNum * noiseStep)
+			autoPad = False
 			print(f'  makeStim() {type} sweep:{sweepNum} durSec:{durSec} amp:{currAmp} freq:{currFreq} noiseAmp:{currNoiseAmp}')
 			self._data[sweepNum] = sanpy.atfStim.makeStim(type, amp=currAmp, durSec=durSec,
 							freq=currFreq, fs=fs, noiseAmp=currNoiseAmp, rectify=doRectify,
-							autoPad=True, autoSave=False)
+							autoPad=autoPad, autoSave=False)
 			if self._data[sweepNum] is None:
 				print(f'makeStim() error making {type} at sweep number {sweepNum}')
 			#
@@ -561,12 +626,28 @@ class stimGen(sanpyPlugin):
 		_g : start noise amplitude
 		_ns : noise step
 		"""
+
+		"""
 		filename = f'{stimType}_s{numSweeps}_sd{durSeconds}_a{amplitude}_f{frequency}_g{noiseAmplitude}'
 		if numSweeps > 1:
 			filename += f'_ns{noiseStep}'
 		filename += '.atf'
 		return filename
+		"""
 
+		filename = datetime.today().strftime('%Y%m%d')
+		filename += '_'
+
+		saveStimIndex = self.saveStimIndex
+		filename += f'{saveStimIndex:04}'
+
+		filename += '.atf'
+
+		# increment for next save
+		self.saveStimIndex += 1
+
+		return filename
+		
 def run():
 	app = QtWidgets.QApplication(sys.argv)
 

@@ -1,3 +1,6 @@
+# this is a folder, problems with heroku
+#from .useranalysis import *
+
 # only export base sanpy, no GUI
 from .bAnalysis_ import *
 #from .bAnalysis import bAnalysis
@@ -11,8 +14,10 @@ from .analysisDir import *
 #from .bAnalysisPlot import getHalfWidths
 from .analysisPlot import *
 
-from .bAnalysisUtil import bAnalysisUtil
-from .bAnalysisUtil import statList
+# 20211025
+#from .bAnalysisUtil import bAnalysisUtil
+#from .bAnalysisUtil import statList
+from .bAnalysisUtil import *
 
 from .bAbfText import bAbfText
 
@@ -26,6 +31,9 @@ from .atfStim import *
 from .bDetection import bDetection
 from .bAnalysisResults import *
 
-from .awsUtil import *
+# hold off on loading from aws for now (requires boto3)
+#from .awsUtil import *
 
-from .userAnalysis import *
+# need this for heroku ????????????????????????????????????????????????????
+#from .userAnalysis import *
+#from .userAnalysis import userAnalysis

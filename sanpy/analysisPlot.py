@@ -132,7 +132,7 @@ class bAnalysisPlot():
 		d = {
 			'linewidth': 0.5,
 			'color': 'k',
-			'width': 6,
+			'width': 9,
 			'height': 3,
 		}
 		return d.copy()
@@ -187,6 +187,9 @@ class bAnalysisPlot():
 		Args:
 			fig (matplotlib.pyplot.figure): An existing figure to plot to.
 				see: https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.figure.html
+
+		Return:
+			fig and axs
 		"""
 
 		#
@@ -209,14 +212,19 @@ class bAnalysisPlot():
 		ax2.set_ylabel('dV/dt')
 		#ax2.set_xlabel('Seconds')
 
-		return fig
+		return fig, [ax1, ax2]
 
-	def plotSpikes(self, plotStyle=None, ax=None):
+	def plotSpikes(self, plotThreshold=True, plotPeak=True, plotStyle=None, ax=None):
 		'''
 		Plot Vm with spike analysis overlaid as symbols
 
-		plotStyle (dict): xxx
-		ax (xxx): If specified will plot into a MatPlotLib axes
+		Args:
+			plotStyle (dict): xxx
+			ax (xxx): If specified will plot into a MatPlotLib axes
+
+		Returns
+			fig
+			ax
 		'''
 
 		if plotStyle is None:
@@ -229,16 +237,18 @@ class bAnalysisPlot():
 		self.plotRaw(ax=ax)
 
 		# plot spike times
-		thresholdVal = self.ba.getStat('thresholdVal')
-		thresholdPnt = self.ba.getStat('thresholdPnt')
-		thresholdSec = [self.ba.pnt2Sec_(x) for x in thresholdPnt]
-		ax.plot(thresholdSec, thresholdVal, 'pg')
+		if plotThreshold:
+			thresholdVal = self.ba.getStat('thresholdVal')
+			thresholdPnt = self.ba.getStat('thresholdPnt')
+			thresholdSec = [self.ba.pnt2Sec_(x) for x in thresholdPnt]
+			ax.plot(thresholdSec, thresholdVal, 'pg')
 
 		# plot the peak
-		peakVal = self.ba.getStat('peakVal')
-		peakPnt = self.ba.getStat('peakPnt')
-		peakSec = [self.ba.pnt2Sec_(x) for x in peakPnt]
-		ax.plot(peakSec, peakVal, 'or')
+		if plotPeak:
+			peakVal = self.ba.getStat('peakVal')
+			peakPnt = self.ba.getStat('peakPnt')
+			peakSec = [self.ba.pnt2Sec_(x) for x in peakPnt]
+			ax.plot(peakSec, peakVal, 'or')
 
 		xUnits = self.ba.get_xUnits()
 		yUnits = self.ba.get_yUnits()

@@ -1,12 +1,11 @@
 import numpy as np
 
 # this specific import is to stop circular imports
-import sanpy.userAnalysis.baseUserAnalysis as baseUserAnalysis
+import sanpy.useranalysis.baseUserAnalysis as baseUserAnalysis
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-#class exampleUserAnalysis(sanpy.userAnalysis.baseUserAnalysis):
 class exampleUserAnalysis(baseUserAnalysis):
 	"""
 	An example user defined analysis.
@@ -34,25 +33,19 @@ class exampleUserAnalysis(baseUserAnalysis):
 		logger.info('Running ...')
 
 		# add new keys to to ba.spikeDict
-		theDefault = None
+		#theDefault = None
 
-		# handled by self.userStatDict and self._installStats()
-		#newKey_pnt = 'mdp2_pnt'
-		#self.addKey(newKey_pnt, theDefault=theDefault)
-
-		#newKey_val = 'mdp2_val'
-		#self.addKey(newKey_val, theDefault=theDefault)
+		# get filtered vm for the entire trace
+		filteredVm = self.getFilteredVm()
 
 		lastThresholdPnt = None
 		for spikeIdx, spike in enumerate(self.ba.spikeDict):
 			thisThresholdPnt = spike['thresholdPnt']
-			#print(f'spike {spikeIdx} thisThresholdPnt:{thisThresholdPnt}')
 
 			if spikeIdx == 0:
 				# first spike does not have a mdp
 				pass
 			else:
-				filteredVm = self.getFilteredVm()
 
 				# pull out points between last spike and this spike
 				preClipVm = filteredVm[lastThresholdPnt:thisThresholdPnt]
@@ -65,27 +58,13 @@ class exampleUserAnalysis(baseUserAnalysis):
 				# grab Vm value at that point
 				theMin = filteredVm[preMinPnt]  # mV
 
-				#
-				# assign
+				# assign to underlying bAnalysis
 				self.setSpikeValue(spikeIdx, 'mdp2_pnt', preMinPnt)
 				self.setSpikeValue(spikeIdx, 'mdp2_val', theMin)
-
-				# check that ba actually has value
-				#print(f'  new key {newKey_pnt} is {self.ba.spikeDict[spikeIdx][newKey_pnt]}')
-				#print(f'  new key {newKey_val} is {self.ba.spikeDict[spikeIdx][newKey_val]}')
 
 			#
 			lastThresholdPnt = thisThresholdPnt
 
-		#
-		# check what we just did
-		'''
-		mdp2_pnt = self.ba.getStat('mdp2_pnt')
-		print('mdp2_pnt:', mdp2_pnt)
-		mdp2_val = self.ba.getStat('mdp2_val')
-		print('mdp2_val:', mdp2_val)
-		'''
-		
 def test1():
 	path = ''
 	path = '/home/cudmore/Sites/SanPy/data/19114000.abf'

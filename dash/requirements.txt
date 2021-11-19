@@ -24,4 +24,8 @@ boto3 # for amazon aws
 # works
 git+git://github.com/cudmore/SanPy
 
+# 20211022, trying to install from local rather than github version ???
+# does not work
+#pip install -e ../.
+
 git+git://github.com/cudmore/pyABF.git#egg=pyabf&subdirectory=src

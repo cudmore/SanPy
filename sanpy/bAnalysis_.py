@@ -573,6 +573,8 @@ class bAnalysis:
 
 		self.myFileType = 'atf'
 
+		# don't keep _abf, we grabbed every thing we needed
+
 	def _loadAbf(self, byteStream=None, loadData=True):
 		"""Load pyAbf from path."""
 		try:
@@ -652,6 +654,8 @@ class bAnalysis:
 
 		#
 		self.myFileType = 'abf'
+
+		self._abf = None
 
 	@property
 	def detectionDirty(self):
@@ -962,7 +966,7 @@ class bAnalysis:
 			x = np.array(x)
 			if statName2 is not None:
 				y = np.array(y)
-				
+
 		if statName2 is not None:
 			return x, y
 		else:
@@ -1613,7 +1617,9 @@ class bAnalysis:
 		self.setSweep(rememberSweep)
 
 		stopTime = time.time()
-		logger.info(f'Detected {len(self.spikeDict)} spikes in {round(stopTime-startTime,3)} seconds')
+
+		if detectionClass['verbose']:
+			logger.info(f'Detected {len(self.spikeDict)} spikes in {round(stopTime-startTime,3)} seconds')
 
 	def spikeDetect2__(self, sweepNumber, dDict):
 		"""
@@ -2053,7 +2059,7 @@ class bAnalysis:
 		self._detectionDirty = True  # e.g. bAnalysis needs to be saved
 
 		# run all user analysis ... what if this fails ???
-		sanpy.runAllUserAnalysis(self)
+		sanpy.userAnalysis.runAllUserAnalysis(self)
 
 		## done
 

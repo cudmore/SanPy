@@ -19,6 +19,9 @@ def getObjectList():
 
 	Each of these is an object and we can construct or interrogate statis class members
 	"""
+
+	#logger.info('')
+
 	ignoreModuleList = ['baseUserAnalysis']
 
 	objList = []
@@ -28,10 +31,10 @@ def getObjectList():
 		if inspect.isclass(obj):
 			if moduleName in ignoreModuleList:
 				continue
-			print(f'is class moduleName {moduleName} obj:{obj}')
+			print(f'  is class moduleName {moduleName} obj:{obj}')
 			# obj is a constructor function
 			# <class 'sanpy.userAnalysis.userAnalysis.exampleUserAnalysis'>
-			print(obj.userStatDict)
+			print('  ', obj.userStatDict)
 
 			# from findUserAnalysis
 			'''
@@ -50,6 +53,9 @@ def findUserAnalysis():
 	Find files in 'sanpy/userAnalysis' and populate a dict with stat names
 	this will be appended to bAnalysisUtil.statList
 	"""
+
+	logger.info('')
+
 	ignoreModuleList = ['baseUserAnalysis']
 
 	userStatDict = {}
@@ -58,10 +64,10 @@ def findUserAnalysis():
 		if inspect.isclass(obj):
 			if moduleName in ignoreModuleList:
 				continue
-			print(f'is class moduleName {moduleName} obj:{obj}')
+			print(f' is class moduleName {moduleName} obj:{obj}')
 			# obj is a constructor function
 			# <class 'sanpy.userAnalysis.userAnalysis.exampleUserAnalysis'>
-			print(obj.userStatDict)
+			print('  ', obj.userStatDict)
 			oneStatDict = obj.userStatDict
 			for k,v in oneStatDict.items():
 				userStatDict[k] = {}
