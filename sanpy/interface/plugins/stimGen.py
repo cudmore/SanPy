@@ -50,6 +50,7 @@ class stimGen(sanpyPlugin):
 		"""
 		super(stimGen, self).__init__(**kwargs)
 
+		self.version = 0.1
 		self.saveStimIndex = 0
 
 		self.numSweeps = 5
@@ -89,6 +90,25 @@ class stimGen(sanpyPlugin):
 
 		self.updateStim()
 
+	def getComment(self):
+		comment = '' # '"Comment='
+
+		comment +=  f'version={self.version};'
+		comment +=  f'numSweeps={self.numSweeps};'
+		comment +=  f'stimType={self.stimType};'
+		comment +=  f'durSeconds={self.durSeconds};'
+		comment +=  f'amplitude={self.amplitude};'
+		comment +=  f'frequency={self.frequency};'
+		comment +=  f'noiseAmplitude={self.noiseAmplitude};'
+		comment +=  f'amplitudeStep={self.amplitudeStep};'
+		comment +=  f'frequencyStep={self.frequencyStep};'
+		comment +=  f'noiseStep={self.noiseStep};'
+		comment +=  f'doRectify={self.doRectify};'
+
+		#
+		#comment += '"'
+		return comment
+
 	def getAtfHeader(self, numChannels=1):
 		"""
 		See: https://github.com/christianrickert/Axon-Text-File/blob/master/data.atf
@@ -111,7 +131,7 @@ class stimGen(sanpyPlugin):
 		"""
 
 		myUnits = 'pA'
-		myComment = 'fill in with stim params'
+		#myComment = 'fill in with stim params'
 
 		numDataColumns = numChannels + 1  # time + number of channels
 		eol = '\n'
@@ -120,7 +140,10 @@ class stimGen(sanpyPlugin):
 		ATF_HEADER += f'8\t{numDataColumns}' + eol
 
 		ATF_HEADER += '"AcquisitionMode=Episodic Stimulation"' + eol
+
+		myComment = self.getComment()
 		ATF_HEADER += f'"Comment={myComment}"' + eol
+
 		ATF_HEADER += '"YTop=20000"' + eol
 		ATF_HEADER += '"YBottom=-20000"' + eol
 		ATF_HEADER += '"SyncTimeUnits=100"' + eol
