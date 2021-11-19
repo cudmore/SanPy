@@ -8,7 +8,7 @@ __pycache__
 .python-version
 
 # files fro grainger et al
-examples
+#examples
 
 # mkdocs
 docs/site
