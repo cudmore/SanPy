@@ -180,14 +180,18 @@ def _addNoise(data, noiseAmp):
 	data += np.random.normal(scale=noiseAmp, size=data.shape)
 	return data
 
-def makeStim(type, amp=10, durSec=10, freq=10, fs=10000,
+def makeStim(type, sweepDurSec=10, startStimSec=2.0, durSec=5.0, yStimOffset=0,
+					amp=10, freq=10, fs=10000,
 					noiseAmp=1, rectify=True, autoPad=False, autoSave=True):
 	"""
 	Make a different number of stim
 
 	Args:
+		durSec (float): Duration of stim
 		rectify (bool): If tru then stim<0 = 0
 	"""
+
+	# make the stim of duration durSec (then embed into longer sweepDurSec)
 	if type == 'Noise':
 		data = _makeNoise(durSec, noiseAmp, fs)
 	elif type == 'Chirp':
@@ -197,7 +201,7 @@ def makeStim(type, amp=10, durSec=10, freq=10, fs=10000,
 	elif type == 'Epsp train':
 		tmpSpikeTrain, data = getSpikeTrain(durSec=durSec, fs=10000, spikeFreq=freq, amp=amp, noiseAmp=0, baseLineShift=0)
 	elif type == 'Integrate and Fire':
-		data = integrateAndFire()
+		data = integrateAndFire(durSec=durSec, freqHz=freq, fs=10000)
 	# TODO: TOO SLOW TO BE USEFUL !!!
 	elif type == 'Stochastic HH':
 		from sanpy.models.myStochHH import myRun2
@@ -216,16 +220,29 @@ def makeStim(type, amp=10, durSec=10, freq=10, fs=10000,
 	if rectify:
 		data[data<0] = 0
 
+	# always add offset, if 0 will have no effect
+	data += yStimOffset
+
+	#
+	# insert stim (data) into final sweep (sweepData)
+	Xs = np.arange(fs*sweepDurSec) / fs  # x/time axis, we should always be able to create this from (dur, fs)
+	sweepData = np.zeros(shape=Xs.shape)
+	xStartPnt = int(fs * startStimSec)
+	xStopPnt = xStartPnt + len(data)
+	if xStopPnt > len(sweepData):
+		xStopPnt = len(sweepData)
+	sweepData[xStartPnt:xStopPnt] = data
+
 	fileName = ''
 	if autoSave:
 		fileName = f'{type}_dur{durSec}_freq{freq}.atf'
-		saveAtf(data, fileName=fileName)
+		saveAtf(sweepData, fileName=fileName)
 
 	#
 	if autoSave:
-		return data, fileName
+		return sweepData, fileName
 	else:
-		return data
+		return sweepData
 
 def getKernel(type='sumExp', amp=5, tau1=30, tau2=70):
 	"""Get a kernel for convolution with a spike train."""
@@ -278,30 +295,31 @@ def getSpikeTrain(durSec=1, fs=10000, spikeFreq=3, amp=10, noiseAmp=10, baseLine
 	return spikeTrain, epspTrain
 
 
-def integrateAndFire():
+def integrateAndFire(durSec, freqHz, fs):
 	"""
 	See: https://mark-kramer.github.io/Case-Studies-Python/IF.html
 	"""
-	durSec = 50
-	fs = 10000
+	print('integrateAndFire()')
+	#durSec = 50
+	#fs = 10000
 	dt = 1 / fs
 	durPnts = (1/dt) * durSec
 	durPnts = int(durPnts)
-	print('durPnts:', durPnts)
+	print('  durPnts:', durPnts)
 
 	# constant current
 	constantAmp = 0.7
 	I = np.zeros(durPnts) + constantAmp
-	print(f'constantAmp:{constantAmp} I:{I.shape}')
+	print(f'  constantAmp:{constantAmp} I:{I.shape}')
 	# plus sin
 	sinAmp = 0.5
-	sinFreq = 1
+	sinFreq = freqHz
 	rmsMult = 1/np.sqrt(2)
 	sinRms = sinAmp * rmsMult
 	# want sinRms to equal constantAMp
 	sinAmp = constantAmp / rmsMult
 	iSin = _makeSin(durSec=durSec, amp=sinAmp, freqHz=sinFreq, fs=fs)
-	print(f'sinAMp:{sinAmp} sinRms:{sinRms} iSin:{iSin.shape}')
+	print(f'  sinAmp:{sinAmp} sinRms:{sinRms} iSin:{iSin.shape}')
 	I += iSin
 	# Pluse noise
 	noiseAmp = 1
@@ -321,11 +339,12 @@ def integrateAndFire():
 			V[k+1] = Vreset
 			spikeTimesSeconds.append(k*dt)
 
-	print(f'numSpikes:{len(spikeTimesSeconds)}')
+	print(f'  numSpikes:{len(spikeTimesSeconds)}')
 	spikeTimeAmp = [Vth] * len(spikeTimesSeconds)
 
 	t = np.arange(0,len(V))*dt	  # Define the time axis.
 
+	'''
 	fig, axs = plt.subplots(3, 1, sharex=True)
 	axs[0].plot(t,I, '-k', linewidth=1)
 	axs[1].plot(t,V, '-k', linewidth=1)
@@ -343,6 +362,7 @@ def integrateAndFire():
 
 	#
 	plt.show()
+	'''
 
 	return V
 

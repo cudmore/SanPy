@@ -50,13 +50,16 @@ class stimGen(sanpyPlugin):
 		"""
 		super(stimGen, self).__init__(**kwargs)
 
-		self.version = 0.1
+		self.version = 0.2  # v0.2 on 20211202
 		self.saveStimIndex = 0
 
 		self.numSweeps = 5
 
 		self._fs = 10000
+		# sampling frequency in (samples per second)
+
 		self._data = [None] * self.numSweeps  # list of sweeps
+
 		self._t = []
 
 		self.stimTypes = [
@@ -67,8 +70,12 @@ class stimGen(sanpyPlugin):
 						#'Stochastic HH',
 						'Integrate and Fire'
 						]
+		# TODO: add (save index, ...)
 		self.stimType = 'Sin'
-		self.durSeconds = 5
+		self.sweepDurSeconds = 10
+		self.stimStartSeconds = 2
+		self.durSeconds = 5  # of stim
+		self.yStimOffset = 0
 		self.amplitude = 3
 		self.frequency = 2
 		self.noiseAmplitude = 0  # sqrt() of this is STD of Gaussian noise
@@ -95,8 +102,11 @@ class stimGen(sanpyPlugin):
 
 		comment +=  f'version={self.version};'
 		comment +=  f'numSweeps={self.numSweeps};'
+		comment +=  f'sweepDurSeconds={self.sweepDurSeconds};'
 		comment +=  f'stimType={self.stimType};'
+		comment +=  f'stimStartSeconds={self.stimStartSeconds};'
 		comment +=  f'durSeconds={self.durSeconds};'
+		comment +=  f'yStimOffset={self.yStimOffset};'
 		comment +=  f'amplitude={self.amplitude};'
 		comment +=  f'frequency={self.frequency};'
 		comment +=  f'noiseAmplitude={self.noiseAmplitude};'
@@ -150,7 +160,8 @@ class stimGen(sanpyPlugin):
 
 		# for a 200 ms sweep, looks like this
 		# "SweepStartTimesMS=21.000,221.000,421.000,621.000,821.000,1021.000,1221.000,1421.000,1621.000,1821.000"
-		durMs = self.durSeconds *1000
+		#durMs = self.durSeconds *1000
+		durMs = self.sweepDurSeconds *1000  # new 20211202
 		numSweeps = self.numSweeps
 		sweepRange = range(numSweeps)
 		SweepStartTimesMS = '"SweepStartTimesMS='
@@ -220,7 +231,10 @@ class stimGen(sanpyPlugin):
 	def makeStim(self):
 		type = self.stimType
 		fs = self.fs
-		durSec = self.durSeconds
+		sweepDurSeconds = self.sweepDurSeconds  # new 20211202
+		stimStartSeconds = self.stimStartSeconds  # of stim
+		durSec = self.durSeconds  # of stim
+		yStimOffset = self.yStimOffset
 		amp = self.amplitude
 		freq = self.frequency
 		noiseAmp = self.noiseAmplitude
@@ -237,7 +251,9 @@ class stimGen(sanpyPlugin):
 			currNoiseAmp = noiseAmp + (sweepNum * noiseStep)
 			autoPad = False
 			print(f'  makeStim() {type} sweep:{sweepNum} durSec:{durSec} amp:{currAmp} freq:{currFreq} noiseAmp:{currNoiseAmp}')
-			self._data[sweepNum] = sanpy.atfStim.makeStim(type, amp=currAmp, durSec=durSec,
+			self._data[sweepNum] = sanpy.atfStim.makeStim(type, sweepDurSec=sweepDurSeconds,
+							startStimSec=stimStartSeconds, durSec=durSec,
+							yStimOffset=yStimOffset, amp=currAmp,
 							freq=currFreq, fs=fs, noiseAmp=currNoiseAmp, rectify=doRectify,
 							autoPad=autoPad, autoSave=False)
 			if self._data[sweepNum] is None:
@@ -261,9 +277,16 @@ class stimGen(sanpyPlugin):
 	'''
 
 	def _grabParams(self):
+		"""
+		Grab all interface parameters in member variables
+		"""
+
+		self.sweepDurSeconds = self.sweepDurationSpinBox.value()  # new 20211202
 		self.numSweeps = self.numSweepsSpinBox.value()
 
-		self.durSeconds = self.durationSpinBox.value()
+		self.stimStartSeconds = self.stimStartSpinBox.value()  # start of sin
+		self.durSeconds = self.durationSpinBox.value()  # duration of stim
+		self.yStimOffset = self.yStimOffsetSpinBox.value()
 		self.amplitude = self.amplitudeSpinBox.value()
 		self.frequency = self.frequencySpinBox.value()
 		self.noiseAmplitude = self.noiseAmpSpinBox.value()
@@ -275,11 +298,13 @@ class stimGen(sanpyPlugin):
 		self.doRectify = self.rectifyCheckBox.isChecked()
 		self._fs = self.fsSpinBox.value()
 
+		'''
 		rmsMult = 1/np.sqrt(2)
 		sinRms = self.amplitude * rmsMult
 		sinRms = round(sinRms,2)
 		aName = f'RMS:{sinRms}'
 		self.sinRms.setText(aName)
+		'''
 
 	def updateStim(self):
 		self._grabParams()
@@ -355,15 +380,15 @@ class stimGen(sanpyPlugin):
 		self.stimTypeDropdown.currentTextChanged.connect(self.on_stim_type)
 		controlLayout.addWidget(self.stimTypeDropdown)
 
-		aName = 'Duration(s)'
+		aName = 'Sweep Duration(s)'
 		aLabel = QtWidgets.QLabel(aName)
 		controlLayout.addWidget(aLabel)
-		self.durationSpinBox = QtWidgets.QDoubleSpinBox()
-		self.durationSpinBox.setKeyboardTracking(False)
-		self.durationSpinBox.setRange(0, 1e9)
-		self.durationSpinBox.setValue(self.durSeconds)
-		self.durationSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		controlLayout.addWidget(self.durationSpinBox)
+		self.sweepDurationSpinBox = QtWidgets.QDoubleSpinBox()
+		self.sweepDurationSpinBox.setKeyboardTracking(False)
+		self.sweepDurationSpinBox.setRange(0, 1e9)
+		self.sweepDurationSpinBox.setValue(self.sweepDurSeconds)
+		self.sweepDurationSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
+		controlLayout.addWidget(self.sweepDurationSpinBox)
 
 		aName = 'Number Of Sweeps'
 		aLabel = QtWidgets.QLabel(aName)
@@ -376,6 +401,41 @@ class stimGen(sanpyPlugin):
 		controlLayout.addWidget(self.numSweepsSpinBox)
 
 		vLayout.addLayout(controlLayout) # add mpl canvas
+
+		# row 1.5
+		controlLayout_row1_5 = QtWidgets.QHBoxLayout()
+
+		aName = 'Stim Start(s)'
+		aLabel = QtWidgets.QLabel(aName)
+		controlLayout_row1_5.addWidget(aLabel)
+		self.stimStartSpinBox = QtWidgets.QDoubleSpinBox()
+		self.stimStartSpinBox.setKeyboardTracking(False)
+		self.stimStartSpinBox.setRange(0, 1e9)
+		self.stimStartSpinBox.setValue(self.stimStartSeconds)
+		self.stimStartSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
+		controlLayout_row1_5.addWidget(self.stimStartSpinBox)
+
+		aName = 'Stim Duration(s)'
+		aLabel = QtWidgets.QLabel(aName)
+		controlLayout_row1_5.addWidget(aLabel)
+		self.durationSpinBox = QtWidgets.QDoubleSpinBox()
+		self.durationSpinBox.setKeyboardTracking(False)
+		self.durationSpinBox.setRange(0, 1e9)
+		self.durationSpinBox.setValue(self.durSeconds)
+		self.durationSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
+		controlLayout_row1_5.addWidget(self.durationSpinBox)
+
+		aName = 'Stim Offset(y)'
+		aLabel = QtWidgets.QLabel(aName)
+		controlLayout_row1_5.addWidget(aLabel)
+		self.yStimOffsetSpinBox = QtWidgets.QDoubleSpinBox()
+		self.yStimOffsetSpinBox.setKeyboardTracking(False)
+		self.yStimOffsetSpinBox.setRange(-1e9, 1e9)
+		self.yStimOffsetSpinBox.setValue(self.yStimOffset)
+		self.yStimOffsetSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
+		controlLayout_row1_5.addWidget(self.yStimOffsetSpinBox)
+
+		vLayout.addLayout(controlLayout_row1_5) # add mpl canvas
 
 		# 2nd row
 		controlLayout_row2 = QtWidgets.QGridLayout()
@@ -395,12 +455,14 @@ class stimGen(sanpyPlugin):
 		controlLayout_row2.addWidget(self.amplitudeSpinBox, 0, 1, rowSpan, colSpan)
 
 		# rms of sin (amp and freq)
+		'''
 		rmsMult = 1/np.sqrt(2)
 		sinRms = self.amplitude * rmsMult
 		sinRms = round(sinRms,2)
 		aName = f'RMS:{sinRms}'
 		self.sinRms = QtWidgets.QLabel(aName)
 		controlLayout_row2.addWidget(self.sinRms, 0, 2, rowSpan, colSpan)
+		'''
 
 		aName = 'Frequency (Hz)'
 		aLabel = QtWidgets.QLabel(aName)

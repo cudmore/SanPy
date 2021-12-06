@@ -64,6 +64,7 @@ class myScatterWidget():
 			self._selectedHueCol = hueCol
 			self._selectedHues = tuple(self._df[hueCol].unique())
 			if self.selectFiles is not None:
+				#print('_selectedHues:', self._selectedHues)
 				self.selectFiles.options = self._selectedHues  # update list in interface
 				# does not work
 				#self.selectFiles.value = self._selectedHues  # select all possible

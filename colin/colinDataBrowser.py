@@ -23,23 +23,27 @@ class colinDataBrowser():
 
 		self._currentPeakIdx = 0
 
-		self._fileList = self._ca.getFileList()
+		self._fileList = self._ca.fileList
+		self._currentFileIndex = 0
+		self._selectedFile = None
+
+		self.currentAnalysis = None
 
 		if len(self._fileList) == 0:
 			print('error: did not find any files in path:', self._ca._folderPath)
 
 		else:
-			fileIdx = 0
-			self._selectedFile = self._fileList[fileIdx]  # user selected files
-
-			self._ca.setAnalysisIdx(fileIdx)
+			self.setFileIndex(self._currentFileIndex)
 
 			self.initGui()
 			self.refreshPlot()
 
-	@property
-	def numPeaks(self):
-		return self._ca.numPeaks
+	def setFileIndex(self, fileIdx):
+		self._currentFileIndex = fileIdx
+		self._selectedFile = self._fileList[fileIdx]  # user selected files
+		self.currentAnalysis = self._ca.getFile(fileIdx)
+
+		self._currentPeakIdx = 0
 
 	def on_zoom1_change(self, n):
 		# print('on_zoom1_change')
@@ -55,53 +59,52 @@ class colinDataBrowser():
 		if peakPnt is None:
 			peakPnt = self._currentPeakIdx
 
-		df = self._ca.getDataFrame()
-		riseTime_ms = df.iloc[peakPnt]['riseTime_ms']
+		df = self.currentAnalysis.analysisDf
+		riseTime_ms = self.currentAnalysis.getValue(peakPnt, 'riseTime_ms')
 		riseTime_ms = round(riseTime_ms,2)
-		height = df.iloc[peakPnt]['myHeight']
-		height = round(height,2)
+		myHeight = self.currentAnalysis.getValue(peakPnt, 'myHeight')
+		myHeight = round(myHeight,2)
 		with self.myOut:
 			IPython.display.clear_output()
-			print('Peak Index:', peakPnt, 'Amp (pA):', height, 'Rise Time (ms):', riseTime_ms)
+			print(f'Peak {peakPnt} Amp(pA) {myHeight} Rise Time (ms) {riseTime_ms}')
 
 	def updateMyOut2(self, s):
 		with self.myOut:
 			IPython.display.clear_output()
 			print(s)
 
-	def on_value_change(self, n):
+	def on_point_slider_change(self, n):
 		"""
-		n (dist): Dict with things like n['new']
+		Respond to user sliding point slider.
+
+		n (dict): Dict with things like n['new']
 		"""
-		#print('on_value_change n:', n['new'])
 		self._currentPeakIdx = n['new']  # new value
 
-		with self.myOut:
-			IPython.display.clear_output()
-			self.updateMyOut()
+		self.updateMyOut()
 
 		self.refreshPlot()
 
 	def setAccept(self, newValue, peakIdx=None):
 		if peakIdx is None:
 			peakIdx = self._currentPeakIdx
-		self._ca.getDataFrame().loc[peakIdx, 'accept'] = newValue
+		#self._ca.getDataFrame().loc[peakIdx, 'accept'] = newValue
+		self.currentAnalysis.setValue(peakIdx, 'accept', newValue)
 
 	def on_accept_button(self, e):
-		with self.myOut:
-			print('on_accept_button() peak:', self._currentPeakIdx)
-			# todo: put into function
-			#self.myAcceptList[self._currentPeakIdx] = True
-			self.setAccept(True)  # will use current gui nidex
+		self.setAccept(True)  # will use current gui index
+
+		s = f'peak {self._currentPeakIdx} is now "Accept"'
+		self.updateMyOut2(s)
 
 		self.refreshPlot()
 
 	def on_reject_button(self, e):
-		with self.myOut:
-			print('on_reject_button() peak:', self._currentPeakIdx)
-			# todo: put into function
-			#self.myAcceptList[self._currentPeakIdx] = False
-			self.setAccept(False)  # will use current gui nidex
+		self.setAccept(False)  # will use current gui index
+
+		s = f'peak {self._currentPeakIdx} is now "Reject"'
+		self.updateMyOut2(s)
+
 		self.refreshPlot()
 
 	def on_prev_button(self, e):
@@ -109,37 +112,28 @@ class colinDataBrowser():
 		if self._currentPeakIdx < 0:
 			self._currentPeakIdx = 0
 
-		with self.myOut:
-			IPython.display.clear_output()
-			self.updateMyOut()
+		self.updateMyOut()
 
 		self.refreshPlot()
 
 	def on_next_button(self, e):
 		self._currentPeakIdx += 1
-		if self._currentPeakIdx > self.numPeaks - 1:
-			self._currentPeakIdx = self.numPeaks - 1
+		if self._currentPeakIdx > self.currentAnalysis.numPeaks - 1:
+			self._currentPeakIdx = self.currentAnalysis.numPeaks - 1
 
-		with self.myOut:
-			IPython.display.clear_output()
-			self.updateMyOut()
+		self.updateMyOut()
 
 		self.refreshPlot()
 
 	def on_save_button(self, e):
-		resultsPath = self._ca.save()
+		resultsPath = self.currentAnalysis.save()
 		str = f'Saved {resultsPath}'
 		self.updateMyOut2(str)
 
 	def on_select_file(self, event):
-		#print(event)
-		newStr = event['new']  # a tuple of strings
-
-		self._selectedFile = newStr
-		self._currentPeakIdx = 0
-
+		#newStr = event['new']  # a tuple of strings
 		fileIdx = event['owner'].index  # index of user selection
-		self._ca.setAnalysisIdx(fileIdx)
+		self.setFileIndex(fileIdx)
 
 		self.refreshPlot()
 
@@ -148,16 +142,18 @@ class colinDataBrowser():
 		thresholdValue = self.thresholdSpinBox.value
 		#print(thresholdValue, type(thresholdValue))
 
-		detectionDict = self._ca.getAnalysis()['detection']
-		detectionDict['height'] = thresholdValue
-		self._ca.detect(detectionDict=detectionDict)
+		detectionDict = self.currentAnalysis.detectionParams
+		detectionDict['threshold'] = thresholdValue
+		self.currentAnalysis.detect(detectionDict=detectionDict)
+
+		self._currentPeakIdx = 0  # important
 
 		self.refreshPlot()
 
 	def initGui(self):
-		self.sweepX = self._ca.sweepX
-		self.sweepY = self._ca.sweepY
-		self.sweepC = self._ca.sweepC
+		self.sweepX = self.currentAnalysis.sweepX
+		self.sweepY = self.currentAnalysis.sweepY
+		self.sweepC = self.currentAnalysis.sweepC
 
 		# list of files
 		self._selectedFile = self._fileList[0]
@@ -172,7 +168,7 @@ class colinDataBrowser():
 
 		self.thresholdSpinBox = widgets.BoundedFloatText(
 		    value=7.5,
-		    min=0,
+		    min=-1e6,
 		    max=1e6,
 		    step=0.1,
 		    description='Threshold (pA)',
@@ -202,12 +198,12 @@ class colinDataBrowser():
 
 		# selected point slider
 		min = 0
-		max = self.numPeaks
+		max = self.currentAnalysis.numPeaks - 1
 		myPointSlider = widgets.IntSlider(min=min, max=max, step=1,
 										   value=self._currentPeakIdx,
 										   continuous_update=False,
 										  description='Peak Number')
-		myPointSlider.observe(self.on_value_change, names='value')
+		myPointSlider.observe(self.on_point_slider_change, names='value')
 
 		#
 		min = 0.1
@@ -259,20 +255,16 @@ class colinDataBrowser():
 		#self.replotScatter()  # needed for accept/reject
 		#self.replotScatter_selection()
 
-		self.sweepX = self._ca.sweepX
-		self.sweepY = self._ca.sweepY
-		self.sweepC = self._ca.sweepC
+		self.sweepX = self.currentAnalysis.sweepX
+		self.sweepY = self.currentAnalysis.sweepY
+		self.sweepC = self.currentAnalysis.sweepC
+		self.sweepY_filtered = self.currentAnalysis.sweepY_filtered
 
 		peakNumber = self._currentPeakIdx
 
-		df = self._ca.getDataFrame()
-
-		# using this to get detection parameters
-		analysis = self._ca.getAnalysis()
+		df = self.currentAnalysis.analysisDf
 
 		peaks = df['peak_pnt']  #analysis['peaks']
-		#halfWidth = analysis['halfWidth']
-		#fullWidth = analysis['fullWidth']
 		acceptList = df['accept']  # analysis['accept']  # todo: update to df
 
 		# peak we are looking at
@@ -305,7 +297,7 @@ class colinDataBrowser():
 		#yRange = max(self.sweepY[xMaskPnts]) - min(self.sweepY[xMaskPnts]) # used for rectangle
 		xClip1 = self.sweepX[xMaskPnts]
 		yClip1 = self.sweepY[xMaskPnts]
-		self.axs[1].plot(self.sweepX[xMaskPnts], self.sweepY[xMaskPnts], '-')
+		self.axs[1].plot(self.sweepX[xMaskPnts], self.sweepY_filtered[xMaskPnts], '-r', linewidth=0.5)
 		# one peak
 		self.axs[1].scatter(xPeakSec, yPeak, c=mySelectColor, marker='x')
 
@@ -315,9 +307,10 @@ class colinDataBrowser():
 		yPlotPeakSec = df2['peak_val']
 		myColors = ['k' if x else 'r' for x in df2['accept']]
 		self.axs[1].scatter(xPlotPeakSec, yPlotPeakSec, c=myColors, zorder=999)
+
 		# h line with threshold
-		height = analysis['detection']['height']
-		self.axs[1].hlines(height, xMinSec, xMaxSec, color='r', linestyles='--')
+		threshold = self.currentAnalysis.detectionParams['threshold']
+		self.axs[1].hlines(threshold, xMinSec, xMaxSec, color='r', linestyles='--')
 
 		#
 		# zoom 2 tight zoom
@@ -330,7 +323,7 @@ class colinDataBrowser():
 		yClip2 = self.sweepY[xMaskPnts2]
 
 		#self.axs[2].plot(self.sweepX[xMaskPnts2], self._ca.sweepY[xMaskPnts2], '-')
-		self.axs[2].plot(self.sweepX[xMaskPnts2], self._ca.sweepY_filtered[xMaskPnts2], '-r')
+		self.axs[2].plot(self.sweepX[xMaskPnts2], self.sweepY_filtered[xMaskPnts2], '-r', linewidth=0.5)
 
 		# find and plot visible peaks by reducing df
 		df2 = df[ (df['peak_sec']>=xMinSec2) & (df['peak_sec']<=xMaxSec2)]
@@ -340,6 +333,11 @@ class colinDataBrowser():
 		self.axs[2].scatter(xPlotPeakSec, yPlotPeakSec, c=myColors, zorder=999)
 
 		self.axs[2].scatter(xPeakSec, yPeak, c=mySelectColor, marker='x')  # one peak
+
+		# for debugging detection
+		fullWidth_left_pnt = df['fullWidth_left_pnt']
+		fullWidth_left_val = df['fullWidth_left_val']
+		self.axs[2].scatter(fullWidth_left_pnt, fullWidth_left_val, c='g', marker='x', zorder=999)
 
 		# hw 50
 		halfWidths = [20, 50, 80]
@@ -352,8 +350,8 @@ class colinDataBrowser():
 
 		# plot foot after backing up to 0 crossnig in derivative
 		#df = self.getDataFrame()
-		xPlotFoot = df2['footSec']
-		yPlotFoot = df2['footVal']
+		xPlotFoot = df2['foot_sec']
+		yPlotFoot = df2['foot_val']
 		self.axs[2].scatter(xPlotFoot, yPlotFoot, c='g', zorder=999)
 
 		# this wil break user zooming ???
