@@ -72,18 +72,18 @@ class stimGen(sanpyPlugin):
 						]
 		# TODO: add (save index, ...)
 		self.stimType = 'Sin'
-		self.sweepDurSeconds = 10
-		self.stimStartSeconds = 2
-		self.durSeconds = 5  # of stim
-		self.yStimOffset = 0
-		self.amplitude = 3
-		self.frequency = 2
-		self.noiseAmplitude = 0  # sqrt() of this is STD of Gaussian noise
+		self.sweepDurSeconds = 30
+		self.stimStartSeconds = 5.0
+		self.durSeconds = 20.0  # of stim
+		self.yStimOffset = 0.0
+		self.amplitude = 0.002
+		self.frequency = 1.0
+		self.noiseAmplitude = 0.0  # sqrt() of this is STD of Gaussian noise
 
 		# step for multiple sweeps
-		self.amplitudeStep = 0
-		self.frequencyStep = 0
-		self.noiseStep = 0
+		self.amplitudeStep = 0.0
+		self.frequencyStep = 0.0
+		self.noiseStep = 0.0
 
 		self.doRectify = False
 		""" remove all <0 from output stim """
@@ -261,6 +261,7 @@ class stimGen(sanpyPlugin):
 			#
 			# scale
 			self._data[sweepNum] *= self.scale
+			print('  self._data[sweepNum].dtype:', self._data[sweepNum].dtype)
 
 		self._t = np.arange(len(self._data[0])) / fs  # just using first sweep
 
@@ -450,6 +451,7 @@ class stimGen(sanpyPlugin):
 		self.amplitudeSpinBox = QtWidgets.QDoubleSpinBox()
 		self.amplitudeSpinBox.setKeyboardTracking(False)
 		self.amplitudeSpinBox.setRange(0, 1e9)
+		self.amplitudeSpinBox.setDecimals(5)
 		self.amplitudeSpinBox.setValue(self.amplitude)
 		self.amplitudeSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
 		controlLayout_row2.addWidget(self.amplitudeSpinBox, 0, 1, rowSpan, colSpan)
@@ -479,7 +481,8 @@ class stimGen(sanpyPlugin):
 		controlLayout_row2.addWidget(aLabel, 0, 5, rowSpan, colSpan)
 		self.noiseAmpSpinBox = QtWidgets.QDoubleSpinBox()
 		self.noiseAmpSpinBox.setKeyboardTracking(False)
-		self.noiseAmpSpinBox.setSingleStep(0.1)
+		self.noiseAmpSpinBox.setDecimals(5)
+		self.noiseAmpSpinBox.setSingleStep(0.01)
 		self.noiseAmpSpinBox.setRange(0, 1e9)
 		self.noiseAmpSpinBox.setValue(self.noiseAmplitude)
 		self.noiseAmpSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
@@ -494,7 +497,8 @@ class stimGen(sanpyPlugin):
 		controlLayout_row2.addWidget(aLabel, 1, 0, rowSpan, colSpan)
 		self.amplitudeStepSpinBox = QtWidgets.QDoubleSpinBox()
 		self.amplitudeStepSpinBox.setKeyboardTracking(False)
-		self.amplitudeStepSpinBox.setSingleStep(0.1)
+		self.amplitudeStepSpinBox.setDecimals(5)
+		self.amplitudeStepSpinBox.setSingleStep(0.01)
 		self.amplitudeStepSpinBox.setRange(0, 1e9)
 		self.amplitudeStepSpinBox.setValue(self.amplitudeStep)
 		self.amplitudeStepSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
@@ -518,7 +522,8 @@ class stimGen(sanpyPlugin):
 		controlLayout_row2.addWidget(aLabel, 1, 5, rowSpan, colSpan)
 		self.noiseStepSpinBox = QtWidgets.QDoubleSpinBox()
 		self.noiseStepSpinBox.setKeyboardTracking(False)
-		self.noiseStepSpinBox.setSingleStep(0.1)
+		self.noiseStepSpinBox.setDecimals(5)
+		self.noiseStepSpinBox.setSingleStep(0.01)
 		self.noiseStepSpinBox.setRange(0, 1e9)
 		self.noiseStepSpinBox.setValue(self.frequencyStep)
 		self.noiseStepSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
@@ -743,6 +748,9 @@ class stimGen(sanpyPlugin):
 
 		# increment for next save
 		self.saveStimIndex += 1
+
+		# update interface
+		self.saveIndexSpinBox.setValue(self.saveStimIndex)
 
 		return filename
 
