@@ -15,6 +15,7 @@ def load():
 
 	path = '/media/cudmore/data/stoch-res/2021_12_06_0002.abf'
 	path = '/media/cudmore/data/stoch-res/2021_12_06_0005.abf'
+	path = '/Users/cudmore/box/data/stoch-res/2021_12_06_0005.abf'
 	stimulusFileFolder = None #'/media/cudmore/data/stoch-res' #os.path.split(path)[0]
 
 	ba = bAnalysis2(path, stimulusFileFolder=stimulusFileFolder)
@@ -51,6 +52,11 @@ def plot(ba):
 	fig, axs = plt.subplots(numSweeps, 1, sharex=True, figsize=(8, 6))
 	rightAxs = [None] * numSweeps
 
+	noiseAmpList = [0, 0.5, 1, 1.5]
+	cvISI_list = [None] * len(noiseAmpList)
+	cvISI_invert_list = [None] * len(noiseAmpList)
+	pSpike_list = [None] * len(noiseAmpList)
+
 	for idx in abf.sweepList:
 		abf.setSweep(idx)
 
@@ -69,9 +75,20 @@ def plot(ba):
 			peakSec = dfPlot['peak_sec']
 			peakVal = dfPlot['peak_val']
 
+			# given 20 peaks, calculate "probability of spike"
+			# 20 spikes yields p=1
+			# 10/20 spikes yields p=0.5
+
+			nSinPeaks = 20 # number of peaks in sin wave
+			pSpike = len(dfPlot)/nSinPeaks
 			isiSec = np.diff(peakSec)
-			isiCV = np.std(isiSec) / np.mean(isiSec)
-			print(f'{idx} n:{len(dfPlot)} isiCV:{isiCV}')
+			cvISI = np.std(isiSec) / np.mean(isiSec)
+			cvISI_invert = 1 / cvISI
+			print(f'{idx} n:{len(dfPlot)} pSpike:{pSpike} cvISI:{cvISI} cvISI_invert:{cvISI_invert}')
+
+			cvISI_list[idx] = cvISI
+			cvISI_invert_list[idx] = cvISI_invert
+			pSpike_list[idx] = pSpike
 
 			axs[idx].plot(peakSec, peakVal, 'o')
 
@@ -92,6 +109,19 @@ def plot(ba):
 
 	#
 	plt.tight_layout()
+
+	fig, axs = plt.subplots(3, 1, sharex=True, figsize=(8, 6))
+	axs[0].plot(noiseAmpList, cvISI_list, 'o-k')
+	axs[1].plot(noiseAmpList, cvISI_invert_list, 'o-k')
+	axs[2].plot(noiseAmpList, pSpike_list, 'o-k')
+
+	axs[0].set_ylabel('cvISI')
+	axs[1].set_ylabel('1/cvISI')
+	axs[2].set_ylabel('Prob(spike) per sin peak')
+	#
+	axs[2].set_xlabel('Noise Amp (pA)')
+
+	#
 	plt.show()
 
 def plotFinal(ba):
