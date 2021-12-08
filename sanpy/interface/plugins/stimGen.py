@@ -40,6 +40,66 @@ from sanpy.interface.plugins import sanpyPlugin
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
+def readFolderParams(folderPath):
+	"""
+	Return a DataFrame, one row per file. Columns are stim parameters
+	"""
+	dList = []
+	for file in sorted(os.listdir(folderPath)):
+		if not file.endswith('.atf'):
+			continue
+		filePath = os.path.join(folderPath, file)
+		d = readFileParams(filePath)
+		dList.append(d)
+	#
+	df = pd.DataFrame(dList)
+	outFile = os.path.join(folderPath, 'stimGen_db.csv')
+	print('saving:', outFile)
+	df.to_csv(outFile)
+
+	return df
+
+def readFileParams(path):
+	"""
+	Read stimGen params from one atf file
+	"""
+	retDict = {}
+	with open(path, 'r') as f:
+		while True:
+			#lines = f.readlines()
+			line = f.readline()
+			if not line:
+				break  # EOF
+			if line.startswith('"Comment='):
+				# looks like
+				# "Comment=version=0.2;numSweeps=5;sweepDurSeconds=30.0;stimType=Sin;stimStartSeconds=5.0;durSeconds=20.0;yStimOffset=0.0;amplitude=0.002;frequency=1.0;noiseAmplitude=0.0;amplitudeStep=0.0;frequencyStep=0.0;noiseStep=0.0;doRectify=False;"
+				line = line.replace('"Comment=','')
+				line = line[0:-2]  # remove trailing "
+				#print(line)
+				for param in line.split(';'):
+					kv = param.split('=')
+					#print(kv)
+					if len(kv) != 2:
+						continue
+					k = kv[0]
+					v = kv[1]
+					#print(k, v)
+
+					if k == 'stimType':
+						pass
+					elif k == 'doRectify':
+						v = bool(v)
+					elif k == 'numSweeps':
+						v = int(v)
+					else:
+						v = float(v)
+					#
+					retDict[k] = v
+				#
+				break
+	#
+	return retDict
+
 class stimGen(sanpyPlugin):
 	myHumanName = 'Stim Gen'
 
@@ -50,16 +110,16 @@ class stimGen(sanpyPlugin):
 		"""
 		super(stimGen, self).__init__(**kwargs)
 
-		self.version = 0.2  # v0.2 on 20211202
 		self.saveStimIndex = 0
 
-		self.numSweeps = 5
+		self.version = 0.2  # v0.2 on 20211202
 
 		self._fs = 10000
 		# sampling frequency in (samples per second)
 
-		self._data = [None] * self.numSweeps  # list of sweeps
+		self.numSweeps = 5
 
+		self._data = [None] * self.numSweeps  # list of sweeps
 		self._t = []
 
 		self.stimTypes = [
@@ -72,7 +132,7 @@ class stimGen(sanpyPlugin):
 						]
 		# TODO: add (save index, ...)
 		self.stimType = 'Sin'
-		self.sweepDurSeconds = 30
+		self.sweepDurSeconds = 30.0
 		self.stimStartSeconds = 5.0
 		self.durSeconds = 20.0  # of stim
 		self.yStimOffset = 0.0
@@ -93,9 +153,38 @@ class stimGen(sanpyPlugin):
 
 		self.savePath = ''  # remember last save folder
 
+		# TODO: all params need to be in dictionary
+		# when user clicks on interface (spinbox), we need to update this dict
+		self.paramDict = self.defaultParams()
+
 		self.buildUI()
 
 		self.updateStim()
+
+	def defaultParams(self):
+		paramDict = {
+			'version': 0.3,
+			'stimType': 'Sin',  # str of stim types
+			'fs': 10000,  # int, samples per second
+			'numSweeps': 5,  # int
+			'sweepDur_sec': 30.0,
+			'stimStart_sec': 5.0,
+			'stimDur_sec': 20.0,
+			'yOffset': 0.0,
+			# First sweep parameters
+			'stimFreq': 1.0,
+			'stimAmp': 0.002,
+			'stimNoiseAmp': 0.0,
+			# step parameters
+			'stimFreqStep': 0.0,
+			'stimAmpStep': 0.0,
+			'stimNoiseStep': 0.0,
+			#
+			'rectify': False,
+			'scale': 1,
+
+
+		}
 
 	def getComment(self):
 		comment = '' # '"Comment='
@@ -312,6 +401,9 @@ class stimGen(sanpyPlugin):
 		self.makeStim()
 		self.replot()
 
+	def on_spin_box2(self, name, obj):
+		print(name, obj.value())
+
 	def on_spin_box(self, name):
 		logger.info(name)
 		if name == 'Number Of Sweeps':
@@ -338,6 +430,8 @@ class stimGen(sanpyPlugin):
 		if name == 'Make Stimulus':
 			self.makeStim()
 		elif name == 'Save As...':
+			# TODO: srt a feeback red as we save, set to green when done
+			# self.saveAsButton
 			self.saveAs()
 		else:
 			logger.info(f'name "{name}" not understood.')
@@ -358,9 +452,9 @@ class stimGen(sanpyPlugin):
 		'''
 
 		aName = 'Save As...'
-		aButton = QtWidgets.QPushButton(aName)
-		aButton.clicked.connect(partial(self.on_button_click,aName))
-		controlLayout.addWidget(aButton)
+		self.saveAsButton = QtWidgets.QPushButton(aName)
+		self.saveAsButton.clicked.connect(partial(self.on_button_click,aName))
+		controlLayout.addWidget(self.saveAsButton)
 
 		aName = 'Save Index'
 		aLabel = QtWidgets.QLabel(aName)
@@ -370,6 +464,7 @@ class stimGen(sanpyPlugin):
 		self.saveIndexSpinBox.setRange(0, 9999)
 		self.saveIndexSpinBox.setValue(self.saveStimIndex)
 		self.saveIndexSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
+		#self.saveIndexSpinBox.valueChanged.connect(partial(self.on_spin_box2, aName, self.saveIndexSpinBox))
 		controlLayout.addWidget(self.saveIndexSpinBox)
 
 		aName = 'Stim Type'
@@ -396,7 +491,7 @@ class stimGen(sanpyPlugin):
 		controlLayout.addWidget(aLabel)
 		self.numSweepsSpinBox = QtWidgets.QSpinBox()
 		self.numSweepsSpinBox.setKeyboardTracking(False)
-		self.numSweepsSpinBox.setRange(1, 1e9)
+		self.numSweepsSpinBox.setRange(1, 100)
 		self.numSweepsSpinBox.setValue(self.numSweeps)
 		self.numSweepsSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
 		controlLayout.addWidget(self.numSweepsSpinBox)
@@ -545,7 +640,7 @@ class stimGen(sanpyPlugin):
 		controlLayout_row3.addWidget(aLabel)
 		self.fsSpinBox = QtWidgets.QSpinBox()
 		self.fsSpinBox.setKeyboardTracking(False)
-		self.fsSpinBox.setRange(1, 1e9)
+		self.fsSpinBox.setRange(1, 100000)  # TODO: Fix hard coding of 100000
 		self.fsSpinBox.setValue(self._fs)
 		self.fsSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
 		controlLayout_row3.addWidget(self.fsSpinBox)
@@ -754,6 +849,20 @@ class stimGen(sanpyPlugin):
 
 		return filename
 
+	def buildFromDict(self, d):
+		"""
+		build from dict constructed from saved abt file using readParams()
+
+		TODO: Does not work because we do not update Qt interface with values from dict
+		"""
+		myVars = vars(self)
+		print(myVars)
+		for k,v in d.items():
+			print(k, v, type(v))
+			myVars[k] = v
+
+		self.replot()
+
 def run():
 	app = QtWidgets.QApplication(sys.argv)
 
@@ -762,5 +871,30 @@ def run():
 
 	sys.exit(app.exec_())
 
+def testDict():
+	folderPath = '/home/cudmore/Sites/SanPy'
+	df = readFolderParams(folderPath)
+
+	sys.exit(1)
+
+	path = '/home/cudmore/Sites/SanPy/sanpy_20211206_0000.atf'
+	path = '/home/cudmore/Sites/SanPy/sanpy_20211206_0001.atf'
+
+	d = readFileParams(path)
+	for k,v in d.items():
+		print(k,v)
+
+	'''
+	app = QtWidgets.QApplication(sys.argv)
+	sg = stimGen()
+	sg.buildFromDict(d)
+
+	sg.show()
+
+	sys.exit(app.exec_())
+	'''
+
 if __name__ == '__main__':
 	run()
+
+	#testDict()

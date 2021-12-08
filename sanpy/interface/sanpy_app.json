@@ -8,12 +8,12 @@
         "plotEveryPoint": 10,
         "showClips": false,
         "showDAC": false,
-        "showDvDt": true,
+        "showDvDt": false,
         "showErrors": false,
-        "showGlobalVm": true,
+        "showGlobalVm": false,
         "showScatter": false
     },
-    "lastPath": "/media/cudmore/data/laura-iso",
+    "lastPath": "/media/cudmore/data/stoch-res",
     "useDarkStyle": true,
     "windowGeometry": {
         "height": 802,

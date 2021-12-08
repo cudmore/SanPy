@@ -84,16 +84,27 @@ class bAnalysis2:
 			'fullWidthFraction': 0.75,  # for initial peak detection with SciPy
 			'startSec': None,  # limit detection to a range of x
 			'stopSec': None,  # limit detection to a range of x
+
+			'verbose': False,
 		}
 		return detectionDict
 
-	def __init__(self, path):
+	def __init__(self, path, stimulusFileFolder=None):
 		self._path = path
-		self._abf = pyabf.ABF(path)
+		self._abf = pyabf.ABF(path, stimulusFileFolder=stimulusFileFolder)
+		#self._abf = pyabf.ABF(path, stimulusFileFolder=stimulusFileFolder, cacheStimulusFiles=False)
 		self._detectionParams = bAnalysis2.getDefaultDetection()
 		self._analysisDf = None
 
-		self._sweepY_filtered = None
+		# needs to be a list to account for sweaps
+		#self._sweepY_filtered = None
+		self._sweepY_filtered = [None] * self.numSweeps
+
+		self._currentSweep = 0
+
+	def setSweep(self, sweep):
+		self._currentSweep = sweep
+		self.abf.setSweep(sweep)
 
 	def __str__(self):
 		dur = round(self.sweepDur,2)
@@ -136,9 +147,16 @@ class bAnalysis2:
 
 		return resultsPath
 
-	def getValue(self, rowIdx:int, col:str):
+	def getValue(self, col:str, rowIdx:int = None):
+		"""
+		rowIdx (int or None): If None then all rows
+		"""
+		theRet = None
 		try:
-			return self.analysisDf.iloc[rowIdx][col]
+			if rowIdx is None:
+				return self.analysisDf[col]
+			else:
+				return self.analysisDf.iloc[rowIdx][col]
 		except (KeyError) as e:
 			print(f'My Key Error in getStat() {rowIdx} {col}')
 
@@ -186,7 +204,10 @@ class bAnalysis2:
 
 	@property
 	def sweepY_filtered(self):
-		return self._sweepY_filtered
+		"""
+		TODO: need to expand for multiple sweeps
+		"""
+		return self._sweepY_filtered[self._currentSweep]
 
 	@property
 	def analysisDf(self):
@@ -208,6 +229,21 @@ class bAnalysis2:
 
 		self._detectionParams = detectionDict
 
+		self._analysisDf = None  # we will fill this in
+
+		for sweep in self.abf.sweepList:
+			self.detect_(sweep)
+
+	def detect_(self, sweep):
+		"""
+		Detect one file
+		"""
+
+		#self.abf.setSweep(sweep)
+		self.setSweep(sweep)
+
+		detectionDict = self._detectionParams
+
 		# detect peaks (peak, prominence, width)
 		doMedian = detectionDict['doMedian']
 		medianFilter = detectionDict['medianFilter']
@@ -222,9 +258,11 @@ class bAnalysis2:
 		#xRange = detectionDict['xRange']
 		startSec = detectionDict['startSec']
 		stopSec = detectionDict['stopSec']
+		verbose = detectionDict['verbose']
 
 		sweepY_filtered = self.sweepY_filtered
 		if sweepY_filtered is None:
+			#print('filtering for sweep:', sweep)
 			sweepY_filtered = self.sweepY
 			if doMedian:
 				sweepY_filtered = scipy.signal.medfilt(sweepY_filtered, medianFilter)
@@ -241,7 +279,7 @@ class bAnalysis2:
 				sweepY_filtered = sweepY_filtered - z
 
 			#
-			self._sweepY_filtered = sweepY_filtered
+			self._sweepY_filtered[self._currentSweep] = sweepY_filtered
 
 		#
 		# find peaks
@@ -252,7 +290,7 @@ class bAnalysis2:
 		xMask = (self.sweepX>=startSec) & (self.sweepX<=stopSec)
 		firstPnt = np.where(xMask==True)[0][0]
 
-		peaks, _properties = scipy.signal.find_peaks(self._sweepY_filtered[xMask],
+		peaks, _properties = scipy.signal.find_peaks(sweepY_filtered[xMask],
 								height=threshold,
 								distance=distance, prominence=None,
 								wlen=None, width=width)
@@ -265,7 +303,7 @@ class bAnalysis2:
 			print('error: did not detect enough peaks', numPeaks)
 			return
 
-		df = pd.DataFrame()
+		df = pd.DataFrame()  # new DataFrame for this sweep
 
 		df['index'] = [x for x in range(numPeaks)]
 		df['file'] = [self.fileName] * numPeaks
@@ -276,15 +314,16 @@ class bAnalysis2:
 		df['userType'] = [0] * numPeaks  # analysis['accept']
 
 		df['DAC0'] = self.sweepC[peaks]
+		df['sweep'] = sweep  # abb working on stach-analysis
 		df['peak_pnt'] = peaks
 		df['peak_sec'] = self._pnt2Sec(peaks)
-		df['peak_val'] = self._sweepY_filtered[peaks]
+		df['peak_val'] = sweepY_filtered[peaks]
 
 		# critical
-		self._analysisDf = df  # TODO: sloppy, fix this
+		#self._analysisDf = df  # TODO: sloppy, fix this
 
 		#
-		self._getFeet()
+		self._getFeet(df)
 
 		# inst freq and (inst) isi
 		peakSec = df['peak_sec']
@@ -309,23 +348,29 @@ class bAnalysis2:
 
 		df['filePath'] = self._path
 
-		#
-		# reduce based on x-range
-		'''
-		xRange = detectionDict['xRange']
-		if xRange is None:
-			xRange = [self.sweepX[0], self.sweepX[-1]]
-		df = df[ (df['peak_sec'] >= xRange[0]) & (df['peak_sec'] <= xRange[1]) ]
-		df = df.reset_index()
-		'''
-
 		# critical
-		self._analysisDf = df  # TODO: sloppy, fix this
+		if self._analysisDf is None:
+			# first sweep
+			#print('creating from df:', len(df))
+			self._analysisDf = df
+		else:
+			#print('appending new df', len(df))
+			self._analysisDf = self._analysisDf.append(df, ignore_index=True)
 
-	def _getFeet(self):
-		df = self.analysisDf
+		#if verbose:
+		#if 1:
+		#	print('self._analysisDf is now:', len(self._analysisDf))
+
+	def _getFeet(self, df):
+		"""
+		df (DataFrame): The current dataframe we are working on
+		"""
+
+		#df = self.analysisDf
 
 		peaks = df['peak_pnt']
+
+		verbose = self._detectionParams['verbose']
 
 		wlen = self._detectionParams['wlen']
 		fullWidthFraction = self._detectionParams['fullWidthFraction']
@@ -365,7 +410,8 @@ class bAnalysis2:
 			xLastCrossing = self._pnt2Sec(footPnt)  # defaults
 			yLastCrossing = self.sweepY_filtered[footPnt]
 			if len(zero_crossings)==0:
-				print('  error: no foot', idx, self._pnt2Sec(footPnt), 'did not find zero crossings')
+				if verbose:
+					print('  error: no foot', idx, self._pnt2Sec(footPnt), 'did not find zero crossings')
 			else:
 				#print(idx, 'footPnt:', footPnt, zero_crossings, preClip)
 				lastCrossingPnt = preStart + zero_crossings[-1]
@@ -393,7 +439,8 @@ class bAnalysis2:
 
 		#
 		# half-width
-		numPeaks = self.numPeaks
+		#numPeaks = self.numPeaks
+		numPeaks = len(df)
 		halfWidths = self._detectionParams['halfWidths']
 		maxWidthPnts = self._detectionParams['distance']
 		maxWidthSec = self._pnt2Sec(maxWidthPnts)

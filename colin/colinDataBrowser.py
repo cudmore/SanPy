@@ -60,9 +60,9 @@ class colinDataBrowser():
 			peakPnt = self._currentPeakIdx
 
 		df = self.currentAnalysis.analysisDf
-		riseTime_ms = self.currentAnalysis.getValue(peakPnt, 'riseTime_ms')
+		riseTime_ms = self.currentAnalysis.getValue('riseTime_ms', peakPnt)
 		riseTime_ms = round(riseTime_ms,2)
-		myHeight = self.currentAnalysis.getValue(peakPnt, 'myHeight')
+		myHeight = self.currentAnalysis.getValue('myHeight', peakPnt)
 		myHeight = round(myHeight,2)
 		with self.myOut:
 			IPython.display.clear_output()
