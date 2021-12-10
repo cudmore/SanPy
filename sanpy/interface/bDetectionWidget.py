@@ -685,7 +685,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			return
 
 		if sweepNumber == 'All':
-			pass
+			sweepNumber = None
 		else:
 			sweepNumber = int(sweepNumber)
 
@@ -1324,6 +1324,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		sweepC = self.ba.sweepC
 		filteredVm = self.ba.filteredVm
 
+		#sweepC = self.ba._sweepC[:,3]
+
 		# debug
 		logger.info(f'sweepX: {sweepX.shape}')
 		logger.info(f'filteredDeriv: {filteredDeriv.shape}')
@@ -1720,7 +1722,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
 	def on_plot_every(self):
 		logger.info('TODO: update plots with plot every.')
-		
+
 	#@QtCore.pyqtSlot()
 	def on_button_click(self, name):
 		logger.info(name)
