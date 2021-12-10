@@ -71,8 +71,11 @@ def readFileParams(path):
 			if not line:
 				break  # EOF
 			if line.startswith('"Comment='):
+				retDict = readCommentParams(line)
 				# looks like
 				# "Comment=version=0.2;numSweeps=5;sweepDurSeconds=30.0;stimType=Sin;stimStartSeconds=5.0;durSeconds=20.0;yStimOffset=0.0;amplitude=0.002;frequency=1.0;noiseAmplitude=0.0;amplitudeStep=0.0;frequencyStep=0.0;noiseStep=0.0;doRectify=False;"
+
+				'''
 				line = line.replace('"Comment=','')
 				line = line[0:-2]  # remove trailing "
 				#print(line)
@@ -95,21 +98,83 @@ def readFileParams(path):
 						v = float(v)
 					#
 					retDict[k] = v
+				'''
 				#
 				break
 	#
 	return retDict
 
+def readCommentParams(commentStr):
+	retDict = {}
+	commentStr = commentStr.replace('"Comment=','')
+	commentStr = commentStr[0:-2]  # remove trailing "
+	#print(line)
+	for param in commentStr.split(';'):
+		kv = param.split('=')
+		#print(kv)
+		if len(kv) != 2:
+			continue
+		k = kv[0]
+		v = kv[1]
+		#print(k, v)
+
+		if k == 'stimType':
+			pass
+		elif k == 'doRectify':
+			v = bool(v)
+		elif k == 'numSweeps':
+			v = int(v)
+		else:
+			v = float(v)
+		#
+		retDict[k] = v
+	#
+	return retDict
+
+def mySpinBox(
+			label:str,
+			stat:str,
+			value,  # (int,float)
+			minVal:float=0,
+			maxVal:float=1e9,
+			decimals:int=3,
+			callback=None
+	):
+	"""
+	infer type from value
+	"""
+	hBoxLayout = QtWidgets.QHBoxLayout()
+
+	aLabel = QtWidgets.QLabel(label)
+	hBoxLayout.addWidget(aLabel)
+
+	# todo: infer type from value
+	if isinstance(value, int):
+		spinBox = QtWidgets.QSpinBox()
+	elif isinstance(value, float):
+		spinBox = QtWidgets.QDoubleSpinBox()
+	else:
+		print('mySpinBox error')
+
+	spinBox.setKeyboardTracking(False)
+	spinBox.setObjectName(stat)  # correspond to stat to set in callback
+	spinBox.setRange(minVal, maxVal)
+	if type == 'float':
+		spinBox.setDecimals(decimals)
+	spinBox.setValue(value)
+	spinBox.valueChanged.connect(callback)
+
+	hBoxLayout.addWidget(spinBox)
+
+	return hBoxLayout
+
 class myDoubleSpinBox(QtWidgets.QDoubleSpinBox):
-	def __init__(self, d, statName, minVal=0, maxVal=1e9, decimals=3):
+	def __init__(self, statName, value, minVal=0, maxVal=1e9, decimals=3, callback=None):
 		"""
 		d (dict): Dict of statName (keys) and their values
 		statName (str): corresponds to d[statName]
 		"""
 		super(myDoubleSpinBox, self).__init__()
-
-		self._d = d
-		value = d[statName]
 
 		spinBox = QtWidgets.QDoubleSpinBox()
 		spinBox.setKeyboardTracking(False)
@@ -117,14 +182,16 @@ class myDoubleSpinBox(QtWidgets.QDoubleSpinBox):
 		spinBox.setRange(minVal, maxVal)
 		spinBox.setDecimals(decimals)
 		spinBox.setValue(value)
-		spinBox.valueChanged.connect(self.on_spin_box2)
+		spinBox.valueChanged.connect(callback)
 
+	'''
 	def on_spin_box2(self):
 		spinbox = self.sender()
 		statName = spinbox.objectName()
 		value = spinbox.value()
 
 		self._d[statName] = value
+	'''
 
 class stimGen(sanpyPlugin):
 	myHumanName = 'Stim Gen'
@@ -136,17 +203,14 @@ class stimGen(sanpyPlugin):
 		"""
 		super(stimGen, self).__init__(**kwargs)
 
-		self.saveStimIndex = 0
+		#self.saveStimIndex = 0
 
+		'''
 		self.version = 0.2  # v0.2 on 20211202
 
 		self._fs = 10000
 		# sampling frequency in (samples per second)
-
-		self.numSweeps = 5
-
-		self._data = [None] * self.numSweeps  # list of sweeps
-		self._t = []
+		'''
 
 		self.stimTypes = [
 						'Sin',
@@ -157,6 +221,7 @@ class stimGen(sanpyPlugin):
 						'Integrate and Fire'
 						]
 		# TODO: add (save index, ...)
+		'''
 		self.stimType = 'Sin'
 		self.sweepDurSeconds = 30.0
 		self.stimStartSeconds = 5.0
@@ -176,6 +241,7 @@ class stimGen(sanpyPlugin):
 
 		self.scale = 1
 		""" scale output stim by this factor"""
+		'''
 
 		self.savePath = ''  # remember last save folder
 
@@ -183,16 +249,29 @@ class stimGen(sanpyPlugin):
 		# when user clicks on interface (spinbox), we need to update this dict
 		self.paramDict = self.defaultParams()
 
+		self._data = [None] * self.numSweeps  # list of sweeps
+		self._t = []
+
 		self.buildUI()
 
 		self.updateStim()
 
+	@property
+	def numSweeps(self):
+		preSweeps = self.paramDict['preSweeps']
+		numSweeps = self.paramDict['numSweeps']
+		postSweeps = self.paramDict['postSweeps']
+		return preSweeps + numSweeps + postSweeps
+
 	def defaultParams(self):
 		paramDict = {
 			'version': 0.3,
+			'saveStimIndex': 0,
 			'stimType': 'Sin',  # str of stim types
 			'fs': 10000,  # int, samples per second
+			'preSweeps': 5,  # int
 			'numSweeps': 5,  # int
+			'postSweeps': 5,  # int
 			'sweepDur_sec': 30.0,
 			'stimStart_sec': 5.0,
 			'stimDur_sec': 20.0,
@@ -214,6 +293,10 @@ class stimGen(sanpyPlugin):
 	def getComment(self):
 		comment = '' # '"Comment='
 
+		for k,v in self.paramDict.items():
+			comment +=  f'{k}={v};'
+
+		'''
 		comment +=  f'version={self.version};'
 		comment +=  f'numSweeps={self.numSweeps};'
 		comment +=  f'sweepDurSeconds={self.sweepDurSeconds};'
@@ -228,7 +311,7 @@ class stimGen(sanpyPlugin):
 		comment +=  f'frequencyStep={self.frequencyStep};'
 		comment +=  f'noiseStep={self.noiseStep};'
 		comment +=  f'doRectify={self.doRectify};'
-
+		'''
 		#
 		#comment += '"'
 		return comment
@@ -275,8 +358,8 @@ class stimGen(sanpyPlugin):
 		# for a 200 ms sweep, looks like this
 		# "SweepStartTimesMS=21.000,221.000,421.000,621.000,821.000,1021.000,1221.000,1421.000,1621.000,1821.000"
 		#durMs = self.durSeconds *1000
-		durMs = self.sweepDurSeconds *1000  # new 20211202
-		numSweeps = self.numSweeps
+		durMs = self.getParam('sweepDur_sec') * 1000  # new 20211202
+		numSweeps = self.numSweeps  # total number including pre/stim/post
 		sweepRange = range(numSweeps)
 		SweepStartTimesMS = '"SweepStartTimesMS='
 		preRollMs = 21
@@ -338,11 +421,13 @@ class stimGen(sanpyPlugin):
 	def t(self):
 		return self._t
 
+	'''
 	@property
 	def fs(self):
 		return self._fs
+	'''
 
-	def makeStim(self):
+	def old_makeStim(self):
 		type = self.stimType
 		fs = self.fs
 		sweepDurSeconds = self.sweepDurSeconds  # new 20211202
@@ -359,6 +444,7 @@ class stimGen(sanpyPlugin):
 		noiseStep = self.noiseStep
 
 		self._data = [None] * self.numSweeps
+
 		for sweepNum in range(self.numSweeps):
 			currAmp = amp + (sweepNum * amplitudeStep)
 			currFreq = freq + (sweepNum * frequencyStep)
@@ -375,9 +461,16 @@ class stimGen(sanpyPlugin):
 			#
 			# scale
 			self._data[sweepNum] *= self.scale
+
 			print('  self._data[sweepNum].dtype:', self._data[sweepNum].dtype)
 
 		self._t = np.arange(len(self._data[0])) / fs  # just using first sweep
+
+	def setParam(self, name, val):
+		"""
+		Get a stimulus parameter
+		"""
+		self.paramDict[name] = val
 
 	def getParam(self, name):
 		"""
@@ -388,7 +481,7 @@ class stimGen(sanpyPlugin):
 	def makeStim2(self):
 		fs = self.getParam('fs')
 		stimType = self.getParam('stimType')
-		numSweeps = self.getParam('numSweeps')
+		#numSweeps = self.getParam('numSweeps')
 		sweepDur_sec = self.getParam('sweepDur_sec')
 		stimStart_sec = self.getParam('stimStart_sec')
 		stimDur_sec = self.getParam('stimDur_sec')
@@ -400,27 +493,45 @@ class stimGen(sanpyPlugin):
 		stimAmpStep = self.getParam('stimAmpStep')
 		stimNoiseStep = self.getParam('stimNoiseStep')
 		rectify = self.getParam('rectify')
+		scale = self.getParam('scale')
 
 		autoPad = False
 
-		self._data = [None] * numSweeps
-		for sweepNum in range(numSweeps):
+		preSweeps = self.paramDict['preSweeps']
+		numStimSweeps = self.paramDict['numSweeps']
+		postSweeps = self.paramDict['postSweeps']
+
+		self._data = [None] * self.numSweeps  # total number including pre/num/post
+
+		Xs = np.arange(fs*sweepDur_sec) / fs  # x/time axis, we should always be able to create this from (dur, fs)
+		blankSweepData = np.zeros(shape=Xs.shape)
+
+		for sweepNum in range(preSweeps):
+			self._data[sweepNum] = blankSweepData
+
+		for sweepNum in range(numStimSweeps):
+			realSweepNum = preSweeps + sweepNum
 			currAmp = stimAmp + (sweepNum * stimAmpStep)
 			currFreq = stimFreq + (sweepNum * stimFreqStep)
 			currNoiseAmp = stimNoiseAmp + (sweepNum * stimNoiseStep)
-			autoPad = False
+			autoPad = False  # TODO: ALWAYS FALSE, my pre/post sweeps don't use this
 			print(f'  makeStim() {stimType} sweep:{sweepNum} durSec:{stimDur_sec} amp:{currAmp} freq:{currFreq} noiseAmp:{currNoiseAmp}')
-			self._data[sweepNum] = sanpy.atfStim.makeStim(stimType, sweepDurSec=sweepDur_sec,
+			self._data[realSweepNum] = sanpy.atfStim.makeStim(stimType, sweepDurSec=sweepDur_sec,
 							startStimSec=stimStart_sec, durSec=stimDur_sec,
 							yStimOffset=yOffset, amp=currAmp,
 							freq=currFreq, fs=fs, noiseAmp=currNoiseAmp, rectify=rectify,
 							autoPad=autoPad, autoSave=False)
-			if self._data[sweepNum] is None:
+			if self._data[realSweepNum] is None:
 				print(f'makeStim() error making {type} at sweep number {sweepNum}')
 			#
 			# scale
-			self._data[sweepNum] *= self.scale
-			print('  self._data[sweepNum].dtype:', self._data[sweepNum].dtype)
+			self._data[realSweepNum] *= scale
+
+			print(f'  {realSweepNum} self._data[realSweepNum].dtype:{self._data[realSweepNum].dtype}')
+
+		for sweepNum in range(postSweeps):
+			realSweepNum = preSweeps + numStimSweeps + sweepNum
+			self._data[realSweepNum] = blankSweepData
 
 		self._t = np.arange(len(self._data[0])) / fs  # just using first sweep
 
@@ -436,11 +547,13 @@ class stimGen(sanpyPlugin):
 		sanpy.atfStim.saveAtf(self.data, fileName="output.atf", fs=10000)
 	'''
 
-	def _grabParams(self):
+	def old_grabParams(self):
 		"""
 		Grab all interface parameters in member variables
 		"""
 
+		pass
+		'''
 		#self.sweepDurSeconds = self.sweepDurationSpinBox.value()  # new 20211202
 		self.numSweeps = self.numSweepsSpinBox.value()
 
@@ -457,6 +570,7 @@ class stimGen(sanpyPlugin):
 
 		self.doRectify = self.rectifyCheckBox.isChecked()
 		self._fs = self.fsSpinBox.value()
+		'''
 
 		'''
 		rmsMult = 1/np.sqrt(2)
@@ -474,7 +588,17 @@ class stimGen(sanpyPlugin):
 	def on_spin_box2(self):
 		spinbox = self.sender()
 		print('on_spin_box2()', spinbox.objectName(), spinbox.value())
+		keyStr = spinbox.objectName()
+		val = spinbox.value()
+		self.setParam(keyStr, val)
+		#
 
+		# todo: only call this when changing number of sweeps
+		self._updateNumSweeps()
+
+		self.updateStim()
+
+	'''
 	def on_spin_box(self, name):
 		logger.info(name)
 		if name == 'Save Index':
@@ -482,27 +606,29 @@ class stimGen(sanpyPlugin):
 			self.saveStimIndex = saveStimIndex
 		elif name == 'Number Of Sweeps':
 			numSweeps = self.numSweepsSpinBox.value()
-			self._updateNumSweeps(numSweeps)
+			self.setParam('numSweeps', numSweeps)
+			self._updateNumSweeps()
 		else:
 			logger.warning(f'"{name}" not understood')
 		#
 		self.updateStim()
+	'''
 
 	def on_stim_type(self, type):
 		logger.info(type)
-		self.stimType = type
+		#self.stimType = type
+		self.setParam('stimTypes', float(type))
 		self.updateStim()
 
 	def on_scale(self, scale):
 		logger.info(type)
-		self.scale = float(scale)
+		#self.scale = float(scale)
+		self.setParam('scale', float(scale))
 		self.updateStim()
 
 	def on_button_click(self, name):
 		logger.info(name)
-		if name == 'Make Stimulus':
-			self.makeStim()
-		elif name == 'Save As...':
+		if name == 'Save As...':
 			# TODO: srt a feeback red as we save, set to green when done
 			# self.saveAsButton
 			self.saveAs()
@@ -510,6 +636,8 @@ class stimGen(sanpyPlugin):
 			logger.info(f'name "{name}" not understood.')
 
 	def on_checkbox_clicked(self, name):
+		if name == 'Rectify':
+			self.setParam('rectify', val)
 		self.updateStim()
 
 	def buildUI(self):
@@ -522,6 +650,15 @@ class stimGen(sanpyPlugin):
 		self.saveAsButton.clicked.connect(partial(self.on_button_click,aName))
 		controlLayout.addWidget(self.saveAsButton)
 
+		statStr = 'saveStimIndex'
+		self.saveIndexSpinBox = mySpinBox(
+			label='Save Index',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout.addLayout(self.saveIndexSpinBox)
+
+		'''
 		aName = 'Save Index'
 		aLabel = QtWidgets.QLabel(aName)
 		controlLayout.addWidget(aLabel)
@@ -533,6 +670,7 @@ class stimGen(sanpyPlugin):
 		self.saveIndexSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
 		self.saveIndexSpinBox.valueChanged.connect(self.on_spin_box2)
 		controlLayout.addWidget(self.saveIndexSpinBox)
+		'''
 
 		aName = 'Stim Type'
 		aLabel = QtWidgets.QLabel(aName)
@@ -543,97 +681,91 @@ class stimGen(sanpyPlugin):
 		self.stimTypeDropdown.currentTextChanged.connect(self.on_stim_type)
 		controlLayout.addWidget(self.stimTypeDropdown)
 
-		aName = 'Sweep Duration(s)'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout.addWidget(aLabel)
-		# d, statName, minVal=0, maxVal=1e9, decimals=2
-		aSpinBox = myDoubleSpinBox(self.paramDict, 'sweepDur_sec')
-		controlLayout.addWidget(aSpinBox)
-		'''
-		self.sweepDurationSpinBox = QtWidgets.QDoubleSpinBox()
-		self.sweepDurationSpinBox.setKeyboardTracking(False)
-		self.sweepDurationSpinBox.setObjectName(aName)
-		self.sweepDurationSpinBox.setRange(0, 1e9)
-		self.sweepDurationSpinBox.setValue(self.sweepDurSeconds)
-		self.sweepDurationSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.sweepDurationSpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout.addWidget(self.sweepDurationSpinBox)
-		'''
-
-		aName = 'Number Of Sweeps'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout.addWidget(aLabel)
-		self.numSweepsSpinBox = QtWidgets.QSpinBox()
-		self.numSweepsSpinBox.setKeyboardTracking(False)
-		self.numSweepsSpinBox.setObjectName(aName)
-		self.numSweepsSpinBox.setRange(1, 100)
-		self.numSweepsSpinBox.setValue(self.numSweeps)
-		self.numSweepsSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.numSweepsSpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout.addWidget(self.numSweepsSpinBox)
+		statStr = 'sweepDur_sec'
+		aSpinBox = mySpinBox(
+			label='Sweep Duration(s)',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout.addLayout(aSpinBox)
 
 		vLayout.addLayout(controlLayout) # add mpl canvas
+
+		# row 1.25
+		controlLayout_row1_2 = QtWidgets.QHBoxLayout()
+
+		statStr = 'preSweeps'
+		aSpinBox = mySpinBox(
+			label='Pre Sweeps',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row1_2.addLayout(aSpinBox)
+
+		statStr = 'numSweeps'
+		aSpinBox = mySpinBox(
+			label= 'Stim Sweeps',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row1_2.addLayout(aSpinBox)
+
+		statStr = 'postSweeps'
+		aSpinBox = mySpinBox(
+			label= 'Post Sweeps',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row1_2.addLayout(aSpinBox)
+
+		vLayout.addLayout(controlLayout_row1_2) # add mpl canvas
 
 		# row 1.5
 		controlLayout_row1_5 = QtWidgets.QHBoxLayout()
 
-		aName = 'Stim Start(s)'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row1_5.addWidget(aLabel)
-		self.stimStartSpinBox = QtWidgets.QDoubleSpinBox()
-		self.stimStartSpinBox.setKeyboardTracking(False)
-		self.stimStartSpinBox.setObjectName(aName)
-		self.stimStartSpinBox.setRange(0, 1e9)
-		self.stimStartSpinBox.setValue(self.stimStartSeconds)
-		self.stimStartSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.stimStartSpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout_row1_5.addWidget(self.stimStartSpinBox)
+		statStr = 'stimStart_sec'
+		aSpinBox = mySpinBox(
+			label= 'Stim Start(s)',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row1_5.addLayout(aSpinBox)
 
-		aName = 'Stim Duration(s)'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row1_5.addWidget(aLabel)
-		self.durationSpinBox = QtWidgets.QDoubleSpinBox()
-		self.durationSpinBox.setKeyboardTracking(False)
-		self.durationSpinBox.setObjectName(aName)
-		self.durationSpinBox.setRange(0, 1e9)
-		self.durationSpinBox.setValue(self.durSeconds)
-		self.durationSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.durationSpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout_row1_5.addWidget(self.durationSpinBox)
+		statStr = 'stimDur_sec'
+		aSpinBox = mySpinBox(
+			label= 'Stim Dur(s)',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row1_5.addLayout(aSpinBox)
 
-		aName = 'Stim Offset(y)'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row1_5.addWidget(aLabel)
-		self.yStimOffsetSpinBox = QtWidgets.QDoubleSpinBox()
-		self.yStimOffsetSpinBox.setKeyboardTracking(False)
-		self.yStimOffsetSpinBox.setObjectName(aName)
-		self.yStimOffsetSpinBox.setRange(-1e9, 1e9)
-		self.yStimOffsetSpinBox.setValue(self.yStimOffset)
-		self.yStimOffsetSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.yStimOffsetSpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout_row1_5.addWidget(self.yStimOffsetSpinBox)
+		statStr = 'yOffset'
+		aSpinBox = mySpinBox(
+			label= 'Stim Offset(y)',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row1_5.addLayout(aSpinBox)
 
 		vLayout.addLayout(controlLayout_row1_5) # add mpl canvas
 
 		# 2nd row
+		controlLayout_row2 = QtWidgets.QHBoxLayout()
+		'''
 		controlLayout_row2 = QtWidgets.QGridLayout()
 		rowSpan = 1
 		colSpan = 1
 		row = 0
 		col = 0
+		'''
 
-		aName = 'Amplitude'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel, row, col, rowSpan, colSpan)
-		self.amplitudeSpinBox = QtWidgets.QDoubleSpinBox()
-		self.amplitudeSpinBox.setKeyboardTracking(False)
-		self.amplitudeSpinBox.setObjectName(aName)
-		self.amplitudeSpinBox.setRange(0, 1e9)
-		self.amplitudeSpinBox.setDecimals(5)
-		self.amplitudeSpinBox.setValue(self.amplitude)
-		self.amplitudeSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.amplitudeSpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout_row2.addWidget(self.amplitudeSpinBox, 0, 1, rowSpan, colSpan)
+		statStr = 'stimAmp'
+		aSpinBox = mySpinBox(
+			label= 'Amplitude',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row2.addLayout(aSpinBox)
 
 		# rms of sin (amp and freq)
 		'''
@@ -645,105 +777,93 @@ class stimGen(sanpyPlugin):
 		controlLayout_row2.addWidget(self.sinRms, 0, 2, rowSpan, colSpan)
 		'''
 
-		aName = 'Frequency (Hz)'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel, 0, 3, rowSpan, colSpan)
-		self.frequencySpinBox = QtWidgets.QDoubleSpinBox()
-		self.frequencySpinBox.setKeyboardTracking(False)
-		self.frequencySpinBox.setObjectName(aName)
-		self.frequencySpinBox.setRange(0, 1e9)
-		self.frequencySpinBox.setValue(self.frequency)
-		self.frequencySpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.frequencySpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout_row2.addWidget(self.frequencySpinBox, 0, 4, rowSpan, colSpan)
+		statStr = 'stimFreq'
+		aSpinBox = mySpinBox(
+			label= 'Frequency (Hz)',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row2.addLayout(aSpinBox)
 
-		aName = 'Noise Amplitude'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel, 0, 5, rowSpan, colSpan)
-		self.noiseAmpSpinBox = QtWidgets.QDoubleSpinBox()
-		self.noiseAmpSpinBox.setKeyboardTracking(False)
-		self.noiseAmpSpinBox.setObjectName(aName)
-		self.noiseAmpSpinBox.setDecimals(5)
-		self.noiseAmpSpinBox.setSingleStep(0.01)
-		self.noiseAmpSpinBox.setRange(0, 1e9)
-		self.noiseAmpSpinBox.setValue(self.noiseAmplitude)
-		self.noiseAmpSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.noiseAmpSpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout_row2.addWidget(self.noiseAmpSpinBox, 0, 6, rowSpan, colSpan)
+		statStr = 'stimNoiseAmp'
+		aSpinBox = mySpinBox(
+			label= 'Noise Amplitude',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row2.addLayout(aSpinBox)
+
+		vLayout.addLayout(controlLayout_row2) # add mpl canvas
 
 		#
 		# row 2
 		#controlLayout_row2 = QtWidgets.QHBoxLayout()
 
-		aName = 'Amplitude Step'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel, 1, 0, rowSpan, colSpan)
-		self.amplitudeStepSpinBox = QtWidgets.QDoubleSpinBox()
-		self.amplitudeStepSpinBox.setKeyboardTracking(False)
-		self.amplitudeStepSpinBox.setObjectName(aName)
-		self.amplitudeStepSpinBox.setDecimals(5)
-		self.amplitudeStepSpinBox.setSingleStep(0.01)
-		self.amplitudeStepSpinBox.setRange(0, 1e9)
-		self.amplitudeStepSpinBox.setValue(self.amplitudeStep)
-		self.amplitudeStepSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.amplitudeStepSpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout_row2.addWidget(self.amplitudeStepSpinBox, 1, 1, rowSpan, colSpan)
-
-		aName = 'Frequency Step'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel, 1, 3, rowSpan, colSpan)
-		self.frequencyStepSpinBox = QtWidgets.QDoubleSpinBox()
-		self.frequencyStepSpinBox.setKeyboardTracking(False)
-		self.frequencyStepSpinBox.setObjectName(aName)
-		self.frequencyStepSpinBox.setSingleStep(0.1)
-		self.frequencyStepSpinBox.setRange(0, 1e9)
-		self.frequencyStepSpinBox.setValue(self.frequencyStep)
-		self.frequencyStepSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.frequencyStepSpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout_row2.addWidget(self.frequencyStepSpinBox, 1, 4, rowSpan, colSpan)
-
-		# first row in grid has freq rms
-
-		aName = 'Noise Step'
-		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row2.addWidget(aLabel, 1, 5, rowSpan, colSpan)
-		self.noiseStepSpinBox = QtWidgets.QDoubleSpinBox()
-		self.noiseStepSpinBox.setKeyboardTracking(False)
-		self.noiseStepSpinBox.setObjectName(aName)
-		self.noiseStepSpinBox.setDecimals(5)
-		self.noiseStepSpinBox.setSingleStep(0.01)
-		self.noiseStepSpinBox.setRange(0, 1e9)
-		self.noiseStepSpinBox.setValue(self.frequencyStep)
-		self.noiseStepSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.noiseStepSpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout_row2.addWidget(self.noiseStepSpinBox, 1, 6, rowSpan, colSpan)
-
-		#
-		vLayout.addLayout(controlLayout_row2) # add mpl canvas
-
 		controlLayout_row3 = QtWidgets.QHBoxLayout()
 
+		statStr = 'stimAmpStep'
+		aSpinBox = mySpinBox(
+			label= 'Amplitude Step',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row3.addLayout(aSpinBox)
+
+		statStr = 'stimFreqStep'
+		aSpinBox = mySpinBox(
+			label= 'Frequency Step',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row3.addLayout(aSpinBox)
+
+		statStr = 'stimNoiseStep'
+		aSpinBox = mySpinBox(
+			label= 'Noise Step',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row3.addLayout(aSpinBox)
+
+		#
+		vLayout.addLayout(controlLayout_row3) # add mpl canvas
+
+		controlLayout_row4 = QtWidgets.QHBoxLayout()
+
+		aValue = self.getParam('rectify')
 		checkboxName = 'Rectify'
 		self.rectifyCheckBox = QtWidgets.QCheckBox(checkboxName)
-		self.rectifyCheckBox.setChecked(self.doRectify)
+		self.rectifyCheckBox.setChecked(aValue)
 		self.rectifyCheckBox.stateChanged.connect(partial(self.on_checkbox_clicked, checkboxName))
-		controlLayout_row3.addWidget(self.rectifyCheckBox)
+		controlLayout_row4.addWidget(self.rectifyCheckBox)
 
+		statStr = 'fs'
+		aSpinBox = mySpinBox(
+			label= 'Samples Per Second',
+			stat=statStr,
+			value=self.getParam(statStr),
+			callback=self.on_spin_box2)
+		controlLayout_row4.addLayout(aSpinBox)
+
+		'''
+		aValue = self.getParam('fs')
 		aName = 'Samples Per Second'
 		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row3.addWidget(aLabel)
+		controlLayout_row4.addWidget(aLabel)
 		self.fsSpinBox = QtWidgets.QSpinBox()
 		self.fsSpinBox.setKeyboardTracking(False)
 		self.fsSpinBox.setObjectName(aName)
 		self.fsSpinBox.setRange(1, 100000)  # TODO: Fix hard coding of 100000
-		self.fsSpinBox.setValue(self._fs)
+		self.fsSpinBox.setValue(aValue)
 		self.fsSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
 		self.fsSpinBox.valueChanged.connect(self.on_spin_box2)
-		controlLayout_row3.addWidget(self.fsSpinBox)
+		controlLayout_row4.addWidget(self.fsSpinBox)
+		'''
 
+		#aValue = self.getParam('scale')
 		aName = 'Scale'
 		aLabel = QtWidgets.QLabel(aName)
-		controlLayout_row3.addWidget(aLabel)
+		controlLayout_row4.addWidget(aLabel)
 		self.scaleDropdown = QtWidgets.QComboBox()
 		scales = [0.001, 0.01, 0.1, 1, 10, 100, 1000]
 		for scale in scales:
@@ -752,10 +872,10 @@ class stimGen(sanpyPlugin):
 		startIndex = 3
 		self.scaleDropdown.setCurrentIndex(startIndex)
 		self.scaleDropdown.currentTextChanged.connect(self.on_scale)
-		controlLayout_row3.addWidget(self.scaleDropdown)
+		controlLayout_row4.addWidget(self.scaleDropdown)
 
 		#
-		vLayout.addLayout(controlLayout_row3) # add mpl canvas
+		vLayout.addLayout(controlLayout_row4) # add mpl canvas
 
 		vSplitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 		vLayout.addWidget(vSplitter)
@@ -770,7 +890,7 @@ class stimGen(sanpyPlugin):
 		#can do self.mplToolbar.hide()
 		self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(self.static_canvas, self.static_canvas)
 
-		self._updateNumSweeps(self.numSweeps)
+		self._updateNumSweeps()
 		#self.rawAxes = self.static_canvas.figure.add_subplot(self.numSweeps,1,1)
 		#self.plotLine, = self.rawAxes[0].plot([], [], '-w', linewidth=1)
 
@@ -790,11 +910,12 @@ class stimGen(sanpyPlugin):
 		#self.mainWidget.show()
 
 
-	def _updateNumSweeps(self, numSweeps):
+	def _updateNumSweeps(self):
 		"""
 		Remove and add all Figure axes
 		"""
-		self.numSweeps = numSweeps
+		numSweeps = self.numSweeps
+
 
 		self.static_canvas.figure.clear()
 
@@ -870,7 +991,7 @@ class stimGen(sanpyPlugin):
 			numSweeps = self.numSweeps
 			out = self.getAtfHeader(numChannels=numSweeps)
 			data = self._data  # list of sweeps
-			fs = self._fs
+			fs = self.getParam('fs')  # self._fs
 
 			#if numChannels == 2:
 			#	myNoise = np.random.normal(scale=np.sqrt(5), size=data.shape)
@@ -907,6 +1028,7 @@ class stimGen(sanpyPlugin):
 		logger.info(f'Saved: "{fileName}"')
 
 	def getFileName(self):
+		'''
 		stimType = self.stimType
 		numSweeps = self.numSweeps
 		durSeconds = self.durSeconds  # sweep duration
@@ -914,6 +1036,7 @@ class stimGen(sanpyPlugin):
 		frequency = self.frequency
 		noiseAmplitude = self.noiseAmplitude
 		noiseStep = self.noiseStep
+		'''
 		"""
 		_s : number of sweeps
 		_sd : sweep duration (seconds)
@@ -934,16 +1057,19 @@ class stimGen(sanpyPlugin):
 		filename = 'sanpy_' + datetime.today().strftime('%Y%m%d')
 		filename += '_'
 
-		saveStimIndex = self.saveStimIndex
+		saveStimIndex = self.getParam('saveStimIndex')  # self.saveStimIndex
 		filename += f'{saveStimIndex:04}'
 
 		filename += '.atf'
 
 		# increment for next save
-		self.saveStimIndex += 1
+		#self.saveStimIndex += 1
+		newStimIdx = saveStimIndex + 1
+		self.setParam('saveStimIndex', newStimIdx)
 
 		# update interface
-		self.saveIndexSpinBox.setValue(self.saveStimIndex)
+		# this is no longer a spinbox, it is an h layout
+		self.saveIndexSpinBox.itemAt(1).widget().setValue(newStimIdx)
 
 		return filename
 

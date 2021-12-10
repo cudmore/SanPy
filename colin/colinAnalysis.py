@@ -26,6 +26,8 @@ mpl.rcParams['axes.spines.top'] = False
 
 import colinUtils
 
+import sanpy.interface.plugins.stimGen2
+
 class bAnalysis2:
 	"""
 	Manager one abf loaded from a file
@@ -101,6 +103,24 @@ class bAnalysis2:
 		self._sweepY_filtered = [None] * self.numSweeps
 
 		self._currentSweep = 0
+
+		# needed to assign stimulusWaveformFromFile
+		tmpSweepC = self.abf.sweepC
+
+		stimFile = pyabf.stimulus.findStimulusWaveformFile(self.abf)
+		stimFileComment = pyabf.stimulus.abbCommentFromFile(self.abf)
+
+		self._stimFile = stimFile
+		if stimFileComment is None:
+			self._stimDict = None
+		else:
+			self._stimDict = sanpy.interface.plugins.stimGen2.readCommentParams(stimFileComment)
+
+		#self._stimFileComment = stimFileComment
+
+	@property
+	def stimDict(self):
+		return self._stimDict
 
 	def setSweep(self, sweep):
 		self._currentSweep = sweep
