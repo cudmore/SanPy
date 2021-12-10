@@ -591,14 +591,17 @@ class stimGen(sanpyPlugin):
 		self.replot()
 
 	def on_spin_box2(self):
+		'''
 		thisTime = time.time()
 		timeDiff = thisTime - self._lastTime
 		print('thisTime:', thisTime, '_lastTime:', self._lastTime, 'timeDiff:', timeDiff)
 		if timeDiff < 5:
 			return
 		self._lastTime = thisTime
+		'''
 
 		spinbox = self.sender()
+		spinbox.setEnabled(False)
 		print('on_spin_box2()', spinbox.objectName(), spinbox.value())
 		keyStr = spinbox.objectName()
 		val = spinbox.value()
@@ -609,6 +612,8 @@ class stimGen(sanpyPlugin):
 		self._updateNumSweeps()
 
 		self.updateStim()
+
+		spinbox.setEnabled(True)
 
 	def on_spin_box(self, name):
 		logger.info(name)
