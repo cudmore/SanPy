@@ -18,7 +18,7 @@ ATF	1.0
 1e-4	2.44141	1.2207	0.610352	2.44141	2.44141	0.610352	0.610352	1.2207	3.05176	3.05176
 """
 
-import os, sys
+import os, sys, time
 from functools import partial
 
 from datetime import datetime
@@ -153,14 +153,17 @@ def mySpinBox(
 		spinBox = QtWidgets.QSpinBox()
 	elif isinstance(value, float):
 		spinBox = QtWidgets.QDoubleSpinBox()
+		spinBox.setDecimals(decimals)
 	else:
 		print('mySpinBox error')
 
 	spinBox.setKeyboardTracking(False)
 	spinBox.setObjectName(stat)  # correspond to stat to set in callback
 	spinBox.setRange(minVal, maxVal)
+	'''
 	if type == 'float':
 		spinBox.setDecimals(decimals)
+	'''
 	spinBox.setValue(value)
 	spinBox.valueChanged.connect(callback)
 
@@ -203,7 +206,9 @@ class stimGen(sanpyPlugin):
 		"""
 		super(stimGen, self).__init__(**kwargs)
 
-		#self.saveStimIndex = 0
+		self._lastTime = time.time()
+		
+		self.saveStimIndex = 0
 
 		'''
 		self.version = 0.2  # v0.2 on 20211202
@@ -266,12 +271,12 @@ class stimGen(sanpyPlugin):
 	def defaultParams(self):
 		paramDict = {
 			'version': 0.3,
-			'saveStimIndex': 0,
+			#'saveStimIndex': 0,
 			'stimType': 'Sin',  # str of stim types
 			'fs': 10000,  # int, samples per second
-			'preSweeps': 5,  # int
+			'preSweeps': 1,  # int
 			'numSweeps': 5,  # int
-			'postSweeps': 5,  # int
+			'postSweeps': 0,  # int
 			'sweepDur_sec': 30.0,
 			'stimStart_sec': 5.0,
 			'stimDur_sec': 20.0,
@@ -586,6 +591,13 @@ class stimGen(sanpyPlugin):
 		self.replot()
 
 	def on_spin_box2(self):
+		thisTime = time.time()
+		timeDiff = thisTime - self._lastTime
+		print('thisTime:', thisTime, '_lastTime:', self._lastTime, 'timeDiff:', timeDiff)
+		if timeDiff < 5:
+			return
+		self._lastTime = thisTime
+
 		spinbox = self.sender()
 		print('on_spin_box2()', spinbox.objectName(), spinbox.value())
 		keyStr = spinbox.objectName()
@@ -598,12 +610,12 @@ class stimGen(sanpyPlugin):
 
 		self.updateStim()
 
-	'''
 	def on_spin_box(self, name):
 		logger.info(name)
 		if name == 'Save Index':
 			saveStimIndex = self.saveIndexSpinBox.value()
 			self.saveStimIndex = saveStimIndex
+		'''
 		elif name == 'Number Of Sweeps':
 			numSweeps = self.numSweepsSpinBox.value()
 			self.setParam('numSweeps', numSweeps)
@@ -612,7 +624,7 @@ class stimGen(sanpyPlugin):
 			logger.warning(f'"{name}" not understood')
 		#
 		self.updateStim()
-	'''
+		'''
 
 	def on_stim_type(self, type):
 		logger.info(type)
@@ -650,6 +662,7 @@ class stimGen(sanpyPlugin):
 		self.saveAsButton.clicked.connect(partial(self.on_button_click,aName))
 		controlLayout.addWidget(self.saveAsButton)
 
+		'''
 		statStr = 'saveStimIndex'
 		self.saveIndexSpinBox = mySpinBox(
 			label='Save Index',
@@ -657,8 +670,8 @@ class stimGen(sanpyPlugin):
 			value=self.getParam(statStr),
 			callback=self.on_spin_box2)
 		controlLayout.addLayout(self.saveIndexSpinBox)
-
 		'''
+
 		aName = 'Save Index'
 		aLabel = QtWidgets.QLabel(aName)
 		controlLayout.addWidget(aLabel)
@@ -668,9 +681,8 @@ class stimGen(sanpyPlugin):
 		self.saveIndexSpinBox.setRange(0, 9999)
 		self.saveIndexSpinBox.setValue(self.saveStimIndex)
 		self.saveIndexSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-		self.saveIndexSpinBox.valueChanged.connect(self.on_spin_box2)
+		#self.saveIndexSpinBox.valueChanged.connect(self.on_spin_box2)
 		controlLayout.addWidget(self.saveIndexSpinBox)
-		'''
 
 		aName = 'Stim Type'
 		aLabel = QtWidgets.QLabel(aName)
@@ -1057,19 +1069,21 @@ class stimGen(sanpyPlugin):
 		filename = 'sanpy_' + datetime.today().strftime('%Y%m%d')
 		filename += '_'
 
-		saveStimIndex = self.getParam('saveStimIndex')  # self.saveStimIndex
+		#saveStimIndex = self.getParam('saveStimIndex')  # self.saveStimIndex
+		saveStimIndex = self.saveStimIndex
 		filename += f'{saveStimIndex:04}'
 
 		filename += '.atf'
 
 		# increment for next save
-		#self.saveStimIndex += 1
-		newStimIdx = saveStimIndex + 1
-		self.setParam('saveStimIndex', newStimIdx)
+		self.saveStimIndex += 1
+		#newStimIdx = saveStimIndex + 1
+		#self.setParam('saveStimIndex', newStimIdx)
 
 		# update interface
 		# this is no longer a spinbox, it is an h layout
-		self.saveIndexSpinBox.itemAt(1).widget().setValue(newStimIdx)
+		#self.saveIndexSpinBox.itemAt(1).widget().setValue(newStimIdx)
+		self.saveIndexSpinBox.setValue(self.saveStimIndex)
 
 		return filename
 
