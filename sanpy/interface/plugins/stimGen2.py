@@ -207,7 +207,7 @@ class stimGen(sanpyPlugin):
 		super(stimGen, self).__init__(**kwargs)
 
 		self._lastTime = time.time()
-		
+
 		self.saveStimIndex = 0
 
 		'''
@@ -634,7 +634,7 @@ class stimGen(sanpyPlugin):
 	def on_stim_type(self, type):
 		logger.info(type)
 		#self.stimType = type
-		self.setParam('stimTypes', float(type))
+		self.setParam('stimType', type)
 		self.updateStim()
 
 	def on_scale(self, scale):
@@ -654,6 +654,7 @@ class stimGen(sanpyPlugin):
 
 	def on_checkbox_clicked(self, name):
 		if name == 'Rectify':
+			val = self.rectifyCheckBox.isChecked()
 			self.setParam('rectify', val)
 		self.updateStim()
 
