@@ -4,14 +4,19 @@ Important, had to modify parsing comment of atf
 see abb in:
 	/home/cudmore/Sites/SanPy/sanpy_env/lib/python3.8/site-packages/pyabf/atf.py", line 63
 """
-import os
+import os, sys
 import numpy as np
+import pandas as pd
 import seaborn as sns
 
 import matplotlib.pyplot as plt
 
 from colinAnalysis import bAnalysis2
 from sanpy.interface.plugins.stimGen2 import readFileParams
+
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
+
 def load(path):
 
 	stimulusFileFolder = None #'/media/cudmore/data/stoch-res' #os.path.split(path)[0]
@@ -45,7 +50,10 @@ def detect(ba, thresholdValue = -20):
 	ba.detect(detectionDict=detectionDict)
 
 	if ba.analysisDf is not None:
-		print(ba.analysisDf.head())
+		logger.info(f'detected {len(ba.analysisDf)} spikes')
+		#print(ba.analysisDf.head())
+	else:
+		logger.info(f'detected No spikes')
 
 def reduce(ba):
 	"""
@@ -58,9 +66,17 @@ def reduce(ba):
 		df of spikes within sin stimulus
 	"""
 	df = ba.analysisDf
-	startSec = 5
-	stopSec = 25
-	df = df[ (df['peak_sec']>=startSec) & (df['peak_sec']<=stopSec)]
+	if ba.stimDict is not None:
+		#print(ba.stimDict)
+		stimStartSeconds = ba.stimDict['stimStartSeconds']
+		durSeconds = ba.stimDict['durSeconds']
+		startSec = stimStartSeconds
+		stopSec = startSec + durSeconds
+		try:
+			df = df[ (df['peak_sec']>=startSec) & (df['peak_sec']<=stopSec)]
+		except (KeyError) as e:
+			logger.error(e)
+
 	return df
 
 def plotStats(ba):
@@ -115,12 +131,16 @@ def plotShotPlot(df):
 	Args:
 		df (DataFrame): already reduce()
 	"""
+	file = df['file'].values[0]
+
 	fig, axs = plt.subplots(1, 1, sharex=True, figsize=(8, 6))
 	axs = [axs]
+	fig.suptitle(file)
 
-	colors = ['r', 'g', 'b', 'k']
+	colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
 
 	sweeps = df['sweep'].unique()
+	print(f'plotShotPlot() num sweeps:{len(sweeps)} {sweeps}')
 	for sweepIdx, sweep in enumerate(sweeps):
 		dfPlot = df[ df['sweep'] == sweep ]
 
@@ -134,7 +154,7 @@ def plotShotPlot(df):
 		axs[0].set_ylabel('ISI -1 (s)')
 		axs[0].set_xlabel('ISI (s)')
 
-def plotPhaseHist(df, startSec, freq, hue='sweep'):
+def plotPhaseHist(ba, axs=None, hue='sweep'):
 	"""
 	Plot hist of spike arrival times as function of phase/angle within sine wave
 
@@ -143,77 +163,187 @@ def plotPhaseHist(df, startSec, freq, hue='sweep'):
 		startSec (float):
 		freq (float):
 	"""
-	sinInterval = 1 / freq
-	hueList = df[hue].unique()
-	bins = 12
+	df = ba.analysisDf
+	if df is None:
+		return
 
-	numSubplot = len(hueList)
-	fig, axs = plt.subplots(numSubplot, 1, sharex=True, figsize=(8, 6))
+	df = reduce(ba)
+
+	# grab freq and startSec from header
+	stimStartSeconds = ba.stimDict['stimStart_sec']
+	stimFreq = ba.stimDict['stimFreq']  # TODO: will not work if we are stepping frequency
+	stimAmp = ba.stimDict['stimAmp']
+
+	file = df['file'].values[0]
+
+	sinInterval = 1 / stimFreq
+	hueList = df[hue].unique()
+	numHue = len(hueList)
+	bins = 'auto'
+
+	print(f'plotPhaseHist() stimStartSeconds:{stimStartSeconds} stimFreq:{stimFreq} sinInterval:{sinInterval} bins:{bins}')
+
+	if axs is None:
+		numSubplot = len(hueList)
+		fig, axs = plt.subplots(numSubplot, 1, sharex=True, figsize=(8, 6))
+		fig.suptitle(file)
+
+	fs = ba.dataPointsPerMs * 1000  # 10000
+	durSec = 1 / stimFreq
+	Xs = np.arange(fs*durSec) / fs  # x/time axis, we should always be able to create this from (dur, fs)
+	sinData = stimAmp * np.sin(2*np.pi*(Xs)*stimFreq)
+	xPlot = Xs * stimFreq  #/ fs  # normalize to interval [0,1] fpr plotting
 
 	for idx,oneHue in enumerate(hueList):
 		dfPlot = df[ df[hue]==oneHue ]
 		peakSecs = dfPlot['peak_sec']
-		peakSecs -= startSec
-		peakPhase =  peakSecs - (peakSecs/sinInterval).astype(int)
+		peakSecs -= stimStartSeconds
+		#peakPhase =  peakSecs - (peakSecs/sinInterval).astype(int)
+		peakPhase_float = peakSecs/sinInterval
+		peakPhase = peakPhase_float - peakPhase_float.astype(int)
+
+		# debug
+		'''
+		tmpDf = pd.DataFrame()
+		tmpDf['peakSecs'] = peakSecs
+		tmpDf['peakPhase_float'] = peakPhase_float
+		tmpDf['peakPhase_int'] = peakPhase_float.astype(int)
+		tmpDf['peakPhase'] = peakPhase
+		print(idx, tmpDf.head())
+		'''
 
 		#sns.histplot(x='ipi_ms', data=dfPlot, bins=numBins, ax=axs[idx])
-		axs[idx].hist(peakPhase, bins=bins, density=True)
+		axs[idx].hist(peakPhase, bins=bins, density=False)
 
+		axsSin = axs[idx].twinx()
+		axsSin.plot(xPlot, sinData, 'r')
+
+		'''
 		if idx == len(hueList)-1:
 			axs[idx].set_xlabel('Phase')
+		'''
 
-def plotHist(df, hue='sweep'):
+		# label x-axis of subplots
+		lastSweep = idx == (numHue - 1)
+		if lastSweep:
+			axs[idx].set_xlabel('Phase')
+		else:
+			axs[idx].spines['bottom'].set_visible(False)
+			axs[idx].tick_params(axis="x", labelbottom=False) # no labels
+			axs[idx].set_xlabel('')
 
-	# plot on one hist
-	#fig, axs = plt.subplots(1, 1, sharex=True, figsize=(8, 6))
-	#axs = [axs]
-	#hue = 'sweep'
-	#sns.histplot(x='ipi_ms', data=df, hue=hue)
+def isiStats(ba, hue='sweep'):
+	df = ba.analysisDf
+	if df is None:
+		return
 
-	# same number of bins per hist
-	numBins = 12
+	df = reduce(ba)
+
+	statList = []
+
+	statStr = 'ipi_ms'
 
 	hueList = df[hue].unique()
+	for idx,oneHue in enumerate(hueList):
+		dfPlot = df[ df[hue]==oneHue ]
+		ipi_ms = dfPlot[statStr]
+
+		oneDict = {
+			'file': ba.fileName,
+			'stat': statStr,
+			'count': len(ipi_ms),
+			'min': np.nanmin(ipi_ms),
+			'max': np.nanmax(ipi_ms),
+			'mean': round(np.nanmean(ipi_ms),3),
+			'median': round(np.nanmedian(ipi_ms),3),
+
+		}
+
+		statList.append(oneDict)
+
+	#
+	retDf = pd.DataFrame(statList)
+	return retDf
+
+def plotHist(ba, axs=None, hue='sweep'):
+
+	df = ba.analysisDf
+	if df is None:
+		return
+
+	df = reduce(ba)
+
+	file = df['file'].values[0]
+
+	# same number of bins per hist
+	numBins = 'auto' #12
+	statStr = 'ipi_ms'
+
+	hueList = df[hue].unique()
+	numHue = len(hueList)
 
 	# plot one hist per subplot
-	numSubplot = len(hueList)
-	fig, axs = plt.subplots(numSubplot, 1, sharex=True, figsize=(8, 6))
+	if axs is None:
+		numSubplot = len(hueList)
+		fig, axs = plt.subplots(numSubplot, 1, sharex=True, figsize=(8, 6))
+		fig.suptitle(file)
 
 
 	for idx,oneHue in enumerate(hueList):
 		dfPlot = df[ df[hue]==oneHue ]
-		'''
-		peakSec = dfPlot['peak_sec']
-		isiSec = np.diff(peakSec)
-		cvISI = np.std(isiSec) / np.mean(isiSec)
-		cvISI_invert = 1 / cvISI
-		'''
-		#dfPlot = df[ df['sweep']== idx]
 
 		# hist of isi
-		sns.histplot(x='ipi_ms', data=dfPlot, bins=numBins, ax=axs[idx])
+		sns.histplot(x=statStr, data=dfPlot, bins=numBins, ax=axs[idx])
 
-def plotRaw(ba):
-	abf = ba.abf
-	numSweeps = len(abf.sweepList)
-	df = reduce(ba)
+		'''
+		if idx == len(hueList)-1:
+			axs[idx].set_xlabel('ipi_ms')
+		else:
+			axs[idx].set_xlabel('')
+		'''
 
-	fig, axs = plt.subplots(numSweeps, 1, sharex=True, figsize=(8, 6))
+		# label x-axis of subplots
+		lastSweep = idx == (numHue - 1)
+		if lastSweep:
+			axs[idx].set_xlabel(statStr)
+		else:
+			axs[idx].spines['bottom'].set_visible(False)
+			axs[idx].tick_params(axis="x", labelbottom=False) # no labels
+			axs[idx].set_xlabel('')
+
+	logger.info('')
+	dfStat = isiStats(ba)
+	print(dfStat)
+
+def plotRaw(ba, axs=None):
+
+	numSweeps = ba.numSweeps
+
+	if axs is None:
+		fig, axs = plt.subplots(numSweeps, 1, sharex=True, figsize=(8, 6))
+		if numSweeps == 1:
+			axs = [axs]
+
+			fig.suptitle(ba.fileName)
+
 	rightAxs = [None] * numSweeps
 
-	for idx in abf.sweepList:
-		abf.setSweep(idx)
+	print(ba.fileName)
+
+	for idx in ba.sweepList:
+		ba.setSweep(idx)
 
 		rightAxs[idx] = axs[idx].twinx()
 		#rightAxs[idx].set_ylabel(abf.sweepLabelC)
 		rightAxs[idx].set_ylabel('DAC (nA)')
-		rightAxs[idx].plot(abf.sweepX, abf.sweepC, 'r', lw=.5, zorder=0)
+		rightAxs[idx].plot(ba.sweepX, ba.sweepC, 'r', lw=.5, zorder=0)
 
 		#axs[idx].set_ylabel(abf.sweepLabelY)
 		axs[idx].set_ylabel('Vm (mV)')
-		axs[idx].plot(abf.sweepX, abf.sweepY, 'k', lw=1.0, zorder=10)
+		axs[idx].plot(ba.sweepX, ba.sweepY, 'k', lw=1.0, zorder=10)
 
 		if ba.analysisDf is not None:
+			df = reduce(ba)
 			# just one sweep
 			#df = ba.analysisDf
 			dfPlot = df[ df['sweep']== idx]
@@ -230,13 +360,25 @@ def plotRaw(ba):
 			isiSec = np.diff(peakSec)
 			cvISI = np.std(isiSec) / np.mean(isiSec)
 			cvISI_invert = 1 / cvISI
-			print(f'plotRaw() {idx} n:{len(dfPlot)} pSpike:{pSpike} cvISI:{cvISI} cvISI_invert:{cvISI_invert}')
+			# round
+			cvISI = round(cvISI,3)
+			cvISI_invert = round(cvISI_invert,3)
+			print(f'  {idx} plotRaw() n:{len(dfPlot)} pSpike:{pSpike} cvISI:{cvISI} cvISI_invert:{cvISI_invert}')
 
 			axs[idx].plot(peakSec, peakVal, 'o')
 
 			footSec = dfPlot['foot_sec']
 			footVal = dfPlot['foot_val']
 			axs[idx].plot(footSec, footVal, 'og')
+
+		# label x-axis of subplots
+		lastSweep = idx == (numSweeps - 1)
+		if lastSweep:
+			axs[idx].set_xlabel('Time (s)')
+		else:
+			axs[idx].spines['bottom'].set_visible(False)
+			axs[idx].tick_params(axis="x", labelbottom=False) # no labels
+			axs[idx].set_xlabel('')
 
 		# get the zorder correct
 		axs[idx].set_zorder(rightAxs[idx].get_zorder()+1)
@@ -245,51 +387,45 @@ def plotRaw(ba):
 	#
 	plt.tight_layout()
 
-	#
-	#plt.show()
-
-def plotFinal(ba):
-	"""
-	BROKEN
-	"""
-	abf = ba.abf
-
-	#xMask = (ba.sweepX<=5) and (ba.seepsX<=25)
-
-	numSweeps = len(abf.sweepList)
-	for idx in abf.sweepList:
-		abf.setSweep(idx)
-
-		df = ba.analysisDf
-		df = df[ df['sweep']== idx]
-
 if __name__ == '__main__':
-	path = '/media/cudmore/data/stoch-res/2021_12_06_0002.abf'
-	# 0005.abf is 4 sweeps with increading noise
-	#path = '/media/cudmore/data/stoch-res/2021_12_06_0005.abf'
-	#path = '/Users/cudmore/box/data/stoch-res/2021_12_06_0005.abf'
+	# one trial of spont
+	#path = '/media/cudmore/data/stoch-res/2021_12_06_0002.abf'
+	# sin stim
+	path = '/media/cudmore/data/stoch-res/2021_12_06_0005.abf'
+
+	# second day of recording
+	#path = '/media/cudmore/data/stoch-res/20211209/2021_12_09_0010.abf'  # 194 seconds of baseline
+	path = '/media/cudmore/data/stoch-res/20211209/2021_12_09_0011.abf'  # 1pA/1Hz/2pA step
+	#path = '/media/cudmore/data/stoch-res/20211209/2021_12_09_0012.abf'  # 1pA/5Hz/2pA step
 
 	ba = load(path)
 
-	print('stimDict:', ba._stimDict)  # can be none
+	#print('stimDict:', ba._stimDict)  # can be none
 
 	thresholdValue = -10
 	detect(ba, thresholdValue=thresholdValue)
 
+	dfStat = isiStats(ba)
+	print('dfStat')
+	print(dfStat)
+
+	sys.exit(1)
 	# if we have a stimulus file
 	if ba.stimDict is not None:
-		stimStartSeconds = ba.stimDict['stimStartSeconds']
-		frequency = ba.stimDict['frequency']  # TODO: will not work if we are stepping frequency
-		durSeconds = ba.stimDict['durSeconds']
+		stimStartSeconds = ba.stimDict['stimStart_sec']
+		frequency = ba.stimDict['stimFreq']  # TODO: will not work if we are stepping frequency
+		durSeconds = ba.stimDict['sweepDur_sec']
 
 		df = reduce(ba)
 
 		plotPhaseHist(df, stimStartSeconds, frequency)
 
-	#plotStats(ba)
+	#plotRaw(ba)
+
+	#plotStats(ba)  # not working
+
 	#plotHist(df)
 	#plotShotPlot(df)
-
 
 	#
 	plt.show()

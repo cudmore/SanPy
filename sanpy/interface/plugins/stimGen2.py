@@ -105,6 +105,9 @@ def readFileParams(path):
 	return retDict
 
 def readCommentParams(commentStr):
+	"""
+	Read stim params from comment string saved in atf
+	"""
 	retDict = {}
 	commentStr = commentStr.replace('"Comment=','')
 	commentStr = commentStr[0:-2]  # remove trailing "
@@ -118,18 +121,125 @@ def readCommentParams(commentStr):
 		v = kv[1]
 		#print(k, v)
 
-		if k == 'stimType':
-			pass
-		elif k == 'doRectify':
+		strKeys = ['stimType']
+		intKeys = ['saveStimIndex', 'stimType', 'preSweeps', 'numSweeps', 'postSweeps']
+
+		if v in ['True', 'False']:
 			v = bool(v)
-		elif k == 'numSweeps':
+		elif k in strKeys:
+			pass
+		elif k in intKeys:
 			v = int(v)
 		else:
-			v = float(v)
+			try:
+				v = float(v)
+			except (ValueError) as e:
+				print(f'ERROR: {k} "{v}" param="{param}"')
 		#
 		retDict[k] = v
 	#
+
+	if retDict['version'] == 0.2:
+		retDict = convertVersionToNew(retDict)
+
 	return retDict
+
+def convertVersionToNew(d):
+	d['sweepDur_sec'] = d['durSeconds']
+	d['stimFreq'] = d['frequency']
+	d['stimFreqStep'] = d['frequencyStep']
+	d['stimAmp'] = d['amplitude']
+	d['stimAmpStep'] = d['amplitudeStep']
+	d['stimNoiseAmp'] = d['noiseAmplitude']
+	d['stimNoiseStep'] = d['noiseStep']
+	d['stimStart_sec'] = d['stimStartSeconds']
+	d['stimDur_sec'] = d['durSeconds']
+	d['rectify'] = d['doRectify']
+	#
+	return d
+
+def buildStimDict(d):
+	"""
+	Build a list of dict to describe each stimulus
+
+	Args:
+		d (dict): returned from readCommentParams()
+
+	version 0.2
+	numSweeps 5
+	sweepDurSeconds 30.0
+	stimType Sin
+	stimStartSeconds 5.0
+	durSeconds 20.0
+	yStimOffset 0.0
+	amplitude 0.001
+	frequency 1.0
+	noiseAmplitude 0.0
+	amplitudeStep 0.0
+	frequencyStep 0.0
+	noiseStep 0.002
+	doRectify True
+	"""
+	def _defaultDict():
+		return {
+			'index': '',
+			'type': '',
+			'start(s)': '',
+			'dur(s)': '',
+			'freq(Hz)': '',
+			'amp': '',
+			'noise amp': '',
+		}
+	#
+	retList = []
+	masterIdx = 0
+	version = d['version']
+	if version == 0.2:
+		d = convertVersionToNew(d)
+	#
+	if 'preSweeps' in d.keys():
+		preSweeps = d['preSweeps']
+		for pre in range(preSweeps):
+			oneDict = _defaultDict()
+			oneDict['index'] = masterIdx
+			oneDict['type'] = 'pre'
+			retList.append(oneDict)
+			masterIdx += 1
+	#
+	numSweeps = d['numSweeps']
+	currentFreq = d['stimFreq']
+	stimFreqStep = d['stimFreqStep']
+	currentAmp = d['stimAmp']
+	stimAmpStep = d['stimAmpStep']
+	currentNoise = d['stimNoiseAmp']
+	stimNoiseStep = d['stimNoiseStep']
+	for sweep in range(numSweeps):
+		oneDict = _defaultDict()
+		oneDict['index'] = masterIdx
+		oneDict['type'] = d['stimType']
+		oneDict['start(s)'] = d['stimStart_sec']
+		oneDict['dur(s)'] = d['stimDur_sec']
+		oneDict['freq(Hz)'] = currentFreq
+		oneDict['amp'] = currentAmp
+		oneDict['noise amp'] = currentNoise
+		retList.append(oneDict)
+		#
+		currentFreq += stimFreqStep
+		currentAmp += stimAmpStep
+		currentNoise += stimNoiseStep
+		masterIdx += 1
+	#
+	if 'postSweeps' in d.keys():
+		postSweeps = d['postSweeps']
+		for post in range(postSweeps):
+			oneDict = _defaultDict()
+			oneDict['index'] = masterIdx
+			oneDict['type'] = 'post'
+			retList.append(oneDict)
+			masterIdx += 1
+
+	#
+	return retList
 
 def mySpinBox(
 			label:str,
@@ -1119,14 +1229,18 @@ def testDict():
 	folderPath = '/home/cudmore/Sites/SanPy'
 	df = readFolderParams(folderPath)
 
-	sys.exit(1)
+	#sys.exit(1)
 
-	path = '/home/cudmore/Sites/SanPy/sanpy_20211206_0000.atf'
-	path = '/home/cudmore/Sites/SanPy/sanpy_20211206_0001.atf'
-
+	path = '/home/cudmore/Sites/SanPy/sanpy_20211210_0000.atf'
+	path = '/home/cudmore/Sites/SanPy/sanpy_20211211_0000.atf'
+	path = '/media/cudmore/data/stoch-res/20211209/sanpy_20211209_0001.atf'
 	d = readFileParams(path)
 	for k,v in d.items():
 		print(k,v)
+
+	dList = buildStimDict(d)
+	for one in dList:
+		print(one)
 
 	'''
 	app = QtWidgets.QApplication(sys.argv)

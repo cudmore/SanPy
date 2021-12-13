@@ -82,7 +82,8 @@ class Stimulus:
             return np.full(self.abf.sweepPointCount, np.nan)
 
 
-def findStimulusWaveformFile(abf, channel=0):
+# abb added verbose
+def findStimulusWaveformFile(abf, channel=0, verbose=True):
     """
     Look for the stimulus waveform file in several places. Return the path
     where it can be found. Return None if it cannot be found.
@@ -112,7 +113,8 @@ def findStimulusWaveformFile(abf, channel=0):
         return str(pathSameFolderAsABF)
 
     # warn if stimulus file was never found
-    warnings.warn(
+    if verbose:
+        warnings.warn(
             f"Could not locate stimulus file for channel {channel}.\n"
             f"ABF file path: {abf.abfFilePath}.\n"
             f"The following paths were searched:\n"
@@ -126,11 +128,14 @@ def findStimulusWaveformFile(abf, channel=0):
 
 # abb to get comment
 def abbCommentFromFile(abf, channel=0):
-    stimPath = findStimulusWaveformFile(abf, channel)
+    """
+    If stim file exists, return (path, comment)
+    """
+    stimPath = findStimulusWaveformFile(abf, channel, verbose=False)
     if stimPath is None:
-        return None
+        return None, None
     else:
-        return cachedStimuli[stimPath].header['comment']
+        return stimPath, cachedStimuli[stimPath].header['comment']
 
 # abb stimulusSweep=None
 def stimulusWaveformFromFile(abf, channel=0, stimulusSweep=None):
@@ -152,7 +157,7 @@ def stimulusWaveformFromFile(abf, channel=0, stimulusSweep=None):
             if stimPath.upper().endswith(".ABF"):
                 cachedStimuli[stimPath] = pyabf.ABF(stimPath)
             elif stimPath.upper().endswith(".ATF"):
-                print('abb assigning cachedStimuli')
+                print('abb pyabf stimulus.stimulusWaveformFromFile() assigning cachedStimuli')
                 cachedStimuli[stimPath] = pyabf.ATF(stimPath)
         # abb, setSweep
         cachedStimuli[stimPath].setSweep(stimulusSweep)

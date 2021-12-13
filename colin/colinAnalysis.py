@@ -28,6 +28,9 @@ import colinUtils
 
 import sanpy.interface.plugins.stimGen2
 
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
+
 class bAnalysis2:
 	"""
 	Manager one abf loaded from a file
@@ -92,44 +95,57 @@ class bAnalysis2:
 		return detectionDict
 
 	def __init__(self, path, stimulusFileFolder=None):
+		"""
+		path (str): path to abf file
+		stimulusFileFolder (str): Relative path to stimulus file.
+								Leave as None, and assume stimulus file atf are in same folder as abf
+		"""
 		self._path = path
 		self._abf = pyabf.ABF(path, stimulusFileFolder=stimulusFileFolder)
-		#self._abf = pyabf.ABF(path, stimulusFileFolder=stimulusFileFolder, cacheStimulusFiles=False)
 		self._detectionParams = bAnalysis2.getDefaultDetection()
 		self._analysisDf = None
 
 		# needs to be a list to account for sweaps
-		#self._sweepY_filtered = None
 		self._sweepY_filtered = [None] * self.numSweeps
 
 		self._currentSweep = 0
 
+		#
+		# if we were recorded with a stimulus file abf
 		# needed to assign stimulusWaveformFromFile
 		tmpSweepC = self.abf.sweepC
-
-		stimFile = pyabf.stimulus.findStimulusWaveformFile(self.abf)
-		stimFileComment = pyabf.stimulus.abbCommentFromFile(self.abf)
-
-		self._stimFile = stimFile
+		stimFilePath, stimFileComment = pyabf.stimulus.abbCommentFromFile(self.abf)
 		if stimFileComment is None:
 			self._stimDict = None
+			self._stimFile = None
 		else:
+			self._stimFile = stimFilePath
 			self._stimDict = sanpy.interface.plugins.stimGen2.readCommentParams(stimFileComment)
-
-		#self._stimFileComment = stimFileComment
 
 	@property
 	def stimDict(self):
+		"""
+		If recorded with a stimulus file, return dict of stimulus parameters.
+		Stimulus parameters are defined in sanpy/interface/plugins/stimGen2.py
+		"""
 		return self._stimDict
 
 	def setSweep(self, sweep):
+		"""
+		Set the current sweep
+		"""
 		self._currentSweep = sweep
 		self.abf.setSweep(sweep)
 
 	def __str__(self):
 		dur = round(self.sweepDur,2)
 
-		s = f'{self.fileName} sweeps:{self.numSweeps} dur(s):{dur} kHz:{self.dataPointsPerMs} events:{self.numPeaks}'
+		stimFileStr = ''
+		if self._stimFile is not None:
+			stimFileStr = f'stimFile:{os.path.split(self._stimFile)[1]}'
+
+		s = f'{self.fileName} sweeps:{self.numSweeps} dur(s):{dur} kHz:{self.dataPointsPerMs} {stimFileStr} events:{self.numPeaks}'
+
 		return s
 
 	def getHeader(self):
@@ -142,20 +158,35 @@ class bAnalysis2:
 		if startSec is None:
 			startSec = 0
 		if stopSec is None:
-			stopSec = self.sweepDur
+			stopSec = round(self.sweepDur,3)
 
 		theRet = {
 			'File': self.fileName,
 			'Sweeps': self.numSweeps,
-			'Dur(s)': self.sweepDur,
+			'Dur(s)': round(self.sweepDur,3),
 			'kHz': self.dataPointsPerMs,
 
 			'Start(s)': startSec,
 			'Stop(s)': stopSec,
 
+			# if we have a atfStim stimulus file
+			'Stim Freq (Hz)': '',
+			'Stim Amp': '',
+			'Noise Amp': '',
+			'Noise Step': '',
+
 			'Threshold': self.detectionParams['threshold'],
 			'Peaks': self.numPeaks,
 		}
+
+		if self._stimDict is not None:
+			try:
+				theRet['Stim Freq (Hz)'] = self._stimDict['stimFreq']
+				theRet['Stim Amp'] = self._stimDict['stimAmp']
+				theRet['Noise Amp'] = self._stimDict['stimNoiseAmp']
+				theRet['Noise Step'] = self._stimDict['stimNoiseStep']
+			except (KeyError) as e:
+				logger.warning(f'Did not find keys (stimNoiseAmp, stimNoiseStep)')
 		return theRet
 
 	def save(self):
@@ -205,6 +236,10 @@ class bAnalysis2:
 	@property
 	def numSweeps(self):
 		return len(self.abf.sweepList)
+
+	@property
+	def sweepList(self):
+		return self.abf.sweepList
 
 	@property
 	def sweepDur(self):
@@ -431,7 +466,8 @@ class bAnalysis2:
 			yLastCrossing = self.sweepY_filtered[footPnt]
 			if len(zero_crossings)==0:
 				if verbose:
-					print('  error: no foot', idx, self._pnt2Sec(footPnt), 'did not find zero crossings')
+					tmpSec = round(self._pnt2Sec(footPnt), 3)
+					print('  error: no foot for peak', idx, 'sec:', tmpSec, 'did not find zero crossings')
 			else:
 				#print(idx, 'footPnt:', footPnt, zero_crossings, preClip)
 				lastCrossingPnt = preStart + zero_crossings[-1]
@@ -570,10 +606,14 @@ class colinAnalysis2:
 	"""
 	Manage a list of bAnalysis2 (abf files) loaded from a folder
 	"""
-	def __init__(self, folderPath):
+	def __init__(self, folderPath=None):
 		self._folderPath = folderPath
+
 		self._analysisList = []
+		# list of bAnalysis2
+
 		self._analysisIdx = 0  # the first abf
+
 		self.loadFolder()
 
 	def __iter__(self):
@@ -615,14 +655,60 @@ class colinAnalysis2:
 	def getFile(self, idx):
 		return self._analysisList[idx]
 
-	def loadFolder(self):
-		for file in sorted(os.listdir(self.folderPath)):
+	def loadFolder(self, path=None):
+		logger.info(path)
+		if path is None:
+			path = self.folderPath
+		if path is None:
+			return
+
+		fileList = sorted(os.listdir(path))
+		print(path, fileList)
+
+		if len(fileList) == 0:
+			# warn user
+			pass
+
+		self._folderPath = path
+		self._analysisList = []  # DELETE EXISTING
+
+		for file in fileList:
 			if file.startswith('.'):
 				continue
 			if file.endswith('.abf'):
 				filePath = os.path.join(self.folderPath, file)
 				oneAnalysis = bAnalysis2(filePath)
+				logger.info(oneAnalysis)
 				self._analysisList.append(oneAnalysis)
+
+	def refreshFolder(self):
+		"""
+		Look in folderPath for new files not in our existing list.
+		Append to files to end of list
+
+		Return:
+			int: Number of new files.
+		"""
+		logger.info('')
+		existingFileList = self.fileList
+		print('  ', existingFileList)
+		newFileList = sorted(os.listdir(self.folderPath))
+		numNewFiles = 0
+		for newFile in newFileList:
+			if newFile.startswith('.'):
+				continue
+			if newFile.endswith('.abf'):
+				if not newFile in existingFileList:
+					print('  new file:', newFile)
+					# load and append new file to self._analysisList
+					newFilePath = os.path.join(self.folderPath, newFile)
+					oneAnalysis = bAnalysis2(newFilePath)
+					logger.info(f'  {oneAnalysis}')
+					self._analysisList.append(oneAnalysis)
+					numNewFiles += 1
+		#
+		logger.info(f'Added {numNewFiles} files')
+		return numNewFiles
 
 	def getAllDataFrame(self):
 		"""Get analysis results for all files.
