@@ -62,6 +62,9 @@ def readFolderParams(folderPath):
 def readFileParams(path):
 	"""
 	Read stimGen params from one atf file
+
+	Args:
+		path (Str): Path to atd f file
 	"""
 	retDict = {}
 	with open(path, 'r') as f:
@@ -158,7 +161,7 @@ def convertVersionToNew(d):
 	#
 	return d
 
-def buildStimDict(d):
+def buildStimDict(d, path=None):
 	"""
 	Build a list of dict to describe each stimulus
 
@@ -182,6 +185,7 @@ def buildStimDict(d):
 	"""
 	def _defaultDict():
 		return {
+			'file': '',
 			'index': '',
 			'type': '',
 			'start(s)': '',
@@ -191,6 +195,11 @@ def buildStimDict(d):
 			'noise amp': '',
 		}
 	#
+	if path is None:
+		fileName = ''
+	else:
+		fileName = os.path.split(path)[1]
+
 	retList = []
 	masterIdx = 0
 	version = d['version']
@@ -215,6 +224,7 @@ def buildStimDict(d):
 	stimNoiseStep = d['stimNoiseStep']
 	for sweep in range(numSweeps):
 		oneDict = _defaultDict()
+		oneDict['file'] = fileName
 		oneDict['index'] = masterIdx
 		oneDict['type'] = d['stimType']
 		oneDict['start(s)'] = d['stimStart_sec']
@@ -1238,7 +1248,7 @@ def testDict():
 	for k,v in d.items():
 		print(k,v)
 
-	dList = buildStimDict(d)
+	dList = buildStimDict(d, path)
 	for one in dList:
 		print(one)
 
@@ -1253,6 +1263,5 @@ def testDict():
 	'''
 
 if __name__ == '__main__':
-	run()
-
 	#testDict()
+	run()

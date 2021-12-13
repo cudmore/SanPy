@@ -222,6 +222,10 @@ class bAnalysis2:
 		return self._detectionParams
 
 	@property
+	def filePath(self):
+		return self._path
+
+	@property
 	def fileName(self):
 		return os.path.split(self._path)[1]
 

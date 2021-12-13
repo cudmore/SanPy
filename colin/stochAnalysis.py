@@ -12,7 +12,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from colinAnalysis import bAnalysis2
-from sanpy.interface.plugins.stimGen2 import readFileParams
+from sanpy.interface.plugins.stimGen2 import readFileParams, buildStimDict
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -36,6 +36,17 @@ def load(path):
 	'''
 
 	return ba
+
+def plotStimFileParams(ba):
+	d = ba.stimDict
+	if d is None:
+		return
+
+	dList = buildStimDict(d, path=ba.filePath)
+	#for one in dList:
+	#	print(one)
+	df = pd.DataFrame(dList)
+	print(df)
 
 def detect(ba, thresholdValue = -20):
 	"""
@@ -232,6 +243,8 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 			axs[idx].tick_params(axis="x", labelbottom=False) # no labels
 			axs[idx].set_xlabel('')
 
+	plotStimFileParams(ba)
+
 def isiStats(ba, hue='sweep'):
 	df = ba.analysisDf
 	if df is None:
@@ -248,14 +261,22 @@ def isiStats(ba, hue='sweep'):
 		dfPlot = df[ df[hue]==oneHue ]
 		ipi_ms = dfPlot[statStr]
 
+		meanISI = np.nanmean(ipi_ms)
+		stdISI = np.nanstd(ipi_ms)
+		cvISI = stdISI / meanISI
+		cvISI_inv = np.nanstd(1/ipi_ms) / np.nanmean(1/ipi_ms)
+
 		oneDict = {
 			'file': ba.fileName,
 			'stat': statStr,
 			'count': len(ipi_ms),
-			'min': np.nanmin(ipi_ms),
-			'max': np.nanmax(ipi_ms),
-			'mean': round(np.nanmean(ipi_ms),3),
-			'median': round(np.nanmedian(ipi_ms),3),
+			'minISI': np.nanmin(ipi_ms),
+			'maxISI': np.nanmax(ipi_ms),
+			'stdISI': round(stdISI,3),
+			'meanISI': round(np.nanmean(ipi_ms),3),
+			'medianISI': round(np.nanmedian(ipi_ms),3),
+			'cvISI': cvISI,
+			'cvISI_inv': cvISI_inv,
 
 		}
 
@@ -314,6 +335,8 @@ def plotHist(ba, axs=None, hue='sweep'):
 	logger.info('')
 	dfStat = isiStats(ba)
 	print(dfStat)
+
+	plotStimFileParams(ba)
 
 def plotRaw(ba, axs=None):
 
@@ -399,6 +422,8 @@ if __name__ == '__main__':
 	#path = '/media/cudmore/data/stoch-res/20211209/2021_12_09_0012.abf'  # 1pA/5Hz/2pA step
 
 	ba = load(path)
+
+	plotStimFileParams(ba)
 
 	#print('stimDict:', ba._stimDict)  # can be none
 
