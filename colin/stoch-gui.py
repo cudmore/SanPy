@@ -50,7 +50,10 @@ class stochGui(QtWidgets.QWidget):
 
 		self._fileList.loadFolder(path)
 		df = self._fileList.asDataFrame()
+
+		print('loaded folder looks like this:')
 		print(df)
+
 		#
 		self.fileListGui.mySetModel(df)
 
@@ -81,6 +84,7 @@ class stochGui(QtWidgets.QWidget):
 	def initGui(self):
 		vLayout = QtWidgets.QVBoxLayout()
 
+		vSplitter0 = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 
 		# list of files
 		self.fileListGui = fileListStochGui()
@@ -88,7 +92,9 @@ class stochGui(QtWidgets.QWidget):
 		self.fileListGui.signalRefreshFolder.connect(self.refreshFolder)
 		self.fileListGui.signalSelectFile.connect(self.selectFile)
 		#self.signalUpdateDetection.connect(self.fileListGui.slot_updateDetection)
-		vLayout.addWidget(self.fileListGui)
+		#vLayout.addWidget(self.fileListGui)
+		vSplitter0.addWidget(self.fileListGui)
+		vLayout.addWidget(vSplitter0)
 
 		vSplitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 
@@ -100,9 +106,13 @@ class stochGui(QtWidgets.QWidget):
 
 		vLayout.addWidget(vSplitter)
 
+		# stats
+		vSplitter2 = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 		self.statGui = statsStochGui()
 		self.raw.signalDetect.connect(self.statGui.slot_detect)
-		vLayout.addWidget(self.statGui)
+		self.signalSelectFile.connect(self.statGui.slot_detect)
+		vSplitter2.addWidget(self.statGui)
+		vLayout.addWidget(vSplitter2)
 
 		#
 		self.setLayout(vLayout)
@@ -122,9 +132,16 @@ class statsStochGui(QtWidgets.QWidget):
 		self._tableView.setModel(self._myModel)
 
 	def slot_detect(self, ba):
-		df = plotStimFileParams(ba)
+		df = ba.isiStats()
+		if df is None:
+			df = pd.DataFrame()
 		self.mySetModel(df)
 
+		print('isi stats:')
+		if len(df) == 0:
+			print('  NONE')
+		else:
+			print(df)
 
 	def initGui(self):
 		vLayout = QtWidgets.QVBoxLayout()
@@ -170,7 +187,7 @@ class fileListStochGui(QtWidgets.QWidget):
 		loadFolderButton.clicked.connect(partial(self.on_load_folder, aName))
 		controlLayout.addWidget(loadFolderButton)
 
-		aName = 'Refresh'
+		aName = 'Load New Files'
 		refreshButton = QtWidgets.QPushButton(aName)
 		refreshButton.clicked.connect(partial(self.on_refresh_button, aName))
 		controlLayout.addWidget(refreshButton)
@@ -211,8 +228,26 @@ class fileListStochGui(QtWidgets.QWidget):
 		self.signalSelectFile.emit(realRow)
 
 	def mySetModel(self, df):
+		"""
+		Refresh entire table df (slow).
+		Be sure to store/refresh the selected row (if any)
+		"""
+
+		# store selected row
+		selectedRow = None
+		selectionModel = self._tableView.selectionModel()
+		if selectionModel is not None:
+			indexes = selectionModel.selectedRows()
+			if len(indexes) > 0:
+				selectedRow = indexes[0].row()
+
+		# update model
 		self._myModel = DataFrameModel(df)  # _dataframe
 		self._tableView.setModel(self._myModel)
+
+		# reselect previous selected row
+		if selectedRow is not None:
+			self._tableView.selectRow(selectedRow)
 
 	'''
 	def slot_updateDetection(self):
@@ -265,6 +300,7 @@ class rawStochGui(QtWidgets.QWidget):
 			self._plotType = 'plotPhaseHist'
 		else:
 			logger.error(f'Did not understand {radioButton.text()}')
+
 		self.replot()
 
 	def replot(self):
@@ -468,7 +504,7 @@ def run():
 	# list of files
 	#path = '/media/cudmore/data/stoch-res/20211209'
 	path = '/media/cudmore/data/stoch-res'
-	path = '/Users/cudmore/data/stoch-res'
+	#path = '/Users/cudmore/data/stoch-res'
 	'''
 	ca = colinAnalysis2(path)
 

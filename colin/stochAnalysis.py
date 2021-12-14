@@ -174,6 +174,9 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 		startSec (float):
 		freq (float):
 	"""
+	if ba.stimDict is None:
+		return
+
 	df = ba.analysisDf
 	if df is None:
 		return
@@ -243,7 +246,7 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 			axs[idx].tick_params(axis="x", labelbottom=False) # no labels
 			axs[idx].set_xlabel('')
 
-	plotStimFileParams(ba)
+	#plotStimFileParams(ba)
 
 def isiStats(ba, hue='sweep'):
 	df = ba.analysisDf
@@ -297,7 +300,7 @@ def plotHist(ba, axs=None, hue='sweep'):
 	file = df['file'].values[0]
 
 	# same number of bins per hist
-	numBins = 'auto' #12
+	bins = 'auto' #12
 	statStr = 'ipi_ms'
 
 	hueList = df[hue].unique()
@@ -314,7 +317,11 @@ def plotHist(ba, axs=None, hue='sweep'):
 		dfPlot = df[ df[hue]==oneHue ]
 
 		# hist of isi
-		sns.histplot(x=statStr, data=dfPlot, bins=numBins, ax=axs[idx])
+		# screws up x-axis line at 0 (annoying !!!)
+		sns.histplot(x=statStr, data=dfPlot, bins=bins, ax=axs[idx])
+		# screws up x-axis line at 0 (annoying !!!)
+		#xStatVal = dfPlot[statStr]
+		#axs[idx].hist(xStatVal, bins=bins, density=False)
 
 		'''
 		if idx == len(hueList)-1:
@@ -332,11 +339,13 @@ def plotHist(ba, axs=None, hue='sweep'):
 			axs[idx].tick_params(axis="x", labelbottom=False) # no labels
 			axs[idx].set_xlabel('')
 
+	'''
 	logger.info('')
 	dfStat = isiStats(ba)
 	print(dfStat)
 
 	plotStimFileParams(ba)
+	'''
 
 def plotRaw(ba, axs=None):
 
@@ -351,7 +360,7 @@ def plotRaw(ba, axs=None):
 
 	rightAxs = [None] * numSweeps
 
-	print(ba.fileName)
+	#print(ba.fileName)
 
 	for idx in ba.sweepList:
 		ba.setSweep(idx)
@@ -378,6 +387,7 @@ def plotRaw(ba, axs=None):
 			# 20 spikes yields p=1
 			# 10/20 spikes yields p=0.5
 
+			'''
 			nSinPeaks = 20 # number of peaks in sin wave
 			pSpike = len(dfPlot)/nSinPeaks
 			isiSec = np.diff(peakSec)
@@ -387,6 +397,7 @@ def plotRaw(ba, axs=None):
 			cvISI = round(cvISI,3)
 			cvISI_invert = round(cvISI_invert,3)
 			print(f'  {idx} plotRaw() n:{len(dfPlot)} pSpike:{pSpike} cvISI:{cvISI} cvISI_invert:{cvISI_invert}')
+			'''
 
 			axs[idx].plot(peakSec, peakVal, 'o')
 

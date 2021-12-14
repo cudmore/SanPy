@@ -27,6 +27,7 @@ mpl.rcParams['axes.spines.top'] = False
 import colinUtils
 
 import sanpy.interface.plugins.stimGen2
+from sanpy.interface.plugins.stimGen2 import readFileParams, buildStimDict
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -130,6 +131,101 @@ class bAnalysis2:
 		"""
 		return self._stimDict
 
+	def reduce(self):
+		"""
+		Reduce spikes based on start/stop of sin stimulus
+
+		TODO:
+			Use readFileParams(atfPath) to read stimulus ATF file and get start/stop
+
+		Return:
+			df of spikes within sin stimulus
+		"""
+		df = self.analysisDf
+		if self.stimDict is not None:
+			#print(ba.stimDict)
+			stimStartSeconds = self.stimDict['stimStartSeconds']
+			durSeconds = self.stimDict['durSeconds']
+			startSec = stimStartSeconds
+			stopSec = startSec + durSeconds
+			try:
+				df = df[ (df['peak_sec']>=startSec) & (df['peak_sec']<=stopSec)]
+			except (KeyError) as e:
+				logger.error(e)
+		#
+		return df
+
+	def stimFileDict(self):
+		d = self.stimDict
+		if d is None:
+			return
+
+		dList = buildStimDict(d, path=self.filePath)
+		#for one in dList:
+		#	print(one)
+		df = pd.DataFrame(dList)
+		return df
+
+	def isiStats(self, hue='sweep'):
+		df = self.analysisDf
+		if df is None:
+			return pd.DataFrame()  # empty
+
+		df = self.reduce()  # reduce based on start/stop of sin stimulus
+
+		statList = []
+
+		statStr = 'ipi_ms'
+
+		stimFileDict = self.stimFileDict()
+		'''
+		if stimFileDict is not None:
+			print('stimFileDict:')
+			print(stimFileDict)
+		'''
+
+		hueList = df[hue].unique()
+		for idx,oneHue in enumerate(hueList):
+			dfPlot = df[ df[hue]==oneHue ]
+			ipi_ms = dfPlot[statStr]
+
+			meanISI = np.nanmean(ipi_ms)
+			stdISI = np.nanstd(ipi_ms)
+			cvISI = stdISI / meanISI
+			cvISI = round(cvISI, 3)
+			cvISI_inv = np.nanstd(1/ipi_ms) / np.nanmean(1/ipi_ms)
+			cvISI_inv = round(cvISI_inv, 3)
+
+			oneDict = {
+				'file': self.fileName,
+				'stat': statStr,
+				'count': len(ipi_ms),
+				'minISI': round(np.nanmin(ipi_ms),3),
+				'maxISI': round(np.nanmax(ipi_ms),3),
+				'stdISI': round(stdISI,3),
+				'meanISI': round(np.nanmean(ipi_ms),3),
+				'medianISI': round(np.nanmedian(ipi_ms),3),
+				'cvISI': cvISI,
+				'cvISI_inv': cvISI_inv,
+
+				# stim params from stimulus file
+				'Stim Freq (Hz)': '',
+				'Stim Amp': '',
+				'Noise Amp': '',
+
+			}
+
+			if stimFileDict is not None:
+				oneDict['Stim Freq (Hz)'] = stimFileDict.loc[idx, 'freq(Hz)']
+				oneDict['Stim Amp'] = stimFileDict.loc[idx, 'amp']
+				oneDict['Noise Amp'] = stimFileDict.loc[idx, 'noise amp']
+
+			statList.append(oneDict)
+
+		#
+		retDf = pd.DataFrame(statList)
+		return retDf
+
 	def setSweep(self, sweep):
 		"""
 		Set the current sweep
@@ -166,8 +262,9 @@ class bAnalysis2:
 			'Dur(s)': round(self.sweepDur,3),
 			'kHz': self.dataPointsPerMs,
 
-			'Start(s)': startSec,
-			'Stop(s)': stopSec,
+			# add back in
+			#'Start(s)': startSec,
+			#'Stop(s)': stopSec,
 
 			# if we have a atfStim stimulus file
 			'Stim Freq (Hz)': '',
@@ -175,8 +272,8 @@ class bAnalysis2:
 			'Noise Amp': '',
 			'Noise Step': '',
 
-			'Threshold': self.detectionParams['threshold'],
-			'Peaks': self.numPeaks,
+			'Detection Threshold': self.detectionParams['threshold'],
+			'Num Peaks': self.numPeaks,
 		}
 
 		if self._stimDict is not None:
@@ -283,6 +380,8 @@ class bAnalysis2:
 		"""
 		Detect one file
 		"""
+		logger.info(f'Starting detection for {self.filePath}')
+
 		if detectionDict is None:
 			detectionDict = bAnalysis2.getDefaultDetection()
 
