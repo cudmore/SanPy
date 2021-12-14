@@ -26,6 +26,7 @@ from stochAnalysis import plotRaw
 from stochAnalysis import plotHist
 from stochAnalysis import plotPhaseHist
 from stochAnalysis import detect
+from stochAnalysis import plotStimFileParams
 
 class stochGui(QtWidgets.QWidget):
 	signalSelectFile = QtCore.pyqtSignal(object) # ba
@@ -68,7 +69,7 @@ class stochGui(QtWidgets.QWidget):
 		ba = self._fileList.getFile(rowIdx)
 		self.signalSelectFile.emit(ba)
 
-	def slot_detect(self):
+	def slot_detect(self, ba):
 		"""
 		New detection emit to update file list table
 		"""
@@ -99,11 +100,55 @@ class stochGui(QtWidgets.QWidget):
 
 		vLayout.addWidget(vSplitter)
 
+		self.statGui = statsStochGui()
+		self.raw.signalDetect.connect(self.statGui.slot_detect)
+		vLayout.addWidget(self.statGui)
+
 		#
 		self.setLayout(vLayout)
 
 
+class statsStochGui(QtWidgets.QWidget):
+	"""
+	show table of isi stats
+	"""
+	def __init__(self, parent=None):
+		super(statsStochGui, self).__init__(parent)
+		self._myModel = None  # a DataFrameModel
+		self.initGui()
+
+	def mySetModel(self, df):
+		self._myModel = DataFrameModel(df)  # _dataframe
+		self._tableView.setModel(self._myModel)
+
+	def slot_detect(self, ba):
+		df = plotStimFileParams(ba)
+		self.mySetModel(df)
+
+
+	def initGui(self):
+		vLayout = QtWidgets.QVBoxLayout()
+
+		# main table view
+		self._tableView = QtWidgets.QTableView(self)
+		self._tableView.setFont(QtGui.QFont('Arial', 10))
+		#print('here seg fault')
+		#self._tableView.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+		self._tableView.horizontalHeader().setStretchLastSection(True)  # so we fill parent
+		# no work
+		#self._tableView.setColumnWidth(0, 500)  # set first column (file) wider
+		self._tableView.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+		self._tableView.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
+							QtWidgets.QSizePolicy.Expanding)
+		self._tableView.setSelectionMode(QtWidgets.QTableView.SingleSelection)
+		#self._tableView.clicked.connect(self.on_left_click)
+
+		vLayout.addWidget(self._tableView)
+
+		self.setLayout(vLayout)
+
 class fileListStochGui(QtWidgets.QWidget):
+
 	signalLoadFolder = QtCore.pyqtSignal() # no payload
 	signalRefreshFolder = QtCore.pyqtSignal()  # no payload
 	signalSelectFile = QtCore.pyqtSignal(object) # row index (corresponds to file on xxx)
@@ -180,7 +225,7 @@ class rawStochGui(QtWidgets.QWidget):
 	"""
 	Plot one of (xxx, yyy, zzz)
 	"""
-	signalDetect = QtCore.pyqtSignal() # no payload
+	signalDetect = QtCore.pyqtSignal(object) # no payload
 
 	def __init__(self, parent=None):
 		super(rawStochGui, self).__init__(parent)
@@ -201,7 +246,7 @@ class rawStochGui(QtWidgets.QWidget):
 			detect(self._ba, thresholdValue)
 			self.replot()
 
-			self.signalDetect.emit()
+			self.signalDetect.emit(self._ba)
 
 			#self.detectButton  # set normal
 			self.detectButton.setStyleSheet("background-color : None")
@@ -423,6 +468,7 @@ def run():
 	# list of files
 	#path = '/media/cudmore/data/stoch-res/20211209'
 	path = '/media/cudmore/data/stoch-res'
+	path = '/Users/cudmore/data/stoch-res'
 	'''
 	ca = colinAnalysis2(path)
 

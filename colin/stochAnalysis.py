@@ -47,7 +47,7 @@ def plotStimFileParams(ba):
 	#	print(one)
 	df = pd.DataFrame(dList)
 	print(df)
-
+	return df
 def detect(ba, thresholdValue = -20):
 	"""
 	Detect spikes
