@@ -28,7 +28,7 @@ import sanpy
 import sanpy.bAnalysisUtil
 
 # keys are human name statDict[<human name>']['name'] is backend
-statDict = sanpy.bAnalysisUtil.bAnalysisUtil.getStatList()
+statDict = sanpy.bAnalysisUtil.getStatList()
 #from sanpy.bAnalysisUtil import statList
 #statDict = statList
 

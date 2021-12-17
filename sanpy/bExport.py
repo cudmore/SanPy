@@ -55,7 +55,8 @@ class bExport():
 		#df = pd.DataFrame(self.ba.spikeDict
 		#df = pd.DataFrame(self.ba.spikeDict.aslist())
 		df = self.ba.asDataFrame()
-		df = df[df['thresholdSec'].between(theMin, theMax, inclusive=True)]
+		#df = df[df['thresholdSec'].between(theMin, theMax, inclusive=True)]
+		df = df[ (df['thresholdSec']>=theMin) & (df['thresholdSec']<=theMax) ]
 
 		# added when trying to make scatterwidget for one file
 		#print('  20210426 adding columns in bExport.report()')
