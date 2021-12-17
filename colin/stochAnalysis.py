@@ -242,7 +242,7 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 		if lastSweep:
 			axs[idx].set_xlabel('Phase')
 		else:
-			axs[idx].spines['bottom'].set_visible(False)
+			#axs[idx].spines['bottom'].set_visible(False)
 			axs[idx].tick_params(axis="x", labelbottom=False) # no labels
 			axs[idx].set_xlabel('')
 
@@ -335,7 +335,7 @@ def plotHist(ba, axs=None, hue='sweep'):
 		if lastSweep:
 			axs[idx].set_xlabel(statStr)
 		else:
-			axs[idx].spines['bottom'].set_visible(False)
+			#axs[idx].spines['bottom'].set_visible(False)
 			axs[idx].tick_params(axis="x", labelbottom=False) # no labels
 			axs[idx].set_xlabel('')
 
@@ -347,7 +347,16 @@ def plotHist(ba, axs=None, hue='sweep'):
 	plotStimFileParams(ba)
 	'''
 
-def plotRaw(ba, axs=None):
+def plotRaw(ba, showDetection=True, showDac=True, axs=None):
+	"""
+	Plot Raw data.
+
+	Args:
+		ba (bAnalysis2)
+		showDetection (bool): Overlay detection parameters
+		showDac (bool): Overlay Stimulus File DAC stimulus
+		axs (matpltlib): If given then plot in this axes
+	"""
 
 	numSweeps = ba.numSweeps
 
@@ -358,65 +367,79 @@ def plotRaw(ba, axs=None):
 
 			fig.suptitle(ba.fileName)
 
+	# If we are plotting Dac
 	rightAxs = [None] * numSweeps
 
-	#print(ba.fileName)
+	# keep track of x/y min of each plot to make them all the same
+	yRawMin = 1e9
+	yRawMax = -1e9
+
+	yDacMin = 1e9
+	yDacMax = -1e9
 
 	for idx in ba.sweepList:
 		ba.setSweep(idx)
 
-		rightAxs[idx] = axs[idx].twinx()
-		#rightAxs[idx].set_ylabel(abf.sweepLabelC)
-		rightAxs[idx].set_ylabel('DAC (nA)')
-		rightAxs[idx].plot(ba.sweepX, ba.sweepC, 'r', lw=.5, zorder=0)
+		if showDac:
+			rightAxs[idx] = axs[idx].twinx()
+			rightAxs[idx].spines['right'].set_visible(True)
+			rightAxs[idx].set_ylabel('DAC (nA)')
+			rightAxs[idx].plot(ba.sweepX, ba.sweepC, 'r', lw=.5, zorder=0)
 
-		#axs[idx].set_ylabel(abf.sweepLabelY)
+			yMin = np.min(ba.sweepC)
+			if yMin < yDacMin:
+				yDacMin = yMin
+			yMax = np.max(ba.sweepC)
+			if yMax > yDacMax:
+				yDacMax = yMax
+
 		axs[idx].set_ylabel('Vm (mV)')
-		axs[idx].plot(ba.sweepX, ba.sweepY, 'k', lw=1.0, zorder=10)
+		axs[idx].plot(ba.sweepX, ba.sweepY, lw=1.0, zorder=10)
 
-		if ba.analysisDf is not None:
+		yMin = np.min(ba.sweepY)
+		if yMin < yRawMin:
+			yRawMin = yMin
+		yMax = np.max(ba.sweepY)
+		if yMax > yRawMax:
+			yRawMax = yMax
+
+		if showDetection and ba.analysisDf is not None:
 			df = reduce(ba)
-			# just one sweep
-			#df = ba.analysisDf
 			dfPlot = df[ df['sweep']== idx]
 
 			peakSec = dfPlot['peak_sec']
 			peakVal = dfPlot['peak_val']
 
-			# given 20 peaks, calculate "probability of spike"
-			# 20 spikes yields p=1
-			# 10/20 spikes yields p=0.5
-
-			'''
-			nSinPeaks = 20 # number of peaks in sin wave
-			pSpike = len(dfPlot)/nSinPeaks
-			isiSec = np.diff(peakSec)
-			cvISI = np.std(isiSec) / np.mean(isiSec)
-			cvISI_invert = 1 / cvISI
-			# round
-			cvISI = round(cvISI,3)
-			cvISI_invert = round(cvISI_invert,3)
-			print(f'  {idx} plotRaw() n:{len(dfPlot)} pSpike:{pSpike} cvISI:{cvISI} cvISI_invert:{cvISI_invert}')
-			'''
-
-			axs[idx].plot(peakSec, peakVal, 'o')
+			axs[idx].plot(peakSec, peakVal, 'ob', markersize=3, zorder=999)
 
 			footSec = dfPlot['foot_sec']
 			footVal = dfPlot['foot_val']
-			axs[idx].plot(footSec, footVal, 'og')
+			axs[idx].plot(footSec, footVal, 'og', markersize=3, zorder=999)
 
 		# label x-axis of subplots
 		lastSweep = idx == (numSweeps - 1)
 		if lastSweep:
 			axs[idx].set_xlabel('Time (s)')
 		else:
-			axs[idx].spines['bottom'].set_visible(False)
+			#axs[idx].spines['bottom'].set_visible(False)
 			axs[idx].tick_params(axis="x", labelbottom=False) # no labels
 			axs[idx].set_xlabel('')
 
 		# get the zorder correct
-		axs[idx].set_zorder(rightAxs[idx].get_zorder()+1)
-		axs[idx].set_frame_on(False)
+		if showDac:
+			axs[idx].set_zorder(rightAxs[idx].get_zorder()+1)
+			axs[idx].set_frame_on(False)
+
+	# set common y min/max
+	# expand left axis by a percentage %
+	percentExpand = 0.05
+	thisExpand = (yRawMax - yRawMin) * percentExpand
+	yRawMin -= thisExpand
+	yRawMax += thisExpand
+	for idx in ba.sweepList:
+		axs[idx].set_ylim(yRawMin, yRawMax)
+		if showDac:
+			rightAxs[idx].set_ylim(yDacMin, yDacMax)
 
 	#
 	plt.tight_layout()

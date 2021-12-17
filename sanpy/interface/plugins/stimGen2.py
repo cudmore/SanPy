@@ -137,7 +137,7 @@ def readCommentParams(commentStr):
 			try:
 				v = float(v)
 			except (ValueError) as e:
-				print(f'ERROR: {k} "{v}" param="{param}"')
+				logger.error(f'ERROR: {k} "{v}" param="{param}"')
 		#
 		retDict[k] = v
 	#

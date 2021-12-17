@@ -11,11 +11,17 @@ import pandas as pd
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
+import seaborn as sns
+
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.backends import backend_qt5agg
 
 import qdarkstyle
+
+# turn off qdarkstyle logging
+import logging
+logging.getLogger('qdarkstyle').setLevel(logging.WARNING)
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -28,95 +34,95 @@ from stochAnalysis import plotPhaseHist
 from stochAnalysis import detect
 from stochAnalysis import plotStimFileParams
 
-class stochGui(QtWidgets.QWidget):
-	signalSelectFile = QtCore.pyqtSignal(object) # ba
-	#signalUpdateDetection = QtCore.pyqtSignal()
+class stochGui(QtWidgets.QMainWindow):
+	"""
+	Main window interface to show (file list, raw plot, stats table).
+	"""
+
+	signalLoadDroppedFile = QtCore.pyqtSignal(str)
+	"""Emit when a file is dropped."""
 
 	def __init__(self, parent=None):
 		super(stochGui, self).__init__(parent)
 
-		self._fileList = colinAnalysis2()  # backend list of bAnalysis2 in folder path
+		self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+		#sns.set(style="ticks", context="talk")
+		plt.style.use("dark_background")
 
-		self.initGui()
+		self._initGui()
 
-	def loadFolder(self, path=None):
-
-		if path is None:
-			path = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory With Recordings"))
-			if len(path) == 0:
-				return
-
-		logger.info(path)
-
-		self._fileList.loadFolder(path)
-		df = self._fileList.asDataFrame()
-
-		print('loaded folder looks like this:')
-		print(df)
-
-		#
-		self.fileListGui.mySetModel(df)
-
-	def refreshFolder(self):
-		logger.info('')
-		numNewFiles = self._fileList.refreshFolder()
-		if numNewFiles > 0:
-			df = self._fileList.asDataFrame()
-			print(df)
-			#
-			self.fileListGui.mySetModel(df)
-
-	def selectFile(self, rowIdx):
-		logger.info(rowIdx)
-		# get bAnalysis2 from file list and propogate selection
-		ba = self._fileList.getFile(rowIdx)
-		self.signalSelectFile.emit(ba)
-
-	def slot_detect(self, ba):
+	def dragEnterEvent(self, e):
 		"""
-		New detection emit to update file list table
-		"""
-		logger.info('')
-		#self.signalUpdateDetection.emit()
-		df = self._fileList.asDataFrame()
-		self.fileListGui.mySetModel(df)
+		Respond to user dragging a file over interface.
 
-	def initGui(self):
+		This function is inherited from PyQt.
+
+		Args:
+			e (QDragEnterEvent):
+		"""
+		acceptedFileTypes = ['.abf']  # list of accepted file extensions
+
+		text = e.mimeData().text()
+		text = text.rstrip()  # strip trailing characters
+
+		filePath, fileExt = os.path.splitext(text)
+		if fileExt in acceptedFileTypes:
+			e.accept()
+
+	def dropEvent(self, e):
+		"""
+		Respond when user actually drops a drag/drop file.
+
+		This function is inherited from PyQt.
+		"""
+		text = e.mimeData().text()
+		text = text.rstrip()
+		filePath = text.replace('file://', '')
+
+		logger.info(filePath)
+
+		if os.path.isfile(filePath):
+			self.signalLoadDroppedFile.emit(filePath)
+
+	def _initGui(self):
+		"""
+		One time initialization of main GUI.
+		"""
 		vLayout = QtWidgets.QVBoxLayout()
-
-		vSplitter0 = QtWidgets.QSplitter(QtCore.Qt.Vertical)
-
-		# list of files
-		self.fileListGui = fileListStochGui()
-		self.fileListGui.signalLoadFolder.connect(self.loadFolder)
-		self.fileListGui.signalRefreshFolder.connect(self.refreshFolder)
-		self.fileListGui.signalSelectFile.connect(self.selectFile)
-		#self.signalUpdateDetection.connect(self.fileListGui.slot_updateDetection)
-		#vLayout.addWidget(self.fileListGui)
-		vSplitter0.addWidget(self.fileListGui)
-		vLayout.addWidget(vSplitter0)
 
 		vSplitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
 
-		# raw plots (raw, hist, phase)
-		self.raw = rawStochGui()
-		self.raw.signalDetect.connect(self.slot_detect)
-		self.signalSelectFile.connect(self.raw.slot_switchFile)
-		vSplitter.addWidget(self.raw)
+		#
+		# list of files
+		self.fileListGui = fileListStochGui()
+		vSplitter.addWidget(self.fileListGui)
 
-		vLayout.addWidget(vSplitter)
+		# raw plots (raw, hist, phase)
+		rawPlotGui = rawStochGui()
+		vSplitter.addWidget(rawPlotGui)
 
 		# stats
-		vSplitter2 = QtWidgets.QSplitter(QtCore.Qt.Vertical)
-		self.statGui = statsStochGui()
-		self.raw.signalDetect.connect(self.statGui.slot_detect)
-		self.signalSelectFile.connect(self.statGui.slot_detect)
-		vSplitter2.addWidget(self.statGui)
-		vLayout.addWidget(vSplitter2)
+		statGui = statsStochGui()
+		vSplitter.addWidget(statGui)
+		vLayout.addWidget(vSplitter)
+
+		# enable drag/drop
+		self.setAcceptDrops(True)
 
 		#
-		self.setLayout(vLayout)
+		# connect signal/slot of (fileListGui, rawPlotGui, statGui)
+		self.fileListGui.signalSelectFile.connect(rawPlotGui.slot_switchFile)
+		self.fileListGui.signalSelectFile.connect(statGui.slot_detect)
+		self.signalLoadDroppedFile.connect(self.fileListGui.loadDroppedFile)
+		#
+		rawPlotGui.signalDetect.connect(self.fileListGui.slot_detect)
+		#
+		rawPlotGui.signalDetect.connect(statGui.slot_detect)
 
+		# finalize
+		centralWidget = QtWidgets.QWidget()
+		centralWidget.setLayout(vLayout)
+		self.setCentralWidget(centralWidget)
 
 class statsStochGui(QtWidgets.QWidget):
 	"""
@@ -125,7 +131,7 @@ class statsStochGui(QtWidgets.QWidget):
 	def __init__(self, parent=None):
 		super(statsStochGui, self).__init__(parent)
 		self._myModel = None  # a DataFrameModel
-		self.initGui()
+		self._initGui()
 
 	def mySetModel(self, df):
 		self._myModel = DataFrameModel(df)  # _dataframe
@@ -137,20 +143,19 @@ class statsStochGui(QtWidgets.QWidget):
 			df = pd.DataFrame()
 		self.mySetModel(df)
 
-		print('isi stats:')
+		logger.info('isi stats:')
+
 		if len(df) == 0:
 			print('  NONE')
 		else:
 			print(df)
 
-	def initGui(self):
+	def _initGui(self):
 		vLayout = QtWidgets.QVBoxLayout()
 
 		# main table view
 		self._tableView = QtWidgets.QTableView(self)
 		self._tableView.setFont(QtGui.QFont('Arial', 10))
-		#print('here seg fault')
-		#self._tableView.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
 		self._tableView.horizontalHeader().setStretchLastSection(True)  # so we fill parent
 		# no work
 		#self._tableView.setColumnWidth(0, 500)  # set first column (file) wider
@@ -166,16 +171,19 @@ class statsStochGui(QtWidgets.QWidget):
 
 class fileListStochGui(QtWidgets.QWidget):
 
-	signalLoadFolder = QtCore.pyqtSignal() # no payload
-	signalRefreshFolder = QtCore.pyqtSignal()  # no payload
+	#signalLoadFolder = QtCore.pyqtSignal() # no payload
+	#signalRefreshFolder = QtCore.pyqtSignal()  # no payload
 	signalSelectFile = QtCore.pyqtSignal(object) # row index (corresponds to file on xxx)
 
 	def __init__(self, parent=None):
 		super(fileListStochGui, self).__init__(parent)
-		self._myModel = None  # a DataFrameModel
-		self.initGui()
 
-	def initGui(self):
+		self._fileList = colinAnalysis2()  # backend list of bAnalysis2 in folder path
+		self._myModel = None  # a DataFrameModel
+
+		self._initGui()
+
+	def _initGui(self):
 		vLayout = QtWidgets.QVBoxLayout()
 
 		# add controls above table
@@ -197,8 +205,6 @@ class fileListStochGui(QtWidgets.QWidget):
 		# main table view
 		self._tableView = QtWidgets.QTableView(self)
 		self._tableView.setFont(QtGui.QFont('Arial', 10))
-		#print('here seg fault')
-		#self._tableView.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
 		self._tableView.horizontalHeader().setStretchLastSection(True)  # so we fill parent
 		# no work
 		#self._tableView.setColumnWidth(0, 500)  # set first column (file) wider
@@ -212,20 +218,69 @@ class fileListStochGui(QtWidgets.QWidget):
 
 		self.setLayout(vLayout)
 
+	def loadFolder(self, path=None):
+
+		if path is None:
+			path = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory With Recordings"))
+			if len(path) == 0:
+				return
+
+		logger.info(path)
+
+		self._fileList.loadFolder(path)
+		df = self._fileList.asDataFrame()
+
+		print('loaded folder looks like this:')
+		print(df)
+
+		#
+		self.mySetModel(df)
+
+		#self.signalLoadFolder.emit()
+
+		if len(df) > 0:
+			self.selectFile(0)
+
+	def refreshFolder(self):
+		"""
+		Scan folder for new files
+		"""
+		logger.info('')
+		numNewFiles = self._fileList.refreshFolder()
+		if numNewFiles > 0:
+			df = self._fileList.asDataFrame()
+			print(df)
+			#
+			self.mySetModel(df)
+
+	def selectFile(self, rowIdx):
+		logger.info(rowIdx)
+		# get bAnalysis2 from file list and propogate selection
+		ba = self._fileList.getFile(rowIdx)
+		self.signalSelectFile.emit(ba)
+
+	def slot_detect(self, ba):
+		"""
+		New detection emit to update file list table
+		"""
+		logger.info('')
+		df = self._fileList.asDataFrame()
+		self.mySetModel(df)
+
 	def on_load_folder(self, nameStr):
 		logger.info(nameStr)
-		self.signalLoadFolder.emit()
+		self.loadFolder()
 
 	def on_refresh_button(self, nameStr):
 		logger.info(nameStr)
-		self.signalRefreshFolder.emit()
+		self.refreshFolder()
 
 	def on_left_click(self, item):
-		logger.info('')
 		row = item.row()
 		df = self._myModel.dataFrame
 		realRow = df.index[row] # sort order
-		self.signalSelectFile.emit(realRow)
+		logger.info(f'User selected row {row} realRow {realRow}')
+		self.selectFile(realRow)
 
 	def mySetModel(self, df):
 		"""
@@ -249,18 +304,22 @@ class fileListStochGui(QtWidgets.QWidget):
 		if selectedRow is not None:
 			self._tableView.selectRow(selectedRow)
 
-	'''
-	def slot_updateDetection(self):
+	def loadDroppedFile(self, filePath):
 		"""
-		Rebuild entire table (slow)
+		When user drops into a QMainWindow
 		"""
-	'''
+		logger.info(filePath)
+		df = self._fileList.appendDroppedFile(filePath)
+
+		self.mySetModel(df)
 
 class rawStochGui(QtWidgets.QWidget):
 	"""
-	Plot one of (xxx, yyy, zzz)
+	Plot one of (raw, isi hist, period hist)
 	"""
+
 	signalDetect = QtCore.pyqtSignal(object) # no payload
+	"""When user presses 'Detect' button and spikes are detected."""
 
 	def __init__(self, parent=None):
 		super(rawStochGui, self).__init__(parent)
@@ -269,7 +328,10 @@ class rawStochGui(QtWidgets.QWidget):
 		self._plotType = 'plotRaw'
 		self._axs = []
 
-		self.buildGui()
+		self._showDetection = True
+		self._showDac = True
+
+		self._buildGui()
 
 	def on_detect_button(self, nameStr):
 		if self._ba is not None:
@@ -284,7 +346,7 @@ class rawStochGui(QtWidgets.QWidget):
 			self.signalDetect.emit(self._ba)
 
 			#self.detectButton  # set normal
-			self.detectButton.setStyleSheet("background-color : None")
+			self.detectButton.setStyleSheet("background-color : Blue")
 
 	def btnstate(self):
 		radioButton = self.sender()
@@ -301,6 +363,16 @@ class rawStochGui(QtWidgets.QWidget):
 		else:
 			logger.error(f'Did not understand {radioButton.text()}')
 
+		self.replot()
+
+	def on_check_boxState(self, state):
+		checkbox = self.sender()
+		isChecked = checkbox.isChecked()
+
+		if checkbox.text() == 'Show Detection':
+			self._showDetection = isChecked
+		elif checkbox.text() == 'Show DAC':
+			self._showDac = isChecked
 		self.replot()
 
 	def replot(self):
@@ -328,7 +400,9 @@ class rawStochGui(QtWidgets.QWidget):
 			#self._axs[sweep].plot([1,2,3], [4,5,6])
 
 		if self._plotType == 'plotRaw':
-			plotRaw(self._ba, self._axs)
+			showDetection = self._showDetection
+			showDac = self._showDac
+			plotRaw(self._ba, showDetection=showDetection, showDac=showDac, axs=self._axs)
 		elif self._plotType == 'plotHist':
 			plotHist(self._ba, self._axs)
 		elif self._plotType == 'plotPhaseHist':
@@ -345,17 +419,17 @@ class rawStochGui(QtWidgets.QWidget):
 		self._ba = ba  # needed to detect
 		self.replot()
 
-	def buildGui(self):
+	def _buildGui(self):
 		vLayout = QtWidgets.QVBoxLayout()
 
 		#
-		# detect
+		# detect layout
 		controlLayout = QtWidgets.QHBoxLayout()
 
 		# detect button
 		aName = 'Detect (mV)'
 		self.detectButton = QtWidgets.QPushButton(aName)
-		self.detectButton.setStyleSheet("background-color : None")
+		self.detectButton.setStyleSheet("background-color : Blue")
 		self.detectButton.clicked.connect(partial(self.on_detect_button, aName))
 
 		controlLayout.addWidget(self.detectButton)
@@ -396,10 +470,24 @@ class rawStochGui(QtWidgets.QWidget):
 		#
 		vLayout.addLayout(plotTypeLayout) # add mpl canvas
 
+		# turn raw plot detection and dac on/off
+		rawPlotOptionsLayout = QtWidgets.QHBoxLayout()
+
+		showDetectionCheckbox = QtWidgets.QCheckBox('Show Detection')
+		showDetectionCheckbox.setCheckState(2)  # annoying
+		showDetectionCheckbox.stateChanged.connect(self.on_check_boxState)
+		rawPlotOptionsLayout.addWidget(showDetectionCheckbox)
+
+		showDacCheckbox = QtWidgets.QCheckBox('Show DAC')
+		showDacCheckbox.setCheckState(2)  # annoying
+		showDacCheckbox.stateChanged.connect(self.on_check_boxState)
+		rawPlotOptionsLayout.addWidget(showDacCheckbox)
+
+		vLayout.addLayout(rawPlotOptionsLayout) # add mpl canvas
+
+
 		#
 		# matplotlib
-		#vSplitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
-		#vLayout.addWidget(vSplitter)
 		vPlotLayout = QtWidgets.QVBoxLayout()
 
 		#plt.style.use('dark_background')
@@ -423,6 +511,9 @@ class rawStochGui(QtWidgets.QWidget):
 		self.setLayout(vLayout)
 
 class DataFrameModel(QtCore.QAbstractTableModel):
+	"""
+	Abstract table model to define behavior of QTableView
+	"""
 	DtypeRole = QtCore.Qt.UserRole + 1000
 	ValueRole = QtCore.Qt.UserRole + 1001
 
@@ -487,34 +578,18 @@ class DataFrameModel(QtCore.QAbstractTableModel):
 def run():
 	app = QtWidgets.QApplication(sys.argv)
 
-	'''
-	path = '/media/cudmore/data/stoch-res/20211209/2021_12_09_0011.abf'  # 1pA/1Hz/2pA step
-	ba = bAnalysis2(path)
-	print(ba)
-
-	thresholdValue = -20
-	detect(ba)
-
-
-	rsg = rawStochGui()
-	rsg.show()
-	rsg.slot_switchFile(ba)
-	'''
-
 	# list of files
 	#path = '/media/cudmore/data/stoch-res/20211209'
 	path = '/media/cudmore/data/stoch-res'
 	#path = '/Users/cudmore/data/stoch-res'
-	'''
-	ca = colinAnalysis2(path)
-
-	flsg = fileListStochGui()
-	flsg.mySetModel(ca.asDataFrame())
-	flsg.show()
-	'''
 
 	sg = stochGui()
-	sg.loadFolder(path)
+	if os.path.isdir(path):
+		sg.fileListGui.loadFolder(path)
+		#sg.signalLoadDroppedFile.emit(path)
+	else:
+		logger.info(f'Did not find actual path in __main__ {path}')
+
 	sg.show()
 
 	sys.exit(app.exec_())

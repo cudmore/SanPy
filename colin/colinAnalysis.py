@@ -32,6 +32,22 @@ from sanpy.interface.plugins.stimGen2 import readFileParams, buildStimDict
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
+# this is sloppy, we need a detection param class
+# use ba.getDefaultDetection() to build it
+'''
+detectionDefault = {
+	'stochastic': {
+		detectionDict = ba.getDefaultDetection()
+		detectionDict['threshold'] = thresholdValue
+		detectionDict['width'] = [50, 800*10]
+		detectionDict['doBaseline'] = False
+		detectionDict['preFootMs'] = 50 * 10
+		detectionDict['verbose'] = True
+
+	}
+}
+'''
+
 class bAnalysis2:
 	"""
 	Manager one abf loaded from a file
@@ -97,8 +113,9 @@ class bAnalysis2:
 
 	def __init__(self, path, stimulusFileFolder=None):
 		"""
-		path (str): path to abf file
-		stimulusFileFolder (str): Relative path to stimulus file.
+		Args:
+			path (str): path to abf file
+			stimulusFileFolder (str): Relative path to stimulus file.
 								Leave as None, and assume stimulus file atf are in same folder as abf
 		"""
 		self._path = path
@@ -122,6 +139,17 @@ class bAnalysis2:
 		else:
 			self._stimFile = stimFilePath
 			self._stimDict = sanpy.interface.plugins.stimGen2.readCommentParams(stimFileComment)
+
+	def __str__(self):
+		dur = round(self.sweepDur,2)
+
+		stimFileStr = ''
+		if self._stimFile is not None:
+			stimFileStr = f'stimFile:{os.path.split(self._stimFile)[1]}'
+
+		s = f'{self.fileName} sweeps:{self.numSweeps} dur(s):{dur} kHz:{self.dataPointsPerMs} {stimFileStr} events:{self.numPeaks}'
+
+		return s
 
 	@property
 	def stimDict(self):
@@ -232,17 +260,6 @@ class bAnalysis2:
 		"""
 		self._currentSweep = sweep
 		self.abf.setSweep(sweep)
-
-	def __str__(self):
-		dur = round(self.sweepDur,2)
-
-		stimFileStr = ''
-		if self._stimFile is not None:
-			stimFileStr = f'stimFile:{os.path.split(self._stimFile)[1]}'
-
-		s = f'{self.fileName} sweeps:{self.numSweeps} dur(s):{dur} kHz:{self.dataPointsPerMs} {stimFileStr} events:{self.numPeaks}'
-
-		return s
 
 	def getHeader(self):
 		"""
@@ -707,7 +724,7 @@ class bAnalysis2:
 
 class colinAnalysis2:
 	"""
-	Manage a list of bAnalysis2 (abf files) loaded from a folder
+	Manage a list of bAnalysis2 (abf files) loaded from a folder path.
 	"""
 	def __init__(self, folderPath=None):
 		self._folderPath = folderPath
@@ -731,9 +748,24 @@ class colinAnalysis2:
 		else:
 			raise StopIteration
 
+	def appendDroppedFile(self, filePath):
+		"""
+		Load a dropped file and append to list
+
+		Args:
+			filePath (str): File path to load.
+
+		Returns:
+			(DataFrame): The new data frame including the new file.
+		"""
+		oneAnalysis = bAnalysis2(filePath)
+		logger.info(oneAnalysis)
+		self._analysisList.append(oneAnalysis)
+		return self.asDataFrame()
+
 	def asDataFrame(self):
 		"""
-		Get information for each file as a DataFrame
+		Get a DataFrame with information for each file.
 		"""
 		headerList = []
 		for fileIdx in range(self.numFiles):
@@ -766,7 +798,7 @@ class colinAnalysis2:
 			return
 
 		fileList = sorted(os.listdir(path))
-		print(path, fileList)
+		#print(path, fileList)
 
 		if len(fileList) == 0:
 			# warn user

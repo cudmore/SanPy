@@ -157,7 +157,7 @@ def stimulusWaveformFromFile(abf, channel=0, stimulusSweep=None):
             if stimPath.upper().endswith(".ABF"):
                 cachedStimuli[stimPath] = pyabf.ABF(stimPath)
             elif stimPath.upper().endswith(".ATF"):
-                print('abb pyabf stimulus.stimulusWaveformFromFile() assigning cachedStimuli')
+                #print('abb pyabf stimulus.stimulusWaveformFromFile() assigning cachedStimuli')
                 cachedStimuli[stimPath] = pyabf.ATF(stimPath)
         # abb, setSweep
         cachedStimuli[stimPath].setSweep(stimulusSweep)
