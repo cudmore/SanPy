@@ -8,16 +8,16 @@
         "plotEveryPoint": 10,
         "showClips": false,
         "showDAC": false,
-        "showDvDt": false,
+        "showDvDt": true,
         "showErrors": false,
         "showGlobalVm": false,
         "showScatter": false
     },
-    "lastPath": "/media/cudmore/data/stoch-res",
+    "lastPath": "/Users/cudmore/data/stoch-res",
     "useDarkStyle": true,
     "windowGeometry": {
-        "height": 802,
-        "width": 1608,
+        "height": 1246,
+        "width": 1935,
         "x": 169,
         "y": 97
     }

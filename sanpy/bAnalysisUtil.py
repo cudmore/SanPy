@@ -9,10 +9,9 @@ from collections import OrderedDict
 # Each key, like 'Take Off Potential (mV)' is a y-stat
 
 import sanpy
-import sanpy.userAnalysis
-import sanpy.userAnalysis.baseUserAnalysis
-#from . import useranalysis
-from .userAnalysis import findUserAnalysis
+#import sanpy.userAnalysis
+#import sanpy.userAnalysis.baseUserAnalysis
+#from sanpy.userAnalysis import findUserAnalysis
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
