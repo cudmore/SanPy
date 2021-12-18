@@ -10,8 +10,8 @@ setup(
     author='Robert H Cudmore',
     author_email='robert.cudmore@gmail.com',
     license='GNU GPLv3',
-	#packages=find_packages(include=['sanpy', 'sanpy.*']),
-    packages=['sanpy'],
+	packages=find_packages(include=['sanpy', 'sanpy.*']),
+    #packages=['sanpy', 'sanpy.userAnalysis'],
 	install_requires=[
         'numpy',
         'pandas',

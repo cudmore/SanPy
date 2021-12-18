@@ -166,19 +166,21 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		# check if our table view has been edited by uder and warn
 		doQuit = True
 		alreadyAsked = False
-		tableIsDirty = self.myAnalysisDir.isDirty
-		analysisIsDirty = self.myAnalysisDir.hasDirty()
-		if tableIsDirty or analysisIsDirty:
-			alreadyAsked = True
-			userResp = sanpy.interface.bDialog.yesNoCancelDialog('You changed the file database or have analyzed but not saved.\nDo you want to save then quit?')
-			if userResp == QtWidgets.QMessageBox.Yes:
-				self.slotSaveFilesTable()
-				event.accept()
-			elif userResp == QtWidgets.QMessageBox.No:
-				event.accept()
-			else:
-				event.ignore()
-				doQuit = False
+		# self.myAnalysisDir is only defined after we load a folder
+		if self.myAnalysisDir is not None:
+			tableIsDirty = self.myAnalysisDir.isDirty
+			analysisIsDirty = self.myAnalysisDir.hasDirty()
+			if tableIsDirty or analysisIsDirty:
+				alreadyAsked = True
+				userResp = sanpy.interface.bDialog.yesNoCancelDialog('You changed the file database or have analyzed but not saved.\nDo you want to save then quit?')
+				if userResp == QtWidgets.QMessageBox.Yes:
+					self.slotSaveFilesTable()
+					event.accept()
+				elif userResp == QtWidgets.QMessageBox.No:
+					event.accept()
+				else:
+					event.ignore()
+					doQuit = False
 		if doQuit:
 			if not alreadyAsked:
 				userResp = sanpy.interface.bDialog.okCancelDialog('Are you sure you want to quit SanPy?', informativeText=None)

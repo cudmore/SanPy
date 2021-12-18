@@ -9,7 +9,8 @@ from collections import OrderedDict
 # Each key, like 'Take Off Potential (mV)' is a y-stat
 
 import sanpy
-from sanpy.userAnalysis import baseUserAnalysis
+import sanpy.userAnalysis
+#from sanpy.userAnalysis import baseUserAnalysis
 #import sanpy.userAnalysis
 #import sanpy.userAnalysis.baseUserAnalysis
 #from sanpy.userAnalysis import findUserAnalysis
@@ -348,7 +349,8 @@ class bAnalysisUtil:
 		coreStateList = statList  # from global withing function
 
 		#userStatList = sanpy.userAnalysis.findUserAnalysis()
-		userStatList = baseUserAnalysis.findUserAnalysis()
+		#userStatList = sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis()
+		userStatList = sanpy.userAnalysis.findUserAnalysis()
 		#userStatList = findUserAnalysis()
 
 		for k, v in userStatList.items():
