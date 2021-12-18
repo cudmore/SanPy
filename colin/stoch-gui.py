@@ -513,6 +513,9 @@ class rawStochGui(QtWidgets.QWidget):
 class DataFrameModel(QtCore.QAbstractTableModel):
 	"""
 	Abstract table model to define behavior of QTableView
+
+	Also see for another implementation:
+	https://github.com/eyllanesc/stackoverflow/tree/master/questions/44603119
 	"""
 	DtypeRole = QtCore.Qt.UserRole + 1000
 	ValueRole = QtCore.Qt.UserRole + 1001
