@@ -10,6 +10,7 @@ setup(
     author='Robert H Cudmore',
     author_email='robert.cudmore@gmail.com',
     license='GNU GPLv3',
+	# this is CRITICAL to import submodule like sanpy.userAnalysis
 	packages=find_packages(include=['sanpy', 'sanpy.*']),
     #packages=['sanpy', 'sanpy.userAnalysis'],
 	install_requires=[

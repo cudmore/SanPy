@@ -208,6 +208,9 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 	sinData = stimAmp * np.sin(2*np.pi*(Xs)*stimFreq)
 	xPlot = Xs * stimFreq  #/ fs  # normalize to interval [0,1] fpr plotting
 
+	# for gianni
+	gMasterDf = None
+
 	for idx,oneHue in enumerate(hueList):
 		dfPlot = df[ df[hue]==oneHue ]
 		peakSecs = dfPlot['peak_sec']
@@ -215,6 +218,16 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 		#peakPhase =  peakSecs - (peakSecs/sinInterval).astype(int)
 		peakPhase_float = peakSecs/sinInterval
 		peakPhase = peakPhase_float - peakPhase_float.astype(int)
+
+		# for gianni
+		thisDf = pd.DataFrame()
+		thisDf['peakPhase'] = peakPhase # to get the number of rows correct
+		thisDf.insert(0, 'sweep', oneHue)  # thisDf['sweep'] = oneHue
+		thisDf.insert(0, 'filename', ba.fileName)  # thisDf['filename'] = ba.fileName
+		if gMasterDf is None:
+			gMasterDf = thisDf
+		else:
+			gMasterDf = gMasterDf.append(thisDf, ignore_index=True)
 
 		# debug
 		'''
@@ -247,6 +260,12 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 			axs[idx].set_xlabel('')
 
 	#plotStimFileParams(ba)
+
+	# for gianni
+	print(gMasterDf)
+	saveFile = ba.fileName + '.csv'
+	print('saveFile:', saveFile)
+	gMasterDf.to_csv(saveFile, index=False)
 
 def isiStats(ba, hue='sweep'):
 	df = ba.analysisDf

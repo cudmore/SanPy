@@ -12,6 +12,9 @@ class exampleUserAnalysis(baseUserAnalysis):
 
 	We will add cardiac style 'maximum depolarizing potential', defines as:
 		For each AP, the minimum voltage between the previous AP and the current AP.
+
+	Don't include an __init__ function and inherited baseUserAnalysis.__init__() will be called
+	If you define an __init__, need to call super()
 	"""
 
 	userStatDict = {
