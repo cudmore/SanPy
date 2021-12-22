@@ -1599,7 +1599,9 @@ class bAnalysis:
 
 		startTime = time.time()
 
-		if detectionClass is not None:
+		if detectionClass is None:
+			detectionClass = self.detectionClass
+		else:
 			self.detectionClass = detectionClass
 
 		#
