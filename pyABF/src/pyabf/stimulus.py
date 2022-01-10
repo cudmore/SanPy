@@ -130,6 +130,14 @@ def findStimulusWaveformFile(abf, channel=0, verbose=True):
 def abbCommentFromFile(abf, channel=0):
     """
     If stim file exists, return (path, comment)
+    
+    Args:
+        abf (pyAbf): abf file
+        channel (int): channel to fetch
+    
+    Returns:
+        stimPath (str): path to stim file
+        comment (str): comment from abf header, the format is defined in sanpy.interface.plugins.stimGen
     """
     stimPath = findStimulusWaveformFile(abf, channel, verbose=False)
     if stimPath is None:

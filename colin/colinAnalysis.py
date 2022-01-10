@@ -93,7 +93,7 @@ class bAnalysis2:
 			'doSavitzkyGolay': True,
 			'SavitzkyGolay_pnts': 11,
 			'SavitzkyGolay_poly': 5,
-			'doBaseline': True,
+			'doBaseline': False,
 			'lam_baseline': 1e13,  # for _baseline_als_optimized
 			'p_baseline': 0.5, # for _baseline_als_optimized
 			'preFootMs': 5,
@@ -118,6 +118,9 @@ class bAnalysis2:
 			stimulusFileFolder (str): Relative path to stimulus file.
 								Leave as None, and assume stimulus file atf are in same folder as abf
 		"""
+		#if stimulusFileFolder is None:
+		#	stimulusFileFolder = 'stimFiles'
+		
 		self._path = path
 		self._abf = pyabf.ABF(path, stimulusFileFolder=stimulusFileFolder)
 		self._detectionParams = bAnalysis2.getDefaultDetection()
@@ -132,13 +135,32 @@ class bAnalysis2:
 		# if we were recorded with a stimulus file abf
 		# needed to assign stimulusWaveformFromFile
 		tmpSweepC = self.abf.sweepC
-		stimFilePath, stimFileComment = pyabf.stimulus.abbCommentFromFile(self.abf)
-		if stimFileComment is None:
-			self._stimDict = None
-			self._stimFile = None
-		else:
+		#stimFilePath, stimFileComment = pyabf.stimulus.abbCommentFromFile(self.abf)
+		stimFilePath, stimFileComment = self._commentFromAtfFile()
+		self._stimDict = None  # raw parameters from snapy.interface.plugins.stimGen
+		self._stimFile = None
+		self._stimDictList = None  # one element per sweep 
+		if stimFileComment is not None:
 			self._stimFile = stimFilePath
 			self._stimDict = sanpy.interface.plugins.stimGen2.readCommentParams(stimFileComment)
+			self._stimDict['file'] = os.path.split(stimFilePath)[1]  # atf does not know abf file name
+			# TODO: there is an error in saving atf comment string, post sweeps are always 0
+			# print(f'self._stimDict:', self._stimDict)
+			self._stimDictList = buildStimDict(self._stimDict, path=self.filePath)
+			self._stimFileDf = self._stimFileAsDataFrame()
+
+	def _commentFromAtfFile(self, channel=0):
+		"""
+		Get the comment string from atf stimulus file
+		"""
+		from pyabf.stimulus import findStimulusWaveformFile
+		from pyabf.stimulus import cachedStimuli
+		
+		stimPath = findStimulusWaveformFile(self.abf, channel, verbose=False)
+		if stimPath is None:
+			return None, None
+		else:
+			return stimPath, cachedStimuli[stimPath].header['comment']
 
 	def __str__(self):
 		dur = round(self.sweepDur,2)
@@ -169,12 +191,13 @@ class bAnalysis2:
 		Return:
 			df of spikes within sin stimulus
 		"""
+		#print(self.stimDict)
+		
 		df = self.analysisDf
 		if self.stimDict is not None:
 			#print(ba.stimDict)
-			stimStartSeconds = self.stimDict['stimStartSeconds']
-			durSeconds = self.stimDict['durSeconds']
-			startSec = stimStartSeconds
+			startSec = self.stimDict['stimStart_sec']
+			durSeconds = self.stimDict['stimDur_sec']
 			stopSec = startSec + durSeconds
 			try:
 				df = df[ (df['peak_sec']>=startSec) & (df['peak_sec']<=stopSec)]
@@ -183,18 +206,50 @@ class bAnalysis2:
 		#
 		return df
 
-	def stimFileDict(self):
+	def getStimStartStop(self):
+		"""
+		If recorded with a stimGen atf file, get start/stop of stimulus.
+		Some sweeps will be black, search for the first sweep that has a stimulus parameters
+		assuming the start/stop of each sweep is identical (may not be in the future)
+		
+		Returns:
+			startSec (float): Start sec of the stimulus
+			stopSec (float): Stop sec of the stimulus
+		"""
+		#dfStimFile = self._stimFileAsDataFrame()  # get underlying atf file params (from stimGen2)
+		dfStimFile = self._stimFileDf
+
+		startSec = None
+		durSec = None
+		stopSec = None
+		for idx, sweep in enumerate(range(self.numSweeps)):
+			tmpStartSec = dfStimFile.loc[sweep, 'start(s)']
+			if not isinstance(tmpStartSec, str):
+				startSec = tmpStartSec
+				durSec = dfStimFile.loc[sweep, 'dur(s)']
+				stopSec = startSec + durSec
+				break
+		return startSec, stopSec
+
+	def _stimFileAsDataFrame(self):
+		"""
+		If recorded using stimGen atf file.
+		Return the stmi parameters as a dataframe
+		"""
 		d = self.stimDict
 		if d is None:
 			return
 
-		dList = buildStimDict(d, path=self.filePath)
+		#dList = buildStimDict(d, path=self.filePath)
 		#for one in dList:
 		#	print(one)
-		df = pd.DataFrame(dList)
+		df = pd.DataFrame(self._stimDictList)
 		return df
 
 	def isiStats(self, hue='sweep'):
+		"""
+		Get mean/sd/sem etc after grouuping by 'sweep'
+		"""
 		df = self.analysisDf
 		if df is None:
 			return pd.DataFrame()  # empty
@@ -205,34 +260,34 @@ class bAnalysis2:
 
 		statStr = 'ipi_ms'
 
-		stimFileDict = self.stimFileDict()
-		'''
-		if stimFileDict is not None:
-			print('stimFileDict:')
-			print(stimFileDict)
-		'''
+		stimFileDf = self._stimFileDf
 
 		hueList = df[hue].unique()
 		for idx,oneHue in enumerate(hueList):
 			dfPlot = df[ df[hue]==oneHue ]
 			ipi_ms = dfPlot[statStr]
 
-			meanISI = np.nanmean(ipi_ms)
-			stdISI = np.nanstd(ipi_ms)
-			cvISI = stdISI / meanISI
-			cvISI = round(cvISI, 3)
-			cvISI_inv = np.nanstd(1/ipi_ms) / np.nanmean(1/ipi_ms)
-			cvISI_inv = round(cvISI_inv, 3)
+			numIntervals = len(ipi_ms)
+			#print('numIntervals:', numIntervals)
+
+			meanISI = np.nanmean(ipi_ms) if numIntervals>1 else float('nan')
+			medianISI = np.nanmedian(ipi_ms) if numIntervals>1 else float('nan')
+			stdISI = np.nanstd(ipi_ms) if numIntervals>1 else float('nan')
+			cvISI = stdISI / meanISI if numIntervals>1 else float('nan')
+			cvISI = round(cvISI, 3) if numIntervals>1 else float('nan')
+			cvISI_inv = np.nanstd(1/ipi_ms) / np.nanmean(1/ipi_ms) if numIntervals>1 else float('nan')
+			cvISI_inv = round(cvISI_inv, 3) if numIntervals>1 else float('nan')
 
 			oneDict = {
 				'file': self.fileName,
 				'stat': statStr,
-				'count': len(ipi_ms),
+				'sweep': idx,
+				'count': numIntervals,
 				'minISI': round(np.nanmin(ipi_ms),3),
 				'maxISI': round(np.nanmax(ipi_ms),3),
 				'stdISI': round(stdISI,3),
-				'meanISI': round(np.nanmean(ipi_ms),3),
-				'medianISI': round(np.nanmedian(ipi_ms),3),
+				'meanISI': round(meanISI,3),
+				'medianISI': round(medianISI,3),
 				'cvISI': cvISI,
 				'cvISI_inv': cvISI_inv,
 
@@ -243,10 +298,14 @@ class bAnalysis2:
 
 			}
 
-			if stimFileDict is not None:
-				oneDict['Stim Freq (Hz)'] = stimFileDict.loc[idx, 'freq(Hz)']
-				oneDict['Stim Amp'] = stimFileDict.loc[idx, 'amp']
-				oneDict['Noise Amp'] = stimFileDict.loc[idx, 'noise amp']
+			if stimFileDf is not None:
+				if idx < len(stimFileDf):
+					oneDict['Stim Freq (Hz)'] = stimFileDf.loc[idx, 'freq(Hz)']
+					oneDict['Stim Amp'] = stimFileDf.loc[idx, 'amp']
+					oneDict['Noise Amp'] = stimFileDf.loc[idx, 'noise amp']
+				else:
+					# This happens when pClamp sweeps > stimGen sweeps (like forgetting to set post=1 in stimgen)
+					logger.error(f'Did not find row {idx} in stimFileDict')
 
 			statList.append(oneDict)
 
@@ -284,6 +343,7 @@ class bAnalysis2:
 			#'Stop(s)': stopSec,
 
 			# if we have a atfStim stimulus file
+			'Stim File': '',
 			'Stim Freq (Hz)': '',
 			'Stim Amp': '',
 			'Noise Amp': '',
@@ -295,6 +355,7 @@ class bAnalysis2:
 
 		if self._stimDict is not None:
 			try:
+				theRet['Stim File'] = self._stimDict['file']
 				theRet['Stim Freq (Hz)'] = self._stimDict['stimFreq']
 				theRet['Stim Amp'] = self._stimDict['stimAmp']
 				theRet['Noise Amp'] = self._stimDict['stimNoiseAmp']
@@ -373,8 +434,11 @@ class bAnalysis2:
 
 	@property
 	def sweepC(self):
-		return self.abf.sweepC
-
+		try:
+			return self.abf.sweepC
+		except (ValueError) as e:
+			logger.error(f'{self.fileName} did not find sweepC for sweep {self._currentSweep}')
+			return np.zeros_like(self.sweepX)
 	@property
 	def sweepY_filtered(self):
 		"""
@@ -397,11 +461,13 @@ class bAnalysis2:
 		"""
 		Detect one file
 		"""
-		logger.info(f'Starting detection for {self.filePath}')
 
 		if detectionDict is None:
 			detectionDict = bAnalysis2.getDefaultDetection()
 
+		if detectionDict['verbose']:
+			logger.info(f'Starting detection for {self.filePath}')
+		
 		self._detectionParams = detectionDict
 
 		self._analysisDf = None  # we will fill this in
@@ -413,11 +479,14 @@ class bAnalysis2:
 		"""
 		Detect one file
 		"""
-
+		
 		#self.abf.setSweep(sweep)
 		self.setSweep(sweep)
 
 		detectionDict = self._detectionParams
+
+		if detectionDict['verbose']:
+			logger.info(f'detecting sweep:{sweep} sweepList:{self.abf.sweepList}')
 
 		# detect peaks (peak, prominence, width)
 		doMedian = detectionDict['doMedian']
@@ -473,10 +542,12 @@ class bAnalysis2:
 
 		numPeaks = len(peaks)
 
-		if numPeaks < 2:
+		'''
+		if numPeaks == 0:
 			# ABORT
 			print('error: did not detect enough peaks', numPeaks)
 			return
+		'''
 
 		df = pd.DataFrame()  # new DataFrame for this sweep
 
@@ -488,7 +559,12 @@ class bAnalysis2:
 		df['accept'] = [True] * numPeaks  # analysis['accept']
 		df['userType'] = [0] * numPeaks  # analysis['accept']
 
-		df['DAC0'] = self.sweepC[peaks]
+		try:
+			df['DAC0'] = self.sweepC[peaks]
+		except(ValueError) as e:
+			logger.error(f'Could not get sweepC for sweep:{sweep} with sweepList:{self.sweepList}')
+			df['DAC0'] = None
+
 		df['sweep'] = sweep  # abb working on stach-analysis
 		df['peak_pnt'] = peaks
 		df['peak_sec'] = self._pnt2Sec(peaks)
@@ -502,11 +578,15 @@ class bAnalysis2:
 
 		# inst freq and (inst) isi
 		peakSec = df['peak_sec']
-		instFreq_hz = 1 / np.diff(peakSec)
-		instFreq_hz = np.insert(instFreq_hz, 0, np.nan)
+		if numPeaks > 1:
+			instFreq_hz = 1 / np.diff(peakSec)
+			instFreq_hz = np.insert(instFreq_hz, 0, np.nan)
 
-		ipi_ms = np.diff(peakSec) * 1000
-		ipi_ms = np.insert(ipi_ms, 0, np.nan)
+			ipi_ms = np.diff(peakSec) * 1000
+			ipi_ms = np.insert(ipi_ms, 0, np.nan)
+		else:
+			ipi_ms = float('nan')
+			instFreq_hz = float('nan')
 
 		df['ipi_ms'] = ipi_ms
 		df['instFreq_hz'] = instFreq_hz
@@ -521,6 +601,20 @@ class bAnalysis2:
 				v = str(v)
 			df[detectionKey] = v
 
+		# TODO: If we have a stim file, save parameters as columns
+		if self._stimDictList is not None:
+			#print(f'in detect sweep:{sweep} {len(self._stimDictList)} sweepStimDict')
+			if sweep < len(self._stimDictList):
+				sweepStimDict = self._stimDictList[sweep]
+				#print(sweepStimDict)
+				for k,v in sweepStimDict.items():
+					stimulationKey = 's_' + k
+					if isinstance(v, list):
+						v = str(v)
+					df[stimulationKey] = v
+			else:
+				logger.error(f'{self.fileName} sweep {sweep} is not in _stimDictList with len {len(self._stimDictList)}')
+			
 		df['filePath'] = self._path
 
 		# critical
@@ -794,7 +888,8 @@ class colinAnalysis2:
 		logger.info(path)
 		if path is None:
 			path = self.folderPath
-		if path is None:
+		if path is None or not os.path.isdir(path):
+			logger.error(f'Please specify a path to a folder, got {path}"')
 			return
 
 		fileList = sorted(os.listdir(path))

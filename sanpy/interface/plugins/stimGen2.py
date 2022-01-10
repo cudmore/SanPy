@@ -64,7 +64,7 @@ def readFileParams(path):
 	Read stimGen params from one atf file
 
 	Args:
-		path (Str): Path to atd f file
+		path (Str): Path to atf file
 	"""
 	retDict = {}
 	with open(path, 'r') as f:
@@ -113,7 +113,7 @@ def readCommentParams(commentStr):
 	"""
 	retDict = {}
 	commentStr = commentStr.replace('"Comment=','')
-	commentStr = commentStr[0:-2]  # remove trailing "
+	commentStr = commentStr[0:-1]  # remove trailing "
 	#print(line)
 	for param in commentStr.split(';'):
 		kv = param.split('=')
@@ -137,7 +137,7 @@ def readCommentParams(commentStr):
 			try:
 				v = float(v)
 			except (ValueError) as e:
-				logger.error(f'ERROR: {k} "{v}" param="{param}"')
+				logger.error(f'ERROR: ValueError for key:{k} value:"{v}" param="{param}"')
 		#
 		retDict[k] = v
 	#
@@ -241,6 +241,12 @@ def buildStimDict(d, path=None):
 	#
 	if 'postSweeps' in d.keys():
 		postSweeps = d['postSweeps']
+		
+		# TODO: fix this bug in interface (I think?)
+		#logger.error(f'todo: fix postSweeps')
+		#if postSweeps==0:
+		#	postSweeps = 1
+		
 		for post in range(postSweeps):
 			oneDict = _defaultDict()
 			oneDict['index'] = masterIdx

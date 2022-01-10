@@ -12,14 +12,14 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from colinAnalysis import bAnalysis2
-from sanpy.interface.plugins.stimGen2 import readFileParams, buildStimDict
+from sanpy.interface.plugins.stimGen2 import buildStimDict  # readFileParams
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 def load(path):
 
-	stimulusFileFolder = None #'/media/cudmore/data/stoch-res' #os.path.split(path)[0]
+	stimulusFileFolder = os.path.split(path)[0] #'/media/cudmore/data/stoch-res' #os.path.split(path)[0]
 
 	ba = bAnalysis2(path, stimulusFileFolder=stimulusFileFolder)
 	print(ba)
@@ -37,7 +37,7 @@ def load(path):
 
 	return ba
 
-def plotStimFileParams(ba):
+def old_plotStimFileParams(ba):
 	d = ba.stimDict
 	if d is None:
 		return
@@ -48,6 +48,7 @@ def plotStimFileParams(ba):
 	df = pd.DataFrame(dList)
 	print(df)
 	return df
+
 def detect(ba, thresholdValue = -20):
 	"""
 	Detect spikes
@@ -90,7 +91,7 @@ def reduce(ba):
 
 	return df
 
-def plotStats(ba):
+def old_plotStats(ba):
 	"""
 	Plot xxx
 	"""
@@ -181,6 +182,8 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 	if df is None:
 		return
 
+	logger.info(f'hue: "{hue}"')
+	
 	df = reduce(ba)
 
 	# grab freq and startSec from header
@@ -262,9 +265,9 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 	#plotStimFileParams(ba)
 
 	# for gianni
-	print(gMasterDf)
 	saveFile = ba.fileName + '.csv'
-	print('saveFile:', saveFile)
+	logger.info('saveFile:', saveFile)
+	print(gMasterDf)
 	gMasterDf.to_csv(saveFile, index=False)
 
 def isiStats(ba, hue='sweep'):
@@ -366,7 +369,7 @@ def plotHist(ba, axs=None, hue='sweep'):
 	plotStimFileParams(ba)
 	'''
 
-def plotRaw(ba, showDetection=True, showDac=True, axs=None):
+def plotRaw(ba, showDetection=True, showDac=True, axs=None, doSave=False):
 	"""
 	Plot Raw data.
 
@@ -380,11 +383,11 @@ def plotRaw(ba, showDetection=True, showDac=True, axs=None):
 	numSweeps = ba.numSweeps
 
 	if axs is None:
-		fig, axs = plt.subplots(numSweeps, 1, sharex=True, figsize=(8, 6))
+		fig, axs = plt.subplots(numSweeps, 1, sharex=True, sharey=True, figsize=(8, 6))
 		if numSweeps == 1:
 			axs = [axs]
 
-			fig.suptitle(ba.fileName)
+		fig.suptitle(ba.fileName)
 
 	# If we are plotting Dac
 	rightAxs = [None] * numSweeps
@@ -399,20 +402,30 @@ def plotRaw(ba, showDetection=True, showDac=True, axs=None):
 	for idx in ba.sweepList:
 		ba.setSweep(idx)
 
-		if showDac:
+		lastSweep = idx == (numSweeps - 1)
+
+		try:
+			sweepC = ba.sweepC
+		except (ValueError) as e:
+			sweepC = None
+
+		if showDac and sweepC is not None:
 			rightAxs[idx] = axs[idx].twinx()
 			rightAxs[idx].spines['right'].set_visible(True)
-			rightAxs[idx].set_ylabel('DAC (nA)')
-			rightAxs[idx].plot(ba.sweepX, ba.sweepC, 'r', lw=.5, zorder=0)
+			if lastSweep:
+				rightAxs[idx].set_ylabel('DAC (nA)')
+			rightAxs[idx].plot(ba.sweepX, sweepC, 'r', lw=.5, zorder=0)
 
-			yMin = np.min(ba.sweepC)
+			yMin = np.min(sweepC)
 			if yMin < yDacMin:
 				yDacMin = yMin
-			yMax = np.max(ba.sweepC)
+			yMax = np.max(sweepC)
 			if yMax > yDacMax:
 				yDacMax = yMax
 
-		axs[idx].set_ylabel('Vm (mV)')
+		if lastSweep:
+			axs[idx].set_ylabel('Vm (mV)')
+		
 		axs[idx].plot(ba.sweepX, ba.sweepY, lw=1.0, zorder=10)
 
 		yMin = np.min(ba.sweepY)
@@ -423,7 +436,8 @@ def plotRaw(ba, showDetection=True, showDac=True, axs=None):
 			yRawMax = yMax
 
 		if showDetection and ba.analysisDf is not None:
-			df = reduce(ba)
+			#df = reduce(ba)
+			df = ba.analysisDf
 			dfPlot = df[ df['sweep']== idx]
 
 			peakSec = dfPlot['peak_sec']
@@ -433,10 +447,9 @@ def plotRaw(ba, showDetection=True, showDac=True, axs=None):
 
 			footSec = dfPlot['foot_sec']
 			footVal = dfPlot['foot_val']
-			axs[idx].plot(footSec, footVal, 'og', markersize=3, zorder=999)
+			#axs[idx].plot(footSec, footVal, 'og', markersize=3, zorder=999)
 
 		# label x-axis of subplots
-		lastSweep = idx == (numSweeps - 1)
 		if lastSweep:
 			axs[idx].set_xlabel('Time (s)')
 		else:
@@ -445,7 +458,7 @@ def plotRaw(ba, showDetection=True, showDac=True, axs=None):
 			axs[idx].set_xlabel('')
 
 		# get the zorder correct
-		if showDac:
+		if showDac and sweepC is not None:
 			axs[idx].set_zorder(rightAxs[idx].get_zorder()+1)
 			axs[idx].set_frame_on(False)
 
@@ -457,11 +470,16 @@ def plotRaw(ba, showDetection=True, showDac=True, axs=None):
 	yRawMax += thisExpand
 	for idx in ba.sweepList:
 		axs[idx].set_ylim(yRawMin, yRawMax)
-		if showDac:
+		if showDac and sweepC is not None:
 			rightAxs[idx].set_ylim(yDacMin, yDacMax)
 
 	#
 	plt.tight_layout()
+
+	if doSave:
+		saveName = os.path.splitext(ba.fileName)[0] + '_raw.png'
+		logger.info(f'saving: {saveName}')
+		fig.savefig(saveName, dpi=300)
 
 if __name__ == '__main__':
 	# one trial of spont
@@ -471,12 +489,12 @@ if __name__ == '__main__':
 
 	# second day of recording
 	#path = '/media/cudmore/data/stoch-res/20211209/2021_12_09_0010.abf'  # 194 seconds of baseline
-	path = '/media/cudmore/data/stoch-res/20211209/2021_12_09_0011.abf'  # 1pA/1Hz/2pA step
-	#path = '/media/cudmore/data/stoch-res/20211209/2021_12_09_0012.abf'  # 1pA/5Hz/2pA step
+	#path = '/media/cudmore/data/stoch-res/20211209/2021_12_09_0011.abf'  # 1pA/1Hz/2pA step
+	path = '/media/cudmore/data/stoch-res/20211209/2021_12_09_0012.abf'  # 1pA/5Hz/2pA step
 
 	ba = load(path)
 
-	plotStimFileParams(ba)
+	# old_plotStimFileParams(ba)
 
 	#print('stimDict:', ba._stimDict)  # can be none
 
@@ -486,17 +504,19 @@ if __name__ == '__main__':
 	dfStat = isiStats(ba)
 	print('dfStat')
 	print(dfStat)
-
-	sys.exit(1)
+	
+	#sys.exit(1)
+	
 	# if we have a stimulus file
 	if ba.stimDict is not None:
 		stimStartSeconds = ba.stimDict['stimStart_sec']
 		frequency = ba.stimDict['stimFreq']  # TODO: will not work if we are stepping frequency
 		durSeconds = ba.stimDict['sweepDur_sec']
 
-		df = reduce(ba)
+		#df = reduce(ba)
 
-		plotPhaseHist(df, stimStartSeconds, frequency)
+		#plotPhaseHist(df, stimStartSeconds, frequency)
+		plotPhaseHist(ba)
 
 	#plotRaw(ba)
 

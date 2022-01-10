@@ -79,9 +79,25 @@ def run(path : str):
 	plt.show()
 
 if __name__ == '__main__':
-	#
-	# change this to location of your csv file
-	#
-	path = '/home/cudmore/Sites/SanPy/colin/gianni-master.csv'
+	if 0:
+		#
+		# change this to location of your csv file
+		#
+		path = '/home/cudmore/Sites/SanPy/colin/gianni-master.csv'
 
-	run(path)
+		run(path)
+
+	if 1:
+		from colinAnalysis import bAnalysis2
+		from colinAnalysis import colinAnalysis2
+
+		path = '/media/cudmore/data/stoch-res/new20220104'
+		ca2 = colinAnalysis2(path)
+		
+		dDict = bAnalysis2.getDefaultDetection()
+		dDict['doBaseline'] = False
+		for file in ca2:
+			file.detect(dDict)
+		df = ca2.asDataFrame()
+		print('saving tmpCell-db.csv')
+		df.to_csv('tmpCell-db.csv')

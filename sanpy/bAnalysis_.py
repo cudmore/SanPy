@@ -614,7 +614,11 @@ class bAnalysis:
 					self._abf.setSweep(sweep)
 					self._sweepX[:, sweep] = self._abf.sweepX  # <class 'numpy.ndarray'>, (60000,)
 					self._sweepY[:, sweep] = self._abf.sweepY
-					self._sweepC[:, sweep] = self._abf.sweepC
+					try:
+						self._sweepC[:, sweep] = self._abf.sweepC
+					except(ValueError) as e:
+						# pyabf will raise this error if it is an atf file
+						pass
 				# not needed
 				self._abf.setSweep(0)
 
