@@ -369,7 +369,7 @@ def plotHist(ba, axs=None, hue='sweep'):
 	plotStimFileParams(ba)
 	'''
 
-def plotRaw(ba, showDetection=True, showDac=True, axs=None, doSave=False):
+def plotRaw(ba, showDetection=True, showDac=True, axs=None, saveFolder=None):
 	"""
 	Plot Raw data.
 
@@ -476,10 +476,11 @@ def plotRaw(ba, showDetection=True, showDac=True, axs=None, doSave=False):
 	#
 	plt.tight_layout()
 
-	if doSave:
+	if saveFolder is not None:
 		saveName = os.path.splitext(ba.fileName)[0] + '_raw.png'
-		logger.info(f'saving: {saveName}')
-		fig.savefig(saveName, dpi=300)
+		savePath = os.path.join(saveFolder, saveName)
+		logger.info(f'saving: {savePath}')
+		fig.savefig(savePath, dpi=300)
 
 if __name__ == '__main__':
 	# one trial of spont

@@ -1077,6 +1077,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#vBoxLayout_detect.addWidget(self.myScatterPlotWidget) #, stretch=2)
 
 		#self.myHBoxLayout_detect.addLayout(vBoxLayout_detect)
+		
+		# kymograph
+		#tmpVLayout = QtWidgets.QVBoxLayout()
+
+		# was this
 		self.myHBoxLayout_detect.addWidget(self.view)
 
 

@@ -374,10 +374,11 @@ def getDefaultDetection(detectionPreset):
 		theDict['onlyPeaksBelow_mV']['defaultValue'] = -20
 		# todo: add onlyPeaksBelow_mV
 	elif detectionPreset == bDetection.detectionPresets.caSpikes:
-		theDict['dvdtThreshold']['defaultValue'] = 0.01 #if None then detect only using mvThreshold
+		#theDict['detectionType']['defaultValue'] = sanpy.bDetection.detectionTypes.mv # ('dvdt', 'mv')
+		theDict['dvdtThreshold']['defaultValue'] = math.nan #if None then detect only using mvThreshold
 		theDict['mvThreshold']['defaultValue'] = 0.5
-		theDict['refractory_ms']['defaultValue'] = 200 #170 # reject spikes with instantaneous frequency
-		theDict['halfWidthWindow_ms']['defaultValue'] = 200 #was 20
+		#theDict['refractory_ms']['defaultValue'] = 200 #170 # reject spikes with instantaneous frequency
+		#theDict['halfWidthWindow_ms']['defaultValue'] = 200 #was 20
 
 	else:
 		logger.error(f'Did not understand detection type "{detectionPreset}"')

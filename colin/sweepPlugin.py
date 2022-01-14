@@ -49,7 +49,7 @@ def plotOne2(ba : bAnalysis2, doSave=False):
                         markers=markers,
                         ax=axs)
 
-def plotHist(ba : bAnalysis2, axs=None, doSave=False):
+def plotHist(ba : bAnalysis2, axs=None, saveFolder=None):
     """
     plot ISI Histogram, one per sweep
     """
@@ -66,6 +66,8 @@ def plotHist(ba : bAnalysis2, axs=None, doSave=False):
 
     plotSweep = []
     plotCV = []
+    plotNum = []
+    xPlotNoise = []
 
     # plot
     if axs is None:
@@ -78,8 +80,13 @@ def plotHist(ba : bAnalysis2, axs=None, doSave=False):
 
         ipi_ms = dfPlot['ipi_ms']
     
-        bins='auto'
-        axs[sweep].hist(ipi_ms)
+        if len(ipi_ms) < 2:
+            # don't plot <2 intervals
+            pass
+        else:
+            print('=== plotting isi_ms:', ipi_ms)
+            bins='auto'
+            axs[sweep].hist(ipi_ms)
 
         noiseAmp = dfISI.loc[sweep, 'Noise Amp']
         cvISI = dfISI.loc[sweep, 'cvISI']
@@ -87,6 +94,7 @@ def plotHist(ba : bAnalysis2, axs=None, doSave=False):
 
         if len(str(noiseAmp)) == 0:
             noiseAmp = 'None'
+        xPlotNoise.append(noiseAmp)
         legendStr = f'noise amp = {noiseAmp}\ncvISI={cvISI}\ncount={numIntervals}'
         #print(legendStr)
 
@@ -96,23 +104,45 @@ def plotHist(ba : bAnalysis2, axs=None, doSave=False):
 
         plotSweep.append(sweep)
         plotCV.append(cvISI)
+        plotNum.append(numIntervals)
 
 
-    if doSave:
+    if saveFolder is not None:
         saveName = os.path.splitext(ba.fileName)[0] + '_isi.png'
-        logger.info(f'saving: {saveName}')
-        fig.savefig(saveName, dpi=300)
+        savePath = os.path.join(saveFolder, saveName)
+        logger.info(f'saving: {savePath}')
+        fig.savefig(savePath, dpi=300)
 
     #
-    fig2, axs2 = plt.subplots(1, 1, figsize=(4, 4), sharex=True)
+    # plot both CV vs noise and num per noise
+    fig2, axs2 = plt.subplots(2, 1, figsize=(4, 4), sharex=True)
     #axs = np.ravel(axs)
     fig2.suptitle(ba.fileName)
-    axs2.plot(plotSweep, plotCV, 'o-k')
+    axs2[0].plot(plotSweep, plotCV, 'o-k')
+    axs2[0].set_ylabel('CV of ISI')
 
-    if doSave:
+    axs2[0].set_xlim(0, numSweeps-1)
+    axs2[0].set_xticks(range(numSweeps))
+    axs2[0].set_xticklabels(xPlotNoise)
+    axs2[0].margins(0.05)
+    axs2[0].axis('tight')
+
+    axs2[1].plot(plotSweep, plotNum, 'o-k')
+    axs2[1].set_ylabel('Number of Intervals')
+
+    axs2[1].set_xlim(0, numSweeps-1)
+    axs2[1].set_xticks(range(numSweeps))
+    axs2[1].set_xticklabels(xPlotNoise)
+    axs2[1].margins(0.05)
+    axs2[1].axis('tight')
+
+    axs2[1].set_xlabel('Sweeps (Noise Amp)')
+
+    if saveFolder is not None:
         saveName = os.path.splitext(ba.fileName)[0] + '_cv.png'
-        logger.info(f'saving: {saveName}')
-        fig2.savefig(saveName, dpi=300)
+        savePath = os.path.join(saveFolder, saveName)
+        logger.info(f'saving: {savePath}')
+        fig2.savefig(savePath, dpi=300)
 
 def plotOne(ba : bAnalysis2, axs=None, doSave=False):
     """
@@ -202,7 +232,6 @@ def plotOne(ba : bAnalysis2, axs=None, doSave=False):
     
     axs.set_xlim(0, numSweeps-1)
     axs.set_xticks(range(numSweeps))
-
     axs.set_xticklabels(xNoiseAmp)    
 
     # Just for appearance's sake
@@ -243,8 +272,8 @@ if __name__ == '__main__':
     includeList.append(path)
     
     # debug
-    path = '/media/cudmore/data/stoch-res/new20220104/2021_12_27_0006.abf'
-    includeList = [path]
+    #path = '/media/cudmore/data/stoch-res/new20220104/2021_12_27_0006.abf'
+    #includeList = [path]
 
     baList = []
     for path in includeList:
@@ -263,17 +292,27 @@ if __name__ == '__main__':
         baList.append(ba)
 
     print('plotting ...')
+    dfMaster = None
     for ba in baList:
         print('  plotting:', ba)
     
-        #plotRaw(ba, doSave=True)
+        saveFolder = 'stoch-plots-20220110'
+        
+        plotRaw(ba, saveFolder=saveFolder)
         #plotOne(ba, doSave=True)
         #plotOne2(ba, doSave=True)
         
-        plotHist(ba, doSave=True)
+        plotHist(ba, saveFolder=saveFolder)
 
         dfISI = ba.isiStats()
-        print('isiStats:')
-        print(dfISI)
+        #print('isiStats:')
+        #print(dfISI)
+        if dfMaster is None:
+            dfMaster = dfISI
+        else:
+            dfMaster = dfMaster.append(dfISI, ignore_index=True)
+
+    #
+    print(dfMaster)
 
     plt.show()

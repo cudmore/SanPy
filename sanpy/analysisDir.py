@@ -204,7 +204,7 @@ class analysisDir():
 
 	# abb 20210803
 	#theseFileTypes = ['.abf', '.csv']
-	theseFileTypes = ['.abf', '.atf', '.csv']
+	theseFileTypes = ['.abf', '.atf', '.csv', '.tif']
 	"""File types to load"""
 
 	def __init__(self, path=None, myApp=None, autoLoad=True):
@@ -950,8 +950,25 @@ class analysisDir():
 		"""
 		if path is None:
 			path = self.path
+
+		logger.warning('MODIFIED TO LOAD TIF FILES')
+		count = 0
+		tmpFileList = []
+		for root, subdirs, files in os.walk(path):
+			print(count)
+			#print('  ', root)
+			#print('  ', subdirs)
+			#print('  ', files)
+			count += 1
+			for file in files:
+				if file.endswith('.tif'):
+					oneFile = os.path.join(root, file)
+					#print('  ', oneFile)
+					tmpFileList.append(oneFile)
+		#tmpFileList = os.listdir(path)
+
 		fileList = []
-		for file in sorted(os.listdir(path)):
+		for file in sorted(tmpFileList):
 			if file.startswith('.'):
 				continue
 			# ignore our database file

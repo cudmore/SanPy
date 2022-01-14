@@ -194,6 +194,12 @@ class bAnalysis2:
 		#print(self.stimDict)
 		
 		df = self.analysisDf
+		startSec, stopSec = ba.getStimStartStop()
+		
+		if startSec is not None and stopSec i snot None:
+			df = df[ (df['peak_sec']>=startSec) & (df['peak_sec']<=stopSec)]
+
+		'''
 		if self.stimDict is not None:
 			#print(ba.stimDict)
 			startSec = self.stimDict['stimStart_sec']
@@ -203,6 +209,7 @@ class bAnalysis2:
 				df = df[ (df['peak_sec']>=startSec) & (df['peak_sec']<=stopSec)]
 			except (KeyError) as e:
 				logger.error(e)
+		'''
 		#
 		return df
 

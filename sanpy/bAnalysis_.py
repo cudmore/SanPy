@@ -287,6 +287,8 @@ class bAnalysis:
 		#		All instance variable MUST be declared before we load
 		#		In particular for self._loadFromDf()
 
+		self.tifData = None
+
 		# instantiate and load abf file
 		self.isBytesIO = False
 		if fromDict is not None:
@@ -352,10 +354,29 @@ class bAnalysis:
 
 	def _loadTif(self):
 		#print('TODO: load tif file from within bAnalysis ... stop using bAbfText()')
-		self._abf = sanpy.bAbfText(file)
+		self._abf = sanpy.bAbfText(self._path)
 		self._abf.sweepY = self._normalizeData(self._abf.sweepY)
 		self.myFileType = 'tif'
 
+		self._sweepList = [0]
+
+		numSweeps = 1
+		tmpRows = self._abf.sweepX.shape[0]
+		logger.info(f'tmpRows {tmpRows}')
+
+		self._sweepLengthSec = self._abf.sweepX[-1]
+
+		self._sweepX = np.zeros((tmpRows,numSweeps))
+		self._sweepX[:, 0] = self._abf.sweepX
+
+		self._sweepY = np.zeros((tmpRows,numSweeps))
+		self._sweepY[:, 0] = self._abf.sweepY
+
+		self._recordingMode = 'tif'
+		self._dataPointsPerMs = self._abf.dataPointsPerMs
+
+		self.tifData = self._abf.tif
+		
 	def _loadCsv(self):
 		"""
 		Load from a two column CSV file with columns of (s, mV)
@@ -795,6 +816,8 @@ class bAnalysis:
 	@property
 	def sweepC(self):
 		"""Get the command waveform DAC (numpy.ndarray). Units will depend on mode"""
+		if self._sweepC is None:
+			return np.zeros_like(self._sweepX[:, self.currentSweep])
 		return self._sweepC[:, self.currentSweep]
 		'''
 		if self.numSweeps == 1:
@@ -1000,9 +1023,10 @@ class bAnalysis:
 	def rebuildFiltered(self):
 		if self._sweepX is None:
 			# no data
+			logger.warning('not getting derivative')
 			return
 
-		if self._recordingMode == 'I-Clamp':
+		if self._recordingMode == 'I-Clamp' or self._recordingMode == 'tif':
 			self._getDerivative()
 		elif self._recordingMode == 'V-Clamp':
 			self._getBaselineSubtract()
@@ -1592,7 +1616,8 @@ class bAnalysis:
 		return spikeTimes0, spikeErrorList
 
 	def spikeDetect(self, detectionClass=None):
-		"""Spike Detect all sweeps.
+		"""
+		Spike Detect all sweeps.
 
 		When we are instantiated we create a default self.detectionClass
 
@@ -2653,7 +2678,7 @@ class bAnalysis:
 		spikeTimes = self.getSpikeTimes(sweepNumber=sweepNumber)
 
 		if len(spikeTimes) != len(self.spikeClips):
-			logger.error(f'len spikeTimes !=  spikeClips {len(spikeTimes)} {len(self.spikeClips)}')
+			logger.error(f'len spikeTimes {len(spikeTimes)} !=  spikeClips {len(self.spikeClips)}')
 
 		# self.spikeClips is a list of clips
 		for idx, clip in enumerate(self.spikeClips):

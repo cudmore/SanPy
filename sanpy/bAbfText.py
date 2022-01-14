@@ -123,6 +123,9 @@ class bAbfText:
 		# normalize to 0..1
 		yLineScanSum = self._NormalizeData(yLineScanSum)
 
+		#print('bAbfText xLineScanSum:', xLineScanSum.shape)
+		#print('bAbfText yLineScanSum:', yLineScanSum.shape)
+
 		return xLineScanSum, yLineScanSum, tif, tifNorm
 
 	def _loadLineScanHeader(self, path):

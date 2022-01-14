@@ -1,3 +1,5 @@
+import math
+
 from functools import partial
 
 import numpy as np
@@ -163,6 +165,9 @@ class spikeClips(sanpyPlugin):
 
 		self.clipPlot.getAxis('left').setLabel('mV')
 		self.clipPlot.getAxis('bottom').setLabel('time (ms)')
+
+		# kymograph analysis
+		self.variancePlot = self.view.addPlot(row=1, col=0)
 
 		vLayout.addWidget(self.view) #, stretch=8)
 
@@ -360,6 +365,16 @@ class spikeClips(sanpyPlugin):
 		if self.meanCheckBox.isChecked():
 			tmpMeanClipLine = MultiLine(xMeanClip, yMeanClip, self, width=3, allowXAxisDrag=False, type='meanclip')
 			self.clipPlot.addItem(tmpMeanClipLine)
+
+		#
+		if 1:
+			self.variancePlot.clear()
+			xVarClip = np.nanmean(xTmp, axis=0) # xTmp is in ms
+			yVarClip = np.nanvar(yTmp, axis=0)
+			tmpVarClipLine = MultiLine(xVarClip, yVarClip, self, width=3, allowXAxisDrag=False, type='meanclip')
+			self.variancePlot.addItem(tmpVarClipLine)
+			self.variancePlot.getAxis('left').setLabel('Variance')
+
 
 		# set axis
 		xLabel = 'time (s)'
@@ -699,10 +714,31 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 		ev.accept()
 
 if __name__ == '__main__':
-	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+	#path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+	#path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+	path = '/media/cudmore/data/rabbit-ca-transient/Control/220110n_0003.tif.frames/220110n_0003.tif'
 	ba = sanpy.bAnalysis(path)
-	ba.spikeDetect()
-	print(ba.numSpikes)
+
+	'''
+	detectionClass = sanpy.bDetection()
+	print(type(detectionClass))
+	detectionClass['dvdtThreshold'] = math.nan #if None then detect only using mvThreshold
+	detectionClass['mvThreshold'] = -0 #0.5
+	'''
+
+	detectionType = sanpy.bDetection.detectionTypes.mv
+
+	mvThreshold = 0.5 #0
+	detectionClass = sanpy.bDetection() # gets default detection class
+	detectionClass['detectionType'] = detectionType  # set detection type to ('dvdt', 'vm')
+	detectionClass['dvdtThreshold'] = math.nan
+	detectionClass['mvThreshold'] = mvThreshold
+
+	ba.spikeDetect(detectionClass=detectionClass)
+	#ba.spikeDetect()
+	print(ba)
+
+	#sys.exit(1)
 
 	import sys
 	app = QtWidgets.QApplication([])
