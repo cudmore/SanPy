@@ -107,6 +107,27 @@ _sanpyColumns = {
 		'type': str,
 		'isEditable': True,
 	},
+	# kymograph interface
+	'kLeft': {
+		'type': int,
+		'isEditable': False,
+	},
+	'kTop': {
+		'type': int,
+		'isEditable': False,
+	},
+	'kRight': {
+		'type': int,
+		'isEditable': False,
+	},
+	'kBottom': {
+		'type': int,
+		'isEditable': False,
+	},
+	'path': {
+		'type': int,
+		'isEditable': False,
+	},
 	'uuid': {
 		'type': str,
 		'isEditable': False,
@@ -427,10 +448,15 @@ class analysisDir():
 				"""
 		start = time.time()
 
+		df = self.getDataFrame()
+
+		# kymograph, just save as csv
+		dbPath = os.path.join(self.path, self.dbFile)
+		logger.info(f'Saving "{dbPath}"')
+		self.getDataFrame().to_csv(dbPath, index=False)
+
 		tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
 		tmpHdfPath = os.path.join(self.path, tmpHdfFile)
-
-		df = self.getDataFrame()
 
 		#
 		# save each bAnalysis
@@ -676,6 +702,8 @@ class analysisDir():
 
 		Arguments:
 			theRowIdx (int): Update just one row
+
+		TODO: For kymograph, add rows (left, top, right, bottom) and update
 		"""
 		if self._df is None:
 			return
@@ -732,6 +760,18 @@ class analysisDir():
 				self._df.loc[rowIdx, 'dvdtThreshold'] = dvdtThreshold
 				self._df.loc[rowIdx, 'mvThreshold'] = mvThreshold
 
+			# kymograph interface
+			if ba is not None and ba.isKymograph():
+				kRect = ba.getKymographRect()
+				self._df.loc[rowIdx, 'kLeft'] = kRect[0]
+				self._df.loc[rowIdx, 'kTop'] = kRect[1]
+				self._df.loc[rowIdx, 'kRight'] = kRect[2]
+				self._df.loc[rowIdx, 'kBottom'] = kRect[3]
+				#
+				# TODO: remove start of ba._path that corresponds to our current folder path
+				# will allow our save db to be modular
+				self._df.loc[rowIdx, 'path'] = ba._path
+
 	'''
 	def setCellValue(self, rowIdx, colStr, value):
 		self._df.loc[rowIdx, colStr] = value
@@ -787,18 +827,23 @@ class analysisDir():
 		file = self._df.loc[rowIdx, 'File']
 		ba = self._df.loc[rowIdx, '_ba']
 		uuid = self._df.loc[rowIdx, 'uuid']  # if we have a uuid bAnalysis is saved in h5f
-		filePath = os.path.join(self.path, file)
+		#filePath = os.path.join(self.path, file)
 
 		#logger.info(f'Found _ba in file db with ba:"{ba}" {type(ba)}')
 
 		if ba is None or ba=='':
+			# working on kymograph
+			filePath = self._df.loc[rowIdx, 'path']
+
 			ba = self.loadOneAnalysis(filePath, uuid)
 			# load
 			'''
 			logger.info(f'Loading bAnalysis from row {rowIdx} "{filePath}"')
 			ba = sanpy.bAnalysis(filePath)
 			'''
-			if ba is not None:
+			if ba is None:
+				logger.error(f'Failed to load path: {filePath}')
+			else:
 				self._df.at[rowIdx, '_ba'] = ba
 				# does not get a uuid until save into h5
 				if uuid:
@@ -808,6 +853,16 @@ class analysisDir():
 						logger.error('Loaded uuid does not match existing in file table')
 						logger.error(f'  Loaded {ba.uuid}')
 						logger.error(f'  Existing {uuid}')
+
+				# kymograph, set ba rect from table
+				if ba.isKymograph():
+					left = self._df.loc[rowIdx, 'kLeft']
+					top = self._df.loc[rowIdx, 'kTop']
+					right = self._df.loc[rowIdx, 'kRight']
+					bottom = self._df.loc[rowIdx, 'kBottom']
+					theRect = [left, top, right, bottom]
+					ba._updateTifRoi(theRect)
+
 				#
 				# update stats of table load/analyzed columns
 				self._updateLoadedAnalyzed()
@@ -836,7 +891,11 @@ class analysisDir():
 					# WHY IS THIS BROKEN ?????????????????????????????????????????????????????????????
 					# This is SLOPPY ON MY PART, WE ALWAYS NEED TO RELOAD FILTER
 					# ADD SOME COD  THAT CHECKS THIS AND REBUILDS AS NECC !!!!!!!!!!
-					ba._loadAbf()
+					if path.endswith('.tif'):
+						# kymograph
+						ba._loadTif()
+					else:
+						ba._loadAbf()
 					ba.rebuildFiltered()
 
 
@@ -951,11 +1010,11 @@ class analysisDir():
 		if path is None:
 			path = self.path
 
-		logger.warning('MODIFIED TO LOAD TIF FILES')
+		logger.warning('MODIFIED TO LOAD TIF FILES IN SUBFOLDERS')
 		count = 0
 		tmpFileList = []
 		for root, subdirs, files in os.walk(path):
-			print(count)
+			#print('analysisDir.getFileList() count:', count)
 			#print('  ', root)
 			#print('  ', subdirs)
 			#print('  ', files)
@@ -1146,7 +1205,8 @@ class analysisDir():
 		if self.myApp is not None:
 			self.myApp.updateStatusBar(str)
 		else:
-			logger.info(str)
+			pass
+			#logger.info(str)
 
 	def api_getFileHeaders(self):
 		headerList = []

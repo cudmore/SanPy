@@ -304,7 +304,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		#print('=== sanpy_app.mySignal() "' + this +'"')
 
 		if this == 'detect':
-			# seel self.slot_detect()
+			# see self.slot_detect()
 			return
 
 			'''

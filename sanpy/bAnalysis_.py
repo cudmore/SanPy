@@ -275,8 +275,9 @@ class bAnalysis:
 			self.loadError = True
 
 		# only defined when loading abf files
-		#self.acqDate = None
-		#self.acqTime = None
+		# turned back on when implementing Santana rabbit Ca kymographs
+		self.acqDate = None
+		self.acqTime = None
 
 		self._detectionDirty = False
 
@@ -352,17 +353,42 @@ class bAnalysis:
 		txt += f" start(s):{self.detectionDict['startSeconds']} stop(s):{self.detectionDict['stopSeconds']}"
 		return txt
 
+	def isKymograph(self):
+		return self.tifData is not None
+
+	def getKymographRect(self):
+		if self.isKymograph():
+			return self._abf.getTifRoi()
+		else:
+			return None
+
+	def getKymographBackgroundRect(self):
+		if self.isKymograph():
+			return self._abf.getTifRoiBackground()
+		else:
+			return None
+
+	def _updateTifRoi(self, theRect=[]):
+		"""
+		Update the kymograph ROI
+		"""
+		self._abf.updateTifRoi(theRect)
+
+		self._sweepX[:, 0] = self._abf.sweepX
+		self._sweepY[:, 0] = self._abf.sweepY
+
 	def _loadTif(self):
 		#print('TODO: load tif file from within bAnalysis ... stop using bAbfText()')
 		self._abf = sanpy.bAbfText(self._path)
-		self._abf.sweepY = self._normalizeData(self._abf.sweepY)
+		# 20220114 removed
+		#self._abf.sweepY = self._normalizeData(self._abf.sweepY)
 		self.myFileType = 'tif'
 
 		self._sweepList = [0]
 
 		numSweeps = 1
 		tmpRows = self._abf.sweepX.shape[0]
-		logger.info(f'tmpRows {tmpRows}')
+		#logger.info(f'tmpRows {tmpRows}')
 
 		self._sweepLengthSec = self._abf.sweepX[-1]
 
@@ -376,7 +402,9 @@ class bAnalysis:
 		self._dataPointsPerMs = self._abf.dataPointsPerMs
 
 		self.tifData = self._abf.tif
-		
+
+		self._sweepLabelY = 'f/f0'  # str
+
 	def _loadCsv(self):
 		"""
 		Load from a two column CSV file with columns of (s, mV)
@@ -646,9 +674,10 @@ class bAnalysis:
 			# get v from pyAbf
 			self._dataPointsPerMs = self._abf.dataPointsPerMs
 
-			#abfDateTime = self._abf.abfDateTime  # 2019-01-14 15:20:48.196000
-			#self.acqDate = abfDateTime.strftime("%Y-%m-%d")
-			#self.acqTime = abfDateTime.strftime("%H:%M:%S")
+			# turned back on when implementing Santana rabbit Ca kymographs
+			abfDateTime = self._abf.abfDateTime  # 2019-01-14 15:20:48.196000
+			self.acqDate = abfDateTime.strftime("%Y-%m-%d")
+			self.acqTime = abfDateTime.strftime("%H:%M:%S")
 
 			#self.sweepUnitsY = self.adcUnits[channel]
 			channel = 0
@@ -2825,8 +2854,8 @@ class bAnalysis:
 			'file': self.getFileName(),
 			'dateAnalyzed': self.dateAnalyzed,
 			#'detectionType': self.detectionType,
-			#'acqDate': self.acqDate,
-			#'acqTime': self.acqTime,
+			'acqDate': self.acqDate,
+			'acqTime': self.acqTime,
 			#
 			'_recordingMode': self._recordingMode,
 			'get_yUnits': self.get_yUnits(),

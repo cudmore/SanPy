@@ -403,7 +403,7 @@ class bTableView(QtWidgets.QTableView):
 		tmp = self.selectedIndexes()
 		if len(tmp)>0:
 			selectedRow = tmp[0].row() # not in sort order
-		self.model().myUpdateLoadedAnalyzed(ba, selectedRow)
+			self.model().myUpdateLoadedAnalyzed(ba, selectedRow)
 
 def test():
 	import sys

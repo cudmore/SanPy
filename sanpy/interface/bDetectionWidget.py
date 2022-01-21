@@ -19,8 +19,9 @@ logger = get_logger(__name__)
 class bDetectionWidget(QtWidgets.QWidget):
 	signalSelectSpike = QtCore.pyqtSignal(object) # spike number, doZoom
 	signalSelectSpikeList = QtCore.pyqtSignal(object) # spike number, doZoom
-	signalDetect = QtCore.pyqtSignal(object) #
+	signalDetect = QtCore.pyqtSignal(object)  # ba
 	signalSelectSweep = QtCore.pyqtSignal(object, object)  # (bAnalysis, sweepNumber)
+	#signalUpdateKymographROI = QtCore.pyqtSignal([])  # list of [left, top, right, bottom] in image pixels
 
 	def __init__(self, ba=None, mainWindow=None, parent=None):
 		"""
@@ -152,6 +153,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 			},
 		]
 
+		# for kymograph
+		#self.myImage = None
+		self.myImageItem = None  # kymographImage
+		self.myLineRoi = None
+
 		self.buildUI()
 
 		windowOptions = self.getMainWindowOptions()
@@ -177,7 +183,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#return self._sweepNumber
 		return self.ba.currentSweep
 
-	def detect(self, detectionType, dvdtThreshold, mvThreshold, startSec, stopSec):
+	def detect(self, detectionType, dvdtThreshold, mvThreshold, startSec=None, stopSec=None):
 		"""
 		Detect spikes
 
@@ -197,6 +203,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		#logger.info(f'Detecting with dvdtThreshold:{dvdtThreshold} mvThreshold:{mvThreshold}')
 		self.updateStatusBar(f'Detecting spikes detectionType:{detectionType} dvdt:{dvdtThreshold} minVm:{mvThreshold} start:{startSec} stop:{stopSec}')
+
+		if startSec is None or stopSec is None:
+			startSec = 0
+			stopSec = self.ba.recordingDur
 
 		# get default detection parammeters and tweek
 		#detectionDict = sanpy.bAnalysis.getDefaultDetection()
@@ -402,7 +412,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.derivPlot.autoRange()
 		self.dacPlot.autoRange()
-		self.vmPlot.autoRange(items=[self.vmLinesFiltered])
+
+		# 20220115
+		#self.vmPlot.autoRange(items=[self.vmLinesFiltered])
+		self.vmPlot.enableAutoRange()
+
 		self.vmPlotGlobal.autoRange(items=[self.vmLinesFiltered2])  # we never zoom this
 
 		#self.refreshClips(None, None)
@@ -460,7 +474,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if self.myMainWindow is not None:
 			self.myMainWindow.slot_updateStatus(text)
 		else:
-			logger.warning(text)
+			logger.info(text)
 
 	def on_scatterClicked(self, item, points, ev=None):
 		"""
@@ -888,6 +902,65 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#		self.myMainWindow.preferencesSet('display', 'showErrors', on)
 
 
+	def kymographChanged(self, event):
+		"""
+		User finished gragging the ROI
+
+		Args:
+			event (pyqtgraph.graphicsItems.ROI.ROI)
+		"""
+		logger.info('')
+		#print(event)
+		pos = event.pos()
+		size = event.size()
+		#print(pos, size)
+
+		#imagePos = self.myImageItem.mapFromScene(event.scenePos())
+		#imageSize = self.myImageItem.mapFromScene(event.size())
+		#print('  imagePos:', imagePos, 'imageSize:', imageSize)
+
+		left, top, right, bottom = None, None, None, None
+		handles = event.getSceneHandlePositions()
+		for handle in handles:
+			if handle[0] is not None:
+				imagePos = self.myImageItem.mapFromScene(handle[1])
+				x = imagePos.x()
+				y = imagePos.y()
+				# units are in image pixels !!!
+				#print(handle[0], 'x:', x, 'y:', y)
+				if handle[0] == 'topleft':
+					left = x
+					bottom = y
+					#top = y
+				elif handle[0] == 'bottomright':
+					right = x
+					top = y
+					#bottom = y
+		#
+		left = int(left)
+		top = int(top)
+		right = int(right)
+		bottom = int(bottom)
+
+		if left<0:
+			left = 0
+
+		print(f'  left:{left} top:{top} right:{right} bottom:{bottom}')
+
+		#  cludge
+		if bottom > top:
+			logger.warning(f'fixing bad top/bottom')
+			tmp = top
+			top = bottom
+			bottom = tmp
+
+		theRect = [left, top, right, bottom]
+		self.ba._updateTifRoi(theRect)
+
+		self._replot(startSec=None, stopSec=None, userUpdate=True)
+
+		self.signalDetect.emit(self.ba)  # underlying _abf has new rect
+
 	def buildUI(self):
 		# left is toolbar, right is PYQtGraph (self.view)
 		self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
@@ -908,7 +981,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#print('bDetectionWidget.buildUI() building pg.GraphicsLayoutWidget')
 		self.view = pg.GraphicsLayoutWidget()
 
-		#self.view.scene().sigMouseClicked.connect(self.slot_dvdtMouseReleased)
+		#self.view.scene().sigMouseClicked.connect(self.tmpOnClick)
 
 		# works but does not stick
 		#self.view.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
@@ -916,6 +989,28 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		row = 0
 		colSpan = 1
+
+		# Kymograph, always build (hidden) and show/hide in replot based on self.ba.isKymograph
+		rowSpan = 1
+		self.kymographPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
+		self.kymographPlot.enableAutoRange()
+		# turn off x/y dragging of deriv and vm
+		self.kymographPlot.setMouseEnabled(x=False, y=False)
+		# hide the little 'A' button to rescale axis
+		self.kymographPlot.hideButtons()
+		# turn off right-click menu
+		self.kymographPlot.setMenuEnabled(False)
+		# hide by default
+		self.kymographPlot.hide()  # show in _replot() if self.ba.isKymograph()
+
+		#if self.ba.isKymograph():
+		#	myTif = self.ba.tifData
+		#	self.myImageItem = kymographImage(myTif, axisOrder='row-major',
+		#						rect=[0,0, self.ba.recordingDur, self.ba.tifData.shape[0]])
+
+		row += rowSpan
+
+		#
 		rowSpan = 1
 		self.vmPlotGlobal = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
 		self.vmPlotGlobal.enableAutoRange()
@@ -992,6 +1087,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.dacPlot.setXLink(self.vmPlot)
 		self.vmPlot.setXLink(self.derivPlot)
 		self.vmPlot.setXLink(self.dacPlot)
+		#
+		#self.kymographPlot.setXLink(self.vmPlot)  # TODO: need to set scale of kymograph x-axis
+		#self.kymographPlot.setXLink(self.derivPlot)
 
 		# turn off x/y dragging of deriv and vm
 		self.vmPlotGlobal.setMouseEnabled(x=False, y=False)
@@ -1077,7 +1175,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#vBoxLayout_detect.addWidget(self.myScatterPlotWidget) #, stretch=2)
 
 		#self.myHBoxLayout_detect.addLayout(vBoxLayout_detect)
-		
+
 		# kymograph
 		#tmpVLayout = QtWidgets.QVBoxLayout()
 
@@ -1229,7 +1327,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.selectSpikeList(spikeList, doZoom=doZoom)
 		#self.detectToolbarWidget.slot_selectSpike(sDict)
 
-	def slot_switchFile(self, tableRowDict, ba=None):
+	def slot_switchFile(self, tableRowDict=None, ba=None):
 		"""
 		Set self.ba to new bAnalysis object ba
 
@@ -1246,29 +1344,29 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# bAnalysis object
 		self.ba = ba
 
-		self.detectToolbarWidget.slot_selectFile(tableRowDict)
-
 		# abb 20201009
 		if self.ba.loadError:
 			self.replot()
-			fileName = tableRowDict['File']
+			fileName = self.ba.getFileName()  # tableRowDict['File']
 			self.updateStatusBar(f'Did not load, the file may be corrupt: "{fileName}".')
 			return False
 
 		# fill in detection parameters (dvdt, vm, start, stop)
-		self.fillInDetectionParameters(tableRowDict) # fills in controls
-
-		#self.updateStatusBar(f'Plotting file {path}')
-
-		# cancel spike selection
-		self.selectSpike(None)
-
-		startSec = tableRowDict['Start(s)']
-		stopSec = tableRowDict['Stop(s)']
+		startSec = ''
+		stopSec = ''
+		if tableRowDict is not None:
+			self.detectToolbarWidget.slot_selectFile(tableRowDict)
+			self.fillInDetectionParameters(tableRowDict) # fills in controls
+			#self.updateStatusBar(f'Plotting file {path}')
+			startSec = tableRowDict['Start(s)']
+			stopSec = tableRowDict['Stop(s)']
 
 		if startSec=='' or stopSec=='':
 			startSec = 0
 			stopSec = self.ba.recordingDur
+
+		# cancel spike selection
+		self.selectSpike(None)
 
 		# set sweep to 0
 		self.selectSweep(0, startSec, stopSec, doEmit=False) # calls self._replot()
@@ -1302,7 +1400,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# refresh spike clips
 		#self.refreshClips(None, None)
 
-	def _replot(self, startSec, stopSec):
+	def _replot(self, startSec, stopSec, userUpdate=False):
 		#remove vm/dvdt/clip items (even when abf file is corrupt)
 		#if self.dvdtLines is not None:
 		#	self.derivPlot.removeItem(self.dvdtLines)
@@ -1332,10 +1430,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#sweepC = self.ba._sweepC[:,3]
 
 		# debug
+		'''
 		logger.info(f'sweepX: {sweepX.shape}')
 		logger.info(f'filteredDeriv: {filteredDeriv.shape}')
 		logger.info(f'sweepC: {sweepC.shape}')
 		logger.info(f'filteredVm: {filteredVm.shape}')
+		'''
 
 		self.dvdtLinesFiltered = MultiLine(sweepX, filteredDeriv,
 							self, forcePenColor=None, type='dvdtFiltered',
@@ -1364,6 +1464,88 @@ class bDetectionWidget(QtWidgets.QWidget):
 									pen=pg.mkPen(None))
 		self.linearRegionItem2.setMovable(False)
 		self.vmPlotGlobal.addItem(self.linearRegionItem2)
+
+		# Kymograph
+		if not self.ba.isKymograph():
+			self.kymographPlot.hide()
+		else:
+			self.kymographPlot.clear()
+			self.kymographPlot.show()
+			#self.tmpImage = np.random.normal(size=(20,50))  # (rows, cols) e.g. (y,x)
+			myTif = self.ba.tifData
+			#self.myImageItem = pg.ImageItem(myTif, axisOrder='row-major')
+			#  TODO: set height to micro-meters
+			# was this
+			if self.ba.isKymograph():
+				axisOrder='row-major'
+				rect=[0,0, self.ba.recordingDur, self.ba.tifData.shape[0]]  # x, y, w, h
+				if self.myImageItem is None:
+					self.myImageItem = kymographImage(myTif, axisOrder=axisOrder,
+									rect=rect)
+				else:
+					myTif = self.ba.tifData
+					self.myImageItem.setImage(myTif, axisOrder=axisOrder,
+									rect=rect)
+			#self.myImageItem.setImage(image=myTif, autoLevels=True)
+			#self.myImageItem.setLevels([100,500])
+			self.kymographPlot.addItem(self.myImageItem)
+			# TODO: put ROI in buildUI
+			#self.myLineRoi = pg.ROI(pos=(10,10), size=(500,20), parent=self.kymographPlot)
+
+			kymographRect = self.ba.getKymographRect()
+			if kymographRect is not None:
+				xRoiPos = kymographRect[0]
+				#yRoiPos = kymographRect[1]
+				yRoiPos = kymographRect[3]
+				top = kymographRect[1]
+				right = kymographRect[2]
+				bottom = kymographRect[3]
+				widthRoi = right - xRoiPos + 1
+				#heightRoi = bottom - yRoiPos + 1
+				heightRoi = top - yRoiPos + 1
+			'''
+			else:
+				#  TODO: Put this logic into function in bAbfText
+				pos, size = self.ba.defaultTifRoi()
+
+				xRoiPos = 0  # startSeconds
+				yRoiPos = 0  # pixels
+				widthRoi = myTif.shape[1]
+				heightRoi = myTif.shape[0]
+				tifHeightPercent = myTif.shape[0] * 0.2
+				#print('tifHeightPercent:', tifHeightPercent)
+				yRoiPos += tifHeightPercent
+				heightRoi -= 2 * tifHeightPercent
+			'''
+			# TODO: get this out of replot, recreating the ROI is causing runtime error
+			pos = (xRoiPos,yRoiPos)
+			size = (widthRoi,heightRoi)
+			if self.myLineRoi is None:
+				self.myLineRoi = pg.ROI(pos=pos, size=size, parent=self.myImageItem)
+				self.myLineRoi.addScaleHandle((0,0), (1,1), name='topleft')  # at origin
+				self.myLineRoi.addScaleHandle((0.5,0), (0.5,1))  # top center
+				self.myLineRoi.addScaleHandle((0.5,1), (0.5,0))  # bottom center
+				self.myLineRoi.addScaleHandle((0,0.5), (1,0.5))  # left center
+				self.myLineRoi.addScaleHandle((1,0.5), (0,0.5))  # right center
+				self.myLineRoi.addScaleHandle((1,1), (0,0), name='bottomright')  # bottom right
+				self.myLineRoi.sigRegionChangeFinished.connect(self.kymographChanged)
+			else:
+				self.myLineRoi.setPos(pos, finish=False)
+				self.myLineRoi.setSize(size, finish=False)
+
+			# background kymograph ROI
+			backgroundRect = self.ba.getKymographBackgroundRect()
+			#print('xxx backgroundRect:', backgroundRect)
+			if backgroundRect is not None:
+				xRoiPos = backgroundRect[0]
+				yRoiPos = backgroundRect[1]
+				right = backgroundRect[2]
+				bottom = backgroundRect[3]
+				widthRoi = right - xRoiPos + 1
+				heightRoi = bottom - yRoiPos + 1
+
+				# TODO: get this out of replot, recreating the ROI is causing runtime error
+				self.myLineRoiBackground = pg.ROI(pos=(xRoiPos,yRoiPos), size=(widthRoi,heightRoi), parent=self.myImageItem)
 
 		#
 		# remove and re-add plot overlays
@@ -1396,6 +1578,29 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#
 		# critical, replot() is inherited
 		self.replot()
+
+class kymographImage(pg.ImageItem):
+	def mouseClickEvent(self, event):
+		#print("Click", event.pos())
+		x = event.pos().x()
+		y = event.pos().y()
+
+	def mouseDragEvent(self, event):
+		return
+
+		if event.isStart():
+			print("Start drag", event.pos())
+		elif event.isFinish():
+			print("Stop drag", event.pos())
+		else:
+			print("Drag", event.pos())
+
+	def hoverEvent(self, event):
+		if not event.isExit():
+			# the mouse is hovering over the image; make sure no other items
+			# will receive left click/drag events from here.
+			event.acceptDrags(pg.QtCore.Qt.LeftButton)
+			event.acceptClicks(pg.QtCore.Qt.LeftButton)
 
 class myImageExporter(ImageExporter):
 	def __init__(self, item):
@@ -1830,6 +2035,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		detectMv = -20
 		showGlobalVm = True
 		showDvDt = True
+		showDAC = True
 		#showClips = False
 		#showScatter = True
 		if windowOptions is not None:
@@ -2254,15 +2460,22 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 if __name__ == '__main__':
 	# load a bAnalysis file
 
-	abfFile = '/Users/cudmore/Sites/bAnalysis/data/19221021.abf'
-	abfFile = '/Users/cudmore/Sites/bAnalysis/data/19114001.abf'
-	abfFile = '/media/cudmore/data/Laura-data/manuscript-data/2020_06_23_0006.abf'
+	#abfFile = '/Users/cudmore/Sites/bAnalysis/data/19221021.abf'
+	#abfFile = '/Users/cudmore/Sites/bAnalysis/data/19114001.abf'
+	path = '/media/cudmore/data/Laura-data/manuscript-data/2020_06_23_0006.abf'
 	path = '../data/19114001.abf'
+	path = '/media/cudmore/data/rabbit-ca-transient/Control/220110n_0003.tif.frames/220110n_0003.tif'
+
+	ba = sanpy.bAnalysis(path)
 
 	app = QtWidgets.QApplication(sys.argv)
 	w = bDetectionWidget()
-	w.switchFile(path)
-	w.detect(10, -20)
+	w.slot_switchFile(ba=ba)
+
+	detectionType = sanpy.bDetection.detectionTypes.mv
+	dvdtThreshold = 10
+	mvThreshold = 1000  # -20
+	#w.detect(detectionType, dvdtThreshold, mvThreshold)
 
 	w.show()
 

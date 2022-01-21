@@ -11,7 +11,7 @@ import myokit
 import myokit.lib.markov as markov
 
 #modelFile = 'clancy-1999.mmt'
-modelFile = 'examples/models/tentusscher-2006.mmt'
+modelFile = 'sanpy/models/tentusscher-2006.mmt'
 model, protocol, script = myokit.load(modelFile)
 
 print('protocol:', protocol)

@@ -240,6 +240,7 @@ class spikeClips(sanpyPlugin):
 
 		# always remove existing
 		self.clipPlot.clear()
+		self.variancePlot.clear()
 
 		if self.ba is None or self.ba.numSpikes == 0:
 			return
@@ -267,7 +268,8 @@ class spikeClips(sanpyPlugin):
 		# this returns x-axis in ms
 		# theseClips is a [list] of clips
 		# theseClips_x is in ms
-		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(startSec, stopSec, spikeSelection=selectedSpikeList,
+		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(startSec, stopSec,
+												spikeSelection=selectedSpikeList,
 												preSpikeClipWidth_ms=self.preClipWidth_ms,
 												postSpikeClipWidth_ms=self.postClipWidth_ms,
 												sweepNumber=self.sweepNumber)
@@ -368,7 +370,7 @@ class spikeClips(sanpyPlugin):
 
 		#
 		if 1:
-			self.variancePlot.clear()
+			#self.variancePlot.clear()
 			xVarClip = np.nanmean(xTmp, axis=0) # xTmp is in ms
 			yVarClip = np.nanvar(yTmp, axis=0)
 			tmpVarClipLine = MultiLine(xVarClip, yVarClip, self, width=3, allowXAxisDrag=False, type='meanclip')

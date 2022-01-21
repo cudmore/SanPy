@@ -31,6 +31,7 @@ from bBrowser import bBrowser
 print('dash.__version__=', dash.__version__)
 
 path = '/Users/cudmore/box/data/laura/SAN CC/NEWxxx'
+path = '/media/cudmore/data/Laura-data/SAN AP'
 
 myBrowser = bBrowser(path)
 myBrowser.loadFolder()
@@ -67,7 +68,7 @@ def plotButton(graphNum):
 	"""
 	Respond to plot button and call myBrowser.updatePlot() to replot
 	"""
-	
+
 	'''
 	yStatHuman = myBrowser.graphPlot[graphNum]['yStat']
 	xStatHuman = myBrowser.graphPlot[graphNum]['xStat']
@@ -296,7 +297,7 @@ myBody = dbc.Container(
 						{'label': 'Mean', 'value': 'showMean'},
 						# get rid of this showMeanLines
 						{'label': 'Mean Lines b/w abf files', 'value': 'showMeanLines'},
-					], values=['showMarkers', 'showMean', 'showMeanLines'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
+					], value=['showMarkers', 'showMean', 'showMeanLines'], labelStyle={'padding-left': '20px', 'display': 'inline-block'}
 				),
 				dbc.Tooltip(
 					[dcc.Markdown(dedent("""
@@ -373,7 +374,8 @@ myBody = dbc.Container(
 					style = {'max-width': '900px', 'text-align': 'left'},
 				),
 
-			], no_gutters=False, align='stretch', # row
+			], align='stretch', # row
+			#], no_gutters=False, align='stretch', # row
 		),
 
 		dbc.Row(
@@ -483,7 +485,8 @@ myBody = dbc.Container(
 					],
 					md=4, align='stretch',
 				),
-			], no_gutters=False, align='stretch', # row
+			], align='stretch', # row
+			#], no_gutters=False, align='stretch', # row
 		)
 	], className="mt-4", fluid=True,
 )

@@ -4,6 +4,7 @@ General purpose plugins to plot from a [sanpy.bAnalysis][sanpy.bAnalysis.bAnalys
 #Robert Cudmore
 #20190328
 
+import sys
 import numpy as np
 import scipy.signal
 import matplotlib.pyplot as plt
@@ -227,35 +228,39 @@ class bAnalysisPlot():
 			ax
 		'''
 
+		markersize = 4
+
 		if plotStyle is None:
 			plotStyle = self.getDefaultPlotStyle()
 
 		if ax is None:
 			fig, ax = self._makeFig()
-
+			fig.suptitle(self.ba.getFileName())
 		# plot vm
 		self.plotRaw(ax=ax)
 
 		# plot spike times
 		if plotThreshold:
-			thresholdVal = self.ba.getStat('thresholdVal')
 			thresholdPnt = self.ba.getStat('thresholdPnt')
+			# don't use this for Ca++ concentration
+			#thresholdVal = self.ba.getStat('thresholdVal')
+			thresholdVal = self.ba.sweepY[thresholdPnt]
 			thresholdSec = [self.ba.pnt2Sec_(x) for x in thresholdPnt]
-			ax.plot(thresholdSec, thresholdVal, 'pg')
+			ax.plot(thresholdSec, thresholdVal, 'pg', markersize=markersize)
 
 		# plot the peak
 		if plotPeak:
-			peakVal = self.ba.getStat('peakVal')
 			peakPnt = self.ba.getStat('peakPnt')
+			# don't use this for Ca++ concentration
+			#peakVal = self.ba.getStat('peakVal')
+			peakVal = self.ba.sweepY[peakPnt]
 			peakSec = [self.ba.pnt2Sec_(x) for x in peakPnt]
-			ax.plot(peakSec, peakVal, 'or')
+			ax.plot(peakSec, peakVal, 'or', markersize=markersize)
 
 		xUnits = self.ba.get_xUnits()
 		yUnits = self.ba.get_yUnits()
 		ax.set_xlabel(xUnits)
 		ax.set_ylabel(yUnits)
-
-		return fig, ax
 
 	def plotTimeSeries(ba, stat, halfWidthIdx=0, ax=None):
 		""" Plot a given spike parameter"""
@@ -319,37 +324,113 @@ class bAnalysisPlot():
 		ax.set_ylabel('Inter-Spike-Interval (sec)')
 		ax.set_xlabel('Time (sec)')
 
-	def plotClips(ba, oneSpikeNumber=None, ax=None):
+	def plotClips(self, plotType='Raw', ax=None):
 		'''
 		Plot clips of all detected spikes
 
 		Clips are created in self.spikeDetect() and default to clipWidth_ms = 100 ms
+
+		Args:
+			plotType (str): From [Raw, RawPlusMean, Mean, SD, Var]
+			#plotVariance (bool): If tru, plot variance. Otherwise plot all raw clips (black) with mean (red)
+
+		Returns:
+			xPlot
+			yPlot
+		'''
+
 		'''
 		if ax is None:
 			grid = plt.GridSpec(1, 1, wspace=0.2, hspace=0.4)
 
 			fig = plt.figure(figsize=(10, 8))
 			ax = fig.add_subplot(grid[0, 0:]) #Vm, entire sweep
+		'''
 
-		for i in range(len(ba.spikeClips)):
-			try:
-				ax.plot(ba.spikeClips_x, ba.spikeClips[i], 'k')
-			except (ValueError) as e:
-				print('exception in bPlot.plotClips() while plotting clips', i)
+		if self.ba.numSpikes == 0:
+			return None, None
+
+		if ax is None:
+			fig, ax = self._makeFig()
+			fig.suptitle(self.ba.getFileName())
+
+		startSec, stopSec = None, None
+		selectedSpikeList = []
+		preClipWidth_ms = 200
+		postClipWidth_ms = 1000
+		sweepNumber = 0
+		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(startSec, stopSec,
+												spikeSelection=selectedSpikeList,
+												preSpikeClipWidth_ms=preClipWidth_ms,
+												postSpikeClipWidth_ms=postClipWidth_ms,
+												sweepNumber=sweepNumber)
+		numClips = len(theseClips)
+
+		# convert clips to 2d ndarray ???
+		xTmp = np.array(theseClips_x)
+		xTmp /= self.ba.dataPointsPerMs * 1000  # pnt to seconds
+		yTmp = np.array(theseClips)  # mV
+
+		# TODO: plot each clip as different color
+		# this will show variation in sequential clips (for Ca++ imaging they are decreasing)
+		#print(xTmp.shape)  # ( e.g. (9,306)
+		#sys.exit(1)
+
+		# plot variance
+		if plotType == 'Mean':
+			xPlot = np.nanmean(xTmp, axis=0) # xTmp is in ms
+			yPlot = np.nanmean(yTmp, axis=0)
+			ax.plot(xPlot, yPlot, '-k', linewidth=1)
+			ax.set_ylabel('Mean')
+			ax.set_xlabel('Time (sec)')
+		elif plotType == 'Var':
+			xPlot = np.nanmean(xTmp, axis=0) # xTmp is in ms
+			yPlot = np.nanvar(yTmp, axis=0)
+			ax.plot(xPlot, yPlot, '-k', linewidth=1)
+			ax.set_ylabel('Variance')
+			ax.set_xlabel('Time (sec)')
+		elif plotType == 'SD':
+			xPlot = np.nanmean(xTmp, axis=0) # xTmp is in ms
+			yPlot = np.nanstd(yTmp, axis=0)
+			ax.plot(xPlot, yPlot, '-k', linewidth=1)
+			ax.set_ylabel('STD')
+			ax.set_xlabel('Time (sec)')
+		elif plotType in ['Raw', 'RawPlusMean']:
+			# plot raw
+			#logger.info('PLOTTING RAW')
+
+			cmap = plt.get_cmap('jet')
+			colors = [cmap(i) for i in np.linspace(0, 1, numClips)]
+
+			for i in range(numClips):
+				color = colors[i]
+				xPlot = xTmp[i,:]
+				yPlot = yTmp[i,:]
+				# I want different colors here
+				#ax.plot(xPlot, yPlot, '-k', linewidth=0.5)
+				# WHY IS THIS NOT WORKING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				logger.info(f'!!!!!!!!!!!!!!!!!!!!!! plotting color g {plotType} {color}')
+				#ax.plot(xPlot, yPlot, '-g', linewidth=0.5, color='g')
+				ax.plot(xPlot, yPlot, '-', label=f'{i}', color=color, linewidth=0.5)
+
+			yLabel = self.ba._sweepLabelY
+			ax.set_ylabel(yLabel)
+			ax.set_xlabel('Time (sec)')
+
+			# plot mean
+			if plotType == 'RawPlusMean':
+				xMeanClip = np.nanmean(xTmp, axis=0) # xTmp is in ms
+				yMeanClip = np.nanmean(yTmp, axis=0)
+				ax.plot(xMeanClip, yMeanClip, '-r', linewidth=1)
+
+			# show legend for each raw race 0,1,2,3,...
+			ax.legend(loc='best')
+
+		else:
+			logger.error(f'Did not understand plot type: {plotType}')
 
 		#
-		# plot current clip
-		line = None
-		if oneSpikeNumber is not None:
-			try:
-				line, = ax.plot(ba.spikeClips_x, ba.spikeClips[oneSpikeNumber], 'y')
-			except (ValueError) as e:
-				print('exception in bPlot.plotClips() while plotting oneSpikeNumber', oneSpikeNumber)
-
-		ax.set_ylabel('Vm (mV)')
-		ax.set_xlabel('Time (ms)')
-
-		return line
+		return xPlot, yPlot
 
 	def plotPhasePlot(self, oneSpikeNumber=None, ax=None):
 		if ax is None:
