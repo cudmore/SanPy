@@ -219,6 +219,7 @@ def run():
 
 	# new
 	#baList = loadWithAnalysisDir(path)
+
 	dbPath = os.path.join(path, 'sanpy_recording_db.csv')
 	dfFolder = pd.read_csv(dbPath)
 
