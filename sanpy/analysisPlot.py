@@ -368,7 +368,8 @@ class bAnalysisPlot():
 
 		# convert clips to 2d ndarray ???
 		xTmp = np.array(theseClips_x)
-		xTmp /= self.ba.dataPointsPerMs * 1000  # pnt to seconds
+		#xTmp /= self.ba.dataPointsPerMs * 1000  # pnt to seconds
+		xTmp /= 1000  # ms to seconds
 		yTmp = np.array(theseClips)  # mV
 
 		# TODO: plot each clip as different color
@@ -409,7 +410,7 @@ class bAnalysisPlot():
 				# I want different colors here
 				#ax.plot(xPlot, yPlot, '-k', linewidth=0.5)
 				# WHY IS THIS NOT WORKING !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-				logger.info(f'!!!!!!!!!!!!!!!!!!!!!! plotting color g {plotType} {color}')
+				#logger.info(f'!!!!!!!!!!!!!!!!!!!!!! plotting color g {plotType} {color}')
 				#ax.plot(xPlot, yPlot, '-g', linewidth=0.5, color='g')
 				ax.plot(xPlot, yPlot, '-', label=f'{i}', color=color, linewidth=0.5)
 

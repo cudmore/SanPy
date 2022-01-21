@@ -283,7 +283,8 @@ class spikeClips(sanpyPlugin):
 		#dataPointsPerMs = self.ba.dataPointsPerMs
 		xTmp = np.array(theseClips_x)
 		#xTmp /= dataPointsPerMs # pnt to ms
-		xTmp /= self.ba.dataPointsPerMs * 1000  # pnt to seconds
+		#xTmp /= self.ba.dataPointsPerMs * 1000  # pnt to seconds
+		xTmp /= 1000  # ms to seconds
 		yTmp = np.array(theseClips)  # mV
 
 		#print('xTmp:', xTmp.shape)
