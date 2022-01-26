@@ -114,6 +114,13 @@ class bAbfText:
 
 		return [left, top, right, bottom]
 
+	def resetRoi(self):
+		"""reset the kymograph roi to default
+		"""
+		defaultRect = self.defaultTifRoi()
+		self.updateTifRoi(defaultRect)
+		return defaultRect
+
 	def defaultTifRoi(self):
 		"""
 		A default rectangular ROI for main kymograph analysis.
@@ -126,12 +133,8 @@ class bAbfText:
 		widthRoi = self.tif.shape[1]
 		heightRoi = self.tif.shape[0]
 		tifHeightPercent = self.tif.shape[0] * 0.15
-		#print('tifHeightPercent:', tifHeightPercent)
 		yRoiPos += tifHeightPercent
 		heightRoi -= 2 * tifHeightPercent
-
-		#pos = (xRoiPos, yRoiPos)
-		#size = (widthRoi, heightRoi)
 
 		left = xRoiPos
 		top = yRoiPos + heightRoi
@@ -186,7 +189,7 @@ class bAbfText:
 		left = 0  # startSec
 		top = tif.shape[0]
 		right = tif.shape[1]  # stopSec
-		botom = 0
+		bottom = 0
 		if theRect is not None:
 			left = theRect[0]
 			top = theRect[1]

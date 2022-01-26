@@ -33,8 +33,8 @@ class spikeClips(sanpyPlugin):
 		"""
 		super().__init__(**kwargs)
 
-		self.preClipWidth_ms = 50
-		self.postClipWidth_ms = 50
+		self.preClipWidth_ms = 100
+		self.postClipWidth_ms = 500
 		if self.ba is not None:
 			#self.clipWidth_ms = self.ba.detectionClass['spikeClipWidth_ms']
 			self.preClipWidth_ms = self.ba.detectionClass['preSpikeClipWidth_ms']
@@ -60,9 +60,6 @@ class spikeClips(sanpyPlugin):
 		self.singleSpikeMultiLine = None
 		self.spikeListMultiLine = None
 
-		# makes self.mainWidget and calls show()
-		#self.pyqtWindow()
-
 		# main layout
 		vLayout = QtWidgets.QVBoxLayout()
 
@@ -73,10 +70,20 @@ class spikeClips(sanpyPlugin):
 		self.numSpikesLabel = QtWidgets.QLabel('Num Spikes:None')
 		hLayout2.addWidget(self.numSpikesLabel)
 
+		self.colorCheckBox = QtWidgets.QCheckBox('Color')
+		self.colorCheckBox.setChecked(True)
+		self.colorCheckBox.stateChanged.connect(lambda:self.replot())
+		hLayout2.addWidget(self.colorCheckBox)
+
 		self.meanCheckBox = QtWidgets.QCheckBox('Mean Trace (red)')
 		self.meanCheckBox.setChecked(True)
 		self.meanCheckBox.stateChanged.connect(lambda:self.replot())
 		hLayout2.addWidget(self.meanCheckBox)
+
+		self.varianceCheckBox = QtWidgets.QCheckBox('Variance')
+		self.varianceCheckBox.setChecked(False)
+		self.varianceCheckBox.stateChanged.connect(lambda:self.replot())
+		hLayout2.addWidget(self.varianceCheckBox)
 
 		self.phasePlotCheckBox = QtWidgets.QCheckBox('Phase')
 		self.phasePlotCheckBox.setChecked(False)
@@ -159,6 +166,8 @@ class spikeClips(sanpyPlugin):
 		# pyqt graph
 		self.view = pg.GraphicsLayoutWidget()
 		self.clipPlot = self.view.addPlot(row=0, col=0)
+		self.clipPlot.enableAutoRange()
+
 		#self.clipPlot.hideButtons()
 		#self.clipPlot.setMenuEnabled(False)
 		#self.clipPlot.setMouseEnabled(x=False, y=False)
@@ -174,6 +183,18 @@ class spikeClips(sanpyPlugin):
 		# set the layout of the main window
 		#self.mainWidget.setLayout(vLayout)
 		self.setLayout(vLayout)
+
+		self.replot()
+
+	def slot_switchFile(self, rowDict, ba, replot=True):
+		# don't replot until we set our detectionClass
+		replot = False
+		super().slot_switchFile(rowDict, ba, replot=replot)
+
+		if ba is not None:
+			#self.clipWidth_ms = self.ba.detectionClass['spikeClipWidth_ms']
+			self.preClipWidth_ms = self.ba.detectionClass['preSpikeClipWidth_ms']
+			self.postClipWidth_ms = self.ba.detectionClass['postSpikeClipWidth_ms']
 
 		self.replot()
 
@@ -323,36 +344,28 @@ class spikeClips(sanpyPlugin):
 				xOffset += xInc # ms
 				yOffset += yInc # mV
 
-		# color map to give each clip different color
-		'''
-		colormap = 'rainbow'
-		cmap = cm.get_cmap(colormap);
-		n = len(uids);
-		colors = cmap(range(n), bytes = True);
-		'''
-
 		#
 		# original, one multiline for all clips (super fast)
 		#self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type='clip')
 		#
 		# each clip so we can set color
-		colors = [
-			(0, 0, 0),
-			(4, 5, 61),
-			(84, 42, 55),
-			(15, 87, 60),
-			(208, 17, 141),
-			(255, 255, 255)
-		]
-
-		# color map
-		cmap = pg.ColorMap(pos=np.linspace(0.0, 1.0, 6), color=colors)
-		#colors = ['r', 'g', 'b']
+		#cmap = pg.colormap.get('Greens', source='matplotlib') # prepare a linear color map
 		numSpikes = xTmp.shape[0]
+
+		doColor = self.colorCheckBox.isChecked()
+		if doColor:
+			cmap = pg.colormap.get('CET-L18') # prepare a linear color map
+			tmpColors = cmap.getColors()
+			tmpLinSpace = np.linspace(0, len(tmpColors), numSpikes, endpoint=False, dtype=np.uint16)
+		#for tmp in tmps:
+		#	print(tmp)
 		for i in range(numSpikes):
-			#forcePenColor = cmap.getByIndex(i)
+			#forcePenColor = cmap.getByIndex(i)  # returns PyQt5.QtGui.QColor
 			forcePenColor = None
-			#print('forcePenColor:', forcePenColor)
+			if doColor:
+				currentStep = tmpLinSpace[i]
+				forcePenColor = tmpColors[currentStep]
+
 			xPlot = xTmp[i,:]
 			yPlot = yTmp[i,:]
 			tmpClipLines = MultiLine(xPlot, yPlot, self, allowXAxisDrag=False, forcePenColor=forcePenColor, type='clip')
@@ -370,7 +383,10 @@ class spikeClips(sanpyPlugin):
 			self.clipPlot.addItem(tmpMeanClipLine)
 
 		#
-		if 1:
+		if not self.varianceCheckBox.isChecked():
+			self.variancePlot.hide()
+		else:
+			self.variancePlot.show()
 			#self.variancePlot.clear()
 			xVarClip = np.nanmean(xTmp, axis=0) # xTmp is in ms
 			yVarClip = np.nanvar(yTmp, axis=0)
@@ -381,10 +397,10 @@ class spikeClips(sanpyPlugin):
 
 		# set axis
 		xLabel = 'time (s)'
-		yLabel = 'mV'
+		yLabel = self.ba.get_yUnits()
 		if isPhasePlot:
-			xLabel = 'mV'
-			yLabel = 'dV/dt'
+			xLabel = self.ba.get_yUnits()
+			yLabel = 'd/dt'
 		self.clipPlot.getAxis('left').setLabel(yLabel)
 		self.clipPlot.getAxis('bottom').setLabel(xLabel)
 
@@ -444,11 +460,6 @@ class spikeClips(sanpyPlugin):
 		sDict (dict): NOT USED
 		"""
 
-		#logger.info(sDict)
-
-		#if self.ba != sDict['ba']:
-		#	return
-
 		if sDict is not None:
 			spikeNumber = sDict['spikeNumber']
 		else:
@@ -467,8 +478,10 @@ class spikeClips(sanpyPlugin):
 		#    replot is calling self.clipPlot.clear()
 		if self.singleSpikeMultiLine is not None:
 			self.clipPlot.removeItem(self.singleSpikeMultiLine)
-		self.singleSpikeMultiLine = MultiLine(x, y, self, width=3, allowXAxisDrag=False, forcePenColor='y', type='spike selection')
-		self.clipPlot.addItem(self.singleSpikeMultiLine)
+		if spikeNumber is not None:
+			# only add i fwe have a spike
+			self.singleSpikeMultiLine = MultiLine(x, y, self, width=3, allowXAxisDrag=False, forcePenColor='y', type='spike selection')
+			self.clipPlot.addItem(self.singleSpikeMultiLine)
 
 	def selectSpikeList(self, sDict=None):
 		"""
@@ -488,8 +501,9 @@ class spikeClips(sanpyPlugin):
 				pass
 		if self.spikeListMultiLine is not None:
 			self.clipPlot.removeItem(self.spikeListMultiLine)
-		self.spikeListMultiLine = MultiLine(x, y, self, width=3, allowXAxisDrag=False, forcePenColor='c', type='spike list selection')
-		self.clipPlot.addItem(self.spikeListMultiLine)
+		if len(self.selectedSpikeList) >0:
+			self.spikeListMultiLine = MultiLine(x, y, self, width=3, allowXAxisDrag=False, forcePenColor='c', type='spike list selection')
+			self.clipPlot.addItem(self.spikeListMultiLine)
 
 class MultiLine(pg.QtGui.QGraphicsPathItem):
 	"""
@@ -538,6 +552,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 			width = 3
 
 		#print('MultiLine penColor:', penColor)
+		logger.info(f'{self.myType} penColor: {penColor}')
 		pen = pg.mkPen(color=penColor, width=width)
 
 		# testing gradient pen
@@ -719,7 +734,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 if __name__ == '__main__':
 	#path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
 	#path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
-	path = '/media/cudmore/data/rabbit-ca-transient/Control/220110n_0003.tif.frames/220110n_0003.tif'
+	path = '/media/cudmore/data/rabbit-ca-transient/jan-12-2022/Control/220110n_0003.tif.frames/220110n_0003.tif'
 	ba = sanpy.bAnalysis(path)
 
 	'''
@@ -729,13 +744,14 @@ if __name__ == '__main__':
 	detectionClass['mvThreshold'] = -0 #0.5
 	'''
 
-	detectionType = sanpy.bDetection.detectionTypes.mv
-
-	mvThreshold = 0.5 #0
+	mvThreshold = 1.2 #0
 	detectionClass = sanpy.bDetection() # gets default detection class
+	detectionType = sanpy.bDetection.detectionTypes.mv
 	detectionClass['detectionType'] = detectionType  # set detection type to ('dvdt', 'vm')
 	detectionClass['dvdtThreshold'] = math.nan
 	detectionClass['mvThreshold'] = mvThreshold
+	detectionClass['preSpikeClipWidth_ms'] = 100
+	detectionClass['postSpikeClipWidth_ms'] = 1000
 
 	ba.spikeDetect(detectionClass=detectionClass)
 	#ba.spikeDetect()

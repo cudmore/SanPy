@@ -71,6 +71,11 @@ class detectionParams(sanpyPlugin):
 		aButton.clicked.connect(partial(self.on_button_click, aName))
 		hControlLayout.addWidget(aButton)
 
+		aName = 'Ca++ Kymograph'
+		aButton = QtWidgets.QPushButton(aName)
+		aButton.clicked.connect(partial(self.on_button_click, aName))
+		hControlLayout.addWidget(aButton)
+
 		aName = 'Neuron'
 		aButton = QtWidgets.QPushButton(aName)
 		aButton.clicked.connect(partial(self.on_button_click, aName))
@@ -326,6 +331,11 @@ class detectionParams(sanpyPlugin):
 			self.detectionClass.setToType(detectionPreset)
 			# refresh interface
 			self.replot()
+		elif buttonName == 'Ca++ Kymograph':
+			detectionPreset = sanpy.bDetection.detectionPresets.caKymograph
+			self.detectionClass.setToType(detectionPreset)
+			# refresh interface
+			self.replot()
 		elif buttonName.endswith('_none'):
 			# set a parameter to None, will only work if 'allowNone'
 			paramName = buttonName.replace('_none', '')
@@ -396,7 +406,8 @@ class detectionParams(sanpyPlugin):
 		super().slot_switchFile(rowDict, ba, replot=replot)
 
 		# grab a copy to modify and then set on 'detect'
-		self.detectionClass = copy.deepcopy(self.ba.detectionClass)
+		logger.error('\n\nCHANGE THIS BACK\ncaKymograph turning of switch_file\n')
+		#self.detectionClass = copy.deepcopy(self.ba.detectionClass)
 
 		self.replot()
 

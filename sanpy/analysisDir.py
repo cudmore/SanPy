@@ -124,7 +124,7 @@ _sanpyColumns = {
 		'type': int,
 		'isEditable': False,
 	},
-	'path': {
+	'relPath': {
 		'type': int,
 		'isEditable': False,
 	},
@@ -760,6 +760,11 @@ class analysisDir():
 				self._df.loc[rowIdx, 'dvdtThreshold'] = dvdtThreshold
 				self._df.loc[rowIdx, 'mvThreshold'] = mvThreshold
 
+				#
+				# TODO: remove start of ba._path that corresponds to our current folder path
+				# will allow our save db to be modular
+				self._df.loc[rowIdx, 'relPath'] = ba._path
+
 			# kymograph interface
 			if ba is not None and ba.isKymograph():
 				kRect = ba.getKymographRect()
@@ -770,7 +775,7 @@ class analysisDir():
 				#
 				# TODO: remove start of ba._path that corresponds to our current folder path
 				# will allow our save db to be modular
-				self._df.loc[rowIdx, 'path'] = ba._path
+				#self._df.loc[rowIdx, 'path'] = ba._path
 
 	'''
 	def setCellValue(self, rowIdx, colStr, value):
@@ -814,13 +819,13 @@ class analysisDir():
 		uuid = self._df.at[rowIdx, 'uuid']
 		return len(uuid) > 0
 
-	def getAnalysis(self, rowIdx):
+	def getAnalysis(self, rowIdx, allowAutoLoad=True):
 		"""
 		Get bAnalysis object, will load if necc.
 
 		Args:
 			rowIdx (int): Row index from table, corresponds to row in self._df
-
+			allowAutoLoad (bool)
 		Return:
 			bAnalysis
 		"""
@@ -832,17 +837,18 @@ class analysisDir():
 		#logger.info(f'Found _ba in file db with ba:"{ba}" {type(ba)}')
 
 		if ba is None or ba=='':
+			#logger.info('did not find _ba ... loading from abf file ...')
 			# working on kymograph
-			filePath = self._df.loc[rowIdx, 'path']
+			filePath = self._df.loc[rowIdx, 'relPath']
 
-			ba = self.loadOneAnalysis(filePath, uuid)
+			ba = self.loadOneAnalysis(filePath, uuid, allowAutoLoad=allowAutoLoad)
 			# load
 			'''
 			logger.info(f'Loading bAnalysis from row {rowIdx} "{filePath}"')
 			ba = sanpy.bAnalysis(filePath)
 			'''
 			if ba is None:
-				logger.error(f'Failed to load path: {filePath}')
+				logger.warning(f'Did not load row {rowIdx} path: "{filePath}". Analysis was probably not saved')
 			else:
 				self._df.at[rowIdx, '_ba'] = ba
 				# does not get a uuid until save into h5
@@ -869,7 +875,7 @@ class analysisDir():
 
 		return ba
 
-	def loadOneAnalysis(self, path, uuid=None):
+	def loadOneAnalysis(self, path, uuid=None, allowAutoLoad=True):
 		"""
 		Load one bAnalysis either from original file path or uuid of h5 file.
 
@@ -902,7 +908,7 @@ class analysisDir():
 					logger.info(f'Loaded ba from h5 uuid {uuid} and now ba:{ba}')
 				except (KeyError):
 					logger.error(f'Did not find uuid in h5 file, uuid:{uuid}')
-		if ba is None:
+		if allowAutoLoad and ba is None:
 			# load from path
 			ba = sanpy.bAnalysis(path)
 			logger.info(f'Loaded ba from path {path} and now ba:{ba}')

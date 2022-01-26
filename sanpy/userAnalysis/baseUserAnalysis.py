@@ -83,6 +83,7 @@ def runAllUserAnalysis(ba):
 
 	# step through each
 	objList = getObjectList()
+	logger.info(f'objList: {objList}')
 	for obj in objList:
 		# instantiate and call run (will add values for stats
 		userObj = obj(ba)

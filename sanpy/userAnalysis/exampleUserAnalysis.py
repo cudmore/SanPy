@@ -25,7 +25,11 @@ class exampleUserAnalysis(baseUserAnalysis):
 		'user stat 2': {
 			'name': 'mdp2_val',
 			'yStat': 'mdp2_val',
-		}
+		},
+		'user stat 3': {
+			'name': 'timeToPeak_ms',
+			'yStat': 'timeToPeak_ms',
+		},
 	}
 
 	def run(self):
@@ -43,6 +47,12 @@ class exampleUserAnalysis(baseUserAnalysis):
 
 		lastThresholdPnt = None
 		for spikeIdx, spike in enumerate(self.ba.spikeDict):
+			# add time to peak
+			thresholdSec = spike['thresholdSec']
+			peakSecond = spike['peakSec']
+			timeToPeak_ms = (peakSec - thresholdSec) * 1000
+			self.setSpikeValue(spikeIdx, 'timeToPeak_ms', timeToPeak_ms)
+
 			thisThresholdPnt = spike['thresholdPnt']
 
 			if spikeIdx == 0:

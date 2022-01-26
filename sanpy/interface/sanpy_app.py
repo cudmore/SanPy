@@ -656,18 +656,21 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.myPluginTab1.setContextMenuPolicy(QtCore.Qt.CustomContextMenu);
 		self.myPluginTab1.customContextMenuRequested.connect(partial(self.slot_contextMenu, sender=self.myPluginTab1))
 
+		#
 		# add a number of plugins to QDockWidget 'Plugins 1'
 		# we need to know the recice human name like 'xxx'
-		#clipsPlugin = self.myPlugins.runPlugin('Plot Spike Clips', ba=None, show=False)
-		scatterPlugin = self.myPlugins.runPlugin('Plot Scatter', ba=None, show=False)
-		errorSummaryPlugin = self.myPlugins.runPlugin('Error Summary', ba=None, show=False)
-		summaryAnalysisPlugin = self.myPlugins.runPlugin('Summary Analysis', ba=None, show=False)
+		detectionPlugin = self.myPlugins.runPlugin('Detection Parameters', ba=None, show=False)
+		clipsPlugin = self.myPlugins.runPlugin('Plot Spike Clips', ba=None, show=False)
+		#scatterPlugin = self.myPlugins.runPlugin('Plot Scatter', ba=None, show=False)
+		#errorSummaryPlugin = self.myPlugins.runPlugin('Error Summary', ba=None, show=False)
+		#summaryAnalysisPlugin = self.myPlugins.runPlugin('Summary Analysis', ba=None, show=False)
 
 		# on add tab, the QTabWIdget makes a copy !!!
-		#self.myPluginTab1.addTab(clipsPlugin, clipsPlugin.myHumanName)
-		self.myPluginTab1.addTab(scatterPlugin, scatterPlugin.myHumanName)
-		self.myPluginTab1.addTab(errorSummaryPlugin, errorSummaryPlugin.myHumanName)
-		self.myPluginTab1.addTab(summaryAnalysisPlugin, summaryAnalysisPlugin.myHumanName)
+		self.myPluginTab1.addTab(detectionPlugin, detectionPlugin.myHumanName)
+		self.myPluginTab1.addTab(clipsPlugin, clipsPlugin.myHumanName)
+		#self.myPluginTab1.addTab(scatterPlugin, scatterPlugin.myHumanName)
+		#self.myPluginTab1.addTab(errorSummaryPlugin, errorSummaryPlugin.myHumanName)
+		#self.myPluginTab1.addTab(summaryAnalysisPlugin, summaryAnalysisPlugin.myHumanName)
 
 		#
 		#detectionPlugin = self.myPlugins.runPlugin('Detection Parameters', ba=None, show=False)

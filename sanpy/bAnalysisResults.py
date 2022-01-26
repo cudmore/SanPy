@@ -220,6 +220,13 @@ analysisResultDict[key]['default'] = defaultVal
 analysisResultDict[key]['units'] = 'mV'  # voltage-clamp
 analysisResultDict[key]['description'] = 'Difference between peakVal minus thresholdVal.'
 
+key = 'timeToPeak_ms'
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]['type'] = 'float'
+analysisResultDict[key]['default'] = defaultVal
+analysisResultDict[key]['units'] = 'ms' # voltage-clamp'
+analysisResultDict[key]['description'] = 'Time to peak (ms) after TOP.'
+
 key = 'preMinPnt'
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]['type'] = 'int'

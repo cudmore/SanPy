@@ -13,6 +13,8 @@ from pyqtgraph.exporters import ImageExporter
 
 import sanpy
 
+import sanpy.interface.bKymograph
+
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
@@ -154,9 +156,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		]
 
 		# for kymograph
-		#self.myImage = None
-		self.myImageItem = None  # kymographImage
-		self.myLineRoi = None
+		#self.myImageItem = None  # kymographImage
+		#self.myLineRoi = None
 
 		self.buildUI()
 
@@ -210,7 +211,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# get default detection parammeters and tweek
 		#detectionDict = sanpy.bAnalysis.getDefaultDetection()
+
+		# specify a default, e.g. caKymograph
+		#detectionPreset = sanpy.bDetection.detectionPresets.caKymograph
+		#sanpy.bDetection(detectionPreset=detectionPreset)
+		# was this
 		detectionDict = sanpy.bDetection() # gets default detection class
+
 		detectionDict['detectionType'] = detectionType  # set detection type to ('dvdt', 'vm')
 		detectionDict['dvdtThreshold'] = dvdtThreshold
 		detectionDict['mvThreshold'] = mvThreshold
@@ -902,7 +909,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#		self.myMainWindow.preferencesSet('display', 'showErrors', on)
 
 
-	def kymographChanged(self, event):
+	def old_kymographChanged(self, event):
 		"""
 		User finished gragging the ROI
 
@@ -961,6 +968,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		self.signalDetect.emit(self.ba)  # underlying _abf has new rect
 
+	def slot_kymographChanged(self):
+		self._replot(startSec=None, stopSec=None, userUpdate=True)
+		self.signalDetect.emit(self.ba)  # underlying _abf has new rect
+
 	def buildUI(self):
 		# left is toolbar, right is PYQtGraph (self.view)
 		self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
@@ -978,7 +989,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget, stretch=1) # stretch=10, not sure on the units???
 		self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget) # stretch=10, not sure on the units???
 
-		#print('bDetectionWidget.buildUI() building pg.GraphicsLayoutWidget')
+		# kymograph, we need a vboxlayout to hollder (kym widget, self.view)
+		vBoxLayoutForPlot = QtWidgets.QVBoxLayout(self)
+
+		self.myKymWidget = sanpy.interface.bKymograph.kymWidget()
+		self.myKymWidget.signalKymographRoiChanged.connect(self.slot_kymographChanged)
+		self.myKymWidget.setVisible(False)
+		vBoxLayoutForPlot.addWidget(self.myKymWidget)
+
+		# was this
 		self.view = pg.GraphicsLayoutWidget()
 
 		#self.view.scene().sigMouseClicked.connect(self.tmpOnClick)
@@ -991,6 +1010,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		colSpan = 1
 
 		# Kymograph, always build (hidden) and show/hide in replot based on self.ba.isKymograph
+		'''
 		rowSpan = 1
 		self.kymographPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
 		self.kymographPlot.enableAutoRange()
@@ -1009,6 +1029,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#						rect=[0,0, self.ba.recordingDur, self.ba.tifData.shape[0]])
 
 		row += rowSpan
+		'''
 
 		#
 		rowSpan = 1
@@ -1108,12 +1129,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 			humanName = plot['humanName']
 			if humanName in ['Half-Widths']:
 				# PlotCurveItem
-				myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=4, color=color), connect='finite') # default is no symbol
+				myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=2, color=color), connect='finite') # default is no symbol
 			elif humanName == 'EDD Rate':
 				# edd rate is a dashed line showing slope/rate of edd
 				myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=2, color=color, style=QtCore.Qt.DashLine), connect='finite') # default is no symbol
 			else:
-				myScatterPlot = pg.PlotDataItem(pen=None, symbol=symbol, symbolSize=4, symbolPen=None, symbolBrush=color)
+				myScatterPlot = pg.PlotDataItem(pen=None, symbol=symbol, symbolSize=6, symbolPen=None, symbolBrush=color)
 				myScatterPlot.setData(x=[], y=[]) # start empty
 				if humanName in ['Threshold (mV)', 'AP Peak (mV)']:
 					myScatterPlot.sigPointsClicked.connect(self.on_scatterClicked)
@@ -1178,9 +1199,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		# kymograph
 		#tmpVLayout = QtWidgets.QVBoxLayout()
+		vBoxLayoutForPlot.addWidget(self.view)
 
-		# was this
-		self.myHBoxLayout_detect.addWidget(self.view)
+		self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot)
+
+		# was this, switchin to kym
+		#self.myHBoxLayout_detect.addWidget(self.view)
 
 
 	def toggleCrosshair(self, onOff):
@@ -1389,6 +1413,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.vmPlot.getAxis('bottom').setLabel('Seconds')
 		#self.clipPlot.getAxis('left').setLabel(yLabel)
 
+		self.myKymWidget.slot_switchFile(ba)
+
 		return True
 
 	def slot_dataChanged(self, columnName, value, rowDict):
@@ -1466,8 +1492,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 		self.vmPlotGlobal.addItem(self.linearRegionItem2)
 
 		# Kymograph
-		if not self.ba.isKymograph():
-			self.kymographPlot.hide()
+		isKymograph = self.ba.isKymograph()
+		self.myKymWidget.setVisible(isKymograph)
+		#self.kymographPlot.hide()
+		'''
 		else:
 			self.kymographPlot.clear()
 			self.kymographPlot.show()
@@ -1480,9 +1508,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 				axisOrder='row-major'
 				rect=[0,0, self.ba.recordingDur, self.ba.tifData.shape[0]]  # x, y, w, h
 				if self.myImageItem is None:
+					# first time build
 					self.myImageItem = kymographImage(myTif, axisOrder=axisOrder,
 									rect=rect)
 				else:
+					# second time update
 					myTif = self.ba.tifData
 					self.myImageItem.setImage(myTif, axisOrder=axisOrder,
 									rect=rect)
@@ -1503,35 +1533,22 @@ class bDetectionWidget(QtWidgets.QWidget):
 				widthRoi = right - xRoiPos + 1
 				#heightRoi = bottom - yRoiPos + 1
 				heightRoi = top - yRoiPos + 1
-			'''
-			else:
-				#  TODO: Put this logic into function in bAbfText
-				pos, size = self.ba.defaultTifRoi()
 
-				xRoiPos = 0  # startSeconds
-				yRoiPos = 0  # pixels
-				widthRoi = myTif.shape[1]
-				heightRoi = myTif.shape[0]
-				tifHeightPercent = myTif.shape[0] * 0.2
-				#print('tifHeightPercent:', tifHeightPercent)
-				yRoiPos += tifHeightPercent
-				heightRoi -= 2 * tifHeightPercent
-			'''
-			# TODO: get this out of replot, recreating the ROI is causing runtime error
-			pos = (xRoiPos,yRoiPos)
-			size = (widthRoi,heightRoi)
-			if self.myLineRoi is None:
-				self.myLineRoi = pg.ROI(pos=pos, size=size, parent=self.myImageItem)
-				self.myLineRoi.addScaleHandle((0,0), (1,1), name='topleft')  # at origin
-				self.myLineRoi.addScaleHandle((0.5,0), (0.5,1))  # top center
-				self.myLineRoi.addScaleHandle((0.5,1), (0.5,0))  # bottom center
-				self.myLineRoi.addScaleHandle((0,0.5), (1,0.5))  # left center
-				self.myLineRoi.addScaleHandle((1,0.5), (0,0.5))  # right center
-				self.myLineRoi.addScaleHandle((1,1), (0,0), name='bottomright')  # bottom right
-				self.myLineRoi.sigRegionChangeFinished.connect(self.kymographChanged)
-			else:
-				self.myLineRoi.setPos(pos, finish=False)
-				self.myLineRoi.setSize(size, finish=False)
+				# TODO: get this out of replot, recreating the ROI is causing runtime error
+				pos = (xRoiPos,yRoiPos)
+				size = (widthRoi,heightRoi)
+				if self.myLineRoi is None:
+					self.myLineRoi = pg.ROI(pos=pos, size=size, parent=self.myImageItem)
+					self.myLineRoi.addScaleHandle((0,0), (1,1), name='topleft')  # at origin
+					self.myLineRoi.addScaleHandle((0.5,0), (0.5,1))  # top center
+					self.myLineRoi.addScaleHandle((0.5,1), (0.5,0))  # bottom center
+					self.myLineRoi.addScaleHandle((0,0.5), (1,0.5))  # left center
+					self.myLineRoi.addScaleHandle((1,0.5), (0,0.5))  # right center
+					self.myLineRoi.addScaleHandle((1,1), (0,0), name='bottomright')  # bottom right
+					self.myLineRoi.sigRegionChangeFinished.connect(self.kymographChanged)
+				else:
+					self.myLineRoi.setPos(pos, finish=False)
+					self.myLineRoi.setSize(size, finish=False)
 
 			# background kymograph ROI
 			backgroundRect = self.ba.getKymographBackgroundRect()
@@ -1546,6 +1563,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 				# TODO: get this out of replot, recreating the ROI is causing runtime error
 				self.myLineRoiBackground = pg.ROI(pos=(xRoiPos,yRoiPos), size=(widthRoi,heightRoi), parent=self.myImageItem)
+		'''
 
 		#
 		# remove and re-add plot overlays

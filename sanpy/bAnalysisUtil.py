@@ -136,6 +136,15 @@ statList['AP Height (mV)'] = {
 	'xStat': 'peakPnt',
 	'xStatUnits': 'Points'
 	}
+# new 20220122
+statList['Time To Peak (ms)'] = {
+	'name': 'timeToPeak_ms',
+	'units': 'ms',
+	'yStat': 'peakVal',
+	'yStatUnits': 'mV',
+	'xStat': 'peakPnt',
+	'xStatUnits': 'Points'
+	}
 statList['Pre AP Min (mV)'] = {
 	'name': 'preMinVal',
 	'units': 'mV',

@@ -24,6 +24,22 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
+import matplotlib as mpl
+mpl.rcParams['axes.spines.right'] = False
+mpl.rcParams['axes.spines.top'] = False
+
+#mpl.rcParams.update({'font.size': 10})
+
+SMALL_SIZE = 8
+MEDIUM_SIZE = 10
+BIGGER_SIZE = 12
+plt.rc('font', size=SMALL_SIZE)          # controls default text sizes
+plt.rc('axes', titlesize=SMALL_SIZE)     # fontsize of the axes title
+plt.rc('axes', labelsize=MEDIUM_SIZE)    # fontsize of the x and y labels
+plt.rc('xtick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
+plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
+plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 import sanpy
 import sanpy.analysisPlot
@@ -66,10 +82,12 @@ def myFindPeaks2(xSec, yData, startPnt, stopPnt):
 	peakVal = yData[peakPnt]
 	return peakPnt, peakVal
 
+g_kd = 1200
+g_caRest = 125
 def convertTomM(yData):
-	kd = 1200
-	caRest = 125
-	ret = kd*yData / (kd/caRest + 1 - yData)
+	#kd = 1200
+	#caRest = 125
+	ret = g_kd*yData / (g_kd/g_caRest + 1 - yData)
 	return ret
 
 def getFileList(path):
@@ -110,13 +128,44 @@ def myPlotScatter(df, xStat, yStat, color=None, ax=None):
 	#g.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 
 def loadWithAnalysisDir(path):
+	# load from saved cell db
+	# this is awesome !!!
+
 	ad = sanpy.analysisDir(path, autoLoad = True)
+
+	print(ad._df)
+
 	baList = []
 	for idx in range(ad.numFiles):
+		# 'I' column to flag (include, exclude) is coming up 'False' for exclude, '2' for include ???
+		includeExclude = ad._df.loc[idx, 'I']
+		if includeExclude == False:
+			print('  row col I at ', idx, 'was reject')
+			continue
+
+		# allowAutoLoad=False, will not load if it was not analyzed/saved in sanpy !!!
+		ba = ad.getAnalysis(idx, allowAutoLoad=False)
+		if ba is None:
+			# was not analyzed in sanpy and saved into hd5
+			continue
+		print('!!!!!!!!!!!!!!!!!!!', ba)
+
+		# checking all manual set param have held
+		# seems to be ok
+		'''
+		detectionDict = ba.detectionDict
+		print('detectionDIct is:')
+		for k,v in detectionDict.items():
+			# v is a dist
+			#print(f"  {k} : {v['currentValue']} {v['description']}")
+			print(f"  {k} : {v['currentValue']}")
+		'''
+
+		'''
 		rowDict = ad.getRowDict(idx)
 		#print(rowDict)
 		mvThreshold = rowDict['mvThreshold']
-		path = rowDict['path']
+		path = rowDict['path']  # TODO: Switch to relative path to make data portable
 		kLeft = rowDict['kLeft']
 		kTop = rowDict['kTop']
 		kRight = rowDict['kRight']
@@ -124,12 +173,21 @@ def loadWithAnalysisDir(path):
 		theRect = [kLeft, kTop, kRight, kBottom]
 
 		print(f'{idx} mvThreshold:{mvThreshold} kRect:{theRect} path:{path}')
+		'''
+
+		path = ba._path
 
 		parent = os.path.split(path)[0]  # corresponds to Olympus export folder
 		grandparent = os.path.split(parent)[0]
 		condition = os.path.split(grandparent)[1]
 
+		# as we load, assign condition based on directory structure
+		#detectionClass['condition'] = condition
+		ba.detectionDict['condition'] = condition
+
 		# load
+		# no need to do this, we got it from analysisDir !!!!
+		'''
 		ba = sanpy.bAnalysis(path)
 
 		detectionClass = sanpy.bDetection() # gets default detection class
@@ -149,9 +207,13 @@ def loadWithAnalysisDir(path):
 		detectionClass['halfWidthWindow_ms'] = 1000
 
 		ba.spikeDetect(detectionClass=detectionClass)
+		'''
+
+		# all we do is add it to the list
 		baList.append(ba)
 
 	#
+	print('baList has', len(baList), 'files')
 	return baList
 
 def old_load(path):
@@ -231,7 +293,7 @@ def loadFromDb(path):
 	baList = []
 	for idx, filePath in enumerate(fileList):
 		# debug
-		if 1:
+		if 0:
 			if idx==4:
 				break
 
@@ -263,6 +325,8 @@ def loadFromDb(path):
 		detectionClass['dvdtThreshold'] = math.nan
 		detectionClass['mvThreshold'] = mvThreshold
 		detectionClass['peakWindow_ms'] = 500
+		detectionClass['preSpikeClipWidth_ms'] = 100
+		detectionClass['postSpikeClipWidth_ms'] = 1000
 
 		if fileName == '220110n_0032.tif':
 			# default is 170 ms
@@ -272,23 +336,44 @@ def loadFromDb(path):
 
 		# detect
 		ba.spikeDetect(detectionClass=detectionClass)
+
+		#
+		# convert each ba sweepY to nM
+		ba._sweepY[:,0] = convertTomM(ba._sweepY[:,0])  # assuming one sweep
+
+		# does not work because oneDf is constructed on fly
+		# append some columns for nano-molar
+		#oneDf = ba.asDataFrame()
+		#peakVal = oneDf['peakVal']
+		#peak_nM = convertTomM(peakVal)
+		#oneDf['peak_nM'] = peak_nM
+
 		baList.append(ba)
 	#
 	return baList
 
-def run():
-	path = '/media/cudmore/data/rabbit-ca-transient/jan-12-2022'
-	path = '/Users/cudmore/box/data/rabbit-ca-variance/jan-12-2022'
-	#path = '/media/cudmore/data/rabbit-ca-transient'
+def run2():
+	path = '/media/cudmore/data/rabbit-ca-transient/jan-18-2022'
+	baList = loadWithAnalysisDir(path)
 
-	# new
-	#baList = loadWithAnalysisDir(path)
+def run():
+	'''
+	# all this sent to fernando
+	path = '/media/cudmore/data/rabbit-ca-transient/jan-12-2022'
+
+	# load and analyze
 	baList = loadFromDb(path)
+	'''
+
+	# new to load from my manual analysis in sanpy 20220125, to analyze jan-18 data
+	path = '/media/cudmore/data/rabbit-ca-transient/jan-18-2022'
+	baList = loadWithAnalysisDir(path)
+	for ba in baList:
+		#
+		# convert each ba sweepY to nM
+		ba._sweepY[:,0] = convertTomM(ba._sweepY[:,0])  # assuming one sweep
 
 	#sys.exit()
-
-	# old
-	#baList = old_load(path)
 
 	#
 	# plot (raw, clips, variance of clips)
@@ -312,17 +397,18 @@ def run():
 
 	yUnitsMean = 'Mean'
 	yUnitsVariance = 'Var'
-	yUnitsSD = 'SD'
+	#yUnitsSD = 'SD'
 
 	meanPeakList = []
 	meanPeakTimeList = []  # ms
 	varPeakList = []
 	varPeakTimeList = []  # ms
 	condList = []
+	percentChangeList = [] # list of % change in peakVal to compare with corresponding variance
 	finalAnalysisList = []  # list of ba
-	# plot all clips (mean/var/sd) in one plot, one line for each recording
-	figSummary, axsSummary = plt.subplots(3, 2, sharex=True, figsize=(4, 4))
-	figSummary.suptitle(f'One line per recording in {yUnits0}')
+	# plot all clips (mean, var) in one plot, one line for each recording
+	figSummary, axsSummary = plt.subplots(2, 2, sharex=True, figsize=(4, 4))
+	figSummary.suptitle(f'One line per recording in {yUnits0} kd:{g_kd} caRest:{g_caRest}')
 	for tmpAxs in axsSummary.ravel():
 		myDespine(tmpAxs)
 
@@ -331,7 +417,7 @@ def run():
 
 		#
 		# convert each ba sweepY to nM
-		ba._sweepY[:,0] = convertTomM(ba._sweepY[:,0])  # assuming one sweep
+		#ba._sweepY[:,0] = convertTomM(ba._sweepY[:,0])  # assuming one sweep
 
 		fileName = ba.getFileName()
 		if fileName in badList:
@@ -345,24 +431,27 @@ def run():
 
 		# plot each recording in new figure
 		# (i) raw intensity, (ii) amp summary (iii) raw clips, ,(iv) mean (v) variance
-		'''
-		fig = plt.figure(constrained_layout=True)
-		figTitle = f'{condition} {fileName}'
+		fig = plt.figure(figsize =([6, 11]))  #constrained_layout=True)
+		figTitle = f'{condition} {fileName} kd:{g_kd} caRest:{g_caRest}'
 		fig.suptitle(figTitle)
-		gs = GridSpec(4, 3, figure=fig)
+		gs = GridSpec(5, 2, figure=fig)
+		gs.update(wspace = 1.5, hspace = 0.3)
 		ax0 = fig.add_subplot(gs[0, :])
-		ax1 = fig.add_subplot(gs[0, :])
-		ax2 = fig.add_subplot(gs[0, :])
-		ax3 = fig.add_subplot(gs[0, :])
-		ax4 = fig.add_subplot(gs[0, :])
-		axs = [ax0, ax1, ax2, ax3, ax4]
-		'''
+		ax10 = fig.add_subplot(gs[1, :1])  # 3 col
+		ax11 = fig.add_subplot(gs[1, 1:2])  # 3 col
+		#ax12 = fig.add_subplot(gs[1, 2:3])  # 3 col
+		ax2 = fig.add_subplot(gs[2, :])
+		ax3 = fig.add_subplot(gs[3, :])
+		ax4 = fig.add_subplot(gs[4, :])
+		axs = [ax0, ax10, ax2, ax3, ax4]
 
+		'''
 		fig, axs = plt.subplots(5, 1, sharex=False, figsize=(8, 6))
 		figTitle = f'{condition} {fileName}'
 		fig.suptitle(figTitle)
 		for tmpAxs in axs:
 			myDespine(tmpAxs)
+		'''
 
 		ap = sanpy.analysisPlot.bAnalysisPlot(ba)
 
@@ -372,8 +461,30 @@ def run():
 
 		# plot summary amplitude for each spike
 		oneDf = ba.asDataFrame()
-		myPlotScatter(oneDf, 'thresholdSec', 'peakVal', color='k', ax=axs[1])
+		peakVal = oneDf['peakVal']
+		peak_nM = convertTomM(peakVal)
+		oneDf['peak_nM'] = peak_nM
+		col0Axs = ax10
+		myPlotScatter(oneDf, 'thresholdSec', 'peak_nM', color='k', ax=col0Axs)
+		col1Axs = ax11
+		myPlotScatter(oneDf, 'thresholdSec', 'timeToPeak_ms', color='k', ax=col1Axs)
+		#col2Axs = ax12
+		#myPlotScatter(oneDf, 'peakVal', 'peakHeight', color='k', ax=col2Axs)
 
+		# get list of peak_nM and calculate % change at end compared to start
+		tmpPeak_nM = oneDf['peak_nM'].values
+		print(tmpPeak_nM.shape, tmpPeak_nM)
+		tmpNumPeak = tmpPeak_nM.shape[0]
+		if tmpNumPeak < 5:
+			percentChangeList.append(math.nan)
+		else:
+			tmpStartPeak = np.nanmean(tmpPeak_nM[0:2])
+			tmpStopPeak = np.nanmean(tmpPeak_nM[-2:-1])
+			percentChange = tmpStopPeak * 100 / tmpStartPeak
+			percentChange = round(percentChange)
+			percentChangeList.append(percentChange)
+			titleStr = f'{percentChange} % Change'
+			col0Axs.set_title(titleStr)
 		#
 		startMetaSec = 0.1
 		stopMetaSec = 1.5
@@ -383,6 +494,9 @@ def run():
 		#
 		# plot clips (raw, mean, var, SD)
 		markersize = 4
+
+		# put (time, mean, var) clips into dataframe and save at end
+		dfTmpSaveMeanVar = pd.DataFrame()
 
 		rawClipAxs = axs[2]
 		xMean, yMean = ap.plotClips(plotType='Raw', ax=rawClipAxs)
@@ -402,6 +516,10 @@ def run():
 
 		meanClipAxs = axs[3]
 		xMean, yMean = ap.plotClips(plotType='Mean', ax=meanClipAxs)
+		#
+		dfTmpSaveMeanVar['time_sec'] = np.round(xMean,3)
+		dfTmpSaveMeanVar['mean_clips'] = yMean # np.round(yMean,3)
+		#
 		peakMeanPnt, peakMeanVal = myFindPeaks2(xMean, yMean, startMetaPnt, stopMetaPnt)
 		xPeakMean = xMean[peakMeanPnt]
 		#peakVarPnt, peakVarVal = myFindPeaks(xVar, yVar, startMetaSec, stopMetaSec)
@@ -409,25 +527,40 @@ def run():
 		axs[3].set_ylabel(yUnitsMean)
 
 		xVar, yVar = ap.plotClips(plotType='Var', ax=axs[4])
+		#
+		#dfTmpSaveMeanVar['time'] = xMean
+		dfTmpSaveMeanVar['var_clips'] = yVar # np.round(yVar,3)
+		#
 		peakVarPnt, peakVarVal = myFindPeaks2(xVar, yVar, startMetaPnt, stopMetaPnt)
 		xPeakVar = xVar[peakVarPnt]
 		#peakVarPnt, peakVarVal = myFindPeaks(xVar, yVar, startMetaSec, stopMetaSec)
 		axs[4].plot(xPeakVar, peakVarVal, 'or', markersize=markersize)
 		axs[4].set_ylabel(yUnitsVariance)
 
+		#
+		# save dfTmpSaveMeanVar with (time, mean, var)
+		# used this on 20220125 to send fernando mean/var of clips
+		'''
+		tmpFileName = os.path.splitext(ba.getFileName())[0] + '_' + condition + '.csv'
+		tmpDfSaveMeanVarFile = f'rabbit/{condition}/{tmpFileName}'
+		print('!!! saving:', tmpDfSaveMeanVarFile, len(dfTmpSaveMeanVar))
+		dfTmpSaveMeanVar.to_csv(tmpDfSaveMeanVarFile)
+		'''
+
 		# SD is square root of var
+		'''
 		xSD, ySD = ap.plotClips(plotType='SD', ax=axs[4])
 		peakSDPnt, peakSDVal = myFindPeaks2(xSD, ySD, startMetaPnt, stopMetaPnt)
-		'''
 		#peakVarPnt, peakVarVal = myFindPeaks(xVar, yVar, startMetaSec, stopMetaSec)
 		axs[4].plot(xSD[peakSDPnt], peakSDVal, 'or', markersize=markersize)
 		axs[4].set_ylabel(yUnitsSD)
 		'''
 
 		# plot all clips (mean, var, sd) in one plot
+		print('condition:', condition)
 		if condition == 'Control':
 			summaryStyle = '-k'
-		elif condition == 'Thapsigargin':
+		elif condition in ['Thapsigargin', 'TG']:
 			summaryStyle = '-r'
 		# mean
 		if condition == 'Control':
@@ -464,6 +597,8 @@ def run():
 			fig.savefig(savePath, dpi=300)
 
 		#
+		#plt.show()
+		#sys.exit(1)
 		plt.close()  #
 
 	# pool all ba analysis df
@@ -483,7 +618,7 @@ def run():
 	# TODO: for each recording (i) fit to line and (ii) determine % change form start to finish
 	# todo: (something like) plot var and SD for each of these (fernando hinted at it)
 	fig12, ax12 = plt.subplots(2, 2, figsize=(4, 8))
-	fig12.suptitle('One Line Per Recording')
+	fig12.suptitle(f'One Line Per Recording kd:{g_kd} caRest:{g_caRest}')
 
 	# control
 	dfControl = dfMaster[ dfMaster['condition']=='Control' ]
@@ -509,6 +644,7 @@ def run():
 		meanPeakTime = meanPeakTimeList[idx]
 		varPeak = varPeakList[idx]
 		varPeakTime = varPeakTimeList[idx]
+		percentChangeInPeakVal = percentChangeList[idx]
 		oneDict = {
 			'condition': cond1,
 			'mvThreshold': mvThreshold,
@@ -516,6 +652,7 @@ def run():
 			'meanPeakTime': meanPeakTime,
 			'varPeak': varPeak,
 			'varPeakTime': varPeakTime,
+			'percentChangeInPeakVal': percentChangeInPeakVal,
 			'numSpikes': ba.numSpikes,
 			'file': ba.getFileName(),
 		}
@@ -551,7 +688,7 @@ def run():
 				showcaps=False,
 				ax=axsVar)
 
-	figVar2, axsVar2 = plt.subplots(2, 1, sharex=False, figsize=(4, 8))
+	figVar2, axsVar2 = plt.subplots(3, 1, sharex=False, figsize=(4, 8))
 	myDespine(axsVar2[0])
 	myDespine(axsVar2[1])
 	# population meanPeak vs varPeak
@@ -561,8 +698,13 @@ def run():
 	# population numSpikes vs varPeak
 	sns.scatterplot(x='numSpikes', y='varPeak', hue='condition', data=df, ax=axsVar2[1])
 	#
-	plt.tight_layout()
+	sns.scatterplot(x='percentChangeInPeakVal', y='varPeak', hue='condition', data=df, ax=axsVar2[2])
+	#plt.tight_layout()
 	plt.show()
 
 if __name__ == '__main__':
+	# was working for all analysis until 20220125
 	run()
+
+	# switching to try and load precice detection params from analysisDir
+	#run2()

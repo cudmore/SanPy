@@ -356,6 +356,11 @@ class bAnalysis:
 	def isKymograph(self):
 		return self.tifData is not None
 
+	def resetKymographRect(self):
+		defaultRect = self._abf.resetRoi()
+		self._updateTifRoi(defaultRect)
+		return defaultRect
+
 	def getKymographRect(self):
 		if self.isKymograph():
 			return self._abf.getTifRoi()
@@ -1826,6 +1831,8 @@ class bAnalysis:
 
 			spikeDict[i]['peakHeight'] = spikeDict[i]['peakVal'] - spikeDict[i]['thresholdVal']
 
+			tmpThresholdSec = spikeDict[i]['thresholdSec']
+			spikeDict[i]['timeToPeak_ms'] = (peakSec - tmpThresholdSec) * 1000
 			#
 			# only append to spikeDict after we are done (accounting for spikes within a sweep)
 			# was this

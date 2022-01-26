@@ -49,6 +49,7 @@ class detectionPresets_(enum.Enum):
 		neuron
 		subtreshold
 		caSpikes
+		caKymograph
 	"""
 	default = 1
 	saNode = 2
@@ -56,6 +57,7 @@ class detectionPresets_(enum.Enum):
 	neuron = 4
 	subthreshold = 5
 	caSpikes = 6
+	caKymograph = 7
 
 #def getDefaultDetection(cellType=None):
 def getDefaultDetection(detectionPreset):
@@ -379,6 +381,15 @@ def getDefaultDetection(detectionPreset):
 		theDict['mvThreshold']['defaultValue'] = 0.5
 		#theDict['refractory_ms']['defaultValue'] = 200 #170 # reject spikes with instantaneous frequency
 		#theDict['halfWidthWindow_ms']['defaultValue'] = 200 #was 20
+	elif detectionPreset == bDetection.detectionPresets.caKymograph:
+		theDict['detectionType']['defaultValue'] = sanpy.bDetection.detectionTypes.mv
+		theDict['dvdtThreshold']['defaultValue'] = math.nan #if None then detect only using mvThreshold
+		theDict['mvThreshold']['defaultValue'] = 1.2
+		theDict['peakWindow_ms']['defaultValue'] = 700
+		theDict['halfWidthWindow_ms']['defaultValue'] = 800
+		theDict['refractory_ms']['defaultValue'] = 1000
+		theDict['preSpikeClipWidth_ms']['defaultValue'] = 200
+		theDict['postSpikeClipWidth_ms']['defaultValue'] = 1000
 
 	else:
 		logger.error(f'Did not understand detection type "{detectionPreset}"')
@@ -432,7 +443,9 @@ class bDetection(object):
 	detectionTypes = detectionTypes_
 	""" Specify the type of spike detection, (dvdt, mv)"""
 
-	def __init__(self, detectionPreset=detectionPresets.default):
+	#def __init__(self, detectionPreset=detectionPresets.default):
+	def __init__(self, detectionPreset=detectionPresets.caKymograph):
+		logger.warning('\n   !!! LOADING: detectionPreset=detectionPresets.caKymograph\n\n')
 		# local copy of default dictionary, do not modify
 		self._dDict = getDefaultDetection(detectionPreset)
 
