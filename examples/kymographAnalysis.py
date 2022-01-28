@@ -243,7 +243,7 @@ def old_load(path):
 		elif condition == 'Thapsigargin':
 			mvThreshold = 1.1
 		else:
-			print(f'XXX ERROR: Case not taken for condition: "{condition}""')
+			print(f'XXX ERROR: Case not taken for condition: "{condition}"')
 
 		detectionClass = sanpy.bDetection() # gets default detection class
 
@@ -352,25 +352,29 @@ def loadFromDb(path):
 	#
 	return baList
 
+'''
 def run2():
 	path = '/media/cudmore/data/rabbit-ca-transient/jan-18-2022'
 	baList = loadWithAnalysisDir(path)
+'''
 
 def run():
 	# all this sent to fernando
+	'''
 	path = '/media/cudmore/data/rabbit-ca-transient/jan-12-2022'
+	path = '/Volumes/t2/data/rabbit-ca-transient/jan-12-2022'
 	# load and analyze
 	baList = loadFromDb(path)
+	'''
 
 	# new to load from my manual analysis in sanpy 20220125, to analyze jan-18 data
-	'''
 	path = '/media/cudmore/data/rabbit-ca-transient/jan-18-2022'
+	path = '/Volumes/t2/data/rabbit-ca-transient/jan-18-2022'
 	baList = loadWithAnalysisDir(path)
 	for ba in baList:
 		#
 		# convert each ba sweepY to nM
 		ba._sweepY[:,0] = convertTomM(ba._sweepY[:,0])  # assuming one sweep
-	'''
 
 	#sys.exit()
 
