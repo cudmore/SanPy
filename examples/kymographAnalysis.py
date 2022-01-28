@@ -357,21 +357,20 @@ def run2():
 	baList = loadWithAnalysisDir(path)
 
 def run():
-	'''
 	# all this sent to fernando
 	path = '/media/cudmore/data/rabbit-ca-transient/jan-12-2022'
-
 	# load and analyze
 	baList = loadFromDb(path)
-	'''
 
 	# new to load from my manual analysis in sanpy 20220125, to analyze jan-18 data
+	'''
 	path = '/media/cudmore/data/rabbit-ca-transient/jan-18-2022'
 	baList = loadWithAnalysisDir(path)
 	for ba in baList:
 		#
 		# convert each ba sweepY to nM
 		ba._sweepY[:,0] = convertTomM(ba._sweepY[:,0])  # assuming one sweep
+	'''
 
 	#sys.exit()
 
@@ -475,7 +474,7 @@ def run():
 		tmpPeak_nM = oneDf['peak_nM'].values
 		print(tmpPeak_nM.shape, tmpPeak_nM)
 		tmpNumPeak = tmpPeak_nM.shape[0]
-		if tmpNumPeak < 5:
+		if tmpNumPeak < 4:
 			percentChangeList.append(math.nan)
 		else:
 			tmpStartPeak = np.nanmean(tmpPeak_nM[0:2])
@@ -659,7 +658,11 @@ def run():
 		dictList.append(oneDict)
 		#print(f'{idx} {cond1} {cond2} {meanPeak} {varPeak} {ba}')
 	df = pd.DataFrame(dictList)
+	print('final df before plotting var as function of condition')
 	print(df)
+
+	saveFinalDfFile = 'rabbit/kymSummary.csv'
+	df.to_csv(saveFinalDfFile)
 
 	#ax = sns.pointplot(x="condition", y="varPeak", data=df)
 	#sns.catplot(x="condition", y="varPeak", data=df)  # does not take ax param
