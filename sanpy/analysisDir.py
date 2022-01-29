@@ -1026,7 +1026,7 @@ class analysisDir():
 			#print('  ', files)
 			count += 1
 			for file in files:
-				if file.endswith('.tif'):
+				if file.endswith('.tif') or file.endswith('.abf'):
 					oneFile = os.path.join(root, file)
 					#print('  ', oneFile)
 					tmpFileList.append(oneFile)
@@ -1047,6 +1047,7 @@ class analysisDir():
 					file = os.path.join(path, file)
 				fileList.append(file)
 		#
+		logger.info(f'found {len(fileList)} files ...')
 		return fileList
 
 	def getRowDict(self, rowIdx):

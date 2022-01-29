@@ -443,8 +443,8 @@ class bDetection(object):
 	detectionTypes = detectionTypes_
 	""" Specify the type of spike detection, (dvdt, mv)"""
 
-	#def __init__(self, detectionPreset=detectionPresets.default):
-	def __init__(self, detectionPreset=detectionPresets.caKymograph):
+	#def __init__(self, detectionPreset=detectionPresets.caKymograph):
+	def __init__(self, detectionPreset=detectionPresets.default):
 		logger.warning('\n   !!! LOADING: detectionPreset=detectionPresets.caKymograph\n\n')
 		# local copy of default dictionary, do not modify
 		self._dDict = getDefaultDetection(detectionPreset)
