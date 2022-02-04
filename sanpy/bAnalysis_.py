@@ -332,7 +332,8 @@ class bAnalysis:
 
 	def asDataFrame(self):
 		"""Return analysis as a Pandas DataFrame."""
-		return pd.DataFrame(self.spikeDict.aslist())
+		#return pd.DataFrame(self.spikeDict.asList())
+		return pd.DataFrame(self.spikeDict.asList())
 
 	@property
 	def detectionDict(self):
@@ -1672,7 +1673,10 @@ class bAnalysis:
 		#
 
 		self._isAnalyzed = True
-		self.spikeDict = [] # we are filling this in, one dict for each spike
+
+		self.spikeDict = sanpy.bAnalysisResults.analysisResultList()
+		 # we are filling this in, one dict for each spike
+		#self.spikeDict = [] # we are filling this in, one dict for each spike
 
 		for sweepNumber in self.sweepList:
 			#self.setSweep(sweep)
@@ -1689,11 +1693,17 @@ class bAnalysis:
 	def spikeDetect2__(self, sweepNumber, dDict):
 		"""
 		Working on using bAnalysisResult.py.
+
+		Args:
+			sweepNumber:
+			dDict: Detection Dict
 		"""
 		# a list of dict of sanpy.bAnalysisResults.analysisResult (one dict per spike)
-		spikeDict = sanpy.analysisResultList()
+		spikeDict = sanpy.bAnalysisResults.analysisResultList()
 		# append one spike
 		#arl.appendDefault()
+
+		#dDict['verbose'] = True
 
 		verbose = False
 		if dDict['verbose']:
@@ -2109,7 +2119,11 @@ class bAnalysis:
 
 		# SUPER important, previously our self.spikeDict was simple list of dict
 		# now it is a list of class xxx
-		self.spikeDict = spikeDict
+		print('=== addind', len(spikeDict))
+		self.spikeDict.appendAnalysis(spikeDict)
+		print('   now have', len(self.spikeDict))
+
+		#print(self.spikeDict)
 
 		#
 		# generate a df holding stats (used by scatterplotwidget)

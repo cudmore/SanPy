@@ -2,7 +2,7 @@
 # Author: Robert H Cudmore
 # Date: 20210603
 
-import os, time
+import os, time, sys
 import copy  # For copy.deepcopy() of bAnalysis
 import uuid  # to generate unique key on bAnalysis spike detect
 import numpy as np
@@ -125,7 +125,7 @@ _sanpyColumns = {
 		'isEditable': False,
 	},
 	'relPath': {
-		'type': int,
+		'type': str,
 		'isEditable': False,
 	},
 	'uuid': {
@@ -141,6 +141,27 @@ Columns to use in display in file table (pyqt, dash, vue).
 We require type so we can edit with QAbstractTableModel.
 Critical for qt interface to allow easy editing of values while preserving type
 """
+
+def fixRelPath(folderPath, dfTable, fileList):
+	"""
+	was not assigning relPath on initial load (no hd5 file)
+	"""
+	if dfTable is None:
+		logger.error('no dfTable')
+
+	n = len(dfTable)
+	for rowIdx in range(n):
+		file = dfTable.loc[rowIdx, 'File']
+		relPath = dfTable.loc[rowIdx, 'relPath']
+		if relPath:
+			continue
+		#print(rowIdx, file, relPath)
+		for filePath in fileList:
+			if filePath.find(file) != -1:
+				print(f' file idx {rowIdx} file:{file} not has relPath:{filePath}')
+				dfTable.loc[rowIdx, 'relPath'] = filePath
+
+	#sys.exit(1)
 
 def h5_printKey(hdfPath):
 	print('\n=== h5_printKey() hdfPath:', hdfPath)
@@ -272,9 +293,17 @@ class analysisDir():
 			self._df = self.loadHdf()
 			if self._df is None:
 				self._df = self.loadFolder(loadData=True)  # only used if no h5 file
+
 		#
 		self._checkColumns()
 		self._updateLoadedAnalyzed()
+
+		'''
+		logger.error('\n   temporary fix with fixRelPath\n')
+		tmpFileList = self.getFileList()
+		fixRelPath(self.path, self._df, tmpFileList)
+		'''
+
 		#
 		logger.info(self)
 
@@ -836,6 +865,7 @@ class analysisDir():
 
 		#logger.info(f'Found _ba in file db with ba:"{ba}" {type(ba)}')
 
+		print('xxx rowIdx:', rowIdx, 'ba:', ba)
 		if ba is None or ba=='':
 			#logger.info('did not find _ba ... loading from abf file ...')
 			# working on kymograph
@@ -882,6 +912,7 @@ class analysisDir():
 		If from h5, we still need to reload sweeps !!!
 		They are binary and fast, saving to h5 (in this case) is slow.
 		"""
+		logger.info(f'path:"{path}" uuid:"{uuid}" allowAutoLoad:"{allowAutoLoad}"')
 		ba = None
 		if uuid is not None and uuid:
 			# load from h5
@@ -1026,6 +1057,7 @@ class analysisDir():
 			#print('  ', files)
 			count += 1
 			for file in files:
+				#if file.endswith('.tif'):
 				if file.endswith('.tif') or file.endswith('.abf'):
 					oneFile = os.path.join(root, file)
 					#print('  ', oneFile)

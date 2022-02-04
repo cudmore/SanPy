@@ -49,8 +49,6 @@ logger = get_logger(__name__)
 
 def myFindPeaks3(xSec, yData, startSec, stopSec):
 	"""
-	NOT WORKING !!!
-
 	Find the peak in data between [startPnt,stopPnt)
 
 	Args:
@@ -59,15 +57,17 @@ def myFindPeaks3(xSec, yData, startSec, stopSec):
 		stopPnt (int):
 	"""
 	xMask = (xSec>=startSec) & (xSec<stopSec)
-	firstPnt = np.where(xMask==True)[0]
+	firstPnt = np.where(xMask==True)[0][0]
+	#print('firstPnt:', firstPnt)
+	#sys.exit(1)
 	#clip = data[startPnt:stopPnt]
 	clip = yData[xMask]
 	peakPnt = np.argmax(clip)
-	#peakPnt += firstPnt
+	peakPnt += firstPnt
 	peakVal = yData[peakPnt]
 	return peakPnt, peakVal
 
-def myFindPeaks2(xSec, yData, startPnt, stopPnt):
+def old_myFindPeaks2(xSec, yData, startPnt, stopPnt):
 	"""
 	Find the peak in data between [startPnt,stopPnt)
 
@@ -133,7 +133,7 @@ def loadWithAnalysisDir(path):
 
 	ad = sanpy.analysisDir(path, autoLoad = True)
 
-	print(ad._df)
+	#print(ad._df)
 
 	baList = []
 	for idx in range(ad.numFiles):
@@ -148,7 +148,7 @@ def loadWithAnalysisDir(path):
 		if ba is None:
 			# was not analyzed in sanpy and saved into hd5
 			continue
-		print('!!!!!!!!!!!!!!!!!!!', ba)
+		#print('!!!!!!!!!!!!!!!!!!!', ba)
 
 		# checking all manual set param have held
 		# seems to be ok
@@ -327,6 +327,7 @@ def loadFromDb(path):
 		detectionClass['peakWindow_ms'] = 500
 		detectionClass['preSpikeClipWidth_ms'] = 100
 		detectionClass['postSpikeClipWidth_ms'] = 1000
+		detectionClass['refractory_ms'] = 700
 
 		if fileName == '220110n_0032.tif':
 			# default is 170 ms
@@ -339,7 +340,7 @@ def loadFromDb(path):
 
 		#
 		# convert each ba sweepY to nM
-		ba._sweepY[:,0] = convertTomM(ba._sweepY[:,0])  # assuming one sweep
+		#ba._sweepY[:,0] = convertTomM(ba._sweepY[:,0])  # assuming one sweep
 
 		# does not work because oneDf is constructed on fly
 		# append some columns for nano-molar
@@ -359,59 +360,71 @@ def run2():
 '''
 
 def run():
+	convertToMolar = True
+	convertMolarStr = 'f/f_0'
+	saveFolder = 'rabbit-raw'
+	if convertToMolar:
+		convertMolarStr = f'kd:{g_kd} caRest:{g_caRest}'
+		saveFolder = 'rabbit-molar'
+
+	badList = []
+
 	# all this sent to fernando
-	'''
-	path = '/media/cudmore/data/rabbit-ca-transient/jan-12-2022'
-	path = '/Volumes/t2/data/rabbit-ca-transient/jan-12-2022'
-	# load and analyze
-	baList = loadFromDb(path)
-	'''
+	if 0:
+		saveFolder += '-jan-12-2022'
+		path = '/media/cudmore/data/rabbit-ca-transient/jan-12-2022'
+		#path = '/Volumes/t2/data/rabbit-ca-transient/jan-12-2022'
+		# load and analyze
+		baList = loadFromDb(path)
+		# for jan-12-2022
+		badList = [
+			'220110n_0056.tif',
+			'220110n_0064.tif',
+			'220110n_0065.tif',
+			'220110n_0069.tif',
+			'22011on_0071.tif',
+		]
 
-	# new to load from my manual analysis in sanpy 20220125, to analyze jan-18 data
-	path = '/media/cudmore/data/rabbit-ca-transient/jan-18-2022'
-	path = '/Volumes/t2/data/rabbit-ca-transient/jan-18-2022'
-	baList = loadWithAnalysisDir(path)
+	if 1:
+		# new to load from my manual analysis in sanpy 20220125, to analyze jan-18 data
+		saveFolder += '-jan-18-2022'
+		path = '/media/cudmore/data/rabbit-ca-transient/jan-18-2022'
+		#path = '/Volumes/t2/data/rabbit-ca-transient/jan-18-2022'
+		baList = loadWithAnalysisDir(path)
+
+	# make output folder
+	if not os.path.isdir(saveFolder):
+		os.mkdir(saveFolder)
+
+	# convert unints of sweepy to molar
+	# all analysis is done, peakVal (in particular) is still in f/f0
 	for ba in baList:
-		#
 		# convert each ba sweepY to nM
-		ba._sweepY[:,0] = convertTomM(ba._sweepY[:,0])  # assuming one sweep
+		if convertToMolar:
+			ba._sweepY[:,0] = convertTomM(ba._sweepY[:,0])  # assuming one sweep
 
-	#sys.exit()
-
-	#
-	# plot (raw, clips, variance of clips)
-	# We analyze everything but just plot a subset (we remove files that do not have stable f/f0
-	badList = [
-		'220110n_0056.tif',
-		'220110n_0064.tif',
-		'220110n_0065.tif',
-		'220110n_0069.tif',
-		'22011on_0071.tif',
-	]
-	#badList = []
-
-	sns.despine()  # remove top/right lines in plots
+	#sns.despine()  # remove top/right lines in plots
 
 	#
 	# plot
-	yUnits0 = '[Ca2+]i (nM^2)'
+	#yUnits0 = '[Ca2+]i (nM^2)'
 	# $10^1$
-	yUnits0 = '[Ca$^2$$^+$]$_i$ ($nM^2$)'
-
-	yUnitsMean = 'Mean'
-	yUnitsVariance = 'Var'
-	#yUnitsSD = 'SD'
+	#yUnits0 = '[Ca$^2$$^+$]$_i$ ($nM^2$)'
+	yUnits0 = ''
 
 	meanPeakList = []
 	meanPeakTimeList = []  # ms
 	varPeakList = []
 	varPeakTimeList = []  # ms
+	var_at_meanPeakTimeList = []  # ms
 	condList = []
 	percentChangeList = [] # list of % change in peakVal to compare with corresponding variance
 	finalAnalysisList = []  # list of ba
+
 	# plot all clips (mean, var) in one plot, one line for each recording
 	figSummary, axsSummary = plt.subplots(2, 2, sharex=True, figsize=(4, 4))
-	figSummary.suptitle(f'One line per recording in {yUnits0} kd:{g_kd} caRest:{g_caRest}')
+	#figSummary.suptitle(f'One line per recording in {yUnits0} kd:{g_kd} caRest:{g_caRest}')
+	figSummary.suptitle(f'1) One line per recording units:{convertMolarStr}')
 	for tmpAxs in axsSummary.ravel():
 		myDespine(tmpAxs)
 
@@ -433,9 +446,11 @@ def run():
 		finalAnalysisList.append(ba)
 
 		# plot each recording in new figure
+		# we save one of these per recording
 		# (i) raw intensity, (ii) amp summary (iii) raw clips, ,(iv) mean (v) variance
 		fig = plt.figure(figsize =([6, 11]))  #constrained_layout=True)
-		figTitle = f'{condition} {fileName} kd:{g_kd} caRest:{g_caRest}'
+		#figTitle = f'{condition} {fileName} kd:{g_kd} caRest:{g_caRest}'
+		figTitle = f'{condition} {fileName} units:{convertMolarStr}'
 		fig.suptitle(figTitle)
 		gs = GridSpec(5, 2, figure=fig)
 		gs.update(wspace = 1.5, hspace = 0.3)
@@ -463,36 +478,42 @@ def run():
 		axs[0].set_ylabel(yUnits0)
 
 		# plot summary amplitude for each spike
-		oneDf = ba.asDataFrame()
-		peakVal = oneDf['peakVal']
-		peak_nM = convertTomM(peakVal)
-		oneDf['peak_nM'] = peak_nM
+		oneDf = ba.asDataFrame()  # returns a copy
+
+		# don't use analyzed peakVal (we might have swapped units of sweepY)
+		# just pull peak using peakPnt and existing sweepY
+		peakPnt = oneDf['peakPnt']
+		peakVal_plot = ba.sweepY[peakPnt]
+		oneDf['peakVal_plot'] = peakVal_plot
+
+		#col0Axs = ax10
+		#myPlotScatter(oneDf, 'thresholdSec', 'peak_nM', color='k', ax=col0Axs)
 		col0Axs = ax10
-		myPlotScatter(oneDf, 'thresholdSec', 'peak_nM', color='k', ax=col0Axs)
+		myPlotScatter(oneDf, 'thresholdSec', 'peakVal_plot', color='k', ax=col0Axs)
 		col1Axs = ax11
 		myPlotScatter(oneDf, 'thresholdSec', 'timeToPeak_ms', color='k', ax=col1Axs)
 		#col2Axs = ax12
 		#myPlotScatter(oneDf, 'peakVal', 'peakHeight', color='k', ax=col2Axs)
 
 		# get list of peak_nM and calculate % change at end compared to start
-		tmpPeak_nM = oneDf['peak_nM'].values
-		print(tmpPeak_nM.shape, tmpPeak_nM)
-		tmpNumPeak = tmpPeak_nM.shape[0]
+		tmpPeak_plot = oneDf['peakVal_plot'].values
+		#print(tmpPeak_nM.shape, tmpPeak_nM)
+		tmpNumPeak = tmpPeak_plot.shape[0]
 		if tmpNumPeak < 4:
 			percentChangeList.append(math.nan)
 		else:
-			tmpStartPeak = np.nanmean(tmpPeak_nM[0:2])
-			tmpStopPeak = np.nanmean(tmpPeak_nM[-2:-1])
+			tmpStartPeak = np.nanmean(tmpPeak_plot[0:2])  # first two
+			tmpStopPeak = np.nanmean(tmpPeak_plot[-2:-1])  # last two
 			percentChange = tmpStopPeak * 100 / tmpStartPeak
 			percentChange = round(percentChange)
 			percentChangeList.append(percentChange)
 			titleStr = f'{percentChange} % Change'
 			col0Axs.set_title(titleStr)
 		#
-		startMetaSec = 0.1
-		stopMetaSec = 1.5
-		startMetaPnt = int(startMetaSec * 1000 * ba.dataPointsPerMs)
-		stopMetaPnt = int(stopMetaSec * 1000 * ba.dataPointsPerMs)
+		startMetaSec = 0.0
+		stopMetaSec = 0.5
+		#startMetaPnt = int(startMetaSec * 1000 * ba.dataPointsPerMs)
+		#stopMetaPnt = int(stopMetaSec * 1000 * ba.dataPointsPerMs)
 
 		#
 		# plot clips (raw, mean, var, SD)
@@ -510,6 +531,7 @@ def run():
 			meanPeakTimeList.append(np.nan)
 			varPeakList.append(np.nan)
 			varPeakTimeList.append(np.nan)
+			var_at_meanPeakTimeList.append(np.nan)
 			continue
 
 		#peakMeanPnt, peakMeanVal = myFindPeaks2(xMean, yMean, startMetaPnt, stopMetaPnt)
@@ -521,43 +543,41 @@ def run():
 		xMean, yMean = ap.plotClips(plotType='Mean', ax=meanClipAxs)
 		#
 		dfTmpSaveMeanVar['time_sec'] = np.round(xMean,3)
-		dfTmpSaveMeanVar['mean_clips'] = yMean # np.round(yMean,3)
+		dfTmpSaveMeanVar['mean_clip'] = yMean # np.round(yMean,3)
 		#
-		peakMeanPnt, peakMeanVal = myFindPeaks2(xMean, yMean, startMetaPnt, stopMetaPnt)
+		#peakMeanPnt, peakMeanVal = myFindPeaks2(xMean, yMean, startMetaPnt, stopMetaPnt)
+		peakMeanPnt, peakMeanVal = myFindPeaks3(xMean, yMean, startMetaSec, stopMetaSec)
 		xPeakMean = xMean[peakMeanPnt]
-		#peakVarPnt, peakVarVal = myFindPeaks(xVar, yVar, startMetaSec, stopMetaSec)
-		axs[3].plot(xPeakMean, peakMeanVal, 'or', markersize=markersize)
-		axs[3].set_ylabel(yUnitsMean)
+		axs[3].plot(xPeakMean, peakMeanVal, '^b', markersize=markersize)
+		axs[3].set_ylabel('Mean')
 
 		xVar, yVar = ap.plotClips(plotType='Var', ax=axs[4])
 		#
 		#dfTmpSaveMeanVar['time'] = xMean
-		dfTmpSaveMeanVar['var_clips'] = yVar # np.round(yVar,3)
+		dfTmpSaveMeanVar['var_clip'] = yVar # np.round(yVar,3)
 		#
-		peakVarPnt, peakVarVal = myFindPeaks2(xVar, yVar, startMetaPnt, stopMetaPnt)
+		#peakVarPnt, peakVarVal = myFindPeaks2(xVar, yVar, startMetaPnt, stopMetaPnt)
+		peakVarPnt, peakVarVal = myFindPeaks3(xVar, yVar, startMetaSec, stopMetaSec)
 		xPeakVar = xVar[peakVarPnt]
-		#peakVarPnt, peakVarVal = myFindPeaks(xVar, yVar, startMetaSec, stopMetaSec)
 		axs[4].plot(xPeakVar, peakVarVal, 'or', markersize=markersize)
-		axs[4].set_ylabel(yUnitsVariance)
+		axs[4].set_ylabel('Var')
+
+		# the variance at same point of peak in mean
+		var_at_meanPeakTime = yVar[peakMeanPnt]  # we save this
+		xPeakVar2 = xVar[peakMeanPnt]
+		axs[4].plot(xPeakVar2, var_at_meanPeakTime, '^b', markersize=markersize)
 
 		#
 		# save dfTmpSaveMeanVar with (time, mean, var)
 		# used this on 20220125 to send fernando mean/var of clips
-		'''
 		tmpFileName = os.path.splitext(ba.getFileName())[0] + '_' + condition + '.csv'
-		tmpDfSaveMeanVarFile = f'rabbit/{condition}/{tmpFileName}'
+		#tmpDfSaveMeanVarFile = f'rabbit/{condition}/{tmpFileName}'
+		tmpTmpFolder = os.path.join(saveFolder, condition)
+		if not os.path.isdir(tmpTmpFolder):
+			os.mkdir(tmpTmpFolder)
+		tmpDfSaveMeanVarFile = os.path.join(tmpTmpFolder, tmpFileName)
 		print('!!! saving:', tmpDfSaveMeanVarFile, len(dfTmpSaveMeanVar))
 		dfTmpSaveMeanVar.to_csv(tmpDfSaveMeanVarFile)
-		'''
-
-		# SD is square root of var
-		'''
-		xSD, ySD = ap.plotClips(plotType='SD', ax=axs[4])
-		peakSDPnt, peakSDVal = myFindPeaks2(xSD, ySD, startMetaPnt, stopMetaPnt)
-		#peakVarPnt, peakVarVal = myFindPeaks(xVar, yVar, startMetaSec, stopMetaSec)
-		axs[4].plot(xSD[peakSDPnt], peakSDVal, 'or', markersize=markersize)
-		axs[4].set_ylabel(yUnitsSD)
-		'''
 
 		# plot all clips (mean, var, sd) in one plot
 		print('condition:', condition)
@@ -571,10 +591,10 @@ def run():
 		else:
 			colIdx = 1
 		axsSummary[0][colIdx].plot(xMean, yMean, summaryStyle)
-		axsSummary[0][colIdx].set_ylabel(yUnitsMean)
+		axsSummary[0][colIdx].set_ylabel('Mean')
 		# var
 		axsSummary[1][colIdx].plot(xVar, yVar, summaryStyle)
-		axsSummary[1][colIdx].set_ylabel(yUnitsVariance)
+		axsSummary[1][colIdx].set_ylabel('Var')
 		# sd
 		'''
 		axsSummary[2][colIdx].plot(xSD, ySD, summaryStyle)
@@ -584,27 +604,34 @@ def run():
 		#
 		# TODO: Keep track of time of each peak in (mean, var, SD)
 
+		# if sweepY was converted with convertTomM() then these values are in MOLAR
 		meanPeakList.append(peakMeanVal)
 		meanPeakTimeList.append(xPeakMean)
 		varPeakList.append(peakVarVal)
 		varPeakTimeList.append(xPeakVar)
+		# the variance at same point of peak in mean
+		#var_at_meanPeakTime = yVar[peakMeanPnt]
+		var_at_meanPeakTimeList.append(var_at_meanPeakTime)
 
 		# save the figure
 		if 1:
-			saveFolder = 'rabbit'
+			#saveFolder = 'rabbit'
 			fileName = ba.getFileName()
 			saveName = os.path.splitext(fileName)[0] # + '_raw.png'
 			saveName += '_' + condition + '.png'
+
+			# prepend idx because xxx date is wonky
+			saveName = str(idx) + '_' + saveName
+
 			savePath = os.path.join(saveFolder, saveName)
 			logger.info(f'saving: {savePath}')
 			fig.savefig(savePath, dpi=300)
 
 		#
-		#plt.show()
-		#sys.exit(1)
 		plt.close()  #
 
 	# pool all ba analysis df
+	# if analysis was done before convertTomM() these are in f/f_0 units
 	dfMaster = pd.DataFrame()
 	for ba in finalAnalysisList:
 		df = ba.asDataFrame()
@@ -613,29 +640,40 @@ def run():
 		else:
 			dfMaster = dfMaster.append(df, ignore_index=True)
 	#
-	#print(dfMaster)
 
 	#
-	# scatter of (peak value, peak height) versus spike time
-	# to determine stable fluorescent signal
-	# TODO: for each recording (i) fit to line and (ii) determine % change form start to finish
-	# todo: (something like) plot var and SD for each of these (fernando hinted at it)
-	fig12, ax12 = plt.subplots(2, 2, figsize=(4, 8))
-	fig12.suptitle(f'One Line Per Recording kd:{g_kd} caRest:{g_caRest}')
+	# this does not work loading from analysis dir
+	# we need to set condition in analysis df
+	if 0:
+		#
+		# scatter of (peak value, peak height) versus spike time
+		# to determine stable fluorescent signal
+		# TODO: for each recording (i) fit to line and (ii) determine % change form start to finish
+		# todo: (something like) plot var and SD for each of these (fernando hinted at it)
+		fig12, ax12 = plt.subplots(2, 2, figsize=(4, 8))
+		#fig12.suptitle(f'One Line Per Recording kd:{g_kd} caRest:{g_caRest}')
+		fig12.suptitle(f'2) One Line Per Recording units:{convertMolarStr}')
 
-	# control
-	dfControl = dfMaster[ dfMaster['condition']=='Control' ]
-	myPlotScatter(dfControl, 'thresholdSec', 'peakVal', color='k', ax=ax12[0][0])
-	myPlotScatter(dfControl, 'thresholdSec', 'peakHeight', color='k', ax=ax12[1][0])
-	# thap
-	dfThap = dfMaster[ dfMaster['condition']=='Thapsigargin' ]
-	myPlotScatter(dfThap, 'thresholdSec', 'peakVal', color='r', ax=ax12[0][1])
-	myPlotScatter(dfThap, 'thresholdSec', 'peakHeight', color='r', ax=ax12[1][1])
+		#
+		# plot all peaks across all cells, speerate by ocndition
+		condList = dfMaster['condition'].unique()
+		# control
+		condOne = condList[0]
+		dfControl = dfMaster[ dfMaster['condition']==condOne ]
+		myPlotScatter(dfControl, 'thresholdSec', 'peakVal', color='k', ax=ax12[0][0])
+		myPlotScatter(dfControl, 'thresholdSec', 'peakHeight', color='k', ax=ax12[1][0])
+		# Thapsigargin
+		condTwo = condList[1]
+		dfThap = dfMaster[ dfMaster['condition']==condTwo ]
+		myPlotScatter(dfThap, 'thresholdSec', 'peakVal', color='r', ax=ax12[0][1])
+		myPlotScatter(dfThap, 'thresholdSec', 'peakHeight', color='r', ax=ax12[1][1])
 
+		print('plotting pooled conditions')
+		print('  finalAnalysisList:', len(finalAnalysisList))
+		print('  dfControl:', len(dfControl))
+		print('  dfThap:', len(dfThap))
 
 	#
-	#plt.show()
-
 	#columns = ['Condition', 'meanPeak', 'varPeak', 'numSpikes', 'file']
 	#df = pd.DataFrame(columns=columns)
 	dictList = []
@@ -647,39 +685,57 @@ def run():
 		meanPeakTime = meanPeakTimeList[idx]
 		varPeak = varPeakList[idx]
 		varPeakTime = varPeakTimeList[idx]
+		var_at_meanPeakTime = var_at_meanPeakTimeList[idx]
 		percentChangeInPeakVal = percentChangeList[idx]
 		oneDict = {
+			'saveFolder': saveFolder,
+			'convertToMolar': convertToMolar,
 			'condition': cond1,
 			'mvThreshold': mvThreshold,
 			'meanPeak': meanPeak,
 			'meanPeakTime': meanPeakTime,
 			'varPeak': varPeak,
 			'varPeakTime': varPeakTime,
+			'var_at_meanPeakTime': var_at_meanPeakTime,# variance at same point as peak in mean
 			'percentChangeInPeakVal': percentChangeInPeakVal,
 			'numSpikes': ba.numSpikes,
 			'file': ba.getFileName(),
+			'kd': '',
+			'caRest': '',
+			'startMetaSec': startMetaSec,  # start/stop of peak detection in mean/var clip
+			'stopMetaSec': stopMetaSec,
 		}
+		if convertToMolar:
+			oneDict['kd'] = g_kd
+			oneDict['caRest'] = g_caRest
+
 		dictList.append(oneDict)
 		#print(f'{idx} {cond1} {cond2} {meanPeak} {varPeak} {ba}')
 	df = pd.DataFrame(dictList)
 	print('final df before plotting var as function of condition')
 	print(df)
 
-	saveFinalDfFile = 'rabbit/kymSummary.csv'
+	# save summary df, one row per files
+	saveFinalDfFile = os.path.join(saveFolder, 'kymSummary.csv')
 	df.to_csv(saveFinalDfFile)
 
 	#ax = sns.pointplot(x="condition", y="varPeak", data=df)
 	#sns.catplot(x="condition", y="varPeak", data=df)  # does not take ax param
 
-	figVar, axsVar = plt.subplots(1, 1, sharex=False, figsize=(4, 4))
-	myDespine(axsVar)
+	# todo: plot var_at_meanPeakTime
+	figVar, axsVar = plt.subplots(1, 2, sharex=False, figsize=(6, 4))
+	figVar.suptitle(f'units:{convertMolarStr}')
+	myDespine(axsVar[0])
+	myDespine(axsVar[1])
+
+	# plot 1
 	sns.stripplot(x='condition',
 		y='varPeak',
 		data=df,
 		alpha=0.3,
 		jitter=0.2,
 		color='k',
-		ax=axsVar);
+		ax=axsVar[0]);
 
 	sns.boxplot(showmeans=True,
 				meanline=True,
@@ -693,21 +749,62 @@ def run():
 				showfliers=False,
 				showbox=False,
 				showcaps=False,
-				ax=axsVar)
+				ax=axsVar[0])
 
-	figVar2, axsVar2 = plt.subplots(3, 1, sharex=False, figsize=(4, 8))
+	# plot 2
+	sns.stripplot(x='condition',
+		y='var_at_meanPeakTime',
+		data=df,
+		alpha=0.3,
+		jitter=0.2,
+		color='k',
+		ax=axsVar[1]);
+
+	sns.boxplot(showmeans=True,
+				meanline=True,
+				meanprops={'color': 'r', 'ls': '-', 'lw': 2},
+				medianprops={'visible': False},
+				whiskerprops={'visible': False},
+				zorder=10,
+				x="condition",
+				y="var_at_meanPeakTime",
+				data=df,
+				showfliers=False,
+				showbox=False,
+				showcaps=False,
+				ax=axsVar[1])
+
+	#
+	saveVarFigFile = 'pooledVar.jpg'
+	saveVarFigPath = os.path.join(saveFolder, saveVarFigFile)
+	logger.info(f'saving saveVarFigPath: {saveVarFigPath}')
+	figVar.savefig(saveVarFigPath, dpi=300)
+
+	#
+	# mean peak versus var peak (var peak here is max in variance, not at same itme as peak in mean)
+	figVar2, axsVar2 = plt.subplots(3, 1, sharex=False, figsize=(6, 8))
+	figVar2.suptitle(f'units:{convertMolarStr}')
 	myDespine(axsVar2[0])
 	myDespine(axsVar2[1])
+	myDespine(axsVar2[2])
 	# population meanPeak vs varPeak
-	sns.scatterplot(x='meanPeak', y='varPeak', hue='condition', data=df, ax=axsVar2[0])
+	yStat = 'varPeak'
+	yStat = 'var_at_meanPeakTime'
+	sns.scatterplot(x='meanPeak', y=yStat, hue='condition', data=df, ax=axsVar2[0])
+	sns.scatterplot(x='numSpikes', y=yStat, hue='condition', data=df, ax=axsVar2[1])
+	sns.scatterplot(x='percentChangeInPeakVal', y=yStat, hue='condition', data=df, ax=axsVar2[2])
 
-	#figVar3, axsVar3 = plt.subplots(1, 1, sharex=False, figsize=(4, 4))
-	# population numSpikes vs varPeak
-	sns.scatterplot(x='numSpikes', y='varPeak', hue='condition', data=df, ax=axsVar2[1])
-	#
-	sns.scatterplot(x='percentChangeInPeakVal', y='varPeak', hue='condition', data=df, ax=axsVar2[2])
+	# save it
+	tmpInternalControlsFile = 'pooledInternalControls.png'
+	saveControlsFigPath = os.path.join(saveFolder, tmpInternalControlsFile)
+	logger.info(f'saving saveControlsFigPath: {saveControlsFigPath}')
+	figVar2.savefig(saveControlsFigPath, dpi=300)
+
 	#plt.tight_layout()
 	plt.show()
+
+def tooLong():
+	pass
 
 if __name__ == '__main__':
 	# was working for all analysis until 20220125

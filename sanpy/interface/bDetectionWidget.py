@@ -1372,7 +1372,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if self.ba.loadError:
 			self.replot()
 			fileName = self.ba.getFileName()  # tableRowDict['File']
-			self.updateStatusBar(f'Did not load, the file may be corrupt: "{fileName}".')
+			errStr = f'Did not load, the file may be corrupt: "{fileName}".'
+			logger.error(errStr)
+			self.updateStatusBar(errStr)
 			return False
 
 		# fill in detection parameters (dvdt, vm, start, stop)

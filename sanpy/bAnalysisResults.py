@@ -457,13 +457,17 @@ class analysisResultList:
 		oneResult = analysisResult()
 		self._myList.append(oneResult)
 
+	def appendAnalysis(self, analysisResultList):
+		for analysisResult in analysisResultList:
+			self._myList.append(analysisResult)
+
 	def addAnalysisResult(self, theKey, theDefault=None):
 
 		# go through list and add to each [i] dict
 		for spike in self:
 			spike.addNewKey(theKey, theDefault=theDefault)
 
-	def aslist(self):
+	def asList(self):
 		"""
 		Return underlying list.
 
