@@ -25,8 +25,9 @@ ba.spikeDetect(dDict)
 
 Date: 20210618
 """
-
+import os
 import numbers, math, enum
+import json
 
 import sanpy
 
@@ -551,6 +552,37 @@ class bDetection(object):
 				gotError = True
 		return gotError
 
+	def print(self):
+		for k, v in self._dDict.items():
+			print(k)
+			for k2,v2 in v.items():
+				print(f'  {k2} : {v2}')
+
+	def save(self, path):
+		"""
+		Save underlying dict to json file
+		"""
+
+		# convert
+
+		with open(path, 'w') as f:
+			json.dump(self._dDict, f)
+
+	def load(self, path):
+		"""
+		Load detection from json file.
+
+		Fill in underlying dict
+		"""
+		if not os.path.isfile(path):
+			logger.error(f'Did not find file: {path}')
+			return
+
+		with open(path, 'r') as f:
+			self._dDict = json.load(f)
+
+		# convert
+
 def test_0():
 	"""
 	Testing get/set of detection params
@@ -590,7 +622,50 @@ def test_0():
 		print('  ', k, ':', v)
 	okSetFromDict = bd.setFromDict(tmpDict)
 
+def test_save_load():
+	# load an abf
+	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+	ba = sanpy.bAnalysis(path)
+
+	# analyze
+	ba.spikeDetect()
+	print(ba)
+
+	# save
+	parentPath, fileName = os.path.split(path)
+
+	saveFolder = os.path.join(parentPath, 'sanpy_analysis')
+	if not os.path.isdir(saveFolder):
+		logger.info(f'making folder: {saveFolder}')
+		os.mkdir(saveFolder)
+	baseName = os.path.splitext(fileName)[0]
+	saveFile = baseName + '_detection.json'
+	savePath = os.path.join(saveFolder, saveFile)
+	logger.info(f'savePath:{savePath}')
+
+
+	detectionClass = ba.detectionClass
+
+	# convert no jsonable classes to str representation
+	defaultValue = detectionClass._dDict['detectionType']['defaultValue']
+	detectionClass._dDict['detectionType']['defaultValue'] = defaultValue.name
+
+	currentValue = detectionClass._dDict['detectionType']['currentValue']
+	detectionClass._dDict['detectionType']['currentValue'] = currentValue.name
+
+	#detectionClass.print()
+
+	detectionClass.save(savePath)
+	detectionClass._dDict = None
+
+	detectionClass.load(savePath)
+
+	detectionClass.print()
+
 if __name__ == '__main__':
 	#test_0()
 
-	printDocs()
+	# this works
+	#printDocs()
+
+	test_save_load()

@@ -511,7 +511,7 @@ def run():
 			col0Axs.set_title(titleStr)
 		#
 		startMetaSec = 0.0
-		stopMetaSec = 0.5
+		stopMetaSec = 0.8
 		#startMetaPnt = int(startMetaSec * 1000 * ba.dataPointsPerMs)
 		#stopMetaPnt = int(stopMetaSec * 1000 * ba.dataPointsPerMs)
 
