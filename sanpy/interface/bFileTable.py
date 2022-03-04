@@ -172,6 +172,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 			data (dataframe or analysisDir): pandas dataframe or analysisDir
 		"""
 		QtCore.QAbstractTableModel.__init__(self)
+
 		self.isDirty = False
 
 		# data is either DataFrame or analysisDir
@@ -296,8 +297,6 @@ class pandasModel(QtCore.QAbstractTableModel):
 		"""
 		Respond to user/keyboard edits.
 
-		Will not get called if xxx
-
 		True if value is changed. Calls layoutChanged after update.
 		Returns:
 			False if value is not different from original value.
@@ -318,8 +317,8 @@ class pandasModel(QtCore.QAbstractTableModel):
 				columnName = self._data.columns[index.column()]
 				realRow = self._data.index[index.row()]
 				v = self._data.loc[realRow, columnName]
-				logger.info(f'Existing value for column "{columnName}" is v: "{v}" {type(v)}')
-				logger.info(f'  proposed value:"{value}" {type(value)}')
+				#logger.info(f'Existing value for column "{columnName}" is v: "{v}" {type(v)}')
+				#logger.info(f'  proposed value:"{value}" {type(value)}')
 				if isinstance(v, np.float64):
 					try:
 						if value == '':
@@ -332,7 +331,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 						return False
 
 				# set
-				logger.info(f'  New value for column "{columnName}" is "{value}" {type(value)}')
+				#logger.info(f'  New value for column "{columnName}" is "{value}" {type(value)}')
 				self._data.loc[realRow, columnName] = value
 				#self._data.iloc[rowIdx, columnIdx] = value
 
@@ -347,7 +346,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 				columnIdx = index.column()
 				columnName = self._data.columns[index.column()]
 				realRow = self._data.index[index.row()]
-				logger.info(f'CheckStateRole {columnName} {value}')
+				logger.info(f'CheckStateRole column:{columnName} value:{value}')
 				if columnName == 'I':
 					self._data.loc[realRow, columnName] = value == 2
 					self.dataChanged.emit(index, index)
@@ -557,9 +556,15 @@ class pandasModel(QtCore.QAbstractTableModel):
 		self._data.to_csv(path, index=False)
 		self.isDirty = False
 
+	'''
 	def saveHdf(self):
 		if self.isAnalysisDir:
 			self._data.saveHdf()
+	'''
+
+	def mySave(self):
+		if self.isAnalysisDir:
+			self._data.save()
 
 	def mySyncDfWithPath(self):
 		if self.isAnalysisDir:

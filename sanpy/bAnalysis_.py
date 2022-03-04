@@ -22,6 +22,7 @@ ba.spikeDetect(dDict)
 """
 
 import os, sys, math, time, collections, datetime, enum
+import json
 import uuid
 from collections import OrderedDict
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
@@ -29,6 +30,7 @@ import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly c
 import numpy as np
 import pandas as pd
 import scipy.signal
+import scipy.stats
 
 import pyabf  # see: https://github.com/swharden/pyABF
 
@@ -210,7 +212,8 @@ class bAnalysis:
 
 	def __init__(self, file=None, theTiff=None, byteStream=None,
 					fromDf=None, fromDict=None,
-					loadData=True):
+					loadData=True,
+					stimulusFileFolder=None):
 		"""
 		Args:
 			file (str): Path to either .abf or .csv with time/mV columns.
@@ -260,8 +263,9 @@ class bAnalysis:
 		#self.detectionType = None
 		"""str: From ('dvdt', 'mv')"""
 
-		self.spikeDict = []  # a list of dict
+		#self.spikeDict = []  # a list of dict
 		#self.spikeTimes = []  # created in self.spikeDetect()
+		self.spikeDict = sanpy.bAnalysisResults.analysisResultList()
 
 		self.spikeClips = []  # created in self.spikeDetect()
 		self.spikeClips_x = []  #
@@ -297,7 +301,7 @@ class bAnalysis:
 		elif fromDf is not None:
 			self._loadFromDf(fromDf)
 		elif byteStream is not None:
-			self._loadAbf(byteStream=byteStream, loadData=loadData)
+			self._loadAbf(byteStream=byteStream, loadData=loadData, stimulusFileFolder=stimulusFileFolder)
 		elif file is not None and file.endswith('.abf'):
 			self._loadAbf(loadData=loadData)
 		elif file is not None and file.endswith('.atf'):
@@ -324,6 +328,8 @@ class bAnalysis:
 
 		self._detectionDirty = False
 
+		self.loadAnalysis()
+
 		# switching back to faster version (no parsing when we cell self.sweepX2
 		self.setSweep()
 
@@ -331,12 +337,21 @@ class bAnalysis:
 		#print('bAnalysis mySize:', mySize)
 
 	def asDataFrame(self):
-		"""Return analysis as a Pandas DataFrame."""
+		"""Return analysis as a Pandas DataFrame.
+
+			Important:
+				This returns a COPY !!!
+				Do not modify and expect changes to stick
+		"""
 		#return pd.DataFrame(self.spikeDict.asList())
 		return pd.DataFrame(self.spikeDict.asList())
 
 	@property
 	def detectionDict(self):
+		# TODO: remove this and just use 'detectionClass'
+		return self.detectionClass
+
+	def getDetectionDict(self):
 		# TODO: remove this and just use 'detectionClass'
 		return self.detectionClass
 
@@ -346,12 +361,16 @@ class bAnalysis:
 			 filename = '<BytesIO>'
 		else:
 			filename = self.getFileName()
-		txt = f'ba: {filename} sweep dur:{round(self.recordingDur,3)} spikes:{self.numSpikes}'
+		txt = f'ba: {filename} {self.numSweeps} sweep(s) with dur:{round(self.recordingDur,3)} spikes:{self.numSpikes}'
 		return txt
 
-	def getInfo(self):
+	def getInfo(self, withPath=False):
+		if withPath:
+			pathStr = self._path
+		else:
+			pathStr = ''
 		txt = self.__str__()
-		txt += f" start(s):{self.detectionDict['startSeconds']} stop(s):{self.detectionDict['stopSeconds']}"
+		txt += f" start(s):{self.detectionDict['startSeconds']} stop(s):{self.detectionDict['stopSeconds']} {pathStr}"
 		return txt
 
 	def isKymograph(self):
@@ -507,7 +526,8 @@ class bAnalysis:
 		didSave = False
 		if not self.detectionDirty:
 			# Do not save it detection has not changed
-			logger.info(f'NOT SAVING uuid:{self.uuid} {self.getInfo()}')
+			#logger.info(f'NOT SAVING, is not dirty uuid:{self.uuid} {self.getInfo()}')
+			logger.info(f'NOT SAVING, is not dirty {self.getInfo(withPath=True)}')
 			return didSave
 
 		logger.info(f'SAVING uuid:{self.uuid} {self.getInfo()}')
@@ -630,7 +650,7 @@ class bAnalysis:
 
 		# don't keep _abf, we grabbed every thing we needed
 
-	def _loadAbf(self, byteStream=None, loadData=True):
+	def _loadAbf(self, byteStream=None, loadData=True, stimulusFileFolder=None):
 		"""Load pyAbf from path."""
 		try:
 			#logger.info(f'loadData:{loadData}')
@@ -638,7 +658,7 @@ class bAnalysis:
 				self._abf = pyabf.ABF(byteStream)
 				self.isBytesIO = True
 			else:
-				self._abf = pyabf.ABF(self._path, loadData=loadData)
+				self._abf = pyabf.ABF(self._path, loadData=loadData, stimulusFileFolder=stimulusFileFolder)
 
 		except (NotImplementedError) as e:
 			logger.error(f'did not load abf file: {self._path}')
@@ -673,6 +693,7 @@ class bAnalysis:
 						self._sweepC[:, sweep] = self._abf.sweepC
 					except(ValueError) as e:
 						# pyabf will raise this error if it is an atf file
+						logger.warning(f'my exception for sweep {sweep} with {self.numSweeps}: {e}')
 						pass
 				# not needed
 				self._abf.setSweep(0)
@@ -715,7 +736,9 @@ class bAnalysis:
 		#
 		self.myFileType = 'abf'
 
-		self._abf = None
+		# base sanpy does not keep the abf around
+		logger.warning('I turned off assigning self._abf=None for stoch-res stim file load')
+		#self._abf = None
 
 	@property
 	def detectionDirty(self):
@@ -883,6 +906,12 @@ class bAnalysis:
 			return theFilteredDeriv
 		'''
 
+	# TODO: Get rid of filteredVm and replace with sweepY_filtered
+
+	@property
+	def sweepY_filtered(self):
+		return self._filteredVm[:, self.currentSweep]
+
 	@property
 	def filteredVm(self):
 		return self._filteredVm[:, self.currentSweep]
@@ -929,7 +958,8 @@ class bAnalysis:
 
 	def getDetectionType(self):
 		# <enum 'detectionTypes_'>
-		return self.detectionClass['detectionType'].name
+		#return self.detectionClass['detectionType'].name
+		return self.detectionClass['detectionType']
 
 	def isDirty(self):
 		return self._detectionDirty
@@ -970,6 +1000,72 @@ class bAnalysis:
 					logger.info(e)
 		#
 		logger.info(f'Given {len(spikeList)} and set {count}')
+
+	def getSweepStats(self, statName:str, decimals=3, asDataFrame=False, df=None):
+		"""
+
+		Args:
+			df (pd.DataFrame): For kymograph we sometimes have to convert (peak) values to molar
+		"""
+
+		if df is None:
+			df = self.spikeDict.asDataFrame()
+
+		sweepStatList = []
+
+		for sweep in range(self.numSweeps):
+			oneDf = df[ df['sweep']==sweep ]
+			theValues = oneDf[statName]
+
+			theCount = np.count_nonzero(~np.isnan(theValues))
+			theMin = np.min(theValues)
+			theMax = np.max(theValues)
+			theMean = np.nanmean(theValues)
+
+			theMin = round(theMin,decimals)
+			theMax = round(theMax,decimals)
+			theMean = round(theMean,decimals)
+
+			if theCount>2:
+				theMedian = np.nanmedian(theValues)
+				theSEM = scipy.stats.sem(theValues)
+				theSD = np.nanstd(theValues)
+				theVar = np.nanvar(theValues)
+				theCV = theSD / theVar
+
+				theMedian = round(theMedian,decimals)
+				theSEM = round(theSEM,decimals)
+				theSD = round(theSD,decimals)
+				theVar = round(theVar,decimals)
+				theCV = round(theCV,decimals)
+
+			else:
+				theMedian = None
+				theSEM = None
+				theSD = None
+				theVar = None
+				theCV = None
+
+			oneDict = {
+				statName+'_sweep': sweep,
+				statName+'_count': theCount,
+				statName+'_min': theMin,
+				statName+'_max': theMax,
+				statName+'_mean': theMean,
+				statName+'_median': theMedian,
+				statName+'_sem': theSEM,
+				statName+'_std': theSD,
+				statName+'_var': theVar,
+				statName+'_cv': theCV,
+			}
+
+			sweepStatList.append(oneDict)
+
+		#
+		if asDataFrame:
+			return pd.DataFrame(sweepStatList)
+		else:
+			return sweepStatList
 
 	def getStat(self, statName1, statName2=None, sweepNumber=None, asArray=False):
 		"""
@@ -1657,6 +1753,9 @@ class bAnalysis:
 		When we are instantiated we create a default self.detectionClass
 
 		Each spike is a row and has 'sweep'
+
+		Args:
+			detectionClass (sanpy.bDetection.detectionPresets)
 		"""
 
 		rememberSweep = self.currentSweep  # This is BAD we are mixing analysis with interface !!!
@@ -1711,7 +1810,7 @@ class bAnalysis:
 			logger.info('=== dDict is:')
 			for k in dDict.keys():
 				value = dDict[k]
-				print(f'  {k}: {type(value)} "{value}"')
+				print(f'  {k} value:"{value}" is type {type(value)}')
 
 		#
 		self.setSweep(sweepNumber)
@@ -1726,19 +1825,24 @@ class bAnalysis:
 		#logger.info(f'detectionType: "{detectionType}')
 
 		# detect all spikes either with dvdt or mv
-		if detectionType == sanpy.bDetection.detectionTypes.mv:
+		if detectionType == sanpy.bDetection.detectionTypes['mv'].value:
 			# detect using mV threshold
 			spikeTimes, spikeErrorList = self._spikeDetect_vm(dDict, sweepNumber)
 
+			# TODO: get rid of this and replace with foot
 			# backup childish vm threshold
 			if dDict['doBackupSpikeVm']:
 				spikeTimes = self._backupSpikeVm(spikeTimes, sweepNumber, dDict['medianFilter'])
-		elif detectionType == sanpy.bDetection.detectionTypes.dvdt:
+		elif detectionType == sanpy.bDetection.detectionTypes['dvdt'].value:
 			# detect using dv/dt threshold AND min mV
 			spikeTimes, spikeErrorList = self._spikeDetect_dvdt(dDict, sweepNumber)
 		else:
 			logger.error(f'Unknown detection type "{detectionType}"')
 			return
+
+		#
+		# backup thrshold to zero crossing in dvdt
+		spikeTimes = self._getFeet(spikeTimes)
 
 		#
 		# set up
@@ -1819,7 +1923,7 @@ class bAnalysis:
 			if tmpError is not None and tmpError != np.nan:
 				spikeDict[i]['errors'].append(tmpError) # tmpError is from:
 				if verbose:
-					print(f'spike:{i} error from main detection:{tmpError}')
+					print(f'  spike:{i} error:{tmpError}')
 			#
 			# detection params
 			spikeDict[i]['dvdtThreshold'] = dDict['dvdtThreshold']
@@ -1946,7 +2050,7 @@ class bAnalysis:
 				eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
 				spikeDict[iIdx]['errors'].append(eDict)
 				if verbose:
-					print(f'spike:{iIdx} error:{eDict}')
+					print(f'  spike:{iIdx} error:{eDict}')
 			#
 			# The nonlinear late diastolic depolarization phase was
 			# estimated as the duration between 1% and 10% dV/dt
@@ -1992,7 +2096,7 @@ class bAnalysis:
 						spikeDict[iIdx]['errors'].append(eDict)
 						#print('  after num error:', len(spikeDict[iIdx]['errors']))
 						if verbose:
-							print(f'spike:{iIdx} error:{eDict}')
+							print(f'  spike:{iIdx} error:{eDict}')
 
 				except (TypeError) as e:
 					#catching exception:  expected non-empty vector for x
@@ -2004,7 +2108,7 @@ class bAnalysis:
 					eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
 					spikeDict[iIdx]['errors'].append(eDict)
 					if verbose:
-						print(f'spike:{iIdx} error:{eDict}')
+						print(f'  spike:{iIdx} error:{eDict}')
 				except (np.RankWarning) as e:
 					#logger.error('== FIX preLinearFitPnt0/preLinearFitPnt1 RankWarning')
 					#logger.error(f'  error is: {e}')
@@ -2016,7 +2120,7 @@ class bAnalysis:
 					eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
 					spikeDict[iIdx]['errors'].append(eDict)
 					if verbose:
-						print(f'spike:{iIdx} error:{eDict}')
+						print(f'  spike:{iIdx} error:{eDict}')
 				except:
 					logger.error(f' !!!!!!!!!!!!!!!!!!!!!!!!!!! UNKNOWN EXCEPTION DURING EDD LINEAR FIT for spike {i}')
 					spikeDict[iIdx]['earlyDiastolicDurationRate'] = defaultVal
@@ -2024,7 +2128,7 @@ class bAnalysis:
 					errorStr = 'Early diastolic duration rate fit - Unknown Exception'
 					eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
 					if verbose:
-						print(f'spike:{iIdx} error:{eDict}')
+						print(f'  spike:{iIdx} error:{eDict}')
 
 			# not implemented
 			#self.spikeDict[i]['lateDiastolicDuration'] = ???
@@ -2045,7 +2149,7 @@ class bAnalysis:
 				eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
 				spikeDict[iIdx]['errors'].append(eDict)
 				if verbose:
-					print(f'spike:{iIdx} error:{eDict}')
+					print(f'  spike:{iIdx} error:{eDict}')
 
 			#
 			# minima in dv/dt after spike
@@ -2095,7 +2199,7 @@ class bAnalysis:
 					eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
 					spikeDict[iIdx]['errors'].append(eDict)
 					if verbose:
-						print(f'spike:{iIdx} error:{eDict}')
+						print(f'  spike:{iIdx} error:{eDict}')
 
 			#
 			# TODO: Move half-width to a function !!!
@@ -2119,9 +2223,9 @@ class bAnalysis:
 
 		# SUPER important, previously our self.spikeDict was simple list of dict
 		# now it is a list of class xxx
-		print('=== addind', len(spikeDict))
+		#print('=== addind', len(spikeDict))
 		self.spikeDict.appendAnalysis(spikeDict)
-		print('   now have', len(self.spikeDict))
+		#print('   now have', len(self.spikeDict))
 
 		#print(self.spikeDict)
 
@@ -2143,6 +2247,109 @@ class bAnalysis:
 		sanpy.userAnalysis.runAllUserAnalysis(self)
 
 		## done
+
+	#def _getFeet(self, df):
+	def _getFeet(self, thresholdPnts):
+		"""
+		df (DataFrame): The current dataframe we are working on
+
+		Notes:
+			Will need to calculate new (height, half widths)
+		"""
+
+		logger.info('')
+
+		#df = self.asDataFrame()
+		#peaks = df['peakVal']
+		#thresholdPnts = df['thresholdPnt']
+
+		verbose = self.detectionClass['verbose']
+
+		# using the derivstive to find zero crossing before
+		# original full width left point
+		# TODO: USer self.filteredDeriv
+		#yFull = self.filteredVm
+		#yDiffFull = np.diff(yFull)
+		#yDiffFull = np.insert(yDiffFull, 0, np.nan)
+		yDiffFull = self.filteredDeriv
+
+		secondDeriv = np.diff(yDiffFull, axis=0)
+		secondDeriv = np.insert(secondDeriv, 0, np.nan)
+
+		n = len(thresholdPnts)
+		footPntList = [None] * n
+		footSec = [None] * n  # not used
+		yFoot = [None] * n  # not used
+		#myHeight = []
+
+		# todo: add this to bAnalysis
+		#preMs = self._detectionParams['preFootMs']
+		#prePnts = self._sec2Pnt(preMs/1000)
+
+		# TODO: add to bDetection
+		preMs = 50
+		prePnts = self.ms2Pnt_(preMs)
+
+		for idx,footPnt in enumerate(thresholdPnts):
+			#footPnt = round(footPnt)  # footPnt is in fractional points
+			lastCrossingPnt = footPnt
+			# move forwared a bit in case we are already in a local minima ???
+			footPnt += 2  # TODO: add as param
+			preStart = footPnt - prePnts
+			preClip = yDiffFull[preStart:footPnt]
+			zero_crossings = np.where(np.diff(np.sign(preClip)))[0]  # find where derivative flips sign (crosses 0)
+			xLastCrossing = self.pnt2Sec_(footPnt)  # defaults
+			yLastCrossing = self.sweepY_filtered[footPnt]
+			if len(zero_crossings)==0:
+				if verbose:
+					tmpSec = round(self.pnt2Sec_(footPnt), 3)
+					logger.error(f'  no foot for peak {idx} at sec {tmpSec} ... did not find zero crossings')
+			else:
+				#print(idx, 'footPnt:', footPnt, zero_crossings, preClip)
+				lastCrossingPnt = preStart + zero_crossings[-1]
+				xLastCrossing = self.pnt2Sec_(lastCrossingPnt)
+				# get y-value (pA) from filtered. This removes 'pops' in raw data
+				yLastCrossing = self.sweepY_filtered[lastCrossingPnt]
+
+
+			# find peak in second derivative
+			'''
+			preStart2 = lastCrossingPnt
+			footMs2 = 20
+			footPnt2 = preStart2 + self.ms2Pnt_(footMs2)
+			preClip2 = secondDeriv[preStart2:footPnt2]
+			#zero_crossings = np.where(np.diff(np.sign(preClip2)))[0]
+			peakPnt2 = np.argmax(preClip2)
+			peakPnt2 += preStart2
+
+			#
+			footPntList[idx] = peakPnt2
+			'''
+
+			footPntList[idx] = lastCrossingPnt # was this and worked, a bit too early
+
+			footSec[idx] = xLastCrossing
+			yFoot[idx] = yLastCrossing
+
+			'''
+			peakPnt = df.loc[idx, 'peak_pnt']
+			peakVal = self.sweepY_filtered[peakPnt]
+			height = peakVal - yLastCrossing
+			#print(f'idx {idx} {peakPnt} {peakVal} - {yLastCrossing} = {height}')
+			myHeight[idx] = (height)
+			'''
+
+		#
+		#df =self._analysisList[self._analysisIdx]['results_full']
+		'''
+		df['foot_pnt'] = footPntList  # sec
+		df['foot_sec'] = footSec  # sec
+		df['foot_val'] = yFoot  # pA
+		'''
+		#df['myHeight'] = myHeight
+
+		#return footPntList, footSec, yFoot
+		return footPntList
 
 	def printSpike(self, idx):
 		"""
@@ -2611,6 +2818,8 @@ class bAnalysis:
 			self.spikeClips (list): List of spike clips
 		"""
 
+		verbose = self.detectionClass['verbose']
+
 		if preSpikeClipWidth_ms is None:
 			preSpikeClipWidth_ms = self.detectionClass['preSpikeClipWidth_ms']
 		if postSpikeClipWidth_ms is None:
@@ -2652,8 +2861,9 @@ class bAnalysis:
 		self.spikeClips = []
 		self.spikeClips_x2 = []
 
-		#for idx, spikeTime in enumerate(self.spikeTimes):
-		sweepY = self.sweepY
+		sweepY = self.sweepY_filtered
+
+		# when there are no spikes getStat() will not return anything
 		sweepNum = self.getStat('sweep', sweepNumber=sweepNumber)  # For 'All' sweeps, we need to know column
 
 		#logger.info(f'sweepY: {sweepY.shape} {len(sweepY.shape)}')
@@ -2677,7 +2887,8 @@ class bAnalysis:
 				self.spikeClips_x2.append(self.spikeClips_x) # a 2D version to make pyqtgraph multiline happy
 			else:
 				#pass
-				logger.error(f'Did not add clip for spike index: {idx} at time: {spikeTime} len(currentClip): {len(currentClip)} != numPointsInClip: {numPointsInClip}')
+				if verbose:
+					logger.warning(f'Did not add clip for spike index: {idx} at time: {spikeTime} len(currentClip): {len(currentClip)} != numPointsInClip: {numPointsInClip}')
 
 		#
 		return self.spikeClips_x2, self.spikeClips
@@ -2727,8 +2938,8 @@ class bAnalysis:
 		meanClip = []
 		spikeTimes = self.getSpikeTimes(sweepNumber=sweepNumber)
 
-		if len(spikeTimes) != len(self.spikeClips):
-			logger.error(f'len spikeTimes {len(spikeTimes)} !=  spikeClips {len(self.spikeClips)}')
+		#if len(spikeTimes) != len(self.spikeClips):
+		#	logger.error(f'len spikeTimes {len(spikeTimes)} !=  spikeClips {len(self.spikeClips)}')
 
 		# self.spikeClips is a list of clips
 		for idx, clip in enumerate(self.spikeClips):
@@ -2854,6 +3065,94 @@ class bAnalysis:
 		"""
 		return (data - np.min(data)) / (np.max(data) - np.min(data))
 
+	def loadAnalysis(self):
+		saveBase = self._getSaveBase()
+
+		# load detection parameters
+		#self.detectionClass.load(saveBase)
+
+		# load analysis
+		#self.spikeDict.load(saveBase)
+
+		saveBase = self._getSaveBase()
+		savePath = saveBase + '-analysis.json'
+
+		if not os.path.isfile(savePath):
+			#logger.error(f'Did not find file: {savePath}')
+			return
+
+		logger.info(f'Loading from saved analysis: {savePath}')
+
+		with open(savePath, 'r') as f:
+			#self._dDict = json.load(f)
+			loadedDict = json.load(f)
+
+		dDict = loadedDict['detection']
+		self.detectionClass._dDict = dDict
+
+		analysisList = loadedDict['analysis']
+		self.spikeDict._myList = analysisList
+
+		self._detectionDirty = False
+		self._isAnalyzed = True
+
+	def saveAnalysis(self, forceSave=False):
+		if not self._detectionDirty and not forceSave:
+			return
+
+		saveFolder = self._getSaveFolder()
+		if not os.path.isdir(saveFolder):
+			logger.info(f'making folder: {saveFolder}')
+			os.mkdir(saveFolder)
+
+		saveBase = self._getSaveBase()
+		savePath = saveBase + '-analysis.json'
+
+		# save detection parameters
+		#self.detectionClass.save(saveBase)
+		dDict = self.detectionClass.getDict()
+
+		saveDict = {}
+		saveDict['detection'] = dDict
+
+		# save list of dict
+		#self.spikeDict = sanpy.bAnalysisResults.analysisResultList()
+		#self.spikeDict.save(saveBase)
+		analysisList = self.spikeDict.asList()
+
+		saveDict['analysis'] = analysisList
+
+		with open(savePath, 'w') as f:
+			json.dump(saveDict, f, cls=NumpyEncoder, indent=4)
+
+		self._detectionDirty = False
+
+		logger.info(f'Saved analysis to: {savePath}')
+
+	def _getSaveFolder(self):
+		"""
+		All analysis will be saved in folder 'sanpy_analysis'
+		"""
+		parentPath, fileName = os.path.split(self._path)
+		saveFolder = os.path.join(parentPath, 'sanpy_analysis')
+		return saveFolder
+
+	def _getSaveBase(self):
+		"""
+		Return basename to append to to save
+
+		This will always be in a subfolder named 'sanpy_analysis'
+
+		For example, bDetection uses this to save <base>-detection.json
+		"""
+		saveFolder = self._getSaveFolder()
+
+		parentPath, fileName = os.path.split(self._path)
+		baseName = os.path.splitext(fileName)[0]
+		savePath = os.path.join(saveFolder, baseName)
+
+		return savePath
+
 	def api_getHeader(self):
 		"""
 		Get header as a dict.
@@ -2948,6 +3247,17 @@ class bAnalysis:
 		with open(htmlFile, 'w') as f:
 			f.write(html)
 		webbrowser.open('file://' + htmlFile)
+
+class NumpyEncoder(json.JSONEncoder):
+	""" Special json encoder for numpy types """
+	def default(self, obj):
+		if isinstance(obj, np.integer):
+			return int(obj)
+		elif isinstance(obj, np.floating):
+			return float(obj)
+		elif isinstance(obj, np.ndarray):
+			return obj.tolist()
+		return json.JSONEncoder.default(self, obj)
 
 def _test_load_abf():
 	path = '/Users/cudmore/data/dual-lcr/20210115/data/21115002.abf'
@@ -3309,9 +3619,69 @@ def test_sweeps():
 	plt.xlabel(ba.abf.sweepLabelX)
 	plt.show()
 
+def test_foot():
+	if 0:
+		path = '/media/cudmore/data/rabbit-ca-transient/feb-8-2022/Control/20220204__0013.tif.frames/20220204__0013.tif'
+
+		ba = bAnalysis(path)
+		print(ba)
+
+		detectionPreset= sanpy.bDetection.detectionPresets.caKymograph
+		detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
+		detectionClass['mvThreshold'] = 1.42
+		detectionClass['doBackupSpikeVm'] = False
+		detectionClass['SavitzkyGolay_pnts'] = 5
+		ba.spikeDetect(detectionClass=detectionClass)
+
+	if 1:
+		path = '/media/cudmore/data/Laura-data/manuscript-data/2020_07_23_0002.abf'
+		ba = bAnalysis(path)
+		print(ba)
+
+		detectionPreset= sanpy.bDetection.detectionPresets.saNode
+		detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
+		detectionClass['dvdtThreshold'] = 2
+		detectionClass['mvThreshold'] = -20
+		detectionClass['doBackupSpikeVm'] = False
+		detectionClass['SavitzkyGolay_pnts'] = 5
+		detectionClass['verbose'] = True
+		ba.spikeDetect(detectionClass=detectionClass)
+
+	print(ba)
+
+	#footPntList, footSec, yFoot = ba._getFeet()
+	#print('footSec:', footSec)
+
+	thresholdSec = ba.getStat('thresholdSec')
+	thresholdVal = ba.getStat('thresholdVal')
+
+	print('thresholdSec:', thresholdSec)
+
+	# 2nd deriv
+	secondDeriv = np.diff(ba.filteredDeriv, axis=0)
+	secondDeriv = np.insert(secondDeriv, 0, np.nan)
+
+	# plot
+	import matplotlib.pyplot as plt
+	fig, axs = plt.subplots(2, 1, sharex=True)
+
+	axs[0].plot(ba.sweepX, ba.filteredDeriv, '-k', linewidth=0.5)
+	axs[0].plot(ba.sweepX, secondDeriv, '-r', linewidth=0.5)
+	axs[0].hlines(0, ba.sweepX[0], ba.sweepX[-1], linestyles='dashed')
+
+	axs[1].plot(ba.sweepX, ba.sweepY, '.k', linewidth=0.5)
+	#axs[1].plot(footSec, yFoot, 'or')
+
+	axs[1].plot(thresholdSec, thresholdVal, 'ob')
+	#axs[1].vlines(1.4073, np.min(ba.sweepY), np.max(ba.sweepY), linestyles='dashed')
+
+	plt.show()
+
 if __name__ == '__main__':
 	# was using this for manuscript
 	#main()
 	#test_hdf()
-	test_load_abf()
+	#test_load_abf()
 	#test_sweeps()
+
+	test_foot()

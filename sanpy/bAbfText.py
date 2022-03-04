@@ -1,6 +1,6 @@
 # 20210129
 
-import os
+import os, sys
 import numpy as np
 
 import tifffile
@@ -176,6 +176,12 @@ class bAbfText:
 
 		Args:
 			theRect (list): left, top, right, bottom
+
+		Notes:
+			This is doing 'background subtract' on sum of line - sum in background roi
+				I don't think this is correct???
+				'sum of line' has num pixels in scan
+				'sum background roi' has a different number of pixels !!!
 		"""
 
 		#logger.info(theRect)
@@ -201,10 +207,14 @@ class bAbfText:
 
 		theBackground = self.updateTifRoi_background()
 
+		# logger.warning(f'I turned off background subtract .. placement of background is sometimes bad')
+
 		# retains shape of entire tif
 		yLineScanSum = [np.nan] * tif.shape[1]
 		xLineScanSum = [np.nan] * tif.shape[1]
 		for i in range(tif.shape[1]):
+			# sum each column and background subtract
+
 			# always assign time
 			xLineScanSum[i] = firstFrameSeconds + (self.tifHeader['secondsPerLine'] * i)
 
@@ -215,7 +225,14 @@ class bAbfText:
 			theSum = np.sum(tif[bottom:top, i])
 
 			# background subtract
-			theSum -= theBackground
+			#print(f'   === theSum:{theSum} {type(theSum)} theBackground:{theBackground} {type(theBackground)}')
+			#if not isinstance(theSum, np.uint64) or not isinstance(theBackground, np.uint64):
+			#	print(f'   === theSum:{theSum} {type(theSum)} theBackground:{theBackground} {type(theBackground)}')
+
+			#logger.warning(f'I turned off background subtract .. placement of background is sometimes bad')
+			#theSum -= theBackground
+
+			#sys.exit(1)
 
 			# f / f_0
 			theSum /= numPixels  # tif.shape[0] # norm to number of pixels in line

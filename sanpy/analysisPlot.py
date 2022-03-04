@@ -324,7 +324,7 @@ class bAnalysisPlot():
 		ax.set_ylabel('Inter-Spike-Interval (sec)')
 		ax.set_xlabel('Time (sec)')
 
-	def plotClips(self, plotType='Raw', ax=None):
+	def plotClips(self, plotType='Raw', preClipWidth_ms=None, postClipWidth_ms=None, ax=None):
 		'''
 		Plot clips of all detected spikes
 
@@ -356,8 +356,16 @@ class bAnalysisPlot():
 
 		startSec, stopSec = None, None
 		selectedSpikeList = []
-		preClipWidth_ms = 200
-		postClipWidth_ms = 1000
+		#preClipWidth_ms = 200
+		#postClipWidth_ms = 1000
+
+		# Leave this none, if we pass none, ba.getSpikeClipsWill take care of this
+		'''
+		if preClipWidth_ms is None:
+			preClipWidth_ms = self.ba.detectionClass['preSpikeClipWidth_ms']
+		if postClipWidth_ms is None:
+			postClipWidth_ms = self.ba.detectionClass['postSpikeClipWidth_ms']
+		'''
 		sweepNumber = 0
 		theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(startSec, stopSec,
 												spikeSelection=selectedSpikeList,

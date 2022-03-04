@@ -184,7 +184,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 		#return self._sweepNumber
 		return self.ba.currentSweep
 
-	def detect(self, detectionType, dvdtThreshold, mvThreshold, startSec=None, stopSec=None):
+	def detect(self, detectionType : sanpy.bDetection.detectionTypes,
+				dvdtThreshold, mvThreshold, startSec=None, stopSec=None):
 		"""
 		Detect spikes
 
@@ -203,7 +204,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			return
 
 		#logger.info(f'Detecting with dvdtThreshold:{dvdtThreshold} mvThreshold:{mvThreshold}')
-		self.updateStatusBar(f'Detecting spikes detectionType:{detectionType} dvdt:{dvdtThreshold} minVm:{mvThreshold} start:{startSec} stop:{stopSec}')
+		self.updateStatusBar(f'Detecting spikes detectionType:{detectionType.value} dvdt:{dvdtThreshold} minVm:{mvThreshold} start:{startSec} stop:{stopSec}')
 
 		if startSec is None or stopSec is None:
 			startSec = 0
@@ -218,7 +219,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		# was this
 		detectionDict = sanpy.bDetection() # gets default detection class
 
-		detectionDict['detectionType'] = detectionType  # set detection type to ('dvdt', 'vm')
+		detectionDict['detectionType'] = detectionType.value  # set detection type to ('dvdt', 'vm')
 		detectionDict['dvdtThreshold'] = dvdtThreshold
 		detectionDict['mvThreshold'] = mvThreshold
 
@@ -1053,7 +1054,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 
 		#
 		# mouse crosshair
-		crosshairPlots = ['derivPlot', 'dacPlot', 'vmPlot', 'clipPlot']
+		#crosshairPlots = ['derivPlot', 'dacPlot', 'vmPlot', 'clipPlot']
+		crosshairPlots = ['derivPlot', 'dacPlot', 'vmPlot']
 		self.crosshairDict = {}
 		for crosshairPlot in crosshairPlots:
 			self.crosshairDict[crosshairPlot] = {
@@ -1078,7 +1080,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 			#	self.clipPlot.addItem(self.crosshairDict[crosshairPlot]['h'], ignoreBounds=True)
 			#	self.clipPlot.addItem(self.crosshairDict[crosshairPlot]['v'], ignoreBounds=True)
 			else:
-				print('error: case not taken for crosshairPlot:', crosshairPlot)
+				logger.error(f'case not taken for crosshairPlot: {crosshairPlot}')
 
 		# trying to implement mouse moved events
 		self.myProxy = pg.SignalProxy(self.vmPlot.scene().sigMouseMoved, rateLimit=60, slot=self.myMouseMoved)
@@ -1372,7 +1374,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 		if self.ba.loadError:
 			self.replot()
 			fileName = self.ba.getFileName()  # tableRowDict['File']
-			errStr = f'Did not load, the file may be corrupt: "{fileName}".'
+			errStr = f'The bAnalysis file was flagged with loadError ... aborting: "{fileName}".'
 			logger.error(errStr)
 			self.updateStatusBar(errStr)
 			return False
@@ -2441,7 +2443,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 		#
 
 	def slot_dataChanged(self, columnName, value, rowDict):
-		"""User has edited main file table.
+		"""
+		User has edited main file table.
+
 		Update detection widget for columns (Start(s), Stop(s), dvdtThreshold, mvThreshold)
 		"""
 		logger.info(f'{columnName} {value} {type(value)}')

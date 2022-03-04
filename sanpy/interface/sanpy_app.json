@@ -7,18 +7,18 @@
     "display": {
         "plotEveryPoint": 10,
         "showClips": false,
-        "showDAC": true,
+        "showDAC": false,
         "showDvDt": true,
         "showErrors": false,
         "showGlobalVm": false,
         "showScatter": false
     },
-    "lastPath": "/media/cudmore/data/theanne-griffith/07.27.21/wc10-27",
+    "lastPath": "/media/cudmore/data/rabbit-ca-transient/jan-18-2022",
     "useDarkStyle": true,
     "windowGeometry": {
-        "height": 1246,
-        "width": 1935,
-        "x": 169,
-        "y": 97
+        "height": 1043,
+        "width": 1988,
+        "x": 253,
+        "y": 235
     }
 }

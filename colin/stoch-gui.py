@@ -32,7 +32,7 @@ from stochAnalysis import plotRaw
 from stochAnalysis import plotHist
 from stochAnalysis import plotPhaseHist
 from stochAnalysis import detect
-from stochAnalysis import plotStimFileParams
+#from stochAnalysis import plotStimFileParams
 
 class stochGui(QtWidgets.QMainWindow):
 	"""
@@ -404,7 +404,7 @@ class rawStochGui(QtWidgets.QWidget):
 			showDac = self._showDac
 			plotRaw(self._ba, showDetection=showDetection, showDac=showDac, axs=self._axs)
 		elif self._plotType == 'plotHist':
-			plotHist(self._ba, self._axs)
+			plotHist(self._ba, axs=self._axs)
 		elif self._plotType == 'plotPhaseHist':
 			plotPhaseHist(self._ba, self._axs)
 
@@ -584,6 +584,7 @@ def run():
 	# list of files
 	#path = '/media/cudmore/data/stoch-res/20211209'
 	path = '/media/cudmore/data/stoch-res'
+	path = '/media/cudmore/data/stoch-res/11feb'
 	#path = '/Users/cudmore/data/stoch-res'
 
 	sg = stochGui()

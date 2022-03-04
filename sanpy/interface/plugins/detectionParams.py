@@ -191,7 +191,7 @@ class detectionParams(sanpyPlugin):
 				aWidget.setRange(-1e9, +1e9)  # minimum is used for setSpecialValueText()
 				aWidget.setSpecialValueText("None")  # displayed when widget is set to minimum
 
-				logger.info(f'XXXXX paramName:{paramName} currentValue:{currentValue} {type(currentValue)}')
+				#logger.info(f'XXXXX paramName:{paramName} currentValue:{currentValue} {type(currentValue)}')
 
 				if currentValue is None or math.isnan(currentValue):
 					aWidget.setValue(-1e9)
@@ -202,7 +202,7 @@ class detectionParams(sanpyPlugin):
 			elif valueType == 'list':
 				# text edit a list
 				pass
-			elif valueType == 'boolean':
+			elif valueType in ['bool', 'boolean']:
 				# popup of True/False
 				aWidget = QtWidgets.QComboBox()
 				aWidget.addItem('True')
@@ -286,6 +286,9 @@ class detectionParams(sanpyPlugin):
 		logger.info('detecting spikes')
 
 		detectionClass = self.detectionClass
+
+		# print out all detection params
+		# detectionClass.print()
 
 		# spike detect
 		self.ba.spikeDetect(detectionClass)

@@ -4,6 +4,11 @@ Utilities to define analysis results.
 These are keys in bAnalysis_ spike dict and columns in output reports
 """
 
+import json
+import os
+
+import numpy as np  # needed to convert np types to JSON types in save
+import pandas as pd
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
@@ -439,6 +444,17 @@ def printDocs():
 	print(f'Generated {myDate} with sanpy.analysisVersion {sanpy.analysisVersion}')
 	print(str)
 
+class NumpyEncoder(json.JSONEncoder):
+	""" Special json encoder for numpy types """
+	def default(self, obj):
+		if isinstance(obj, np.integer):
+			return int(obj)
+		elif isinstance(obj, np.floating):
+			return float(obj)
+		elif isinstance(obj, np.ndarray):
+			return obj.tolist()
+		return json.JSONEncoder.default(self, obj)
+
 class analysisResultList:
 	"""
 	Class encapsulating a list of analysisResultDict (one dict per spike)
@@ -451,6 +467,27 @@ class analysisResultList:
 		self._myList = []
 
 		self._iterIdx = -1
+
+	def old_save(self, saveBase):
+		savePath = saveBase + '-analysis.json'
+
+		analysisList = self.asList()
+
+		#print(analysisList[0].print())
+		print(self._myList[0])
+
+		with open(savePath, 'w') as f:
+			json.dump(analysisList, f, cls=NumpyEncoder, indent=4)
+
+	def old_load(self, loadBase):
+		loadPath = loadBase + '-analysis.json'
+
+		if not os.path.isfile(loadPath):
+			logger.error(f'Did not find file: {loadPath}')
+			return
+
+		with open(loadPath, 'r') as f:
+			self._myList = json.load(f)
 
 	def appendDefault(self):
 		"""Append a spike to analysis."""
@@ -475,6 +512,9 @@ class analysisResultList:
 		See bExport.xxx.
 		"""
 		return [spike.asDict() for spike in self._myList]
+
+	def asDataFrame(self):
+		return pd.DataFrame(self.asList())
 
 	def __getitem__(self, key):
 		"""
@@ -508,7 +548,6 @@ class analysisResultList:
 		else:
 			return self._myList[self._iterIdx]
 
-
 class analysisResult:
 	def __init__(self):
 		# this is the raw definition of analysis results (See above)
@@ -522,18 +561,25 @@ class analysisResult:
 			self._rDict[k] = default
 
 	def __str__(self):
-		'''
+		printList = []
 		for k,v in self._rDict.items():
-			if k == 'widths':
-				widths = v
-				for idx2, width in enumerate(widths):
-					print(f'{idx2}')
-					print(width)
+			if isinstance(v, dict):
+				for k2,v2 in v.items():
+					printList.append(f'  {k2} : {v2} {type(v2)}')
 			else:
-				print(f'key:{k} v:{v}')
-		return str('xxx')
-		'''
-		return str(self._rDict)
+				printList.append(f'{k} : {v} {type(v)}')
+		return '\n'.join(printList)
+
+	def print(self):
+		printList = []
+		for k,v in self._rDict.items():
+			if isinstance(v, list):
+				for item in v:
+					for k2,v2 in item.items():
+						printList.append(f'  {k2} : {v2} {type(v2)}')
+			else:
+				printList.append(f'{k} : {v} {type(v)}')
+		return '\n'.join(printList)
 
 	def addNewKey(self, theKey, theDefault=None):
 		"""

@@ -158,7 +158,7 @@ def fixRelPath(folderPath, dfTable, fileList):
 		#print(rowIdx, file, relPath)
 		for filePath in fileList:
 			if filePath.find(file) != -1:
-				print(f' file idx {rowIdx} file:{file} not has relPath:{filePath}')
+				print(f'  fixRelPath() file idx {rowIdx} file:{file} now has relPath:{filePath}')
 				dfTable.loc[rowIdx, 'relPath'] = filePath
 
 	#sys.exit(1)
@@ -249,7 +249,7 @@ class analysisDir():
 	theseFileTypes = ['.abf', '.atf', '.csv', '.tif']
 	"""File types to load"""
 
-	def __init__(self, path=None, myApp=None, autoLoad=True):
+	def __init__(self, path=None, myApp=None, autoLoad=False, folderDepth=None):
 		"""
 		Load and manage a list of files in a folder path.
 		Use this as the main pandasModel for file list myTableView.
@@ -275,6 +275,8 @@ class analysisDir():
 		self.myApp = myApp # used to signal on building initial db
 		self.autoLoad = autoLoad
 
+		self.folderDepth = folderDepth  # specify int
+
 		self._isDirty = False
 
 		self._poolDf = None
@@ -289,23 +291,37 @@ class analysisDir():
 		self.dbFile = 'sanpy_recording_db.csv'
 
 		self._df = None
-		if autoLoad:
+		#if autoLoad:
+		if 1:
 			self._df = self.loadHdf()
 			if self._df is None:
-				self._df = self.loadFolder(loadData=True)  # only used if no h5 file
+				self._df = self.loadFolder(loadData=autoLoad)  # only used if no h5 file
+				self._updateLoadedAnalyzed()
+
+		# self._df = self.loadFolder(loadData=autoLoad)
 
 		#
 		self._checkColumns()
 		self._updateLoadedAnalyzed()
 
-		'''
-		logger.error('\n   temporary fix with fixRelPath\n')
+		logger.warning('\n   temporary fix with fixRelPath()\n')
 		tmpFileList = self.getFileList()
 		fixRelPath(self.path, self._df, tmpFileList)
-		'''
 
 		#
-		logger.info(self)
+		#logger.info(self)
+
+	def __iter__(self):
+		self._iterIdx = 0
+		return self
+
+	def __next__(self):
+		if self._iterIdx < self.numFiles:
+			x = self._df.loc[self._iterIdx]['_ba']
+			self._iterIdx += 1
+			return x
+		else:
+			raise StopIteration
 
 	def __str__(self):
 		totalDurSec = self._df['Dur(s)'].sum()
@@ -465,6 +481,11 @@ class analysisDir():
 		command = ["ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
 		call(command)
 
+	def save(self):
+		for ba in self:
+			if ba is not None:
+				ba.saveAnalysis()
+
 	def saveHdf(self):
 		"""
 		Save file table and any number of loaded and analyzed bAnalysis.
@@ -556,7 +577,7 @@ class analysisDir():
 		if not os.path.isfile(hdfPath):
 			return
 
-		logger.info(f'Loading existing folder hdf: {hdfPath}')
+		logger.info(f'Loading existing folder hdf {hdfPath}')
 
 		start = time.time()
 		with pd.HDFStore(hdfPath) as hdfStore:
@@ -597,6 +618,8 @@ class analysisDir():
 					logger.error(f'hdf uuid key for row {row} not found in .h5 file, uuid:"{ba_uuid}"')
 			'''
 
+		# fixRelPath(self.path, df, self.getFileList())
+
 		stop = time.time()
 		logger.info(f'Loading took {round(stop-start,2)} seconds')
 		#
@@ -630,6 +653,8 @@ class analysisDir():
 		TODO: get rid of loading database from .csv (it is replaced by .h5 file)
 		TODO: extend the logic to load from cloud (after we were instantiated)
 		"""
+		logger.info('Loading folder from scratch (no hdf file)')
+
 		start = time.time()
 		if path is None:
 			path = self.path
@@ -647,7 +672,8 @@ class analysisDir():
 			loadedDatabase = True
 			#logger.info(f'  shape is {df.shape}')
 		else:
-			logger.info(f'No existing db file, making {dbPath}')
+			#logger.info(f'No existing db file, making {dbPath}')
+			logger.info(f'No existing db file, making default dataframe')
 			df = pd.DataFrame(columns=self.sanpyColumns.keys())
 			df = self._setColumnType(df)
 
@@ -691,6 +717,8 @@ class analysisDir():
 
 				# do not assign uuid until bAnalysis is saved in h5 file
 				#rowDict['uuid'] = ''
+
+				rowDict['relPath'] = file
 
 				listOfDict.append(rowDict)
 
@@ -797,6 +825,10 @@ class analysisDir():
 			# kymograph interface
 			if ba is not None and ba.isKymograph():
 				kRect = ba.getKymographRect()
+
+				#print(kRect)
+				#sys.exit(1)
+
 				self._df.loc[rowIdx, 'kLeft'] = kRect[0]
 				self._df.loc[rowIdx, 'kTop'] = kRect[1]
 				self._df.loc[rowIdx, 'kRight'] = kRect[2]
@@ -865,7 +897,8 @@ class analysisDir():
 
 		#logger.info(f'Found _ba in file db with ba:"{ba}" {type(ba)}')
 
-		print('xxx rowIdx:', rowIdx, 'ba:', ba)
+		#logger.info(f'rowIdx: {rowIdx} ba:{ba}')
+
 		if ba is None or ba=='':
 			#logger.info('did not find _ba ... loading from abf file ...')
 			# working on kymograph
@@ -896,8 +929,15 @@ class analysisDir():
 					top = self._df.loc[rowIdx, 'kTop']
 					right = self._df.loc[rowIdx, 'kRight']
 					bottom = self._df.loc[rowIdx, 'kBottom']
-					theRect = [left, top, right, bottom]
-					ba._updateTifRoi(theRect)
+
+					# on first load, these will be empty
+					# grab rect from ba (in _updateLoadedAnalyzed())
+					if left=='' or top=='' or right=='' or bottom=='':
+						pass
+					else:
+						theRect = [left, top, right, bottom]
+						print(f'  theRect:{theRect}')
+						ba._updateTifRoi(theRect)
 
 				#
 				# update stats of table load/analyzed columns
@@ -913,14 +953,37 @@ class analysisDir():
 		They are binary and fast, saving to h5 (in this case) is slow.
 		"""
 		logger.info(f'path:"{path}" uuid:"{uuid}" allowAutoLoad:"{allowAutoLoad}"')
+
 		ba = None
-		if uuid is not None and uuid:
+		allowUUID = True  # on transition to bAnalysis save as json
+		if allowUUID and uuid is not None and uuid:
 			# load from h5
 			hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
 			hdfPath = os.path.join(self.path, hdfFile)
 			with pd.HDFStore(hdfPath) as hdfStore:
+				# hdfStore is of type pandas.io.pytables.HDFStore
 				try:
-					dfAnalysis = hdfStore[uuid]
+					logger.info(f'retreiving uuid from hdf file {uuid}')
+
+					realKey = '/' + uuid
+
+					if not realKey in hdfStore.keys():
+						logger.error(f' did not find uuid in hdf store, uuid: {realKey}')
+						for key in hdfStore.keys():
+							print('  ', key)
+
+					# logger.info(f'hdfStore: {hdfStore}')
+
+					# dfAnalysis = hdfStore[realKey]
+
+					# i don't understand why accessing an hd5 key we get a vlaue error (it is type checking my cutum enum types???
+					try:
+						dfAnalysis = hdfStore.select(realKey)
+					except(ValueError) as e:
+						logger.error(f'!!!!!!!!!!!!!!! my exception: {e}')
+
+					#logger.info(f'dfAnalysis is of type {type(dfAnalysis)}')
+
 					ba = sanpy.bAnalysis(fromDf=dfAnalysis)
 
 
@@ -1023,18 +1086,28 @@ class analysisDir():
 		#if rowIdx is not None:
 		#	rowDict['Idx'] = rowIdx
 
+		'''
 		if ba.loadError:
 			rowDict['I'] = 0
 		else:
 			rowDict['I'] = 2 # need 2 because checkbox value is in (0,2)
+		'''
+
 		rowDict['File'] = ba.getFileName() #os.path.split(ba.path)[1]
 		rowDict['Dur(s)'] = ba.recordingDur
 		rowDict['Sweeps'] = ba.numSweeps
 		rowDict['kHz'] = ba.recordingFrequency
 		rowDict['Mode'] = ba.recordingMode
 
-		rowDict['dvdtThreshold'] = 20
-		rowDict['mvThreshold'] = -20
+		#rowDict['dvdtThreshold'] = 20
+		#rowDict['mvThreshold'] = -20
+		if ba.isAnalyzed():
+			dDict = ba.getDetectionDict()
+			rowDict['I'] = dDict.getValue('include')
+			rowDict['dvdtThreshold'] = dDict.getValue('dvdtThreshold')
+			rowDict['mvThreshold'] = dDict.getValue('mvThreshold')
+			rowDict['Start(s)'] = dDict.getValue('startSeconds')
+			rowDict['Stop(s)'] = dDict.getValue('stopSeconds')
 
 		return ba, rowDict
 
@@ -1050,11 +1123,21 @@ class analysisDir():
 		logger.warning('MODIFIED TO LOAD TIF FILES IN SUBFOLDERS')
 		count = 0
 		tmpFileList = []
+		folderDepth = self.folderDepth  # if none then all depths
 		for root, subdirs, files in os.walk(path):
 			#print('analysisDir.getFileList() count:', count)
 			#print('  ', root)
 			#print('  ', subdirs)
 			#print('  ', files)
+			'''
+			parentFolder = os.path.split(root)[1]
+			print(root)
+			print('  ', parentFolder)
+			if parentFolder.startswith('__'):
+				continue
+			'''
+			if folderDepth is not None and count > folderDepth:
+				break
 			count += 1
 			for file in files:
 				#if file.endswith('.tif'):

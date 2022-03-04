@@ -552,7 +552,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 			width = 3
 
 		#print('MultiLine penColor:', penColor)
-		logger.info(f'{self.myType} penColor: {penColor}')
+		#logger.info(f'{self.myType} penColor: {penColor}')
 		pen = pg.mkPen(color=penColor, width=width)
 
 		# testing gradient pen

@@ -38,8 +38,8 @@ class detectionTypes_(enum.Enum):
 	"""
 	Detection type is one of (dvdt, mv)
 	"""
-	dvdt = 1
-	mv = 2
+	dvdt = 'dvdt'
+	mv = 'mv'
 
 class detectionPresets_(enum.Enum):
 	"""
@@ -73,9 +73,19 @@ def getDefaultDetection(detectionPreset):
 	"""
 	theDict = {}
 
+	key = 'include'
+	theDict[key] = {}
+	theDict[key]['defaultValue'] = True
+	theDict[key]['type'] = 'bool'
+	theDict[key]['allowNone'] = False
+	theDict[key]['units'] = ''
+	theDict[key]['humanName'] = 'Include'
+	theDict[key]['errors'] = ('')
+	theDict[key]['description'] = 'Include analysis for this file'
+
 	key = 'detectionType'
 	theDict[key] = {}
-	theDict[key]['defaultValue'] = sanpy.bDetection.detectionTypes.dvdt # ('dvdt', 'mv')
+	theDict[key]['defaultValue'] = sanpy.bDetection.detectionTypes['dvdt'].value # ('dvdt', 'mv')
 	theDict[key]['type'] = 'sanpy.bDetection.detectionTypes'
 	theDict[key]['allowNone'] = False  # To do, have 2x entry points to bAnalysis detect, never set this to nan
 	theDict[key]['units'] = ''
@@ -183,9 +193,10 @@ def getDefaultDetection(detectionPreset):
 	theDict[key]['errors'] = ('')
 	theDict[key]['description'] = 'Only accept APs below this value (mV)'
 
+	# TODO: get rid of this and replace with foot
 	key = 'doBackupSpikeVm'
 	theDict[key] = {}
-	theDict[key]['defaultValue'] = True
+	theDict[key]['defaultValue'] = False
 	theDict[key]['type'] = 'boolean'
 	theDict[key]['allowNone'] = False
 	theDict[key]['units'] = 'Boolean'
@@ -315,7 +326,7 @@ def getDefaultDetection(detectionPreset):
 
 	key = 'SavitzkyGolay_pnts'
 	theDict[key] = {}
-	theDict[key]['defaultValue'] = 0 #20211001 was 5
+	theDict[key]['defaultValue'] = 5 #20211001 was 5
 	theDict[key]['type'] = 'int'
 	theDict[key]['allowNone'] = True # 0 is no filter
 	theDict[key]['units'] = 'points'
@@ -383,12 +394,15 @@ def getDefaultDetection(detectionPreset):
 		#theDict['refractory_ms']['defaultValue'] = 200 #170 # reject spikes with instantaneous frequency
 		#theDict['halfWidthWindow_ms']['defaultValue'] = 200 #was 20
 	elif detectionPreset == bDetection.detectionPresets.caKymograph:
-		theDict['detectionType']['defaultValue'] = sanpy.bDetection.detectionTypes.mv
+		theDict['detectionType']['defaultValue'] = sanpy.bDetection.detectionTypes['mv'].value
 		theDict['dvdtThreshold']['defaultValue'] = math.nan #if None then detect only using mvThreshold
 		theDict['mvThreshold']['defaultValue'] = 1.2
 		theDict['peakWindow_ms']['defaultValue'] = 700
 		theDict['halfWidthWindow_ms']['defaultValue'] = 800
-		theDict['refractory_ms']['defaultValue'] = 1000
+		theDict['refractory_ms']['defaultValue'] = 500
+		theDict['doBackupSpikeVm']['defaultValue'] = False
+
+		# theDict['SavitzkyGolay_pnts']['defaultValue'] = 5
 		theDict['preSpikeClipWidth_ms']['defaultValue'] = 200
 		theDict['postSpikeClipWidth_ms']['defaultValue'] = 1000
 
@@ -446,7 +460,7 @@ class bDetection(object):
 
 	#def __init__(self, detectionPreset=detectionPresets.default):
 	def __init__(self, detectionPreset=detectionPresets.caKymograph):
-		logger.warning('\n   !!! LOADING: detectionPreset=detectionPresets.caKymograph\n\n')
+		#logger.warning('\n   !!! LOADING: detectionPreset=detectionPresets.caKymograph\n\n')
 		# local copy of default dictionary, do not modify
 		self._dDict = getDefaultDetection(detectionPreset)
 
@@ -522,7 +536,7 @@ class bDetection(object):
 				return False
 			elif expectedType=='sanpy.bDetection.detectionTypes':
 				try:
-					value = sanpy.bDetection.detectionTypes[value]
+					value = sanpy.bDetection.detectionTypes[value].name
 					#print(value == sanpy.bDetection.detectionTypes.dvdt)
 					#print(value == sanpy.bDetection.detectionTypes.mv)
 				except (KeyError) as e:
@@ -558,30 +572,41 @@ class bDetection(object):
 			for k2,v2 in v.items():
 				print(f'  {k2} : {v2}')
 
-	def save(self, path):
+	def old_save(self, saveBase):
 		"""
 		Save underlying dict to json file
+
+		Args:
+			save base (str): basename to append '-detection.json'
 		"""
 
 		# convert
 
-		with open(path, 'w') as f:
-			json.dump(self._dDict, f)
+		savePath = saveBase + '-detection.json'
 
-	def load(self, path):
+		with open(savePath, 'w') as f:
+			json.dump(self._dDict, f, indent=4)
+
+	def old_load(self, loadBase):
 		"""
 		Load detection from json file.
 
 		Fill in underlying dict
 		"""
-		if not os.path.isfile(path):
-			logger.error(f'Did not find file: {path}')
+
+		loadPath = loadBase + '-detection.json'
+
+		if not os.path.isfile(loadPath):
+			logger.error(f'Did not find file: {loadPath}')
 			return
 
-		with open(path, 'r') as f:
+		with open(loadPath, 'r') as f:
 			self._dDict = json.load(f)
 
 		# convert
+
+	def getDict(self):
+		return self._dDict
 
 def test_0():
 	"""
@@ -631,36 +656,28 @@ def test_save_load():
 	ba.spikeDetect()
 	print(ba)
 
-	# save
-	parentPath, fileName = os.path.split(path)
-
-	saveFolder = os.path.join(parentPath, 'sanpy_analysis')
-	if not os.path.isdir(saveFolder):
-		logger.info(f'making folder: {saveFolder}')
-		os.mkdir(saveFolder)
-	baseName = os.path.splitext(fileName)[0]
-	saveFile = baseName + '_detection.json'
-	savePath = os.path.join(saveFolder, saveFile)
-	logger.info(f'savePath:{savePath}')
-
+	#print(ba._getSaveFolder())
+	saveBase = ba._getSaveBase()
 
 	detectionClass = ba.detectionClass
 
-	# convert no jsonable classes to str representation
-	defaultValue = detectionClass._dDict['detectionType']['defaultValue']
-	detectionClass._dDict['detectionType']['defaultValue'] = defaultValue.name
-
-	currentValue = detectionClass._dDict['detectionType']['currentValue']
-	detectionClass._dDict['detectionType']['currentValue'] = currentValue.name
-
-	#detectionClass.print()
-
-	detectionClass.save(savePath)
+	'''
+	detectionClass.save(saveBase)
 	detectionClass._dDict = None
 
-	detectionClass.load(savePath)
+	detectionClass.load(saveBase)
 
 	detectionClass.print()
+	'''
+
+	# might work
+	ba.saveAnalysis()
+
+	ba.loadAnalysis()
+
+	#ba.detectionClass.print()
+
+	print(ba)
 
 if __name__ == '__main__':
 	#test_0()

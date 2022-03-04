@@ -53,6 +53,8 @@ class kymWidget(QtWidgets.QWidget):
 		self.ba = ba
 		self.myImageItem = None  # kymographImage
 		self.myLineRoi = None
+		self.myLineRoiBackground = None
+		self.myColorBarItem = None
 		self.buildUI()
 		self._replot()
 
@@ -138,6 +140,14 @@ class kymWidget(QtWidgets.QWidget):
 		# roi max
 		self.roiMaxLabel = QtWidgets.QLabel('ROI Max:')
 		controlBarLayout0.addWidget(self.roiMaxLabel)
+
+		# background min
+		self.backgroundRoiMinLabel = QtWidgets.QLabel('Background Min:')
+		controlBarLayout0.addWidget(self.backgroundRoiMinLabel)
+		# background max
+		self.backgroundRoiMaxLabel = QtWidgets.QLabel('Background Max:')
+		controlBarLayout0.addWidget(self.backgroundRoiMaxLabel)
+
 		# cursor
 		self.tifCursorLabel = QtWidgets.QLabel('Cursor:')
 		controlBarLayout0.addWidget(self.tifCursorLabel)
@@ -208,15 +218,21 @@ class kymWidget(QtWidgets.QWidget):
 
 		cm = pg.colormap.get('Greens_r', source='matplotlib') # prepare a linear color map
 		#values = (0, 2**bitDepth)
-		values = (0, maxTif)
-		limits = values
-		logger.info(f'color bar bit depth is {bitDepth} with values is {values}')
-		bar = pg.ColorBarItem( values=values, limits=limits, cmap=cm, orientation='horizontal' ) # prepare interactive color bar
+		#values = (0, maxTif)
+		values = (0, 2**12)
+		limits = (0, 2**12)
+		#logger.info(f'color bar bit depth is {bitDepth} with values in {values}')
+		if self.myColorBarItem == None:
+			self.myColorBarItem = pg.ColorBarItem( values=values, limits=limits,
+												interactive=True,
+												label='', cmap=cm, orientation='horizontal' )
 		# Have ColorBarItem control colors of img and appear in 'plot':
-		bar.setImageItem( self.myImageItem, insert_in=self.kymographPlot )
+		self.myColorBarItem.setImageItem( self.myImageItem, insert_in=self.kymographPlot )
+		self.myColorBarItem.setLevels(values=values)
 
 		kymographRect = self.ba.getKymographRect()
 		if kymographRect is not None:
+			# TODO: I guess we always have a rect, o.w. this would be a runtime error
 			xRoiPos = kymographRect[0]
 			yRoiPos = kymographRect[3]
 			top = kymographRect[1]
@@ -255,25 +271,61 @@ class kymWidget(QtWidgets.QWidget):
 			self.myLineRoi.setPos(pos, finish=False)
 			self.myLineRoi.setSize(size, finish=False)
 
+		#
 		# background kymograph ROI
 		backgroundRect = self.ba.getKymographBackgroundRect()  # keep this in the backend
 		if backgroundRect is not None:
 			xRoiPos = backgroundRect[0]
-			yRoiPos = backgroundRect[1]
+			yRoiPos = backgroundRect[3]
+			top = backgroundRect[1]
 			right = backgroundRect[2]
 			bottom = backgroundRect[3]
 			widthRoi = right - xRoiPos + 1
-			heightRoi = bottom - yRoiPos + 1
+			#heightRoi = bottom - yRoiPos + 1
+			heightRoi = top - yRoiPos + 1
+		pos = (xRoiPos,yRoiPos)
+		size = (widthRoi,heightRoi)
 
+		if self.myLineRoiBackground is None:
 			# TODO: get this out of replot, recreating the ROI is causing runtime error
-			self.myLineRoiBackground = pg.ROI(pos=(xRoiPos,yRoiPos), size=(widthRoi,heightRoi), parent=self.myImageItem)
+			self.myLineRoiBackground = pg.ROI(pos=pos, size=size, parent=self.myImageItem)
+		else:
+			self.myLineRoiBackground.setPos(pos, finish=False)
+			self.myLineRoiBackground.setSize(size, finish=False)
 
 		# update min/max labels
 		# TODO: also display min max within roi ???
 		self.tifMinLabel.setText(f'Min:{minTif}')
 		self.tifMaxLabel.setText(f'Max:{maxTif}')
 
+		# update min/max displayed to user
 		self._updateRoiMinMax(kymographRect)
+		self._updateBackgroundRoiMinMax(backgroundRect)
+
+	def _updateBackgroundRoiMinMax(self, backgroundRect=None):
+		"""
+		update background roi
+
+		TODO: Add self.ba.getBackGroundStats()
+
+		"""
+		logger.warning(f'Need to add interface for user to adjust background roi')
+		if backgroundRect is None:
+			backgroundRect = self.ba.getKymographBackgroundRect()
+
+		left = backgroundRect[0]
+		top = backgroundRect[1]
+		right = backgroundRect[2]
+		bottom = backgroundRect[3]
+
+		myTif = self.ba.tifData
+		tifClip = myTif[bottom:top, left:right]
+
+		roiMin = np.nanmin(tifClip)
+		roiMax = np.nanmax(tifClip)
+
+		self.backgroundRoiMinLabel.setText(f'Background Min:{roiMin}')
+		self.backgroundRoiMaxLabel.setText(f'Background Max:{roiMax}')
 
 	def _updateRoiMinMax(self, theRect):
 		left = theRect[0]

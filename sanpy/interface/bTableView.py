@@ -311,7 +311,7 @@ class bTableView(QtWidgets.QTableView):
 			self.model().mySyncDfWithPath()
 		elif action == saveAllAnalysis:
 			#self.signalSaveFileTable.emit()
-			self.model().saveHdf()
+			self.model().mySave()
 		elif action in [saNodeParams, ventricularParams, neuronParams, subthresholdParams]:
 			#print(action, action.text())
 			if selectedRow is not None:
@@ -366,11 +366,13 @@ class bTableView(QtWidgets.QTableView):
 		#theGeometryRect.setWidth(myWidth)
 		#self.frozenTableView.setGeometry(theGeometryRect)
 
+		'''
 		print('=== self.verticalHeader().width():', self.verticalHeader().width())
-		print('self.frameWidth():', self.frameWidth())
-		print('self.viewport().height():', self.viewport().height())
-		print('self.horizontalHeader().height():', self.horizontalHeader().height())
-
+		print('  self.frameWidth():', self.frameWidth())
+		print('  self.viewport().height():', self.viewport().height())
+		print('  self.horizontalHeader().height():', self.horizontalHeader().height())
+		'''
+		
 		self.frozenTableView.setGeometry(
 			self.verticalHeader().width() - self.frameWidth(),
 			self.frameWidth(),

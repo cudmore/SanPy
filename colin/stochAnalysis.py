@@ -77,17 +77,22 @@ def reduce(ba):
 	Return:
 		df of spikes within sin stimulus
 	"""
-	df = ba.analysisDf
+	df = ba.asDataFrame()
 	if ba.stimDict is not None:
 		#print(ba.stimDict)
+		'''
 		stimStartSeconds = ba.stimDict['stimStartSeconds']
 		durSeconds = ba.stimDict['durSeconds']
 		startSec = stimStartSeconds
 		stopSec = startSec + durSeconds
+		'''
+
+		startSec, stopSec = ba.getStimStartStop()
+
 		try:
 			df = df[ (df['peak_sec']>=startSec) & (df['peak_sec']<=stopSec)]
 		except (KeyError) as e:
-			logger.error(e)
+			logger.error(f'my key error: {e}')
 
 	return df
 
@@ -166,7 +171,7 @@ def plotShotPlot(df):
 		axs[0].set_ylabel('ISI -1 (s)')
 		axs[0].set_xlabel('ISI (s)')
 
-def plotPhaseHist(ba, axs=None, hue='sweep'):
+def plotPhaseHist(ba3, axs=None, hue='sweep', saveFolder=None):
 	"""
 	Plot hist of spike arrival times as function of phase/angle within sine wave
 
@@ -175,23 +180,31 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 		startSec (float):
 		freq (float):
 	"""
-	if ba.stimDict is None:
+	if ba3.stimDict is None:
 		return
 
-	df = ba.analysisDf
+	'''
+	df = ba3.asDataFrame()
 	if df is None:
 		return
+	'''
 
-	logger.info(f'hue: "{hue}"')
-	
-	df = reduce(ba)
+	#logger.info(f'hue: "{hue}"')
+
+	df = reduce(ba3)
+
+	if len(df)==0:
+		logger.error(f'got no spikes after reduce')
+		return
 
 	# grab freq and startSec from header
-	stimStartSeconds = ba.stimDict['stimStart_sec']
-	stimFreq = ba.stimDict['stimFreq']  # TODO: will not work if we are stepping frequency
-	stimAmp = ba.stimDict['stimAmp']
+	stimStartSeconds = ba3.stimDict['stimStart_sec']
+	stimFreq = ba3.stimDict['stimFreq']  # TODO: will not work if we are stepping frequency
+	stimAmp = ba3.stimDict['stimAmp']
 
 	file = df['file'].values[0]
+
+	numSweeps = ba3.numSweeps
 
 	sinInterval = 1 / stimFreq
 	hueList = df[hue].unique()
@@ -201,11 +214,12 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 	print(f'plotPhaseHist() stimStartSeconds:{stimStartSeconds} stimFreq:{stimFreq} sinInterval:{sinInterval} bins:{bins}')
 
 	if axs is None:
-		numSubplot = len(hueList)
+		numSubplot = numSweeps
 		fig, axs = plt.subplots(numSubplot, 1, sharex=True, figsize=(8, 6))
 		fig.suptitle(file)
+		axs[numSubplot-1].set_xlabel('Phase')
 
-	fs = ba.dataPointsPerMs * 1000  # 10000
+	fs = ba3.dataPointsPerMs * 1000  # 10000
 	durSec = 1 / stimFreq
 	Xs = np.arange(fs*durSec) / fs  # x/time axis, we should always be able to create this from (dur, fs)
 	sinData = stimAmp * np.sin(2*np.pi*(Xs)*stimFreq)
@@ -214,9 +228,20 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 	# for gianni
 	gMasterDf = None
 
-	for idx,oneHue in enumerate(hueList):
+	#for idx,oneHue in enumerate(hueList):
+	for idx in range(numSweeps):
+		if not idx in hueList:
+			continue
+
+		oneHue = idx
+
 		dfPlot = df[ df[hue]==oneHue ]
-		peakSecs = dfPlot['peak_sec']
+
+		if len(dfPlot) < 2:
+			logger.error(f'sweep {idx} only had {len(dfPlot)} spikes ... not plotting')
+			continue
+
+		peakSecs = dfPlot['peakSec']
 		peakSecs -= stimStartSeconds
 		#peakPhase =  peakSecs - (peakSecs/sinInterval).astype(int)
 		peakPhase_float = peakSecs/sinInterval
@@ -226,7 +251,7 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 		thisDf = pd.DataFrame()
 		thisDf['peakPhase'] = peakPhase # to get the number of rows correct
 		thisDf.insert(0, 'sweep', oneHue)  # thisDf['sweep'] = oneHue
-		thisDf.insert(0, 'filename', ba.fileName)  # thisDf['filename'] = ba.fileName
+		thisDf.insert(0, 'filename', ba3.getFileName())  # thisDf['filename'] = ba.fileName
 		if gMasterDf is None:
 			gMasterDf = thisDf
 		else:
@@ -254,7 +279,7 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 		'''
 
 		# label x-axis of subplots
-		lastSweep = idx == (numHue - 1)
+		lastSweep = idx == (numSweeps - 1)
 		if lastSweep:
 			axs[idx].set_xlabel('Phase')
 		else:
@@ -264,11 +289,18 @@ def plotPhaseHist(ba, axs=None, hue='sweep'):
 
 	#plotStimFileParams(ba)
 
+	if saveFolder is not None:
+		saveName = os.path.splitext(ba3.getFileName())[0] + '_phase.png'
+		savePath = os.path.join(saveFolder, saveName)
+		logger.info(f'saving: {savePath}')
+		fig.savefig(savePath, dpi=300)
+
 	# for gianni
-	saveFile = ba.fileName + '.csv'
-	logger.info('saveFile:', saveFile)
+	saveName = os.path.splitext(ba3.getFileName())[0] + '_gianni.csv'
+	savePath = os.path.join(saveFolder, saveName)
+	logger.info(f'gianni savePath: {savePath}')
 	print(gMasterDf)
-	gMasterDf.to_csv(saveFile, index=False)
+	gMasterDf.to_csv(savePath, index=False)
 
 def isiStats(ba, hue='sweep'):
 	df = ba.analysisDf
@@ -311,32 +343,61 @@ def isiStats(ba, hue='sweep'):
 	retDf = pd.DataFrame(statList)
 	return retDf
 
-def plotHist(ba, axs=None, hue='sweep'):
+def plotHist(ba3, axs=None, hue='sweep', saveFolder=None):
+	"""
+	Args:
 
-	df = ba.analysisDf
+		ba (bAnalysis3)
+	"""
+
+	'''
+	df = ba3.asDataFrame()
 	if df is None:
+		logger.error(f'did not find analysis for {ba}')
+		return
+	'''
+
+	df = reduce(ba3)
+
+	if len(df)==0:
+		logger.error(f'after reduce, got empty df')
 		return
 
-	df = reduce(ba)
-
-	file = df['file'].values[0]
+	file = ba3.getFileName()  # df['file'].values[0]
 
 	# same number of bins per hist
 	bins = 'auto' #12
-	statStr = 'ipi_ms'
+	statStr = 'isi_ms'
 
-	hueList = df[hue].unique()
-	numHue = len(hueList)
+	numSweeps = ba3.numSweeps
+
+	#hueList = df[hue].unique()
+	#numHue = len(hueList)
+
+	#logger.info(f'plotting hueList: {hueList}')
 
 	# plot one hist per subplot
 	if axs is None:
-		numSubplot = len(hueList)
+		numSubplot = numSweeps
 		fig, axs = plt.subplots(numSubplot, 1, sharex=True, figsize=(8, 6))
 		fig.suptitle(file)
+		axs[numSubplot-1].set_xlabel('ISI (ms)')
 
 
-	for idx,oneHue in enumerate(hueList):
+	#for idx,oneHue in enumerate(hueList):
+	for idx in range(numSweeps):
+		#if not idx in hueList:
+		#	continue
+
+		oneHue = idx
+
+		#hueList = df[hue].unique()
+
 		dfPlot = df[ df[hue]==oneHue ]
+
+		if len(dfPlot) < 2:
+			logger.error(f'sweep {idx} only had {len(dfPlot)} spikes ... not plotting')
+			continue
 
 		# hist of isi
 		# screws up x-axis line at 0 (annoying !!!)
@@ -353,13 +414,19 @@ def plotHist(ba, axs=None, hue='sweep'):
 		'''
 
 		# label x-axis of subplots
-		lastSweep = idx == (numHue - 1)
+		lastSweep = idx == (numSweeps - 1)
 		if lastSweep:
 			axs[idx].set_xlabel(statStr)
 		else:
 			#axs[idx].spines['bottom'].set_visible(False)
 			axs[idx].tick_params(axis="x", labelbottom=False) # no labels
 			axs[idx].set_xlabel('')
+
+	if saveFolder is not None:
+		saveName = os.path.splitext(ba3.getFileName())[0] + '_hist.png'
+		savePath = os.path.join(saveFolder, saveName)
+		logger.info(f'saving: {savePath}')
+		fig.savefig(savePath, dpi=300)
 
 	'''
 	logger.info('')
@@ -387,7 +454,7 @@ def plotRaw(ba, showDetection=True, showDac=True, axs=None, saveFolder=None):
 		if numSweeps == 1:
 			axs = [axs]
 
-		fig.suptitle(ba.fileName)
+		fig.suptitle(ba.getFileName())
 
 	# If we are plotting Dac
 	rightAxs = [None] * numSweeps
@@ -425,8 +492,8 @@ def plotRaw(ba, showDetection=True, showDac=True, axs=None, saveFolder=None):
 
 		if lastSweep:
 			axs[idx].set_ylabel('Vm (mV)')
-		
-		axs[idx].plot(ba.sweepX, ba.sweepY, lw=1.0, zorder=10)
+
+		axs[idx].plot(ba.sweepX, ba.sweepY, lw=0.5, zorder=10)
 
 		yMin = np.min(ba.sweepY)
 		if yMin < yRawMin:
@@ -482,7 +549,121 @@ def plotRaw(ba, showDetection=True, showDac=True, axs=None, saveFolder=None):
 		logger.info(f'saving: {savePath}')
 		fig.savefig(savePath, dpi=300)
 
-if __name__ == '__main__':
+def plotRaw3(ba3, showDetection=True, showDac=True, axs=None, saveFolder=None):
+	"""
+	Plot Raw data.
+
+	Args:
+		ba3 (bAnalysis3)
+		showDetection (bool): Overlay detection parameters
+		showDac (bool): Overlay Stimulus File DAC stimulus
+		axs (matpltlib): If given then plot in this axes
+	"""
+
+	numSweeps = ba3.numSweeps
+
+	if axs is None:
+		fig, axs = plt.subplots(numSweeps, 1, sharex=True, sharey=True, figsize=(8, 6))
+		if numSweeps == 1:
+			axs = [axs]
+
+		fig.suptitle(ba3.getFileName())
+
+	# If we are plotting Dac
+	rightAxs = [None] * numSweeps
+
+	# keep track of x/y min of each plot to make them all the same
+	yRawMin = 1e9
+	yRawMax = -1e9
+
+	yDacMin = 1e9
+	yDacMax = -1e9
+
+	for idx in ba3.sweepList:
+		ba3.setSweep(idx)
+
+		lastSweep = idx == (numSweeps - 1)
+
+		try:
+			sweepC = ba3.sweepC
+		except (ValueError) as e:
+			sweepC = None
+
+		if showDac and sweepC is not None:
+			rightAxs[idx] = axs[idx].twinx()
+			rightAxs[idx].spines['right'].set_visible(True)
+			if lastSweep:
+				rightAxs[idx].set_ylabel('DAC (nA)')
+			rightAxs[idx].plot(ba3.sweepX, sweepC, c='tab:gray', lw=.5, zorder=0)
+
+			yMin = np.min(sweepC)
+			if yMin < yDacMin:
+				yDacMin = yMin
+			yMax = np.max(sweepC)
+			if yMax > yDacMax:
+				yDacMax = yMax
+
+		if lastSweep:
+			axs[idx].set_ylabel('Vm (mV)')
+
+		axs[idx].plot(ba3.sweepX, ba3.sweepY, lw=0.5, zorder=10)
+
+		yMin = np.min(ba3.sweepY)
+		if yMin < yRawMin:
+			yRawMin = yMin
+		yMax = np.max(ba3.sweepY)
+		if yMax > yRawMax:
+			yRawMax = yMax
+
+		if showDetection and ba3.isAnalyzed is not None and ba3.numSpikes>0:
+			#df = reduce(ba)
+			#df = ba3.analysisDf
+			df = ba3.asDataFrame()
+
+			dfPlot = df[ df['sweep']== idx]
+
+			peakSec = dfPlot['peakSec']
+			peakVal = dfPlot['peakVal']
+			axs[idx].plot(peakSec, peakVal, 'ob', markersize=3, zorder=999)
+
+			footSec = dfPlot['thresholdSec']
+			footVal = dfPlot['thresholdVal']
+			axs[idx].plot(footSec, footVal, 'og', markersize=3, zorder=999)
+
+		# label x-axis of subplots
+		if lastSweep:
+			axs[idx].set_xlabel('Time (s)')
+		else:
+			#axs[idx].spines['bottom'].set_visible(False)
+			axs[idx].tick_params(axis="x", labelbottom=False) # no labels
+			axs[idx].set_xlabel('')
+
+		# get the zorder correct
+		if showDac and sweepC is not None:
+			axs[idx].set_zorder(rightAxs[idx].get_zorder()+1)
+			axs[idx].set_frame_on(False)
+
+	# set common y min/max
+	# expand left axis by a percentage %
+	percentExpand = 0.05
+	thisExpand = (yRawMax - yRawMin) * percentExpand
+	yRawMin -= thisExpand
+	yRawMax += thisExpand
+	for idx in ba3.sweepList:
+		axs[idx].set_ylim(yRawMin, yRawMax)
+		if showDac and sweepC is not None:
+			rightAxs[idx].set_ylim(yDacMin, yDacMax)
+
+	#
+	plt.tight_layout()
+
+	if saveFolder is not None:
+		saveName = os.path.splitext(ba3.getFileName())[0] + '_raw.png'
+		savePath = os.path.join(saveFolder, saveName)
+		logger.info(f'saving: {savePath}')
+		fig.savefig(savePath, dpi=300)
+
+def run0():
 	# one trial of spont
 	#path = '/media/cudmore/data/stoch-res/2021_12_06_0002.abf'
 	# sin stim
@@ -505,9 +686,9 @@ if __name__ == '__main__':
 	dfStat = isiStats(ba)
 	print('dfStat')
 	print(dfStat)
-	
+
 	#sys.exit(1)
-	
+
 	# if we have a stimulus file
 	if ba.stimDict is not None:
 		stimStartSeconds = ba.stimDict['stimStart_sec']
@@ -528,3 +709,125 @@ if __name__ == '__main__':
 
 	#
 	plt.show()
+
+def plotCV(csvPath):
+	#csvPath = '/media/cudmore/data/stoch-res/11feb/analysis/isi_analysis.csv'
+	df = pd.read_csv(csvPath)
+
+	fileNames = df['file'].unique()
+
+	numFiles = len(fileNames)
+
+	numCol = 2
+	numRow = round(numFiles/numCol)
+
+	fig, axs = plt.subplots(numRow, numCol, sharex=True, sharey=True, figsize=(8, 10))
+	axs = np.ravel(axs)
+
+	statCol = 'cvISI_inv'  # cvISI
+	statCol = 'cvISI'  # cvISI
+	for idx, file in enumerate(fileNames):
+		plotDf = df[ df['file']==file ]
+
+		xPlot = plotDf['sweep']
+		yPlot = plotDf[statCol]
+
+		axs[idx].plot(xPlot, yPlot, 'o-k')
+
+		axs[idx].title.set_text(file)
+
+		axs[idx].set_ylabel('cvISI')
+		axs[idx].set_xlabel('Noise')
+
+	plt.show()
+
+def test_bAnalysis3():
+	"""
+	TODO:
+		1) Load bAnalysis from saved hf5 analysis folder (with saved analysis)
+		2) Construct a bAnalysis3() from path
+		3) swap in loaded (detection, analysis) into bAnalysis3
+	"""
+	import sanpy
+	import colinAnalysis
+	import stochAnalysis
+	import matplotlib.pyplot as plt
+
+	folderPath = '/media/cudmore/data/stoch-res/11feb'
+	ad = sanpy.analysisDir(path=folderPath)
+	baList = []
+	for rowIdx,oneBa in enumerate(ad):
+		#if rowIdx > 9:
+		#	break
+		oneBa = ad.getAnalysis(rowIdx)  # load from hdf file
+		baList.append(oneBa)
+
+	ba3List = []
+	for ba in baList:
+		baPath = ba.path
+		ba3 = colinAnalysis.bAnalysis3(baPath, loadData=False, stimulusFileFolder=None)
+
+		# swap in analysis loaded from hd5 !!!
+		ba3.detectionClass = ba.detectionClass
+		ba3.spikeDict = ba.spikeDict
+
+		ba3List.append(ba3)
+
+	print(f'we have {len(ba3List)} ba3')
+
+	#path = '/media/cudmore/data/stoch-res/11feb/2022_02_11_0008.abf'
+	#ba3 = colinAnalysis.bAnalysis3(path, loadData=True, stimulusFileFolder=None)
+
+	dfMaster = None
+	for idx, ba3 in enumerate(ba3List):
+		print(f'file idx {idx}')
+		print('   ba3:', ba3)
+
+		numSweeps = ba3.numSweeps
+
+		if numSweeps > 1:
+			# works
+			saveFolder = os.path.join(folderPath, 'analysis')
+			if not os.path.isdir(saveFolder):
+				os.mkdir(saveFolder)
+			stochAnalysis.plotRaw3(ba3, showDetection=True, showDac=True, axs=None, saveFolder=saveFolder)
+			plt.close()
+
+			stochAnalysis.plotHist(ba3, saveFolder=saveFolder)
+			plt.close()
+
+			stochAnalysis.plotPhaseHist(ba3, saveFolder=saveFolder)
+			plt.close()
+
+		df_isi = ba3.isiStats() # can return none
+
+		#print(df_isi)
+		#print('')
+
+		if dfMaster is None and df_isi is not None:
+			dfMaster = df_isi
+		elif df_isi is not None:
+			dfMaster = pd.concat([dfMaster,df_isi], ignore_index=True)
+
+	#
+	#print(dfMaster)
+
+	saveFile = os.path.join(folderPath, 'analysis')
+	if not os.path.isdir(saveFile):
+		os.mkdir(saveFile)
+	saveFile = os.path.join(saveFile, 'isi_analysis.csv')
+	print('=== saving:', saveFile)
+	dfMaster.to_csv(saveFile)
+
+	plotCV(saveFile)
+
+	plt.show()
+
+if __name__ == '__main__':
+	# run0()
+
+	# works
+	test_bAnalysis3()
+
+	# load saved csv and plot
+	#plotCV()

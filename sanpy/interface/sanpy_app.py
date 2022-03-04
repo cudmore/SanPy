@@ -174,7 +174,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 				alreadyAsked = True
 				userResp = sanpy.interface.bDialog.yesNoCancelDialog('You changed the file database or have analyzed but not saved.\nDo you want to save then quit?')
 				if userResp == QtWidgets.QMessageBox.Yes:
-					self.slotSaveFilesTable()
+					self.slot_saveFilesTable()
 					event.accept()
 				elif userResp == QtWidgets.QMessageBox.No:
 					event.accept()
@@ -477,7 +477,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 		saveDatabaseAction = QtWidgets.QAction('Save Database', self)
 		saveDatabaseAction.setShortcut('Ctrl+S')
-		saveDatabaseAction.triggered.connect(self.slotSaveFilesTable)
+		saveDatabaseAction.triggered.connect(self.slot_saveFilesTable)
 
 		#buildDatabaseAction = QtWidgets.QAction('Build Big Database ...', self)
 		#buildDatabaseAction.triggered.connect(self.buildDatabase)
@@ -734,7 +734,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 		self.tableView.signalDeleteRow.connect(self.slotDeleteRow)
 		self.tableView.signalCopyTable.connect(self.slotCopyTable)
 		self.tableView.signalFindNewFiles.connect(self.slotFindNewFiles)
-		self.tableView.signalSaveFileTable.connect(self.slotSaveFilesTable)
+		self.tableView.signalSaveFileTable.connect(self.slot_saveFilesTable)
 		'''
 		self.tableView.signalUpdateStatus.connect(self.slot_updateStatus)
 		#self.tableView.mySetModel(self.myModel)
@@ -928,7 +928,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 	def slot_selectSweep(self, ba, sweepNumber):
 		self.signalSelectSweep.emit(ba, sweepNumber)
 
-	def slotSaveFilesTable(self):
+	def slot_saveFilesTable(self):
 		"""Needed on user keyboard Ctrl+S
 		"""
 		#logger.info('')
