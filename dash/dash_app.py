@@ -74,8 +74,14 @@ def myDetect(dvdtThreshold):
 		return
 
 	detectionDict = sanpy.bDetection() # gets default detection class
-	detectionType = sanpy.bDetection.detectionTypes.dvdt
-	detectionDict['detectionType'] = detectionType  # set detection type to ('dvdt', 'vm')
+	# 20220420
+	#detectionType = sanpy.bDetection.detectionTypes.dvdt
+	detectionType  = sanpy.bDetection.detectionTypes['dvdt']
+	
+	#detectionDict = sanpy.bDetection.getDefaultDetection()
+	detectionDict = sanpy.bDetection() # gets default detection class
+
+	#detectionDict['detectionType'] = detectionType  # set detection type to ('dvdt', 'vm')
 	detectionDict['dvdtThreshold'] = dvdtThreshold
 	ba.spikeDetect(detectionDict)
 

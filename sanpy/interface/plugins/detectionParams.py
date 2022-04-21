@@ -410,7 +410,7 @@ class detectionParams(sanpyPlugin):
 
 		# grab a copy to modify and then set on 'detect'
 		logger.error('\n\nCHANGE THIS BACK\ncaKymograph turning of switch_file\n')
-		#self.detectionClass = copy.deepcopy(self.ba.detectionClass)
+		self.detectionClass = copy.deepcopy(self.ba.detectionClass)
 
 		self.replot()
 

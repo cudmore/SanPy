@@ -20,14 +20,12 @@ ba = sanpy.bAnalysis(myPath)
 ba.spikeDetect(dDict)
 
 # browse results
-
 ```
-
-Date: 20210618
 """
 import os
 import numbers, math, enum
 import json
+from pprint import pprint
 
 import sanpy
 
@@ -36,7 +34,10 @@ logger = get_logger(__name__)
 
 class detectionTypes_(enum.Enum):
 	"""
-	Detection type is one of (dvdt, mv)
+	Detection type is one of (dvdt, mv).
+
+	dvdt: Search for threshold crossings in first derivative of membrane potential.
+	mv: Search for threshold crossings in membrane potential.
 	"""
 	dvdt = 'dvdt'
 	mv = 'mv'
@@ -370,10 +371,12 @@ def getDefaultDetection(detectionPreset):
 		theDict['postSpikeClipWidth_ms']['defaultValue'] = 500
 	elif detectionPreset == bDetection.detectionPresets.neuron:
 		theDict['dvdtThreshold']['defaultValue'] = 100
-		theDict['mvThreshold']['defaultValue'] = -20
-		theDict['refractory_ms']['defaultValue'] = 7
+		theDict['mvThreshold']['defaultValue'] = -40
+		theDict['refractory_ms']['defaultValue'] = 4
 		theDict['peakWindow_ms']['defaultValue'] = 5
 		theDict['halfWidthWindow_ms']['defaultValue'] = 4
+		theDict['dvdtPreWindow_ms']['defaultValue'] = 2
+		theDict['dvdtPostWindow_ms']['defaultValue'] = 2
 		theDict['preSpikeClipWidth_ms']['defaultValue'] = 20
 		theDict['postSpikeClipWidth_ms']['defaultValue'] = 20
 	elif detectionPreset == bDetection.detectionPresets.subthreshold:
@@ -458,8 +461,8 @@ class bDetection(object):
 	detectionTypes = detectionTypes_
 	""" Specify the type of spike detection, (dvdt, mv)"""
 
-	#def __init__(self, detectionPreset=detectionPresets.default):
-	def __init__(self, detectionPreset=detectionPresets.caKymograph):
+	#def __init__(self, detectionPreset=detectionPresets.caKymograph):
+	def __init__(self, detectionPreset=detectionPresets.default):
 		#logger.warning('\n   !!! LOADING: detectionPreset=detectionPresets.caKymograph\n\n')
 		# local copy of default dictionary, do not modify
 		self._dDict = getDefaultDetection(detectionPreset)
@@ -470,8 +473,17 @@ class bDetection(object):
 		"""
 		self._dDict = getDefaultDetection(detectionPreset)
 
+	#def __str__(self):
+	#	return pprint(self._dDict)
+	
+	def printDict(self):
+		for k in self._dDict.keys():
+			v = self._dDict[k]['currentValue']
+			print(f'  {k}: "{v}" {type(v)}')
+
 	def __getitem__(self, key):
 		# to mimic a dictionary
+		# myDetection['a key']
 		try:
 			return self._dDict[key]['currentValue']
 		except (KeyError) as e:
@@ -491,6 +503,16 @@ class bDetection(object):
 	def keys(self):
 		# to mimic a dictionary
 		return self._dDict.keys()
+
+	def getMsValueAsPnt(self, key : str, dataPointsPerMs : int):
+		"""Get current value of a ms key as points.
+		"""
+		if not key.endswith('_ms'):
+			logger.warning(f'key "{key}" does not end in "_ms" ?')
+		msValue = self.getValue(key)
+		ret = msValue * dataPointsPerMs
+		ret = round(ret)  # ensure it is an int
+		return ret
 
 	def getValue(self, key):
 		"Get current value from key. Valid keys are defined in getDefaultDetection."

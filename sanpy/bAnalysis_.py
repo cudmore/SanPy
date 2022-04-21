@@ -693,8 +693,16 @@ class bAnalysis:
 						self._sweepC[:, sweep] = self._abf.sweepC
 					except(ValueError) as e:
 						# pyabf will raise this error if it is an atf file
-						logger.warning(f'my exception for sweep {sweep} with {self.numSweeps}: {e}')
-						pass
+						logger.warning(f'exception fetching sweepC for sweep {sweep} with {self.numSweeps}: {e}')
+						#
+						# if we were recorded with a stimulus file abf
+						# needed to assign stimulusWaveformFromFile
+						try:
+							tmpSweepC = self._abf.sweepC
+							self._sweepC[:, sweep] = self._abf.sweepC
+						except (ValueError) as e:
+							logger.warning(f'ba has no sweep {sweep} sweepC ???')
+
 				# not needed
 				self._abf.setSweep(0)
 
@@ -1608,6 +1616,9 @@ class bAnalysis:
 		spikeTimeErrors = None
 		spikeTimes0, ignoreSpikeErrors = self._throwOutRefractory(spikeTimes0, spikeTimeErrors, refractory_ms=dDict['refractory_ms'])
 
+		#logger.warning('REMOVED SPIKE TOP AS % OF DVDT')
+		#return spikeTimes0, [None] * len(spikeTimes0)
+		
 		#
 		# for each threshold crossing, search backwards in dV/dt for a % of maximum (about 10 ms)
 		#dvdt_percentOfMax = 0.1
@@ -1621,7 +1632,6 @@ class bAnalysis:
 		for i, spikeTime in enumerate(spikeTimes0):
 			# get max in derivative
 
-			# 20210130, this is a BUG !!!! I was only looking before, should be looking before AND after
 			preDerivClip = filteredDeriv[spikeTime-window_pnts:spikeTime] # backwards
 			postDerivClip = filteredDeriv[spikeTime:spikeTime+window_pnts] # forwards
 
@@ -1771,6 +1781,12 @@ class bAnalysis:
 		# todo: ask user if they want to remove their settings for (isBad, userType)
 		#
 
+		if self.detectionClass['verbose']:
+			logger.info('=== detectionClass is:')
+			for k in self.detectionClass.keys():
+				v = self.detectionClass[k]
+				print(f'  {k} value:"{v}" is type {type(v)}')
+
 		self._isAnalyzed = True
 
 		self.spikeDict = sanpy.bAnalysisResults.analysisResultList()
@@ -1804,6 +1820,9 @@ class bAnalysis:
 
 		#dDict['verbose'] = True
 
+		verbose = dDict['verbose']
+		
+		'''
 		verbose = False
 		if dDict['verbose']:
 			verbose = True
@@ -1811,6 +1830,7 @@ class bAnalysis:
 			for k in dDict.keys():
 				value = dDict[k]
 				print(f'  {k} value:"{value}" is type {type(value)}')
+		'''
 
 		#
 		self.setSweep(sweepNumber)
@@ -1842,7 +1862,10 @@ class bAnalysis:
 
 		#
 		# backup thrshold to zero crossing in dvdt
-		spikeTimes = self._getFeet(spikeTimes)
+		if 0:
+			tmp_window_ms = dDict['dvdtPreWindow_ms']
+			tmp_window_pnts = self.ms2Pnt_(tmp_window_ms)
+			spikeTimes = self._getFeet(spikeTimes, tmp_window_pnts)
 
 		#
 		# set up
@@ -2051,6 +2074,7 @@ class bAnalysis:
 				spikeDict[iIdx]['errors'].append(eDict)
 				if verbose:
 					print(f'  spike:{iIdx} error:{eDict}')
+					
 			#
 			# The nonlinear late diastolic depolarization phase was
 			# estimated as the duration between 1% and 10% dV/dt
@@ -2249,15 +2273,20 @@ class bAnalysis:
 		## done
 
 	#def _getFeet(self, df):
-	def _getFeet(self, thresholdPnts):
+	def _getFeet(self, thresholdPnts : list[int], prePnts : int) -> list[int]:
 		"""
-		df (DataFrame): The current dataframe we are working on
+		
+		Args:
+			thresholdPnts (list of int)
+			prePnts (int): pre point window to search for zero crossing
 
 		Notes:
 			Will need to calculate new (height, half widths)
 		"""
 
-		logger.info('')
+		#prePnts = int(prePnts)
+		
+		logger.info(f'num thresh:{len(thresholdPnts)} prePnts:{prePnts}')
 
 		#df = self.asDataFrame()
 		#peaks = df['peakVal']
@@ -2287,16 +2316,19 @@ class bAnalysis:
 		#prePnts = self._sec2Pnt(preMs/1000)
 
 		# TODO: add to bDetection
-		preMs = 50
-		prePnts = self.ms2Pnt_(preMs)
+		logger.warning('ADD preMs AS PARAMETER !!!')
+		#preWinMs = 50  # sa-node
+		#prePnts = self.ms2Pnt_(preMs)
 
 		for idx,footPnt in enumerate(thresholdPnts):
 			#footPnt = round(footPnt)  # footPnt is in fractional points
 			lastCrossingPnt = footPnt
 			# move forwared a bit in case we are already in a local minima ???
+			logger.warning('REMOVED WHEN WORKING ON NEURON DETECTION')
 			footPnt += 2  # TODO: add as param
 			preStart = footPnt - prePnts
 			preClip = yDiffFull[preStart:footPnt]
+
 			zero_crossings = np.where(np.diff(np.sign(preClip)))[0]  # find where derivative flips sign (crosses 0)
 			xLastCrossing = self.pnt2Sec_(footPnt)  # defaults
 			yLastCrossing = self.sweepY_filtered[footPnt]
@@ -2880,7 +2912,12 @@ class bAnalysis:
 			else:
 				# 2D case where recording has multiple sweeps
 				#currentClip = sweepY[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts, sweep]
-				currentClip = sweepY[spikeTime-preClipWidth_pnts:spikeTime+preClipWidth_pnts, sweep]
+				try:
+					currentClip = sweepY[spikeTime-preClipWidth_pnts:spikeTime+preClipWidth_pnts, sweep]
+				except (IndexError) as e:
+					logger.error(e)
+					print(f'sweep: {sweep}')
+					print(f'sweepY.shape: {sweepY.shape}')
 
 			if len(currentClip) == numPointsInClip:
 				self.spikeClips.append(currentClip)

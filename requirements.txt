@@ -2,7 +2,8 @@ pandas
 numpy
 scipy
 
-PyQt5==5.12 # 5.12 is only version where combox boxes work # 5.15.2
+#PyQt5==5.12 # 5.12 is only version where combox boxes work # 5.15.2
+PyQt5
 pyqtgraph
 matplotlib
 mplcursors #  added 202102 for bScatterPlotWidget2 (to show popup on hover)
