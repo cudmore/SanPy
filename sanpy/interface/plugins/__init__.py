@@ -23,5 +23,7 @@ from .stimGen import stimGen
 
 from .detectionParams import detectionParams
 
+from .kymographPlugin import kymographPlugin
+
 # TODO: make this just one line, so user can drop a bplugin inn and restart
 from . import *

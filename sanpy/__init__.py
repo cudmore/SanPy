@@ -3,6 +3,7 @@
 
 # only export base sanpy, no GUI
 from .bAnalysis_ import *
+from .epochTable import epochTable
 from .analysisDir import *
 from .analysisPlot import *
 from .bAnalysisUtil import *
@@ -16,6 +17,9 @@ from .version import analysisVersion
 from .version import interfaceVersion
 
 from .bDetection import bDetection
+
+from .kymographAnalysis import kymographAnalysis
+from ._util import _loadLineScanHeader
 
 # hold off on loading from aws for now (requires boto3)
 #from .awsUtil import *

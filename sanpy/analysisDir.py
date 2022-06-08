@@ -9,6 +9,7 @@ import numpy as np
 import pandas as pd
 import requests, io  # too load from the web
 from subprocess import call # to call ptrepack (might fail on windows???)
+from pprint import pprint
 
 import sanpy
 
@@ -146,6 +147,11 @@ def fixRelPath(folderPath, dfTable, fileList):
 	"""
 	was not assigning relPath on initial load (no hd5 file)
 	"""
+	logger.info('')
+	
+	print('fileList:', fileList)
+	pprint(dfTable[['File', 'relPath']])
+	
 	if dfTable is None:
 		logger.error('no dfTable')
 
@@ -153,8 +159,11 @@ def fixRelPath(folderPath, dfTable, fileList):
 	for rowIdx in range(n):
 		file = dfTable.loc[rowIdx, 'File']
 		relPath = dfTable.loc[rowIdx, 'relPath']
-		if relPath:
-			continue
+		
+		# 20220422 why was this here?
+		#if relPath:
+		#	continue
+		
 		#print(rowIdx, file, relPath)
 		for filePath in fileList:
 			if filePath.find(file) != -1:
@@ -307,6 +316,8 @@ class analysisDir():
 		logger.warning('\n   temporary fix with fixRelPath()\n')
 		tmpFileList = self.getFileList()
 		fixRelPath(self.path, self._df, tmpFileList)
+
+		#sys.exit(1)
 
 		#
 		#logger.info(self)
@@ -983,6 +994,16 @@ class analysisDir():
 						logger.error(f'!!!!!!!!!!!!!!! my exception: {e}')
 
 					#logger.info(f'dfAnalysis is of type {type(dfAnalysis)}')
+
+					# 20220422, need to fix the path here !!!
+					#logger.info('NEED TO FIX THE PATH HERE')
+					#print('  dfAnalysis is:')
+					#print("dfAnalysis['_path']:", dfAnalysis['_path'])
+					logger.info(f'swapping dfAnalysis _path to: {path}')
+					dfAnalysis['_path'] = path
+					
+					#pprint(dfAnalysis)
+					
 
 					ba = sanpy.bAnalysis(fromDf=dfAnalysis)
 

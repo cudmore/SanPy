@@ -35,9 +35,9 @@ class epochTable():
 			
 			epochDict = {
 				'index': epochIdx,
+				'type': epochType,
 				'startPoint': p1,  # point the epoch starts
 				'stopPoint': p2,  # point the epoch starts
-				'type': epochType,
 				'level': epochLevel,
 				'pulseWidth': pulseWidth,
 				'pulsePeriod': pulsePeriod,

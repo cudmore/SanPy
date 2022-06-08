@@ -164,7 +164,7 @@ class bPlugins():
 				if show:
 					newPlugin.show()
 			except(TypeError) as e:
-				logger.error(f'Error opening plugin: {e}')
+				logger.error(f'Error opening plugin "{pluginName}": {e}')
 				return
 			self._openSet.add(newPlugin)
 

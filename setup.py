@@ -26,7 +26,8 @@ setup(
 		'tifffile',
 		'mplcursors',
 		'requests', #  to load from the cloud (for now github)
-		'tables'  # to load/save with pandas HDFStore
+		'tables',  # to load/save with pandas HDFStore
+        'scikit-image',
     ],
     # use pip install .[gui]
     # on Big Sur use pip install .\[gui\]

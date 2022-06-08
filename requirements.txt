@@ -25,3 +25,5 @@ tifffile
 tables  # to load/save with pandas HDFStore
 
 boto3  # for Amazon AWS, try and remove and just install if used. 202109
+
+scikit-image

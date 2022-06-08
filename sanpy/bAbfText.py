@@ -184,7 +184,7 @@ class bAbfText:
 				'sum background roi' has a different number of pixels !!!
 		"""
 
-		#logger.info(theRect)
+		logger.info(theRect)
 
 		self.myRectRoi = theRect
 

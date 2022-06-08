@@ -8,7 +8,10 @@ from .bScatterPlotWidget import bScatterPlotWidget
 from .bScatterPlotWidget2 import bScatterPlotMainWindow
 from .bExportWidget import bExportWidget
 from .bFileTable import *
+
 from .bTableView import bTableView
+from .fileListWidget import fileListWidget
+
 from .bErrorTable import *
 from .bDialog import *
 #from .bFileTable import *
@@ -19,3 +22,5 @@ from .bPlugins import *
 #from .plugins import *
 
 #from .breeze_resources import *
+
+from .kymographWidget import kymographWidget

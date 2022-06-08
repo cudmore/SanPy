@@ -4,21 +4,27 @@
         "detectDvDt": 20,
         "detectMv": -20
     },
-    "display": {
-        "plotEveryPoint": 10,
-        "showClips": false,
-        "showDAC": true,
-        "showDvDt": true,
-        "showErrors": false,
-        "showGlobalVm": false,
-        "showScatter": false
+    "detectionPanels": {
+        "Detection": true,
+        "Detection Panel": true,
+        "Display": true,
+        "Plot Options": false
     },
-    "lastPath": "/Users/cudmore/data/theanne-griffith",
+    "filePanels": {
+        "File Panel": true
+    },
+    "lastPath": "/Users/cudmore/data/kym-example",
+    "rawDataPanels": {
+        "DAC": true,
+        "Derivative": true,
+        "Full Recording": true,
+        "plotEveryPoint": 10
+    },
     "useDarkStyle": true,
     "windowGeometry": {
-        "height": 749,
-        "width": 1462,
-        "x": 50,
+        "height": 916,
+        "width": 1000,
+        "x": 342,
         "y": 66
     }
 }
