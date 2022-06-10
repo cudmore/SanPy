@@ -26,15 +26,19 @@ setup(
 		'tifffile',
 		'mplcursors',
 		'requests', #  to load from the cloud (for now github)
-		'tables',  # to load/save with pandas HDFStore
+		'tables',  # this fails on arm64, neeed 'conda install pytables'
         'scikit-image',
+        'pyqtgraph',
+        'qdarkstyle',
+        'PyQt5',  # this fail on arm64, need 'conda install pyqt'
     ],
     # use pip install .[gui]
     # on Big Sur use pip install .\[gui\]
 	extras_require={
         'gui': [
 			'pyqtgraph',
-			'PyQt5==5.12 # 5.12 is only version where QComboBox works # 5.15.2',
+			#'PyQt5==5.12 # 5.12 is only version where QComboBox works # 5.15.2',
+			'PyQt5',
 			'qdarkstyle',
 		],
         'dev': [
@@ -42,7 +46,7 @@ setup(
 			'mkdocs-material',
 			'mkdocs-jupyter',
             'mkdocstrings',
-            'tornado', # nneded for pyinstaller
+            'tornado', # needed for pyinstaller
             'pyinstaller',
             'ipython',
 		],

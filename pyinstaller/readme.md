@@ -3,6 +3,8 @@
 
 Each SanPy.app is specific to the exact OS. We have working version for macOS Catalina and Big Sur. Both Microsoft windows and Ubuntu versions are in the works.
 
+See this repo for building Napari (similar) https://github.com/tlambert03/napari-pyinstaller
+
 Use the [dev] option in main SanPy installer to install pyinstaller and its dependencies. In particular, pyinstaller requires `pip install tornado` but does not install tornado itself?
 
 ```
@@ -11,7 +13,7 @@ source sanpy_env/bin/activate
 pip install -e .[dev]
 # in zsh, need to escape brackets
 pip install -e .\[dev\]
-
+```
 
 Need to install pyenv python with framework/shared libraries activated (always forget this).
 

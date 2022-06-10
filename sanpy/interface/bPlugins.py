@@ -161,12 +161,13 @@ class bPlugins():
 			try:
 				newPlugin = \
 					self.pluginDict[pluginName]['constructor'](ba=ba, bPlugin=self, startStop=startStop)
-				if show:
-					newPlugin.show()
+				if not newPlugin.getInitError() and show:
+					newPlugin.getWidget().show()
 			except(TypeError) as e:
 				logger.error(f'Error opening plugin "{pluginName}": {e}')
 				return
-			self._openSet.add(newPlugin)
+			if not newPlugin.getInitError():
+				self._openSet.add(newPlugin)
 
 			return newPlugin
 

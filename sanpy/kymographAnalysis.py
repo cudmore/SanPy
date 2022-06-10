@@ -295,9 +295,16 @@ class kymographAnalysis():
         width = right - left #+ 1
         height = top - bottom #+ 1
         
-        self._pos = (bottom, left)
+        self._pos = (left, bottom)
         self._size = (width, height)
 
+        print('left:', left)
+        print('top:', top)
+        print('right:', right)
+        print('bottom:', bottom)
+        print('_pos:', self._pos)
+        print('_size:', self._size)
+        
     def load(self):
         """Load <file>-analysis.csv
         
@@ -313,7 +320,7 @@ class kymographAnalysis():
         with open(savePath) as f:
             header = f.readline().rstrip()
         
-        self._parseHeader(header)
+        self._parseHeader(header)  # parse header of saved analysis
 
         df = pd.read_csv(savePath, header=1)
         #pprint(df)
@@ -400,15 +407,13 @@ class kymographAnalysis():
         src_pnt_space = self.um2pnt(roiRect[3])
         dst_pnt_space = self.um2pnt(roiRect[1])
 
-        # intensityProfile will always have len() of number of pixels in line scane
+        # intensityProfile will always have len() of number of pixels in line scan
         src = (lineScanNumber, 0)
-        dst = (lineScanNumber, self.numPixels())
-        #src = (lineScanNumber, src_pnt_space)
-        #dst = (lineScanNumber, dst_pnt_space)
+        dst = (lineScanNumber, self.numPixels()-1)  # -1 because profile_line uses last pnt (unlike numpy)
         
-        print('  image:', self._image.shape)
-        print('  src:', src)
-        print('  dst:', dst)
+        #print('  image:', self._image.shape)
+        #print('  src:', src)
+        #print('  dst:', dst)
         
         # intensityProfile will always have len() of number of pixels in line scane
         if self._lineWidth == 1:
@@ -418,7 +423,7 @@ class kymographAnalysis():
             intensityProfile = \
                     profile.profile_line(self._image, src, dst, linewidth=self._lineWidth)
 
-        print('  intensityProfile:', intensityProfile.shape, type(intensityProfile))
+        #print('  intensityProfile:', intensityProfile.shape, type(intensityProfile))
 
         # TODO: line profile will always have same length, 
         #   nan our based on rect roi ???

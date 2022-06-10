@@ -49,8 +49,11 @@ def get_logger(name, level=logging.DEBUG):
 
 	# Create a custom logger
 	logger = logging.getLogger(name)
+	logger.setLevel(level)  # abb 20220609
+
+	# abb removed 20220609
 	logger.propagate = False  # don't propogate to root (o.w. prints twice)
-	#print('   ', logger)
+	#print('   ', logger, 'level:', level)
 	if not logger.handlers:
 		#print('=== sanpyLogger.get_logger() creating handlers')
 		#print('    ', logger.handlers)

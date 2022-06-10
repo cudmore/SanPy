@@ -95,10 +95,16 @@ class sanpyPlugin(QtWidgets.QWidget):
 							Note: NOT USED.
 		"""
 		super(sanpyPlugin, self).__init__(parent)
+		
+		# derived classes will set this in init (see kymographPlugin)
+		self._initError = False
+
 		self._ba = ba
 		self._bPlugins = bPlugin # pointer to object, send signal back on close
 
 		self._sweepNumber = 0
+
+		self._showSelf = True  # to show self as a QWidget
 
 		if startStop is not None:
 			self._startSec = startStop[0]
@@ -149,6 +155,20 @@ class sanpyPlugin(QtWidgets.QWidget):
 
 		# connect self to main app with signals/slots
 		self._installSignalSlot()
+
+	def getInitError(self):
+		return self._initError
+
+	def getWidget(self):
+		"""Over-ride if plugin makes its own widget.
+		"""
+		return self
+	
+	def getShowSelf(self):
+		return self._showSelf
+
+	def setShowSelf(self, show : bool):
+		self._showSelf = show
 
 	def getSweep(self, type):
 		theRet = None
@@ -396,9 +416,12 @@ class sanpyPlugin(QtWidgets.QWidget):
 		pass
 
 	def bringToFront(self):
+		if not self._showSelf:
+			return
+		
 		# Qt
-		self.show()
-		self.activateWindow()
+		self.getWidget().show()
+		self.getWidget().activateWindow()
 
 		# Matplotlib
 		if self.fig is not None:
@@ -506,7 +529,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
 		# pyqt
 		#self.mainWidget._mySetWindowTitle(self.windowTitle)
-		self.setWindowTitle(self.windowTitle)
+		self.getWidget().setWindowTitle(self.windowTitle)
 
 	def spike_pick_event(self, event):
 		"""
@@ -547,7 +570,6 @@ class sanpyPlugin(QtWidgets.QWidget):
 
 	def slot_switchFile(self, rowDict, ba, replot=True):
 		"""Respond to switch file."""
-		#logger.info('')
 		if not self.getResponseOption(self.responseTypes.switchFile):
 			return
 
@@ -794,6 +816,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 	def handleContextMenu(self, action):
 		pass
 
+# Not used 20220609
 class myWidget(QtWidgets.QWidget):
 	"""
 	Helper class to open a PyQt window from within a plugin.

@@ -754,14 +754,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #
         # add a number of plugins to QDockWidget 'Plugins 1'
         # we need to know the recice human name like 'xxx'
-        detectionPlugin = self.myPlugins.runPlugin('Detection Parameters', ba=None, show=False)
+        #detectionPlugin = self.myPlugins.runPlugin('Detection Parameters', ba=None, show=False)
         clipsPlugin = self.myPlugins.runPlugin('Plot Spike Clips', ba=None, show=False)
         #scatterPlugin = self.myPlugins.runPlugin('Plot Scatter', ba=None, show=False)
         #errorSummaryPlugin = self.myPlugins.runPlugin('Error Summary', ba=None, show=False)
         #summaryAnalysisPlugin = self.myPlugins.runPlugin('Summary Analysis', ba=None, show=False)
 
         # on add tab, the QTabWIdget makes a copy !!!
-        self.myPluginTab1.addTab(detectionPlugin, detectionPlugin.myHumanName)
+        #self.myPluginTab1.addTab(detectionPlugin, detectionPlugin.myHumanName)
         self.myPluginTab1.addTab(clipsPlugin, clipsPlugin.myHumanName)
         #self.myPluginTab1.addTab(scatterPlugin, scatterPlugin.myHumanName)
         #self.myPluginTab1.addTab(errorSummaryPlugin, errorSummaryPlugin.myHumanName)
@@ -1004,27 +1004,30 @@ class SanPyWindow(QtWidgets.QMainWindow):
         newPlugin = self.myPlugins.runPlugin(pluginName, ba, show=False)
         #scatterPlugin = self.myPlugins.runPlugin('Scatter Plot', ba=None, show=False)
 
-        # add tab
-        #print('newPlugin:', newPlugin)
-        # 1) either this
-        #newPlugin.insertIntoScrollArea()
-        '''
-        scrollArea = newPlugin.insertIntoScrollArea()
-        if scrollArea is not None:
-            newTabIndex = sender.addTab(scrollArea, pluginName)
-        else:
-            newTabIndex = sender.addTab(newPlugin, pluginName)
-        '''
-        # 2) or this
-        newTabIndex = sender.addTab(newPlugin, pluginName)  # addTab takes ownership
+        # only add if plugin wants to be shown
+        if not newPlugin.getInitError() and newPlugin.getShowSelf():
+            # add tab
+            #print('newPlugin:', newPlugin)
+            # 1) either this
+            #newPlugin.insertIntoScrollArea()
+            '''
+            scrollArea = newPlugin.insertIntoScrollArea()
+            if scrollArea is not None:
+                newTabIndex = sender.addTab(scrollArea, pluginName)
+            else:
+                newTabIndex = sender.addTab(newPlugin, pluginName)
+            '''
+            # 2) or this
+            #newTabIndex = sender.addTab(newPlugin, pluginName)  # addTab takes ownership
+            newTabIndex = sender.addTab(newPlugin.getWidget(), pluginName)  # addTab takes ownership
 
-        #widgetPointer = sender.widget(newTabIndex)
-        #widgetPointer.insertIntoScrollArea()
+            #widgetPointer = sender.widget(newTabIndex)
+            #widgetPointer.insertIntoScrollArea()
 
-        # bring tab to front
-        #count = sender.count()
-        #sender.setCurrentIndex(count-1)
-        sender.setCurrentIndex(newTabIndex)
+            # bring tab to front
+            #count = sender.count()
+            #sender.setCurrentIndex(count-1)
+            sender.setCurrentIndex(newTabIndex)
 
     def slot_dockLocationChanged(self, dock, area):
         """

@@ -186,7 +186,9 @@ class spikeClips(sanpyPlugin):
 
 		self.replot()
 
-	def slot_switchFile(self, rowDict, ba, replot=True):
+	def slot_switchFile(self, rowDict, ba, replot=True):		
+		#logger.info('')
+		
 		# don't replot until we set our detectionClass
 		replot = False
 		super().slot_switchFile(rowDict, ba, replot=replot)

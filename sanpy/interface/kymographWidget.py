@@ -15,8 +15,8 @@ import pyqtgraph as pg
 import qdarkstyle
 
 # turn off qdarkstyle logging
-import logging
-logging.getLogger('qdarkstyle').setLevel(logging.WARNING)
+#import logging
+#logging.getLogger('qdarkstyle').setLevel(logging.WARNING)
 
 #from shapeanalysisplugin._my_logger import logger
 #from shapeanalysisplugin import kymographAnalysis
@@ -98,9 +98,10 @@ class kymographWidget(QtWidgets.QWidget):
         self._kymographAnalysis.setPercentOfMax(value)
 
     def _slot_roi_changed(self):
-        logger.info('')
         pos = self._rectRoi.pos()
         size = self._rectRoi.size()
+
+        logger.info(f'pos:{pos} size:{size}')
 
         self._kymographAnalysis.setPosRoi(pos)
         self._kymographAnalysis.setSizeRoi(size)
@@ -124,8 +125,12 @@ class kymographWidget(QtWidgets.QWidget):
         #print('    left:', left, 'right:', right)
                     
         # +1 because np.arange() does NOT include the last point
-        xData = np.arange(0, self._kymographAnalysis.pointsPerLineScan()+1)
+        #xData = np.arange(0, self._kymographAnalysis.pointsPerLineScan()+1)
+        xData = np.arange(0, self._kymographAnalysis.pointsPerLineScan())
         xData = np.multiply(xData, self._kymographAnalysis._umPerPixel)
+        if len(xData) != len(lineProfile):
+            logger.error(f'xData: {len(xData)}')
+            logger.error(f'lineProfile: {len(lineProfile)}')
         self.lineIntensityPlot.setData(xData, lineProfile)
 
         # if the fit fails we get left/right as nan
@@ -233,13 +238,15 @@ class kymographWidget(QtWidgets.QWidget):
         self.kymographImage.setRect(imageRect[0], imageRect[1], imageRect[2], imageRect[3])
         self.kymographWindow.addItem(self.kymographImage)
 
-        # vertical line to show "Line PRofile"
+        # vertical line to show "Line Profile"
         sliceLine = pg.InfiniteLine(pos=0, angle=90)
         self._sliceLinesList.append(sliceLine) # keep a list of vertical slice lines so we can update all at once
         self.kymographWindow.addItem(sliceLine)
 
         # rectangulaar roi over image
-        rectPen = pg.mkPen('r', width=self._kymographAnalysis.getLineWidth())
+        #_penWidth = self._kymographAnalysis.getLineWidth()
+        _penWidth = 1
+        rectPen = pg.mkPen('r', width=_penWidth)
         pos = self._kymographAnalysis.getPosRoi()
         size = self._kymographAnalysis.getSizeRoi()
         _imageRect = self._kymographAnalysis.getImageRect()   # (x,y,w,h)
@@ -312,6 +319,42 @@ class kymographWidget(QtWidgets.QWidget):
 
         # finalize
         self.setLayout(vBoxLayout)
+
+    def replot(self,path):
+
+        logger.info('')
+        
+        self._kymographAnalysis = kymographAnalysis(path)
+        
+        # clear the image from the panel
+        #self.kymographWindow.clear()
+        
+        self.kymographImage = pg.ImageItem(self._kymographAnalysis.getImage())
+        # setRect(x, y, w, h)
+        imageRect = self._kymographAnalysis.getImageRect()  # (x,y,w,h)
+        self.kymographImage.setRect(imageRect[0], imageRect[1], imageRect[2], imageRect[3])
+        self.kymographWindow.addItem(self.kymographImage)
+
+        # update roi
+        _imageRect = self._kymographAnalysis.getImageRect()   # (x,y,w,h)
+        maxBounds = QtCore.QRectF(_imageRect[0], _imageRect[1],
+                            _imageRect[2], _imageRect[3])
+        self._rectRoi.maxBounds = maxBounds
+        pos = self._kymographAnalysis.getPosRoi()
+        size = self._kymographAnalysis.getSizeRoi()
+        print(f'  pos:{pos}, size:{size}')
+        self._rectRoi.setPos(pos)
+        self._rectRoi.setSize(size)
+        self._rectRoi.stateChanged()
+
+        # update slider
+        self.profileSlider.setMaximum(self._kymographAnalysis.numLineScans())
+
+        #
+        self._on_slider_changed(0)
+
+        self.refreshSumLinePlot()
+        self.refreshDiameterPlot()
 
     def refreshSumLinePlot(self):
         logger.info('')

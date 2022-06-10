@@ -15,15 +15,15 @@
     },
     "lastPath": "/Users/cudmore/data/kym-example",
     "rawDataPanels": {
-        "DAC": true,
-        "Derivative": true,
+        "DAC": false,
+        "Derivative": false,
         "Full Recording": true,
         "plotEveryPoint": 10
     },
     "useDarkStyle": true,
     "windowGeometry": {
-        "height": 916,
-        "width": 1000,
+        "height": 1076,
+        "width": 1881,
         "x": 342,
         "y": 66
     }
