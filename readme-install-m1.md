@@ -74,11 +74,13 @@ Follow link (3) above to add the new key to the GitHub website
 ## Switch an old https local GitHub to new ssh
 
 ```
-git remote -v. # to see current (Should have https)
+# to see current (Should have https)
+git remote -v
 
-git remote set-url origin git@github.com:USERNAME/REPOSITORY.git
+git remote set-url origin git@github.com:cudmore/SanPy.git
 
-Git remote -v. # to verify
+# verify
+git remote -v
 
 ## Configure vs code
 

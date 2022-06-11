@@ -560,7 +560,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         '''
 
     def _refreshViewMenu(self):
-        logger.info('****************')
+        #logger.info('****************')
         
         self.viewMenu.clear()
 

@@ -46,10 +46,11 @@ class kymWidget(QtWidgets.QWidget):
     signalKymographRoiChanged = QtCore.pyqtSignal(object)  # list of [l, t, r, b]
     signalSwitchToMolar = QtCore.pyqtSignal(object, object, object)  # (boolean, kd, caConc)
 
-
     def __init__(self, ba=None, parent=None):
         super(kymWidget, self).__init__(parent)
 
+        logger.info('')
+        
         self.ba = ba
         self.myImageItem = None  # kymographImage
         self.myLineRoi = None
@@ -179,13 +180,14 @@ class kymWidget(QtWidgets.QWidget):
     def _replot(self):
         logger.info('')
 
-        self.kymographPlot.clear()
-        self.kymographPlot.show()
-
         if self.ba is None:
             return
 
+        self.kymographPlot.clear()
+        self.kymographPlot.show()
+
         myTif = self.ba.tifData
+        print('  myTif:', myTif)
         #self.myImageItem = pg.ImageItem(myTif, axisOrder='row-major')
         #  TODO: set height to micro-meters
         axisOrder='row-major'
