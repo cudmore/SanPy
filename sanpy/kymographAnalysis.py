@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 from sanpy._util import _loadLineScanHeader
 
 class kymographAnalysis():
-    def __init__(self, path, data=None):
+    def __init__(self, path, data=None, autoLoad=True):
         
         self._path = path
         
@@ -42,9 +42,9 @@ class kymographAnalysis():
             self._umPerPixel = _olympusHeader['umPerPixel']
             self._secondsPerLine = _olympusHeader['secondsPerLine']
 
-        logger.info(f'image has shape: {self._image.shape}')
-        logger.info(f'  _umPerPixel: {self._umPerPixel}')
-        logger.info(f'  _secondsPerLine: {self._secondsPerLine}')
+        #logger.info(f'image has shape: {self._image.shape}')
+        #logger.info(f'  _umPerPixel: {self._umPerPixel}')
+        #logger.info(f'  _secondsPerLine: {self._secondsPerLine}')
 
         _size = len(self._image.shape)
         if  _size < 2 or _size > 3:
@@ -72,7 +72,37 @@ class kymographAnalysis():
         }
 
         # load analysis if it exists
-        self.load()
+        if autoLoad:
+            self.load()
+
+    def getReport(self):
+        folder, fileName = os.path.split(self._path)
+        folder, _tmp = os.path.split(folder)  # _tmp is Olympus export folder
+        folder, folderName = os.path.split(folder)
+        _tmp, grandParentFolder = os.path.split(folder)
+
+        theDict = {
+            'folder': folderName,
+            'grandParentFolder': grandParentFolder,
+            'file': fileName,
+            'numLines': self.numLineScans(),
+            'numPixels': self.numPixels(),
+            'secondsPerLine': self._secondsPerLine,
+            'umPerPixel': self._umPerPixel,
+            'dur_sec': self.numLineScans() * self._secondsPerLine,
+            'dist_um': self.numPixels() * self._umPerPixel,
+            'tifMin': np.nanmin(self._image),  # TODO: make this for ROI rect
+            'tifMax': np.nanmax(self._image),
+            #
+            'minDiam': self._results['minDiam'],
+            'maxDiam': self._results['maxDiam'],
+            'diamChange': self._results['diamChange'],
+            #
+            'minSum': self._results['minSum'],
+            'maxSum': self._results['maxSum'],
+            'sumChange': self._results['sumChange'],
+        }
+        return theDict
 
     def pnt2um(self, point):
         return point * self._umPerPixel
@@ -108,6 +138,26 @@ class kymographAnalysis():
 
         # ret is in lines: line*(seconds/line) -> seconds
         ret = np.multiply(ret, self._secondsPerLine)
+
+        return ret
+
+    def getSpaceArray(self):
+        """Get full time array across all line scans
+        
+        Time is in sec.
+        """
+
+        # (um/pixel, ms/line)
+        #timeScale = self._scale[1]
+
+        start = 0
+        stop = self.pointsPerLineScan() #* timeScale
+        step = 1 #timeScale
+
+        ret = np.arange(start, stop, step)
+
+        # ret is in lines: line*(seconds/line) -> seconds
+        ret = np.multiply(ret, self._umPerPixel)
 
         return ret
 
@@ -147,7 +197,7 @@ class kymographAnalysis():
         self._pos = (bottom, left)
         self._size = (width, height)
 
-        logger.info(f'pos:{self._pos} size:{self._size}')
+        #logger.info(f'pos:{self._pos} size:{self._size}')
 
     def getRoiRect(self, asInt=False):
         #imageShape = self.getImageShape()
@@ -248,10 +298,14 @@ class kymographAnalysis():
 
         return header
 
-    def save(self):
-        logger.info('')
+    def save(self, path : str = None):
+        #logger.info('')
 
-        savePath = self.getAnalysisFile()
+        if path is None:
+            savePath = self.getAnalysisFile()
+            #name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
+        else:
+            savePath = path
 
         header = self._getHeader()
 
@@ -352,7 +406,7 @@ class kymographAnalysis():
         leftRect_line = int(leftRect_sec / self._secondsPerLine)
         rightRect_line = int(rightRect_sec / self._secondsPerLine)
         
-        logger.info(f'roi rect:{theRect} leftRect_line:{leftRect_line} rightRect_line:{rightRect_line}')
+        #logger.info(f'roi rect:{theRect} leftRect_line:{leftRect_line} rightRect_line:{rightRect_line}')
 
         sumIntensity = [np.nan] * self.numLineScans()
         left_idx_list = [np.nan] * self.numLineScans()
@@ -381,9 +435,23 @@ class kymographAnalysis():
         self._results['left_pnt'] = left_idx_list
         self._results['right_pnt'] = right_idx_list
 
+        # smooth
+        kernelSize = 5
+        diameter_um = self._results['diameter_um']
+        sumintensity = self._results['sumintensity']
+        diameter_um_f = scipy.signal.medfilt(diameter_um, kernelSize)
+        sumintensity_f = scipy.signal.medfilt(sumintensity, kernelSize)
+        #
+        self._results['minDiam'] = np.nanmin(diameter_um_f)
+        self._results['maxDiam'] = np.nanmax(diameter_um_f)
+        self._results['diamChange'] = self._results['maxDiam'] - self._results['minDiam']
+        #
+        self._results['minSum'] = np.nanmin(sumintensity_f)
+        self._results['maxSum'] = np.nanmax(sumintensity_f)
+        self._results['sumChange'] = self._results['maxSum'] - self._results['minSum']
+
         stopSeconds = time.time()
         durSeconds = round(stopSeconds-startSeconds,2)
-
         logger.info(f'  analyzed {len(lineRange)} line scans in {durSeconds} seconds')
 
     def pnt2um(self, point):

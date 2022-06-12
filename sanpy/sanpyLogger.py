@@ -21,7 +21,10 @@ for k,v in os.environ.items():
 sys.exit(1)
 '''
 
+basedir = os.path.dirname(__file__)
+
 def getLoggerFile():
+	'''
 	if getattr(sys, 'frozen', False):
 		# running in a bundle (frozen)
 		myPath = sys._MEIPASS
@@ -32,20 +35,25 @@ def getLoggerFile():
 
 	fileName = 'sanpy.log'
 	logPath = os.path.join(myPath, fileName)
+	'''
+	logPath = os.path.join(basedir, fileName)
 	return logPath
 
 def get_logger(name, level=logging.DEBUG):
 	"""
 	"""
+	'''
 	if getattr(sys, 'frozen', False):
 		# running in a bundle (frozen)
 		myPath = sys._MEIPASS
 	else:
 		# running in a normal Python environment
 		myPath = pathlib.Path(__file__).parent.absolute()
+	'''
 
 	fileName = 'sanpy.log'
-	logPath = os.path.join(myPath, fileName)
+	#logPath = os.path.join(myPath, fileName)
+	logPath = os.path.join(basedir, fileName)
 
 	# Create a custom logger
 	logger = logging.getLogger(name)

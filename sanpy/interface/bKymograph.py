@@ -1,5 +1,7 @@
 """
 Display a tif kymograph and allow user to modify a rect roi
+
+Used by main SanPy interface
 """
 
 import sys

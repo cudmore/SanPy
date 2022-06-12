@@ -80,7 +80,12 @@ class kymographWidget(QtWidgets.QWidget):
             self.refreshSumLinePlot()
             self.refreshDiameterPlot()
         
-            self._kymographAnalysis.save()
+        elif name == 'Save':
+            saveFilePath = self._kymographAnalysis.getAnalysisFile()
+            # get file name to save
+            #name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
+            savefile, tmp = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', saveFilePath)
+            self._kymographAnalysis.save(savefile)
 
         elif name == 'Rot -90':
             newImage = self._kymographAnalysis.rotateImage()
@@ -188,6 +193,11 @@ class kymographWidget(QtWidgets.QWidget):
         hBoxLayoutControls.addWidget(aButton)
 
         buttonName = 'Analyze'
+        aButton = QtWidgets.QPushButton(buttonName)
+        aButton.clicked.connect(lambda state, name=buttonName: self._buttonCallback(name))
+        hBoxLayoutControls.addWidget(aButton)
+
+        buttonName = 'Save'
         aButton = QtWidgets.QPushButton(buttonName)
         aButton.clicked.connect(lambda state, name=buttonName: self._buttonCallback(name))
         hBoxLayoutControls.addWidget(aButton)
