@@ -5,6 +5,24 @@ Each SanPy.app is specific to the exact OS. We have working version for macOS Ca
 
 See this repo for building Napari (similar) https://github.com/tlambert03/napari-pyinstaller
 
+When using conda, site-packages is in
+
+```
+/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages
+```
+
+Build is in
+
+```
+/Users/cudmore/Sites/SanPy/pyinstaller/dist/SanPy-App.app/Contents/MacOS/SanPy-App
+```
+
+For pyqtgraph, we already have a folder but need to copy 'colors' folder into it
+
+```
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/cudmore/Desktop/SanPy-App.app/Contents/MacOS/pyqtgraph/colors/maps/CET-L18'
+```
+
 Use the [dev] option in main SanPy installer to install pyinstaller and its dependencies. In particular, pyinstaller requires `pip install tornado` but does not install tornado itself?
 
 ```

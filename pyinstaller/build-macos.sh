@@ -10,12 +10,27 @@
 
 # 	--onedir \
 
+#pyinstaller \
+#	--clean \
+#	--onedir \
+#	--windowed \
+#	--icon ../sanpy/interface/icons/sanpy_transparent.icns \
+#	--noconfirm \
+#	--path ../sanpy_env/lib/python3.7/site-packages \
+#	--name SanPy \
+#	../sanpy/interface/sanpy_app.py
+
+# 	--add-binary "/opt/miniconda3/envs/sanpy-env/bin/ptrepack:." \
+
 pyinstaller \
+	--noconfirm \
 	--clean \
 	--onedir \
 	--windowed \
 	--icon ../sanpy/interface/icons/sanpy_transparent.icns \
-	--noconfirm \
-	--path ../sanpy_env/lib/python3.7/site-packages \
+	--path /opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages \
 	--name SanPy \
+	--hidden-import pkg_resources.py2_warn \
+	--hidden-import pkg_resources.markers \
+	--add-data "/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors:pyqtgraph/colors" \
 	../sanpy/interface/sanpy_app.py

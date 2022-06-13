@@ -478,6 +478,16 @@ class analysisDir():
 			logger.info(f'Saving took {round(stop-start,2)} seconds')
 			'''
 
+	def _getFrozenPath(self):
+		if getattr(sys, 'frozen', False):
+			# running in a bundle (frozen)
+			myPath = sys._MEIPASS
+		else:
+			# running in a normal Python environment
+			#myPath = os.path.dirname(os.path.abspath(__file__))
+			myPath = pathlib.Path(__file__).parent.absolute()
+		return myPath
+
 	def _rebuildHdf(self):
 		#
 		# rebuild the file to remove old changes and reduce size
@@ -487,10 +497,46 @@ class analysisDir():
 		hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
 		hdfPath = os.path.join(self.path, hdfFile)
 		logger.info(f'Rebuilding h5 to {hdfPath}')
+		
+		'''
 		#command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", '--complevel=9', '--complib=blosc:blosclz', tmpHdfPath, hdfPath]
 		#command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", tmpHdfPath, hdfPath]
-		command = ["ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
-		call(command)
+		command = ["_ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
+		'''
+
+		bundle_dir = ''
+		if getattr(sys, 'frozen', False):
+			# running in a bundle (frozen)
+			bundle_dir = sys._MEIPASS
+		else:
+			bundle_dir = os.path.dirname(os.path.abspath(__file__))
+		
+		#_ptrepack_path = os.path.join(bundle_dir, 'ptrepack')
+		#logger.info(f'frozen _ptrepack_path: {_ptrepack_path}')
+		#command[0] = _ptrepack_path
+
+		_ptrepackPath = os.path.join(bundle_dir, '_ptrepack.py')
+
+		sys.argv = ["-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
+		# execute the script, but also bring in globals so imported modules are there
+		
+		logger.info(f'opening: {_ptrepackPath}')
+		#logger.info(f'globals: {globals()}')
+		
+		try:
+			exec(open(_ptrepackPath).read(), globals())
+
+		except(FileNotFoundError) as e:
+			logger.error('Call to _ptrepack command line fails in pyinstaller bundled app')
+			logger.error(e)
+
+		'''
+		try:
+			call(command)
+		except(FileNotFoundError) as e:
+			logger.error('Call to ptrepack command line fails in pyinstaller bundled app')
+			logger.error(e)
+		'''
 
 	def save(self):
 		for ba in self:
@@ -512,9 +558,12 @@ class analysisDir():
 		df = self.getDataFrame()
 
 		# kymograph, just save as csv
+		# 20220612 WHY WAS I DOING THIS !!!!
+		'''
 		dbPath = os.path.join(self.path, self.dbFile)
 		logger.info(f'Saving "{dbPath}"')
 		self.getDataFrame().to_csv(dbPath, index=False)
+		'''
 
 		tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
 		tmpHdfPath = os.path.join(self.path, tmpHdfFile)
@@ -563,13 +612,23 @@ class analysisDir():
 
 		#
 		# rebuild the file to remove old changes and reduce size
+		self._rebuildHdf()
+		
+		# abb removed 20220612
+		'''
 		hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
 		hdfPath = os.path.join(self.path, hdfFile)
-		logger.critical(f'Rebuilding h5 to {hdfPath}')
+		logger.critical(f'Rebuilding h5 using call to to command line "ptrepack" {hdfPath}')
 		#command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", '--complevel=9', '--complib=blosc:blosclz', tmpHdfPath, hdfPath]
 		#command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", tmpHdfPath, hdfPath]
 		command = ["ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
-		call(command)
+		
+		try:
+			call(command)
+		except(FileNotFoundError) as e:
+			logger.error('Call to ptrepack command line fails in pyinstaller bundled app')
+			logger.error(e)
+		'''
 
 		#logger.info(f'Removing temporary file {tmpHdfPath}')
 		#os.remove(tmpHdfPath)
@@ -586,7 +645,12 @@ class analysisDir():
 		hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
 		hdfPath = os.path.join(self.path, hdfFile)
 		if not os.path.isfile(hdfPath):
-			return
+			# abb 20220612 for bundled pyinstaller
+			# we can't compress h5 file on save using system call to ptrepack
+			tmp_hdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
+			hdfPath = os.path.join(self.path, tmp_hdfFile)
+			if not os.path.isfile(hdfPath):
+				return
 
 		logger.info(f'Loading existing folder hdf {hdfPath}')
 
@@ -674,8 +738,10 @@ class analysisDir():
 		loadedDatabase = False
 
 		# load an existing folder db or create a new one
+		# abb 20220612 turned off loading from self.dbFile .csv file
 		dbPath = os.path.join(path, self.dbFile)
-		if os.path.isfile(dbPath):
+		if 0 and os.path.isfile(dbPath):
+			# load from .csv
 			logger.info(f'Loading existing folder db: {dbPath}')
 			df = pd.read_csv(dbPath, header=0, index_col=False)
 			#df["Idx"] = pd.to_numeric(df["Idx"])

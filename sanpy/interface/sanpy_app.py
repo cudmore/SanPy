@@ -30,7 +30,8 @@ logging.getLogger('qdarkstyle').setLevel(logging.WARNING)
 # turn off numexpr 'INFO' logging
 logging.getLogger('numexpr').setLevel(logging.WARNING)
 
-basedir = os.path.dirname(__file__)
+#basedir = os.path.dirname(__file__)
+#print('sanpy_app basedir:', basedir)
 
 class SanPyWindow(QtWidgets.QMainWindow):
 
@@ -56,15 +57,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
         """
         TODO: use this in all cases
         """
-        '''
         if getattr(sys, 'frozen', False):
             # we are running in a bundle (frozen)
             bundle_dir = sys._MEIPASS
         else:
             # we are running in a normal Python environment
             bundle_dir = os.path.dirname(os.path.abspath(__file__))
-        '''
-        bundle_dir = basedir
+        logger.info(f'bundle_dir: {bundle_dir}')
+        
         return bundle_dir
 
     def __init__(self, path=None, parent=None):

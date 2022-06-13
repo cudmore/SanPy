@@ -6,10 +6,10 @@ block_cipher = None
 
 a = Analysis(
     ['../sanpy/interface/sanpy_app.py'],
-    pathex=['../sanpy_env/lib/python3.7/site-packages'],
+    pathex=['/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages'],
     binaries=[],
-    datas=[],
-    hiddenimports=[],
+    datas=[('/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors', 'pyqtgraph/colors')],
+    hiddenimports=['pkg_resources.py2_warn', 'pkg_resources.markers'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
