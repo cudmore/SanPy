@@ -10,6 +10,7 @@ import pandas as pd
 import requests, io  # too load from the web
 from subprocess import call # to call ptrepack (might fail on windows???)
 from pprint import pprint
+import tables.scripts.ptrepack  # to save compressed .h5 file
 
 import sanpy
 
@@ -504,7 +505,6 @@ class analysisDir():
 		command = ["_ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
 		'''
 
-		bundle_dir = ''
 		if getattr(sys, 'frozen', False):
 			# running in a bundle (frozen)
 			bundle_dir = sys._MEIPASS
@@ -515,21 +515,30 @@ class analysisDir():
 		#logger.info(f'frozen _ptrepack_path: {_ptrepack_path}')
 		#command[0] = _ptrepack_path
 
-		_ptrepackPath = os.path.join(bundle_dir, '_ptrepack.py')
+		#_ptrepackPath = os.path.join(bundle_dir, '_ptrepack.py')
 
-		sys.argv = ["-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
-		# execute the script, but also bring in globals so imported modules are there
-		
-		logger.info(f'opening: {_ptrepackPath}')
-		#logger.info(f'globals: {globals()}')
-		
+		# The first item is normalls the command line command name (not used)
+		sys.argv = ["", "--overwrite", "--chunkshape=auto", tmpHdfPath, hdfPath]
+
+		logger.info('running tables.scripts.ptrepack.main()')
+		logger.info(f'sys.argv: {sys.argv}')
 		try:
-			exec(open(_ptrepackPath).read(), globals())
+			# works
+			# exec(open(_ptrepackPath).read(), globals())
+			
+			tables.scripts.ptrepack.main()
+
+			# delete the temporary (large file)
+			logger.info(f'Deleting tmp file: {tmpHdfPath}')
+			os.remove(tmpHdfPath)
+
+			#self.signalApp(f'Call success to script {_ptrepackPath}')
+			self.signalApp(f'Saved compressed folder analysis with tables.scripts.ptrepack.main()')
 
 		except(FileNotFoundError) as e:
-			logger.error('Call to _ptrepack command line fails in pyinstaller bundled app')
+			logger.error('tables.scripts.ptrepack.main() failed ... file was not saved')
 			logger.error(e)
-
+			self.signalApp(f'ERROR in tables.scripts.ptrepack.main(): {e}')
 		'''
 		try:
 			call(command)
@@ -1320,6 +1329,7 @@ class analysisDir():
 		rowDict = self.getRowDict(rowIdx)
 
 		# CRITICAL: Need to make a deep copy of the _ba pointer to bAnalysis object
+		logger.info(f"copying {type(rowDict['_ba'])} {rowDict['_ba']}")
 		baNew = copy.deepcopy(rowDict['_ba'])
 
 		# copy of bAnalysis needs a new uuid
@@ -1412,10 +1422,9 @@ class analysisDir():
 			Will not be able to do this, we need to run outside Qt
 		"""
 		if self.myApp is not None:
-			self.myApp.updateStatusBar(str)
+			self.myApp.slot_updateStatus(str)
 		else:
-			pass
-			#logger.info(str)
+			logger.info(str)
 
 	def api_getFileHeaders(self):
 		headerList = []

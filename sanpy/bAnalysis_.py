@@ -750,8 +750,8 @@ class bAnalysis:
         self.myFileType = 'abf'
 
         # base sanpy does not keep the abf around
-        logger.warning('I turned off assigning self._abf=None for stoch-res stim file load')
-        #self._abf = None
+        logger.warning('[[[TURNED BACK ON]]] I turned off assigning self._abf=None for stoch-res stim file load')
+        self._abf = None
 
     @property
     def detectionDirty(self):

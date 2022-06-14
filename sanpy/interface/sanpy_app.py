@@ -254,7 +254,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.path = path # path to loaded bAnalysisDir folder
 
         # will create/load csv and/or gzip (of all analysis)
-        self.myAnalysisDir = sanpy.analysisDir(path)
+        self.myAnalysisDir = sanpy.analysisDir(path, myApp=self)
 
         # set myAnalysisDir to file list model
         self.myModel = sanpy.interface.bFileTable.pandasModel(self.myAnalysisDir)

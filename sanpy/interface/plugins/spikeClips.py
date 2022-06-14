@@ -122,7 +122,7 @@ class spikeClips(sanpyPlugin):
 		#
 		hLayout3 = QtWidgets.QHBoxLayout()
 
-		aLabel = QtWidgets.QLabel('Pre Clip Width (ms)')
+		aLabel = QtWidgets.QLabel('Pre Clip (ms)')
 		hLayout3.addWidget(aLabel)
 		self.preClipWidthSpinBox = QtWidgets.QSpinBox()
 		self.preClipWidthSpinBox.setKeyboardTracking(False)
@@ -132,7 +132,7 @@ class spikeClips(sanpyPlugin):
 		self.preClipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
 		hLayout3.addWidget(self.preClipWidthSpinBox)
 
-		aLabel = QtWidgets.QLabel('Post Clip Width (ms)')
+		aLabel = QtWidgets.QLabel('Post Clip (ms)')
 		hLayout3.addWidget(aLabel)
 		self.postClipWidthSpinBox = QtWidgets.QSpinBox()
 		self.postClipWidthSpinBox.setKeyboardTracking(False)
@@ -414,6 +414,10 @@ class spikeClips(sanpyPlugin):
 		self.x = xTmp  # 1D
 		self.y = yTmp  # 2D
 		self.yMean = yMeanClip
+
+		# update pre/post clip (ms)
+		self.preClipWidthSpinBox.setValue(self.preClipWidth_ms)
+		self.postClipWidthSpinBox.setValue(self.postClipWidth_ms)
 
 		#
 		# replot any selected spikes

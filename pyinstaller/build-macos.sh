@@ -22,6 +22,10 @@
 
 # 	--add-binary "/opt/miniconda3/envs/sanpy-env/bin/ptrepack:." \
 
+# 	--hidden-import tables.scripts \
+#	--hidden-import tables.scripts.ptrepack \
+#	--add-data "../sanpy/_ptrepack.py:." \
+
 pyinstaller \
 	--noconfirm \
 	--clean \
@@ -32,5 +36,6 @@ pyinstaller \
 	--name SanPy \
 	--hidden-import pkg_resources.py2_warn \
 	--hidden-import pkg_resources.markers \
+	--hidden-import tables \
 	--add-data "/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors:pyqtgraph/colors" \
 	../sanpy/interface/sanpy_app.py
