@@ -23,6 +23,12 @@ For pyqtgraph, we already have a folder but need to copy 'colors' folder into it
 FileNotFoundError: [Errno 2] No such file or directory: '/Users/cudmore/Desktop/SanPy-App.app/Contents/MacOS/pyqtgraph/colors/maps/CET-L18'
 ```
 
+Compressing h5 files requires `ptrepack` binary and callable from command line
+
+```
+/opt/miniconda3/envs/sanpy-env/bin/ptrepack
+```
+
 Use the [dev] option in main SanPy installer to install pyinstaller and its dependencies. In particular, pyinstaller requires `pip install tornado` but does not install tornado itself?
 
 ```

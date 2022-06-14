@@ -14,6 +14,8 @@ import pandas as pd
 import qdarkstyle
 #import breeze_resources
 
+import webbrowser
+
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 import sanpy.interface
@@ -546,7 +548,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         '''
 
         #
-        # a dynamic menu to show opten plugins
+        # a dynamic menu to show open plugins
         self.windowsMenu = mainMenu.addMenu('&Windows')
         self.windowsMenu.aboutToShow.connect(self._populateOpenPlugins)
 
@@ -564,6 +566,18 @@ class SanPyWindow(QtWidgets.QMainWindow):
         windowsMenu.addAction(openScatterAction)
         '''
 
+        # help menu
+        helpMenu = mainMenu.addMenu('&Help')
+        name = 'SanPy Help (Opens In Browser)'
+        action = QtWidgets.QAction(name, self)
+        action.triggered.connect(partial(self._onHelpMenuAction, name))
+        helpMenu.addAction(action)
+
+    def _onHelpMenuAction(self, name : str):
+        if name == 'SanPy Help (Opens In Browser)':
+            url = 'https://cudmore.github.io/SanPy/'
+            webbrowser.open(url, new=2)
+        
     def _refreshViewMenu(self):
         #logger.info('****************')
         

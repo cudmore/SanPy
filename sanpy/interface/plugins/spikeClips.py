@@ -90,39 +90,44 @@ class spikeClips(sanpyPlugin):
 		self.phasePlotCheckBox.stateChanged.connect(lambda:self.replot())
 		hLayout2.addWidget(self.phasePlotCheckBox)
 
+		vLayout.addLayout(hLayout2)
+
+		#
+		hLayout2_5 = QtWidgets.QHBoxLayout()
+
 		self.waterfallCheckBox = QtWidgets.QCheckBox('Waterfall')
 		self.waterfallCheckBox.setChecked(False)
 		self.waterfallCheckBox.stateChanged.connect(lambda:self.replot())
-		hLayout2.addWidget(self.waterfallCheckBox)
+		hLayout2_5.addWidget(self.waterfallCheckBox)
 
 		# x mult for waterfall
-		aLabel = QtWidgets.QLabel('X-Mult')
-		hLayout2.addWidget(aLabel)
+		aLabel = QtWidgets.QLabel('X-Offset')
+		hLayout2_5.addWidget(aLabel)
 		self.xMultSpinBox = QtWidgets.QDoubleSpinBox()
 		self.xMultSpinBox.setKeyboardTracking(False)
 		self.xMultSpinBox.setSingleStep(0.05)
 		self.xMultSpinBox.setRange(0, 1)
 		self.xMultSpinBox.setValue(self.xMult)
 		self.xMultSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
-		hLayout2.addWidget(self.xMultSpinBox)
+		hLayout2_5.addWidget(self.xMultSpinBox)
 
 		# y mult for waterfall
-		aLabel = QtWidgets.QLabel('Y-Mult')
-		hLayout2.addWidget(aLabel)
+		aLabel = QtWidgets.QLabel('Y-Offset')
+		hLayout2_5.addWidget(aLabel)
 		self.yMultSpinBox = QtWidgets.QDoubleSpinBox()
 		self.yMultSpinBox.setKeyboardTracking(False)
 		self.yMultSpinBox.setSingleStep(0.05)
 		self.yMultSpinBox.setRange(0, 1)
 		self.yMultSpinBox.setValue(self.yMult)
 		self.yMultSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
-		hLayout2.addWidget(self.yMultSpinBox)
+		hLayout2_5.addWidget(self.yMultSpinBox)
 
-		vLayout.addLayout(hLayout2)
+		vLayout.addLayout(hLayout2_5)
 
 		#
 		hLayout3 = QtWidgets.QHBoxLayout()
 
-		aLabel = QtWidgets.QLabel('Pre Clip (ms)')
+		aLabel = QtWidgets.QLabel('Pre (ms)')
 		hLayout3.addWidget(aLabel)
 		self.preClipWidthSpinBox = QtWidgets.QSpinBox()
 		self.preClipWidthSpinBox.setKeyboardTracking(False)
@@ -132,7 +137,7 @@ class spikeClips(sanpyPlugin):
 		self.preClipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
 		hLayout3.addWidget(self.preClipWidthSpinBox)
 
-		aLabel = QtWidgets.QLabel('Post Clip (ms)')
+		aLabel = QtWidgets.QLabel('Post (ms)')
 		hLayout3.addWidget(aLabel)
 		self.postClipWidthSpinBox = QtWidgets.QSpinBox()
 		self.postClipWidthSpinBox.setKeyboardTracking(False)
@@ -430,6 +435,18 @@ class spikeClips(sanpyPlugin):
 		Copy to clipboard is not going to work, data is too big
 		"""
 
+		exporter = pg.exporters.ImageExporter(self.clipPlot)
+		print(f'exporter: {type(exporter)}')
+		print('getSupportedImageFormats:', exporter.getSupportedImageFormats())
+		# set export parameters if needed
+		
+		# (width, height, antialias, background, invertvalue)
+		exporter.parameters()['width'] = 1000   # (note this also affects height parameter)
+		# save to file
+		exporter.export('/Users/cudmore/Desktop/testExport.png')
+
+		return
+		
 		numSpikes = self.y.shape[0]
 
 		columns = ['time(ms)', 'meanClip']
