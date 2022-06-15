@@ -27,17 +27,23 @@ pip install napari
 conda create -y -n sanpy-env python=3.9
 conda activate sanpy-env
 
-pip install --upgrade pip
+pip install --upgrade pip setuptools
 
-conda install pyqt # not PyQt5 like with pip
+setuptools 61.2.0 -->> 62.4.0
+pip 21.2.4 -->> 22.1.2 (???)
+
+# not PyQt5 like with pip
+conda install pyqt 
 
 # this would be 'pip install tables' but fails on arm
 conda install pytables
 
 pip install -e .
+pip install -e .\[gui\]
+pip install -e .\[dev\]
 
 # need to add these to setup.cfg
-pip install pyqtgraph qdarkstyle 
+#pip install pyqtgraph qdarkstyle 
 
 
 # configure ssh

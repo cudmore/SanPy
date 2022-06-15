@@ -26,6 +26,13 @@
 #	--hidden-import tables.scripts.ptrepack \
 #	--add-data "../sanpy/_ptrepack.py:." \
 
+# on macos laptop, use
+#   --path /Users/cudmore/Sites/SanPy/sanpy_env/lib/python3.9/site-packages/pyqtgraph/colors:pyqtgraph/colors" \
+
+# on macos studio, use
+#	--path /opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages \
+#	--add-data "/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors:pyqtgraph/colors" \
+
 pyinstaller \
 	--noconfirm \
 	--clean \

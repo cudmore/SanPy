@@ -67,7 +67,8 @@ class detectionPresets_(enum.Enum):
 #def getDefaultDetection(cellType=None):
 def getDefaultDetection(detectionPreset):
     """
-    Get detection parameters including mapping from backend to human readable and long-format descriptions.
+    Get detection parameters including mapping from backend
+    to human readable and long-format descriptions.
 
     Args:
         detectionPreset (enum): bDetection.detectionPresets.default

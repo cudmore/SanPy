@@ -1890,8 +1890,16 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         # in table we specify 'nan' but float spin box will not show that
         if math.isnan(dvdtThreshold):
-            dvdtThreshold = -1
+            windowOptions = self.detectionWidget.getMainWindowOptions()
+            dvdtThreshold = windowOptions['detect']['detectDvDt']
 
+        if math.isnan(mvThreshold):
+            windowOptions = self.detectionWidget.getMainWindowOptions()
+            mvThreshold = windowOptions['detect']['detectMv']
+
+        print('=== fillInDetectionParameters dvdtThreshold:', dvdtThreshold)
+        print('=== fillInDetectionParameters mvThreshold:', mvThreshold)
+        
         self.dvdtThreshold.setValue(dvdtThreshold)
         self.mvThreshold.setValue(mvThreshold)
 
