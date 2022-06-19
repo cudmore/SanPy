@@ -1375,10 +1375,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.selectSweep(0, startSec, stopSec, doEmit=False) # calls self._replot()
 
         # set full axis
-        #self.setAxisFull()
+        # abb 20220615
+        self.setAxisFull()
 
         # abb implement sweep, move to function()
-        #self._replot()
+        #abb 20220615
+        self._replot(startSec, stopSec)
 
         #self.refreshClips(startSec, stopSec)
 

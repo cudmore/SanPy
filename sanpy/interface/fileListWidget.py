@@ -5,6 +5,8 @@ import pandas as pd
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+from functools import partial
+
 # using sanpy.analysisDir in pandasModel.__init__()
 import sanpy
 import sanpy.interface
@@ -45,6 +47,12 @@ class fileListWidget(QtWidgets.QWidget):
 
         self._hToolbarLayout = QtWidgets.QHBoxLayout()
 
+        buttonName = 'fileListWidget button'
+        button = QtWidgets.QPushButton(buttonName)
+        #button.setToolTip('Save Detected Spikes to Excel file')
+        button.clicked.connect(partial(self.on_button_click,buttonName))
+        self._hToolbarLayout.addWidget(button)
+
         self._vLayout.addLayout(self._hToolbarLayout)
 
         #
@@ -52,6 +60,9 @@ class fileListWidget(QtWidgets.QWidget):
         self._vLayout.addWidget(self._tableView)
 
         self.setLayout(self._vLayout)
+
+    def on_button_click(Self, name):
+        logger.info(f'{name}')
 
 
 

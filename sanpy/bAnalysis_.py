@@ -220,10 +220,17 @@ class bAnalysis:
             theTiff (str): Path to .tif file.
             byteStream (io.BytesIO): Binary stream for use in the cloud.
             fromDf: (pd.DataFrame): One row df with columns as instance variables
+                used by analysisDir to reload from h5 file
             fromDict: (dict): Dict has keys ['sweepX', 'sweepY', 'mode']
         """
-        #logger.info(f'{file}')
-        self.detectionClass = sanpy.bDetection()
+        
+        logger.info(f'IF FILE IS KYMOGRAPH NEED TO SET DETECTION PARAMS {file}')
+        if file is not None and file.endswith('.tif'):
+            detectionPreset = sanpy.bDetection.detectionPresets.caKymograph
+        else:
+            detectionPreset = sanpy.bDetection.detectionPresets.default
+        self.detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
+
         self._isAnalyzed = False
 
         # mimic pyAbf
@@ -521,7 +528,7 @@ class bAnalysis:
         #logger.info(f'sweepList:{self.sweepList}')
         #logger.info(f'_currentSweep:{self._currentSweep}')
 
-    def _saveToHdf(self, hdfPath):
+    def _saveToHdf(self, hdfPath, hdfMode):
         """
         Save to h5 file with key self.uuid.
         Only save if detection has changed (e.g. self.detectionDirty)
@@ -535,7 +542,8 @@ class bAnalysis:
 
         logger.info(f'SAVING uuid:{self.uuid} {self.getInfo()}')
 
-        with pd.HDFStore(hdfPath, mode='a') as hdfStore:
+        #with pd.HDFStore(hdfPath, mode='a') as hdfStore:
+        with pd.HDFStore(hdfPath, mode=hdfMode) as hdfStore:
             # vars(class) retuns a dict with all instance variables
             iDict = vars(self)
 

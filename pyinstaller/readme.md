@@ -43,9 +43,7 @@ python Sanpy/sanpy/interface/sanpy_app.py
 
 Make a script (.sh on macOS, .bat on Windows)
 
-The location matters, here it is in `/SanPy/pyinstaller/build-macos-laptop.sh`
-
-Need to modify both `--path` and `--add-data` to what just got installed above.
+The location matters, here it is in `/SanPy/pyinstaller/build-macos-laptop.sh`. This script contains  the following ...
 
 ```
 pyinstaller \
@@ -60,6 +58,8 @@ pyinstaller \
     --add-data "/Users/cudmore/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors:pyqtgraph/colors" \
 	../sanpy/interface/sanpy_app.py
 ```
+
+Need to modify both `--path` and `--add-data` to what just got installed above.
 
 This script will generate a new file `SanPy/pyinstaller/SanPy.spec`. Have a look at it. Another way to use pyinstaller is to run it from this script (change its name so it does not get over-written).
 
