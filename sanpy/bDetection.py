@@ -45,24 +45,26 @@ class detectionTypes_(enum.Enum):
     dvdt = 'dvdt'
     mv = 'mv'
 
+# TODO (Cudmore) this needs to be a class so we can expand/contract based on what we find on the hard-drive
+# allow user to save to detection presets
 class detectionPresets_(enum.Enum):
     """
     Detection presets is one of:
-        default
-        saNode
-        ventricular
-        neuron
-        subtreshold
-        caSpikes
-        caKymograph
     """
-    default = 1
-    saNode = 2
-    ventricular = 3
-    neuron = 4
-    subthreshold = 5
-    caSpikes = 6
-    caKymograph = 7
+    # default = 1
+    # saNode = 2
+    # ventricular = 3
+    # neuron = 4
+    # subthreshold = 5
+    # caSpikes = 6
+    # caKymograph = 7
+    default = 'Default'
+    saNode = 'SA Node'
+    ventricular = 'Ventricular'
+    neuron = 'Neuron'
+    subthreshold = 'Sub-threshold'
+    caSpikes = 'Ca Spikes'
+    caKymograph = 'Kymograph'
 
 #def getDefaultDetection(cellType=None):
 def getDefaultDetection(detectionPreset):
@@ -482,11 +484,20 @@ class bDetection(object):
         - get values
         - set values
     """
+
     detectionPresets = detectionPresets_
     """Enum with names of preset detection types"""
 
     detectionTypes = detectionTypes_
     """ Enum with the type of spike detection, (dvdt, mv)"""
+
+    def getDetectionPresetList():
+        """"Get list of names of detection type.
+        """
+        detectionList = []
+        for detectionPreset in bDetection.detectionPresets:
+            detectionList.append(detectionPreset.value)
+        return detectionList
 
     #def __init__(self, detectionPreset=detectionPresets.caKymograph):
     def __init__(self, detectionPreset=detectionPresets.default):
@@ -494,6 +505,7 @@ class bDetection(object):
         # local copy of default dictionary, do not modify
         self._dDict = getDefaultDetection(detectionPreset)
         self.toJson()
+
 
     def toJson(self):
         """Get key and defaultValue

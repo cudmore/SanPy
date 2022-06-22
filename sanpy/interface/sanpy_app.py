@@ -2,13 +2,13 @@
 # Date: 20190719
 
 import os, sys, time, math, json
-import traceback # to print call stack
+#import traceback # to print call stack
 from functools import partial
 from collections import OrderedDict
 import platform
-import glob
-from turtle import window_width
-import numpy as np
+#import glob
+#from turtle import window_width
+#import numpy as np
 import pandas as pd
 
 import qdarkstyle
@@ -18,6 +18,7 @@ import webbrowser
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
+import sanpy._util
 import sanpy.interface
 
 from sanpy.sanpyLogger import get_logger
@@ -55,6 +56,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
     signalSelectSpikeList = QtCore.pyqtSignal(object)
     """Emit spike list selection."""
 
+    '''
+    # see sanpy.utils.getBundledDir()
     def _getBundledDir():
         """
         TODO: use this in all cases
@@ -68,6 +71,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         logger.info(f'bundle_dir: {bundle_dir}')
         
         return bundle_dir
+    '''
 
     def __init__(self, path=None, parent=None):
         """
@@ -86,6 +90,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         stream = QtCore.QTextStream(file)
         self.setStyleSheet(stream.readAll())
         '''
+
+        sanpy._util.addUserPath()
 
         # create an empty model for file list
         dfEmpty = pd.DataFrame(columns=sanpy.analysisDir.sanpyColumns.keys())
@@ -718,8 +724,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #
         # Detection widget
         baNone = None
-        self.myDetectionWidget = sanpy.interface.bDetectionWidget(baNone,self)
-
+        self.myDetectionWidget = sanpy.interface.bDetectionWidget(ba=baNone, mainWindow=self)
+        
         # show/hide
         on = self.configDict['detectionPanels']['Detection Panel']
         self.myDetectionWidget.toggleInterface('Detection Panel', on)
@@ -857,7 +863,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
             # we are running in a normal Python environment
             bundle_dir = os.path.dirname(os.path.abspath(__file__))
         '''
-        bundle_dir = SanPyWindow._getBundledDir()
+        #bundle_dir = SanPyWindow._getBundledDir()
+        bundle_dir = sanpy._util.getBundledDir()
         # load preferences
         self.optionsFile = os.path.join(bundle_dir, 'sanpy_app.json')
 
@@ -1144,9 +1151,7 @@ def main():
     logger.info(f'Python version is {platform.python_version()}')
     logger.info(f'PyQt version is {QtCore.QT_VERSION_STR}')
 
-    os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt5'
-
-    app = QtWidgets.QApplication(sys.argv)
+    #sanpy._util.addUserPath()
 
     '''
     if getattr(sys, 'frozen', False):
@@ -1156,10 +1161,15 @@ def main():
         # we are running in a normal Python environment
         bundle_dir = os.path.dirname(os.path.abspath(__file__))
     '''
-    bundle_dir = SanPyWindow._getBundledDir()
+    ##bundle_dir = SanPyWindow._getBundledDir()
+    bundle_dir = sanpy._util.getBundledDir()
     logger.info(f'bundle_dir is "{bundle_dir}"')
 
-    appIconPath = os.path.join(bundle_dir, 'icons/sanpy_transparent.png')
+    os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt5'
+
+    app = QtWidgets.QApplication(sys.argv)
+
+    appIconPath = os.path.join(bundle_dir, 'interface/icons/sanpy_transparent.png')
     logger.info(f'appIconPath is "{appIconPath}"')
     if os.path.isfile(appIconPath):
         app.setWindowIcon(QtGui.QIcon(appIconPath))
@@ -1185,14 +1195,11 @@ def main():
 
     w = SanPyWindow()
 
-    #testFFT(w)
-
+    # debug
     #loadFolder = '/home/cudmore/Sites/SanPy/data'
     #w.loadFolder(loadFolder)
 
     w.show()
-
-    #runFft(w)
 
     sys.exit(app.exec_())
 

@@ -14,6 +14,7 @@ import pyqtgraph as pg
 from pyqtgraph.exporters import ImageExporter
 
 import sanpy
+import sanpy.bDetection
 
 import sanpy.interface.bKymograph
 
@@ -172,7 +173,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             showDAC = windowOptions['rawDataPanels']['DAC']
             showFullRecording = windowOptions['rawDataPanels']['Full Recording']
 
-            self.toggleInterface('Global Vm', showFullRecording)
+            self.toggleInterface('Full Recording', showFullRecording)
             self.toggleInterface('Derivative', showDerivative)
             self.toggleInterface('DAC', showDAC)
             #self.toggleInterface('Clips', showClips)
@@ -685,7 +686,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             on (bool):
         """
         if isinstance(idx, str):
-            logger.error(f'Unexpected type for parameter idx "{idx}" with type {idx}')
+            logger.error(f'Unexpected type for parameter idx "{idx}" with type {type(idx)}')
             return
 
         # toggle the plot on/off
@@ -2110,12 +2111,33 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         detectionGridLayout = QtWidgets.QGridLayout()
         #detectionGridLayout.setAlignment(QtCore.Qt.AlignTop)
 
+        row = 0
+        rowSpan = 1
+        columnSpan = 2
+
+        aComboLabel = QtWidgets.QLabel('Presets')
+        
+        # get list of detection presets
+        detectionTypes = sanpy.bDetection.getDetectionPresetList()
+
+
+        aComboBox = QtWidgets.QComboBox()
+        for detectionType in detectionTypes:
+            aComboBox.addItem(detectionType)
+
+        columnSpan = 1
+        detectionGridLayout.addWidget(aComboLabel, row, 0, rowSpan, columnSpan)
+        columnSpan = 3
+        detectionGridLayout.addWidget(aComboBox, row, 1, rowSpan, columnSpan)
+        row += 1
+
+        #
         buttonName = 'Detect dV/dt'
         button = QtWidgets.QPushButton(buttonName)
         button.setToolTip('Detect spikes using dV/dt threshold.')
         button.clicked.connect(partial(self.on_button_click,buttonName))
 
-        row = 0
+        #row = 0
         rowSpan = 1
         columnSpan = 2
         detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)

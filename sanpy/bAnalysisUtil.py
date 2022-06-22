@@ -9,7 +9,7 @@ from collections import OrderedDict
 # Each key, like 'Take Off Potential (mV)' is a y-stat
 
 import sanpy
-import sanpy.userAnalysis
+#import sanpy.userAnalysis
 #from sanpy.userAnalysis import baseUserAnalysis
 #import sanpy.userAnalysis
 #import sanpy.userAnalysis.baseUserAnalysis
@@ -365,7 +365,7 @@ class bAnalysisUtil:
 		for k, v in userStatList.items():
 			# check if key exists !!!
 			if k in coreStateList.keys():
-				logger.error(f'key {k} already exists in statList')
+				logger.error(f'user analysis key {"k"} already exists in core stat List')
 			else:
 				name = v['name']
 				coreStateList[k] = {}

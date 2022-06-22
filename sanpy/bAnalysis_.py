@@ -35,6 +35,12 @@ import scipy.stats
 import pyabf  # see: https://github.com/swharden/pyABF
 
 import sanpy
+import sanpy.bDetection
+# this specific import is to stop circular imports
+#from sanpy.baseUserAnalysis import baseUserAnalysis
+import sanpy.user_analysis.baseUserAnalysis
+#import sanpy.user_analysis
+
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
@@ -212,6 +218,7 @@ class bAnalysis:
 
     def __init__(self, file=None, theTiff=None, byteStream=None,
                     fromDf=None, fromDict=None,
+                    detectionPreset : sanpy.bDetection.detectionPresets = None,
                     loadData=True,
                     stimulusFileFolder=None):
         """
@@ -225,9 +232,7 @@ class bAnalysis:
         """
         
         logger.info(f'IF FILE IS KYMOGRAPH NEED TO SET DETECTION PARAMS {file}')
-        if file is not None and file.endswith('.tif'):
-            detectionPreset = sanpy.bDetection.detectionPresets.caKymograph
-        else:
+        if detectionPreset is None:
             detectionPreset = sanpy.bDetection.detectionPresets.default
         self.detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
 
@@ -2284,7 +2289,8 @@ class bAnalysis:
         self._detectionDirty = True  # e.g. bAnalysis needs to be saved
 
         # run all user analysis ... what if this fails ???
-        sanpy.userAnalysis.runAllUserAnalysis(self)
+        #sanpy.user_analysis.baseUserAnalysis.runAllUserAnalysis(self)
+        sanpy.user_analysis.baseUserAnalysis.runAllUserAnalysis(self)
 
         ## done
 
@@ -3734,7 +3740,7 @@ if __name__ == '__main__':
     # was using this for manuscript
     #main()
     #test_hdf()
-    #test_load_abf()
+    test_load_abf()
     #test_sweeps()
 
-    test_foot()
+    #test_foot()

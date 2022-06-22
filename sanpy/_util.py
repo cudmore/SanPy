@@ -1,8 +1,100 @@
 import os
+import sys
+import pathlib
 
-#from shapeanalysisplugin._my_logger import logger
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
+
+def getBundledDir():
+    """
+    """
+    if getattr(sys, 'frozen', False):
+        # we are running in a bundle (frozen)
+        bundle_dir = sys._MEIPASS
+    else:
+        # we are running in a normal Python environment
+        bundle_dir = os.path.dirname(os.path.abspath(__file__))
+    #logger.info(f'bundle_dir: {bundle_dir}')
+    
+    return bundle_dir
+
+def addUserPath():
+    """Make user SanPy folder and add it to the Python sys.path
+    """
+    
+    logger.info('')
+    makeSanPyFolders()  # make if necc
+            
+    userSanPyFolder = getUserSanPyFolder()
+
+    if userSanPyFolder in sys.path:
+        sys.path.remove(userSanPyFolder)
+
+    if not userSanPyFolder in sys.path:
+        logger.info(f'Adding to sys.path: {userSanPyFolder}')
+        sys.path.append(userSanPyFolder)
+
+    logger.info('sys.path is now:')
+
+    for path in sys.path:
+        logger.info(f'    {path}')
+
+def getUserDocumentsFolder():
+    userPath = pathlib.Path.home()
+    userDocumentsFolder = os.path.join(userPath, 'Documents')
+    if not os.path.isdir(userDocumentsFolder):
+        logger.error(f'Did not find path "{userDocumentsFolder}"')
+        logger.error(f'   Using "{userPath}"')
+        return userPath
+    else:
+        return userDocumentsFolder
+
+def getUserSanPyFolder():
+    userDocumentsFolder = getUserDocumentsFolder()
+    sanpyFolder = os.path.join(userDocumentsFolder, 'SanPy')
+    return sanpyFolder
+
+def getUserPluginFolder():
+    userSanPyFolder = getUserSanPyFolder()
+    userPluginFolder = os.path.join(userSanPyFolder, 'plugins')
+    return userPluginFolder
+
+def getUserAnalysisFolder():
+    userAnalysisFolder = getUserSanPyFolder()
+    userAnalysisFolder = os.path.join(userAnalysisFolder, 'analysis')
+    return userAnalysisFolder
+
+def makeSanPyFolders():
+    """Make SanPy folder in user Documents path.
+
+    If no Documents folder then make SanPy folder directly in user path.
+    """
+    userDocumentsFolder = getUserDocumentsFolder()
+
+    sanpyFolder = os.path.join(userDocumentsFolder, 'SanPy')
+    if not os.path.isdir(sanpyFolder):
+        logger.info(f'Making SanPy folder "{sanpyFolder}"')
+        os.mkdir(sanpyFolder)
+
+    # to save detection parameters json
+    detectionFolder = os.path.join(sanpyFolder, 'detection')
+    if not os.path.isdir(detectionFolder):
+        logger.info(f'Making user detection folder "{detectionFolder}"')
+        os.mkdir(detectionFolder)
+
+    # to hold custom .py plugins
+    pluginFolder = getUserPluginFolder()  # os.path.join(sanpyFolder, 'plugins')
+    if not os.path.isdir(pluginFolder):
+        # TODO: add __init__.py
+        logger.info(f'Making user plugin folder "{pluginFolder}"')
+        os.mkdir(pluginFolder)
+
+    # to hold custom .py analysis
+    detectionFolder = os.path.join(sanpyFolder, 'analysis')
+    if not os.path.isdir(detectionFolder):
+        # TODO: add __init__.py
+        logger.info(f'Making user analysis folder "{detectionFolder}"')
+        os.mkdir(detectionFolder)
 
 def _loadLineScanHeader(path):
     """
