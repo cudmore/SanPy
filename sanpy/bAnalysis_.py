@@ -216,7 +216,9 @@ class bAnalysis:
     def getNewUuid():
         return 't' + str(uuid.uuid4()).replace('-', '_')
 
-    def __init__(self, file=None, theTiff=None, byteStream=None,
+    def __init__(self, file=None,
+                    #theTiff=None,
+                    byteStream=None,
                     fromDf=None, fromDict=None,
                     detectionPreset : sanpy.bDetection.detectionPresets = None,
                     loadData=True,
@@ -224,7 +226,7 @@ class bAnalysis:
         """
         Args:
             file (str): Path to either .abf or .csv with time/mV columns.
-            theTiff (str): Path to .tif file.
+            #theTiff (str): Path to .tif file. [[[NOT USED]]]
             byteStream (io.BytesIO): Binary stream for use in the cloud.
             fromDf: (pd.DataFrame): One row df with columns as instance variables
                 used by analysisDir to reload from h5 file
@@ -342,7 +344,7 @@ class bAnalysis:
 
         self._detectionDirty = False
 
-        self.loadAnalysis()
+        #self.loadAnalysis()
 
         # switching back to faster version (no parsing when we cell self.sweepX2
         self.setSweep()
@@ -495,7 +497,7 @@ class bAnalysis:
             self._recordingMode = 'V-Clamp'
             self._sweepLabelY = 'pA' # TODO: get from column
         else:
-            logger.warning(f'The seconds column is "{xxx}" but muse be one of ("mV", "pA")')
+            logger.warning(f'The seconds column is "{secondColStr}" but muse be one of ("mV", "pA")')
 
         # always seconds
         self._sweepLabelX = 'sec' # TODO: get from column
@@ -3125,6 +3127,9 @@ class bAnalysis:
         return (data - np.min(data)) / (np.max(data) - np.min(data))
 
     def loadAnalysis(self):
+        """
+        Not used.
+        """
         saveBase = self._getSaveBase()
 
         # load detection parameters
@@ -3137,7 +3142,7 @@ class bAnalysis:
         savePath = saveBase + '-analysis.json'
 
         if not os.path.isfile(savePath):
-            logger.error(f'Did not find file: {savePath}')
+            #logger.error(f'Did not find file: {savePath}')
             return
 
         logger.info(f'Loading from saved analysis: {savePath}')
@@ -3156,6 +3161,8 @@ class bAnalysis:
         self._isAnalyzed = True
 
     def saveAnalysis(self, forceSave=False):
+        """Not used.
+        """
         if not self._detectionDirty and not forceSave:
             return
 

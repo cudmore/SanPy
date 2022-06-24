@@ -361,7 +361,9 @@ class spikeClips(sanpyPlugin):
 
         doColor = self.colorCheckBox.isChecked()
         if doColor:
-            cmap = pg.colormap.get('CET-L18') # prepare a linear color map
+            #cmap = pg.colormap.get('CET-L18') # prepare a linear color map
+            cmap = pg.colormap.get('gist_rainbow', source='matplotlib') # prepare a linear color map
+            
             tmpColors = cmap.getColors()
             tmpLinSpace = np.linspace(0, len(tmpColors), numSpikes, endpoint=False, dtype=np.uint16)
         #for tmp in tmps:

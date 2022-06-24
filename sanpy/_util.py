@@ -23,9 +23,9 @@ def addUserPath():
     """
     
     logger.info('')
-    makeSanPyFolders()  # make if necc
+    _makeSanPyFolders()  # make <user>/Documents/SanPy if necc
             
-    userSanPyFolder = getUserSanPyFolder()
+    userSanPyFolder = _getUserSanPyFolder()
 
     if userSanPyFolder in sys.path:
         sys.path.remove(userSanPyFolder)
@@ -39,7 +39,7 @@ def addUserPath():
     for path in sys.path:
         logger.info(f'    {path}')
 
-def getUserDocumentsFolder():
+def _getUserDocumentsFolder():
     userPath = pathlib.Path.home()
     userDocumentsFolder = os.path.join(userPath, 'Documents')
     if not os.path.isdir(userDocumentsFolder):
@@ -49,29 +49,29 @@ def getUserDocumentsFolder():
     else:
         return userDocumentsFolder
 
-def getUserSanPyFolder():
-    userDocumentsFolder = getUserDocumentsFolder()
+def _getUserSanPyFolder():
+    userDocumentsFolder = _getUserDocumentsFolder()
     sanpyFolder = os.path.join(userDocumentsFolder, 'SanPy')
     return sanpyFolder
 
-def getUserPluginFolder():
-    userSanPyFolder = getUserSanPyFolder()
+def _getUserPluginFolder():
+    userSanPyFolder = _getUserSanPyFolder()
     userPluginFolder = os.path.join(userSanPyFolder, 'plugins')
     return userPluginFolder
 
-def getUserAnalysisFolder():
-    userAnalysisFolder = getUserSanPyFolder()
+def _getUserAnalysisFolder():
+    userAnalysisFolder = _getUserSanPyFolder()
     userAnalysisFolder = os.path.join(userAnalysisFolder, 'analysis')
     return userAnalysisFolder
 
-def makeSanPyFolders():
+def _makeSanPyFolders():
     """Make SanPy folder in user Documents path.
 
     If no Documents folder then make SanPy folder directly in user path.
     """
-    userDocumentsFolder = getUserDocumentsFolder()
+    userDocumentsFolder = _getUserDocumentsFolder()
 
-    sanpyFolder = os.path.join(userDocumentsFolder, 'SanPy')
+    sanpyFolder = _getUserSanPyFolder()
     if not os.path.isdir(sanpyFolder):
         logger.info(f'Making SanPy folder "{sanpyFolder}"')
         os.mkdir(sanpyFolder)
@@ -83,18 +83,24 @@ def makeSanPyFolders():
         os.mkdir(detectionFolder)
 
     # to hold custom .py plugins
-    pluginFolder = getUserPluginFolder()  # os.path.join(sanpyFolder, 'plugins')
+    pluginFolder = _getUserPluginFolder()  # os.path.join(sanpyFolder, 'plugins')
     if not os.path.isdir(pluginFolder):
         # TODO: add __init__.py
         logger.info(f'Making user plugin folder "{pluginFolder}"')
         os.mkdir(pluginFolder)
 
     # to hold custom .py analysis
-    detectionFolder = os.path.join(sanpyFolder, 'analysis')
+    analysisFolder = _getUserAnalysisFolder()
     if not os.path.isdir(detectionFolder):
         # TODO: add __init__.py
-        logger.info(f'Making user analysis folder "{detectionFolder}"')
-        os.mkdir(detectionFolder)
+        logger.info(f'Making user analysis folder "{analysisFolder}"')
+        os.mkdir(analysisFolder)
+
+def _module_from_file(module_name, file_path):
+	spec = importlib.util.spec_from_file_location(module_name, file_path)
+	module = importlib.util.module_from_spec(spec)
+	spec.loader.exec_module(module)
+	return module
 
 def _loadLineScanHeader(path):
     """

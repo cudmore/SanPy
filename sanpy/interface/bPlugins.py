@@ -20,7 +20,7 @@ class bPlugins():
 		self._sanpyApp = sanpyApp
 
 		"""path to <user>/plugin_dir"""
-		self.userPluginFolder = sanpy._util.getUserPluginFolder()
+		self.userPluginFolder = sanpy._util._getUserPluginFolder()
 
 		"""dict of pointers to open plugins"""
 		self.pluginDict = {}

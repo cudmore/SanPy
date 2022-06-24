@@ -5,6 +5,10 @@
 import os, time, sys
 import copy  # For copy.deepcopy() of bAnalysis
 import uuid  # to generate unique key on bAnalysis spike detect
+import pathlib  # ned to use this (introduced in Python 3.4) to maname paths on Windows, stop using os.path
+
+from typing import List  #, Union
+
 import numpy as np
 import pandas as pd
 import requests, io  # too load from the web
@@ -145,7 +149,7 @@ We require type so we can edit with QAbstractTableModel.
 Critical for qt interface to allow easy editing of values while preserving type
 """
 
-def fixRelPath(folderPath, dfTable, fileList):
+def fixRelPath(folderPath, dfTable :pd.DataFrame, fileList : List[str]):
     """
     was not assigning relPath on initial load (no hd5 file)
     """
@@ -494,10 +498,12 @@ class analysisDir():
         #
         # rebuild the file to remove old changes and reduce size
         tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-        tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+        #tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+        tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
 
         hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-        hdfPath = os.path.join(self.path, hdfFile)
+        #hdfPath = os.path.join(self.path, hdfFile)
+        hdfPath = pathlib.Path(self.path) / hdfFile
         logger.info(f'Rebuilding h5 to {hdfPath}')
         
         '''
@@ -518,7 +524,10 @@ class analysisDir():
 
         #_ptrepackPath = os.path.join(bundle_dir, '_ptrepack.py')
 
-        # The first item is normalls the command line command name (not used)
+        # can't pass sys.argv a 'POsixPath' (from pathlib.Path, need to be a string
+        # The first item is normally the command line command name (not used)
+        tmpHdfPath = str(tmpHdfPath)
+        hdfPath = str(hdfPath)
         sys.argv = ["", "--overwrite", "--chunkshape=auto", tmpHdfPath, hdfPath]
 
         logger.info('running tables.scripts.ptrepack.main()')
@@ -576,14 +585,16 @@ class analysisDir():
         '''
 
         tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-        tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+        #tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+        tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
 
         # the compressed version from the last save
         # if it exists, append to it
         hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-        hdfFilePath = os.path.join(self.path, hdfFile)
+        #hdfFilePath = os.path.join(self.path, hdfFile)
+        hdfFilePath = pathlib.Path(self.path) / hdfFile
 
-        print('!!! hdfFilePath:', hdfFilePath)
+        #print('!!! hdfFilePath:', hdfFilePath)
         
         hdfMode = 'w'
         if os.path.isfile(hdfFilePath):
@@ -669,12 +680,14 @@ class analysisDir():
 
         df = None
         hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-        hdfPath = os.path.join(self.path, hdfFile)
+        #hdfPath = os.path.join(self.path, hdfFile)
+        hdfPath = pathlib.Path(self.path) / hdfFile
         if not os.path.isfile(hdfPath):
             # abb 20220612 for bundled pyinstaller
             # we can't compress h5 file on save using system call to ptrepack
             tmp_hdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-            hdfPath = os.path.join(self.path, tmp_hdfFile)
+            #hdfPath = os.path.join(self.path, tmp_hdfFile)
+            hdfPath = pathlib.Path(self.path) / tmp_hdfFile
             if not os.path.isfile(hdfPath):
                 return
 
@@ -733,7 +746,8 @@ class analysisDir():
         logger.info(f'TODO: Delete from h5 file uuid:{uuid}')
 
         tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-        tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+        #tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+        tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
         removed = False
         with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
             try:
@@ -1273,7 +1287,9 @@ class analysisDir():
             tmpFileName, tmpExt = os.path.splitext(file)
             if tmpExt in self.theseFileTypes:
                 if getFullPath:
-                    file = os.path.join(path, file)
+                    #file = os.path.join(path, file)
+                    file = pathlib.Path(path) / file
+                    file = str(file)  # return List[str] NOT List[PosixPath]
                 fileList.append(file)
         #
         logger.info(f'found {len(fileList)} files ...')

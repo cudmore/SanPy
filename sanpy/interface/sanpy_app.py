@@ -6,6 +6,7 @@ import os, sys, time, math, json
 from functools import partial
 from collections import OrderedDict
 import platform
+import pathlib
 #import glob
 #from turtle import window_width
 #import numpy as np
@@ -81,16 +82,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         super(SanPyWindow, self).__init__(parent)
 
-        # breeze_resources
-        '''
-        breezePath = '/home/cudmore/Sites/BreezeStyleSheets/dist/dark/stylesheet.qss'
-        #file = QtCore.QFile(":/dark/stylesheet.qss")
-        file = QtCore.QFile(breezePath)
-        file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
-        stream = QtCore.QTextStream(file)
-        self.setStyleSheet(stream.readAll())
-        '''
-
+        # create directories in <user>/Documents and add to python path
         sanpy._util.addUserPath()
 
         # create an empty model for file list
@@ -260,6 +252,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
             return
 
         self.path = path # path to loaded bAnalysisDir folder
+
+        logger.info(f'Loading path: {path}')
 
         # will create/load csv and/or gzip (of all analysis)
         self.myAnalysisDir = sanpy.analysisDir(path, myApp=self)
@@ -855,18 +849,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
             logger.error(f'Did not get preference with keys "{key1}" and "{key2}"')
 
     def preferencesLoad(self):
-        '''
-        if getattr(sys, 'frozen', False):
-            # we are running in a bundle (frozen)
-            bundle_dir = sys._MEIPASS
-        else:
-            # we are running in a normal Python environment
-            bundle_dir = os.path.dirname(os.path.abspath(__file__))
-        '''
-        #bundle_dir = SanPyWindow._getBundledDir()
+        
+        # TODO: put this in constructore
         bundle_dir = sanpy._util.getBundledDir()
-        # load preferences
-        self.optionsFile = os.path.join(bundle_dir, 'sanpy_app.json')
+        #self.optionsFile = os.path.join(bundle_dir, 'sanpy_app.json')
+        self.optionsFile = pathlib.Path(bundle_dir) / 'sanpy_app.json'
 
         if os.path.isfile(self.optionsFile):
             #print('  preferencesLoad() loading options file:', self.optionsFile)
@@ -877,6 +864,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             #print('     preferencesLoad() using program provided default options')
             #print('  did not find file:', self.optionsFile)
             logger.info(f'Using default options')
+            logger.info(f'    did not find "{self.optionsFile}"')
             return self.preferencesDefaults()
 
     def preferencesDefaults(self):
@@ -1147,57 +1135,32 @@ def testFFT(sanpyWindow):
     fftPlugin = sanpyWindow.myPlugins.runPlugin(pluginName, ba)
 
 def main():
-    logger.info(f'=== Starting sanpy_app.py in __main__')
+    logger.info(f'=== Starting sanpy_app.py in __main__()')
     logger.info(f'Python version is {platform.python_version()}')
     logger.info(f'PyQt version is {QtCore.QT_VERSION_STR}')
 
-    #sanpy._util.addUserPath()
-
-    '''
-    if getattr(sys, 'frozen', False):
-        # we are running in a bundle (frozen)
-        bundle_dir = sys._MEIPASS
-    else:
-        # we are running in a normal Python environment
-        bundle_dir = os.path.dirname(os.path.abspath(__file__))
-    '''
-    ##bundle_dir = SanPyWindow._getBundledDir()
     bundle_dir = sanpy._util.getBundledDir()
     logger.info(f'bundle_dir is "{bundle_dir}"')
+    logger.info(f'str(bundle_dir) is "{str(bundle_dir)}"')
 
     os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt5'
 
     app = QtWidgets.QApplication(sys.argv)
 
-    appIconPath = os.path.join(bundle_dir, 'interface/icons/sanpy_transparent.png')
-    logger.info(f'appIconPath is "{appIconPath}"')
-    if os.path.isfile(appIconPath):
-        app.setWindowIcon(QtGui.QIcon(appIconPath))
+    #appIconPath = os.path.join(bundle_dir, 'interface/icons/sanpy_transparent.png')
+    appIconPath = pathlib.Path(bundle_dir) / 'interface' / 'icons' / 'sanpy_transparent.png'
+    appIconPathStr = str(appIconPath)
+    #logger.info(f'appIconPath is "{appIconPath}"')
+    if os.path.isfile(appIconPathStr):
+        logger.info(f'setting app window icon with: "{appIconPath}"')
+        app.setWindowIcon(QtGui.QIcon(appIconPathStr))
     else:
-        logger.error(f'Did not find appIconPath: {appIconPath}')
+        logger.warning(f'Did not find appIconPath: {appIconPathStr}')
 
     #app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
     app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api=os.environ['PYQTGRAPH_QT_LIB']))
 
-    # breeze_resources
-    '''
-    breezePath = '/home/cudmore/Sites/BreezeStyleSheets/dist/dark/stylesheet.qss'
-    #file = QtCore.QFile(":/dark/stylesheet.qss")
-    file = QtCore.QFile(breezePath)
-    file.open(QtCore.QFile.ReadOnly | QtCore.QFile.Text)
-    stream = QtCore.QTextStream(file)
-    app.setStyleSheet(stream.readAll())
-    '''
-
-    # can specify with 'path='
-    #path = '/Users/cudmore/data/laura-ephys/test1_sanpy2'
-    #path = '/Users/cudmore/data/laura-ephys/sanap20210412'
-
     w = SanPyWindow()
-
-    # debug
-    #loadFolder = '/home/cudmore/Sites/SanPy/data'
-    #w.loadFolder(loadFolder)
 
     w.show()
 
