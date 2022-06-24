@@ -528,7 +528,15 @@ class analysisDir():
         # The first item is normally the command line command name (not used)
         tmpHdfPath = str(tmpHdfPath)
         hdfPath = str(hdfPath)
-        sys.argv = ["", "--overwrite", "--chunkshape=auto", tmpHdfPath, hdfPath]
+        
+        # on Windows, path cannot have a ':'
+        # tables.scripts.ptrepack.main() has a but (since 2017) that causes it to fail with a ':'
+        
+        # when calling ptrepack, we need trailing ':' on each src/dst path
+        _tmpHdfPath = tmpHdfPath + ':'
+        _hdfPath = hdfPath + ':'
+        
+        sys.argv = ["", "--overwrite", "--chunkshape=auto", _tmpHdfPath, _hdfPath]
 
         logger.info('running tables.scripts.ptrepack.main()')
         logger.info(f'sys.argv: {sys.argv}')

@@ -849,7 +849,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
             logger.error(f'Did not get preference with keys "{key1}" and "{key2}"')
 
     def preferencesLoad(self):
-        
+        """
+        When frozen with pyINstaller and on Windows, we get a different
+            bundled (mei) folder each time we run.
+            Thus, we can't save out preferences there.
+        """
         # TODO: put this in constructore
         bundle_dir = sanpy._util.getBundledDir()
         #self.optionsFile = os.path.join(bundle_dir, 'sanpy_app.json')
