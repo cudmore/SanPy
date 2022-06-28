@@ -13,9 +13,7 @@ def getBundledDir():
         bundle_dir = sys._MEIPASS
     else:
         # we are running in a normal Python environment
-        bundle_dir = os.path.dirname(os.path.abspath(__file__))
-    #logger.info(f'bundle_dir: {bundle_dir}')
-    
+        bundle_dir = os.path.dirname(os.path.abspath(__file__))    
     return bundle_dir
 
 def addUserPath():
@@ -35,7 +33,6 @@ def addUserPath():
         sys.path.append(userSanPyFolder)
 
     logger.info('sys.path is now:')
-
     for path in sys.path:
         logger.info(f'    {path}')
 
@@ -54,6 +51,19 @@ def _getUserSanPyFolder():
     sanpyFolder = os.path.join(userDocumentsFolder, 'SanPy')
     return sanpyFolder
 
+def getUserFolder(folder : str) -> str:
+    userSanPyFolder = _getUserSanPyFolder()
+    if folder == 'plugins':
+        theFolder = os.path.join(userSanPyFolder, 'plugins')
+    elif folder == 'analysis':
+        theFolder = os.path.join(userSanPyFolder, 'analysis')
+    elif folder == 'preferences':
+        theFolder = os.path.join(userSanPyFolder, 'preferences')
+    else:
+        logger.error(f'did not understand folder: "{folder}"')
+        return None
+    return theFolder
+
 def _getUserPluginFolder():
     userSanPyFolder = _getUserSanPyFolder()
     userPluginFolder = os.path.join(userSanPyFolder, 'plugins')
@@ -64,6 +74,11 @@ def _getUserAnalysisFolder():
     userAnalysisFolder = os.path.join(userAnalysisFolder, 'analysis')
     return userAnalysisFolder
 
+def _getUserPreferencesFolder():
+    userPreferencesFolder = _getUserSanPyFolder()
+    userPreferencesFolder = os.path.join(userPreferencesFolder, 'preferences')
+    return userPreferencesFolder
+
 def _makeSanPyFolders():
     """Make SanPy folder in user Documents path.
 
@@ -71,11 +86,18 @@ def _makeSanPyFolders():
     """
     userDocumentsFolder = _getUserDocumentsFolder()
 
+    # main <user>/DOcuments/SanPy folder
     sanpyFolder = _getUserSanPyFolder()
     if not os.path.isdir(sanpyFolder):
         logger.info(f'Making SanPy folder "{sanpyFolder}"')
         os.mkdir(sanpyFolder)
 
+    # SanPyapplication preferences
+    preferencesFolder = _getUserPreferencesFolder()
+    if not os.path.isdir(preferencesFolder):
+        logger.info(f'Making user preferences folder "{preferencesFolder}"')
+        os.mkdir(preferencesFolder)
+    
     # to save detection parameters json
     detectionFolder = os.path.join(sanpyFolder, 'detection')
     if not os.path.isdir(detectionFolder):

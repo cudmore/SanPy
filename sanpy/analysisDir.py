@@ -506,43 +506,21 @@ class analysisDir():
         hdfPath = pathlib.Path(self.path) / hdfFile
         logger.info(f'Rebuilding h5 to {hdfPath}')
         
-        '''
-        #command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", '--complevel=9', '--complib=blosc:blosclz', tmpHdfPath, hdfPath]
-        #command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", tmpHdfPath, hdfPath]
-        command = ["_ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
-        '''
-
-        if getattr(sys, 'frozen', False):
-            # running in a bundle (frozen)
-            bundle_dir = sys._MEIPASS
-        else:
-            bundle_dir = os.path.dirname(os.path.abspath(__file__))
-        
-        #_ptrepack_path = os.path.join(bundle_dir, 'ptrepack')
-        #logger.info(f'frozen _ptrepack_path: {_ptrepack_path}')
-        #command[0] = _ptrepack_path
-
-        #_ptrepackPath = os.path.join(bundle_dir, '_ptrepack.py')
-
-        # can't pass sys.argv a 'POsixPath' (from pathlib.Path, need to be a string
-        # The first item is normally the command line command name (not used)
+        # can't pass sys.argv a 'PosixPath' from pathlib.Path, needs to be a string
         tmpHdfPath = str(tmpHdfPath)
         hdfPath = str(hdfPath)
         
-        # on Windows, path cannot have a ':'
-        # tables.scripts.ptrepack.main() has a but (since 2017) that causes it to fail with a ':'
-        
         # when calling ptrepack, we need trailing ':' on each src/dst path
+        # without this Windows fails to find the file
         _tmpHdfPath = tmpHdfPath + ':'
         _hdfPath = hdfPath + ':'
         
+        # The first item is normally the command line command name (not used)
         sys.argv = ["", "--overwrite", "--chunkshape=auto", _tmpHdfPath, _hdfPath]
 
         logger.info('running tables.scripts.ptrepack.main()')
         logger.info(f'sys.argv: {sys.argv}')
         try:
-            # works
-            # exec(open(_ptrepackPath).read(), globals())
             
             tables.scripts.ptrepack.main()
 
@@ -550,25 +528,24 @@ class analysisDir():
             logger.info(f'Deleting tmp file: {tmpHdfPath}')
             os.remove(tmpHdfPath)
 
-            #self.signalApp(f'Call success to script {_ptrepackPath}')
             self.signalApp(f'Saved compressed folder analysis with tables.scripts.ptrepack.main()')
 
         except(FileNotFoundError) as e:
             logger.error('tables.scripts.ptrepack.main() failed ... file was not saved')
             logger.error(e)
             self.signalApp(f'ERROR in tables.scripts.ptrepack.main(): {e}')
-        '''
-        try:
-            call(command)
-        except(FileNotFoundError) as e:
-            logger.error('Call to ptrepack command line fails in pyinstaller bundled app')
-            logger.error(e)
-        '''
 
     def save(self):
+        """Save all analysis as csv.
+        """
+        logger.info('')
         for ba in self:
             if ba is not None:
-                ba.saveAnalysis()
+                # save detection and analysis to json
+                # ba.saveAnalysis(forceSave=True)
+                
+                # save analysis to csv
+                ba.saveAnalysis_tocsv()
 
     def saveHdf(self):
         """
@@ -593,51 +570,42 @@ class analysisDir():
         '''
 
         tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-        #tmpHdfPath = os.path.join(self.path, tmpHdfFile)
         tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
 
         # the compressed version from the last save
         # if it exists, append to it
         hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-        #hdfFilePath = os.path.join(self.path, hdfFile)
         hdfFilePath = pathlib.Path(self.path) / hdfFile
-
-        #print('!!! hdfFilePath:', hdfFilePath)
         
         hdfMode = 'w'
         if os.path.isfile(hdfFilePath):
-            logger.info(f'copying existing hdf file to tmp')
+            logger.info(f'copying existing hdf file to tmp and setting mode to append')
             print('    hdfFilePath:', hdfFilePath)
             print('    tmpHdfPath:', tmpHdfPath)
             shutil.copyfile(hdfFilePath,tmpHdfPath)
             hdfMode = 'a'
         #
         # save each bAnalysis
-        #print(df)
-        doSaveAnalysis = True
-        logger.info(f'Saving tmp db with doSaveAnalysis:{doSaveAnalysis} (will be compressed) {tmpHdfPath}')
+        logger.info(f'Saving tmp db with hdfMode:{hdfMode} (will be compressed) {tmpHdfPath}')
 
-        if doSaveAnalysis:
-            for row in range(len(df)):
-                #ba = self.getAnalysis(row)  # do not call this, it will load
-                ba = df.at[row, '_ba']
-                if ba is not None:
-                    # 20220615
-                    didSave = ba._saveToHdf(tmpHdfPath, hdfMode=hdfMode) # will only save if ba.detectionDirty
-                    if didSave:
-                        # we are now saved into h5 file, remember uuid to load
-                        df.at[row, 'uuid'] = ba.uuid
+        for row in range(len(df)):
+            #ba = self.getAnalysis(row)  # do not call this, it will load
+            ba = df.at[row, '_ba']
+            if ba is not None:
+                # 20220615
+                didSave = ba._saveToHdf(tmpHdfPath, hdfMode=hdfMode) # will only save if ba.detectionDirty
+                if didSave:
+                    # we are now saved into h5 file, remember uuid to load
+                    df.at[row, 'uuid'] = ba.uuid
 
-            # rebuild (L, A, S) columns
-            self._updateLoadedAnalyzed()
+        # rebuild (L, A, S) columns
+        self._updateLoadedAnalyzed()
 
         #
         # save file database
         #with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
         with pd.HDFStore(tmpHdfPath, mode=hdfMode) as hdfStore:
             dbKey = os.path.splitext(self.dbFile)[0]
-            #logger.critical(f'Storing file database into key "{dbKey}"')
-            #df = self.getDataFrame()
             df = df.drop('_ba', axis=1)  # don't ever save _ba, use it for runtime
 
             logger.info(f'saving file db with {len(df)} rows')
@@ -653,30 +621,12 @@ class analysisDir():
             #
             self._isDirty = False  # if true, prompt to save on quit
 
-        #h5_printKey(tmpHdfPath)
 
         #
         # rebuild the file to remove old changes and reduce size
         self._rebuildHdf()
         
-        # abb removed 20220612
-        '''
-        hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-        hdfPath = os.path.join(self.path, hdfFile)
-        logger.critical(f'Rebuilding h5 using call to to command line "ptrepack" {hdfPath}')
-        #command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", '--complevel=9', '--complib=blosc:blosclz', tmpHdfPath, hdfPath]
-        #command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", tmpHdfPath, hdfPath]
-        command = ["ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
-        
-        try:
-            call(command)
-        except(FileNotFoundError) as e:
-            logger.error('Call to ptrepack command line fails in pyinstaller bundled app')
-            logger.error(e)
-        '''
-
-        #logger.info(f'Removing temporary file {tmpHdfPath}')
-        #os.remove(tmpHdfPath)
+        h5_printKey(hdfFilePath)
 
         stop = time.time()
         logger.info(f'Saving took {round(stop-start,2)} seconds')
@@ -705,7 +655,7 @@ class analysisDir():
         with pd.HDFStore(hdfPath) as hdfStore:
             print('  hdfStore has keys:')
             for k in hdfStore.keys():
-                print(f'  {k}')
+                print(f'    {k}')
 
             dbKey = os.path.splitext(self.dbFile)[0]
 
@@ -717,10 +667,9 @@ class analysisDir():
             # _ba is for runtime, assign after loading from either (abf or h5)
             df['_ba'] = None
 
-            '''
-            logger.info('loaded db df')
-            print(df[['File', 'uuid', '_ba']])
-            '''
+            logger.info('  loaded db df')
+            print('    ', df[['File', 'uuid', '_ba']])
+            
             # load each bAnalysis from hdf
             # No, don't load anything until user clicks
             '''
@@ -1581,11 +1530,11 @@ def test_hd5():
 
 def test_pool():
     path = '/home/cudmore/Sites/SanPy/data'
-    bad = analysisDir(path)
+    ad = analysisDir(path)
     print('loaded df:')
-    print(bad._df)
+    print(ad._df)
 
-    bad.pool_build()
+    ad.pool_build()
 
 def testCloud():
     cloudDict = {

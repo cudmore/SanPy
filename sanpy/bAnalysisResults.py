@@ -88,6 +88,13 @@ analysisResultDict[key]['default'] = 0  # todo: not sure
 analysisResultDict[key]['units'] = ''
 analysisResultDict[key]['description'] = 'Sweep number of analyzed sweep. Zero based.'
 
+key = 'epoch'
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]['type'] = 'int'
+analysisResultDict[key]['default'] = np.nan  # todo: not sure
+analysisResultDict[key]['units'] = ''
+analysisResultDict[key]['description'] = 'Stimulus epoch number the spike occured in. Zero based.'
+
 key = 'sweepSpikeNumber'
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]['type'] = 'int'
@@ -496,6 +503,7 @@ class analysisResultList:
 
 	def appendAnalysis(self, analysisResultList):
 		for analysisResult in analysisResultList:
+			# analysisResult is for one spike
 			self._myList.append(analysisResult)
 
 	def addAnalysisResult(self, theKey, theDefault=None):

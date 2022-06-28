@@ -7,6 +7,8 @@ from functools import partial
 from collections import OrderedDict
 import platform
 import pathlib
+from datetime import datetime
+
 #import glob
 #from turtle import window_width
 #import numpy as np
@@ -1140,6 +1142,10 @@ def testFFT(sanpyWindow):
 
 def main():
     logger.info(f'=== Starting sanpy_app.py in __main__()')
+
+    date_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    logger.info(f'    {date_time_str}')
+
     logger.info(f'Python version is {platform.python_version()}')
     logger.info(f'PyQt version is {QtCore.QT_VERSION_STR}')
 

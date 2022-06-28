@@ -22,6 +22,7 @@ ba.spikeDetect(dDict)
 """
 
 import os, sys, math, time, collections, datetime, enum
+#from socket import AF_AAL5
 import json
 import uuid
 from collections import OrderedDict
@@ -282,6 +283,8 @@ class bAnalysis:
         #self.spikeDict = []  # a list of dict
         #self.spikeTimes = []  # created in self.spikeDetect()
         self.spikeDict = sanpy.bAnalysisResults.analysisResultList()
+
+        self._spikesPerSweep = None
 
         self.spikeClips = []  # created in self.spikeDetect()
         self.spikeClips_x = []  #
@@ -692,7 +695,11 @@ class bAnalysis:
             self._abf = None
 
         if 1:
-            self._epochTable = sanpy.epochTable(self._abf)
+            try:
+                _tmp = self._abf.sweepEpochs.p1s
+                self._epochTable = sanpy.epochTable(self._abf)
+            except (AttributeError) as e:
+                logger.warning(f'did not find epochTable: {e}')
             
             self._sweepList = self._abf.sweepList
             self._sweepLengthSec = self._abf.sweepLengthSec
@@ -767,6 +774,11 @@ class bAnalysis:
         # base sanpy does not keep the abf around
         logger.warning('[[[TURNED BACK ON]]] I turned off assigning self._abf=None for stoch-res stim file load')
         self._abf = None
+
+    def getEpochTable(self):
+        """Only proper abf files will have an epoch table.
+        """
+        return self._epochTable
 
     @property
     def detectionDirty(self):
@@ -856,6 +868,36 @@ class bAnalysis:
         """Get the total number of detected spikes."""
         #return len(self.spikeTimes) # spikeTimes is tmp per sweep
         return len(self.spikeDict) # spikeDict has all spikes for all sweeps
+
+    def getNumSpikes(self, sweep : int = 0):
+        """Get number of spikes in a sweep.
+        """
+        #spikeList = self.getSpikeTimes(sweepNumber=sweep)
+        return self._spikesPerSweep[sweep]
+
+    def bad_getAbsSpikeFromSweep(self, sweepSpikeIdx : int, sweep : int):
+        """Given a spike index within a sweep, get the absolute spike index.
+
+        See getSweepSpikeFromAbsolute()
+        """
+        absIdx = 0
+        for idx, spikesPerSweep in enumerate(self._spikesPerSweep):
+            absIdx += self._spikesPerSweep[idx]
+            if idx==sweep:
+                break
+        absIdx += sweepSpikeIdx
+        return absIdx
+    
+    def getSweepSpikeFromAbsolute(self, absSpikeIdx : int, sweep : int):
+        """Get sweep spike from absolute spike.
+        
+        See getAbsSpikeFromSweep()
+        """
+        absIdx = 0
+        for oneSweep in range(sweep):
+            absIdx += self._spikesPerSweep[oneSweep]
+        sweepSpike = absSpikeIdx - absIdx
+        return sweepSpike
 
     def old_getOneColumns(self, d):
         shape = d.shape
@@ -1014,6 +1056,22 @@ class bAnalysis:
         if x is not None and len(x)>1:
             theMean = np.nanmean(x)
         return theMean
+
+    def getSpikeStat(self, spikeList, stat):
+        if len(spikeList) == 0:
+            return None
+
+        retList = []
+        #count = 0
+        for idx, spike in enumerate(self.spikeDict):
+            if idx in spikeList:
+                try:
+                    val = spike[stat]
+                    retList.append(val)
+                    #count += 1
+                except (KeyError) as e:
+                    logger.info(e)
+        return retList
 
     def setSpikeStat(self, spikeList, stat, value):
         """Used to set simple things like ('isBad', 'userType1', ...)
@@ -1816,6 +1874,8 @@ class bAnalysis:
          # we are filling this in, one dict for each spike
         #self.spikeDict = [] # we are filling this in, one dict for each spike
 
+        self._spikesPerSweep = [0] * self.numSweeps
+
         for sweepNumber in self.sweepList:
             #self.setSweep(sweep)
             self.spikeDetect2__(sweepNumber, dDict=self.detectionClass)
@@ -1952,9 +2012,15 @@ class bAnalysis:
             spikeDict[i]['condition'] = dDict['condition']
 
             spikeDict[i]['sweep'] = sweepNumber
+            
+            epoch = None
+            if self._epochTable is not None:
+                epoch = self._epochTable.findEpoch(spikeTime)    
+            spikeDict[i]['epoch'] = epoch
+
             # keep track of per sweep spike and total spike
             spikeDict[i]['sweepSpikeNumber'] = i
-            spikeDict[i]['spikeNumber'] = i  # self.numSpikes
+            spikeDict[i]['spikeNumber'] = self.numSpikes + i
 
             spikeDict[i]['include'] = True
 
@@ -2273,8 +2339,10 @@ class bAnalysis:
         #print('=== addind', len(spikeDict))
         self.spikeDict.appendAnalysis(spikeDict)
         #print('   now have', len(self.spikeDict))
-
         #print(self.spikeDict)
+
+        # keep track of spikes per sweep (expensive to calculate)
+        self._spikesPerSweep[sweepNumber] = len(spikeDict)
 
         #
         # generate a df holding stats (used by scatterplotwidget)
@@ -3160,8 +3228,27 @@ class bAnalysis:
         self._detectionDirty = False
         self._isAnalyzed = True
 
+    def saveAnalysis_tocsv(self):
+        """Save analysis to csv.
+        """
+        df = self.asDataFrame()  # pd.DataFrame(self.spikeDict)
+
+        saveFolder = self._getSaveFolder()
+        if not os.path.isdir(saveFolder):
+            logger.info(f'making folder: {saveFolder}')
+            os.mkdir(saveFolder)
+
+        saveBase = self._getSaveBase()
+        savePath = saveBase + '-analysis.csv'
+
+        logger.info(savePath)
+        
+        df.to_csv(savePath)
+
     def saveAnalysis(self, forceSave=False):
         """Not used.
+
+        Save detection parameters and analysis as json.
         """
         if not self._detectionDirty and not forceSave:
             return

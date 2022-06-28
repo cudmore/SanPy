@@ -9,7 +9,7 @@ import glob
 import importlib
 import inspect
 import os
-
+import traceback  # to print call stack on exception
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
@@ -177,11 +177,15 @@ def runAllUserAnalysis(ba):
         #userObj = obj(ba)
         #userObj.run()
 
-        # instantiate a user object
-        userObj = obj['constructor'](ba)
+        try:
+            # instantiate a user object
+            userObj = obj['constructor'](ba)
 
-        # run the analysis
-        userObj.run()  # run the analysis and append to actual ba object
+            # run the analysis
+            userObj.run()  # run the analysis and append to actual ba object
+        except (Exception) as e:
+            logger.error(f'Exception in running user defined analysis: {e}')
+            logger.error(traceback.format_exc())
 
 class baseUserAnalysis:
     """
