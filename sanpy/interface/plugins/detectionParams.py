@@ -49,17 +49,17 @@ class detectionParams(sanpyPlugin):
         if self.ba is not None:
             fileName = self.ba.getFileName()
         self.fileNameLabel = QtWidgets.QLabel(f'File: {fileName}')
-        hControlLayout.addWidget(self.fileNameLabel)
+        hControlLayout.addWidget(self.fileNameLabel, alignment=QtCore.Qt.AlignLeft)
 
         aName = 'Detect'
         aButton = QtWidgets.QPushButton(aName)
         aButton.clicked.connect(partial(self.on_button_click, aName))
-        hControlLayout.addWidget(aButton)
+        hControlLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
 
         aName = 'Set Defaults'
         aButton = QtWidgets.QPushButton(aName)
         aButton.clicked.connect(partial(self.on_button_click, aName))
-        hControlLayout.addWidget(aButton)
+        hControlLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
 
         # get list of detection presets
         detectionPresets = sanpy.bDetection.getDetectionPresetList()
@@ -70,7 +70,9 @@ class detectionParams(sanpyPlugin):
         aComboBox.setCurrentText(detectionPresets[0])
         aComboBox.currentTextChanged.connect(self.on_select_detection_preset)
 
-        hControlLayout.addWidget(aComboBox)
+        hControlLayout.addWidget(aComboBox, alignment=QtCore.Qt.AlignLeft)
+
+        hControlLayout.addStretch()
 
         '''
         aName = 'Set Defaults'
@@ -378,8 +380,8 @@ class detectionParams(sanpyPlugin):
             logger.warning(f'Button "{buttonName}" not understood.')
 
     def replot(self):
-        if self.ba is None:
-            return
+        #if self.ba is None:
+        #    return
 
         logger.info('')
 
@@ -388,12 +390,13 @@ class detectionParams(sanpyPlugin):
         #detectionClass = self.ba.detectionClass
 
         # was this
-        #detectionClass = self.detectionClass
-        self.detectionClass = self.ba.detectionClass
         detectionClass = self.detectionClass
+        
+        # self.detectionClass = self.ba.detectionClass
+        # detectionClass = self.detectionClass
 
-        fileName = self.ba.getFileName()
-        self.fileNameLabel.setText(f'File: {fileName}')
+        #fileName = self.ba.getFileName()
+        #self.fileNameLabel.setText(f'File: {fileName}')
 
         #for k,v in self.widgetDict.items():
         for detectionParam in detectionClass.keys():

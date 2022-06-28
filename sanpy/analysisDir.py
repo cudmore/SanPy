@@ -577,6 +577,10 @@ class analysisDir():
         hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
         hdfFilePath = pathlib.Path(self.path) / hdfFile
         
+        print('!!! we are using')
+        print('    hdfFilePath:', hdfFilePath)
+        print('    tmpHdfPath:', tmpHdfPath)
+
         hdfMode = 'w'
         if os.path.isfile(hdfFilePath):
             logger.info(f'copying existing hdf file to tmp and setting mode to append')
@@ -584,6 +588,8 @@ class analysisDir():
             print('    tmpHdfPath:', tmpHdfPath)
             shutil.copyfile(hdfFilePath,tmpHdfPath)
             hdfMode = 'a'
+        else:
+            print('   does not exist:', hdfFilePath)
         #
         # save each bAnalysis
         logger.info(f'Saving tmp db with hdfMode:{hdfMode} (will be compressed) {tmpHdfPath}')
@@ -604,7 +610,8 @@ class analysisDir():
         #
         # save file database
         #with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
-        with pd.HDFStore(tmpHdfPath, mode=hdfMode) as hdfStore:
+        #with pd.HDFStore(tmpHdfPath, mode=hdfMode) as hdfStore:
+        with pd.HDFStore(tmpHdfPath) as hdfStore:
             dbKey = os.path.splitext(self.dbFile)[0]
             df = df.drop('_ba', axis=1)  # don't ever save _ba, use it for runtime
 

@@ -2498,6 +2498,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # finalize
         self.setLayout(self.mainLayout)
 
+    def on_spike_number(self, spikeNumber):
+        doZoom = True
+        self.detectionWidget.selectSpike(spikeNumber, doZoom, doEmit=True)
+
     def _buildSpikeBrowser(self):
         """Build interface to go to spike number, previous <<, and next >>"""
         hBoxSpikeBrowser = QtWidgets.QHBoxLayout()
@@ -2511,7 +2515,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.spikeNumber.setMaximum(+1e6)
         self.spikeNumber.setKeyboardTracking(False)
         self.spikeNumber.setValue(0)
-        #self.spikeNumber.valueChanged.connect(self.on_spike_number)
+        self.spikeNumber.valueChanged.connect(self.on_spike_number)
+        #self.spikeNumber.editingFinished.connect(self.on_spike_number)
+        self.spikeNumber.setKeyboardTracking(False)
+
         hBoxSpikeBrowser.addWidget(self.spikeNumber)
 
         buttonName = 'Go'

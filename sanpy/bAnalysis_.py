@@ -553,7 +553,8 @@ class bAnalysis:
         logger.info(f'SAVING uuid:{self.uuid} {self.getInfo()}')
 
         #with pd.HDFStore(hdfPath, mode='a') as hdfStore:
-        with pd.HDFStore(hdfPath, mode=hdfMode) as hdfStore:
+        #with pd.HDFStore(hdfPath, mode=hdfMode) as hdfStore:
+        with pd.HDFStore(hdfPath) as hdfStore:
             # vars(class) retuns a dict with all instance variables
             iDict = vars(self)
 
@@ -893,11 +894,14 @@ class bAnalysis:
         
         See getAbsSpikeFromSweep()
         """
-        absIdx = 0
-        for oneSweep in range(sweep):
-            absIdx += self._spikesPerSweep[oneSweep]
-        sweepSpike = absSpikeIdx - absIdx
-        return sweepSpike
+        sweepSpikeNum = self.spikeDict[absSpikeIdx]['sweepSpikeNumber']
+        return sweepSpikeNum
+        
+        # absIdx = 0
+        # for oneSweep in range(sweep):
+        #     absIdx += self._spikesPerSweep[oneSweep]
+        # sweepSpike = absSpikeIdx - absIdx
+        # return sweepSpike
 
     def old_getOneColumns(self, d):
         shape = d.shape
