@@ -127,7 +127,7 @@ def spikeDetect(t, dataFiltered, dataThreshold2, startPoint=None, stopPoint=None
 
 	#
 	# backup each spike until pre/post is not changing
-	# uses g_backupFraction to get percent of dv/dt at spike veruus each backup window
+	# uses g_backupFraction to get percent of dv/dt at spike versus each backup window
 	backupWindow_pnts = 30
 	maxSteps = 30  # 30 steps at 20 pnts (2ms) per step gives 60 ms
 	backupSpikes = []
