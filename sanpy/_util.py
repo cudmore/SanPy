@@ -1,6 +1,7 @@
 import os
 import sys
 import pathlib
+import shutil
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -37,6 +38,8 @@ def addUserPath():
         logger.info(f'    {path}')
 
 def _getUserDocumentsFolder():
+    """Get folder from <user> path (not sanpy path).
+    """
     userPath = pathlib.Path.home()
     userDocumentsFolder = os.path.join(userPath, 'Documents')
     if not os.path.isdir(userDocumentsFolder):
@@ -89,9 +92,19 @@ def _makeSanPyFolders():
     # main <user>/DOcuments/SanPy folder
     sanpyFolder = _getUserSanPyFolder()
     if not os.path.isdir(sanpyFolder):
-        logger.info(f'Making SanPy folder "{sanpyFolder}"')
-        os.mkdir(sanpyFolder)
+        logger.info(f'Making <user>/SanPy folder "{sanpyFolder}"')
+        #os.mkdir(sanpyFolder)
 
+        #
+        # copy entire xxx into <user>/Documents/SanPy
+        _bundDir = getBundledDir()
+        _srcPath = pathlib.Path(_bundDir) / '_userFiles' / 'SanPy'
+        _dstPath = pathlib.Path(sanpyFolder)
+        logger.info(f'    copying folder tree to <user>/Documents/SanPy folder')
+        logger.info(f'    _srcPath:{_srcPath}')
+        logger.info(f'    _dstPath:{_dstPath}')
+        shutil.copytree(_srcPath, _dstPath)
+    '''
     # SanPyapplication preferences
     preferencesFolder = _getUserPreferencesFolder()
     if not os.path.isdir(preferencesFolder):
@@ -117,6 +130,11 @@ def _makeSanPyFolders():
         # TODO: add __init__.py
         logger.info(f'Making user analysis folder "{analysisFolder}"')
         os.mkdir(analysisFolder)
+        # copy from _userFiles into this folder
+        # _bundDir = getBundledDir()
+        # _srcPath = pathlib.Path(self._bundDir) / tmpHdfFile
+        # shutil.copyfile(hdfFilePath,tmpHdfPath)
+    '''
 
 def _module_from_file(module_name, file_path):
 	spec = importlib.util.spec_from_file_location(module_name, file_path)

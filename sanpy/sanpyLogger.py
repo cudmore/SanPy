@@ -38,15 +38,19 @@ def getLoggerFile():
 
     userPath = pathlib.Path.home()
     userPreferencesFolder = os.path.join(userPath, 'Documents', 'SanPy', 'preferences')
+    #print('looking for userPreferencesFolder:', userPreferencesFolder)
     if os.path.isdir(userPreferencesFolder):
         myPath = userPreferencesFolder
+        #print('  my path 1:', myPath)
     elif getattr(sys, 'frozen', False):
         # running in a bundle (frozen)
         myPath = sys._MEIPASS
+        #print('  my path 2:', myPath)
     else:
         # running in a normal Python environment
         #myPath = os.path.dirname(os.path.abspath(__file__))
         myPath = pathlib.Path(__file__).parent.absolute()
+        #print('  my path 3:', myPath)
 
     fileName = 'sanpy.log'
     logPath = os.path.join(myPath, fileName)

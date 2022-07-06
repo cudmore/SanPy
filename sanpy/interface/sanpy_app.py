@@ -312,6 +312,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # add to preferences recent folders
         self.configDict.addFolder(path)
 
+        # save preferences
+        self.configDict.save()
+        
     '''
     def slot_dataChanged(self, columnName, value, rowDict):
         """User has edited main file table.

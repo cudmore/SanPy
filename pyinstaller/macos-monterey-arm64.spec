@@ -8,7 +8,9 @@ a = Analysis(
     ['../sanpy/interface/sanpy_app.py'],
     pathex=['/Users/cudmore/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/'],
     binaries=[],
-    datas=[('/Users/cudmore/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors', 'pyqtgraph/colors')],
+    datas=[
+            #('/Users/cudmore/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors', 'pyqtgraph/colors'),
+            ('../sanpy/_userFiles', '_userFiles')],
     hiddenimports=['pkg_resources', 'tables'],
     hookspath=[],
     hooksconfig={},

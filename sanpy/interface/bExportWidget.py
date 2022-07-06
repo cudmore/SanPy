@@ -281,7 +281,7 @@ class bExportWidget(QtWidgets.QWidget):
 
         if self.path:
             windowTitle = os.path.split(self.path)[1]
-            print('windowTitle:', windowTitle)
+            #print('windowTitle:', windowTitle)
             self.setWindowTitle('Export Trace: ' + windowTitle)
         else:
             self.setWindowTitle('Export Trace: ' + 'None')
