@@ -95,6 +95,13 @@ analysisResultDict[key]['default'] = np.nan  # todo: not sure
 analysisResultDict[key]['units'] = ''
 analysisResultDict[key]['description'] = 'Stimulus epoch number the spike occured in. Zero based.'
 
+key = 'epochLevel'
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]['type'] = 'float'
+analysisResultDict[key]['default'] = np.nan  # todo: not sure
+analysisResultDict[key]['units'] = ''
+analysisResultDict[key]['description'] = 'Epoch level (DAC) stimulus during the spike.'
+
 key = 'sweepSpikeNumber'
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]['type'] = 'int'

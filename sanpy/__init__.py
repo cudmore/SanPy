@@ -1,7 +1,9 @@
 # this is a folder, problems with heroku
 #from .useranalysis import *
 
-# only export base sanpy, no GUI
+from .sanpyLogger import *
+from ._util import *
+
 from .bAnalysis_ import *
 from .epochTable import epochTable
 from .analysisDir import *

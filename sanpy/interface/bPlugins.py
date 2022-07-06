@@ -121,19 +121,19 @@ class bPlugins():
 
 			loadedModule = self._module_from_file(fullModuleName, file)
 
-			logger.info('')
-			logger.info(f'    file: {file}')
-			logger.info(f'    fullModuleName: {fullModuleName}')
-			logger.info(f'    moduleName: {moduleName}')
-			logger.info(f'    loadedModule: {loadedModule}')
+			# logger.info('')
+			# logger.info(f'    file: {file}')
+			# logger.info(f'    fullModuleName: {fullModuleName}')
+			# logger.info(f'    moduleName: {moduleName}')
+			# logger.info(f'    loadedModule: {loadedModule}')
 
 			try:
 				oneConstructor = getattr(loadedModule, moduleName)
-				logger.info(f'    oneConstructor: {oneConstructor}')
-				logger.info(f'    type(oneConstructor): {type(oneConstructor)}')
+				# logger.info(f'    oneConstructor: {oneConstructor}')
+				# logger.info(f'    type(oneConstructor): {type(oneConstructor)}')
 
 			except (AttributeError) as e:
-				logger.error(f'Make sure filename and class are the same file:"{moduleName}"')
+				logger.error(f'While loading a user plugin, make sure filename and class are the same:"{moduleName}"')
 			else:
 				humanName = oneConstructor.myHumanName
 				pluginDict = {
@@ -149,13 +149,13 @@ class bPlugins():
 				if humanName in self.pluginDict.keys():
 					logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
 				else:
-					logger.info(f'loading user plugin: "{file}"')
+					# logger.info(f'loading user plugin: "{file}"')
 					#self.pluginDict[moduleName] = pluginDict
 					self.pluginDict[humanName] = pluginDict
 					loadedModuleList.append(moduleName)
 
 		# print the loaded plugins
-		logger.info(f'Loaded {len(loadedModuleList)} user plugins')
+		logger.info(f'Loaded {len(loadedModuleList)} user plugin(s)')
 		for loaded in loadedModuleList:
 			logger.info(f'    {loaded}')
 

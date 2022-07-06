@@ -23,9 +23,12 @@ ba.spikeDetect(dDict)
 ```
 """
 import os
-import numbers, math, enum
+import numbers, math
+from enum import Enum
 import json
 from pprint import pprint
+
+from collections import OrderedDict
 
 from matplotlib.font_manager import json_load
 #from colin.stochAnalysis import load
@@ -35,7 +38,7 @@ import sanpy
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-class detectionTypes_(enum.Enum):
+class detectionTypes_(Enum):
     """
     Detection type is one of (dvdt, mv).
 
@@ -47,7 +50,7 @@ class detectionTypes_(enum.Enum):
 
 # TODO (Cudmore) this needs to be a class so we can expand/contract based on what we find on the hard-drive
 # allow user to save to detection presets
-class detectionPresets_(enum.Enum):
+class detectionPresets_(Enum):
     """
     Detection presets is one of:
     """
@@ -62,9 +65,10 @@ class detectionPresets_(enum.Enum):
     saNode = 'SA Node'
     ventricular = 'Ventricular'
     neuron = 'Neuron'
-    subthreshold = 'Sub-threshold'
+    fastNeuron = 'Fast Neuron'
+    subthreshold = 'Sub Threshold'
     caSpikes = 'Ca Spikes'
-    caKymograph = 'Kymograph'
+    caKymograph = 'Ca Kymograph'
 
 #def getDefaultDetection(cellType=None):
 def getDefaultDetection(detectionPreset):
@@ -78,12 +82,13 @@ def getDefaultDetection(detectionPreset):
     Returns:
         dict: The default detection dictionary.
     """
-    theDict = {}
+    theDict = OrderedDict()  # {}
 
     #key = 'detectionName'
     #theDict[key] = {}
     #theDict[key]['defaultValue'] = ''  # the name of the preset
 
+    '''
     key = 'include'
     theDict[key] = {}
     theDict[key]['defaultValue'] = True
@@ -93,6 +98,17 @@ def getDefaultDetection(detectionPreset):
     theDict[key]['humanName'] = 'Include'
     theDict[key]['errors'] = ('')
     theDict[key]['description'] = 'Include analysis for this file'
+    '''
+
+    key = 'detectionName'
+    theDict[key] = {}
+    theDict[key]['defaultValue'] = detectionPreset.value # ('dvdt', 'mv')
+    theDict[key]['type'] = 'sanpy.bDetection.detectionPresets'
+    theDict[key]['allowNone'] = False  # To do, have 2x entry points to bAnalysis detect, never set this to nan
+    theDict[key]['units'] = ''
+    theDict[key]['humanName'] = 'Detection Preset Name'
+    theDict[key]['errors'] = ('')
+    theDict[key]['description'] = 'The name of detection presets (including user saved presets)'
 
     key = 'detectionType'
     theDict[key] = {}
@@ -380,15 +396,25 @@ def getDefaultDetection(detectionPreset):
         theDict['preSpikeClipWidth_ms']['defaultValue'] = 200
         theDict['postSpikeClipWidth_ms']['defaultValue'] = 500
     elif detectionPreset == bDetection.detectionPresets.neuron:
-        theDict['dvdtThreshold']['defaultValue'] = 100
+        theDict['dvdtThreshold']['defaultValue'] = 20
         theDict['mvThreshold']['defaultValue'] = -40
         theDict['refractory_ms']['defaultValue'] = 4
         theDict['peakWindow_ms']['defaultValue'] = 5
         theDict['halfWidthWindow_ms']['defaultValue'] = 4
         theDict['dvdtPreWindow_ms']['defaultValue'] = 2
         theDict['dvdtPostWindow_ms']['defaultValue'] = 2
-        theDict['preSpikeClipWidth_ms']['defaultValue'] = 20
-        theDict['postSpikeClipWidth_ms']['defaultValue'] = 20
+        theDict['preSpikeClipWidth_ms']['defaultValue'] = 2
+        theDict['postSpikeClipWidth_ms']['defaultValue'] = 2
+    elif detectionPreset == bDetection.detectionPresets.fastNeuron:
+        theDict['dvdtThreshold']['defaultValue'] = 20
+        theDict['mvThreshold']['defaultValue'] = -40
+        theDict['refractory_ms']['defaultValue'] = 3
+        theDict['peakWindow_ms']['defaultValue'] = 2
+        theDict['halfWidthWindow_ms']['defaultValue'] = 4
+        theDict['dvdtPreWindow_ms']['defaultValue'] = 2
+        theDict['dvdtPostWindow_ms']['defaultValue'] = 2
+        theDict['preSpikeClipWidth_ms']['defaultValue'] = 2
+        theDict['postSpikeClipWidth_ms']['defaultValue'] = 2
     elif detectionPreset == bDetection.detectionPresets.subthreshold:
         theDict['dvdtThreshold']['defaultValue'] = math.nan
         theDict['mvThreshold']['defaultValue'] = -20  # user specifies
@@ -426,7 +452,7 @@ def getDefaultDetection(detectionPreset):
     for k,v in theDict.items():
         defaultValue = theDict[k]['defaultValue']
         theDict[k]['currentValue'] = defaultValue
-
+    
     return theDict.copy()
 
 def printDocs():
@@ -504,8 +530,7 @@ class bDetection(object):
         #logger.warning('\n   !!! LOADING: detectionPreset=detectionPresets.caKymograph\n\n')
         # local copy of default dictionary, do not modify
         self._dDict = getDefaultDetection(detectionPreset)
-        self.toJson()
-
+        #self.toJson()
 
     def toJson(self):
         """Get key and defaultValue
@@ -514,15 +539,15 @@ class bDetection(object):
         for k,v in self._dDict.items():
             theDict[k] = v['defaultValue']
 
-        logger.info('theDict:')
+        #logger.info('theDict:')
         #pprint(theDict)
 
         #with open(savePath, 'w') as f:
         #    json.dump(self._dDict, f, indent=4)
         theJson = json.dumps(theDict, indent=4)
-        logger.info('theJson:')
-        #print(theJson)
-        
+        #logger.info('theJson:')
+        return theJson
+
     def setToType(self, detectionPreset):
         """
         detectionPreset (enum) detectionPresets
@@ -740,7 +765,7 @@ def test_0():
 
 def test_save_load():
     # load an abf
-    path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+    path = '/Users/cudmore/Sites/SanPy/data/19114001.abf'
     ba = sanpy.bAnalysis(path)
 
     # analyze
@@ -770,10 +795,52 @@ def test_save_load():
 
     print(ba)
 
+def _exportDetectionJson():
+    """20220705
+    
+    need to load/save detection presets from json
+
+    To start, this will save json from the hard coded getDefaultDetection() function.
+    """
+    savePath = '/Users/cudmore/Desktop/detection-presets'
+    
+    for oneDetection in bDetection.detectionPresets:
+        print('oneDetection:', oneDetection, 'oneDetection.value:', oneDetection.value)
+ 
+        onePreset = bDetection.detectionPresets(oneDetection)
+        oneDetectionClass = bDetection(onePreset)
+        #oneJson = oneDetectionClass.toJson()
+       
+        _theDict = {}
+        for k,v in oneDetectionClass._dDict.items():
+            print(k)
+            _theDict[k] = v['defaultValue']
+
+        #print('_theDict.items():', _theDict.items())
+        #pprint(_theDict)
+
+        oneSaveFile = oneDetection.value + '.json'
+        onseSavePath = os.path.join(savePath, oneSaveFile)
+        print('    ', onseSavePath)
+        
+        with open(onseSavePath, 'w') as f:
+            #json.dump(oneJson, f, ensure_ascii=False, indent=4)
+            json.dump(_theDict, f, indent=4)
+
+        # load to check
+        with open(onseSavePath) as f:
+            # need this to keep them in order ... 'object_pairs_hook=OrderedDict'
+            data_loaded = json.load(f, object_pairs_hook=OrderedDict)
+        pprint(data_loaded)
+
+        #break
+
 if __name__ == '__main__':
     #test_0()
 
     # this works
     #printDocs()
 
-    test_save_load()
+    #test_save_load()
+
+    _exportDetectionJson()

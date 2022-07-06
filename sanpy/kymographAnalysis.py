@@ -81,6 +81,28 @@ class kymographAnalysis():
         folder, folderName = os.path.split(folder)
         _tmp, grandParentFolder = os.path.split(folder)
 
+        """
+        numLines: Number of line scans in kymograph
+        numPixels: Number of pixels in each line scan
+        secondsPerLine: The duration (sec) of each line scan
+        umPerPixel: The um per pixel along the line scan
+        dur_sec: Total duration of kymograph (sec)
+        dist_um: The um length of each line scan
+
+        # analysis 
+        tifMin: Minimum intensity of the tif
+        tifMax: Maximum intensity of the tif
+        
+        # diameter analysis
+        minDiam: Minimum diameter (among all line scans)
+        maxDiam: Maximum diameter (among all line scans)
+        diamChange: (maxDIam-minDiam) to quickly find kymographs that have a large change in diameter.
+        
+        # sum along the entire line scan (to find cell wide Ca2+ spikes)
+        minSum: The minimum (sum all pixels in line scan / numPixels)
+        maxSum: The maximum ...
+        sumChange: (maxSum-minSUm) to quickly find kymographs that have a large change in diameter
+        """
         theDict = {
             'folder': folderName,
             'grandParentFolder': grandParentFolder,

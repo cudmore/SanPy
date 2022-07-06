@@ -1,7 +1,11 @@
 # Author: Robert H Cudmore
 # Date: 20190719
 
-import os, sys, time, math, json
+from curses.panel import bottom_panel
+import os, sys
+# import time
+# import math
+# import json
 #import traceback # to print call stack
 from functools import partial
 from collections import OrderedDict
@@ -23,6 +27,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 import sanpy._util
 import sanpy.interface
+import sanpy.interface.preferences
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -84,6 +89,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         super(SanPyWindow, self).__init__(parent)
 
+        self.setAcceptDrops(True)
+
         # create directories in <user>/Documents and add to python path
         sanpy._util.addUserPath()
 
@@ -113,10 +120,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #self.selectedRow = None
 
         # path to loaded folder (using bAnalysisDir)
-        self.configDict = self.preferencesLoad()
+        self.configDict = sanpy.interface.preferences(self)
         self.myAnalysisDir = None
-        lastPath = self.configDict['lastPath']
-        logger.info(f'json preferences file lastPath "{lastPath}"')
+        lastPath = self.configDict.getMostRecentFolder()
+        logger.info(f'preferences lastPath is "{lastPath}"')
         if path is not None:
             self.path = path
         elif lastPath is not None and os.path.isdir(lastPath):
@@ -131,12 +138,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         # I changed saved preferences file,
         # try not to screw up Laura's analysis
-        if 'useDarkStyle' in self.configDict.keys():
-            self.useDarkStyle = self.configDict['useDarkStyle']
-        else:
-            #print('  adding useDarkStyle to preferences')
-            self.useDarkStyle = True
-            self.configDict['useDarkStyle'] = True
+        self.useDarkStyle = self.configDict['useDarkStyle']
 
         #
         # set window geometry
@@ -164,6 +166,22 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         self.slot_updateStatus('Ready')
         logger.info('SanPy started')
+
+    def dragEnterEvent(self, event):
+        logger.info('')
+        if event.mimeData().hasUrls():
+            event.accept()
+        else:
+            event.ignore()
+
+    def dropEvent(self, event):
+        logger.info('')
+        folders = [u.toLocalFile() for u in event.mimeData().urls()]
+        if len(folders) > 1:
+            return
+        oneFolder = folders[0]
+        if os.path.isdir(oneFolder):
+            self.loadFolder(path=oneFolder)
 
     def closeEvent(self, event):
         """
@@ -202,6 +220,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def getOptions(self):
         return self.configDict
 
+    def getWindowGeometry(self):
+        myRect = self.geometry()
+        left = myRect.left()
+        top = myRect.top()
+        width = myRect.width()
+        height = myRect.height()
+        return left, top, width, height
+
     def toggleStyleSheet(self, doDark=None, buildingInterface=False):
         # breeze
         return
@@ -231,7 +257,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             msg.setWindowTitle("Theme Changed")
             retval = msg.exec_()
 
-            self.preferencesSave()
+            self.configDict.save()
 
     def loadFolder(self, path=''):
         """
@@ -250,12 +276,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
         elif os.path.isdir(path):
             pass
         else:
-            logger.warning(f'Did not load path "{path}"')
+            logger.warning(f'    Did not load path "{path}"')
             return
 
         self.path = path # path to loaded bAnalysisDir folder
 
-        logger.info(f'Loading path: {path}')
+        #logger.info(f'Loading path: {path}')
 
         # will create/load csv and/or gzip (of all analysis)
         self.myAnalysisDir = sanpy.analysisDir(path, myApp=self)
@@ -282,6 +308,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         else:
             windowTitle = 'SanPy'
         self.setWindowTitle(windowTitle)
+
+        # add to preferences recent folders
+        self.configDict.addFolder(path)
 
     '''
     def slot_dataChanged(self, columnName, value, rowDict):
@@ -316,7 +345,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #print('=== sanpy_app.mySignal() "' + this +'"')
 
         if this == 'select spike':
-            print('\n\nTODO: GET RID OF "select spike"\n\n')
+            logger.warning('\n\nTODO: GET RID OF "select spike"\n\n')
             spikeNumber = data['spikeNumber']
             doZoom = data['isShift']
             self.selectSpike(spikeNumber, doZoom=doZoom)
@@ -448,11 +477,16 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         mainMenu = self.menuBar()
 
-        loadFolderAction = QtWidgets.QAction('Load Folder ...', self)
+        # load
+        loadFolderAction = QtWidgets.QAction('Open Folder ...', self)
         loadFolderAction.setShortcut('Ctrl+O')
         loadFolderAction.triggered.connect(self.loadFolder)
 
-        saveDatabaseAction = QtWidgets.QAction('Save Database', self)
+        # open recent (submenu)
+        self.openRecentMenu = QtWidgets.QMenu('Open Recent ...')
+        self.openRecentMenu.aboutToShow.connect(self._refreshOpenRecent)
+
+        saveDatabaseAction = QtWidgets.QAction('Save Folder Analysis', self)
         saveDatabaseAction.setShortcut('Ctrl+S')
         saveDatabaseAction.triggered.connect(self.slot_saveFilesTable)
 
@@ -460,13 +494,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #buildDatabaseAction.triggered.connect(self.buildDatabase)
 
         savePreferencesAction = QtWidgets.QAction('Save Preferences', self)
-        savePreferencesAction.triggered.connect(self.preferencesSave)
+        savePreferencesAction.triggered.connect(self.configDict.save)
 
         showLogAction = QtWidgets.QAction('Show Log', self)
         showLogAction.triggered.connect(self.openLog)
 
         fileMenu = mainMenu.addMenu('&File')
         fileMenu.addAction(loadFolderAction)
+        fileMenu.addMenu(self.openRecentMenu)
         fileMenu.addSeparator()
         fileMenu.addAction(saveDatabaseAction)
         fileMenu.addSeparator()
@@ -580,6 +615,16 @@ class SanPyWindow(QtWidgets.QMainWindow):
             url = 'https://cudmore.github.io/SanPy/'
             webbrowser.open(url, new=2)
         
+    def _refreshOpenRecent(self):
+        #logger.info('')
+        self.openRecentMenu.clear()
+        for recentFolder in self.configDict.getRecentFolder():
+
+            loadFolderAction = QtWidgets.QAction(recentFolder, self)
+            #loadFolderAction.setShortcut('Ctrl+O')
+            loadFolderAction.triggered.connect(partial(self.loadFolder, recentFolder))
+
+            self.openRecentMenu.addAction(loadFolderAction)
     def _refreshViewMenu(self):
         #logger.info('****************')
         
@@ -776,7 +821,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # add a number of plugins to QDockWidget 'Plugins 1'
         # we need to know the recice human name like 'xxx'
         #detectionPlugin = self.myPlugins.runPlugin('Detection Parameters', ba=None, show=False)
-        clipsPlugin = self.myPlugins.runPlugin('Plot Spike Clips', ba=None, show=False)
+        
+        #clipsPlugin = self.myPlugins.runPlugin('Plot Spike Clips', ba=None, show=False)
+        clipsPlugin = self.myPlugins.runPlugin('Export Trace', ba=None, show=False)
+        #clipsPlugin = self.myPlugins.runPlugin('Plot Recording', ba=None, show=False)
+        
         #scatterPlugin = self.myPlugins.runPlugin('Plot Scatter', ba=None, show=False)
         #errorSummaryPlugin = self.myPlugins.runPlugin('Error Summary', ba=None, show=False)
         #summaryAnalysisPlugin = self.myPlugins.runPlugin('Summary Analysis', ba=None, show=False)
@@ -822,114 +871,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #self.setLayout(layout)
         #self.setWindowTitle('SanPy v3')
 
-    def preferencesSet(self, key1, key2, val):
-        """Set a preference. See `preferencesDefaults()` for key values."""
-        try:
-            self.configDict[key1][key2] = val
-
-            # actually show hide some widgets
-            #if key1=='display' and key2=='showScatter':
-            #    if val:
-            #        self.myScatterPlotWidget.show()
-            #    else:
-            #        self.myScatterPlotWidget.hide()
-
-            #if key1=='display' and key2=='showErrors':
-            #    if val:
-            #        self.myErrorTable.show()
-            #    else:
-            #        self.myErrorTable.hide()
-
-        except (KeyError) as e:
-            logger.error(f'Did not set preference with keys "{key1}" and "{key2}"')
-
-    def preferencesGet(self, key1, key2):
-        """Get a preference. See `preferencesDefaults()` for key values."""
-        try:
-            return self.configDict[key1][key2]
-        except (KeyError) as e:
-            logger.error(f'Did not get preference with keys "{key1}" and "{key2}"')
-
-    def preferencesLoad(self):
-        """
-        When frozen with pyINstaller and on Windows, we get a different
-            bundled (mei) folder each time we run.
-            Thus, we can't save out preferences there.
-        """
-        # TODO: put this in constructore
-        bundle_dir = sanpy._util.getBundledDir()
-        #self.optionsFile = os.path.join(bundle_dir, 'sanpy_app.json')
-        self.optionsFile = pathlib.Path(bundle_dir) / 'sanpy_app.json'
-
-        if os.path.isfile(self.optionsFile):
-            #print('  preferencesLoad() loading options file:', self.optionsFile)
-            logger.info(f'Loading options file: {self.optionsFile}')
-            with open(self.optionsFile) as f:
-                return json.load(f)
-        else:
-            #print('     preferencesLoad() using program provided default options')
-            #print('  did not find file:', self.optionsFile)
-            logger.info(f'Using default options')
-            logger.info(f'    did not find "{self.optionsFile}"')
-            return self.preferencesDefaults()
-
-    def preferencesDefaults(self):
-        configDict = OrderedDict()
-
-        configDict['useDarkStyle'] = True
-        configDict['autoDetect'] = True # FALSE DOES NOT WORK!!!! auto detect on file selection and/or sweep selection
-        configDict['lastPath'] = ''
-        configDict['windowGeometry'] = {}
-        configDict['windowGeometry']['x'] = 100
-        configDict['windowGeometry']['y'] = 100
-        configDict['windowGeometry']['width'] = 1000
-        configDict['windowGeometry']['height'] = 1000
-        
-        configDict['filePanels'] = {}
-        configDict['filePanels']['File Panel'] = True
-
-        # panels withing detectionWidget -> myDetectionToolbar
-        configDict['detectionPanels'] = {}
-        configDict['detectionPanels']['Detection Panel'] = True  # main panel
-        configDict['detectionPanels']['Detection'] = True
-        configDict['detectionPanels']['Display'] = True
-        configDict['detectionPanels']['Plot Options'] = False
-        
-        # values in detectionWidget -> myDetectionToolbar
-        configDict['detect'] = {}
-        configDict['detect']['detectDvDt'] = 20
-        configDict['detect']['detectMv'] = -20
-
-        # display options within detectionWidget -> myDetectionToolbar
-        configDict['rawDataPanels'] = {}
-        configDict['rawDataPanels']['plotEveryPoint'] = 10 # not used?
-        configDict['rawDataPanels']['Full Recording'] = True #
-        configDict['rawDataPanels']['Derivative'] = True #
-        configDict['rawDataPanels']['DAC'] = True #
-
-        return configDict
-
-    def preferencesSave(self):
-        #print('=== SanPy_App.preferencesSave() file:', self.optionsFile)
-        logger.info(f'Saving options file as: "{self.optionsFile}"')
-
-        myRect = self.geometry()
-        left = myRect.left()
-        top = myRect.top()
-        width = myRect.width()
-        height = myRect.height()
-
-        self.configDict['windowGeometry']['x'] = left
-        self.configDict['windowGeometry']['y'] = top
-        self.configDict['windowGeometry']['width'] = width
-        self.configDict['windowGeometry']['height'] = height
-
-        self.configDict['lastPath'] = self.path
-
-        #
-        # save
-        with open(self.optionsFile, 'w') as outfile:
-            json.dump(self.configDict, outfile, indent=4, sort_keys=True)
 
     def sanpyPlugin_action(self, pluginName):
         """
@@ -1141,17 +1082,19 @@ def testFFT(sanpyWindow):
     fftPlugin = sanpyWindow.myPlugins.runPlugin(pluginName, ba)
 
 def main():
-    logger.info(f'=== Starting sanpy_app.py in __main__()')
+    logger.info(f'Starting sanpy_app.py in __main__()')
 
     date_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     logger.info(f'    {date_time_str}')
 
-    logger.info(f'Python version is {platform.python_version()}')
-    logger.info(f'PyQt version is {QtCore.QT_VERSION_STR}')
+    logger.info(f'    Python version is {platform.python_version()}')
+    logger.info(f'    PyQt version is {QtCore.QT_VERSION_STR}')
 
     bundle_dir = sanpy._util.getBundledDir()
-    logger.info(f'bundle_dir is "{bundle_dir}"')
-    logger.info(f'str(bundle_dir) is "{str(bundle_dir)}"')
+    logger.info(f'    bundle_dir is "{bundle_dir}"')
+
+    _logFilePath = sanpy.sanpyLogger.getLoggerFile()
+    logger.info(f'    logging to file {_logFilePath}')
 
     os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt5'
 
@@ -1162,10 +1105,10 @@ def main():
     appIconPathStr = str(appIconPath)
     #logger.info(f'appIconPath is "{appIconPath}"')
     if os.path.isfile(appIconPathStr):
-        logger.info(f'setting app window icon with: "{appIconPath}"')
+        logger.info(f'    setting app window icon with: "{appIconPath}"')
         app.setWindowIcon(QtGui.QIcon(appIconPathStr))
     else:
-        logger.warning(f'Did not find appIconPath: {appIconPathStr}')
+        logger.warning(f'    Did not find appIconPath: {appIconPathStr}')
 
     #app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
     app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api=os.environ['PYQTGRAPH_QT_LIB']))

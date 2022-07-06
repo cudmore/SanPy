@@ -149,19 +149,24 @@ We require type so we can edit with QAbstractTableModel.
 Critical for qt interface to allow easy editing of values while preserving type
 """
 
-def fixRelPath(folderPath, dfTable :pd.DataFrame, fileList : List[str]):
+def fixRelPath(folderPath, dfTable : pd.DataFrame, fileList : List[str]):
     """
-    was not assigning relPath on initial load (no hd5 file)
+    Was not assigning relPath on initial load (no hd5 file).
+
+    We need a path relative to location of loaded folder.
+    This allows a folder of files and analysis to be moved (to a different machine)
     """
-    logger.info('')
     
-    print('fileList:', fileList)
-    pprint(dfTable[['File', 'relPath']])
+    # print('fileList:', fileList)
+    # pprint(dfTable[['File', 'relPath']])
     
-    if dfTable is None:
-        logger.error('no dfTable')
+    # if dfTable is None:
+    #     logger.error('no dfTable')
 
     n = len(dfTable)
+
+    logger.info(f'Checking path for {n} file(s)')
+
     for rowIdx in range(n):
         file = dfTable.loc[rowIdx, 'File']
         relPath = dfTable.loc[rowIdx, 'relPath']
@@ -173,17 +178,14 @@ def fixRelPath(folderPath, dfTable :pd.DataFrame, fileList : List[str]):
         #print(rowIdx, file, relPath)
         for filePath in fileList:
             if filePath.find(file) != -1:
-                print(f'  fixRelPath() file idx {rowIdx} file:{file} now has relPath:{filePath}')
+                logger.info(f'    fixRelPath() file idx {rowIdx} file:{file} now has relPath:{filePath}')
                 dfTable.loc[rowIdx, 'relPath'] = filePath
 
-    #sys.exit(1)
-
 def h5_printKey(hdfPath):
-    print('\n=== h5_printKey() hdfPath:', hdfPath)
+    logger.info(f'hdfPath: {hdfPath} has keys:')
     with pd.HDFStore(hdfPath, mode='r') as store:
         for key in store.keys():
-            print('  ', key)
-    print('\n')
+            logger.info(f'    {key}')
 
 class bAnalysisDirWeb():
     """
@@ -319,7 +321,7 @@ class analysisDir():
         self._checkColumns()
         self._updateLoadedAnalyzed()
 
-        logger.warning('\n   temporary fix with fixRelPath()\n')
+        logger.warning('remember: temporary fix with fixRelPath()\n')
         tmpFileList = self.getFileList()
         fixRelPath(self.path, self._df, tmpFileList)
 
@@ -547,6 +549,33 @@ class analysisDir():
                 # save analysis to csv
                 ba.saveAnalysis_tocsv()
 
+    def _getTmpHdfFile(self):
+        """Get temporary h5 file to write to.
+        
+        We will always then compress with _rebuildHdf.
+        """
+        logger.info('')
+        
+        tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
+        tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
+
+        # the compressed version from the last save
+        hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
+        hdfFilePath = pathlib.Path(self.path) / hdfFile
+        
+        #hdfMode = 'w'
+        if os.path.isfile(hdfFilePath):
+            logger.info(f'    copying existing hdf file to tmp ')
+            logger.info(f'    hdfFilePath {hdfFilePath}')
+            logger.info(f'    tmpHdfPath {tmpHdfPath}')
+            shutil.copyfile(hdfFilePath,tmpHdfPath)
+        else:
+            pass
+            # compressed file does not exist, just use tmp path
+            # print('   does not exist:', hdfFilePath)
+
+        return tmpHdfPath
+
     def saveHdf(self):
         """
         Save file table and any number of loaded and analyzed bAnalysis.
@@ -577,29 +606,31 @@ class analysisDir():
         hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
         hdfFilePath = pathlib.Path(self.path) / hdfFile
         
-        print('!!! we are using')
-        print('    hdfFilePath:', hdfFilePath)
-        print('    tmpHdfPath:', tmpHdfPath)
+        # print('!!! we are using')
+        # print('    hdfFilePath:', hdfFilePath)
+        # print('    tmpHdfPath:', tmpHdfPath)
 
-        hdfMode = 'w'
+        #hdfMode = 'w'
         if os.path.isfile(hdfFilePath):
             logger.info(f'copying existing hdf file to tmp and setting mode to append')
             print('    hdfFilePath:', hdfFilePath)
             print('    tmpHdfPath:', tmpHdfPath)
             shutil.copyfile(hdfFilePath,tmpHdfPath)
-            hdfMode = 'a'
+            #hdfMode = 'a'
         else:
             print('   does not exist:', hdfFilePath)
         #
         # save each bAnalysis
-        logger.info(f'Saving tmp db with hdfMode:{hdfMode} (will be compressed) {tmpHdfPath}')
+        #logger.info(f'Saving tmp db with hdfMode:{hdfMode} (will be compressed) {tmpHdfPath}')
+        logger.info(f'Saving tmp db (will be compressed) {tmpHdfPath}')
 
         for row in range(len(df)):
             #ba = self.getAnalysis(row)  # do not call this, it will load
             ba = df.at[row, '_ba']
             if ba is not None:
                 # 20220615
-                didSave = ba._saveToHdf(tmpHdfPath, hdfMode=hdfMode) # will only save if ba.detectionDirty
+                #didSave = ba._saveToHdf(tmpHdfPath, hdfMode=hdfMode) # will only save if ba.detectionDirty
+                didSave = ba._saveToHdf(tmpHdfPath) # will only save if ba.detectionDirty
                 if didSave:
                     # we are now saved into h5 file, remember uuid to load
                     df.at[row, 'uuid'] = ba.uuid
@@ -609,8 +640,6 @@ class analysisDir():
 
         #
         # save file database
-        #with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
-        #with pd.HDFStore(tmpHdfPath, mode=hdfMode) as hdfStore:
         with pd.HDFStore(tmpHdfPath) as hdfStore:
             dbKey = os.path.splitext(self.dbFile)[0]
             df = df.drop('_ba', axis=1)  # don't ever save _ba, use it for runtime
@@ -657,25 +686,26 @@ class analysisDir():
                 return
 
         logger.info(f'Loading existing folder hdf {hdfPath}')
+        h5_printKey(hdfPath)
 
         start = time.time()
         with pd.HDFStore(hdfPath) as hdfStore:
-            print('  hdfStore has keys:')
-            for k in hdfStore.keys():
-                print(f'    {k}')
+            # print('  hdfStore has keys:')
+            # for k in hdfStore.keys():
+            #     print(f'    {k}')
 
             dbKey = os.path.splitext(self.dbFile)[0]
 
             try:
                 df = hdfStore[dbKey]  # load it
             except (KeyError) as e:
-                logger.error(f'Did not find dbKey:"{dbKey}" {e}')
+                logger.error(f'    Did not find dbKey:"{dbKey}" {e}')
 
             # _ba is for runtime, assign after loading from either (abf or h5)
             df['_ba'] = None
 
-            logger.info('  loaded db df')
-            print('    ', df[['File', 'uuid', '_ba']])
+            logger.info('    loaded db df')
+            logger.info(f"{df[['File', 'uuid']]}")
             
             # load each bAnalysis from hdf
             # No, don't load anything until user clicks
@@ -704,24 +734,30 @@ class analysisDir():
         return df
 
     def _deleteFromHdf(self, uuid):
-        """Delete uuid from h5 file. id corresponds to a bAnalysis detection."""
+        """Delete uuid from h5 file. Each bAnalysis detection get a unique uuid.
+        """
         if uuid is None or not uuid:
             return
-        logger.info(f'TODO: Delete from h5 file uuid:{uuid}')
+        logger.info(f'deleting from h5 file uuid:{uuid}')
 
-        tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-        #tmpHdfPath = os.path.join(self.path, tmpHdfFile)
-        tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
+        # tmpHdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
+        # tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
+
+        tmpHdfPath = self._getTmpHdfFile()
+
         removed = False
-        with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
+        with pd.HDFStore(tmpHdfPath) as hdfStore:
             try:
                 hdfStore.remove(uuid)
                 removed = True
             except (KeyError):
-                logger.error(f'Did not find uuid {uuid} in h5 file.')
+                logger.error(f'Did not find uuid {uuid} in h5 file {tmpHdfPath}')
 
         #
-        if removed:
+        #if removed:
+        if 1:
+            # always rebuild even if we did not find uuid
+            # we need to do this to remove _tmp.h5 created in _getTmpHdfFile()
             self._rebuildHdf()
             self._updateLoadedAnalyzed()
 
@@ -1160,7 +1196,7 @@ class analysisDir():
 
         # load bAnalysis
         #logger.info(f'Loading bAnalysis "{path}"')
-        ba = sanpy.bAnalysis(path, loadData=loadData)
+        ba = sanpy.bAnalysis(path, loadData=loadData) # loadData is false, load header
 
         if ba.loadError:
             logger.error(f'Error loading bAnalysis file "{path}"')
@@ -1203,7 +1239,7 @@ class analysisDir():
 
         return ba, rowDict
 
-    def getFileList(self, path=None, getFullPath=True):
+    def getFileList(self, path=None):
         """
         Get file paths from path.
 
@@ -1212,7 +1248,7 @@ class analysisDir():
         if path is None:
             path = self.path
 
-        logger.warning('MODIFIED TO LOAD TIF FILES IN SUBFOLDERS')
+        logger.warning('Remember: MODIFIED TO LOAD TIF FILES IN SUBFOLDERS')
         count = 0
         tmpFileList = []
         folderDepth = self.folderDepth  # if none then all depths
@@ -1250,10 +1286,10 @@ class analysisDir():
             # tmpExt is like .abf, .csv, etc
             tmpFileName, tmpExt = os.path.splitext(file)
             if tmpExt in self.theseFileTypes:
-                if getFullPath:
-                    #file = os.path.join(path, file)
-                    file = pathlib.Path(path) / file
-                    file = str(file)  # return List[str] NOT List[PosixPath]
+                # if getFullPath:
+                #     #file = os.path.join(path, file)
+                #     file = pathlib.Path(path) / file
+                #     file = str(file)  # return List[str] NOT List[PosixPath]
                 fileList.append(file)
         #
         logger.info(f'found {len(fileList)} files ...')
@@ -1279,6 +1315,10 @@ class analysisDir():
 
     def appendRow(self, rowDict=None, ba=None):
         # append one empty row
+        logger.info('')
+        print('    rowDict:', rowDict)
+        print('    ba:', ba)
+        
         rowSeries = pd.Series()
         if rowDict is not None:
             rowSeries = pd.Series(rowDict)
@@ -1308,6 +1348,8 @@ class analysisDir():
         # clear uuid
         self._df.at[rowIdx, 'uuid'] = ''
 
+        self._updateLoadedAnalyzed()
+
     def deleteRow(self, rowIdx):
         df = self._df
 
@@ -1319,6 +1361,8 @@ class analysisDir():
         df = df.drop([rowIdx])
         df = df.reset_index(drop=True)
         self._df = df
+
+        self._updateLoadedAnalyzed()
 
     def duplicateRow(self, rowIdx):
         # duplicate rowIdx
@@ -1350,43 +1394,53 @@ class analysisDir():
         df = df.reset_index(drop=True)
         self._df = df
 
+        self._updateLoadedAnalyzed()
+
     def syncDfWithPath(self):
+        """Sync path with existing df. Used to detect new/removed files.
         """
-        Sync path with existing df. Used to pick up new/removed files"""
-        pathFileList = self.getFileList(getFullPath=False)
+
+        pathFileList = self.getFileList()  # always full path
         dfFileList = self._df['File'].tolist()
 
-        '''
-        print('=== pathFileList:')
-        print(pathFileList)
-        print('=== dfFileList:')
-        print(dfFileList)
-        '''
-
+        logger.info('')
+        # print('    === pathFileList (on drive):')
+        # print('    ', pathFileList)
+        # print('    === dfFileList (in table):')
+        # print('    ', dfFileList)
+        
         addedToDf = False
 
         # look for files in path not in df
         for pathFile in pathFileList:
-            if pathFile not in dfFileList:
-                logger.info(f'Found file in path "{pathFile}" not in df')
+            fileName = os.path.split(pathFile)[1]
+            if fileName not in dfFileList:
+                logger.info(f'Found file in path "{fileName}" not in df')
                 # load bAnalysis and get df column values
                 addedToDf = True
-                fullPathFile = os.path.join(self.path, pathFile)
-                ba, rowDict = self.getFileRow(fullPathFile) # loads bAnalysis
+                #fullPathFile = os.path.join(self.path, pathFile)
+                ba, rowDict = self.getFileRow(pathFile) # loads bAnalysis
                 if rowDict is not None:
                     #listOfDict.append(rowDict)
-                    self.appendRow(rowDict=rowDict, ba=ba)
+
+                    # TODO: get this into getFileROw()
+                    rowDict['relPath'] = pathFile
+                    rowDict['_ba'] = None
+
+                    self.appendRow(rowDict=rowDict, ba=None)
 
         # look for files in df not in path
-        for dfFile in dfFileList:
-            if not dfFile in pathFileList:
-                logger.info(f'Found file in df "{dfFile}" not in path')
+        # for dfFile in dfFileList:
+        #     if not dfFile in pathFileList:
+        #         logger.info(f'Found file in df "{dfFile}" not in path')
 
         if addedToDf:
             df = self._df
             df = df.sort_values(by=['File'], axis='index', ascending=True, inplace=False)
             df = df.reset_index(drop=True)
             self._df = df
+
+        self._updateLoadedAnalyzed()
 
     def pool_build(self):
         """Build one df with all analysis. Use this in plot tool plugin.

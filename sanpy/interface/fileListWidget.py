@@ -33,7 +33,15 @@ class fileListWidget(QtWidgets.QWidget):
 
         self._myModel = myModel
 
+        # self.setAcceptDrops(True)
+
         self._buildUI()
+
+    # def dragEnterEvent(self, event):
+    #     logger.info('')
+    
+    # def dropEvent(self, event):
+    #     logger.info('')
 
     def mySetModel(self, theModel):
         self._myModel = theModel

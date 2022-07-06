@@ -250,7 +250,7 @@ class bAnalysis:
         self._sweepY = None  # np.ndarray
         self._sweepC = None # the command waveform (DAC)
 
-        self._epochTable = None
+        self._epochTableList = None  # each sweep has an epoch table
 
         self._filteredVm = None
         self._filteredDeriv = None
@@ -538,22 +538,20 @@ class bAnalysis:
         #logger.info(f'sweepList:{self.sweepList}')
         #logger.info(f'_currentSweep:{self._currentSweep}')
 
-    def _saveToHdf(self, hdfPath, hdfMode):
+    def _saveToHdf(self, hdfPath):
         """
         Save to h5 file with key self.uuid.
+        
         Only save if detection has changed (e.g. self.detectionDirty)
         """
         didSave = False
         if not self.detectionDirty:
             # Do not save it detection has not changed
-            #logger.info(f'NOT SAVING, is not dirty uuid:{self.uuid} {self.getInfo()}')
             logger.info(f'NOT SAVING, is not dirty {self.getInfo(withPath=True)}')
             return didSave
 
         logger.info(f'SAVING uuid:{self.uuid} {self.getInfo()}')
 
-        #with pd.HDFStore(hdfPath, mode='a') as hdfStore:
-        #with pd.HDFStore(hdfPath, mode=hdfMode) as hdfStore:
         with pd.HDFStore(hdfPath) as hdfStore:
             # vars(class) retuns a dict with all instance variables
             iDict = vars(self)
@@ -577,8 +575,7 @@ class bAnalysis:
             #
             self._detectionDirty = False
             didSave= True
-        #
-        #logger.info(f'  Saved {self.uuid} ... {self.getInfo()}')
+
         #
         return didSave
 
@@ -698,12 +695,18 @@ class bAnalysis:
         if 1:
             try:
                 _tmp = self._abf.sweepEpochs.p1s
-                self._epochTable = sanpy.epochTable(self._abf)
             except (AttributeError) as e:
-                logger.warning(f'did not find epochTable: {e}')
-            
+                logger.warning(f'did not find epochTable: {e} in file {self.path}')
+            else:
+                _numSweeps = len(self._abf.sweepList)
+                self._epochTableList = [None] * _numSweeps
+                for _sweepIdx in range(_numSweeps):
+                    self._abf.setSweep(_sweepIdx)
+                    self._epochTableList[_sweepIdx] = sanpy.epochTable(self._abf)
+                self._abf.setSweep(0)
+
             self._sweepList = self._abf.sweepList
-            self._sweepLengthSec = self._abf.sweepLengthSec
+            self._sweepLengthSec = self._abf.sweepLengthSec  # assuming all sweeps have the same duration
 
             # on load, sweep is 0
             if loadData:
@@ -742,6 +745,10 @@ class bAnalysis:
             self.acqDate = abfDateTime.strftime("%Y-%m-%d")
             self.acqTime = abfDateTime.strftime("%H:%M:%S")
 
+            _numChannels = len(self._abf.adcUnits)
+            if _numChannels >1:
+                logger.info(f'SanPy does not work with multi-channel recordings numChannels is {_numChannels}')
+            
             #self.sweepUnitsY = self.adcUnits[channel]
             channel = 0
             #dacUnits = self._abf.dacUnits[channel]
@@ -752,12 +759,14 @@ class bAnalysis:
 
             #self._sweepLabelX = self._abf.sweepLabelX
             #self._sweepLabelY = self._abf.sweepLabelY
-            if self._sweepLabelY in ['pA']:
+            if self._sweepLabelY in ['pA', 'nA']:
                 self._recordingMode = 'V-Clamp'
                 #self._sweepY_label = self._abf.sweepUnitsY
             elif self._sweepLabelY in ['mV']:
                 self._recordingMode = 'I-Clamp'
                 #self._sweepY_label = self._abf.sweepUnitsY
+            else:
+                logger.warning(f'did not understand adcUnit "{adcUnits}"')
 
             '''
             if self._abf.sweepUnitsY in ['pA']:
@@ -776,11 +785,14 @@ class bAnalysis:
         logger.warning('[[[TURNED BACK ON]]] I turned off assigning self._abf=None for stoch-res stim file load')
         self._abf = None
 
-    def getEpochTable(self):
+    def getEpochTable(self, sweep):
         """Only proper abf files will have an epoch table.
         """
-        return self._epochTable
-
+        if self._epochTableList is not None:
+            return self._epochTableList[sweep]
+        else:
+            return None
+            
     @property
     def detectionDirty(self):
         return self._detectionDirty
@@ -876,16 +888,17 @@ class bAnalysis:
         #spikeList = self.getSpikeTimes(sweepNumber=sweep)
         return self._spikesPerSweep[sweep]
 
-    def bad_getAbsSpikeFromSweep(self, sweepSpikeIdx : int, sweep : int):
+    def getAbsSpikeFromSweep(self, sweepSpikeIdx : int, sweep : int):
         """Given a spike index within a sweep, get the absolute spike index.
 
         See getSweepSpikeFromAbsolute()
         """
+        
+        #print('    self._spikesPerSweep:', self._spikesPerSweep)
+        
         absIdx = 0
-        for idx, spikesPerSweep in enumerate(self._spikesPerSweep):
-            absIdx += self._spikesPerSweep[idx]
-            if idx==sweep:
-                break
+        for sweepIdx in range(sweep):
+            absIdx += self._spikesPerSweep[sweepIdx]
         absIdx += sweepSpikeIdx
         return absIdx
     
@@ -969,7 +982,10 @@ class bAnalysis:
     @property
     def filteredDeriv(self):
         """Get the command waveform DAC (numpy.ndarray). Units will depend on mode"""
-        return self._filteredDeriv[:, self.currentSweep]
+        if self._filteredDeriv is not None:
+            return self._filteredDeriv[:, self.currentSweep]
+        else:
+            return None
         '''
         #logger.info(self._filteredDeriv.shape)
         if self.numSweeps == 1:
@@ -1247,7 +1263,7 @@ class bAnalysis:
     def rebuildFiltered(self):
         if self._sweepX is None:
             # no data
-            logger.warning('not getting derivative')
+            logger.warning('not getting derivative ... sweepX was none?')
             return
 
         if self._recordingMode == 'I-Clamp' or self._recordingMode == 'tif':
@@ -1255,7 +1271,7 @@ class bAnalysis:
         elif self._recordingMode == 'V-Clamp':
             self._getBaselineSubtract()
         else:
-            logger.warning('Did not take derivative')
+            logger.warning(f'Did not take derivative, unknown recording mode "{self._recordingMode}"')
 
     def _getFilteredRecording(self, dDict=None):
         """
@@ -2017,10 +2033,14 @@ class bAnalysis:
 
             spikeDict[i]['sweep'] = sweepNumber
             
-            epoch = None
-            if self._epochTable is not None:
-                epoch = self._epochTable.findEpoch(spikeTime)    
+            epoch = float('nan')
+            epochLevel = float('nan')
+            epochTable = self.getEpochTable(sweepNumber)
+            if epochTable is not None:
+                epoch = epochTable.findEpoch(spikeTime)   
+                epochLevel = epochTable.getLevel(epoch)
             spikeDict[i]['epoch'] = epoch
+            spikeDict[i]['epochLevel'] = epochLevel
 
             # keep track of per sweep spike and total spike
             spikeDict[i]['sweepSpikeNumber'] = i
@@ -2142,8 +2162,16 @@ class bAnalysis:
             # here we are looking in a predefined window
             startPnt = spikeTimes[i]-mdp_pnts
             if startPnt < 0:
-                logger.info('TODO: add an official warning, we went past 0 for pre spike mdp ms window')
+                #logger.info('TODO: add an official warning, we went past 0 for pre spike mdp ms window')
                 startPnt = 0
+                # log error
+                errorType = 'Pre spike min under-run (mdp)'
+                errorStr = 'Went past time 0 searching for pre-spike min'
+                eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
+                spikeDict[iIdx]['errors'].append(eDict)
+                if verbose:
+                    print(f'  spike:{iIdx} error:{eDict}')
+
             preRange = filteredVm[startPnt:spikeTimes[i]] # EXCEPTION
             preMinPnt = np.argmin(preRange)
             preMinPnt += startPnt

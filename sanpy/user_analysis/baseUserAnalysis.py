@@ -22,14 +22,17 @@ def _module_from_file(module_name, file_path):
     spec.loader.exec_module(module)
     return module
 
-def getObjectList():
+def getObjectList(verbose = False):
     """
     Return a list of classes defined in sanpy.userAnalysis.
 
     Each of these is an object we can (i) construct or (ii) interrogate statis class members
     """
 
-    logger.info('')
+    verbose = False
+    
+    if verbose:
+        logger.info('')
 
     #
     # user plugins from files in folder <user>/SanPy/analysis
@@ -50,18 +53,20 @@ def getObjectList():
 
         loadedModule = _module_from_file(fullModuleName, file)
 
-        logger.info('')
-        logger.info(f'    file: {file}')
-        logger.info(f'    fullModuleName: {fullModuleName}')
-        logger.info(f'    moduleName: {moduleName}')
-        logger.info(f'    loadedModule: {loadedModule}')
+        if verbose:
+            logger.info('')
+            logger.info(f'    file: {file}')
+            logger.info(f'    fullModuleName: {fullModuleName}')
+            logger.info(f'    moduleName: {moduleName}')
+            logger.info(f'    loadedModule: {loadedModule}')
 
         # 1) class based user analysis
         oneConstructor = None
         try:
             oneConstructor = getattr(loadedModule, moduleName)  # moduleName is derived from file name (must match)
-            logger.info(f'    oneConstructor: {oneConstructor}')
-            logger.info(f'    type(oneConstructor): {type(oneConstructor)}')
+            if verbose:
+                logger.info(f'    oneConstructor: {oneConstructor}')
+                logger.info(f'    type(oneConstructor): {type(oneConstructor)}')
         except (AttributeError) as e:
             logger.error(f'Make sure filename and class name are the same,  file name is "{moduleName}"')
 
@@ -75,6 +80,9 @@ def getObjectList():
             pass
             #logger.error(f'Make sure filename and class name are the same,  file name is "{moduleName}"')
         
+        # 20220630, get the static stat attribute from the class
+        _statStatDict = getattr(oneConstructor, 'userStatDict')
+        #print('_statStatDict:', _statStatDict)
 
         #humanName = oneConstructor.myHumanName
         pluginDict = {
@@ -83,7 +91,9 @@ def getObjectList():
             'module': fullModuleName,
             'path': file,
             'constructor': oneConstructor,
+            'staticStatDict': _statStatDict,
             #
+            # experimental, trying to use functions rather than class
             'runFunction': oneRunFunction,
             'statDict': oneStatDict,
             #'humanName': humanName
@@ -98,16 +108,24 @@ def getObjectList():
         #     self.pluginDict[humanName] = pluginDict
         #     loadedModuleList.append(moduleName)
 
-        logger.info(f'loading user analysis from file: "{file}"')
+        if verbose:
+            logger.info(f'loading user analysis from file: "{file}"')
+        
         #pluginDict[humanName] = pluginDict
         
         loadedModuleList.append(pluginDict)
 
-    return loadedModuleList
+    # print out the entire list
+    logger.info('')
+    for loadedModuleDict in loadedModuleList:
+        for k,v in loadedModuleDict.items():
+            logger.info(f'    {k} : {v}')
+    #
+    return loadedModuleList  # list of dict
 
     #
     # OLD
-    #
+    """
     ignoreModuleList = ['baseUserAnalysis']
 
     objList = []
@@ -133,9 +151,11 @@ def getObjectList():
 
     #
     return objList
-
-def findUserAnalysis():
     """
+
+def broken_findUserAnalysis():
+    """
+    20220630 is BROKEN !!!
     Find files in 'sanpy/userAnalysis' and populate a dict with stat names
     this will be appended to bAnalysisUtil.statList
     """
@@ -145,7 +165,7 @@ def findUserAnalysis():
     ignoreModuleList = ['baseUserAnalysis']
 
     userStatDict = {}
-    for moduleName, obj in inspect.getmembers(sanpy.userAnalysis):
+    for moduleName, obj in inspect.getmembers(sanpy.user_analysis):
         #print('moduleName:', moduleName, 'obj:', obj)
         if inspect.isclass(obj):
             if moduleName in ignoreModuleList:
@@ -162,7 +182,7 @@ def findUserAnalysis():
     #
     return userStatDict
 
-def runAllUserAnalysis(ba):
+def runAllUserAnalysis(ba, verbose=False):
     """
     call at end of bAnalysis
     """
@@ -170,7 +190,8 @@ def runAllUserAnalysis(ba):
     # step through each
     objList = getObjectList()  # list of dict
 
-    logger.info(f'objList: {objList}')
+    if verbose:
+        logger.info(f'objList: {objList}')
     for obj in objList:
         # instantiate and call run (will add values for stats
         # was this
@@ -199,10 +220,12 @@ class baseUserAnalysis:
 
         self._installStats()
 
-    def _installStats(self):
-        logger.info(f'Installing "{self.userStatDict}"')
+    def _installStats(self, verbose=False):
+        if verbose:
+            logger.info(f'Installing "{self.userStatDict}"')
         for k, v in self.userStatDict.items():
-            logger.info(f'{k}: {v}')
+            if verbose:
+                logger.info(f'{k}: {v}')
             name = v['name']
             self.addKey(name, theDefault=None)
 
@@ -281,4 +304,5 @@ def test1():
     findUserAnalysis()
 
 if __name__ == '__main__':
-    test1()
+    #test1()
+    getObjectList()

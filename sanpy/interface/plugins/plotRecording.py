@@ -15,267 +15,352 @@ from sanpy.interface.plugins import sanpyPlugin
 from sanpy.bAnalysisUtil import statList
 
 class plotRecording(sanpyPlugin):
-	"""
-	Example of matplotlib plugin.
-	"""
-	myHumanName = 'Plot Recording (matplotlib)'
+    """
+    Example of matplotlib plugin.
+    """
+    myHumanName = 'Plot Recording'
 
-	def __init__(self, **kwargs):
-		super(plotRecording, self).__init__(**kwargs)
+    def __init__(self, **kwargs):
+        super(plotRecording, self).__init__(**kwargs)
 
-		# this is a very simple plugin, do not respond to changes in interface
-		switchFile = self.responseTypes.switchFile
-		self.toggleResponseOptions(switchFile, newValue=False)
-		analysisChange = self.responseTypes.analysisChange
-		self.toggleResponseOptions(analysisChange, newValue=False)
-		#selectSpike = self.responseTypes.selectSpike
-		#self.toggleResponseOptions(selectSpike, newValue=False)
-		setAxis = self.responseTypes.setAxis
-		self.toggleResponseOptions(setAxis, newValue=False)
+        # this is a very simple plugin, do not respond to changes in interface
+        # switchFile = self.responseTypes.switchFile
+        # self.toggleResponseOptions(switchFile, newValue=False)
 
-		self.plot()
+        # analysisChange = self.responseTypes.analysisChange
+        # self.toggleResponseOptions(analysisChange, newValue=False)
 
-	def plot(self):
-		if self.ba is None:
-			return
+        #selectSpike = self.responseTypes.selectSpike
+        #self.toggleResponseOptions(selectSpike, newValue=False)
 
-		self.mplWindow2() # assigns (self.fig, self.ax)
+        setAxis = self.responseTypes.setAxis
+        self.toggleResponseOptions(setAxis, newValue=False)
 
-		sweepX = self.getSweep('x')  # self.ba.sweepX(sweepNumber=self.sweepNumber)
-		sweepY = self.getSweep('y')  # self.ba.filteredVm(sweepNumber=self.sweepNumber)  # sweepY
+        self.rawLine = None
+        self.thresholdLine = None
 
-		self.sweepX = sweepX
-		self.sweepY = sweepY
+        self.plot()
+        self.replot()
 
-		# comma is critical
-		self.line, = self.axs.plot(sweepX, sweepY, '-', linewidth=0.5)
+    def plot(self):
+        # if self.ba is None:
+        #     return
 
-		thresholdSec = self.ba.getStat('thresholdSec')
-		thresholdVal = self.ba.getStat('thresholdVal')
-		if thresholdSec is None and thresholdVal is None:
-			self.lineDetection, = self.axs.plot([], [], 'o')
-		else:
-			# comma is critical
-			self.lineDetection, = self.axs.plot(thresholdSec, thresholdVal, 'or')
+        self.mplWindow2() # assigns (self.fig, self.axs)
 
-		peakSec = self.ba.getStat('peakSec')
-		peakVal = self.ba.getStat('peakVal')
-		if peakSec is None and peakVal is None:
-			self.linePeak, = self.axs.plot([], [], 'o')
-		else:
-			# comma is critical
-			self.linePeak, = self.axs.plot(peakSec, peakVal, 'or')
+        return
 
-		preMinPnt = self.ba.getStat('preMinPnt')
-		preMinSec = [self.ba.pnt2Sec_(x) for x in preMinPnt]
-		preMinVal = self.ba.getStat('preMinVal')
-		if preMinSec is None and preMinVal is None:
-			self.linePreMin, = self.axs.plot([], [], 'og')
-		else:
-			# comma is critical
-			self.linePreMin, = self.axs.plot(preMinSec, preMinVal, 'og')
+        '''
+        if self.ba is not None:
+            sweepX = self.getSweep('x')  # self.ba.sweepX(sweepNumber=self.sweepNumber)
+            sweepY = self.getSweep('y')  # self.ba.filteredVm(sweepNumber=self.sweepNumber)  # sweepY
+        else:
+            sweepX = []
+            sweepY = []
 
-		# 0 edd
-		preLinearFitPnt0 = self.ba.getStat('preLinearFitPnt0')
-		preLinearFitSec0 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt0]
-		preLinearFitVal0 = self.ba.getStat('preLinearFitVal0')
-		if preLinearFitSec0 is None and preLinearFitVal0 is None:
-			self.linePreLinear0, = self.axs.plot([], [], 'o')
-		else:
-			# comma is critical
-			self.linePreLinear0, = self.axs.plot(preLinearFitSec0, preLinearFitVal0, 'ob')
+        self.sweepX = sweepX
+        self.sweepY = sweepY
+        '''
 
-		# 1 edd
-		preLinearFitPnt1 = self.ba.getStat('preLinearFitPnt1')
-		preLinearFitSec1 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt1]
-		preLinearFitVal1 = self.ba.getStat('preLinearFitVal1')
-		if preLinearFitSec1 is None and preLinearFitVal1 is None:
-			self.linePreLinear1, = self.axs.plot([], [], 'o')
-		else:
-			# comma is critical
-			self.linePreLinear1, = self.axs.plot(preLinearFitSec1, preLinearFitVal1, 'ob')
+        # comma is critical
+        #self.line, = self.axs.plot(sweepX, sweepY, '-', linewidth=0.5)
+        self.line, = self.axs.plot([], [], '-', linewidth=0.5)
 
-		# draw line for edd
-		xEdd, yEdd = self.getEddLines()
-		self.lineEdd, = self.axs.plot(xEdd, yEdd, '--b')
+        self.lineDetection, = self.axs.plot([], [], 'o')
+        # thresholdSec = None
+        # thresholdVal = None
+        # if self.ba is not None:
+        #     thresholdSec = self.ba.getStat('thresholdSec')
+        #     thresholdVal = self.ba.getStat('thresholdVal')
+        # if thresholdSec is None or thresholdVal is None:
+        #     self.lineDetection, = self.axs.plot([], [], 'o')
+        # else:
+        #     # comma is critical
+        #     self.lineDetection, = self.axs.plot(thresholdSec, thresholdVal, 'or')
 
-		# hw(s)
-		xHW, yHW = self.getHalfWidths()
-		self.lineHW, = self.axs.plot(xHW, yHW, '-')
+        self.linePeak, = self.axs.plot([], [], 'o')
+        # peakSec = None
+        # peakVal = None
+        # if self.ba is not None:
+        #     peakSec = self.ba.getStat('peakSec')
+        #     peakVal = self.ba.getStat('peakVal')
+        # if peakSec is None or peakVal is None:
+        #     self.linePeak, = self.axs.plot([], [], 'o')
+        # else:
+        #     # comma is critical
+        #     self.linePeak, = self.axs.plot(peakSec, peakVal, 'or')
 
-		#plt.show()
+        self.linePreMin, = self.axs.plot([], [], 'og')
+        # preMinSec = None
+        # preMinVal = None
+        # if self.ba is not None:
+        #     preMinPnt = self.ba.getStat('preMinPnt')
+        #     preMinSec = [self.ba.pnt2Sec_(x) for x in preMinPnt]
+        #     preMinVal = self.ba.getStat('preMinVal')
+        # if preMinSec is None or preMinVal is None:
+        #     self.linePreMin, = self.axs.plot([], [], 'og')
+        # else:
+        #     # comma is critical
+        #     self.linePreMin, = self.axs.plot(preMinSec, preMinVal, 'og')
 
-	def replot(self):
-		"""
-		bAnalysis has been updated, replot
-		"""
-		logger.info('')
+        # 0 edd
+        self.linePreLinear0, = self.axs.plot([], [], 'o')
+        # preLinearFitSec0 = None
+        # preLinearFitVal0 = None
+        # if self.ba is not None:
+        #     preLinearFitPnt0 = self.ba.getStat('preLinearFitPnt0')
+        #     preLinearFitSec0 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt0]
+        #     preLinearFitVal0 = self.ba.getStat('preLinearFitVal0')
+        # if preLinearFitSec0 is None or preLinearFitVal0 is None:
+        #     self.linePreLinear0, = self.axs.plot([], [], 'o')
+        # else:
+        #     # comma is critical
+        #     self.linePreLinear0, = self.axs.plot(preLinearFitSec0, preLinearFitVal0, 'ob')
 
-		sweepX = self.getSweep('x')  # self.ba.sweepX(sweepNumber=self.sweepNumber)
-		sweepY = self.getSweep('y')  # self.ba.sweepY(sweepNumber=self.sweepNumber)
+        # 1 edd
+        '''
+        preLinearFitPnt1 = self.ba.getStat('preLinearFitPnt1')
+        preLinearFitSec1 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt1]
+        preLinearFitVal1 = self.ba.getStat('preLinearFitVal1')
+        if preLinearFitSec1 is None and preLinearFitVal1 is None:
+            self.linePreLinear1, = self.axs.plot([], [], 'o')
+        else:
+            # comma is critical
+            self.linePreLinear1, = self.axs.plot(preLinearFitSec1, preLinearFitVal1, 'ob')
 
-		self.sweepX = sweepX
-		self.sweepY = sweepY
+        # draw line for edd
+        xEdd, yEdd = self.getEddLines()
+        self.lineEdd, = self.axs.plot(xEdd, yEdd, '--b')
 
-		self.line.set_data(sweepX, sweepY)
+        '''
+        # hw(s)
+        #xHW, yHW = self.getHalfWidths()
+        self.lineHW, = self.axs.plot([], [], '-')
 
-		thresholdSec = self.ba.getStat('thresholdSec')
-		thresholdVal = self.ba.getStat('thresholdVal')
-		if thresholdSec is None and thresholdVal is None:
-			self.lineDetection.set_data([], [])
-		else:
-			self.lineDetection.set_data(thresholdSec, thresholdVal)
+        #plt.show()
 
-		self.ax.relim()
-		self.ax.autoscale_view(True,True,True)
-		plt.draw()
+    def replot(self):
+        """
+        bAnalysis has been updated, replot
+        """
+        logger.info('')
 
-	def getEddLines(self):
-		preLinearFitPnt0 = self.ba.getStat('preLinearFitPnt0')
-		preLinearFitSec0 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt0]
-		preLinearFitVal0 = self.ba.getStat('preLinearFitVal0')
+        self.xOffset = 0.01
+        self.yOffset = 50
+        
+        xCurrentOffset = 0
+        yCurrentOffset = 0
 
-		preLinearFitPnt1 = self.ba.getStat('preLinearFitPnt1')
-		preLinearFitSec1 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt1]
-		preLinearFitVal1 = self.ba.getStat('preLinearFitVal1')
+        currentSweep = self.ba.currentSweep
+        
+        numSweeps = self.ba.numSweeps
 
-		x = []
-		y = []
-		for idx in range(self.ba.numSpikes):
-			try:
-				dx = preLinearFitSec1[idx] - preLinearFitSec0[idx]
-				dy = preLinearFitVal1[idx] - preLinearFitVal0[idx]
-			except (IndexError) as e:
-				logger.error(f'spike {idx} preLinearFitSec1:{len(preLinearFitSec1)} preLinearFitSec0:{len(preLinearFitSec0)}')
-				logger.error(f'spike {idx} preLinearFitPnt1:{len(preLinearFitPnt1)} preLinearFitPnt0:{len(preLinearFitPnt0)}')
+        self.fig.clear(True)
+        self.axs = self.fig.add_subplot(1,1,1)
 
-			lineLength = 4  # TODO: make this a function of spike frequency?
+        '''
+        if self.rawLine is not None:
+            for line in self.rawLine:
+                line.clear()
+        self.rawLine = [None] * numSweeps
+        
+        if self.thresholdLine is not None:
+            for line in self.thresholdLine:
+                line.clear()
+        self.thresholdLine = [None] * numSweeps
+        '''
+        self.rawLine = [None] * numSweeps
+        self.thresholdLine = [None] * numSweeps
 
-			try:
-				x.append(preLinearFitSec0[idx])
-				x.append(preLinearFitSec1[idx] + lineLength*dx)
-				x.append(np.nan)
+        for sweepIdx in range(numSweeps):
+            self.ba.setSweep(sweepIdx)
+            
+            #self.axs[_idx].self.fig.add_subplot(numSweeps, 1, _idx)
 
-				y.append(preLinearFitVal0[idx])
-				y.append(preLinearFitVal1[idx] + lineLength*dy)
-				y.append(np.nan)
-			except (IndexError) as e:
-				logger.error(f'preLinearFitSec0:{len(preLinearFitSec0)} preLinearFitSec1:{len(preLinearFitSec1)}')
-				logger.error(e)
+            sweepX = self.getSweep('x')  # self.ba.sweepX(sweepNumber=self.sweepNumber)
+            sweepY = self.getSweep('y')  # self.ba.sweepY(sweepNumber=self.sweepNumber)
 
-		return x, y
+            self.sweepX = sweepX
+            self.sweepY = sweepY
 
-	def getHalfWidths(self):
-		"""Get x/y pair for plotting all half widths."""
-		# defer until we know how many half-widths 20/50/80
-		x = []
-		y = []
-		numPerSpike = 3  # rise/fall/nan
-		numSpikes = self.ba.numSpikes
-		xyIdx = 0
-		for idx, spike in enumerate(self.ba.spikeDict):
-			if idx ==0:
-				# make x/y from first spike using halfHeights = [20,50,80]
-				halfHeights = spike['halfHeights'] # will be same for all spike, like [20, 50, 80]
-				numHalfHeights = len(halfHeights)
-				# *numHalfHeights to account for rise/fall + padding nan
-				x = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
-				y = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
-				#print('  len(x):', len(x), 'numHalfHeights:', numHalfHeights, 'numSpikes:', numSpikes, 'halfHeights:', halfHeights)
+            self.rawLine[sweepIdx], = self.axs.plot(sweepX+xCurrentOffset, sweepY+yCurrentOffset, 'w-', linewidth=0.5)
 
-			for idx2, width in enumerate(spike['widths']):
-				halfHeight = width['halfHeight'] # [20,50,80]
-				risingPnt = width['risingPnt']
-				#risingVal = width['risingVal']
-				risingVal = self.sweepY[risingPnt]
-				fallingPnt = width['fallingPnt']
-				#fallingVal = width['fallingVal']
-				fallingVal = self.sweepY[fallingPnt]
+            thresholdSec = self.ba.getStat('thresholdSec', sweepNumber=sweepIdx)
+            thresholdSec = [x+xCurrentOffset for x in thresholdSec]
+            thresholdVal = self.ba.getStat('thresholdVal', sweepNumber=sweepIdx)
+            thresholdVal = [x+yCurrentOffset for x in thresholdVal]
+            self.thresholdLine[sweepIdx] = self.axs.plot(thresholdSec, thresholdVal, 'r.')
+            '''
+            if thresholdSec is None or thresholdVal is None:
+                self.thresholdLine[sweepIdx].set_data([], [])
+            else:
+                self.thresholdLine[sweepIdx] = self.axs.plot(thresholdSec, thresholdSec, 'o')
+            '''
 
-				if risingPnt is None or fallingPnt is None:
-					# half-height was not detected
-					continue
+            '''
+            xHW, yHW = self.getHalfWidths()
+            self.lineHW, = self.axs.plot(xHW, yHW, '-')
+            '''
 
-				risingSec = self.ba.pnt2Sec_(risingPnt)
-				fallingSec = self.ba.pnt2Sec_(fallingPnt)
+            xCurrentOffset += self.xOffset
+            yCurrentOffset += self.yOffset
 
-				x[xyIdx] = risingSec
-				x[xyIdx+1] = fallingSec
-				x[xyIdx+2] = np.nan
-				# y
-				y[xyIdx] = fallingVal  #risingVal, to make line horizontal
-				y[xyIdx+1] = fallingVal
-				y[xyIdx+2] = np.nan
+        self.axs.relim()
+        self.axs.autoscale_view(True,True,True)
 
-				# each spike has 3x pnts: rise/fall/nan
-				xyIdx += numPerSpike  # accounts for rising/falling/nan
-			# end for width
-		# end for spike
-		return x, y
+        self.ba.setSweep(currentSweep)
+        self.static_canvas.draw_idle()
+        plt.draw()
 
-	def slot_selectSpike(self, eDict):
-		logger.info(eDict)
-		spikeNumber = eDict['spikeNumber']
-		doZoom = eDict['doZoom']
+    def getEddLines(self):
+        preLinearFitPnt0 = self.ba.getStat('preLinearFitPnt0')
+        preLinearFitSec0 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt0]
+        preLinearFitVal0 = self.ba.getStat('preLinearFitVal0')
 
-		if spikeNumber is None:
-			return
+        preLinearFitPnt1 = self.ba.getStat('preLinearFitPnt1')
+        preLinearFitSec1 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt1]
+        preLinearFitVal1 = self.ba.getStat('preLinearFitVal1')
 
-		if self.ba is None:
-			return
+        x = []
+        y = []
+        for idx in range(self.ba.numSpikes):
+            try:
+                dx = preLinearFitSec1[idx] - preLinearFitSec0[idx]
+                dy = preLinearFitVal1[idx] - preLinearFitVal0[idx]
+            except (IndexError) as e:
+                logger.error(f'spike {idx} preLinearFitSec1:{len(preLinearFitSec1)} preLinearFitSec0:{len(preLinearFitSec0)}')
+                logger.error(f'spike {idx} preLinearFitPnt1:{len(preLinearFitPnt1)} preLinearFitPnt0:{len(preLinearFitPnt0)}')
 
-		thresholdSec = self.ba.getStat('thresholdSec')
-		spikeTime = thresholdSec[spikeNumber]
-		xMin = spikeTime - 0.5
-		xMax = spikeTime + 0.5
+            lineLength = 4  # TODO: make this a function of spike frequency?
 
-		self.axs.set_xlim(xMin, xMax)
+            try:
+                x.append(preLinearFitSec0[idx])
+                x.append(preLinearFitSec1[idx] + lineLength*dx)
+                x.append(np.nan)
 
-		self.fig.canvas.draw()
-		self.fig.canvas.flush_events()
+                y.append(preLinearFitVal0[idx])
+                y.append(preLinearFitVal1[idx] + lineLength*dy)
+                y.append(np.nan)
+            except (IndexError) as e:
+                logger.error(f'preLinearFitSec0:{len(preLinearFitSec0)} preLinearFitSec1:{len(preLinearFitSec1)}')
+                logger.error(e)
+
+        return x, y
+
+    def getHalfWidths(self):
+        """Get x/y pair for plotting all half widths.
+        
+        DOes not work with new version because of sweeps.
+        """
+        # defer until we know how many half-widths 20/50/80
+        x = []
+        y = []
+        numPerSpike = 3  # rise/fall/nan
+        numSpikes = self.ba.numSpikes
+        xyIdx = 0
+        for idx, spike in enumerate(self.ba.spikeDict):
+            if idx ==0:
+                # make x/y from first spike using halfHeights = [20,50,80]
+                halfHeights = spike['halfHeights'] # will be same for all spike, like [20, 50, 80]
+                numHalfHeights = len(halfHeights)
+                # *numHalfHeights to account for rise/fall + padding nan
+                x = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
+                y = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
+                #print('  len(x):', len(x), 'numHalfHeights:', numHalfHeights, 'numSpikes:', numSpikes, 'halfHeights:', halfHeights)
+
+            for idx2, width in enumerate(spike['widths']):
+                halfHeight = width['halfHeight'] # [20,50,80]
+                risingPnt = width['risingPnt']
+                #risingVal = width['risingVal']
+                risingVal = self.sweepY[risingPnt]
+                fallingPnt = width['fallingPnt']
+                #fallingVal = width['fallingVal']
+                fallingVal = self.sweepY[fallingPnt]
+
+                if risingPnt is None or fallingPnt is None:
+                    # half-height was not detected
+                    continue
+
+                risingSec = self.ba.pnt2Sec_(risingPnt)
+                fallingSec = self.ba.pnt2Sec_(fallingPnt)
+
+                x[xyIdx] = risingSec
+                x[xyIdx+1] = fallingSec
+                x[xyIdx+2] = np.nan
+                # y
+                y[xyIdx] = fallingVal  #risingVal, to make line horizontal
+                y[xyIdx+1] = fallingVal
+                y[xyIdx+2] = np.nan
+
+                # each spike has 3x pnts: rise/fall/nan
+                xyIdx += numPerSpike  # accounts for rising/falling/nan
+            # end for width
+        # end for spike
+        return x, y
+
+    def slot_selectSpike(self, eDict):
+        logger.info(eDict)
+        spikeNumber = eDict['spikeNumber']
+        doZoom = eDict['doZoom']
+
+        if spikeNumber is None:
+            return
+
+        if self.ba is None:
+            return
+
+        thresholdSec = self.ba.getStat('thresholdSec')
+        spikeTime = thresholdSec[spikeNumber]
+        xMin = spikeTime - 0.5
+        xMax = spikeTime + 0.5
+
+        self.axs.set_xlim(xMin, xMax)
+
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
 
 def testPlot():
-	import os
-	file_path = os.path.realpath(__file__)  # full path to this file
-	file_path = os.path.split(file_path)[0]  # folder for this file
-	path = os.path.join(file_path, '../../../data/19114001.abf')
+    import os
+    file_path = os.path.realpath(__file__)  # full path to this file
+    file_path = os.path.split(file_path)[0]  # folder for this file
+    path = os.path.join(file_path, '../../../data/19114001.abf')
 
-	ba = bAnalysis(path)
-	if ba.loadError:
-		print('error loading file')
-		return
-	ba.spikeDetect()
+    ba = bAnalysis(path)
+    if ba.loadError:
+        print('error loading file')
+        return
+    ba.spikeDetect()
 
-	# create plugin
-	ap = plotRecording(ba=ba)
+    # create plugin
+    ap = plotRecording(ba=ba)
 
-	#ap.plot()
+    #ap.plot()
 
-	#ap.slotUpdateAnalysis()
+    #ap.slotUpdateAnalysis()
 
 def main():
-	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
-	ba = sanpy.bAnalysis(path)
-	ba.spikeDetect()
-	print(ba.numSpikes)
+    path = '/Users/cudmore/Sites/SanPy/data/2021_07_20_0010.abf'
+    ba = sanpy.bAnalysis(path)
+    ba.spikeDetect()
+    print(ba.numSpikes)
 
-	import sys
-	app = QtWidgets.QApplication([])
-	pr = plotRecording(ba=ba)
-	pr.show()
-	sys.exit(app.exec_())
+    import sys
+    app = QtWidgets.QApplication([])
+    pr = plotRecording(ba=ba)
+    pr.show()
+    sys.exit(app.exec_())
 
 def testLoad():
-	import os, glob
-	pluginFolder = '/Users/cudmore/sanpy_plugins'
-	files = glob.glob(os.path.join(pluginFolder, '*.py'))
-	for file in files:
-		#if file.startswith('.'):
-		#	continue
-		if file.endswith('__init__.py'):
-			continue
-		print(file)
+    import os, glob
+    pluginFolder = '/Users/cudmore/sanpy_plugins'
+    files = glob.glob(os.path.join(pluginFolder, '*.py'))
+    for file in files:
+        #if file.startswith('.'):
+        #    continue
+        if file.endswith('__init__.py'):
+            continue
+        print(file)
 if __name__ == '__main__':
-	#testPlot()
-	#testLoad()
-	main()
+    #testPlot()
+    #testLoad()
+    main()

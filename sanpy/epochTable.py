@@ -1,6 +1,7 @@
 """
 See:
 """
+from tkinter import Y
 from typing import Union
 from pprint import pprint
 
@@ -18,7 +19,9 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class epochTable():
-    """Load epoch/stimulation from abd file using 'sweepEpochs'.
+    """Load epoch/stimulation from abf file using 'sweepEpochs'.
+
+    Values in epoch table are per sweep!
     """
     def __init__(self, abf : pyabf.ABF):
         
@@ -53,12 +56,14 @@ class epochTable():
             p2_sec = p2 / abf.dataPointsPerMs / 1000
 
             epochDict = {
+                'sweepNumber': abf.sweepNumber,
                 'index': epochIdx,
                 'type': epochType,
                 'startPoint': p1,  # point the epoch starts
                 'stopPoint': p2,  # point the epoch starts
                 'startSec': p1_sec,
                 'stopSec': p2_sec,
+                'durSec': p2_sec - p1_sec,
                 'level': epochLevel,
                 'pulseWidth': pulseWidth,
                 'pulsePeriod': pulsePeriod,
@@ -86,6 +91,39 @@ class epochTable():
         #
         return None
 
+    def getLevel(self, epoch):
+        """Given an epoch number return the 'level'
+        """
+        return self._epochList[epoch]['level']
+
+    def getStartSec(self, epoch):
+        """Given an epoch number return the 'startSec'
+        """
+        return self._epochList[epoch]['startSec']
+
+    def getStartSecs(self):
+        startSecs = [epoch['startSec'] for epoch in self._epochList]
+        return startSecs
+
+    def getEpochLines(self, yMin=0, yMax=1):
+        x = [float('nan')] * (self.numEpochs() * 3)
+        y = [float('nan')] * (self.numEpochs() * 3)
+        
+        for epoch in range(self.numEpochs()):
+            idx = epoch * 3
+            x[idx] = self._epochList[epoch]['startSec']
+            x[idx+1] = self._epochList[epoch]['startSec']
+            x[idx+2] = float('nan')
+
+            y[idx] = yMin
+            y[idx+1] = yMax
+            y[idx+2] = float('nan')
+
+        return x, y
+
+    def numEpochs(self):
+        return len(self._epochList)
+
 if __name__ == '__main__':
     import sanpy
 
@@ -95,10 +133,15 @@ if __name__ == '__main__':
     ba = sanpy.bAnalysis(path)
     print(ba)
 
-    et = ba.getEpochTable()
+    sweep = 13
+
+    et = ba.getEpochTable(sweep)
     df = et.getEpochList(asDataFrame=True)
     pprint(df)
 
     testPnt = 1280
     epochIndex = et.findEpoch(testPnt)
     print(f'testPnt:{testPnt} is in epoch index: {epochIndex}')
+
+    print('getStartSecs:', et.getStartSecs())
+    print('getEpochLines:', et.getEpochLines())
