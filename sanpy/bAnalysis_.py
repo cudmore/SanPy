@@ -22,6 +22,7 @@ ba.spikeDetect(dDict)
 """
 
 import os, sys, math, time, collections, datetime, enum
+from pprint import pprint
 #from socket import AF_AAL5
 import json
 import uuid
@@ -220,8 +221,9 @@ class bAnalysis:
     def __init__(self, file=None,
                     #theTiff=None,
                     byteStream=None,
-                    fromDf=None, fromDict=None,
-                    detectionPreset : sanpy.bDetection.detectionPresets = None,
+                    fromDf=None,
+                    fromDict=None,
+                    #detectionPreset : sanpy.bDetection.detectionPresets = None,
                     loadData=True,
                     stimulusFileFolder=None):
         """
@@ -235,9 +237,12 @@ class bAnalysis:
         """
         
         logger.info(f'IF FILE IS KYMOGRAPH NEED TO SET DETECTION PARAMS {file}')
+        '''
         if detectionPreset is None:
             detectionPreset = sanpy.bDetection.detectionPresets.default
         self.detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
+        '''
+        self._detectionDict  = None # corresponds to an item in sanpy.bDetection
 
         self._isAnalyzed = False
 
@@ -365,12 +370,15 @@ class bAnalysis:
         #return pd.DataFrame(self.spikeDict.asList())
         return pd.DataFrame(self.spikeDict.asList())
 
+    def getDetectionDict(self):
+        return self._detectionDict
+        
     @property
-    def detectionDict(self):
+    def old_detectionDict(self):
         # TODO: remove this and just use 'detectionClass'
         return self.detectionClass
 
-    def getDetectionDict(self):
+    def old_getDetectionDict(self):
         # TODO: remove this and just use 'detectionClass'
         return self.detectionClass
 
@@ -389,7 +397,9 @@ class bAnalysis:
         else:
             pathStr = ''
         txt = self.__str__()
-        txt += f" start(s):{self.detectionDict['startSeconds']} stop(s):{self.detectionDict['stopSeconds']} {pathStr}"
+        startSeconds = self.getDetectionDict()['startSeconds']
+        stopSeconds = self.getDetectionDict()['stopSeconds']
+        txt += f" start(s):{startSeconds} stop(s):{stopSeconds} {pathStr}"
         return txt
 
     def isKymograph(self):
@@ -555,19 +565,30 @@ class bAnalysis:
         with pd.HDFStore(hdfPath) as hdfStore:
             # vars(class) retuns a dict with all instance variables
             iDict = vars(self)
-
+            
             oneDf = pd.DataFrame(columns=iDict.keys())
             #oneDf['path'] = [self.path]  # seed oneDf with one row (critical)
 
             # do not save these instance variables (e.g. self._ba)
             noneKeys = ['_sweepX', '_sweepY', '_sweepC',
                         '_abf', '_filteredVm', '_filteredDeriv',
-                        'spikeClips', 'spikeClips_x', 'spikeClips_x2']
+                        'spikeClips', 'spikeClips_x', 'spikeClips_x2',
+                        '_detectionDict',
+                        #'_epochTableList'
+                        ]
+
+            print('=== iDict.items()')
+            for k,v in iDict.items():
+                if k in noneKeys:
+                    continue
+                print(k, v)
+            print('=== END iDict.items()')
 
             for k,v in iDict.items():
                 if k in noneKeys:
                     v = None
                 #print(f'saving h5 k:{k} {type(v)}')
+                print('    ===saving:', k, v)
                 oneDf.at[0, k] = v
             # save into file
             hdfStore[self.uuid] = oneDf
@@ -1049,7 +1070,7 @@ class bAnalysis:
     def get_xUnits(self):
         return self._sweepLabelX
 
-    def getDetectionType(self):
+    def old_getDetectionType(self):
         # <enum 'detectionTypes_'>
         #return self.detectionClass['detectionType'].name
         return self.detectionClass['detectionType']
@@ -1273,19 +1294,23 @@ class bAnalysis:
         else:
             logger.warning(f'Did not take derivative, unknown recording mode "{self._recordingMode}"')
 
-    def _getFilteredRecording(self, dDict=None):
+    def _getFilteredRecording(self):
         """
         Get a filtered version of recording, used for both V-Clamp and I-Clamp.
 
         Args:
             dDict (dict): Default detection dictionary. See bDetection.defaultDetection
         """
-        if dDict is None:
-            dDict = sanpy.bDetection.getDefaultDetection()
 
-        medianFilter = dDict['medianFilter']
-        SavitzkyGolay_pnts = dDict['SavitzkyGolay_pnts']
-        SavitzkyGolay_poly = dDict['SavitzkyGolay_poly']
+        if self._detectionDict is not None:
+            medianFilter = self._detectionDict['medianFilter']
+            SavitzkyGolay_pnts = self._detectionDict['SavitzkyGolay_pnts']
+            SavitzkyGolay_poly = self._detectionDict['SavitzkyGolay_poly']
+        else:
+            # we have not been analyzed, impose some defaults
+            medianFilter = 0  # no median filter
+            SavitzkyGolay_pnts = 5
+            SavitzkyGolay_poly = 2
 
         if medianFilter > 0:
             if not medianFilter % 2:
@@ -1300,40 +1325,6 @@ class bAnalysis:
         else:
             self._filteredVm = self.sweepY
 
-    def _getBaselineSubtract(self, dDict=None):
-        """
-        for V-Clamp
-
-        Args:
-            dDict (dict): Default detection dictionary. See bDetection.getDefaultDetection()
-        """
-        #print('\n\n _getBaselineSubtract for v-clamp IS BROKEN BECAUSE OF SWEEPS IN FILTERED DERIV\n\n')
-
-        logger.info('XXX TODO: Need to add a way to baseline subtract for spontaneous V-Clamp data !!!')
-
-        # temporary fix, makes no sense for V-Clamp
-        self._getDerivative()
-
-        #
-        return
-        #
-
-        '''
-        if dDict is None:
-            dDict = sanpy.bDetection.getDefaultDetection()
-
-        # work on a copy
-        dDictCopy = dDict.copy()
-        dDictCopy['medianFilter'] = 5
-
-        self._getFilteredRecording(dDictCopy)
-
-        # baseline subtract filtered recording
-        theMean = np.nanmean(self.filteredVm)
-        self.filteredDeriv = self.filteredVm.copy()
-        self.filteredDeriv -= theMean
-        '''
-
     def _getDerivative(self):
         """
         Get derivative of recording (used for I-Clamp). Uses (xxx,yyy,zzz) keys in dDict.
@@ -1341,15 +1332,15 @@ class bAnalysis:
         Args:
             dDict (dict): Default detection dictionary. See bDetection.getDefaultDetection()
         """
-        #if dDict is None:
-        #    dDict = sanpy.bDetection.getDefaultDetection()
-
-        #medianFilter = dDict['medianFilter']
-        #SavitzkyGolay_pnts = dDict['SavitzkyGolay_pnts']
-        #SavitzkyGolay_poly = dDict['SavitzkyGolay_poly']
-        medianFilter = self.detectionClass.getValue('medianFilter')
-        SavitzkyGolay_pnts = self.detectionClass.getValue('SavitzkyGolay_pnts')
-        SavitzkyGolay_poly = self.detectionClass.getValue('SavitzkyGolay_poly')
+        if self._detectionDict is not None:
+            medianFilter = self._detectionDict['medianFilter']
+            SavitzkyGolay_pnts = self._detectionDict['SavitzkyGolay_pnts']
+            SavitzkyGolay_poly = self._detectionDict['SavitzkyGolay_poly']
+        else:
+            # we have not been analyzed, impose some defaults
+            medianFilter = 0  # no median filter
+            SavitzkyGolay_pnts = 5
+            SavitzkyGolay_poly = 2
 
         if medianFilter > 0:
             if not medianFilter % 2:
@@ -1401,6 +1392,40 @@ class bAnalysis:
         #self._filteredDeriv = np.insert(self.filteredDeriv, rowZero, rowOfZeros, axis=0)
         #self._filteredDeriv = np.concatenate((zeroRow,self.filteredDeriv))
         #print('  self._filteredDeriv:', self._filteredDeriv[0:4,:])
+
+    def _getBaselineSubtract(self, dDict=None):
+        """
+        for V-Clamp
+
+        Args:
+            dDict (dict): Default detection dictionary. See bDetection.getDefaultDetection()
+        """
+        #print('\n\n _getBaselineSubtract for v-clamp IS BROKEN BECAUSE OF SWEEPS IN FILTERED DERIV\n\n')
+
+        logger.info('XXX TODO: Need to add a way to baseline subtract for spontaneous V-Clamp data !!!')
+
+        # temporary fix, makes no sense for V-Clamp
+        self._getDerivative()
+
+        #
+        return
+        #
+
+        '''
+        if dDict is None:
+            dDict = sanpy.bDetection.getDefaultDetection()
+
+        # work on a copy
+        dDictCopy = dDict.copy()
+        dDictCopy['medianFilter'] = 5
+
+        self._getFilteredRecording(dDictCopy)
+
+        # baseline subtract filtered recording
+        theMean = np.nanmean(self.filteredVm)
+        self.filteredDeriv = self.filteredVm.copy()
+        self.filteredDeriv -= theMean
+        '''
 
     def _backupSpikeVm(self, spikeTimes, sweepNumber, medianFilter=None):
         """
@@ -1517,7 +1542,7 @@ class bAnalysis:
 
         # TODO: put back in and log if detection ['verbose']
         after = len(spikeTimes0)
-        if self.detectionClass['verbose']:
+        if self._detectionDict['verbose']:
             logger.info(f'From {before} to {after} spikes with refractory_ms:{refractory_ms}')
 
         return spikeTimes0, goodSpikeErrors
@@ -1857,35 +1882,30 @@ class bAnalysis:
         #
         return spikeTimes0, spikeErrorList
 
-    def spikeDetect(self, detectionClass=None):
+    def spikeDetect(self, detectionDict):
         """
         Spike Detect all sweeps.
-
-        When we are instantiated we create a default self.detectionClass
 
         Each spike is a row and has 'sweep'
 
         Args:
-            detectionClass (sanpy.bDetection.detectionPresets)
+            detectionDict: From sanpy.bDetection
         """
 
         rememberSweep = self.currentSweep  # This is BAD we are mixing analysis with interface !!!
 
         startTime = time.time()
 
-        if detectionClass is None:
-            detectionClass = self.detectionClass
-        else:
-            self.detectionClass = detectionClass
-
         #
         # todo: ask user if they want to remove their settings for (isBad, userType)
         #
 
-        if self.detectionClass['verbose']:
-            logger.info('=== detectionClass is:')
-            for k in self.detectionClass.keys():
-                v = self.detectionClass[k]
+        self._detectionDict = detectionDict
+
+        if detectionDict['verbose']:
+            logger.info('=== detectionDict is:')
+            for k in detectionDict.keys():
+                v = detectionDict[k]
                 print(f'  {k} value:"{v}" is type {type(v)}')
 
         self._isAnalyzed = True
@@ -1898,17 +1918,17 @@ class bAnalysis:
 
         for sweepNumber in self.sweepList:
             #self.setSweep(sweep)
-            self.spikeDetect2__(sweepNumber, dDict=self.detectionClass)
+            self._spikeDetect2(sweepNumber)
 
         #
         self.setSweep(rememberSweep)
 
         stopTime = time.time()
 
-        if detectionClass['verbose']:
+        if detectionDict['verbose']:
             logger.info(f'Detected {len(self.spikeDict)} spikes in {round(stopTime-startTime,3)} seconds')
 
-    def spikeDetect2__(self, sweepNumber, dDict):
+    def _spikeDetect2(self, sweepNumber):
         """
         Working on using bAnalysisResult.py.
 
@@ -1916,6 +1936,8 @@ class bAnalysis:
             sweepNumber:
             dDict: Detection Dict
         """
+        dDict = self._detectionDict
+        
         # a list of dict of sanpy.bAnalysisResults.analysisResult (one dict per spike)
         spikeDict = sanpy.bAnalysisResults.analysisResultList()
         # append one spike
@@ -2416,7 +2438,7 @@ class bAnalysis:
         #peaks = df['peakVal']
         #thresholdPnts = df['thresholdPnt']
 
-        verbose = self.detectionClass['verbose']
+        verbose = self._detectionDict['verbose']
 
         # using the derivstive to find zero crossing before
         # original full width left point
@@ -2974,12 +2996,12 @@ class bAnalysis:
             self.spikeClips (list): List of spike clips
         """
 
-        verbose = self.detectionClass['verbose']
+        verbose = self._detectionDict['verbose']
 
         if preSpikeClipWidth_ms is None:
-            preSpikeClipWidth_ms = self.detectionClass['preSpikeClipWidth_ms']
+            preSpikeClipWidth_ms = self._detectionDict['preSpikeClipWidth_ms']
         if postSpikeClipWidth_ms is None:
-            postSpikeClipWidth_ms = self.detectionClass['postSpikeClipWidth_ms']
+            postSpikeClipWidth_ms = self._detectionDict['postSpikeClipWidth_ms']
 
         if sweepNumber is None:
             sweepNumber = 'All'
@@ -3154,7 +3176,7 @@ class bAnalysis:
             dfError = pd.DataFrame(dictList)
 
         #print('bAnalysis.errorReport() returning len(dfError):', len(dfError))
-        if self.detectionClass['verbose']:
+        if self._detectionDict['verbose']:
             logger.info(f'Found {len(dfError)} errors in spike detection')
 
         #
@@ -3649,15 +3671,26 @@ def _lcrDualAnalysis():
     plt.show()
 
 def test_load_abf():
+    from pprint import pprint
     path = 'data/19114001.abf' # needs to be run fron SanPy
     print('=== test_load_abf() path:', path)
     ba = bAnalysis(path)
 
-    detectionPreset = sanpy.bDetection.detectionPresets.default
-    detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
-    ba.spikeDetect(detectionClass=detectionClass)
+    #detectionPreset = sanpy.bDetection.detectionPresets.default
+    #detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
+    #ba.spikeDetect(detectionClass=detectionClass)
 
-    print(ba.getDetectionType(), type(ba.getDetectionType()))
+    # this is expensive
+    bd = sanpy.bDetection()
+    dDict = bd.getDetectionDict('sanode')
+
+    print('=== detecting with:')
+    pprint(dDict)
+    
+    # detect
+    ba.spikeDetect(dDict)
+
+    #print(ba.getDetectionType(), type(ba.getDetectionType()))
 
     print('  ba.numSpikes:', ba.numSpikes)
     #ba.openHeaderInBrowser()
@@ -3804,14 +3837,14 @@ def test_sweeps():
     plt.xlabel(ba.abf.sweepLabelX)
     plt.show()
 
-def test_foot():
+def old_test_foot():
     if 0:
         path = '/media/cudmore/data/rabbit-ca-transient/feb-8-2022/Control/20220204__0013.tif.frames/20220204__0013.tif'
 
         ba = bAnalysis(path)
         print(ba)
 
-        detectionPreset= sanpy.bDetection.detectionPresets.caKymograph
+        detectionPreset= sanpy.bDetection.detectionPresets.cakymograph
         detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
         detectionClass['mvThreshold'] = 1.42
         detectionClass['doBackupSpikeVm'] = False
@@ -3823,7 +3856,7 @@ def test_foot():
         ba = bAnalysis(path)
         print(ba)
 
-        detectionPreset= sanpy.bDetection.detectionPresets.saNode
+        detectionPreset= sanpy.bDetection.detectionPresets.sanode
         detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
         detectionClass['dvdtThreshold'] = 2
         detectionClass['mvThreshold'] = -20

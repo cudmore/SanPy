@@ -17,7 +17,7 @@ import logging
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__, level=logging.DEBUG)
 
-class Test_Analysis(unittest.TestCase):
+class Test_Analysis_Dir(unittest.TestCase):
 	def setUp(self):
 		# Create a temporary directory
 		self.test_dir = tempfile.mkdtemp()
@@ -26,15 +26,14 @@ class Test_Analysis(unittest.TestCase):
 		dst = os.path.join(self.test_dir, '19114001.abf')
 		shutil.copyfile('data/19114001.abf', dst)
 
-		dst = os.path.join(self.test_dir, '19114001.csv')
-		shutil.copyfile('data/19114001.csv', dst)
+		dst = os.path.join(self.test_dir, '19114000.abf')
+		shutil.copyfile('data/19114000.abf', dst)
 
 	def tearDown(self):
 		# Remove the directory after the test
 		shutil.rmtree(self.test_dir)
 
 	def test_3_loadDir(self):
-		return
 
 		logger.info('')
 		ad = sanpy.analysisDir(path=self.test_dir)
@@ -48,4 +47,3 @@ class Test_Analysis(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-	pass

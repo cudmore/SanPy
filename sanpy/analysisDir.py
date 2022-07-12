@@ -699,6 +699,7 @@ class analysisDir():
             try:
                 df = hdfStore[dbKey]  # load it
             except (KeyError) as e:
+                # file is corrupt !!!
                 logger.error(f'    Did not find dbKey:"{dbKey}" {e}')
 
             # _ba is for runtime, assign after loading from either (abf or h5)
@@ -924,13 +925,13 @@ class analysisDir():
             # start(s) and stop(s) from ba detectionDict
             if self.isAnalyzed(rowIdx):
                 # set table to values we just detected with
-                startSec = ba.detectionClass['startSeconds']
-                stopSec = ba.detectionClass['stopSeconds']
+                startSec = ba.getDetectionDict()['startSeconds']
+                stopSec = ba.getDetectionDict()['stopSeconds']
                 self._df.loc[rowIdx, 'Start(s)'] = startSec
                 self._df.loc[rowIdx, 'Stop(s)'] = stopSec
 
-                dvdtThreshold = ba.detectionClass['dvdtThreshold']
-                mvThreshold = ba.detectionClass['mvThreshold']
+                dvdtThreshold = ba.getDetectionDict()['dvdtThreshold']
+                mvThreshold = ba.getDetectionDict()['mvThreshold']
                 self._df.loc[rowIdx, 'dvdtThreshold'] = dvdtThreshold
                 self._df.loc[rowIdx, 'mvThreshold'] = mvThreshold
 

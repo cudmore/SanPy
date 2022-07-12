@@ -91,8 +91,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         self.setAcceptDrops(True)
 
+        # TODO: if first time run (no <user>/Documents/SanPy) then warn user to quit and restart
+
         # create directories in <user>/Documents and add to python path
         sanpy._util.addUserPath()
+
+        self._detectionClass = sanpy.bDetection()
 
         # create an empty model for file list
         dfEmpty = pd.DataFrame(columns=sanpy.analysisDir.sanpyColumns.keys())
@@ -166,6 +170,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         self.slot_updateStatus('Ready')
         logger.info('SanPy started')
+
+    def getDetectionClass(self):
+        return self._detectionClass
 
     def dragEnterEvent(self, event):
         logger.info('')
@@ -824,18 +831,19 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # add a number of plugins to QDockWidget 'Plugins 1'
         # we need to know the recice human name like 'xxx'
         #detectionPlugin = self.myPlugins.runPlugin('Detection Parameters', ba=None, show=False)
-        
-        #clipsPlugin = self.myPlugins.runPlugin('Plot Spike Clips', ba=None, show=False)
-        clipsPlugin = self.myPlugins.runPlugin('Export Trace', ba=None, show=False)
-        #clipsPlugin = self.myPlugins.runPlugin('Plot Recording', ba=None, show=False)
-        
+                
         #scatterPlugin = self.myPlugins.runPlugin('Plot Scatter', ba=None, show=False)
         #errorSummaryPlugin = self.myPlugins.runPlugin('Error Summary', ba=None, show=False)
         #summaryAnalysisPlugin = self.myPlugins.runPlugin('Summary Analysis', ba=None, show=False)
 
         # on add tab, the QTabWIdget makes a copy !!!
-        #self.myPluginTab1.addTab(detectionPlugin, detectionPlugin.myHumanName)
-        self.myPluginTab1.addTab(clipsPlugin, clipsPlugin.myHumanName)
+        detectionPlugin = self.myPlugins.runPlugin('Detection Parameters', ba=None, show=False)
+        if detectionPlugin is not None:
+            self.myPluginTab1.addTab(detectionPlugin, detectionPlugin.myHumanName)
+
+        #clipsPlugin = self.myPlugins.runPlugin('Export Trace', ba=None, show=False)
+        #self.myPluginTab1.addTab(clipsPlugin, clipsPlugin.myHumanName)
+
         #self.myPluginTab1.addTab(scatterPlugin, scatterPlugin.myHumanName)
         #self.myPluginTab1.addTab(errorSummaryPlugin, errorSummaryPlugin.myHumanName)
         #self.myPluginTab1.addTab(summaryAnalysisPlugin, summaryAnalysisPlugin.myHumanName)

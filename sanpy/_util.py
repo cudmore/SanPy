@@ -72,6 +72,11 @@ def _getUserPluginFolder():
     userPluginFolder = os.path.join(userSanPyFolder, 'plugins')
     return userPluginFolder
 
+def _getUserDetectionFolder():
+    userSanPyFolder = _getUserSanPyFolder()
+    userDetectionFolder = os.path.join(userSanPyFolder, 'detection')
+    return userDetectionFolder
+
 def _getUserAnalysisFolder():
     userAnalysisFolder = _getUserSanPyFolder()
     userAnalysisFolder = os.path.join(userAnalysisFolder, 'analysis')

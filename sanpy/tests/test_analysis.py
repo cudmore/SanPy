@@ -17,12 +17,12 @@ import logging
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__, level=logging.DEBUG)
 
-class xxx_Test_Analysis(unittest.TestCase):
+class Test_Analysis(unittest.TestCase):
     # this patter is wierd to me?
     path = 'data/19114001.abf'
     ba = sanpy.bAnalysis(path)
     expectedNumSpikes = 103
-    expectedNumErrors = 68
+    expectedNumErrors = 69
 
     def test_0_load(self):
         logger.info('RUNNING')
@@ -35,8 +35,9 @@ class xxx_Test_Analysis(unittest.TestCase):
     def test_1_detect(self):
         logger.info('RUNNING')
         # grab detection parameters
-        # see: sanpy.bDetection.detectionPresets.caKymograph
-        dDict = sanpy.bDetection()  # gets default
+        # see: sanpy.bDetection.detectionPresets.cakymograph
+        bd = sanpy.bDetection()  # gets default
+        dDict = bd.getDetectionDict('SA Node')
         # detect
         self.ba.spikeDetect(dDict)
 

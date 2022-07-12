@@ -240,16 +240,21 @@ class bDetectionWidget(QtWidgets.QWidget):
         #detectionDict = sanpy.bAnalysis.getDefaultDetection()
 
         # specify a default, e.g. caKymograph
-        #detectionPreset = sanpy.bDetection.detectionPresets.caKymograph
+        #detectionPreset = sanpy.bDetection.detectionPresets.cakymograph
         #sanpy.bDetection(detectionPreset=detectionPreset)
         # was this
 
+        '''
         print(sanpy.bDetection.detectionPresets)
-        
         detectionPreset = sanpy.bDetection.detectionPresets(detectionPresetStr)
-
         detectionDict = sanpy.bDetection(detectionPreset=detectionPreset) # gets default detection class
+        detectionDict['detectionType'] = detectionType.value  # set detection type to ('dvdt', 'vm')
+        detectionDict['dvdtThreshold'] = dvdtThreshold
+        detectionDict['mvThreshold'] = mvThreshold
+        '''
 
+        _selectedDetection = self.detectToolbarWidget._selectedDetection
+        detectionDict = self.getMainWindowDetectionClass().getDetectionDict(_selectedDetection)
         detectionDict['detectionType'] = detectionType.value  # set detection type to ('dvdt', 'vm')
         detectionDict['dvdtThreshold'] = dvdtThreshold
         detectionDict['mvThreshold'] = mvThreshold
@@ -313,6 +318,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         theRet = None
         if self.myMainWindow is not None:
             theRet = self.myMainWindow.getOptions()
+        return theRet
+
+    def getMainWindowDetectionClass(self):
+        theRet = None
+        if self.myMainWindow is not None:
+            theRet = self.myMainWindow.getDetectionClass()
         return theRet
 
     def save(self, alsoSaveTxt=False):
@@ -1942,6 +1953,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self._startSec = None
         self._stopSec = None
 
+        self._selectedDetection = None
+
         self.buildUI()
 
     def fillInDetectionParameters(self, tableRowDict):
@@ -1997,7 +2010,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
     '''
 
     def on_detection_preset_change(self, detectionTypeStr):
-        """USer selected a preset detection.
+        """User selected a preset detection.
         
         Fill in preset dv/dt and mV.
         Use this detection preset when user hits detect
@@ -2005,10 +2018,13 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         logger.info('')
 
         # grab default (dv/dt, mv) from preset
-        detectionPreset = sanpy.bDetection.detectionPresets(detectionTypeStr)
-        detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
-        dvdtThreshold = detectionClass['dvdtThreshold']
-        mvThreshold = detectionClass['mvThreshold']
+        #detectionPreset = sanpy.bDetection.detectionPresets(detectionTypeStr)
+        #detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
+
+        self._selectedDetection = detectionTypeStr
+        detectionDict = self.detectionWidget.getMainWindowDetectionClass().getDetectionDict(self._selectedDetection)
+        dvdtThreshold = detectionDict['dvdtThreshold']
+        mvThreshold = detectionDict['mvThreshold']
         print('    dvdtThreshold:', dvdtThreshold, 'mvThreshold:', mvThreshold)
         
         # set interface
@@ -2251,7 +2267,12 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         aComboLabel = QtWidgets.QLabel('Presets')
         
         # get list of detection presets
-        detectionTypes = sanpy.bDetection.getDetectionPresetList()
+        #detectionTypes = sanpy.bDetection.getDetectionPresetList()
+        detectionClass = self.detectionWidget.getMainWindowDetectionClass()
+        detectionTypes = detectionClass.getDetectionPresetList()
+        
+        self._selectedDetection = detectionTypes[0]  # set to the first detection type
+
         self.detectionPresets = QtWidgets.QComboBox()
         for detectionType in detectionTypes:
             self.detectionPresets.addItem(detectionType)

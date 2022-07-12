@@ -68,7 +68,7 @@ if __name__ == '__main__':
     path = '/Users/cudmore/Sites/SanPy/data/2021_07_20_0010.abf'
     ba = sanpy.bAnalysis(path)
 
-    detectionPreset = sanpy.bDetection.detectionPresets.fastNeuron
+    detectionPreset = sanpy.bDetection.detectionPresets.fastneuron
     detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
     
     '''
