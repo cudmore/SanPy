@@ -122,6 +122,7 @@ class epochTable():
         return x, y
 
     def numEpochs(self):
+        #print('qqq:', self._epochList)
         return len(self._epochList)
 
 if __name__ == '__main__':

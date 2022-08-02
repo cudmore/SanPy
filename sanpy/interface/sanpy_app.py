@@ -94,7 +94,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # TODO: if first time run (no <user>/Documents/SanPy) then warn user to quit and restart
 
         # create directories in <user>/Documents and add to python path
-        sanpy._util.addUserPath()
+        firstTimeRunning = sanpy._util.addUserPath()
+        if firstTimeRunning:
+            logger.info('We created <user>/Documents/Sanpy and need to restart')
 
         self._detectionClass = sanpy.bDetection()
 
@@ -1127,6 +1129,9 @@ def main():
     w = SanPyWindow()
 
     w.show()
+
+    # to debug the meber function openLog()
+    #w.openLog()
 
     sys.exit(app.exec_())
 

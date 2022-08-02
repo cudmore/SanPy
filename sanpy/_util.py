@@ -19,10 +19,13 @@ def getBundledDir():
 
 def addUserPath():
     """Make user SanPy folder and add it to the Python sys.path
+    
+    Returns:
+        True: IF we made the folder (first time SAnPY is running)
     """
     
     logger.info('')
-    _makeSanPyFolders()  # make <user>/Documents/SanPy if necc
+    madeUserFolder = _makeSanPyFolders()  # make <user>/Documents/SanPy if necc
             
     userSanPyFolder = _getUserSanPyFolder()
 
@@ -37,6 +40,8 @@ def addUserPath():
     for path in sys.path:
         logger.info(f'    {path}')
 
+    return madeUserFolder
+    
 def _getUserDocumentsFolder():
     """Get folder from <user> path (not sanpy path).
     """
@@ -94,12 +99,13 @@ def _makeSanPyFolders():
     """
     userDocumentsFolder = _getUserDocumentsFolder()
 
+    madeUserFolder = False
+    
     # main <user>/DOcuments/SanPy folder
     sanpyFolder = _getUserSanPyFolder()
     if not os.path.isdir(sanpyFolder):
         logger.info(f'Making <user>/SanPy folder "{sanpyFolder}"')
-        #os.mkdir(sanpyFolder)
-
+        madeUserFolder = True
         #
         # copy entire xxx into <user>/Documents/SanPy
         _bundDir = getBundledDir()
@@ -109,6 +115,9 @@ def _makeSanPyFolders():
         logger.info(f'    _srcPath:{_srcPath}')
         logger.info(f'    _dstPath:{_dstPath}')
         shutil.copytree(_srcPath, _dstPath)
+    
+    return madeUserFolder
+
     '''
     # SanPyapplication preferences
     preferencesFolder = _getUserPreferencesFolder()

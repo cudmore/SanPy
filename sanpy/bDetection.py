@@ -374,6 +374,16 @@ def getDefaultDetection():
     theDict[key]['errors'] = ('')
     theDict[key]['description'] = 'The degree of the polynomial for Savitzky-Golay filter'
 
+    # key = 'dateAnalyzed'
+    # theDict[key] = {}
+    # theDict[key]['defaultValue'] = ''
+    # theDict[key]['type'] = 'str'
+    # theDict[key]['allowNone'] = False
+    # theDict[key]['units'] = ''
+    # theDict[key]['humanName'] = 'Date Analyzed'
+    # theDict[key]['errors'] = ('')
+    # theDict[key]['description'] = 'The date of analysis (yyyymmdd)'
+
     key = 'verbose'
     theDict[key] = {}
     theDict[key]['defaultValue'] = False
@@ -625,7 +635,7 @@ class bDetection(object):
         theDict['sanode'] = 'SA Node'
         theDict['ventricular'] = 'Ventricular'
         theDict['neuron'] = 'neuron'
-        theDict['fastneuron'] = 'Fast NEuron'
+        theDict['fastneuron'] = 'Fast Neuron'
         theDict['subthreshold'] = 'Sub Threshold'
         theDict['caspikes'] = 'Ca Spikes'
         theDict['cakymograph'] = 'Ca Kymograph'
@@ -796,6 +806,8 @@ class bDetection(object):
             return dDict
         except (KeyError) as e:
             logger.error(f'Did not find detectionType:"{detectionType}"')
+        except (ValueError) as e:
+            logger.error(f'Did not find detectionType:"{detectionType}"')
 
     def getValue(self, detectionType : str, key):
         """Get current value from key. Valid keys are defined in getDefaultDetection().
@@ -936,7 +948,7 @@ class bDetection(object):
         theDict = {}
         
         if detectionPreset == self._detectionEnum.sanode:
-            theDict['detectionName'] = 'SA  Node'
+            theDict['detectionName'] = 'SA Node'
             theDict['dvdtThreshold'] = 20
             theDict['mvThreshold'] = -20
             theDict['refractory_ms'] = 170  # max freq of 5 Hz

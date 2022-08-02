@@ -12,5 +12,5 @@ class plotTool(basePlotTool):
 
 	def __init__(self, **kwargs):
 		super(plotTool, self).__init__(**kwargs)
-		self.masterDf = self.ba.dfReportForScatter
+		self.masterDf = self.ba.asDataFrame()
 		self.plot()

@@ -6,6 +6,7 @@ These are keys in bAnalysis_ spike dict and columns in output reports
 
 import json
 import os
+from typing import Dict, List, Tuple
 
 import numpy as np  # needed to convert np types to JSON types in save
 import pandas as pd
@@ -18,17 +19,45 @@ defaultVal = float('nan')
 
 # each key in analysisResultDict needs to have the same dict
 def getDefaultDict():
-	defaultDict = {
-		'type': '',  # like: int, float, boolean, list
-		'default': '',  # default value, can be 0, None, NaN, ...
-		'units': '',  # real world units like point, mV, dvdt
-		'depends on detection': '',  # organize documentation and refer to bDetect keys
-		'error': '',  # if this analysis results can trigger an error
-		'description': '',  # long description for documentation
-		}
-	return defaultDict.copy()
+    defaultDict = {
+        'type': '',  # like: int, float, boolean, list
+        'default': '',  # default value, can be 0, None, NaN, ...
+        'units': '',  # real world units like point, mV, dvdt
+        'depends on detection': '',  # organize documentation and refer to bDetect keys
+        'error': '',  # if this analysis results can trigger an error
+        'description': '',  # long description for documentation
+        }
+    return defaultDict.copy()
 
 analysisResultDict = {}
+
+key = 'analysisDate'
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]['type'] = 'str'
+analysisResultDict[key]['default'] = ''
+analysisResultDict[key]['units'] = ''
+analysisResultDict[key]['description'] = ''
+
+key = 'analysisTime'
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]['type'] = 'str'
+analysisResultDict[key]['default'] = ''
+analysisResultDict[key]['units'] = ''
+analysisResultDict[key]['description'] = ''
+
+key = 'modDate'
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]['type'] = 'str'
+analysisResultDict[key]['default'] = ''
+analysisResultDict[key]['units'] = ''
+analysisResultDict[key]['description'] = ''
+
+key = 'modTime'
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]['type'] = 'str'
+analysisResultDict[key]['default'] = ''
+analysisResultDict[key]['units'] = ''
+analysisResultDict[key]['description'] = ''
 
 key = 'analysisVersion'
 analysisResultDict[key] = getDefaultDict()
@@ -405,295 +434,344 @@ analysisResultDict[key]['description'] = 'A list of dict to hold half-height inf
 
 # need to define keys width_<i> from halfHeights list [10, 20, 50, 80, 90]
 for i in [10, 20, 50, 80, 90]:
-	key = 'widths_' + str(i)
-	analysisResultDict[key] = getDefaultDict()
-	analysisResultDict[key]['type'] = 'int'
-	analysisResultDict[key]['default'] = defaultVal
-	analysisResultDict[key]['units'] = 'percent'
-	analysisResultDict[key]['depends on detection'] = 'halfWidthWindow_ms'
-	analysisResultDict[key]['description'] = f'Width (ms) at half-height {i} %.'
+    key = 'widths_' + str(i)
+    analysisResultDict[key] = getDefaultDict()
+    analysisResultDict[key]['type'] = 'int'
+    analysisResultDict[key]['default'] = defaultVal
+    analysisResultDict[key]['units'] = 'percent'
+    analysisResultDict[key]['depends on detection'] = 'halfWidthWindow_ms'
+    analysisResultDict[key]['description'] = f'Width (ms) at half-height {i} %.'
 
 # now we have (AP threshold, AP peak), derive stats about each AP
 
 def printDocs():
-	"""
-	Print out human readable detection parameters and convert to markdown table.
+    """
+    Print out human readable detection parameters and convert to markdown table.
 
-	Requires:
-		pip install tabulate
+    Requires:
+        pip install tabulate
 
-	See: bDetection.printDocs()
-	"""
-	import pandas as pd
-	from datetime import datetime
+    See: bDetection.printDocs()
+    """
+    import pandas as pd
+    from datetime import datetime
 
-	logger.info('Ensure there are no errors')
+    logger.info('Ensure there are no errors')
 
-	dictList = []
-	for k, v in analysisResultDict.items():
-		# iterating on getDefaultDict() to ensure all code above has valid k/v pairs
-		#lineStr = k + '\t'
-		oneDict = {
-			'Name': k,
-		}
-		for k2 in getDefaultDict().keys():
-			#print(f'  {k}: {k2}: {v[k2]}')
-			#lineStr += f'{v[k2]}' + '\t'
-			oneDict[k2] = v[k2]
-		#
-		#print(lineStr)
+    dictList = []
+    for k, v in analysisResultDict.items():
+        # iterating on getDefaultDict() to ensure all code above has valid k/v pairs
+        #lineStr = k + '\t'
+        oneDict = {
+            'Name': k,
+        }
+        for k2 in getDefaultDict().keys():
+            #print(f'  {k}: {k2}: {v[k2]}')
+            #lineStr += f'{v[k2]}' + '\t'
+            oneDict[k2] = v[k2]
+        #
+        #print(lineStr)
 
-		dictList.append(oneDict)
+        dictList.append(oneDict)
 
-		# check that k is in headerDefaultDict
-		for k3 in v:
-			if not k3 in getDefaultDict().keys():
-				logger.error(f'Found extra key "{k}" in "analysisResultDict"')
+        # check that k is in headerDefaultDict
+        for k3 in v:
+            if not k3 in getDefaultDict().keys():
+                logger.error(f'Found extra key "{k}" in "analysisResultDict"')
 
-	#
-	df = pd.DataFrame(dictList)
-	#str = df.to_markdown()
-	str = df.to_html()
-	myDate = datetime.today().strftime('%Y-%m-%d')
-	print(f'Generated {myDate} with sanpy.analysisVersion {sanpy.analysisVersion}')
-	print(str)
+    #
+    df = pd.DataFrame(dictList)
+    #str = df.to_markdown()
+    str = df.to_html()
+    myDate = datetime.today().strftime('%Y-%m-%d')
+    print(f'Generated {myDate} with sanpy.analysisVersion {sanpy.analysisVersion}')
+    print(str)
 
 class NumpyEncoder(json.JSONEncoder):
-	""" Special json encoder for numpy types """
-	def default(self, obj):
-		if isinstance(obj, np.integer):
-			return int(obj)
-		elif isinstance(obj, np.floating):
-			return float(obj)
-		elif isinstance(obj, np.ndarray):
-			return obj.tolist()
-		return json.JSONEncoder.default(self, obj)
+    """ Special json encoder for numpy types """
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 class analysisResultList:
-	"""
-	Class encapsulating a list of analysisResultDict (one dict per spike)
-	"""
-	def __init__(self):
-		# one copy for entire list
-		self._dDict = analysisResultDict
+    """
+    Class encapsulating a list of analysisResultDict (one dict per spike)
+    """
+    def __init__(self):
+        # one copy for entire list
+        
+        # TODO: put xxx in a function getAnalysisResltDict()
+        self._dDict = analysisResultDict
 
-		# list of analysisResultDict
-		self._myList = []
+        # list of analysisResultDict
+        self._myList = []
 
-		self._iterIdx = -1
+        self._iterIdx = -1
 
-	def old_save(self, saveBase):
-		savePath = saveBase + '-analysis.json'
+    def setFromListDict(self, listOfDict : List[dict]):
+        """Set analysis results from a list of dict.
+        
+        Used when loading sanpy.bAnalysis from h5 file.
 
-		analysisList = self.asList()
+        When we create self (during spike detect) we have a list of class analysisResult.
+        When we save/load we have a list of dict.
 
-		#print(analysisList[0].print())
-		print(self._myList[0])
+        This is assuming we re-create self every time we do spike detection
+        """
+        
+        # do not do this, we are an analysisResultList as a list of analysisResult
+        # self._myList = listOfDict
+        
+        self._myList = []
+        for oneDict in listOfDict:
+            oneAnalysisResult = analysisResult(theDict=oneDict)
+            self._myList.append(oneAnalysisResult)
 
-		with open(savePath, 'w') as f:
-			json.dump(analysisList, f, cls=NumpyEncoder, indent=4)
+    def analysisDate(self):
+        if len(self) > 0:
+            return self._myList[0]['analysisDate']
+        else:
+            return None
 
-	def old_load(self, loadBase):
-		loadPath = loadBase + '-analysis.json'
+    def analysisTime(self):
+        if len(self) > 0:
+            return self._myList[0]['analysisTime']
+        else:
+            return None
+        
+    def old_save(self, saveBase):
+        savePath = saveBase + '-analysis.json'
 
-		if not os.path.isfile(loadPath):
-			logger.error(f'Did not find file: {loadPath}')
-			return
+        analysisList = self.asList()
 
-		with open(loadPath, 'r') as f:
-			self._myList = json.load(f)
+        #print(analysisList[0].print())
+        print(self._myList[0])
 
-	def appendDefault(self):
-		"""Append a spike to analysis."""
-		oneResult = analysisResult()
-		self._myList.append(oneResult)
+        with open(savePath, 'w') as f:
+            json.dump(analysisList, f, cls=NumpyEncoder, indent=4)
 
-	def appendAnalysis(self, analysisResultList):
-		for analysisResult in analysisResultList:
-			# analysisResult is for one spike
-			self._myList.append(analysisResult)
+    def old_load(self, loadBase):
+        loadPath = loadBase + '-analysis.json'
 
-	def addAnalysisResult(self, theKey, theDefault=None):
+        if not os.path.isfile(loadPath):
+            logger.error(f'Did not find file: {loadPath}')
+            return
 
-		# go through list and add to each [i] dict
-		for spike in self:
-			spike.addNewKey(theKey, theDefault=theDefault)
+        with open(loadPath, 'r') as f:
+            self._myList = json.load(f)
 
-	def asList(self):
-		"""
-		Return underlying list.
+    def appendDefault(self):
+        """Append a spike to analysis.
+        
+        Used in bAnalysis spike detection.
+        """
+        oneResult = analysisResult()
+        self._myList.append(oneResult)
 
-		Needed to create pandas dataframe from list.
-		See bExport.xxx.
-		"""
-		return [spike.asDict() for spike in self._myList]
+    def appendAnalysis(self, analysisResultList):
+        for analysisResult in analysisResultList:
+            # analysisResult is for one spike
+            self._myList.append(analysisResult)
 
-	def asDataFrame(self):
-		return pd.DataFrame(self.asList())
+    def addAnalysisResult(self, theKey, theDefault=None):
 
-	def __getitem__(self, key):
-		"""
-		Allow [] indexing with self[int].
-		"""
-		try:
-			#return self._dDict[key]['currentValue']
-			return self._myList[key]
-		except (IndexError) as e:
-			logger.error(f'{e}')
+        # go through list and add to each [i] dict
+        for spike in self:
+            spike.addNewKey(theKey, theDefault=theDefault)
 
-	def __len__(self):
-		""" Allow len() with len(this)
-		"""
-		return len(self._myList)
+    def asList(self):
+        """
+        Return underlying list.
+        """
+        #return [spike.asDict() for spike in self._myList]
+        return [x.asDict() for x in self._myList]
 
-	def __iter__(self):
-		"""
-		Allow iteration with "for item in self"
-		"""
-		return self
+    def asDataFrame(self):
+        """
+        Note: underlying _myList is a list of analysisResult
+        """
+        return pd.DataFrame(self.asList())
 
-	def __next__(self):
-		"""
-		Allow iteration with "for item in self"
-		"""
-		self._iterIdx += 1
-		if self._iterIdx >= len(self._myList):
-			self._iterIdx = -1 # reset to initial value
-			raise StopIteration
-		else:
-			return self._myList[self._iterIdx]
+    def __getitem__(self, key):
+        """
+        Allow [] indexing with self[int].
+        """
+        try:
+            #return self._dDict[key]['currentValue']
+            return self._myList[key]
+        except (IndexError) as e:
+            logger.error(f'{e}')
+
+    def __len__(self):
+        """ Allow len() with len(this)
+        """
+        return len(self._myList)
+
+    def __iter__(self):
+        """
+        Allow iteration with "for item in self"
+        """
+        return self
+
+    def __next__(self):
+        """
+        Allow iteration with "for item in self"
+        """
+        self._iterIdx += 1
+        if self._iterIdx >= len(self._myList):
+            self._iterIdx = -1 # reset to initial value
+            raise StopIteration
+        else:
+            return self._myList[self._iterIdx]
 
 class analysisResult:
-	def __init__(self):
-		# this is the raw definition of analysis results (See above)
-		# pull from this to create key/value self.rDict
-		#self._dDict = analysisResultDict
-		defaultDict = analysisResultDict
-		# this is simple key/value pairs as we will in detection
-		self._rDict = {}
-		for k,v in defaultDict.items():
-			default = v['default']
-			self._rDict[k] = default
+    def __init__(self, theDict=None):
+        """Create an anlysis item (for one spike)
+        
+        Args:
+            theDict: Pre-existing dict when we load form h5 file
+        """
+        # this is the raw definition of analysis results (See above)
+        # pull from this to create key/value self.rDict
+        #self._dDict = analysisResultDict
+        defaultDict = analysisResultDict
+        # this is simple key/value pairs as we will in detection
+        self._rDict = {}
+        for k,v in defaultDict.items():
+            default = v['default']
+            self._rDict[k] = default
 
-	def __str__(self):
-		printList = []
-		for k,v in self._rDict.items():
-			if isinstance(v, dict):
-				for k2,v2 in v.items():
-					printList.append(f'  {k2} : {v2} {type(v2)}')
-			else:
-				printList.append(f'{k} : {v} {type(v)}')
-		return '\n'.join(printList)
+        if theDict is not None:
+            for k,v in theDict.items():
+                self[k] = v  # calls __setitem__()
 
-	def print(self):
-		printList = []
-		for k,v in self._rDict.items():
-			if isinstance(v, list):
-				for item in v:
-					for k2,v2 in item.items():
-						printList.append(f'  {k2} : {v2} {type(v2)}')
-			else:
-				printList.append(f'{k} : {v} {type(v)}')
-		return '\n'.join(printList)
+    # this was interfering with converting to DataFrame ???
+    '''
+    def __str__(self):
+        printList = []
+        for k,v in self._rDict.items():
+            if isinstance(v, dict):
+                for k2,v2 in v.items():
+                    printList.append(f'  {k2} : {v2} {type(v2)}')
+            else:
+                printList.append(f'{k} : {v} {type(v)}')
+        return '\n'.join(printList)
+    '''
 
-	def addNewKey(self, theKey, theDefault=None):
-		"""
-		Add a new key to this spike.
+    def print(self):
+        printList = []
+        for k,v in self._rDict.items():
+            if isinstance(v, list):
+                for item in v:
+                    for k2,v2 in item.items():
+                        printList.append(f'  {k2} : {v2} {type(v2)}')
+            else:
+                printList.append(f'{k} : {v} {type(v)}')
+        return '\n'.join(printList)
 
-		Returns: (bool) True if new key added, false if key already exists.
-		"""
-		if theDefault is None:
-			#theType = 'float'
-			theDefault = float('nan')
+    def addNewKey(self, theKey, theDefault=None):
+        """
+        Add a new key to this spike.
 
-		# check if key exists
-		keyExists = theKey in self._rDict.keys()
-		addedKey = False
-		if keyExists:
-			 #key exists, don't modify
-			 #logger.warning(f'The key "{theKey}" already exists and has value "{self._rDict[theKey]}"')
-			 pass
-		else:
-			self._rDict[theKey] = theDefault
-			addedKey = True
+        Returns: (bool) True if new key added, false if key already exists.
+        """
+        if theDefault is None:
+            #theType = 'float'
+            theDefault = float('nan')
 
-		#
-		return addedKey
+        # check if key exists
+        keyExists = theKey in self._rDict.keys()
+        addedKey = False
+        if keyExists:
+             #key exists, don't modify
+             #logger.warning(f'The key "{theKey}" already exists and has value "{self._rDict[theKey]}"')
+             pass
+        else:
+            self._rDict[theKey] = theDefault
+            addedKey = True
 
-	def asDict(self):
-		"""
-		Returns underlying dictionary
-		"""
-		return self._rDict
+        #
+        return addedKey
 
-	def __getitem__(self, key):
-		# to mimic a dictionary
-		ret = None
-		try:
-			#return self._dDict[key]['currentValue']
-			ret = self._rDict[key]
-		except (KeyError) as e:
-			logger.error(f'Error getting key "{key}" exception:{e}')
-			raise
-		#
-		return ret
+    def asDict(self):
+        """
+        Returns underlying dictionary
+        """
+        return self._rDict
 
-	def __setitem__(self, key, value):
-		# to mimic a dictionary
-		try:
-			#self._dDict[key]['currentValue'] = value
-			self._rDict[key] = value
-		except (KeyError) as e:
-			logger.error(f'{e}')
+    def __getitem__(self, key):
+        # to mimic a dictionary
+        ret = None
+        try:
+            #return self._dDict[key]['currentValue']
+            ret = self._rDict[key]
+        except (KeyError) as e:
+            logger.error(f'Error getting key "{key}" exception:{e}')
+            raise
+        #
+        return ret
 
-	def items(self):
-		# to mimic a dictionary
-		return self._rDict.items()
+    def __setitem__(self, key, value):
+        # to mimic a dictionary
+        try:
+            #self._dDict[key]['currentValue'] = value
+            self._rDict[key] = value
+        except (KeyError) as e:
+            logger.error(f'{e}')
 
-	def keys(self):
-		# to mimic a dictionary
-		return self._rDict.keys()
+    def items(self):
+        # to mimic a dictionary
+        return self._rDict.items()
+
+    def keys(self):
+        # to mimic a dictionary
+        return self._rDict.keys()
 
 
 def test():
-	for k,v in analysisResultDict.items():
-		print(k,v)
+    for k,v in analysisResultDict.items():
+        print(k,v)
 
-	ar = analysisResults()
+    ar = analysisResults()
 
-	key = 'analysisVersion'
-	print(f'key:{key} value:"{ar[key]}" type:{type(ar[key])}')
+    key = 'analysisVersion'
+    print(f'key:{key} value:"{ar[key]}" type:{type(ar[key])}')
 
-	key = 'errors'
-	print(f'key:{key} value:"{ar[key]}" type:{type(ar[key])}')
+    key = 'errors'
+    print(f'key:{key} value:"{ar[key]}" type:{type(ar[key])}')
 
 def test2():
-	# load abf
-	path = '/home/cudmore/Sites/SanPy/data/19114000.abf'
-	ba = sanpy.bAnalysis(path)
+    # load abf
+    path = '/home/cudmore/Sites/SanPy/data/19114000.abf'
+    ba = sanpy.bAnalysis(path)
 
-	# detect
-	sweepNumber = 0
-	detectionClass = ba.detectionClass
-	detectionClass['verbose'] = True
-	ba.spikeDetect2__(sweepNumber, detectionClass)
+    # detect
+    sweepNumber = 0
+    detectionClass = ba.detectionClass
+    detectionClass['verbose'] = True
+    ba.spikeDetect2__(sweepNumber, detectionClass)
 
-	'''
-	printSpikeNum = 4
-	print(f'== printing spike {printSpikeNum}')
-	ba.printSpike(printSpikeNum)
-	'''
+    '''
+    printSpikeNum = 4
+    print(f'== printing spike {printSpikeNum}')
+    ba.printSpike(printSpikeNum)
+    '''
 
-	#ba.printErrors()
+    #ba.printErrors()
 
-	sd = ba.getSpikeDictionaries()
-	'''
-	for idx, s in enumerate(sd):
-		if idx == 2:
-			print(s)
-	'''
+    sd = ba.getSpikeDictionaries()
+    '''
+    for idx, s in enumerate(sd):
+        if idx == 2:
+            print(s)
+    '''
 
 if __name__ == '__main__':
-	#test()
-	test2()
-	#printDocs()
+    #test()
+    test2()
+    #printDocs()

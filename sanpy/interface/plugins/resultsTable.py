@@ -1,4 +1,5 @@
 #20210619
+from pprint import pprint
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -10,85 +11,120 @@ import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
 class resultsTable(sanpyPlugin):
-	"""
-	Plugin to display summary of all spikes, one spike per row.
+    """
+    Plugin to display summary of all spikes, one spike per row.
 
-	Uses:
-		QTableView: sanpy.interface.bErrorTable.errorTableView()
-		QAbstractTableModel: sanpy.interface.bFileTable.pandasModel
-	"""
-	myHumanName = 'Summary Spikes'
+    Uses:
+        QTableView: sanpy.interface.bErrorTable.errorTableView()
+        QAbstractTableModel: sanpy.interface.bFileTable.pandasModel
+    """
+    myHumanName = 'Summary Spikes'
 
-	def __init__(self, **kwargs):
-		super().__init__(**kwargs)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-		#self.pyqtWindow() # makes self.mainWidget
+        #self.pyqtWindow() # makes self.mainWidget
 
-		layout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout()
 
-		controlsLayout = QtWidgets.QHBoxLayout()
-		self.numSpikesLabel = QtWidgets.QLabel('unknown spikes')
-		controlsLayout.addWidget(self.numSpikesLabel)
-		layout.addLayout(controlsLayout)
+        topToolbarLayout0, topToolbarLayout1 = self._buildTopToolbar()  # horizontal toolbar with checkboxes to toggle signals
+        layout.addLayout(topToolbarLayout0)
+        layout.addLayout(topToolbarLayout1)
 
-		self.myErrorTable = sanpy.interface.bErrorTable.errorTableView()
-		# TODO: derive a more general purpose table, here we are re-using error table
-		self.myErrorTable.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Interactive);
-		self.myErrorTable.horizontalHeader().setStretchLastSection(False)
+        # moved into _buildTopToolbar()
+        # controlsLayout = QtWidgets.QHBoxLayout()
+        # self._numSpikesLabel = QtWidgets.QLabel('unknown spikes')
+        # controlsLayout.addWidget(self._numSpikesLabel)
+        # layout.addLayout(controlsLayout)
 
-		layout.addWidget(self.myErrorTable)
+        # TODO: derive a more general purpose table, here we are re-using error table
+        self.myErrorTable = sanpy.interface.bErrorTable.errorTableView()
+        self.myErrorTable.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Interactive);
+        self.myErrorTable.horizontalHeader().setStretchLastSection(False)
 
-		self.setLayout(layout)
+        layout.addWidget(self.myErrorTable)
 
-		#
-		# connect clicks in error table to signal main sanpy_app with slot_selectSpike()
-		if self.getSanPyApp() is not None:
-			fnPtr = self.getSanPyApp().slot_selectSpike
-			self.myErrorTable.signalSelectSpike.connect(fnPtr)
+        self.setLayout(layout)
 
-		self.replot()
+        #
+        # connect clicks in error table to signal main sanpy_app with slot_selectSpike()
+        if self.getSanPyApp() is not None:
+            fnPtr = self.getSanPyApp().slot_selectSpike
+            self.myErrorTable.signalSelectSpike.connect(fnPtr)
 
-	def setAxis(self):
-		# inherited, resopnd to user setting x-axis
-		self.replot()
+        self.replot()
 
-	def replot(self):
-		logger.info('')
-		# update
-		if self.ba is None:
-			return
-		dfPlot = self.ba.dfReportForScatter
-		if dfPlot is not None:
-			startSec, stopSec = self.getStartStop()
-			if startSec is not None and stopSec is not None:
-				# use column thresholdSec
-				dfPlot = dfPlot[ (dfPlot['thresholdSec']>=startSec) & (dfPlot['thresholdSec']<=stopSec)]
-				#pass
-			#
-			logger.info(f'dfReportForScatter {startSec} {stopSec}')
-			errorReportModel = sanpy.interface.bFileTable.pandasModel(dfPlot)
-			self.myErrorTable.setModel(errorReportModel)
+    def setAxis(self):
+        # inherited, resopnd to user setting x-axis
+        self.replot()
 
-			self.numSpikesLabel.setText(f'{len(dfPlot)} spikes')
+    def _getReport(self):
+        # exportObject = sanpy.bExport(self.ba)
+        # startSec, stopSec = self.getStartStop()
+        # dfPlot = exportObject.report(startSec, stopSec)
+        dfPlot = self.ba.asDataFrame()
+        return dfPlot
 
-	def copyToClipboard(self):
-		if self.ba is not None:
-			dfReportForScatter = self.ba.dfReportForScatter
-			if dfReportForScatter is not None:
-				logger.info('Copy to clipboard')
-				dfReportForScatter.to_clipboard(sep='\t', index=False)
+    def replot(self):
+        logger.info('')
+        # update
+        if self.ba is None:
+            return
+
+        startSec, stopSec = self.getStartStop()
+
+        dfPlot = self._getReport()
+
+        if dfPlot is not None:
+            if startSec is not None and stopSec is not None:
+                # use column thresholdSec
+                dfPlot = dfPlot[ (dfPlot['thresholdSec']>=startSec) & (dfPlot['thresholdSec']<=stopSec)]
+                #pass
+            #
+            logger.info(f'dfReportForScatter {startSec} {stopSec}')
+            errorReportModel = sanpy.interface.bFileTable.pandasModel(dfPlot)
+            self.myErrorTable.setModel(errorReportModel)
+
+            self._fileLabel.setText(f'{self.ba.getFileName()}')
+            self._numSpikesLabel.setText(f'{len(dfPlot)} spikes')
+
+    def copyToClipboard(self):
+        if self.ba is not None:
+            dfPlot = self._getReport()
+            if dfPlot is not None:
+                logger.info('Copy to clipboard')
+                dfPlot.to_clipboard(sep='\t', index=False)
 
 def main():
-	path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
-	ba = sanpy.bAnalysis(path)
-	ba.spikeDetect()
-	print(ba.numSpikes)
+    path = 'data/19114001.abf'
+    ba = sanpy.bAnalysis(path)
 
-	import sys
-	app = QtWidgets.QApplication([])
-	rt = resultsTable(ba=ba)
-	rt.show()
-	sys.exit(app.exec_())
+    bd = sanpy.bDetection()  # gets default
+    dDict = bd.getDetectionDict('SA Node')
+
+    ba.spikeDetect(dDict)
+    #print(ba.numSpikes)
+
+    #print(ba.spikeDict._myList[0])
+    #_df = ba.asDataFrame()
+    #pprint(_df)
+
+    # does not work, _myList[3] is class sanpy.analysisResults.analysisResult
+    # print('qqqqqqqqqq')
+    # print(ba.spikeDict._myList[3])
+
+    #pprint(ba.spikeDict.asDataFrame())
+
+    # print('=== 2')
+    # print(ba.spikeDict[2])
+
+    #sys.exit()
+
+    import sys
+    app = QtWidgets.QApplication([])
+    rt = resultsTable(ba=ba)
+    rt.show()
+    sys.exit(app.exec_())
 
 if __name__ == '__main__':
-	main()
+    main()
