@@ -18,7 +18,6 @@ class kymographPlugin(sanpyPlugin):
         logger.info('')
         
         super().__init__(ba=ba, **kwargs)
-        #super(kymographPlugin, self).__init__(ba=ba, **kwargs)
 
         #self.setShowSelf(False)
                 

@@ -26,7 +26,13 @@ def run(path):
     """Run analysis on all raw data in path.
     """
     # folder to save all this analysis
+    
+    # this was for fernando rabbit data
     savePath = '/Users/cudmore/Desktop/kymAnalysis'
+    
+    # this is for rosie
+    savePath = '/Users/cudmore/Desktop/kymAnalysis-rosie'
+
     if not os.path.isdir(savePath):
         os.mkdir(savePath)
 
@@ -45,7 +51,9 @@ def run(path):
     for idx, file in enumerate(files):
         print(f'=== {idx} of {len(files)} {file}')
         
-        ka = sanpy.kymographAnalysis(file, autoLoad=False)
+        autoLoad = False  # for fernando, was using default roi rect
+        autoLoad = True  # for rosie, using roi rect set manually and saved
+        ka = sanpy.kymographAnalysis(file, autoLoad=autoLoad)
 
         # analyze with default rect roi
         ka.setLineWidth(1)
@@ -176,6 +184,9 @@ if __name__ == '__main__':
 
     pathList = [path1, path2, path3, path4]
 
+    rosiePath1 = '/Users/cudmore/data/rosie/Raw data for contraction analysis/Female Old'
+    pathList = [rosiePath1]
+    
     dfMaster = None
     
     for path in pathList:

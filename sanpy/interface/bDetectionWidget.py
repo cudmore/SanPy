@@ -681,7 +681,9 @@ class bDetectionWidget(QtWidgets.QWidget):
                 xPlot, yPlot = sanpy.getHalfWidthLines(sweepX, filteredVm, spikeDictionaries)
             elif plotIsOn and plot['humanName'] == 'Epoch Lines':
                 _epochTable = self.ba.getEpochTable(self.sweepNumber)
-                xPlot, yPlot =  _epochTable.getEpochLines(yMin=np.nanmin(self.ba.filteredVm), yMax=np.nanmax(self.ba.filteredVm))
+                if _epochTable is not None:
+                    # happens when file is tif kymograph
+                    xPlot, yPlot =  _epochTable.getEpochLines(yMin=np.nanmin(self.ba.filteredVm), yMax=np.nanmax(self.ba.filteredVm))
             elif plotIsOn and plot['humanName'] == 'EDD':
                 xPlot, yPlot = self.getEDD()
             elif plotIsOn and plot['humanName'] == 'EDD Rate':
