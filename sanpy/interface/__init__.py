@@ -24,3 +24,5 @@ from .bPlugins import *
 #from .breeze_resources import *
 
 from .kymographWidget import kymographWidget
+
+from .preferences import preferences

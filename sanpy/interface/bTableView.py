@@ -47,6 +47,10 @@ class bTableView(QtWidgets.QTableView):
     def __init__(self, model, parent=None):
         super(bTableView, self).__init__(parent)
 
+        #self.setAcceptDrops(True)
+        #self.setDragDropMode(QtWidgets.QAbstractItemView.DropOnly)
+        #self.setDropIndicatorShown(True)
+
         self.lastSeletedRow = None
         self.clicked.connect(self.onLeftClick)
 
@@ -127,6 +131,12 @@ class bTableView(QtWidgets.QTableView):
         # this almost works but header becomes white???
         self.setStyleSheet(qss)
         #self.frozenTableView.setStyleSheet(qss)
+
+    # def dragEnterEvent(self, event):
+    #     logger.info('')
+    
+    # def dropEvent(self, event):
+    #     logger.info('')
 
     #
     # frozen
@@ -296,6 +306,10 @@ class bTableView(QtWidgets.QTableView):
         #
         action = contextMenu.exec_(self.mapToGlobal(event.pos()))
         
+        if action is None:
+            # no user selection
+            return
+            
         logger.info(f'  action: "{action.text()}"')
         
         selectedRow = None

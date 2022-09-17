@@ -14,6 +14,7 @@ import pyqtgraph as pg
 from pyqtgraph.exporters import ImageExporter
 
 import sanpy
+import sanpy.bDetection
 
 import sanpy.interface.bKymograph
 
@@ -112,6 +113,17 @@ class bDetectionWidget(QtWidgets.QWidget):
                 'plotIsOn': False,
             },
             {
+                'humanName': 'Epoch Lines',
+                'x': None,
+                'y': None,
+                'convertx_tosec': True,
+                'color': 'gray',
+                'styleColor': 'color: gray',
+                'symbol': 'o',
+                'plotOn': 'vm',
+                'plotIsOn': True,
+            },
+            {
                 'humanName': 'Pre AP Min (mV)',
                 'x': 'preMinPnt',
                 'y': 'preMinVal',
@@ -172,7 +184,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             showDAC = windowOptions['rawDataPanels']['DAC']
             showFullRecording = windowOptions['rawDataPanels']['Full Recording']
 
-            self.toggleInterface('Global Vm', showFullRecording)
+            self.toggleInterface('Full Recording', showFullRecording)
             self.toggleInterface('Derivative', showDerivative)
             self.toggleInterface('DAC', showDAC)
             #self.toggleInterface('Clips', showClips)
@@ -190,15 +202,20 @@ class bDetectionWidget(QtWidgets.QWidget):
 
     @property
     def sweepNumber(self):
-        #return self._sweepNumber
-        return self.ba.currentSweep
+        """Get the current sweep number (from bAnalysis).
+        """
+        if self.ba is None:
+            return None
+        else:
+            return self.ba.currentSweep
 
-    def detect(self, detectionType : sanpy.bDetection.detectionTypes,
+    def detect(self, detectionPresetStr: str, detectionType : sanpy.bDetection.detectionTypes,
                 dvdtThreshold, mvThreshold, startSec=None, stopSec=None):
         """
         Detect spikes
 
         Args:
+            detectionPreset (str) corresponds to Enum sanpy.bDetection.detectionPresets_
             detectionType (sanpy.bDetection.detectionTypes): The type of detection (dvdt, vm)
         """
 
@@ -226,7 +243,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         #detectionPreset = sanpy.bDetection.detectionPresets.caKymograph
         #sanpy.bDetection(detectionPreset=detectionPreset)
         # was this
-        detectionDict = sanpy.bDetection() # gets default detection class
+
+        print(sanpy.bDetection.detectionPresets)
+        
+        detectionPreset = sanpy.bDetection.detectionPresets(detectionPresetStr)
+
+        detectionDict = sanpy.bDetection(detectionPreset=detectionPreset) # gets default detection class
 
         detectionDict['detectionType'] = detectionType.value  # set detection type to ('dvdt', 'vm')
         detectionDict['dvdtThreshold'] = dvdtThreshold
@@ -511,14 +533,19 @@ class bDetectionWidget(QtWidgets.QWidget):
         #    print(f'    points[{idx}].data():{p.data()} p.index:{p.index()} p.pos:{p.pos()}')
 
         if len(points) > 0:
-            spikeNumber = points[0].index()
+            sweepSpikeNumber = points[0].index()
 
-            logger.info(f'spikeNumber:{spikeNumber}')
+            # convert sweep spike index to absolute
+            absIndex = self.ba.getAbsSpikeFromSweep(sweepSpikeNumber, self.sweepNumber)
+
+            logger.info(f'self.sweepNumber:{self.sweepNumber} sweepSpikeNumber:{sweepSpikeNumber} absIndex:{absIndex}')
             eDict = {
-                'spikeNumber': spikeNumber,
+                'spikeNumber': absIndex,
                 'doZoom': False,
                 'ba': self.ba,
             }
+            logger.info(f'    {eDict}')
+
             self.signalSelectSpike.emit(eDict)
 
         """
@@ -641,6 +668,9 @@ class bDetectionWidget(QtWidgets.QWidget):
                 filteredVm = self.ba.filteredVm
                 #filteredVm = filteredVm[:,0]
                 xPlot, yPlot = sanpy.getHalfWidthLines(sweepX, filteredVm, spikeDictionaries)
+            elif plotIsOn and plot['humanName'] == 'Epoch Lines':
+                _epochTable = self.ba.getEpochTable(self.sweepNumber)
+                xPlot, yPlot =  _epochTable.getEpochLines(yMin=np.nanmin(self.ba.filteredVm), yMax=np.nanmax(self.ba.filteredVm))
             elif plotIsOn and plot['humanName'] == 'EDD':
                 xPlot, yPlot = self.getEDD()
             elif plotIsOn and plot['humanName'] == 'EDD Rate':
@@ -685,7 +715,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             on (bool):
         """
         if isinstance(idx, str):
-            logger.error(f'Unexpected type for parameter idx "{idx}" with type {idx}')
+            logger.error(f'Unexpected type for parameter idx "{idx}" with type {type(idx)}')
             return
 
         # toggle the plot on/off
@@ -720,6 +750,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         else:
             sweepNumber = int(sweepNumber)
 
+        if sweepNumber<0 or sweepNumber>self.ba.numSweeps-1:
+            return
+
         logger.info(f'sweepNumber:"{sweepNumber}" {type(sweepNumber)} doEmit:{doEmit} startSec:"{startSec}" stopSec:"{stopSec}"')
 
         #if self._sweepNumber == sweepNumber:
@@ -731,14 +764,21 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         #self.setAxisFull()
 
+        # cancel spike selection
+        self.selectSpike(None)
+
         self._replot(startSec, stopSec)  # will set full axis
 
         if doEmit:
             self.signalSelectSweep.emit(self.ba, sweepNumber)
 
-    def selectSpike(self, spikeNumber, doZoom=False, doEmit=False):
-        if spikeNumber is not None:
-            logger.info(f'spikeNumber: {spikeNumber}, doZoom {doZoom}')
+    def selectSpike(self, spikeNumber : int, doZoom=False, doEmit=False):
+        """
+        Args:
+            spikeNumber: absolute
+        """
+        logger.info(f'spikeNumber:{spikeNumber} doZoom:{doZoom} doEmit:{doEmit}')
+        
         # we will always use self.ba ('peakSec', 'peakVal')
         if self.ba is None:
             return
@@ -750,25 +790,47 @@ class bDetectionWidget(QtWidgets.QWidget):
         x = None
         y = None
 
-        # removed second clause while adding multiple spike selection
-        #if spikeNumber is not None and spikeNumber < len(xPlot):
+        # potentially move on to a new sweep (while implementing Thian data)
         if spikeNumber is not None:
-            xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=self.sweepNumber)
+            if spikeNumber<0 or spikeNumber>self.ba.numSpikes-1:
+                logger.error(f'Got spike {spikeNumber} but expecting range [0,{self.ba.numSpikes-1})')
+                return
+
+            sweep = self.ba.getSpikeStat(spikeList, 'sweep')
+            sweep = sweep[0]  # just the first
+            if sweep != self.sweepNumber:
+                print('!!! SWITCHING to sweep:', sweep, 'from self.sweepNumber:', self.sweepNumber)
+                self.slot_selectSweep(sweep)
+
+            logger.info(f'spikeNumber: {spikeNumber}, sweep {sweep}, doZoom {doZoom}')
+            sweepSpikeNumber = self.ba.getSweepSpikeFromAbsolute(spikeNumber, sweep)
+            sweepSpikeList = [sweepSpikeNumber]
+            print('    sweepSpikeNumber:', sweepSpikeNumber, type(sweepSpikeNumber))
+
+            spikeList = [sweepSpikeNumber]
+
+            # removed second clause while adding multiple spike selection
+            #if spikeNumber is not None and spikeNumber < len(xPlot):
+            #xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=self.sweepNumber)
+            xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=sweep)
             xPlot = np.array(xPlot)
             yPlot = np.array(yPlot)
             try:
-                x = xPlot[spikeList]
-                y = yPlot[spikeList]
+                x = xPlot[sweepSpikeList]
+                y = yPlot[sweepSpikeList]
             except (IndexError) as e:
-                pass
+                logger.error(f'{e}')
+                #pass
 
         self.mySingleSpikeScatterPlot.setData(x=x, y=y)
 
         # zoom
         if spikeNumber is not None and doZoom:
             thresholdSeconds = self.ba.getStat('thresholdSec', sweepNumber=self.sweepNumber)
-            if spikeNumber < len(thresholdSeconds):
-                thresholdSecond = thresholdSeconds[spikeNumber]
+            if sweepSpikeNumber < len(thresholdSeconds):
+                logger.info('    !!!! REMOVE HARD CODED ZOOM')
+                #thresholdSecond = thresholdSeconds[spikeNumber]
+                thresholdSecond = thresholdSeconds[sweepSpikeNumber]
                 thresholdSecond = round(thresholdSecond, 3)
                 startSec = thresholdSecond - 0.5
                 startSec = round(startSec, 2)
@@ -1007,6 +1069,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         #self.detectToolbarWidget = myDetectToolbarWidget(self.myPlots, self)
         #self.myHBoxLayout_detect.addLayout(self.detectToolbarWidget, stretch=1) # stretch=10, not sure on the units???
         self.detectToolbarWidget = myDetectToolbarWidget2(self.myPlots, self)
+        self.signalSelectSpike.connect(self.detectToolbarWidget.slot_selectSpike)
         #if self.myMainWindow is not None:
         #    self.detectToolbarWidget.signalSelectSpike.connect(self.myMainWindow.slotSelectSpike)
 
@@ -1106,6 +1169,10 @@ class bDetectionWidget(QtWidgets.QWidget):
             else:
                 logger.error(f'case not taken for crosshairPlot: {crosshairPlot}')
 
+        #
+        # epoch as vertical lines
+        # we don't know the number of epochs until we have a ba?
+
         # trying to implement mouse moved events
         self.myProxy = pg.SignalProxy(self.vmPlot.scene().sigMouseMoved, rateLimit=60, slot=self.myMouseMoved)
         #self.vmPlot.scene().sigMouseMoved.connect(self.myMouseMoved)
@@ -1156,6 +1223,8 @@ class bDetectionWidget(QtWidgets.QWidget):
             if humanName in ['Half-Widths']:
                 # PlotCurveItem
                 myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=2, color=color), connect='finite') # default is no symbol
+            elif humanName in ['Epoch Lines']:
+                myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=1, color=color, style=QtCore.Qt.DashLine), connect='finite') # default is no symbol
             elif humanName == 'EDD Rate':
                 # edd rate is a dashed line showing slope/rate of edd
                 myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=2, color=color, style=QtCore.Qt.DashLine), connect='finite') # default is no symbol
@@ -1314,12 +1383,18 @@ class bDetectionWidget(QtWidgets.QWidget):
         if key == QtCore.Qt.Key.Key_Escape:
             self.myMainWindow.mySignal('cancel all selections')
 
+    def slot_selectSweep(self, sweep : int):
+        """Fake slot, not ising in emit/connect.
+        """
+        self.selectSweep(sweep)
+        self.detectToolbarWidget.slot_selectSweep(sweep)
+
     def slot_selectSpike(self, sDict):
-        #print('detectionWidget.slotSelectSpike() sDict:', sDict)
+        logger.info(f'detection widget {sDict}')
         spikeNumber = sDict['spikeNumber']
         doZoom = sDict['doZoom']
         self.selectSpike(spikeNumber, doZoom=doZoom)
-        self.detectToolbarWidget.slot_selectSpike(sDict)
+        #self.detectToolbarWidget.slot_selectSpike(sDict)
 
     def slot_selectSpikeList(self, sDict):
         #print('detectionWidget.slotSelectSpike() sDict:', sDict)
@@ -1443,6 +1518,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         logger.info(f'filteredVm: {filteredVm.shape}')
         '''
 
+        #
         self.dvdtLinesFiltered = MultiLine(sweepX, filteredDeriv,
                             self, forcePenColor=None, type='dvdtFiltered',
                             columnOrder=True)
@@ -1857,7 +1933,7 @@ class MultiLine(pg.QtGui.QGraphicsPathItem):
 class myDetectToolbarWidget2(QtWidgets.QWidget):
     #signalSelectSpike = QtCore.Signal(object, object) # spike number, doZoom
 
-    def __init__(self, myPlots, detectionWidget, parent=None):
+    def __init__(self, myPlots, detectionWidget : bDetectionWidget, parent=None):
         super(myDetectToolbarWidget2, self).__init__(parent)
 
         self.myPlots = myPlots
@@ -1899,8 +1975,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             windowOptions = self.detectionWidget.getMainWindowOptions()
             mvThreshold = windowOptions['detect']['detectMv']
 
-        print('=== fillInDetectionParameters dvdtThreshold:', dvdtThreshold)
-        print('=== fillInDetectionParameters mvThreshold:', mvThreshold)
+        # print('=== fillInDetectionParameters dvdtThreshold:', dvdtThreshold)
+        # print('=== fillInDetectionParameters mvThreshold:', mvThreshold)
         
         self.dvdtThreshold.setValue(dvdtThreshold)
         self.mvThreshold.setValue(mvThreshold)
@@ -1920,6 +1996,25 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         print('    todo: implement sweep number:', sweepNumber)
     '''
 
+    def on_detection_preset_change(self, detectionTypeStr):
+        """USer selected a preset detection.
+        
+        Fill in preset dv/dt and mV.
+        Use this detection preset when user hits detect
+        """
+        logger.info('')
+
+        # grab default (dv/dt, mv) from preset
+        detectionPreset = sanpy.bDetection.detectionPresets(detectionTypeStr)
+        detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
+        dvdtThreshold = detectionClass['dvdtThreshold']
+        mvThreshold = detectionClass['mvThreshold']
+        print('    dvdtThreshold:', dvdtThreshold, 'mvThreshold:', mvThreshold)
+        
+        # set interface
+        self.dvdtThreshold.setValue(dvdtThreshold)
+        self.mvThreshold.setValue(mvThreshold)
+
     def on_sweep_change(self, sweepNumber):
         """
         Args:
@@ -1932,6 +2027,37 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             return
         logger.info(f'Calling selectSweep() {sweepNumber}')
         self.detectionWidget.selectSweep(sweepNumber)
+
+    def on_sweep_change_2(self, prevNext : str):
+        if self.detectionWidget.ba is None:
+            return
+
+        if prevNext == 'previous':
+            inc = -1
+        else:
+            inc = +1
+        newSweep = self.detectionWidget.sweepNumber
+        if newSweep is None:
+            return
+        else:
+            newSweep += inc
+        
+        if newSweep<0 or newSweep > self.detectionWidget.ba.numSweeps-1:
+            return
+        
+        self.detectionWidget.slot_selectSweep(newSweep)
+        #self.detectionWidget.selectSweep(newSweep)
+
+        # update combobox
+        #self.sweepComboBox.setCurrentIndex(newSweep+1)
+
+    def slot_selectSweep(self, sweep : int):
+        """Fake slot, not ising in emit/connect.
+        """
+        self.sweepComboBox.setCurrentIndex(sweep+1)
+
+        #self.spikeNumber.setMaximum(+1e6)
+        #self.spikeNumber.setValue(0)
 
     #@QtCore.pyqtSlot()
     def on_start_stop(self):
@@ -1955,6 +2081,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         isShift = modifiers == QtCore.Qt.ShiftModifier
 
         if name == 'Detect dV/dt':
+            detectionPreset = self.detectionPresets.currentText()
+            
             dvdtThreshold = self.dvdtThreshold.value()
             #print(f'  dvdtThreshold:', dvdtThreshold, type(dvdtThreshold))
             mvThreshold = self.mvThreshold.value()
@@ -1969,7 +2097,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             stopSec = self.stopSeconds.value()
             #
             detectionType = sanpy.bDetection.detectionTypes.dvdt
-            self.detectionWidget.detect(detectionType, dvdtThreshold, mvThreshold, startSec, stopSec)
+            self.detectionWidget.detect(detectionPreset, detectionType, dvdtThreshold, mvThreshold, startSec, stopSec)
 
         elif name =='Detect mV':
             dvdtThreshold = self.dvdtThreshold.value()
@@ -1986,7 +2114,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             stopSec = self.stopSeconds.value()
             #
             detectionType = sanpy.bDetection.detectionTypes.mv
-            self.detectionWidget.detect(detectionType, dvdtThreshold, mvThreshold, startSec, stopSec)
+            self.detectionWidget.detect(detectionPreset, detectionType, dvdtThreshold, mvThreshold, startSec, stopSec)
 
         # Reset Axes
         #elif name == 'Reset Axes':
@@ -1997,6 +2125,12 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             #print('"Save Spike Report" isShift:', isShift)
             self.detectionWidget.save(alsoSaveTxt=isShift)
 
+        # next/previous sweep
+        elif name == '<':
+            self.on_sweep_change_2('previous')
+        elif name == '>':
+            self.on_sweep_change_2('next')
+
         #elif name == 'Explore':
         #    # open bScatterPlot2 for one recording
         #    self.detectionWidget.exploreSpikes()
@@ -2006,7 +2140,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         elif name == 'Go':
             spikeNumber = self.spikeNumber.value()
-            doZoom = True
+            doZoom = isShift
             self.detectionWidget.selectSpike(spikeNumber, doZoom, doEmit=True)
 
         elif name == '<<':
@@ -2014,8 +2148,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             spikeNumber -= 1
             if spikeNumber < 0:
                 spikeNumber = 0
-            self.spikeNumber.setValue(spikeNumber)
-            self.on_button_click('Go')
+            doZoom = isShift
+            self.detectionWidget.selectSpike(spikeNumber, doZoom, doEmit=True)
 
         elif name == '>>':
             if self.detectionWidget.ba is None:
@@ -2024,8 +2158,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             spikeNumber += 1
             if spikeNumber > self.detectionWidget.ba.numSpikes - 1:
                 spikeNumber = self.detectionWidget.ba.numSpikes - 1
-            self.spikeNumber.setValue(spikeNumber)
-            self.on_button_click('Go')
+            doZoom = isShift
+            self.detectionWidget.selectSpike(spikeNumber, doZoom, doEmit=True)
 
         else:
             logger.warning(f'Did not understand button: "{name}"')
@@ -2110,12 +2244,32 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         detectionGridLayout = QtWidgets.QGridLayout()
         #detectionGridLayout.setAlignment(QtCore.Qt.AlignTop)
 
+        row = 0
+        rowSpan = 1
+        columnSpan = 2
+
+        aComboLabel = QtWidgets.QLabel('Presets')
+        
+        # get list of detection presets
+        detectionTypes = sanpy.bDetection.getDetectionPresetList()
+        self.detectionPresets = QtWidgets.QComboBox()
+        for detectionType in detectionTypes:
+            self.detectionPresets.addItem(detectionType)
+        self.detectionPresets.currentTextChanged.connect(self.on_detection_preset_change)
+
+        columnSpan = 1
+        detectionGridLayout.addWidget(aComboLabel, row, 0, rowSpan, columnSpan)
+        columnSpan = 3
+        detectionGridLayout.addWidget(self.detectionPresets, row, 1, rowSpan, columnSpan)
+        row += 1
+
+        #
         buttonName = 'Detect dV/dt'
         button = QtWidgets.QPushButton(buttonName)
         button.setToolTip('Detect spikes using dV/dt threshold.')
         button.clicked.connect(partial(self.on_button_click,buttonName))
 
-        row = 0
+        #row = 0
         rowSpan = 1
         columnSpan = 2
         detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)
@@ -2217,15 +2371,30 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         row = 0
         # sweeps
         tmpSweepLabel = QtWidgets.QLabel('Sweep')
+        buttonName = '<'
+        self.previousSweepButton = QtWidgets.QPushButton(buttonName)
+        self.previousSweepButton.clicked.connect(partial(self.on_button_click,buttonName))
+        buttonName = '>'
+        self.nextSweepButton = QtWidgets.QPushButton(buttonName)
+        self.nextSweepButton.clicked.connect(partial(self.on_button_click,buttonName))
+
         self.sweepComboBox = QtWidgets.QComboBox()
         self.sweepComboBox.currentTextChanged.connect(self.on_sweep_change)
         # will be set in self.slot_selectFile()
         #for sweep in range(self.detectionWidget.ba.numSweeps):
         #    self.sweepComboBox.addItem(str(sweep))
+        hSweepLayout = QtWidgets.QHBoxLayout()
+        hSweepLayout.addWidget(tmpSweepLabel)
+        hSweepLayout.addWidget(self.previousSweepButton)
+        hSweepLayout.addWidget(self.sweepComboBox)
+        hSweepLayout.addWidget(self.nextSweepButton)
         tmpRowSpan = 1
-        tmpColSpan = 1
-        displayGridLayout.addWidget(tmpSweepLabel, row, 0, tmpRowSpan, tmpColSpan)
-        displayGridLayout.addWidget(self.sweepComboBox, row, 1, tmpRowSpan, tmpColSpan)
+        tmpColSpan = 2
+        displayGridLayout.addLayout(hSweepLayout, row, 0, tmpRowSpan, tmpColSpan)
+        # displayGridLayout.addWidget(tmpSweepLabel, row, 0, tmpRowSpan, tmpColSpan)
+        # displayGridLayout.addWidget(previousSweepButton, row, 1, tmpRowSpan, tmpColSpan)
+        # displayGridLayout.addWidget(self.sweepComboBox, row, 2, tmpRowSpan, tmpColSpan)
+        # displayGridLayout.addWidget(nextSweepButton, row, 3, tmpRowSpan, tmpColSpan)
 
         # plot every x th pnts, value of 10 would plot every 10th point
         '''
@@ -2362,6 +2531,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # finalize
         self.setLayout(self.mainLayout)
 
+    def on_spike_number(self, spikeNumber):
+        logger.info(f'!!! THIS IS A PROBLEM spikeNumber:{spikeNumber}')
+        doZoom = False
+        self.detectionWidget.selectSpike(spikeNumber, doZoom, doEmit=True)
+
     def _buildSpikeBrowser(self):
         """Build interface to go to spike number, previous <<, and next >>"""
         hBoxSpikeBrowser = QtWidgets.QHBoxLayout()
@@ -2369,13 +2543,16 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         aLabel = QtWidgets.QLabel('Spike')
         hBoxSpikeBrowser.addWidget(aLabel)
 
-        # spike number
+        # absolute spike number
         self.spikeNumber = QtWidgets.QSpinBox()
         self.spikeNumber.setMinimum(0)
         self.spikeNumber.setMaximum(+1e6)
         self.spikeNumber.setKeyboardTracking(False)
         self.spikeNumber.setValue(0)
-        #self.spikeNumber.valueChanged.connect(self.on_spike_number)
+        self.spikeNumber.valueChanged.connect(self.on_spike_number)
+        #self.spikeNumber.editingFinished.connect(self.on_spike_number)
+        #self.spikeNumber.setKeyboardTracking(False)
+
         hBoxSpikeBrowser.addWidget(self.spikeNumber)
 
         buttonName = 'Go'
@@ -2413,6 +2590,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.mousePositionLabel.repaint()
 
     def slot_selectSpike(self, sDict):
+        logger.info(f'detectiontoolbar widget: sDict:{sDict}')
         spikeNumber = sDict['spikeNumber']
         # don't respond to a list of spikes
         if isinstance(spikeNumber, list):
@@ -2421,7 +2599,22 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # spin boxes can not have 'no value'
         if spikeNumber is None:
             spikeNumber = 0
+        
+        # convert absolute to sweep
+        sweepSpike = self.detectionWidget.ba.getSweepSpikeFromAbsolute(spikeNumber, self.detectionWidget.sweepNumber)
+        
+        '''
+        print('    !!!! self.detectionWidget.sweepNumber:', self.detectionWidget.sweepNumber)
+        print('    !!!! spikeNumber:', spikeNumber)
+        print('    !!!! sweepSpike:', sweepSpike)
+        '''
+
+        # need to blockSignal or else this emits to callback
+        self.spikeNumber.blockSignals(True)
         self.spikeNumber.setValue(spikeNumber)
+        self.spikeNumber.blockSignals(False)
+
+        self.spikeNumber.update()
 
     def slot_selectFile(self, rowDict):
         file = rowDict['File']
@@ -2456,14 +2649,21 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         #    self.sweepComboBox.setCurrentIndex(1)
 
         # turn off sweep combo box if just one sweep
-        if self.detectionWidget.ba.numSweeps == 1:
-            self.sweepComboBox.setEnabled(False)
-        else:
-            self.sweepComboBox.setEnabled(True)
+        enableSweepButtons = self.detectionWidget.ba.numSweeps > 1
+        self.sweepComboBox.setEnabled(enableSweepButtons)
+        self.previousSweepButton.setEnabled(enableSweepButtons)
+        self.nextSweepButton.setEnabled(enableSweepButtons)
 
         #
         self.sweepComboBox.blockSignals(False)
         #
+
+        # TODO: Fix this, we need to set this when user performs new analysis
+        # self.spikeNumber.setMaximum(self.detectionWidget.ba.numSpikes - 1)
+        
+        self.spikeNumber.blockSignals(True)
+        self.spikeNumber.setValue(0)
+        self.spikeNumber.blockSignals(False)
 
     def slot_dataChanged(self, columnName, value, rowDict):
         """

@@ -5,6 +5,10 @@
 import os, time, sys
 import copy  # For copy.deepcopy() of bAnalysis
 import uuid  # to generate unique key on bAnalysis spike detect
+import pathlib  # ned to use this (introduced in Python 3.4) to maname paths on Windows, stop using os.path
+
+from typing import List  #, Union
+
 import numpy as np
 import pandas as pd
 import requests, io  # too load from the web
@@ -145,19 +149,24 @@ We require type so we can edit with QAbstractTableModel.
 Critical for qt interface to allow easy editing of values while preserving type
 """
 
-def fixRelPath(folderPath, dfTable, fileList):
+def fixRelPath(folderPath, dfTable : pd.DataFrame, fileList : List[str]):
     """
-    was not assigning relPath on initial load (no hd5 file)
+    Was not assigning relPath on initial load (no hd5 file).
+
+    We need a path relative to location of loaded folder.
+    This allows a folder of files and analysis to be moved (to a different machine)
     """
-    logger.info('')
     
-    print('fileList:', fileList)
-    pprint(dfTable[['File', 'relPath']])
+    # print('fileList:', fileList)
+    # pprint(dfTable[['File', 'relPath']])
     
-    if dfTable is None:
-        logger.error('no dfTable')
+    # if dfTable is None:
+    #     logger.error('no dfTable')
 
     n = len(dfTable)
+
+    logger.info(f'Checking path for {n} file(s)')
+
     for rowIdx in range(n):
         file = dfTable.loc[rowIdx, 'File']
         relPath = dfTable.loc[rowIdx, 'relPath']
@@ -169,17 +178,14 @@ def fixRelPath(folderPath, dfTable, fileList):
         #print(rowIdx, file, relPath)
         for filePath in fileList:
             if filePath.find(file) != -1:
-                print(f'  fixRelPath() file idx {rowIdx} file:{file} now has relPath:{filePath}')
+                logger.info(f'    fixRelPath() file idx {rowIdx} file:{file} now has relPath:{filePath}')
                 dfTable.loc[rowIdx, 'relPath'] = filePath
 
-    #sys.exit(1)
-
 def h5_printKey(hdfPath):
-    print('\n=== h5_printKey() hdfPath:', hdfPath)
+    logger.info(f'hdfPath: {hdfPath} has keys:')
     with pd.HDFStore(hdfPath, mode='r') as store:
         for key in store.keys():
-            print('  ', key)
-    print('\n')
+            logger.info(f'    {key}')
 
 class bAnalysisDirWeb():
     """
@@ -315,7 +321,7 @@ class analysisDir():
         self._checkColumns()
         self._updateLoadedAnalyzed()
 
-        logger.warning('\n   temporary fix with fixRelPath()\n')
+        logger.warning('remember: temporary fix with fixRelPath()\n')
         tmpFileList = self.getFileList()
         fixRelPath(self.path, self._df, tmpFileList)
 
@@ -494,38 +500,29 @@ class analysisDir():
         #
         # rebuild the file to remove old changes and reduce size
         tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-        tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+        #tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+        tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
 
         hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-        hdfPath = os.path.join(self.path, hdfFile)
+        #hdfPath = os.path.join(self.path, hdfFile)
+        hdfPath = pathlib.Path(self.path) / hdfFile
         logger.info(f'Rebuilding h5 to {hdfPath}')
         
-        '''
-        #command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", '--complevel=9', '--complib=blosc:blosclz', tmpHdfPath, hdfPath]
-        #command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", tmpHdfPath, hdfPath]
-        command = ["_ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
-        '''
-
-        if getattr(sys, 'frozen', False):
-            # running in a bundle (frozen)
-            bundle_dir = sys._MEIPASS
-        else:
-            bundle_dir = os.path.dirname(os.path.abspath(__file__))
+        # can't pass sys.argv a 'PosixPath' from pathlib.Path, needs to be a string
+        tmpHdfPath = str(tmpHdfPath)
+        hdfPath = str(hdfPath)
         
-        #_ptrepack_path = os.path.join(bundle_dir, 'ptrepack')
-        #logger.info(f'frozen _ptrepack_path: {_ptrepack_path}')
-        #command[0] = _ptrepack_path
-
-        #_ptrepackPath = os.path.join(bundle_dir, '_ptrepack.py')
-
-        # The first item is normalls the command line command name (not used)
-        sys.argv = ["", "--overwrite", "--chunkshape=auto", tmpHdfPath, hdfPath]
+        # when calling ptrepack, we need trailing ':' on each src/dst path
+        # without this Windows fails to find the file
+        _tmpHdfPath = tmpHdfPath + ':'
+        _hdfPath = hdfPath + ':'
+        
+        # The first item is normally the command line command name (not used)
+        sys.argv = ["", "--overwrite", "--chunkshape=auto", _tmpHdfPath, _hdfPath]
 
         logger.info('running tables.scripts.ptrepack.main()')
         logger.info(f'sys.argv: {sys.argv}')
         try:
-            # works
-            # exec(open(_ptrepackPath).read(), globals())
             
             tables.scripts.ptrepack.main()
 
@@ -533,25 +530,51 @@ class analysisDir():
             logger.info(f'Deleting tmp file: {tmpHdfPath}')
             os.remove(tmpHdfPath)
 
-            #self.signalApp(f'Call success to script {_ptrepackPath}')
             self.signalApp(f'Saved compressed folder analysis with tables.scripts.ptrepack.main()')
 
         except(FileNotFoundError) as e:
             logger.error('tables.scripts.ptrepack.main() failed ... file was not saved')
             logger.error(e)
             self.signalApp(f'ERROR in tables.scripts.ptrepack.main(): {e}')
-        '''
-        try:
-            call(command)
-        except(FileNotFoundError) as e:
-            logger.error('Call to ptrepack command line fails in pyinstaller bundled app')
-            logger.error(e)
-        '''
 
     def save(self):
+        """Save all analysis as csv.
+        """
+        logger.info('')
         for ba in self:
             if ba is not None:
-                ba.saveAnalysis()
+                # save detection and analysis to json
+                # ba.saveAnalysis(forceSave=True)
+                
+                # save analysis to csv
+                ba.saveAnalysis_tocsv()
+
+    def _getTmpHdfFile(self):
+        """Get temporary h5 file to write to.
+        
+        We will always then compress with _rebuildHdf.
+        """
+        logger.info('')
+        
+        tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
+        tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
+
+        # the compressed version from the last save
+        hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
+        hdfFilePath = pathlib.Path(self.path) / hdfFile
+        
+        #hdfMode = 'w'
+        if os.path.isfile(hdfFilePath):
+            logger.info(f'    copying existing hdf file to tmp ')
+            logger.info(f'    hdfFilePath {hdfFilePath}')
+            logger.info(f'    tmpHdfPath {tmpHdfPath}')
+            shutil.copyfile(hdfFilePath,tmpHdfPath)
+        else:
+            pass
+            # compressed file does not exist, just use tmp path
+            # print('   does not exist:', hdfFilePath)
+
+        return tmpHdfPath
 
     def saveHdf(self):
         """
@@ -576,49 +599,49 @@ class analysisDir():
         '''
 
         tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-        tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+        tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
 
         # the compressed version from the last save
         # if it exists, append to it
         hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-        hdfFilePath = os.path.join(self.path, hdfFile)
-
-        print('!!! hdfFilePath:', hdfFilePath)
+        hdfFilePath = pathlib.Path(self.path) / hdfFile
         
-        hdfMode = 'w'
+        # print('!!! we are using')
+        # print('    hdfFilePath:', hdfFilePath)
+        # print('    tmpHdfPath:', tmpHdfPath)
+
+        #hdfMode = 'w'
         if os.path.isfile(hdfFilePath):
-            logger.info(f'copying existing hdf file to tmp')
+            logger.info(f'copying existing hdf file to tmp and setting mode to append')
             print('    hdfFilePath:', hdfFilePath)
             print('    tmpHdfPath:', tmpHdfPath)
             shutil.copyfile(hdfFilePath,tmpHdfPath)
-            hdfMode = 'a'
+            #hdfMode = 'a'
+        else:
+            print('   does not exist:', hdfFilePath)
         #
         # save each bAnalysis
-        #print(df)
-        doSaveAnalysis = True
-        logger.info(f'Saving tmp db with doSaveAnalysis:{doSaveAnalysis} (will be compressed) {tmpHdfPath}')
+        #logger.info(f'Saving tmp db with hdfMode:{hdfMode} (will be compressed) {tmpHdfPath}')
+        logger.info(f'Saving tmp db (will be compressed) {tmpHdfPath}')
 
-        if doSaveAnalysis:
-            for row in range(len(df)):
-                #ba = self.getAnalysis(row)  # do not call this, it will load
-                ba = df.at[row, '_ba']
-                if ba is not None:
-                    # 20220615
-                    didSave = ba._saveToHdf(tmpHdfPath, hdfMode=hdfMode) # will only save if ba.detectionDirty
-                    if didSave:
-                        # we are now saved into h5 file, remember uuid to load
-                        df.at[row, 'uuid'] = ba.uuid
+        for row in range(len(df)):
+            #ba = self.getAnalysis(row)  # do not call this, it will load
+            ba = df.at[row, '_ba']
+            if ba is not None:
+                # 20220615
+                #didSave = ba._saveToHdf(tmpHdfPath, hdfMode=hdfMode) # will only save if ba.detectionDirty
+                didSave = ba._saveToHdf(tmpHdfPath) # will only save if ba.detectionDirty
+                if didSave:
+                    # we are now saved into h5 file, remember uuid to load
+                    df.at[row, 'uuid'] = ba.uuid
 
-            # rebuild (L, A, S) columns
-            self._updateLoadedAnalyzed()
+        # rebuild (L, A, S) columns
+        self._updateLoadedAnalyzed()
 
         #
         # save file database
-        #with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
-        with pd.HDFStore(tmpHdfPath, mode=hdfMode) as hdfStore:
+        with pd.HDFStore(tmpHdfPath) as hdfStore:
             dbKey = os.path.splitext(self.dbFile)[0]
-            #logger.critical(f'Storing file database into key "{dbKey}"')
-            #df = self.getDataFrame()
             df = df.drop('_ba', axis=1)  # don't ever save _ba, use it for runtime
 
             logger.info(f'saving file db with {len(df)} rows')
@@ -634,30 +657,12 @@ class analysisDir():
             #
             self._isDirty = False  # if true, prompt to save on quit
 
-        #h5_printKey(tmpHdfPath)
 
         #
         # rebuild the file to remove old changes and reduce size
         self._rebuildHdf()
         
-        # abb removed 20220612
-        '''
-        hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-        hdfPath = os.path.join(self.path, hdfFile)
-        logger.critical(f'Rebuilding h5 using call to to command line "ptrepack" {hdfPath}')
-        #command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", '--complevel=9', '--complib=blosc:blosclz', tmpHdfPath, hdfPath]
-        #command = ["ptrepack", "-o", "--chunkshape=auto", "--propindexes", tmpHdfPath, hdfPath]
-        command = ["ptrepack", "-o", "--chunkshape=auto", tmpHdfPath, hdfPath]
-        
-        try:
-            call(command)
-        except(FileNotFoundError) as e:
-            logger.error('Call to ptrepack command line fails in pyinstaller bundled app')
-            logger.error(e)
-        '''
-
-        #logger.info(f'Removing temporary file {tmpHdfPath}')
-        #os.remove(tmpHdfPath)
+        h5_printKey(hdfFilePath)
 
         stop = time.time()
         logger.info(f'Saving took {round(stop-start,2)} seconds')
@@ -669,37 +674,39 @@ class analysisDir():
 
         df = None
         hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-        hdfPath = os.path.join(self.path, hdfFile)
+        #hdfPath = os.path.join(self.path, hdfFile)
+        hdfPath = pathlib.Path(self.path) / hdfFile
         if not os.path.isfile(hdfPath):
             # abb 20220612 for bundled pyinstaller
             # we can't compress h5 file on save using system call to ptrepack
             tmp_hdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-            hdfPath = os.path.join(self.path, tmp_hdfFile)
+            #hdfPath = os.path.join(self.path, tmp_hdfFile)
+            hdfPath = pathlib.Path(self.path) / tmp_hdfFile
             if not os.path.isfile(hdfPath):
                 return
 
         logger.info(f'Loading existing folder hdf {hdfPath}')
+        h5_printKey(hdfPath)
 
         start = time.time()
         with pd.HDFStore(hdfPath) as hdfStore:
-            print('  hdfStore has keys:')
-            for k in hdfStore.keys():
-                print(f'  {k}')
+            # print('  hdfStore has keys:')
+            # for k in hdfStore.keys():
+            #     print(f'    {k}')
 
             dbKey = os.path.splitext(self.dbFile)[0]
 
             try:
                 df = hdfStore[dbKey]  # load it
             except (KeyError) as e:
-                logger.error(f'Did not find dbKey:"{dbKey}" {e}')
+                logger.error(f'    Did not find dbKey:"{dbKey}" {e}')
 
             # _ba is for runtime, assign after loading from either (abf or h5)
             df['_ba'] = None
 
-            '''
-            logger.info('loaded db df')
-            print(df[['File', 'uuid', '_ba']])
-            '''
+            logger.info('    loaded db df')
+            logger.info(f"{df[['File', 'uuid']]}")
+            
             # load each bAnalysis from hdf
             # No, don't load anything until user clicks
             '''
@@ -727,23 +734,30 @@ class analysisDir():
         return df
 
     def _deleteFromHdf(self, uuid):
-        """Delete uuid from h5 file. id corresponds to a bAnalysis detection."""
+        """Delete uuid from h5 file. Each bAnalysis detection get a unique uuid.
+        """
         if uuid is None or not uuid:
             return
-        logger.info(f'TODO: Delete from h5 file uuid:{uuid}')
+        logger.info(f'deleting from h5 file uuid:{uuid}')
 
-        tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-        tmpHdfPath = os.path.join(self.path, tmpHdfFile)
+        # tmpHdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
+        # tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
+
+        tmpHdfPath = self._getTmpHdfFile()
+
         removed = False
-        with pd.HDFStore(tmpHdfPath, mode='a') as hdfStore:
+        with pd.HDFStore(tmpHdfPath) as hdfStore:
             try:
                 hdfStore.remove(uuid)
                 removed = True
             except (KeyError):
-                logger.error(f'Did not find uuid {uuid} in h5 file.')
+                logger.error(f'Did not find uuid {uuid} in h5 file {tmpHdfPath}')
 
         #
-        if removed:
+        #if removed:
+        if 1:
+            # always rebuild even if we did not find uuid
+            # we need to do this to remove _tmp.h5 created in _getTmpHdfFile()
             self._rebuildHdf()
             self._updateLoadedAnalyzed()
 
@@ -1182,7 +1196,7 @@ class analysisDir():
 
         # load bAnalysis
         #logger.info(f'Loading bAnalysis "{path}"')
-        ba = sanpy.bAnalysis(path, loadData=loadData)
+        ba = sanpy.bAnalysis(path, loadData=loadData) # loadData is false, load header
 
         if ba.loadError:
             logger.error(f'Error loading bAnalysis file "{path}"')
@@ -1225,7 +1239,7 @@ class analysisDir():
 
         return ba, rowDict
 
-    def getFileList(self, path=None, getFullPath=True):
+    def getFileList(self, path=None):
         """
         Get file paths from path.
 
@@ -1234,7 +1248,7 @@ class analysisDir():
         if path is None:
             path = self.path
 
-        logger.warning('MODIFIED TO LOAD TIF FILES IN SUBFOLDERS')
+        logger.warning('Remember: MODIFIED TO LOAD TIF FILES IN SUBFOLDERS')
         count = 0
         tmpFileList = []
         folderDepth = self.folderDepth  # if none then all depths
@@ -1272,8 +1286,10 @@ class analysisDir():
             # tmpExt is like .abf, .csv, etc
             tmpFileName, tmpExt = os.path.splitext(file)
             if tmpExt in self.theseFileTypes:
-                if getFullPath:
-                    file = os.path.join(path, file)
+                # if getFullPath:
+                #     #file = os.path.join(path, file)
+                #     file = pathlib.Path(path) / file
+                #     file = str(file)  # return List[str] NOT List[PosixPath]
                 fileList.append(file)
         #
         logger.info(f'found {len(fileList)} files ...')
@@ -1299,6 +1315,10 @@ class analysisDir():
 
     def appendRow(self, rowDict=None, ba=None):
         # append one empty row
+        logger.info('')
+        print('    rowDict:', rowDict)
+        print('    ba:', ba)
+        
         rowSeries = pd.Series()
         if rowDict is not None:
             rowSeries = pd.Series(rowDict)
@@ -1328,6 +1348,8 @@ class analysisDir():
         # clear uuid
         self._df.at[rowIdx, 'uuid'] = ''
 
+        self._updateLoadedAnalyzed()
+
     def deleteRow(self, rowIdx):
         df = self._df
 
@@ -1339,6 +1361,8 @@ class analysisDir():
         df = df.drop([rowIdx])
         df = df.reset_index(drop=True)
         self._df = df
+
+        self._updateLoadedAnalyzed()
 
     def duplicateRow(self, rowIdx):
         # duplicate rowIdx
@@ -1370,43 +1394,53 @@ class analysisDir():
         df = df.reset_index(drop=True)
         self._df = df
 
+        self._updateLoadedAnalyzed()
+
     def syncDfWithPath(self):
+        """Sync path with existing df. Used to detect new/removed files.
         """
-        Sync path with existing df. Used to pick up new/removed files"""
-        pathFileList = self.getFileList(getFullPath=False)
+
+        pathFileList = self.getFileList()  # always full path
         dfFileList = self._df['File'].tolist()
 
-        '''
-        print('=== pathFileList:')
-        print(pathFileList)
-        print('=== dfFileList:')
-        print(dfFileList)
-        '''
-
+        logger.info('')
+        # print('    === pathFileList (on drive):')
+        # print('    ', pathFileList)
+        # print('    === dfFileList (in table):')
+        # print('    ', dfFileList)
+        
         addedToDf = False
 
         # look for files in path not in df
         for pathFile in pathFileList:
-            if pathFile not in dfFileList:
-                logger.info(f'Found file in path "{pathFile}" not in df')
+            fileName = os.path.split(pathFile)[1]
+            if fileName not in dfFileList:
+                logger.info(f'Found file in path "{fileName}" not in df')
                 # load bAnalysis and get df column values
                 addedToDf = True
-                fullPathFile = os.path.join(self.path, pathFile)
-                ba, rowDict = self.getFileRow(fullPathFile) # loads bAnalysis
+                #fullPathFile = os.path.join(self.path, pathFile)
+                ba, rowDict = self.getFileRow(pathFile) # loads bAnalysis
                 if rowDict is not None:
                     #listOfDict.append(rowDict)
-                    self.appendRow(rowDict=rowDict, ba=ba)
+
+                    # TODO: get this into getFileROw()
+                    rowDict['relPath'] = pathFile
+                    rowDict['_ba'] = None
+
+                    self.appendRow(rowDict=rowDict, ba=None)
 
         # look for files in df not in path
-        for dfFile in dfFileList:
-            if not dfFile in pathFileList:
-                logger.info(f'Found file in df "{dfFile}" not in path')
+        # for dfFile in dfFileList:
+        #     if not dfFile in pathFileList:
+        #         logger.info(f'Found file in df "{dfFile}" not in path')
 
         if addedToDf:
             df = self._df
             df = df.sort_values(by=['File'], axis='index', ascending=True, inplace=False)
             df = df.reset_index(drop=True)
             self._df = df
+
+        self._updateLoadedAnalyzed()
 
     def pool_build(self):
         """Build one df with all analysis. Use this in plot tool plugin.
@@ -1557,11 +1591,11 @@ def test_hd5():
 
 def test_pool():
     path = '/home/cudmore/Sites/SanPy/data'
-    bad = analysisDir(path)
+    ad = analysisDir(path)
     print('loaded df:')
-    print(bad._df)
+    print(ad._df)
 
-    bad.pool_build()
+    ad.pool_build()
 
 def testCloud():
     cloudDict = {

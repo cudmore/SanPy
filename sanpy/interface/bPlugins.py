@@ -20,7 +20,7 @@ class bPlugins():
 		self._sanpyApp = sanpyApp
 
 		"""path to <user>/plugin_dir"""
-		self.userPluginFolder = ''
+		self.userPluginFolder = sanpy._util._getUserPluginFolder()
 
 		"""dict of pointers to open plugins"""
 		self.pluginDict = {}
@@ -29,13 +29,20 @@ class bPlugins():
 		self._openSet = set()
 
 		# add <user>/sanpy_plugins folder
-		userPath = pathlib.Path.home()
-		userPluginFolder = os.path.join(userPath, 'sanpy_plugins')
-		if os.path.isdir(userPluginFolder):
-			self.userPluginFolder = userPluginFolder
-			sys.path.append(self.userPluginFolder)
-		else:
-			logger.info(f'It is OK but did not find pluginFolder "{userPluginFolder}"')
+		# userPath = pathlib.Path.home()
+		# userDocumentsFolder = sanpy._util.getUserDocumentsFolder()
+		# userPluginFolder = os.path.join(userDocumentsFolder, 'sanpy_plugins')
+
+		#userPluginFolder = sanpy._util.getUserPluginFolder()
+
+		# if not os.path.isdir(userPluginFolder):
+		# 	logger.info(f'Making userPluginFolder: {userPluginFolder}')
+		# 	os.mkdir(userPluginFolder)
+		# if os.path.isdir(userPluginFolder):
+		# 	self.userPluginFolder = userPluginFolder
+		# 	sys.path.append(self.userPluginFolder)
+		# else:
+		# 	logger.info(f'It is OK but did not find pluginFolder "{userPluginFolder}"')
 
 		#
 		self.loadPlugins()
@@ -87,17 +94,23 @@ class bPlugins():
 					self.pluginDict[humanName] = pluginDict
 
 		# print the loaded plugins
-		logger.info(f'Loaded plugins: {loadedList}')
-
+		logger.info(f'Loaded plugins:')
+		for loaded in loadedList:
+			logger.info(f'    {loaded}')
 		# sort
 		self.pluginDict = dict(sorted(self.pluginDict.items()))
 
 		#
-		# user plugins from files in folder <user>/sanpy_plugins
+		# user plugins from files in folder <user>/SanPy/plugins
+		loadedModuleList = []
 		if self.userPluginFolder:
 			files = glob.glob(os.path.join(self.userPluginFolder, '*.py'))
 		else:
 			files = []
+		
+		#print('xxx userPluginFolder:', self.userPluginFolder)
+		#print('xxx files:', files)
+		
 		for file in files:
 			if file.endswith('__init__.py'):
 				continue
@@ -108,10 +121,19 @@ class bPlugins():
 
 			loadedModule = self._module_from_file(fullModuleName, file)
 
+			# logger.info('')
+			# logger.info(f'    file: {file}')
+			# logger.info(f'    fullModuleName: {fullModuleName}')
+			# logger.info(f'    moduleName: {moduleName}')
+			# logger.info(f'    loadedModule: {loadedModule}')
+
 			try:
 				oneConstructor = getattr(loadedModule, moduleName)
+				# logger.info(f'    oneConstructor: {oneConstructor}')
+				# logger.info(f'    type(oneConstructor): {type(oneConstructor)}')
+
 			except (AttributeError) as e:
-				logger.error(f'Make sure filename and class are the same file:"{moduleName0}"')
+				logger.error(f'While loading a user plugin, make sure filename and class are the same:"{moduleName}"')
 			else:
 				humanName = oneConstructor.myHumanName
 				pluginDict = {
@@ -127,9 +149,16 @@ class bPlugins():
 				if humanName in self.pluginDict.keys():
 					logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
 				else:
-					logger.info(f'loading user plugin: "{file}"')
+					# logger.info(f'loading user plugin: "{file}"')
 					#self.pluginDict[moduleName] = pluginDict
 					self.pluginDict[humanName] = pluginDict
+					loadedModuleList.append(moduleName)
+
+		# print the loaded plugins
+		logger.info(f'Loaded {len(loadedModuleList)} user plugin(s)')
+		for loaded in loadedModuleList:
+			logger.info(f'    {loaded}')
+
 
 	def runPlugin(self, pluginName, ba, show=True):
 		"""

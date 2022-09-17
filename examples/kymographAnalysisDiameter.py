@@ -6,6 +6,8 @@ Strategy is to just extract the diameter from an ROI that encompasses the entire
 This is different than extracting proper linescan sum and performing spike detection.
 
 20220610
+
+This script uses sanpy.kymographAnalysis(), the output columns are specified there.
 """
 
 import os

@@ -49,13 +49,32 @@ class detectionParams(sanpyPlugin):
         if self.ba is not None:
             fileName = self.ba.getFileName()
         self.fileNameLabel = QtWidgets.QLabel(f'File: {fileName}')
-        hControlLayout.addWidget(self.fileNameLabel)
+        hControlLayout.addWidget(self.fileNameLabel, alignment=QtCore.Qt.AlignLeft)
 
         aName = 'Detect'
         aButton = QtWidgets.QPushButton(aName)
         aButton.clicked.connect(partial(self.on_button_click, aName))
-        hControlLayout.addWidget(aButton)
+        hControlLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
 
+        aName = 'Set Defaults'
+        aButton = QtWidgets.QPushButton(aName)
+        aButton.clicked.connect(partial(self.on_button_click, aName))
+        hControlLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
+
+        # get list of detection presets
+        detectionPresets = sanpy.bDetection.getDetectionPresetList()
+
+        aComboBox = QtWidgets.QComboBox()
+        for detectionPreset in detectionPresets:
+            aComboBox.addItem(detectionPreset)
+        aComboBox.setCurrentText(detectionPresets[0])
+        aComboBox.currentTextChanged.connect(self.on_select_detection_preset)
+
+        hControlLayout.addWidget(aComboBox, alignment=QtCore.Qt.AlignLeft)
+
+        hControlLayout.addStretch()
+
+        '''
         aName = 'Set Defaults'
         aButton = QtWidgets.QPushButton(aName)
         aButton.clicked.connect(partial(self.on_button_click, aName))
@@ -90,6 +109,7 @@ class detectionParams(sanpyPlugin):
         aButton = QtWidgets.QPushButton(aName)
         aButton.clicked.connect(partial(self.on_button_click, aName))
         hControlLayout.addWidget(aButton)
+        '''
 
         #
         self.vLayout.addLayout(hControlLayout)
@@ -296,6 +316,15 @@ class detectionParams(sanpyPlugin):
         # update interface
         self.signalDetect.emit(self.ba)
 
+    def on_select_detection_preset(self, detectionPreset : str):
+        """User selected a detection preset from combobox.
+        """
+        logger.info(f'detectionPreset:"{detectionPreset}"')
+        #detectionPreset = sanpy.bDetection.detectionPresets[detectionPreset]
+        detectionPreset = sanpy.bDetection.detectionPresets(detectionPreset)
+        self.detectionClass.setToType(detectionPreset)
+        self.replot()
+
     def on_button_click(self, buttonName):
         #logger.info(f'buttonNme:{buttonName}')
         # set to a defined preset
@@ -309,36 +338,38 @@ class detectionParams(sanpyPlugin):
             self.detectionClass.setToType(detectionPreset)
             # refresh interface
             self.replot()
-        elif buttonName == 'SA Node':
-            detectionPreset = sanpy.bDetection.detectionPresets.saNode
-            self.detectionClass.setToType(detectionPreset)
-            # refresh interface
-            self.replot()
-        elif buttonName == 'Ventricular':
-            detectionPreset = sanpy.bDetection.detectionPresets.ventricular
-            self.detectionClass.setToType(detectionPreset)
-            # refresh interface
-            self.replot()
-        elif buttonName == 'Neuron':
-            detectionPreset = sanpy.bDetection.detectionPresets.neuron
-            self.detectionClass.setToType(detectionPreset)
-            # refresh interface
-            self.replot()
-        elif buttonName == 'Subthreshold':
-            detectionPreset = sanpy.bDetection.detectionPresets.subthreshold
-            self.detectionClass.setToType(detectionPreset)
-            # refresh interface
-            self.replot()
-        elif buttonName == 'Ca++ Spikes':
-            detectionPreset = sanpy.bDetection.detectionPresets.caSpikes
-            self.detectionClass.setToType(detectionPreset)
-            # refresh interface
-            self.replot()
-        elif buttonName == 'Ca++ Kymograph':
-            detectionPreset = sanpy.bDetection.detectionPresets.caKymograph
-            self.detectionClass.setToType(detectionPreset)
-            # refresh interface
-            self.replot()
+        
+        # elif buttonName == 'SA Node':
+        #     detectionPreset = sanpy.bDetection.detectionPresets.saNode
+        #     self.detectionClass.setToType(detectionPreset)
+        #     # refresh interface
+        #     self.replot()
+        # elif buttonName == 'Ventricular':
+        #     detectionPreset = sanpy.bDetection.detectionPresets.ventricular
+        #     self.detectionClass.setToType(detectionPreset)
+        #     # refresh interface
+        #     self.replot()
+        # elif buttonName == 'Neuron':
+        #     detectionPreset = sanpy.bDetection.detectionPresets.neuron
+        #     self.detectionClass.setToType(detectionPreset)
+        #     # refresh interface
+        #     self.replot()
+        # elif buttonName == 'Subthreshold':
+        #     detectionPreset = sanpy.bDetection.detectionPresets.subthreshold
+        #     self.detectionClass.setToType(detectionPreset)
+        #     # refresh interface
+        #     self.replot()
+        # elif buttonName == 'Ca++ Spikes':
+        #     detectionPreset = sanpy.bDetection.detectionPresets.caSpikes
+        #     self.detectionClass.setToType(detectionPreset)
+        #     # refresh interface
+        #     self.replot()
+        # elif buttonName == 'Ca++ Kymograph':
+        #     detectionPreset = sanpy.bDetection.detectionPresets.caKymograph
+        #     self.detectionClass.setToType(detectionPreset)
+        #     # refresh interface
+        #     self.replot()
+
         elif buttonName.endswith('_none'):
             # set a parameter to None, will only work if 'allowNone'
             paramName = buttonName.replace('_none', '')
@@ -349,8 +380,8 @@ class detectionParams(sanpyPlugin):
             logger.warning(f'Button "{buttonName}" not understood.')
 
     def replot(self):
-        if self.ba is None:
-            return
+        #if self.ba is None:
+        #    return
 
         logger.info('')
 
@@ -359,12 +390,13 @@ class detectionParams(sanpyPlugin):
         #detectionClass = self.ba.detectionClass
 
         # was this
-        #detectionClass = self.detectionClass
-        self.detectionClass = self.ba.detectionClass
         detectionClass = self.detectionClass
+        
+        # self.detectionClass = self.ba.detectionClass
+        # detectionClass = self.detectionClass
 
-        fileName = self.ba.getFileName()
-        self.fileNameLabel.setText(f'File: {fileName}')
+        #fileName = self.ba.getFileName()
+        #self.fileNameLabel.setText(f'File: {fileName}')
 
         #for k,v in self.widgetDict.items():
         for detectionParam in detectionClass.keys():
