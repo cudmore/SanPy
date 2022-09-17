@@ -19,14 +19,14 @@ class bPlugins():
     def __init__(self, sanpyApp=None):
         self._sanpyApp = sanpyApp
 
-        """path to <user>/plugin_dir"""
         self.userPluginFolder = sanpy._util._getUserPluginFolder()
+        """path to <user>/plugin_dir"""
 
-        """dict of pointers to open plugins"""
         self.pluginDict = {}
+        """dict of pointers to open plugins"""
 
-        """set of open plugins"""
         self._openSet = set()
+        """set of open plugins"""
 
         # add <user>/sanpy_plugins folder
         # userPath = pathlib.Path.home()
@@ -133,7 +133,7 @@ class bPlugins():
                 # logger.info(f'    type(oneConstructor): {type(oneConstructor)}')
 
             except (AttributeError) as e:
-                logger.error(f'While loading a user plugin, make sure filename and class are the same:"{moduleName}"')
+                logger.error(f'While loading a user plugin, make sure file name and class name are the same:"{moduleName}"')
             else:
                 humanName = oneConstructor.myHumanName
                 pluginDict = {
@@ -229,7 +229,13 @@ class bPlugins():
             retList.append(myHumanName)
         return retList
 
-    def _module_from_file(self, module_name, file_path):
+    def _module_from_file(self, module_name : str, file_path : str):
+        """
+        
+        Args:
+            module_name: Is like sanpy.interface.plugins.onePluginFile
+            file_path: Full path to onePluginFile source code (onePluginFile.py)
+        """
         spec = importlib.util.spec_from_file_location(module_name, file_path)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
