@@ -27,10 +27,18 @@ class kymographAnalysis():
         
         self._path = path
         
+        # image must be shape[0] is time/big, shape[1] is space/small
+        # opposite from my load abf from kymograph!!!
         if data is None:
             self._image = tifffile.imread(path)  # (line scan, pixels)
         else:
             self._image = data
+
+        if self._image.shape[0] < self._image.shape[1]:
+            logger.info(f'Rotating image with shape: {self._image.shape}')
+            self._image = np.rot90(self._image, 3)  # ROSIE, so lines are not backward
+
+        logger.info(f'final image shape is: {self._image.shape}')
 
         # load the header from Olympus exported .txt file
         self._umPerPixel = 1
@@ -51,12 +59,15 @@ class kymographAnalysis():
             logger.error(f'image must be 2d but is {self._image.shape}')
         
         # pos and size of rectangular ROI for analysis
-        _imageRect =self.getImageRect()
-        self._pos = (_imageRect[0], _imageRect[1])
-        self._size = (_imageRect[2], _imageRect[3])
-
+        #_imageRect =self.getImageRect()
+        #self._pos = (_imageRect[0], _imageRect[1])
+        #self._size = (_imageRect[2], _imageRect[3])
+        _posRoi, _sizeRoi = self.getFullRectRoi()
+        self.setPosRoi(_posRoi)
+        self.setSizeRoi(_sizeRoi)
+        
         # analysis parameters
-        self._lineWidth = 5
+        self._lineWidth = 1  # If >1 the analysis get 100x SLOWER
         self._percentOfMax = 0.2
 
         self._version = '0.0.1'
@@ -129,17 +140,6 @@ class kymographAnalysis():
     def pnt2um(self, point):
         return point * self._umPerPixel
     
-    def getImageRect(self):
-        """
-        Returns:
-            (x, y, w, h)
-        """
-        width_sec = self.numLineScans() * self._secondsPerLine
-        height_um = self.pointsPerLineScan() * self._umPerPixel
-        x = 0
-        y = 0
-        return x, y, width_sec, height_um
-
     def getResults(self, key):
         return self._results[key]
 
@@ -183,12 +183,69 @@ class kymographAnalysis():
 
         return ret
 
-    def getFullRectRoi(self):
-        _rect = self.getImageRect()
-        self._pos = (_rect[0], _rect[1])  # (0,0)
-        self._size = (_rect[2], _rect[3])  #(self.getImageShape()[0], self.getImageShape()[1])
+    def getImageRect(self):
+        """
+        Returns:
+            (x, y, w, h)
+        """
+        width_sec = self.numLineScans() * self._secondsPerLine
+        height_um = self.pointsPerLineScan() * self._umPerPixel
+        x = 0
+        y = 0
+        return x, y, width_sec, height_um
+
+    def getFullRectRoi(self, asRect=False):
+        _reduceFraction = 0.16
         
-        return self._pos, self._size
+        _rect = self.getImageRect()  # [left, top, widht, height]
+        _rect = list(_rect)
+
+        logger.info(f'before reduction _rect:{_rect}')
+        # reduce top/bottom (space) by 0.15 percent
+        percentReduction = _rect[3] * _reduceFraction
+        _rect[1] += percentReduction
+        _rect[3] -= 2*percentReduction
+        logger.info(f'after reduction _rect:{_rect}')
+
+        self._pos = (_rect[0], _rect[1])  # (0,0)
+        self._size = (_rect[2], _rect[3])  #(self.getImageShape()[0], self.getImageShape()[1])        
+        
+        if asRect:
+            return _rect
+        else:
+            return self._pos, self._size
+
+    def getRoiRect(self, asInt=True):
+        """
+        Get the current roi rectangle.
+        
+        Return:
+            l,t,r,b
+        """
+        #imageShape = self.getImageShape()
+        pos = self._pos
+        size = self._size
+
+        left = pos[0]
+        top = pos[1] + size[1]
+        right = pos[0] + size[0]
+        bottom = pos[1]
+
+        if asInt:
+            left = int(left)
+            top = int(top)
+            right = int(right)
+            bottom = int(bottom)
+
+        # TODO (cudmore) implement this
+        '''
+        if left<0: left = 0
+        if top>xxx: top = xxx
+        if right>yyy: right = yyy
+        if bottom<0: bottom = 0
+        '''
+
+        return (left, top, right, bottom)
 
     def setPercentOfMax(self, percent):
         """Set the percent of max used in xxx().
@@ -221,32 +278,6 @@ class kymographAnalysis():
 
         #logger.info(f'pos:{self._pos} size:{self._size}')
 
-    def getRoiRect(self, asInt=False):
-        #imageShape = self.getImageShape()
-        pos = self._pos
-        size = self._size
-
-        left = pos[0]
-        top = pos[1] + size[1]
-        right = pos[0] + size[0]
-        bottom = pos[1]
-
-        if asInt:
-            left = int(left)
-            top = int(top)
-            right = int(right)
-            bottom = int(bottom)
-
-        # TODO (cudmore) implement this
-        '''
-        if left<0: left = 0
-        if top>xxx: top = xxx
-        if right>yyy: right = yyy
-        if bottom<0: bottom = 0
-        '''
-
-        return (left, top, right, bottom)
-
     def rotateImage(self):
         self._image = np.rot90(self._image)
         return self._image
@@ -261,9 +292,11 @@ class kymographAnalysis():
         return self._lineWidth
     
     def setPosRoi(self, pos : tuple):
+        logger.info(f'pos is (left,bottom): {pos}')
         self._pos = pos
     
     def setSizeRoi(self, size : tuple):
+        logger.info(f'size is (width,height): {size}')
         self._size = size
     
     def getPosRoi(self):
@@ -374,12 +407,12 @@ class kymographAnalysis():
         self._pos = (left, bottom)
         self._size = (width, height)
 
-        print('left:', left)
-        print('top:', top)
-        print('right:', right)
-        print('bottom:', bottom)
-        print('_pos:', self._pos)
-        print('_size:', self._size)
+        # print('left:', left)
+        # print('top:', top)
+        # print('right:', right)
+        # print('bottom:', bottom)
+        logger.info(f'  _pos: {self._pos}')
+        logger.info(f'  _size: {self._size}')
         
     def load(self):
         """Load <file>-analysis.csv
@@ -420,7 +453,12 @@ class kymographAnalysis():
     def analyze(self):
         startSeconds = time.time()
         
-        theRect = self.getRoiRect()  # (l, t, r, b)
+        # ROSIE, set to 0.15 percent
+        #theRect = self.getFullRectRoi(asRect=True)
+        #theRect = self.getRoiRect()  # (l, t, r, b)
+        theRect = self.getRoiRect()
+
+        logger.info(f'(l,t,r,b) is {theRect}')
         leftRect_sec = theRect[0]
         rightRect_sec = theRect[2]
                 
@@ -435,14 +473,26 @@ class kymographAnalysis():
         right_idx_list = [np.nan] * self.numLineScans()
         diameter_idx_list = [np.nan] * self.numLineScans()
         
+        # print('=== DEBUG ROSIE rightRect_line = 2000')
+        # rightRect_line = 2000
+        
+        #logger.info(f'leftRect_line:{leftRect_line} rightRect_line:{rightRect_line}')
+        
         lineRange = np.arange(leftRect_line, rightRect_line)
         for line in lineRange:
                         
+            # logger.info(f'line:{line}')
+            # logger.info(f'  ')
+
             # get line profile using line width
             # outside roi rect will be nan
             intensityProfile, left_idx, right_idx = \
                             self._getFitLineProfile(line)
-            
+
+            # logger.info(f'  len(intensityProfile):{len(intensityProfile)} \
+            #             left_idx:{left_idx} \
+            #             right_idx:{right_idx}')
+
             sumIntensity[line] = np.nansum(intensityProfile)
             # normalize to number of points in line scan
             sumIntensity[line] /= self._image.shape[1]
@@ -461,7 +511,10 @@ class kymographAnalysis():
         kernelSize = 5
         diameter_um = self._results['diameter_um']
         sumintensity = self._results['sumintensity']
+        logger.info(f'Smoothing with scipy.signal.medfilt')
+        logger.info(f'  len(diameter_um):{len(diameter_um)} kernelSize:{kernelSize}')
         diameter_um_f = scipy.signal.medfilt(diameter_um, kernelSize)
+        logger.info(f'  len(sumintensity):{len(sumintensity)} kernelSize:{kernelSize}')
         sumintensity_f = scipy.signal.medfilt(sumintensity, kernelSize)
         #
         self._results['minDiam'] = np.nanmin(diameter_um_f)
@@ -494,6 +547,9 @@ class kymographAnalysis():
 
         # we know the scan line, determine start/stop based on roi
         roiRect = self.getRoiRect()  # (l, t, r, b) in um and seconds (float)
+        
+        #logger.info(f'roiRect: {roiRect} self._image.shape:{self._image.shape}')
+        
         src_pnt_space = self.um2pnt(roiRect[3])
         dst_pnt_space = self.um2pnt(roiRect[1])
 
@@ -509,6 +565,10 @@ class kymographAnalysis():
         if self._lineWidth == 1:
             intensityProfile = self._image[lineScanNumber,:]
             intensityProfile = intensityProfile.astype(float)
+            # median filter line profile
+            kernelSize = 5
+            intensityProfile = scipy.signal.medfilt(intensityProfile, kernelSize)
+
         else:
             intensityProfile = \
                     profile.profile_line(self._image, src, dst, linewidth=self._lineWidth)
@@ -523,17 +583,28 @@ class kymographAnalysis():
 
         # TODO: nan out before/after roi
         intensityProfile[0:src_pnt_space] = np.nan
-        intensityProfile[dst_pnt_space:-1] = np.nan
+        #intensityProfile[dst_pnt_space:-1] = np.nan
+        intensityProfile[dst_pnt_space:] = np.nan
         
         fwhm, left_idx, right_idx = self.FWHM(x, intensityProfile)
 
         #left_idx = self.pnt2um(left_idx)
         #right_idx = self.pnt2um(right_idx)
 
+        '''
+        print('  roiRect:', roiRect)
+        print('  len(intensityProfile):', len(intensityProfile))
+        print('  len(x):', len(x))
+        print('  src_pnt_space:', src_pnt_space)
+        print('  dst_pnt_space:', dst_pnt_space)
+        print('  left_idx:', left_idx)
+        print('  right_idx:', right_idx)
+        '''
+
         return intensityProfile, left_idx, right_idx
 
     # see: https://stackoverflow.com/questions/10582795/finding-the-full-width-half-maximum-of-a-peak
-    def FWHM(self, X,Y):
+    def FWHM(self, X, Y):
         #logger.info(f'_percentOfMax:{self._percentOfMax}')
         
         #Y = scipy.signal.medfilt(Y, 3)

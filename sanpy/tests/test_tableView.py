@@ -5,6 +5,10 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import sanpy.interface
 
+import logging
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__, level=logging.DEBUG)
+
 app = QtWidgets.QApplication(sys.argv)
 
 class Test(unittest.TestCase):
@@ -30,6 +34,7 @@ class Test(unittest.TestCase):
 		shutil.rmtree(self.test_dir)
 
 	def test_1(self):
+		logger.info('RUNNING')
 		model = sanpy.interface.bFileTable.pandasModel(self.ad)
 		self.btv = sanpy.interface.bTableView(model)
 

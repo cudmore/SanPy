@@ -211,7 +211,7 @@ class bTableView(QtWidgets.QTableView):
     def _onLeftClick(self, realRow):
         rowDict = self.model().myGetRowDict(realRow)
 
-        logger.info(f"=== User click row:{realRow} file:{rowDict['File']}")
+        logger.info(f"=== User click row:{realRow} relPath:{rowDict['relPath']}")
 
         # always emit on clip, keep track if row was already selected
         #if self.lastSeletedRow is None or self.lastSeletedRow != realRow:

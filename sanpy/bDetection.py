@@ -22,12 +22,16 @@ ba.spikeDetect(dDict)
 # browse results
 ```
 """
+from http.client import RemoteDisconnected
 import os
-import numbers, math
+import numbers
+import math
 from enum import Enum
 import json
+import pathlib
 from pprint import pprint
-
+import glob
+import copy
 from collections import OrderedDict
 
 from matplotlib.font_manager import json_load
@@ -50,7 +54,9 @@ class detectionTypes_(Enum):
 
 # TODO (Cudmore) this needs to be a class so we can expand/contract based on what we find on the hard-drive
 # allow user to save to detection presets
-class detectionPresets_(Enum):
+
+'''
+class old_detectionPresets_(Enum):
     """
     Detection presets is one of:
     """
@@ -69,9 +75,9 @@ class detectionPresets_(Enum):
     subthreshold = 'Sub Threshold'
     caSpikes = 'Ca Spikes'
     caKymograph = 'Ca Kymograph'
+'''
 
-#def getDefaultDetection(cellType=None):
-def getDefaultDetection(detectionPreset):
+def getDefaultDetection():
     """
     Get detection parameters including mapping from backend
     to human readable and long-format descriptions.
@@ -82,11 +88,8 @@ def getDefaultDetection(detectionPreset):
     Returns:
         dict: The default detection dictionary.
     """
+    
     theDict = OrderedDict()  # {}
-
-    #key = 'detectionName'
-    #theDict[key] = {}
-    #theDict[key]['defaultValue'] = ''  # the name of the preset
 
     '''
     key = 'include'
@@ -102,8 +105,8 @@ def getDefaultDetection(detectionPreset):
 
     key = 'detectionName'
     theDict[key] = {}
-    theDict[key]['defaultValue'] = detectionPreset.value # ('dvdt', 'mv')
-    theDict[key]['type'] = 'sanpy.bDetection.detectionPresets'
+    theDict[key]['defaultValue'] = 'default' #detectionPreset.value # ('dvdt', 'mv')
+    theDict[key]['type'] = 'string'
     theDict[key]['allowNone'] = False  # To do, have 2x entry points to bAnalysis detect, never set this to nan
     theDict[key]['units'] = ''
     theDict[key]['humanName'] = 'Detection Preset Name'
@@ -112,7 +115,7 @@ def getDefaultDetection(detectionPreset):
 
     key = 'detectionType'
     theDict[key] = {}
-    theDict[key]['defaultValue'] = sanpy.bDetection.detectionTypes['dvdt'].value # ('dvdt', 'mv')
+    theDict[key]['defaultValue'] = sanpy.bDetection.detectionTypes['dvdt'].value  # ('dvdt', 'mv')
     theDict[key]['type'] = 'sanpy.bDetection.detectionTypes'
     theDict[key]['allowNone'] = False  # To do, have 2x entry points to bAnalysis detect, never set this to nan
     theDict[key]['units'] = ''
@@ -323,7 +326,7 @@ def getDefaultDetection(detectionPreset):
 
     key = 'preSpikeClipWidth_ms'
     theDict[key] = {}
-    theDict[key]['defaultValue'] = 500
+    theDict[key]['defaultValue'] = 200
     theDict[key]['type'] = 'float'
     theDict[key]['allowNone'] = False
     theDict[key]['units'] = 'ms'
@@ -371,6 +374,16 @@ def getDefaultDetection(detectionPreset):
     theDict[key]['errors'] = ('')
     theDict[key]['description'] = 'The degree of the polynomial for Savitzky-Golay filter'
 
+    # key = 'dateAnalyzed'
+    # theDict[key] = {}
+    # theDict[key]['defaultValue'] = ''
+    # theDict[key]['type'] = 'str'
+    # theDict[key]['allowNone'] = False
+    # theDict[key]['units'] = ''
+    # theDict[key]['humanName'] = 'Date Analyzed'
+    # theDict[key]['errors'] = ('')
+    # theDict[key]['description'] = 'The date of analysis (yyyymmdd)'
+
     key = 'verbose'
     theDict[key] = {}
     theDict[key]['defaultValue'] = False
@@ -381,10 +394,16 @@ def getDefaultDetection(detectionPreset):
     theDict[key]['errors'] = ('')
     theDict[key]['description'] = 'Verbose Detection Reporting'
 
+    # assign each detection param current value to it default value
+    for k,v in theDict.items():
+        defaultValue = theDict[k]['defaultValue']
+        theDict[k]['currentValue'] = defaultValue
+
+    '''
     if detectionPreset == bDetection.detectionPresets.default:
         # these are defaults from above
         pass
-    elif detectionPreset == bDetection.detectionPresets.saNode:
+    elif detectionPreset == bDetection.detectionPresets.sanode:
         # these are defaults from above
         pass
     elif detectionPreset == bDetection.detectionPresets.ventricular:
@@ -405,7 +424,7 @@ def getDefaultDetection(detectionPreset):
         theDict['dvdtPostWindow_ms']['defaultValue'] = 2
         theDict['preSpikeClipWidth_ms']['defaultValue'] = 2
         theDict['postSpikeClipWidth_ms']['defaultValue'] = 2
-    elif detectionPreset == bDetection.detectionPresets.fastNeuron:
+    elif detectionPreset == bDetection.detectionPresets.fastneuron:
         theDict['dvdtThreshold']['defaultValue'] = 20
         theDict['mvThreshold']['defaultValue'] = -40
         theDict['refractory_ms']['defaultValue'] = 3
@@ -426,13 +445,13 @@ def getDefaultDetection(detectionPreset):
         theDict['onlyPeaksAbove_mV']['defaultValue'] = None
         theDict['onlyPeaksBelow_mV']['defaultValue'] = -20
         # todo: add onlyPeaksBelow_mV
-    elif detectionPreset == bDetection.detectionPresets.caSpikes:
+    elif detectionPreset == bDetection.detectionPresets.caspikes:
         #theDict['detectionType']['defaultValue'] = sanpy.bDetection.detectionTypes.mv # ('dvdt', 'mv')
         theDict['dvdtThreshold']['defaultValue'] = math.nan #if None then detect only using mvThreshold
         theDict['mvThreshold']['defaultValue'] = 0.5
         #theDict['refractory_ms']['defaultValue'] = 200 #170 # reject spikes with instantaneous frequency
         #theDict['halfWidthWindow_ms']['defaultValue'] = 200 #was 20
-    elif detectionPreset == bDetection.detectionPresets.caKymograph:
+    elif detectionPreset == bDetection.detectionPresets.cakymograph:
         theDict['detectionType']['defaultValue'] = sanpy.bDetection.detectionTypes['mv'].value
         theDict['dvdtThreshold']['defaultValue'] = math.nan #if None then detect only using mvThreshold
         theDict['mvThreshold']['defaultValue'] = 1.2
@@ -440,19 +459,23 @@ def getDefaultDetection(detectionPreset):
         theDict['halfWidthWindow_ms']['defaultValue'] = 800
         theDict['refractory_ms']['defaultValue'] = 500
         theDict['doBackupSpikeVm']['defaultValue'] = False
-
         # theDict['SavitzkyGolay_pnts']['defaultValue'] = 5
         theDict['preSpikeClipWidth_ms']['defaultValue'] = 200
         theDict['postSpikeClipWidth_ms']['defaultValue'] = 1000
-
     else:
         logger.error(f'Did not understand detection type "{detectionPreset}"')
+        logger.error(f'    bDetection.detectionPresets.fastneuron: {bDetection.detectionPresets.fastneuron}')
+        logger.error(f'    type(bDetection.detectionPresets.fastneuron): {type(bDetection.detectionPresets.fastneuron)}')
+        logger.error(f'    detectionPreset == bDetection.detectionPresets.fastneuron: {detectionPreset == bDetection.detectionPresets.fastneuron}')
+    '''
 
     # assign each detection param current value to it default value
+    '''
     for k,v in theDict.items():
         defaultValue = theDict[k]['defaultValue']
         theDict[k]['currentValue'] = defaultValue
-    
+    '''
+
     return theDict.copy()
 
 def printDocs():
@@ -464,10 +487,12 @@ def printDocs():
 
     See: bAnalysisResults.printDocs()
     """
+    logger.info('')
+    
     import pandas as pd
 
-    detectionPreset = detectionPresets_.default  # detectionPresets_ is an enum class
-    d = getDefaultDetection(detectionPreset=detectionPreset)
+    detectionPreset = bDetection.detectionPresets.default  # detectionPresets_ is an enum class
+    d = getDefaultDetection()
     dictList = []
     for k,v in d.items():
         parameter = k
@@ -481,14 +506,18 @@ def printDocs():
         dictList.append(oneDict)
     #
     df = pd.DataFrame(dictList)
-    str = df.to_markdown()
-    print(str)
+    
+    # REMEMBER: This requires `pip install tabulate`
+    outStr = df.to_markdown()
+    
+    print(outStr)
 
+'''
 class detectionPresets():
     """A list of bDetection that are saved/loaded from json files.
     """
     def __init__(self):
-        self._path = 'detectionPresets'  # dolder to load from
+        self._path = 'detectionPresets'  # folder to load from
         
         self.loadPresets()
     
@@ -496,41 +525,146 @@ class detectionPresets():
         """Load all presets in folder 'detectionPresets'
         """
         
+        logger.info('')
         files = os.dir(self._path)
         for file in files:
             if not file.endswith('.json'):
                 continue
             oneJson = json_load(file)
             print(oneJson)
-            
+'''
+
 class bDetection(object):
-    """ Class to manage detection parameters (experimental).
+    """ Class to manage detection parameters.
 
         - get defaults
         - get values
         - set values
     """
 
-    detectionPresets = detectionPresets_
-    """Enum with names of preset detection types"""
+    # 20220706, was this
+    # detectionPresets = detectionPresets_
+    #detectionPresets = Enum('bDetection.detectionPresets', getPresetsDict())
+    """Enum with names of preset detection types. This is built from json files in sanpy and <user> folder."""
 
     detectionTypes = detectionTypes_
     """ Enum with the type of spike detection, (dvdt, mv)"""
 
-    def getDetectionPresetList():
+    def __init__(self):
+        """Load all sanpy and <user> detection json files."""
+
+        # make a self._detection of dictionaries with detection parameters across bDetection.detectionPresets
+        #self._detectionDict = getPresetsDict()  # load form files
+
+        # full dictionary with description of detection type, reusing from original before refactor
+        self._dDict = getDefaultDetection()
+        
+        # list of preset names including <user>SanPy/detection json files
+        # use item=e[key] or item=e(value) then use item.name or item.value
+        _theDict, _userPresetsDict = self._getPresetsDict()
+        self._detectionEnum = Enum('self.detectionEnum', _theDict)
+
+        # dictionary of presets, each key is like 'sanode' and then value is a dict of
+        #   detection param keys and their values
+        self._detectionPreset = {}
+        for item in self._detectionEnum:
+            # item is like self.detectionEnum.sanode
+            print(f'{item}, {item.name}, "{item.value}"')
+            presetValues = self._getPresetValues(item)
+            if presetValues:
+                # got value of built in preset
+                self._detectionPreset[item.name] = presetValues
+            else:
+                # find in user loaded presets
+                _userKey = item.name
+                try:
+                    self._detectionPreset[item.name] = _userPresetsDict[_userKey]
+                except:
+                    logger.erro(f'did not find item.name:{item.name} in _detectionPreset {self._detectionPreset.keys()}')
+
+    def getDetectionPresetList(self):
         """"Get list of names of detection type.
+
+        Used to make a list in popup in interface/ and interface/plugins
         """
         detectionList = []
-        for detectionPreset in bDetection.detectionPresets:
+        for detectionPreset in self._detectionEnum:
             detectionList.append(detectionPreset.value)
         return detectionList
 
-    #def __init__(self, detectionPreset=detectionPresets.caKymograph):
-    def __init__(self, detectionPreset=detectionPresets.default):
-        #logger.warning('\n   !!! LOADING: detectionPreset=detectionPresets.caKymograph\n\n')
-        # local copy of default dictionary, do not modify
-        self._dDict = getDefaultDetection(detectionPreset)
-        #self.toJson()
+    def _getPresetsDict(self):
+        """Load detection presets from json files in 2 different folder:
+            1) sanpy/detection-presets
+            2) <user>/Documents/Sanpy/detection/
+
+        For file name like 'Fast Neuron.json' make key 'fastneuron'
+
+        Returns:
+            xxx:
+            userPresets: dictionary, one item per user file
+        """
+        
+        def fileNameToKey(filePath):
+            """Given full path to json file, return 
+                Filename without extension, and a well formed key.
+            """
+            fileName = os.path.split(filePath)[1]
+            fileName = os.path.splitext(fileName)[0]
+
+            fileNameKey = os.path.split(filePath)[1]
+            fileNameKey = os.path.splitext(fileNameKey)[0]
+            # reduce preset json filename to (lower case, no spaces, no dash)
+            fileNameKey = fileNameKey.lower()
+            fileNameKey = fileNameKey.replace(' ', '')
+            fileNameKey = fileNameKey.replace('-', '')  # in case user specifies a '-' in file name
+            return fileName, fileNameKey
+
+        theDict= {}
+        userPresets = {}
+
+        #
+        # get files in our 'detection-presets' folder
+        '''
+        presetsPath = pathlib.Path(sanpy._util.getBundledDir()) / 'detection-presets' / '*.json'
+        files = glob.glob(str(presetsPath))
+        for filePath in files:
+            fileName, fileNameKey = fileNameToKey(filePath)
+            #
+            theDict[fileNameKey] = fileName
+        '''
+        theDict['sanode'] = 'SA Node'
+        theDict['ventricular'] = 'Ventricular'
+        theDict['neuron'] = 'neuron'
+        theDict['fastneuron'] = 'Fast Neuron'
+        theDict['subthreshold'] = 'Sub Threshold'
+        theDict['caspikes'] = 'Ca Spikes'
+        theDict['cakymograph'] = 'Ca Kymograph'
+
+        # get files in <users>/Documents/SanPy/detection/ folder
+        #userDetectionPath = pathlib.Path(sanpy._util._getUserDetectionFolder()) / '*.json'
+        #files = glob.glob(str(userDetectionPath))
+        files = self._getUserFiles()
+        print('user files:', files)
+        for filePath in files:
+            fileName, fileNameKey = fileNameToKey(filePath)
+            theDict[fileNameKey] = fileName
+
+            # load user preset json and grab (param keys and values)
+            with open(filePath, 'r') as f:
+                userPresetsDict = json.load(f)
+                userPresets[fileNameKey] = userPresetsDict
+
+        return theDict, userPresets
+
+    def _getUserFiles(self):
+        """Get the full path to all user file presets .json
+        """
+        userDetectionPath = pathlib.Path(sanpy._util._getUserDetectionFolder())
+        if userDetectionPath.is_dir:
+            files = userDetectionPath.glob('*.json')
+            return files
+        else:
+            return []
 
     def toJson(self):
         """Get key and defaultValue
@@ -548,16 +682,39 @@ class bDetection(object):
         #logger.info('theJson:')
         return theJson
 
-    def setToType(self, detectionPreset):
+    def saveAs(self, detectionType : str, filename, path=None):
+        """Save a detection dictionary to json.
+        
+        If running in GUI, main SanPy app will specify the correct path.
+
+        This is only for user defined sets, we never save our built in detection (hard coded in code).
+
+        Args:
+            detectionType: human readable like 'SA Node', will become 'SA Node.json'
+            filename: Name of file to save (no extension, will append .json)
+        """
+        #_keyName = self._detectionEnum(detectionType).name
+        if path is None:
+            # get <user>/Documents/SanPy/xxx folder
+            savePath = sanpy._util._getUserDetectionFolder()
+            savePath = pathlib.Path(savePath) / f'{filename}.json'
+        logger.info(str(savePath))
+        with open(savePath, 'w') as f:
+            dDict = self.getDetectionDict(detectionType)
+            dDict['detectionName'] = filename
+            json.dump(dDict, f, indent=4)
+
+    def old_setToType(self, detectionPreset):
         """
         detectionPreset (enum) detectionPresets
         """
+        logger.info(f'detectionPreset:{detectionPreset}')
         self._dDict = getDefaultDetection(detectionPreset)
 
     #def __str__(self):
     #    return pprint(self._dDict)
     
-    def getDefaultDetectionItem(self, key):
+    def not_used_getDefaultDetectionItem(self, key):
         #key = 'include'
         theDict = {}
         theDict[key] = {}
@@ -575,7 +732,7 @@ class bDetection(object):
             v = self._dDict[k]['currentValue']
             print(f'  {k}: "{v}" {type(v)}')
 
-    def __getitem__(self, key):
+    def old___getitem__(self, key):
         # to mimic a dictionary
         # myDetection['a key']
         try:
@@ -583,22 +740,22 @@ class bDetection(object):
         except (KeyError) as e:
             logger.error(f'{e}')
 
-    def __setitem__(self, key, value):
+    def old___setitem__(self, key, value):
         # to mimic a dictionary
         try:
             self._dDict[key]['currentValue'] = value
         except (KeyError) as e:
             logger.error(f'{e}')
 
-    def items(self):
+    def old_items(self):
         # to mimic a dictionary
         return self._dDict.items()
 
-    def keys(self):
+    def old_keys(self):
         # to mimic a dictionary
         return self._dDict.keys()
 
-    def getMsValueAsPnt(self, key : str, dataPointsPerMs : int):
+    def old_getMsValueAsPnt(self, detectionPreset, key : str, dataPointsPerMs : int):
         """Get current value of a ms key as points.
         """
         if not key.endswith('_ms'):
@@ -608,20 +765,72 @@ class bDetection(object):
         ret = round(ret)  # ensure it is an int
         return ret
 
-    def getValue(self, key):
-        "Get current value from key. Valid keys are defined in getDefaultDetection."
+    def getMasterDict(self, detectionType : str):
+        """Get the full dictionary from self._dDict getDefaultDetection()
+
+        This is needed by sanpy/interface/plugins/detectionParams.py
+        """
+
+        retDict = copy.deepcopy(self._dDict)
+
+        detectionTypeKey = self._detectionEnum(detectionType).name
+        oneType = self._detectionPreset[detectionTypeKey]
+        for k,v in oneType.items():
+            retDict[k]['currentValue'] = v
+
+        return retDict
+
+    def getDetectionDict(self, detectionType : str, allParameter=True):
+        """Get a full detection dict.
+        
+        Presets like 'SA Node' only over-ride a subset of the defaults, thus need to merge.
+        User saved detection parameters will have all keys.
+        
+        Args:
+            detectionType : detection type key, like 'SA Node'
+        """
         try:
-            return self._dDict[key]['currentValue']
+            if allParameter:
+                dDict = {}
+                
+                # master template to get all default values
+                for k,v in self._dDict.items():
+                    dDict[k] = v['currentValue']
+
+                # use specified detection type to get over-written values
+                detectionTypeKey = self._detectionEnum(detectionType).name
+                oneType = self._detectionPreset[detectionTypeKey]
+                for k,v in oneType.items():
+                    dDict[k] = v
+
+            return dDict
         except (KeyError) as e:
-            logger.warning(f'Did not find key "{key}" to get current value')
+            logger.error(f'Did not find detectionType:"{detectionType}"')
+        except (ValueError) as e:
+            logger.error(f'Did not find detectionType:"{detectionType}"')
+
+    def getValue(self, detectionType : str, key):
+        """Get current value from key. Valid keys are defined in getDefaultDetection().
+        
+        Args:
+            detectionType : string value from enum, like 'SA Node'
+        """
+        try:
+            #return self._dDict[key]['currentValue']
+            return self._detectionPreset[detectionType][key]
+        except (KeyError) as e:
+            logger.warning(f'Did not find detectionType "{detectionType}" or key "{key}" to get current value')
             # TODO: define default when not found ???
             return None
 
-    def setValue(self, key, value):
+    def setValue(self, detectionType : str, key : str, value):
         """
         Set current value for key. Valid keys are defined in getDefaultDetection.
 
         For float values that need to take on none, vlue comes in as -1e9
+        
+        Args:
+            detectionType : short name (not value)
         """
         try:
             valueType = type(value)
@@ -631,6 +840,7 @@ class bDetection(object):
             valueIsList = isinstance(value, list)
             valueIsNone = value is None
 
+            # from the master list
             expectedType = self._dDict[key]['type'] # (number, string, boolean)
             allowNone = self._dDict[key]['allowNone'] # used to turn off a detection param
 
@@ -650,6 +860,7 @@ class bDetection(object):
             elif expectedType=='list' and not valueIsList:
                 logger.warning(f'Type mismatch (list) setting "{key}", got {valueType}, expecting {expectedType}')
                 return False
+            '''
             elif expectedType=='sanpy.bDetection.detectionTypes':
                 try:
                     value = sanpy.bDetection.detectionTypes[value].name
@@ -657,18 +868,21 @@ class bDetection(object):
                     #print(value == sanpy.bDetection.detectionTypes.mv)
                 except (KeyError) as e:
                     logger.error(f'sanpy.bDetection.detectionTypes does not contain value "{value}"')
+            '''
             #
             # set
-            self._dDict[key]['currentValue'] = value
+            #self._dDict[key]['currentValue'] = value
+            self._detectionPreset[detectionType][key] = value
 
-            logger.info(f"now key:{key}: {self._dDict[key]['currentValue']} {type(self._dDict[key]['currentValue'])}")
+            logger.info(f"now detectionType:{detectionType} key:{key}: {self._detectionPreset[detectionType][key]} {type(self._detectionPreset[detectionType][key])}")
 
             return True
+
         except (KeyError) as e:
-            logger.warning(f'Did not find key "{key}" to set current value to "{value}"')
+            logger.warning(f'Did not find detectionType:{detectionType}, key:"{key}" to set current value to "{value}"')
             return False
 
-    def setFromDict(self, dDict):
+    def old_setFromDict(self, dDict):
         """
         Set detection from key/values in dDict
 
@@ -682,7 +896,7 @@ class bDetection(object):
                 gotError = True
         return gotError
 
-    def print(self):
+    def old_print(self):
         for k, v in self._dDict.items():
             print(k)
             for k2,v2 in v.items():
@@ -721,8 +935,93 @@ class bDetection(object):
 
         # convert
 
+    '''
     def getDict(self):
         return self._dDict
+    '''
+
+    def _getPresetValues(self, detectionPreset):
+        """
+        detectionName : corresponds to key in enum self._detectionEnum
+        """
+
+        theDict = {}
+        
+        if detectionPreset == self._detectionEnum.sanode:
+            theDict['detectionName'] = 'SA Node'
+            theDict['dvdtThreshold'] = 20
+            theDict['mvThreshold'] = -20
+            theDict['refractory_ms'] = 170  # max freq of 5 Hz
+            theDict['peakWindow_ms'] = 100
+            theDict['halfWidthWindow_ms'] = 200
+            theDict['preSpikeClipWidth_ms'] = 200
+            theDict['postSpikeClipWidth_ms'] = 500
+        elif detectionPreset == self._detectionEnum.ventricular:
+            theDict['detectionName'] = 'Ventricular'
+            theDict['dvdtThreshold'] = 100
+            theDict['mvThreshold'] = -20
+            theDict['refractory_ms'] = 200  # max freq of 5 Hz
+            theDict['peakWindow_ms'] = 100
+            theDict['halfWidthWindow_ms'] = 300
+            theDict['preSpikeClipWidth_ms'] = 200
+            theDict['postSpikeClipWidth_ms'] = 500
+        elif detectionPreset == self._detectionEnum.neuron:
+            theDict['detectionName'] = 'Neuron'
+            theDict['dvdtThreshold'] = 20
+            theDict['mvThreshold'] = -40
+            theDict['refractory_ms'] = 4
+            theDict['peakWindow_ms'] = 5
+            theDict['halfWidthWindow_ms'] = 4
+            theDict['dvdtPreWindow_ms'] = 2
+            theDict['dvdtPostWindow_ms'] = 2
+            theDict['preSpikeClipWidth_ms'] = 2
+            theDict['postSpikeClipWidth_ms'] = 2
+        elif detectionPreset == self._detectionEnum.fastneuron:
+            theDict['detectionName'] = 'Fast Neuron'
+            theDict['dvdtThreshold'] = 20
+            theDict['mvThreshold'] = -40
+            theDict['refractory_ms'] = 3
+            theDict['peakWindow_ms'] = 2
+            theDict['halfWidthWindow_ms'] = 4
+            theDict['dvdtPreWindow_ms'] = 2
+            theDict['dvdtPostWindow_ms'] = 2
+            theDict['preSpikeClipWidth_ms'] = 2
+            theDict['postSpikeClipWidth_ms'] = 2
+        elif detectionPreset == self._detectionEnum.subthreshold:
+            theDict['detectionName'] = 'Subthreshold'
+            theDict['dvdtThreshold'] = math.nan
+            theDict['mvThreshold'] = -20  # user specifies
+            theDict['refractory_ms'] = 100  # max freq is 10 Hz
+            theDict['peakWindow_ms'] = 50
+            theDict['halfWidthWindow_ms'] = 100
+            theDict['preSpikeClipWidth_ms'] = 100
+            theDict['postSpikeClipWidth_ms'] = 200
+            theDict['onlyPeaksAbove_mV'] = None
+            theDict['onlyPeaksBelow_mV'] = -20
+            # todo: add onlyPeaksBelow_mV
+        elif detectionPreset == self._detectionEnum.caspikes:
+            theDict['detectionName'] = 'Ca Spikes'
+            #theDict['detectionType'] = sanpy.bDetection.detectionTypes.mv # ('dvdt', 'mv')
+            theDict['dvdtThreshold'] = math.nan #if None then detect only using mvThreshold
+            theDict['mvThreshold'] = 0.5
+            #theDict['refractory_ms'] = 200 #170 # reject spikes with instantaneous frequency
+            #theDict['halfWidthWindow_ms'] = 200 #was 20
+        elif detectionPreset == self._detectionEnum.cakymograph:
+            theDict['detectionName'] = 'Ca Kymograph'
+            theDict['detectionType'] = sanpy.bDetection.detectionTypes['mv'].value
+            theDict['dvdtThreshold'] = math.nan #if None then detect only using mvThreshold
+            theDict['mvThreshold'] = 1.2
+            theDict['peakWindow_ms'] = 700
+            theDict['halfWidthWindow_ms'] = 800
+            theDict['refractory_ms'] = 500
+            theDict['doBackupSpikeVm'] = False
+            # theDict['SavitzkyGolay_pnts'] = 5
+            theDict['preSpikeClipWidth_ms'] = 200
+            theDict['postSpikeClipWidth_ms'] = 1000
+        else:
+            logger.error(f'did not understand detectionPreset: {detectionPreset}')
+
+        return theDict
 
 def test_0():
     """
@@ -835,6 +1134,48 @@ def _exportDetectionJson():
 
         #break
 
+def testSwitchType():
+
+    #bd = sanpy.bDetection() # default to bDetection.detectionDefaults.default
+    bd = sanpy.bDetection()
+    
+    # names of all presets, both (built in, and user)
+    presetList = bd.getDetectionPresetList()
+    print('presetList:', presetList)
+
+    # detection dict for one
+    print('=== sanode')
+    dDict = bd.getDetectionDict('SA Node')
+    for k,v in dDict.items():
+        print(f'    {k}:{v} {type(v)}')
+
+    print('=== fastneuron2')
+    dDict = bd.getDetectionDict('Fast Neuron 2')
+    for k,v in dDict.items():
+        print(f'    {k}:{v} {type(v)}')
+
+    # detection dict for all
+    '''
+    for item in bd._detectionEnum:
+        dDict = bd.getDetectionDict(item.name)
+        print(f'=== {item.name} {item.value}')
+        pprint(dDict)
+    '''
+
+    bd.setValue('sanode', 'dvdtThreshold', 12)
+
+    print('=== after setValue 12 sanode')
+    dDict = bd.getDetectionDict('SA Node')
+    for k,v in dDict.items():
+        print(f'    {k}:{v} {type(v)}')
+
+    newValue = bd.getValue('sanode', 'dvdtThreshold')
+    print('newValue:', newValue)
+
+    # works
+    # bd.saveAs('SA Node', filename='xxx yyy')
+    bd.saveAs('SA Node', filename='SA Node 3')
+    
 if __name__ == '__main__':
     #test_0()
 
@@ -843,4 +1184,10 @@ if __name__ == '__main__':
 
     #test_save_load()
 
-    _exportDetectionJson()
+    #_exportDetectionJson()
+
+    testSwitchType()
+    # print('detectionPresets.default:', bDetection.detectionPresets.default)
+    # print('detectionPresets.neuron:', bDetection.detectionPresets.neuron)
+    # print('detectionPresets.neuron.value:', bDetection.detectionPresets.neuron.value)
+    # print('getDetectionPresetList:', bDetection.getDetectionPresetList())

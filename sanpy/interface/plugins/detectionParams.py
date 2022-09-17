@@ -23,16 +23,30 @@ class detectionParams(sanpyPlugin):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        # fill this in
+        logger.info('aaa')
         #self.dDict = sanpy.bDetection.getDefaultDetection()
+        _currentDetection = None
+        _detectionDict = None
         if self.ba is not None:
-            # make a copy and send it back on 'detect'
-            detectionClass = copy.deepcopy(self.ba.detectionClass)
-        else:
-            detectionPreset = sanpy.bDetection.detectionPresets.default
-            detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
-        #
-        self.detectionClass = detectionClass
+            # TODO: get the ba detection dict "detectionName"
+            #   pull the detection class master dict
+            baDetectionDict = self.ba.getDetectionDict()  # can be None
+            if baDetectionDict is not None:
+                _currentDetection = baDetectionDict['detectionName']
+                _detectionDict = self.getSanPyApp().getDetectionClass().getMasterDict(_detectionName)    
+
+        if _detectionDict is None and self.getSanPyApp() is not None:
+            # get the list
+            presetList = self.getSanPyApp().getDetectionClass().getDetectionPresetList()
+            # select first in list
+            _currentDetection = presetList[0]
+            _detectionDict = self.getSanPyApp().getDetectionClass().getMasterDict(_currentDetection)        
+            #_detectionDict = copy.deepcopy(_detectionDict)
+
+        self._detectionDict = _detectionDict  # The full master list
+
+        # the name of the detection dict in ba OR the first detection type in detection class
+        self._currentDetection = _currentDetection
 
         self.buildUI()
 
@@ -62,12 +76,13 @@ class detectionParams(sanpyPlugin):
         hControlLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
 
         # get list of detection presets
-        detectionPresets = sanpy.bDetection.getDetectionPresetList()
+        detectionPresetList = self.getSanPyApp().getDetectionClass().getDetectionPresetList()
 
         aComboBox = QtWidgets.QComboBox()
-        for detectionPreset in detectionPresets:
+        #detectionPresets = sanpy.bDetection.getDetectionPresetList()
+        for detectionPreset in detectionPresetList:
             aComboBox.addItem(detectionPreset)
-        aComboBox.setCurrentText(detectionPresets[0])
+        aComboBox.setCurrentText(detectionPresetList[0])
         aComboBox.currentTextChanged.connect(self.on_select_detection_preset)
 
         hControlLayout.addWidget(aComboBox, alignment=QtCore.Qt.AlignLeft)
@@ -140,7 +155,7 @@ class detectionParams(sanpyPlugin):
         # list of keys/columns in main analysis dir file list
         analysisDirDict = sanpy.analysisDir.sanpyColumns
         #dDict = self.dDict
-        dDict = self.detectionClass
+        dDict = self._detectionDict
 
         vLayoutParams = QtWidgets.QGridLayout()
 
@@ -277,9 +292,10 @@ class detectionParams(sanpyPlugin):
         if value == -1e9:
             #print(f'TWEAK paramName:{paramName} --->>> value:', value)
             value = None
-        ok = self.detectionClass.setValue(paramName, value)
-        if not ok:
-            logger.error('')
+        #ok = self.detectionClass.setValue(paramName, value)
+        # if not ok:
+        #     logger.error('')
+        self._detectionDict[paramName]['currentValue'] = value
 
     def on_bool_combo_box(self, paramName, text):
         #logger.info(f'paramName:{paramName} text:"{text}" {type(text)}')
@@ -304,14 +320,12 @@ class detectionParams(sanpyPlugin):
 
     def detect(self):
         logger.info('detecting spikes')
-
-        detectionClass = self.detectionClass
-
-        # print out all detection params
-        # detectionClass.print()
+        
+        if self.ba is None:
+            return
 
         # spike detect
-        self.ba.spikeDetect(detectionClass)
+        self.ba.spikeDetect(self._detectionDict)
 
         # update interface
         self.signalDetect.emit(self.ba)
@@ -321,8 +335,12 @@ class detectionParams(sanpyPlugin):
         """
         logger.info(f'detectionPreset:"{detectionPreset}"')
         #detectionPreset = sanpy.bDetection.detectionPresets[detectionPreset]
-        detectionPreset = sanpy.bDetection.detectionPresets(detectionPreset)
-        self.detectionClass.setToType(detectionPreset)
+        #detectionPreset = sanpy.bDetection.detectionPresets(detectionPreset)
+        #self.detectionClass.setToType(detectionPreset)
+        
+        # grab the detection from sanpy app
+        self._detectionDict = self.getSanPyApp().getDetectionClass().getMasterDict(detectionPreset)
+
         self.replot()
 
     def on_button_click(self, buttonName):
@@ -340,7 +358,7 @@ class detectionParams(sanpyPlugin):
             self.replot()
         
         # elif buttonName == 'SA Node':
-        #     detectionPreset = sanpy.bDetection.detectionPresets.saNode
+        #     detectionPreset = sanpy.bDetection.detectionPresets.sanode
         #     self.detectionClass.setToType(detectionPreset)
         #     # refresh interface
         #     self.replot()
@@ -360,12 +378,12 @@ class detectionParams(sanpyPlugin):
         #     # refresh interface
         #     self.replot()
         # elif buttonName == 'Ca++ Spikes':
-        #     detectionPreset = sanpy.bDetection.detectionPresets.caSpikes
+        #     detectionPreset = sanpy.bDetection.detectionPresets.caspikes
         #     self.detectionClass.setToType(detectionPreset)
         #     # refresh interface
         #     self.replot()
         # elif buttonName == 'Ca++ Kymograph':
-        #     detectionPreset = sanpy.bDetection.detectionPresets.caKymograph
+        #     detectionPreset = sanpy.bDetection.detectionPresets.cakymograph
         #     self.detectionClass.setToType(detectionPreset)
         #     # refresh interface
         #     self.replot()
@@ -385,27 +403,19 @@ class detectionParams(sanpyPlugin):
 
         logger.info('')
 
-        # ba will always have a detectionClass
-        # todo: do this on switch file
-        #detectionClass = self.ba.detectionClass
-
         # was this
-        detectionClass = self.detectionClass
-        
-        # self.detectionClass = self.ba.detectionClass
-        # detectionClass = self.detectionClass
+        #detectionClass = self.detectionClass
+        detectionDict = self._detectionDict
 
-        #fileName = self.ba.getFileName()
-        #self.fileNameLabel.setText(f'File: {fileName}')
-
-        #for k,v in self.widgetDict.items():
-        for detectionParam in detectionClass.keys():
+        #for detectionParam in detectionClass.keys():
+        for detectionParam in detectionDict.keys():
             if detectionParam not in self.widgetDict.keys():
                 logger.warning(f'XXX detectionParam:{detectionParam} missing')
                 continue
 
             #currentValue = v['currentValue']
-            currentValue = detectionClass.getValue(detectionParam)
+            #currentValue = detectionClass.getValue(detectionParam)
+            currentValue = detectionDict[detectionParam]['currentValue']
 
             if currentValue == -1e9:
                 logger.error(f'XXXXX detectionParam:{detectionParam} currentValue:{currentValue} {type(currentValue)}')
@@ -441,18 +451,30 @@ class detectionParams(sanpyPlugin):
         super().slot_switchFile(rowDict, ba, replot=replot)
 
         # grab a copy to modify and then set on 'detect'
-        print('!!!')
-        logger.error('    CHANGE THIS BACK\ncaKymograph turning of switch_file\n')
-        print()
-        self.detectionClass = copy.deepcopy(self.ba.detectionClass)
+        #logger.error('    CHANGE THIS BACK\ncaKymograph turning of switch_file\n')
+        
+        # before we detect a ba, its detection dict is None
+        baDetectionDict = self.ba.getDetectionDict()  # can be None
+        if baDetectionDict is not None:
+            _currentDetection = baDetectionDict['detectionName']
+            _detectionDict = self.getSanPyApp().getDetectionClass().getMasterDict(_currentDetection)    
+
+            self._detectionDict = _detectionDict  # The full master list
+            self._currentDetection = _currentDetection  # name of the current detection
+
+            logger.info('TODO: set detection name combo box')
 
         self.replot()
 
 if __name__ == '__main__':
 
-    path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+    path = '/Users/cudmore/Sites/SanPy/data/19114001.abf'
     ba = sanpy.bAnalysis(path)
-    ba.spikeDetect()
+
+    bd = sanpy.bDetection()  # gets default
+    dDict = bd.getDetectionDict('SA Node')
+
+    ba.spikeDetect(dDict)
     print(ba.numSpikes)
 
     import sys

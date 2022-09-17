@@ -111,7 +111,11 @@ class kymographWidget(QtWidgets.QWidget):
         self._kymographAnalysis.setPosRoi(pos)
         self._kymographAnalysis.setSizeRoi(size)
 
-    def _on_slider_changed(self, value :int):
+        # update line profile plot
+        _lineScanValue = self.profileSlider.value()
+        self._on_slider_changed(_lineScanValue)
+
+    def _on_slider_changed(self, value : int):
         """Respond to user changing the "Line Scan" slider.
         
         Args:
@@ -128,7 +132,11 @@ class kymographWidget(QtWidgets.QWidget):
         lineProfile, left_pnt, right_pnt = \
             self._kymographAnalysis._getFitLineProfile(value)
         #print('    left:', left, 'right:', right)
-                    
+
+        # logger.info(f'  len(lineProfile):{len(lineProfile)} \
+        #             left_pnt:{left_pnt} \
+        #             right_pnt:{right_pnt}')
+
         # +1 because np.arange() does NOT include the last point
         #xData = np.arange(0, self._kymographAnalysis.pointsPerLineScan()+1)
         xData = np.arange(0, self._kymographAnalysis.pointsPerLineScan())
@@ -240,12 +248,14 @@ class kymographWidget(QtWidgets.QWidget):
         # 1) kymograph image
         self.kymographWindow = pg.PlotWidget()
         self.kymographWindow.setLabel('left', 'Line Scan', units='')
-        self.kymographWindow.setLabel('bottom', 'Time', units='')
+        #self.kymographWindow.setLabel('bottom', 'Time', units='')
 
         self.kymographImage = pg.ImageItem(self._kymographAnalysis.getImage())
         # setRect(x, y, w, h)
         imageRect = self._kymographAnalysis.getImageRect()  # (x,y,w,h)
+        #pos, size = self._kymographAnalysis.getFullRectRoi()  # (x,y,w,h)
         self.kymographImage.setRect(imageRect[0], imageRect[1], imageRect[2], imageRect[3])
+        #self.kymographImage.setRect(pos[0], pos[1], size[0], size[1])
         self.kymographWindow.addItem(self.kymographImage)
 
         # vertical line to show "Line Profile"
@@ -304,6 +314,8 @@ class kymographWidget(QtWidgets.QWidget):
         xPlot = np.arange(0, self._kymographAnalysis.numLineScans())
         yPlot = xPlot * np.nan
         self.diameterPlot.setData(xPlot, yPlot, connect='finite')  # fill with nan
+        # link x-axis with kymograph PlotWidget
+        self.diameterPlotItem.setXLink(self.kymographWindow)
 
         # vertical line to show "Line Profile"
         sliceLine = pg.InfiniteLine(pos=0, angle=90)
@@ -319,6 +331,8 @@ class kymographWidget(QtWidgets.QWidget):
         xPlot = np.arange(0, self._kymographAnalysis.numLineScans())
         yPlot = xPlot * np.nan
         self.sumIntensityPlot.setData(xPlot, yPlot, connect='finite')  # fill with nan
+        # link x-axis with kymograph PlotWidget
+        self.sumIntensityPlotItem.setXLink(self.kymographWindow)
 
         # vertical line to show "Line PRofile"
         sliceLine = pg.InfiniteLine(pos=0, angle=90)

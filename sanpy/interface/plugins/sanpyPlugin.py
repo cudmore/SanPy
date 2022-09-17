@@ -29,6 +29,10 @@ sys.exit(app.exec_())
 
 import math, enum
 
+# This is very disturbing, error if we use 'from functools import partial'
+# Error shows up in sanpy.bPlugin when it tries to grab <plugin>.myHumanName ???
+import functools
+
 #from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
@@ -48,10 +52,11 @@ logger = get_logger(__name__)
 class ResponseType(enum.Enum):
     """Enum representing the types of events a Plugin will respond to.
     """
-    switchFile = 1
-    analysisChange = 2
-    selectSpike = 3
-    setAxis = 4
+    switchFile = 'Switch File'
+    setSweep = 'Set Sweep'
+    analysisChange = 'Analysis Change'
+    selectSpike = 'Select Spike'
+    setAxis = 'Set Axis'
 
 #class sanpyPlugin(QtCore.QObject):
 class sanpyPlugin(QtWidgets.QWidget):
@@ -686,6 +691,9 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def slot_setSweep(self, ba, sweepNumber):
         logger.info('')
+        if not self.getResponseOption(self.responseTypes.setSweep):
+            return
+
         self._sweepNumber = sweepNumber
 
         # reset selection
@@ -765,10 +773,16 @@ class sanpyPlugin(QtWidgets.QWidget):
         # turn off all signal/slot
         switchFile = self.responseTypes.switchFile
         self.toggleResponseOptions(switchFile, newValue=False)
+
+        setSweep = self.responseTypes.setSweep
+        self.toggleResponseOptions(setSweep, newValue=False)
+
         analysisChange = self.responseTypes.analysisChange
         self.toggleResponseOptions(analysisChange, newValue=False)
+
         selectSpike = self.responseTypes.selectSpike
         self.toggleResponseOptions(selectSpike, newValue=False)
+
         setAxis = self.responseTypes.setAxis
         self.toggleResponseOptions(setAxis, newValue=False)
 
@@ -795,25 +809,29 @@ class sanpyPlugin(QtWidgets.QWidget):
         self.prependMenus(contextMenu)
 
         # TODO: Put these in parant sanPyPlugin
-        switchFile = contextMenu.addAction("Respond to switch file")
+        switchFile = contextMenu.addAction("Switch File")
         switchFile.setCheckable(True)
         switchFile.setChecked(self.responseOptions['switchFile'])
 
-        analysisChange = contextMenu.addAction("Respond to analysis change")
+        setSweep = contextMenu.addAction("Set Sweep")
+        setSweep.setCheckable(True)
+        setSweep.setChecked(self.responseOptions['setSweep'])
+
+        analysisChange = contextMenu.addAction("Analysis Change")
         analysisChange.setCheckable(True)
         analysisChange.setChecked(self.responseOptions['analysisChange'])
 
-        selectSpike = contextMenu.addAction("Respond to select spike")
+        selectSpike = contextMenu.addAction("Select Spike")
         selectSpike.setCheckable(True)
         selectSpike.setChecked(self.responseOptions['selectSpike'])
 
-        axisChange = contextMenu.addAction("Respond to axis change")
+        axisChange = contextMenu.addAction("Axis Change")
         axisChange.setCheckable(True)
         axisChange.setChecked(self.responseOptions['setAxis'])
 
         contextMenu.addSeparator()
         copyTable = contextMenu.addAction("Copy Results")
-        saveFigure = contextMenu.addAction("Save Results Figure")
+        saveFigure = contextMenu.addAction("Save Figure")
 
         #contextMenu.addSeparator()
         #saveTable = contextMenu.addAction("Save Table")
@@ -857,6 +875,43 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def handleContextMenu(self, action):
         pass
+
+    def _buildTopToolbar(self):
+        """Toolbar to show file, toggle responses on/off, etc
+        
+        This currenlty does not play nice with mpl based plugin (which call self.setLayout)
+        """
+        
+        # make an h layout
+        # add a checkbox for each of toggle (file, sweep, etc)
+        # set checkbox state based on current xxx
+        # this is callback to toggle
+        # self.toggleResponseOptions(self.responseTypes.switchFile)
+        
+        # #self._myToolbarWidget = QtWidgets.QtWidget()
+        hLayout0 = QtWidgets.QHBoxLayout()
+
+        self._fileLabel = QtWidgets.QLabel('File')
+        hLayout0.addWidget(self._fileLabel)
+
+        self._numSpikesLabel = QtWidgets.QLabel('unknown spikes')
+        hLayout0.addWidget(self._numSpikesLabel)
+
+        #
+        hLayout1 = QtWidgets.QHBoxLayout()
+
+        # a checkbox for each 'respond to' in the ResponseType enum
+        for item in ResponseType:
+            aCheckbox = QtWidgets.QCheckBox(item.value)
+            aCheckbox.setChecked(self.responseOptions[item.name])
+            aCheckbox.stateChanged.connect(functools.partial(self.toggleResponseOptions, item))
+            hLayout1.addWidget(aCheckbox)
+
+        #self.setLayout(layout)
+        return hLayout0, hLayout1
+
+    # def __on_checkbox_clicked(self, checkBoxName, checkBoxState):
+    #     logger.info(checkBoxName, checkBoxState)
 
 # Not used 20220609
 class myWidget(QtWidgets.QWidget):

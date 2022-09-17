@@ -7,7 +7,7 @@ import copy  # For copy.deepcopy() of bAnalysis
 import uuid  # to generate unique key on bAnalysis spike detect
 import pathlib  # ned to use this (introduced in Python 3.4) to maname paths on Windows, stop using os.path
 
-from typing import List  #, Union
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
@@ -18,6 +18,7 @@ import tables.scripts.ptrepack  # to save compressed .h5 file
 import shutil
 
 import sanpy
+import sanpy.h5Util
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -70,7 +71,15 @@ _sanpyColumns = {
         'type': float,
         'isEditable': False,
     },
-    'Sweeps': {
+    'Channels': {  # For Thianne
+        'type': int,
+        'isEditable': False,
+    },
+    'Sweeps': {  
+        'type': int,
+        'isEditable': False,
+    },
+    'Epochs': {  # For Thianne
         'type': int,
         'isEditable': False,
     },
@@ -149,7 +158,7 @@ We require type so we can edit with QAbstractTableModel.
 Critical for qt interface to allow easy editing of values while preserving type
 """
 
-def fixRelPath(folderPath, dfTable : pd.DataFrame, fileList : List[str]):
+def _fixRelPath(folderPath, dfTable : pd.DataFrame, fileList : List[str]):
     """
     Was not assigning relPath on initial load (no hd5 file).
 
@@ -178,10 +187,10 @@ def fixRelPath(folderPath, dfTable : pd.DataFrame, fileList : List[str]):
         #print(rowIdx, file, relPath)
         for filePath in fileList:
             if filePath.find(file) != -1:
-                logger.info(f'    fixRelPath() file idx {rowIdx} file:{file} now has relPath:{filePath}')
+                logger.info(f'    _fixRelPath() file idx {rowIdx} file:{file} now has relPath:{filePath}')
                 dfTable.loc[rowIdx, 'relPath'] = filePath
 
-def h5_printKey(hdfPath):
+def old_h5_printKey(hdfPath):
     logger.info(f'hdfPath: {hdfPath} has keys:')
     with pd.HDFStore(hdfPath, mode='r') as store:
         for key in store.keys():
@@ -266,7 +275,10 @@ class analysisDir():
     theseFileTypes = ['.abf', '.atf', '.csv', '.tif']
     """File types to load"""
 
-    def __init__(self, path=None, myApp=None, autoLoad=False, folderDepth=None):
+    def __init__(self, path=None, myApp=None,
+                    autoLoad=False,
+                    folderDepth : Union[int, None] = None
+                    ):
         """
         Load and manage a list of files in a folder path.
         Use this as the main pandasModel for file list myTableView.
@@ -277,6 +289,7 @@ class analysisDir():
             path (str): Path to folder
             myApp (sanpy_app): Optional
             autoLoad (boolean):
+            folderDepth: 
             cloudDict (dict): To load frmo cloud, for now  just github
 
         Notes:
@@ -290,7 +303,7 @@ class analysisDir():
         """
         self.path = path
         self.myApp = myApp # used to signal on building initial db
-        self.autoLoad = autoLoad
+        self.autoLoad = autoLoad  # not used
 
         self.folderDepth = folderDepth  # specify int
 
@@ -321,14 +334,11 @@ class analysisDir():
         self._checkColumns()
         self._updateLoadedAnalyzed()
 
-        logger.warning('remember: temporary fix with fixRelPath()\n')
+        '''
+        logger.warning('remember: temporary fix with _fixRelPath()\n')
         tmpFileList = self.getFileList()
-        fixRelPath(self.path, self._df, tmpFileList)
-
-        #sys.exit(1)
-
-        #
-        #logger.info(self)
+        _fixRelPath(self.path, self._df, tmpFileList)
+        '''
 
     def __iter__(self):
         self._iterIdx = 0
@@ -486,7 +496,7 @@ class analysisDir():
             logger.info(f'Saving took {round(stop-start,2)} seconds')
             '''
 
-    def _getFrozenPath(self):
+    def old_getFrozenPath(self):
         if getattr(sys, 'frozen', False):
             # running in a bundle (frozen)
             myPath = sys._MEIPASS
@@ -496,7 +506,7 @@ class analysisDir():
             myPath = pathlib.Path(__file__).parent.absolute()
         return myPath
 
-    def _rebuildHdf(self):
+    def old_rebuildHdf(self):
         #
         # rebuild the file to remove old changes and reduce size
         tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
@@ -549,7 +559,7 @@ class analysisDir():
                 # save analysis to csv
                 ba.saveAnalysis_tocsv()
 
-    def _getTmpHdfFile(self):
+    def old_getTmpHdfFile(self):
         """Get temporary h5 file to write to.
         
         We will always then compress with _rebuildHdf.
@@ -576,6 +586,22 @@ class analysisDir():
 
         return tmpHdfPath
 
+    def getPathFromRelPath(self, relPath):
+        """Get full path to file (usually an abf file.
+        """
+        if relPath.startswith('/'):
+            relPath = relPath[1:]
+        
+        fullFilePath = os.path.join(self.path, relPath)
+        
+        '''
+        print('xxx', self.path)
+        print('xxx', relPath)
+        print('xxx', fullFilePath)
+        '''
+
+        return fullFilePath
+
     def saveHdf(self):
         """
         Save file table and any number of loaded and analyzed bAnalysis.
@@ -590,49 +616,20 @@ class analysisDir():
 
         df = self.getDataFrame()
 
-        # kymograph, just save as csv
-        # 20220612 WHY WAS I DOING THIS !!!!
-        '''
-        dbPath = os.path.join(self.path, self.dbFile)
-        logger.info(f'Saving "{dbPath}"')
-        self.getDataFrame().to_csv(dbPath, index=False)
-        '''
-
-        tmpHdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-        tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
-
         # the compressed version from the last save
-        # if it exists, append to it
         hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
         hdfFilePath = pathlib.Path(self.path) / hdfFile
         
-        # print('!!! we are using')
-        # print('    hdfFilePath:', hdfFilePath)
-        # print('    tmpHdfPath:', tmpHdfPath)
+        logger.info(f'Saving db (will be compressed) {hdfFilePath}')
 
-        #hdfMode = 'w'
-        if os.path.isfile(hdfFilePath):
-            logger.info(f'copying existing hdf file to tmp and setting mode to append')
-            print('    hdfFilePath:', hdfFilePath)
-            print('    tmpHdfPath:', tmpHdfPath)
-            shutil.copyfile(hdfFilePath,tmpHdfPath)
-            #hdfMode = 'a'
-        else:
-            print('   does not exist:', hdfFilePath)
-        #
         # save each bAnalysis
-        #logger.info(f'Saving tmp db with hdfMode:{hdfMode} (will be compressed) {tmpHdfPath}')
-        logger.info(f'Saving tmp db (will be compressed) {tmpHdfPath}')
-
         for row in range(len(df)):
-            #ba = self.getAnalysis(row)  # do not call this, it will load
             ba = df.at[row, '_ba']
             if ba is not None:
-                # 20220615
-                #didSave = ba._saveToHdf(tmpHdfPath, hdfMode=hdfMode) # will only save if ba.detectionDirty
-                didSave = ba._saveToHdf(tmpHdfPath) # will only save if ba.detectionDirty
+                didSave = ba._saveHdf_pytables(hdfFilePath)
                 if didSave:
                     # we are now saved into h5 file, remember uuid to load
+                    #print('xxx SETTING dir uuid')
                     df.at[row, 'uuid'] = ba.uuid
 
         # rebuild (L, A, S) columns
@@ -640,126 +637,134 @@ class analysisDir():
 
         #
         # save file database
-        with pd.HDFStore(tmpHdfPath) as hdfStore:
-            dbKey = os.path.splitext(self.dbFile)[0]
-            df = df.drop('_ba', axis=1)  # don't ever save _ba, use it for runtime
+        logger.info(f'    saving file db with {len(df)} rows')
+        print(df)
 
-            logger.info(f'saving file db with {len(df)} rows')
+        dbKey = os.path.splitext(self.dbFile)[0]
+        df = df.drop('_ba', axis=1)  # don't ever save _ba, use it for runtime
 
-            #print(df[['File', 'uuid']])
-            print(df)
-            '''
-            for col in df.columns:
-                print(col, df[col])
-            '''
-
-            hdfStore[dbKey] = df  # save it
-            #
-            self._isDirty = False  # if true, prompt to save on quit
-
+        #hdfStore[dbKey] = df  # save it
+        df.to_hdf(hdfFilePath, dbKey)
 
         #
+        self._isDirty = False  # if true, prompt to save on quit
+
         # rebuild the file to remove old changes and reduce size
-        self._rebuildHdf()
-        
-        h5_printKey(hdfFilePath)
+        #self._rebuildHdf()
+        sanpy.h5Util._repackHdf(hdfFilePath)
+
+        # lis the keys in the file
+        sanpy.h5Util.listKeys(hdfFilePath)
 
         stop = time.time()
         logger.info(f'Saving took {round(stop-start,2)} seconds')
 
     def loadHdf(self, path=None):
+        """
+        Load the database key from an h5 file.
+        
+        We do not load analy anlysis until user clicks on row, see loadOneAnalysis()
+        """
         if path is None:
             path = self.path
         self.path = path
 
         df = None
         hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-        #hdfPath = os.path.join(self.path, hdfFile)
         hdfPath = pathlib.Path(self.path) / hdfFile
-        if not os.path.isfile(hdfPath):
-            # abb 20220612 for bundled pyinstaller
-            # we can't compress h5 file on save using system call to ptrepack
-            tmp_hdfFile = os.path.splitext(self.dbFile)[0] + '_tmp.h5'
-            #hdfPath = os.path.join(self.path, tmp_hdfFile)
-            hdfPath = pathlib.Path(self.path) / tmp_hdfFile
-            if not os.path.isfile(hdfPath):
-                return
+        if not hdfPath.is_file():
+            return
 
-        logger.info(f'Loading existing folder hdf {hdfPath}')
-        h5_printKey(hdfPath)
+        logger.info(f'Loading existing folder h5 file {hdfPath}')
+        sanpy.h5Util.listKeys(hdfPath)
 
-        start = time.time()
-        with pd.HDFStore(hdfPath) as hdfStore:
-            # print('  hdfStore has keys:')
-            # for k in hdfStore.keys():
-            #     print(f'    {k}')
+        _start = time.time()
+        dbKey = os.path.splitext(self.dbFile)[0]
 
-            dbKey = os.path.splitext(self.dbFile)[0]
+        try:
+            df = pd.read_hdf(hdfPath, dbKey)
+        except (KeyError) as e:
+            # file is corrupt !!!
+            logger.error(f'    Load h5 failed, did not find dbKey:"{dbKey}" {e}')
 
-            try:
-                df = hdfStore[dbKey]  # load it
-            except (KeyError) as e:
-                logger.error(f'    Did not find dbKey:"{dbKey}" {e}')
-
+        if df is not None:
             # _ba is for runtime, assign after loading from either (abf or h5)
             df['_ba'] = None
 
             logger.info('    loaded db df')
             logger.info(f"{df[['File', 'uuid']]}")
             
-            # load each bAnalysis from hdf
-            # No, don't load anything until user clicks
-            '''
-            for row in range(len(df)):
-                ba_uuid = df.at[row, 'uuid']
-                if not ba_uuid:
-                    # ba was not saved in h5 file
-                    continue
-                try:
-                    # TODO: Get rid of this, don't load all data on init, wait for user to click
-                    print(f'xxx not loading uuid {ba_uuid} ... wait for user click')
-                    dfAnalysis = hdfStore[ba_uuid]
-                    ba = sanpy.bAnalysis(fromDf=dfAnalysis)
-                    logger.info(f'Loaded row {row} uuid:{ba.uuid} bAnalysis {ba}')
-                    df.at[row, '_ba'] = ba # can be none
-                except(KeyError):
-                    logger.error(f'hdf uuid key for row {row} not found in .h5 file, uuid:"{ba_uuid}"')
-            '''
+            # do not load anything until user clicks rows, see loadOneAnalysis()
 
-        # fixRelPath(self.path, df, self.getFileList())
-
-        stop = time.time()
-        logger.info(f'Loading took {round(stop-start,2)} seconds')
+            _stop = time.time()
+            logger.info(f'Loading took {round(_stop-_start,2)} seconds')
         #
         return df
 
+    def loadOneAnalysis(self, path, uuid=None, allowAutoLoad=True, verbose=True):
+        """
+        Load one bAnalysis either from original file path or uuid of h5 file.
+
+        If from h5, we still need to reload sweeps !!!
+        They are binary and fast, saving to h5 (in this case) is slow.
+        """
+        if verbose:
+            logger.info(f'path:"{path}" uuid:"{uuid}" allowAutoLoad:"{allowAutoLoad}"')
+
+        hdfPath = self._getHdfFile()
+        
+        ba = None
+        if uuid is not None and uuid:
+            # load from h5
+            if verbose:
+                logger.info(f'    Retreiving uuid from hdf file {uuid}')
+
+            # load from abf
+            ba = sanpy.bAnalysis(path, verbose=verbose)
+            # load analysis from h5 file, will fail if uuid is not in file
+            ba._loadHdf_pytables(hdfPath, uuid)
+
+        if allowAutoLoad and ba is None:
+            # load from path
+            ba = sanpy.bAnalysis(path, verbose=verbose)
+            if verbose:
+                logger.info(f'    Loaded ba from path {path} and now ba:{ba}')
+        #
+        return ba
+
+    def _getHdfFile(self):
+        hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
+        hdfPath = os.path.join(self.path, hdfFile)
+        return hdfPath
+
     def _deleteFromHdf(self, uuid):
-        """Delete uuid from h5 file. Each bAnalysis detection get a unique uuid.
+        """Delete uuid from h5 file.
+        
+        Each bAnalysis detection get a unique uuid.
         """
         if uuid is None or not uuid:
             return
         logger.info(f'deleting from h5 file uuid:{uuid}')
 
-        # tmpHdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-        # tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
+        _hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
+        hdfPath = pathlib.Path(self.path) / _hdfFile
 
-        tmpHdfPath = self._getTmpHdfFile()
+        #tmpHdfPath = self._getTmpHdfFile()
 
         removed = False
-        with pd.HDFStore(tmpHdfPath) as hdfStore:
+        with pd.HDFStore(hdfPath) as hdfStore:
             try:
                 hdfStore.remove(uuid)
                 removed = True
             except (KeyError):
-                logger.error(f'Did not find uuid {uuid} in h5 file {tmpHdfPath}')
+                logger.error(f'Did not find uuid {uuid} in h5 file {hdfPath}')
 
         #
-        #if removed:
-        if 1:
-            # always rebuild even if we did not find uuid
-            # we need to do this to remove _tmp.h5 created in _getTmpHdfFile()
-            self._rebuildHdf()
+        if removed:
+            # will rebuild on next save
+            #self._rebuildHdf()
             self._updateLoadedAnalyzed()
+            self._isDirty = True  # if true, prompt to save on quit
 
     def loadFolder(self, path=None, loadData=False):
         """
@@ -813,12 +818,12 @@ class analysisDir():
             start = time.time()
             # build new db dataframe
             listOfDict = []
-            for rowIdx, file in enumerate(fileList):
-                self.signalApp(f'Loading "{file}"')
+            for rowIdx, fullFilePath in enumerate(fileList):
+                self.signalApp(f'Loading "{fullFilePath}"')
 
                 # rowDict is what we are showing in the file table
                 # abb debug vue, set loadData=True
-                ba, rowDict = self.getFileRow(file, loadData=loadData)  # loads bAnalysis
+                ba, rowDict = self.getFileRow(fullFilePath, loadData=loadData)  # loads bAnalysis
 
                 # TODO: calculating time, remove this
                 # This is 2x faster than loading from pandas gzip ???
@@ -835,7 +840,14 @@ class analysisDir():
                 # do not assign uuid until bAnalysis is saved in h5 file
                 #rowDict['uuid'] = ''
 
-                rowDict['relPath'] = file
+                relPath = fullFilePath.replace(path, '')
+                if relPath.startswith('/'):
+                    # so we can use os.path.join()
+                    relPath = relPath[1:]
+                #rowDict['path'] = fullFilePath
+                rowDict['relPath'] = relPath
+
+                #logger.info(f'    row:{rowIdx} relPath:{relPath} fullFilePath:{fullFilePath}')
 
                 listOfDict.append(rowDict)
 
@@ -924,20 +936,28 @@ class analysisDir():
             # start(s) and stop(s) from ba detectionDict
             if self.isAnalyzed(rowIdx):
                 # set table to values we just detected with
-                startSec = ba.detectionClass['startSeconds']
-                stopSec = ba.detectionClass['stopSeconds']
+                startSec = ba.getDetectionDict()['startSeconds']
+                stopSec = ba.getDetectionDict()['stopSeconds']
                 self._df.loc[rowIdx, 'Start(s)'] = startSec
                 self._df.loc[rowIdx, 'Stop(s)'] = stopSec
 
-                dvdtThreshold = ba.detectionClass['dvdtThreshold']
-                mvThreshold = ba.detectionClass['mvThreshold']
+                dvdtThreshold = ba.getDetectionDict()['dvdtThreshold']
+                mvThreshold = ba.getDetectionDict()['mvThreshold']
                 self._df.loc[rowIdx, 'dvdtThreshold'] = dvdtThreshold
                 self._df.loc[rowIdx, 'mvThreshold'] = mvThreshold
 
                 #
                 # TODO: remove start of ba._path that corresponds to our current folder path
                 # will allow our save db to be modular
-                self._df.loc[rowIdx, 'relPath'] = ba._path
+                
+                # relPth should usually be filled in ???
+                '''
+                relPath = self.getPathFromRelPath(ba._path)
+                self._df.loc[rowIdx, 'relPath'] = relPath
+                '''
+                
+                # logger.info('maybe put back in')
+                # print(f'    self._df.loc[rowIdx, "relPath"] is "{self._df.loc[rowIdx, "relPath"]}"')
 
             # kymograph interface
             if ba is not None and ba.isKymograph():
@@ -997,7 +1017,7 @@ class analysisDir():
         uuid = self._df.at[rowIdx, 'uuid']
         return len(uuid) > 0
 
-    def getAnalysis(self, rowIdx, allowAutoLoad=True):
+    def getAnalysis(self, rowIdx, allowAutoLoad=True, verbose=True):
         """
         Get bAnalysis object, will load if necc.
 
@@ -1011,17 +1031,17 @@ class analysisDir():
         ba = self._df.loc[rowIdx, '_ba']
         uuid = self._df.loc[rowIdx, 'uuid']  # if we have a uuid bAnalysis is saved in h5f
         #filePath = os.path.join(self.path, file)
-
         #logger.info(f'Found _ba in file db with ba:"{ba}" {type(ba)}')
-
         #logger.info(f'rowIdx: {rowIdx} ba:{ba}')
 
         if ba is None or ba=='':
             #logger.info('did not find _ba ... loading from abf file ...')
             # working on kymograph
-            filePath = self._df.loc[rowIdx, 'relPath']
+            #                 relPath = self.getPathFromRelPath(ba._path)
+            relPath = self._df.loc[rowIdx, 'relPath']
+            filePath = self.getPathFromRelPath(relPath)
 
-            ba = self.loadOneAnalysis(filePath, uuid, allowAutoLoad=allowAutoLoad)
+            ba = self.loadOneAnalysis(filePath, uuid, allowAutoLoad=allowAutoLoad, verbose=verbose)
             # load
             '''
             logger.info(f'Loading bAnalysis from row {rowIdx} "{filePath}"')
@@ -1060,81 +1080,6 @@ class analysisDir():
                 # update stats of table load/analyzed columns
                 self._updateLoadedAnalyzed()
 
-        return ba
-
-    def loadOneAnalysis(self, path, uuid=None, allowAutoLoad=True):
-        """
-        Load one bAnalysis either from original file path or uuid of h5 file.
-
-        If from h5, we still need to reload sweeps !!!
-        They are binary and fast, saving to h5 (in this case) is slow.
-        """
-        logger.info(f'path:"{path}" uuid:"{uuid}" allowAutoLoad:"{allowAutoLoad}"')
-
-        ba = None
-        allowUUID = True  # on transition to bAnalysis save as json
-        if allowUUID and uuid is not None and uuid:
-            # load from h5
-            hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-            hdfPath = os.path.join(self.path, hdfFile)
-            with pd.HDFStore(hdfPath) as hdfStore:
-                # hdfStore is of type pandas.io.pytables.HDFStore
-                try:
-                    logger.info(f'retreiving uuid from hdf file {uuid}')
-
-                    realKey = '/' + uuid
-
-                    if not realKey in hdfStore.keys():
-                        logger.error(f' did not find uuid in hdf store, uuid: {realKey}')
-                        print('  valid h5 keys are:')
-                        for key in hdfStore.keys():
-                            print('    ', key)
-
-                    # logger.info(f'hdfStore: {hdfStore}')
-
-                    # dfAnalysis = hdfStore[realKey]
-
-                    # i don't understand why accessing an hd5 key we get a vlaue error (it is type checking my cutum enum types???
-                    try:
-                        dfAnalysis = hdfStore.select(realKey)
-                    except(ValueError) as e:
-                        logger.error(f'!!!!!!!!!!!!!!! my exception: {e}')
-
-                    #logger.info(f'dfAnalysis is of type {type(dfAnalysis)}')
-
-                    # 20220422, need to fix the path here !!!
-                    #logger.info('NEED TO FIX THE PATH HERE')
-                    #print('  dfAnalysis is:')
-                    #print("dfAnalysis['_path']:", dfAnalysis['_path'])
-                    logger.info(f'swapping dfAnalysis _path to: {path}')
-                    dfAnalysis['_path'] = path
-                    
-                    #pprint(dfAnalysis)
-                    
-
-                    ba = sanpy.bAnalysis(fromDf=dfAnalysis)
-
-
-
-                    # WHY IS THIS BROKEN ?????????????????????????????????????????????????????????????
-                    # This is SLOPPY ON MY PART, WE ALWAYS NEED TO RELOAD FILTER
-                    # ADD SOME COD  THAT CHECKS THIS AND REBUILDS AS NECC !!!!!!!!!!
-                    if path.endswith('.tif'):
-                        # kymograph
-                        ba._loadTif()
-                    else:
-                        ba._loadAbf()
-                    ba.rebuildFiltered()
-
-
-                    logger.info(f'Loaded ba from h5 uuid {uuid} and now ba:{ba}')
-                except (KeyError):
-                    logger.error(f'Did not find uuid in h5 file, uuid:{uuid}')
-        if allowAutoLoad and ba is None:
-            # load from path
-            ba = sanpy.bAnalysis(path)
-            logger.info(f'Loaded ba from path {path} and now ba:{ba}')
-        #
         return ba
 
     def _setColumnType(self, df):
@@ -1223,7 +1168,14 @@ class analysisDir():
 
         rowDict['File'] = ba.getFileName() #os.path.split(ba.path)[1]
         rowDict['Dur(s)'] = ba.recordingDur
+
+        rowDict['Channels'] = ba.numChannels  # Theanne
+
         rowDict['Sweeps'] = ba.numSweeps
+
+        # TODO: here, we do not get an epoch table until the file is loaded !!!
+        rowDict['Epochs'] = ba.numEpochs  # Theanne, data has to be loaded
+
         rowDict['kHz'] = ba.recordingFrequency
         rowDict['Mode'] = ba.recordingMode
 
@@ -1253,19 +1205,22 @@ class analysisDir():
         tmpFileList = []
         folderDepth = self.folderDepth  # if none then all depths
         for root, subdirs, files in os.walk(path):
-            #print('analysisDir.getFileList() count:', count)
-            #print('  ', root)
-            #print('  ', subdirs)
-            #print('  ', files)
-            '''
-            parentFolder = os.path.split(root)[1]
-            print(root)
-            print('  ', parentFolder)
-            if parentFolder.startswith('__'):
+
+            # strip out folders that start with __
+            #_parentFolder = os.path.split(root)[1]
+            #print('root:', root)
+            #print('  parentFolder:', _parentFolder)
+            #if _parentFolder.startswith('__'):
+            if '__' in root:
+                logger.info(f'SKIPPING based on path root:{root}')
                 continue
-            '''
+
+            # print('=== subdirs:', subdirs)
+            # print('    root:', root)
+
             if folderDepth is not None and count > folderDepth:
                 break
+
             count += 1
             for file in files:
                 #if file.endswith('.tif'):
@@ -1273,7 +1228,9 @@ class analysisDir():
                     oneFile = os.path.join(root, file)
                     #print('  ', oneFile)
                     tmpFileList.append(oneFile)
+        
         #tmpFileList = os.listdir(path)
+
 
         fileList = []
         for file in sorted(tmpFileList):
@@ -1424,7 +1381,8 @@ class analysisDir():
                     #listOfDict.append(rowDict)
 
                     # TODO: get this into getFileROw()
-                    rowDict['relPath'] = pathFile
+                    logger.warning('20220718, not sure we need this ???')
+                    # rowDict['relPath'] = pathFile
                     rowDict['_ba'] = None
 
                     self.appendRow(rowDict=rowDict, ba=None)
@@ -1450,13 +1408,14 @@ class analysisDir():
             if not self.isAnalyzed(row):
                 continue
             ba = self.getAnalysis(row)
-            if ba.dfReportForScatter is not None:
+            oneDf = ba.asDataFrame()
+            if df is not None:
                 self.signalApp(f'adding "{ba.getFileName()}"')
-                ba.dfReportForScatter['File Number'] = row
+                oneDf.dfReportForScatter['File Number'] = row
                 if masterDf is None:
-                    masterDf = ba.dfReportForScatter
+                    masterDf = oneDf
                 else:
-                    masterDf = pd.concat([masterDf, ba.dfReportForScatter])
+                    masterDf = pd.concat([masterDf, oneDf])
         #
         if masterDf is None:
             logger.error('Did not find any analysis.')

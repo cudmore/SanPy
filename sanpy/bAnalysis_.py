@@ -22,11 +22,16 @@ ba.spikeDetect(dDict)
 """
 
 import os, sys, math, time, collections, datetime, enum
+from pprint import pprint
 #from socket import AF_AAL5
 import json
 import uuid
 from collections import OrderedDict
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
+
+from typing import Union, Dict, List, Tuple
+
+import h5py
 
 import numpy as np
 import pandas as pd
@@ -38,9 +43,8 @@ import pyabf  # see: https://github.com/swharden/pyABF
 import sanpy
 import sanpy.bDetection
 # this specific import is to stop circular imports
-#from sanpy.baseUserAnalysis import baseUserAnalysis
 import sanpy.user_analysis.baseUserAnalysis
-#import sanpy.user_analysis
+import sanpy.h5Util
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -217,13 +221,16 @@ class bAnalysis:
     def getNewUuid():
         return 't' + str(uuid.uuid4()).replace('-', '_')
 
-    def __init__(self, file=None,
+    def __init__(self,
+                    file=None,
                     #theTiff=None,
                     byteStream=None,
-                    fromDf=None, fromDict=None,
-                    detectionPreset : sanpy.bDetection.detectionPresets = None,
+                    #fromDf=None,
+                    #fromDict=None,
+                    #detectionPreset : sanpy.bDetection.detectionPresets = None,
                     loadData=True,
-                    stimulusFileFolder=None):
+                    stimulusFileFolder=None,
+                    verbose=True):
         """
         Args:
             file (str): Path to either .abf or .csv with time/mV columns.
@@ -232,16 +239,23 @@ class bAnalysis:
             fromDf: (pd.DataFrame): One row df with columns as instance variables
                 used by analysisDir to reload from h5 file
             fromDict: (dict): Dict has keys ['sweepX', 'sweepY', 'mode']
+            loadData: If true, load raw data, otherwise just load header
+            stimulusFileFolder:
         """
         
-        logger.info(f'IF FILE IS KYMOGRAPH NEED TO SET DETECTION PARAMS {file}')
+        #logger.info(f'IF FILE IS KYMOGRAPH NEED TO SET DETECTION PARAMS {file}')
+        
+        '''
         if detectionPreset is None:
             detectionPreset = sanpy.bDetection.detectionPresets.default
         self.detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
+        '''
+        self._detectionDict  = None # corresponds to an item in sanpy.bDetection
 
         self._isAnalyzed = False
 
         # mimic pyAbf
+        self._numChannels = None
         self._dataPointsPerMs = None
         self._currentSweep = 0  # int
         self._sweepList = [0]  # list
@@ -274,7 +288,7 @@ class bAnalysis:
         self._abf = None
         """pyAbf: If loaded from binary .abf file"""
 
-        self.dateAnalyzed = None
+        #self.dateAnalyzed = None
         """str: Date Time of analysis. TODO: make a property."""
 
         #self.detectionType = None
@@ -291,11 +305,7 @@ class bAnalysis:
         self.spikeClips_x2 = []  #
 
         self.dfError = None  # dataframe with a list of detection errors
-        self.dfReportForScatter = None  # dataframe to be used by scatterplotwidget
-
-        if file is not None and not os.path.isfile(file):
-            logger.error(f'File does not exist: "{file}"')
-            self.loadError = True
+        self._dfReportForScatter = None  # dataframe to be used by scatterplotwidget
 
         # only defined when loading abf files
         # turned back on when implementing Santana rabbit Ca kymographs
@@ -307,20 +317,26 @@ class bAnalysis:
         # will be overwritten by existing uuid in self._loadFromDf()
         self.uuid = bAnalysis.getNewUuid()
 
+        self.tifData = None
+        self.isBytesIO = False
+
         # IMPORTANT:
         #        All instance variable MUST be declared before we load
         #        In particular for self._loadFromDf()
 
-        self.tifData = None
+        if file is not None and not os.path.isfile(file):
+            logger.error(f'File does not exist: "{file}"')
+            self.loadError = True
 
         # instantiate and load abf file
-        self.isBytesIO = False
-        if fromDict is not None:
-            self._loadFromDict(fromDict)
-        elif fromDf is not None:
-            self._loadFromDf(fromDf)
-        elif byteStream is not None:
-            self._loadAbf(byteStream=byteStream, loadData=loadData, stimulusFileFolder=stimulusFileFolder)
+        # if fromDict is not None:
+        #     self._loadFromDict(fromDict)
+        # elif fromDf is not None:
+        #     self._loadFromDf(fromDf)
+        if byteStream is not None:
+            self._loadAbf(byteStream=byteStream,
+                    loadData=loadData,
+                    stimulusFileFolder=stimulusFileFolder)
         elif file is not None and file.endswith('.abf'):
             self._loadAbf(loadData=loadData)
         elif file is not None and file.endswith('.atf'):
@@ -335,15 +351,8 @@ class bAnalysis:
             #self.loadError = True
 
         # get default derivative
-        self.rebuildFiltered()
-        '''
-        if self._recordingMode == 'I-Clamp':
-            self._getDerivative()
-        elif self._recordingMode == 'V-Clamp':
-            self._getBaselineSubtract()
-        else:
-            logger.warning('Did not take derivative')
-        '''
+        if loadData:
+            self.rebuildFiltered()
 
         self._detectionDirty = False
 
@@ -352,9 +361,6 @@ class bAnalysis:
         # switching back to faster version (no parsing when we cell self.sweepX2
         self.setSweep()
 
-        #mySize = sys.getsizeof(self._sweepX)  # bytes
-        #print('bAnalysis mySize:', mySize)
-
     def asDataFrame(self):
         """Return analysis as a Pandas DataFrame.
 
@@ -362,15 +368,18 @@ class bAnalysis:
                 This returns a COPY !!!
                 Do not modify and expect changes to stick
         """
-        #return pd.DataFrame(self.spikeDict.asList())
-        return pd.DataFrame(self.spikeDict.asList())
+        return self._dfReportForScatter
+        #return self.spikeDict.asDataFrame()
 
+    def getDetectionDict(self):
+        return self._detectionDict
+        
     @property
-    def detectionDict(self):
+    def old_detectionDict(self):
         # TODO: remove this and just use 'detectionClass'
         return self.detectionClass
 
-    def getDetectionDict(self):
+    def old_getDetectionDict(self):
         # TODO: remove this and just use 'detectionClass'
         return self.detectionClass
 
@@ -389,7 +398,9 @@ class bAnalysis:
         else:
             pathStr = ''
         txt = self.__str__()
-        txt += f" start(s):{self.detectionDict['startSeconds']} stop(s):{self.detectionDict['stopSeconds']} {pathStr}"
+        startSeconds = self.getDetectionDict()['startSeconds']
+        stopSeconds = self.getDetectionDict()['stopSeconds']
+        txt += f" start(s):{startSeconds} stop(s):{stopSeconds} {pathStr}"
         return txt
 
     def isKymograph(self):
@@ -421,103 +432,7 @@ class bAnalysis:
         self._sweepX[:, 0] = self._abf.sweepX
         self._sweepY[:, 0] = self._abf.sweepY
 
-    def _loadTif(self):
-        #print('TODO: load tif file from within bAnalysis ... stop using bAbfText()')
-        self._abf = sanpy.bAbfText(self._path)
-        # 20220114 removed
-        #self._abf.sweepY = self._normalizeData(self._abf.sweepY)
-        self.myFileType = 'tif'
-
-        self._sweepList = [0]
-
-        numSweeps = 1
-        tmpRows = self._abf.sweepX.shape[0]
-        #logger.info(f'tmpRows {tmpRows}')
-
-        self._sweepLengthSec = self._abf.sweepX[-1]
-
-        self._sweepX = np.zeros((tmpRows,numSweeps))
-        self._sweepX[:, 0] = self._abf.sweepX
-
-        self._sweepY = np.zeros((tmpRows,numSweeps))
-        self._sweepY[:, 0] = self._abf.sweepY
-
-        self._recordingMode = 'tif'
-        self._dataPointsPerMs = self._abf.dataPointsPerMs
-
-        self.tifData = self._abf.tif
-
-        self._sweepLabelY = 'f/f0'  # str
-
-    def _loadCsv(self):
-        """
-        Load from a two column CSV file with columns of (s, mV)
-        """
-        logger.info(self._path)
-
-        dfCsv = pd.read_csv(self._path)
-
-        # TODO: check column names make sense
-        # There must be 2 columns ('s', 'mV')
-        numCols = len(dfCsv.columns)
-        if numCols != 2:
-            # error
-            logger.warning(f'There must be two columns, found {numCols}')
-            self.loadError = True
-            return
-
-        self.myFileType = 'csv'
-
-        firstColStr = dfCsv.columns[0]
-        secondColStr = dfCsv.columns[1]
-
-        if firstColStr in ['s', 'sec', 'seconds']:
-            timeMult = 1
-        elif firstColStr in ['ms']:
-            timeMult = 1/1000
-        else:
-            logger.warning(f'The first column is "{firstColStr}" but must be one of ("s", "sec", "seconds", "ms")')
-            self.loadError = True
-            return
-
-        self._sweepX = dfCsv[firstColStr].values  # first col is time
-        self._sweepY = dfCsv[secondColStr].values  # second col is values (either mV or pA)
-        self._sweepC = np.zeros(len(self._sweepX))
-
-        self._sweepX *= timeMult
-
-        # imported csv will always have 1 sweep (1 column)
-        self._sweepX = self._sweepX.reshape((self._sweepX.shape[0],1))
-        self._sweepY = self._sweepY.reshape((self._sweepY.shape[0],1))
-        self._sweepC = self._sweepC.reshape((self._sweepC.shape[0],1))
-        #print('self._sweepX:', self._sweepX.shape)
-
-        # TODO: infer from second column
-        if secondColStr == 'mV':
-            self._recordingMode = 'I-Clamp'
-            self._sweepLabelY = 'mV' # TODO: get from column
-        elif secondColStr == 'pA':
-            self._recordingMode = 'V-Clamp'
-            self._sweepLabelY = 'pA' # TODO: get from column
-        else:
-            logger.warning(f'The seconds column is "{secondColStr}" but muse be one of ("mV", "pA")')
-
-        # always seconds
-        self._sweepLabelX = 'sec' # TODO: get from column
-
-        # TODO: infer from first column as ('s', 'ms')
-        firstPnt = self._sweepX[0][0]
-        secondPnt = self._sweepX[1][0]
-        diff_seconds = secondPnt - firstPnt
-        diff_ms = diff_seconds * 1000
-        _dataPointsPerMs = 1 / diff_ms
-        self._dataPointsPerMs = _dataPointsPerMs
-        #logger.info(f'_dataPointsPerMs: {_dataPointsPerMs}')
-
-        #self._recordingMode = 'I-Clamp'
-        self._sweepLengthSec = self._sweepX[-1][0]
-
-    def _loadFromDf(self, fromDf):
+    def old_loadFromDf(self, fromDf):
         """Load from a pandas df saved into a .h5 file.
 
         This uses vars(self) to get all class attributes.
@@ -538,7 +453,142 @@ class bAnalysis:
         #logger.info(f'sweepList:{self.sweepList}')
         #logger.info(f'_currentSweep:{self._currentSweep}')
 
-    def _saveToHdf(self, hdfPath):
+    def old_saveHdf2(self, hdfPath, forceSave=False):
+        """save using h5py (not pytables).
+        """
+        if self.numSpikes == 0:
+            return
+        if not forceSave and not self.isDirty:
+            return
+
+        # TODO: we need a fixed uuid from analysisDIr
+        uuid = self.uuid
+        
+        # convert detection dict to json
+        detectionJson = json.dumps(self._detectionDict)  # dict
+        
+        # convert spikeLIst (list of dict) to json
+        spikeList = self.spikeDict.asList()
+        
+        '''
+        print('xxx spike[0]')
+        for k,v in spikeList[0].items():
+            print(k,v,type(v))
+        '''
+
+        # lots of our analysis ends up as numpy data types
+        # json does not know how to handle
+        # use a json numpy encoder to convert
+        dataJson = json.dumps(spikeList, cls=NumpyEncoder)  # list of dict
+        
+        # TODO: Check that this works on Windows
+        if os.path.isfile(hdfPath):
+            mode = 'a'
+        else:
+            mode = 'w'
+
+        logger.info(f'{hdfPath} with mode={mode}')
+
+        with h5py.File(hdfPath, mode=mode) as h5file:
+            
+            # will get ValueError: Unableto create group (name already exists)
+            uuidGroup = h5file.create_group(uuid)
+            
+            ddg = uuidGroup.create_dataset('detectionDict', data=detectionJson)
+            ald = uuidGroup.create_dataset('analysisList', data=dataJson)
+
+    def old_loadHdf2(self, hdfPath):
+        logger.info('')
+        with h5py.File(hdfPath, mode='r') as h5file:
+            for k,v in h5file.items():
+                print(k,v)
+
+    def _saveHdf_pytables(self, hdfPath):
+
+        didSave = False
+        if not self.detectionDirty:
+            # Do not save it detection has not changed
+            logger.info(f'NOT SAVING, is not dirty {self.getInfo(withPath=True)}')
+            return didSave
+
+        # when making df from dict, need to pass it a list
+        # o.w. key values that are lists get expanded into rows
+        dfDetection = pd.DataFrame([self._detectionDict])
+
+        # convert spikeList (list of dict) to json
+        #spikeList = self.spikeDict.asList()
+        #dataJson = json.dumps(spikeList, cls=NumpyEncoder)  # list of dict
+        #dfAnalysis = pd.DataFrame(spikeList)
+        dfAnalysis = self.spikeDict.asDataFrame()
+
+        uuid = self.uuid
+
+        logger.info(f'    Saving {self.numSpikes} spikes to uuid {uuid} in h5 file {hdfPath}')
+
+        with pd.HDFStore(hdfPath) as hdfStore:
+            key = uuid + '/' + 'detectionDict'
+            dfDetection.to_hdf(hdfStore, key)  # default mode='a'
+
+            key = uuid + '/' + 'analysisList'
+            dfAnalysis.to_hdf(hdfStore, key)
+
+            didSave = True
+
+        # we saved, detection is not dirty
+        self._detectionDirty = False
+        
+        return didSave
+
+    def _loadHdf_pytables(self, hdfPath, uuid):
+        """
+        Load analysis from an h5 file using key 'uuid'.
+        
+        Notes:
+            df.to_dict() requires into=OrderedDIct, o.w. column order is sorted
+        """
+
+        # cant use pd.HDFStore(<path>) as read_hdf does not understand file pointer
+        
+        logger.info(f'loading {uuid} from {hdfPath}')
+
+        # load pandas dataframe(s) from h5 file
+        didLoad = True
+        try:
+            detectionDictKey = uuid + '/' + 'detectionDict'  # group
+            dfDetection = pd.read_hdf(hdfPath, detectionDictKey)
+        except (KeyError) as e:
+            logger.error(e)
+            didLoad = False
+        try:
+            analysisListKey = uuid + '/' + 'analysisList'
+            dfAnalysis = pd.read_hdf(hdfPath, analysisListKey)
+        except (KeyError) as e:
+            logger.error(e)
+            didLoad = False
+
+        if didLoad:
+            # we take on the uuid we were loaded from
+            self.uuid = uuid
+            
+            # convert to a dict
+            detectionDict = dfDetection.to_dict('records', into=OrderedDict)[0]  # one dict
+            
+            self._detectionDict = detectionDict
+            #pprint(detectionDict)
+
+            # convert to a list of dict
+            analysisList = dfAnalysis.to_dict('records', into=OrderedDict)  # list of dict
+            self.spikeDict.setFromListDict(analysisList)
+            #pprint(analysisList[0])
+
+            # recreate spike analysis dataframe
+            self._dfReportForScatter =  dfAnalysis
+
+            logger.info(f'    loaded {len(detectionDict.keys())} detection keys and {len(self.spikeDict)} spikes')
+        else:
+            logger.error(f'    LOAD FAILED')
+
+    def old_saveToHdf(self, hdfPath):
         """
         Save to h5 file with key self.uuid.
         
@@ -552,22 +602,49 @@ class bAnalysis:
 
         logger.info(f'SAVING uuid:{self.uuid} {self.getInfo()}')
 
+        dfDetection = pd.DataFrame(self._detectionDict)
+
+        spikeList = self.spikeDict.asList()
+        dfAnalysis = pd.DataFrame(spikeList)
+
+        uuid = self.uuid
+        with pd.HDFStore(hdfPath) as hdfStore:
+            key = uuid + '/' + 'detectionDict'
+            dfDetection.to_hdf(hdfStore, key)
+
+            key = uuid + '/' + 'analysisList'
+            dfAnalysis.to_hdf(hdfStore, key)
+
+        didSave = True
+        return didSave
+
         with pd.HDFStore(hdfPath) as hdfStore:
             # vars(class) retuns a dict with all instance variables
             iDict = vars(self)
-
+            
             oneDf = pd.DataFrame(columns=iDict.keys())
             #oneDf['path'] = [self.path]  # seed oneDf with one row (critical)
 
             # do not save these instance variables (e.g. self._ba)
             noneKeys = ['_sweepX', '_sweepY', '_sweepC',
                         '_abf', '_filteredVm', '_filteredDeriv',
-                        'spikeClips', 'spikeClips_x', 'spikeClips_x2']
+                        'spikeClips', 'spikeClips_x', 'spikeClips_x2',
+                        '_detectionDict',
+                        #'_epochTableList'
+                        ]
+
+            print('=== iDict.items()')
+            for k,v in iDict.items():
+                if k in noneKeys:
+                    continue
+                print(k, v)
+            print('=== END iDict.items()')
 
             for k,v in iDict.items():
                 if k in noneKeys:
                     v = None
                 #print(f'saving h5 k:{k} {type(v)}')
+                print('    ===saving:', k, v)
                 oneDf.at[0, k] = v
             # save into file
             hdfStore[self.uuid] = oneDf
@@ -579,12 +656,12 @@ class bAnalysis:
         #
         return didSave
 
-    def _loadFromDict(self, theDict):
+    def old_loadFromDict(self, theDict):
         """Create bAnalysis from a dictionary.
 
         Args:
             theDict (dict): Requires keys ('sweepX', 'sweepY', 'Mode')
-                            Will infer dataPointsPErMs from sweepX
+                            Will infer dataPointsPerMs from sweepX
         """
         self._sweepX = theDict['sweepX']
         self._sweepY = theDict['sweepY']
@@ -674,36 +751,40 @@ class bAnalysis:
         try:
             #logger.info(f'loadData:{loadData}')
             if byteStream is not None:
+                logger.info('Loading byte stream')
                 self._abf = pyabf.ABF(byteStream)
                 self.isBytesIO = True
             else:
+                #logger.info(f'Loading file: {self._path}')
                 self._abf = pyabf.ABF(self._path, loadData=loadData, stimulusFileFolder=stimulusFileFolder)
 
         except (NotImplementedError) as e:
-            logger.error(f'did not load abf file: {self._path}')
-            logger.error(f'  NotImplementedError exception was: {e}')
+            logger.error(f'    did not load abf file: {self._path}')
+            logger.error(f'      NotImplementedError exception was: {e}')
             self.loadError = True
             self._abf = None
 
         except (Exception) as e:
             # some abf files throw: 'unpack requires a buffer of 234 bytes'
-            logger.error(f'did not load abf file: {self._path}')
-            logger.error(f'  unknown Exception was: {e}')
+            # 'ABF' object has no attribute 'sweepEpochs'
+            logger.error(f'    did not load abf file: {self._path}')
+            logger.error(f'        unknown Exception was: {e}')
             self.loadError = True
             self._abf = None
 
         if 1:
-            try:
-                _tmp = self._abf.sweepEpochs.p1s
-            except (AttributeError) as e:
-                logger.warning(f'did not find epochTable: {e} in file {self.path}')
-            else:
-                _numSweeps = len(self._abf.sweepList)
-                self._epochTableList = [None] * _numSweeps
-                for _sweepIdx in range(_numSweeps):
-                    self._abf.setSweep(_sweepIdx)
-                    self._epochTableList[_sweepIdx] = sanpy.epochTable(self._abf)
-                self._abf.setSweep(0)
+            if loadData:
+                try:
+                    _tmp = self._abf.sweepEpochs.p1s
+                except (AttributeError) as e:
+                    logger.warning(f'    did not find epochTable loadData:{loadData}: {e} in file {self.path}')
+                else:
+                    _numSweeps = len(self._abf.sweepList)
+                    self._epochTableList = [None] * _numSweeps
+                    for _sweepIdx in range(_numSweeps):
+                        self._abf.setSweep(_sweepIdx)
+                        self._epochTableList[_sweepIdx] = sanpy.epochTable(self._abf)
+                    self._abf.setSweep(0)
 
             self._sweepList = self._abf.sweepList
             self._sweepLengthSec = self._abf.sweepLengthSec  # assuming all sweeps have the same duration
@@ -716,15 +797,16 @@ class bAnalysis:
                 self._sweepY = np.zeros((tmpRows,numSweeps))
                 self._sweepC = np.zeros((tmpRows,numSweeps))
 
+                _channel = 0
                 for sweep in self._sweepList:
-                    self._abf.setSweep(sweep)
+                    self._abf.setSweep(sweepNumber=sweep, channel=_channel)
                     self._sweepX[:, sweep] = self._abf.sweepX  # <class 'numpy.ndarray'>, (60000,)
                     self._sweepY[:, sweep] = self._abf.sweepY
                     try:
                         self._sweepC[:, sweep] = self._abf.sweepC
                     except(ValueError) as e:
                         # pyabf will raise this error if it is an atf file
-                        logger.warning(f'exception fetching sweepC for sweep {sweep} with {self.numSweeps}: {e}')
+                        logger.warning(f'    exception fetching sweepC for sweep {sweep} with {self.numSweeps}: {e}')
                         #
                         # if we were recorded with a stimulus file abf
                         # needed to assign stimulusWaveformFromFile
@@ -745,10 +827,11 @@ class bAnalysis:
             self.acqDate = abfDateTime.strftime("%Y-%m-%d")
             self.acqTime = abfDateTime.strftime("%H:%M:%S")
 
-            _numChannels = len(self._abf.adcUnits)
-            if _numChannels >1:
-                logger.info(f'SanPy does not work with multi-channel recordings numChannels is {_numChannels}')
-            
+            self._numChannels = len(self._abf.adcUnits)
+            if self._numChannels > 1:
+                logger.warning(f'    SanPy does not work with multi-channel recordings numChannels is {self._numChannels} {self._path}')
+                # logger.warning('    Will default to channel 0')
+
             #self.sweepUnitsY = self.adcUnits[channel]
             channel = 0
             #dacUnits = self._abf.dacUnits[channel]
@@ -768,22 +851,108 @@ class bAnalysis:
             else:
                 logger.warning(f'did not understand adcUnit "{adcUnits}"')
 
-            '''
-            if self._abf.sweepUnitsY in ['pA']:
-                self._recordingMode = 'V-Clamp'
-                self._sweepY_label = self._abf.sweepUnitsY
-            elif self._abf.sweepUnitsY in ['mV']:
-                self._recordingMode = 'I-Clamp'
-                self._sweepY_label = self._abf.sweepUnitsY
-            '''
-
-
         #
         self.myFileType = 'abf'
 
         # base sanpy does not keep the abf around
-        logger.warning('[[[TURNED BACK ON]]] I turned off assigning self._abf=None for stoch-res stim file load')
+        #logger.warning('[[[TURNED BACK ON]]] I turned off assigning self._abf=None for stoch-res stim file load')
         self._abf = None
+
+    def _loadTif(self):
+        #print('TODO: load tif file from within bAnalysis ... stop using bAbfText()')
+        self._abf = sanpy.bAbfText(self._path)
+        # 20220114 removed
+        #self._abf.sweepY = self._normalizeData(self._abf.sweepY)
+        self.myFileType = 'tif'
+
+        self._sweepList = [0]
+
+        numSweeps = 1
+        tmpRows = self._abf.sweepX.shape[0]  # points in one line scan
+        #logger.info(f'tmpRows {tmpRows}')
+
+        self._sweepLengthSec = self._abf.sweepX[-1]
+
+        self._sweepX = np.zeros((tmpRows,numSweeps))
+        self._sweepX[:, 0] = self._abf.sweepX
+
+        self._sweepY = np.zeros((tmpRows,numSweeps))
+        self._sweepY[:, 0] = self._abf.sweepY
+
+        self._recordingMode = 'tif'
+        self._dataPointsPerMs = self._abf.dataPointsPerMs
+
+        self.tifData = self._abf.tif
+
+        self._sweepLabelY = 'f/f0'  # str
+
+    def _loadCsv(self):
+        """
+        Load from a two column CSV file with columns of (s, mV)
+        """
+        logger.info(self._path)
+
+        dfCsv = pd.read_csv(self._path)
+
+        # TODO: check column names make sense
+        # There must be 2 columns ('s', 'mV')
+        numCols = len(dfCsv.columns)
+        if numCols != 2:
+            # error
+            logger.warning(f'There must be two columns, found {numCols}')
+            self.loadError = True
+            return
+
+        self.myFileType = 'csv'
+
+        firstColStr = dfCsv.columns[0]
+        secondColStr = dfCsv.columns[1]
+
+        if firstColStr in ['s', 'sec', 'seconds']:
+            timeMult = 1
+        elif firstColStr in ['ms']:
+            timeMult = 1/1000
+        else:
+            logger.warning(f'The first column is "{firstColStr}" but must be one of ("s", "sec", "seconds", "ms")')
+            self.loadError = True
+            return
+
+        self._sweepX = dfCsv[firstColStr].values  # first col is time
+        self._sweepY = dfCsv[secondColStr].values  # second col is values (either mV or pA)
+        self._sweepC = np.zeros(len(self._sweepX))
+
+        self._sweepX *= timeMult
+
+        # imported csv will always have 1 sweep (1 column)
+        self._sweepX = self._sweepX.reshape((self._sweepX.shape[0],1))
+        self._sweepY = self._sweepY.reshape((self._sweepY.shape[0],1))
+        self._sweepC = self._sweepC.reshape((self._sweepC.shape[0],1))
+        #print('self._sweepX:', self._sweepX.shape)
+
+        # TODO: infer from second column
+        if secondColStr == 'mV':
+            self._recordingMode = 'I-Clamp'
+            self._sweepLabelY = 'mV' # TODO: get from column
+        elif secondColStr == 'pA':
+            self._recordingMode = 'V-Clamp'
+            self._sweepLabelY = 'pA' # TODO: get from column
+        else:
+            logger.warning(f'The seconds column is "{secondColStr}" but muse be one of ("mV", "pA")')
+
+        # always seconds
+        self._sweepLabelX = 'sec' # TODO: get from column
+
+        # TODO: infer from first column as ('s', 'ms')
+        firstPnt = self._sweepX[0][0]
+        secondPnt = self._sweepX[1][0]
+        diff_seconds = secondPnt - firstPnt
+        diff_ms = diff_seconds * 1000
+        _dataPointsPerMs = 1 / diff_ms
+        self._dataPointsPerMs = _dataPointsPerMs
+        #logger.info(f'_dataPointsPerMs: {_dataPointsPerMs}')
+
+        #self._recordingMode = 'I-Clamp'
+        self._sweepLengthSec = self._sweepX[-1][0]
 
     def getEpochTable(self, sweep):
         """Only proper abf files will have an epoch table.
@@ -875,6 +1044,23 @@ class bAnalysis:
     def numSweeps(self):
         """Get the number of sweeps."""
         return len(self._sweepList)
+
+    @property
+    def numChannels(self):
+        """Get the number of channels.
+        
+        TODO: 20220726, we do not handle multi channel recordings.
+        """
+        return self._numChannels
+
+    @property
+    def numEpochs(self):
+        """Get the number of epochs.
+        
+        Epochs are mostly for pClamp abf files. We are assuming each sweep has the same namber of epochs.
+        """
+        if self._epochTableList is not None:
+            return self._epochTableList[0].numEpochs()
 
     @property
     def numSpikes(self):
@@ -1049,7 +1235,7 @@ class bAnalysis:
     def get_xUnits(self):
         return self._sweepLabelX
 
-    def getDetectionType(self):
+    def old_getDetectionType(self):
         # <enum 'detectionTypes_'>
         #return self.detectionClass['detectionType'].name
         return self.detectionClass['detectionType']
@@ -1093,12 +1279,32 @@ class bAnalysis:
                     logger.info(e)
         return retList
 
-    def setSpikeStat(self, spikeList, stat, value):
+    def setSpikeStat(self, spikeList : Union[list, int], stat : str, value):
         """Used to set simple things like ('isBad', 'userType1', ...)
         """
+        if isinstance(spikeList, list):
+            pass
+        elif isinstance(spikeList, int):
+            spikeList = [spikeList]
+        else:
+            logger.error(f'Expecting list[int] or int but got spikeList type {type(spikeList)}')
+            return
+
         if len(spikeList) == 0:
             return
 
+        now = datetime.datetime.now()
+        modDate = now.strftime('%Y%m%d')
+        modTime = now.strftime('%H:%M:%S')
+
+        for spike in spikeList:
+            self[stat] = value
+            self['modDate'] = modDate
+            self['modTime'] = modTime
+            
+        logger.info(f'set spikes {spikeList} stat "{stat}" to value "{value}"')
+
+        '''
         count = 0
         for idx, spike in enumerate(self.spikeDict):
             if idx in spikeList:
@@ -1109,6 +1315,7 @@ class bAnalysis:
                     logger.info(e)
         #
         logger.info(f'Given {len(spikeList)} and set {count}')
+        '''
 
     def getSweepStats(self, statName:str, decimals=3, asDataFrame=False, df=None):
         """
@@ -1240,15 +1447,17 @@ class bAnalysis:
             return x
 
     def getSpikeTimes(self, sweepNumber=None):
-        """Get spike times for current sweep
+        """Get spike times (points) for current sweep
         """
         #theRet = [spike['thresholdPnt'] for spike in self.spikeDict if spike['sweep']==self.currentSweep]
         theRet = self.getStat('thresholdPnt', sweepNumber=sweepNumber)
         return theRet
 
     def getSpikeSeconds(self, sweepNumber=None):
+        """Get spike times (seconds) for current sweep
+        """
         #theRet = [spike['thresholdSec'] for spike in self.spikeDict if spike['sweep']==self.currentSweep]
-        theRet = self.getStat('thresholdSec')
+        theRet = self.getStat('thresholdSec', sweepNumber=sweepNumber)
         return theRet
 
     def getSpikeDictionaries(self, sweepNumber=None):
@@ -1273,19 +1482,23 @@ class bAnalysis:
         else:
             logger.warning(f'Did not take derivative, unknown recording mode "{self._recordingMode}"')
 
-    def _getFilteredRecording(self, dDict=None):
+    def _getFilteredRecording(self):
         """
         Get a filtered version of recording, used for both V-Clamp and I-Clamp.
 
         Args:
             dDict (dict): Default detection dictionary. See bDetection.defaultDetection
         """
-        if dDict is None:
-            dDict = sanpy.bDetection.getDefaultDetection()
 
-        medianFilter = dDict['medianFilter']
-        SavitzkyGolay_pnts = dDict['SavitzkyGolay_pnts']
-        SavitzkyGolay_poly = dDict['SavitzkyGolay_poly']
+        if self._detectionDict is not None:
+            medianFilter = self._detectionDict['medianFilter']
+            SavitzkyGolay_pnts = self._detectionDict['SavitzkyGolay_pnts']
+            SavitzkyGolay_poly = self._detectionDict['SavitzkyGolay_poly']
+        else:
+            # we have not been analyzed, impose some defaults
+            medianFilter = 0  # no median filter
+            SavitzkyGolay_pnts = 5
+            SavitzkyGolay_poly = 2
 
         if medianFilter > 0:
             if not medianFilter % 2:
@@ -1300,40 +1513,6 @@ class bAnalysis:
         else:
             self._filteredVm = self.sweepY
 
-    def _getBaselineSubtract(self, dDict=None):
-        """
-        for V-Clamp
-
-        Args:
-            dDict (dict): Default detection dictionary. See bDetection.getDefaultDetection()
-        """
-        #print('\n\n _getBaselineSubtract for v-clamp IS BROKEN BECAUSE OF SWEEPS IN FILTERED DERIV\n\n')
-
-        logger.info('XXX TODO: Need to add a way to baseline subtract for spontaneous V-Clamp data !!!')
-
-        # temporary fix, makes no sense for V-Clamp
-        self._getDerivative()
-
-        #
-        return
-        #
-
-        '''
-        if dDict is None:
-            dDict = sanpy.bDetection.getDefaultDetection()
-
-        # work on a copy
-        dDictCopy = dDict.copy()
-        dDictCopy['medianFilter'] = 5
-
-        self._getFilteredRecording(dDictCopy)
-
-        # baseline subtract filtered recording
-        theMean = np.nanmean(self.filteredVm)
-        self.filteredDeriv = self.filteredVm.copy()
-        self.filteredDeriv -= theMean
-        '''
-
     def _getDerivative(self):
         """
         Get derivative of recording (used for I-Clamp). Uses (xxx,yyy,zzz) keys in dDict.
@@ -1341,15 +1520,15 @@ class bAnalysis:
         Args:
             dDict (dict): Default detection dictionary. See bDetection.getDefaultDetection()
         """
-        #if dDict is None:
-        #    dDict = sanpy.bDetection.getDefaultDetection()
-
-        #medianFilter = dDict['medianFilter']
-        #SavitzkyGolay_pnts = dDict['SavitzkyGolay_pnts']
-        #SavitzkyGolay_poly = dDict['SavitzkyGolay_poly']
-        medianFilter = self.detectionClass.getValue('medianFilter')
-        SavitzkyGolay_pnts = self.detectionClass.getValue('SavitzkyGolay_pnts')
-        SavitzkyGolay_poly = self.detectionClass.getValue('SavitzkyGolay_poly')
+        if self._detectionDict is not None:
+            medianFilter = self._detectionDict['medianFilter']
+            SavitzkyGolay_pnts = self._detectionDict['SavitzkyGolay_pnts']
+            SavitzkyGolay_poly = self._detectionDict['SavitzkyGolay_poly']
+        else:
+            # we have not been analyzed, impose some defaults
+            medianFilter = 0  # no median filter
+            SavitzkyGolay_pnts = 5
+            SavitzkyGolay_poly = 2
 
         if medianFilter > 0:
             if not medianFilter % 2:
@@ -1401,6 +1580,40 @@ class bAnalysis:
         #self._filteredDeriv = np.insert(self.filteredDeriv, rowZero, rowOfZeros, axis=0)
         #self._filteredDeriv = np.concatenate((zeroRow,self.filteredDeriv))
         #print('  self._filteredDeriv:', self._filteredDeriv[0:4,:])
+
+    def _getBaselineSubtract(self, dDict=None):
+        """
+        for V-Clamp
+
+        Args:
+            dDict (dict): Default detection dictionary. See bDetection.getDefaultDetection()
+        """
+        #print('\n\n _getBaselineSubtract for v-clamp IS BROKEN BECAUSE OF SWEEPS IN FILTERED DERIV\n\n')
+
+        #logger.info('XXX TODO: Need to add a way to baseline subtract for spontaneous V-Clamp data !!!')
+
+        # temporary fix, makes no sense for V-Clamp
+        self._getDerivative()
+
+        #
+        return
+        #
+
+        '''
+        if dDict is None:
+            dDict = sanpy.bDetection.getDefaultDetection()
+
+        # work on a copy
+        dDictCopy = dDict.copy()
+        dDictCopy['medianFilter'] = 5
+
+        self._getFilteredRecording(dDictCopy)
+
+        # baseline subtract filtered recording
+        theMean = np.nanmean(self.filteredVm)
+        self.filteredDeriv = self.filteredVm.copy()
+        self.filteredDeriv -= theMean
+        '''
 
     def _backupSpikeVm(self, spikeTimes, sweepNumber, medianFilter=None):
         """
@@ -1517,7 +1730,7 @@ class bAnalysis:
 
         # TODO: put back in and log if detection ['verbose']
         after = len(spikeTimes0)
-        if self.detectionClass['verbose']:
+        if self._detectionDict['verbose']:
             logger.info(f'From {before} to {after} spikes with refractory_ms:{refractory_ms}')
 
         return spikeTimes0, goodSpikeErrors
@@ -1857,35 +2070,30 @@ class bAnalysis:
         #
         return spikeTimes0, spikeErrorList
 
-    def spikeDetect(self, detectionClass=None):
+    def spikeDetect(self, detectionDict):
         """
         Spike Detect all sweeps.
-
-        When we are instantiated we create a default self.detectionClass
 
         Each spike is a row and has 'sweep'
 
         Args:
-            detectionClass (sanpy.bDetection.detectionPresets)
+            detectionDict: From sanpy.bDetection
         """
 
         rememberSweep = self.currentSweep  # This is BAD we are mixing analysis with interface !!!
 
         startTime = time.time()
 
-        if detectionClass is None:
-            detectionClass = self.detectionClass
-        else:
-            self.detectionClass = detectionClass
-
         #
         # todo: ask user if they want to remove their settings for (isBad, userType)
         #
 
-        if self.detectionClass['verbose']:
-            logger.info('=== detectionClass is:')
-            for k in self.detectionClass.keys():
-                v = self.detectionClass[k]
+        self._detectionDict = detectionDict
+
+        if detectionDict['verbose']:
+            logger.info('=== detectionDict is:')
+            for k in detectionDict.keys():
+                v = detectionDict[k]
                 print(f'  {k} value:"{v}" is type {type(v)}')
 
         self._isAnalyzed = True
@@ -1898,17 +2106,17 @@ class bAnalysis:
 
         for sweepNumber in self.sweepList:
             #self.setSweep(sweep)
-            self.spikeDetect2__(sweepNumber, dDict=self.detectionClass)
+            self._spikeDetect2(sweepNumber)
 
         #
         self.setSweep(rememberSweep)
 
         stopTime = time.time()
 
-        if detectionClass['verbose']:
+        if detectionDict['verbose']:
             logger.info(f'Detected {len(self.spikeDict)} spikes in {round(stopTime-startTime,3)} seconds')
 
-    def spikeDetect2__(self, sweepNumber, dDict):
+    def _spikeDetect2(self, sweepNumber):
         """
         Working on using bAnalysisResult.py.
 
@@ -1916,25 +2124,13 @@ class bAnalysis:
             sweepNumber:
             dDict: Detection Dict
         """
+        dDict = self._detectionDict
+        
         # a list of dict of sanpy.bAnalysisResults.analysisResult (one dict per spike)
         spikeDict = sanpy.bAnalysisResults.analysisResultList()
-        # append one spike
-        #arl.appendDefault()
-
-        #dDict['verbose'] = True
 
         verbose = dDict['verbose']
         
-        '''
-        verbose = False
-        if dDict['verbose']:
-            verbose = True
-            logger.info('=== dDict is:')
-            for k in dDict.keys():
-                value = dDict[k]
-                print(f'  {k} value:"{value}" is type {type(value)}')
-        '''
-
         #
         self.setSweep(sweepNumber)
         #
@@ -1945,7 +2141,6 @@ class bAnalysis:
         #
         # spike detect
         detectionType = dDict['detectionType']
-        #logger.info(f'detectionType: "{detectionType}')
 
         # detect all spikes either with dvdt or mv
         if detectionType == sanpy.bDetection.detectionTypes['mv'].value:
@@ -1979,8 +2174,9 @@ class bAnalysis:
 
         #
         now = datetime.datetime.now()
-        dateStr = now.strftime('%Y-%m-%d %H:%M:%S')
-        self.dateAnalyzed = dateStr
+        dateStr = now.strftime('%Y%m%d')
+        timeStr = now.strftime('%H:%M:%S')
+        # self.dateAnalyzed = dateStr
 
         #
         # look in a window after each threshold crossing to get AP peak
@@ -2021,6 +2217,8 @@ class bAnalysis:
             #spikeDict = OrderedDict() # use OrderedDict so Pandas output is in the correct order
 
             #spikeDict[i]['isBad'] = False
+            spikeDict[i]['analysisDate'] = dateStr
+            spikeDict[i]['analysisTime'] = timeStr
             spikeDict[i]['analysisVersion'] = sanpy.analysisVersion
             spikeDict[i]['interfaceVersion'] = sanpy.interfaceVersion
             spikeDict[i]['file'] = self.getFileName()
@@ -2376,23 +2574,23 @@ class bAnalysis:
         # keep track of spikes per sweep (expensive to calculate)
         self._spikesPerSweep[sweepNumber] = len(spikeDict)
 
+        # run all user analysis ... what if this fails ???
+        sanpy.user_analysis.baseUserAnalysis.runAllUserAnalysis(self)
+
         #
         # generate a df holding stats (used by scatterplotwidget)
-        startSeconds = dDict['startSeconds']
-        stopSeconds = dDict['stopSeconds']
+        #startSeconds = dDict['startSeconds']
+        #stopSeconds = dDict['stopSeconds']
         if self.numSpikes > 0:
-            exportObject = sanpy.bExport(self)
-            self.dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
+            #exportObject = sanpy.bExport(self)
+            #self.dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
+            self._dfReportForScatter =  self.spikeDict.asDataFrame()
         else:
             self.dfReportForScatter = None
 
         self.dfError = self.errorReport()
 
         self._detectionDirty = True  # e.g. bAnalysis needs to be saved
-
-        # run all user analysis ... what if this fails ???
-        #sanpy.user_analysis.baseUserAnalysis.runAllUserAnalysis(self)
-        sanpy.user_analysis.baseUserAnalysis.runAllUserAnalysis(self)
 
         ## done
 
@@ -2416,7 +2614,7 @@ class bAnalysis:
         #peaks = df['peakVal']
         #thresholdPnts = df['thresholdPnt']
 
-        verbose = self.detectionClass['verbose']
+        verbose = self._detectionDict['verbose']
 
         # using the derivstive to find zero crossing before
         # original full width left point
@@ -2585,8 +2783,9 @@ class bAnalysis:
 
         #
         now = datetime.datetime.now()
-        dateStr = now.strftime('%Y-%m-%d %H:%M:%S')
-        self.dateAnalyzed = dateStr
+        dateStr = now.strftime('%Y%m%d')
+        timeStr = now.strftime('%h%m%s')
+        # self.dateAnalyzed = dateStr
 
         #
         # look in a window after each threshold crossing to get AP peak
@@ -2637,6 +2836,8 @@ class bAnalysis:
             spikeDict = OrderedDict() # use OrderedDict so Pandas output is in the correct order
 
             #spikeDict['isBad'] = False
+            spikeDict['dateAnalyzed'] = dateStr
+            spikeDict['timeAnalyzed'] = timeStr
             spikeDict['analysisVersion'] = sanpy.analysisVersion
             spikeDict['interfaceVersion'] = sanpy.interfaceVersion
             spikeDict['file'] = self.getFileName()
@@ -2945,6 +3146,8 @@ class bAnalysis:
         self.spikeClips_x2 = None
 
         #
+        # TODO: THIS WON't EXIST ON RELOAD FROM detection dict and analysis list dict
+        
         # generate a df holding stats (used by scatterplotwidget)
         startSeconds = dDict['startSeconds']
         stopSeconds = dDict['stopSeconds']
@@ -2974,12 +3177,12 @@ class bAnalysis:
             self.spikeClips (list): List of spike clips
         """
 
-        verbose = self.detectionClass['verbose']
+        verbose = self._detectionDict['verbose']
 
         if preSpikeClipWidth_ms is None:
-            preSpikeClipWidth_ms = self.detectionClass['preSpikeClipWidth_ms']
+            preSpikeClipWidth_ms = self._detectionDict['preSpikeClipWidth_ms']
         if postSpikeClipWidth_ms is None:
-            postSpikeClipWidth_ms = self.detectionClass['postSpikeClipWidth_ms']
+            postSpikeClipWidth_ms = self._detectionDict['postSpikeClipWidth_ms']
 
         if sweepNumber is None:
             sweepNumber = 'All'
@@ -3154,7 +3357,7 @@ class bAnalysis:
             dfError = pd.DataFrame(dictList)
 
         #print('bAnalysis.errorReport() returning len(dfError):', len(dfError))
-        if self.detectionClass['verbose']:
+        if self._detectionDict['verbose']:
             logger.info(f'Found {len(dfError)} errors in spike detection')
 
         #
@@ -3338,6 +3541,16 @@ class bAnalysis:
 
         return savePath
 
+    @property
+    def analysisDate(self):
+        if self.spikeDict is not None:
+            return self.spikeDict.analysisDate()
+        
+    @property
+    def analysisTime(self):
+        if self.spikeDict is not None:
+            return self.spikeDict.analysisTime()
+        
     def api_getHeader(self):
         """
         Get header as a dict.
@@ -3648,22 +3861,36 @@ def _lcrDualAnalysis():
     #
     plt.show()
 
-def test_load_abf():
+def test_load_abf(doDetect=True):
+    from pprint import pprint
     path = 'data/19114001.abf' # needs to be run fron SanPy
     print('=== test_load_abf() path:', path)
     ba = bAnalysis(path)
 
-    detectionPreset = sanpy.bDetection.detectionPresets.default
-    detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
-    ba.spikeDetect(detectionClass=detectionClass)
+    #detectionPreset = sanpy.bDetection.detectionPresets.default
+    #detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
+    #ba.spikeDetect(detectionClass=detectionClass)
 
-    print(ba.getDetectionType(), type(ba.getDetectionType()))
+    if doDetect:
+        # this is expensive
+        bd = sanpy.bDetection()
+        dDict = bd.getDetectionDict('SA Node')
 
-    print('  ba.numSpikes:', ba.numSpikes)
-    #ba.openHeaderInBrowser()
+        #print('=== detecting with:')
+        #pprint(dDict)
+        
+        # detect
+        ba.spikeDetect(dDict)
 
-    thresholdSec = ba.getStat('thresholdSec')
-    print('  thresholdSec:', thresholdSec)
+        #print(ba.getDetectionType(), type(ba.getDetectionType()))
+
+        #print('  ba.numSpikes:', ba.numSpikes)
+        #ba.openHeaderInBrowser()
+
+        thresholdSec = ba.getStat('thresholdSec')
+        #print('  thresholdSec:', thresholdSec)
+
+    return ba
 
 def test_load_csv():
     path = 'data/19114001.csv' # needs to be run fron SanPy
@@ -3804,14 +4031,14 @@ def test_sweeps():
     plt.xlabel(ba.abf.sweepLabelX)
     plt.show()
 
-def test_foot():
+def old_test_foot():
     if 0:
         path = '/media/cudmore/data/rabbit-ca-transient/feb-8-2022/Control/20220204__0013.tif.frames/20220204__0013.tif'
 
         ba = bAnalysis(path)
         print(ba)
 
-        detectionPreset= sanpy.bDetection.detectionPresets.caKymograph
+        detectionPreset= sanpy.bDetection.detectionPresets.cakymograph
         detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
         detectionClass['mvThreshold'] = 1.42
         detectionClass['doBackupSpikeVm'] = False
@@ -3823,7 +4050,7 @@ def test_foot():
         ba = bAnalysis(path)
         print(ba)
 
-        detectionPreset= sanpy.bDetection.detectionPresets.saNode
+        detectionPreset= sanpy.bDetection.detectionPresets.sanode
         detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
         detectionClass['dvdtThreshold'] = 2
         detectionClass['mvThreshold'] = -20
@@ -3862,11 +4089,63 @@ def test_foot():
 
     plt.show()
 
+def test_two_channel():
+    path = '/Users/cudmore/data/theanne-griffith/07.28.21/wc3-28/2021_07_28_0005.abf'
+    path = '/Users/cudmore/data/theanne-griffith/07.19.21/2021_07_19_0000.abf'
+    
+    ba = bAnalysis(path)
+    
+    sweepY = ba._sweepY
+    print(sweepY.shape)
+
+def test_hd5():
+    """
+    Trying pytsables again.
+    
+    testing if save using hd5 (not pytables) is better
+    """
+    
+    # load and analyze
+    ba = test_load_abf(doDetect=True)
+
+    #hdfPath = '/Users/cudmore/Desktop/h5-problems/test.h5'
+    #ba._saveHdf2(hdfPath, forceSave=True)
+    #ba._loadHdf2(hdfPath)
+
+    # save
+    hdfPath = '/Users/cudmore/Desktop/h5-problems/test_pytables.h5'
+    ba._saveHdf_pytables(hdfPath)
+
+    #
+    # repack
+    sanpy.h5Util._repackHdf(hdfPath)
+
+    #
+    # load and print keys of what we just saved
+    logger.info(f'we just saved and repacked: {hdfPath}')
+    sanpy.h5Util.listKeys(hdfPath)
+
+    #
+    # load what we just saved
+    uuid = ba.uuid
+
+    # load the same file
+    ba2 = test_load_abf(doDetect=False)
+
+    # load analysis from h5
+    ba2._loadHdf_pytables(hdfPath, uuid)
+
 if __name__ == '__main__':
     # was using this for manuscript
     #main()
     #test_hdf()
-    test_load_abf()
+    
+    #test_load_abf()
+    
+    test_two_channel()
+    
     #test_sweeps()
 
     #test_foot()
+
+    #test_hd5()

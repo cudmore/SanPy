@@ -7,7 +7,10 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 def getBundledDir():
-    """
+    """Get the working directory where user preferences are save.
+
+    This will be source code folder when running from source,
+      will be a more freeform folder when running as a frozen app/exe
     """
     if getattr(sys, 'frozen', False):
         # we are running in a bundle (frozen)
@@ -18,16 +21,20 @@ def getBundledDir():
     return bundle_dir
 
 def addUserPath():
-    """Make user SanPy folder and add it to the Python sys.path
+    """Make <user>/Documents/SanPy folder and add it to the Python sys.path
+    
+    Returns:
+        True: If we made the folder (first time SanPy is running)
     """
     
     logger.info('')
-    _makeSanPyFolders()  # make <user>/Documents/SanPy if necc
+
+    madeUserFolder = _makeSanPyFolders()  # make <user>/Documents/SanPy if necc
             
     userSanPyFolder = _getUserSanPyFolder()
 
-    if userSanPyFolder in sys.path:
-        sys.path.remove(userSanPyFolder)
+    # if userSanPyFolder in sys.path:
+    #     sys.path.remove(userSanPyFolder)
 
     if not userSanPyFolder in sys.path:
         logger.info(f'Adding to sys.path: {userSanPyFolder}')
@@ -37,8 +44,10 @@ def addUserPath():
     for path in sys.path:
         logger.info(f'    {path}')
 
+    return madeUserFolder
+    
 def _getUserDocumentsFolder():
-    """Get folder from <user> path (not sanpy path).
+    """Get <user>/Documents folder.
     """
     userPath = pathlib.Path.home()
     userDocumentsFolder = os.path.join(userPath, 'Documents')
@@ -50,11 +59,13 @@ def _getUserDocumentsFolder():
         return userDocumentsFolder
 
 def _getUserSanPyFolder():
+    """Get <user>/Documents/SanPy folder.
+    """
     userDocumentsFolder = _getUserDocumentsFolder()
     sanpyFolder = os.path.join(userDocumentsFolder, 'SanPy')
     return sanpyFolder
 
-def getUserFolder(folder : str) -> str:
+def old_getUserFolder(folder : str) -> str:
     userSanPyFolder = _getUserSanPyFolder()
     if folder == 'plugins':
         theFolder = os.path.join(userSanPyFolder, 'plugins')
@@ -72,29 +83,44 @@ def _getUserPluginFolder():
     userPluginFolder = os.path.join(userSanPyFolder, 'plugins')
     return userPluginFolder
 
+def _getUserDetectionFolder():
+    """Folder of saved user detection presets.
+    
+    Each is a json file.
+    """
+    userSanPyFolder = _getUserSanPyFolder()
+    userDetectionFolder = os.path.join(userSanPyFolder, 'detection')
+    return userDetectionFolder
+
 def _getUserAnalysisFolder():
+    """Folder of custom user analysis code.
+    """
     userAnalysisFolder = _getUserSanPyFolder()
     userAnalysisFolder = os.path.join(userAnalysisFolder, 'analysis')
     return userAnalysisFolder
 
 def _getUserPreferencesFolder():
+    """Folder of SanPy app preferences and logs (user does not modify this.
+    """
     userPreferencesFolder = _getUserSanPyFolder()
     userPreferencesFolder = os.path.join(userPreferencesFolder, 'preferences')
     return userPreferencesFolder
 
 def _makeSanPyFolders():
-    """Make SanPy folder in user Documents path.
+    """Make <user>/Documents/SanPy folder .
 
-    If no Documents folder then make SanPy folder directly in user path.
+    If no Documents folder then make SanPy folder directly in <user> path.
     """
     userDocumentsFolder = _getUserDocumentsFolder()
 
+    madeUserFolder = False
+    
     # main <user>/DOcuments/SanPy folder
     sanpyFolder = _getUserSanPyFolder()
     if not os.path.isdir(sanpyFolder):
+        # first time run
         logger.info(f'Making <user>/SanPy folder "{sanpyFolder}"')
-        #os.mkdir(sanpyFolder)
-
+        madeUserFolder = True
         #
         # copy entire xxx into <user>/Documents/SanPy
         _bundDir = getBundledDir()
@@ -104,6 +130,12 @@ def _makeSanPyFolders():
         logger.info(f'    _srcPath:{_srcPath}')
         logger.info(f'    _dstPath:{_dstPath}')
         shutil.copytree(_srcPath, _dstPath)
+    else:
+        # already exists, make sure we have all sub-folders that are expected
+        pass
+
+    return madeUserFolder
+
     '''
     # SanPyapplication preferences
     preferencesFolder = _getUserPreferencesFolder()
