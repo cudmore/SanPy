@@ -364,7 +364,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             #self.signalSelectSpike.emit(data)
 
         elif this == 'set x axis':
-            logger.info(f'set x axis {data}')
+            logger.info(f'"set x axis" {data}')
 
             self.startSec = data[0]
             self.stopSec = data[1]
@@ -379,7 +379,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 self.stopSec = self.get_bAnalysis().recordingDur
             else:
                 self.stopSec = None
-            logger.info(f'set full x axis {self.startSec} {self.stopSec}')
+            logger.info(f'"set full x axis" {self.startSec} {self.stopSec}')
             self.signalSetXAxis.emit([self.startSec, self.stopSec])  # emits to scatter plot ONLY
 
         elif this == 'cancel all selections':

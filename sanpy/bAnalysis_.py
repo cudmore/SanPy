@@ -318,7 +318,10 @@ class bAnalysis:
         self.uuid = bAnalysis.getNewUuid()
 
         self.tifData = None
+        # when we have a tif kymograph
+
         self.isBytesIO = False
+        # when we are running in the cloud
 
         # IMPORTANT:
         #        All instance variable MUST be declared before we load
@@ -860,7 +863,9 @@ class bAnalysis:
 
     def _loadTif(self):
         #print('TODO: load tif file from within bAnalysis ... stop using bAbfText()')
+        
         self._abf = sanpy.bAbfText(self._path)
+        
         # 20220114 removed
         #self._abf.sweepY = self._normalizeData(self._abf.sweepY)
         self.myFileType = 'tif'
@@ -879,6 +884,9 @@ class bAnalysis:
         self._sweepY = np.zeros((tmpRows,numSweeps))
         self._sweepY[:, 0] = self._abf.sweepY
 
+        # print(self._sweepX)
+        # print(self._sweepY)
+        
         self._recordingMode = 'tif'
         self._dataPointsPerMs = self._abf.dataPointsPerMs
 
@@ -1529,6 +1537,9 @@ class bAnalysis:
             medianFilter = 0  # no median filter
             SavitzkyGolay_pnts = 5
             SavitzkyGolay_poly = 2
+
+        if not isinstance(medianFilter, int):
+            logger.error(f'expecting int medianFilter, got: {medianFilter}')
 
         if medianFilter > 0:
             if not medianFilter % 2:
@@ -2371,28 +2382,43 @@ class bAnalysis:
                     print(f'  spike:{iIdx} error:{eDict}')
 
             preRange = filteredVm[startPnt:spikeTimes[i]] # EXCEPTION
-            preMinPnt = np.argmin(preRange)
-            preMinPnt += startPnt
-            # the pre min is actually an average around the real minima
-            avgRange = filteredVm[preMinPnt-avgWindow_pnts:preMinPnt+avgWindow_pnts]
-            preMinVal = np.average(avgRange)
-
-            # search backward from spike to find when vm reaches preMinVal (avg)
-            preRange = filteredVm[preMinPnt:spikeTimes[i]]
-            preRange = np.flip(preRange) # we want to search backwards from peak
             try:
-                preMinPnt2 = np.where(preRange<preMinVal)[0][0]
-                preMinPnt = spikeTimes[i] - preMinPnt2
-                spikeDict[iIdx]['preMinPnt'] = preMinPnt
-                spikeDict[iIdx]['preMinVal'] = preMinVal
-
-            except (IndexError) as e:
-                errorType = 'Pre spike min (mdp)'
-                errorStr = 'Did not find preMinVal: ' + str(round(preMinVal,3)) #+ ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
+                preMinPnt = np.argmin(preRange)
+            except (ValueError) as e:
+                # 20220926, happend when we have no scale and mdp_pnts=0
+                #print(f'xxx i:{i} mdp_pnts:{mdp_pnts} len:{len(filteredVm)} startPnt:{startPnt} spikeTimes[i]:{spikeTimes[i]}')
+                # 20220926, we really just want ot bail on this error
+                # lots of code below relies on this
+                # TODO: fix this mess
+                preMinPnt = startPnt
+                errorType = 'Pre spike min 0 (mdp)'
+                errorStr = f'Did not find preMinPnt mdp_pnts:{mdp_pnts} startPnt:{startPnt} spikeTimes[i]:{spikeTimes[i]}'
                 eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
                 spikeDict[iIdx]['errors'].append(eDict)
                 if verbose:
                     print(f'  spike:{iIdx} error:{eDict}')
+            if preMinPnt is not None:
+                preMinPnt += startPnt
+                # the pre min is actually an average around the real minima
+                avgRange = filteredVm[preMinPnt-avgWindow_pnts:preMinPnt+avgWindow_pnts]
+                preMinVal = np.average(avgRange)
+
+                # search backward from spike to find when vm reaches preMinVal (avg)
+                preRange = filteredVm[preMinPnt:spikeTimes[i]]
+                preRange = np.flip(preRange) # we want to search backwards from peak
+                try:
+                    preMinPnt2 = np.where(preRange<preMinVal)[0][0]
+                    preMinPnt = spikeTimes[i] - preMinPnt2
+                    spikeDict[iIdx]['preMinPnt'] = preMinPnt
+                    spikeDict[iIdx]['preMinVal'] = preMinVal
+
+                except (IndexError) as e:
+                    errorType = 'Pre spike min (mdp)'
+                    errorStr = 'Did not find preMinVal: ' + str(round(preMinVal,3)) #+ ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
+                    eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
+                    spikeDict[iIdx]['errors'].append(eDict)
+                    if verbose:
+                        print(f'  spike:{iIdx} error:{eDict}')
                     
             #
             # The nonlinear late diastolic depolarization phase was

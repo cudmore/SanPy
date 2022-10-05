@@ -32,7 +32,7 @@ class kymographPlugin(sanpyPlugin):
         print('  path:', path)
 
         print('  creating kymographWidget')
-        self._kymWidget = sanpy.interface.kymographWidget(path)
+        self._kymWidget = sanpy.interface.kymographWidget(ba)
         print('  created')
 
         # does not work

@@ -33,7 +33,7 @@ class detectionParams(sanpyPlugin):
             baDetectionDict = self.ba.getDetectionDict()  # can be None
             if baDetectionDict is not None:
                 _currentDetection = baDetectionDict['detectionName']
-                _detectionDict = self.getSanPyApp().getDetectionClass().getMasterDict(_detectionName)    
+                _detectionDict = self.getSanPyApp().getDetectionClass().getMasterDict(_currentDetection)    
 
         if _detectionDict is None and self.getSanPyApp() is not None:
             # get the list

@@ -36,19 +36,19 @@ class bAbfText:
         self.tifHeader = None
 
         if theDict is not None:
-            print('bAbfText() from dict')
+            logger.info('bAbfText() from dict')
             self.sweepX = theDict['sweepX']
             self.sweepY = theDict['sweepY']
         elif path.endswith('.tif'):
             self.sweepX, self.sweepY, self.tif, self.tifNorm = \
                                 self._abfFromLineScanTif(path)
-            self.tifHeader = self._loadLineScanHeader(path)
+            #self.tifHeader = self._loadLineScanHeader(path)
 
             #logger.info(f'tif params: {np.min(self.tif)} {np.max(self.tif)} {self.tif.shape} {self.tif.dtype}')
         else:
-            print('bAbfText() from path', path)
+            logger.info('bAbfText() from path: {path}')
             if not os.path.isfile(path):
-                print('ERROR: Did not find file:', path)
+                logger.error('Did not find file: {path}')
                 return
 
             tmpNumPy = np.loadtxt(path, skiprows=1, delimiter=',')
@@ -59,6 +59,8 @@ class bAbfText:
         # linescan is like
         # 'secondsPerLine': 0.0042494285714285715,
         # 1 / secondsPerLine = 235.32
+        # 20220926, if this is '1' second, detection will fail
+        #  because self.dataPointsPerMs goes to 0
         secondsPerSample = self.sweepX[1] - self.sweepX[0]
         samplesPerSecond = 1 / secondsPerSample
         self.dataRate = samplesPerSecond #235 #10000 # samples per second
@@ -72,15 +74,16 @@ class bAbfText:
         self.sweepUnitsX = 'todo: fix'
         self.sweepUnitsY = 'todo: fix'
 
-        self.myRectRoi = None
+        #self.myRectRoi = None
         self.myRectRoiBackground = None
-        self.minLineScan = None
+        #self.minLineScan = None
 
-        defaultRect = self.defaultTifRoi_background()  # for kymograph
-        self.updateTifRoi_background(defaultRect)
+        # done in _abfFromLineScanTif
+        # defaultRect = self.defaultTifRoi_background()  # for kymograph
+        # self.updateTifRoi_background(defaultRect)
 
-        defaultRect = self.defaultTifRoi()  # for kymograph
-        self.updateTifRoi(defaultRect)
+        # defaultRect = self.defaultTifRoi()  # for kymograph
+        # self.updateTifRoi(defaultRect)
 
         #
         # print results
@@ -199,17 +202,22 @@ class bAbfText:
         right = tif.shape[1]  # stopSec
         bottom = 0
         if theRect is not None:
-            left = theRect[0]
+            #left = theRect[0]
             top = theRect[1]
-            right = theRect[2]
+            #right = theRect[2]
             bottom = theRect[3]
 
         # number of pixels in subset of line scan
         numPixels = top - bottom + 1
 
-        theBackground = self.updateTifRoi_background()
+        #theBackground = self.updateTifRoi_background()
 
         # logger.warning(f'I turned off background subtract .. placement of background is sometimes bad')
+
+        _secondsPerLine = self.tifHeader['secondsPerLine']
+        if _secondsPerLine is None:
+            _secondsPerLine = 0.001  # so we get 1 pnt per ms
+            logger.warning(f'No header, secondsPerLine is None. Using fake _secondsPerLine:{_secondsPerLine}')
 
         # retains shape of entire tif
         yLineScanSum = [np.nan] * tif.shape[1]
@@ -218,12 +226,14 @@ class bAbfText:
             # sum each column and background subtract
 
             # always assign time
-            if self.tifHeader['secondsPerLine'] is None:
-                # no units on kymograph
-                _fakeSecondsPerLine = 1
-                xLineScanSum[i] = firstFrameSeconds + (_fakeSecondsPerLine * i)
-            else:
-                xLineScanSum[i] = firstFrameSeconds + (self.tifHeader['secondsPerLine'] * i)
+            xLineScanSum[i] = firstFrameSeconds + (_secondsPerLine * i)
+            # if self.tifHeader['secondsPerLine'] is None:
+            #     # no units on kymograph
+            #     _fakeSecondsPerLine = 0.001
+            #     #logger.error(f'No header, secondsPerLine is None. Using _fakeSecondsPerLine:{_fakeSecondsPerLine}')
+            #     xLineScanSum[i] = firstFrameSeconds + (_fakeSecondsPerLine * i)
+            # else:
+            #     xLineScanSum[i] = firstFrameSeconds + (self.tifHeader['secondsPerLine'] * i)
 
             if i<left or i>right:
                 continue
@@ -250,8 +260,11 @@ class bAbfText:
 
         # derive simplified f/f0 by dividing by min
         self.minLineScan = np.nanmin(yLineScanSum)
-        yLineScanSum /= self.minLineScan
+        
+        # 20221003, do not do this, ysweep will be sum/pnts
+        # yLineScanSum /= self.minLineScan
 
+        logger.info('updating sweepX and sweepY with new rect ROI')
         self.sweepX = xLineScanSum
         self.sweepY = yLineScanSum
 
@@ -296,6 +309,7 @@ class bAbfText:
         #                self.tifHeader['totalSeconds'] / self.tifHeader['shape'][1]
         #tifHeader['abfPath'] = abfFile
 
+        # updateTifRoi sets sweepX and seepY
         defaultRect = self.defaultTifRoi()
         self.updateTifRoi(defaultRect)
 
@@ -323,14 +337,14 @@ class bAbfText:
 
         #print('bAbfText xLineScanSum:', xLineScanSum.shape)
         #print('bAbfText yLineScanSum:', yLineScanSum.shape)
-
+        
         return self.sweepX, self.sweepY, tif, tifNorm
 
     def _loadLineScanHeader(self, path):
-        """
-        path: full path to tif
+        """Load scale from .txt file saved by olympus export.
 
-        we will load and parse coresponding .txt file
+        Args:
+            path: full path to tif
 
         returns dict:
             numPixels:
@@ -344,8 +358,12 @@ class bAbfText:
                 'numLines': self.tif.shape[1],
                 'totalSeconds': None,
                 'shape': self.tif.shape,
-                'secondsPerLine': None,
-                'linesPerSecond': None,  # 1/secondsPerLine
+                'secondsPerLine': 0.001,
+                #'linesPerSecond': None,  # 1/secondsPerLine
+
+                'numPixels': self.tif.shape[0],
+                'umLength': None,
+                'umPerPixel': 1,
             }
             return defaultHeader
         
@@ -360,7 +378,7 @@ class bAbfText:
 
         if not os.path.isfile(txtFile):
             logger.warning(f'Did not find file: {txtFile}')
-            logger.warning(f'The Kymograph will have no scale.')
+            logger.warning(f'  The Kymograph will have no scale.')
             return theRet
 
         # to open export .txt file for Olympus FV3000
@@ -407,7 +425,7 @@ class bAbfText:
 
         #theRet['shape'] = self.tif.shape
         theRet['secondsPerLine'] = theRet['totalSeconds'] / theRet['shape'][1]
-        theRet['linesPerSecond'] = 1 / theRet['secondsPerLine']
+        #theRet['linesPerSecond'] = 1 / theRet['secondsPerLine']
         #
         return theRet
 

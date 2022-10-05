@@ -26,7 +26,8 @@ class kymographAnalysis():
     def __init__(self, path, data=None, autoLoad=True):
         
         self._path = path
-        
+        # path to tif file
+
         # image must be shape[0] is time/big, shape[1] is space/small
         # opposite from my load abf from kymograph!!!
         if data is None:
@@ -42,7 +43,7 @@ class kymographAnalysis():
 
         # load the header from Olympus exported .txt file
         self._umPerPixel = 1
-        self._secondsPerLine = 1
+        self._secondsPerLine = 1  #0.001  # make ms per bin = 1
         
         _olympusHeader = _loadLineScanHeader(path)
         #pprint(_olympusHeader)
@@ -319,7 +320,9 @@ class kymographAnalysis():
         """
         savePath, saveFile = os.path.split(self._path)
         saveFileBase, ext = os.path.splitext(saveFile)
-        saveFile = saveFileBase + '-analysis.csv'
+
+        saveFile = saveFileBase + '-analysis2.csv'
+
         #print('    savePath:', savePath)
         #print('    saveFileBase:', saveFileBase)
         #print('    saveFile:', saveFile)
@@ -414,6 +417,26 @@ class kymographAnalysis():
         logger.info(f'  _pos: {self._pos}')
         logger.info(f'  _size: {self._size}')
         
+    def loadPeaks(self):
+        """
+        Load foot/peaks from manual detection.
+        """
+        #self._fpAnalysis = None  # Pandas dataframe with xFoot, yFoot, xPeak, yPeak
+        
+        fpFilePath = self._path.replace('.tif', '-fpAnalysis2.csv')
+        fpFileName = os.path.split(fpFilePath)[1]
+        if not os.path.isfile(fpFilePath):
+            logger.error(f'Did not find manual peak file:{fpFileName}')
+            print('  fpFilePath:', fpFilePath)
+            return
+        
+        logger.info(f'loading fpFilePath:{fpFileName}')
+        print('  fpFilePath:', fpFilePath)
+
+        _fpAnalysis = pd.read_csv(fpFilePath)
+
+        return _fpAnalysis
+
     def load(self):
         """Load <file>-analysis.csv
         
@@ -444,12 +467,18 @@ class kymographAnalysis():
             'rightpnt': [],
         }
         '''
-        self._results['time_ms'] = df['time_ms']
-        self._results['sumintensity'] = df['sumintensity']
-        self._results['diameter_um'] = df['diameter_um']
-        self._results['left_pnt'] = df['left_pnt']
-        self._results['right_pnt'] = df['right_pnt']
-        
+        try:
+            self._results['time_ms'] = df['time_ms'].values
+            self._results['sumintensity'] = df['sumintensity'].values
+            self._results['diameter_um'] = df['diameter_um'].values
+            self._results['left_pnt'] = df['left_pnt'].values
+            self._results['right_pnt'] = df['right_pnt'].values
+            self._results['diameter_pixels'] = df['diameter_pixels'].values
+        except (KeyError) as e:
+            # if we did not find a scale in rosie rosetta
+            logger.error(f'DID NOT FIND KEY {e}')
+            #self._results = None
+
     def analyze(self):
         startSeconds = time.time()
         
@@ -503,22 +532,28 @@ class kymographAnalysis():
 
         self._results['time_ms'] = self.getTimeArray().tolist()
         self._results['sumintensity'] = sumIntensity
-        self._results['diameter_um'] = np.multiply(diameter_idx_list, self._umPerPixel)
+        
+        # filter
+        diameter_um = np.multiply(diameter_idx_list, self._umPerPixel)
+        kernelSize = 5
+        diameter_um = scipy.signal.medfilt(diameter_um, kernelSize)
+        self._results['diameter_um'] = diameter_um
+        
         self._results['left_pnt'] = left_idx_list
         self._results['right_pnt'] = right_idx_list
 
         # smooth
-        kernelSize = 5
-        diameter_um = self._results['diameter_um']
+        kernelSize = 3
+        logger.info(f'put kernel size at user option, kernelSize: {kernelSize}')
+        #diameter_um = self._results['diameter_um']
+        #diameter_um_f = scipy.signal.medfilt(diameter_um, kernelSize)
+
         sumintensity = self._results['sumintensity']
-        logger.info(f'Smoothing with scipy.signal.medfilt')
-        logger.info(f'  len(diameter_um):{len(diameter_um)} kernelSize:{kernelSize}')
-        diameter_um_f = scipy.signal.medfilt(diameter_um, kernelSize)
-        logger.info(f'  len(sumintensity):{len(sumintensity)} kernelSize:{kernelSize}')
         sumintensity_f = scipy.signal.medfilt(sumintensity, kernelSize)
+
         #
-        self._results['minDiam'] = np.nanmin(diameter_um_f)
-        self._results['maxDiam'] = np.nanmax(diameter_um_f)
+        self._results['minDiam'] = np.nanmin(diameter_um)
+        self._results['maxDiam'] = np.nanmax(diameter_um)
         self._results['diamChange'] = self._results['maxDiam'] - self._results['minDiam']
         #
         self._results['minSum'] = np.nanmin(sumintensity_f)

@@ -5,6 +5,7 @@ from email.headerregistry import HeaderRegistry
 import os, sys, math
 #import inspect # to print call stack
 from functools import partial
+from tracemalloc import start
 #import this
 
 import numpy as np
@@ -16,7 +17,7 @@ from pyqtgraph.exporters import ImageExporter
 import sanpy
 import sanpy.bDetection
 
-import sanpy.interface.bKymograph
+import sanpy.interface.kymographWidget
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -173,7 +174,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         #self.myImageItem = None  # kymographImage
         #self.myLineRoi = None
 
-        self.buildUI()
+        self._buildUI()
 
         windowOptions = self.getMainWindowOptions()
         showDvDt = True
@@ -374,7 +375,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         """
         Get the current range of X-Axis
         """
-        rect = self.derivPlot.viewRect() # get xaxis
+        rect = self.vmPlot.viewRect() # get xaxis
         xMin = rect.left()
         xMax = rect.right()
         return xMin, xMax
@@ -384,16 +385,26 @@ class bDetectionWidget(QtWidgets.QWidget):
         Shared by (setAxisFull, setAxis)
         """
         # make sure start/stop are in correct order and swap if necc.
-        if stop<start:
-            tmp = start
-            start = stop
-            stop = tmp
+        if start is not None and stop is not None:
+            if stop<start:
+                tmp = start
+                start = stop
+                stop = tmp
 
-        #logger.info(f'start:{start} stop:{stop} set_xyBoth:{set_xyBoth} whichPlot:{whichPlot}')
+        logger.info(f'start:{start} stop:{stop} set_xyBoth:{set_xyBoth} whichPlot:{whichPlot}')
 
         padding = 0
         if set_xyBoth == 'xAxis':
-            self.derivPlot.setXRange(start, stop, padding=padding) # linked to Vm
+
+            if start is None or np.isnan(stop) or stop is None or np.isnan(stop):
+                start = 0
+                stop = self.ba.recordingDur
+
+            #self.derivPlot.setXRange(start, stop, padding=padding) # linked to Vm
+            self.vmPlot.setXRange(start, stop, padding=padding) # linked to Vm
+
+            self.myKymWidget.kymographPlot.setXRange(start, stop, padding=padding)  # row major is different
+    
         if set_xyBoth == 'yAxis':
             if whichPlot in ['dvdt', 'dvdtFiltered']:
                 self.derivPlot.setYRange(start, stop) # linked to Vm
@@ -427,8 +438,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlotGlobal.autoRange(items=[self.vmLinesFiltered2])  # always full view
         self.linearRegionItem2.setRegion([startSec, stopSec])
 
-        padding = 0
-        self.derivPlot.setXRange(startSec, stopSec, padding=padding) # linked to Vm
+        #padding = 0
+        #self.derivPlot.setXRange(startSec, stopSec, padding=padding) # linked to Vm
+        #self.myKymWidget.kymographPlot.autoRange()  # row major is different
 
     def setAxisFull_y(self, thisAxis):
         """
@@ -460,12 +472,15 @@ class bDetectionWidget(QtWidgets.QWidget):
         if self.ba is None:
             return
 
-        self.derivPlot.autoRange()
-        self.dacPlot.autoRange()
-
         # 20220115
         #self.vmPlot.autoRange(items=[self.vmLinesFiltered])
-        self.vmPlot.enableAutoRange()
+        #self.vmPlot.enableAutoRange()
+        self.vmPlot.autoRange()  # 20221003
+
+        # these are linked to vmPlot
+        #self.derivPlot.autoRange()
+        #self.dacPlot.autoRange()
+
 
         self.vmPlotGlobal.autoRange(items=[self.vmLinesFiltered2])  # we never zoom this
 
@@ -474,6 +489,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # rectangle region on vmPlotGlobal
         self.linearRegionItem2.setRegion([0, self.ba.recordingDur])
+
+        # kymograph
+        #self.myKymWidget.kymographPlot.setXRange(start, stop, padding=padding)  # row major is different
+        self.myKymWidget.kymographPlot.autoRange()  # row major is different
 
         #
         # update detection toolbar
@@ -499,6 +518,8 @@ class bDetectionWidget(QtWidgets.QWidget):
             set_xyBoth: (xAxis, yAxis, Both)
             whichPlot: (dvdt, vm)
         """
+        logger.info(f'start:{start} stop:{stop} set_xyBoth:{set_xyBoth} whichPlot:{whichPlot}')
+        
         start, stop = self._setAxis(start, stop, set_xyBoth=set_xyBoth, whichPlot=whichPlot)
         #print('bDetectionWidget.setAxis()', start, stop)
         if set_xyBoth == 'xAxis':
@@ -676,14 +697,17 @@ class bDetectionWidget(QtWidgets.QWidget):
             if plotIsOn and plot['humanName'] == 'Half-Widths':
                 spikeDictionaries = self.ba.getSpikeDictionaries(sweepNumber=self.sweepNumber)
                 sweepX = self.ba.sweepX
-                filteredVm = self.ba.filteredVm
+                sweepY = self.ba.sweepY
+                #filteredVm = self.ba.filteredVm
                 #filteredVm = filteredVm[:,0]
-                xPlot, yPlot = sanpy.getHalfWidthLines(sweepX, filteredVm, spikeDictionaries)
+                xPlot, yPlot = sanpy.getHalfWidthLines(sweepX, sweepY, spikeDictionaries)
             elif plotIsOn and plot['humanName'] == 'Epoch Lines':
                 _epochTable = self.ba.getEpochTable(self.sweepNumber)
                 if _epochTable is not None:
                     # happens when file is tif kymograph
-                    xPlot, yPlot =  _epochTable.getEpochLines(yMin=np.nanmin(self.ba.filteredVm), yMax=np.nanmax(self.ba.filteredVm))
+                    sweepY = self.ba.sweepY
+                    #filteredVm = self.ba.filteredVm
+                    xPlot, yPlot =  _epochTable.getEpochLines(yMin=np.nanmin(sweepY), yMax=np.nanmax(sweepY))
             elif plotIsOn and plot['humanName'] == 'EDD':
                 xPlot, yPlot = self.getEDD()
             elif plotIsOn and plot['humanName'] == 'EDD Rate':
@@ -1072,7 +1096,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._replot(startSec=None, stopSec=None, userUpdate=True)
         self.signalDetect.emit(self.ba)  # underlying _abf has new rect
 
-    def buildUI(self):
+    def _buildUI(self):
         # left is toolbar, right is PYQtGraph (self.view)
         self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
         self.myHBoxLayout_detect.setAlignment(QtCore.Qt.AlignTop)
@@ -1093,7 +1117,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # kymograph, we need a vboxlayout to hollder (kym widget, self.view)
         vBoxLayoutForPlot = QtWidgets.QVBoxLayout(self)
 
-        self.myKymWidget = sanpy.interface.bKymograph.kymWidget()
+        self.myKymWidget = sanpy.interface.kymographWidget()
         self.myKymWidget.signalKymographRoiChanged.connect(self.slot_kymographChanged)
         self.myKymWidget.setVisible(False)
         vBoxLayoutForPlot.addWidget(self.myKymWidget)
@@ -1152,6 +1176,11 @@ class bDetectionWidget(QtWidgets.QWidget):
         #rowSpan = 1
         #self.clipPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
 
+        # link x-axis
+        #self.derivPlot.setXLink(self.vmPlot)
+        #self.dacPlot.setXLink(self.vmPlot)
+        #self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
+
         #
         # mouse crosshair
         #crosshairPlots = ['derivPlot', 'dacPlot', 'vmPlot', 'clipPlot']
@@ -1207,13 +1236,19 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot.setMenuEnabled(False)
         #self.clipPlot.setMenuEnabled(False)
 
+        # 20221003 just link everything to vmPlot
         # link x-axis of deriv and vm
+        # self.derivPlot.setXLink(self.vmPlot)
+        # self.derivPlot.setXLink(self.dacPlot)
+        # self.dacPlot.setXLink(self.derivPlot)
+        # self.dacPlot.setXLink(self.vmPlot)
+        # self.vmPlot.setXLink(self.derivPlot)
+        # self.vmPlot.setXLink(self.dacPlot)
         self.derivPlot.setXLink(self.vmPlot)
-        self.derivPlot.setXLink(self.dacPlot)
-        self.dacPlot.setXLink(self.derivPlot)
         self.dacPlot.setXLink(self.vmPlot)
-        self.vmPlot.setXLink(self.derivPlot)
-        self.vmPlot.setXLink(self.dacPlot)
+
+        #self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
+
         #
         #self.kymographPlot.setXLink(self.vmPlot)  # TODO: need to set scale of kymograph x-axis
         #self.kymographPlot.setXLink(self.derivPlot)
@@ -1271,11 +1306,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # axis labels
         # TODO (cudmore) get the units correct, grab from y-axis of abf file
-        self.vmPlotGlobal.getAxis('left').setLabel('mV')
-        self.derivPlot.getAxis('left').setLabel('Derivative')
-        self.dacPlot.getAxis('left').setLabel('DAC')
-        self.vmPlot.getAxis('left').setLabel('mV')
-        self.vmPlot.getAxis('bottom').setLabel('Seconds')
+        # 20221003 was this, on removal different y-axis label withs (x axis aligns correctly) ???
+        # self.vmPlotGlobal.getAxis('left').setLabel('mV')
+        # self.derivPlot.getAxis('left').setLabel('Derivative')
+        # self.dacPlot.getAxis('left').setLabel('DAC')
+        # self.vmPlot.getAxis('left').setLabel('mV')
+        # self.vmPlot.getAxis('bottom').setLabel('Seconds')
 
         self.replot()
 
@@ -1452,7 +1488,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             startSec = tableRowDict['Start(s)']
             stopSec = tableRowDict['Stop(s)']
 
-        if startSec=='' or stopSec=='':
+        if startSec=='' or stopSec=='' or np.isnan(startSec) or np.isnan(stopSec):
             startSec = 0
             stopSec = self.ba.recordingDur
 
@@ -1481,8 +1517,11 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot.getAxis('left').setLabel(yLabel)
         self.vmPlot.getAxis('bottom').setLabel('Seconds')
 
-        self.myKymWidget.slot_switchFile(ba)
+        self.myKymWidget.slot_switchFile(ba, startSec, stopSec)
 
+        # reconnect relink x-axis
+        #self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
+ 
         return True
 
     def slot_dataChanged(self, columnName, value, rowDict):
@@ -1495,6 +1534,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         #self.refreshClips(None, None)
 
     def _replot(self, startSec, stopSec, userUpdate=False):
+        
+        logger.info(f'startSec:{startSec} stopSec:{stopSec} userUpdate:{userUpdate}')
+        
+        if startSec is None or stopSec is None:
+            startSec, stopSec = self.getXRange()
+            
         #remove vm/dvdt/clip items (even when abf file is corrupt)
         #if self.dvdtLines is not None:
         #    self.derivPlot.removeItem(self.dvdtLines)
@@ -1519,8 +1564,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         sweepX = self.ba.sweepX
         filteredDeriv = self.ba.filteredDeriv
         sweepC = self.ba.sweepC
-        filteredVm = self.ba.filteredVm
-
+        #filteredVm = self.ba.filteredVm
+        sweepY = self.ba.sweepY
+        
         #sweepC = self.ba._sweepC[:,3]
 
         # debug
@@ -1543,13 +1589,13 @@ class bDetectionWidget(QtWidgets.QWidget):
                             columnOrder=True)
         self.dacPlot.addItem(self.dacLines)
 
-        self.vmLinesFiltered = MultiLine(sweepX, filteredVm,
+        self.vmLinesFiltered = MultiLine(sweepX, sweepY,
                             self, forcePenColor=None, type='vmFiltered',
                             columnOrder=True)
         self.vmPlot.addItem(self.vmLinesFiltered)
 
         # can't add a multi line to 2 different plots???
-        self.vmLinesFiltered2 = MultiLine(sweepX, filteredVm,
+        self.vmLinesFiltered2 = MultiLine(sweepX, sweepY,
                             self, forcePenColor='b', type='vmFiltered',
                             columnOrder=True)
         self.vmPlotGlobal.addItem(self.vmLinesFiltered2)
@@ -1659,8 +1705,11 @@ class bDetectionWidget(QtWidgets.QWidget):
         # set full axis
         # setAxisFull was causing start/stop to get over-written
         #self.setAxisFull()
-        self.setAxis_OnFileChange(startSec, stopSec)
+        # 20221003 was this
+        #self.setAxis_OnFileChange(startSec, stopSec)
+        self.setAxisFull()
         #self.detectToolbarWidget.on_start_stop()
+        self._setAxis(start=startSec, stop=stopSec)
 
         #
         # critical, replot() is inherited
@@ -2118,6 +2167,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             self.detectionWidget.detect(detectionPreset, detectionType, dvdtThreshold, mvThreshold, startSec, stopSec)
 
         elif name =='Detect mV':
+            detectionPreset = self.detectionPresets.currentText()
+
             dvdtThreshold = self.dvdtThreshold.value()
             mvThreshold = self.mvThreshold.value()
             #print('    mvThreshold:', mvThreshold)

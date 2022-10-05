@@ -966,10 +966,13 @@ class analysisDir():
                 #print(kRect)
                 #sys.exit(1)
 
-                self._df.loc[rowIdx, 'kLeft'] = kRect[0]
-                self._df.loc[rowIdx, 'kTop'] = kRect[1]
-                self._df.loc[rowIdx, 'kRight'] = kRect[2]
-                self._df.loc[rowIdx, 'kBottom'] = kRect[3]
+                if kRect is None:
+                    logger.error(f'Got None kymograph rect')
+                else:
+                    self._df.loc[rowIdx, 'kLeft'] = kRect[0]
+                    self._df.loc[rowIdx, 'kTop'] = kRect[1]
+                    self._df.loc[rowIdx, 'kRight'] = kRect[2]
+                    self._df.loc[rowIdx, 'kBottom'] = kRect[3]
                 #
                 # TODO: remove start of ba._path that corresponds to our current folder path
                 # will allow our save db to be modular
