@@ -43,7 +43,7 @@ class kymographAnalysis():
 
         # load the header from Olympus exported .txt file
         self._umPerPixel = 1
-        self._secondsPerLine = 1  #0.001  # make ms per bin = 1
+        self._secondsPerLine = 1 #0.001  #0.001  # make ms per bin = 1
         
         _olympusHeader = _loadLineScanHeader(path)
         #pprint(_olympusHeader)

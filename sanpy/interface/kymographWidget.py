@@ -1,6 +1,8 @@
 """
 Widget to act as the interface for kymographPlugin
 
+Shows line scans and diameters
+
 I am keeping it seperate because it can be used standalone.
 """
 
@@ -26,7 +28,7 @@ from sanpy import kymographAnalysis
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-class kymographWidget(QtWidgets.QWidget):
+class kymographWidget2(QtWidgets.QWidget):
 
     def __init__(self, path : str, parent = None):
         logger.info('')
