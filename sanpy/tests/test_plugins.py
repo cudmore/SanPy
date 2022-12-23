@@ -79,12 +79,12 @@ def test_app(sanpyAppObject):
     assert _dict2['File'] == '19114000.abf'
 
     # simulate detect dv/dt
-    print('qqqq dv/dt')
-    sanpyAppObject.myDetectionWidget.detectToolbarWidget.on_button_click('Detect dV/dt')
+    # print('qqqq dv/dt')
+    # sanpyAppObject.myDetectionWidget.detectToolbarWidget.on_button_click('Detect dV/dt')
 
-def _slot_selectRow(rowIdx : int, rowDict : dict, selectAgain : bool):
-    logger.info(f'{rowIdx} {rowDict}')
-    assert rowIdx == _selectedRow
+# def _slot_selectRow(rowIdx : int, rowDict : dict, selectAgain : bool):
+#     logger.info(f'{rowIdx} {rowDict}')
+#     assert rowIdx == _selectedRow
 
 def test_init(pluginsObject, qtbot):
     assert pluginsObject is not None
@@ -97,7 +97,7 @@ def test_init(pluginsObject, qtbot):
     
     # table view
     _tableView = sanpy.interface.bTableView(_model)
-    _tableView.signalSelectRow.connect(_slot_selectRow)
+    #_tableView.signalSelectRow.connect(_slot_selectRow)
     _tableView._onLeftClick(_selectedRow)
 
     _pluginList = pluginsObject.pluginList()
@@ -118,10 +118,9 @@ def test_init(pluginsObject, qtbot):
     # ba.spikeDetect(dDict)
 
     # github is running out of memory
-    _pluginList = [_pluginList[0]]
-    for _pluginName in _pluginList:
-        logger.info(f'====== running plugin _pluginName: {_pluginName}')
-        _newPlugin = pluginsObject.runPlugin(_pluginName, ba, show=False)
-        assert _newPlugin is not None
-        assert _newPlugin.getInitError() == False
-        qtbot.addWidget(_newPlugin)
+    # for _pluginName in _pluginList:
+    #     logger.info(f'====== running plugin _pluginName: {_pluginName}')
+    #     _newPlugin = pluginsObject.runPlugin(_pluginName, ba, show=False)
+    #     assert _newPlugin is not None
+    #     assert _newPlugin.getInitError() == False
+    #     qtbot.addWidget(_newPlugin)
