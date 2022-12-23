@@ -1,3 +1,25 @@
+## Development workflow
+
+### Github workflow can run out of memory
+
+```
+Error: Process completed with exit code 134.
+```
+
+### flak8
+
+### PyTest
+
+### xxx
+
+### tox
+
+install
+
+```
+python -m pip install --user tox
+```
+
 ## Writing code 202212
 
  - Activate drag/drop of a folder from the finder

@@ -117,6 +117,8 @@ def test_init(pluginsObject, qtbot):
     dDict = bd.getDetectionDict('SA Node')
     ba.spikeDetect(dDict)
 
+    # github is running out of memory
+    _pluginList = _pluginList[0]
     for _pluginName in _pluginList:
         logger.info(f'====== running plugin _pluginName: {_pluginName}')
         _newPlugin = pluginsObject.runPlugin(_pluginName, ba, show=False)
