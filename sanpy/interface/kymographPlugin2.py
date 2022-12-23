@@ -152,7 +152,7 @@ class kymographPlugin2(QtWidgets.QWidget):
         self._kymWidgetMain.slot_switchFile(ba=self._ba)
 
         path = self._ba.getFilePath()
-        self._kymographAnalysis = kymographAnalysis(path)
+        self._kymographAnalysis = sanpy.kymAnalysis(path)
 
         self.refreshSumLinePlot()
         self.refreshDiameterPlot()
@@ -523,7 +523,7 @@ class kymographPlugin2(QtWidgets.QWidget):
 
         logger.info('')
         
-        self._kymographAnalysis = kymographAnalysis(path)
+        self._kymographAnalysis = sanpy.kymAnalysis(path)
         
         if 0:
             # clear the image from the panel

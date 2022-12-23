@@ -1,11 +1,15 @@
 import os
 
 import pandas as pd
+import numpy as np
 
 import sanpy
 
 import sanpy.interface.plugins.stimGen2
 from sanpy.interface.plugins.stimGen2 import readFileParams, buildStimDict
+
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 """
 bAnalysis class that loads a stim file.

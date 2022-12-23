@@ -4,7 +4,6 @@
 #from . import *
 
 from .bDetectionWidget import bDetectionWidget
-from .bScatterPlotWidget import bScatterPlotWidget
 from .bScatterPlotWidget2 import bScatterPlotMainWindow
 from .bExportWidget import bExportWidget
 from .bFileTable import *

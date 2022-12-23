@@ -1,3 +1,4 @@
+import os
 
 class fileLoader_base:
     handleExtension : str = 'None'  # define in derived
@@ -46,7 +47,7 @@ class fileLoader_base:
         """Get a parameter, raise key error if not found.
         """
         if key not in self._paramDict.keys():
-            errStr = f'_getParam did not find key: "{key}", possible values are {self._paramDict.keys()}')
+            errStr = f'_getParam did not find key: "{key}", possible values are {self._paramDict.keys()}'
             raise(KeyError(errStr))
             return
         else:
@@ -56,7 +57,7 @@ class fileLoader_base:
         """Set a parameter, raise key error if not found.
         """
         if key not in self._paramDict.keys():
-            errStr = f'_setParam did not find key: "{key}", possible values are {self._paramDict.keys()}')
+            errStr = f'_setParam did not find key: "{key}", possible values are {self._paramDict.keys()}'
             raise(KeyError(errStr))
             return
         else:

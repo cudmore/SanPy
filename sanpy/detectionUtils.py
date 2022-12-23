@@ -1,6 +1,3 @@
-
-"""
-"""
 from pprint import pprint
 
 from typing import List, Union  # Callable, Iterator, Optional
@@ -505,7 +502,7 @@ def getEarlyDiastolicDurationRate(y, spikeTimes : List[int],
 				# make an error if edd rate is too low
 				if mLinear <= lowEddRate_warning:
 					errorType = 'Fit EDD'
-					errorStr = f'Early diastolic duration rate fit - Too low {round(mLinear,3)}<={lowestEddRate}'
+					errorStr = f'Early diastolic duration rate fit - Too low {round(mLinear,3)}<={lowEddRate_warning}'
 					eDict = getErrorDict(idx, spikeTime, errorType, errorStr) # spikeTime is in pnts
 					errorList[idx].append(eDict)
 					if verbose:

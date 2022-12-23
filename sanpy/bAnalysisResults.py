@@ -734,10 +734,11 @@ class analysisResult:
 
 
 def test():
-    for k,v in analysisResultDict.items():
+    ar = analysisResultList()
+
+    for k,v in ar.items():
         print(k,v)
 
-    ar = analysisResults()
 
     key = 'analysisVersion'
     print(f'key:{key} value:"{ar[key]}" type:{type(ar[key])}')
@@ -747,7 +748,7 @@ def test():
 
 def test2():
     # load abf
-    path = '/home/cudmore/Sites/SanPy/data/19114000.abf'
+    path = 'data/19114000.abf'
     ba = sanpy.bAnalysis(path)
 
     # detect

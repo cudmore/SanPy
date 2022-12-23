@@ -299,10 +299,6 @@ class baseUserAnalysis:
         Try not to re-use existing keys
         """
 
-
-def test1():
-    findUserAnalysis()
-
 if __name__ == '__main__':
     #test1()
     getObjectList()
