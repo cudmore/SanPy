@@ -28,9 +28,9 @@ setup(
 		'requests', #  to load from the cloud (for now github)
 		'tables',  # this fails on arm64, neeed 'conda install pytables'
         'scikit-image',
-        'pyqtgraph',
+        'pyqtgraph==0.12.4',
         'qdarkstyle',
-        'PyQt5',  # this fail on arm64, need 'conda install pyqt'
+        'PyQt5==5.15.6',  # this fail on arm64, need 'conda install pyqt'
         'h5py',
     ],
     # use pip install .[gui]
