@@ -198,10 +198,9 @@ class spikeClips(sanpyPlugin):
         replot = False
         super().slot_switchFile(rowDict, ba, replot=replot)
 
-        if ba is not None:
-            #self.clipWidth_ms = self.ba.detectionClass['spikeClipWidth_ms']
-            self.preClipWidth_ms = self.ba.detectionClass['preSpikeClipWidth_ms']
-            self.postClipWidth_ms = self.ba.detectionClass['postSpikeClipWidth_ms']
+        if self.ba is not None and self.ba.isAnalyzed():
+            self.preClipWidth_ms = self.ba.getDetectionDict()['preSpikeClipWidth_ms']
+            self.postClipWidth_ms = self.ba.getDetectionDict()['postSpikeClipWidth_ms']
 
         self.replot()
 

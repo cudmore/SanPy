@@ -212,7 +212,9 @@ class bTableView(QtWidgets.QTableView):
         return rowDict
 
     def onLeftClick(self, item):
-        """Hanlde user left-click on a row. Keep track of lastSelected row to differentiate between
+        """Hanlde user left-click on a row.
+        
+        Keep track of lastSelected row to differentiate between
         switch-file and click again.
         """
         row = item.row()
