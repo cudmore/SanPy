@@ -1758,7 +1758,8 @@ class myImageExporter(ImageExporter):
         myWidth = int(self.params['height'] * ar)
         self.params.param('width').setValue(myWidth, blockSignal=self.widthChanged)
 
-class MultiLine(pg.QtGui.QGraphicsPathItem):
+#class MultiLine(pg.QtGui.QGraphicsPathItem):
+class MultiLine(QtWidgets.QGraphicsPathItem):
     """
     This will display a time-series whole-cell recording efficiently
     It does this by converting the array of points to a QPath

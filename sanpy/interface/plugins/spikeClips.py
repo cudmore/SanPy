@@ -5,10 +5,10 @@ from functools import partial
 import numpy as np
 import pandas as pd
 
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets
 import pyqtgraph as pg
 
-from matplotlib.backends import backend_qt5agg
+#from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -548,7 +548,8 @@ class spikeClips(sanpyPlugin):
             self.spikeListMultiLine = MultiLine(x, y, self, width=3, allowXAxisDrag=False, forcePenColor='c', type='spike list selection')
             self.clipPlot.addItem(self.spikeListMultiLine)
 
-class MultiLine(pg.QtGui.QGraphicsPathItem):
+#class MultiLine(pg.QtGui.QGraphicsPathItem):
+class MultiLine(QtWidgets.QGraphicsPathItem):
     """
     This will display a time-series whole-cell recording efficiently
     It does this by converting the array of points to a QPath
