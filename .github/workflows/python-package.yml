@@ -42,4 +42,4 @@ jobs:
     - name: Test with pytest
       run: |
         unittest
-        pytest
+        pytest sanpy
