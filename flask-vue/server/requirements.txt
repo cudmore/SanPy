@@ -1,6 +1,0 @@
-# install sanpy
--e ../../.
-
-requests
-flask
-Flask-Cors
