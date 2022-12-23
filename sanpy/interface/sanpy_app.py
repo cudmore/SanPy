@@ -87,7 +87,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             path (str): Full path to folder with raw file (abf,csv,tif).
         """
 
-        super(SanPyWindow, self).__init__(parent)
+        super().__init__(parent)
 
         self.setAcceptDrops(True)
 
@@ -157,8 +157,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         self.myPlugins = sanpy.interface.bPlugins(sanpyApp=self)
 
-        self._buildMenus()
+        # order matter, _buildMenus uses objects created in _buildUI
         self._buildUI()
+        self._buildMenus()
 
         #self.myExportWidget = None
 
@@ -598,8 +599,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         #
         # a dynamic menu to show open plugins
-        self.windowsMenu = mainMenu.addMenu('&Windows')
-        self.windowsMenu.aboutToShow.connect(self._populateOpenPlugins)
+        # self.windowsMenu = mainMenu.addMenu('&Windows')
+        # self.windowsMenu.aboutToShow.connect(self._populateOpenPlugins)
 
         '''
         # windows menu to toggle scatter plot widget
@@ -645,7 +646,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.viewMenu.addSeparator()
 
         key1 = 'filePanels'
-
         name = 'File Panel'
         checkedMainPanel = self.configDict[key1]['File Panel']
         action = QtWidgets.QAction(name, self, checkable=True)
@@ -716,13 +716,40 @@ class SanPyWindow(QtWidgets.QMainWindow):
         action.triggered.connect(partial(self._viewMenuAction, key1, name))
         self.viewMenu.addAction(action)
 
+        self.viewMenu.addSeparator()
+
+        # show/hide plugin 1/2 dock widgets
+        key1 = 'pluginDocks'
+        name = 'Plugins 1'
+        #checkedMainPanel = self.configDict[key1]['File Panel']
+        _isVisible = self.pluginDock1.isVisible()  # assuming we _buildUI
+        action = QtWidgets.QAction(name, self, checkable=True)
+        action.setChecked(_isVisible)
+        action.triggered.connect(partial(self._viewMenuAction, key1, name))
+        self.viewMenu.addAction(action)
+
+        key1 = 'pluginDocks'
+        name = 'Plugins 2'
+        _isVisible = self.pluginDock2.isVisible()  # assuming we _buildUI
+        action = QtWidgets.QAction(name, self, checkable=True)
+        action.setChecked(_isVisible)
+        action.triggered.connect(partial(self._viewMenuAction, key1, name))
+        self.viewMenu.addAction(action)
+
     def _viewMenuAction(self, key1, name, isChecked):
         """Respond to user selection in view menu.
         """
         logger.info(f'{name} {isChecked}')
-        self.configDict[key1][name] = isChecked
         
+        try:
+            self.configDict[key1][name] = isChecked
+        except (KeyError) as e:
+            pass
+
         if key1 == 'filePanels':
+            self.toggleInterface(name, isChecked)
+
+        elif key1 == 'pluginDocks':
             self.toggleInterface(name, isChecked)
 
         elif key1 == 'rawDataPanels':
@@ -740,6 +767,16 @@ class SanPyWindow(QtWidgets.QMainWindow):
             else:
                 #self._fileListWidget.hide()
                 self.fileDock.hide()
+        elif name == 'Plugins 1':
+            if on:
+                self.pluginDock1.show()
+            else:
+                self.pluginDock1.hide()
+        elif name == 'Plugins 2':
+            if on:
+                self.pluginDock2.show()
+            else:
+                self.pluginDock2.hide()
 
     def _populateOpenPlugins(self):
         self.windowsMenu.clear()
@@ -769,6 +806,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
     '''
 
     def _buildUI(self):
+        """"
+        File List : sanpy.interface.fileListWidget
+        Detection Widget: sanpy.interface.bDetectionWidget
+        """
         self.toggleStyleSheet(buildingInterface=True)
 
         self.statusBar = QtWidgets.QStatusBar()
@@ -795,6 +836,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         # detection widget is persistent
         self.setCentralWidget(self.myDetectionWidget)
+        
+        # TODO: detection widget as a dock
+        #  detection widget has left panel of controls and right panel of plots
+        #  just make left controls a dock widget
+        # self.detectionDock = QtWidgets.QDockWidget('Detection',self)
+        # self.detectionDock.setWidget(self.myDetectionWidget)
+        # self.detectionDock.setFloating(False)
+        # self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.detectionDock)
 
         #
         # list of files
@@ -817,9 +866,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.fileDock.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.fileDock))
         self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.fileDock)
 
+        #
         # 2x docks for plugins
-
-        # xxx
         self.myPluginTab1 = QtWidgets.QTabWidget()
         self.myPluginTab1.setMovable(True)
         self.myPluginTab1.setTabsClosable(True)
@@ -831,17 +879,18 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         #
         # add a number of plugins to QDockWidget 'Plugins 1'
-        # we need to know the recice human name like 'xxx'
-        #detectionPlugin = self.myPlugins.runPlugin('Detection Parameters', ba=None, show=False)
-                
+        # we need to know the recice human name like 'Detection Parameters'
+                        
         #scatterPlugin = self.myPlugins.runPlugin('Plot Scatter', ba=None, show=False)
         #errorSummaryPlugin = self.myPlugins.runPlugin('Error Summary', ba=None, show=False)
         #summaryAnalysisPlugin = self.myPlugins.runPlugin('Summary Analysis', ba=None, show=False)
 
         # on add tab, the QTabWIdget makes a copy !!!
-        detectionPlugin = self.myPlugins.runPlugin('Detection Parameters', ba=None, show=False)
-        if detectionPlugin is not None:
-            self.myPluginTab1.addTab(detectionPlugin, detectionPlugin.myHumanName)
+        _openPlugins = self.configDict['pluginPanels'] # list of plugins to open
+        for _openPlugin in _openPlugins:
+            _oneOpenPlugin = self.myPlugins.runPlugin(_openPlugin, ba=None, show=False)
+            if _oneOpenPlugin is not None:
+                self.myPluginTab1.addTab(_oneOpenPlugin, _oneOpenPlugin.myHumanName)
 
         #clipsPlugin = self.myPlugins.runPlugin('Export Trace', ba=None, show=False)
         #self.myPluginTab1.addTab(clipsPlugin, clipsPlugin.myHumanName)
@@ -850,12 +899,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #self.myPluginTab1.addTab(errorSummaryPlugin, errorSummaryPlugin.myHumanName)
         #self.myPluginTab1.addTab(summaryAnalysisPlugin, summaryAnalysisPlugin.myHumanName)
 
-        #
-        #detectionPlugin = self.myPlugins.runPlugin('Detection Parameters', ba=None, show=False)
-        #self.myPluginTab1.addTab(detectionPlugin, 'Detection')
-
         self.pluginDock1 = QtWidgets.QDockWidget('Plugins 1',self)
         self.pluginDock1.setWidget(self.myPluginTab1)
+        self.pluginDock1.setVisible(self.myPluginTab1.count()>0)
         self.pluginDock1.setFloating(False)
         self.pluginDock1.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.pluginDock1))
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea,self.pluginDock1)
@@ -874,12 +920,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # Open some default plugins
         # no plugins
 
-        self.pluginsDock2 = QtWidgets.QDockWidget('Plugins 2',self)
-        self.pluginsDock2.setWidget(self.myPluginTab2)
-        self.pluginsDock2.setFloating(False)
-        self.pluginsDock2.hide() # initially hide 'Plugins 2'
-        self.pluginsDock2.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.pluginsDock2))
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.pluginsDock2)
+        self.pluginDock2 = QtWidgets.QDockWidget('Plugins 2',self)
+        self.pluginDock2.setWidget(self.myPluginTab2)
+        self.pluginDock2.setFloating(False)
+        self.pluginDock2.hide() # initially hide 'Plugins 2'
+        self.pluginDock2.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.pluginDock2))
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.pluginDock2)
 
         #self.setLayout(layout)
         #self.setWindowTitle('SanPy v3')
@@ -887,11 +933,24 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
     def sanpyPlugin_action(self, pluginName):
         """
-        Run a plugin using curent ba
+        Run a plugin using curent ba. Responds to main menu 'Plugins'
         """
-        #ba = self.myDetectionWidget.ba
+        logger.info(f'opening pluginName: "{pluginName}"')
         ba = self.get_bAnalysis()
-        self.myPlugins.runPlugin(pluginName, ba)
+        _runningPlugin = self.myPlugins.runPlugin(pluginName, ba)
+        
+        # add the plugin to a tab, user can detatch it
+        self.myPluginTab1.addTab(_runningPlugin, _runningPlugin.myHumanName)
+
+        # bring new tab to the front
+        self.myPluginTab1.setCurrentWidget(_runningPlugin)
+
+        # make sure the dock is visible
+        self.pluginDock1.setVisible(True)
+
+        # add plugin to preferences so it opens next time we run the app
+        if _runningPlugin is not None:
+            self.configDict.addPlugin(_runningPlugin.getHumanName())
 
     def slot_selectSpike(self, sDict):
         spikeNumber = sDict['spikeNumber']
@@ -1034,12 +1093,19 @@ class SanPyWindow(QtWidgets.QMainWindow):
             index (int): The index into sender that gives us the tab, sender.widget(index)
         """
 
-        logger.info(f'index:{index} sender:{sender}')
+        logger.info(f'index:{index} sender:{type(sender)}')
 
         # remove plugin from self.xxx
-        widgetPointer = sender.widget(index)
+        # pluginInstancePointer is full class to actual plugin, like
+        # sanpy.interface.plugins.detectionParams.detectionParams
+        pluginInstancePointer = sender.widget(index)
+        logger.info(f'  pluginInstancePointer:{type(pluginInstancePointer)}')
 
-        self.myPlugins.slot_closeWindow(widgetPointer)
+        # remove from preferences
+        if pluginInstancePointer is not None:
+            self.configDict.removePlugin(pluginInstancePointer.getHumanName())
+
+        self.myPlugins.slot_closeWindow(pluginInstancePointer)
 
         # remove the tab
         sender.removeTab(index)
@@ -1050,7 +1116,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         Make sure only front tab (plugins) receive signals
         """
-        #logger.info(f'Turn of all other tab signals !!!')
+        logger.info(f'index:{index} sender:{sender}')
         pass
 
     def openLog(self):

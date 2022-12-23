@@ -630,9 +630,13 @@ class bExport():
         return analysisName, df
 
 def test():
-    path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+    path = 'data/19114001.abf'
     ba = sanpy.bAnalysis(path)
-    ba.spikeDetect()
+
+    bd = sanpy.bDetection()  # gets default
+    dDict = bd.getDetectionDict('SA Node')
+    ba.spikeDetect(dDict)
+
     be = bExport(ba)
     df = be.getSummary()
     logger.info('')

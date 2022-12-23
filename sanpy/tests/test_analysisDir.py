@@ -18,32 +18,33 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__, level=logging.DEBUG)
 
 class Test_Analysis_Dir(unittest.TestCase):
-	def setUp(self):
-		# Create a temporary directory
-		self.test_dir = tempfile.mkdtemp()
+    def setUp(self):
+        # Create a temporary directory
+        self.test_dir = tempfile.mkdtemp()
 
-		# copy data into it
-		dst = os.path.join(self.test_dir, '19114001.abf')
-		shutil.copyfile('data/19114001.abf', dst)
+        # copy data into it
+        dst = os.path.join(self.test_dir, '19114001.abf')
+        shutil.copyfile('data/19114001.abf', dst)
 
-		dst = os.path.join(self.test_dir, '19114000.abf')
-		shutil.copyfile('data/19114000.abf', dst)
+        dst = os.path.join(self.test_dir, '19114000.abf')
+        shutil.copyfile('data/19114000.abf', dst)
 
-	def tearDown(self):
-		# Remove the directory after the test
-		shutil.rmtree(self.test_dir)
+    def tearDown(self):
+        # Remove the directory after the test
+        shutil.rmtree(self.test_dir)
 
-	def test_3_loadDir(self):
+    def test_3_loadDir(self):
 
-		logger.info('')
-		ad = sanpy.analysisDir(path=self.test_dir)
+        logger.info('')
+        
+        ad = sanpy.analysisDir(path=self.test_dir)
 
-		self.assertEqual(len(ad._df), 2)
+        self.assertEqual(len(ad._df), 2)
 
-		ad.saveHdf()
+        ad.saveHdf()
 
-		ad.loadHdf()
-		self.assertEqual(len(ad._df), 2)
+        ad.loadHdf()
+        self.assertEqual(len(ad._df), 2)
 
 if __name__ == '__main__':
     unittest.main()

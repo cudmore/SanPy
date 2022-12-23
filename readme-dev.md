@@ -1,3 +1,8 @@
+## Writing code 202212
+
+ - Activate drag/drop of a folder from the finder
+    see: sanpy.interface.fileListWidget
+
 ## Update 202109
 
 - Split FFT plugin into front-end and back-end. Currrently it is all front-end. This includes moving to back end: creation of bessel filter, filtering the signal, calculating FFT/PSD. Once this is done, write example notebook on how to do it programatically with API.

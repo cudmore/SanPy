@@ -31,6 +31,7 @@ setup(
         'pyqtgraph',
         'qdarkstyle',
         'PyQt5',  # this fail on arm64, need 'conda install pyqt'
+        'h5py',
     ],
     # use pip install .[gui]
     # on Big Sur use pip install .\[gui\]

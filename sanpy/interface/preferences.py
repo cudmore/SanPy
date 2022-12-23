@@ -1,11 +1,5 @@
-"""
-Class to hold GUI preferences. Created and used by app SanPyWindow
-
-20220629
-"""
 import os
 import pathlib
-
 import json
 from json.decoder import JSONDecodeError
 
@@ -17,16 +11,16 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class preferences():
+    """
+    Class to hold GUI preferences. Created and used by app SanPyWindow.
+
+    Created: 20220629
+    """
     def __init__(self, sanpyApp : sanpy_app):
         super().__init__()
         self._sanpyApp = sanpyApp
-
-        self._version = 1.1  # increment when we change preferences
-
-        #self.optionsFile = None
-        
+        self._version = 1.2  # increment when we change preferences
         self._maxRecent = 7  # a lucky number
-        
         self._configDict = self.load()
 
     def __setitem__(self, key, item):
@@ -40,25 +34,34 @@ class preferences():
         return self._configDict
     
     def addFolder(self, path : str):
+        """Add a folder to preferences.
+        """
         logger.info(f'{path}')
-        if path in self.configDict['recentFolders']:
-            return
-        self.configDict['recentFolders'].append(path)
-        # limit list to last _maxNumUndo 
-        self.configDict['recentFolders'] = self.configDict['recentFolders'][-self._maxRecent:] 
+        
+        # add if not in recentFolders
+        if not path in self.configDict['recentFolders']:
+            self.configDict['recentFolders'].append(path)
+            # limit list to last _maxNumUndo 
+            self.configDict['recentFolders'] = self.configDict['recentFolders'][-self._maxRecent:] 
     
+        # always set as the most recent folder
         self.configDict['mostRecentFolder'] = path
+
+    def addPlugin(self, pluginName : str):
+        """Add plugin to preferences.
+        """
+        if not pluginName in self.configDict['pluginPanels']:
+            self.configDict['pluginPanels'].append(pluginName)
+
+    def removePlugin(self, pluginName : str):
+        """Remove plugin from preferences.
+        """
+        if pluginName in self.configDict['pluginPanels']:
+            self.configDict['pluginPanels'].remove(pluginName)
 
     def getMostRecentFolder(self):
         return self.configDict['mostRecentFolder']
         
-        '''
-        if self.configDict['recentFolders']:
-             return self.configDict['recentFolders'][-1]
-        else:
-            return None
-        '''
-
     def getRecentFolder(self):
         return self.configDict['recentFolders']
 
@@ -131,8 +134,10 @@ class preferences():
         configDict['version'] = self._version
         configDict['useDarkStyle'] = True
         configDict['autoDetect'] = True # FALSE DOES NOT WORK!!!! auto detect on file selection and/or sweep selection
+
         configDict['recentFolders'] = []
         configDict['mostRecentFolder'] = ''
+
         configDict['windowGeometry'] = {}
         configDict['windowGeometry']['x'] = 100
         configDict['windowGeometry']['y'] = 100
@@ -149,6 +154,9 @@ class preferences():
         configDict['detectionPanels']['Display'] = True
         configDict['detectionPanels']['Plot Options'] = False
         
+        # plugins to show at startup
+        configDict['pluginPanels'] = []
+
         # values in detectionWidget -> myDetectionToolbar
         configDict['detect'] = {}
         configDict['detect']['detectDvDt'] = 20
@@ -158,8 +166,8 @@ class preferences():
         configDict['rawDataPanels'] = {}
         configDict['rawDataPanels']['plotEveryPoint'] = 10 # not used?
         configDict['rawDataPanels']['Full Recording'] = True #
-        configDict['rawDataPanels']['Derivative'] = True #
-        configDict['rawDataPanels']['DAC'] = True #
+        configDict['rawDataPanels']['Derivative'] = False #
+        configDict['rawDataPanels']['DAC'] = False #
 
         return configDict
 

@@ -20,7 +20,7 @@ from .version import interfaceVersion
 
 from .bDetection import bDetection
 
-from .kymographAnalysis import kymographAnalysis
+from .kymAnalysis import kymAnalysis
 from ._util import _loadLineScanHeader
 
 # hold off on loading from aws for now (requires boto3)

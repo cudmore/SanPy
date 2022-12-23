@@ -5,7 +5,6 @@ import pandas as pd
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-# using sanpy.analysisDir in pandasModel.__init__()
 import sanpy
 import sanpy.interface
 #import sanpy.analysisDir
@@ -16,14 +15,7 @@ logger = get_logger(__name__)
 
 class bTableView(QtWidgets.QTableView):
     """Table view to display list of files.
-
-    TODO: Try and implement the first column (filename) as a frozen column.
-
-    See:
-        #https://doc.qt.io/qt-5/qtwidgets-itemviews-frozencolumn-example.html
-        https://github.com/PyQt5/Examples/tree/master/PyQt5/itemviews/frozencolumn
     """
-
     '''
     signalUnloadRow = QtCore.pyqtSignal(object)  # row index
     signalRemoveFromDatabase = QtCore.pyqtSignal(object)  # row index
@@ -34,7 +26,7 @@ class bTableView(QtWidgets.QTableView):
     signalFindNewFiles = QtCore.pyqtSignal()
 
     signalSaveFileTable = QtCore.pyqtSignal()
-    """Save entire database as pandas hsf."""
+    # Save entire database as pandas hsf.
     '''
 
     signalSelectRow = QtCore.pyqtSignal(object, object, object)  # (row, rowDict, selectingAgain)
@@ -45,7 +37,11 @@ class bTableView(QtWidgets.QTableView):
     signalSetDefaultDetection = QtCore.pyqtSignal(object, object)  # selected row, detection type
 
     def __init__(self, model, parent=None):
-        super(bTableView, self).__init__(parent)
+        """
+        Args:
+            model: sanpy.interface.bFileTable.pandasModel
+        """
+        super().__init__(parent=parent)
 
         #self.setAcceptDrops(True)
         #self.setDragDropMode(QtWidgets.QAbstractItemView.DropOnly)
@@ -54,11 +50,13 @@ class bTableView(QtWidgets.QTableView):
         self.lastSeletedRow = None
         self.clicked.connect(self.onLeftClick)
 
-        #
-        # frozen
-        self.setModel(model)
+        self.mySetModel(model)
+
+        # frozen table was my attempt to keep a few columns always on the left
+        # this led to huge problems and is not worth it
 
         # (L, A, S, N, I(include), File)
+        '''
         self.numFrozenColumns = 6 # depends on columns in analysisDir
 
         self.frozenTableView = QtWidgets.QTableView(self)
@@ -68,13 +66,25 @@ class bTableView(QtWidgets.QTableView):
         # only allow one row to be selected
         self.frozenTableView.setSelectionMode(QtWidgets.QTableView.SingleSelection)
         self.initFrozenColumn()
-        self.horizontalHeader().sectionResized.connect(self.updateSectionWidth)
-        self.verticalHeader().sectionResized.connect(self.updateSectionHeight)
+        '''
+
+        # dec 2022, not needed
+        # self.horizontalHeader().sectionResized.connect(self.updateSectionWidth)
+        # self.verticalHeader().sectionResized.connect(self.updateSectionHeight)
+    
+        _hHeader = self.horizontalHeader()
+        _hHeader.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
+        # _hHeader.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+
+        '''
         self.frozenTableView.verticalScrollBar().valueChanged.connect(self.verticalScrollBar().setValue)
         self.verticalScrollBar().valueChanged.connect(self.frozenTableView.verticalScrollBar().setValue)
+        '''
 
         # rewire contextMenuEvent to self (WIERD BUT SEEMS TO WORK)
+        '''
         self.frozenTableView.contextMenuEvent = self.contextMenuEvent
+        '''
 
         #
         # original
@@ -112,8 +122,10 @@ class bTableView(QtWidgets.QTableView):
 
         # frozen column
         #self.frozenTableView.setFont(QtGui.QFont('Arial', 10))
+        '''
         self.frozenTableView.setFont(fnt)
         self.frozenTableView.verticalHeader().setDefaultSectionSize(rowHeight)
+        '''
 
         # original was this
         # active background-color: #346792;
@@ -140,7 +152,7 @@ class bTableView(QtWidgets.QTableView):
 
     #
     # frozen
-    def initFrozenColumn(self):
+    def old_initFrozenColumn(self):
         self.frozenTableView.setModel(self.model())
 
         # this is causing selection to be in muted blue
@@ -254,22 +266,45 @@ class bTableView(QtWidgets.QTableView):
         Set the model. Needed so we can show/hide columns
 
         Args:
-            model (xxx):
+            model: sanpy.interface.bFileTable.pandasModel
         """
-        #logger.info('')
 
         self.setModel(model)
 
+        # when we are created, we are given an empty dataframe
+        if isinstance(model._data, pd.core.frame.DataFrame):
+            if model._data.empty:
+                return
+
+        # hide some columns, needed each time we set the model
+        hiddenColumns = ['kLeft', 'kTop', 'kRight', 'kBottom', 
+                            'Cell Type', 'Sex', 'Condition',
+                            'Notes',
+                            'relPath',
+                            'uuid',
+                            'badColumn']
+        for hiddenColumn in hiddenColumns:
+            try:
+                columnIdx = model._data.columns.index(hiddenColumn)
+                #print('xxx hiding column', hiddenColumn, columnIdx)
+                self.setColumnHidden(columnIdx, True)
+            except (ValueError) as e:
+                logger.error(f'Did not find column {hiddenColumn}')
+
+        '''
         self.frozenTableView.setModel(self.model())
         # this is required otherwise selections become disconnected
         self.frozenTableView.setSelectionModel(self.selectionModel())
+        '''
 
     def mySelectRow(self, rowIdx):
         """Needed to connect main and frozen table."""
         #logger.info('')
 
         self.selectRow(rowIdx)
+        '''
         self.frozenTableView.selectRow(rowIdx)
+        '''
 
     '''
     # trying to use this to remove tooltip when it comes up as empty ''
@@ -354,17 +389,19 @@ class bTableView(QtWidgets.QTableView):
         #if self.logicalIndex == 0:
         if logicalIndex == 0:
             #logger.info(f'XXX {newSize}')
+            '''
             self.frozenTableView.setColumnWidth(0, newSize)
+            '''
             self.updateFrozenTableGeometry()
 
-    def updateSectionHeight(self, logicalIndex, oldSize, newSize):
+    def old_updateSectionHeight(self, logicalIndex, oldSize, newSize):
         self.frozenTableView.setRowHeight(logicalIndex, newSize)
 
-    def resizeEvent(self, event):
+    def old_resizeEvent(self, event):
         super(bTableView, self).resizeEvent(event)
         self.updateFrozenTableGeometry()
 
-    def moveCursor(self, cursorAction, modifiers):
+    def old_moveCursor(self, cursorAction, modifiers):
         #logger.info('')
         current = super(bTableView, self).moveCursor(cursorAction, modifiers)
         if (cursorAction == self.MoveLeft and
@@ -384,7 +421,7 @@ class bTableView(QtWidgets.QTableView):
         if index.column() > 0:
             super(bTableView, self).scrollTo(index, hint)
 
-    def updateFrozenTableGeometry(self):
+    def old_updateFrozenTableGeometry(self):
         """
         """
         myWidth = 400
@@ -436,22 +473,24 @@ class bTableView(QtWidgets.QTableView):
 def test():
     import sys
     app = QtWidgets.QApplication([])
+    
+    import qdarkstyle
+    app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 
-    path = '/home/cudmore/Sites/SanPy/data'
+    path = 'data'  # assuming we are run from SanPy repo
     ad = sanpy.analysisDir(path)
 
     df = ad.getDataFrame()
-    print('df:')
-    print(df)
     model = sanpy.interface.bFileTable.pandasModel(ad)
 
-    # make an empty dataframe with just headers !!!
-    dfEmpty = pd.DataFrame(columns=sanpy.analysisDir.sanpyColumns.keys())
-    #dfEmpty = dfEmpty.append(pd.Series(), ignore_index=True)
-    #dfEmpty['_ba'] = ''
-    print('dfEmpty:')
-    print(dfEmpty)
-    emptyModel = sanpy.interface.bFileTable.pandasModel(dfEmpty)
+    # why was I doing this?
+    # # make an empty dataframe with just headers !!!
+    # dfEmpty = pd.DataFrame(columns=sanpy.analysisDir.sanpyColumns.keys())
+    # #dfEmpty = dfEmpty.append(pd.Series(), ignore_index=True)
+    # #dfEmpty['_ba'] = ''
+    # print('dfEmpty:')
+    # print(dfEmpty)
+    # emptyModel = sanpy.interface.bFileTable.pandasModel(dfEmpty)
 
     btv = bTableView(model)
     #btv.mySetModel(model)

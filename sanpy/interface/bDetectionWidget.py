@@ -17,7 +17,7 @@ from pyqtgraph.exporters import ImageExporter
 import sanpy
 import sanpy.bDetection
 
-import sanpy.interface.kymographWidget
+#import sanpy.interface.kymographWidget
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -1120,6 +1120,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.myKymWidget = sanpy.interface.kymographWidget()
         self.myKymWidget.signalKymographRoiChanged.connect(self.slot_kymographChanged)
         self.myKymWidget.setVisible(False)
+        self.myKymWidget.showLineSlider(False)
         vBoxLayoutForPlot.addWidget(self.myKymWidget)
 
         # was this
@@ -1465,6 +1466,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         Returns: True/False
         """
+        logger.info(f'tableRowDict:{tableRowDict}')
+        logger.info(f'ba:{ba}')
 
         # bAnalysis object
         self.ba = ba
@@ -2443,6 +2446,15 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         displayGridLayout = QtWidgets.QGridLayout()
 
         row = 0
+
+        # channel
+        _tmpChannelLabel = QtWidgets.QLabel('Channel')
+        _channelComboBox = QtWidgets.QComboBox()
+        # add channels from abf
+        _fakeChannels = ['1', '2', '3', 'bizarre']
+        for channel in _fakeChannels:
+            _channelComboBox.addItem(channel)
+
         # sweeps
         tmpSweepLabel = QtWidgets.QLabel('Sweep')
         buttonName = '<'
@@ -2458,6 +2470,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         #for sweep in range(self.detectionWidget.ba.numSweeps):
         #    self.sweepComboBox.addItem(str(sweep))
         hSweepLayout = QtWidgets.QHBoxLayout()
+
+        hSweepLayout.addWidget(_tmpChannelLabel)
+        hSweepLayout.addWidget(_channelComboBox)
+
+
         hSweepLayout.addWidget(tmpSweepLabel)
         hSweepLayout.addWidget(self.previousSweepButton)
         hSweepLayout.addWidget(self.sweepComboBox)

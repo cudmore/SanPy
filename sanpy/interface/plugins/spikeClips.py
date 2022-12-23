@@ -35,10 +35,10 @@ class spikeClips(sanpyPlugin):
 
         self.preClipWidth_ms = 100
         self.postClipWidth_ms = 500
-        if self.ba is not None:
+        if self.ba is not None and self.ba.isAnalyzed():
             #self.clipWidth_ms = self.ba.detectionClass['spikeClipWidth_ms']
-            self.preClipWidth_ms = self.ba.detectionClass['preSpikeClipWidth_ms']
-            self.postClipWidth_ms = self.ba.detectionClass['postSpikeClipWidth_ms']
+            self.preClipWidth_ms = self.ba._detectionDict['preSpikeClipWidth_ms']
+            self.postClipWidth_ms = self.ba._detectionDict['postSpikeClipWidth_ms']
 
         self.respondTo = 'All' # ('All', 'X-Axis', 'Spike Selection')
 
@@ -131,7 +131,7 @@ class spikeClips(sanpyPlugin):
         hLayout3.addWidget(aLabel)
         self.preClipWidthSpinBox = QtWidgets.QSpinBox()
         self.preClipWidthSpinBox.setKeyboardTracking(False)
-        self.preClipWidthSpinBox.setRange(1, 1e9)
+        self.preClipWidthSpinBox.setRange(1, 2**16)
         self.preClipWidthSpinBox.setValue(self.preClipWidth_ms)
         #self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
         self.preClipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
@@ -141,7 +141,7 @@ class spikeClips(sanpyPlugin):
         hLayout3.addWidget(aLabel)
         self.postClipWidthSpinBox = QtWidgets.QSpinBox()
         self.postClipWidthSpinBox.setKeyboardTracking(False)
-        self.postClipWidthSpinBox.setRange(1, 1e9)
+        self.postClipWidthSpinBox.setRange(1, 2**16)
         self.postClipWidthSpinBox.setValue(self.postClipWidth_ms)
         #self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
         self.postClipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))

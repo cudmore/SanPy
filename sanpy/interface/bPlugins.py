@@ -13,13 +13,15 @@ class bPlugins():
     Generate a list of plugins.
 
     Looking in
-        - sanpy.interface.plugins
-        - <user>/sanpy_plugins
+        - package, sanpy.interface.plugins
+        - folder, <user>/sanpy_plugins
     """
     def __init__(self, sanpyApp=None):
         self._sanpyApp = sanpyApp
 
         self.userPluginFolder = sanpy._util._getUserPluginFolder()
+        if not os.path.isdir(self.userPluginFolder):
+            self.userPluginFolder = None
         """path to <user>/plugin_dir"""
 
         self.pluginDict = {}
@@ -48,14 +50,12 @@ class bPlugins():
         self.loadPlugins()
 
     def getSanPyApp(self):
-        """
-        Get the underlying SanPy app
+        """Get the underlying SanPy app.
         """
         return self._sanpyApp
 
     def loadPlugins(self):
-        """
-        Load plugins from both:
+        """Load plugins from both:
          - Package: sanpy.interface.plugins
          - Folder: <user>/sanpy_plugins
         """
@@ -103,7 +103,7 @@ class bPlugins():
         #
         # user plugins from files in folder <user>/SanPy/plugins
         loadedModuleList = []
-        if self.userPluginFolder:
+        if self.userPluginFolder is not None:
             files = glob.glob(os.path.join(self.userPluginFolder, '*.py'))
         else:
             files = []
@@ -159,7 +159,6 @@ class bPlugins():
         for loaded in loadedModuleList:
             logger.info(f'    {loaded}')
 
-
     def runPlugin(self, pluginName, ba, show=True):
         """
         Run one plugin with given ba (bAnalysis).
@@ -196,6 +195,9 @@ class bPlugins():
                 #print(2)
                 if not newPlugin.getInitError() and show:
                     newPlugin.getWidget().show()
+
+                # add the plugin to open next time we run
+                
             # except(TypeError) as e:
             #     logger.error(f'Error opening plugin "{pluginName}": {e}')
             #     return
@@ -253,7 +255,7 @@ class bPlugins():
         """
         #logger.info(pluginObj)
         try:
-            logger.info(f'Removing plugin from _openSet: {pluginObj}')
+            logger.info(f'Removing plugin from _openSet: "{pluginObj.getHumanName()}"')
             # Critical to detatch signal/slot, removing from set does not seem to do this?
             pluginObj._disconnectSignalSlot()
             self._openSet.remove(pluginObj)

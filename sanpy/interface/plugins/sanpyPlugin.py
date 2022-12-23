@@ -1,7 +1,5 @@
-# Created: 20210609
-
 """
-`sanpyPlugin` is the parent class for all SanPy plugins.
+sanpyPlugin is the parent class for all SanPy plugins.
 Derive from this class to create new plugins.
 
 Users can run a plugin with the following code
@@ -16,7 +14,7 @@ import sanpy.interface
 app = QtWidgets.QApplication([])
 
 # load and analyze sample data
-path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+path = '../../data/19114001.abf'
 ba = sanpy.bAnalysis(path)
 ba.spikeDetect()
 
@@ -29,7 +27,7 @@ sys.exit(app.exec_())
 
 import math, enum
 
-# This is very disturbing, error if we use 'from functools import partial'
+# Error if we use 'from functools import partial'
 # Error shows up in sanpy.bPlugin when it tries to grab <plugin>.myHumanName ???
 import functools
 
@@ -58,17 +56,17 @@ class ResponseType(enum.Enum):
     selectSpike = 'Select Spike'
     setAxis = 'Set Axis'
 
-#class sanpyPlugin(QtCore.QObject):
 class sanpyPlugin(QtWidgets.QWidget):
-    """
-    Base class for all SanPy plugins. Provides general purpose API to build plugings including:
+    """Base class for all SanPy plugins.
+    
+    Provides general purpose API to build plugings including:
 
     - Open PyQt and Matplotlib plots
     - Set up signal/slots for:
         (1) file is changed
         (2) detection is run
         (3) spike is selected
-        (4) Axis is changed
+        (4) axis is changed
     """
 
     signalCloseWindow = QtCore.pyqtSignal(object)
@@ -92,14 +90,14 @@ class sanpyPlugin(QtWidgets.QWidget):
     def __init__(self, ba=None, bPlugin=None, startStop=None, options=None, parent=None):
         """
         Args:
-            ba (sanpy.bAnalysis): [bAnalysis][sanpy.bAnalysis.bAnalysis] object representing one file.
+            ba (sanpy.bAnalysis): [bAnalysis][sanpy.bAnalysis] object representing one file.
             bPlugin (sanpy.interface.bPlugin): Used in Qt to get SanPy App and to set up signal/slot.
             startStop (list of float): Start and stop (s) of x-axis.
             options (dict): Dictionary of optional plugins.
                             Used by 'plot tool' to plot a pool using app analysisDir dfMaster.
                             Note: NOT USED.
         """
-        super(sanpyPlugin, self).__init__(parent)
+        super().__init__(parent)
         
         # derived classes will set this in init (see kymographPlugin)
         self._initError = False
@@ -161,6 +159,9 @@ class sanpyPlugin(QtWidgets.QWidget):
         # connect self to main app with signals/slots
         self._installSignalSlot()
 
+    def getHumanName(self):
+        return self.myHumanName
+    
     def getInitError(self):
         return self._initError
 
@@ -345,26 +346,24 @@ class sanpyPlugin(QtWidgets.QWidget):
         pass
 
     def getStartStop(self):
-        """
-        Ret:
+        """Get current start stop of interface.
+
+        Returns:
             tuple: (start, stop) in seconds. Can be None
         """
         return self._startSec, self._stopSec
 
     def keyReleaseEvent(self, event):
-        #logger.info(type(event))
         self.keyIsDown = None
 
     def keyPressEvent(self, event):
         """
-        Used so user can turn on/off responding to analysis changes
+        Used so user can turn on/off responding to analysis changes.
 
         Args:
             event (QtGui.QKeyEvent): Qt event
                 (matplotlib.backend_bases.KeyEvent): Matplotlib event
         """
-        #logger.info(type(event))
-
         isQt = isinstance(event, QtGui.QKeyEvent)
         isMpl = isinstance(event, mpl.backend_bases.KeyEvent)
 
@@ -969,6 +968,7 @@ class myWidget(QtWidgets.QWidget):
         self._parentPlugin.contextMenuEvent(event)
 
     def closeEvent(self, event):
+        logger.info(f'event:{type(event)}')
         self._parentPlugin.onClose(event)
 
 def test_plugin():

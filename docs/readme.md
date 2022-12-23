@@ -13,8 +13,13 @@ https://github.com/cudmore/sanpy
 ```
 pip install mkdocs
 pip install mkdocs-material
-pip install mkdocstrings
+#pip install mkdocstrings
 pip install mkdocs-jupyter # to have mkdocs show jupyter notebooks
+```
+
+Dec 2022, need this now
+```
+pip install "mkdocstrings[python]"
 ```
 
 ### serve local

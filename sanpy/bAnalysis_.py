@@ -21,9 +21,14 @@ ba.spikeDetect(dDict)
 ```
 """
 
-import os, sys, math, time, collections, datetime, enum
+import os
+import sys
+import math
+import time
+import datetime
+import copy
+import enum
 from pprint import pprint
-#from socket import AF_AAL5
 import json
 import uuid
 from collections import OrderedDict
@@ -374,8 +379,11 @@ class bAnalysis:
         return self._dfReportForScatter
         #return self.spikeDict.asDataFrame()
 
-    def getDetectionDict(self):
-        return self._detectionDict
+    def getDetectionDict(self, asCopy : bool = False):
+        if asCopy:
+            return copy.deepcopy(self._detectionDict)
+        else:
+            return self._detectionDict
         
     @property
     def old_detectionDict(self):
@@ -586,6 +594,9 @@ class bAnalysis:
 
             # recreate spike analysis dataframe
             self._dfReportForScatter =  dfAnalysis
+
+            # dec 2022
+            self._isAnalyzed = True
 
             logger.info(f'    loaded {len(detectionDict.keys())} detection keys and {len(self.spikeDict)} spikes')
         else:

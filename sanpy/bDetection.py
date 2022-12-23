@@ -52,7 +52,8 @@ class detectionTypes_(Enum):
     dvdt = 'dvdt'
     mv = 'mv'
 
-# TODO (Cudmore) this needs to be a class so we can expand/contract based on what we find on the hard-drive
+# TODO (Cudmore) this needs to be a class so we can expand/contract based
+# on what we find on the hard-drive
 # allow user to save to detection presets
 
 '''
@@ -111,7 +112,17 @@ def getDefaultDetection():
     theDict[key]['units'] = ''
     theDict[key]['humanName'] = 'Detection Preset Name'
     theDict[key]['errors'] = ('')
-    theDict[key]['description'] = 'The name of detection presets (including user saved presets)'
+    theDict[key]['description'] = 'The name of detection preset'
+
+    key = 'userSaveName'
+    theDict[key] = {}
+    theDict[key]['defaultValue'] = '' #detectionPreset.value # ('dvdt', 'mv')
+    theDict[key]['type'] = 'string'
+    theDict[key]['allowNone'] = False  # To do, have 2x entry points to bAnalysis detect, never set this to nan
+    theDict[key]['units'] = ''
+    theDict[key]['humanName'] = 'Saved Detection Params'
+    theDict[key]['errors'] = ('')
+    theDict[key]['description'] = 'The name of saved user detection params'
 
     key = 'detectionType'
     theDict[key] = {}
@@ -536,27 +547,14 @@ class detectionPresets():
 
 class bDetection(object):
     """ Class to manage detection parameters.
-
-        - get defaults
-        - get values
-        - set values
     """
-
-    # 20220706, was this
-    # detectionPresets = detectionPresets_
-    #detectionPresets = Enum('bDetection.detectionPresets', getPresetsDict())
-    """Enum with names of preset detection types. This is built from json files in sanpy and <user> folder."""
-
     detectionTypes = detectionTypes_
     """ Enum with the type of spike detection, (dvdt, mv)"""
 
     def __init__(self):
         """Load all sanpy and <user> detection json files."""
 
-        # make a self._detection of dictionaries with detection parameters across bDetection.detectionPresets
-        #self._detectionDict = getPresetsDict()  # load form files
-
-        # full dictionary with description of detection type, reusing from original before refactor
+        # dict with detection key and current value
         self._dDict = getDefaultDetection()
         
         # list of preset names including <user>SanPy/detection json files
@@ -569,7 +567,7 @@ class bDetection(object):
         self._detectionPreset = {}
         for item in self._detectionEnum:
             # item is like self.detectionEnum.sanode
-            print(f'{item}, {item.name}, "{item.value}"')
+            logger.info(f'  loaded {item}, {item.name}, "{item.value}"')
             presetValues = self._getPresetValues(item)
             if presetValues:
                 # got value of built in preset
@@ -600,8 +598,7 @@ class bDetection(object):
         For file name like 'Fast Neuron.json' make key 'fastneuron'
 
         Returns:
-            xxx:
-            userPresets: dictionary, one item per user file
+            userPresets (dict): One item per user file
         """
         
         def fileNameToKey(filePath):
@@ -634,17 +631,18 @@ class bDetection(object):
         '''
         theDict['sanode'] = 'SA Node'
         theDict['ventricular'] = 'Ventricular'
-        theDict['neuron'] = 'neuron'
+        theDict['neuron'] = 'Neuron'
         theDict['fastneuron'] = 'Fast Neuron'
         theDict['subthreshold'] = 'Sub Threshold'
         theDict['caspikes'] = 'Ca Spikes'
         theDict['cakymograph'] = 'Ca Kymograph'
 
+        #
         # get files in <users>/Documents/SanPy/detection/ folder
         #userDetectionPath = pathlib.Path(sanpy._util._getUserDetectionFolder()) / '*.json'
         #files = glob.glob(str(userDetectionPath))
         files = self._getUserFiles()
-        print('user files:', files)
+        #print('user files:', files)
         for filePath in files:
             fileName, fileNameKey = fileNameToKey(filePath)
             theDict[fileNameKey] = fileName
@@ -682,7 +680,7 @@ class bDetection(object):
         #logger.info('theJson:')
         return theJson
 
-    def saveAs(self, detectionType : str, filename, path=None):
+    def old_saveAs(self, detectionType : str, filename, path=None):
         """Save a detection dictionary to json.
         
         If running in GUI, main SanPy app will specify the correct path.
@@ -704,66 +702,10 @@ class bDetection(object):
             dDict['detectionName'] = filename
             json.dump(dDict, f, indent=4)
 
-    def old_setToType(self, detectionPreset):
-        """
-        detectionPreset (enum) detectionPresets
-        """
-        logger.info(f'detectionPreset:{detectionPreset}')
-        self._dDict = getDefaultDetection(detectionPreset)
-
-    #def __str__(self):
-    #    return pprint(self._dDict)
-    
-    def not_used_getDefaultDetectionItem(self, key):
-        #key = 'include'
-        theDict = {}
-        theDict[key] = {}
-        theDict[key]['defaultValue'] = True
-        theDict[key]['type'] = 'bool'
-        theDict[key]['allowNone'] = False
-        theDict[key]['units'] = ''
-        theDict[key]['humanName'] = 'Include'
-        theDict[key]['errors'] = ('')
-        theDict[key]['description'] = 'Include analysis for this file'
-        return theDict.copy()
-
     def printDict(self):
         for k in self._dDict.keys():
             v = self._dDict[k]['currentValue']
             print(f'  {k}: "{v}" {type(v)}')
-
-    def old___getitem__(self, key):
-        # to mimic a dictionary
-        # myDetection['a key']
-        try:
-            return self._dDict[key]['currentValue']
-        except (KeyError) as e:
-            logger.error(f'{e}')
-
-    def old___setitem__(self, key, value):
-        # to mimic a dictionary
-        try:
-            self._dDict[key]['currentValue'] = value
-        except (KeyError) as e:
-            logger.error(f'{e}')
-
-    def old_items(self):
-        # to mimic a dictionary
-        return self._dDict.items()
-
-    def old_keys(self):
-        # to mimic a dictionary
-        return self._dDict.keys()
-
-    def old_getMsValueAsPnt(self, detectionPreset, key : str, dataPointsPerMs : int):
-        """Get current value of a ms key as points.
-        """
-        if not key.endswith('_ms'):
-            logger.warning(f'key "{key}" does not end in "_ms" ?')
-        msValue = self.getValue(key)
-        ret = msValue * dataPointsPerMs
-        ret = round(ret)  # ensure it is an int
-        return ret
 
     def getMasterDict(self, detectionType : str):
         """Get the full dictionary from self._dDict getDefaultDetection()
@@ -802,7 +744,6 @@ class bDetection(object):
                 oneType = self._detectionPreset[detectionTypeKey]
                 for k,v in oneType.items():
                     dDict[k] = v
-
             return dDict
         except (KeyError) as e:
             logger.error(f'Did not find detectionType:"{detectionType}"')
@@ -882,26 +823,6 @@ class bDetection(object):
             logger.warning(f'Did not find detectionType:{detectionType}, key:"{key}" to set current value to "{value}"')
             return False
 
-    def old_setFromDict(self, dDict):
-        """
-        Set detection from key/values in dDict
-
-        Args:
-            dDict (dict): Usually a table row like interface/bTableView.py
-        """
-        gotError = False
-        for k,v in dDict.items():
-            ok = self.setValue(k, v)
-            if not ok:
-                gotError = True
-        return gotError
-
-    def old_print(self):
-        for k, v in self._dDict.items():
-            print(k)
-            for k2,v2 in v.items():
-                print(f'  {k2} : {v2}')
-
     def old_save(self, saveBase):
         """
         Save underlying dict to json file
@@ -934,11 +855,6 @@ class bDetection(object):
             self._dDict = json.load(f)
 
         # convert
-
-    '''
-    def getDict(self):
-        return self._dDict
-    '''
 
     def _getPresetValues(self, detectionPreset):
         """

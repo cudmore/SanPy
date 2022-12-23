@@ -266,14 +266,16 @@ class bAnalysisDirWeb():
 
 class analysisDir():
     """
-    Class to manage a list of files loaded from a folder
+    Class to manage a list of files loaded from a folder.
     """
-    sanpyColumns = _sanpyColumns
 
-    # abb 20210803
-    #theseFileTypes = ['.abf', '.csv']
+    sanpyColumns = _sanpyColumns
+    """Dict of dict of column names and bookkeeping info.
+    """
+
     theseFileTypes = ['.abf', '.atf', '.csv', '.tif']
-    """File types to load"""
+    """File types to load.
+    """
 
     def __init__(self, path=None, myApp=None,
                     autoLoad=False,
@@ -992,7 +994,10 @@ class analysisDir():
         ba = self._df.loc[rowIdx, '_ba']
         #print('isAnalyzed()', rowIdx, ba)
         #if ba is not None:
-        if isinstance(ba, sanpy.bAnalysis):
+        #print('qqq', rowIdx, ba, type(ba))
+        # sanpy.bAnalysis_.bAnalysis
+        # if isinstance(ba, sanpy.bAnalysis):
+        if ba is not None:
             isAnalyzed = ba.isAnalyzed()
         return isAnalyzed
 
@@ -1406,15 +1411,17 @@ class analysisDir():
     def pool_build(self):
         """Build one df with all analysis. Use this in plot tool plugin.
         """
+        logger.info('')
         masterDf = None
         for row in range(self.numFiles):
             if not self.isAnalyzed(row):
+                logger.info(f'  row:{row} not analyzed')
                 continue
             ba = self.getAnalysis(row)
             oneDf = ba.asDataFrame()
-            if df is not None:
-                self.signalApp(f'adding "{ba.getFileName()}"')
-                oneDf.dfReportForScatter['File Number'] = row
+            if oneDf is not None:
+                self.signalApp(f'  adding "{ba.getFileName()}"')
+                oneDf['File Number'] = int(row)
                 if masterDf is None:
                     masterDf = oneDf
                 else:

@@ -1,7 +1,7 @@
 """
 Display a tif kymograph and allow user to modify a rect roi
 
-Used by main SanPy interface
+Used by main SanPy interface and kymograph plugin
 """
 
 import sys
@@ -100,10 +100,12 @@ class kymographImage(pg.ImageItem):
             event.acceptClicks(pg.QtCore.Qt.LeftButton)
 
 class kymographWidget(QtWidgets.QWidget):
-
+    """Display a kymograph with contrast controls.
+    """
     signalKymographRoiChanged = QtCore.pyqtSignal(object)  # list of [l, t, r, b]
     signalSwitchToMolar = QtCore.pyqtSignal(object, object, object)  # (boolean, kd, caConc)
     signalScaleChanged = QtCore.pyqtSignal(object)  # dict with x/y scale
+    signalLineSliderChanged = QtCore.pyqtSignal(object)  # int, new line selected
 
     def __init__(self, ba=None, parent=None):
         """
@@ -355,6 +357,7 @@ class kymographWidget(QtWidgets.QWidget):
         # kymograph
         self.view = pg.GraphicsLayoutWidget()
         #self.view.show()
+        #self.kymographWindow = pg.PlotWidget()
 
         row = 0
         colSpan = 1
@@ -370,8 +373,63 @@ class kymographWidget(QtWidgets.QWidget):
         # hide by default
         self.kymographPlot.hide()  # show in _replot() if self.ba.isKymograph()
 
+        # TODO: add show/hide, we do not want this in the main interface
+        # vertical line to show selected line scan (adjusted/changed with slider)
+        self._sliceLine = pg.InfiniteLine(pos=0, angle=90)
+        #self._sliceLinesList.append(sliceLine) # keep a list of vertical slice lines so we can update all at once
+        self.kymographPlot.addItem(self._sliceLine)
+
         self.myVBoxLayout.addWidget(self.view)
 
+        #
+        # # add scatter plot for rising/falling diameter detection
+        # color = 'g'
+        # symbol = 'o'
+        # leftDiamScatterPlot = pg.PlotDataItem(pen=None, symbol=symbol, symbolSize=6, symbolPen=None, symbolBrush=color)
+        # leftDiamScatterPlot.setData(x=[], y=[]) # start empty
+
+        # color = 'r'
+        # symbol = 'o'
+        # rightDiamScatterPlot = pg.PlotDataItem(pen=None, symbol=symbol, symbolSize=6, symbolPen=None, symbolBrush=color)
+        # rightDiamScatterPlot.setData(x=[], y=[]) # start empty
+
+        # self.kymographPlot.addItem(leftDiamScatterPlot)
+        # self.kymographPlot.addItem(rightDiamScatterPlot)
+
+        #
+        # 1.5) slider to step through "Line Profile"
+        self._profileSlider = QtWidgets.QSlider(QtCore.Qt.Orientation.Horizontal)
+        self._profileSlider.setMinimum(0)
+        # TODO: cludge, fix
+        _numLineScans = 0
+        if self.ba is not None:
+            _numLineScans = len(self.ba.sweepX) - 1
+        self._profileSlider.setMaximum(_numLineScans)
+        #self._profileSlider.setMaximum(self._kymographAnalysis.numLineScans())
+        self._profileSlider.valueChanged.connect(self._on_line_slider_changed)
+        self.myVBoxLayout.addWidget(self._profileSlider)
+
+    def showLineSlider(self, visible):
+        """Toggle line slider and vertical line (on image) on/off.
+        """
+        self._profileSlider.setVisible(visible)
+
+    def _on_line_slider_changed(self, lineNumber :int):
+        """Respond to user dragging the line slider.
+        
+        Args:
+            lineNumber: Int line number, needs to be converted to 'seconds'
+        """
+
+        lineSeconds = lineNumber * self.ba._abf.tifHeader['secondsPerLine']
+
+        logger.info(f'lineNumber:{lineNumber} lineSeconds:{lineSeconds}')
+
+        # set the vertical line
+        self._sliceLine.setValue(lineSeconds)
+
+        self.signalLineSliderChanged.emit(lineNumber)
+    
     def _onContrastSliderChanged(self, val:int, name:str):
         """Respond to either the min or max contrast slider.
         
@@ -453,10 +511,31 @@ class kymographWidget(QtWidgets.QWidget):
             self.myImageItem.setImage(myTif, axisOrder=axisOrder,
                             rect=rect)
         self.kymographPlot.addItem(self.myImageItem)
+        
         padding = 0
         if startSec is not None and stopSec is not None:
             self.kymographPlot.setXRange(startSec, stopSec, padding=padding)  # row major is different
 
+        # re-add the vertical line
+        self.kymographPlot.addItem(self._sliceLine)
+
+        #
+        # plot of diameter detection
+        self._leftFitScatter = pg.ScatterPlotItem(
+                                size=3, brush=pg.mkBrush(50, 255, 50, 120))
+        _xFake = []  # self.ba.sweepX
+        _yFake = []  # [200 for x in self.ba.sweepX]
+        self._leftFitScatter.setData(_xFake, _yFake)
+        self.kymographPlot.addItem(self._leftFitScatter)
+            
+        self._rightFitScatter = pg.ScatterPlotItem(
+                                size=3, brush=pg.mkBrush(255, 50, 50, 120))
+        _xFake = []  # self.ba.sweepX
+        _yFake = []  # [350 for x in self.ba.sweepX]
+        self._rightFitScatter.setData(_xFake, _yFake)
+        self.kymographPlot.addItem(self._rightFitScatter)
+
+        #
         # color bar with contrast !!!
         if myTif.dtype == np.dtype('uint8'):
             bitDepth = 8
@@ -508,6 +587,7 @@ class kymographWidget(QtWidgets.QWidget):
             heightRoi -= 2 * tifHeightPercent
         '''
         # TODO: get this out of replot, recreating the ROI is causing runtime error
+        # update the rect roi
         pos = (xRoiPos,yRoiPos)
         size = (widthRoi,heightRoi)
         if self.myLineRoi is None:
@@ -548,7 +628,7 @@ class kymographWidget(QtWidgets.QWidget):
             else:
                 self.myLineRoiBackground.setPos(pos, finish=False)
                 self.myLineRoiBackground.setSize(size, finish=False)
-
+        
         # update min/max labels
         # TODO: only set this once on switch file
         myTifOrig = self.ba.tifData
@@ -562,6 +642,20 @@ class kymographWidget(QtWidgets.QWidget):
         self._updateRoiMinMax(kymographRect)
         self._updateBackgroundRoiMinMax(backgroundRect)
 
+    def updateLeftRightFit(self, yLeft, yRight, visible=True):
+        """
+        
+        """
+    
+        self._leftFitScatter.setVisible(visible)
+        self._rightFitScatter.setVisible(visible)
+
+        if visible:
+            x = self.ba.sweepX
+            #TODO: check that len(y) == len(x)
+            self._leftFitScatter.setData(x, yLeft)
+            self._rightFitScatter.setData(x, yRight)
+    
     def _updateBackgroundRoiMinMax(self, backgroundRect=None):
         """
         update background roi
@@ -685,6 +779,10 @@ class kymographWidget(QtWidgets.QWidget):
             self.ba = ba
             #self._updateRoiMinMax(theRect)
             self._replot(startSec=startSec, stopSec=stopSec)
+
+            # update line scan slider
+            _numLineScans = len(self.ba.sweepX) - 1
+            self._profileSlider.setMaximum(_numLineScans)
 
     def hoverEvent(self, event):
         if event.isExit():

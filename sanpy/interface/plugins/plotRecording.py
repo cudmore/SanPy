@@ -143,8 +143,11 @@ class plotRecording(sanpyPlugin):
         """
         bAnalysis has been updated, replot
         """
-        logger.info('')
+        logger.info(f'{self.ba}')
 
+        if self.ba is None:
+            return
+            
         self.xOffset = 0.01
         self.yOffset = 50
         
