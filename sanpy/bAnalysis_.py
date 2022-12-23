@@ -2632,7 +2632,7 @@ class bAnalysis:
         ## done
 
     #def _getFeet(self, df):
-    def _getFeet(self, thresholdPnts : list[int], prePnts : int) -> list[int]:
+    def _getFeet(self, thresholdPnts : List[int], prePnts : int) -> List[int]:
         """
         
         Args:
