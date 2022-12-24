@@ -10,6 +10,8 @@ import importlib
 import inspect
 import os
 import traceback  # to print call stack on exception
+from typing import List, Union
+
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
@@ -22,7 +24,7 @@ def _module_from_file(module_name, file_path):
     spec.loader.exec_module(module)
     return module
 
-def getObjectList(verbose = False):
+def _getObjectList(verbose = False) -> List[dict]:
     """
     Return a list of classes defined in sanpy.userAnalysis.
 
@@ -40,7 +42,6 @@ def getObjectList(verbose = False):
     files = glob.glob(os.path.join(userAnalysisFolder, '*.py'))
 
     pluginDict = {}
-
     loadedModuleList = []
 
     for file in files:
@@ -60,7 +61,7 @@ def getObjectList(verbose = False):
             logger.info(f'    moduleName: {moduleName}')
             logger.info(f'    loadedModule: {loadedModule}')
 
-        # 1) class based user analysis
+        # class based user analysis
         oneConstructor = None
         try:
             oneConstructor = getattr(loadedModule, moduleName)  # moduleName is derived from file name (must match)
@@ -70,19 +71,9 @@ def getObjectList(verbose = False):
         except (AttributeError) as e:
             logger.error(f'Make sure filename and class name are the same,  file name is "{moduleName}"')
 
-        # 2) function based user analysis
-        oneStatDict = None
-        oneRunFunction = None
-        try:
-            oneRunFunction = getattr(loadedModule, 'exampleFunction_xxx')  # moduleName is derived from file name (must match)
-            oneStatDict = getattr(loadedModule, 'exampleStatDict_xxx')  # moduleName is derived from file name (must match)
-        except (AttributeError) as e:
-            pass
-            #logger.error(f'Make sure filename and class name are the same,  file name is "{moduleName}"')
-        
-        # 20220630, get the static stat attribute from the class
-        _statStatDict = getattr(oneConstructor, 'userStatDict')
-        #print('_statStatDict:', _statStatDict)
+        # instantiate the object and it will create a dictionary of new stats
+        _tmpObj = oneConstructor(ba=None)
+        _statStatDict = _tmpObj._getUserStatDict()
 
         #humanName = oneConstructor.myHumanName
         pluginDict = {
@@ -92,103 +83,49 @@ def getObjectList(verbose = False):
             'path': file,
             'constructor': oneConstructor,
             'staticStatDict': _statStatDict,
-            #
-            # experimental, trying to use functions rather than class
-            'runFunction': oneRunFunction,
-            'statDict': oneStatDict,
-            #'humanName': humanName
             }
-
-        # assuming user analysis is unique
-        # if humanName in self.pluginDict.keys():
-        #     logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
-        # else:
-        #     logger.info(f'loading user plugin: "{file}"')
-        #     #self.pluginDict[moduleName] = pluginDict
-        #     self.pluginDict[humanName] = pluginDict
-        #     loadedModuleList.append(moduleName)
 
         if verbose:
             logger.info(f'loading user analysis from file: "{file}"')
-        
-        #pluginDict[humanName] = pluginDict
-        
+                
         loadedModuleList.append(pluginDict)
 
     # print out the entire list
-    logger.info('')
-    for loadedModuleDict in loadedModuleList:
-        for k,v in loadedModuleDict.items():
-            logger.info(f'    {k} : {v}')
+    # logger.info('')
+    # for loadedModuleDict in loadedModuleList:
+    #     for k,v in loadedModuleDict.items():
+    #         logger.info(f'    {k} : {v}')
     #
     return loadedModuleList  # list of dict
 
-    #
-    # OLD
+def findUserAnalysisStats() -> List[dict]:
+    """Get the stat names of all user defined analysis.
     """
-    ignoreModuleList = ['baseUserAnalysis']
+    userStatList : List[dict] = []
+    objList = _getObjectList()  # list of dict
+    for obj in objList:
+        # sanpy._util.pprint(obj)
+        # print('')
+        
+        # instantiate the object
+        userObj = obj['constructor'](ba=None)
 
-    objList = []
-    #userStatDict = {}
-    for moduleName, obj in inspect.getmembers(sanpy.userAnalysis):
-        #print('moduleName:', moduleName, 'obj:', obj)
-        if inspect.isclass(obj):
-            if moduleName in ignoreModuleList:
-                continue
-            print(f'  is class moduleName {moduleName} obj:{obj}')
-            # obj is a constructor function
-            # <class 'sanpy.userAnalysis.userAnalysis.exampleUserAnalysis'>
-            print('  ', obj.userStatDict)
+        userObjStatDict = userObj._getUserStatDict()
 
-            # from findUserAnalysis
-            '''
-            oneStatDict = obj.userStatDict
-            for k,v in oneStatDict.items():
-                userStatDict[k] = {}
-                userStatDict[k]['name'] = v['name']
-            '''
-            objList.append(obj)  # obj is a class constructor
+        for k, v in userObjStatDict.items():
+            oneUserStatDict = {k: v}
+            userStatList.append(oneUserStatDict)
 
-    #
-    return objList
-    """
-
-def broken_findUserAnalysis():
-    """
-    20220630 is BROKEN !!!
-    Find files in 'sanpy/userAnalysis' and populate a dict with stat names
-    this will be appended to bAnalysisUtil.statList
-    """
-
-    logger.info('')
-
-    ignoreModuleList = ['baseUserAnalysis']
-
-    userStatDict = {}
-    for moduleName, obj in inspect.getmembers(sanpy.user_analysis):
-        #print('moduleName:', moduleName, 'obj:', obj)
-        if inspect.isclass(obj):
-            if moduleName in ignoreModuleList:
-                continue
-            print(f' is class moduleName {moduleName} obj:{obj}')
-            # obj is a constructor function
-            # <class 'sanpy.userAnalysis.userAnalysis.exampleUserAnalysis'>
-            print('  ', obj.userStatDict)
-            oneStatDict = obj.userStatDict
-            for k,v in oneStatDict.items():
-                userStatDict[k] = {}
-                userStatDict[k]['name'] = v['name']
-
-    #
-    return userStatDict
+    return userStatList
 
 def runAllUserAnalysis(ba, verbose=False):
-    """
-    call at end of bAnalysis
+    """Run all user defined analysis.
+    
+    Called at end of sanpy.bAnalysis.detect()
     """
 
     # step through each
-    objList = getObjectList()  # list of dict
+    objList = _getObjectList()  # list of dict
 
     if verbose:
         logger.info(f'objList: {objList}')
@@ -212,22 +149,53 @@ class baseUserAnalysis:
     """
     Create a userAnalysis object after bAnalysis has been analyzed with the core analysis results.
     """
-    userStatDict = {}
-    """User needs to fill this in see xxx for example"""
 
     def __init__(self, ba):
-        self._myAnalysis = ba
+        self._myAnalysis : sanpy.bAnalysis = ba
+        
+        self._userStatDict : dict = {}
+        # add to this with addUserStat()
 
-        self._installStats()
+        self.defineUserStats()
 
-    def _installStats(self, verbose=False):
-        if verbose:
-            logger.info(f'Installing "{self.userStatDict}"')
-        for k, v in self.userStatDict.items():
-            if verbose:
-                logger.info(f'{k}: {v}')
-            name = v['name']
-            self.addKey(name, theDefault=None)
+    def _getUserStatDict(self):
+        """Get dict of user defined stats, one key per stat.
+        """
+        return self._userStatDict
+        
+    def defineUserStats(self):
+        """Derived classes add stats with addUserStat(humanName, internalName).
+        
+        humanName and internalName are str.
+        """
+        pass
+    
+    def addUserStat(self, humanName :str, internalName : str):
+        """Add a user stat. Derived classes do this in defineUserStats().
+
+        userStatDict = {
+            'User Time To Peak (ms)' : {
+                'name': 'user_timeToPeak_ms',
+                'units': 'ms',
+                'yStat': 'user_timeToPeak_ms',
+                'yStatUnits': 'ms',
+                'xStat': 'thresholdPnt',
+                'xStatUnits': 'Points'
+                }
+        }
+        """
+        if humanName in self._userStatDict.keys():
+            logger.error(f'User stat with human name "{humanName}" already exists')
+            return
+        statDict = {
+            'name': internalName,
+            'units': None,
+            'yStat': None,
+            'yStatUnits': None,
+            'xStat': None,
+            'xStatUnits': None,
+        }
+        self._userStatDict[humanName] = statDict
 
     @property
     def ba(self):
@@ -249,28 +217,26 @@ class baseUserAnalysis:
     def getFilteredVm(self):
         return self.ba.filteredVm
 
-    def addKey(self, theKey, theDefault=None):
-        """Add a new key to analysis results.
-
-        Will add key to each spike in self.ba.spikeDict
-        """
-        self.ba.spikeDict.addAnalysisResult(theKey, theDefault)
-
     def setSpikeValue(self, spikeIdx, theKey, theVal):
         """
         Set the value of a spike key.
 
         Args:
             spikeIdx (int): The spike index , 0 based.
-            theKey (str): Name of the key.
+            theKey (str): Name of the user defined internal name.
             theVal (): The value for the key, can be almost any type like
                         (float, int, bool, dict, list)
 
         Raises:
-            KeyError: xxx.
-            IndexError: xxx.
+            KeyError: If theKey is not a key in analysis results.
+            IndexError: If spikeIdx is beyond number of spikes -1.
         """
-        self.ba.spikeDict[spikeIdx][theKey] = theVal
+        try:
+            self.ba.spikeDict[spikeIdx][theKey] = theVal
+        except (KeyError) as e:
+            logger.error(f'User internal stat does not exist "{theKey}"')
+        except (IndexError) as e:
+            logger.error(f'spikeIdx {spikeIdx} is out of range, max value is {self.ba.numSpikes}')
 
     def getSpikeValue(self, spikeIdx, theKey):
         """
@@ -288,17 +254,16 @@ class baseUserAnalysis:
             theRet = self.ba.spikeDict[spikeIdx][theKey]
             return theRet
         except (KeyError) as e:
-            print(e)
+            logger.error(f'User internal stat does not exist "{theKey}"')
         except (IndexError) as e:
-            print(e)
+            logger.error(f'spikeIdx {spikeIdx} is out of range, max value is {self.ba.numSpikes}')
 
     def run(self):
         """
-        Run user analysis. Add a key to analysis results and fill in its values.
-
-        Try not to re-use existing keys
+        Run user analysis. Calculate values for each new user stat.
         """
 
 if __name__ == '__main__':
     #test1()
-    getObjectList()
+    # _getObjectList()
+    findUserAnalysisStats()

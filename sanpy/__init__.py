@@ -1,10 +1,9 @@
-# this is a folder, problems with heroku
-#from .useranalysis import *
-
 from .sanpyLogger import *
-from ._util import *
 
-from .bAnalysis_ import *
+from ._util import *
+from .analysisUtil import *
+
+from .bAnalysis_ import bAnalysis
 from .epochTable import epochTable
 from .analysisDir import *
 from .analysisPlot import *
@@ -22,10 +21,3 @@ from .bDetection import bDetection
 
 from .kymAnalysis import kymAnalysis
 from ._util import _loadLineScanHeader
-
-# hold off on loading from aws for now (requires boto3)
-#from .awsUtil import *
-
-# need this for heroku ????????????????????????????????????????????????????
-# ModuleNotFoundError: No module named 'sanpy.userAnalysis'
-#from .userAnalysis import *

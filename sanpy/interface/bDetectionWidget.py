@@ -348,7 +348,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         lhs, rhs = xMaxStr.split('.')
         xMaxStr = '_e' + lhs + '_' + rhs
 
-        filePath, fileName = os.path.split(os.path.abspath(self.ba.path))
+        filePath, fileName = os.path.split(os.path.abspath(self.ba.getFilePath()))
         fileBaseName, extension = os.path.splitext(fileName)
         fileBaseName = f'{fileBaseName}{xMinStr}{xMaxStr}.xlsx'
         #excelFileName = os.path.join(filePath, fileBaseName + '.xlsx')
@@ -700,7 +700,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 sweepY = self.ba.sweepY
                 #filteredVm = self.ba.filteredVm
                 #filteredVm = filteredVm[:,0]
-                xPlot, yPlot = sanpy.getHalfWidthLines(sweepX, sweepY, spikeDictionaries)
+                xPlot, yPlot = sanpy.analysisUtil.getHalfWidthLines(sweepX, sweepY, spikeDictionaries)
             elif plotIsOn and plot['humanName'] == 'Epoch Lines':
                 _epochTable = self.ba.getEpochTable(self.sweepNumber)
                 if _epochTable is not None:
@@ -711,8 +711,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             elif plotIsOn and plot['humanName'] == 'EDD':
                 xPlot, yPlot = self.getEDD()
             elif plotIsOn and plot['humanName'] == 'EDD Rate':
-                #xPlot, yPlot = sanpy.analysisPlot.getEddLines(self.ba)
-                xPlot, yPlot = sanpy.getEddLines(self.ba)
+                xPlot, yPlot = sanpy.analysisUtil.getEddLines(self.ba)
             elif plotIsOn:
                 xPlot, yPlot = self.ba.getStat(plot['x'], plot['y'], sweepNumber=self.sweepNumber)
                 if xPlot is not None and plot['convertx_tosec']:

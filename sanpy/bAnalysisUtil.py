@@ -1,29 +1,21 @@
 # Author: Robert Cudmore
 # Date: 20190627
-
-import sys, os, json
-from collections import OrderedDict
-
 # todo: move these to a json file !!!
 # A list of human readable stats and how to map them to backend
 # Each key, like 'Take Off Potential (mV)' is a y-stat
 
+import sys, os, json
+from collections import OrderedDict
+from typing import List
+
 import sanpy
-#import sanpy.userAnalysis
-#from sanpy.userAnalysis import baseUserAnalysis
-#import sanpy.userAnalysis
-#import sanpy.userAnalysis.baseUserAnalysis
-#from sanpy.userAnalysis import findUserAnalysis
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-
 """
 A dictionary of detection parameters.
-"""
 
-"""
 Functions to map human readable name to backend stat name and vica versa.
 
 See [xxx-methods](../../Methods) section for a list of available stats
@@ -36,10 +28,9 @@ from sanpy.bAnalysisUtil import getHumandFromStat, getStatFromHuman
 humanStr = getHumandFromStat('thresholdSec')
 statStr = getStatFromHuman('Spike Time (s)')
 ```
-
 """
 
-# add this to keep al key VALUES the same
+# add this to keep all key VALUES the same
 # or maybe make a class??? like bDetection (which holds detection parameters?)
 '''
 def _defaultStatDict():
@@ -362,8 +353,32 @@ class bAnalysisUtil:
         #userStatList = findUserAnalysis()
         
         logger.warning(f'need to reactivate getting user stats')
-        return coreStatList
         
+        """
+        Each entry in statList looks like:
+        
+        statList['Spike Time (s)'] = {
+            'name': 'thresholdSec',
+            'units': 's',
+            'yStat': 'thresholdVal',
+            'yStatUnits': 'mV',
+            'xStat': 'thresholdSec',
+            'xStatUnits': 's'
+            }
+        """
+        userStatList : List[dict] = sanpy.user_analysis.baseUserAnalysis.findUserAnalysisStats()
+        for userStatDict in userStatList:
+            for k, v in userStatDict.items():
+                if k in coreStatList.keys():
+                    logger.error(f'user analysis key "{k}" already exists in core stat List')
+                else:
+                    # name = v['name']
+                    # coreStatList[k] = {}
+                    # coreStatList[k][name] = name
+                    coreStatList[k] = v
+
+        return coreStatList
+
         #20220630, was this
         userStatList = sanpy.user_analysis.baseUserAnalysis.findUserAnalysis()
 
@@ -456,94 +471,12 @@ class bAnalysisUtil:
 
         return theRet
 
-    # abb removed 20201109, not using this, write a PyQt preferences panel
-    '''
-    def tk_PreferenesPanel(self, app):
-        """
-        app: tkinter.Tk()
-        """
-        myPadding = 3
-
-        self.top = tkinter.Toplevel(app)
-        self.top.grab_set()
-        self.top.bind('<Button-1>', self.tk_ignore)
-
-        self.top.title('Preferences')
-        self.top.geometry('900x500') # w x h
-
-        self.top.grid_rowconfigure(0, weight=1) # main
-        self.top.grid_rowconfigure(1, weight=1) # ok
-
-        myFrame = ttk.Frame(self.top, borderwidth=5,relief="groove")
-        myFrame.grid(row=0, column=0, sticky="nsew", padx=myPadding, pady=myPadding)
-        myFrame.grid_columnconfigure(0, weight=1)
-        myFrame.grid_columnconfigure(1, weight=1)
-
-        from_ = 0
-        to = 2**32-1
-
-        for idx, key in enumerate(self.configDict['detection'].keys()):
-            myText = self.getDetectionParam(key)
-            myInt = int(myText)
-
-            myLabel = ttk.Label(myFrame, text=key)
-            myLabel.grid(row=idx, column=0, sticky="w", padx=myPadding, pady=myPadding)
-
-            # spinbox only responds to clicking up/down arrow, does not respond to values directly entered
-            # this lambda is complex but handles both up/down arrows AND bind of <Return> key
-            mySpinbox = ttk.Spinbox(myFrame, from_=from_, to=to)
-            cmd = lambda event=None, spinboxWidget=mySpinbox, option=key: self.tk_spinbox_Callback(event, spinboxWidget, option)
-            mySpinbox['command'] = cmd
-            mySpinbox.bind('<Return>', cmd)
-            mySpinbox.bind('<FocusOut>', cmd)
-
-            mySpinbox.set(myInt)
-            mySpinbox.selection_range(0, "end")
-            mySpinbox.icursor("end")
-
-            mySpinbox.grid(row=idx, column=1, sticky="w", padx=myPadding, pady=myPadding)
-
-            myLabel2 = ttk.Label(myFrame, text=self.getDetectionDescription(key))
-            myLabel2.grid(row=idx, column=2, sticky="w", padx=myPadding, pady=myPadding)
-
-        # ok
-        buttonPadding = 10
-        myFrameOK = ttk.Frame(self.top) #, borderwidth=5,relief="groove")
-        myFrameOK.grid(row=2, column=0, sticky="e", padx=buttonPadding, pady=buttonPadding)
-        myFrameOK.grid_columnconfigure(0, weight=1)
-        myFrameOK.grid_columnconfigure(1, weight=1)
-
-        cancelButton = ttk.Button(myFrameOK, text="Cancel", command=self.tk_cancelButton_Callback)
-        cancelButton.grid(row=0, column=1)
-
-        okButton = ttk.Button(myFrameOK, text="Save Preferences", command=self.tk_okButton_Callback)
-        okButton.grid(row=0, column=2)
-    '''
-
-    # abb removed 20201109, not using this, write a PyQt preferences panel
-    '''
-    def tk_spinbox_Callback(self, event=None, xxx=None, yyy=None):
-        print('spinbox_Callback() event:', event, 'xxx:', xxx, 'yyy:', yyy)
-        print('new value is:', xxx.get())
-        newValue = xxx.get() # str
-        # not sure if everything is int() ???
-        newValue = int(newValue)
-        self.setDetectionParam(yyy, newValue)
-
-    def tk_cancelButton_Callback(self):
-        self.top.destroy() # destroy *this, the modal
-
-    def tk_okButton_Callback(self):
-        self.configSave()
-        self.top.destroy() # destroy *this, the modal
-
-    def tk_ignore(self, event):
-        #print('_ignore event:', event)
-        return 'break'
-    '''
-
 if __name__ == '__main__':
-
+    if 0:
+        _fullStatList = sanpy.bAnalysisUtil.getStatList()
+        for oneStat in _fullStatList:
+            sanpy._util.pprint(oneStat)
+    
     if 0:
         # unit tests
         bau = bAnalysisUtil()

@@ -6,9 +6,17 @@
 Error: Process completed with exit code 134.
 ```
 
-### flak8
+### flake8
+
+```
+flake8 ./sanpy --count --select=E9,F63,F7,F82 --show-source --statistics
+```
 
 ### PyTest
+
+```
+pytest tests
+```
 
 ### xxx
 

@@ -1,18 +1,8 @@
 import numpy as np
 
-# this specific import is to stop circular imports
 from sanpy.user_analysis.baseUserAnalysis import baseUserAnalysis
-
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
-
-def exampleFunction_xxx():
-    logger.info(f'    !!!!')
-
-exampleStatDict_xxx = {
-    'a': 1,
-    'b': 1,
-}
 
 class exampleUserAnalysis(baseUserAnalysis):
     """
@@ -21,34 +11,26 @@ class exampleUserAnalysis(baseUserAnalysis):
     We will add cardiac style 'maximum depolarizing potential', defines as:
         For each AP, the minimum voltage between the previous AP and the current AP.
 
-    Don't include an __init__ function and inherited baseUserAnalysis.__init__() will be called
-    If you define an __init__, need to call super()
+    We need to define the behavior of two inherited functions
+
+    1) defineUserStats()
+        add any numner of user stats with
+            addUserStat(human name, internal name)
+
+    2) run()
+        Run the analysis you want to compute.
+        Add the value for each spike with
+            setSpikeValue(spike index, internal name, new value)
     """
 
-    userStatDict = {
-        'user stat 1': {
-            'name': 'mdp2_pnt',
-            'yStat': 'mdp2_pnt',
-        },
-        'user stat 2': {
-            'name': 'mdp2_val',
-            'yStat': 'mdp2_val',
-        },
-        'user stat 3': {
-            'name': 'timeToPeak_ms',
-            'yStat': 'timeToPeak_ms',
-        },
-    }
+    def defineUserStats(self):
+        """Add your user stats here.
+        """
+        self.addUserStat('User Time To Peak (ms)', 'user_timeToPeak_ms')
 
     def run(self):
+        """This is the user code to create and then fill in a new key/value for each spike.
         """
-        This is the user code to create and then fill in a new key/value for each spike.
-        """
-
-        #logger.info('Running ...')
-
-        # add new keys to to ba.spikeDict
-        #theDefault = None
 
         # get filtered vm for the entire trace
         filteredVm = self.getFilteredVm()
@@ -56,17 +38,18 @@ class exampleUserAnalysis(baseUserAnalysis):
         lastThresholdPnt = None
         for spikeIdx, spikeDict in enumerate(self.ba.spikeDict):
             # add time to peak
-            sweep = spikeDict['sweep']
             thresholdSec = spikeDict['thresholdSec']
             peakSecond = spikeDict['peakSec']
             timeToPeak_ms = (peakSecond - thresholdSec) * 1000
 
             # assign to underlying bAnalysis
-            self.setSpikeValue(spikeIdx, 'timeToPeak_ms', timeToPeak_ms)
+            #print(f'  exampleUserAnalysis() {spikeIdx} user_timeToPeak_ms {timeToPeak_ms}')
+            self.setSpikeValue(spikeIdx, 'user_timeToPeak_ms', timeToPeak_ms)
 
             thisThresholdPnt = spikeDict['thresholdPnt']
 
             # TODO: need to improve this, it cannot compare spikes across different sweeps !!!
+            sweep = spikeDict['sweep']
             '''
             if spikeIdx == 0:
                 # first spike does not have a mdp

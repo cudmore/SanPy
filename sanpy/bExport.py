@@ -199,7 +199,7 @@ class bExport():
         #
         # header sheet
         headerDict = OrderedDict()
-        filePath, fileName = os.path.split(self.ba.path)
+        filePath, fileName = os.path.split(self.ba.getFilePath())
         headerDict['File Name'] = [fileName]
         headerDict['File Path'] = [filePath]
 
@@ -346,7 +346,7 @@ class bExport():
             #
             # header sheet
             headerDict = OrderedDict()
-            filePath, fileName = os.path.split(self.ba.path)
+            filePath, fileName = os.path.split(self.ba.getFilePath())
             headerDict['File Name'] = [fileName]
             headerDict['File Path'] = [filePath]
 
@@ -609,7 +609,7 @@ class bExport():
         maxStr = '%.2f'%(theMax)
         minStr = minStr.replace('.', '_')
         maxStr = maxStr.replace('.', '_')
-        tmpPath, tmpFile = os.path.split(self.ba.path)
+        tmpPath, tmpFile = os.path.split(self.ba.getFilePath())
         tmpFile, tmpExt = os.path.splitext(tmpFile)
         analysisName = tmpFile + '_s' + minStr + '_s' + maxStr
         logger.info(f'minStr:{minStr} maxStr:{maxStr} analysisName:{analysisName}')

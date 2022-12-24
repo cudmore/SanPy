@@ -2,9 +2,14 @@ import os
 import sys
 import pathlib
 import shutil
+from typing import List, Union
+import uuid
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
+
+def getNewUuid():
+    return 't' + str(uuid.uuid4()).replace('-', '_')
 
 def getBundledDir():
     """Get the working directory where user preferences are save.
@@ -105,6 +110,10 @@ def _getUserPreferencesFolder():
     userPreferencesFolder = _getUserSanPyFolder()
     userPreferencesFolder = os.path.join(userPreferencesFolder, 'preferences')
     return userPreferencesFolder
+
+def pprint(d : dict):
+    for k,v in d.items():
+        print(f'  {k}: {v}')
 
 def _makeSanPyFolders():
     """Make <user>/Documents/SanPy folder .

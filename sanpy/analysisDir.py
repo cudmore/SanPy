@@ -1340,7 +1340,7 @@ class analysisDir():
         baNew = copy.deepcopy(rowDict['_ba'])
 
         # copy of bAnalysis needs a new uuid
-        new_uuid = sanpy.bAnalysis.getNewUuid()  # 't' + str(uuid.uuid4())   #.replace('-', '_')
+        new_uuid = sanpy._util.getNewUuid()  # 't' + str(uuid.uuid4())   #.replace('-', '_')
         logger.info(f'assigning new uuid {new_uuid} to {baNew}')
 
         if baNew.uuid == new_uuid:

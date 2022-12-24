@@ -1,42 +1,16 @@
-#Author: Robert H Cudmore
-#Date: 20190225
-"""
-The bAnalysis class represents a whole-cell recording and provides functions for analysis.
-
-A bAnalysis object can be created in a number of ways:
- (i) From a file path including .abf and .csv
- (ii) From a pandas DataFrame when loading from a h5 file.
- (iii) From a byteStream abf when working in the cloud.
-
-Once loaded, a number of operations can be performed including:
-  Spike detection, Error checking, Plotting, and Saving.
-
-Examples:
-
-```python
-path = 'data/19114001.abf'
-ba = bAnalysis(path)
-dDict = sanpy.bDetection.getDefaultDetection()
-ba.spikeDetect(dDict)
-```
-"""
-
 import os
-import sys
 import math
 import time
 import datetime
 import copy
-import enum
 from pprint import pprint
 import json
-import uuid
 from collections import OrderedDict
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
 
 from typing import Union, Dict, List, Tuple
 
-import h5py
+# import h5py
 
 import numpy as np
 import pandas as pd
@@ -54,241 +28,80 @@ import sanpy.h5Util
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def throwOutAboveBelow_(vm, spikeTimes, spikeErrors, peakWindow_pnts, onlyPeaksAbove_mV=None, onlyPeaksBelow_mV=None):
-    """
-    Args:
-        vm (np.ndarray):
-        spikeTimes (list): list of spike times
-        spikeErrors (list): list of error
-    """
-    newSpikeTimes = []
-    newSpikeErrorList = []
-    newSpikePeakPnt = []
-    newSpikePeakVal = []
-    for i, spikeTime in enumerate(spikeTimes):
-        peakPnt = np.argmax(vm[spikeTime:spikeTime+peakWindow_pnts])
-        peakPnt += spikeTime
-        peakVal = np.max(vm[spikeTime:spikeTime+peakWindow_pnts])
-
-        goodSpikeAbove = True
-        if onlyPeaksAbove_mV is not None and (peakVal < onlyPeaksAbove_mV):
-            goodSpikeAbove = False
-        goodSpikeBelow = True
-        if onlyPeaksBelow_mV is not None and (peakVal > onlyPeaksBelow_mV):
-            goodSpikeBelow = False
-
-        if goodSpikeAbove and goodSpikeBelow:
-            newSpikeTimes.append(spikeTime)
-            newSpikeErrorList.append(spikeErrors[i])
-            newSpikePeakPnt.append(peakPnt)
-            newSpikePeakVal.append(peakVal)
-        else:
-            #print('spikeDetect() peak height: rejecting spike', i, 'at pnt:', spikeTime, "dDict['onlyPeaksAbove_mV']:", dDict['onlyPeaksAbove_mV'])
-            pass
-    #
-    return newSpikeTimes, newSpikeErrorList, newSpikePeakPnt, newSpikePeakVal
-
-def getEddLines(ba):
-    """Get lines representing linear fit of EDD rate.
-
-    Args:
-        ba (bAnalysis): bAnalysis object
-    """
-    logger.info(ba)
-
-    x = []
-    y = []
-    if ba is None or ba.numSpikes == 0:
-        return x, y
-
-    #
-    # these are getting for current sweep
-    preLinearFitPnt0 = ba.getStat('preLinearFitPnt0')
-    preLinearFitSec0 = [ba.pnt2Sec_(x) for x in preLinearFitPnt0]
-    preLinearFitVal0 = ba.getStat('preLinearFitVal0')
-
-    preLinearFitPnt1 = ba.getStat('preLinearFitPnt1')
-    preLinearFitSec1 = [ba.pnt2Sec_(x) for x in preLinearFitPnt1]
-    preLinearFitVal1 = ba.getStat('preLinearFitVal1')
-
-    thisNumSpikes = len(preLinearFitPnt0)
-    #for idx, spike in enumerate(range(ba.numSpikes)):
-    for idx, spike in enumerate(range(thisNumSpikes)):
-        #dx = preLinearFitSec1[idx] - preLinearFitSec0[idx]
-        #dy = preLinearFitVal1[idx] - preLinearFitVal0[idx]
-
-        # always plot edd rate line at constant length
-        lineLengthSec = 0.1 #8  # TODO: make this a function of spike frequency?
-
-        x.append(preLinearFitSec0[idx])
-        x.append(preLinearFitSec1[idx] + lineLengthSec)
-        x.append(np.nan)
-
-        y.append(preLinearFitVal0[idx])
-        y.append(preLinearFitVal1[idx] + lineLengthSec)
-        y.append(np.nan)
-
-    #logger.info(f'{len(x)} {len(y)}')
-
-    return x, y
-
-def getHalfWidthLines(t, v, spikeDictList):
-    """Get x/y pair for plotting all half widths."""
-    x = []
-    y = []
-
-    #if len(t.shape)>1 or len(v.shape)>1:
-    #    logger.error('EXPECTING 1D, EXPAND THIS TO 2D SWEEPS')
-    #    print(t.shape, v.shape)
-    #    return x, y
-
-    if t.shape != v.shape:
-        logger.error(f't:{t.shape} and v:{v.shape} are not the same length')
-        return x, y
-
-    is2D = len(t.shape) > 1
-
-    numPerSpike = 3  # rise/fall/nan
-    #numSpikes = self.ba.numSpikes
-    numSpikes = len(spikeDictList)
-    logger.info(f'numSpikes:{numSpikes}')
-    xyIdx = 0
-    #for idx, spike in enumerate(self.ba.spikeDict):
-    #spikeDictionaries = self.ba.getSpikeDictionaries(sweepNumber=self.sweepNumber)
-    for idx, spike in enumerate(spikeDictList):
-        sweep = spike['sweep']
-        if idx ==0:
-            # make x/y from first spike using halfHeights = [20,50,80,...]
-            halfHeights = spike['halfHeights'] # will be same for all spike, like [20, 50, 80]
-            numHalfHeights = len(halfHeights)
-            # *numHalfHeights to account for rise/fall + padding nan
-            x = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
-            y = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
-            #print('  len(x):', len(x), 'numHalfHeights:', numHalfHeights, 'numSpikes:', numSpikes, 'halfHeights:', halfHeights)
-
-        if 'widths' not in spike.keys():
-            logger.error(f'=== Did not find "widths" key in spike {idx}')
-
-        for idx2, width in enumerate(spike['widths']):
-            #halfHeight = width['halfHeight'] # [20,50,80]
-            risingPnt = width['risingPnt']
-            #risingVal = width['risingVal']
-            fallingPnt = width['fallingPnt']
-            #fallingVal = width['fallingVal']
-
-            if risingPnt is None or fallingPnt is None:
-                # half-height was not detected
-                continue
-
-            #risingSec = self.ba.pnt2Sec_(risingPnt)
-            #fallingSec = self.ba.pnt2Sec_(fallingPnt)
-
-
-            # if v or t are 2D, we have multiple sweeps
-            # one sweep per column
-            if is2D:
-                risingVal = v[risingPnt,sweep]
-                fallingVal = v[fallingPnt,sweep]
-                risingSec = t[risingPnt,sweep]
-                fallingSec = t[fallingPnt,sweep]
-            else:
-                risingVal = v[risingPnt]
-                fallingVal = v[fallingPnt]
-                risingSec = t[risingPnt]
-                fallingSec = t[fallingPnt]
-
-            #print(f'fallingVal:{fallingVal} {type(fallingVal)}')
-
-            # x
-            x[xyIdx] = risingSec
-            x[xyIdx+1] = fallingSec
-            x[xyIdx+2] = np.nan
-            # y
-            y[xyIdx] = fallingVal  #risingVal, re-use fallingVal to make line horizontal
-            y[xyIdx+1] = fallingVal
-            y[xyIdx+2] = np.nan
-
-            # each spike has 3x pnts: rise/fall/nan
-            xyIdx += numPerSpike  # accounts for rising/falling/nan
-        # end for width
-    # end for spike
-
-    '''
-    print(f't:{len(t)} {type(t)} {t.shape}')
-    print(f'v:{len(v)} {type(v)} {v.shape}')
-    print(f'x:{len(x)} {type(x)} {x[0:10]}')
-    print(f'y:{len(y)} {type(y)} {y[0:10]}')
-    '''
-    #
-    return x, y
-
 class bAnalysis:
-    def getNewUuid():
-        return 't' + str(uuid.uuid4()).replace('-', '_')
+    """
+    The bAnalysis class represents a whole-cell recording and provides functions for analysis.
+
+    A bAnalysis object can be created in a number of ways:
+    (i) From a file path including .abf and .csv
+    (ii) From a pandas DataFrame when loading from a h5 file.
+    (iii) From a byteStream abf when working in the cloud.
+
+    Once loaded, a number of operations can be performed including:
+    Spike detection, Error checking, Plotting, and Saving.
+
+    Examples:
+
+    ```python
+    path = 'data/19114001.abf'
+    ba = bAnalysis(path)
+    dDict = sanpy.bDetection.getDefaultDetection()
+    ba.spikeDetect(dDict)
+    print(ba)
+    ```
+    """
+
+    # def getNewUuid():
+    #     return 't' + str(uuid.uuid4()).replace('-', '_')
 
     def __init__(self,
                     file=None,
-                    #theTiff=None,
                     byteStream=None,
-                    #fromDf=None,
-                    #fromDict=None,
-                    #detectionPreset : sanpy.bDetection.detectionPresets = None,
                     loadData=True,
                     stimulusFileFolder=None,
                     verbose=True):
         """
         Args:
             file (str): Path to either .abf or .csv with time/mV columns.
-            #theTiff (str): Path to .tif file. [[[NOT USED]]]
             byteStream (io.BytesIO): Binary stream for use in the cloud.
-            fromDf: (pd.DataFrame): One row df with columns as instance variables
-                used by analysisDir to reload from h5 file
-            fromDict: (dict): Dict has keys ['sweepX', 'sweepY', 'mode']
             loadData: If true, load raw data, otherwise just load header
             stimulusFileFolder:
         """
-        
-        #logger.info(f'IF FILE IS KYMOGRAPH NEED TO SET DETECTION PARAMS {file}')
-        
-        '''
-        if detectionPreset is None:
-            detectionPreset = sanpy.bDetection.detectionPresets.default
-        self.detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
-        '''
-        self._detectionDict  = None # corresponds to an item in sanpy.bDetection
 
-        self._isAnalyzed = False
+        self._path = file  # todo: change this to filePath
+        """str: File path."""
+
+        self._detectionDict :dict = None # corresponds to an item in sanpy.bDetection
+
+        self._isAnalyzed : bool = False
 
         # mimic pyAbf
-        self._numChannels = None
-        self._dataPointsPerMs = None
-        self._currentSweep = 0  # int
-        self._sweepList = [0]  # list
-        self._sweepLengthSec = np.nan
-        self._sweepX = None  # np.ndarray
-        self._sweepY = None  # np.ndarray
-        self._sweepC = None # the command waveform (DAC)
+        self._numChannels : int = None
+        self._dataPointsPerMs : int = None
+        self._currentSweep : int = 0  # int
+        self._sweepList : List[int] = [0]  # list
+        self._sweepLengthSec : float = np.nan
+        self._sweepX : np.ndarray = None  # values of x (Time)
+        self._sweepY : np.ndarray = None  # values of y (Recording)
+        self._sweepC : np.ndarray = None # values of the command waveform (DAC)
 
         self._epochTableList = None  # each sweep has an epoch table
 
-        self._filteredVm = None
-        self._filteredDeriv = None
+        self._filteredVm : np.ndarray = None
+        self._filteredDeriv : np.ndarray = None
 
-        self._recordingMode = 'Unknown'  # str
-        self._sweepLabelX = '???'  # str
-        self._sweepLabelY = '???'  # str
+        self._recordingMode : str = 'Unknown'
+        self._sweepLabelX : str = '???'
+        self._sweepLabelY : str = '???'
 
-        self.myFileType = None
+        self.myFileType : str = None
         """str: From ('abf', 'csv', 'tif', 'bytestream')"""
 
-        self.loadError = False
+        self.loadError : bool = False
         """bool: True if error loading file/stream."""
 
         #self.detectionDict = None  # remember the parameters of our last detection
         """dict: Dictionary specifying detection parameters, see bDetection.getDefaultDetection."""
-
-        self._path = file  # todo: change this to filePath
-        """str: File path."""
 
         self._abf = None
         """pyAbf: If loaded from binary .abf file"""
@@ -299,11 +112,11 @@ class bAnalysis:
         #self.detectionType = None
         """str: From ('dvdt', 'mv')"""
 
-        #self.spikeDict = []  # a list of dict
-        #self.spikeTimes = []  # created in self.spikeDetect()
-        self.spikeDict = sanpy.bAnalysisResults.analysisResultList()
+        self.spikeDict : sanpy.bAnalysisResults.analysisResultList \
+                        = sanpy.bAnalysisResults.analysisResultList()
+        # class to store all analysis results
 
-        self._spikesPerSweep = None
+        self._spikesPerSweep : int = None
 
         self.spikeClips = []  # created in self.spikeDetect()
         self.spikeClips_x = []  #
@@ -313,14 +126,13 @@ class bAnalysis:
         self._dfReportForScatter = None  # dataframe to be used by scatterplotwidget
 
         # only defined when loading abf files
-        # turned back on when implementing Santana rabbit Ca kymographs
         self.acqDate = None
         self.acqTime = None
 
         self._detectionDirty = False
 
         # will be overwritten by existing uuid in self._loadFromDf()
-        self.uuid = bAnalysis.getNewUuid()
+        self.uuid = sanpy._util.getNewUuid()
 
         self.tifData = None
         # when we have a tif kymograph
@@ -364,9 +176,6 @@ class bAnalysis:
 
         self._detectionDirty = False
 
-        #self.loadAnalysis()
-
-        # switching back to faster version (no parsing when we cell self.sweepX2
         self.setSweep()
 
     def asDataFrame(self):
@@ -380,22 +189,16 @@ class bAnalysis:
         #return self.spikeDict.asDataFrame()
 
     def getDetectionDict(self, asCopy : bool = False):
+        """Get the detection dictionary that was used for detect().
+        """
         if asCopy:
             return copy.deepcopy(self._detectionDict)
         else:
             return self._detectionDict
         
-    @property
-    def old_detectionDict(self):
-        # TODO: remove this and just use 'detectionClass'
-        return self.detectionClass
-
-    def old_getDetectionDict(self):
-        # TODO: remove this and just use 'detectionClass'
-        return self.detectionClass
-
     def __str__(self):
-        #return f'ba: {self.getFileName()} dur:{round(self.recordingDur,3)} spikes:{self.numSpikes} isAnalyzed:{self.isAnalyzed()} detectionDirty:{self.detectionDirty}'
+        """Get a brief str representation. Usefull for print().
+        """
         if self.isBytesIO:
              filename = '<BytesIO>'
         else:
@@ -443,79 +246,9 @@ class bAnalysis:
         self._sweepX[:, 0] = self._abf.sweepX
         self._sweepY[:, 0] = self._abf.sweepY
 
-    def old_loadFromDf(self, fromDf):
-        """Load from a pandas df saved into a .h5 file.
-
-        This uses vars(self) to get all class attributes.
-        """
-        logger.info(f"uuid: {fromDf['uuid'][0]}")
-
-        # vars(class) retuns a dict with all instance variables
-        iDict = vars(self)
-        for col in fromDf.columns:
-            value = fromDf.iloc[0][col]
-            #logger.info(f'col:{col} {type(value)}')
-            if col not in iDict.keys():
-                logger.warning(f'col "{col}" not in bAnalysis iDict (self.__dict__)')
-            iDict[col] = value
-
-        logger.info(f'self._path: {self._path}')
-        #logger.info(f'sweepX:{self.sweepX.shape}')
-        #logger.info(f'sweepList:{self.sweepList}')
-        #logger.info(f'_currentSweep:{self._currentSweep}')
-
-    def old_saveHdf2(self, hdfPath, forceSave=False):
-        """save using h5py (not pytables).
-        """
-        if self.numSpikes == 0:
-            return
-        if not forceSave and not self.isDirty:
-            return
-
-        # TODO: we need a fixed uuid from analysisDIr
-        uuid = self.uuid
-        
-        # convert detection dict to json
-        detectionJson = json.dumps(self._detectionDict)  # dict
-        
-        # convert spikeLIst (list of dict) to json
-        spikeList = self.spikeDict.asList()
-        
-        '''
-        print('xxx spike[0]')
-        for k,v in spikeList[0].items():
-            print(k,v,type(v))
-        '''
-
-        # lots of our analysis ends up as numpy data types
-        # json does not know how to handle
-        # use a json numpy encoder to convert
-        dataJson = json.dumps(spikeList, cls=NumpyEncoder)  # list of dict
-        
-        # TODO: Check that this works on Windows
-        if os.path.isfile(hdfPath):
-            mode = 'a'
-        else:
-            mode = 'w'
-
-        logger.info(f'{hdfPath} with mode={mode}')
-
-        with h5py.File(hdfPath, mode=mode) as h5file:
-            
-            # will get ValueError: Unableto create group (name already exists)
-            uuidGroup = h5file.create_group(uuid)
-            
-            ddg = uuidGroup.create_dataset('detectionDict', data=detectionJson)
-            ald = uuidGroup.create_dataset('analysisList', data=dataJson)
-
-    def old_loadHdf2(self, hdfPath):
-        logger.info('')
-        with h5py.File(hdfPath, mode='r') as h5file:
-            for k,v in h5file.items():
-                print(k,v)
-
     def _saveHdf_pytables(self, hdfPath):
-
+        """Save detection parameters and analysis into an hdf5 file.
+        """
         didSave = False
         if not self.detectionDirty:
             # Do not save it detection has not changed
@@ -601,99 +334,6 @@ class bAnalysis:
             logger.info(f'    loaded {len(detectionDict.keys())} detection keys and {len(self.spikeDict)} spikes')
         else:
             logger.error(f'    LOAD FAILED')
-
-    def old_saveToHdf(self, hdfPath):
-        """
-        Save to h5 file with key self.uuid.
-        
-        Only save if detection has changed (e.g. self.detectionDirty)
-        """
-        didSave = False
-        if not self.detectionDirty:
-            # Do not save it detection has not changed
-            logger.info(f'NOT SAVING, is not dirty {self.getInfo(withPath=True)}')
-            return didSave
-
-        logger.info(f'SAVING uuid:{self.uuid} {self.getInfo()}')
-
-        dfDetection = pd.DataFrame(self._detectionDict)
-
-        spikeList = self.spikeDict.asList()
-        dfAnalysis = pd.DataFrame(spikeList)
-
-        uuid = self.uuid
-        with pd.HDFStore(hdfPath) as hdfStore:
-            key = uuid + '/' + 'detectionDict'
-            dfDetection.to_hdf(hdfStore, key)
-
-            key = uuid + '/' + 'analysisList'
-            dfAnalysis.to_hdf(hdfStore, key)
-
-        didSave = True
-        return didSave
-
-        with pd.HDFStore(hdfPath) as hdfStore:
-            # vars(class) retuns a dict with all instance variables
-            iDict = vars(self)
-            
-            oneDf = pd.DataFrame(columns=iDict.keys())
-            #oneDf['path'] = [self.path]  # seed oneDf with one row (critical)
-
-            # do not save these instance variables (e.g. self._ba)
-            noneKeys = ['_sweepX', '_sweepY', '_sweepC',
-                        '_abf', '_filteredVm', '_filteredDeriv',
-                        'spikeClips', 'spikeClips_x', 'spikeClips_x2',
-                        '_detectionDict',
-                        #'_epochTableList'
-                        ]
-
-            print('=== iDict.items()')
-            for k,v in iDict.items():
-                if k in noneKeys:
-                    continue
-                print(k, v)
-            print('=== END iDict.items()')
-
-            for k,v in iDict.items():
-                if k in noneKeys:
-                    v = None
-                #print(f'saving h5 k:{k} {type(v)}')
-                print('    ===saving:', k, v)
-                oneDf.at[0, k] = v
-            # save into file
-            hdfStore[self.uuid] = oneDf
-
-            #
-            self._detectionDirty = False
-            didSave= True
-
-        #
-        return didSave
-
-    def old_loadFromDict(self, theDict):
-        """Create bAnalysis from a dictionary.
-
-        Args:
-            theDict (dict): Requires keys ('sweepX', 'sweepY', 'Mode')
-                            Will infer dataPointsPerMs from sweepX
-        """
-        self._sweepX = theDict['sweepX']
-        self._sweepY = theDict['sweepY']
-        self._sweepC = np.zeros(self._sweepX.shape)
-
-        self._sweepLengthSec = self._sweepX[-1][0]
-
-        # assuming _sweepX is 2d with one column
-
-        # for 10 kHz will be 0.0001
-        dtSeconds = self._sweepX[1,0] - self._sweepX[0,0]
-        self._dataPointsPerMs = 1 / (dtSeconds*1000)
-        print('_dataPointsPerMs:', self._dataPointsPerMs, type(self._dataPointsPerMs))
-
-        self._recordingMode = theDict['mode'] #'I-Clamp'
-
-        self._path = 'Model_Data'
-        self.myFileType = 'fromDict'
 
     def _loadAtf(self, loadData):
         # We cant't get dataPointsPerMs without loading the data
@@ -985,10 +625,6 @@ class bAnalysis:
     def detectionDirty(self):
         return self._detectionDirty
 
-    @property
-    def path(self):
-        return self._path
-
     def getFilePath(self):
         return self._path
 
@@ -1030,29 +666,6 @@ class bAnalysis:
     def dataPointsPerMs(self):
         """Get the number of data points per ms."""
         return self._dataPointsPerMs
-
-    '''
-    def setSweep(self, sweepNumber):
-        """
-        Set the current sweep.
-
-        Args:
-            sweepNumber (str): from ('All', 0, 1, 2, 3, ...)
-
-        TODO:
-            - Set sweep of underlying abf (if we have one)
-            - take channel into account with:
-                abf.setSweep(sweepNumber: 3, channel: 0)
-        """
-        if sweepNumber == 'All':
-            sweepNumber = 'allsweeps'
-        elif sweepNumber == 'allsweeps':
-            pass
-        else:
-            sweepNumber = int(sweepNumber)
-        self._currentSweep = sweepNumber
-        self.rebuildFiltered()
-    '''
 
     @property
     def sweepList(self):
@@ -1097,10 +710,7 @@ class bAnalysis:
         """Given a spike index within a sweep, get the absolute spike index.
 
         See getSweepSpikeFromAbsolute()
-        """
-        
-        #print('    self._spikesPerSweep:', self._spikesPerSweep)
-        
+        """        
         absIdx = 0
         for sweepIdx in range(sweep):
             absIdx += self._spikesPerSweep[sweepIdx]
@@ -1120,22 +730,6 @@ class bAnalysis:
         #     absIdx += self._spikesPerSweep[oneSweep]
         # sweepSpike = absSpikeIdx - absIdx
         # return sweepSpike
-
-    def old_getOneColumns(self, d):
-        shape = d.shape
-        if len(shape) == 1:
-            return d
-        else:
-            d = d[:,0]
-            logger.info(d.shape)
-            return d
-
-    def old_safeOneSweep(self, d):
-        if d is None or len(d.shape) != 2:
-            logger.error(f'Expecing shape len of 2 but got "{d.shape}"')
-            return d
-        else:
-            return d[:,0]
 
     @property
     def sweepX(self):
@@ -1234,38 +828,18 @@ class bAnalysis:
         self._filteredDeriv2 = self._filteredDeriv[:,sweep]
         '''
 
-    '''
-    @property
-    def sweepX2(self):
-        return self._sweepX2
-
-    @property
-    def sweepY2(self):
-        return self._sweepY2
-
-    @property
-    def filteredDeriv2(self):
-        return self._filteredDeriv2
-    '''
-
     def get_yUnits(self):
         return self._sweepLabelY
 
     def get_xUnits(self):
         return self._sweepLabelX
 
-    def old_getDetectionType(self):
-        # <enum 'detectionTypes_'>
-        #return self.detectionClass['detectionType'].name
-        return self.detectionClass['detectionType']
-
     def isDirty(self):
+        """Return True if analysis has been modified but not save."""
         return self._detectionDirty
 
     def isAnalyzed(self):
         """Return True if this bAnalysis has been analyzed, False otherwise."""
-        #return self.detectionDict is not None
-        #return self.numSpikes > 0
         return self._isAnalyzed
 
     def getStatMean(self, statName, sweepNumber=None):
@@ -2210,7 +1784,7 @@ class bAnalysis:
         onlyPeaksAbove_mV = dDict['onlyPeaksAbove_mV']
         onlyPeaksBelow_mV = dDict['onlyPeaksBelow_mV']
         spikeTimes,spikeErrorList, newSpikePeakPnt, newSpikePeakVal \
-                         = throwOutAboveBelow_(filteredVm,
+                         = sanpy.analysisUtil.throwOutAboveBelow(filteredVm,
                                 spikeTimes, spikeErrorList,
                                 peakWindow_pnts,
                                 onlyPeaksAbove_mV=onlyPeaksAbove_mV,
@@ -2766,439 +2340,6 @@ class bAnalysis:
             print(f"spike {idx} has {len(spike['errors'])} errors")
             for eIdx, error in enumerate(spike['errors']):
                 print(f'  error # {eIdx} is: {error}')
-
-    def old_spikeDetect__(self, sweepNumber, dDict):
-        """
-        Spike detect the current sweep and put results into list of dict `self.spikeDict[]`.
-
-        Args:
-            dDict (bDetection): A detection class/dictionary from [bDetection()][sanpy.bDetection]
-        """
-
-        verbose = True
-
-        if dDict['verbose']:
-            logger.info('dDict is:')
-            for k in dDict.keys():
-                value = dDict[k]
-                print(f'  {k}: {type(value)} "{value}"')
-
-        #
-        self.setSweep(sweepNumber)
-        #
-
-        # in case dDict has new filter values
-        self.rebuildFiltered()
-
-        #
-        # spike detect
-        detectionType = dDict['detectionType']
-        #logger.info(f'detectionType: "{detectionType}')
-
-        # detect all spikes either with dvdt or mv
-        if detectionType == sanpy.bDetection.detectionTypes.mv:
-            # detect using mV threshold
-            spikeTimes, spikeErrorList = self._spikeDetect_vm(dDict, sweepNumber)
-
-            # backup childish vm threshold
-            if dDict['doBackupSpikeVm']:
-                #self.spikeTimes = self._backupSpikeVm(dDict['medianFilter'])
-                spikeTimes = self._backupSpikeVm(spikeTimes, sweepNumber, dDict['medianFilter'])
-        elif detectionType == sanpy.bDetection.detectionTypes.dvdt:
-            # detect using dv/dt threshold AND min mV
-            spikeTimes, spikeErrorList = self._spikeDetect_dvdt(dDict, sweepNumber)
-        else:
-            logger.error(f'Unknown detection type "{detectionType}"')
-            return
-
-        #
-        # set up
-        sweepX = self.sweepX  # sweepNumber is not optional
-        filteredVm = self.filteredVm  # sweepNumber is not optional
-        filteredDeriv = self.filteredDeriv
-        sweepC = self.sweepC
-
-        #
-        now = datetime.datetime.now()
-        dateStr = now.strftime('%Y%m%d')
-        timeStr = now.strftime('%h%m%s')
-        # self.dateAnalyzed = dateStr
-
-        #
-        # look in a window after each threshold crossing to get AP peak
-        peakWindow_pnts = self.ms2Pnt_(dDict['peakWindow_ms'])
-
-        #
-        # throw out spikes that have peak BELOW onlyPeaksAbove_mV
-        # throw out spikes that have peak ABOVE onlyPeaksBelow_mV
-        onlyPeaksAbove_mV = dDict['onlyPeaksAbove_mV']
-        onlyPeaksBelow_mV = dDict['onlyPeaksBelow_mV']
-        spikeTimes,spikeErrorList, newSpikePeakPnt, newSpikePeakVal \
-                         = throwOutAboveBelow_(filteredVm,
-                                spikeTimes, spikeErrorList,
-                                peakWindow_pnts,
-                                onlyPeaksAbove_mV=onlyPeaksAbove_mV,
-                                onlyPeaksBelow_mV=onlyPeaksBelow_mV)
-
-        #
-        # small window to average Vm to calculate MDP (itself in a window before spike)
-        avgWindow_pnts = self.ms2Pnt_(dDict['avgWindow_ms'])
-        avgWindow_pnts = math.floor(avgWindow_pnts/2)
-
-        #
-        # for each spike
-        numSpikes = len(spikeTimes)
-        for i, spikeTime in enumerate(spikeTimes):
-            # spikeTime units is ALWAYS points
-
-            # get the AP peak
-            '''
-            peakPnt = np.argmax(filteredVm[spikeTime:spikeTime+peakWindow_pnts])
-            peakPnt += spikeTime
-            peakVal = np.max(filteredVm[spikeTime:spikeTime+peakWindow_pnts])
-            '''
-            peakPnt = newSpikePeakPnt[i]
-            peakVal = newSpikePeakVal[i]
-            peakSec = (newSpikePeakPnt[i] / self.dataPointsPerMs) / 1000
-
-            #
-            # todo: break this out into a configuration file with
-            # {
-            #    'name': analysisVersion,
-            #    'type': 'str',
-            #    'description': 'The analysis version'
-            # }
-
-            # create one spike dictionary
-            spikeDict = OrderedDict() # use OrderedDict so Pandas output is in the correct order
-
-            #spikeDict['isBad'] = False
-            spikeDict['dateAnalyzed'] = dateStr
-            spikeDict['timeAnalyzed'] = timeStr
-            spikeDict['analysisVersion'] = sanpy.analysisVersion
-            spikeDict['interfaceVersion'] = sanpy.interfaceVersion
-            spikeDict['file'] = self.getFileName()
-
-            spikeDict['detectionType'] = detectionType
-
-            spikeDict['cellType'] = dDict['cellType']
-            spikeDict['sex'] = dDict['sex']
-            spikeDict['condition'] = dDict['condition']
-
-            spikeDict['sweep'] = sweepNumber
-            # keep track of per sweep spike and total spike
-            spikeDict['sweepSpikeNumber'] = i
-            spikeDict['spikeNumber'] = i  # self.numSpikes
-
-            spikeDict['include'] = True
-
-            # todo: make this a byte encoding so we can have multiple user tyes per spike
-            spikeDict['userType'] = 0  # One userType (int) that can have values
-
-            #spikeDict['userType2'] = False
-            #spikeDict['userType3'] = False
-
-            spikeDict['errors'] = []
-            # append existing spikeErrorList from spikeDetect_dvdt() or spikeDetect_mv()
-            tmpError = spikeErrorList[i]
-            if tmpError is not None and tmpError != np.nan:
-                #spikeDict['numError'] += 1
-                spikeDict['errors'].append(tmpError) # tmpError is from:
-                #eDict = self._getErrorDict(i, spikeTime, errType, errStr) # spikeTime is in pnts
-
-            #
-            # detection params
-            spikeDict['dvdtThreshold'] = dDict['dvdtThreshold']
-            spikeDict['mvThreshold'] = dDict['mvThreshold']
-            spikeDict['medianFilter'] = dDict['medianFilter']
-            spikeDict['halfHeights'] = dDict['halfHeights']
-
-            spikeDict['thresholdPnt'] = spikeTime
-            spikeDict['thresholdSec'] = (spikeTime / self.dataPointsPerMs) / 1000
-            spikeDict['thresholdVal'] = filteredVm[spikeTime] # in vm
-            spikeDict['thresholdVal_dvdt'] = filteredDeriv[spikeTime] # in dvdt, spikeTime is points
-
-            # DAC command at the precise spike point
-            spikeDict['dacCommand'] = sweepC[spikeTime]  # spikeTime is in points
-
-            spikeDict['peakPnt'] = peakPnt
-            spikeDict['peakSec'] = peakSec
-            spikeDict['peakVal'] = peakVal
-
-            spikeDict['peakHeight'] = spikeDict['peakVal'] - spikeDict['thresholdVal']
-
-            #
-            # only append to spikeDict after we are done (accounting for spikes within a sweep)
-            self.spikeDict.append(spikeDict)
-            iIdx = len(self.spikeDict) - 1
-            #
-            #
-
-            defaultVal = float('nan')
-
-            # get pre/post spike minima
-            self.spikeDict[iIdx]['preMinPnt'] = None
-            self.spikeDict[iIdx]['preMinVal'] = defaultVal
-
-            # early diastolic duration
-            # 0.1 to 0.5 of time between pre spike min and spike time
-            self.spikeDict[iIdx]['preLinearFitPnt0'] = None
-            self.spikeDict[iIdx]['preLinearFitPnt1'] = None
-            self.spikeDict[iIdx]['earlyDiastolicDuration_ms'] = defaultVal # seconds between preLinearFitPnt0 and preLinearFitPnt1
-            self.spikeDict[iIdx]['preLinearFitVal0'] = defaultVal
-            self.spikeDict[iIdx]['preLinearFitVal1'] = defaultVal
-            # m,b = np.polyfit(x, y, 1)
-            self.spikeDict[iIdx]['earlyDiastolicDurationRate'] = defaultVal # fit of y=preLinearFitVal 0/1 versus x=preLinearFitPnt 0/1
-            self.spikeDict[iIdx]['lateDiastolicDuration'] = defaultVal #
-
-            self.spikeDict[iIdx]['preSpike_dvdt_max_pnt'] = None
-            self.spikeDict[iIdx]['preSpike_dvdt_max_val'] = defaultVal # in units mV
-            self.spikeDict[iIdx]['preSpike_dvdt_max_val2'] = defaultVal # in units dv/dt
-            self.spikeDict[iIdx]['postSpike_dvdt_min_pnt'] = None
-            self.spikeDict[iIdx]['postSpike_dvdt_min_val'] = defaultVal # in units mV
-            self.spikeDict[iIdx]['postSpike_dvdt_min_val2'] = defaultVal # in units dv/dt
-
-            self.spikeDict[iIdx]['isi_pnts'] = defaultVal # time between successive AP thresholds (thresholdSec)
-            self.spikeDict[iIdx]['isi_ms'] = defaultVal # time between successive AP thresholds (thresholdSec)
-            self.spikeDict[iIdx]['spikeFreq_hz'] = defaultVal # time between successive AP thresholds (thresholdSec)
-            self.spikeDict[iIdx]['cycleLength_pnts'] = defaultVal # time between successive MDPs
-            self.spikeDict[iIdx]['cycleLength_ms'] = defaultVal # time between successive MDPs
-
-            # Action potential duration (APD) was defined as the interval between the TOP and the subsequent MDP
-            #self.spikeDict[iIdx]['apDuration_ms'] = defaultVal
-            self.spikeDict[iIdx]['diastolicDuration_ms'] = defaultVal
-
-            # any number of spike widths
-            #print('spikeDetect__() appending widths list to spike iIdx:', iIdx)
-            self.spikeDict[iIdx]['widths'] = []
-            for halfHeight in dDict['halfHeights']:
-                widthDict = {
-                    'halfHeight': halfHeight,
-                    'risingPnt': None,
-                    'risingVal': defaultVal,
-                    'fallingPnt': None,
-                    'fallingVal': defaultVal,
-                    'widthPnts': None,
-                    'widthMs': defaultVal
-                }
-                self.spikeDict[iIdx]['widths_' + str(halfHeight)] = defaultVal
-                self.spikeDict[iIdx]['widths'].append(widthDict)
-
-            #
-            mdp_ms = dDict['mdp_ms']
-            mdp_pnts = self.ms2Pnt_(mdp_ms)  # mdp_ms * self.dataPointsPerMs
-            mdp_pnts = int(mdp_pnts)
-
-            # pre spike min
-            # other algorithms look between spike[i-1] and spike[i]
-            # here we are looking in a predefined window
-            startPnt = spikeTimes[i]-mdp_pnts
-            if startPnt < 0:
-                logger.info('TODO: add an official warning, we went past 0 for pre spike mdp ms window')
-                startPnt = 0
-            preRange = filteredVm[startPnt:spikeTimes[i]] # EXCEPTION
-            preMinPnt = np.argmin(preRange)
-            preMinPnt += startPnt
-            # the pre min is actually an average around the real minima
-            avgRange = filteredVm[preMinPnt-avgWindow_pnts:preMinPnt+avgWindow_pnts]
-            preMinVal = np.average(avgRange)
-
-            # search backward from spike to find when vm reaches preMinVal (avg)
-            preRange = filteredVm[preMinPnt:spikeTimes[i]]
-            preRange = np.flip(preRange) # we want to search backwards from peak
-            try:
-                preMinPnt2 = np.where(preRange<preMinVal)[0][0]
-                preMinPnt = spikeTimes[i] - preMinPnt2
-                self.spikeDict[iIdx]['preMinPnt'] = preMinPnt
-                self.spikeDict[iIdx]['preMinVal'] = preMinVal
-
-            except (IndexError) as e:
-                errorType = 'Pre spike min (mdp)'
-                errorStr = 'Did not find preMinVal: ' + str(round(preMinVal,3)) #+ ' postRange min:' + str(np.min(postRange)) + ' max ' + str(np.max(postRange))
-                eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
-                self.spikeDict[iIdx]['errors'].append(eDict)
-
-            #
-            # The nonlinear late diastolic depolarization phase was
-            # estimated as the duration between 1% and 10% dV/dt
-            # linear fit on 10% - 50% of the time from preMinPnt to self.spikeTimes[i]
-            startLinearFit = 0.1 # percent of time between pre spike min and AP peak
-            stopLinearFit = 0.5 #
-            timeInterval_pnts = spikeTimes[i] - preMinPnt
-            # taking round() so we always get an integer # points
-            preLinearFitPnt0 = preMinPnt + round(timeInterval_pnts * startLinearFit)
-            preLinearFitPnt1 = preMinPnt + round(timeInterval_pnts * stopLinearFit)
-            preLinearFitVal0 = filteredVm[preLinearFitPnt0]
-            preLinearFitVal1 = filteredVm[preLinearFitPnt1]
-
-            # linear fit before spike
-            self.spikeDict[iIdx]['preLinearFitPnt0'] = preLinearFitPnt0
-            self.spikeDict[iIdx]['preLinearFitPnt1'] = preLinearFitPnt1
-            self.spikeDict[iIdx]['earlyDiastolicDuration_ms'] = self.pnt2Ms_(preLinearFitPnt1 - preLinearFitPnt0)
-            self.spikeDict[iIdx]['preLinearFitVal0'] = preLinearFitVal0
-            self.spikeDict[iIdx]['preLinearFitVal1'] = preLinearFitVal1
-
-            # a linear fit where 'm,b = np.polyfit(x, y, 1)'
-            # m*x+b"
-            xFit = sweepX[preLinearFitPnt0:preLinearFitPnt1]  # abb added +1
-            yFit = filteredVm[preLinearFitPnt0:preLinearFitPnt1]
-
-            # sometimes xFit/yFit have 0 length -->> TypeError
-            #print(f' {iIdx} preLinearFitPnt0:{preLinearFitPnt0}, preLinearFitPnt1:{preLinearFitPnt1}')
-            #print(f'    xFit:{len(xFit)} yFit:{len(yFit)}')
-
-            with warnings.catch_warnings():
-                warnings.filterwarnings('error')
-                try:
-                    mLinear, bLinear = np.polyfit(xFit, yFit, 1) # m is slope, b is intercept
-                    self.spikeDict[iIdx]['earlyDiastolicDurationRate'] = mLinear
-                    # todo: make an error if edd rate is too low
-                    lowestEddRate = dDict['lowEddRate_warning']  #8
-                    if mLinear <= lowestEddRate:
-                        errorType = 'Fit EDD'
-                        errorStr = 'Early diastolic duration rate fit - Too low'
-                        eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
-                        self.spikeDict[iIdx]['errors'].append(eDict)
-
-                except (TypeError) as e:
-                    #catching exception:  expected non-empty vector for x
-                    # xFit/yFit turn up empty when mdp and TOP points are within 1 point
-                    '''
-                    print('!!!!!! ERROR is e:', e)
-                    print ('  xFit:', xFit)
-                    print ('  yFit:', yFit)
-                    print('  preLinearFitPnt0:', preLinearFitPnt0)
-                    print('  preLinearFitPnt1:', preLinearFitPnt1)
-                    '''
-                    self.spikeDict[iIdx]['earlyDiastolicDurationRate'] = defaultVal
-                    errorType = 'Fit EDD'
-                    #errorStr = 'Early diastolic duration rate fit - TypeError'
-                    errorStr = 'Early diastolic duration rate fit - preMinPnt == spikePnt'
-                    eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
-                    self.spikeDict[iIdx]['errors'].append(eDict)
-                except (np.RankWarning) as e:
-                    #logger.error('== FIX preLinearFitPnt0/preLinearFitPnt1 RankWarning')
-                    #logger.error(f'  error is: {e}')
-                    #print('RankWarning')
-                    # also throws: RankWarning: Polyfit may be poorly conditioned
-                    self.spikeDict[iIdx]['earlyDiastolicDurationRate'] = defaultVal
-                    errorType = 'Fit EDD'
-                    errorStr = 'Early diastolic duration rate fit - RankWarning'
-                    eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
-                    self.spikeDict[iIdx]['errors'].append(eDict)
-                except:
-                    logger.error(f' !!!!!!!!!!!!!!!!!!!!!!!!!!! UNKNOWN EXCEPTION DURING EDD LINEAR FIT for spike {i}')
-                    self.spikeDict[iIdx]['earlyDiastolicDurationRate'] = defaultVal
-                    errorType = 'Fit EDD'
-                    errorStr = 'Early diastolic duration rate fit - Unknown Exception'
-                    eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
-
-            # not implemented
-            #self.spikeDict[i]['lateDiastolicDuration'] = ???
-
-            #
-            # maxima in dv/dt before spike (between TOP and peak)
-            try:
-                preRange = filteredDeriv[spikeTimes[i]:peakPnt+1]
-                preSpike_dvdt_max_pnt = np.argmax(preRange)
-                preSpike_dvdt_max_pnt += spikeTimes[i]
-                self.spikeDict[iIdx]['preSpike_dvdt_max_pnt'] = preSpike_dvdt_max_pnt
-                self.spikeDict[iIdx]['preSpike_dvdt_max_val'] = filteredVm[preSpike_dvdt_max_pnt] # in units mV
-                self.spikeDict[iIdx]['preSpike_dvdt_max_val2'] = filteredDeriv[preSpike_dvdt_max_pnt] # in units mV
-            except (ValueError) as e:
-                #self.spikeDict[iIdx]['numError'] = self.spikeDict[iIdx]['numError'] + 1
-                # sometimes preRange is empty, don't try and put min/max in error
-                errorType = 'Pre Spike dvdt'
-                errorStr = 'Searching for dvdt max - ValueError'
-                eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
-                self.spikeDict[iIdx]['errors'].append(eDict)
-
-            #
-            # minima in dv/dt after spike
-            #postRange = dvdt[self.spikeTimes[i]:postMinPnt]
-            #postSpike_ms = 20 # 10
-            #postSpike_pnts = self.ms2Pnt_(postSpike_ms)
-            dvdtPostWindow_ms = dDict['dvdtPostWindow_ms']
-            dvdtPostWindow_pnts = self.ms2Pnt_(dvdtPostWindow_ms)
-            postRange = filteredDeriv[peakPnt:peakPnt+dvdtPostWindow_pnts] # fixed window after spike
-
-            postSpike_dvdt_min_pnt = np.argmin(postRange)
-            postSpike_dvdt_min_pnt += peakPnt
-            self.spikeDict[iIdx]['postSpike_dvdt_min_pnt'] = postSpike_dvdt_min_pnt
-            self.spikeDict[iIdx]['postSpike_dvdt_min_val'] = filteredVm[postSpike_dvdt_min_pnt]
-            self.spikeDict[iIdx]['postSpike_dvdt_min_val2'] = filteredDeriv[postSpike_dvdt_min_pnt]
-
-            #
-            # diastolic duration was defined as the interval between MDP and TOP
-            # one off error when preMinPnt is not defined
-            self.spikeDict[iIdx]['diastolicDuration_ms'] = self.pnt2Ms_(spikeTime - preMinPnt)
-
-            #
-            # calculate instantaneous spike frequency and ISI
-            self.spikeDict[iIdx]['cycleLength_ms'] = float('nan')
-            if i > 0:
-                isiPnts = self.spikeDict[iIdx]['thresholdPnt'] - self.spikeDict[iIdx-1]['thresholdPnt']
-                isi_ms = self.pnt2Ms_(isiPnts)
-                isi_hz = 1 / (isi_ms / 1000)
-                self.spikeDict[iIdx]['isi_pnts'] = isiPnts
-                self.spikeDict[iIdx]['isi_ms'] = self.pnt2Ms_(isiPnts)
-                self.spikeDict[iIdx]['spikeFreq_hz'] = 1 / (self.pnt2Ms_(isiPnts) / 1000)
-
-                # Cycle length was defined as the interval between MDPs in successive APs
-                prevPreMinPnt = self.spikeDict[iIdx-1]['preMinPnt'] # can be nan
-                thisPreMinPnt = self.spikeDict[iIdx]['preMinPnt']
-                if prevPreMinPnt is not None and thisPreMinPnt is not None:
-                    cycleLength_pnts = thisPreMinPnt - prevPreMinPnt
-                    self.spikeDict[iIdx]['cycleLength_pnts'] = cycleLength_pnts
-                    self.spikeDict[iIdx]['cycleLength_ms'] = self.pnt2Ms_(cycleLength_pnts)
-                else:
-                    # error
-                    prevPreMinSec = self.pnt2Sec_(prevPreMinPnt)
-                    thisPreMinSec = self.pnt2Sec_(thisPreMinPnt)
-                    #errorStr = f'Previous spike preMinPnt is {prevPreMinPnt} and this preMinPnt: {thisPreMinPnt}'
-                    errorType = 'Cycle Length'
-                    errorStr = f'Previous spike preMinPnt (s) is {prevPreMinSec} and this preMinPnt: {thisPreMinSec}'
-                    eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr) # spikeTime is in pnts
-                    self.spikeDict[iIdx]['errors'].append(eDict)
-
-            #
-            # TODO: Move half-width to a function !!!
-            #
-            hwWindowPnts = dDict['halfWidthWindow_ms'] * self.dataPointsPerMs
-            hwWindowPnts = round(hwWindowPnts)
-            halfHeightList = dDict['halfHeights']
-            self._getHalfWidth(filteredVm, i, iIdx, spikeTime, peakPnt, hwWindowPnts, self.dataPointsPerMs, halfHeightList)
-            #for i in range(1):
-            #    self.spikeDict[iIdx]['widths_'+str(halfHeight)] = widthMs
-            #    self.spikeDict[iIdx]['widths'][j] = widthDict
-
-        #
-        # look between threshold crossing to get minima
-        # we will ignore the first and last spike
-
-        #
-        # spike clips
-        self.spikeClips = None
-        self.spikeClips_x = None
-        self.spikeClips_x2 = None
-
-        #
-        # TODO: THIS WON't EXIST ON RELOAD FROM detection dict and analysis list dict
-        
-        # generate a df holding stats (used by scatterplotwidget)
-        startSeconds = dDict['startSeconds']
-        stopSeconds = dDict['stopSeconds']
-        if self.numSpikes > 0:
-            exportObject = sanpy.bExport(self)
-            self.dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
-        else:
-            self.dfReportForScatter = None
-
-        self.dfError = self.errorReport()
-
-        self._detectionDirty = True  # e.g. bAnalysis needs to be saved
-
-        # done
 
     def _makeSpikeClips(self, preSpikeClipWidth_ms, postSpikeClipWidth_ms=None, theseTime_sec=None, sweepNumber=None):
         """

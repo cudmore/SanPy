@@ -1,4 +1,6 @@
 """
+Dec 2022, NOT USED BY ANY OTHER CODE ?
+
 Utilities to define analysis results.
 
 These are keys in bAnalysis_ spike dict and columns in output reports

@@ -215,7 +215,7 @@ class plotRecording(sanpyPlugin):
         self.static_canvas.draw_idle()
         plt.draw()
 
-    def getEddLines(self):
+    def old_getEddLines(self):
         preLinearFitPnt0 = self.ba.getStat('preLinearFitPnt0')
         preLinearFitSec0 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt0]
         preLinearFitVal0 = self.ba.getStat('preLinearFitVal0')

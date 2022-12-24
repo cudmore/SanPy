@@ -58,7 +58,7 @@ class exportTrace(sanpyPlugin):
             logger.error(f'Unknown myType: "{self.myType}"')
             xyUnits = ('error time', 'error y')
 
-        path = self.ba.path
+        path = self.ba.getFilePath()
 
         xMin, xMax = self.getStartStop()
         '''

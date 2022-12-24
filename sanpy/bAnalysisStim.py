@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 bAnalysis class that loads a stim file.
 
 TODO:
-	- as usualy, plit into interface and gui.
+	- as usual, split into interface and gui.
 		For example, move this to main api (move out of interface)
 		sanpy.interface.plugins.stimGen2.readCommentParams(stimFileComment)
 """

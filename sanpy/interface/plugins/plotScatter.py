@@ -786,9 +786,9 @@ class myStatListWidget(QtWidgets.QWidget):
         try:
             stat = self.statList[humanStat]['name']
         except (KeyError) as e:
+            logger.error(f'Did not find humanStat "{humanStat}" exception:{e}')
             humanStat = None
             stat = None
-            logger.error(f'Did not find humanStat "{humanStat}" exception:{e}')
             #for k,v in
 
         return humanStat, stat
