@@ -1,6 +1,6 @@
 
 [![Python](https://img.shields.io/badge/python-3.7|3.8|3.9|3.10|3.11-blue.svg)](https://www.python.org/downloads/release/python-3111/)
-[![tests](https://github.com/cudmore/SanPy/Test/badge.svg)](https://github.com/cudmore/SanPy/actions)
+[![tests](https://github.com/cudmore/SanPy/workflows/Test/badge.svg)](https://github.com/cudmore/SanPy/actions)
 
 old badges here
 

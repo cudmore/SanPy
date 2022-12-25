@@ -44,7 +44,7 @@ jobs:
 
     - name: Test and generate coverage report
       run: |
-        pytest --cov=./tests --cov-report=xml --ignore=./tests/interface tests
+        pytest --cov=./tests --cov-report=xml --ignore=./tests/interface ./tests
 
     - name: Run flake8
       run: |
