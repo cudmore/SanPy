@@ -50,9 +50,9 @@ jobs:
       run: |
         pytest --cov=./tests --cov-report=xml --ignore=./tests/interface ./tests
 
-    - name: Run unittest
-      run: |
-        python -m unittest
+    # - name: Run unittest
+    #   run: |
+    #     python -m unittest
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
