@@ -1,4 +1,9 @@
 
+[![Python](https://img.shields.io/badge/python-3.7|3.8|3.9|3.10|3.11-blue.svg)](https://www.python.org/downloads/release/python-3111/)
+[![tests](https://github.com/cudmore/SanPy/Test/badge.svg)](https://github.com/cudmore/SanPy/actions)
+
+old badges here
+
 [![Build Status](https://travis-ci.org/cudmore/SanPy.svg?branch=master)](https://travis-ci.org/cudmore/SanPy)
 [![Python package](https://github.com/cudmore/SanPy/actions/workflows/python-package.yml/badge.svg)](https://github.com/cudmore/SanPy/actions/workflows/python-package.yml)
 
