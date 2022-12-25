@@ -1,6 +1,5 @@
 
 [![Build Status](https://travis-ci.org/cudmore/SanPy.svg?branch=master)](https://travis-ci.org/cudmore/SanPy)
-
 [![Python package](https://github.com/cudmore/SanPy/actions/workflows/python-package.yml/badge.svg)](https://github.com/cudmore/SanPy/actions/workflows/python-package.yml)
 
 ## SanPy, pronounced ['senpai']['senpai']
