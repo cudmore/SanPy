@@ -120,3 +120,19 @@ We provide a Python library that can load, analyze, save, and plot eletropysiolo
 
 When you publish a paper, you need to ensure your primary data is available for interogation and that your analysis can be reproduced. This software facilitates that by allowing you to share the raw data, provide the code that was used to analyze it, and explicity show how it was analyzed such that it can be verified and reproduced.
 
+## Other software
+
+These is of course other software to do similar things. This is not a complete list.
+
+ - [ParamAP][ParamAP] - Standardized parameterization of sinoatrial node myocyte action potentials
+ - [stimfit][stimfit] - A program for viewing and analyzing electrophysiological data
+
+C++ libraries
+
+ - [biosig][biosig] - A C/C++ library providing reading and writing routines for biosignal data formats
+ - [sigviewer][sigviewer] - SigViewer is a viewing application for biosignals.
+
+[ParamAP]: https://github.com/christianrickert/ParamAP
+[stimfit]: https://github.com/neurodroid/stimfit
+[biosig]: http://biosig.sourceforge.net/projects.html
+[sigviewer]: https://github.com/cbrnr/sigviewer
