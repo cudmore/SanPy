@@ -1,17 +1,17 @@
 from setuptools import setup, find_packages
 
-#exec (open('bimpy/version.py').read())
+VERSION = "0.1.3"
 
 setup(
     name='sanpy',
-    version='0.1.2',
-    description='Cardiac Myocyte Current Clamp Analysis',
+    version=VERSION,
+    description='Whole cell current clamp analysis.',
     url='http://github.com/cudmore/SanPy',
     author='Robert H Cudmore',
     author_email='robert.cudmore@gmail.com',
-    license='GNU GPLv3',
+    license='GNU General Public License, Version 3',
 	# this is CRITICAL to import submodule like sanpy.userAnalysis
-	packages=find_packages(include=['sanpy', 'sanpy.*']),
+	packages=find_packages(include=['sanpy', 'sanpy.*', 'sanpy.interface']),
     #packages=['sanpy', 'sanpy.userAnalysis'],
 	install_requires=[
         'numpy',
@@ -51,7 +51,9 @@ setup(
             'pyinstaller',
             'ipython',
 		],
+        'test':["pytest", "pytest-cov", "pooch"],
     },
+    python_requires=">=3.7",
     entry_points={
         'console_scripts': [
             'sanpy=sanpy.interface.sanpy_app:main',

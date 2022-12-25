@@ -36,16 +36,16 @@ git clone git@github.com:cudmore/SanPy.git
 cd SanPy
 ```
 
-2) Make a virtual environment (with either conda or venv)
+2) Create and activate a virtual environment with either `conda` or `venv`
 
-2.1) With conda
+ 2.1) With `conda`
 
 ```
 conda create -y -n sanpy1-env python=3.9
 conda activate sanpy1-env
 ```
 
-2.2) With venv
+ 2.2) With `venv`
 
 ```
 python -m venv sanpy1-env
