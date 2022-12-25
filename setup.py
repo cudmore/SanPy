@@ -51,7 +51,7 @@ setup(
             'pyinstaller',
             'ipython',
 		],
-        'test':["pytest", "pytest-cov", "pooch"],
+        'test':["pytest", "pytest-cov", 'flake8', "pooch"],
     },
     python_requires=">=3.7",
     entry_points={
