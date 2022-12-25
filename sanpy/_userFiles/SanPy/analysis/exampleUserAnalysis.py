@@ -29,7 +29,7 @@ class exampleUserAnalysis(baseUserAnalysis):
         self.addUserStat('User Time To Peak (ms)', 'user_timeToPeak_ms')
 
     def run(self):
-        """This is the user code to create and then fill in a new key/value for each spike.
+        """This is the user code to create and then fill in a new name/value for each spike.
         """
 
         # get filtered vm for the entire trace

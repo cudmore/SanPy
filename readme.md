@@ -7,9 +7,11 @@
 
 ['senpai']: https://en.wikipedia.org/wiki/Senpai_and_k%C5%8Dhai
 
-## Whole cell myocyte action potential analysis
+## Whole cell action potential analysis
 
-This repository has code to perform [cardiac action potential][cardiac action potential] analysis. It is primarily designed to analyze spontaneous cardiac action potentials from whole-cell current-clamp recordings of [cardiac myocytes].
+Originally designed for cardiac myocytes, we have been busy extending this software to handle most whole-cell current clamp recordings and analysis.
+
+We began with code to perform [cardiac action potential][cardiac action potential] analysis. Originally, this was primarily designed to analyze spontaneous cardiac action potentials from whole-cell current-clamp recordings of [cardiac myocytes].
 
 [cardiac action potential]: https://en.wikipedia.org/wiki/Cardiac_action_potential
 [cardiac myocytes]: https://en.wikipedia.org/wiki/Cardiac_muscle_cell
@@ -20,9 +22,48 @@ This repository has code to perform [cardiac action potential][cardiac action po
 
 ['sanpy-docs']: https://cudmore.github.io/SanPy/
 
-## This is a work in progress, do not use this code.
+## This is a work in progress, use with caution.
 
 If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.
+
+## Install from source
+
+This code will run on macOS, Microsoft Windows, and Linux.
+
+1) Clone the repository
+
+```
+git clone git@github.com:cudmore/SanPy.git
+cd SanPy
+```
+
+2) Make a virtual environment (with either conda or venv)
+
+2.1) With conda
+
+```
+conda create -y -n sanpy1-env python=3.9
+conda activate sanpy1-env
+```
+
+2.2) With venv
+
+```
+python -m venv sanpy1-env
+source sanpy1-env/bin/activate
+```
+
+3) Install the code
+
+```
+pip install -e .
+```
+
+4) Run `sanpy`
+
+```
+sanpy
+```
 
 ## Desktop Application
 
@@ -30,7 +71,6 @@ The desktop application allows the user to load a folder of files (top table). S
 
 
 <IMG SRC="docs/docs/img/spike-app.png" width=700>
-
 
 <IMG SRC="docs/docs/img/meta-window-example.png" width=700>
 
@@ -52,135 +92,6 @@ plt.show()
 
 <IMG SRC="docs/docs/img/example1.png" width=600>
 
-## Install
-
-This code will run on macOS, Microsoft Windows, or Linux.
-
-Assuming you have the following
-
- - [Python 3.7.x][python3]
- - [pip][pip]
- - [git][git] (optional)
-
-### Install the desktop application
-
-##### Option 1) Install using ./install
-
-```
-# If you have git installed.
-# Clone the github repository (this will create a SanPy/ folder).
-git clone https://github.com/cudmore/SanPy.git
-
-# If you do not have git installed you can download the .zip file manually.
-# In a browser, go to 'https://github.com/cudmore/SanPy'.
-# Click green button 'Clone or download'.
-# Select 'Download ZIP'.
-# Once downloaded, manually extract the contents of the .zip file and continue following this tutorial.
-
-# Change into the cloned or downloaded 'SanPy/' folder.
-cd SanPy
-
-# Install
-./install
-
-# Run
-./run
-```
-
-##### Option 2) Install manually
-
-```
-# clone the github repository (this will create a SanPy/ folder)
-git clone https://github.com/cudmore/SanPy.git
-
-# change into the cloned SanPy folder
-cd SanPy
-
-# create a Python3 virtual environment in 'sanpy_env/' folder
-python -m venv sanpy_env
-
-# [OR] if python is bound to Python 2 (check with 'python --version')
-
-python3 -m venv sanpy_env
-
-# activate the virtual environment in sanpy_env/
-source sanpy_env/bin/activate
-
-# install the package
-pip install .
-
-# [OR] install the required python packages (into the activated virtual environment)
-# pip install -r requirements.txt
-```
-
-### Running the desktop application
-
-##### Option 1) Using ./run
-
-```
-cd SanPy
-./run
-```
-
-##### Option 2) Manually
-
-```
-# activate the virtual environment in sanpy_env/
-cd SanPy
-source sanpy_env/bin/activate
-
-# run the desktop application
-python sanpy/sanpy_app.py
-```
-
-## Web Application
-
-The browser based web application provides the same interface for analysis as the desktop application.
-
-<IMG SRC="docs/docs/img/app2-interface.png" width=700 border=1>
-
-
-Once data is analyzed, Pooling allows browsing detection parameters across any number of files.
-
-
-<IMG SRC="docs/docs/img/pymy-pooling.png" width=700 border=1>
-
-### Install the web application
-
-Please note, this is experimental and does not have all functions implemented. Please use the desktop version instead.
-
-```
-cd SanPy/dash
-pip install -r requirements.txt
-```
-
-### Running the web applications
-
-Run the web application to analyze raw data
-
-```
-cd SanPy/dash
-python app2.py
-```
-
-The web application for analysis is available at
-
-```
-http://localhost:8000
-```
-
-Run the web application to browse and pool saved analysis
-
-```
-cd SanPy/dash
-python bBrowser_app.py
-```
-
-The web application for browsing and pooling saved analysis is available at
-
-```
-http://localhost:8050
-```
 
 ## What spike parameters are detected?
 

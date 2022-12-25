@@ -23,11 +23,16 @@ pip install napari
 
 # install SanPy
 
+```
+conda create -y -n sanpy1-env python=3.9
+conda activate sanpy1-env
 
-conda create -y -n sanpy-env python=3.9
-conda activate sanpy-env
+pip install -e .
+```
 
+```
 pip install --upgrade pip setuptools
+```
 
 setuptools 61.2.0 -->> 62.4.0
 pip 21.2.4 -->> 22.1.2 (???)
