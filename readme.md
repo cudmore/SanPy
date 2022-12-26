@@ -3,7 +3,7 @@
 [![tests](https://github.com/cudmore/SanPy/workflows/Test/badge.svg)](https://github.com/cudmore/SanPy/actions)
 [![codecov](https://codecov.io/github/cudmore/SanPy/branch/master/graph/badge.svg?token=0ZR226588I)](https://codecov.io/github/cudmore/SanPy)
 [![OS](https://img.shields.io/badge/OS-Linux|Windows|macOS-blue.svg)]()
-[![License](https://img.shields.io/badge/license-GPLv3-blue)](https://github.com/cudmore/SanPy/blob/main/LICENSE)
+[![License](https://img.shields.io/badge/license-GPLv3-blue)](https://github.com/cudmore/SanPy/blob/master/LICENSE)
 
 ## SanPy, pronounced ['senpai']['senpai']
 
