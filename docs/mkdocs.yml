@@ -58,6 +58,7 @@ nav:
     - Install: install.md
     - Desktop Application: desktop-application.md
     - Plugins: plugins.md
+    - File Loaders: file-loaders.md
     - Scripting:
         - Overview: scripting/overview.ipynb
         - Examples: scripting/examples.ipynb
@@ -71,6 +72,10 @@ nav:
         - bExport: api/bExport.md
         - bDetection: api/bDetection.md
         - bAnalysisUtil: api/bAnalysisUtil.md
+        - fileLoader:
+            - fileLoader_base: api/fileloader/fileLoader_base.md
+            - fileLoader_abf: api/fileloader/fileLoader_abf.md
+            - fileLoader_csv: api/fileloader/fileLoader_csv.md
         - baseUserAnalysis: api/userAnalysis/baseUserAnalysis.md
         - interface:
             - sanp_app: api/interface/sanpy_app.md

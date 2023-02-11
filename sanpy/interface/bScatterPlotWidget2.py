@@ -44,14 +44,14 @@ import sanpy
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def loadDatabase(path):
+def old_loadDatabase(path):
     """
     path: full path to .csv file generated with reanalyze.py
     """
     #path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
     masterDf = None
     if not os.path.isfile(path):
-        print('eror: bUtil.loadDatabase() did not find file:', path)
+        logger.error('did not find file:', path)
     elif path.endswith('.csv'):
         masterDf = pd.read_csv(path, header=0) #, dtype={'ABF File': str})
     elif path.endswith('.xls'):
@@ -462,7 +462,7 @@ class myMplCanvas(QtWidgets.QFrame):
 
     def __init__(self, plotNumber=None, parent=None):
 
-        super(myMplCanvas, self).__init__(parent) # FigureCanvas
+        super().__init__(parent) # FigureCanvas
 
         #self.plotType = None
 
@@ -998,6 +998,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                     statListDict=None,
                     interfaceDefaults=None,
                     masterDf=None,
+                    limitToCol=None,  # col like 'epoch' to create popup to limit to one value (like 0)
                     parent=None):
         """
         path: full path to .csv file generated with reanalyze
@@ -1017,7 +1018,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         todo: remove analysisName and add as 'groupby' popup from categorical columns
             depending on 'analysisName' popup, group differently in getMeanDf
         """
-        super(bScatterPlotMainWindow, self).__init__(parent)
+        super().__init__(parent)
 
         #self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
 
@@ -1036,6 +1037,9 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # assigns self.masterDf
         # if masterDf is not None will use masterDf rather than loading path
         self.loadPath(path, masterDf=masterDf, categoricalList=categoricalList)
+
+        # dec 2022
+        self._limitToCol = limitToCol
 
         # statListDict is a dict with key=humanstat name and yStat=column name in csv
         #self.statListDict = sanpy.bAnalysisUtil.getStatList()
@@ -1142,6 +1146,23 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
     def _mySetWindowTitle(self, windowTitle):
         """Required to interact with sanpyPlugin."""
         self.setWindowTitle(windowTitle)
+
+    def _buildPlotOptionsLayout(self):
+        hBoxLayout = QtWidgets.QHBoxLayout()
+
+        hueList = ['None'] + self.hueTypes # prepend 'None'
+        hueDropdown = QtWidgets.QComboBox()
+        hueDropdown.addItems(hueList)
+        # if interfaceDefaults['Hue'] is not None:
+        #     defaultIdx = _defaultDropdownIdx(hueList, interfaceDefaults['Hue'])
+        # else:
+        #     defaultIdx = 0
+        defaultIdx = 0
+        hueDropdown.setCurrentIndex(defaultIdx) # 1 because we pre-pended 'None'
+        hueDropdown.currentIndexChanged.connect(self.updateHue)
+
+        hBoxLayout.addWidget(hueDropdown)
+        return hBoxLayout
 
     def buildUI(self, interfaceDefaults):
         if self.darkTheme:
@@ -1353,18 +1374,31 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.layout.addWidget(QtWidgets.QLabel("Y Statistic"), 1, col)
         self.layout.addWidget(self.yDropdown, 1, col+1)
         '''
-
+        
         aName = 'Replot'
         aButton = QtWidgets.QPushButton(aName)
         aButton.clicked.connect(partial(self.on_button_click, aName))
-        self.layout.addWidget(aButton, 0, 0)
+        self.layout.addWidget(aButton, 1, 0)
 
         self.layout.addWidget(QtWidgets.QLabel("Hue (Plot)"), 2, col)
         self.layout.addWidget(self.hueDropdown, 2, col+1)
+
         self.layout.addWidget(QtWidgets.QLabel("Group By (Stats)"), 3, col)
         self.layout.addWidget(self.groupByDropdown, 3, col+1)
         #self.layout.addWidget(QtWidgets.QLabel("Color"), 3, 0)
         #self.layout.addWidget(self.colorDropdown, 3, 1)
+
+        #dec2022
+        # print(self._limitToCol)
+        # self.limitToDropdown = QtWidgets.QComboBox()
+        # if self._limitToCol is not None:
+        #     self.limitToDropdown.addItem('None')
+        #     for _x in self._limitToCol:
+        #         self.limitToDropdown.addItem(_x)
+        # self.limitToDropdown.setCurrentIndex(0)
+        # self.limitToDropdown.currentIndexChanged.connect(self.updateLimitTo)
+        # self.layout.addWidget(self.limitToDropdown, 3, col+1)
+
         #
         col += 2
         self.layout.addWidget(QtWidgets.QLabel("Plot Type"), 0, col)
@@ -1907,6 +1941,9 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.groupByColumnName = self.groupByDropdown.currentText()
         self.update2() # todo: don't update plot, update table
 
+    def updateLimitTo(self):
+        logger.info('')
+
     '''
     def updateColor(self):
         color = self.colorDropdown.currentText()
@@ -2331,5 +2368,14 @@ def test():
 
     sys.exit(app.exec_())
 
+def testDec2022():
+    import sanpy.interface
+    app = QtWidgets.QApplication(sys.argv)
+    df = pd.read_csv('/Users/cudmore/Desktop/tmpDf-20221231.csv')
+    ptp = sanpy.interface.plugins.plotToolPool(tmpMasterDf=df)
+    ptp.show()
+    sys.exit(app.exec_())
+
 if __name__ == '__main__':
-    test()
+    # test()
+    testDec2022()

@@ -39,7 +39,7 @@ class kymographPlugin2(QtWidgets.QWidget):
         # switching to hold actual bAnalysis
         #self._ba = sanpy.bAnalysis(path)
         self._ba = None
-        if ba is not None and ba.isKymograph():
+        if ba is not None and ba.fileLoader.isKymograph():
             self._ba = ba
 
         # self._kymographAnalysis = sanpy.kymographAnalysis(path)
@@ -144,7 +144,7 @@ class kymographPlugin2(QtWidgets.QWidget):
             self._kymographAnalysis.setPercentOfMax(value)
 
     def slotSwitchFile(self, ba :sanpy.bAnalysis):
-        if ba is not None and not ba.isKymograph:
+        if ba is not None and not ba.fileLoader.isKymograph():
             return
 
         self._ba = ba

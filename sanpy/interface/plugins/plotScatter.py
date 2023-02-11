@@ -538,12 +538,7 @@ class plotScatter(sanpyPlugin):
 
         #if spikeList is not None:
         if len(spikeList) > 0:
-            #xData = self.ba.getStat(self.xStatName, sweepNumber=self.sweepNumber)
-            #xData = np.array(xData)
             xData = [self.xData[spikeList]]
-
-            #yData = self.ba.getStat(self.yStatName, sweepNumber=self.sweepNumber)
-            #yData = np.array(yData)
             yData = [self.yData[spikeList]]
         else:
             xData = []

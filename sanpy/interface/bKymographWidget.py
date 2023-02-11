@@ -137,7 +137,7 @@ class kymographWidget(QtWidgets.QWidget):
     def on_button_click(self, name):
         logger.info(name)
         if name == 'Reset ROI':
-            newRect = self.ba.resetKymographRect()
+            newRect = self.ba.fileLoader.resetKymographRect()
             #self.ba._updateTifRoi(newRect)
             self._replot()
             self.signalKymographRoiChanged.emit(newRect)  # underlying _abf has new rect
@@ -496,7 +496,7 @@ class kymographWidget(QtWidgets.QWidget):
         # todo: get from tifHeader
         umLength = self.ba.tifData.shape[0] * self.ba._abf.tifHeader['umPerPixel']
 
-        rect=[0,0, self.ba.recordingDur, umLength]  # x, y, w, h
+        rect=[0,0, self.ba.fileLoader.recordingDur, umLength]  # x, y, w, h
         
         if self.myImageItem is None:
             # first time build
@@ -561,7 +561,7 @@ class kymographWidget(QtWidgets.QWidget):
             self.myColorBarItem.setImageItem( self.myImageItem, insert_in=self.kymographPlot )
             self.myColorBarItem.setLevels(values=values)
 
-        kymographRect = self.ba.getKymographRect()
+        kymographRect = self.ba.fileLoader.getKymographRect()
         if kymographRect is not None:
             # TODO: I guess we always have a rect, o.w. this would be a runtime error
             xRoiPos = kymographRect[0]
@@ -608,7 +608,7 @@ class kymographWidget(QtWidgets.QWidget):
 
         #
         # background kymograph ROI
-        backgroundRect = self.ba.getKymographBackgroundRect()  # keep this in the backend
+        backgroundRect = self.ba.fileLoader.getKymographBackgroundRect()  # keep this in the backend
         if backgroundRect is not None:
             xRoiPos = backgroundRect[0]
             yRoiPos = backgroundRect[3]
@@ -631,7 +631,7 @@ class kymographWidget(QtWidgets.QWidget):
         
         # update min/max labels
         # TODO: only set this once on switch file
-        myTifOrig = self.ba.tifData
+        myTifOrig = self.ba.fileLoader.tifData
         minTif = np.nanmin(myTifOrig)
         maxTif = np.nanmax(myTifOrig)
         #print(type(dtype), dtype)  # <class 'numpy.dtype[uint16]'> uint16
@@ -651,7 +651,7 @@ class kymographWidget(QtWidgets.QWidget):
         self._rightFitScatter.setVisible(visible)
 
         if visible:
-            x = self.ba.sweepX
+            x = self.ba.fileLoader.sweepX
             #TODO: check that len(y) == len(x)
             self._leftFitScatter.setData(x, yLeft)
             self._rightFitScatter.setData(x, yRight)
@@ -660,14 +660,14 @@ class kymographWidget(QtWidgets.QWidget):
         """
         update background roi
 
-        TODO: Add self.ba.getBackGroundStats()
+        TODO: Add self.ba.fileLoader.getBackGroundStats()
 
         """
         logger.warning(f'Need to add interface for user to adjust background roi')
         return
         
         if backgroundRect is None:
-            backgroundRect = self.ba.getKymographBackgroundRect()
+            backgroundRect = self.ba.fileLoader.getKymographBackgroundRect()
 
         left = backgroundRect[0]
         top = backgroundRect[1]
@@ -691,7 +691,7 @@ class kymographWidget(QtWidgets.QWidget):
 
         logger.info(f'left:{left} top:{top} right:{right} bottom:{bottom}')
         
-        myTif = self.ba.tifData
+        myTif = self.ba.fileLoader.tifData
         tifClip = myTif[bottom:top, left:right]
 
         roiMin = np.nanmin(tifClip)
@@ -711,7 +711,7 @@ class kymographWidget(QtWidgets.QWidget):
         # pos = event.pos()
         # size = event.size()
 
-        _kymographRect = self.ba.getKymographRect()  # (l, t, r, b)
+        _kymographRect = self.ba.fileLoader.getKymographRect()  # (l, t, r, b)
 
         left = _kymographRect[0]
         top = _kymographRect[1]
@@ -750,7 +750,7 @@ class kymographWidget(QtWidgets.QWidget):
             bottom = 0
 
         # force left and right
-        _kymographRect = self.ba.getKymographRect()  # (l, t, r, b)
+        _kymographRect = self.ba.fileLoader.getKymographRect()  # (l, t, r, b)
         left = 0
         right = _kymographRect[2]
 
@@ -771,17 +771,17 @@ class kymographWidget(QtWidgets.QWidget):
         #self.ba._updateTifRoi(theRect)
         #self._replot(startSec=None, stopSec=None, userUpdate=True)
         #self.signalDetect.emit(self.ba)  # underlying _abf has new rect
-        self.ba._updateTifRoi(theRect)
+        self.ba.fileLoader._updateTifRoi(theRect)
         self.signalKymographRoiChanged.emit(theRect)  # underlying _abf has new rect
 
     def slot_switchFile(self, ba=None, startSec=None, stopSec=None):
-        if ba is not None and ba.isKymograph():
+        if ba is not None and ba.fileLoader.isKymograph():
             self.ba = ba
             #self._updateRoiMinMax(theRect)
             self._replot(startSec=startSec, stopSec=stopSec)
 
             # update line scan slider
-            _numLineScans = len(self.ba.sweepX) - 1
+            _numLineScans = len(self.ba.fileLoader.sweepX) - 1
             self._profileSlider.setMaximum(_numLineScans)
 
     def hoverEvent(self, event):
@@ -794,7 +794,7 @@ class kymographWidget(QtWidgets.QWidget):
         xPos = int(xPos)
         yPos = int(yPos)
 
-        myTif = self.ba.tifData
+        myTif = self.ba.fileLoader.tifData
         intensity = myTif[yPos, xPos]  # flipped
 
         #logger.info(f'x:{xPos} y:{yPos} intensity:{intensity}')

@@ -59,9 +59,6 @@ class resultsTable(sanpyPlugin):
         self.replot()
 
     def _getReport(self):
-        # exportObject = sanpy.bExport(self.ba)
-        # startSec, stopSec = self.getStartStop()
-        # dfPlot = exportObject.report(startSec, stopSec)
         dfPlot = self.ba.asDataFrame()
         return dfPlot
 
@@ -85,7 +82,7 @@ class resultsTable(sanpyPlugin):
             errorReportModel = sanpy.interface.bFileTable.pandasModel(dfPlot)
             self.myErrorTable.setModel(errorReportModel)
 
-            self._fileLabel.setText(f'{self.ba.getFileName()}')
+            self._fileLabel.setText(f'{self.ba.fileLoader.filename}')
             self._numSpikesLabel.setText(f'{len(dfPlot)} spikes')
 
     def copyToClipboard(self):

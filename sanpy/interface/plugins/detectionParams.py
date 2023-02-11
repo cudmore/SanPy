@@ -79,7 +79,7 @@ class detectionParams(sanpyPlugin):
 
         fileName = 'None'
         if self.ba is not None:
-            fileName = self.ba.getFileName()
+            fileName = self.ba.fileLoader.filename
         self.fileNameLabel = QtWidgets.QLabel(f'File: {fileName}')
         hControlLayout.addWidget(self.fileNameLabel, alignment=QtCore.Qt.AlignLeft)
 

@@ -13,7 +13,7 @@ import sanpy.bDetection
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def loadDatabase(path):
+def old_loadDatabase(path):
 	"""
 	Load a csv/xls/xlsx file as a pandas dataframe.
 

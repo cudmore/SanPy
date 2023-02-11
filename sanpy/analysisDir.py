@@ -277,8 +277,8 @@ class analysisDir():
     """File types to load.
     """
 
-    def __init__(self, path=None, myApp=None,
-                    autoLoad=False,
+    def __init__(self, path : str = None, myApp = None,
+                    autoLoad : bool = False,
                     folderDepth : Union[int, None] = None
                     ):
         """
@@ -289,17 +289,12 @@ class analysisDir():
 
         Args:
             path (str): Path to folder
-            myApp (sanpy_app): Optional
-            autoLoad (boolean):
-            folderDepth: 
+            myApp (sanpy.interface.sanpy_app): Optional
+            autoLoad (bool):
+            folderDepth (int): 
             cloudDict (dict): To load frmo cloud, for now  just github
 
         Notes:
-            - on load existing .csv
-                - match columns in file with 'sanpyColumns'
-                - check that each file in csv exists in the path
-                - check if there are files in the path NOT in the csv
-
             - Some functions are so self can mimic a pandas dataframe used by pandasModel.
                 (shape, loc, loc_setter, iloc, iLoc_setter, columns, append, drop, sort_values, copy)
         """
@@ -319,6 +314,7 @@ class analysisDir():
         # needs to be a list so we can have files more than one
         #self.fileList = [] #OrderedDict()
 
+        # TODO: refactor, we are not using the csv parth of this, just the filename
         # name of database file created/loaded from folder path
         self.dbFile = 'sanpy_recording_db.csv'
 
@@ -962,8 +958,10 @@ class analysisDir():
                 # print(f'    self._df.loc[rowIdx, "relPath"] is "{self._df.loc[rowIdx, "relPath"]}"')
 
             # kymograph interface
-            if ba is not None and ba.isKymograph():
-                kRect = ba.getKymographRect()
+            #if ba is not None and ba.isKymograph():
+            # if ba is not None and isinstance(ba, sanpy.fileloaders.fileLoader_tif):
+            if ba is not None and ba.fileLoader.isKymograph():
+                kRect = ba.fileLoader.getKymographRect()
 
                 #print(kRect)
                 #sys.exit(1)
@@ -1025,7 +1023,7 @@ class analysisDir():
         uuid = self._df.at[rowIdx, 'uuid']
         return len(uuid) > 0
 
-    def getAnalysis(self, rowIdx, allowAutoLoad=True, verbose=True):
+    def getAnalysis(self, rowIdx, allowAutoLoad=True, verbose=True) -> sanpy.bAnalysis:
         """
         Get bAnalysis object, will load if necc.
 
@@ -1069,7 +1067,9 @@ class analysisDir():
                         logger.error(f'  Existing {uuid}')
 
                 # kymograph, set ba rect from table
-                if ba.isKymograph():
+                # if ba.isKymograph():
+                # if ba is not None and isinstance(ba, sanpy.fileloaders.fileLoader_tif):
+                if ba is not None and ba.fileLoader.isKymograph():
                     left = self._df.loc[rowIdx, 'kLeft']
                     top = self._df.loc[rowIdx, 'kTop']
                     right = self._df.loc[rowIdx, 'kRight']
@@ -1081,8 +1081,8 @@ class analysisDir():
                         pass
                     else:
                         theRect = [left, top, right, bottom]
-                        print(f'  theRect:{theRect}')
-                        ba._updateTifRoi(theRect)
+                        logger.info(f'  theRect:{theRect}')
+                        ba.fileLoader._updateTifRoi(theRect)
 
                 #
                 # update stats of table load/analyzed columns
@@ -1174,18 +1174,18 @@ class analysisDir():
             rowDict['I'] = 2 # need 2 because checkbox value is in (0,2)
         '''
 
-        rowDict['File'] = ba.getFileName() #os.path.split(ba.path)[1]
-        rowDict['Dur(s)'] = ba.recordingDur
+        rowDict['File'] = ba.fileLoader.filename #os.path.split(ba.path)[1]
+        rowDict['Dur(s)'] = ba.fileLoader.recordingDur
 
-        rowDict['Channels'] = ba.numChannels  # Theanne
+        rowDict['Channels'] = ba.fileLoader.numChannels  # Theanne
 
-        rowDict['Sweeps'] = ba.numSweeps
+        rowDict['Sweeps'] = ba.fileLoader.numSweeps
 
         # TODO: here, we do not get an epoch table until the file is loaded !!!
-        rowDict['Epochs'] = ba.numEpochs  # Theanne, data has to be loaded
+        rowDict['Epochs'] = ba.fileLoader.numEpochs  # Theanne, data has to be loaded
 
-        rowDict['kHz'] = ba.recordingFrequency
-        rowDict['Mode'] = ba.recordingMode
+        rowDict['kHz'] = ba.fileLoader.recordingFrequency
+        rowDict['Mode'] = ba.fileLoader.recordingMode
 
         #rowDict['dvdtThreshold'] = 20
         #rowDict['mvThreshold'] = -20
@@ -1199,9 +1199,8 @@ class analysisDir():
 
         return ba, rowDict
 
-    def getFileList(self, path=None):
-        """
-        Get file paths from path.
+    def getFileList(self, path : str = None) -> List[str]:
+        """Get file paths from path.
 
         Uses self.theseFileTypes
         """
@@ -1209,11 +1208,17 @@ class analysisDir():
             path = self.path
 
         logger.warning('Remember: MODIFIED TO LOAD TIF FILES IN SUBFOLDERS')
-        count = 0
+        count = 1
         tmpFileList = []
         folderDepth = self.folderDepth  # if none then all depths
+        excludeFolders = ['analysis', 'hide']
         for root, subdirs, files in os.walk(path):
 
+            subdirs[:] = [d for d in subdirs if d not in excludeFolders]
+
+            print('folderDepth:', folderDepth)
+            print('  root:', root, 'subdirs:', subdirs, 'files:', files)
+            
             # strip out folders that start with __
             #_parentFolder = os.path.split(root)[1]
             #print('root:', root)
@@ -1223,22 +1228,24 @@ class analysisDir():
                 logger.info(f'SKIPPING based on path root:{root}')
                 continue
 
-            # print('=== subdirs:', subdirs)
-            # print('    root:', root)
+            if os.path.split(root)[1] == 'analysis':
+                # don't load from analysis/ folder, we save analysis there
+                continue
 
-            if folderDepth is not None and count > folderDepth:
-                break
+            # if os.path.split(root)[1] == 'hide':
+            #     # special case/convention, don't load from 'hide' folders
+            #     continue
+
+            for file in files:
+                # TODO (cudmore) parse all our fileLoader(s) for a list
+                _, _ext = os.path.splitext(file)
+                if _ext in self.theseFileTypes:
+                    oneFile = os.path.join(root, file)
+                    tmpFileList.append(oneFile)
 
             count += 1
-            for file in files:
-                #if file.endswith('.tif'):
-                if file.endswith('.tif') or file.endswith('.abf'):
-                    oneFile = os.path.join(root, file)
-                    #print('  ', oneFile)
-                    tmpFileList.append(oneFile)
-        
-        #tmpFileList = os.listdir(path)
-
+            if folderDepth is not None and count > folderDepth:
+                break
 
         fileList = []
         for file in sorted(tmpFileList):
@@ -1420,7 +1427,7 @@ class analysisDir():
             ba = self.getAnalysis(row)
             oneDf = ba.asDataFrame()
             if oneDf is not None:
-                self.signalApp(f'  adding "{ba.getFileName()}"')
+                self.signalApp(f'  adding "{ba.fileLoader.filename}"')
                 oneDf['File Number'] = int(row)
                 if masterDf is None:
                     masterDf = oneDf

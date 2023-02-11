@@ -30,7 +30,6 @@ class kymographPlugin(sanpyPlugin):
         return self._kymWidget
 
     def replot(self):
-        #path = self.ba.getFilePath()
         if self._kymWidget is None:
             self._kymWidget = sanpy.interface.kymographPlugin2(self.ba)
         self._kymWidget.slotSwitchFile(self.ba)
@@ -40,7 +39,7 @@ class kymographPlugin(sanpyPlugin):
         replot = False
         super().slot_switchFile(rowDict, ba, replot=replot)
 
-        if ba is not None and ba.myFileType != 'tif':
+        if ba is not None and ba.fileLoader.isKymograph():
             logger.error(f'only tif files are supported')
             #self._initError = True
             return

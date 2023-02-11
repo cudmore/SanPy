@@ -1,6 +1,3 @@
-# Author: Robert H Cudmore
-# Date: 20190717
-
 from email.headerregistry import HeaderRegistry
 import os, sys, math
 #import inspect # to print call stack
@@ -36,7 +33,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         super(bDetectionWidget, self).__init__(parent)
 
-        self.ba = ba
+        self.ba : sanpy.bAnalysis = ba
         self.myMainWindow = mainWindow
 
         self.mySetTheme()
@@ -208,7 +205,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         if self.ba is None:
             return None
         else:
-            return self.ba.currentSweep
+            return self.ba.fileLoader.currentSweep
 
     def detect(self, detectionPresetStr: str, detectionType : sanpy.bDetection.detectionTypes,
                 dvdtThreshold, mvThreshold, startSec=None, stopSec=None):
@@ -235,7 +232,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         if startSec is None or stopSec is None:
             startSec = 0
-            stopSec = self.ba.recordingDur
+            stopSec = self.ba.fileLoader.recordingDur
 
         # get default detection parammeters and tweek
         #detectionDict = sanpy.bAnalysis.getDefaultDetection()
@@ -327,18 +324,13 @@ class bDetectionWidget(QtWidgets.QWidget):
             theRet = self.myMainWindow.getDetectionClass()
         return theRet
 
-    def save(self, alsoSaveTxt=False):
-        """
-        Prompt user for filename and save both xlsx and txt
-        Save always defaults to data folder
+    def save(self, saveCsv=True):
+        """Prompt user for filename and save both xlsx and txt
         """
         if self.ba is None or self.ba.numSpikes==0:
-            #print('   no analysis ???')
+            logger.warning('No analysis to save?')
             return
         xMin, xMax = self.getXRange()
-        #print('    xMin:', xMin, 'xMax:', xMax)
-
-        # abb 20201217, I thought I was already doing this?
         xMinStr = '%.2f'%(xMin)
         xMaxStr = '%.2f'%(xMax)
 
@@ -348,28 +340,26 @@ class bDetectionWidget(QtWidgets.QWidget):
         lhs, rhs = xMaxStr.split('.')
         xMaxStr = '_e' + lhs + '_' + rhs
 
-        filePath, fileName = os.path.split(os.path.abspath(self.ba.getFilePath()))
+        filePath, fileName = os.path.split(os.path.abspath(self.ba.fileLoader.filepath))
         fileBaseName, extension = os.path.splitext(fileName)
-        fileBaseName = f'{fileBaseName}{xMinStr}{xMaxStr}.xlsx'
-        #excelFileName = os.path.join(filePath, fileBaseName + '.xlsx')
-        excelFileName = os.path.join(filePath, fileBaseName)
+        fileBaseName = f'{fileBaseName}{xMinStr}{xMaxStr}.csv'
+        csvFileName = os.path.join(filePath, fileBaseName)
 
-        #print('Asking user for file name to save...')
-        #savefile, tmp = QtGui.QFileDialog.getSaveFileName(self, 'Save File', excelFileName)
-        savefile, tmp = QtWidgets.QFileDialog.getSaveFileName(self, 'Save File', excelFileName)
+        # ask user for file to save
+        savefile, tmp = QtWidgets.QFileDialog.getSaveFileName(self, 'Save CSV File', csvFileName)
 
         if len(savefile) > 0:
             logger.info(f'savefile: {savefile}')
-            logger.info(f'xMin:{xMin} xMax:{xMax} alsoSaveTxt:{alsoSaveTxt}')
+            logger.info(f'  xMin:{xMin} xMax:{xMax} alsoSaveTxt:{saveCsv}')
             exportObj = sanpy.bExport(self.ba)
-            analysisName, df = exportObj.saveReport(savefile, xMin, xMax, alsoSaveTxt=alsoSaveTxt)
+            analysisName, df = exportObj.saveReport(savefile, xMin, xMax, alsoSaveTxt=saveCsv)
             #if self.myMainWindow is not None:
             #    self.myMainWindow.mySignal('saved', data=analysisName)
-            txt = f'Exported Excel file: {analysisName}'
+            txt = f'Exported CSV file: {analysisName}'
             self.updateStatusBar(txt)
         else:
+            # user cancelled save
             pass
-            #print('no file saved')
 
     def getXRange(self):
         """
@@ -398,7 +388,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
             if start is None or np.isnan(stop) or stop is None or np.isnan(stop):
                 start = 0
-                stop = self.ba.recordingDur
+                stop = self.ba.fileLoader.recordingDur
 
             #self.derivPlot.setXRange(start, stop, padding=padding) # linked to Vm
             self.vmPlot.setXRange(start, stop, padding=padding) # linked to Vm
@@ -433,7 +423,7 @@ class bDetectionWidget(QtWidgets.QWidget):
     def setAxis_OnFileChange(self, startSec, stopSec):
         if startSec is None or stopSec is None or math.isnan(startSec) or math.isnan(stopSec):
             startSec = 0
-            stopSec = self.ba.recordingDur
+            stopSec = self.ba.fileLoader.recordingDur
 
         self.vmPlotGlobal.autoRange(items=[self.vmLinesFiltered2])  # always full view
         self.linearRegionItem2.setRegion([startSec, stopSec])
@@ -450,14 +440,14 @@ class bDetectionWidget(QtWidgets.QWidget):
         # y-axis is NOT shared
         # dvdt
         if thisAxis in ['dvdt', 'dvdtFiltered']:
-            filteredDeriv = self.ba.filteredDeriv
+            filteredDeriv = self.ba.fileLoader.filteredDeriv
             top = np.nanmax(filteredDeriv)
             bottom = np.nanmin(filteredDeriv)
             start, stop = self._setAxis(bottom, top,
                                     set_xyBoth='yAxis',
                                     whichPlot='dvdt')
         elif thisAxis in ['vm', 'vmFiltered']:
-            sweepY = self.ba.sweepY
+            sweepY = self.ba.fileLoader.sweepY
             top = np.nanmax(sweepY)
             bottom = np.nanmin(sweepY)
             start, stop = self._setAxis(bottom, top,
@@ -488,7 +478,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         #self.clipPlot.autoRange()
 
         # rectangle region on vmPlotGlobal
-        self.linearRegionItem2.setRegion([0, self.ba.recordingDur])
+        self.linearRegionItem2.setRegion([0, self.ba.fileLoader.recordingDur])
 
         # kymograph
         #self.myKymWidget.kymographPlot.setXRange(start, stop, padding=padding)  # row major is different
@@ -497,7 +487,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         #
         # update detection toolbar
         start = 0
-        stop = self.ba.recordingDur
+        stop = self.ba.fileLoader.recordingDur
         self.detectToolbarWidget.startSeconds.setValue(start)
         self.detectToolbarWidget.startSeconds.repaint()
         self.detectToolbarWidget.stopSeconds.setValue(stop)
@@ -605,12 +595,12 @@ class bDetectionWidget(QtWidgets.QWidget):
             preLinearFitPnt1 = spike['preLinearFitPnt1']
 
             if preLinearFitPnt0 is not None:
-                preLinearFitPnt0 = self.ba.pnt2Sec_(preLinearFitPnt0)
+                preLinearFitPnt0 = self.ba.fileLoader.pnt2Sec_(preLinearFitPnt0)
             else:
                 preLinearFitPnt0 = np.nan
 
             if preLinearFitPnt1 is not None:
-                preLinearFitPnt1 = self.ba.pnt2Sec_(preLinearFitPnt1)
+                preLinearFitPnt1 = self.ba.fileLoader.pnt2Sec_(preLinearFitPnt1)
             else:
                 preLinearFitPnt1 = np.nan
 
@@ -662,8 +652,8 @@ class bDetectionWidget(QtWidgets.QWidget):
                     # half-height was not detected
                     continue
 
-                risingSec = self.ba.pnt2Sec_(risingPnt)
-                fallingSec = self.ba.pnt2Sec_(fallingPnt)
+                risingSec = self.ba.fileLoader.pnt2Sec_(risingPnt)
+                fallingSec = self.ba.fileLoader.pnt2Sec_(fallingPnt)
 
                 x[xyIdx] = risingSec
                 x[xyIdx+1] = fallingSec
@@ -696,16 +686,16 @@ class bDetectionWidget(QtWidgets.QWidget):
             #plotIsOn = True
             if plotIsOn and plot['humanName'] == 'Half-Widths':
                 spikeDictionaries = self.ba.getSpikeDictionaries(sweepNumber=self.sweepNumber)
-                sweepX = self.ba.sweepX
-                sweepY = self.ba.sweepY
+                sweepX = self.ba.fileLoader.sweepX
+                sweepY = self.ba.fileLoader.sweepY
                 #filteredVm = self.ba.filteredVm
                 #filteredVm = filteredVm[:,0]
                 xPlot, yPlot = sanpy.analysisUtil.getHalfWidthLines(sweepX, sweepY, spikeDictionaries)
             elif plotIsOn and plot['humanName'] == 'Epoch Lines':
-                _epochTable = self.ba.getEpochTable(self.sweepNumber)
+                _epochTable = self.ba.fileLoader.getEpochTable(self.sweepNumber)
                 if _epochTable is not None:
                     # happens when file is tif kymograph
-                    sweepY = self.ba.sweepY
+                    sweepY = self.ba.fileLoader.sweepY
                     #filteredVm = self.ba.filteredVm
                     xPlot, yPlot =  _epochTable.getEpochLines(yMin=np.nanmin(sweepY), yMax=np.nanmax(sweepY))
             elif plotIsOn and plot['humanName'] == 'EDD':
@@ -715,7 +705,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             elif plotIsOn:
                 xPlot, yPlot = self.ba.getStat(plot['x'], plot['y'], sweepNumber=self.sweepNumber)
                 if xPlot is not None and plot['convertx_tosec']:
-                    xPlot = [self.ba.pnt2Sec_(x) for x in xPlot] # convert pnt to sec
+                    xPlot = [self.ba.fileLoader.pnt2Sec_(x) for x in xPlot] # convert pnt to sec
             #
             # added connect='finite' to respect nan in half-width
             # not sure how connect='finite' affect all other plots using scatter???
@@ -786,7 +776,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         else:
             sweepNumber = int(sweepNumber)
 
-        if sweepNumber<0 or sweepNumber>self.ba.numSweeps-1:
+        if sweepNumber<0 or sweepNumber>self.ba.fileLoader.numSweeps-1:
             return
 
         logger.info(f'sweepNumber:"{sweepNumber}" {type(sweepNumber)} doEmit:{doEmit} startSec:"{startSec}" stopSec:"{stopSec}"')
@@ -796,7 +786,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         #    return
 
         #self._sweepNumber = sweepNumber
-        self.ba.setSweep(sweepNumber)
+        self.ba.fileLoader.setSweep(sweepNumber)
 
         #self.setAxisFull()
 
@@ -935,7 +925,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # convert clips to 2d ndarray ???
         xTmp = np.array(theseClips_x)
         #xTmp /= self.ba.dataPointsPerMs # pnt to ms
-        xTmp /= self.ba.dataPointsPerMs * 1000  # pnt to seconds
+        xTmp /= self.ba.fileLoader.dataPointsPerMs * 1000  # pnt to seconds
         yTmp = np.array(theseClips)
 
         #print('refreshClips() xTmp:', xTmp.shape)
@@ -1474,7 +1464,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # abb 20201009
         if self.ba.loadError:
             self.replot()
-            fileName = self.ba.getFileName()  # tableRowDict['File']
+            fileName = self.ba.fileLoader.filename()  # tableRowDict['File']
             errStr = f'The bAnalysis file was flagged with loadError ... aborting: "{fileName}".'
             logger.error(errStr)
             self.updateStatusBar(errStr)
@@ -1492,7 +1482,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         if startSec=='' or stopSec=='' or np.isnan(startSec) or np.isnan(stopSec):
             startSec = 0
-            stopSec = self.ba.recordingDur
+            stopSec = self.ba.fileLoader.recordingDur
 
         # cancel spike selection
         self.selectSpike(None)
@@ -1511,7 +1501,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         #self.refreshClips(startSec, stopSec)
 
         # update x/y axis labels
-        yLabel = self.ba._sweepLabelY
+        yLabel = self.ba.fileLoader._sweepLabelY
         self.dacPlot.getAxis('left').setLabel('DAC')
         self.derivPlot.getAxis('left').setLabel('Derivative')
         self.vmPlotGlobal.getAxis('left').setLabel(yLabel)
@@ -1563,23 +1553,16 @@ class bDetectionWidget(QtWidgets.QWidget):
         #                    self, type='dvdt')
 
         # shared by all plot
-        sweepX = self.ba.sweepX
-        filteredDeriv = self.ba.filteredDeriv
-        sweepC = self.ba.sweepC
+        sweepX = self.ba.fileLoader.sweepX
+        filteredDeriv = self.ba.fileLoader.filteredDeriv  # dec 2022, check if exists
+        sweepC = self.ba.fileLoader.sweepC
         #filteredVm = self.ba.filteredVm
-        sweepY = self.ba.sweepY
+        sweepY = self.ba.fileLoader.sweepY
         
-        #sweepC = self.ba._sweepC[:,3]
-
-        # debug
-        '''
-        logger.info(f'sweepX: {sweepX.shape}')
-        logger.info(f'filteredDeriv: {filteredDeriv.shape}')
-        logger.info(f'sweepC: {sweepC.shape}')
-        logger.info(f'filteredVm: {filteredVm.shape}')
-        '''
-
         #
+        if sweepX.shape != filteredDeriv.shape:
+            logger.error(f'shapes do not match')
+            
         self.dvdtLinesFiltered = MultiLine(sweepX, filteredDeriv,
                             self, forcePenColor=None, type='dvdtFiltered',
                             columnOrder=True)
@@ -1601,7 +1584,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                             self, forcePenColor='b', type='vmFiltered',
                             columnOrder=True)
         self.vmPlotGlobal.addItem(self.vmLinesFiltered2)
-        self.linearRegionItem2 = pg.LinearRegionItem(values=(0,self.ba.recordingDur),
+        self.linearRegionItem2 = pg.LinearRegionItem(values=(0,self.ba.fileLoader.recordingDur),
                                     orientation=pg.LinearRegionItem.Vertical,
                                     brush=pg.mkBrush(100,100,100,100),
                                     pen=pg.mkPen(None))
@@ -1609,78 +1592,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlotGlobal.addItem(self.linearRegionItem2)
 
         # Kymograph
-        isKymograph = self.ba.isKymograph()
+        isKymograph = self.ba.fileLoader.isKymograph()
         self.myKymWidget.setVisible(isKymograph)
         #self.kymographPlot.hide()
-        '''
-        else:
-            self.kymographPlot.clear()
-            self.kymographPlot.show()
-            #self.tmpImage = np.random.normal(size=(20,50))  # (rows, cols) e.g. (y,x)
-            myTif = self.ba.tifData
-            #self.myImageItem = pg.ImageItem(myTif, axisOrder='row-major')
-            #  TODO: set height to micro-meters
-            # was this
-            if self.ba.isKymograph():
-                axisOrder='row-major'
-                rect=[0,0, self.ba.recordingDur, self.ba.tifData.shape[0]]  # x, y, w, h
-                if self.myImageItem is None:
-                    # first time build
-                    self.myImageItem = kymographImage(myTif, axisOrder=axisOrder,
-                                    rect=rect)
-                else:
-                    # second time update
-                    myTif = self.ba.tifData
-                    self.myImageItem.setImage(myTif, axisOrder=axisOrder,
-                                    rect=rect)
-            #self.myImageItem.setImage(image=myTif, autoLevels=True)
-            #self.myImageItem.setLevels([100,500])
-            self.kymographPlot.addItem(self.myImageItem)
-            # TODO: put ROI in buildUI
-            #self.myLineRoi = pg.ROI(pos=(10,10), size=(500,20), parent=self.kymographPlot)
-
-            kymographRect = self.ba.getKymographRect()
-            if kymographRect is not None:
-                xRoiPos = kymographRect[0]
-                #yRoiPos = kymographRect[1]
-                yRoiPos = kymographRect[3]
-                top = kymographRect[1]
-                right = kymographRect[2]
-                bottom = kymographRect[3]
-                widthRoi = right - xRoiPos + 1
-                #heightRoi = bottom - yRoiPos + 1
-                heightRoi = top - yRoiPos + 1
-
-                # TODO: get this out of replot, recreating the ROI is causing runtime error
-                pos = (xRoiPos,yRoiPos)
-                size = (widthRoi,heightRoi)
-                if self.myLineRoi is None:
-                    self.myLineRoi = pg.ROI(pos=pos, size=size, parent=self.myImageItem)
-                    self.myLineRoi.addScaleHandle((0,0), (1,1), name='topleft')  # at origin
-                    self.myLineRoi.addScaleHandle((0.5,0), (0.5,1))  # top center
-                    self.myLineRoi.addScaleHandle((0.5,1), (0.5,0))  # bottom center
-                    self.myLineRoi.addScaleHandle((0,0.5), (1,0.5))  # left center
-                    self.myLineRoi.addScaleHandle((1,0.5), (0,0.5))  # right center
-                    self.myLineRoi.addScaleHandle((1,1), (0,0), name='bottomright')  # bottom right
-                    self.myLineRoi.sigRegionChangeFinished.connect(self.kymographChanged)
-                else:
-                    self.myLineRoi.setPos(pos, finish=False)
-                    self.myLineRoi.setSize(size, finish=False)
-
-            # background kymograph ROI
-            backgroundRect = self.ba.getKymographBackgroundRect()
-            #print('xxx backgroundRect:', backgroundRect)
-            if backgroundRect is not None:
-                xRoiPos = backgroundRect[0]
-                yRoiPos = backgroundRect[1]
-                right = backgroundRect[2]
-                bottom = backgroundRect[3]
-                widthRoi = right - xRoiPos + 1
-                heightRoi = bottom - yRoiPos + 1
-
-                # TODO: get this out of replot, recreating the ROI is causing runtime error
-                self.myLineRoiBackground = pg.ROI(pos=(xRoiPos,yRoiPos), size=(widthRoi,heightRoi), parent=self.myImageItem)
-        '''
 
         #
         # remove and re-add plot overlays
@@ -1875,7 +1789,7 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
                 logger.error(f'Unknown myType: "{self.myType}"')
                 xyUnits = ('error time', 'error y')
 
-            path = self.detectionWidget.ba.path
+            path = self.detectionWidget.ba.fileLoader.filepath
 
             xMin = None
             xMax = None
@@ -2052,7 +1966,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             startSeconds = 0
         if math.isnan(stopSeconds):
             #stopSeconds = self.detectionWidget.ba.sweepX[-1]
-            stopSeconds = self.detectionWidget.ba.recordingDur
+            stopSeconds = self.detectionWidget.ba.fileLoader.recordingDur
 
         self.startSeconds.setValue(startSeconds)
         self.stopSeconds.setValue(stopSeconds)
@@ -2112,7 +2026,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         else:
             newSweep += inc
         
-        if newSweep<0 or newSweep > self.detectionWidget.ba.numSweeps-1:
+        if newSweep<0 or newSweep > self.detectionWidget.ba.fileLoader.numSweeps-1:
             return
         
         self.detectionWidget.slot_selectSweep(newSweep)
@@ -2188,14 +2102,13 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             detectionType = sanpy.bDetection.detectionTypes.mv
             self.detectionWidget.detect(detectionPreset, detectionType, dvdtThreshold, mvThreshold, startSec, stopSec)
 
-        # Reset Axes
-        #elif name == 'Reset Axes':
         elif name == '[]':
+            # Reset Axes
             self.detectionWidget.setAxisFull()
 
         elif name == 'Export Spike Report':
-            #print('"Save Spike Report" isShift:', isShift)
-            self.detectionWidget.save(alsoSaveTxt=isShift)
+            #self.detectionWidget.save(alsoSaveTxt=isShift)
+            self.detectionWidget.save(saveCsv=True)
 
         # next/previous sweep
         elif name == '<':
@@ -2731,7 +2644,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # populate sweep combo box
         self.sweepComboBox.clear()
         self.sweepComboBox.addItem('All')
-        for sweep in range(self.detectionWidget.ba.numSweeps):
+        for sweep in range(self.detectionWidget.ba.fileLoader.numSweeps):
             self.sweepComboBox.addItem(str(sweep))
         # always select sweep 0
         self.sweepComboBox.setCurrentIndex(1)
@@ -2740,7 +2653,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         #    self.sweepComboBox.setCurrentIndex(1)
 
         # turn off sweep combo box if just one sweep
-        enableSweepButtons = self.detectionWidget.ba.numSweeps > 1
+        enableSweepButtons = self.detectionWidget.ba.fileLoader.numSweeps > 1
         self.sweepComboBox.setEnabled(enableSweepButtons)
         self.previousSweepButton.setEnabled(enableSweepButtons)
         self.nextSweepButton.setEnabled(enableSweepButtons)

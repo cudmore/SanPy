@@ -45,7 +45,7 @@ import mplcursors # popup on hover
 #import sanpy
 #import bUtil # from sanpy folder, for pandas model
 
-def loadDatabase(path):
+def old_loadDatabase(path):
 	"""
 	path: full path to .csv file generated with reanalyze.py
 	"""

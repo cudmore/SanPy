@@ -50,95 +50,6 @@ class plotRecording(sanpyPlugin):
 
         return
 
-        '''
-        if self.ba is not None:
-            sweepX = self.getSweep('x')  # self.ba.sweepX(sweepNumber=self.sweepNumber)
-            sweepY = self.getSweep('y')  # self.ba.filteredVm(sweepNumber=self.sweepNumber)  # sweepY
-        else:
-            sweepX = []
-            sweepY = []
-
-        self.sweepX = sweepX
-        self.sweepY = sweepY
-        '''
-
-        # comma is critical
-        #self.line, = self.axs.plot(sweepX, sweepY, '-', linewidth=0.5)
-        self.line, = self.axs.plot([], [], '-', linewidth=0.5)
-
-        self.lineDetection, = self.axs.plot([], [], 'o')
-        # thresholdSec = None
-        # thresholdVal = None
-        # if self.ba is not None:
-        #     thresholdSec = self.ba.getStat('thresholdSec')
-        #     thresholdVal = self.ba.getStat('thresholdVal')
-        # if thresholdSec is None or thresholdVal is None:
-        #     self.lineDetection, = self.axs.plot([], [], 'o')
-        # else:
-        #     # comma is critical
-        #     self.lineDetection, = self.axs.plot(thresholdSec, thresholdVal, 'or')
-
-        self.linePeak, = self.axs.plot([], [], 'o')
-        # peakSec = None
-        # peakVal = None
-        # if self.ba is not None:
-        #     peakSec = self.ba.getStat('peakSec')
-        #     peakVal = self.ba.getStat('peakVal')
-        # if peakSec is None or peakVal is None:
-        #     self.linePeak, = self.axs.plot([], [], 'o')
-        # else:
-        #     # comma is critical
-        #     self.linePeak, = self.axs.plot(peakSec, peakVal, 'or')
-
-        self.linePreMin, = self.axs.plot([], [], 'og')
-        # preMinSec = None
-        # preMinVal = None
-        # if self.ba is not None:
-        #     preMinPnt = self.ba.getStat('preMinPnt')
-        #     preMinSec = [self.ba.pnt2Sec_(x) for x in preMinPnt]
-        #     preMinVal = self.ba.getStat('preMinVal')
-        # if preMinSec is None or preMinVal is None:
-        #     self.linePreMin, = self.axs.plot([], [], 'og')
-        # else:
-        #     # comma is critical
-        #     self.linePreMin, = self.axs.plot(preMinSec, preMinVal, 'og')
-
-        # 0 edd
-        self.linePreLinear0, = self.axs.plot([], [], 'o')
-        # preLinearFitSec0 = None
-        # preLinearFitVal0 = None
-        # if self.ba is not None:
-        #     preLinearFitPnt0 = self.ba.getStat('preLinearFitPnt0')
-        #     preLinearFitSec0 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt0]
-        #     preLinearFitVal0 = self.ba.getStat('preLinearFitVal0')
-        # if preLinearFitSec0 is None or preLinearFitVal0 is None:
-        #     self.linePreLinear0, = self.axs.plot([], [], 'o')
-        # else:
-        #     # comma is critical
-        #     self.linePreLinear0, = self.axs.plot(preLinearFitSec0, preLinearFitVal0, 'ob')
-
-        # 1 edd
-        '''
-        preLinearFitPnt1 = self.ba.getStat('preLinearFitPnt1')
-        preLinearFitSec1 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt1]
-        preLinearFitVal1 = self.ba.getStat('preLinearFitVal1')
-        if preLinearFitSec1 is None and preLinearFitVal1 is None:
-            self.linePreLinear1, = self.axs.plot([], [], 'o')
-        else:
-            # comma is critical
-            self.linePreLinear1, = self.axs.plot(preLinearFitSec1, preLinearFitVal1, 'ob')
-
-        # draw line for edd
-        xEdd, yEdd = self.getEddLines()
-        self.lineEdd, = self.axs.plot(xEdd, yEdd, '--b')
-
-        '''
-        # hw(s)
-        #xHW, yHW = self.getHalfWidths()
-        self.lineHW, = self.axs.plot([], [], '-')
-
-        #plt.show()
-
     def replot(self):
         """
         bAnalysis has been updated, replot
@@ -154,9 +65,8 @@ class plotRecording(sanpyPlugin):
         xCurrentOffset = 0
         yCurrentOffset = 0
 
-        currentSweep = self.ba.currentSweep
-        
-        numSweeps = self.ba.numSweeps
+        currentSweep = self.ba.fileLoader.currentSweep
+        numSweeps = self.ba.fileLoader.numSweeps
 
         self.fig.clear(True)
         self.axs = self.fig.add_subplot(1,1,1)
@@ -176,12 +86,12 @@ class plotRecording(sanpyPlugin):
         self.thresholdLine = [None] * numSweeps
 
         for sweepIdx in range(numSweeps):
-            self.ba.setSweep(sweepIdx)
+            self.ba.fileLoader.setSweep(sweepIdx)
             
             #self.axs[_idx].self.fig.add_subplot(numSweeps, 1, _idx)
 
-            sweepX = self.getSweep('x')  # self.ba.sweepX(sweepNumber=self.sweepNumber)
-            sweepY = self.getSweep('y')  # self.ba.sweepY(sweepNumber=self.sweepNumber)
+            sweepX = self.getSweep('x')
+            sweepY = self.getSweep('y')
 
             self.sweepX = sweepX
             self.sweepY = sweepY
@@ -211,17 +121,17 @@ class plotRecording(sanpyPlugin):
         self.axs.relim()
         self.axs.autoscale_view(True,True,True)
 
-        self.ba.setSweep(currentSweep)
+        self.ba.fileLoader.setSweep(currentSweep)
         self.static_canvas.draw_idle()
         plt.draw()
 
     def old_getEddLines(self):
         preLinearFitPnt0 = self.ba.getStat('preLinearFitPnt0')
-        preLinearFitSec0 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt0]
-        preLinearFitVal0 = self.ba.getStat('preLinearFitVal0')
+        preLinearFitSec0 = [self.ba.fileLoader.pnt2Sec_(x) for x in preLinearFitPnt0]
+        preLinearFitVal0 = self.ba.fileLoader.getStat('preLinearFitVal0')
 
         preLinearFitPnt1 = self.ba.getStat('preLinearFitPnt1')
-        preLinearFitSec1 = [self.ba.pnt2Sec_(x) for x in preLinearFitPnt1]
+        preLinearFitSec1 = [self.ba.fileLoader.pnt2Sec_(x) for x in preLinearFitPnt1]
         preLinearFitVal1 = self.ba.getStat('preLinearFitVal1')
 
         x = []
@@ -284,8 +194,8 @@ class plotRecording(sanpyPlugin):
                     # half-height was not detected
                     continue
 
-                risingSec = self.ba.pnt2Sec_(risingPnt)
-                fallingSec = self.ba.pnt2Sec_(fallingPnt)
+                risingSec = self.ba.fileLoader.pnt2Sec_(risingPnt)
+                fallingSec = self.ba.fileLoader.pnt2Sec_(fallingPnt)
 
                 x[xyIdx] = risingSec
                 x[xyIdx+1] = fallingSec

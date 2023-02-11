@@ -1,5 +1,6 @@
 import os
 import sys
+import importlib
 import pathlib
 import shutil
 from typing import List, Union
@@ -24,6 +25,18 @@ def getBundledDir():
         # we are running in a normal Python environment
         bundle_dir = os.path.dirname(os.path.abspath(__file__))    
     return bundle_dir
+
+def _module_from_file(module_name : str, file_path : str):
+    """
+    
+    Args:
+        module_name: Is like sanpy.interface.plugins.onePluginFile
+        file_path: Full path to onePluginFile source code (onePluginFile.py)
+    """
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 def addUserPath():
     """Make <user>/Documents/SanPy folder and add it to the Python sys.path
@@ -82,6 +95,11 @@ def old_getUserFolder(folder : str) -> str:
         logger.error(f'did not understand folder: "{folder}"')
         return None
     return theFolder
+
+def _getUserFileLoaderFolder():
+    userSanPyFolder = _getUserSanPyFolder()
+    fileLoaderFolder = os.path.join(userSanPyFolder, 'file loaders')
+    return fileLoaderFolder
 
 def _getUserPluginFolder():
     userSanPyFolder = _getUserSanPyFolder()

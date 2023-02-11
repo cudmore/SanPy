@@ -137,11 +137,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         else:
             self.path = None
 
-        '''
-        if self.path is not None and len(self.path)>0:
-            self.loadFolder(self.path)
-        '''
-
         # I changed saved preferences file,
         # try not to screw up Laura's analysis
         self.useDarkStyle = self.configDict['useDarkStyle']
@@ -169,7 +164,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # 20210803, loadFolder was above? Still works down here
         # needed to update detection widget after buildUI()
         if self.path is not None and len(self.path)>0:
-            self.loadFolder(self.path)
+            self.slot_loadFolder(self.path)
 
         self.slot_updateStatus('Ready')
         logger.info('SanPy started')
@@ -191,11 +186,32 @@ class SanPyWindow(QtWidgets.QMainWindow):
             return
         oneFolder = folders[0]
         if os.path.isdir(oneFolder):
-            self.loadFolder(path=oneFolder)
+            self.slot_loadFolder(path=oneFolder)
+
+    def _promptIfDirty(self) -> bool:
+        """If this return False, do not proceed with caller action.
+        e.g. on 'load folder'
+
+        If not dirty then always returns True
+        """
+        acceptAndContinue = True
+        if self.myAnalysisDir is not None:
+            tableIsDirty = self.myAnalysisDir.isDirty
+            analysisIsDirty = self.myAnalysisDir.hasDirty()
+            if tableIsDirty or analysisIsDirty:
+                userResp = sanpy.interface.bDialog.yesNoCancelDialog(
+                                    'There is analysis that is not saved.\nDo you want to save?')
+                if userResp == QtWidgets.QMessageBox.Yes:
+                    self.slot_saveFilesTable()
+                    acceptAndContinue = True
+                elif userResp == QtWidgets.QMessageBox.No:
+                    acceptAndContinue = True
+                else:  # userResp == QtWidgets.QMessageBox.Cancel:
+                    acceptAndContinue = False
+        return acceptAndContinue
 
     def closeEvent(self, event):
-        """
-        called when user closes main window or selects quit
+        """Called when user closes main window or selects quit.
         """
 
         # check if our table view has been edited by uder and warn
@@ -207,7 +223,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             analysisIsDirty = self.myAnalysisDir.hasDirty()
             if tableIsDirty or analysisIsDirty:
                 alreadyAsked = True
-                userResp = sanpy.interface.bDialog.yesNoCancelDialog('You changed the file database or have analyzed but not saved.\nDo you want to save then quit?')
+                userResp = sanpy.interface.bDialog.yesNoCancelDialog('There is analysis that is not saved.\nDo you want to save?')
                 if userResp == QtWidgets.QMessageBox.Yes:
                     self.slot_saveFilesTable()
                     event.accept()
@@ -269,17 +285,26 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
             self.configDict.save()
 
-    def loadFolder(self, path=''):
+    def slot_loadFolder(self, path='', folderDepth=None):
         """
         Load a folder of .abf
 
         create df and save in sanpy_recording_db.csv
         """
 
-        #print(f'=== sanpy_app2.loadFolder() "{path}"')
-        logger.info(f'Loading path: {path}')
+        if folderDepth is None:
+            # get the depth from file list widget
+            folderDepth = self._fileListWidget.getDepth()
+
+        logger.info(f'Loading depth:{folderDepth} path: {path}')
+
+        # if folder is already loaded, ask to save
+        acceptAndContinue = self._promptIfDirty()
+        if not acceptAndContinue:
+            return
+
         # ask user for folder
-        if isinstance(path,bool) or len(path)==0:
+        if path is None or isinstance(path,bool) or len(path)==0:
             path = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select Directory With Recordings"))
             if len(path) == 0:
                 return
@@ -294,7 +319,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #logger.info(f'Loading path: {path}')
 
         # will create/load csv and/or gzip (of all analysis)
-        self.myAnalysisDir = sanpy.analysisDir(path, myApp=self)
+        self.myAnalysisDir = sanpy.analysisDir(path, folderDepth=folderDepth, myApp=self)
 
         # set myAnalysisDir to file list model
         self.myModel = sanpy.interface.bFileTable.pandasModel(self.myAnalysisDir)
@@ -377,7 +402,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         elif this == 'set full x axis':
             self.startSec = 0
             if self.get_bAnalysis() is not None:
-                self.stopSec = self.get_bAnalysis().recordingDur
+                self.stopSec = self.get_bAnalysis().fileLoader.recordingDur
             else:
                 self.stopSec = None
             logger.info(f'"set full x axis" {self.startSec} {self.stopSec}')
@@ -484,19 +509,19 @@ class SanPyWindow(QtWidgets.QMainWindow):
             if selectingAgain:
                 pass
             else:
-                self.slot_updateStatus(f'Loaded file "{ba.getFileName()}"')# this will load ba if necc
+                self.slot_updateStatus(f'Loaded file "{ba.fileLoader.filename}"')# this will load ba if necc
 
     def _buildMenus(self):
 
         mainMenu = self.menuBar()
 
         # load
-        loadFolderAction = QtWidgets.QAction('Open Folder ...', self)
+        loadFolderAction = QtWidgets.QAction('Load Folder ...', self)
         loadFolderAction.setShortcut('Ctrl+O')
-        loadFolderAction.triggered.connect(self.loadFolder)
+        loadFolderAction.triggered.connect(self.slot_loadFolder)
 
         # open recent (submenu)
-        self.openRecentMenu = QtWidgets.QMenu('Open Recent ...')
+        self.openRecentMenu = QtWidgets.QMenu('Load Recent ...')
         self.openRecentMenu.aboutToShow.connect(self._refreshOpenRecent)
 
         saveDatabaseAction = QtWidgets.QAction('Save Folder Analysis', self)
@@ -635,9 +660,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
             loadFolderAction = QtWidgets.QAction(recentFolder, self)
             #loadFolderAction.setShortcut('Ctrl+O')
-            loadFolderAction.triggered.connect(partial(self.loadFolder, recentFolder))
+            loadFolderAction.triggered.connect(partial(self.slot_loadFolder, recentFolder))
 
             self.openRecentMenu.addAction(loadFolderAction)
+
     def _refreshViewMenu(self):
         #logger.info('****************')
         
@@ -849,6 +875,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # list of files
         self._fileListWidget = sanpy.interface.fileListWidget(self.myModel)
         #self._fileListWidget.signalUpdateStatus.connect(self.slot_updateStatus)  # never used
+        self._fileListWidget.signalLoadFolder.connect(self.slot_loadFolder)
         self._fileListWidget.getTableView().signalSelectRow.connect(self.slot_fileTableClicked)
         self._fileListWidget.getTableView().signalSetDefaultDetection.connect(self.slot_setDetectionParams)
 

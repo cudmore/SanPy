@@ -1,8 +1,3 @@
-"""
-Class to export analysis from a bAnalysis.
-
-Created: 20210522
-"""
 import os
 from collections import OrderedDict
 from pprint import pprint
@@ -18,12 +13,12 @@ logger = get_logger(__name__)
 class bExport():
     """
     Once analysis is performed with sanpy.bAnalysis.spikeDetect(),
-    reports can be generated with the bExport class.
+        reports can be generated with the bExport class.
 
     Example reports are:
 
     - Generating reports as a Pandas DataFrame.
-    - Saving reports as a Microsoft Excel file.
+    - (depreciated) Saving reports as a Microsoft Excel file.
     - Saving reports as a CSV text files.
     """
     def __init__(self, ba):
@@ -48,23 +43,14 @@ class bExport():
         if theMin is None or theMax is None:
             #return None
             theMin = 0
-            theMax = self.ba.recordingDur
+            theMax = self.ba.fileLoader.recordingDur
 
         logger.info(f'theMin:{theMin} theMax:{theMax}')
 
-        # 20210929, implementing bAnalysisResults
-        #df = pd.DataFrame(self.ba.spikeDict
-        #df = pd.DataFrame(self.ba.spikeDict.aslist())
         df = self.ba.asDataFrame()
-
-        #print('xxx')
-        #pprint(df)
-
-        #df = df[df['thresholdSec'].between(theMin, theMax, inclusive=True)]
         df = df[ (df['thresholdSec']>=theMin) & (df['thresholdSec']<=theMax) ]
 
         # added when trying to make scatterwidget for one file
-        #print('  20210426 adding columns in bExport.report()')
         df['Condition'] = '' #df['condition1']
         df['File Number'] = '' #df['condition2']
         df['Sex'] = '' #df['condition3']
@@ -99,7 +85,7 @@ class bExport():
         maxStr = maxStr.replace('.', '_')
 
         # TODO: bytestreams are not strictly from a hdd folder or file
-        fileName = self.ba.getFileName()
+        fileName = self.ba.fileLoader.filename
         if fileName is not None:
             fileName, tmpExt = os.path.splitext(fileName)
             analysisName = fileName + '_s' + minStr + '_s' + maxStr
@@ -110,31 +96,32 @@ class bExport():
 
         return df
 
-    def report2(self, theMin, theMax):
+    def report2(self, theMin :float, theMax : float) -> pd.DataFrame:
         """
-        Generate a human readable report of spikes with spike times between theMin (sec) and theMax (sec).
+        Generate a human readable report of spikes.
+        Include spike times between theMin and theMax (Sec).
 
         Args:
             theMin (float): Start seconds to save, inclusive
             theMax (float): Stop seconds to save, inclusive
 
         Returns:
-            df: Pandas DataFrame
+            df: pd.DataFrame
         """
         newList = []
         for spikeIdx, spike in enumerate(self.ba.spikeDict):
 
             # if current spike time is out of bounds then continue (e.g. it is not between theMin (sec) and theMax (sec)
-            spikeTime_sec = self.ba.pnt2Sec_(spike['thresholdPnt'])
+            spikeTime_sec = self.ba.fileLoader.pnt2Sec_(spike['thresholdPnt'])
             if spikeTime_sec<theMin or spikeTime_sec>theMax:
                 continue
 
             spikeDict = OrderedDict() # use OrderedDict so Pandas output is in the correct order
             spikeDict['Spike'] = spikeIdx
-            spikeDict['Take Off Potential (s)'] = self.ba.pnt2Sec_(spike['thresholdPnt'])
-            spikeDict['Take Off Potential (ms)'] = self.ba.pnt2Ms_(spike['thresholdPnt'])
+            spikeDict['Take Off Potential (s)'] = self.ba.fileLoader.pnt2Sec_(spike['thresholdPnt'])
+            spikeDict['Take Off Potential (ms)'] = self.ba.fileLoader.pnt2Ms_(spike['thresholdPnt'])
             spikeDict['Take Off Potential (mV)'] = spike['thresholdVal']
-            spikeDict['AP Peak (ms)'] = self.ba.pnt2Ms_(spike['peakPnt'])
+            spikeDict['AP Peak (ms)'] = self.ba.fileLoader.pnt2Ms_(spike['peakPnt'])
             spikeDict['AP Peak (mV)'] = spike['peakVal']
             spikeDict['AP Height (mV)'] = spike['peakHeight']
             spikeDict['Pre AP Min (mV)'] = spike['preMinVal']
@@ -162,7 +149,7 @@ class bExport():
                 keyName = 'width_' + str(widthDict['halfHeight'])
                 spikeDict[keyName] = widthDict['widthMs']
 
-            spikeDict['File'] = self.ba.getFileName()
+            spikeDict['File'] = self.ba.fileLoader.filename
 
             # errors
             #spikeDict['numError'] = spike['numError']
@@ -175,20 +162,18 @@ class bExport():
         df = pd.DataFrame(newList)
         return df
 
-    def getSummary(self, theMin=None, theMax=None):
+    def getSummary(self, theMin : float = None, theMax : float = None) -> pd.DataFrame:
+        """Get analysis summary as df.
+        This adds some header information to spike report bExport.report2().
         """
-        Get analysis summary as df.
-
-        TODO: Working on this while implementing plugin 'saveAnalysis'
-        """
-        #logger.info(self.ba)
 
         if self.ba.numSpikes == 0:
+            logger.warning(f'did not find and spikes for summary')
             return None
 
         if theMin is None or theMax is None:
             theMin = 0
-            theMax = self.ba.recordingDur
+            theMax = self.ba.fileLoader.recordingDur
 
         #
         # cardiac style analysis to sheet 'cardiac'
@@ -199,7 +184,7 @@ class bExport():
         #
         # header sheet
         headerDict = OrderedDict()
-        filePath, fileName = os.path.split(self.ba.getFilePath())
+        filePath, fileName = os.path.split(self.ba.fileLoader.filepath)
         headerDict['File Name'] = [fileName]
         headerDict['File Path'] = [filePath]
 
@@ -221,7 +206,7 @@ class bExport():
         #headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
         #headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
         headerDict['Sweep Number'] = ['Default 0']  # [self.ba.currentSweep]
-        headerDict['Number of Sweeps'] = [self.ba.numSweeps]
+        headerDict['Number of Sweeps'] = [self.ba.fileLoader.numSweeps]
         headerDict['Export Start (sec)'] = [float('%.2f'%(theMin))] # on export, x-axis of raw plot will be ouput
         headerDict['Export Stop (sec)'] = [float('%.2f'%(theMax))] # on export, x-axis of raw plot will be ouput
 
@@ -304,7 +289,8 @@ class bExport():
 
         return df
 
-    def saveReport(self, savefile, theMin=None, theMax=None, saveExcel=True, alsoSaveTxt=True, verbose=True):
+    def saveReport(self, savefile, theMin=None, theMax=None,
+                    saveExcel=True, alsoSaveTxt=True, verbose=True):
         """
         Save a spike report for detected spikes between theMin (sec) and theMax (sec).
 
@@ -314,8 +300,8 @@ class bExport():
             savefile (str): path to xlsx file
             theMin (float): start/stop seconds of the analysis
             theMax (float): start/stop seconds of the analysis
-            saveExcel (bool): xxx
-            alsoSaveTxt (bool): xxx
+            saveExcel (bool):
+            alsoSaveTxt (bool):
 
         Return:
             str: analysisName
@@ -323,13 +309,15 @@ class bExport():
         """
         if theMin is None or theMax is None:
             theMin = 0
-            theMax = self.ba.recordingDur
+            theMax = self.ba.fileLoader.recordingDur
 
         # always grab a df to the entire analysis (not sure what I will do with this)
         #df = self.ba.report() # report() is my own 'bob' verbiage
 
         theRet = None
 
+        logger.warning('NEVER SAVING EXCEL !!! dec 2022')
+        saveExcel = False
         if saveExcel and savefile:
             #if verbose: print('    bExport.saveReport() saving user specified .xlsx file:', savefile)
             excelFilePath = savefile
@@ -346,7 +334,7 @@ class bExport():
             #
             # header sheet
             headerDict = OrderedDict()
-            filePath, fileName = os.path.split(self.ba.getFilePath())
+            filePath, fileName = os.path.split(self.ba.filepath)
             headerDict['File Name'] = [fileName]
             headerDict['File Path'] = [filePath]
 
@@ -369,7 +357,7 @@ class bExport():
             #headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
             #headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
             headerDict['Sweep Number'] = ['Default 0']  # [self.ba.currentSweep]
-            headerDict['Number of Sweeps'] = [self.ba.numSweeps]
+            headerDict['Number of Sweeps'] = [self.ba.fileLoader.numSweeps]
             headerDict['Export Start (sec)'] = [float('%.2f'%(theMin))] # on export, x-axis of raw plot will be ouput
             headerDict['Export Stop (sec)'] = [float('%.2f'%(theMax))] # on export, x-axis of raw plot will be ouput
 
@@ -512,13 +500,13 @@ class bExport():
             #
             # save mean spike clip
 
-            theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(theMin, theMax, sweepNumber=self.sweepNumber)
+            not_used_theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(theMin, theMax, sweepNumber=self.sweepNumber)
             if len(theseClips_x) == 0:
                 pass
             else:
                 first_X = theseClips_x[0] #- theseClips_x[0][0]
                 first_X = np.array(first_X)
-                first_X /= self.ba.dataPointsPerMs # pnts to ms
+                first_X /= self.ba.fileLoader.dataPointsPerMs # pnts to ms
                 #if verbose: print('    bExport.saveReport() saving mean clip to sheet "Avg Spike" from', len(theseClips), 'clips')
                 #dfClip = pd.DataFrame(meanClip, first_X)
                 dfClip = pd.DataFrame.from_dict({
@@ -569,7 +557,7 @@ class bExport():
 
         # save header
         textFileHeader = OrderedDict()
-        textFileHeader['file'] = self.ba.getFileName()
+        textFileHeader['file'] = self.ba.fileLoader.filename
         #textFileHeader['condition1'] = self.ba.condition1
         #textFileHeader['condition2'] = self.ba.condition2
         #textFileHeader['condition3'] = self.ba.condition3
@@ -587,7 +575,7 @@ class bExport():
         #textFileHeader['startSeconds'] = self.ba.startSeconds
         #textFileHeader['stopSeconds'] = self.ba.stopSeconds
         textFileHeader['currentSweep'] = 'Default 0' # self.ba.currentSweep
-        textFileHeader['numSweeps'] = self.ba.numSweeps
+        textFileHeader['numSweeps'] = self.ba.fileLoader.numSweeps
         #textFileHeader['theMin'] = theMin
         #textFileHeader['theMax'] = theMax
 
@@ -609,7 +597,7 @@ class bExport():
         maxStr = '%.2f'%(theMax)
         minStr = minStr.replace('.', '_')
         maxStr = maxStr.replace('.', '_')
-        tmpPath, tmpFile = os.path.split(self.ba.getFilePath())
+        tmpPath, tmpFile = os.path.split(self.ba.fileLoader.filepath)
         tmpFile, tmpExt = os.path.splitext(tmpFile)
         analysisName = tmpFile + '_s' + minStr + '_s' + maxStr
         logger.info(f'minStr:{minStr} maxStr:{maxStr} analysisName:{analysisName}')

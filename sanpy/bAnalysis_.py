@@ -3,7 +3,6 @@ import math
 import time
 import datetime
 import copy
-from pprint import pprint
 import json
 from collections import OrderedDict
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
@@ -21,9 +20,10 @@ import pyabf  # see: https://github.com/swharden/pyABF
 
 import sanpy
 import sanpy.bDetection
-# this specific import is to stop circular imports
-import sanpy.user_analysis.baseUserAnalysis
+import sanpy.user_analysis.baseUserAnalysis  # to stop circular imports
 import sanpy.h5Util
+import sanpy.fileloaders
+from sanpy.fileloaders import recordingModes
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -55,27 +55,30 @@ class bAnalysis:
     #     return 't' + str(uuid.uuid4()).replace('-', '_')
 
     def __init__(self,
-                    file=None,
-                    byteStream=None,
-                    loadData=True,
-                    stimulusFileFolder=None,
-                    verbose=True):
+                    filepath :str = None,
+                    byteStream =None,
+                    loadData : bool = True,
+                    stimulusFileFolder : str = None,
+                    verbose :bool = True):
         """
         Args:
-            file (str): Path to either .abf or .csv with time/mV columns.
+            filepath (str): Path to either .abf or .csv with time/mV columns.
             byteStream (io.BytesIO): Binary stream for use in the cloud.
             loadData: If true, load raw data, otherwise just load header
             stimulusFileFolder:
         """
 
+        '''
         self._path = file  # todo: change this to filePath
+        '''
         """str: File path."""
 
-        self._detectionDict :dict = None # corresponds to an item in sanpy.bDetection
+        self._detectionDict : dict = None # corresponds to an item in sanpy.bDetection
 
         self._isAnalyzed : bool = False
 
         # mimic pyAbf
+        '''
         self._numChannels : int = None
         self._dataPointsPerMs : int = None
         self._currentSweep : int = 0  # int
@@ -97,16 +100,21 @@ class bAnalysis:
         self.myFileType : str = None
         """str: From ('abf', 'csv', 'tif', 'bytestream')"""
 
+        # only defined when loading abf files
+        self.acqDate = None
+        self.acqTime = None
+        '''
+
         self.loadError : bool = False
         """bool: True if error loading file/stream."""
 
         #self.detectionDict = None  # remember the parameters of our last detection
         """dict: Dictionary specifying detection parameters, see bDetection.getDefaultDetection."""
 
-        self._abf = None
+        #self._abf = None
         """pyAbf: If loaded from binary .abf file"""
 
-        #self.dateAnalyzed = None
+        self.dateAnalyzed : str = None
         """str: Date Time of analysis. TODO: make a property."""
 
         #self.detectionType = None
@@ -125,34 +133,50 @@ class bAnalysis:
         self.dfError = None  # dataframe with a list of detection errors
         self._dfReportForScatter = None  # dataframe to be used by scatterplotwidget
 
-        # only defined when loading abf files
-        self.acqDate = None
-        self.acqTime = None
-
         self._detectionDirty = False
 
         # will be overwritten by existing uuid in self._loadFromDf()
         self.uuid = sanpy._util.getNewUuid()
 
-        self.tifData = None
+        #self.tifData = None
         # when we have a tif kymograph
 
-        self.isBytesIO = False
+        #self.isBytesIO = False
         # when we are running in the cloud
 
-        # IMPORTANT:
-        #        All instance variable MUST be declared before we load
-        #        In particular for self._loadFromDf()
 
-        if file is not None and not os.path.isfile(file):
-            logger.error(f'File does not exist: "{file}"')
+        # TODO (cudmore) need to parse folder of file loaders in fileloders/ and determine
+        # class to use to load file (using fileLoader.filetype
+        self._fileLoader = None
+        if filepath is not None and not os.path.isfile(filepath):
+            logger.error(f'File does not exist: "{filepath}"')
             self.loadError = True
+        else:
+            _fileLoadersDict = sanpy.fileloaders.getFileLoaders()  # EXPENSIVE, to do, pass in from app
+            _ext = os.path.splitext(filepath)[1]
+            _ext = _ext[1:]
+            try:
+                logger.info('LOADING')
+                constructorObject = _fileLoadersDict[_ext]['constructor']
+                self._fileLoader = constructorObject(filepath)
+            except (KeyError) as e:
+                logger.error(f'did not find a file loader for extension "{_ext}"')
+                self.loadError = True
+            
+            # if filepath.endswith('.abf'):
+            #     from sanpy.fileloaders import fileLoader_abf
+            #     self._fileLoader = fileLoader_abf(filepath)
+            # elif filepath.endswith('.atf'):
+            #     from sanpy.fileloaders import fileLoader_atf
+            #     self._fileLoader = fileLoader_atf(filepath)
+            # elif filepath.endswith('.csv'):
+            #     from sanpy.fileloaders import fileLoader_csv
+            #     self._fileLoader = fileLoader_csv(filepath)
+            # elif filepath.endswith('.tif'):
+            #     from sanpy.fileloaders import fileLoader_tif
+            #     self._fileLoader = fileLoader_tif(filepath)
 
-        # instantiate and load abf file
-        # if fromDict is not None:
-        #     self._loadFromDict(fromDict)
-        # elif fromDf is not None:
-        #     self._loadFromDf(fromDf)
+        '''
         if byteStream is not None:
             self._loadAbf(byteStream=byteStream,
                     loadData=loadData,
@@ -169,14 +193,21 @@ class bAnalysis:
             pass
             #logger.error(f'Can only open abf/csv/tif/stream files: {file}')
             #self.loadError = True
+        '''
 
         # get default derivative
         if loadData:
-            self.rebuildFiltered()
+            self._rebuildFiltered()
 
         self._detectionDirty = False
 
+        '''
         self.setSweep()
+        '''
+
+    @property
+    def fileLoader(self):
+        return self._fileLoader
 
     def asDataFrame(self):
         """Return analysis as a Pandas DataFrame.
@@ -199,61 +230,21 @@ class bAnalysis:
     def __str__(self):
         """Get a brief str representation. Usefull for print().
         """
-        if self.isBytesIO:
-             filename = '<BytesIO>'
-        else:
-            filename = self.getFileName()
-        txt = f'ba: {filename} {self.numSweeps} sweep(s) with dur:{round(self.recordingDur,3)} spikes:{self.numSpikes}'
+        # if self.isBytesIO:
+        #      filename = '<BytesIO>'
+        # else:
+        #     filename = self.getFileName()
+        fileLoadStr = self.fileLoader.__str__()
+        txt = f'fileLoader: {fileLoadStr} spikes:{self.numSpikes}'
         return txt
-
-    def getInfo(self, withPath=False):
-        if withPath:
-            pathStr = self._path
-        else:
-            pathStr = ''
-        txt = self.__str__()
-        startSeconds = self.getDetectionDict()['startSeconds']
-        stopSeconds = self.getDetectionDict()['stopSeconds']
-        txt += f" start(s):{startSeconds} stop(s):{stopSeconds} {pathStr}"
-        return txt
-
-    def isKymograph(self):
-        return self.tifData is not None
-
-    def resetKymographRect(self):
-        defaultRect = self._abf.resetRoi()
-        self._updateTifRoi(defaultRect)
-        return defaultRect
-
-    def getKymographRect(self):
-        if self.isKymograph():
-            return self._abf.getTifRoi()
-        else:
-            return None
-
-    def getKymographBackgroundRect(self):
-        if self.isKymograph():
-            return self._abf.getTifRoiBackground()
-        else:
-            return None
-
-    def _updateTifRoi(self, theRect=[]):
-        """
-        Update the kymograph ROI
-        """
-        self._abf.updateTifRoi(theRect)
-
-        self._sweepX[:, 0] = self._abf.sweepX
-        self._sweepY[:, 0] = self._abf.sweepY
 
     def _saveHdf_pytables(self, hdfPath):
         """Save detection parameters and analysis into an hdf5 file.
         """
-        didSave = False
         if not self.detectionDirty:
             # Do not save it detection has not changed
-            logger.info(f'NOT SAVING, is not dirty {self.getInfo(withPath=True)}')
-            return didSave
+            logger.info(f'NOT SAVING, is not dirty {self}')
+            return False
 
         # when making df from dict, need to pass it a list
         # o.w. key values that are lists get expanded into rows
@@ -276,12 +267,10 @@ class bAnalysis:
             key = uuid + '/' + 'analysisList'
             dfAnalysis.to_hdf(hdfStore, key)
 
-            didSave = True
-
         # we saved, detection is not dirty
         self._detectionDirty = False
         
-        return didSave
+        return True
 
     def _loadHdf_pytables(self, hdfPath, uuid):
         """
@@ -334,379 +323,25 @@ class bAnalysis:
             logger.info(f'    loaded {len(detectionDict.keys())} detection keys and {len(self.spikeDict)} spikes')
         else:
             logger.error(f'    LOAD FAILED')
-
-    def _loadAtf(self, loadData):
-        # We cant't get dataPointsPerMs without loading the data
-        loadData = True
-
-        self._abf = pyabf.ATF(self._path)  # , loadData=loadData)
-        print('  self._abf:', self._abf.sweepList)
-        #try:
-        if 1:
-            self._sweepList = self._abf.sweepList
-            self._sweepLengthSec = self._abf.sweepLengthSec
-            if loadData:
-                tmpRows = self._abf.sweepX.shape[0]
-                numSweeps = len(self._sweepList)
-                self._sweepX = np.zeros((tmpRows,numSweeps))
-                self._sweepY = np.zeros((tmpRows,numSweeps))
-                self._sweepC = np.zeros((tmpRows,numSweeps))
-
-                for sweep in self._sweepList:
-                    self._abf.setSweep(sweep)
-                    self._sweepX[:, sweep] = self._abf.sweepX  # <class 'numpy.ndarray'>, (60000,)
-                    self._sweepY[:, sweep] = self._abf.sweepY
-                    #self._sweepC[:, sweep] = self._abf.sweepC
-                # not needed
-                self._abf.setSweep(0)
-
-            logger.info(f'Loaded abf self._sweepX: {self._sweepX.shape}')
-            # get v from pyAbf
-            if len(self.sweepX.shape) > 1:
-                t0 = self.sweepX[0][0]
-                t1 = self.sweepX[1][0]
-            else:
-                t0 = self.sweepX[0]
-                t1 = self.sweepX[1]
-            dt = (t1-t0) * 1000
-            dataPointsPerMs = 1 / dt
-            dataPointsPerMs = round(dataPointsPerMs)
-            self._dataPointsPerMs = dataPointsPerMs
-
-            '''
-            channel = 0
-            adcUnits = self._abf.adcUnits[channel]
-            self._sweepLabelY = adcUnits
-            self._sweepLabelX = "sec'"
-            '''
-            self._sweepLabelY = 'mV'
-            self._sweepLabelX = "sec'"
-
-            if self._sweepLabelY in ['pA']:
-                self._recordingMode = 'V-Clamp'
-            elif self._sweepLabelY in ['mV']:
-                self._recordingMode = 'I-Clamp'
-
-        '''
-        except (Exception) as e:
-            # some abf files throw: 'unpack requires a buffer of 234 bytes'
-            logger.error(f'did not load ATF file: {self._path}')
-            logger.error(f'  unknown Exception was: {e}')
-            self.loadError = True
-            self._abf = None
-        '''
-
-        self.myFileType = 'atf'
-
-        # don't keep _abf, we grabbed every thing we needed
-
-    def _loadAbf(self, byteStream=None, loadData=True, stimulusFileFolder=None):
-        """Load pyAbf from path."""
-        try:
-            #logger.info(f'loadData:{loadData}')
-            if byteStream is not None:
-                logger.info('Loading byte stream')
-                self._abf = pyabf.ABF(byteStream)
-                self.isBytesIO = True
-            else:
-                #logger.info(f'Loading file: {self._path}')
-                self._abf = pyabf.ABF(self._path, loadData=loadData, stimulusFileFolder=stimulusFileFolder)
-
-        except (NotImplementedError) as e:
-            logger.error(f'    did not load abf file: {self._path}')
-            logger.error(f'      NotImplementedError exception was: {e}')
-            self.loadError = True
-            self._abf = None
-
-        except (Exception) as e:
-            # some abf files throw: 'unpack requires a buffer of 234 bytes'
-            # 'ABF' object has no attribute 'sweepEpochs'
-            logger.error(f'    did not load abf file: {self._path}')
-            logger.error(f'        unknown Exception was: {e}')
-            self.loadError = True
-            self._abf = None
-
-        if 1:
-            if loadData:
-                try:
-                    _tmp = self._abf.sweepEpochs.p1s
-                except (AttributeError) as e:
-                    logger.warning(f'    did not find epochTable loadData:{loadData}: {e} in file {self.path}')
-                else:
-                    _numSweeps = len(self._abf.sweepList)
-                    self._epochTableList = [None] * _numSweeps
-                    for _sweepIdx in range(_numSweeps):
-                        self._abf.setSweep(_sweepIdx)
-                        self._epochTableList[_sweepIdx] = sanpy.epochTable(self._abf)
-                    self._abf.setSweep(0)
-
-            self._sweepList = self._abf.sweepList
-            self._sweepLengthSec = self._abf.sweepLengthSec  # assuming all sweeps have the same duration
-
-            # on load, sweep is 0
-            if loadData:
-                tmpRows = self._abf.sweepX.shape[0]
-                numSweeps = len(self._sweepList)
-                self._sweepX = np.zeros((tmpRows,numSweeps))
-                self._sweepY = np.zeros((tmpRows,numSweeps))
-                self._sweepC = np.zeros((tmpRows,numSweeps))
-
-                _channel = 0
-                for sweep in self._sweepList:
-                    self._abf.setSweep(sweepNumber=sweep, channel=_channel)
-                    self._sweepX[:, sweep] = self._abf.sweepX  # <class 'numpy.ndarray'>, (60000,)
-                    self._sweepY[:, sweep] = self._abf.sweepY
-                    try:
-                        self._sweepC[:, sweep] = self._abf.sweepC
-                    except(ValueError) as e:
-                        # pyabf will raise this error if it is an atf file
-                        logger.warning(f'    exception fetching sweepC for sweep {sweep} with {self.numSweeps}: {e}')
-                        #
-                        # if we were recorded with a stimulus file abf
-                        # needed to assign stimulusWaveformFromFile
-                        try:
-                            tmpSweepC = self._abf.sweepC
-                            self._sweepC[:, sweep] = self._abf.sweepC
-                        except (ValueError) as e:
-                            logger.warning(f'ba has no sweep {sweep} sweepC ???')
-
-                # not needed
-                self._abf.setSweep(0)
-
-            # get v from pyAbf
-            self._dataPointsPerMs = self._abf.dataPointsPerMs
-
-            # turned back on when implementing Santana rabbit Ca kymographs
-            abfDateTime = self._abf.abfDateTime  # 2019-01-14 15:20:48.196000
-            self.acqDate = abfDateTime.strftime("%Y-%m-%d")
-            self.acqTime = abfDateTime.strftime("%H:%M:%S")
-
-            self._numChannels = len(self._abf.adcUnits)
-            if self._numChannels > 1:
-                logger.warning(f'    SanPy does not work with multi-channel recordings numChannels is {self._numChannels} {self._path}')
-                # logger.warning('    Will default to channel 0')
-
-            #self.sweepUnitsY = self.adcUnits[channel]
-            channel = 0
-            #dacUnits = self._abf.dacUnits[channel]
-            adcUnits = self._abf.adcUnits[channel]
-            #print('  adcUnits:', adcUnits)  # 'mV'
-            self._sweepLabelY = adcUnits
-            self._sweepLabelX = "sec'"
-
-            #self._sweepLabelX = self._abf.sweepLabelX
-            #self._sweepLabelY = self._abf.sweepLabelY
-            if self._sweepLabelY in ['pA', 'nA']:
-                self._recordingMode = 'V-Clamp'
-                #self._sweepY_label = self._abf.sweepUnitsY
-            elif self._sweepLabelY in ['mV']:
-                self._recordingMode = 'I-Clamp'
-                #self._sweepY_label = self._abf.sweepUnitsY
-            else:
-                logger.warning(f'did not understand adcUnit "{adcUnits}"')
-
-        #
-        self.myFileType = 'abf'
-
-        # base sanpy does not keep the abf around
-        #logger.warning('[[[TURNED BACK ON]]] I turned off assigning self._abf=None for stoch-res stim file load')
-        self._abf = None
-
-    def _loadTif(self):
-        #print('TODO: load tif file from within bAnalysis ... stop using bAbfText()')
-        
-        self._abf = sanpy.bAbfText(self._path)
-        
-        # 20220114 removed
-        #self._abf.sweepY = self._normalizeData(self._abf.sweepY)
-        self.myFileType = 'tif'
-
-        self._sweepList = [0]
-
-        numSweeps = 1
-        tmpRows = self._abf.sweepX.shape[0]  # points in one line scan
-        #logger.info(f'tmpRows {tmpRows}')
-
-        self._sweepLengthSec = self._abf.sweepX[-1]
-
-        self._sweepX = np.zeros((tmpRows,numSweeps))
-        self._sweepX[:, 0] = self._abf.sweepX
-
-        self._sweepY = np.zeros((tmpRows,numSweeps))
-        self._sweepY[:, 0] = self._abf.sweepY
-
-        # print(self._sweepX)
-        # print(self._sweepY)
-        
-        self._recordingMode = 'tif'
-        self._dataPointsPerMs = self._abf.dataPointsPerMs
-
-        self.tifData = self._abf.tif
-
-        self._sweepLabelY = 'f/f0'  # str
-
-    def _loadCsv(self):
-        """
-        Load from a two column CSV file with columns of (s, mV)
-        """
-        logger.info(self._path)
-
-        dfCsv = pd.read_csv(self._path)
-
-        # TODO: check column names make sense
-        # There must be 2 columns ('s', 'mV')
-        numCols = len(dfCsv.columns)
-        if numCols != 2:
-            # error
-            logger.warning(f'There must be two columns, found {numCols}')
-            self.loadError = True
-            return
-
-        self.myFileType = 'csv'
-
-        firstColStr = dfCsv.columns[0]
-        secondColStr = dfCsv.columns[1]
-
-        if firstColStr in ['s', 'sec', 'seconds']:
-            timeMult = 1
-        elif firstColStr in ['ms']:
-            timeMult = 1/1000
-        else:
-            logger.warning(f'The first column is "{firstColStr}" but must be one of ("s", "sec", "seconds", "ms")')
-            self.loadError = True
-            return
-
-        self._sweepX = dfCsv[firstColStr].values  # first col is time
-        self._sweepY = dfCsv[secondColStr].values  # second col is values (either mV or pA)
-        self._sweepC = np.zeros(len(self._sweepX))
-
-        self._sweepX *= timeMult
-
-        # imported csv will always have 1 sweep (1 column)
-        self._sweepX = self._sweepX.reshape((self._sweepX.shape[0],1))
-        self._sweepY = self._sweepY.reshape((self._sweepY.shape[0],1))
-        self._sweepC = self._sweepC.reshape((self._sweepC.shape[0],1))
-        #print('self._sweepX:', self._sweepX.shape)
-
-        # TODO: infer from second column
-        if secondColStr == 'mV':
-            self._recordingMode = 'I-Clamp'
-            self._sweepLabelY = 'mV' # TODO: get from column
-        elif secondColStr == 'pA':
-            self._recordingMode = 'V-Clamp'
-            self._sweepLabelY = 'pA' # TODO: get from column
-        else:
-            logger.warning(f'The seconds column is "{secondColStr}" but muse be one of ("mV", "pA")')
-
-        # always seconds
-        self._sweepLabelX = 'sec' # TODO: get from column
-
-        # TODO: infer from first column as ('s', 'ms')
-        firstPnt = self._sweepX[0][0]
-        secondPnt = self._sweepX[1][0]
-        diff_seconds = secondPnt - firstPnt
-        diff_ms = diff_seconds * 1000
-        _dataPointsPerMs = 1 / diff_ms
-        self._dataPointsPerMs = _dataPointsPerMs
-        #logger.info(f'_dataPointsPerMs: {_dataPointsPerMs}')
-
-        #self._recordingMode = 'I-Clamp'
-        self._sweepLengthSec = self._sweepX[-1][0]
-
-    def getEpochTable(self, sweep):
-        """Only proper abf files will have an epoch table.
-        """
-        if self._epochTableList is not None:
-            return self._epochTableList[sweep]
-        else:
-            return None
-            
+ 
     @property
     def detectionDirty(self):
         return self._detectionDirty
 
-    def getFilePath(self):
-        return self._path
-
-    def getFileName(self):
-        if self._path is None:
-            return None
-        else:
-            return os.path.split(self._path)[1]
-
-    @property
-    def abf(self):
-        """Get the underlying pyabf object."""
-        return self._abf
-
-    @property
-    def recordingMode(self):
-        return self._recordingMode
-
-    @property
-    def recordingDur(self):
-        """Get recording duration in seconds.
-
-        If there are multiple sweeps, assuming all are the same duration.
-        """
-        theDur = self._sweepLengthSec
-        #logger.info(f'theDur:{theDur} {type(theDur)}')
-        return theDur
-
-    @property
-    def recordingFrequency(self):
-        """Get recording frequency in kHz."""
-        return self._dataPointsPerMs
-
-    @property
-    def currentSweep(self):
-        return self._currentSweep
-
-    @property
-    def dataPointsPerMs(self):
-        """Get the number of data points per ms."""
-        return self._dataPointsPerMs
-
-    @property
-    def sweepList(self):
-        """Get the list of sweeps."""
-        return self._sweepList
-
-    @property
-    def numSweeps(self):
-        """Get the number of sweeps."""
-        return len(self._sweepList)
-
-    @property
-    def numChannels(self):
-        """Get the number of channels.
-        
-        TODO: 20220726, we do not handle multi channel recordings.
-        """
-        return self._numChannels
-
-    @property
-    def numEpochs(self):
-        """Get the number of epochs.
-        
-        Epochs are mostly for pClamp abf files. We are assuming each sweep has the same namber of epochs.
-        """
-        if self._epochTableList is not None:
-            return self._epochTableList[0].numEpochs()
-
     @property
     def numSpikes(self):
-        """Get the total number of detected spikes."""
-        #return len(self.spikeTimes) # spikeTimes is tmp per sweep
+        """Get the total number of detected spikes (all sweeps).
+        
+        See getNumSpikes(sweep)
+        """
         return len(self.spikeDict) # spikeDict has all spikes for all sweeps
 
     def getNumSpikes(self, sweep : int = 0):
         """Get number of spikes in a sweep.
         """
-        #spikeList = self.getSpikeTimes(sweepNumber=sweep)
         return self._spikesPerSweep[sweep]
 
-    def getAbsSpikeFromSweep(self, sweepSpikeIdx : int, sweep : int):
+    def getAbsSpikeFromSweep(self, sweepSpikeIdx : int, sweep : int) -> int:
         """Given a spike index within a sweep, get the absolute spike index.
 
         See getSweepSpikeFromAbsolute()
@@ -717,7 +352,7 @@ class bAnalysis:
         absIdx += sweepSpikeIdx
         return absIdx
     
-    def getSweepSpikeFromAbsolute(self, absSpikeIdx : int, sweep : int):
+    def getSweepSpikeFromAbsolute(self, absSpikeIdx : int, sweep : int) -> int:
         """Get sweep spike from absolute spike.
         
         See getAbsSpikeFromSweep()
@@ -731,108 +366,6 @@ class bAnalysis:
         # sweepSpike = absSpikeIdx - absIdx
         # return sweepSpike
 
-    @property
-    def sweepX(self):
-        return self._sweepX[:, self.currentSweep]
-        """Get the time (seconds) from recording (numpy.ndarray)."""
-        '''
-        if self.numSweeps == 1:
-            return self._safeOneSweep(self._sweepX)
-        elif sweepNumber is None or sweepNumber == 'All':
-            return self._sweepX  # will be 2D
-        else:
-            theSweepX = self._sweepX[:,sweepNumber]
-            theSweepX = self._getOneColumns(theSweepX)
-            return theSweepX
-        '''
-    @property
-    def sweepY(self):
-        """Get the amplitude (mV or pA) from recording (numpy.ndarray). Units wil depend on mode"""
-        return self._sweepY[:, self.currentSweep]
-        '''
-        if self.numSweeps == 1:
-            return self._safeOneSweep(self._sweepY)
-        elif sweepNumber is None or sweepNumber == 'All':
-            return self._sweepY
-        else:
-            theSweepY = self._sweepY[:,sweepNumber]
-            theSweepY = self._getOneColumns(theSweepY)
-            return theSweepY
-        '''
-
-    @property
-    def sweepC(self):
-        """Get the command waveform DAC (numpy.ndarray). Units will depend on mode"""
-        if self._sweepC is None:
-            return np.zeros_like(self._sweepX[:, self.currentSweep])
-        return self._sweepC[:, self.currentSweep]
-        '''
-        if self.numSweeps == 1:
-            return self._safeOneSweep(self._sweepC)
-        elif sweepNumber is None or sweepNumber == 'All':
-            return self._sweepC
-        else:
-            #return self._sweepC[:,sweepNumber]
-            theSweepC = self._sweepC[:,sweepNumber]
-            theSweepC = self._getOneColumns(theSweepC)
-            return theSweepC
-        '''
-
-    @property
-    def filteredDeriv(self):
-        """Get the command waveform DAC (numpy.ndarray). Units will depend on mode"""
-        if self._filteredDeriv is not None:
-            return self._filteredDeriv[:, self.currentSweep]
-        else:
-            return None
-        '''
-        #logger.info(self._filteredDeriv.shape)
-        if self.numSweeps == 1:
-            return self._safeOneSweep(self._filteredDeriv)
-        elif sweepNumber is None or sweepNumber == 'All':
-            return self._filteredDeriv
-        else:
-            #return self._filteredDeriv[:,sweepNumber]
-            theFilteredDeriv = self._filteredDeriv[:,sweepNumber]
-            theFilteredDeriv = self._getOneColumns(theFilteredDeriv)
-            return theFilteredDeriv
-        '''
-
-    # TODO: Get rid of filteredVm and replace with sweepY_filtered
-
-    @property
-    def sweepY_filtered(self):
-        return self._filteredVm[:, self.currentSweep]
-
-    @property
-    def filteredVm(self):
-        return self._filteredVm[:, self.currentSweep]
-        '''
-        """Get the command waveform DAC (numpy.ndarray). Units will depend on mode"""
-        if self.numSweeps == 1:
-            return self._safeOneSweep(self._filteredVm)
-        elif sweepNumber is None or sweepNumber == 'All':
-            return self._filteredVm
-        else:
-            theFilteredVm = self._filteredVm[:,sweepNumber]
-            theFilteredVm = self._getOneColumns(theFilteredVm)
-            return theFilteredVm
-        '''
-
-    def setSweep(self, sweep=0):
-        self._currentSweep = sweep
-        '''
-        self._sweepX2 = self._sweepX[:,sweep]
-        self._sweepY2 = self._sweepY[:,sweep]
-        self._sweepC2 = self._sweepC[:,sweep]
-        self._filteredDeriv2 = self._filteredDeriv[:,sweep]
-        '''
-
-    def get_yUnits(self):
-        return self._sweepLabelY
-
-    def get_xUnits(self):
-        return self._sweepLabelX
 
     def isDirty(self):
         """Return True if analysis has been modified but not save."""
@@ -842,7 +375,7 @@ class bAnalysis:
         """Return True if this bAnalysis has been analyzed, False otherwise."""
         return self._isAnalyzed
 
-    def getStatMean(self, statName, sweepNumber=None):
+    def getStatMean(self, statName : str, sweepNumber : int = None):
         """
         Get the mean of an analysis parameter.
 
@@ -873,7 +406,9 @@ class bAnalysis:
         return retList
 
     def setSpikeStat(self, spikeList : Union[list, int], stat : str, value):
-        """Used to set simple things like ('isBad', 'userType1', ...)
+        """Set a stat for one spike or a list of spikes.
+        
+        Used to set simple things like ('isBad', 'userType1', ...)
         """
         if isinstance(spikeList, list):
             pass
@@ -910,7 +445,8 @@ class bAnalysis:
         logger.info(f'Given {len(spikeList)} and set {count}')
         '''
 
-    def getSweepStats(self, statName:str, decimals=3, asDataFrame=False, df=None):
+    def getSweepStats(self, statName : str, decimals=3,
+                        asDataFrame = False, df :pd.DataFrame = None):
         """
 
         Args:
@@ -922,7 +458,7 @@ class bAnalysis:
 
         sweepStatList = []
 
-        for sweep in range(self.numSweeps):
+        for sweep in range(self.fileLoader.numSweeps):
             oneDf = df[ df['sweep']==sweep ]
             theValues = oneDf[statName]
 
@@ -1062,18 +598,18 @@ class bAnalysis:
         theRet = [spike for spike in self.spikeDict if sweepNumber=='All' or spike['sweep']==sweepNumber]
         return theRet
 
-    def rebuildFiltered(self):
-        if self._sweepX is None:
+    def _rebuildFiltered(self):
+        if self.fileLoader.sweepX is None:
             # no data
             logger.warning('not getting derivative ... sweepX was none?')
             return
 
-        if self._recordingMode == 'I-Clamp' or self._recordingMode == 'tif':
-            self._getDerivative()
-        elif self._recordingMode == 'V-Clamp':
-            self._getBaselineSubtract()
+        if self.fileLoader.recordingMode == recordingModes.iclamp or self.fileLoader.recordingMode == recordingModes.kymograph:
+            self.fileLoader._getDerivative()
+        elif self.fileLoader.recordingMode == recordingModes.vclamp:
+            self.fileLoader._getDerivative()
         else:
-            logger.warning(f'Did not take derivative, unknown recording mode "{self._recordingMode}"')
+            logger.warning(f'Did not take derivative, unknown recording mode "{self.fileLoader.recordingMode}"')
 
     def _getFilteredRecording(self):
         """
@@ -1093,123 +629,20 @@ class bAnalysis:
             SavitzkyGolay_pnts = 5
             SavitzkyGolay_poly = 2
 
-        if medianFilter > 0:
-            if not medianFilter % 2:
-                medianFilter += 1
-                logger.warning(f'Please use an odd value for the median filter, set medianFilter: {medianFilter}')
-            medianFilter = int(medianFilter)
-            self._filteredVm = scipy.signal.medfilt2d(self.sweepY(), [medianFilter,1])
-        elif SavitzkyGolay_pnts > 0:
-            self._filteredVm = scipy.signal.savgol_filter(self.sweepY(),
-                                SavitzkyGolay_pnts, SavitzkyGolay_poly,
-                                mode='nearest', axis=0)
-        else:
-            self._filteredVm = self.sweepY
+        self.fileLoader._getDerivative(medianFilter, SavitzkyGolay_pnts, SavitzkyGolay_poly)
 
-    def _getDerivative(self):
-        """
-        Get derivative of recording (used for I-Clamp). Uses (xxx,yyy,zzz) keys in dDict.
-
-        Args:
-            dDict (dict): Default detection dictionary. See bDetection.getDefaultDetection()
-        """
-        if self._detectionDict is not None:
-            medianFilter = self._detectionDict['medianFilter']
-            SavitzkyGolay_pnts = self._detectionDict['SavitzkyGolay_pnts']
-            SavitzkyGolay_poly = self._detectionDict['SavitzkyGolay_poly']
-        else:
-            # we have not been analyzed, impose some defaults
-            medianFilter = 0  # no median filter
-            SavitzkyGolay_pnts = 5
-            SavitzkyGolay_poly = 2
-
-        if not isinstance(medianFilter, int):
-            logger.error(f'expecting int medianFilter, got: {medianFilter}')
-
-        if medianFilter > 0:
-            if not medianFilter % 2:
-                medianFilter += 1
-                logger.warning('Please use an odd value for the median filter, set medianFilter: {medianFilter}')
-            medianFilter = int(medianFilter)
-            self._filteredVm = scipy.signal.medfilt2d(self._sweepY, [medianFilter,1])
-        elif SavitzkyGolay_pnts > 0:
-            self._filteredVm = scipy.signal.savgol_filter(self._sweepY,
-                                SavitzkyGolay_pnts, SavitzkyGolay_poly,
-                                axis=0,
-                                mode='nearest')
-        else:
-            self._filteredVm = self._sweepY
-
-        self._filteredDeriv = np.diff(self._filteredVm, axis=0)
-
-        # filter the derivative
-        if medianFilter > 0:
-            if not medianFilter % 2:
-                medianFilter += 1
-                print(f'Please use an odd value for the median filter, set medianFilter: {medianFilter}')
-            medianFilter = int(medianFilter)
-            self._filteredDeriv = scipy.signal.medfilt2d(self._filteredDeriv, [medianFilter,1])
-        elif SavitzkyGolay_pnts > 0:
-            self._filteredDeriv = scipy.signal.savgol_filter(self._filteredDeriv,
-                                    SavitzkyGolay_pnts, SavitzkyGolay_poly,
-                                    axis = 0,
-                                    mode='nearest')
-        else:
-            #self._filteredDeriv = self.filteredDeriv
-            pass
-
-        # mV/ms
-        dataPointsPerMs = self.dataPointsPerMs
-        self._filteredDeriv = self._filteredDeriv * dataPointsPerMs #/ 1000
-
-        # insert an initial point (rw) so it is the same length as raw data in abf.sweepY
-        # three options (concatenate, insert, vstack)
-        # could only get vstack working
-        #self.deriv = np.concatenate(([0],self.deriv))
-        rowOfZeros = np.zeros(self.numSweeps)
-        rowZero = 0
-
-        #print('  rowOfZeros:', rowOfZeros.shape)
-        #print('  _filteredDeriv:', self._filteredDeriv.shape)
-
-        self._filteredDeriv = np.vstack([rowOfZeros, self._filteredDeriv])
-        #self._filteredDeriv = np.insert(self.filteredDeriv, rowZero, rowOfZeros, axis=0)
-        #self._filteredDeriv = np.concatenate((zeroRow,self.filteredDeriv))
-        #print('  self._filteredDeriv:', self._filteredDeriv[0:4,:])
-
-    def _getBaselineSubtract(self, dDict=None):
-        """
-        for V-Clamp
-
-        Args:
-            dDict (dict): Default detection dictionary. See bDetection.getDefaultDetection()
-        """
-        #print('\n\n _getBaselineSubtract for v-clamp IS BROKEN BECAUSE OF SWEEPS IN FILTERED DERIV\n\n')
-
-        #logger.info('XXX TODO: Need to add a way to baseline subtract for spontaneous V-Clamp data !!!')
-
-        # temporary fix, makes no sense for V-Clamp
-        self._getDerivative()
-
-        #
-        return
-        #
-
-        '''
-        if dDict is None:
-            dDict = sanpy.bDetection.getDefaultDetection()
-
-        # work on a copy
-        dDictCopy = dDict.copy()
-        dDictCopy['medianFilter'] = 5
-
-        self._getFilteredRecording(dDictCopy)
-
-        # baseline subtract filtered recording
-        theMean = np.nanmean(self.filteredVm)
-        self.filteredDeriv = self.filteredVm.copy()
-        self.filteredDeriv -= theMean
-        '''
+        # if medianFilter > 0:
+        #     if not medianFilter % 2:
+        #         medianFilter += 1
+        #         logger.warning(f'Please use an odd value for the median filter, set medianFilter: {medianFilter}')
+        #     medianFilter = int(medianFilter)
+        #     self._filteredVm = scipy.signal.medfilt2d(self.sweepY(), [medianFilter,1])
+        # elif SavitzkyGolay_pnts > 0:
+        #     self._filteredVm = scipy.signal.savgol_filter(self.sweepY(),
+        #                         SavitzkyGolay_pnts, SavitzkyGolay_poly,
+        #                         mode='nearest', axis=0)
+        # else:
+        #     self._filteredVm = self.sweepY
 
     def _backupSpikeVm(self, spikeTimes, sweepNumber, medianFilter=None):
         """
@@ -1236,7 +669,7 @@ class bAnalysis:
 
         maxNumPntsToBackup = 20 # todo: add _ms
         bin_ms = 1
-        bin_pnts = round(bin_ms * self.dataPointsPerMs)
+        bin_pnts = round(bin_ms * self.fileLoader.dataPointsPerMs)
         half_bin_pnts = math.floor(bin_pnts/2)
         for idx, spikeTimePnts in enumerate(spikeTimes):
             foundRealThresh = False
@@ -1311,7 +744,7 @@ class bAnalysis:
                 # first spike is always good
                 continue
             dPoints = spikeTimes0[i] - spikeTimes0[lastGood]
-            if dPoints < self.dataPointsPerMs*refractory_ms:
+            if dPoints < self.fileLoader.dataPointsPerMs*refractory_ms:
                 # remove spike time [i]
                 spikeTimes0[i] = 0
             else:
@@ -1456,7 +889,7 @@ class bAnalysis:
 
         TODO: xxx
         """
-        sec = self.pnt2Sec_(pnt)  # pnt / self.dataPointsPerMs / 1000
+        sec = self.fileLoader.pnt2Sec_(pnt)  # pnt / self.dataPointsPerMs / 1000
         sec = round(sec,4)
 
         eDict = {
@@ -1480,7 +913,7 @@ class bAnalysis:
 
         #
         # analyze full recording
-        filteredDeriv = self.filteredDeriv
+        filteredDeriv = self.fileLoader.filteredDeriv
         Is=np.where(filteredDeriv>dDict['dvdtThreshold'])[0]
         Is=np.concatenate(([0],Is))
         Ds=Is[:-1]-Is[1:]+1
@@ -1489,18 +922,18 @@ class bAnalysis:
         #
         # reduce spike times based on start/stop
         if dDict['startSeconds'] is not None and dDict['stopSeconds'] is not None:
-            startPnt = self.dataPointsPerMs * (dDict['startSeconds']*1000) # seconds to pnt
-            stopPnt = self.dataPointsPerMs * (dDict['stopSeconds']*1000) # seconds to pnt
+            startPnt = self.fileLoader.dataPointsPerMs * (dDict['startSeconds']*1000) # seconds to pnt
+            stopPnt = self.fileLoader.dataPointsPerMs * (dDict['stopSeconds']*1000) # seconds to pnt
             tmpSpikeTimes = [spikeTime for spikeTime in spikeTimes0 if (spikeTime>=startPnt and spikeTime<=stopPnt)]
             spikeTimes0 = tmpSpikeTimes
 
         #
         # throw out all spikes that are below a threshold Vm (usually below -20 mV)
-        peakWindow_pnts = self.ms2Pnt_(dDict['peakWindow_ms'])
+        peakWindow_pnts = self.fileLoader.ms2Pnt_(dDict['peakWindow_ms'])
         #peakWindow_pnts = self.dataPointsPerMs * dDict['peakWindow_ms']
         #peakWindow_pnts = round(peakWindow_pnts)
         goodSpikeTimes = []
-        sweepY = self.sweepY
+        sweepY = self.fileLoader.sweepY
         for spikeTime in spikeTimes0:
             peakVal = np.max(sweepY[spikeTime:spikeTime+peakWindow_pnts])
             if peakVal > dDict['mvThreshold']:
@@ -1533,12 +966,12 @@ class bAnalysis:
         # for each threshold crossing, search backwards in dV/dt for a % of maximum (about 10 ms)
         #dvdt_percentOfMax = 0.1
         #window_ms = 2
-        window_pnts = dDict['dvdtPreWindow_ms'] * self.dataPointsPerMs
+        window_pnts = dDict['dvdtPreWindow_ms'] * self.fileLoader.dataPointsPerMs
         # abb 20210130 lcr analysis
         window_pnts = round(window_pnts)
         spikeTimes1 = []
         spikeErrorList1 = []
-        filteredDeriv = self.filteredDeriv
+        filteredDeriv = self.fileLoader.filteredDeriv
         for i, spikeTime in enumerate(spikeTimes0):
             # get max in derivative
 
@@ -1601,7 +1034,7 @@ class bAnalysis:
             self.filtereddVdt:
         """
 
-        filteredVm = self.filteredVm
+        filteredVm = self.fileLoader.sweepY_filtered
         Is=np.where(filteredVm>dDict['mvThreshold'])[0] # returns boolean array
         Is=np.concatenate(([0],Is))
         Ds=Is[:-1]-Is[1:]+1
@@ -1610,8 +1043,8 @@ class bAnalysis:
         #
         # reduce spike times based on start/stop
         if dDict['startSeconds'] is not None and dDict['stopSeconds'] is not None:
-            startPnt = self.dataPointsPerMs * (dDict['startSeconds']*1000) # seconds to pnt
-            stopPnt = self.dataPointsPerMs * (dDict['stopSeconds']*1000) # seconds to pnt
+            startPnt = self.fileLoader.dataPointsPerMs * (dDict['startSeconds']*1000) # seconds to pnt
+            stopPnt = self.fileLoader.dataPointsPerMs * (dDict['stopSeconds']*1000) # seconds to pnt
             tmpSpikeTimes = [spikeTime for spikeTime in spikeTimes0 if (spikeTime>=startPnt and spikeTime<=stopPnt)]
             spikeTimes0 = tmpSpikeTimes
 
@@ -1637,26 +1070,26 @@ class bAnalysis:
         tmpLastGoodSpike_pnts = None
         #minISI_pnts = 5000 # at 20 kHz this is 0.25 sec
         minISI_ms = 75 #250
-        minISI_pnts = self.ms2Pnt_(minISI_ms)
+        minISI_pnts = self.fileLoader.ms2Pnt_(minISI_ms)
 
         prePntUp = 10 # pnts
         goodSpikeTimes = []
         goodSpikeErrors = []
-        sweepY = self.sweepY
+        sweepY = self.fileLoader.sweepY
         for tmpIdx, spikeTime in enumerate(spikeTimes0):
             tmpFuckPreClip = sweepY[spikeTime-prePntUp:spikeTime]  # not including the stop index
             tmpFuckPostClip = sweepY[spikeTime+1:spikeTime+prePntUp+1]  # not including the stop index
             preAvg = np.average(tmpFuckPreClip)
             postAvg = np.average(tmpFuckPostClip)
             if postAvg > preAvg:
-                tmpSpikeTimeSec = self.pnt2Sec_(spikeTime)
+                # tmpSpikeTimeSec = self.fileLoader.pnt2Sec_(spikeTime)
                 if tmpLastGoodSpike_pnts is not None and (spikeTime-tmpLastGoodSpike_pnts) < minISI_pnts:
                     continue
                 goodSpikeTimes.append(spikeTime)
                 goodSpikeErrors.append(spikeErrorList[tmpIdx])
                 tmpLastGoodSpike_pnts = spikeTime
             else:
-                tmpSpikeTimeSec = self.pnt2Sec_(spikeTime)
+                tmpSpikeTimeSec = self.fileLoader.pnt2Sec_(spikeTime)
 
         # todo: add this to spikeDetect_dvdt()
         goodSpikeTimes, goodSpikeErrors = self._throwOutRefractory(goodSpikeTimes, goodSpikeErrors, refractory_ms=dDict['refractory_ms'])
@@ -1676,7 +1109,7 @@ class bAnalysis:
             detectionDict: From sanpy.bDetection
         """
 
-        rememberSweep = self.currentSweep  # This is BAD we are mixing analysis with interface !!!
+        rememberSweep = self.fileLoader.currentSweep  # This is BAD we are mixing analysis with interface !!!
 
         startTime = time.time()
 
@@ -1698,14 +1131,14 @@ class bAnalysis:
          # we are filling this in, one dict for each spike
         #self.spikeDict = [] # we are filling this in, one dict for each spike
 
-        self._spikesPerSweep = [0] * self.numSweeps
+        self._spikesPerSweep = [0] * self.fileLoader.numSweeps
 
-        for sweepNumber in self.sweepList:
+        for sweepNumber in self.fileLoader.sweepList:
             #self.setSweep(sweep)
             self._spikeDetect2(sweepNumber)
 
         #
-        self.setSweep(rememberSweep)
+        self.fileLoader.setSweep(rememberSweep)
 
         stopTime = time.time()
 
@@ -1728,11 +1161,11 @@ class bAnalysis:
         verbose = dDict['verbose']
         
         #
-        self.setSweep(sweepNumber)
+        self.fileLoader.setSweep(sweepNumber)
         #
 
         # in case dDict has new filter values
-        self.rebuildFiltered()
+        self._getFilteredRecording()
 
         #
         # spike detect
@@ -1758,25 +1191,25 @@ class bAnalysis:
         # backup thrshold to zero crossing in dvdt
         if 0:
             tmp_window_ms = dDict['dvdtPreWindow_ms']
-            tmp_window_pnts = self.ms2Pnt_(tmp_window_ms)
+            tmp_window_pnts = self.fileLoader.ms2Pnt_(tmp_window_ms)
             spikeTimes = self._getFeet(spikeTimes, tmp_window_pnts)
 
         #
         # set up
-        sweepX = self.sweepX  # sweepNumber is not optional
-        filteredVm = self.filteredVm  # sweepNumber is not optional
-        filteredDeriv = self.filteredDeriv
-        sweepC = self.sweepC
+        sweepX = self.fileLoader.sweepX  # sweepNumber is not optional
+        filteredVm = self.fileLoader.sweepY_filtered  # sweepNumber is not optional
+        filteredDeriv = self.fileLoader.filteredDeriv
+        sweepC = self.fileLoader.sweepC
 
         #
         now = datetime.datetime.now()
         dateStr = now.strftime('%Y%m%d')
         timeStr = now.strftime('%H:%M:%S')
-        # self.dateAnalyzed = dateStr
+        self.dateAnalyzed = dateStr
 
         #
         # look in a window after each threshold crossing to get AP peak
-        peakWindow_pnts = self.ms2Pnt_(dDict['peakWindow_ms'])
+        peakWindow_pnts = self.fileLoader.ms2Pnt_(dDict['peakWindow_ms'])
 
         #
         # throw out spikes that have peak BELOW onlyPeaksAbove_mV
@@ -1792,12 +1225,12 @@ class bAnalysis:
 
         #
         # small window to average Vm to calculate MDP (itself in a window before spike)
-        avgWindow_pnts = self.ms2Pnt_(dDict['avgWindow_ms'])
+        avgWindow_pnts = self.fileLoader.ms2Pnt_(dDict['avgWindow_ms'])
         avgWindow_pnts = math.floor(avgWindow_pnts/2)
 
         #
         # for each spike
-        numSpikes = len(spikeTimes)
+        #numSpikes = len(spikeTimes)
         for i, spikeTime in enumerate(spikeTimes):
             # spikeTime units is ALWAYS points
 
@@ -1807,7 +1240,7 @@ class bAnalysis:
             # get the AP peak
             peakPnt = newSpikePeakPnt[i]
             peakVal = newSpikePeakVal[i]
-            peakSec = (newSpikePeakPnt[i] / self.dataPointsPerMs) / 1000
+            peakSec = (newSpikePeakPnt[i] / self.fileLoader.dataPointsPerMs) / 1000
 
             # create one spike dictionary
             #spikeDict = OrderedDict() # use OrderedDict so Pandas output is in the correct order
@@ -1817,7 +1250,7 @@ class bAnalysis:
             spikeDict[i]['analysisTime'] = timeStr
             spikeDict[i]['analysisVersion'] = sanpy.analysisVersion
             spikeDict[i]['interfaceVersion'] = sanpy.interfaceVersion
-            spikeDict[i]['file'] = self.getFileName()
+            spikeDict[i]['file'] = self.fileLoader.filename
 
             spikeDict[i]['detectionType'] = detectionType
 
@@ -1829,7 +1262,7 @@ class bAnalysis:
             
             epoch = float('nan')
             epochLevel = float('nan')
-            epochTable = self.getEpochTable(sweepNumber)
+            epochTable = self.fileLoader.getEpochTable(sweepNumber)
             if epochTable is not None:
                 epoch = epochTable.findEpoch(spikeTime)   
                 epochLevel = epochTable.getLevel(epoch)
@@ -1862,7 +1295,7 @@ class bAnalysis:
             spikeDict[i]['halfHeights'] = dDict['halfHeights']
 
             spikeDict[i]['thresholdPnt'] = spikeTime
-            spikeDict[i]['thresholdSec'] = (spikeTime / self.dataPointsPerMs) / 1000
+            spikeDict[i]['thresholdSec'] = (spikeTime / self.fileLoader.dataPointsPerMs) / 1000
             spikeDict[i]['thresholdVal'] = filteredVm[spikeTime] # in vm
             spikeDict[i]['thresholdVal_dvdt'] = filteredDeriv[spikeTime] # in dvdt, spikeTime is points
 
@@ -1948,7 +1381,7 @@ class bAnalysis:
 
             #
             mdp_ms = dDict['mdp_ms']
-            mdp_pnts = self.ms2Pnt_(mdp_ms)  # mdp_ms * self.dataPointsPerMs
+            mdp_pnts = self.fileLoader.ms2Pnt_(mdp_ms)  # mdp_ms * self.dataPointsPerMs
             mdp_pnts = int(mdp_pnts)
 
             # pre spike min
@@ -2021,7 +1454,7 @@ class bAnalysis:
             # linear fit before spike
             spikeDict[iIdx]['preLinearFitPnt0'] = preLinearFitPnt0
             spikeDict[iIdx]['preLinearFitPnt1'] = preLinearFitPnt1
-            spikeDict[iIdx]['earlyDiastolicDuration_ms'] = self.pnt2Ms_(preLinearFitPnt1 - preLinearFitPnt0)
+            spikeDict[iIdx]['earlyDiastolicDuration_ms'] = self.fileLoader.pnt2Ms_(preLinearFitPnt1 - preLinearFitPnt0)
             spikeDict[iIdx]['preLinearFitVal0'] = preLinearFitVal0
             spikeDict[iIdx]['preLinearFitVal1'] = preLinearFitVal1
 
@@ -2111,7 +1544,7 @@ class bAnalysis:
             #postSpike_ms = 20 # 10
             #postSpike_pnts = self.ms2Pnt_(postSpike_ms)
             dvdtPostWindow_ms = dDict['dvdtPostWindow_ms']
-            dvdtPostWindow_pnts = self.ms2Pnt_(dvdtPostWindow_ms)
+            dvdtPostWindow_pnts = self.fileLoader.ms2Pnt_(dvdtPostWindow_ms)
             postRange = filteredDeriv[peakPnt:peakPnt+dvdtPostWindow_pnts] # fixed window after spike
 
             postSpike_dvdt_min_pnt = np.argmin(postRange)
@@ -2123,18 +1556,18 @@ class bAnalysis:
             #
             # diastolic duration was defined as the interval between MDP and TOP
             # one off error when preMinPnt is not defined
-            spikeDict[iIdx]['diastolicDuration_ms'] = self.pnt2Ms_(spikeTime - preMinPnt)
+            spikeDict[iIdx]['diastolicDuration_ms'] = self.fileLoader.pnt2Ms_(spikeTime - preMinPnt)
 
             #
             # calculate instantaneous spike frequency and ISI, for first spike this is not defined
             spikeDict[iIdx]['cycleLength_ms'] = float('nan')
             if i > 0:
                 isiPnts = spikeDict[iIdx]['thresholdPnt'] - spikeDict[iIdx-1]['thresholdPnt']
-                isi_ms = self.pnt2Ms_(isiPnts)
+                isi_ms = self.fileLoader.pnt2Ms_(isiPnts)
                 isi_hz = 1 / (isi_ms / 1000)
                 spikeDict[iIdx]['isi_pnts'] = isiPnts
-                spikeDict[iIdx]['isi_ms'] = self.pnt2Ms_(isiPnts)
-                spikeDict[iIdx]['spikeFreq_hz'] = 1 / (self.pnt2Ms_(isiPnts) / 1000)
+                spikeDict[iIdx]['isi_ms'] = self.fileLoader.pnt2Ms_(isiPnts)
+                spikeDict[iIdx]['spikeFreq_hz'] = 1 / (self.fileLoader.pnt2Ms_(isiPnts) / 1000)
 
                 # Cycle length was defined as the interval between MDPs in successive APs
                 prevPreMinPnt = spikeDict[iIdx-1]['preMinPnt'] # can be nan
@@ -2142,11 +1575,11 @@ class bAnalysis:
                 if prevPreMinPnt is not None and thisPreMinPnt is not None:
                     cycleLength_pnts = thisPreMinPnt - prevPreMinPnt
                     spikeDict[iIdx]['cycleLength_pnts'] = cycleLength_pnts
-                    spikeDict[iIdx]['cycleLength_ms'] = self.pnt2Ms_(cycleLength_pnts)
+                    spikeDict[iIdx]['cycleLength_ms'] = self.fileLoader.pnt2Ms_(cycleLength_pnts)
                 else:
                     # error
-                    prevPreMinSec = self.pnt2Sec_(prevPreMinPnt)
-                    thisPreMinSec = self.pnt2Sec_(thisPreMinPnt)
+                    prevPreMinSec = self.fileLoader.pnt2Sec_(prevPreMinPnt)
+                    thisPreMinSec = self.fileLoader.pnt2Sec_(thisPreMinPnt)
                     #errorStr = f'Previous spike preMinPnt is {prevPreMinPnt} and this preMinPnt: {thisPreMinPnt}'
                     errorType = 'Cycle Length'
                     errorStr = f'Previous spike preMinPnt (s) is {prevPreMinSec} and this preMinPnt: {thisPreMinSec}'
@@ -2158,12 +1591,13 @@ class bAnalysis:
             #
             # TODO: Move half-width to a function !!!
             #
-            hwWindowPnts = dDict['halfWidthWindow_ms'] * self.dataPointsPerMs
+            hwWindowPnts = dDict['halfWidthWindow_ms'] * self.fileLoader.dataPointsPerMs
             hwWindowPnts = round(hwWindowPnts)
             halfHeightList = dDict['halfHeights']
             # was this
             #self._getHalfWidth(filteredVm, i, iIdx, spikeTime, peakPnt, hwWindowPnts, self.dataPointsPerMs, halfHeightList)
-            self._getHalfWidth(filteredVm, iIdx, spikeDict, spikeTime, peakPnt, hwWindowPnts, self.dataPointsPerMs, halfHeightList, verbose=verbose)
+            self._getHalfWidth(filteredVm, iIdx, spikeDict, spikeTime, peakPnt,
+                                hwWindowPnts, self.fileLoader.dataPointsPerMs, halfHeightList, verbose=verbose)
 
         #
         # look between threshold crossing to get minima
@@ -2233,7 +1667,7 @@ class bAnalysis:
         #yFull = self.filteredVm
         #yDiffFull = np.diff(yFull)
         #yDiffFull = np.insert(yDiffFull, 0, np.nan)
-        yDiffFull = self.filteredDeriv
+        yDiffFull = self.fileLoader.filteredDeriv
 
         secondDeriv = np.diff(yDiffFull, axis=0)
         secondDeriv = np.insert(secondDeriv, 0, np.nan)
@@ -2263,18 +1697,18 @@ class bAnalysis:
             preClip = yDiffFull[preStart:footPnt]
 
             zero_crossings = np.where(np.diff(np.sign(preClip)))[0]  # find where derivative flips sign (crosses 0)
-            xLastCrossing = self.pnt2Sec_(footPnt)  # defaults
-            yLastCrossing = self.sweepY_filtered[footPnt]
+            xLastCrossing = self.fileLoader.pnt2Sec_(footPnt)  # defaults
+            yLastCrossing = self.fileLoader.sweepY_filtered[footPnt]
             if len(zero_crossings)==0:
                 if verbose:
-                    tmpSec = round(self.pnt2Sec_(footPnt), 3)
+                    tmpSec = round(self.fileLoader.pnt2Sec_(footPnt), 3)
                     logger.error(f'  no foot for peak {idx} at sec {tmpSec} ... did not find zero crossings')
             else:
                 #print(idx, 'footPnt:', footPnt, zero_crossings, preClip)
                 lastCrossingPnt = preStart + zero_crossings[-1]
-                xLastCrossing = self.pnt2Sec_(lastCrossingPnt)
+                xLastCrossing = self.fileLoader.pnt2Sec_(lastCrossingPnt)
                 # get y-value (pA) from filtered. This removes 'pops' in raw data
-                yLastCrossing = self.sweepY_filtered[lastCrossingPnt]
+                yLastCrossing = self.fileLoader.sweepY_filtered[lastCrossingPnt]
 
 
             # find peak in second derivative
@@ -2371,15 +1805,15 @@ class bAnalysis:
         else:
             # convert theseTime_sec to pnts
             theseTime_ms = [x*1000 for x in theseTime_sec]
-            theseTime_pnts = [x*self.dataPointsPerMs for x in theseTime_ms]
+            theseTime_pnts = [x*self.fileLoader.dataPointsPerMs for x in theseTime_ms]
             theseTime_pnts = [round(x) for x in theseTime_pnts]
 
-        preClipWidth_pnts = self.ms2Pnt_(preSpikeClipWidth_ms)
+        preClipWidth_pnts = self.fileLoader.ms2Pnt_(preSpikeClipWidth_ms)
         #if preClipWidth_pnts % 2 == 0:
         #    pass # Even
         #else:
         #    clipWidth_pnts += 1 # Make odd even
-        postClipWidth_pnts = self.ms2Pnt_(postSpikeClipWidth_ms)
+        postClipWidth_pnts = self.fileLoader.ms2Pnt_(postSpikeClipWidth_ms)
 
         #halfClipWidth_pnts = int(clipWidth_pnts/2)
 
@@ -2389,8 +1823,8 @@ class bAnalysis:
         #self.spikeClips_x = [(x-halfClipWidth_pnts)/self.dataPointsPerMs for x in range(clipWidth_pnts)]
 
         # in ms
-        self.spikeClips_x = [(x-preClipWidth_pnts)/self.dataPointsPerMs for x in range(preClipWidth_pnts)]
-        self.spikeClips_x += [(x)/self.dataPointsPerMs for x in range(postClipWidth_pnts)]
+        self.spikeClips_x = [(x-preClipWidth_pnts)/self.fileLoader.dataPointsPerMs for x in range(preClipWidth_pnts)]
+        self.spikeClips_x += [(x)/self.fileLoader.dataPointsPerMs for x in range(postClipWidth_pnts)]
 
         #20190714, added this to make all clips same length, much easier to plot in MultiLine
         numPointsInClip = len(self.spikeClips_x)
@@ -2398,7 +1832,7 @@ class bAnalysis:
         self.spikeClips = []
         self.spikeClips_x2 = []
 
-        sweepY = self.sweepY_filtered
+        sweepY = self.fileLoader.sweepY_filtered
 
         # when there are no spikes getStat() will not return anything
         sweepNum = self.getStat('sweep', sweepNumber=sweepNumber)  # For 'All' sweeps, we need to know column
@@ -2490,7 +1924,7 @@ class bAnalysis:
                 doThisSpike = idx in spikeSelection
             else:
                 spikeTime = spikeTimes[idx]
-                spikeTime = self.pnt2Sec_(spikeTime)
+                spikeTime = self.fileLoader.pnt2Sec_(spikeTime)
                 if spikeTime>=theMin and spikeTime<=theMax:
                     doThisSpike = True
             if doThisSpike:
@@ -2557,49 +1991,6 @@ class bAnalysis:
 
         be = sanpy.bExport(self)
         be.saveReport(savefile, saveExcel=saveExcel, alsoSaveTxt=alsoSaveTxt)
-
-    def pnt2Sec_(self, pnt):
-        """
-        Convert a point to Seconds using `self.dataPointsPerMs`
-
-        Args:
-            pnt (int): The point
-
-        Returns:
-            float: The point in seconds
-        """
-        if pnt is None:
-            #return math.isnan(pnt)
-            return math.nan
-        else:
-            return pnt / self.dataPointsPerMs / 1000
-
-    def pnt2Ms_(self, pnt):
-        """
-        Convert a point to milliseconds (ms) using `self.dataPointsPerMs`
-
-        Args:
-            pnt (int): The point
-
-        Returns:
-            float: The point in milliseconds (ms)
-        """
-        return pnt / self.dataPointsPerMs
-
-    def ms2Pnt_(self, ms):
-        """
-        Convert milliseconds (ms) to point in recording using `self.dataPointsPerMs`
-
-        Args:
-            ms (float): The ms into the recording
-
-        Returns:
-            int: The point in the recording
-        """
-        theRet = ms * self.dataPointsPerMs
-        #theRet = int(theRet)
-        theRet = round(theRet)
-        return theRet
 
     def _normalizeData(self, data):
         """
@@ -2747,7 +2138,7 @@ class bAnalysis:
             'loadError': self.loadError,
             #'detectionDict': self.detectionClass,
             'path': self._path,
-            'file': self.getFileName(),
+            'file': self.fileLoader.filename,
             'dateAnalyzed': self.dateAnalyzed,
             #'detectionType': self.detectionType,
             'acqDate': self.acqDate,

@@ -204,18 +204,18 @@ class baseUserAnalysis:
 
     def getSweepX(self):
         """Get the x-axis of a recording."""
-        return self.ba.sweepX
+        return self.ba.fileLoader.sweepX
 
     def getSweepY(self):
         """Get the y-axis of a recording."""
-        return self.ba.sweepY
+        return self.ba.fileLoader.sweepY
 
     def getSweepC(self):
         """Get the DAC axis of a recording."""
-        return self.ba.sweepC
+        return self.ba.fileLoader.sweepC
 
     def getFilteredVm(self):
-        return self.ba.filteredVm
+        return self.ba.fileLoader.sweepY_filtered
 
     def setSpikeValue(self, spikeIdx, theKey, theVal):
         """

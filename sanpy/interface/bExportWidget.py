@@ -270,14 +270,12 @@ class bExportWidget(QtWidgets.QWidget):
 
     def switchFile(self, ba : bAnalysis):
         
-        self.mySweepX = ba.sweepX
-        self.mySweepY = ba.sweepY
+        self.mySweepX = ba.fileLoader.sweepX
+        self.mySweepY = ba.fileLoader.sweepY
         self.mySweepX_Downsample = self.mySweepX
         self.mySweepY_Downsample = self.mySweepY
 
-        #okGo = self.setFile(file)
-        self.path = ba.path
-        #self.xyUnits = xyUnits
+        self.path = ba.fileLoader.filepath
 
         if self.path:
             windowTitle = os.path.split(self.path)[1]
@@ -982,12 +980,6 @@ class bExportWidget(QtWidgets.QWidget):
 
         self.lineWidthSpinBox.setEnabled(True)
 
-    # def replot(self):
-    #     logger.info(f'{self.ba}')
-    #     self.mySweepX_Downsample = self.ba.sweepX
-    #     self.mySweepY_Downsample = self.ba.sweepY
-    #     self.plotRaw()
-
     def plotRaw(self, xMin=None, xMax=None, firstPlot=False):
         if firstPlot:
             self.figure.clf()
@@ -1147,8 +1139,8 @@ def run():
         app = QtWidgets.QApplication(sys.argv)
         app.aboutToQuit.connect(app.deleteLater)
 
-        sweepX = ba.sweepX
-        sweepY = ba.sweepY
+        sweepX = ba.fileLoader.sweepX
+        sweepY = ba.fileLoader.sweepY
         xyUnits = ('Time (sec)', 'Vm (mV)')
         type = 'vm'
         GUI = bExportWidget(sweepX, sweepY, path=path, xyUnits=xyUnits, type=type)

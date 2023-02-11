@@ -281,12 +281,12 @@ class spikeClips(sanpyPlugin):
         selectedSpikeList = []
         if self.respondTo == 'All':
             startSec = 0
-            stopSec = self.ba.recordingDur
+            stopSec = self.ba.fileLoader.recordingDur
         elif self.respondTo == 'X-Axis':
             startSec, stopSec = self.getStartStop()
             if startSec is None or stopSec is None:
                 startSec = 0
-                stopSec = self.ba.recordingDur
+                stopSec = self.ba.fileLoader.recordingDur
         elif self.respondTo == 'Spike Selection':
             selectedSpikeList = self.selectedSpikeList
 
@@ -307,17 +307,10 @@ class spikeClips(sanpyPlugin):
             return
 
         # convert clips to 2d ndarray ???
-        #dataPointsPerMs = self.ba.dataPointsPerMs
         xTmp = np.array(theseClips_x)
-        #xTmp /= dataPointsPerMs # pnt to ms
-        #xTmp /= self.ba.dataPointsPerMs * 1000  # pnt to seconds
         xTmp /= 1000  # ms to seconds
         yTmp = np.array(theseClips)  # mV
 
-        #print('xTmp:', xTmp.shape)
-        #print('yTmp:', yTmp.shape)
-
-        #print(xTmp.shape, yTmp.shape)
         if isPhasePlot:
             # plot x mV versus y dV/dt
             dvdt = np.zeros((yTmp.shape[0], yTmp.shape[1]-1))  #
@@ -405,9 +398,9 @@ class spikeClips(sanpyPlugin):
 
         # set axis
         xLabel = 'time (s)'
-        yLabel = self.ba.get_yUnits()
+        yLabel = self.ba.fileLoader.get_yUnits()
         if isPhasePlot:
-            xLabel = self.ba.get_yUnits()
+            xLabel = self.ba.fileLoader.get_yUnits()
             yLabel = 'd/dt'
         self.clipPlot.getAxis('left').setLabel(yLabel)
         self.clipPlot.getAxis('bottom').setLabel(xLabel)
@@ -433,32 +426,6 @@ class spikeClips(sanpyPlugin):
     def saveResultsFigure(self):
         super().saveResultsFigure(pgPlot=self.clipPlot)
         
-        return
-        
-        '''
-        exporter = pg.exporters.ImageExporter(self.clipPlot)
-        print(f'exporter: {type(exporter)}')
-        print('getSupportedImageFormats:', exporter.getSupportedImageFormats())
-        # set export parameters if needed
-        
-        # (width, height, antialias, background, invertvalue)
-        exporter.parameters()['width'] = 1000   # (note this also affects height parameter)
-        
-        # ask user for file
-        fileName = self.ba.getFileName()
-        fileName += '.png'
-        savePath = fileName
-        options = QtWidgets.QFileDialog.Options()
-        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self,"Save .png file",
-                            savePath,"CSV Files (*.png)", options=options)
-        if not fileName:
-            return
-        
-        # save to file
-        logger.info(f'Saving to: {fileName}')
-        exporter.export(fileName)
-        '''
-
     def copyToClipboard(self):
         """
         Save instead
@@ -482,20 +449,6 @@ class spikeClips(sanpyPlugin):
 
         super().copyToClipboard(df=df)
         
-        '''
-        fileName = self.ba.getFileName()
-        fileName += '.csv'
-        savePath = fileName
-        options = QtWidgets.QFileDialog.Options()
-        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self,"Save .csv file",
-                            savePath,"CSV Files (*.csv)", options=options)
-        if not fileName:
-            return
-
-        logger.info(f'Saving: "{fileName}"')
-        df.to_csv(fileName, index=False)
-        '''
-
     def selectSpike(self, sDict=None):
         """
         Leave existing spikes and select one spike with a different color.

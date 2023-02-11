@@ -19,7 +19,7 @@ class bPlugins():
     def __init__(self, sanpyApp=None):
         self._sanpyApp = sanpyApp
 
-        self.userPluginFolder = sanpy._util._getUserPluginFolder()
+        self.userPluginFolder : str = sanpy._util._getUserPluginFolder()
         if not os.path.isdir(self.userPluginFolder):
             self.userPluginFolder = None
         """path to <user>/plugin_dir"""
@@ -58,6 +58,8 @@ class bPlugins():
         """Load plugins from both:
          - Package: sanpy.interface.plugins
          - Folder: <user>/sanpy_plugins
+        
+        See: sanpy.fileLoaders.fileLoader_base.getFileLoader()
         """
         self.pluginDict = {}
 
@@ -79,7 +81,7 @@ class bPlugins():
                     continue
                 loadedList.append(moduleName)
                 fullModuleName = 'sanpy.interface.plugins.' + moduleName
-                humanName = obj.myHumanName
+                humanName = obj.myHumanName  # myHumanName is a static str
                 pluginDict = {
                     'pluginClass': moduleName,
                     'type': 'system',
@@ -108,9 +110,6 @@ class bPlugins():
         else:
             files = []
         
-        #print('xxx userPluginFolder:', self.userPluginFolder)
-        #print('xxx files:', files)
-        
         for file in files:
             if file.endswith('__init__.py'):
                 continue
@@ -121,19 +120,10 @@ class bPlugins():
 
             loadedModule = self._module_from_file(fullModuleName, file)
 
-            # logger.info('')
-            # logger.info(f'    file: {file}')
-            # logger.info(f'    fullModuleName: {fullModuleName}')
-            # logger.info(f'    moduleName: {moduleName}')
-            # logger.info(f'    loadedModule: {loadedModule}')
-
             try:
                 oneConstructor = getattr(loadedModule, moduleName)
-                # logger.info(f'    oneConstructor: {oneConstructor}')
-                # logger.info(f'    type(oneConstructor): {type(oneConstructor)}')
-
             except (AttributeError) as e:
-                logger.error(f'While loading a user plugin, make sure file name and class name are the same:"{moduleName}"')
+                logger.error(f'Did not load user plugin, make sure file name and class name are the same:"{moduleName}"')
             else:
                 humanName = oneConstructor.myHumanName
                 pluginDict = {
@@ -144,13 +134,9 @@ class bPlugins():
                     'constructor': oneConstructor,
                     'humanName': humanName
                     }
-                # assuming moduleName is unique
-                #if moduleName in self.pluginDict.keys():
                 if humanName in self.pluginDict.keys():
                     logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
                 else:
-                    # logger.info(f'loading user plugin: "{file}"')
-                    #self.pluginDict[moduleName] = pluginDict
                     self.pluginDict[humanName] = pluginDict
                     loadedModuleList.append(moduleName)
 

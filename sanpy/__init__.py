@@ -21,3 +21,5 @@ from .bDetection import bDetection
 
 from .kymAnalysis import kymAnalysis
 from ._util import _loadLineScanHeader
+
+from .fileloaders import *

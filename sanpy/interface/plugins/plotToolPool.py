@@ -21,6 +21,7 @@ class plotToolPool(basePlotTool):
         if self.getSanPyApp() is not None:
             self.masterDf = self.getSanPyApp().myAnalysisDir.pool_build()
             logger.info(self.masterDf)
+            self.masterDf.to_csv('/Users/cudmore/Desktop/tmpDf-20221231.csv')
         elif tmpMasterDf is not None:
             logger.info('Using tmpMasterDf')
             self.masterDf = tmpMasterDf

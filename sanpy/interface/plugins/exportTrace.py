@@ -34,10 +34,6 @@ class exportTrace(sanpyPlugin):
         if self.mainWidget is None:
             self.plot()
 
-        # self.mainWidget.mySweepX_Downsample = self.ba.sweepX
-        # self.mainWidget.mySweepY_Downsample = self.ba.sweepY
-        # self.mainWidget.plotRaw()
-
         self.mainWidget.switchFile(self.ba)
         
     def plot(self):
@@ -58,7 +54,7 @@ class exportTrace(sanpyPlugin):
             logger.error(f'Unknown myType: "{self.myType}"')
             xyUnits = ('error time', 'error y')
 
-        path = self.ba.getFilePath()
+        path = self.ba.fileLoader.filepath
 
         xMin, xMax = self.getStartStop()
         '''

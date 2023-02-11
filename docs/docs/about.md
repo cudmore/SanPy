@@ -2,4 +2,4 @@ If you find the code in this repository interesting, please email Robert Cudmore
 
 Please visit the [Cudmore lab website][cudmore] for more information.
 
-[cudmore]: http://robertcudmore.org
+[cudmore]: https://cudmorelab.github.io/

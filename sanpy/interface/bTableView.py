@@ -16,6 +16,7 @@ logger = get_logger(__name__)
 class bTableView(QtWidgets.QTableView):
     """Table view to display list of files.
     """
+    
     '''
     signalUnloadRow = QtCore.pyqtSignal(object)  # row index
     signalRemoveFromDatabase = QtCore.pyqtSignal(object)  # row index

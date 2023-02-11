@@ -182,15 +182,15 @@ class sanpyPlugin(QtWidgets.QWidget):
         if self.ba is None:
             return theRet
         if type == 'X':
-            theRet = self.ba.sweepX
+            theRet = self.ba.fileLoader.sweepX
         elif type == 'Y':
-            theRet = self.ba.sweepY
+            theRet = self.ba.fileLoader.sweepY
         elif type == 'C':
-            theRet = self.ba.sweepC
+            theRet = self.ba.fileLoader.sweepC
         elif type == 'filteredDeriv':
-            theRet = self.ba.filteredDeriv
+            theRet = self.ba.fileLoader.filteredDeriv
         elif type == 'filteredVm':
-            theRet = self.ba.filteredDeriv
+            theRet = self.ba.fileLoader.sweepY_filtered
         else:
             logger.error(f'Did not understand type: "{type}"')
         #
@@ -416,7 +416,7 @@ class sanpyPlugin(QtWidgets.QWidget):
     def copyToClipboard(self, df = None):
         """Add code to copy plugin to clipboard.
         """
-        fileName = self.ba.getFileName()
+        fileName = self.ba.fileLoader.filename
         fileName += '.csv'
         savePath = fileName
         options = QtWidgets.QFileDialog.Options()
@@ -445,7 +445,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         exporter.parameters()['width'] = 1000   # (note this also affects height parameter)
         
         # ask user for file
-        fileName = self.ba.getFileName()
+        fileName = self.ba.fileLoader.filename
         fileName += '.png'
         savePath = fileName
         options = QtWidgets.QFileDialog.Options()
@@ -560,7 +560,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def _mySetWindowTitle(self):
         if self.ba is not None:
-            fileName = self.ba.getFileName()
+            fileName = self.ba.fileLoader.filename
         else:
             fileName = ''
         self.windowTitle = self.myHumanName + ':' + fileName

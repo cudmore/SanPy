@@ -20,6 +20,8 @@ logger = get_logger(__name__, level=logging.DEBUG)
 class Test_Analysis(unittest.TestCase):
     # this patter is wierd to me?
     path = 'data/19114001.abf'
+    # path = 'data/19114001.csv'
+    #path = 'data/rosie-kymograph.tif'
     ba = sanpy.bAnalysis(path)
     expectedNumSpikes = 103
     expectedNumErrors = 69
@@ -28,9 +30,9 @@ class Test_Analysis(unittest.TestCase):
         logger.info('RUNNING')
 
         self.assertFalse(self.ba.loadError)
-        self.assertIsNotNone(self.ba.sweepX)
-        self.assertIsNotNone(self.ba.sweepY)
-        self.assertEqual(len(self.ba.sweepX), len(self.ba.sweepY))
+        self.assertIsNotNone(self.ba.fileLoader.sweepX)
+        self.assertIsNotNone(self.ba.fileLoader.sweepY)
+        self.assertEqual(len(self.ba.fileLoader.sweepX), len(self.ba.fileLoader.sweepY))
 
     def test_1_detect(self):
         logger.info('RUNNING')

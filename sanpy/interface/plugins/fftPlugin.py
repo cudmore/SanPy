@@ -436,7 +436,7 @@ class fftPlugin(sanpyPlugin):
 		self._store_ba = None  # allow switching between model and self.ba
 
 		if self.ba is not None:
-			self.fs = self.ba.recordingFrequency * 1000
+			self.fs = self.ba.fileLoader.recordingFrequency * 1000
 		else:
 			self.fs = None
 		self.psdWindowStr = 'Hanning'  # mpl.mlab.window_hanning
@@ -820,10 +820,10 @@ class fftPlugin(sanpyPlugin):
 		if startSec is None or stopSec is None or math.isnan(startSec) or math.isnan(stopSec):
 			logger.info(f'Resetting start/stop seconds to max')
 			startSec = 0
-			stopSec = self.ba.recordingDur  #self.ba.sweepX()[-1]
+			stopSec = self.ba.fileLoader.recordingDur  #self.ba.sweepX()[-1]
 		logger.info(f'Using start(s):{startSec} stop(s):{stopSec}')
-		self.lastLeft = round(startSec*1000*self.ba.dataPointsPerMs)
-		self.lastRight = round(stopSec*1000*self.ba.dataPointsPerMs)
+		self.lastLeft = round(startSec*1000*self.ba.fileLoader.dataPointsPerMs)
+		self.lastRight = round(stopSec*1000*self.ba.fileLoader.dataPointsPerMs)
 
 		leftPoint = self.lastLeft
 		rightPoint = self.lastRight
@@ -1037,7 +1037,7 @@ class fftPlugin(sanpyPlugin):
 		#self.appendResultsStr(printStr)
 		print('=== FFT results are:')
 		print(printStr)
-		printStr = f'fftPlugin\t{self.ba.getFileName()}\t{pStart}\t{pStop}\t{pMaxFreq}\t{pMaxPsd}'
+		printStr = f'fftPlugin\t{self.ba.fileLoader.filename}\t{pStart}\t{pStop}\t{pMaxFreq}\t{pMaxPsd}'
 		self.appendResultsStr(printStr, maxFreq=pMaxFreq, maxPsd=pMaxPsd, freqs=freqsLog10, psd=pxxLog10)
 		print(printStr)
 
@@ -1098,7 +1098,7 @@ class fftPlugin(sanpyPlugin):
 	def appendResultsStr(self, str, maxFreq='', maxPsd='', freqs='', psd=''):
 		self._resultStr += str + '\n'
 		resultDict = {
-			'file': self.ba.getFileName(),
+			'file': self.ba.fileLoader.filename,
 			'startSec': self.getStartStop()[0],
 			'stopSec': self.getStartStop()[1],
 			'butterFilter': self.doButterFilter,
@@ -1121,43 +1121,6 @@ class fftPlugin(sanpyPlugin):
 	def old_replot_fft(self):
 		self.replot_fft2()
 		return
-
-		logger.info('')
-
-		# trim down data based on start/stop
-		leftPoint = self.lastLeft
-		rightPoint = self.lastRight
-		x = self.ba.filteredVm
-		x = x[leftPoint:rightPoint]
-		t = self.ba.sweepX
-		t = t[leftPoint:rightPoint]
-
-		ft = np.fft.rfft(x)
-		# not sure to use diff b/w [1]-[0] or fs=10000 ???
-		#tmpFs = self.fs #t[1]-t[0]
-		tmpFs = t[1]-t[0]
-		logger.info(f'  fft tmpFs:{tmpFs}')
-		freqs = np.fft.rfftfreq(len(x), tmpFs) # Get frequency axis from the time axis
-		mags = abs(ft) # We don't care about the phase information here
-		#print('mags:', mags[0:10])
-
-		inflection = np.diff(np.sign(np.diff(mags)))
-		peaks = (inflection < 0).nonzero()[0] + 1
-		peak = peaks[mags[peaks].argmax()]
-		signal_freq = freqs[peak] # Gives 0.05
-		logger.info(f'fft signal frequency is:{signal_freq}')
-
-		self.fftAxes.clear()
-		# dropping first point
-		self.fftAxes.semilogy(freqs[1:-1], mags[1:-1], '-')
-		self.fftAxes.set_xlim(0, self.maxPlotHz)  # Hz
-		self.fftAxes.set_xlabel('Freq')
-		self.fftAxes.set_ylabel('FFT Magnitude')
-
-		#
-		self.fftAxes.relim()
-		self.fftAxes.autoscale_view(True,True,True)  # (tight,x,y)
-		self.static_canvas.draw()
 
 	def replotFilter(self):
 		"""Plot frequency response of butter sos filter."""
@@ -1267,10 +1230,7 @@ class fftPlugin(sanpyPlugin):
 		# either real ba or model
 		print(self.ba)
 
-		#self.t = self.ba.sweepX()
-		self.fs = self.ba.recordingFrequency * 1000
-		#self.data = self.ba.sweepY()
-		#self.data = self.data.copy()
+		self.fs = self.ba.fileLoader.recordingFrequency * 1000
 
 		self.replot2(switchFile=True)
 
@@ -1410,7 +1370,7 @@ class fftPlugin(sanpyPlugin):
 	def slot_switchFile(self, rowDict, ba):
 		super().slot_switchFile(rowDict, ba, replot=False)
 
-		self.fs = self.ba.recordingFrequency * 1000
+		self.fs = self.ba.fileLoader.recordingFrequency * 1000
 
 		self.freqResLabel.setText(f'Freq Resolution (Hz) {round(self.fs/self.nfft, 3)}')
 
@@ -1434,15 +1394,15 @@ def test_fft():
 		path = '/Users/cudmore/Sites/SanPy/data/fft/2020_07_07_0000.abf'
 		ba = sanpy.bAnalysis(path)
 
-		x = ba.sweepX()
-		y = ba.sweepY()
+		x = ba.fileLoader.sweepX
+		y = ba.fileLoader.sweepY
 
 		# 20-30 sec
 		startSec = 16.968 # good signal
 		stopSec = 31.313
 
 		# reduce to get fft with N=1024 in excel
-		dataPointsPerMs = ba.dataPointsPerMs  # 10 for 10 kHz
+		dataPointsPerMs = ba.fileLoader.dataPointsPerMs  # 10 for 10 kHz
 		startPnt = round(startSec * 1000 * dataPointsPerMs)
 		stopPnt = round(stopSec * 1000 * dataPointsPerMs)
 
@@ -1459,7 +1419,7 @@ def test_fft():
 		NFFT = 512 # 2**16 #512 * 100  # The number of data points used in each block for the FFT
 		medianPnts = 50  # 5 ms
 
-		fileName = ba.getFileName()
+		fileName = ba.fileLoader.filename
 
 	if 1:
 		# sin wave data

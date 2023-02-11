@@ -54,6 +54,9 @@ class basePlotTool(sanpyPlugin):
         categoricalList = ['include', 'condition', 'cellType', 'sex', 'file', 'File Number']#, 'File Name']
         hueTypes = ['cellType', 'sex', 'condition', 'file', 'File Number'] #, 'File Name'] #, 'None']
         sortOrder = ['cellType', 'sex', 'condition', 'File Number']
+        
+        limitToCol = ['epoch']
+        
         interfaceDefaults = {'Y Statistic': 'Spike Frequency (Hz)',
                             'X Statistic': 'Spike Frequency (Hz)',
                             'Hue': 'cellType',
@@ -76,6 +79,7 @@ class basePlotTool(sanpyPlugin):
                         path, categoricalList, hueTypes,
                         analysisName, sortOrder, statListDict=statListDict,
                         masterDf = self.masterDf,
+                        limitToCol = limitToCol,
                         interfaceDefaults = interfaceDefaults)
         # rewire existing widget into plugin architecture
         #self.mainWidget.closeEvent = self.onClose
