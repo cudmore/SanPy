@@ -41,6 +41,7 @@ jobs:
         #flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        # need to ignore test_tableView, GitHub runs out of memory
+        # need to ignore PyQt tests in interface/ folder, GitHub runs out of memory
         pytest tests --ignore=tests/interface/test_tableView.py --ignore=tests/interface/test_plugins.py 
-        python -m unittest
+        # feb 2023, I need to stop using unittest
+        #python -m unittest
