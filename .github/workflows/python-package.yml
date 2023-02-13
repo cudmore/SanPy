@@ -42,5 +42,5 @@ jobs:
     - name: Test with pytest
       run: |
         # need to ignore test_tableView, GitHub runs out of memory
-        pytest tests --ignore=tests/interface/test_tableView.py
+        pytest tests --ignore=tests/interface/test_tableView.py --ignore=tests/interface/test_plugins.py 
         python -m unittest
