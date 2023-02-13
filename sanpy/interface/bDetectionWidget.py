@@ -1711,7 +1711,8 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
             self.path = pg.arrayToQPath(x.flatten(), y.flatten(), connect.flatten())
         else:
             self.path = pg.arrayToQPath(x.flatten(), y.flatten(), connect='all')
-        pg.QtGui.QGraphicsPathItem.__init__(self, self.path)
+        #pg.QtGui.QGraphicsPathItem.__init__(self, self.path)
+        super().__init__(self.path)
 
         # holy shit, this is bad, without this the app becomes non responsive???
         # if width > 1.0 then this whole app STALLS
@@ -2550,7 +2551,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # absolute spike number
         self.spikeNumber = QtWidgets.QSpinBox()
         self.spikeNumber.setMinimum(0)
-        self.spikeNumber.setMaximum(+1e6)
+        self.spikeNumber.setMaximum(2**16)
         self.spikeNumber.setKeyboardTracking(False)
         self.spikeNumber.setValue(0)
         self.spikeNumber.valueChanged.connect(self.on_spike_number)

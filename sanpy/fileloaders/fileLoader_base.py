@@ -39,7 +39,7 @@ def getFileLoaders() -> dict:
             fullModuleName = 'sanpy.fileloaders.' + moduleName
             # filetype is a static str, e.g. the extension to load
             try:
-                filetype = obj.loadFileType()
+                filetype = obj.loadFileType
             except(AttributeError) as e:
                 logger.warning(f'Did not load "{moduleName}", no "filetype" attribute')
                 continue
@@ -89,7 +89,7 @@ def getFileLoaders() -> dict:
         else:
             # filetype is a static str, e.g. the extension to load
             try:
-                filetype = oneConstructor.loadFileType()
+                filetype = oneConstructor.loadFileType
             except(AttributeError) as e:
                 logger.warning(f'Did not load "{moduleName}", no "filetype" attribute')
                 continue
@@ -136,19 +136,21 @@ class fileLoader_base(ABC):
 
     Define two functions
     
-        def loadFileType(self):
+        def loadFileType():
             return the file type to handle, like 'abf' or 'csv'
 
         def loadFile(self):
             load the data from self.filepath and call setLoadedData(sweepX, sweepY)
     
     """    
-    @abstractmethod
-    def loadFileType() -> str:
-        """Derived classes must return the file type to handle.
-        For example, 'csv', or 'm', or 'dat'
-        """
-        pass
+    loadFileType : str = ''
+    # @property
+    # @abstractmethod
+    # def loadFileType(self) -> str:
+    #     """Derived classes must return the file type to handle.
+    #     For example, 'csv', or 'm', or 'dat'
+    #     """
+    #     pass
 
     @abstractmethod
     def loadFile(self):
@@ -225,13 +227,14 @@ class fileLoader_base(ABC):
     def recordingMode(self):
         return self._recordingMode
         
-    # @property
-    # def sweepLabelX(self):
-    #     return self._sweepLabelX
+    # feb 2023, uncommented
+    @property
+    def sweepLabelX(self):
+        return self._sweepLabelX
         
-    # @property
-    # def sweepLabelY(self):
-    #     return self._sweepLabelY
+    @property
+    def sweepLabelY(self):
+        return self._sweepLabelY
         
     @property
     def recordingDur(self):

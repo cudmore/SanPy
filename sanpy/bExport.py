@@ -221,16 +221,16 @@ class bExport():
             headerDict[col] = []
 
         # mean
-        theMean = cardiac_df.mean() # skipna default is True
+        theMean = cardiac_df.mean(numeric_only=True) # skipna default is True
         theMean['errors'] = ''
         # sd
-        theSD = cardiac_df.std() # skipna default is True
+        theSD = cardiac_df.std(numeric_only=True) # skipna default is True
         theSD['errors'] = ''
         #se
-        theSE = cardiac_df.sem() # skipna default is True
+        theSE = cardiac_df.sem(numeric_only=True) # skipna default is True
         theSE['errors'] = ''
         #n
-        theN = cardiac_df.count() # skipna default is True
+        theN = cardiac_df.count(numeric_only=True) # skipna default is True
         theN['errors'] = ''
 
         statCols = ['mean', 'sd', 'se', 'n']

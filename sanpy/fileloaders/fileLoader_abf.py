@@ -9,10 +9,11 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class fileLoader_abf(fileLoader_base):
-    #filetype = 'abf'
+    loadFileType = 'abf'
     
-    def loadFileType():
-        return 'abf'
+    # @property
+    # def loadFileType(self):
+    #     return 'abf'
 
     def loadFile(self):
         self._loadAbf()

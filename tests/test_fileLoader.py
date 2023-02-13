@@ -9,7 +9,7 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__, level=logging.DEBUG)
 
 def test_fileLoader_tif():
-    path = 'data/rosie-kymograph.tif'
+    path = 'data/kymograph/rosie-kymograph.tif'
     tifFile = fileLoader_tif(path)
     assert tifFile is not None
 
@@ -55,7 +55,7 @@ def test_fileLoader_abf():
 
     logger.info(f'abfFile: {abfFile}')
 
-    assert abfFile.filetype == 'abf'
+    assert abfFile.loadFileType == 'abf'
 
     assert abfFile.sweepLabelX == 'sec'
 

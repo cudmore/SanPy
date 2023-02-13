@@ -534,7 +534,8 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
             self.path = pg.arrayToQPath(x.flatten(), y.flatten(), connect.flatten())
         else:
             self.path = pg.arrayToQPath(x.flatten(), y.flatten(), connect='all')
-        pg.QtGui.QGraphicsPathItem.__init__(self, self.path)
+        #pg.QtGui.QGraphicsPathItem.__init__(self, self.path)
+        super().__init__(self.path)
 
         doDarkTheme = True
         if forcePenColor is not None:

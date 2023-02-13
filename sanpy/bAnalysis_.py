@@ -153,6 +153,11 @@ class bAnalysis:
             self.loadError = True
         else:
             _fileLoadersDict = sanpy.fileloaders.getFileLoaders()  # EXPENSIVE, to do, pass in from app
+            
+            print('_fileLoadersDict:')
+            for k,v in _fileLoadersDict.items():
+                print('  ', k, ':', v)
+            
             _ext = os.path.splitext(filepath)[1]
             _ext = _ext[1:]
             try:

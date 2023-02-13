@@ -11,10 +11,11 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class fileLoader_tif(fileLoader_base):
-    #filetype = 'tif'
+    loadFileType = 'tif'
     
-    def loadFileType():
-        return 'tif'
+    # @property
+    # def loadFileType(self):
+    #     return 'tif'
 
     def loadFile(self):
         # assuming pixels x line scan like (519, 10000)

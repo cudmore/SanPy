@@ -7,10 +7,11 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class fileLoader_csv(fileLoader_base):
-    #filetype = 'csv'
+    loadFileType = 'csv'
     
-    def loadFileType():
-        return 'csv'
+    # @property
+    # def loadFileType(self):
+    #     return 'csv'
     
     def loadFile(self):
         """Load file and call setLoadedData().
