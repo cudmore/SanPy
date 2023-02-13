@@ -9,7 +9,8 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__, level=logging.DEBUG)
 
 def test_fileLoader_tif():
-    path = 'data/kymograph/rosie-kymograph.tif'
+    #path = 'data/kymograph/rosie-kymograph.tif'
+    path = os.path.join('data', 'kymograph', 'rosie-kymograph.tif')
     tifFile = fileLoader_tif(path)
     assert tifFile is not None
 
@@ -24,8 +25,9 @@ def test_fileLoader_tif():
     # plt.show()
 
 def test_fileLoader_csv():
-    path = 'data/19114001.csv'
-    path = 'data/2021_07_20_0010.csv'
+    # path = 'data/19114001.csv'
+    # path = 'data/2021_07_20_0010.csv'
+    path = os.path.join('data', '2021_07_20_0010.csv')
 
     csvFile = fileLoader_csv(path)
     assert csvFile is not None
@@ -47,8 +49,9 @@ def test_fileLoader_csv():
     # plt.show()
 
 def test_fileLoader_abf():
-    path = 'data/19114001.abf'
-    path = 'data/2021_07_20_0010.abf'
+    # path = 'data/19114001.abf'
+    # path = 'data/2021_07_20_0010.abf'
+    path = os.path.join('data', '2021_07_20_0010.abf')
 
     abfFile = fileLoader_abf(path)
     assert abfFile is not None
@@ -99,10 +102,12 @@ def test_fileLoader_abf():
 def test_new_b_analysis():
     # test new version of bAnalysis using fileLoader
     import sanpy
-    path = 'data/19114001.abf'
+    # path = 'data/19114001.abf'
+    path = os.path.join('data', '19114001.abf')
     ba = sanpy.bAnalysis(path)
 
-    path = 'data/19114001.csv'
+    # path = 'data/19114001.csv'
+    path = os.path.join('data', '19114001.csv')
     ba = sanpy.bAnalysis(path)
 
 if __name__ == '__main__':

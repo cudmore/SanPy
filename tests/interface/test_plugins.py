@@ -1,3 +1,4 @@
+import os
 import pytest
 
 import sanpy
@@ -109,7 +110,8 @@ def test_init(pluginsObject, qtbot):
     ba = None
     
     # (2) ba loaded but no analysis
-    path = 'data/19114001.abf'
+    # path = 'data/19114001.abf'
+    path = os.path.join('data', '19114001.abf')
     ba = sanpy.bAnalysis(path)
 
     # (3) ba loaded and with analysis

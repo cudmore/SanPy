@@ -23,11 +23,15 @@ class Test_Analysis_Dir(unittest.TestCase):
         self.test_dir = tempfile.mkdtemp()
 
         # copy data into it
+        src = os.path.join('data', '19114001.abf')
         dst = os.path.join(self.test_dir, '19114001.abf')
-        shutil.copyfile('data/19114001.abf', dst)
+        #shutil.copyfile('data/19114001.abf', dst)
+        shutil.copyfile(src, dst)
 
+        src = os.path.join('data', '19114000.abf')
         dst = os.path.join(self.test_dir, '19114000.abf')
-        shutil.copyfile('data/19114000.abf', dst)
+        #shutil.copyfile('data/19114000.abf', dst)
+        shutil.copyfile(src, dst)
 
     def tearDown(self):
         # Remove the directory after the test
