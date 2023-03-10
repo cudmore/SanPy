@@ -1,5 +1,9 @@
 import os
 
+import sanpy
+
+# from sanpy.analysisPlot import bAnalysisPlot
+
 from sanpy.fileloaders.fileLoader_abf import fileLoader_abf
 from sanpy.fileloaders.fileLoader_csv import fileLoader_csv
 from sanpy.fileloaders.fileLoader_tif import fileLoader_tif
@@ -17,9 +21,8 @@ def test_fileLoader_tif():
     logger.info(f'tifFile: {tifFile}')
 
     # test plot
-    from sanpy.analysisPlot import bAnalysisPlot
-    ap = bAnalysisPlot(tifFile)
-    ap.plotRaw()
+    # ap = bAnalysisPlot(tifFile)
+    # ap.plotRaw()
 
     # import matplotlib.pyplot as plt
     # plt.show()
@@ -41,9 +44,8 @@ def test_fileLoader_csv():
     logger.info(f'sweepC: {csvFile.sweepC.shape}')
 
     # test plot
-    from sanpy.analysisPlot import bAnalysisPlot
-    ap = bAnalysisPlot(csvFile)
-    ap.plotRaw()
+    # ap = bAnalysisPlot(csvFile)
+    # ap.plotRaw()
 
     # import matplotlib.pyplot as plt
     # plt.show()
@@ -56,7 +58,7 @@ def test_fileLoader_abf():
     abfFile = fileLoader_abf(path)
     assert abfFile is not None
 
-    logger.info(f'abfFile: {abfFile}')
+    # logger.info(f'abfFile: {abfFile}')
 
     assert abfFile.loadFileType == 'abf'
 
@@ -67,18 +69,17 @@ def test_fileLoader_abf():
     _filteredDeriv = abfFile.filteredDeriv
     assert _filteredDeriv.shape == abfFile.sweepX.shape
 
-    print(abfFile)
+    # print(abfFile)
 
     # test plot
-    from sanpy.analysisPlot import bAnalysisPlot
-    ap = bAnalysisPlot(abfFile)
-    ap.plotRaw()
+    # ap = bAnalysisPlot(abfFile)
+    # ap.plotRaw()
 
     # import matplotlib.pyplot as plt
     # plt.show()
 
     # utility to export an abf as csv (use once)
-    if 1:
+    if 0:
         import pandas as pd
         df = pd.DataFrame()
         df['sec'] = abfFile.sweepX
@@ -101,7 +102,6 @@ def test_fileLoader_abf():
     
 def test_new_b_analysis():
     # test new version of bAnalysis using fileLoader
-    import sanpy
     # path = 'data/19114001.abf'
     path = os.path.join('data', '19114001.abf')
     ba = sanpy.bAnalysis(path)

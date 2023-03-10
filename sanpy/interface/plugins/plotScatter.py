@@ -47,11 +47,6 @@ class plotScatter(sanpyPlugin):
         self.yData = []
         self.xAxisSpikeNumber = []  # We need to keep track of this for 'Chase Plot'
 
-        #self.selectedSpike = None
-        #self.selectedSpikeList = []  # Always a list, if empy then None
-
-        #self.pyqtWindow()  # makes self.mainWidget and calls show()
-
         # main layout
         hLayout = QtWidgets.QHBoxLayout()
         hSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
@@ -292,8 +287,8 @@ class plotScatter(sanpyPlugin):
 
         # select spike in range
         thresholdSec = self.ba.getStat('thresholdSec')
-        self.selectedSpikeList = [spikeIdx for spikeIdx,spikeSec in enumerate(thresholdSec) if (spikeSec>startSec and spikeSec<stopSec)]
-
+        _selectedSpikeList = [spikeIdx for spikeIdx,spikeSec in enumerate(thresholdSec) if (spikeSec>startSec and spikeSec<stopSec)]
+        self.setSelectedSpikes(_selectedSpikeList)
         self.selectSpikeList()
 
     def replot(self):
@@ -520,21 +515,13 @@ class plotScatter(sanpyPlugin):
             #ax_histy.xaxis.set_ticks_position('bottom')
             #print('  binsHistY:', len(binsHistY))
 
-    def selectSpikeList(self, sDict=None):
+    def selectSpikeList(self):
         """
-        sDict (dict): NOT USED
         """
-        #spikeList = sDict['spikeList']
-        #logger.info(sDict)
-
         if self.xStatName is None or self.yStatName is None:
             return
 
-        #self.selectedSpikeList = spikeList  # [] on no selection
-
-        spikeList = self.selectedSpikeList
-
-        #logger.info(f'spikeList:{spikeList}')
+        spikeList = self.getSelectedSpikes()
 
         #if spikeList is not None:
         if len(spikeList) > 0:
@@ -551,8 +538,8 @@ class plotScatter(sanpyPlugin):
         #self.repaint() # update the widget
 
     def selectSpike(self, sDict=None):
-        """
-        Select a spike
+        """Select a spike
+        
         sDict (dict): NOT USED
         """
 
@@ -585,14 +572,13 @@ class plotScatter(sanpyPlugin):
         #self.repaint() # update the widget
 
     def selectSpikesFromHighlighter(self, selectedSpikeList):
-        """
-        User selected some spikes with Highlighter -->> PRopogate to main
+        """User selected some spikes with Highlighter -->> Propogate to main
         """
 
         if len(selectedSpikeList) > 0:
-            self.selectedSpikeList = selectedSpikeList
+            self.setSelectedSpikes(selectedSpikeList)
             sDict = {
-                'spikeList': selectedSpikeList,
+                'spikeList': self.getSelectedSpikes(),
                 'doZoom': False, # never zoom on multiple spike selection
                 'ba': self.ba,
             }
@@ -611,7 +597,7 @@ class plotScatter(sanpyPlugin):
         Prepend menus to context menu
         """
 
-        noSpikesSelected = len(self.selectedSpikeList) == 0
+        noSpikesSelected = len(self.getSelectedSpikes()) == 0
 
         includeAction = contextMenu.addAction("Accept")
         includeAction.setDisabled(noSpikesSelected)  # disable if no spikes
@@ -635,7 +621,8 @@ class plotScatter(sanpyPlugin):
 
     def handleContextMenu(self, action):
         """
-        return true if handled
+        Returns:
+            True if handled, o.w. False
         """
         if action is None:
             return False
@@ -643,31 +630,33 @@ class plotScatter(sanpyPlugin):
         text = action.text()
         logger.info(f'Action text "{text}"')
 
+        _selectedSpikes = self.getSelectedSpikes()
+
         handled = False
         if text == 'Accept':
             #print('Set selected spikes to include (not isbad)')
-            self.ba.setSpikeStat(self.selectedSpikeList, 'isBad', False)
+            self.ba.setSpikeStat(_selectedSpikes, 'isBad', False)
             self.replot()
             handled = True
         elif text == 'Reject':
             #print('Set selected spikes to reject (isbad)')
-            self.ba.setSpikeStat(self.selectedSpikeList, 'isBad', True)
+            self.ba.setSpikeStat(_selectedSpikes, 'isBad', True)
             self.replot()
             handled = True
         elif text == 'User Type 1':
-            self.ba.setSpikeStat(self.selectedSpikeList, 'userType', 1)
+            self.ba.setSpikeStat(_selectedSpikes, 'userType', 1)
             self.replot()
             handled = True
         elif text == 'User Type 2':
-            self.ba.setSpikeStat(self.selectedSpikeList, 'userType', 2)
+            self.ba.setSpikeStat(_selectedSpikes, 'userType', 2)
             self.replot()
             handled = True
         elif text == 'User Type 3':
-            self.ba.setSpikeStat(self.selectedSpikeList, 'userType', 3)
+            self.ba.setSpikeStat(_selectedSpikes, 'userType', 3)
             self.replot()
             handled = True
         elif text == 'Reset User Type':
-            self.ba.setSpikeStat(self.selectedSpikeList, 'userType', 0)
+            self.ba.setSpikeStat(_selectedSpikes, 'userType', 0)
             self.replot()
             handled = True
         else:

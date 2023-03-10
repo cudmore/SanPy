@@ -501,8 +501,7 @@ class NumpyEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 class analysisResultList:
-    """
-    Class encapsulating a list of analysisResultDict (one dict per spike)
+    """Class encapsulating a list of analysisResultDict (one dict per spike).
     """
     def __init__(self):
         # one copy for entire list

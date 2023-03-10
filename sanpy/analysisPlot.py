@@ -167,21 +167,25 @@ class bAnalysisPlot():
             plotStyle = self.getDefaultPlotStyle()
 
         if ax is None:
-            fig, ax = self._makeFig()
-            fig.suptitle(f'{self._ba.filepath}')
+            _fig, _ax = self._makeFig()
+            _fig.suptitle(f'{self._ba.fileLoader.filepath}')
+        else:
+            _ax = ax
 
         color = plotStyle['color']
         linewidth = plotStyle['linewidth']
-        sweepX = self.ba.sweepX
-        sweepY = self.ba.sweepY
+        sweepX = self.ba.fileLoader.sweepX
+        sweepY = self.ba.fileLoader.sweepY
 
-        ax.plot(sweepX, sweepY, '-', c=color, linewidth=linewidth) # fmt = '[marker][line][color]'
+        _ax.plot(sweepX, sweepY, '-', c=color, linewidth=linewidth) # fmt = '[marker][line][color]'
 
-        xUnits = self.ba.get_xUnits()
-        yUnits = self.ba.get_yUnits()
-        ax.set_xlabel(xUnits)
-        ax.set_ylabel(yUnits)
+        xUnits = self.ba.fileLoader.get_xUnits()
+        yUnits = self.ba.fileLoader.get_yUnits()
+        _ax.set_xlabel(xUnits)
+        _ax.set_ylabel(yUnits)
 
+        return _ax
+        
     def plotDerivAndRaw(self):
         """
         Plot both Vm and the derivative of Vm (dV/dt).
@@ -207,8 +211,8 @@ class bAnalysisPlot():
 
         self.plotRaw(ax=ax1);
 
-        sweepX = self.ba.sweepX
-        filteredDeriv = self.ba.filteredDeriv
+        sweepX = self.ba.fileLoader.sweepX
+        filteredDeriv = self.ba.fileLoader.filteredDeriv
         ax2.plot(sweepX, filteredDeriv)
 
         ax2.set_ylabel('dV/dt')

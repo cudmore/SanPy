@@ -98,6 +98,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         if firstTimeRunning:
             logger.info('We created <user>/Documents/Sanpy and need to restart')
 
+        self._fileLoaderDict = sanpy.fileloaders.getFileLoaders()
         self._detectionClass = sanpy.bDetection()
 
         # create an empty model for file list
@@ -172,6 +173,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def getDetectionClass(self):
         return self._detectionClass
 
+    def getFileLoaderDict(self):
+        return self._fileLoaderDict
+    
     def dragEnterEvent(self, event):
         logger.info('')
         if event.mimeData().hasUrls():
@@ -959,21 +963,27 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
 
     def sanpyPlugin_action(self, pluginName):
-        """
-        Run a plugin using curent ba. Responds to main menu 'Plugins'
+        """Responds to main menu 'Plugins'
+        
+        Run a plugin using curent ba.
+        
+        Notes:
+            See also xxx for running a plugin in a tab
         """
         logger.info(f'opening pluginName: "{pluginName}"')
         ba = self.get_bAnalysis()
+        
+        # run the plugin
         _runningPlugin = self.myPlugins.runPlugin(pluginName, ba)
         
         # add the plugin to a tab, user can detatch it
-        self.myPluginTab1.addTab(_runningPlugin, _runningPlugin.myHumanName)
+        # self.myPluginTab1.addTab(_runningPlugin, _runningPlugin.myHumanName)
 
         # bring new tab to the front
-        self.myPluginTab1.setCurrentWidget(_runningPlugin)
+        # self.myPluginTab1.setCurrentWidget(_runningPlugin)
 
         # make sure the dock is visible
-        self.pluginDock1.setVisible(True)
+        # self.pluginDock1.setVisible(True)
 
         # add plugin to preferences so it opens next time we run the app
         if _runningPlugin is not None:
@@ -1030,16 +1040,20 @@ class SanPyWindow(QtWidgets.QMainWindow):
             self.slot_updateStatus(f'Detected {ba.numSpikes} spikes')
 
     def slot_contextMenu(self, point, sender):
-        """
-        Build a menu of plugins
+        """Build a menu of plugins
+
+        On user selection, run the plugin in a tab.
+
+        Notes:
+            See also xxx for running a plugin outside a tab (via main plugin menu)
 
         Args:
-            point (): Not sure
+            point (QtCore.QPoint): Not used
             sender (QTabWidget):
         """
         #sender = self.sender()  # PyQt5.QtWidgets.QDockWidget
 
-        logger.info(f'point:{point}, sender:{sender}')
+        #logger.info(f'point:{point}, sender:{sender}')
 
         # list of available plugins
         pluginList = self.myPlugins.pluginList()
@@ -1058,7 +1072,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
             # n menu selected
             return
 
-        #print(action.text())
         pluginName = action.text()
         ba = self.get_bAnalysis()
         newPlugin = self.myPlugins.runPlugin(pluginName, ba, show=False)

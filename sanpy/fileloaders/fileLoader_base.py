@@ -3,7 +3,7 @@ import glob
 import math
 import enum
 import inspect
-from typing import Union, Dict, List, Tuple
+from typing import Union, Dict, List, Tuple, Optional
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -14,7 +14,7 @@ import sanpy.fileloaders
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def getFileLoaders() -> dict:
+def getFileLoaders(verbose : bool = False) -> dict:
     """Load file loaders from both:
         - Package: sanpy.fileloaders
         - Folder: <user>/SanPy/File Loaders
@@ -32,7 +32,8 @@ def getFileLoaders() -> dict:
     loadedList = []
     for moduleName, obj in inspect.getmembers(sanpy.fileloaders):
         if inspect.isclass(obj):
-            logger.info(f'moduleName:{moduleName}')
+            if verbose:
+                logger.info(f'moduleName:{moduleName}')
             if moduleName in ignoreModuleList:
                 continue
             loadedList.append(moduleName)
@@ -106,12 +107,13 @@ def getFileLoaders() -> dict:
                 logger.warning(f'  this loader will overwrite the previous loader.')
             retDict[filetype] = oneLoaderDict
 
-    logger.info(f'Loaded {len(retDict.keys())} file loaders:')
-    for k,v in retDict.items():
-        #logger.info(f'    {k}:{v}')
-        logger.info(f'  {k}')
-        for k2, v2 in v.items():
-            logger.info(f'    {k2}: {v2}')
+    if verbose:
+        logger.info(f'Loaded {len(retDict.keys())} file loaders:')
+        for k,v in retDict.items():
+            #logger.info(f'    {k}:{v}')
+            logger.info(f'  {k}')
+            for k2, v2 in v.items():
+                logger.info(f'    {k2}: {v2}')
 
     # sort
     #retDict = dict(sorted(retDict.items()))
@@ -306,7 +308,7 @@ class fileLoader_base(ABC):
             self._filteredDeriv
         """
 
-        logger.info(f'{self.filename} medianFilter:{medianFilter} SavitzkyGolay_pnts:{SavitzkyGolay_pnts} SavitzkyGolay_poly:{SavitzkyGolay_poly}')
+        #logger.info(f'{self.filename} medianFilter:{medianFilter} SavitzkyGolay_pnts:{SavitzkyGolay_pnts} SavitzkyGolay_poly:{SavitzkyGolay_poly}')
         
         if not isinstance(medianFilter, int):
             logger.error(f'expecting int medianFilter, got: {medianFilter}')
@@ -351,18 +353,18 @@ class fileLoader_base(ABC):
         # three options (concatenate, insert, vstack), could only get vstack working
         rowOfZeros = np.zeros(self.numSweeps)
 
-        logger.info(f' dataPointsPerMs:{dataPointsPerMs}')
-        logger.info(f' self.numSweeps:{self.numSweeps}')
-        logger.info(f' rowOfZeros:{rowOfZeros.shape}')
-        logger.info(f' 1 - _filteredDeriv:{self._filteredDeriv.shape}')
+        # logger.info(f' dataPointsPerMs:{dataPointsPerMs}')
+        # logger.info(f' self.numSweeps:{self.numSweeps}')
+        # logger.info(f' rowOfZeros:{rowOfZeros.shape}')
+        # logger.info(f' 1 - _filteredDeriv:{self._filteredDeriv.shape}')
 
         #rowZero = 0
         self._filteredDeriv = np.vstack([rowOfZeros, self._filteredDeriv])
 
-        logger.info(f'  sweepX:{self.sweepX.shape}')
-        logger.info(f'  sweepY:{self.sweepY.shape}')
-        logger.info(f'  _filteredY:{self._filteredY.shape}')
-        logger.info(f'  2- _filteredDeriv:{self._filteredDeriv.shape}')
+        # logger.info(f'  sweepX:{self.sweepX.shape}')
+        # logger.info(f'  sweepY:{self.sweepY.shape}')
+        # logger.info(f'  _filteredY:{self._filteredY.shape}')
+        # logger.info(f'  2- _filteredDeriv:{self._filteredDeriv.shape}')
 
     @property
     def sweepY_filtered(self) -> np.ndarray:
@@ -439,32 +441,41 @@ class fileLoader_base(ABC):
     def setLoadedData(self,
             sweepX : np.ndarray,
             sweepY : np.ndarray,
-            sweepC : Union[np.ndarray,None] = None,
+            sweepC : Optional[np.ndarray] = None,
             recordingMode : recordingModes = recordingModes.iclamp,
             xLabel : str = '',
             yLabel : str = ''):
         """Derived classes call this function once the data is loaded in loadFile().
         
-        - Number of sweeps: sweepY.shape[1]
-        - Sweep Length (sec): sweepX[-1,0]
-        - Data Points Per Millisecond: 1 / ((sweepX[1,0] - sweepX[0,0]) * 1000)
+        Args:
+            sweepX (required)
+            sweepY (required)
+            sweepC (optional)
+            recordingMode (optional, defaults to recordingModes.iclamp)
+            xLabel (optional, default to '') str for x-axis label
+            yLabel (optional, defaults to '') str for y-axis label
+
+        Notes
+            - Number of sweeps: sweepY.shape[1]
+            - Sweep Length (sec): sweepX[-1,0]
+            - Data Points Per Millisecond: 1 / ((sweepX[1,0] - sweepX[0,0]) * 1000)
         """
         self._sweepX = sweepX
         self._sweepY = sweepY
         self._sweepC = sweepC
 
-        self._recordingMode = recordingMode
-        self._numSweeps = self._sweepY.shape[1]
-        self._sweepList = list(range(self._numSweeps))
-        self._sweepLabelX = xLabel
-        self._sweepLabelY = yLabel
+        self._recordingMode : recordingModes = recordingMode
+        self._numSweeps : int = self._sweepY.shape[1]
+        self._sweepList : List[int] = list(range(self._numSweeps))
+        self._sweepLabelX : str = xLabel
+        self._sweepLabelY : str = yLabel
 
-        self._sweepLengthSec = self._sweepX[-1,0]  # from 0 to last sample point
+        self._sweepLengthSec : float = self._sweepX[-1,0]  # from 0 to last sample point
 
         dtSeconds = self._sweepX[1,0] - self._sweepX[0,0]  # seconds per sample
         dtSeconds = float(dtSeconds)
         dtMilliseconds = dtSeconds * 1000
-        self._dataPointsPerMs = int(1/dtMilliseconds)
+        self._dataPointsPerMs : int = int(1/dtMilliseconds)
 
         # check our work
 

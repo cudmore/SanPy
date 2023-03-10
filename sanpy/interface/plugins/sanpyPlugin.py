@@ -31,6 +31,8 @@ import math, enum
 # Error shows up in sanpy.bPlugin when it tries to grab <plugin>.myHumanName ???
 import functools
 
+from typing import Union, Dict, List, Tuple
+
 #from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
@@ -102,8 +104,10 @@ class sanpyPlugin(QtWidgets.QWidget):
         # derived classes will set this in init (see kymographPlugin)
         self._initError = False
 
-        self._ba = ba
-        self._bPlugins = bPlugin # pointer to object, send signal back on close
+        self._ba : sanpy.bAnalysis = ba
+        
+        self._bPlugins = bPlugin
+        # pointer to object, send signal back on close
 
         self._sweepNumber = 0
 
@@ -121,7 +125,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         # TODO: keep track of spike selection
         self.selectedSpike = None
-        self.selectedSpikeList = []
+        self._selectedSpikeList = []
 
         self.windowTitle = 'default sanpyPlugin --- change'
 
@@ -144,7 +148,8 @@ class sanpyPlugin(QtWidgets.QWidget):
         #self.scrollArea = QtWidgets.QScrollArea()
         #self.scrollArea.setWidget(self)
 
-        self.layout = None
+        # no used
+        # self.layout = None
 
         # created in self.mplWindow()
         self.fig = None
@@ -158,6 +163,16 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         # connect self to main app with signals/slots
         self._installSignalSlot()
+
+    def getSelectedSpikes(self) -> List[int]:
+        """Get the currently selected spikes.
+        """
+        return self._selectedSpikeList
+    
+    def setSelectedSpikes(self, spikes : List[int]):
+        """Set the currently selected spikes.
+        """
+        self._selectedSpikeList = spikes
 
     def getHumanName(self):
         return self.myHumanName
@@ -213,8 +228,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         return self._sweepNumber
 
     def insertIntoScrollArea(self):
-        """
-        When inserting this widget into an interface, may want to wrap it in a ScrollArea
+        """When inserting this widget into an interface, may want to wrap it in a ScrollArea
 
         This is used in main SanPy interface to insert this widget into a tab
 
@@ -330,19 +344,22 @@ class sanpyPlugin(QtWidgets.QWidget):
         return self.responseOptions[thisOption.name]
 
     def plot(self):
-        """Add code to plot."""
+        """Derived class adds code to plot."""
         pass
 
     def replot(self):
-        """Add code to replot."""
+        """Derived class adds code to replot."""
         pass
 
     def selectSpike(self, sDict=None):
-        """Add code to select spike from sDict."""
+        """Derived class adds code to select spike from sDict."""
         pass
 
-    def selectSpikeList(self, sDict=None):
-        """Add code to select spike from sDict."""
+    def selectSpikeList(self):
+        """Derived class adds code to select spike from sDict.
+        
+        Get selected spike list with getSelectedSpikes()
+        """
         pass
 
     def getStartStop(self):
@@ -490,6 +507,13 @@ class sanpyPlugin(QtWidgets.QWidget):
         #self.mainWidget.setWindowTitle(self.name)
         #self.mainWidget.show()
 
+    def makeVLayout(self):
+        """Make a PyQt QVBoxLayout.
+        """
+        vBoxLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(vBoxLayout)
+        return vBoxLayout
+    
     def mplWindow2(self, numRow=1, numCol=1):
         plt.style.use('dark_background')
         # this is dangerous, collides with self.mplWindow()
@@ -554,7 +578,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         self.fig.canvas.mpl_connect('close_event', self.closeEvent)
 
         # spike selection
-        # TODO: epand this to other type of objects
+        # TODO: expand this to other type of objects
         # TODO: allow user to turn off
         #self.cid = self.static_canvas.mpl_connect('pick_event', self.spike_pick_event)
 
@@ -625,7 +649,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         #self.fileRowDict = rowDict  # for detectionParams plugin
 
         # reset spike and spike list selection
-        self.selectedSpikeList = []
+        self._selectedSpikeList = []
         self.selectedSpike = None
         self.selectSpike()
         self.selectSpikeList()
@@ -696,13 +720,14 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._sweepNumber = sweepNumber
 
         # reset selection
-        self.selectedSpikeList = []
+        self._selectedSpikeList = []
         self.selectedSpike = None
 
         self.replot()
 
     def slot_selectSpikeList(self, eDict):
-        """Respond to spike selection."""
+        """Respond to spike selection.
+        """
 
         # don't respond if we are showing a different ba (bAnalysis)
         ba = eDict['ba']
@@ -710,12 +735,13 @@ class sanpyPlugin(QtWidgets.QWidget):
             return
 
         spikeList = eDict['spikeList']
-        self.selectedSpikeList = spikeList  # [] on no selection
+        self._selectedSpikeList = spikeList  # [] on no selection
 
-        self.selectSpikeList(eDict)
+        self.selectSpikeList()
 
     def slot_selectSpike(self, eDict):
-        """Respond to spike selection."""
+        """Respond to spike selection.
+        """
 
         # don't respond if user/code has turned this off
         if not self.getResponseOption(self.responseTypes.selectSpike):

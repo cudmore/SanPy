@@ -1,6 +1,11 @@
 # 20210610
 
-import os, sys, pathlib, glob, importlib, inspect
+import os
+import sys
+import pathlib
+import glob
+import importlib
+import inspect
 
 import sanpy
 import sanpy.interface.plugins
@@ -9,10 +14,9 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class bPlugins():
-    """
-    Generate a list of plugins.
+    """Generate a dict of plugins.
 
-    Looking in
+    Populate the dict by looking in
         - package, sanpy.interface.plugins
         - folder, <user>/sanpy_plugins
     """
@@ -30,23 +34,6 @@ class bPlugins():
         self._openSet = set()
         """set of open plugins"""
 
-        # add <user>/sanpy_plugins folder
-        # userPath = pathlib.Path.home()
-        # userDocumentsFolder = sanpy._util.getUserDocumentsFolder()
-        # userPluginFolder = os.path.join(userDocumentsFolder, 'sanpy_plugins')
-
-        #userPluginFolder = sanpy._util.getUserPluginFolder()
-
-        # if not os.path.isdir(userPluginFolder):
-        #     logger.info(f'Making userPluginFolder: {userPluginFolder}')
-        #     os.mkdir(userPluginFolder)
-        # if os.path.isdir(userPluginFolder):
-        #     self.userPluginFolder = userPluginFolder
-        #     sys.path.append(self.userPluginFolder)
-        # else:
-        #     logger.info(f'It is OK but did not find pluginFolder "{userPluginFolder}"')
-
-        #
         self.loadPlugins()
 
     def getSanPyApp(self):
@@ -145,16 +132,19 @@ class bPlugins():
         for loaded in loadedModuleList:
             logger.info(f'    {loaded}')
 
-    def runPlugin(self, pluginName, ba, show=True):
-        """
-        Run one plugin with given ba (bAnalysis).
+    def runPlugin(self,
+                  pluginName : str,
+                  ba : sanpy.bAnalysis,
+                  show : bool = True):
+        """Run one plugin with given a bAnalysis.
 
         Args:
             pluginName (str):
             ba (bAnalysis): object
+            show:
         """
         if not pluginName in self.pluginDict.keys():
-            logger.warning(f'Did not find user plugin folder: "{pluginName}"')
+            logger.error(f'Did not find plugin: "{pluginName}"')
             return
         else:
             humanName = self.pluginDict[pluginName]['constructor'].myHumanName
@@ -170,8 +160,11 @@ class bPlugins():
                 else:
                     startStop = [startSec, stopSec]
 
-            logger.info(f'Running plugin: "{pluginName}" {humanName} startStop:{startStop}')
-            logger.info('TODO: put try except back in !!!')
+            logger.info(f'Running plugin:')
+            logger.info(f'  pluginName:{pluginName}')
+            logger.info(f'  humanName:{humanName}')
+            logger.info(f'  startStop:{startStop}')
+            logger.info(f'  TODO: put try except back in !!!')
             # TODO: to open PyQt windows, we need to keep a local (persistent) variable
             #try:
             if 1:
@@ -261,11 +254,16 @@ class bPlugins():
             doZoom = sDict['doZoom']
             app.selectSpike(spikeNumber, doZoom=doZoom)
 
-    def slot_selectSpikeList(self, sDict):
-        """
-        On user selection of spike in a plugin
+    def slot_selectSpikeList(self, sDict : dict):
+        """On user selection of spike(s) in a plugin
 
         Tell main app to select a spike everywhere
+
+        Args:
+            sDict (dict) with keys
+                spikeList : List[int]
+                doZoom : bool
+                ba : sanpy.bAnalysis_.bAnalysis
         """
         logger.info(sDict)
         app = self.getSanPyApp()

@@ -1,19 +1,9 @@
-"""
-See:
-"""
-from tkinter import Y
-from typing import Union
+from typing import Union, Optional
 from pprint import pprint
 
 import pandas as pd
 
 import pyabf
-
-'''
-path = 'data/20191009_0005.abf'
-path = '/Users/cudmore/data/theanne-griffith/07.20.21/2021_07_20_0013.abf'
-abf = pyabf.ABF(path)
-'''
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -27,12 +17,6 @@ class epochTable():
         
         self._epochList = []
 
-        #print('sweepX pnts:', len(abf.sweepX))
-
-        #print('===')
-        #pprint(vars(abf.sweepEpochs))
-        #print('===')
-        
         dataPointsPerMs = abf.dataPointsPerMs
         """To convert point to seconds"""
 
@@ -77,7 +61,7 @@ class epochTable():
         else:
             return self._epochList
     
-    def findEpoch(self, pnt : int) -> Union[None, int]:
+    def findEpoch(self, pnt : int) -> Optional[int]:
         """Return epoch index for a point in recording.
 
         Stop points are always the same as next epoch start point.

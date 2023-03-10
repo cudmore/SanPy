@@ -51,10 +51,6 @@ class spikeClips(sanpyPlugin):
         self.xMult = 0.1
         self.yMult = 0.1
 
-        # todo: mode these to sanpyPlugin
-        self.selectedSpikeList = []
-        self.selectedSpike = None
-
         #self.clipLines = None
         #self.meanClipLine = None
         self.singleSpikeMultiLine = None
@@ -288,7 +284,7 @@ class spikeClips(sanpyPlugin):
                 startSec = 0
                 stopSec = self.ba.fileLoader.recordingDur
         elif self.respondTo == 'Spike Selection':
-            selectedSpikeList = self.selectedSpikeList
+            selectedSpikeList = self.getSelectedSpikes()
 
         #print('=== selectedSpikeList:', selectedSpikeList)
 
@@ -479,9 +475,10 @@ class spikeClips(sanpyPlugin):
             self.singleSpikeMultiLine = MultiLine(x, y, self, width=3, allowXAxisDrag=False, forcePenColor='y', type='spike selection')
             self.clipPlot.addItem(self.singleSpikeMultiLine)
 
-    def selectSpikeList(self, sDict=None):
+    def selectSpikeList(self):
         """
-        Select spikes based on self.selectedSpikeList.
+        Select spikes based on self.getSelectedSpikes().
+
         sDict (dict): NOT USED
         """
         #logger.info(sDict)
@@ -489,15 +486,17 @@ class spikeClips(sanpyPlugin):
         x = np.zeros(1) * np.nan
         y = np.zeros(1) * np.nan
 
-        if len(self.selectedSpikeList) >0:
+        _selectedSpikes = self.getSelectedSpikes()
+
+        if len(_selectedSpikes) > 0:
             try:
-                x = self.x[self.selectedSpikeList]
-                y = self.y[self.selectedSpikeList]
+                x = self.x[_selectedSpikes]
+                y = self.y[_selectedSpikes]
             except (IndexError) as e:
                 pass
         if self.spikeListMultiLine is not None:
             self.clipPlot.removeItem(self.spikeListMultiLine)
-        if len(self.selectedSpikeList) >0:
+        if len(_selectedSpikes) > 0:
             self.spikeListMultiLine = MultiLine(x, y, self, width=3, allowXAxisDrag=False, forcePenColor='c', type='spike list selection')
             self.clipPlot.addItem(self.spikeListMultiLine)
 

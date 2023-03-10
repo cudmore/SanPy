@@ -26,5 +26,7 @@ from .detectionParams import detectionParams
 from .kymographPlugin import kymographPlugin
 #from .kymographPlugin2 import kymographPlugin2
 
+from .setSpineStat import SetSpineStat
+
 # TODO: make this just one line, so user can drop a bplugin inn and restart
 from . import *

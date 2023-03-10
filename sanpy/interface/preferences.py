@@ -108,7 +108,8 @@ class preferences():
 
         useDefault = True
         if os.path.isfile(preferencesFile):
-            logger.info(f'Loading preferences file: {preferencesFile}')
+            logger.info(f'Loading preferences file')
+            logger.info(f'  {preferencesFile}')
             try:
                 with open(preferencesFile) as f:
                     loadedJson = json.load(f)

@@ -56,15 +56,18 @@ class bAnalysis:
 
     def __init__(self,
                     filepath :str = None,
-                    byteStream =None,
+                    byteStream = None,
                     loadData : bool = True,
+                    fileLoaderDict : dict = None,
                     stimulusFileFolder : str = None,
-                    verbose :bool = True):
+                    verbose : bool = False):
         """
         Args:
             filepath (str): Path to either .abf or .csv with time/mV columns.
             byteStream (io.BytesIO): Binary stream for use in the cloud.
             loadData: If true, load raw data, otherwise just load header
+            fileLoaderDict: if None then fetch from sanpy.fileloaders.getFileLoaders()
+                Do this if running in a script. If running an SanPy app, we pass the dict
             stimulusFileFolder:
         """
 
@@ -76,34 +79,6 @@ class bAnalysis:
         self._detectionDict : dict = None # corresponds to an item in sanpy.bDetection
 
         self._isAnalyzed : bool = False
-
-        # mimic pyAbf
-        '''
-        self._numChannels : int = None
-        self._dataPointsPerMs : int = None
-        self._currentSweep : int = 0  # int
-        self._sweepList : List[int] = [0]  # list
-        self._sweepLengthSec : float = np.nan
-        self._sweepX : np.ndarray = None  # values of x (Time)
-        self._sweepY : np.ndarray = None  # values of y (Recording)
-        self._sweepC : np.ndarray = None # values of the command waveform (DAC)
-
-        self._epochTableList = None  # each sweep has an epoch table
-
-        self._filteredVm : np.ndarray = None
-        self._filteredDeriv : np.ndarray = None
-
-        self._recordingMode : str = 'Unknown'
-        self._sweepLabelX : str = '???'
-        self._sweepLabelY : str = '???'
-
-        self.myFileType : str = None
-        """str: From ('abf', 'csv', 'tif', 'bytestream')"""
-
-        # only defined when loading abf files
-        self.acqDate = None
-        self.acqTime = None
-        '''
 
         self.loadError : bool = False
         """bool: True if error loading file/stream."""
@@ -144,7 +119,6 @@ class bAnalysis:
         #self.isBytesIO = False
         # when we are running in the cloud
 
-
         # TODO (cudmore) need to parse folder of file loaders in fileloders/ and determine
         # class to use to load file (using fileLoader.filetype
         self._fileLoader = None
@@ -152,35 +126,20 @@ class bAnalysis:
             logger.error(f'File does not exist: "{filepath}"')
             self.loadError = True
         else:
-            _fileLoadersDict = sanpy.fileloaders.getFileLoaders()  # EXPENSIVE, to do, pass in from app
-            
-            print('_fileLoadersDict:')
-            for k,v in _fileLoadersDict.items():
-                print('  ', k, ':', v)
+            if fileLoaderDict is None:
+                fileLoaderDict = sanpy.fileloaders.getFileLoaders()  # EXPENSIVE, to do, pass in from app
             
             _ext = os.path.splitext(filepath)[1]
             _ext = _ext[1:]
             try:
-                logger.info('LOADING')
-                constructorObject = _fileLoadersDict[_ext]['constructor']
+                if verbose:
+                    logger.info(f'Loading file with extension: {_ext}')
+                constructorObject = fileLoaderDict[_ext]['constructor']
                 self._fileLoader = constructorObject(filepath)
             except (KeyError) as e:
                 logger.error(f'did not find a file loader for extension "{_ext}"')
                 self.loadError = True
             
-            # if filepath.endswith('.abf'):
-            #     from sanpy.fileloaders import fileLoader_abf
-            #     self._fileLoader = fileLoader_abf(filepath)
-            # elif filepath.endswith('.atf'):
-            #     from sanpy.fileloaders import fileLoader_atf
-            #     self._fileLoader = fileLoader_atf(filepath)
-            # elif filepath.endswith('.csv'):
-            #     from sanpy.fileloaders import fileLoader_csv
-            #     self._fileLoader = fileLoader_csv(filepath)
-            # elif filepath.endswith('.tif'):
-            #     from sanpy.fileloaders import fileLoader_tif
-            #     self._fileLoader = fileLoader_tif(filepath)
-
         '''
         if byteStream is not None:
             self._loadAbf(byteStream=byteStream,
@@ -343,6 +302,8 @@ class bAnalysis:
 
     def getNumSpikes(self, sweep : int = 0):
         """Get number of spikes in a sweep.
+
+        See property numSpikes
         """
         return self._spikesPerSweep[sweep]
 
@@ -410,10 +371,17 @@ class bAnalysis:
                     logger.info(e)
         return retList
 
+    def setSpikeStat_time(self, startSec : int, stopSec : int, stat : str, value):
+        """Set a spike stat for spikes in a range of time.
+        """
+        
+        # get spike list in range [startSec, stopSec]
+        #spikeList = self.getSpikeSeconds()
+
     def setSpikeStat(self, spikeList : Union[list, int], stat : str, value):
         """Set a stat for one spike or a list of spikes.
         
-        Used to set simple things like ('isBad', 'userType1', ...)
+        Used to set things like ('isBad', 'userType1', 'condition', ...)
         """
         if isinstance(spikeList, list):
             pass
@@ -431,10 +399,12 @@ class bAnalysis:
         modTime = now.strftime('%H:%M:%S')
 
         for spike in spikeList:
-            self[stat] = value
-            self['modDate'] = modDate
-            self['modTime'] = modTime
+            self.spikeDict[spike][stat] = value
+            self.spikeDict[spike]['modDate'] = modDate
+            self.spikeDict[spike]['modTime'] = modTime
             
+        self._detectionDirty = True
+
         logger.info(f'set spikes {spikeList} stat "{stat}" to value "{value}"')
 
         '''
@@ -905,7 +875,7 @@ class bAnalysis:
         }
         return eDict
 
-    def _spikeDetect_dvdt(self, dDict, sweepNumber, verbose=False):
+    def _spikeDetect_dvdt(self, dDict : dict, sweepNumber : int, verbose : bool = False):
         """
         Search for threshold crossings (dvdtThreshold) in first derivative (dV/dt) of membrane potential (Vm)
         append each threshold crossing (e.g. a spike) in self.spikeTimes list
@@ -926,6 +896,8 @@ class bAnalysis:
 
         #
         # reduce spike times based on start/stop
+        #logger.error('THIS IS a BUg if start sec is none then set to 0 !!!')
+        # THIS IS ABUG ... FIX
         if dDict['startSeconds'] is not None and dDict['stopSeconds'] is not None:
             startPnt = self.fileLoader.dataPointsPerMs * (dDict['startSeconds']*1000) # seconds to pnt
             stopPnt = self.fileLoader.dataPointsPerMs * (dDict['stopSeconds']*1000) # seconds to pnt
@@ -1028,7 +1000,7 @@ class bAnalysis:
 
         return spikeTimes1, spikeErrorList1
 
-    def _spikeDetect_vm(self, dDict, sweepNumber, verbose=False):
+    def _spikeDetect_vm(self, dDict : dict, sweepNumber : int, verbose : bool = False):
         """
         spike detect using Vm threshold and NOT dvdt
         append each threshold crossing (e.g. a spike) in self.spikeTimes list
@@ -1104,9 +1076,8 @@ class bAnalysis:
         #
         return spikeTimes0, spikeErrorList
 
-    def spikeDetect(self, detectionDict):
-        """
-        Spike Detect all sweeps.
+    def spikeDetect(self, detectionDict : dict):
+        """Run spike detection for all sweeps.
 
         Each spike is a row and has 'sweep'
 
@@ -1150,13 +1121,13 @@ class bAnalysis:
         if detectionDict['verbose']:
             logger.info(f'Detected {len(self.spikeDict)} spikes in {round(stopTime-startTime,3)} seconds')
 
-    def _spikeDetect2(self, sweepNumber):
+    def _spikeDetect2(self, sweepNumber : int):
         """
         Working on using bAnalysisResult.py.
 
         Args:
-            sweepNumber:
             dDict: Detection Dict
+            sweepNumber:
         """
         dDict = self._detectionDict
         
@@ -1315,18 +1286,12 @@ class bAnalysis:
 
             tmpThresholdSec = spikeDict[i]['thresholdSec']
             spikeDict[i]['timeToPeak_ms'] = (peakSec - tmpThresholdSec) * 1000
-            #
+
             # only append to spikeDict after we are done (accounting for spikes within a sweep)
-            # was this
             #self.spikeDict.append(spikeDict)
             #iIdx = len(self.spikeDict) - 1
-            #
-            #
 
             iIdx = i
-
-            #
-            # was this, assigning default
 
             # todo: get rid of this
             defaultVal = float('nan')
@@ -1472,7 +1437,7 @@ class bAnalysis:
             #print(f' {iIdx} preLinearFitPnt0:{preLinearFitPnt0}, preLinearFitPnt1:{preLinearFitPnt1}')
             #print(f'    xFit:{len(xFit)} yFit:{len(yFit)}')
 
-            # TODO: I need to trigger following errors to confirm code works !!!!
+            # TODO: somehow trigger following errors to confirm code works (pytest)
             with warnings.catch_warnings():
                 warnings.filterwarnings('error')
                 try:
@@ -1640,11 +1605,11 @@ class bAnalysis:
 
         self.dfError = self.errorReport()
 
-        self._detectionDirty = True  # e.g. bAnalysis needs to be saved
+        self._detectionDirty = True
+        # e.g. bAnalysis needs to be saved
 
         ## done
 
-    #def _getFeet(self, df):
     def _getFeet(self, thresholdPnts : List[int], prePnts : int) -> List[int]:
         """
         

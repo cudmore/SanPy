@@ -768,7 +768,7 @@ class bDetection(object):
         """
         Set current value for key. Valid keys are defined in getDefaultDetection.
 
-        For float values that need to take on none, vlue comes in as -1e9
+        For float values that need to take on none, value comes in as -1e9
         
         Args:
             detectionType : short name (not value)

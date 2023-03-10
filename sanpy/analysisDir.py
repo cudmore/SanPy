@@ -7,15 +7,17 @@ import copy  # For copy.deepcopy() of bAnalysis
 import uuid  # to generate unique key on bAnalysis spike detect
 import pathlib  # ned to use this (introduced in Python 3.4) to maname paths on Windows, stop using os.path
 
-from typing import List, Union
+from typing import List, Union, Optional
 
 import numpy as np
 import pandas as pd
 import requests, io  # too load from the web
-from subprocess import call # to call ptrepack (might fail on windows???)
-from pprint import pprint
-import tables.scripts.ptrepack  # to save compressed .h5 file
-import shutil
+
+# for old code that was compressing hdf5 files
+#from subprocess import call # to call ptrepack (might fail on windows???)
+#from pprint import pprint
+#import tables.scripts.ptrepack  # to save compressed .h5 file
+#import shutil
 
 import sanpy
 import sanpy.h5Util
@@ -60,7 +62,7 @@ _sanpyColumns = {
     'I': {
         # include
         # problems with isinstance(bool), just using string
-        'type': 'bool',
+        'type': bool,
         'isEditable': True,
     },
     'File': {
@@ -277,12 +279,14 @@ class analysisDir():
     """File types to load.
     """
 
-    def __init__(self, path : str = None, myApp = None,
+    def __init__(self,
+                    path : str = None,
+                    myApp = None,
                     autoLoad : bool = False,
-                    folderDepth : Union[int, None] = None
+                    folderDepth : Optional[int] = None
                     ):
-        """
-        Load and manage a list of files in a folder path.
+        """Load and manage a list of files in a folder path.
+        
         Use this as the main pandasModel for file list myTableView.
 
         TODO: extend to link to folder in cloud (start with box and/or github)
@@ -292,7 +296,7 @@ class analysisDir():
             myApp (sanpy.interface.sanpy_app): Optional
             autoLoad (bool):
             folderDepth (int): 
-            cloudDict (dict): To load frmo cloud, for now  just github
+            #cloudDict (dict): To load from cloud, for now  just github
 
         Notes:
             - Some functions are so self can mimic a pandas dataframe used by pandasModel.
@@ -711,6 +715,13 @@ class analysisDir():
 
         hdfPath = self._getHdfFile()
         
+        # grab the fileLoaderDict from our app
+        # if it is None then bAnalysis will load this (from disk)
+        if self.myApp is not None:
+            _fileLoaderDict = self.myApp.getFileLoaderDict()
+        else:
+            _fileLoaderDict = None
+
         ba = None
         if uuid is not None and uuid:
             # load from h5
@@ -718,13 +729,14 @@ class analysisDir():
                 logger.info(f'    Retreiving uuid from hdf file {uuid}')
 
             # load from abf
-            ba = sanpy.bAnalysis(path, verbose=verbose)
+            ba = sanpy.bAnalysis(path, fileLoaderDict=_fileLoaderDict, verbose=verbose)
+            
             # load analysis from h5 file, will fail if uuid is not in file
             ba._loadHdf_pytables(hdfPath, uuid)
 
         if allowAutoLoad and ba is None:
             # load from path
-            ba = sanpy.bAnalysis(path, verbose=verbose)
+            ba = sanpy.bAnalysis(path, fileLoaderDict=_fileLoaderDict, verbose=verbose)
             if verbose:
                 logger.info(f'    Loaded ba from path {path} and now ba:{ba}')
         #
@@ -811,17 +823,19 @@ class analysisDir():
             # seach existing db for missing abf files
             pass
         else:
-            # get list of all abf/csv/tif
+            # get list of all abf/csv/tif files
             fileList = self.getFileList(path)
+            _numFilesToLoad = len(fileList)
             start = time.time()
             # build new db dataframe
             listOfDict = []
             for rowIdx, fullFilePath in enumerate(fileList):
-                self.signalApp(f'Loading "{fullFilePath}"')
+                self.signalApp(f'Loading file {rowIdx+1} of {_numFilesToLoad} "{fullFilePath}"')
 
                 # rowDict is what we are showing in the file table
                 # abb debug vue, set loadData=True
-                ba, rowDict = self.getFileRow(fullFilePath, loadData=loadData)  # loads bAnalysis
+                # loads bAnalysis
+                ba, rowDict = self.getFileRow(fullFilePath, loadData=loadData)
 
                 # TODO: calculating time, remove this
                 # This is 2x faster than loading from pandas gzip ???
@@ -1091,9 +1105,8 @@ class analysisDir():
         return ba
 
     def _setColumnType(self, df):
-        """
-        Needs to be called every time a df is created.
-        Ensures proper type of columns following sanpyColumns[key]['type']
+        """Needs to be called every time a df is created.
+            Ensures proper type of columns following sanpyColumns[key]['type']
         """
         #print('columns are:', df.columns)
         for col in df.columns:
@@ -1147,9 +1160,17 @@ class analysisDir():
             logger.warning(f'Did not load file type "{fileType}"')
             return None, None
 
+        # grab the fileLoaderDict from our app
+        # if it is None then bAnalysis will load this (from disk)
+        if self.myApp is not None:
+            _fileLoaderDict = self.myApp.getFileLoaderDict()
+        else:
+            _fileLoaderDict = None
+
         # load bAnalysis
         #logger.info(f'Loading bAnalysis "{path}"')
-        ba = sanpy.bAnalysis(path, loadData=loadData) # loadData is false, load header
+        # loadData is false, load header
+        ba = sanpy.bAnalysis(path, loadData=loadData, fileLoaderDict=_fileLoaderDict)
 
         if ba.loadError:
             logger.error(f'Error loading bAnalysis file "{path}"')
@@ -1185,7 +1206,7 @@ class analysisDir():
         rowDict['Epochs'] = ba.fileLoader.numEpochs  # Theanne, data has to be loaded
 
         rowDict['kHz'] = ba.fileLoader.recordingFrequency
-        rowDict['Mode'] = ba.fileLoader.recordingMode
+        rowDict['Mode'] = ba.fileLoader.recordingMode.value
 
         #rowDict['dvdtThreshold'] = 20
         #rowDict['mvThreshold'] = -20
@@ -1216,8 +1237,8 @@ class analysisDir():
 
             subdirs[:] = [d for d in subdirs if d not in excludeFolders]
 
-            print('folderDepth:', folderDepth)
-            print('  root:', root, 'subdirs:', subdirs, 'files:', files)
+            # print('folderDepth:', folderDepth)
+            # print('  root:', root, 'subdirs:', subdirs, 'files:', files)
             
             # strip out folders that start with __
             #_parentFolder = os.path.split(root)[1]

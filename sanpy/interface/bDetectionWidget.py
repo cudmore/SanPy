@@ -1,9 +1,10 @@
-from email.headerregistry import HeaderRegistry
-import os, sys, math
+import os
+import sys
+import math
+import time
 #import inspect # to print call stack
 from functools import partial
-from tracemalloc import start
-#import this
+from typing import Union, Dict, List, Tuple
 
 import numpy as np
 
@@ -29,6 +30,7 @@ class bDetectionWidget(QtWidgets.QWidget):
     def __init__(self, ba=None, mainWindow=None, parent=None):
         """
         ba: bAnalysis object
+        mainWindow:
         """
 
         super(bDetectionWidget, self).__init__(parent)
@@ -39,6 +41,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.mySetTheme()
 
         #self._sweepNumber = None  # 'All'
+
+        self._selectedSpikeList : List[int] = None
 
         self.dvdtLines = None
         self.dvdtLinesFiltered = None
@@ -207,15 +211,20 @@ class bDetectionWidget(QtWidgets.QWidget):
         else:
             return self.ba.fileLoader.currentSweep
 
-    def detect(self, detectionPresetStr: str, detectionType : sanpy.bDetection.detectionTypes,
-                dvdtThreshold, mvThreshold, startSec=None, stopSec=None):
-        """
-        Detect spikes
+    def detect(self,
+                detectionPresetStr : str,
+                detectionType : sanpy.bDetection.detectionTypes,
+                dvdtThreshold : float,
+                mvThreshold : float,
+                startSec :float = None, stopSec : float = None):
+        """Detect spikes.
 
         Args:
             detectionPreset (str) corresponds to Enum sanpy.bDetection.detectionPresets_
             detectionType (sanpy.bDetection.detectionTypes): The type of detection (dvdt, vm)
         """
+
+        _startSec = time.time()
 
         if self.ba is None:
             str = 'Please select a file to analyze.'
@@ -233,23 +242,6 @@ class bDetectionWidget(QtWidgets.QWidget):
         if startSec is None or stopSec is None:
             startSec = 0
             stopSec = self.ba.fileLoader.recordingDur
-
-        # get default detection parammeters and tweek
-        #detectionDict = sanpy.bAnalysis.getDefaultDetection()
-
-        # specify a default, e.g. caKymograph
-        #detectionPreset = sanpy.bDetection.detectionPresets.cakymograph
-        #sanpy.bDetection(detectionPreset=detectionPreset)
-        # was this
-
-        '''
-        print(sanpy.bDetection.detectionPresets)
-        detectionPreset = sanpy.bDetection.detectionPresets(detectionPresetStr)
-        detectionDict = sanpy.bDetection(detectionPreset=detectionPreset) # gets default detection class
-        detectionDict['detectionType'] = detectionType.value  # set detection type to ('dvdt', 'vm')
-        detectionDict['dvdtThreshold'] = dvdtThreshold
-        detectionDict['mvThreshold'] = mvThreshold
-        '''
 
         _selectedDetection = self.detectToolbarWidget._selectedDetection
         detectionDict = self.getMainWindowDetectionClass().getDetectionDict(_selectedDetection)
@@ -302,6 +294,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         #    # signal to main window so it can update (file list, scatter plot)
         #    self.myMainWindow.mySignal('detect') #, data=(dfReportForScatter, dfError))
 
+        # report the number of spikes and the time it took
+        _stopSec = time.time()
+        numSpikes = self.ba.numSpikes
+        _elapsedSec = round(_stopSec-_startSec,2)
+        updateStr = f'Detected {numSpikes} in {_elapsedSec} seconds'
+        self.updateStatusBar(updateStr)
+
     def mySetTheme(self):
         if self.myMainWindow is not None and self.myMainWindow.useDarkStyle:
             pg.setConfigOption('background', 'k')
@@ -319,9 +318,21 @@ class bDetectionWidget(QtWidgets.QWidget):
         return theRet
 
     def getMainWindowDetectionClass(self):
+        """The detection class loads a number of json files.
+            When running SanPy app do this one.
+        """
         theRet = None
         if self.myMainWindow is not None:
             theRet = self.myMainWindow.getDetectionClass()
+        return theRet
+
+    def getMainWindowFileLoaderDict(self):
+        """The file loader dict loads and parses a number of .py files.
+            When running SanPy app do this one.
+        """
+        theRet = None
+        if self.myMainWindow is not None:
+            theRet = self.myMainWindow.getFileLoaderDict()
         return theRet
 
     def save(self, saveCsv=True):
@@ -362,8 +373,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             pass
 
     def getXRange(self):
-        """
-        Get the current range of X-Axis
+        """Get the current range of X-Axis.
         """
         rect = self.vmPlot.viewRect() # get xaxis
         xMin = rect.left()
@@ -371,8 +381,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         return xMin, xMax
 
     def _setAxis(self, start, stop, set_xyBoth='xAxis', whichPlot='vm'):
-        """
-        Shared by (setAxisFull, setAxis)
+        """Shared by (setAxisFull, setAxis).
         """
         # make sure start/stop are in correct order and swap if necc.
         if start is not None and stop is not None:
@@ -381,7 +390,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 start = stop
                 stop = tmp
 
-        logger.info(f'start:{start} stop:{stop} set_xyBoth:{set_xyBoth} whichPlot:{whichPlot}')
+        #logger.info(f'start:{start} stop:{stop} set_xyBoth:{set_xyBoth} whichPlot:{whichPlot}')
 
         padding = 0
         if set_xyBoth == 'xAxis':
@@ -420,7 +429,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         return start, stop
 
-    def setAxis_OnFileChange(self, startSec, stopSec):
+    def old_setAxis_OnFileChange(self, startSec, stopSec):
         if startSec is None or stopSec is None or math.isnan(startSec) or math.isnan(stopSec):
             startSec = 0
             stopSec = self.ba.fileLoader.recordingDur
@@ -433,8 +442,10 @@ class bDetectionWidget(QtWidgets.QWidget):
         #self.myKymWidget.kymographPlot.autoRange()  # row major is different
 
     def setAxisFull_y(self, thisAxis):
-        """
-        thisAxis: (vm, dvdt)
+        """Set full y-axis.
+
+        Args:
+            thisAxis: Specifies the axis to set, like (vm, dvdt)
         """
         #logger.info(f'thisAxis:"{thisAxis}"')
         # y-axis is NOT shared
@@ -508,7 +519,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             set_xyBoth: (xAxis, yAxis, Both)
             whichPlot: (dvdt, vm)
         """
-        logger.info(f'start:{start} stop:{stop} set_xyBoth:{set_xyBoth} whichPlot:{whichPlot}')
+        #logger.info(f'start:{start} stop:{stop} set_xyBoth:{set_xyBoth} whichPlot:{whichPlot}')
         
         start, stop = self._setAxis(start, stop, set_xyBoth=set_xyBoth, whichPlot=whichPlot)
         #print('bDetectionWidget.setAxis()', start, stop)
@@ -798,10 +809,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         if doEmit:
             self.signalSelectSweep.emit(self.ba, sweepNumber)
 
-    def selectSpike(self, spikeNumber : int, doZoom=False, doEmit=False):
+    def selectSpike(self, spikeNumber : int, doZoom : bool = False, doEmit : bool = False):
         """
         Args:
             spikeNumber: absolute
+            doZoom:
+            doEmit: If True then emit signalSelectSpike signal
         """
         logger.info(f'spikeNumber:{spikeNumber} doZoom:{doZoom} doEmit:{doEmit}')
         
@@ -825,13 +838,13 @@ class bDetectionWidget(QtWidgets.QWidget):
             sweep = self.ba.getSpikeStat(spikeList, 'sweep')
             sweep = sweep[0]  # just the first
             if sweep != self.sweepNumber:
-                print('!!! SWITCHING to sweep:', sweep, 'from self.sweepNumber:', self.sweepNumber)
+                logger.info('!!! SWITCHING to sweep: {sweep} from self.sweepNumber:{self.sweepNumber}')
                 self.slot_selectSweep(sweep)
 
             logger.info(f'spikeNumber: {spikeNumber}, sweep {sweep}, doZoom {doZoom}')
             sweepSpikeNumber = self.ba.getSweepSpikeFromAbsolute(spikeNumber, sweep)
             sweepSpikeList = [sweepSpikeNumber]
-            print('    sweepSpikeNumber:', sweepSpikeNumber, type(sweepSpikeNumber))
+            logger.info(f'  sweepSpikeNumber:{sweepSpikeNumber} {type(sweepSpikeNumber)}')
 
             spikeList = [sweepSpikeNumber]
 
@@ -873,7 +886,18 @@ class bDetectionWidget(QtWidgets.QWidget):
             }
             self.signalSelectSpike.emit(eDict)
 
-    def selectSpikeList(self, spikeList, doZoom=False, doEmit=False):
+    def setSpikeStat(self, stat : str = 'condition', value : str = 'xxx'):
+        """Set the selected spikes.
+        """
+        logger.info(f'setting spike stat "{stat}" to "{value}"')
+        if self._selectedSpikeList is not None:
+            self.ba.setSpikeStat(self._selectedSpikeList, stat, value)
+
+    def selectSpikeList(self, spikeList : List[int],
+                        doZoom : bool = False,
+                        doEmit : bool = False):
+        """Visually select a number of spikes.
+        """
         x = None
         y = None
 
@@ -884,9 +908,11 @@ class bDetectionWidget(QtWidgets.QWidget):
             x = xPlot[spikeList]
             y = yPlot[spikeList]
 
+        self._selectedSpikeList = spikeList
+
         self.mySpikeListScatterPlot.setData(x=x, y=y)
 
-        # I don't think anybody is listening to this
+        # TODO: I don't think anybody is listening to this
         if doEmit:
             eDict = {
                 'spikeList': spikeList,
@@ -1252,6 +1278,21 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         #self.toggleClips(False)
 
+        # single spike selection
+        color = 'y'
+        symbol = 'x'
+        size = 20
+        self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=2, color=color), symbol=symbol, size=size)
+        self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
+
+        # mult spike selection (spikeList)
+        # TODO: make sure this on top of the plot of analysis results
+        color = 'c'
+        symbol = 'o'
+        size = 20
+        self.mySpikeListScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=2, color=color), symbol=symbol, size=size)
+        self.vmPlot.addItem(self.mySpikeListScatterPlot)
+
         # add all overlaid scatter plots
         self.myPlotList = [] # list of pg.ScatterPlotItem
         for idx, plot in enumerate(self.myPlots):
@@ -1260,7 +1301,8 @@ class bDetectionWidget(QtWidgets.QWidget):
             humanName = plot['humanName']
             if humanName in ['Half-Widths']:
                 # PlotCurveItem
-                myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=2, color=color), connect='finite') # default is no symbol
+                # default is no symbol
+                myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=2, color=color), connect='finite')
             elif humanName in ['Epoch Lines']:
                 myScatterPlot = pg.PlotDataItem(pen=pg.mkPen(width=1, color=color, style=QtCore.Qt.DashLine), connect='finite') # default is no symbol
             elif humanName == 'EDD Rate':
@@ -1281,18 +1323,6 @@ class bDetectionWidget(QtWidgets.QWidget):
                 self.vmPlotGlobal.addItem(myScatterPlot)
             elif plot['plotOn'] == 'dvdt':
                 self.derivPlot.addItem(myScatterPlot)
-
-        # single spike selection
-        color = 'y'
-        symbol = 'x'
-        self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=2, color=color), symbol=symbol, size=10)
-        self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
-
-        # mult spike selection (spikeList)
-        color = 'c'
-        symbol = 'o'
-        self.mySpikeListScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=2, color=color), symbol=symbol, size=10)
-        self.vmPlot.addItem(self.mySpikeListScatterPlot)
 
         # axis labels
         # TODO (cudmore) get the units correct, grab from y-axis of abf file
@@ -1321,10 +1351,17 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.crosshairDict[plotName]['v'].setVisible(onOff)
 
     def myMouseMoved(self, event):
-        # event: PyQt5.QtCore.QPointF
-        #print('myMouseMoved()', event)
+        """Respond to mouse moves.
+        
+            Update cursor position
+            If crosshair is visible, update that too.
+        
+        Args:
+            event: PyQt5.QtCore.QPointF
+        """
 
         # looking directly at checkbox in myDetectionToolbarWidget2
+        # _crossHairIsOn = self.detectToolbarWidget.crossHairCheckBox.isChecked()
         if not self.detectToolbarWidget.crossHairCheckBox.isChecked():
             return
 
@@ -1403,24 +1440,33 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.detectToolbarWidget.setMousePositionLabel(x,y)
 
     def keyPressEvent(self, event):
-        #print('=== sanpy_app.MainWindow() keyPressEvent()')
+        """Respond to user key press.
+        
+        Args:
+            event: PyQt5.QtGui.QKeyEvent
+        """
         key = event.key()
         text = event.text()
         #print('== bDetectionWidget.keyPressEvent() key:', key, 'text:', text)
         #logger.info(f'key:{key} text:{text}')
 
-        if text == 'h':
+        #if text == 'h':
+        if key == QtCore.Qt.Key_H:
             if self.detectToolbarWidget.isVisible():
                 self.detectToolbarWidget.hide()
             else:
                 self.detectToolbarWidget.show()
 
-        if text == 'a':
+        # if text == 'a':
+        if key in [QtCore.Qt.Key_A, QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return]:
             #self.detectToolbarWidget.keyPressEvent(event)
             self.setAxisFull()
 
         if key == QtCore.Qt.Key.Key_Escape:
             self.myMainWindow.mySignal('cancel all selections')
+
+        if key == QtCore.Qt.Key_C:
+            self.setSpikeStat()
 
     def slot_selectSweep(self, sweep : int):
         """Fake slot, not ising in emit/connect.
@@ -1442,14 +1488,14 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.selectSpikeList(spikeList, doZoom=doZoom)
         #self.detectToolbarWidget.slot_selectSpike(sDict)
 
-    def slot_switchFile(self, tableRowDict=None, ba=None):
-        """
+    def slot_switchFile(self, tableRowDict :dict = None, ba : sanpy.bAnalysis = None):
+        """Switch to a new file.
+
         Set self.ba to new bAnalysis object ba
 
         Can fail if .abf file is corrupt
 
         Args:
-            path (str):
             tableRowDict (dict):
             ba (bAnalysis):
 
@@ -1461,7 +1507,6 @@ class bDetectionWidget(QtWidgets.QWidget):
         # bAnalysis object
         self.ba = ba
 
-        # abb 20201009
         if self.ba.loadError:
             self.replot()
             fileName = self.ba.fileLoader.filename()  # tableRowDict['File']
@@ -1673,20 +1718,19 @@ class myImageExporter(ImageExporter):
 
 #class MultiLine(pg.QtGui.QGraphicsPathItem):
 class MultiLine(QtWidgets.QGraphicsPathItem):
-    """
-    This will display a time-series whole-cell recording efficiently
-    It does this by converting the array of points to a QPath
-
-    see: https://stackoverflow.com/questions/17103698/plotting-large-arrays-in-pyqtgraph/17108463#17108463
-    """
     def __init__(self, x, y, detectionWidget, type, forcePenColor=None, allowXAxisDrag=True, columnOrder=False):
-        """
-        x and y are 2D arrays of shape (Nplots, Nsamples)
+        """Display a time-series whole-cell recording efficiently
+        It does this by converting the array of points to a QPath
 
-        type: (dvdt, vm)
-        forcePenColor
-        allowXAxisDrag
-        columnOrder (bool): if True then data is in columns (like multi sweep abf file)
+        see: https://stackoverflow.com/questions/17103698/plotting-large-arrays-in-pyqtgraph/17108463#17108463
+
+        Args:
+            x and y are 2D arrays of shape (Nplots, Nsamples)
+            detectionWidget
+            type: (dvdt, vm)
+            forcePenColor
+            allowXAxisDrag
+            columnOrder (bool): if True then data is in columns (like multi sweep abf file)
         """
 
         self.exportWidgetList = []
@@ -1748,99 +1792,16 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
 
     def mouseClickEvent(self, event):
         if event.button() == QtCore.Qt.RightButton:
-            print('mouseClickEvent() right click', self.myType)
+            logger.info(f'mouseClickEvent() right click {self.myType}')
             self.contextMenuEvent(event)
 
-    def contextMenuEvent(self, event):
-        myType = self.myType
-
-        '''
-        if myType == 'clip':
-            logger.warning('No export for clips, try clicking again')
-            return
-        '''
-
-        contextMenu = QtWidgets.QMenu()
-        exportTraceAction = contextMenu.addAction(f'Export Trace {myType}')
-        contextMenu.addSeparator()
-        resetAllAxisAction = contextMenu.addAction(f'Reset All Axis')
-        resetYAxisAction = contextMenu.addAction(f'Reset Y-Axis')
-        #openAct = contextMenu.addAction("Open")
-        #quitAct = contextMenu.addAction("Quit")
-        #action = contextMenu.exec_(self.mapToGlobal(event.pos()))
-        posQPoint = QtCore.QPoint(event.screenPos().x(), event.screenPos().y())
-        action = contextMenu.exec_(posQPoint)
-        if action is None:
-            return
-        actionText = action.text()
-        if actionText == f'Export Trace {myType}':
-            #
-            # See: plugins/exportTRace.py
-            #
-
-            #print('Opening Export Trace Window')
-
-            if self.myType == 'vmFiltered':
-                xyUnits = ('Time (sec)', 'Vm (mV)')# todo: pass xMin,xMax to constructor
-            elif self.myType == 'dvdtFiltered':
-                xyUnits = ('Time (sec)', 'dV/dt (mV/ms)')# todo: pass xMin,xMax to constructor
-            elif self.myType == 'meanclip':
-                xyUnits = ('Time (ms)', 'Vm (mV)')# todo: pass xMin,xMax to constructor
-            else:
-                logger.error(f'Unknown myType: "{self.myType}"')
-                xyUnits = ('error time', 'error y')
-
-            path = self.detectionWidget.ba.fileLoader.filepath
-
-            xMin = None
-            xMax = None
-            #if self.myType in ['clip', 'meanclip']:
-            #    xMin, xMax = self.detectionWidget.clipPlot.getAxis('bottom').range
-            #else:
-            #    xMin, xMax = self.detectionWidget.getXRange()
-            xMin, xMax = self.detectionWidget.getXRange()
-            #print('  xMin:', xMin, 'xMax:', xMax)
-
-            if self.myType in ['vm', 'dvdt']:
-                xMargin = 2 # seconds
-            else:
-                xMargin = 2
-
-            exportWidget = sanpy.interface.bExportWidget(self.x, self.y,
-                            xyUnits=xyUnits,
-                            path=path,
-                            xMin=xMin, xMax=xMax,
-                            xMargin = xMargin,
-                            type=self.myType,
-                            darkTheme=self.detectionWidget.useDarkStyle)
-
-            exportWidget.myCloseSignal.connect(self.slot_closeChildWindow)
-            exportWidget.show()
-
-            self.exportWidgetList.append(exportWidget)
-        elif actionText == 'Reset All Axis':
-            #print('Reset Y-Axis', self.myType)
-            self.detectionWidget.setAxisFull()
-        elif actionText == 'Reset Y-Axis':
-            #print('Reset Y-Axis', self.myType)
-            self.detectionWidget.setAxisFull_y(self.myType)
-        else:
-            logger.warning(f'action not taken: {action}')
-
-    def slot_closeChildWindow(self, windowPointer):
-        #print('closeChildWindow()', windowPointer)
-        #print('  exportWidgetList:', self.exportWidgetList)
-
-        idx = self.exportWidgetList.index(windowPointer)
-        if idx is not None:
-            popedItem = self.exportWidgetList.pop(idx)
-            #print('  popedItem:', popedItem)
-        else:
-            print(' slot_closeChildWindow() did not find', windowPointer)
-
     def mouseDragEvent(self, ev):
-        """
-        default is to drag x-axis, use alt_drag for y-axis
+        """Default is to drag x-axis, use alt+drag for y-axis.
+        
+        TODO: implement option+drag to select spike point from scatter
+        
+        see:
+            https://gist.github.com/eyllanesc/f305119027ae3b85dfcf8a3ef8c00238
         """
         #print('MultiLine.mouseDragEvent():', type(ev), ev)
 
@@ -1909,6 +1870,94 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
             #print('xStart:', self.xStart, 'self.xCurrent:', self.xCurrent)
             self.linearRegionItem.setRegion((self.xStart, self.xCurrent))
         ev.accept()
+
+    def contextMenuEvent(self, event):
+        myType = self.myType
+
+        '''
+        if myType == 'clip':
+            logger.warning('No export for clips, try clicking again')
+            return
+        '''
+
+        contextMenu = QtWidgets.QMenu()
+        exportTraceAction = contextMenu.addAction(f'Export Trace {myType}')
+        contextMenu.addSeparator()
+        resetAllAxisAction = contextMenu.addAction(f'Reset All Axis')
+        resetYAxisAction = contextMenu.addAction(f'Reset Y-Axis')
+        #openAct = contextMenu.addAction("Open")
+        #quitAct = contextMenu.addAction("Quit")
+        #action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+        posQPoint = QtCore.QPoint(event.screenPos().x(), event.screenPos().y())
+        action = contextMenu.exec_(posQPoint)
+        if action is None:
+            return
+        actionText = action.text()
+        if actionText == f'Export Trace {myType}':
+            #
+            # See: plugins/exportTrace.py
+            #
+
+            #print('Opening Export Trace Window')
+
+            # todo: pass xMin,xMax to constructor
+            if self.myType == 'vmFiltered':
+                xyUnits = ('Time (sec)', 'Vm (mV)')
+            elif self.myType == 'dvdtFiltered':
+                xyUnits = ('Time (sec)', 'dV/dt (mV/ms)')
+            elif self.myType == 'meanclip':
+                xyUnits = ('Time (ms)', 'Vm (mV)')
+            else:
+                logger.error(f'Unknown myType: "{self.myType}"')
+                xyUnits = ('error time', 'error y')
+
+            path = self.detectionWidget.ba.fileLoader.filepath
+
+            # xMin = None
+            # xMax = None
+            #if self.myType in ['clip', 'meanclip']:
+            #    xMin, xMax = self.detectionWidget.clipPlot.getAxis('bottom').range
+            #else:
+            #    xMin, xMax = self.detectionWidget.getXRange()
+            xMin, xMax = self.detectionWidget.getXRange()
+            #print('  xMin:', xMin, 'xMax:', xMax)
+
+            if self.myType in ['vm', 'dvdt']:
+                xMargin = 2 # seconds
+            else:
+                xMargin = 2
+
+            exportWidget = sanpy.interface.bExportWidget(self.x, self.y,
+                            xyUnits=xyUnits,
+                            path=path,
+                            xMin=xMin, xMax=xMax,
+                            xMargin = xMargin,
+                            type=self.myType,
+                            darkTheme=self.detectionWidget.useDarkStyle)
+
+            exportWidget.myCloseSignal.connect(self.slot_closeChildWindow)
+            exportWidget.show()
+
+            self.exportWidgetList.append(exportWidget)
+        elif actionText == 'Reset All Axis':
+            #print('Reset Y-Axis', self.myType)
+            self.detectionWidget.setAxisFull()
+        elif actionText == 'Reset Y-Axis':
+            #print('Reset Y-Axis', self.myType)
+            self.detectionWidget.setAxisFull_y(self.myType)
+        else:
+            logger.warning(f'action not taken: {action}')
+
+    def slot_closeChildWindow(self, windowPointer):
+        #print('closeChildWindow()', windowPointer)
+        #print('  exportWidgetList:', self.exportWidgetList)
+
+        idx = self.exportWidgetList.index(windowPointer)
+        if idx is not None:
+            popedItem = self.exportWidgetList.pop(idx)
+            #print('  popedItem:', popedItem)
+        else:
+            print(' slot_closeChildWindow() did not find', windowPointer)
 
 class myDetectToolbarWidget2(QtWidgets.QWidget):
     #signalSelectSpike = QtCore.Signal(object, object) # spike number, doZoom
@@ -1994,7 +2043,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         detectionDict = self.detectionWidget.getMainWindowDetectionClass().getDetectionDict(self._selectedDetection)
         dvdtThreshold = detectionDict['dvdtThreshold']
         mvThreshold = detectionDict['mvThreshold']
-        print('    dvdtThreshold:', dvdtThreshold, 'mvThreshold:', mvThreshold)
+        logger.info(f'    dvdtThreshold:{dvdtThreshold} mvThreshold:{mvThreshold}')
         
         # set interface
         self.dvdtThreshold.setValue(dvdtThreshold)
@@ -2061,7 +2110,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
     #@QtCore.pyqtSlot()
     def on_button_click(self, name):
-        logger.info(name)
+        """User clicked a button.
+        """
+        logger.info(f'User clicked button "{name}"')
+
         modifiers = QtWidgets.QApplication.keyboardModifiers()
         isShift = modifiers == QtCore.Qt.ShiftModifier
 
@@ -2157,7 +2209,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
     def on_crosshair_clicked(self, value):
         #print('on_crosshair_clicked() value:', value)
-        onOff = value==2
+        onOff = value == 2
         self.detectionWidget.toggleCrosshair(onOff)
 
     def toggleInterface(self, panelName : str, onoff : bool):

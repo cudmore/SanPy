@@ -281,6 +281,7 @@ class bTableView(QtWidgets.QTableView):
 
         # hide some columns, needed each time we set the model
         hiddenColumns = ['kLeft', 'kTop', 'kRight', 'kBottom', 
+                            'Channels',
                             'Cell Type', 'Sex', 'Condition',
                             'Notes',
                             'relPath',

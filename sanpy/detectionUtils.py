@@ -1,6 +1,6 @@
 from pprint import pprint
 
-from typing import List, Union  # Callable, Iterator, Optional
+from typing import List, Union, Optional  # Callable, Iterator, Optional
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
 
 import numpy as np
@@ -72,8 +72,12 @@ def getThreshold_vm(y, threshold : float):
 	thresholdPoints = Is[np.where(Ds)[0]+1]
 	return thresholdPoints
 
-def reduceByRefractory(spikeTimes : list[int], refractoryPnts : int):
+def reduceByRefractory(spikeTimes : List[int], refractoryPnts : int):
 	"""If there are fast-spikes, throw-out the second one.
+	
+	Args:
+        spikeTimes: list of spike time threshold crossing
+        refractoryPnts: 
 	"""
 
 	#refractory_ms = 20 #10 # remove spike [i] if it occurs within refractory_ms of spike [i-1]
@@ -98,7 +102,7 @@ def reduceByRefractory(spikeTimes : list[int], refractoryPnts : int):
 	newSpikeTimes = [spikeTime for spikeTime in spikeTimes if spikeTime]
 	return newSpikeTimes
 
-def refineWithDerivative(y : np.ndarray, spikeTimes : list[int],
+def refineWithDerivative(y : np.ndarray, spikeTimes : List[int],
 						dvdtPreWindow_pnts : int,
 						firstDeriv = None,
 						secondDeriv = None,
@@ -279,7 +283,7 @@ def getHalfWidth(y, spikePnts, spikePeakPnts,
 def getHalfWidth_(vm, thresholdPnt, peakPnt,
 				peakIdx : int,
 				hwWindowPnts : int,
-				dataPointsPerMs : Union[int,None] = None,
+				dataPointsPerMs : Optional[int] = None,
 				halfHeights=[10,20,50,80,90], verbose=False):
 	"""
 	Get half-widhts for one spike.

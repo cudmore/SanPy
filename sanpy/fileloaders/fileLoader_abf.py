@@ -18,7 +18,7 @@ class fileLoader_abf(fileLoader_base):
     def loadFile(self):
         self._loadAbf()
 
-    def _loadAbf(self, byteStream=None, loadData=True, stimulusFileFolder=None):
+    def _loadAbf(self, byteStream =  None, loadData : bool = True, stimulusFileFolder : str = None):
         """Load pyAbf from path."""
         try:
             #logger.info(f'loadData:{loadData}')
