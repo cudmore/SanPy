@@ -36,6 +36,7 @@ class detectionErrors(sanpyPlugin):
 
 		#
 		# connect clicks in error table to siganl main sanpy_app with slot_selectSpike()
+		logger.warning('mar 11 FIX SPIKE SELECTION')
 		if self.getSanPyApp() is not None:
 			fnPtr = self.getSanPyApp().slot_selectSpike
 			self.myErrorTable.signalSelectSpike.connect(fnPtr)

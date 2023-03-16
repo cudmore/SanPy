@@ -103,7 +103,7 @@ def _repackHdf(hdfPath):
 
 def _loadAnalysis(hdfPath):
     """Load all bAnalysis from h5"""
-    print('=== loadAnalysis hdfPath:', hdfPath)
+    logger.info(f'hdfPath: {hdfPath}')
     start = time.time()
     numLoaded =0
     with pd.HDFStore(hdfPath, mode='r') as store:
@@ -112,7 +112,7 @@ def _loadAnalysis(hdfPath):
             if isinstance(data, pd.DataFrame):
                 if '_sweepX' in data.columns:
                     ba = sanpy.bAnalysis(fromDf=data)
-                    print('    ', ba)
+                    logger.info(f'loaded ba: {ba}')
                     numLoaded += 1
                 else:
                     # this is usually the file database

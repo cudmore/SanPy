@@ -2,12 +2,15 @@
 
 import os
 import sys
-import pathlib
+#import pathlib
 import glob
 import importlib
 import inspect
 
+from typing import Union, Dict, List, Tuple, Optional
+
 import sanpy
+#import sanpy.interface
 import sanpy.interface.plugins
 
 from sanpy.sanpyLogger import get_logger
@@ -20,7 +23,7 @@ class bPlugins():
         - package, sanpy.interface.plugins
         - folder, <user>/sanpy_plugins
     """
-    def __init__(self, sanpyApp=None):
+    def __init__(self, sanpyApp : Optional["sanpy.interface.SanPyWindow"] = None):
         self._sanpyApp = sanpyApp
 
         self.userPluginFolder : str = sanpy._util._getUserPluginFolder()
@@ -36,7 +39,7 @@ class bPlugins():
 
         self.loadPlugins()
 
-    def getSanPyApp(self):
+    def getSanPyApp(self) -> Optional["sanpy.interface.SanPyWindow"]:
         """Get the underlying SanPy app.
         """
         return self._sanpyApp
@@ -52,7 +55,8 @@ class bPlugins():
 
         # Enum is to ignore bPlugins.py class ResponseType(Enum)
         ignoreModuleList = ['sanpyPlugin', 'myWidget',
-                            'ResponseType', 'basePlotTool',
+                            'ResponseType', 'SpikeSelectEvent',
+                            'basePlotTool',
                             'NavigationToolbar2QT']
 
         #
@@ -69,13 +73,15 @@ class bPlugins():
                 loadedList.append(moduleName)
                 fullModuleName = 'sanpy.interface.plugins.' + moduleName
                 humanName = obj.myHumanName  # myHumanName is a static str
+                showInMenu = obj.showInMenu  # showInMenu is a static bool
                 pluginDict = {
                     'pluginClass': moduleName,
                     'type': 'system',
                     'module': fullModuleName,
                     'path': '',
                     'constructor': obj,
-                    'humanName': humanName
+                    'humanName': humanName,
+                    'showInMenu': showInMenu,
                 }
                 if humanName in self.pluginDict.keys():
                     logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
@@ -113,13 +119,15 @@ class bPlugins():
                 logger.error(f'Did not load user plugin, make sure file name and class name are the same:"{moduleName}"')
             else:
                 humanName = oneConstructor.myHumanName
+                showInMenu = oneConstructor.showInMenu
                 pluginDict = {
                     'pluginClass': moduleName,
                     'type': 'user',
                     'module': fullModuleName,
                     'path': file,
                     'constructor': oneConstructor,
-                    'humanName': humanName
+                    'humanName': humanName,
+                    'showInMenu': showInMenu,
                     }
                 if humanName in self.pluginDict.keys():
                     logger.warning(f'Plugin already added "{moduleName}" humanName:"{humanName}"')
@@ -196,10 +204,19 @@ class bPlugins():
             theRet = self.pluginDict[pluginName]['type']
             return theRet
 
-    def pluginList(self):
-        """Get list of names of loaded plugins"""
+    def pluginList(self, forMenu=True):
+        """Get list of names of loaded plugins
+
+        Pay attention to showInMenu
+        """
         retList = []
         for k,v in self.pluginDict.items():
+            # k is the name of the plugin
+            # v is a dict with its current state
+            # print(' QANON ', k)
+            # print('     v:', v)
+            if not v['showInMenu']:
+                continue
             retList.append(k)
         return retList
 

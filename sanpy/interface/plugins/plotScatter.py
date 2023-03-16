@@ -189,9 +189,9 @@ class plotScatter(sanpyPlugin):
         self.replot()
 
     def _switchScatter(self):
+        """Switch between single scatter plot and scatter + marginal histograms
         """
-        Switch between single scatter plot and scatter + marginal histograms
-        """
+
         if self.plotHistograms:
             # gridspec for scatter + hist
             self.gs = self.fig.add_gridspec(2, 2,  width_ratios=(7, 2), height_ratios=(2, 7),
@@ -233,19 +233,68 @@ class plotScatter(sanpyPlugin):
         self.cmap = mpl.pyplot.cm.coolwarm.copy()
         self.cmap.set_under("white") # only works for dark theme
         # do not specify 'c' argument, we set colors using set_facecolor, set_color
+
         self.lines = self.axScatter.scatter([], [], picker=5)
+
         # make initial empty spike selection plot
-        self.spikeSel, = self.axScatter.plot([], [], 'x', markerfacecolor='none', color='y', markersize=10)  # no picker for selection
-        self.spikeListSel, = self.axScatter.plot([], [], 'o', markerfacecolor='none', color='y', markersize=10)  # no picker for selection
+
+        # self.spikeSel, = self.axScatter.plot([], [], 'x', markerfacecolor='none', color='y', markersize=10)  # no picker for selection
+        # TODO: standardize this with Highlighter scatter
+        # was this
+        # self.spikeListSel, = self.axScatter.plot([], [], 'o', markerfacecolor='none', color='y', markersize=10)  # no picker for selection
+        logger.info('!!!!!!!!!!!!!!!')
+        markerSize = 10
+        self.spikeListSel, = self.axScatter.plot([], [], 'o', markersize=markerSize, color='yellow', zorder=10)
+
         # despine top/right
         self.axScatter.spines['right'].set_visible(False)
         self.axScatter.spines['top'].set_visible(False)
 
-        self.cid = self.static_canvas.mpl_connect('pick_event', self.spike_pick_event)
+        self.cid = self.static_canvas.mpl_connect('pick_event', self.spike_pick_event2)
+        
         self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
 
         #
         #self.replot()
+
+    def spike_pick_event2(self, event):
+        """Respond to user left-mouse clicks in mpl plot.
+                
+        Args:
+            event : matplotlib.backend_bases.PickEvent
+                PickEvent with indices in ind[]
+
+        Notes:
+            need to clean up fft on pick, it is still in base plugin class
+        """
+        
+        # ignore when not left mouse button
+        if event.mouseevent.button != 1:
+            return
+    
+        if len(event.ind) < 1:
+            return
+
+        logger.info(f'{event}')
+        logger.info(f'{event.mouseevent}')
+
+        spikeNumber = event.ind[0]
+
+        doZoom = False
+        modifiers = QtWidgets.QApplication.keyboardModifiers()
+        if modifiers == QtCore.Qt.ShiftModifier:
+            doZoom = True
+
+        logger.info(f'got {len(event.ind)} candidates, first is spike:{spikeNumber} doZoom:{doZoom}')
+
+        # propagate a signal to parent
+        # TODO: use class SpikeSelectEvent()
+        sDict = {
+            'spikeList': [spikeNumber],
+            'doZoom': doZoom,
+            'ba': self.ba,
+        }
+        self.signalSelectSpikeList.emit(sDict)
 
     def btnstate(self, b):
         state = b.isChecked()
@@ -292,15 +341,16 @@ class plotScatter(sanpyPlugin):
         self.selectSpikeList()
 
     def replot(self):
-        """
-        Replot when analysis changes or file changes
+        """Replot when analysis changes or file changes
         """
 
+        logger.info('')
+        
         # get from stat lists
         xHumanStat, xStat = self.xPlotWidget.getCurrentStat()
         yHumanStat, yStat = self.yPlotWidget.getCurrentStat()
 
-        logger.info(f'x:"{xHumanStat}" y:"{yHumanStat}"')
+        #logger.info(f'x:"{xHumanStat}" y:"{yHumanStat}"')
         #logger.info(f'x:"{xStat}" y:"{yStat}"')
 
         if self.ba is None or xHumanStat is None or yHumanStat is None:
@@ -369,8 +419,8 @@ class plotScatter(sanpyPlugin):
                 13:"orange",
                 7:"green"}
             color_dict= {
-                'good':(0,1,1,1), # cyan
-                'bad':'r', # red
+                'good': (0,1,1,1), # cyan
+                'bad': (1,0,0,1), # red
                 #'userType1':(0,0,1,1), # blue
                 #'userType2':(0,1,1,1), # cyan
                 #'userType3':(1,0,1,1), # magenta
@@ -518,6 +568,8 @@ class plotScatter(sanpyPlugin):
     def selectSpikeList(self):
         """
         """
+        logger.info('')
+        
         if self.xStatName is None or self.yStatName is None:
             return
 
@@ -531,15 +583,16 @@ class plotScatter(sanpyPlugin):
             xData = []
             yData = []
 
+        logger.info(f'!!! SET DATA {xData} {yData}')
         self.spikeListSel.set_data(xData, yData)
 
         self.static_canvas.draw()
         # was this
         #self.repaint() # update the widget
 
-    def selectSpike(self, sDict=None):
+    def old_selectSpike(self, sDict=None):
         """Select a spike
-        
+
         sDict (dict): NOT USED
         """
 
@@ -585,9 +638,9 @@ class plotScatter(sanpyPlugin):
             self.signalSelectSpikeList.emit(sDict)
 
     def toolbarHasSelection(self):
-        """
-        return true if either ['zoom rect', 'pan/zoom'] are selected
-        This is needed to cancel mouse clicks in Highlighter and right click in SanPyPLugin
+        """Return true if either ['zoom rect', 'pan/zoom'] are selected
+        
+        This is needed to cancel mouse clicks in Highlighter and right click in SanPyPlugin
         """
         state = self.mplToolbar.mode
         return state in ['zoom rect', 'pan/zoom']
@@ -635,12 +688,12 @@ class plotScatter(sanpyPlugin):
         handled = False
         if text == 'Accept':
             #print('Set selected spikes to include (not isbad)')
-            self.ba.setSpikeStat(_selectedSpikes, 'isBad', False)
+            self.ba.setSpikeStat(_selectedSpikes, 'include', False)
             self.replot()
             handled = True
         elif text == 'Reject':
             #print('Set selected spikes to reject (isbad)')
-            self.ba.setSpikeStat(_selectedSpikes, 'isBad', True)
+            self.ba.setSpikeStat(_selectedSpikes, 'include', True)
             self.replot()
             handled = True
         elif text == 'User Type 1':
@@ -667,8 +720,8 @@ class plotScatter(sanpyPlugin):
         return handled
 
     def copyToClipboard(self):
-        """
-        Copy current x/y stats to clipboard with some other book-keeping.
+        """Copy current x/y stats to clipboard with some other book-keeping.
+        
         For example: spike number, spike time (s), is bad, user type, and file name.
         """
         spikeNumber = self.ba.getStat('spikeNumber', sweepNumber=self.sweepNumber)
@@ -696,9 +749,6 @@ class plotScatter(sanpyPlugin):
         df.to_clipboard(excel=excel, sep=sep)
 
         logger.info(f'Copied {len(df)} spikes to clipboard.')
-
-    #def slot_selectSpike(self, sDict):
-    #    pass
 
 class myStatListWidget(QtWidgets.QWidget):
     """
@@ -827,8 +877,9 @@ class Highlighter(object):
         self.ax.figure.canvas.mpl_connect('key_release_event', self._keyReleaseEvent)
 
         # remember, sanpyPlugin is installing for key press and on pick
-        self.keepOnMotion = self.ax.figure.canvas.mpl_connect('motion_notify_event', self.on_motion)
+        self.keepOnMotion = self.ax.figure.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
         self.keepMouseDown = self.ax.figure.canvas.mpl_connect('button_press_event', self.on_button_press)
+        self._keepMouseDown = self.ax.figure.canvas.mpl_connect('button_release_event', self.on_button_release)
 
     def _keyPressEvent(self, event):
         #logger.info(event)
@@ -838,19 +889,29 @@ class Highlighter(object):
         #logger.info(event)
         self.keyIsDown = None
 
-    def on_button_press(self, event):
-        """
-        Args:
-            event (matplotlib.backend_bases.MouseEvent):
-        """
-        #print(f'  event.button:"{event.button}" {type(event.button)}')
+    def on_button_release(self, event):
+        logger.info(event)
+
         # don't take action on right-click
         if event.button != 1:
             # not the left button
             #print('  rejecting not button 1')
             return
 
-        #logger.info(event)
+        self.mouseDownEvent = None
+
+    def on_button_press(self, event):
+        """
+        Args:
+            event (matplotlib.backend_bases.MouseEvent):
+        """
+        logger.info(event)
+
+        # don't take action on right-click
+        if event.button != 1:
+            # not the left button
+            #print('  rejecting not button 1')
+            return
 
         # do nothing in zoom or pan/zoom is active
         # finding documentation on mpl toolbar is near impossible
@@ -873,12 +934,18 @@ class Highlighter(object):
         else:
             self.mask = np.zeros(self.x.shape, dtype=bool)
 
-    def on_motion(self, event):
-        """
-        event (<class 'matplotlib.backend_bases.MouseEvent'>):
+    def on_mouse_move(self, event):
+        """When mouse is down, respond to movement and select points.
+
+        Args:
+            event (<class 'matplotlib.backend_bases.MouseEvent'>):
 
         event contains:
-            motion_notify_event: xy=(113, 36) xydata=(None, None) button=None dblclick=False inaxes=None
+            motion_notify_event: xy=(113, 36)
+            xydata=(None, None)
+            button=None
+            dblclick=False
+            inaxes=None
         """
 
         # self.ax is our main scatter plot axes
@@ -903,8 +970,7 @@ class Highlighter(object):
         self.canvas.draw()
 
     def setData(self, x, y):
-        """
-        Set underlying highlighter data, call this when we replot() scatter
+        """Set underlying highlighter data, call this when we replot() scatter
         """
         # convert list to np array
         xArray = np.array(x)
@@ -916,8 +982,7 @@ class Highlighter(object):
 
     #def __call__(self, event1, event2):
     def _HighlighterReleasedEvent(self, event1, event2):
-        """
-        Callback when mouse is released
+        """Callback when mouse is released
 
         event1:
             button_press_event: xy=(87.0, 136.99999999999991) xydata=(27.912559411227885, 538.8555851528383) button=1 dblclick=False inaxes=AxesSubplot(0.1,0.1;0.607046x0.607046)
@@ -925,8 +990,8 @@ class Highlighter(object):
             button_release_event: xy=(131.0, 211.99999999999991) xydata=(48.83371692821588, 657.6677439956331) button=1 dblclick=False inaxes=AxesSubplot(0.1,0.1;0.607046x0.607046)
         """
 
-        #logger.info(event1)
-        #logger.info(event2)
+        # logger.info(event1)
+        # logger.info(event2)
 
         self.mouseDownEvent = None
 
@@ -939,14 +1004,14 @@ class Highlighter(object):
         selectedSpikesList = selectedSpikes.tolist()
         self._parentPlot.selectSpikesFromHighlighter(selectedSpikesList)
 
-        # clear the selection use just made, will get 'reselected' in signal/slot
+        # clear the selection user just made, will get 'reselected' in signal/slot
         self._highlight.set_offsets([np.nan, np.nan])
 
         return
 
     def inside(self, event1, event2):
-        """Returns a boolean mask of the points inside the rectangle defined by
-        event1 and event2."""
+        """Returns a boolean mask of the points inside the
+        rectangle defined by event1 and event2."""
         # Note: Could use points_inside_poly, as well
         x0, x1 = sorted([event1.xdata, event2.xdata])
         y0, y1 = sorted([event1.ydata, event2.ydata])
@@ -958,7 +1023,7 @@ def run():
     path = '/Users/cudmore/Sites/SanPy/data/19114001.abf'
     ba = sanpy.bAnalysis(path)
     ba.spikeDetect()
-    print(ba.numSpikes)
+    print(ba)
 
     import sys
     app = QtWidgets.QApplication([])

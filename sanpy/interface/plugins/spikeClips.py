@@ -67,7 +67,7 @@ class spikeClips(sanpyPlugin):
         hLayout2.addWidget(self.numSpikesLabel)
 
         self.colorCheckBox = QtWidgets.QCheckBox('Color')
-        self.colorCheckBox.setChecked(True)
+        self.colorCheckBox.setChecked(False)
         self.colorCheckBox.stateChanged.connect(lambda:self.replot())
         hLayout2.addWidget(self.colorCheckBox)
 
@@ -237,8 +237,7 @@ class spikeClips(sanpyPlugin):
         self.replot()
 
     def replot(self):
-        """
-        Replot when analysis changes or file changes
+        """Replot when analysis changes or file changes
         """
         self._myReplotClips()
         #
@@ -416,7 +415,7 @@ class spikeClips(sanpyPlugin):
 
         #
         # replot any selected spikes
-        self.selectSpike()
+        #self.old_selectSpike()
         self.selectSpikeList()
 
     def saveResultsFigure(self):
@@ -445,7 +444,7 @@ class spikeClips(sanpyPlugin):
 
         super().copyToClipboard(df=df)
         
-    def selectSpike(self, sDict=None):
+    def old_selectSpike(self, sDict=None):
         """
         Leave existing spikes and select one spike with a different color.
         The one spike might not be displayed, then do nothing.
@@ -497,7 +496,11 @@ class spikeClips(sanpyPlugin):
         if self.spikeListMultiLine is not None:
             self.clipPlot.removeItem(self.spikeListMultiLine)
         if len(_selectedSpikes) > 0:
-            self.spikeListMultiLine = MultiLine(x, y, self, width=3, allowXAxisDrag=False, forcePenColor='c', type='spike list selection')
+            self.spikeListMultiLine = MultiLine(x, y, self,
+                                                width=3,
+                                                allowXAxisDrag=False,
+                                                forcePenColor='c',
+                                                type='spike list selection')
             self.clipPlot.addItem(self.spikeListMultiLine)
 
 #class MultiLine(pg.QtGui.QGraphicsPathItem):

@@ -211,10 +211,33 @@ class plotRecording(sanpyPlugin):
         # end for spike
         return x, y
 
-    def slot_selectSpike(self, eDict):
+    def selectSpikeList(self):
+        """Only respond to single spike selection.
+        """
+        spikeList = self.getSelectedSpikes()
+
+        if spikeList==[] or len(spikeList)>1:
+            return
+
+        if self.ba is None:
+            return
+
+        spikeNumber = spikeList[0]
+
+        thresholdSec = self.ba.getStat('thresholdSec')
+        spikeTime = thresholdSec[spikeNumber]
+        xMin = spikeTime - 0.5
+        xMax = spikeTime + 0.5
+
+        self.axs.set_xlim(xMin, xMax)
+
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+
+    def old_slot_selectSpike(self, eDict):
         logger.info(eDict)
         spikeNumber = eDict['spikeNumber']
-        doZoom = eDict['doZoom']
+        #doZoom = eDict['doZoom']
 
         if spikeNumber is None:
             return

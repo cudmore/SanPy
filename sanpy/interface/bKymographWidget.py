@@ -403,7 +403,7 @@ class kymographWidget(QtWidgets.QWidget):
         # TODO: cludge, fix
         _numLineScans = 0
         if self.ba is not None:
-            _numLineScans = len(self.ba.sweepX) - 1
+            _numLineScans = len(self.ba.fileLoader.sweepX) - 1
         self._profileSlider.setMaximum(_numLineScans)
         #self._profileSlider.setMaximum(self._kymographAnalysis.numLineScans())
         self._profileSlider.valueChanged.connect(self._on_line_slider_changed)

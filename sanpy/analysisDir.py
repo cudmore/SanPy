@@ -536,7 +536,7 @@ class analysisDir():
         logger.info(f'sys.argv: {sys.argv}')
         try:
             
-            tables.scripts.ptrepack.main()
+            tables.scripts.ptrepack.main()  # noqa
 
             # delete the temporary (large file)
             logger.info(f'Deleting tmp file: {tmpHdfPath}')
@@ -580,7 +580,7 @@ class analysisDir():
             logger.info(f'    copying existing hdf file to tmp ')
             logger.info(f'    hdfFilePath {hdfFilePath}')
             logger.info(f'    tmpHdfPath {tmpHdfPath}')
-            shutil.copyfile(hdfFilePath,tmpHdfPath)
+            shutil.copyfile(hdfFilePath,tmpHdfPath)  # noqa
         else:
             pass
             # compressed file does not exist, just use tmp path
@@ -852,12 +852,12 @@ class analysisDir():
                 # do not assign uuid until bAnalysis is saved in h5 file
                 #rowDict['uuid'] = ''
 
-                relPath = fullFilePath.replace(path, '')
-                if relPath.startswith('/'):
-                    # so we can use os.path.join()
-                    relPath = relPath[1:]
-                #rowDict['path'] = fullFilePath
-                rowDict['relPath'] = relPath
+                # 20230313 moved into getFileRow()
+                # relPath = fullFilePath.replace(path, '')
+                # if relPath.startswith('/'):
+                #     # so we can use os.path.join()
+                #     relPath = relPath[1:]
+                # rowDict['relPath'] = relPath
 
                 #logger.info(f'    row:{rowIdx} relPath:{relPath} fullFilePath:{fullFilePath}')
 
@@ -1038,8 +1038,7 @@ class analysisDir():
         return len(uuid) > 0
 
     def getAnalysis(self, rowIdx, allowAutoLoad=True, verbose=True) -> sanpy.bAnalysis:
-        """
-        Get bAnalysis object, will load if necc.
+        """Get bAnalysis object, will load if necc.
 
         Args:
             rowIdx (int): Row index from table, corresponds to row in self._df
@@ -1136,8 +1135,7 @@ class analysisDir():
         return df
 
     def getFileRow(self, path, loadData=False):
-        """
-        Get dict representing one file (row in table). Loads bAnalysis to get headers.
+        """Get dict representing one file (row in table). Loads bAnalysis to get headers.
 
         On load error of proper file type (abf, csv), ba.loadError==True
 
@@ -1217,6 +1215,13 @@ class analysisDir():
             rowDict['mvThreshold'] = dDict.getValue('mvThreshold')
             rowDict['Start(s)'] = dDict.getValue('startSeconds')
             rowDict['Stop(s)'] = dDict.getValue('stopSeconds')
+
+        # remove the path to the folder we have loaded
+        relPath = path.replace(self.path, '')
+        if relPath.startswith('/'):
+            # so we can use os.path.join()
+            relPath = relPath[1:]
+        rowDict['relPath'] = relPath
 
         return ba, rowDict
 
@@ -1307,10 +1312,12 @@ class analysisDir():
         return theRet
 
     def appendRow(self, rowDict=None, ba=None):
-        # append one empty row
-        logger.info('')
-        print('    rowDict:', rowDict)
-        print('    ba:', ba)
+        """Append an empty row.
+        """
+
+        # logger.info('')
+        # print('    rowDict:', rowDict)
+        # print('    ba:', ba)
         
         rowSeries = pd.Series()
         if rowDict is not None:

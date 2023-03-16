@@ -126,3 +126,12 @@ def test_init(pluginsObject, qtbot):
         assert _newPlugin is not None
         assert _newPlugin.getInitError() == False
         qtbot.addWidget(_newPlugin)
+
+        _selectSpikesDict = {'ba': ba, 'spikeList':[]}
+        _newPlugin.slot_selectSpikeList(_selectSpikesDict)
+
+        _selectSpikesDict = {'ba': ba, 'spikeList':[1,10,15]}
+        _newPlugin.slot_selectSpikeList(_selectSpikesDict)
+
+        # TODO: test switch file
+        # TODO: test set sweep

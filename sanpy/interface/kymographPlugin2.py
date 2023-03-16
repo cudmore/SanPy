@@ -566,8 +566,8 @@ class kymographPlugin2(QtWidgets.QWidget):
         # xPlot = self._kymographAnalysis.getTimeArray()  # always the same
         # yPlot = self._kymographAnalysis.getResults('sumintensity')
 
-        xPlot = self._ba.sweepX
-        yPlot = self._ba.sweepY
+        xPlot = self._ba.fileLoader.sweepX
+        yPlot = self._ba.fileLoader.sweepY
 
         self.sumIntensityPlot.setData(xPlot, yPlot, connect='finite')
 
@@ -578,7 +578,7 @@ class kymographPlugin2(QtWidgets.QWidget):
         #numLineScans = self._kymographAnalysis.numLineScans()
         #xPlot = self._kymographAnalysis.getResults('time_ms')
         #xPlot = self._kymographAnalysis.getTimeArray()  # always the same
-        xPlot = self._ba.sweepX
+        xPlot = self._ba.fileLoader.sweepX
         yDiam_um = self._kymographAnalysis.getResults('diameter_um')
 
         self.diameterPlot.setData(xPlot, yDiam_um, connect='finite')

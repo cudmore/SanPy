@@ -6,13 +6,16 @@ Estimate the time our spike detection takes.
         - spike detect from 0 to i sec and calculate the time it takes
 """
 
+import sys
 import time
 import numpy as np
 import pandas as pd
+import scipy
 
 from sklearn.linear_model import LinearRegression
 
 import matplotlib.pyplot as plt  # just to show plots during script
+import seaborn as sns
 
 import sanpy
 
@@ -66,9 +69,12 @@ def timingFigure():
 
     return timeItTook, numSamples, numSpikes
 
-def plotFigure(numSpikes, timeItTook):
+def plotFigure(df : pd.DataFrame):
     logger.info(f'x is numSpikes, y is time (sec)')
-    plt.plot(numSpikes, timeItTook, 'ok')
+    x = 'numSamples'  # 'numSpikes'
+    y = '_timeItTook_filtered'
+    sns.scatterplot(x=x, y=y, data=df)
+    sns.despine()
     plt.show()
 
 def saveResults(runNumber, timeItTook, numSamples, numSpikes):
@@ -78,30 +84,84 @@ def saveResults(runNumber, timeItTook, numSamples, numSpikes):
     df['numSamples'] = numSamples
     df['numSpikes'] = numSpikes
     
-    path = '/Users/cudmore/Desktop/sanpy-benchmark-20230305.csv'
-    df.to_csv(path)
+    path = '/Users/cudmore/Desktop/sanpy-benchmark-20230313.csv'
+    df.to_csv(path, index=False)
 
 def linearFit():
-    path = '/Users/cudmore/Desktop/sanpy-benchmark-20230305-v1.csv'
-    df = pd.read_csv(path)
+    path = '/Users/cudmore/Desktop/sanpy-benchmark-20230313.csv'
+    df : pd.DataFrame = pd.read_csv(path)
     
-    y = df['timeItTook'].to_numpy()
+    # add a seconds colum (num samples - >seconds)
+    # assuming dt = 0.01 ms (100 samples per second)
+    df['seconds'] = df['numSamples'] / 10000
+
+    # filter points with each runNumber
+    for run in df['runNumber'].unique():
+        print('run:', run, type(run))
+        dfRun = df.loc[df['runNumber'] == run]
+        _timeItTook = dfRun['timeItTook']
+        _timeItTook_filtered = scipy.ndimage.median_filter(_timeItTook,5)
+        df.loc[df['runNumber'] == run, 'timeItTook_filtered'] = _timeItTook_filtered
+
+    print(df.head())
+
+    #y = df['timeItTook'].to_numpy()
+    y = df['timeItTook_filtered'].to_numpy()
+    
+    # numSpikes is linear wrt timeItTook
+    # numSamples has exponential increase in timeItTook?
     x = df['numSamples'].to_numpy().reshape(-1, 1)
+    x = df['seconds'].to_numpy().reshape(-1, 1)
     x = df['numSpikes'].to_numpy().reshape(-1, 1)
 
-    model = LinearRegression().fit(x, y)
-    print(f"intercept: {model.intercept_}")
-    print(f"slope: {model.coef_}")
+    #x = x.reshape(-1, 1)
+    #x = x.ravel()
+    #y = y.ravel()
+    print('x.shape:', x.shape)
+    print('y.shape:', y.shape)
+
+    # fit to line
+    model = LinearRegression().fit(x, np.log(y))
+    print(f"linear intercept: {model.intercept_}")
+    print(f"linear slope: {model.coef_}")
+
+    x = x.ravel()
+
+    # fit to exponential
+    p = np.polyfit(x, np.log(y), 1)
+    # Convert the polynomial back into an exponential
+    a = np.exp(p[1])
+    b = p[0]
+    x_fitted = np.linspace(np.min(x), np.max(x), 100)
+    y_fitted = a * np.exp(b * x_fitted)
+
+    sns.set_context("talk")
+
+    ax = plt.axes()
+    #ax.scatter(x, y)
+    hue = None  # runNumber
+    sns.scatterplot(x='numSpikes', y='timeItTook_filtered', hue=hue, data=df, ax=ax)
+
+    ax.plot(x_fitted, y_fitted, 'k', label='Fitted curve')
+
+    ax.set_yscale('log')
+
+    sns.despine()
+    plt.tight_layout()
+
+    plt.show()
 
     # x=numSpikes
     # intercept: 0.03681416695543044
     # slope: [0.0009]
 
-    plotFigure(x, y)
+    #plotFigure(df)
 
 if __name__ == '__main__':
     
     if 0:
+        # run spike detection on progressively longer seconds
+        # takes a few minutes to run
         numRuns = 10
         runNumber = []
         timeItTook = []
@@ -121,4 +181,5 @@ if __name__ == '__main__':
         saveResults(runNumber, timeItTook, numSamples, numSpikes)
 
     if 1:
+        # load out results
         linearFit()

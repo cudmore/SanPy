@@ -27,16 +27,21 @@ class bDetectionWidget(QtWidgets.QWidget):
     signalSelectSweep = QtCore.pyqtSignal(object, object)  # (bAnalysis, sweepNumber)
     #signalUpdateKymographROI = QtCore.pyqtSignal([])  # list of [left, top, right, bottom] in image pixels
 
-    def __init__(self, ba=None, mainWindow=None, parent=None):
+    def __init__(self,ba : sanpy.bAnalysis = None,
+                 mainWindow : "sanpy.interface.SanPyWindow" = None,
+                 parent=None):
         """
-        ba: bAnalysis object
-        mainWindow:
+        ba : sanpy.bAnalysis
+            bAnalysis object
+        mainWindow : sanpy.interface.SanPyWindow
         """
 
         super(bDetectionWidget, self).__init__(parent)
 
         self.ba : sanpy.bAnalysis = ba
-        self.myMainWindow = mainWindow
+        self.myMainWindow : "sanpy.interface.SanPyWindow" = mainWindow
+
+        self._blockSlots : bool = False
 
         self.mySetTheme()
 
@@ -743,13 +748,14 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.detectToolbarWidget.numErrorsLabel.setText('Errors: ' + str(self.ba.numErrors()))
         self.detectToolbarWidget.numErrorsLabel.repaint()
 
-    def togglePlot(self, idx, on):
-        """
-        Toggle overlay of stats like (spike threshold, spike peak, ...).
+    def togglePlot(self, idx : int, on : bool):
+        """Toggle overlay of stats like (spike threshold, spike peak, ...).
 
         Arg:
-            idx (int): overlay index into self.myPlots
+            idx (int)
+                overlay index into self.myPlots
             on (bool):
+                if True then on
         """
         if isinstance(idx, str):
             logger.error(f'Unexpected type for parameter idx "{idx}" with type {type(idx)}')
@@ -809,6 +815,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         if doEmit:
             self.signalSelectSweep.emit(self.ba, sweepNumber)
 
+    def setSpikeStat(self, stat : str = 'condition', value : str = 'xxx'):
+        """Set the selected spikes.
+        """
+        logger.info(f'setting spike stat "{stat}" to "{value}"')
+        if self._selectedSpikeList is not None:
+            self.ba.setSpikeStat(self._selectedSpikeList, stat, value)
+
     def selectSpike(self, spikeNumber : int, doZoom : bool = False, doEmit : bool = False):
         """
         Args:
@@ -817,7 +830,25 @@ class bDetectionWidget(QtWidgets.QWidget):
             doEmit: If True then emit signalSelectSpike signal
         """
         logger.info(f'spikeNumber:{spikeNumber} doZoom:{doZoom} doEmit:{doEmit}')
-        
+        logger.warning(f'  converting to spike list selection')
+         
+        # # march 11, 2023
+
+        # if self._blockSlots:
+        #     return
+    
+        # self._blockSlots = True
+
+        # if spikeNumber is None:
+        #     spikeList = []
+        # else:
+        #     spikeList = [spikeNumber]
+        # self.selectSpikeList(spikeList, doEmit=True)
+
+        # self._blockSlots = False
+
+        # return
+    
         # we will always use self.ba ('peakSec', 'peakVal')
         if self.ba is None:
             return
@@ -843,25 +874,24 @@ class bDetectionWidget(QtWidgets.QWidget):
 
             logger.info(f'spikeNumber: {spikeNumber}, sweep {sweep}, doZoom {doZoom}')
             sweepSpikeNumber = self.ba.getSweepSpikeFromAbsolute(spikeNumber, sweep)
-            sweepSpikeList = [sweepSpikeNumber]
-            logger.info(f'  sweepSpikeNumber:{sweepSpikeNumber} {type(sweepSpikeNumber)}')
+            
+            # removed mar 11
+            # sweepSpikeList = [sweepSpikeNumber]
+            #logger.info(f'  sweepSpikeNumber:{sweepSpikeNumber} {type(sweepSpikeNumber)}')
 
-            spikeList = [sweepSpikeNumber]
+            # spikeList = [sweepSpikeNumber]
 
-            # removed second clause while adding multiple spike selection
-            #if spikeNumber is not None and spikeNumber < len(xPlot):
-            #xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=self.sweepNumber)
-            xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=sweep)
-            xPlot = np.array(xPlot)
-            yPlot = np.array(yPlot)
-            try:
-                x = xPlot[sweepSpikeList]
-                y = yPlot[sweepSpikeList]
-            except (IndexError) as e:
-                logger.error(f'{e}')
-                #pass
+            # xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=sweep)
+            # xPlot = np.array(xPlot)
+            # yPlot = np.array(yPlot)
+            # try:
+            #     x = xPlot[sweepSpikeList]
+            #     y = yPlot[sweepSpikeList]
+            # except (IndexError) as e:
+            #     logger.error(f'{e}')
 
-        self.mySingleSpikeScatterPlot.setData(x=x, y=y)
+        # removed mar 11 2023
+        # self.mySingleSpikeScatterPlot.setData(x=x, y=y)
 
         # zoom
         if spikeNumber is not None and doZoom:
@@ -884,20 +914,29 @@ class bDetectionWidget(QtWidgets.QWidget):
                 'doZoom': doZoom,
                 'ba': self.ba,
             }
+            logger.info(f'  -->> emit signalSelectSpike')
             self.signalSelectSpike.emit(eDict)
 
-    def setSpikeStat(self, stat : str = 'condition', value : str = 'xxx'):
-        """Set the selected spikes.
-        """
-        logger.info(f'setting spike stat "{stat}" to "{value}"')
-        if self._selectedSpikeList is not None:
-            self.ba.setSpikeStat(self._selectedSpikeList, stat, value)
+        # march 11, 2023
+        if self._blockSlots:
+            return
+    
+        self._blockSlots = True
+
+        if spikeNumber is None:
+            spikeList = []
+        else:
+            spikeList = [spikeNumber]
+        self.selectSpikeList(spikeList, doEmit=True)
+
+        self._blockSlots = False
 
     def selectSpikeList(self, spikeList : List[int],
                         doZoom : bool = False,
                         doEmit : bool = False):
         """Visually select a number of spikes.
         """
+        
         x = None
         y = None
 
@@ -914,12 +953,17 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # TODO: I don't think anybody is listening to this
         if doEmit:
+            if self._blockSlots:
+                return
+            self._blockSlots = True
             eDict = {
                 'spikeList': spikeList,
                 'doZoom': doZoom,
                 'ba': self.ba,
             }
+            logger.info(f'  -->> emit signalSelectSpikeList eDict:{eDict}')
             self.signalSelectSpikeList.emit(eDict)
+            self._blockSlots = False
 
     def old_refreshClips(self, xMin=None, xMax=None):
 
@@ -971,8 +1015,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.clipPlot.addItem(self.meanClipLine)
 
     def toggleInterface(self, item, on):
-        """
-        show/hide different portions of interface
+        """Visually toggle different portions of interface
         """
         #print('toggle_Interface()', item, on)
         #if item == 'Clips':
@@ -1042,6 +1085,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         elif item == 'Display':
             self.detectToolbarWidget.toggleInterface(item, on)
         elif item == 'Plot Options':
+            self.detectToolbarWidget.toggleInterface(item, on)
+        elif item == 'Set Spines':
             self.detectToolbarWidget.toggleInterface(item, on)
 
         else:
@@ -1122,6 +1167,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         #self.myHBoxLayout_detect.addLayout(self.detectToolbarWidget, stretch=1) # stretch=10, not sure on the units???
         self.detectToolbarWidget = myDetectToolbarWidget2(self.myPlots, self)
         self.signalSelectSpike.connect(self.detectToolbarWidget.slot_selectSpike)
+        self.signalSelectSpikeList.connect(self.detectToolbarWidget.slot_selectSpikeList)
         #if self.myMainWindow is not None:
         #    self.detectToolbarWidget.signalSelectSpike.connect(self.myMainWindow.slotSelectSpike)
 
@@ -1279,17 +1325,18 @@ class bDetectionWidget(QtWidgets.QWidget):
         #self.toggleClips(False)
 
         # single spike selection
-        color = 'y'
-        symbol = 'x'
-        size = 20
-        self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=2, color=color), symbol=symbol, size=size)
-        self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
+        # removed mar 11 2023
+        # color = 'y'
+        # symbol = 'x'
+        # size = 20
+        # self.mySingleSpikeScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=2, color=color), symbol=symbol, size=size)
+        # self.vmPlot.addItem(self.mySingleSpikeScatterPlot)
 
         # mult spike selection (spikeList)
         # TODO: make sure this on top of the plot of analysis results
-        color = 'c'
+        color = 'y'
         symbol = 'o'
-        size = 20
+        size = 12
         self.mySpikeListScatterPlot = pg.ScatterPlotItem(pen=pg.mkPen(width=2, color=color), symbol=symbol, size=size)
         self.vmPlot.addItem(self.mySpikeListScatterPlot)
 
@@ -1476,17 +1523,36 @@ class bDetectionWidget(QtWidgets.QWidget):
 
     def slot_selectSpike(self, sDict):
         logger.info(f'detection widget {sDict}')
+
         spikeNumber = sDict['spikeNumber']
         doZoom = sDict['doZoom']
-        self.selectSpike(spikeNumber, doZoom=doZoom)
-        #self.detectToolbarWidget.slot_selectSpike(sDict)
+        
+        # march 11, 2023 was this
+        #self.selectSpike(spikeNumber, doZoom=doZoom)
+
+        if spikeNumber is None:
+            spikeList = []
+        else:
+            spikeList = [spikeNumber]
+        
+        spikeListDict = {
+            'spikeList': spikeList,
+            'doZoom': doZoom
+        }
+        self.slot_selectSpikeList(spikeListDict)
 
     def slot_selectSpikeList(self, sDict):
         #print('detectionWidget.slotSelectSpike() sDict:', sDict)
         spikeList = sDict['spikeList']
         doZoom = sDict['doZoom']
-        self.selectSpikeList(spikeList, doZoom=doZoom)
-        #self.detectToolbarWidget.slot_selectSpike(sDict)
+        self.selectSpikeList(spikeList, doZoom=doZoom, doEmit=True)
+
+        # mar 11
+        # if spikeList == []:
+        #     spikeNumber = 0
+        # else:
+        #     spikeNumber = spikeList[0]
+        # self.selectSpike(spikeNumber, doZoom=doZoom)
 
     def slot_switchFile(self, tableRowDict :dict = None, ba : sanpy.bAnalysis = None):
         """Switch to a new file.
@@ -2085,14 +2151,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # update combobox
         #self.sweepComboBox.setCurrentIndex(newSweep+1)
 
-    def slot_selectSweep(self, sweep : int):
-        """Fake slot, not ising in emit/connect.
-        """
-        self.sweepComboBox.setCurrentIndex(sweep+1)
-
-        #self.spikeNumber.setMaximum(+1e6)
-        #self.spikeNumber.setValue(0)
-
     #@QtCore.pyqtSlot()
     def on_start_stop(self):
         start = self.startSeconds.value()
@@ -2231,6 +2289,12 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
                 self.plotGroupBox.show()
             else:
                 self.plotGroupBox.hide()
+        # mar 11
+        elif panelName == 'Set Spines':
+            if onoff:
+                self.setSpineGroupBox.show()
+            else:
+                self.setSpineGroupBox.hide()
 
         else:
             logger.warning(f'did not understand panelName "{panelName}"')
@@ -2413,13 +2477,13 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         row = 0
 
-        # channel
-        _tmpChannelLabel = QtWidgets.QLabel('Channel')
-        _channelComboBox = QtWidgets.QComboBox()
-        # add channels from abf
-        _fakeChannels = ['1', '2', '3', 'bizarre']
-        for channel in _fakeChannels:
-            _channelComboBox.addItem(channel)
+        # channel, we only support one channel
+        # _tmpChannelLabel = QtWidgets.QLabel('Channel')
+        # _channelComboBox = QtWidgets.QComboBox()
+        # # add channels from abf
+        # _fakeChannels = ['1', '2', '3', 'bizarre']
+        # for channel in _fakeChannels:
+        #     _channelComboBox.addItem(channel)
 
         # sweeps
         tmpSweepLabel = QtWidgets.QLabel('Sweep')
@@ -2437,9 +2501,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         #    self.sweepComboBox.addItem(str(sweep))
         hSweepLayout = QtWidgets.QHBoxLayout()
 
-        hSweepLayout.addWidget(_tmpChannelLabel)
-        hSweepLayout.addWidget(_channelComboBox)
-
+        # hSweepLayout.addWidget(_tmpChannelLabel)
+        # hSweepLayout.addWidget(_channelComboBox)
 
         hSweepLayout.addWidget(tmpSweepLabel)
         hSweepLayout.addWidget(self.previousSweepButton)
@@ -2491,6 +2554,22 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # finalize
         self.displayGroupBox.setLayout(displayGridLayout)
         self.mainLayout.addWidget(self.displayGroupBox)
+
+        #
+        # mar 11 set spine group box
+        #
+        # set spine group
+        self.setSpineGroupBox = QtWidgets.QGroupBox('Set Spines')
+        setSpineLayout = QtWidgets.QHBoxLayout()
+
+        # mar 11, created a setspinestat plugin
+        setSpineStatWidget = \
+            sanpy.interface.plugins.SetSpineStat(ba=self.detectionWidget.ba,
+                                                 bPlugin=self.detectionWidget.myMainWindow.myPlugins)
+        setSpineLayout.addWidget(setSpineStatWidget)
+
+        self.setSpineGroupBox.setLayout(setSpineLayout)
+        self.mainLayout.addWidget(self.setSpineGroupBox)
 
         #
         # plots  group
@@ -2646,6 +2725,14 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.mousePositionLabel.setText(labelStr)
         self.mousePositionLabel.repaint()
 
+    def slot_selectSweep(self, sweep : int):
+        """Fake slot, not ising in emit/connect.
+        """
+        self.sweepComboBox.setCurrentIndex(sweep+1)
+
+        #self.spikeNumber.setMaximum(+1e6)
+        #self.spikeNumber.setValue(0)
+
     def slot_selectSpike(self, sDict):
         logger.info(f'detectiontoolbar widget: sDict:{sDict}')
         spikeNumber = sDict['spikeNumber']
@@ -2672,6 +2759,26 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.spikeNumber.blockSignals(False)
 
         self.spikeNumber.update()
+
+    def slot_selectSpikeList(self, sDict):
+        logger.warning(f'mar 1, added and converting to select 1st spike')
+        #print('detectionWidget.slotSelectSpike() sDict:', sDict)
+        spikeList = sDict['spikeList']
+        doZoom = sDict['doZoom']
+        
+        # mar 11, detection toolbar does not select multiple spikes
+        # self.selectSpikeList(spikeList, doZoom=doZoom)
+
+        # mar 11
+        if spikeList == []:
+            spikeNumber = 0
+        else:
+            spikeNumber = spikeList[0]
+        sDict = {
+            'spikeNumber': spikeNumber
+        }
+        # self.selectSpike(spikeNumber, doZoom=doZoom)
+        self.slot_selectSpike(sDict)
 
     def slot_selectFile(self, rowDict):
         file = rowDict['File']

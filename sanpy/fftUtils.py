@@ -576,7 +576,7 @@ class fftFromRecording():
 		#logger.info(f'Fetching sweepX with sweepNumber: {self.sweepNumber}')
 
 		#sweepX = self.getSweep('x')
-		sweepX = self.ba.sweepX
+		sweepX = self.ba.fileLoader.sweepX
 
 		#logger.info(f'  sweepX: {sweepX.shape}')
 		#logger.info(f'  leftSec:{sweepX[leftPoint]} rightSec:{sweepX[rightPoint-1]}')

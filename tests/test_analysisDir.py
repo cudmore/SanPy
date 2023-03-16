@@ -4,7 +4,7 @@ Test bAnalysis.py
 Run this file with
 
 ```
-python -m unittest sanpy/tests/test_analysis.py
+python -m unittest tests/test_analysis.py
 ```
 """
 
@@ -37,7 +37,7 @@ class Test_Analysis_Dir(unittest.TestCase):
         # Remove the directory after the test
         shutil.rmtree(self.test_dir)
 
-    def test_3_loadDir(self):
+    def testLoadDir(self):
 
         logger.info('')
         
@@ -49,6 +49,20 @@ class Test_Analysis_Dir(unittest.TestCase):
 
         ad.loadHdf()
         self.assertEqual(len(ad._df), 2)
+
+        # add a new file and test sync folder
+        src = os.path.join('data', '20191009_0005.abf')
+        dst = os.path.join(self.test_dir, '20191009_0005.abf')
+        shutil.copyfile(src, dst)
+
+        logger.info(f'testing syncDfWithPath')
+        ad.syncDfWithPath()
+        self.assertEqual(len(ad._df), 3)
+
+        # get all three files
+        ba = ad.getAnalysis(0)
+        ba = ad.getAnalysis(1)
+        ba = ad.getAnalysis(2)
 
 if __name__ == '__main__':
     unittest.main()

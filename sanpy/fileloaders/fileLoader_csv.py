@@ -17,6 +17,9 @@ class fileLoader_csv(fileLoader_base):
         """Load file and call setLoadedData().
         
         Use self.filepath for the file
+       
+        Column 0 is seconds
+        Column 1 is recording in ['mV', 'pA']
         """
         # load the csv file
         _df = pd.read_csv(self.filepath)
@@ -27,10 +30,16 @@ class fileLoader_csv(fileLoader_base):
 
         _numSamples = len(_df)
         _numSweeps = _numColumns - 1  # assuming no DAC columns
-                        
+
+        # TODO: check that the columns we will read are float (not str or object)
+        #           
         # make sweepX (assuming all sweeps have the same sweepX)
         sweepX = np.ndarray( (_numSamples,1))
-        sweepX[:,0] = _df[_columns[0]].to_numpy()
+        try:
+            sweepX[:,0] = _df[_columns[0]].to_numpy()
+        except (ValueError) as e:
+            raise ValueError
+        
         # make sweepY to hold (samples, sweeps) values, the values in each sweep are different
         sweepY = np.ndarray( (_numSamples,_numSweeps))
         for sweep in range(_numSweeps):
@@ -49,11 +58,13 @@ class fileLoader_csv(fileLoader_base):
             logger.warning(f'did not infer recording mode from column name {_tmpColName}')
             _recordingMode = recordingModes.unknown
 
-        _sweepLabelX = _columns[0]
-        _sweepLabelY = _tmpColName  #_columns[1]
+        xLabel = _columns[0]
+        yLabel = _tmpColName  #_columns[1]
         
         self.setLoadedData(
                 sweepX = sweepX,
                 sweepY = sweepY,
                 #sweepC = sweepC,
+                xLabel = xLabel,
+                yLabel = yLabel,
         )

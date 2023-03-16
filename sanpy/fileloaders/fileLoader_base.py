@@ -448,12 +448,18 @@ class fileLoader_base(ABC):
         """Derived classes call this function once the data is loaded in loadFile().
         
         Args:
-            sweepX (required)
-            sweepY (required)
-            sweepC (optional)
-            recordingMode (optional, defaults to recordingModes.iclamp)
-            xLabel (optional, default to '') str for x-axis label
-            yLabel (optional, defaults to '') str for y-axis label
+            sweepX : np.ndarray
+                Time values
+            sweepY : np.ndarray
+                Recording values, mV or pA
+            sweepC : np.ndarray
+                (optional) DAC stimulus, pA or mV
+            recordingMode : recordingModes
+                (optional) Defaults to recordingModes.iclamp)
+            xLabel : str
+                (optional) str for x-axis label
+            yLabel : str
+                (optional) str for y-axis label
 
         Notes
             - Number of sweeps: sweepY.shape[1]
@@ -475,7 +481,9 @@ class fileLoader_base(ABC):
         dtSeconds = self._sweepX[1,0] - self._sweepX[0,0]  # seconds per sample
         dtSeconds = float(dtSeconds)
         dtMilliseconds = dtSeconds * 1000
-        self._dataPointsPerMs : int = int(1/dtMilliseconds)
+        _dataPointsPerMs = int(1/dtMilliseconds)
+        #logger.info(f'dtSeconds:{dtSeconds} dtMilliseconds:{dtMilliseconds} _dataPointsPerMs:{_dataPointsPerMs}')
+        self._dataPointsPerMs : int = _dataPointsPerMs
 
         # check our work
 

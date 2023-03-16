@@ -7,7 +7,7 @@ import json
 from collections import OrderedDict
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
 
-from typing import Union, Dict, List, Tuple
+from typing import Union, Dict, List, Tuple, Optional
 
 # import h5py
 
@@ -171,8 +171,13 @@ class bAnalysis:
 
     @property
     def fileLoader(self):
+        """
+        """
         return self._fileLoader
 
+    def getFileName(self):
+        return self.fileLoader.filename
+    
     def asDataFrame(self):
         """Return analysis as a Pandas DataFrame.
 
@@ -371,24 +376,29 @@ class bAnalysis:
                     logger.info(e)
         return retList
 
-    def setSpikeStat_time(self, startSec : int, stopSec : int, stat : str, value):
+    def setSpikeStat_time(self,
+                          startSec : int,
+                          stopSec : int,
+                          stat : str,
+                          value):
         """Set a spike stat for spikes in a range of time.
         """
         
         # get spike list in range [startSec, stopSec]
-        #spikeList = self.getSpikeSeconds()
+        spikeSeconds = self.getSpikeSeconds()
+        spikeList = [idx for idx, x in enumerate(spikeSeconds) if x>=startSec and x<stopSec]
+        self.setSpikeStat(spikeList, stat, value)
 
-    def setSpikeStat(self, spikeList : Union[list, int], stat : str, value):
-        """Set a stat for one spike or a list of spikes.
+    def setSpikeStat(self, spikeList : Union[list, int],
+                     stat : str, value):
+        """Set a spike stat for one spike or a list of spikes.
         
         Used to set things like ('isBad', 'userType1', 'condition', ...)
         """
-        if isinstance(spikeList, list):
-            pass
-        elif isinstance(spikeList, int):
+        if isinstance(spikeList, int):
             spikeList = [spikeList]
-        else:
-            logger.error(f'Expecting list[int] or int but got spikeList type {type(spikeList)}')
+        # else:
+        #     logger.error(f'Expecting list[int] or int but got spikeList type {type(spikeList)}')
             return
 
         if len(spikeList) == 0:
@@ -487,11 +497,13 @@ class bAnalysis:
         else:
             return sweepStatList
 
-    def getStat(self, statName1, statName2=None, sweepNumber=None, asArray=False):
-        """
-        Get a list of values for one or two analysis parameters.
+    def getStat(self, statName1, statName2 : Optional[str] = None,
+                sweepNumber : Optional[int] = None,
+                asArray : Optional[bool] = False):
+        """Get a list of values for one or two analysis parameters.
 
-        For a list of available analysis parameters, use [bDetection.getDefaultDetection()][sanpy.bDetection.bDetection]
+        For a list of available analysis parameters,
+            see [bDetection.getDefaultDetection()][sanpy.bDetection.bDetection]
 
         If the returned list of analysis parameters are in points,
             convert to seconds or ms using: pnt2Sec_(pnt) or pnt2Ms_(pnt).
@@ -632,7 +644,7 @@ class bAnalysis:
         realSpikeTimePnts = [np.nan] * len(spikeTimes)
 
         medianFilter = 5
-        sweepY = self.sweepY
+        sweepY = self.fileLoader.sweepY
         if medianFilter>0:
             myVm = scipy.signal.medfilt(sweepY, medianFilter)
         else:

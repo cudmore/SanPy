@@ -13,6 +13,8 @@ import platform
 import pathlib
 from datetime import datetime
 
+from typing import Union, Dict, List, Tuple
+
 #import glob
 #from turtle import window_width
 #import numpy as np
@@ -370,7 +372,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 }
         self.signalSelectSpike.emit(eDict)
 
-    def selectSpikeList(self, spikeList, doZoom=False):
+    def selectSpikeList(self, spikeList : List[int], doZoom : bool = False):
         eDict = {
                 'spikeList': spikeList,
                 'doZoom': doZoom,
@@ -720,6 +722,16 @@ class SanPyWindow(QtWidgets.QMainWindow):
         action.setEnabled(checkedMainPanel)
         self.viewMenu.addAction(action)
 
+        # mar 11
+        name = 'Set Spines'
+        #checked = self.configDict['detectionPanels'][name]
+        checked = True
+        action = QtWidgets.QAction(name, self, checkable=True)
+        action.setChecked(checked)
+        action.triggered.connect(partial(self._viewMenuAction, key1, name))
+        action.setEnabled(checkedMainPanel)
+        self.viewMenu.addAction(action)
+
         self.viewMenu.addSeparator()
 
         # traces (globalvm, dvdt, dac)
@@ -861,6 +873,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.signalUpdateAnalysis.connect(self.myDetectionWidget.slot_updateAnalysis) # myDetectionWidget listens to self
 
         self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike) # self listens to myDetectionWidget
+        self.myDetectionWidget.signalSelectSpikeList.connect(self.slot_selectSpikeList) # self listens to myDetectionWidget
         self.myDetectionWidget.signalSelectSweep.connect(self.slot_selectSweep) # self listens to myDetectionWidget
         self.myDetectionWidget.signalDetect.connect(self.slot_detect)
 
@@ -993,6 +1006,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
         spikeNumber = sDict['spikeNumber']
         doZoom = sDict['doZoom']
         self.selectSpike(spikeNumber, doZoom)
+
+    def slot_selectSpikeList(self, sDict):
+        spikeList = sDict['spikeList']
+        doZoom = sDict['doZoom']
+        self.selectSpikeList(spikeList, doZoom)
 
     def slot_selectSweep(self, ba, sweepNumber):
         self.signalSelectSweep.emit(ba, sweepNumber)

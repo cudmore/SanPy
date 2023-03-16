@@ -1,4 +1,8 @@
 
+"""
+Plot example experiment of cardiac myocyte before and after bat application of ISO.
+"""
+
 import scipy
 import numpy as np
 import matplotlib.pyplot as plt  # just to show plots during script

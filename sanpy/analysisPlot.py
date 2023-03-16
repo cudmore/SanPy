@@ -1,12 +1,13 @@
 """
 General purpose plugins to plot from a [sanpy.bAnalysis][sanpy.bAnalysis.bAnalysis] object.
 """
-#Robert Cudmore
-#20190328
 
 import sys
+from typing import Union, Dict, List, Tuple, Optional
+
 import numpy as np
 import scipy.signal
+import seaborn as sns
 import matplotlib.pyplot as plt
 
 import sanpy
@@ -131,7 +132,7 @@ class bAnalysisPlot():
     def getDefaultPlotStyle(self):
         """Get dictionary with default plot style."""
         d = {
-            'linewidth': 0.5,
+            'linewidth': 1,
             'color': 'k',
             'width': 9,
             'height': 3,
@@ -220,12 +221,19 @@ class bAnalysisPlot():
 
         return fig, [ax1, ax2]
 
-    def plotSpikes(self, plotThreshold=True, plotPeak=True, plotStyle=None, ax=None):
-        '''
-        Plot Vm with spike analysis overlaid as symbols
+    def plotSpikes(self,
+                   plotThreshold=False, plotPeak=False,
+                   plotStyle=None,
+                   hue : Optional[str] = 'condition',
+                   markerSize : Optional[int] = 4,
+                   ax=None):
+        '''Plot Vm with spike analysis overlaid as symbols
 
         Args:
+            plotThreshold
+            plotPeak
             plotStyle (dict): xxx
+            markerSize
             ax (xxx): If specified will plot into a MatPlotLib axes
 
         Returns
@@ -233,8 +241,8 @@ class bAnalysisPlot():
             ax
         '''
 
-        markersize = 4
-
+        legend = False
+        
         if plotStyle is None:
             plotStyle = self.getDefaultPlotStyle()
 
@@ -246,29 +254,46 @@ class bAnalysisPlot():
 
         # plot spike times
         if plotThreshold:
-            thresholdPnt = self.ba.getStat('thresholdPnt')
-            # don't use this for Ca++ concentration
-            #thresholdVal = self.ba.getStat('thresholdVal')
-            thresholdVal = self.ba.sweepY[thresholdPnt]
-            thresholdSec = [self.ba.pnt2Sec_(x) for x in thresholdPnt]
-            ax.plot(thresholdSec, thresholdVal, 'pg', markersize=markersize)
+            thresholdSec = self.ba.getStat('thresholdSec')  # x
+            thresholdVal = self.ba.getStat('thresholdVal')  # y
+            
+            #ax.plot(thresholdSec, thresholdVal, 'pr', markersize=markerSize)
+            df = self.ba.spikeDict.asDataFrame()  # regenerates, can be expensive
+            logger.info(f'df hue unique is: {df[hue].unique()}')
+            sns.scatterplot(x='thresholdSec', y='thresholdVal', hue=hue, data=df, ax=ax, legend=legend)
 
         # plot the peak
         if plotPeak:
             peakPnt = self.ba.getStat('peakPnt')
             # don't use this for Ca++ concentration
             #peakVal = self.ba.getStat('peakVal')
-            peakVal = self.ba.sweepY[peakPnt]
-            peakSec = [self.ba.pnt2Sec_(x) for x in peakPnt]
-            ax.plot(peakSec, peakVal, 'or', markersize=markersize)
+            peakVal = self.ba.fileLoader.sweepY[peakPnt]
+            peakSec = [self.ba.fileLoader.pnt2Sec_(x) for x in peakPnt]
+            ax.plot(peakSec, peakVal, 'oc', markersize=markerSize)
 
-        xUnits = self.ba.get_xUnits()
-        yUnits = self.ba.get_yUnits()
+        xUnits = self.ba.fileLoader.get_xUnits()
+        yUnits = self.ba.fileLoader.get_yUnits()
         ax.set_xlabel(xUnits)
         ax.set_ylabel(yUnits)
 
+    def plotStat(self, xStat : str, yStat : str,
+                 hue : Optional[str] = None,
+                 ax = None):
+                 # ax : Optional["matplotlib.axes._subplots.AxesSubplot"] = None):
+        
+        legend = False
+        
+        if ax is None:
+            fig, ax = self._makeFig()
+            fig.suptitle(self.ba.getFileName())
+        print(type(ax))
+              
+        df = self.ba.spikeDict.asDataFrame()  # regenerates, can be expensive
+        sns.scatterplot(x=xStat, y=yStat, hue=hue, data=df, ax=ax, legend=legend)
+
     def plotTimeSeries(ba, stat, halfWidthIdx=0, ax=None):
-        """ Plot a given spike parameter"""
+        """ Plot a given spike parameter.
+        """
         if stat == 'peak':
             yStatName = 'peakVal'
             yStatLabel = 'Spike Peak (mV)'

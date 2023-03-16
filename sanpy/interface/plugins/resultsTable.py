@@ -48,9 +48,10 @@ class resultsTable(sanpyPlugin):
 
         #
         # connect clicks in error table to signal main sanpy_app with slot_selectSpike()
-        if self.getSanPyApp() is not None:
-            fnPtr = self.getSanPyApp().slot_selectSpike
-            self.myErrorTable.signalSelectSpike.connect(fnPtr)
+        logger.warning('FIX SPIKE SELECTION')
+        # if self.getSanPyApp() is not None:
+        #     fnPtr = self.getSanPyApp().slot_selectSpike
+        #     self.myErrorTable.signalSelectSpike.connect(fnPtr)
 
         self.replot()
 

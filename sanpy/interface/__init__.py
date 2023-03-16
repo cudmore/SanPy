@@ -3,6 +3,8 @@
 
 #from . import *
 
+from .sanpy_app import SanPyWindow
+
 from .bDetectionWidget import bDetectionWidget
 from .bScatterPlotWidget2 import bScatterPlotMainWindow
 from .bExportWidget import bExportWidget

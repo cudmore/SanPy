@@ -45,7 +45,8 @@ class SetSpineStat(sanpyPlugin):
     signalSetSpikeStat = QtCore.Signal(dict)
 
     myHumanName = 'Set Spine Stats'
-
+    showInMenu = False
+    
     def __init__(self, **kwargs):
         logger.info('')
         super().__init__(**kwargs)
