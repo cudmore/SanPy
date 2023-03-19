@@ -60,9 +60,15 @@ class Test_Analysis_Dir(unittest.TestCase):
         self.assertEqual(len(ad._df), 3)
 
         # get all three files
-        ba = ad.getAnalysis(0)
-        ba = ad.getAnalysis(1)
-        ba = ad.getAnalysis(2)
+        ba0 = ad.getAnalysis(0)
+        ba1 = ad.getAnalysis(1)
+        ba2 = ad.getAnalysis(2)
+
+        # delete a row
+        ad.deleteRow(1)
+
+        # remove from database
+        #ad.removeRowFromDatabase(0)
 
 if __name__ == '__main__':
     unittest.main()

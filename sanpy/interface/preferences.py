@@ -11,10 +11,9 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class preferences():
-    """
-    Class to hold GUI preferences. Created and used by app SanPyWindow.
-
-    Created: 20220629
+    """Class to hold GUI preferences.
+    
+    Created and used by sanpy app SanPyWindow.
     """
     def __init__(self, sanpyApp : sanpy_app):
         super().__init__()
@@ -197,3 +196,5 @@ class preferences():
         # save
         with open(preferencesFile, 'w') as outfile:
             json.dump(self._configDict, outfile, indent=4, sort_keys=True)
+
+        self._sanpyApp.slot_updateStatus('Saved preferences')

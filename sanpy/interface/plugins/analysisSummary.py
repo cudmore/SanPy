@@ -31,7 +31,9 @@ class analysisSummary(sanpyPlugin):
 
         layout.addWidget(self.myErrorTable)
 
-        self.setLayout(layout)
+        # mar 17
+        # self.setLayout(layout)
+        self.getVBoxLayout().addLayout(layout)
 
         self.replot()
 

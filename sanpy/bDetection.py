@@ -490,8 +490,7 @@ def getDefaultDetection():
     return theDict.copy()
 
 def printDocs():
-    """
-    Print out human readable detection parameters and convert to markdown table.
+    """Print out human readable detection parameters and convert to markdown table.
 
     Requires:
         pip install tabulate
@@ -502,7 +501,7 @@ def printDocs():
     
     import pandas as pd
 
-    detectionPreset = bDetection.detectionPresets.default  # detectionPresets_ is an enum class
+    #detectionPreset = bDetection.detectionPresets.default  # detectionPresets_ is an enum class
     d = getDefaultDetection()
     dictList = []
     for k,v in d.items():
@@ -518,10 +517,15 @@ def printDocs():
     #
     df = pd.DataFrame(dictList)
     
+    # spit out markdown to copy/paste into mkdocs md file
     # REMEMBER: This requires `pip install tabulate`
-    outStr = df.to_markdown()
+    #outStr = df.to_markdown()
+    # print(outStr)
     
-    print(outStr)
+    # save to csv for making a table for manuscript
+    path = '/Users/cudmore/Desktop/sanpy-detection-params-20230316.csv'
+    print('saving to:', path)
+    df.to_csv(path, index=False)
 
 '''
 class detectionPresets():
@@ -1096,13 +1100,13 @@ if __name__ == '__main__':
     #test_0()
 
     # this works
-    #printDocs()
+    printDocs()
 
     #test_save_load()
 
     #_exportDetectionJson()
 
-    testSwitchType()
+    #testSwitchType()
     # print('detectionPresets.default:', bDetection.detectionPresets.default)
     # print('detectionPresets.neuron:', bDetection.detectionPresets.neuron)
     # print('detectionPresets.neuron.value:', bDetection.detectionPresets.neuron.value)

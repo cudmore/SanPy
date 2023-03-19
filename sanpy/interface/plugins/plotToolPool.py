@@ -6,8 +6,7 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class plotToolPool(basePlotTool):
-    """
-    Plot tool pooled across all open analysis
+    """Plot tool pooled across all open analysis
     """
     myHumanName = 'Plot Tool (pool)'
 

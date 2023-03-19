@@ -1,7 +1,3 @@
-"""
-General purpose plugins to plot from a [sanpy.bAnalysis][sanpy.bAnalysis.bAnalysis] object.
-"""
-
 import sys
 from typing import Union, Dict, List, Tuple, Optional
 
@@ -115,7 +111,8 @@ def old_getHalfWidths(ba):
 
 class bAnalysisPlot():
     """
-    Class to plot results of [sanpy.bAnalysis][sanpy.bAnalysis.bAnalysis] spike detection.
+    Class to plot results of [sanpy.bAnalysis][sanpy.bAnalysis] spike detection.
+    
     """
     def __init__(self, ba=None):
         """

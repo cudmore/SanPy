@@ -38,28 +38,28 @@ analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]['type'] = 'str'
 analysisResultDict[key]['default'] = ''
 analysisResultDict[key]['units'] = ''
-analysisResultDict[key]['description'] = ''
+analysisResultDict[key]['description'] = 'Date of analysis in yyyymmdd format.'
 
 key = 'analysisTime'
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]['type'] = 'str'
 analysisResultDict[key]['default'] = ''
 analysisResultDict[key]['units'] = ''
-analysisResultDict[key]['description'] = ''
+analysisResultDict[key]['description'] = 'Time of analysis in hh:mm:ss 24 hours format.'
 
 key = 'modDate'
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]['type'] = 'str'
 analysisResultDict[key]['default'] = ''
 analysisResultDict[key]['units'] = ''
-analysisResultDict[key]['description'] = ''
+analysisResultDict[key]['description'] = 'Modification date if AP is modified after detection.'
 
 key = 'modTime'
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]['type'] = 'str'
 analysisResultDict[key]['default'] = ''
 analysisResultDict[key]['units'] = ''
-analysisResultDict[key]['description'] = ''
+analysisResultDict[key]['description'] = 'Modification time if AP is modified after detection.'
 
 key = 'analysisVersion'
 analysisResultDict[key] = getDefaultDict()
@@ -152,14 +152,14 @@ analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]['type'] = 'bool'
 analysisResultDict[key]['default'] = True
 analysisResultDict[key]['units'] = ''
-analysisResultDict[key]['description'] = 'Boolean indication include or not. Can be set by user/programatically after analysis.'
+analysisResultDict[key]['description'] = 'Boolean indication include or not. Can be set by user/programmatically  after analysis.'
 
 key = 'userType'
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]['type'] = 'int'
 analysisResultDict[key]['default'] = 0
 analysisResultDict[key]['units'] = ''
-analysisResultDict[key]['description'] = 'Integer indication user type. Can be set by user/programatically after analysis.'
+analysisResultDict[key]['description'] = 'Integer indication user type. Can be set by user/programmatically  after analysis.'
 
 
 key = 'errors'
@@ -317,7 +317,7 @@ key = 'preLinearFitVal0'
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]['type'] = 'float'
 analysisResultDict[key]['default'] = defaultVal
-analysisResultDict[key]['units'] = 'mv'  # voltage-clam
+analysisResultDict[key]['units'] = 'mv'  # voltage-clamp
 analysisResultDict[key]['description'] = ''
 
 key = 'preLinearFitVal1'
@@ -339,7 +339,7 @@ analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]['type'] = 'float'
 analysisResultDict[key]['default'] = defaultVal
 analysisResultDict[key]['units'] = ''
-analysisResultDict[key]['description'] = 'TODO: Not sure this is implemented'
+analysisResultDict[key]['description'] = 'Depreciated'
 
 key = 'preSpike_dvdt_max_pnt'
 analysisResultDict[key] = getDefaultDict()
@@ -483,11 +483,19 @@ def printDocs():
 
     #
     df = pd.DataFrame(dictList)
-    #str = df.to_markdown()
-    str = df.to_html()
-    myDate = datetime.today().strftime('%Y-%m-%d')
-    print(f'Generated {myDate} with sanpy.analysisVersion {sanpy.analysisVersion}')
-    print(str)
+    
+    if 0:
+        # to markdown for mkdocs md file
+        #str = df.to_markdown()
+        str = df.to_html()
+        myDate = datetime.today().strftime('%Y-%m-%d')
+        print(f'Generated {myDate} with sanpy.analysisVersion {sanpy.analysisVersion}')
+        print(str)
+
+    if 1:
+        path = '/Users/cudmore/Desktop/sanpy-analysis-results.csv'
+        print('saving:', path)
+        df.to_csv(path, index=False)
 
 class NumpyEncoder(json.JSONEncoder):
     """ Special json encoder for numpy types """
@@ -775,5 +783,5 @@ def test2():
 
 if __name__ == '__main__':
     #test()
-    test2()
-    #printDocs()
+    #test2()
+    printDocs()

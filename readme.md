@@ -44,15 +44,15 @@ cd SanPy
  2.1) With `conda`
 
 ```
-conda create -y -n sanpy1-env python=3.9
-conda activate sanpy1-env
+conda create -y -n sanpy-env python=3.9
+conda activate sanpy-env
 ```
 
  2.2) With `venv`
 
 ```
-python -m venv sanpy1-env
-source sanpy1-env/bin/activate
+python -m venv sanpy-env
+source sanpy-env/bin/activate
 ```
 
 3) Install the code

@@ -1,9 +1,0 @@
-# the file app.py has to return
-# server = app.server
-
-#web: gunicorn app:server
-
-# dash_app is from dash_app.py
-# server is from 'import server'
-
-web: gunicorn dash_app:server

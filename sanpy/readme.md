@@ -1,6 +1,6 @@
 ## SanPy
 
-A spike detection program optimized for cardiac myocytes
+A current-clamp analysis API and desktop GUI
 
 ## Install
 
@@ -36,10 +36,6 @@ A spike detection program optimized for cardiac myocytes
     - once ba is in main window, add detection there
     - propagate changes to children including (detection widget, file widget, scatter widget)
 
- @@@@@ IMPORTANT @@@@@@
- - *** ADD RESET mV BEFORE WE DETECT NEXT SPIKE *** !!! !!!
- @@@@@ IMPORTANT @@@@@@
-
 ### Main Window
 
  - add menus
@@ -57,9 +53,7 @@ A spike detection program optimized for cardiac myocytes
 
 ### Detection widget
 
- @@@@@ IMPORTANT @@@@@@
  - add sweeps to detection widget
- @@@@@ IMPORTANT @@@@@@
 
  - add spinner on file load
 

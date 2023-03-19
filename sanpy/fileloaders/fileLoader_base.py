@@ -15,13 +15,20 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 def getFileLoaders(verbose : bool = False) -> dict:
-    """Load file loaders from both:
-        - Package: sanpy.fileloaders
-        - Folder: <user>/SanPy/File Loaders
+    """Load file loaders from both
+        
+    1) Module sanpy.fileloaders
+        
+    2) Folder <user>/Documents/SanPy/File Loaders
     
-    Each file loader is a class derived from [xxx](sanpy.fileloaders.fileLoader_base)
+    Each file loader is a class derived from [fileLoader_base](../../api/fileloader/fileLoader_base.md)
 
     See: sanpy.interface.bPlugins.loadPlugins()
+
+    Returns
+    -------
+    dict
+        A dictionary of file loaders.
     """
     retDict = {}
 
@@ -131,18 +138,23 @@ class recordingModes(enum.Enum):
 class fileLoader_base(ABC):
     """Abstract base class to derive file loaders.
 
-    For some working examples of derived classes, see [fileLoader_abf](../../api/fileloader/fileLoader_abf.md) and [fileLoader_csv](../../api/fileloader/fileLoader_csv.md)
+    For some working examples of derived classes, see
+    [fileLoader_abf](../../api/fileloader/fileLoader_abf.md) and
+    [fileLoader_csv](../../api/fileloader/fileLoader_csv.md)
 
-    To create a file loader, derive a class from fileLoader_base:
-        class myFileLoader(fileLoader_base):
-
-    Define two functions
+    To create a file loader
     
-        def loadFileType():
-            return the file type to handle, like 'abf' or 'csv'
+    1) derive a class from fileLoader_base and define `loadFileType`
+        
+        class myFileLoader(fileLoader_base):
+            loadFileType = 'the_file_extension_this_will_load'
 
+    2) Define a `loadFile` function
+    
         def loadFile(self):
-            load the data from self.filepath and call setLoadedData(sweepX, sweepY)
+            # load the data from self.filepath and create sweepX and sweepY
+            # specify what was loaded
+            self.setLoadedData(sweepX, sweepY)
     
     """    
     loadFileType : str = ''
@@ -163,8 +175,12 @@ class fileLoader_base(ABC):
     def __init__(self, filepath : str, loadData : bool = True):
         """Base class to derive new file loaders.
         
-        Args:
-            path: File path, will load different derived classes based on extension
+        Parameters
+        ----------
+        filepath : str
+            File path to load. Will use different derived classes based on extension
+        loadData : bool
+            If True then load raw data, otherwise just load the header.
         """
         
         super().__init__()
@@ -174,7 +190,7 @@ class fileLoader_base(ABC):
         self._filteredY : np.ndarray = None  # set in _getDerivative
         self._filteredDeriv : np.ndarray = None
         self._currentSweep : int = 0
-        self._epochTableList = None  # used by abf
+        self._epochTableList = [sanpy.fileloaders.epochTable]  # used by abf
 
         # load file from inherited class
         self.loadFile()
@@ -196,6 +212,8 @@ class fileLoader_base(ABC):
 
     @property
     def filename(self) -> str:
+        """Get the filename.
+        """
         if self.filepath is None:
             return None
         else:
@@ -212,8 +230,6 @@ class fileLoader_base(ABC):
     @property
     def currentSweep(self) -> int:
         """Get the current sweep.
-
-        If more than one sweep, must be defined in derived class.
         """
         return self._currentSweep
     
@@ -264,17 +280,25 @@ class fileLoader_base(ABC):
 
     @property
     def sweepX(self):
-        """All sweeps are assumed to have the same x-values (seconds).
+        """Get the X-Values for a sweep.
+        
+        Notes
+        -----
+        All sweeps are assumed to have the same x-values (seconds).
         """
         #return self._sweepX[:, self.currentSweep]
         return self._sweepX[:, 0]
 
     @property
     def sweepY(self):
+        """Get the Y values for the current sweep.
+        """
         return self._sweepY[:, self.currentSweep]
 
     @property
     def sweepC(self):
+        """Get the DAC command for the current sweep.
+        """
         if self._sweepC is None:
             #return np.zeros_like(self._sweepX[:, self.currentSweep])
             return np.zeros_like(self._sweepX[:, 0])
@@ -287,22 +311,32 @@ class fileLoader_base(ABC):
         return self._sweepLabelY
 
     @property
-    def filteredDeriv(self) -> np.ndarray:
-        """Get the filtered first derivative of sweepY"""
+    def filteredDeriv(self) -> Optional[np.ndarray]:
+        """Get the filtered first derivative of sweepY.
+        """
         if self._filteredDeriv is not None:
             return self._filteredDeriv[:, self.currentSweep]
         else:
             return None
 
-    def _getDerivative(self, medianFilter : int = 0,
+    def _getDerivative(self,
+                    medianFilter : int = 0,
                     SavitzkyGolay_pnts : int = 5,
                     SavitzkyGolay_poly : int = 2):
-        """
-        Get filtered version of recording and derivative of recording (used for I-Clamp).
+        """Get filtered version of recording and derivative of recording (used for I-Clamp).
 
-        Args:
-            dDict (dict): Default detection dictionary. See bDetection.getDefaultDetection()
+            By default we will use a SavitzkyGolay filter with 5 points and a 2nd order polynomial.
 
+        Parameters
+        ----------
+        medianFilter : int
+            Median filter box with. Must be odd, specify 0 for no median filter
+        SavitzkyGolay_pnts : int
+            Specify 0 for no filter.
+        SavitzkyGolay_poly : int
+
+        Notes
+        -----
         Creates:
             self._filteredVm
             self._filteredDeriv
@@ -380,14 +414,16 @@ class fileLoader_base(ABC):
         return self.dataPointsPerMs
 
     def pnt2Sec_(self, pnt : int) -> float:
-        """
-        Convert a point to Seconds using dataPointsPerMs.
+        """Convert a point to seconds using dataPointsPerMs.
 
-        Args:
-            pnt (int): The point
+        Parameters
+        ----------
+        pnt : int
 
-        Returns:
-            float: The point in seconds
+        Returns
+        -------
+        float
+            The point in seconds (s)
         """
         if pnt is None:
             #return math.isnan(pnt)
@@ -399,11 +435,14 @@ class fileLoader_base(ABC):
         """
         Convert a point to milliseconds (ms) using `self.dataPointsPerMs`
 
-        Args:
-            pnt (int): The point
+        Parameters
+        ----------
+        pnt : int
 
-        Returns:
-            float: The point in milliseconds (ms)
+        Returns
+        -------
+        float
+            The point in milliseconds (ms)
         """
         return pnt / self.dataPointsPerMs
 
@@ -411,11 +450,15 @@ class fileLoader_base(ABC):
         """
         Convert milliseconds (ms) to point in recording using `self.dataPointsPerMs`
 
-        Args:
-            ms (float): The ms into the recording
+        Parameters
+        ----------
+        ms : float
+            The ms into the recording
 
-        Returns:
-            int: The point in the recording
+        Returns
+        -------
+        int
+            The point in the recording corresponding to ms
         """
         theRet = ms * self.dataPointsPerMs
         theRet = round(theRet)
@@ -423,6 +466,9 @@ class fileLoader_base(ABC):
 
     def getEpochTable(self, sweep : int):
         """Only proper abf files will have an epoch table.
+        
+        TODO: Make all file loders have an epoch table.
+            Make API so derived file loaders can create their own
         """
         if self._epochTableList is not None:
             return self._epochTableList[sweep]
@@ -447,24 +493,26 @@ class fileLoader_base(ABC):
             yLabel : str = ''):
         """Derived classes call this function once the data is loaded in loadFile().
         
-        Args:
-            sweepX : np.ndarray
-                Time values
-            sweepY : np.ndarray
-                Recording values, mV or pA
-            sweepC : np.ndarray
-                (optional) DAC stimulus, pA or mV
-            recordingMode : recordingModes
-                (optional) Defaults to recordingModes.iclamp)
-            xLabel : str
-                (optional) str for x-axis label
-            yLabel : str
-                (optional) str for y-axis label
+        Parameters
+        ----------
+        sweepX : np.ndarray
+            Time values
+        sweepY : np.ndarray
+            Recording values, mV or pA
+        sweepC : np.ndarray
+            (optional) DAC stimulus, pA or mV
+        recordingMode : recordingModes
+            (optional) Defaults to recordingModes.iclamp)
+        xLabel : str
+            (optional) str for x-axis label
+        yLabel : str
+            (optional) str for y-axis label
 
         Notes
-            - Number of sweeps: sweepY.shape[1]
-            - Sweep Length (sec): sweepX[-1,0]
-            - Data Points Per Millisecond: 1 / ((sweepX[1,0] - sweepX[0,0]) * 1000)
+        -----
+        - Number of sweeps: sweepY.shape[1]
+        - Sweep Length (sec): sweepX[-1,0]
+        - Data Points Per Millisecond: 1 / ((sweepX[1,0] - sweepX[0,0]) * 1000)
         """
         self._sweepX = sweepX
         self._sweepY = sweepY

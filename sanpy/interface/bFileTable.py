@@ -503,7 +503,9 @@ class pandasModel(QtCore.QAbstractTableModel):
 		#self.beginInsertRows(QtCore.QModelIndex(), rowIdx, rowIdx)
 		if self.isAnalysisDir:
 			# if using analysis dir, azll actions are in-place
+			# self.beginResetModel()
 			self._data.removeRowFromDatabase(rowIdx)
+			# self.endResetModel()
 
 			# we changed the model, we need to emit dataChanged
 			indexStart = self.createIndex(rowIdx, 0)

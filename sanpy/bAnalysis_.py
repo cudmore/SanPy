@@ -499,24 +499,38 @@ class bAnalysis:
 
     def getStat(self, statName1, statName2 : Optional[str] = None,
                 sweepNumber : Optional[int] = None,
+                epochNumber : Optional[int] = None,
                 asArray : Optional[bool] = False):
         """Get a list of values for one or two analysis parameters.
 
+        Parameters
+        ----------
+        statName1 : str
+            Name of the first analysis parameter to retreive.
+        statName2 : str
+            Optional name of the second analysis parameter to retreive.
+        sweepNumber : int str or None
+            Optional sweep number, if None or 'All' then get all sweeps
+        epochNumber : int str or None
+            Optional epoch number, if None or 'All' then get all epochs
+        asArray : bool
+            If True then return as np.array(), otherwise return as a list
+
+        Notes
+        -----
         For a list of available analysis parameters,
             see [bDetection.getDefaultDetection()][sanpy.bDetection.bDetection]
 
         If the returned list of analysis parameters are in points,
             convert to seconds or ms using: pnt2Sec_(pnt) or pnt2Ms_(pnt).
 
-        Args:
-            statName1 (str): Name of the first analysis parameter to retreive.
-            statName2 (str): Optional, Name of the second analysis parameter to retreive.
-
-        Returns:
-            list: List of analysis parameter values, None if error.
-
-        TODO: Add convertToSec (bool)
+        Returns
+        -------
+        list or np.array
+            List of analysis parameter values, None if error.
+            Returns a np.array is asArray is True
         """
+
         def clean(val):
             """Convert None to float('nan')"""
             if val is None:
@@ -526,7 +540,6 @@ class bAnalysis:
         x = []  # None
         y = []  # None
         error = False
-
         if len(self.spikeDict) == 0:
             #logger.error(f'Did not find any spikes in spikeDict')
             error = True
@@ -540,11 +553,15 @@ class bAnalysis:
         if sweepNumber is None:
             sweepNumber = 'All'
 
+        if epochNumber is None:
+            epochNumber = 'All'
+
         if not error:
             # original
             #x = [clean(spike[statName1]) for spike in self.spikeDict]
             # only current spweek
-            x = [clean(spike[statName1]) for spike in self.spikeDict if (sweepNumber=='All' or spike['sweep']==sweepNumber)]
+            x = [clean(spike[statName1]) for spike in
+                self.spikeDict if (sweepNumber=='All' or spike['sweep']==sweepNumber) and (epochNumber=='All' or spike['epoch']==epochNumber)]
 
             if statName2 is not None:
                 # original
@@ -1817,7 +1834,8 @@ class bAnalysis:
         sweepY = self.fileLoader.sweepY_filtered
 
         # when there are no spikes getStat() will not return anything
-        sweepNum = self.getStat('sweep', sweepNumber=sweepNumber)  # For 'All' sweeps, we need to know column
+        # For 'All' sweeps, we need to know column
+        sweepNum = self.getStat('sweep', sweepNumber=sweepNumber)
 
         #logger.info(f'sweepY: {sweepY.shape} {len(sweepY.shape)}')
         #logger.info(f'theseTime_pnts: {theseTime_pnts}')
@@ -1957,13 +1975,8 @@ class bAnalysis:
         #
         return dfError
 
-    def save_csv(self):
-        """
-        Save as a CSV text file with name <path>_analysis.csv'
-
-        TODO: Fix
-        TODO: We need to save header with xxx
-        TODO: Load <path>_analysis.csv
+    def _old_to_csv(self):
+        """Save as a CSV text file with name <path>_analysis.csv'
         """
         savefile = os.path.splitext(self._path)[0]
         savefile += '_analysis.csv'
@@ -1975,14 +1988,12 @@ class bAnalysis:
         be.saveReport(savefile, saveExcel=saveExcel, alsoSaveTxt=alsoSaveTxt)
 
     def _normalizeData(self, data):
-        """
-        Used to calculate normalized data for detection from Kymograph. Is NOT for df/d0.
+        """Calculate normalized data for detection from Kymograph. Is NOT for df/d0.
         """
         return (data - np.min(data)) / (np.max(data) - np.min(data))
 
-    def loadAnalysis(self):
-        """
-        Not used.
+    def _not_used_loadAnalysis(self):
+        """Not used.
         """
         saveBase = self._getSaveBase()
 

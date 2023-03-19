@@ -39,7 +39,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install -e .
+        pip install -e .[gui]
         pip install '.[test]'
 
     - name: Run flake8

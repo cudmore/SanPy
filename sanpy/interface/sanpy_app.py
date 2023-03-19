@@ -129,7 +129,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #self.selectedRow = None
 
         # path to loaded folder (using bAnalysisDir)
-        self.configDict = sanpy.interface.preferences(self)
+        self.configDict : sanpy.interface.preferences = sanpy.interface.preferences(self)
         self.myAnalysisDir = None
         lastPath = self.configDict.getMostRecentFolder()
         logger.info(f'preferences lastPath is "{lastPath}"')
@@ -511,7 +511,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         ba = self.myAnalysisDir.getAnalysis(row) # if None then problem loading
 
         if ba is not None:
-            self.signalSwitchFile.emit(rowDict, ba)
+            self.signalSwitchFile.emit(ba, rowDict)
             if selectingAgain:
                 pass
             else:
@@ -1020,6 +1020,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         """
         #logger.info('')
         self.myAnalysisDir.saveHdf()
+        self.slot_updateStatus(f'Save analysis for folder: {self.myAnalysisDir.path}')
 
     def slot_updateStatus(self, text):
         logger.info(text)

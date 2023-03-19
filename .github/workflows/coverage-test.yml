@@ -32,7 +32,7 @@ jobs:
         run: |
           python --version
           python -m pip install --upgrade pip setuptools wheel
-          python -m pip install .
+          python -m pip install .[gui]
           python -m pip install coverage codecov
 
       - name: Run coverage tests

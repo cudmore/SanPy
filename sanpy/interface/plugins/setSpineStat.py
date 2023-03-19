@@ -58,7 +58,7 @@ class SetSpineStat(sanpyPlugin):
         self._setState()
 
     def _buildUI(self):
-        vBoxLayout = self.makeVLayout()
+        vBoxLayout = self.getVBoxLayout()
 
         # first row
         hBoxLayout = QtWidgets.QHBoxLayout()
@@ -115,7 +115,6 @@ class SetSpineStat(sanpyPlugin):
         """
 
         _selectedSpikes = self.getSelectedSpikes()
-
 
         if  _selectedSpikes == []:
             self._spikeLabel.setText('0 Spikes')

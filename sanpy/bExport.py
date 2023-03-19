@@ -11,8 +11,7 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class bExport():
-    """
-    Once analysis is performed with sanpy.bAnalysis.spikeDetect(),
+    """Once analysis is performed with sanpy.bAnalysis.spikeDetect(),
         reports can be generated with the bExport class.
 
     Example reports are:
@@ -531,8 +530,7 @@ class bExport():
         return analysisName, theRet
 
     def getReportDf(self, theMin, theMax, savefile):
-        """
-        Get spikes as a Pandas DataFrame, one row per spike.
+        """Get spikes as a Pandas DataFrame, one row per spike.
 
         Args:
             theMin (float): xxx

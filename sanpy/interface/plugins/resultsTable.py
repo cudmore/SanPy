@@ -1,4 +1,3 @@
-#20210619
 from pprint import pprint
 
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -7,12 +6,10 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 import sanpy
-#import sanpy.interface
 from sanpy.interface.plugins import sanpyPlugin
 
 class resultsTable(sanpyPlugin):
-    """
-    Plugin to display summary of all spikes, one spike per row.
+    """Plugin to display summary of all spikes, one spike per row.
 
     Uses:
         QTableView: sanpy.interface.bErrorTable.errorTableView()
@@ -25,26 +22,21 @@ class resultsTable(sanpyPlugin):
 
         #self.pyqtWindow() # makes self.mainWidget
 
-        layout = QtWidgets.QVBoxLayout()
+        # layout = QtWidgets.QVBoxLayout()
 
-        topToolbarLayout0, topToolbarLayout1 = self._buildTopToolbar()  # horizontal toolbar with checkboxes to toggle signals
-        layout.addLayout(topToolbarLayout0)
-        layout.addLayout(topToolbarLayout1)
-
-        # moved into _buildTopToolbar()
-        # controlsLayout = QtWidgets.QHBoxLayout()
-        # self._numSpikesLabel = QtWidgets.QLabel('unknown spikes')
-        # controlsLayout.addWidget(self._numSpikesLabel)
-        # layout.addLayout(controlsLayout)
+        # topToolbarLayout0, topToolbarLayout1 = self._buildTopToolbar()  # horizontal toolbar with checkboxes to toggle signals
+        # layout.addLayout(topToolbarLayout0)
+        # layout.addLayout(topToolbarLayout1)
 
         # TODO: derive a more general purpose table, here we are re-using error table
         self.myErrorTable = sanpy.interface.bErrorTable.errorTableView()
         self.myErrorTable.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Interactive);
         self.myErrorTable.horizontalHeader().setStretchLastSection(False)
 
-        layout.addWidget(self.myErrorTable)
+        #layout.addWidget(self.myErrorTable)
+        self.getVBoxLayout().addWidget(self.myErrorTable)
 
-        self.setLayout(layout)
+        #self.setLayout(layout)
 
         #
         # connect clicks in error table to signal main sanpy_app with slot_selectSpike()

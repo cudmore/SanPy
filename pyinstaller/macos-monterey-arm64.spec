@@ -1,16 +1,21 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
 block_cipher = None
+
+extras_toc = Tree('../sanpy/_userFiles', prefix='_userFiles', excludes=['.DS_Store'])
+print('extras_toc')
+print(extras_toc)
 
 
 a = Analysis(
     ['../sanpy/interface/sanpy_app.py'],
-    pathex=['/Users/cudmore/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/'],
+    pathex=['/Users/cudmore/opt/miniconda3/envs/sanpy-env-pyinstaller/lib/python3.9/site-packages/'],
     binaries=[],
     datas=[
-            #('/Users/cudmore/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors', 'pyqtgraph/colors'),
-            ('../sanpy/_userFiles', '_userFiles')],
+            # ('/Users/cudmore/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors', 'pyqtgraph/colors'),
+            ('/Users/cudmore/opt/miniconda3/envs/sanpy-env-pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables'),
+            ('../sanpy/_userFiles', '_userFiles'),
+        ],
     hiddenimports=['pkg_resources', 'tables'],
     hookspath=[],
     hooksconfig={},

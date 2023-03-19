@@ -1,1 +1,1 @@
-::: sanpy.analysisPlot
+::: sanpy.bAnalysisPlot

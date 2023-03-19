@@ -1554,16 +1554,19 @@ class bDetectionWidget(QtWidgets.QWidget):
         #     spikeNumber = spikeList[0]
         # self.selectSpike(spikeNumber, doZoom=doZoom)
 
-    def slot_switchFile(self, tableRowDict :dict = None, ba : sanpy.bAnalysis = None):
+    def slot_switchFile(self,
+                        ba : sanpy.bAnalysis = None,
+                        tableRowDict : dict = None):
         """Switch to a new file.
 
         Set self.ba to new bAnalysis object ba
 
         Can fail if .abf file is corrupt
 
-        Args:
-            tableRowDict (dict):
-            ba (bAnalysis):
+        Parameters
+        ----------
+        tableRowDict :dict
+        ba : sanpy.bAnalysis
 
         Returns: True/False
         """

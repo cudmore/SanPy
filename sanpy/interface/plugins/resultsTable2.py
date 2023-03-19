@@ -39,8 +39,9 @@ class resultsTable2(sanpyPlugin):
 
         layout.addWidget(self.myErrorTable)
 
-        self.setLayout(layout)
-
+        #self.setLayout(layout)
+        self.getVBoxLayout().addLayout(layout)
+        
         #
         # connect clicks in error table to signal main sanpy_app with slot_selectSpike()
         logger.warning('mar 11 FIX SPIKE SELECTION')

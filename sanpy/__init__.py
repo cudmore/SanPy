@@ -4,7 +4,6 @@ from ._util import *
 from .analysisUtil import *
 
 from .bAnalysis_ import bAnalysis
-from .epochTable import epochTable
 from .analysisDir import *
 from .analysisPlot import *
 from .bAnalysisUtil import *

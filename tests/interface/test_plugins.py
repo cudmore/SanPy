@@ -88,6 +88,8 @@ def test_app(sanpyAppObject):
 #     assert rowIdx == _selectedRow
 
 def test_init(pluginsObject, qtbot):
+    """Run all plugins through a number of different tests.
+    """
     assert pluginsObject is not None
 
     # analysis dir
@@ -119,7 +121,19 @@ def test_init(pluginsObject, qtbot):
     dDict = bd.getDetectionDict('SA Node')
     ba.spikeDetect(dDict)
 
+    pathCsv = os.path.join('data', '19114001.csv')
+    baCsv = sanpy.bAnalysis(path)
+
+
     # github is running out of memory
+    for _pluginName in _pluginList:
+        # first run the plugin with ba=None
+        baNone = None
+        _newPlugin = pluginsObject.runPlugin(_pluginName, baNone, show=False)
+        assert _newPlugin is not None
+        assert _newPlugin.getInitError() == False
+        qtbot.addWidget(_newPlugin)
+
     for _pluginName in _pluginList:
         logger.info(f'====== running plugin _pluginName: {_pluginName}')
         _newPlugin = pluginsObject.runPlugin(_pluginName, ba, show=False)
@@ -127,11 +141,19 @@ def test_init(pluginsObject, qtbot):
         assert _newPlugin.getInitError() == False
         qtbot.addWidget(_newPlugin)
 
+        # select an empy list
         _selectSpikesDict = {'ba': ba, 'spikeList':[]}
         _newPlugin.slot_selectSpikeList(_selectSpikesDict)
 
+        # select a list
         _selectSpikesDict = {'ba': ba, 'spikeList':[1,10,15]}
         _newPlugin.slot_selectSpikeList(_selectSpikesDict)
 
         # TODO: test switch file
+        # switch to csv ba with no spikes
+        _newPlugin.slot_switchFile(ba=baCsv)
+
+        # switch back to ba with spikes
+        _newPlugin.slot_switchFile(ba=ba)
+
         # TODO: test set sweep

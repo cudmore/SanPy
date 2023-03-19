@@ -1,6 +1,6 @@
 import math
-
 from functools import partial
+from typing import Union, Dict, List, Tuple, Optional, Optional
 
 import numpy as np
 import pandas as pd
@@ -183,16 +183,20 @@ class spikeClips(sanpyPlugin):
 
         # set the layout of the main window
         #self.mainWidget.setLayout(vLayout)
-        self.setLayout(vLayout)
-
+        #self.setLayout(vLayout)
+        self.getVBoxLayout().addLayout(vLayout)
+        
         self.replot()
 
-    def slot_switchFile(self, rowDict, ba, replot=True):        
+    def slot_switchFile(self,
+                        ba : sanpy.bAnalysis,
+                        rowDict : Optional[dict] = None,
+                        replot : bool = True):
         #logger.info('')
         
         # don't replot until we set our detectionClass
         replot = False
-        super().slot_switchFile(rowDict, ba, replot=replot)
+        super().slot_switchFile(ba, rowDict, replot=replot)
 
         if self.ba is not None and self.ba.isAnalyzed():
             self.preClipWidth_ms = self.ba.getDetectionDict()['preSpikeClipWidth_ms']

@@ -86,11 +86,12 @@ class exportTrace(sanpyPlugin):
 
         # rewire existing widget into plugin architecture
         #self.mainWidget.closeEvent = self.onClose
-        self._mySetWindowTitle()
+        #self._mySetWindowTitle()
 
         #self.setCentralWidget(self.mainWidget)
-        self.setLayout(tmpLayout)
-
+        #self.setLayout(tmpLayout)
+        self.getVBoxLayout().addLayout(tmpLayout)
+        
 if __name__ == '__main__':
     path = '/Users/cudmore/Sites/SanPy/data/19114001.abf'
     ba = sanpy.bAnalysis(path)

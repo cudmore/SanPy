@@ -54,7 +54,7 @@ class fileLoader_abf(fileLoader_base):
                 self._epochTableList = [None] * _numSweeps
                 for _sweepIdx in range(_numSweeps):
                     self._abf.setSweep(_sweepIdx)
-                    self._epochTableList[_sweepIdx] = sanpy.epochTable(self._abf)
+                    self._epochTableList[_sweepIdx] = sanpy.fileloaders.epochTable(self._abf)
                 self._abf.setSweep(0)
 
             self._sweepList = self._abf.sweepList

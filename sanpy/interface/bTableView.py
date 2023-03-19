@@ -324,10 +324,12 @@ class bTableView(QtWidgets.QTableView):
         contextMenu = QtWidgets.QMenu(self)
         #
         unloadData = contextMenu.addAction("Unload Data")
-        contextMenu.addSeparator()
-        removeFromDatabase = contextMenu.addAction("Remove From Database")
-        contextMenu.addSeparator()
-        duplicateRow = contextMenu.addAction("Duplicate Row")
+
+        # contextMenu.addSeparator()
+        # removeFromDatabase = contextMenu.addAction("Remove From Database")
+
+        # contextMenu.addSeparator()
+        # duplicateRow = contextMenu.addAction("Duplicate Row")
         contextMenu.addSeparator()
         deleteRow = contextMenu.addAction("Delete Row")
         contextMenu.addSeparator()
@@ -359,12 +361,15 @@ class bTableView(QtWidgets.QTableView):
         if action == unloadData:
             #self.signalUnloadRow.emit(selectedRow) # not in sort order
                 self.model().myUnloadRow(selectedRow)
-        elif action == removeFromDatabase:
-            #self.signalRemoveFromDatabase.emit(selectedRow) # not in sort order
-            self.model().myRemoveFromDatabase(selectedRow)
-        elif action == duplicateRow:
-            #self.signalDuplicateRow.emit(selectedRow) # not in sort order
-            self.model().myDuplicateRow(selectedRow)
+        # elif action == removeFromDatabase:
+        #     #self.signalRemoveFromDatabase.emit(selectedRow) # not in sort order
+        #     self.model().myRemoveFromDatabase(selectedRow)
+
+        # depreciated, we no longer duplicate rows
+        # elif action == duplicateRow:
+        #     #self.signalDuplicateRow.emit(selectedRow) # not in sort order
+        #     self.model().myDuplicateRow(selectedRow)
+
         elif action == deleteRow:
             #self.signalDeleteRow.emit(selectedRow)
             self.model().myDeleteRow(selectedRow)

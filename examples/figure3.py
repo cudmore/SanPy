@@ -1,4 +1,6 @@
 """
+Not sure this is needed?
+
 Plot Figure 3 of SanPy manuscript
 """
 
@@ -6,7 +8,7 @@ import matplotlib.pyplot as plt  # just to show plots during script
 
 import sanpy
 
-def fig3():
+def fig():
     
     path = 'data/19114000.abf'
 
@@ -21,4 +23,4 @@ def fig3():
     plt.show()
 
 if __name__ == '__main__':
-    fig3()
+    fig()

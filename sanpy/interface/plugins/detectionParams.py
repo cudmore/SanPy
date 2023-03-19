@@ -2,6 +2,7 @@ import math
 import os
 from functools import partial
 import json
+from typing import Union, Dict, List, Tuple, Optional, Optional
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -155,23 +156,22 @@ class detectionParams(sanpyPlugin):
         self.vLayoutParams = self.buildUI2()
         self.vLayout.addLayout(self.vLayoutParams)
 
-        # finalize
-        #self.setLayout(self.vLayout)
-
         #
         # scroll area again
-        self.fuckWidget = QtWidgets.QWidget()
-        self.fuckWidget.setLayout(self.vLayout)
+        self._tmpWidget = QtWidgets.QWidget()
+        self._tmpWidget.setLayout(self.vLayout)
 
         self.scrollArea = QtWidgets.QScrollArea()
         self.scrollArea.setWidgetResizable(True);
-        self.scrollArea.setWidget(self.fuckWidget)
+        self.scrollArea.setWidget(self._tmpWidget)
 
         self.finalLayout = QtWidgets.QVBoxLayout()
         self.finalLayout.addWidget(self.scrollArea)
 
         # finalize
-        self.setLayout(self.finalLayout)
+        #self.setLayout(self.finalLayout)
+        _vBoxLayout = self.getVBoxLayout()
+        _vBoxLayout.addLayout(self.finalLayout)
 
     def buildUI2(self):
         """Build a control for each detection parameter.
@@ -510,10 +510,13 @@ class detectionParams(sanpyPlugin):
             else:
                 logger.warning(f'key "{detectionParam}" has value "{currentValue}" but widget type "{type(aWidget)}" not understood.')
 
-    def slot_switchFile(self, rowDict, ba, replot=True):
+    def slot_switchFile(self,
+                        ba : sanpy.bAnalysis,
+                        rowDict : Optional[dict] = None,
+                        replot : bool = True):
         # don't replot until we set our detectionClass
         replot = False
-        super().slot_switchFile(rowDict, ba, replot=replot)
+        super().slot_switchFile(ba, rowDict, replot=replot)
         
         # before we detect a ba, its detection dict is None
         _detectionDict = self.ba.getDetectionDict(asCopy=True)  # can be None

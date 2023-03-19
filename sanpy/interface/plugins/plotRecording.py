@@ -51,8 +51,7 @@ class plotRecording(sanpyPlugin):
         return
 
     def replot(self):
-        """
-        bAnalysis has been updated, replot
+        """bAnalysis has been updated, replot
         """
         logger.info(f'{self.ba}')
 

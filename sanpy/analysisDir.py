@@ -302,7 +302,7 @@ class analysisDir():
             - Some functions are so self can mimic a pandas dataframe used by pandasModel.
                 (shape, loc, loc_setter, iloc, iLoc_setter, columns, append, drop, sort_values, copy)
         """
-        self.path = path
+        self.path : str = path
         self.myApp = myApp # used to signal on building initial db
         self.autoLoad = autoLoad  # not used
 
@@ -549,7 +549,7 @@ class analysisDir():
             logger.error(e)
             self.signalApp(f'ERROR in tables.scripts.ptrepack.main(): {e}')
 
-    def save(self):
+    def _not_used_save(self):
         """Save all analysis as csv.
         """
         logger.info('')
@@ -1327,7 +1327,9 @@ class analysisDir():
 
         newRowIdx = len(self._df)
         df = self._df
+        logger.warning(f'need to replace append with concat')
         df = df.append(rowSeries, ignore_index=True)
+        #df = pd.concat([df,rowSeries], ignore_index=True, axis=1)
         df = df.reset_index(drop=True)
 
         if ba is not None:
@@ -1364,7 +1366,10 @@ class analysisDir():
 
         self._updateLoadedAnalyzed()
 
-    def duplicateRow(self, rowIdx):
+    def old_duplicateRow(self, rowIdx):
+        """Depreciated, Was used to have different ocnditions within a recording,
+            this is now handled by condiiton column.
+        """
         # duplicate rowIdx
         newIdx = rowIdx + 0.5
 

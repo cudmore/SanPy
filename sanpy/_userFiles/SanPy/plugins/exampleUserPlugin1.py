@@ -26,21 +26,24 @@ class exampleUserPlugin1(sanpyPlugin):
         super().__init__(**kwargs)
 
         self.plot()
+        self.replot()
 
     def plot(self):
         """Create the plot in the widget (called once).
         """
         self.mplWindow2() # assigns (self.fig, self.axs)
 
-        # red line with raw data
+        # white line with raw data
         self.line, = self.axs.plot([], [], '-w', linewidth=0.5)
 
         # red circles with spike threshold
         self.lineDetection, = self.axs.plot([], [], 'ro')
 
     def replot(self):
-        """Replot the widget. USually when the file is switched
+        """Replot the widget. Usually when the file is switched
         """
+        
+        logger.info('')
         
         # get the x/y values from the recording
         sweepX = self.getSweep('x')  # self.ba.sweepX(sweepNumber=self.sweepNumber)
@@ -57,8 +60,10 @@ class exampleUserPlugin1(sanpyPlugin):
         # make sure the matplotlib axis auto scale
         self.axs.relim()
         self.axs.autoscale_view(True,True,True)
-        plt.draw()
-
+        
+        # plt.draw()
+        self.static_canvas.draw()
+        
 if __name__ == '__main__':
     # load an example file
     path = '/Users/cudmore/Sites/SanPy/data/19114001.abf'

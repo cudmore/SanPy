@@ -182,8 +182,11 @@ class plotScatter(sanpyPlugin):
         # set the layout of the main window
         # playing with dock
         #self.mainWidget.setLayout(hLayout)
-        self.setLayout(hLayout)
-
+        
+        # mar 17 was this
+        # self.setLayout(hLayout)
+        self.getVBoxLayout().addLayout(hLayout)
+        
         #self.mainWidget.setGeometry(100, 100, 1200, 600)
 
         self.replot()
@@ -325,23 +328,28 @@ class plotScatter(sanpyPlugin):
             logger.warning(f'Did not respond to button "{b.text()}"')
 
     def setAxis(self):
-        # inherited, resopnd to user setting x-axis
-        #self.replot()
+        """Inherited, respond to user setting x-axis.
 
-        # generate a list of spike and select
+        Generate a list of spikes and select them.
+        """
 
         startSec, stopSec = self.getStartStop()
         if startSec is None or stopSec is None:
             return
 
         # select spike in range
-        thresholdSec = self.ba.getStat('thresholdSec')
-        _selectedSpikeList = [spikeIdx for spikeIdx,spikeSec in enumerate(thresholdSec) if (spikeSec>startSec and spikeSec<stopSec)]
+        thresholdSec = self.ba.getStat('thresholdSec',
+                                       sweepNumber=self.sweepNumber,
+                                       epochNumber=self.epochNumber)
+
+        _selectedSpikeList = [spikeIdx for spikeIdx,spikeSec in enumerate(thresholdSec)
+                              if (spikeSec>startSec and spikeSec<stopSec)]
+
         self.setSelectedSpikes(_selectedSpikeList)
         self.selectSpikeList()
 
     def replot(self):
-        """Replot when analysis changes or file changes
+        """Replot when file or analysis changes.
         """
 
         logger.info('')
@@ -357,12 +365,17 @@ class plotScatter(sanpyPlugin):
             xData = []
             yData = []
         else:
-            xData = self.ba.getStat(xStat, sweepNumber=self.sweepNumber)
-            yData = self.ba.getStat(yStat, sweepNumber=self.sweepNumber)
-
+            xData = self.getStat(xStat)
+            yData = self.getStat(yStat)
+            # xData = self.ba.getStat(xStat,
+            #                         sweepNumber=self.sweepNumber,
+            #                         epochNumber=self.epochNumber)
+            # yData = self.ba.getStat(yStat,
+            #                         sweepNumber=self.sweepNumber,
+            #                         epochNumber=self.epochNumber)
 
         #
-        # convert to numpy
+        # convert to numpy (TODO: use ba.getStat() option for this.)
         xData = np.array(xData)
         yData = np.array(yData)
 
@@ -381,8 +394,11 @@ class plotScatter(sanpyPlugin):
         self.xStatHumanName = xHumanStat
         self.yStatHumanName = yHumanStat
 
-        # keep track of x-axis spike number (for chae plot)
-        xAxisSpikeNumber = self.ba.getStat('spikeNumber', sweepNumber=self.sweepNumber)
+        # keep track of x-axis spike number (for chase plot)
+        xAxisSpikeNumber = self.getStat('spikeNumber')
+        # xAxisSpikeNumber = self.ba.getStat('spikeNumber',
+        #                                    sweepNumber=self.sweepNumber,
+        #                                    epochNumber=self.epochNumber)
         xAxisSpikeNumber = np.array(xAxisSpikeNumber)
 
         # need to mask color and marker
@@ -435,8 +451,14 @@ class plotScatter(sanpyPlugin):
             #cm = ListedColormap([color_dict[x] for x in color_dict.keys()])
             #self.lines.set_cmap(cm)
 
-            goodSpikes = self.ba.getStat('include', sweepNumber=self.sweepNumber)
-            userTypeList = self.ba.getStat('userType', sweepNumber=self.sweepNumber)
+            goodSpikes = self.ba.getStat('include')
+            userTypeList = self.ba.getStat('userType')
+            # goodSpikes = self.ba.getStat('include',
+            #                              sweepNumber=self.sweepNumber,
+            #                              epochNumber=self.epochNumber)
+            # userTypeList = self.ba.getStat('userType',
+            #                                sweepNumber=self.sweepNumber,
+            #                                epochNumber=self.epochNumber)
 
             if self.plotChasePlot:
                 #xData = xData[1:-1] # x is the reference spike for marking (bad, type)
@@ -724,17 +746,37 @@ class plotScatter(sanpyPlugin):
         
         For example: spike number, spike time (s), is bad, user type, and file name.
         """
-        spikeNumber = self.ba.getStat('spikeNumber', sweepNumber=self.sweepNumber)
-        spikeTimeSec = self.ba.getStat('thresholdSec', sweepNumber=self.sweepNumber)
+        spikeNumber = self.ba.getStat('spikeNumber',
+                                      sweepNumber=self.sweepNumber,
+                                      epochNumber=self.epochNumber)
+        spikeTimeSec = self.ba.getStat('thresholdSec',
+                                       sweepNumber=self.sweepNumber,
+                                       epochNumber=self.epochNumber)
         #
-        xStat = self.ba.getStat(self.xStatName, sweepNumber=self.sweepNumber)
-        yStat = self.ba.getStat(self.yStatName, sweepNumber=self.sweepNumber)
+        xStat = self.ba.getStat(self.xStatName,
+                                sweepNumber=self.sweepNumber,
+                                epochNumber=self.epochNumber)
+        yStat = self.ba.getStat(self.yStatName,
+                                sweepNumber=self.sweepNumber,
+                                epochNumber=self.epochNumber)
         #
-        goodSpikes = self.ba.getStat('include', sweepNumber=self.sweepNumber)
-        userType = self.ba.getStat('userType', sweepNumber=self.sweepNumber)
-        file = self.ba.getStat('file', sweepNumber=self.sweepNumber)
+        goodSpikes = self.ba.getStat('include',
+                                     sweepNumber=self.sweepNumber,
+                                     epochNumber=self.epochNumber)
+        userType = self.ba.getStat('userType',
+                                   sweepNumber=self.sweepNumber,
+                                   epochNumber=self.epochNumber)
+        file = self.ba.getStat('file',
+                               sweepNumber=self.sweepNumber,
+                               epochNumber=self.epochNumber)
 
-        columns = ['Spike Number', 'Spike Time(s)', self.xStatHumanName, self.yStatHumanName, 'Include', 'User Type', 'File']
+        columns = ['Spike Number',
+                   'Spike Time(s)',
+                   self.xStatHumanName,
+                   self.yStatHumanName,
+                   'Include',
+                   'User Type',
+                   'File']
         df = pd.DataFrame(columns=columns)
         df['Spike Number'] = spikeNumber
         df['Spike Time(s)'] = spikeTimeSec

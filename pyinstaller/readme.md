@@ -1,4 +1,38 @@
 
+## 20230316
+
+On M1 macOS laptop (Monteray, 12.4), build from a premade spec `macos-monterey-arm64.spec`.
+
+```
+conda create -y -n sanpy-env-pyinstaller python=3.9
+conda activate sanpy-env-pyinstaller
+
+pip install -e .
+
+cd pyinstaller
+./build-from-spec.sh
+```
+
+Having problems with tables package. pyinstaller is not bundling libblosc2.dylib
+
+Solved by manually copying this file into bundled macos app
+
+/Users/cudmore/opt/miniconda3/envs/sanpy-env-pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib
+
+added this to my macos-arm.spec
+
+```
+    datas=[
+            #('/Users/cudmore/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors', 'pyqtgraph/colors'),
+            ('/Users/cudmore/opt/miniconda3/envs/sanpy-env-pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib, 'tables'),
+            ('../sanpy/_userFiles', '_userFiles')],
+```
+
+Now is failing with skimage
+
+"Cannot load imports from non-existent stub", problem was introduces with skimage 0.20.0
+
+
 ## Making a macOS app with pyinstaller
 
 Each SanPy.app is specific to the exact OS. We have working version for macOS Catalina and Big Sur. Both Microsoft windows and Ubuntu versions are in the works.

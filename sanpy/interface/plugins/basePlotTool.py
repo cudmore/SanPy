@@ -91,4 +91,6 @@ class basePlotTool(sanpyPlugin):
         tmpLayout.addWidget(self.mainWidget2)
 
         #
-        self.setLayout(tmpLayout)
+        #self.setLayout(tmpLayout)
+        self.getVBoxLayout().addLayout(tmpLayout)
+        

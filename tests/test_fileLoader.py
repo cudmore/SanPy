@@ -35,13 +35,19 @@ def test_fileLoader_csv():
     csvFile = fileLoader_csv(path)
     assert csvFile is not None
 
-    logger.info(f'csvFile: {csvFile}')
+    csvFile._getDerivative() # calcullate derivates
+
+    _filteredDeriv = csvFile.filteredDeriv
+    assert _filteredDeriv.shape == csvFile.sweepX.shape
+
+    # logger.info(f'csvFile: {csvFile}')
 
     csvFile.setSweep(0)
-    logger.info(f'dataPointsPerMs: {csvFile.dataPointsPerMs}')
-    logger.info(f'sweepX: {csvFile.sweepX.shape}')
-    logger.info(f'sweepY: {csvFile.sweepY.shape}')
-    logger.info(f'sweepC: {csvFile.sweepC.shape}')
+
+    # logger.info(f'dataPointsPerMs: {csvFile.dataPointsPerMs}')
+    # logger.info(f'sweepX: {csvFile.sweepX.shape}')
+    # logger.info(f'sweepY: {csvFile.sweepY.shape}')
+    # logger.info(f'sweepC: {csvFile.sweepC.shape}')
 
     # test plot
     # ap = bAnalysisPlot(csvFile)

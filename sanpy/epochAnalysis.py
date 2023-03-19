@@ -105,7 +105,7 @@ if __name__ == '__main__':
     for sweep in range(numSweeps):
         abf.setSweep(sweep)
         print(abf.sweepNumber)
-        et = sanpy.epochTable(abf)
+        et = sanpy.fileloaders.epochTable(abf)
         #dfEpoch = ba._epochTable.getEpochList(asDataFrame=True)
         dfEpoch = et.getEpochList(asDataFrame=True)
         print(dfEpoch)
