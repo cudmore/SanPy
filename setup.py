@@ -24,7 +24,7 @@ setup(
         'matplotlib',
         'mplcursors',
         'seaborn',
-        #'requests', #  to load from the cloud (for now github)
+        'requests', #  to load from the cloud (for now github)
         'tables',  # aka pytable for hdf5. this fails on arm64, neeed 'conda install pytables'
         'scikit-image==0.19.3',  # used for line profile in kym analysis, 0.20.0 introduces pyinstaller bug because of lazy import
         'h5py',

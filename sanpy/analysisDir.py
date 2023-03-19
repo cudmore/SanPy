@@ -217,8 +217,7 @@ class bAnalysisDirWeb():
         self.loadFolder()
 
     def loadFolder(self):
-        """
-        Load using cloudDict
+        """Load using cloudDict
         """
 
         """
