@@ -329,7 +329,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.configDict.addFolder(path)
 
         # save preferences
-        self.configDict.save()
+        #self.configDict.save()
         
     '''
     def slot_dataChanged(self, columnName, value, rowDict):
@@ -723,8 +723,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         # mar 11
         name = 'Set Spikes'
-        #checked = self.configDict['detectionPanels'][name]
-        checked = True
+        checked = self.configDict['detectionPanels'][name]
         action = QtWidgets.QAction(name, self, checkable=True)
         action.setChecked(checked)
         action.triggered.connect(partial(self._viewMenuAction, key1, name))
@@ -938,25 +937,26 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         #
         # add a number of plugins to QDockWidget 'Plugins 1'
-        # we need to know the recice human name like 'Detection Parameters'
-                        
-        #scatterPlugin = self.myPlugins.runPlugin('Plot Scatter', ba=None, show=False)
-        #errorSummaryPlugin = self.myPlugins.runPlugin('Error Summary', ba=None, show=False)
-        #summaryAnalysisPlugin = self.myPlugins.runPlugin('Summary Analysis', ba=None, show=False)
+        # we need to know the human name like 'Detection Parameters'
 
-        # on add tab, the QTabWIdget makes a copy !!!
-        _openPlugins = self.configDict['pluginPanels'] # list of plugins to open
-        for _openPlugin in _openPlugins:
+        
+        # was a list, now is a dict
+        # _openPlugins = self.configDict['pluginPanels'] # list of plugins to open
+        # for _openPlugin in _openPlugins:
+        #     _oneOpenPlugin = self.myPlugins.runPlugin(_openPlugin, ba=None, show=False)
+        #     if _oneOpenPlugin is not None:
+        #         # on add tab, the QTabWIdget makes a copy !!!
+        #         self.myPluginTab1.addTab(_oneOpenPlugin, _oneOpenPlugin.myHumanName)
+
+        _openPlugins = self.configDict['pluginPanels'] # dict of
+        for _openPlugin, _externalWindow in _openPlugins.items():
             _oneOpenPlugin = self.myPlugins.runPlugin(_openPlugin, ba=None, show=False)
             if _oneOpenPlugin is not None:
-                self.myPluginTab1.addTab(_oneOpenPlugin, _oneOpenPlugin.myHumanName)
-
-        #clipsPlugin = self.myPlugins.runPlugin('Export Trace', ba=None, show=False)
-        #self.myPluginTab1.addTab(clipsPlugin, clipsPlugin.myHumanName)
-
-        #self.myPluginTab1.addTab(scatterPlugin, scatterPlugin.myHumanName)
-        #self.myPluginTab1.addTab(errorSummaryPlugin, errorSummaryPlugin.myHumanName)
-        #self.myPluginTab1.addTab(summaryAnalysisPlugin, summaryAnalysisPlugin.myHumanName)
+                if _externalWindow:
+                    self.sanpyPlugin_action(_openPlugin)
+                else:
+                    # on add tab, the QTabWIdget makes a copy !!!
+                    self.myPluginTab1.addTab(_oneOpenPlugin, _oneOpenPlugin.myHumanName)
 
         self.pluginDock1 = QtWidgets.QDockWidget('Plugins 1',self)
         self.pluginDock1.setWidget(self.myPluginTab1)

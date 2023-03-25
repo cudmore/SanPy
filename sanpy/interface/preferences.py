@@ -18,7 +18,12 @@ class preferences():
     def __init__(self, sanpyApp : sanpy_app):
         super().__init__()
         self._sanpyApp = sanpyApp
-        self._version = 1.2  # increment when we change preferences
+        
+        # bump this when we change, sanpy app will rebuild if loaded preerences are out of date
+        #self._version = 1.2  # increment when we change preferences
+        self._version = 1.3  # added set spike
+        self._version = 1.4  # converted plugins from list[str] to dict to include externalWindow option
+        
         self._maxRecent = 7  # a lucky number
         self._configDict = self.load()
 
@@ -46,17 +51,23 @@ class preferences():
         # always set as the most recent folder
         self.configDict['mostRecentFolder'] = path
 
-    def addPlugin(self, pluginName : str):
+    def addPlugin(self, pluginName : str, externalWindow : bool = True):
         """Add plugin to preferences.
         """
-        if not pluginName in self.configDict['pluginPanels']:
-            self.configDict['pluginPanels'].append(pluginName)
+        # was this as list
+        # if not pluginName in self.configDict['pluginPanels']:
+        #     self.configDict['pluginPanels'].append(pluginName)
+        if not pluginName in self.configDict['pluginPanels'].keys():
+            self.configDict['pluginPanels'][pluginName] = {'externalWindow': externalWindow}
 
     def removePlugin(self, pluginName : str):
         """Remove plugin from preferences.
         """
-        if pluginName in self.configDict['pluginPanels']:
-            self.configDict['pluginPanels'].remove(pluginName)
+        # was this as list
+        # if pluginName in self.configDict['pluginPanels']:
+        #     self.configDict['pluginPanels'].remove(pluginName)
+        if pluginName in self.configDict['pluginPanels'].keys():
+            self.configDict['pluginPanels'].pop(pluginName)
 
     def getMostRecentFolder(self):
         return self.configDict['mostRecentFolder']
@@ -113,10 +124,11 @@ class preferences():
                 with open(preferencesFile) as f:
                     loadedJson = json.load(f)
                     loadedVersion = loadedJson['version']
-                    logger.info(f'    loaded preferences version {loadedVersion}')
+                    logger.info(f'  loaded preferences version {loadedVersion}')
                     if loadedVersion < self._version:
                         # use default
-                        logger.warning('    older version found, reverting to current defaults')
+                        logger.warning('  older version found, reverting to current defaults')
+                        logger.warning(f'  loadedVersion:{loadedVersion} currentVersion:{self._version}')
                         pass
                     else:
                         return loadedJson
@@ -153,9 +165,11 @@ class preferences():
         configDict['detectionPanels']['Detection'] = True
         configDict['detectionPanels']['Display'] = True
         configDict['detectionPanels']['Plot Options'] = False
+        configDict['detectionPanels']['Set Spikes'] = False
         
         # plugins to show at startup
-        configDict['pluginPanels'] = []
+        # 20230325 convert from List[str] to dict
+        configDict['pluginPanels'] = {}
 
         # values in detectionWidget -> myDetectionToolbar
         configDict['detect'] = {}

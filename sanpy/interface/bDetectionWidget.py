@@ -207,6 +207,9 @@ class bDetectionWidget(QtWidgets.QWidget):
             showPlotOption = windowOptions['detectionPanels']['Plot Options']
             self.toggleInterface('Plot Options', showPlotOption)
 
+            showPlotOption = windowOptions['detectionPanels']['Set Spikes']
+            self.toggleInterface('Set Spikes', showPlotOption)
+
     @property
     def sweepNumber(self):
         """Get the current sweep number (from bAnalysis).
@@ -2564,9 +2567,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.mainLayout.addWidget(self.displayGroupBox)
 
         #
-        # mar 11 set spine group box
+        # mar 11 set spike group box
         #
-        # set spine group
+        # set spike group
         self.setSpineGroupBox = QtWidgets.QGroupBox('Set Spikes')
         setSpineLayout = QtWidgets.QHBoxLayout()
 

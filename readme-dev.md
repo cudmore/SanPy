@@ -2,7 +2,7 @@
 
 - Refactor all things having to do with light/dark theme. This is critical as copy paste from the interface cannot be trapped in a dark theme (for printing, manuscripts, etc)
 
-- Finish implementation of setSpineStat plugin. Make sure it responds to interface changes and actually sets backend data in bAnalysis results.
+- Finish implementation of setSpikeStat plugin. Make sure it responds to interface changes and actually sets backend data in bAnalysis results.
 
 - Update main sanpy app preferences, add mechanism to
 
