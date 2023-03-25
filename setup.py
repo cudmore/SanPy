@@ -51,6 +51,12 @@ setup(
             'jupyter',
             'pooch'  # what is this for?
         ],
+        'test': [
+            'pytest',
+            'pytest-cov',
+            'pytest-qt',
+            'flake8',
+        ]
     },
     python_requires=">=3.7",
     entry_points={
