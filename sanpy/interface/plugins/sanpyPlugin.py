@@ -619,7 +619,9 @@ class sanpyPlugin(QtWidgets.QWidget):
         #plt.style.use('dark_background')
         
         # this is dangerous, collides with self.mplWindow()
-        self.fig : "matplotlib.figure.Figure" = mpl.figure.Figure()
+        # these are causing really freaking annoying failures on GitHub !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # self.fig : "matplotlib.figure.Figure" = mpl.figure.Figure()
+        self.fig = mpl.figure.Figure()
 
         # not working
         #self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
