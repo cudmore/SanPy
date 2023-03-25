@@ -9,12 +9,17 @@
         <meta name="description" content="Current Clamp Analysis For Cardiac Myocytes">
       
       
-      
         <meta name="author" content="Robert H Cudmore">
       
       
+      
+        <link rel="prev" href="../api/interface/plugins/sanpyPlugin/">
+      
+      
+        <link rel="next" href="../web-application/">
+      
       <link rel="icon" href="../img/sanpy-transparent.png">
-      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-7.3.6">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.3">
     
     
       
@@ -22,32 +27,34 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.a57b2b03.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.c4a75a56.min.css">
       
         
-        <link rel="stylesheet" href="../assets/stylesheets/palette.3f5d1f46.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.a0c5b2b5.min.css">
+      
+      
+
+    
+    
+    
+      
         
-      
-    
-    
-    
-      
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
-    
     
     
       <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
       <link rel="stylesheet" href="../css/style.css">
     
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
-
+    
     
     
   </head>
@@ -58,10 +65,9 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent="">
   
     
-    <script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -69,7 +75,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#what-spike-parameters-are-detected" class="md-skip">
+        <a href="#detection-parameters" class="md-skip">
           Skip to content
         </a>
       
@@ -78,9 +84,12 @@
       
     </div>
     
+    
       
 
-<header class="md-header" data-md-component="header">
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href=".." title="SanPy Documentation" class="md-header__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
       
@@ -88,7 +97,7 @@
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -110,22 +119,21 @@
     
     
       <label class="md-header__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
       </label>
-      
-<div class="md-search" data-md-component="search" role="dialog">
+      <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
       <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
       </label>
       <nav class="md-search__options" aria-label="Search">
         
-        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
       
@@ -136,7 +144,7 @@
           <div class="md-search-result__meta">
             Initializing search
           </div>
-          <ol class="md-search-result__list"></ol>
+          <ol class="md-search-result__list" role="presentation"></ol>
         </div>
       </div>
     </div>
@@ -145,11 +153,10 @@
     
     
       <div class="md-header__source">
-        
-<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     SanPy Repository
@@ -190,11 +197,10 @@
   </label>
   
     <div class="md-nav__source">
-      
-<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     SanPy Repository
@@ -213,7 +219,22 @@
   
     <li class="md-nav__item">
       <a href=".." class="md-nav__link">
-        SanPy
+        Introducing SanPy
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../download/" class="md-nav__link">
+        Download
       </a>
     </li>
   
@@ -271,71 +292,10 @@
   
   
   
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
-      
-      
-      
-      
-        <label class="md-nav__link" for="__nav_5">
-          Scripting
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" aria-label="Scripting" data-md-level="1">
-        <label class="md-nav__title" for="__nav_5">
-          <span class="md-nav__icon md-icon"></span>
-          Scripting
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
-  
     <li class="md-nav__item">
-      <a href="../scripting/overview/" class="md-nav__link">
-        Overview
+      <a href="../scripting/" class="md-nav__link">
+        Using the API
       </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../scripting/examples/" class="md-nav__link">
-        Examples
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../scripting/plotting-analysis/" class="md-nav__link">
-        Plotting Analysis
-      </a>
-    </li>
-  
-
-            
-          
-        </ul>
-      </nav>
     </li>
   
 
@@ -351,18 +311,19 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" >
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_6">
+        <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
           API
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="__nav_6">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_7">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
@@ -376,6 +337,48 @@
     <li class="md-nav__item">
       <a href="../api/overview/" class="md-nav__link">
         Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/writing-a-file-loader/" class="md-nav__link">
+        Writing A File Loader
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/writing-a-plugin/" class="md-nav__link">
+        Writing A Plugin
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/writing-new-analysis/" class="md-nav__link">
+        Writing New Analysis
       </a>
     </li>
   
@@ -404,6 +407,20 @@
     <li class="md-nav__item">
       <a href="../api/bAnalysisResults/" class="md-nav__link">
         bAnalysisResults
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/epochTable/" class="md-nav__link">
+        epochTable
       </a>
     </li>
   
@@ -485,6 +502,82 @@
   
   
   
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_13" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_7_13" id="__nav_7_13_label" tabindex="0">
+          fileLoader
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_13_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_7_13">
+          <span class="md-nav__icon md-icon"></span>
+          fileLoader
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/fileloader/fileLoader_base/" class="md-nav__link">
+        fileLoader_base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/fileloader/fileLoader_abf/" class="md-nav__link">
+        fileLoader_abf
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/fileloader/fileLoader_csv/" class="md-nav__link">
+        fileLoader_csv
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
     <li class="md-nav__item">
       <a href="../api/userAnalysis/baseUserAnalysis/" class="md-nav__link">
         baseUserAnalysis
@@ -503,18 +596,19 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_10" type="checkbox" id="__nav_6_10" >
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_15" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_6_10">
+        <label class="md-nav__link" for="__nav_7_15" id="__nav_7_15_label" tabindex="0">
           interface
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="interface" data-md-level="2">
-        <label class="md-nav__title" for="__nav_6_10">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_15_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_7_15">
           <span class="md-nav__icon md-icon"></span>
           interface
         </label>
@@ -543,18 +637,19 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_10_2" type="checkbox" id="__nav_6_10_2" >
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_15_2" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_6_10_2">
+        <label class="md-nav__link" for="__nav_7_15_2" id="__nav_7_15_2_label" tabindex="0">
           plugins
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="plugins" data-md-level="3">
-        <label class="md-nav__title" for="__nav_6_10_2">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_7_15_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_7_15_2">
           <span class="md-nav__icon md-icon"></span>
           plugins
         </label>
@@ -605,7 +700,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
       
@@ -620,7 +715,6 @@
       
         
 
-
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
@@ -631,13 +725,6 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#what-spike-parameters-are-detected" class="md-nav__link">
-    What spike parameters are detected?
-  </a>
-  
-</li>
       
         <li class="md-nav__item">
   <a href="#detection-parameters" class="md-nav__link">
@@ -654,15 +741,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#analysis-output" class="md-nav__link">
-    Analysis output
+  <a href="#analysis-results" class="md-nav__link">
+    Analysis results
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#analysis-output-full" class="md-nav__link">
-    Analysis output (full)
+  <a href="#analysis-results-full" class="md-nav__link">
+    Analysis results (full)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-spike-parameters-are-detected" class="md-nav__link">
+    What spike parameters are detected?
   </a>
   
 </li>
@@ -733,7 +827,6 @@
                   <div class="md-sidebar__inner">
                     
 
-
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
@@ -744,13 +837,6 @@
       Table of contents
     </label>
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#what-spike-parameters-are-detected" class="md-nav__link">
-    What spike parameters are detected?
-  </a>
-  
-</li>
       
         <li class="md-nav__item">
   <a href="#detection-parameters" class="md-nav__link">
@@ -767,15 +853,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#analysis-output" class="md-nav__link">
-    Analysis output
+  <a href="#analysis-results" class="md-nav__link">
+    Analysis results
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#analysis-output-full" class="md-nav__link">
-    Analysis output (full)
+  <a href="#analysis-results-full" class="md-nav__link">
+    Analysis results (full)
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-spike-parameters-are-detected" class="md-nav__link">
+    What spike parameters are detected?
   </a>
   
 </li>
@@ -788,28 +881,15 @@
               </div>
             
           
-          <div class="md-content" data-md-component="content">
-            <article class="md-content__inner md-typeset">
-              
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
                 
-                
-                <h2 id="what-spike-parameters-are-detected">What spike parameters are detected?<a class="headerlink" href="#what-spike-parameters-are-detected" title="Permanent link">¤</a></h2>
-<p>We are following the cardiac myocyte nomenclature from this paper:</p>
-<p><a href="https://www.ncbi.nlm.nih.gov/pubmed/24128759">Larson, et al (2013) Depressed pacemaker activity of sinoatrial node
-myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 110(44):18011-18016</a></p>
-<ul>
-<li>MDP and Vmax were defined as the most negative and positive membrane potentials, respectively</li>
-<li>Take-off potential (TOP) was defined as the membrane potential when the first derivative of voltage with respect to time (dV/dt) reached 10% of its maximum value</li>
-<li>Cycle length was defined as the interval between MDPs in successive APs</li>
-<li>The maximum rates of the AP upstroke and repolarization were taken as the maximum and minimum values of the first derivative (dV/dtmax and dV/dtmin, respectively)</li>
-<li>[[[REMOVED 20210501]]] Action potential duration (APD) was defined as the interval between the TOP and the subsequent MDP</li>
-<li>APD_50 and APD_90 were defined as the interval between the TOP and 50% and 90% repolarization, respectively</li>
-<li>The diastolic duration was defined as the interval between MDP and TOP</li>
-<li>The early diastolic depolarization rate was estimated as the slope of a linear fit between 10% and 50% of the diastolic duration and the early diastolic duration was the corresponding time interval</li>
-<li>The nonlinear late diastolic depolarization phase was estimated as the duration between 1% and 10% dV/dt</li>
-</ul>
+                  
+
+
 <h2 id="detection-parameters">Detection Parameters<a class="headerlink" href="#detection-parameters" title="Permanent link">¤</a></h2>
-<p>To detect action potentials, we use a number of parameters. These can all be configured using the default setting using <a href="../api/bDetection">sanpy/detectionParams</a>.</p>
+<p>To detect action potentials, SanPy uses a number of parameters. These can all be configured using the default setting using <a href="../api/bDetection">sanpy/detectionParams</a>.</p>
 <p>Note: To update this table use sanpy/bDetection.py</p>
 <table>
 <thead>
@@ -954,18 +1034,18 @@ myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 11
 </tbody>
 </table>
 <h2 id="detection-errors">Detection Errors<a class="headerlink" href="#detection-errors" title="Permanent link">¤</a></h2>
-<p>When we encounter errors during spike detection, they are stored for each spike in ['errors']. Each error has a name like 'dvdtPercent' as follows</p>
+<p>When SanPy encounters errors during spike detection, they are stored for each spike in ['errors']. Each error has a name like 'dvdtPercent' as follows</p>
 <ul>
-<li>dvdtPercent: Error searching for percent (10%) of dvdt max. When this occurs, the TOP (mV) of a spike will be more depolarized than it should be.</li>
-<li>preMin: Error searching for spike pre min, the MDP before a spike. This can occur on the first spike if it is close to the beginning of the recording.</li>
-<li>postMin:</li>
-<li>fitEDD: Error while fitting slope of EDD.</li>
-<li>preSpikeDvDt: Error while searching for peak in max ap upstroke (dV/dt) between spike threshold (TOP) and the peak in the first derivative of Vm (dV/dt).</li>
-<li>cycleLength: Usually occurs on last spike when looking for next MDP.</li>
-<li>spikeWidth: Error finding a particular spike with (AP_Dur). Usually occurs when spikes are too broad, can increase detection parameter <code>hwWindow_ms</code>.</li>
+<li><strong>dvdtPercent</strong>: Error searching for percent (10%) of dvdt max. When this occurs, the TOP (mV) of a spike will be more depolarized than it should be.</li>
+<li><strong>preMin</strong>: Error searching for spike pre min, the MDP before a spike. This can occur on the first spike if it is close to the beginning of the recording.</li>
+<li><strong>postMin</strong>:</li>
+<li><strong>fitEDD</strong>: Error while fitting slope of EDD.</li>
+<li><strong>preSpikeDvDt</strong>: Error while searching for peak in max ap upstroke (dV/dt) between spike threshold (TOP) and the peak in the first derivative of Vm (dV/dt).</li>
+<li><strong>cycleLength</strong>: Usually occurs on last spike when looking for next MDP.</li>
+<li><strong>spikeWidth</strong>: Error finding a particular spike with (AP_Dur). Usually occurs when spikes are too broad, can increase detection parameter <code>hwWindow_ms</code>.</li>
 </ul>
-<h1 id="analysis-output">Analysis output<a class="headerlink" href="#analysis-output" title="Permanent link">¤</a></h1>
-<p>Once spike are detected/analyzed, we have a number of parameters.</p>
+<h1 id="analysis-results">Analysis results<a class="headerlink" href="#analysis-results" title="Permanent link">¤</a></h1>
+<p>Once spike are detected, SanPy has the following analysis results.</p>
 <table>
 <thead>
 <tr>
@@ -1202,32 +1282,668 @@ myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 11
 </tr>
 </tbody>
 </table>
-<h1 id="analysis-output-full">Analysis output (full)<a class="headerlink" href="#analysis-output-full" title="Permanent link">¤</a></h1>
+<h1 id="analysis-results-full">Analysis results (full)<a class="headerlink" href="#analysis-results-full" title="Permanent link">¤</a></h1>
+<!-- <iframe src="../static/analysis-output-full.html" width="800" height="800" style="border: 0" seamless></iframe> -->
+
+<p>Generated 2023-03-24 with sanpy.analysisVersion 20230324a</p>
 <p>Note: To update this table use sanpy/bAnalysisResults.py</p>
-<iframe src="../static/analysis-output-full.html" width="800" height="800" style="border: 0" seamless></iframe>
-                
-              
-              
-                
+<table border="1" class="dataframe" style="width:600">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Name</th>
+      <th>type</th>
+      <th>default</th>
+      <th>units</th>
+      <th>depends on detection</th>
+      <th>error</th>
+      <th>description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>analysisDate</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Date of analysis in yyyymmdd format.</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>analysisTime</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Time of analysis in hh:mm:ss 24 hours format.</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>modDate</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Modification date if AP is modified after detection.</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>modTime</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Modification time if AP is modified after detection.</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>analysisVersion</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Analysis version when analysis was run. See sanpy.analysisVersion</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>interfaceVersion</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Interface version string when analysis was run. See sanpy.interfaceVersion</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>file</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Name of raw data file analyzed</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>detectionType</td>
+      <td></td>
+      <td>None</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Type of detection, either vm or dvdt. See enum sanpy.bDetection.detectionTypes</td>
+    </tr>
+    <tr>
+      <th>8</th>
+      <td>cellType</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>User specified cell type</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>sex</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>User specified sex</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>condition</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>User specified condition</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>sweep</td>
+      <td>int</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Sweep number of analyzed sweep. Zero based.</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>epoch</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Stimulus epoch number the spike occured in. Zero based.</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>epochLevel</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Epoch level (DAC) stimulus during the spike.</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>sweepSpikeNumber</td>
+      <td>int</td>
+      <td>None</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Spike number within the sweep. Zero based.</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>spikeNumber</td>
+      <td>int</td>
+      <td>None</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Spike number across all sweeps. Zero based.</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>include</td>
+      <td>bool</td>
+      <td>True</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Boolean indication include or not. Can be set by user/programmatically  after analysis.</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>userType</td>
+      <td>int</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Integer indication user type. Can be set by user/programmatically  after analysis.</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>errors</td>
+      <td>list</td>
+      <td>[]</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>List of dictionary to hold detection errors for this spike</td>
+    </tr>
+    <tr>
+      <th>19</th>
+      <td>dvdtThreshold</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>dvdt</td>
+      <td>dvdtThreshold</td>
+      <td></td>
+      <td>AP Threshold in derivative dv/dt</td>
+    </tr>
+    <tr>
+      <th>20</th>
+      <td>mvThreshold</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mV</td>
+      <td>mvThreshold</td>
+      <td></td>
+      <td>AP Threshold in primary recording mV</td>
+    </tr>
+    <tr>
+      <th>21</th>
+      <td>medianFilter</td>
+      <td>int</td>
+      <td>0</td>
+      <td></td>
+      <td>medianFilter</td>
+      <td></td>
+      <td>Median filter to generate filtered vm and dvdt. Value 0 indicates no filter.</td>
+    </tr>
+    <tr>
+      <th>22</th>
+      <td>halfHeights</td>
+      <td>list</td>
+      <td>[]</td>
+      <td></td>
+      <td>halfHeights</td>
+      <td></td>
+      <td>List of int to specify half-heights like [10, 20, 50, 80, 90].</td>
+    </tr>
+    <tr>
+      <th>23</th>
+      <td>thresholdPnt</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>point</td>
+      <td></td>
+      <td></td>
+      <td>AP threshold point</td>
+    </tr>
+    <tr>
+      <th>24</th>
+      <td>thresholdSec</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>sec</td>
+      <td></td>
+      <td></td>
+      <td>AP threshold seconds</td>
+    </tr>
+    <tr>
+      <th>25</th>
+      <td>thresholdVal</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mV</td>
+      <td></td>
+      <td></td>
+      <td>Value of Vm at AP threshold point.</td>
+    </tr>
+    <tr>
+      <th>26</th>
+      <td>thresholdVal_dvdt</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>dvdt</td>
+      <td></td>
+      <td></td>
+      <td>Value of dvdt at AP threshold point.</td>
+    </tr>
+    <tr>
+      <th>27</th>
+      <td>dacCommand</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mV</td>
+      <td></td>
+      <td></td>
+      <td>Value of DAC command at AP threshold point.</td>
+    </tr>
+    <tr>
+      <th>28</th>
+      <td>peakPnt</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>point</td>
+      <td>(onlyPeaksAbove_mV, peakWindow_ms)</td>
+      <td></td>
+      <td>AP peak point.</td>
+    </tr>
+    <tr>
+      <th>29</th>
+      <td>peakSec</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>sec</td>
+      <td></td>
+      <td></td>
+      <td>AP peak seconds.</td>
+    </tr>
+    <tr>
+      <th>30</th>
+      <td>peakVal</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mV</td>
+      <td></td>
+      <td></td>
+      <td>Value of Vm at AP peak point.</td>
+    </tr>
+    <tr>
+      <th>31</th>
+      <td>peakHeight</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mV</td>
+      <td></td>
+      <td></td>
+      <td>Difference between peakVal minus thresholdVal.</td>
+    </tr>
+    <tr>
+      <th>32</th>
+      <td>timeToPeak_ms</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>ms</td>
+      <td></td>
+      <td></td>
+      <td>Time to peak (ms) after TOP.</td>
+    </tr>
+    <tr>
+      <th>33</th>
+      <td>preMinPnt</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>point</td>
+      <td>mdp_ms</td>
+      <td></td>
+      <td>Minimum before an AP taken from predefined window.</td>
+    </tr>
+    <tr>
+      <th>34</th>
+      <td>preMinVal</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mV</td>
+      <td></td>
+      <td></td>
+      <td>Minimum before an AP taken from predefined window.</td>
+    </tr>
+    <tr>
+      <th>35</th>
+      <td>preLinearFitPnt0</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>point</td>
+      <td></td>
+      <td></td>
+      <td>Point where pre linear fit starts. Used for EDD Rate</td>
+    </tr>
+    <tr>
+      <th>36</th>
+      <td>preLinearFitPnt1</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>point</td>
+      <td></td>
+      <td></td>
+      <td>Point where pre linear fit stops. Used for EDD Rate</td>
+    </tr>
+    <tr>
+      <th>37</th>
+      <td>earlyDiastolicDuration_ms</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>ms</td>
+      <td></td>
+      <td></td>
+      <td>Time (ms) between start/stop of EDD.</td>
+    </tr>
+    <tr>
+      <th>38</th>
+      <td>preLinearFitVal0</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mv</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th>39</th>
+      <td>preLinearFitVal1</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mv</td>
+      <td></td>
+      <td></td>
+      <td></td>
+    </tr>
+    <tr>
+      <th>40</th>
+      <td>earlyDiastolicDurationRate</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mv/S</td>
+      <td></td>
+      <td></td>
+      <td>Early diastolic duration rate, the slope of the linear fit between start/stop of EDD.</td>
+    </tr>
+    <tr>
+      <th>41</th>
+      <td>lateDiastolicDuration</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Depreciated</td>
+    </tr>
+    <tr>
+      <th>42</th>
+      <td>preSpike_dvdt_max_pnt</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>point</td>
+      <td></td>
+      <td></td>
+      <td>Point corresponding to peak in dv/dt before an AP.</td>
+    </tr>
+    <tr>
+      <th>43</th>
+      <td>preSpike_dvdt_max_val</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mV</td>
+      <td></td>
+      <td></td>
+      <td>Value of Vm at peak of dv/dt before an AP.</td>
+    </tr>
+    <tr>
+      <th>44</th>
+      <td>preSpike_dvdt_max_val2</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>dv/dt</td>
+      <td></td>
+      <td></td>
+      <td>Value of dv/dt at peak of dv/dt before an AP.</td>
+    </tr>
+    <tr>
+      <th>45</th>
+      <td>postSpike_dvdt_min_pnt</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>point</td>
+      <td>dvdtPostWindow_ms</td>
+      <td></td>
+      <td>Point corresponding to min in dv/dt after an AP.</td>
+    </tr>
+    <tr>
+      <th>46</th>
+      <td>postSpike_dvdt_min_val</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mV</td>
+      <td></td>
+      <td></td>
+      <td>Value of Vm at minimum of dv/dt after an AP.</td>
+    </tr>
+    <tr>
+      <th>47</th>
+      <td>postSpike_dvdt_min_val2</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>dvdt</td>
+      <td></td>
+      <td></td>
+      <td>Value of dv/dt at minimum of dv/dt after an AP.</td>
+    </tr>
+    <tr>
+      <th>48</th>
+      <td>isi_pnts</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>point</td>
+      <td>refractory_ms</td>
+      <td></td>
+      <td>Inter-Spike-Interval (points) with respect to previous AP.</td>
+    </tr>
+    <tr>
+      <th>49</th>
+      <td>isi_ms</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>ms</td>
+      <td></td>
+      <td></td>
+      <td>Inter-Spike-Interval (ms) with respect to previous AP.</td>
+    </tr>
+    <tr>
+      <th>50</th>
+      <td>spikeFreq_hz</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>Hz</td>
+      <td></td>
+      <td></td>
+      <td>AP frequency with respect to previous AP.</td>
+    </tr>
+    <tr>
+      <th>51</th>
+      <td>cycleLength_pnts</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>point</td>
+      <td></td>
+      <td></td>
+      <td>Points between APs with respect to previous AP.</td>
+    </tr>
+    <tr>
+      <th>52</th>
+      <td>cycleLength_ms</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>point</td>
+      <td></td>
+      <td></td>
+      <td>Time (ms) between APs with respect to previous AP.</td>
+    </tr>
+    <tr>
+      <th>53</th>
+      <td>diastolicDuration_ms</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>ms</td>
+      <td></td>
+      <td></td>
+      <td>Time (ms) between minimum before AP (preMinPnt) and AP time (thresholdPnt).</td>
+    </tr>
+    <tr>
+      <th>54</th>
+      <td>widths</td>
+      <td>list</td>
+      <td>[]</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>A list of dict to hold half-height information for each half-height in detection halfHeights.</td>
+    </tr>
+    <tr>
+      <th>55</th>
+      <td>widths_10</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>percent</td>
+      <td>halfWidthWindow_ms</td>
+      <td></td>
+      <td>Width (ms) at half-height 10 %.</td>
+    </tr>
+    <tr>
+      <th>56</th>
+      <td>widths_20</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>percent</td>
+      <td>halfWidthWindow_ms</td>
+      <td></td>
+      <td>Width (ms) at half-height 20 %.</td>
+    </tr>
+    <tr>
+      <th>57</th>
+      <td>widths_50</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>percent</td>
+      <td>halfWidthWindow_ms</td>
+      <td></td>
+      <td>Width (ms) at half-height 50 %.</td>
+    </tr>
+    <tr>
+      <th>58</th>
+      <td>widths_80</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>percent</td>
+      <td>halfWidthWindow_ms</td>
+      <td></td>
+      <td>Width (ms) at half-height 80 %.</td>
+    </tr>
+    <tr>
+      <th>59</th>
+      <td>widths_90</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>percent</td>
+      <td>halfWidthWindow_ms</td>
+      <td></td>
+      <td>Width (ms) at half-height 90 %.</td>
+    </tr>
+  </tbody>
+</table>
+<p><br></p>
+<h1 id="what-spike-parameters-are-detected">What spike parameters are detected?<a class="headerlink" href="#what-spike-parameters-are-detected" title="Permanent link">¤</a></h1>
+<p>For cardiac myocyte analysis, SanPy follows the nomenclature from this paper:</p>
+<p><a href="https://www.ncbi.nlm.nih.gov/pubmed/24128759">Larson, et al (2013) Depressed pacemaker activity of sinoatrial node
+myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 110(44):18011-18016</a></p>
+<ul>
+<li>MDP and Vmax were defined as the most negative and positive membrane potentials, respectively</li>
+<li>Take-off potential (TOP) was defined as the membrane potential when the first derivative of voltage with respect to time (dV/dt) reached 10% of its maximum value</li>
+<li>Cycle length was defined as the interval between MDPs in successive APs</li>
+<li>The maximum rates of the AP upstroke and repolarization were taken as the maximum and minimum values of the first derivative (dV/dtmax and dV/dtmin, respectively)</li>
+<li>[[[REMOVED 20210501]]] Action potential duration (APD) was defined as the interval between the TOP and the subsequent MDP</li>
+<li>APD_50 and APD_90 were defined as the interval between the TOP and 50% and 90% repolarization, respectively</li>
+<li>The diastolic duration was defined as the interval between MDP and TOP</li>
+<li>The early diastolic depolarization rate was estimated as the slope of a linear fit between 10% and 50% of the diastolic duration and the early diastolic duration was the corresponding time interval</li>
+<li>The nonlinear late diastolic depolarization phase was estimated as the duration between 1% and 10% dV/dt</li>
+</ul>
 
 
-              
-            </article>
-          </div>
+
+
+
+                
+              </article>
+            </div>
+          
+          
         </div>
         
       </main>
       
-        my footer
+        All material is Copyright 2011-2022 Robert H. Cudmore
       
     </div>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.fcfe8b6d.min.js", "version": null}</script>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant"], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.b1047164.min.js"></script>
+      <script src="../assets/javascripts/bundle.efa0ade1.min.js"></script>
       
     
   </body>

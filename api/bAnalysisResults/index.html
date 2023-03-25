@@ -9,12 +9,17 @@
         <meta name="description" content="Current Clamp Analysis For Cardiac Myocytes">
       
       
-      
         <meta name="author" content="Robert H Cudmore">
       
       
+      
+        <link rel="prev" href="../bAnalysis/">
+      
+      
+        <link rel="next" href="../epochTable/">
+      
       <link rel="icon" href="../../img/sanpy-transparent.png">
-      <meta name="generator" content="mkdocs-1.2.3, mkdocs-material-7.3.6">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.3">
     
     
       
@@ -22,32 +27,34 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.a57b2b03.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.c4a75a56.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.3f5d1f46.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.a0c5b2b5.min.css">
+      
+      
+
+    
+    
+    
+      
         
-      
-    
-    
-    
-      
         
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
-    
     
     
       <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
     
       <link rel="stylesheet" href="../../css/style.css">
     
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
-
+    
     
     
   </head>
@@ -58,10 +65,9 @@
     
     
     
-    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="" data-md-color-accent="">
   
     
-    <script>function __prefix(e){return new URL("../..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -69,7 +75,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#sanpy.bAnalysisResults.analysisResult" class="md-skip">
+        <a href="#sanpy.bAnalysisResults" class="md-skip">
           Skip to content
         </a>
       
@@ -78,9 +84,12 @@
       
     </div>
     
+    
       
 
-<header class="md-header" data-md-component="header">
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
     <a href="../.." title="SanPy Documentation" class="md-header__button md-logo" aria-label="SanPy Documentation" data-md-component="logo">
       
@@ -88,7 +97,7 @@
 
     </a>
     <label class="md-header__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -110,22 +119,21 @@
     
     
       <label class="md-header__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
       </label>
-      
-<div class="md-search" data-md-component="search" role="dialog">
+      <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
       <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
       </label>
       <nav class="md-search__options" aria-label="Search">
         
-        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
         </button>
       </nav>
       
@@ -136,7 +144,7 @@
           <div class="md-search-result__meta">
             Initializing search
           </div>
-          <ol class="md-search-result__list"></ol>
+          <ol class="md-search-result__list" role="presentation"></ol>
         </div>
       </div>
     </div>
@@ -145,11 +153,10 @@
     
     
       <div class="md-header__source">
-        
-<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+        <a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     SanPy Repository
@@ -190,11 +197,10 @@
   </label>
   
     <div class="md-nav__source">
-      
-<a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
+      <a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     SanPy Repository
@@ -213,7 +219,22 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        SanPy
+        Introducing SanPy
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../download/" class="md-nav__link">
+        Download
       </a>
     </li>
   
@@ -271,71 +292,10 @@
   
   
   
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
-      
-      
-      
-      
-        <label class="md-nav__link" for="__nav_5">
-          Scripting
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <nav class="md-nav" aria-label="Scripting" data-md-level="1">
-        <label class="md-nav__title" for="__nav_5">
-          <span class="md-nav__icon md-icon"></span>
-          Scripting
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-            
-              
-  
-  
-  
     <li class="md-nav__item">
-      <a href="../../scripting/overview/" class="md-nav__link">
-        Overview
+      <a href="../../scripting/" class="md-nav__link">
+        Using the API
       </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../scripting/examples/" class="md-nav__link">
-        Examples
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../scripting/plotting-analysis/" class="md-nav__link">
-        Plotting Analysis
-      </a>
-    </li>
-  
-
-            
-          
-        </ul>
-      </nav>
     </li>
   
 
@@ -353,18 +313,19 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
       
       
       
-      
-        <label class="md-nav__link" for="__nav_6">
+        <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
           API
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="__nav_6">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+        <label class="md-nav__title" for="__nav_7">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
@@ -378,6 +339,48 @@
     <li class="md-nav__item">
       <a href="../overview/" class="md-nav__link">
         Overview
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../writing-a-file-loader/" class="md-nav__link">
+        Writing A File Loader
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../writing-a-plugin/" class="md-nav__link">
+        Writing A Plugin
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../writing-new-analysis/" class="md-nav__link">
+        Writing New Analysis
       </a>
     </li>
   
@@ -407,7 +410,7 @@
   
     <li class="md-nav__item md-nav__item--active">
       
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
       
@@ -422,7 +425,6 @@
       
         
 
-
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
@@ -435,87 +437,39 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisResults" class="md-nav__link">
+    sanpy.bAnalysisResults
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisResults-classes" class="md-nav__link">
+    Classes
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisResults.NumpyEncoder" class="md-nav__link">
+    NumpyEncoder
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.bAnalysisResults.analysisResult" class="md-nav__link">
     analysisResult
   </a>
   
-    <nav class="md-nav" aria-label="analysisResult">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResult.__str__" class="md-nav__link">
-    __str__()
-  </a>
-  
 </li>
         
           <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResult.addNewKey" class="md-nav__link">
-    addNewKey()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResult.asDict" class="md-nav__link">
-    asDict()
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#sanpy.bAnalysisResults.analysisResultList" class="md-nav__link">
     analysisResultList
   </a>
   
-    <nav class="md-nav" aria-label="analysisResultList">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.__getitem__" class="md-nav__link">
-    __getitem__()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.__iter__" class="md-nav__link">
-    __iter__()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.__len__" class="md-nav__link">
-    __len__()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.__next__" class="md-nav__link">
-    __next__()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.appendDefault" class="md-nav__link">
-    appendDefault()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.aslist" class="md-nav__link">
-    aslist()
-  </a>
-  
 </li>
         
       </ul>
@@ -524,9 +478,22 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisResults-functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#sanpy.bAnalysisResults.printDocs" class="md-nav__link">
     printDocs()
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -534,6 +501,20 @@
   
 </nav>
       
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../epochTable/" class="md-nav__link">
+        epochTable
+      </a>
     </li>
   
 
@@ -614,6 +595,82 @@
   
   
   
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_13" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_7_13" id="__nav_7_13_label" tabindex="0">
+          fileLoader
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_13_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_7_13">
+          <span class="md-nav__icon md-icon"></span>
+          fileLoader
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fileloader/fileLoader_base/" class="md-nav__link">
+        fileLoader_base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fileloader/fileLoader_abf/" class="md-nav__link">
+        fileLoader_abf
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fileloader/fileLoader_csv/" class="md-nav__link">
+        fileLoader_csv
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
     <li class="md-nav__item">
       <a href="../userAnalysis/baseUserAnalysis/" class="md-nav__link">
         baseUserAnalysis
@@ -632,18 +689,19 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_10" type="checkbox" id="__nav_6_10" >
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_15" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_6_10">
+        <label class="md-nav__link" for="__nav_7_15" id="__nav_7_15_label" tabindex="0">
           interface
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="interface" data-md-level="2">
-        <label class="md-nav__title" for="__nav_6_10">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_15_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_7_15">
           <span class="md-nav__icon md-icon"></span>
           interface
         </label>
@@ -672,18 +730,19 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_10_2" type="checkbox" id="__nav_6_10_2" >
+      
+      
+      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_15_2" >
       
       
       
-      
-        <label class="md-nav__link" for="__nav_6_10_2">
+        <label class="md-nav__link" for="__nav_7_15_2" id="__nav_7_15_2_label" tabindex="0">
           plugins
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" aria-label="plugins" data-md-level="3">
-        <label class="md-nav__title" for="__nav_6_10_2">
+      <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_7_15_2_label" aria-expanded="false">
+        <label class="md-nav__title" for="__nav_7_15_2">
           <span class="md-nav__icon md-icon"></span>
           plugins
         </label>
@@ -796,7 +855,6 @@
                   <div class="md-sidebar__inner">
                     
 
-
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
@@ -809,87 +867,39 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisResults" class="md-nav__link">
+    sanpy.bAnalysisResults
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisResults-classes" class="md-nav__link">
+    Classes
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisResults.NumpyEncoder" class="md-nav__link">
+    NumpyEncoder
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#sanpy.bAnalysisResults.analysisResult" class="md-nav__link">
     analysisResult
   </a>
   
-    <nav class="md-nav" aria-label="analysisResult">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResult.__str__" class="md-nav__link">
-    __str__()
-  </a>
-  
 </li>
         
           <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResult.addNewKey" class="md-nav__link">
-    addNewKey()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResult.asDict" class="md-nav__link">
-    asDict()
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#sanpy.bAnalysisResults.analysisResultList" class="md-nav__link">
     analysisResultList
   </a>
   
-    <nav class="md-nav" aria-label="analysisResultList">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.__getitem__" class="md-nav__link">
-    __getitem__()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.__iter__" class="md-nav__link">
-    __iter__()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.__len__" class="md-nav__link">
-    __len__()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.__next__" class="md-nav__link">
-    __next__()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.appendDefault" class="md-nav__link">
-    appendDefault()
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisResults.analysisResultList.aslist" class="md-nav__link">
-    aslist()
-  </a>
-  
 </li>
         
       </ul>
@@ -898,9 +908,22 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisResults-functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#sanpy.bAnalysisResults.printDocs" class="md-nav__link">
     printDocs()
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -912,45 +935,26 @@
               </div>
             
           
-          <div class="md-content" data-md-component="content">
-            <article class="md-content__inner md-typeset">
-              
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
                 
-                
-                  <h1>bAnalysisResults</h1>
-                
-                <div class="doc doc-object doc-module">
+                  
 
 
-    <div class="doc doc-contents first">
+  <h1>bAnalysisResults</h1>
 
-      <p>Utilities to define analysis results.</p>
+<div class="doc doc-object doc-module">
+
+
+<a id="sanpy.bAnalysisResults"></a>
+  <div class="doc doc-contents first">
+  
+      <p>Dec 2022, NOT USED BY ANY OTHER CODE ?</p>
+<p>Utilities to define analysis results.</p>
 <p>These are keys in bAnalysis_ spike dict and columns in output reports</p>
 
-
-
-  <div class="doc doc-children">
-
-
-
-
-  <div class="doc doc-object doc-class">
-
-
-
-<h2 id="sanpy.bAnalysisResults.analysisResult" class="doc doc-heading">
-        <code>
-analysisResult        </code>
-
-
-
-<a href="#sanpy.bAnalysisResults.analysisResult" class="headerlink" title="Permanent link">¤</a></h2>
-
-    <div class="doc doc-contents ">
-
-
-
-
+  
 
   <div class="doc doc-children">
 
@@ -959,532 +963,1231 @@ analysisResult        </code>
 
 
 
+<h2 id="sanpy.bAnalysisResults-classes">Classes<a href="#sanpy.bAnalysisResults-classes" class="headerlink" title="Permanent link">¤</a></h2>
+
+<div class="doc doc-object doc-class">
 
 
 
+<h3 id="sanpy.bAnalysisResults.NumpyEncoder" class="doc doc-heading">
+        <code>NumpyEncoder</code>
 
 
+<a href="#sanpy.bAnalysisResults.NumpyEncoder" class="headerlink" title="Permanent link">¤</a></h3>
 
 
-  <div class="doc doc-object doc-method">
+  <div class="doc doc-contents ">
+      <p class="doc doc-class-bases">
+        Bases: <code>json.<span title="json.JSONEncoder">JSONEncoder</span></code></p>
 
+  
+      <p>Special json encoder for numpy types</p>
 
-
-<h3 id="sanpy.bAnalysisResults.analysisResult.__str__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
-
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-special"><code>special</code></small>
-  </span>
-
-<a href="#sanpy.bAnalysisResults.analysisResult.__str__" class="headerlink" title="Permanent link">¤</a></h3>
-
-    <div class="doc doc-contents ">
-
-      <p>for k,v in self._rDict.items():
-        if k == 'widths':
-                widths = v
-                for idx2, width in enumerate(widths):
-                        print(f'{idx2}')
-                        print(width)
-        !!! else
-                print(f'key:{k} v:{v}')
-return str('xxx')</p>
 
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-	<span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">	for k,v in self._rDict.items():</span>
-<span class="sd">		if k == &#39;widths&#39;:</span>
-<span class="sd">			widths = v</span>
-<span class="sd">			for idx2, width in enumerate(widths):</span>
-<span class="sd">				print(f&#39;{idx2}&#39;)</span>
-<span class="sd">				print(width)</span>
-<span class="sd">		else:</span>
-<span class="sd">			print(f&#39;key:{k} v:{v}&#39;)</span>
-<span class="sd">	return str(&#39;xxx&#39;)</span>
-<span class="sd">	&#39;&#39;&#39;</span>
-	<span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="p">)</span>
-</code></pre></div>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span>
+<span class="normal">505</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">NumpyEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Special json encoder for numpy types &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">floating</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">obj</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
         </details>
-    </div>
+
+  
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
 
   </div>
 
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="sanpy.bAnalysisResults.analysisResult" class="doc doc-heading">
+        <code>analysisResult</code>
+
+
+<a href="#sanpy.bAnalysisResults.analysisResult" class="headerlink" title="Permanent link">¤</a></h3>
+
+
+  <div class="doc doc-contents ">
+
+
+
+        <details class="quote">
+          <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">641</span>
+<span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span>
+<span class="normal">656</span>
+<span class="normal">657</span>
+<span class="normal">658</span>
+<span class="normal">659</span>
+<span class="normal">660</span>
+<span class="normal">661</span>
+<span class="normal">662</span>
+<span class="normal">663</span>
+<span class="normal">664</span>
+<span class="normal">665</span>
+<span class="normal">666</span>
+<span class="normal">667</span>
+<span class="normal">668</span>
+<span class="normal">669</span>
+<span class="normal">670</span>
+<span class="normal">671</span>
+<span class="normal">672</span>
+<span class="normal">673</span>
+<span class="normal">674</span>
+<span class="normal">675</span>
+<span class="normal">676</span>
+<span class="normal">677</span>
+<span class="normal">678</span>
+<span class="normal">679</span>
+<span class="normal">680</span>
+<span class="normal">681</span>
+<span class="normal">682</span>
+<span class="normal">683</span>
+<span class="normal">684</span>
+<span class="normal">685</span>
+<span class="normal">686</span>
+<span class="normal">687</span>
+<span class="normal">688</span>
+<span class="normal">689</span>
+<span class="normal">690</span>
+<span class="normal">691</span>
+<span class="normal">692</span>
+<span class="normal">693</span>
+<span class="normal">694</span>
+<span class="normal">695</span>
+<span class="normal">696</span>
+<span class="normal">697</span>
+<span class="normal">698</span>
+<span class="normal">699</span>
+<span class="normal">700</span>
+<span class="normal">701</span>
+<span class="normal">702</span>
+<span class="normal">703</span>
+<span class="normal">704</span>
+<span class="normal">705</span>
+<span class="normal">706</span>
+<span class="normal">707</span>
+<span class="normal">708</span>
+<span class="normal">709</span>
+<span class="normal">710</span>
+<span class="normal">711</span>
+<span class="normal">712</span>
+<span class="normal">713</span>
+<span class="normal">714</span>
+<span class="normal">715</span>
+<span class="normal">716</span>
+<span class="normal">717</span>
+<span class="normal">718</span>
+<span class="normal">719</span>
+<span class="normal">720</span>
+<span class="normal">721</span>
+<span class="normal">722</span>
+<span class="normal">723</span>
+<span class="normal">724</span>
+<span class="normal">725</span>
+<span class="normal">726</span>
+<span class="normal">727</span>
+<span class="normal">728</span>
+<span class="normal">729</span>
+<span class="normal">730</span>
+<span class="normal">731</span>
+<span class="normal">732</span>
+<span class="normal">733</span>
+<span class="normal">734</span>
+<span class="normal">735</span>
+<span class="normal">736</span>
+<span class="normal">737</span>
+<span class="normal">738</span>
+<span class="normal">739</span>
+<span class="normal">740</span>
+<span class="normal">741</span>
+<span class="normal">742</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">analysisResult</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theDict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create an anlysis item (for one spike)</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            theDict: Pre-existing dict when we load form h5 file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># this is the raw definition of analysis results (See above)</span>
+        <span class="c1"># pull from this to create key/value self.rDict</span>
+        <span class="c1">#self._dDict = analysisResultDict</span>
+        <span class="n">defaultDict</span> <span class="o">=</span> <span class="n">analysisResultDict</span>
+        <span class="c1"># this is simple key/value pairs as we will in detection</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">defaultDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">default</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">default</span>
+
+        <span class="k">if</span> <span class="n">theDict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">theDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>  <span class="c1"># calls __setitem__()</span>
+
+    <span class="c1"># this was interfering with converting to DataFrame ???</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    def __str__(self):</span>
+<span class="sd">        printList = []</span>
+<span class="sd">        for k,v in self._rDict.items():</span>
+<span class="sd">            if isinstance(v, dict):</span>
+<span class="sd">                for k2,v2 in v.items():</span>
+<span class="sd">                    printList.append(f&#39;  {k2} : {v2} {type(v2)}&#39;)</span>
+<span class="sd">            else:</span>
+<span class="sd">                printList.append(f&#39;{k} : {v} {type(v)}&#39;)</span>
+<span class="sd">        return &#39;\n&#39;.join(printList)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">print</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">printList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">k2</span><span class="p">,</span><span class="n">v2</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                        <span class="n">printList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">k2</span><span class="si">}</span><span class="s1"> : </span><span class="si">{</span><span class="n">v2</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">v2</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">printList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1"> : </span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">printList</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">addNewKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theKey</span><span class="p">,</span> <span class="n">theDefault</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a new key to this spike.</span>
+
+<span class="sd">        Returns: (bool) True if new key added, false if key already exists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">theDefault</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1">#theType = &#39;float&#39;</span>
+            <span class="n">theDefault</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
+
+        <span class="c1"># check if key exists</span>
+        <span class="n">keyExists</span> <span class="o">=</span> <span class="n">theKey</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+        <span class="n">addedKey</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">keyExists</span><span class="p">:</span>
+             <span class="c1">#key exists, don&#39;t modify</span>
+             <span class="c1">#logger.warning(f&#39;The key &quot;{theKey}&quot; already exists and has value &quot;{self._rDict[theKey]}&quot;&#39;)</span>
+             <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="p">[</span><span class="n">theKey</span><span class="p">]</span> <span class="o">=</span> <span class="n">theDefault</span>
+            <span class="n">addedKey</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1">#</span>
+        <span class="k">return</span> <span class="n">addedKey</span>
+
+    <span class="k">def</span> <span class="nf">asDict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns underlying dictionary</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="c1"># to mimic a dictionary</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1">#return self._dDict[key][&#39;currentValue&#39;]</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Error getting key &quot;</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">&quot; exception:</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">raise</span>
+        <span class="c1">#</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="k">def</span> <span class="fm">__setitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="c1"># to mimic a dictionary</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1">#self._dDict[key][&#39;currentValue&#39;] = value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">items</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># to mimic a dictionary</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">keys</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># to mimic a dictionary</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+        </details>
+
+  
+
+  <div class="doc doc-children">
 
 
 
 
-  <div class="doc doc-object doc-method">
 
 
 
-<h3 id="sanpy.bAnalysisResults.analysisResult.addNewKey" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">addNewKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theKey</span><span class="p">,</span> <span class="n">theDefault</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+<h4 id="sanpy.bAnalysisResults.analysisResult-functions">Functions<a href="#sanpy.bAnalysisResults.analysisResult-functions" class="headerlink" title="Permanent link">¤</a></h4>
+
+<div class="doc doc-object doc-function">
 
 
-<a href="#sanpy.bAnalysisResults.analysisResult.addNewKey" class="headerlink" title="Permanent link">¤</a></h3>
 
-    <div class="doc doc-contents ">
+<h5 id="sanpy.bAnalysisResults.analysisResult.__init__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="n">theDict</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
+<a href="#sanpy.bAnalysisResults.analysisResult.__init__" class="headerlink" title="Permanent link">¤</a></h5>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Create an anlysis item (for one spike)</p>
+<p>Args:
+    theDict: Pre-existing dict when we load form h5 file</p>
+
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">642</span>
+<span class="normal">643</span>
+<span class="normal">644</span>
+<span class="normal">645</span>
+<span class="normal">646</span>
+<span class="normal">647</span>
+<span class="normal">648</span>
+<span class="normal">649</span>
+<span class="normal">650</span>
+<span class="normal">651</span>
+<span class="normal">652</span>
+<span class="normal">653</span>
+<span class="normal">654</span>
+<span class="normal">655</span>
+<span class="normal">656</span>
+<span class="normal">657</span>
+<span class="normal">658</span>
+<span class="normal">659</span>
+<span class="normal">660</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theDict</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create an anlysis item (for one spike)</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        theDict: Pre-existing dict when we load form h5 file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># this is the raw definition of analysis results (See above)</span>
+    <span class="c1"># pull from this to create key/value self.rDict</span>
+    <span class="c1">#self._dDict = analysisResultDict</span>
+    <span class="n">defaultDict</span> <span class="o">=</span> <span class="n">analysisResultDict</span>
+    <span class="c1"># this is simple key/value pairs as we will in detection</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">defaultDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">default</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;default&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">default</span>
+
+    <span class="k">if</span> <span class="n">theDict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">theDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>  <span class="c1"># calls __setitem__()</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h5 id="sanpy.bAnalysisResults.analysisResult.addNewKey" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">addNewKey</span><span class="p">(</span><span class="n">theKey</span><span class="p">,</span> <span class="n">theDefault</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+<a href="#sanpy.bAnalysisResults.analysisResult.addNewKey" class="headerlink" title="Permanent link">¤</a></h5>
+
+
+  <div class="doc doc-contents ">
+  
       <p>Add a new key to this spike.</p>
 <p>Returns: (bool) True if new key added, false if key already exists.</p>
 
-        <details class="quote">
-          <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">addNewKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theKey</span><span class="p">,</span> <span class="n">theDefault</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Add a new key to this spike.</span>
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">686</span>
+<span class="normal">687</span>
+<span class="normal">688</span>
+<span class="normal">689</span>
+<span class="normal">690</span>
+<span class="normal">691</span>
+<span class="normal">692</span>
+<span class="normal">693</span>
+<span class="normal">694</span>
+<span class="normal">695</span>
+<span class="normal">696</span>
+<span class="normal">697</span>
+<span class="normal">698</span>
+<span class="normal">699</span>
+<span class="normal">700</span>
+<span class="normal">701</span>
+<span class="normal">702</span>
+<span class="normal">703</span>
+<span class="normal">704</span>
+<span class="normal">705</span>
+<span class="normal">706</span>
+<span class="normal">707</span>
+<span class="normal">708</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">addNewKey</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theKey</span><span class="p">,</span> <span class="n">theDefault</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Add a new key to this spike.</span>
 
-<span class="sd">	Returns: (bool) True if new key added, false if key already exists.</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">if</span> <span class="n">theDefault</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-		<span class="c1">#theType = &#39;float&#39;</span>
-		<span class="n">theDefault</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
+<span class="sd">    Returns: (bool) True if new key added, false if key already exists.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">theDefault</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1">#theType = &#39;float&#39;</span>
+        <span class="n">theDefault</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
 
-	<span class="c1"># check if key exists</span>
-	<span class="n">keyExists</span> <span class="o">=</span> <span class="n">theKey</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
-	<span class="n">addedKey</span> <span class="o">=</span> <span class="kc">False</span>
-	<span class="k">if</span> <span class="n">keyExists</span><span class="p">:</span>
-		 <span class="c1">#key exists, don&#39;t modify</span>
-		 <span class="c1">#logger.warning(f&#39;The key &quot;{theKey}&quot; already exists and has value &quot;{self._rDict[theKey]}&quot;&#39;)</span>
-		 <span class="k">pass</span>
-	<span class="k">else</span><span class="p">:</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="p">[</span><span class="n">theKey</span><span class="p">]</span> <span class="o">=</span> <span class="n">theDefault</span>
-		<span class="n">addedKey</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1"># check if key exists</span>
+    <span class="n">keyExists</span> <span class="o">=</span> <span class="n">theKey</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
+    <span class="n">addedKey</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">keyExists</span><span class="p">:</span>
+         <span class="c1">#key exists, don&#39;t modify</span>
+         <span class="c1">#logger.warning(f&#39;The key &quot;{theKey}&quot; already exists and has value &quot;{self._rDict[theKey]}&quot;&#39;)</span>
+         <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span><span class="p">[</span><span class="n">theKey</span><span class="p">]</span> <span class="o">=</span> <span class="n">theDefault</span>
+        <span class="n">addedKey</span> <span class="o">=</span> <span class="kc">True</span>
 
-	<span class="c1">#</span>
-	<span class="k">return</span> <span class="n">addedKey</span>
-</code></pre></div>
-        </details>
-    </div>
-
+    <span class="c1">#</span>
+    <span class="k">return</span> <span class="n">addedKey</span>
+</code></pre></div></td></tr></table></div>
+      </details>
   </div>
 
+</div>
+
+<div class="doc doc-object doc-function">
 
 
 
+<h5 id="sanpy.bAnalysisResults.analysisResult.asDict" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">asDict</span><span class="p">()</span></code>
 
-  <div class="doc doc-object doc-method">
-
-
-
-<h3 id="sanpy.bAnalysisResults.analysisResult.asDict" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">asDict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+<a href="#sanpy.bAnalysisResults.analysisResult.asDict" class="headerlink" title="Permanent link">¤</a></h5>
 
 
-<a href="#sanpy.bAnalysisResults.analysisResult.asDict" class="headerlink" title="Permanent link">¤</a></h3>
-
-    <div class="doc doc-contents ">
-
+  <div class="doc doc-contents ">
+  
       <p>Returns underlying dictionary</p>
 
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">710</span>
+<span class="normal">711</span>
+<span class="normal">712</span>
+<span class="normal">713</span>
+<span class="normal">714</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">asDict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns underlying dictionary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="sanpy.bAnalysisResults.analysisResultList" class="doc doc-heading">
+        <code>analysisResultList</code>
+
+
+<a href="#sanpy.bAnalysisResults.analysisResultList" class="headerlink" title="Permanent link">¤</a></h3>
+
+
+  <div class="doc doc-contents ">
+
+  
+      <p>Class encapsulating a list of analysisResultDict (one dict per spike).</p>
+
+
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">asDict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Returns underlying dictionary</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_rDict</span>
-</code></pre></div>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span>
+<span class="normal">543</span>
+<span class="normal">544</span>
+<span class="normal">545</span>
+<span class="normal">546</span>
+<span class="normal">547</span>
+<span class="normal">548</span>
+<span class="normal">549</span>
+<span class="normal">550</span>
+<span class="normal">551</span>
+<span class="normal">552</span>
+<span class="normal">553</span>
+<span class="normal">554</span>
+<span class="normal">555</span>
+<span class="normal">556</span>
+<span class="normal">557</span>
+<span class="normal">558</span>
+<span class="normal">559</span>
+<span class="normal">560</span>
+<span class="normal">561</span>
+<span class="normal">562</span>
+<span class="normal">563</span>
+<span class="normal">564</span>
+<span class="normal">565</span>
+<span class="normal">566</span>
+<span class="normal">567</span>
+<span class="normal">568</span>
+<span class="normal">569</span>
+<span class="normal">570</span>
+<span class="normal">571</span>
+<span class="normal">572</span>
+<span class="normal">573</span>
+<span class="normal">574</span>
+<span class="normal">575</span>
+<span class="normal">576</span>
+<span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span>
+<span class="normal">584</span>
+<span class="normal">585</span>
+<span class="normal">586</span>
+<span class="normal">587</span>
+<span class="normal">588</span>
+<span class="normal">589</span>
+<span class="normal">590</span>
+<span class="normal">591</span>
+<span class="normal">592</span>
+<span class="normal">593</span>
+<span class="normal">594</span>
+<span class="normal">595</span>
+<span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span>
+<span class="normal">600</span>
+<span class="normal">601</span>
+<span class="normal">602</span>
+<span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span>
+<span class="normal">608</span>
+<span class="normal">609</span>
+<span class="normal">610</span>
+<span class="normal">611</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span>
+<span class="normal">618</span>
+<span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span>
+<span class="normal">623</span>
+<span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span>
+<span class="normal">629</span>
+<span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">analysisResultList</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class encapsulating a list of analysisResultDict (one dict per spike).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># one copy for entire list</span>
+
+        <span class="c1"># TODO: put xxx in a function getAnalysisResltDict()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dDict</span> <span class="o">=</span> <span class="n">analysisResultDict</span>
+
+        <span class="c1"># list of analysisResultDict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="k">def</span> <span class="nf">setFromListDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listOfDict</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Set analysis results from a list of dict.</span>
+
+<span class="sd">        Used when loading sanpy.bAnalysis from h5 file.</span>
+
+<span class="sd">        When we create self (during spike detect) we have a list of class analysisResult.</span>
+<span class="sd">        When we save/load we have a list of dict.</span>
+
+<span class="sd">        This is assuming we re-create self every time we do spike detection</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># do not do this, we are an analysisResultList as a list of analysisResult</span>
+        <span class="c1"># self._myList = listOfDict</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">oneDict</span> <span class="ow">in</span> <span class="n">listOfDict</span><span class="p">:</span>
+            <span class="n">oneAnalysisResult</span> <span class="o">=</span> <span class="n">analysisResult</span><span class="p">(</span><span class="n">theDict</span><span class="o">=</span><span class="n">oneDict</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oneAnalysisResult</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">analysisDate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;analysisDate&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">analysisTime</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;analysisTime&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">old_save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">saveBase</span><span class="p">):</span>
+        <span class="n">savePath</span> <span class="o">=</span> <span class="n">saveBase</span> <span class="o">+</span> <span class="s1">&#39;-analysis.json&#39;</span>
+
+        <span class="n">analysisList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">asList</span><span class="p">()</span>
+
+        <span class="c1">#print(analysisList[0].print())</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">savePath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">analysisList</span><span class="p">,</span> <span class="n">f</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">NumpyEncoder</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">old_load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loadBase</span><span class="p">):</span>
+        <span class="n">loadPath</span> <span class="o">=</span> <span class="n">loadBase</span> <span class="o">+</span> <span class="s1">&#39;-analysis.json&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">loadPath</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not find file: </span><span class="si">{</span><span class="n">loadPath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">loadPath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">appendDefault</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Append a spike to analysis.</span>
+
+<span class="sd">        Used in bAnalysis spike detection.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">oneResult</span> <span class="o">=</span> <span class="n">analysisResult</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oneResult</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">appendAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">analysisResultList</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">analysisResult</span> <span class="ow">in</span> <span class="n">analysisResultList</span><span class="p">:</span>
+            <span class="c1"># analysisResult is for one spike</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">analysisResult</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">addAnalysisResult</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theKey</span><span class="p">,</span> <span class="n">theDefault</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+        <span class="c1"># go through list and add to each [i] dict</span>
+        <span class="k">for</span> <span class="n">spike</span> <span class="ow">in</span> <span class="bp">self</span><span class="p">:</span>
+            <span class="n">spike</span><span class="o">.</span><span class="n">addNewKey</span><span class="p">(</span><span class="n">theKey</span><span class="p">,</span> <span class="n">theDefault</span><span class="o">=</span><span class="n">theDefault</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">asList</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return underlying list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1">#return [spike.asDict() for spike in self._myList]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">asDict</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">asDataFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Note: underlying _myList is a list of analysisResult</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">asList</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allow [] indexing with self[int].</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1">#return self._dDict[key][&#39;currentValue&#39;]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Allow len() with len(this)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allow iteration with &quot;for item in self&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Allow iteration with &quot;for item in self&quot;</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="c1"># reset to initial value</span>
+            <span class="k">raise</span> <span class="ne">StopIteration</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
         </details>
-    </div>
 
-  </div>
-
-
-
-
-
-
-
-
-
-
-
-  </div>
-
-    </div>
-
-  </div>
-
-
-
-
-
-
-
-
-  <div class="doc doc-object doc-class">
-
-
-
-<h2 id="sanpy.bAnalysisResults.analysisResultList" class="doc doc-heading">
-        <code>
-analysisResultList        </code>
-
-
-
-<a href="#sanpy.bAnalysisResults.analysisResultList" class="headerlink" title="Permanent link">¤</a></h2>
-
-    <div class="doc doc-contents ">
-
-      <p>Class encapsulating a list of analysisResultDict (one dict per spike)</p>
-
-
-
+  
 
   <div class="doc doc-children">
 
 
 
 
-  <div class="doc doc-object doc-method">
 
 
 
-<h3 id="sanpy.bAnalysisResults.analysisResultList.__getitem__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span></code>
+<h4 id="sanpy.bAnalysisResults.analysisResultList-functions">Functions<a href="#sanpy.bAnalysisResults.analysisResultList-functions" class="headerlink" title="Permanent link">¤</a></h4>
 
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-special"><code>special</code></small>
-  </span>
+<div class="doc doc-object doc-function">
 
-<a href="#sanpy.bAnalysisResults.analysisResultList.__getitem__" class="headerlink" title="Permanent link">¤</a></h3>
 
-    <div class="doc doc-contents ">
 
+<h5 id="sanpy.bAnalysisResults.analysisResultList.__getitem__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__getitem__</span><span class="p">(</span><span class="n">key</span><span class="p">)</span></code>
+
+<a href="#sanpy.bAnalysisResults.analysisResultList.__getitem__" class="headerlink" title="Permanent link">¤</a></h5>
+
+
+  <div class="doc doc-contents ">
+  
       <p>Allow [] indexing with self[int].</p>
 
-        <details class="quote">
-          <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Allow [] indexing with self[int].</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">try</span><span class="p">:</span>
-		<span class="c1">#return self._dDict[key][&#39;currentValue&#39;]</span>
-		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
-	<span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-		<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-</code></pre></div>
-        </details>
-    </div>
-
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">609</span>
+<span class="normal">610</span>
+<span class="normal">611</span>
+<span class="normal">612</span>
+<span class="normal">613</span>
+<span class="normal">614</span>
+<span class="normal">615</span>
+<span class="normal">616</span>
+<span class="normal">617</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Allow [] indexing with self[int].</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1">#return self._dDict[key][&#39;currentValue&#39;]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+      </details>
   </div>
 
+</div>
+
+<div class="doc doc-object doc-function">
 
 
 
+<h5 id="sanpy.bAnalysisResults.analysisResultList.__iter__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__iter__</span><span class="p">()</span></code>
+
+<a href="#sanpy.bAnalysisResults.analysisResultList.__iter__" class="headerlink" title="Permanent link">¤</a></h5>
 
 
-
-
-  <div class="doc doc-object doc-method">
-
-
-
-<h3 id="sanpy.bAnalysisResults.analysisResultList.__iter__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
-
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-special"><code>special</code></small>
-  </span>
-
-<a href="#sanpy.bAnalysisResults.analysisResultList.__iter__" class="headerlink" title="Permanent link">¤</a></h3>
-
-    <div class="doc doc-contents ">
-
+  <div class="doc doc-contents ">
+  
       <p>Allow iteration with "for item in self"</p>
 
-        <details class="quote">
-          <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Allow iteration with &quot;for item in self&quot;</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">return</span> <span class="bp">self</span>
-</code></pre></div>
-        </details>
-    </div>
-
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">624</span>
+<span class="normal">625</span>
+<span class="normal">626</span>
+<span class="normal">627</span>
+<span class="normal">628</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Allow iteration with &quot;for item in self&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span>
+</code></pre></div></td></tr></table></div>
+      </details>
   </div>
 
+</div>
+
+<div class="doc doc-object doc-function">
 
 
 
+<h5 id="sanpy.bAnalysisResults.analysisResultList.__len__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__len__</span><span class="p">()</span></code>
 
-  <div class="doc doc-object doc-method">
+<a href="#sanpy.bAnalysisResults.analysisResultList.__len__" class="headerlink" title="Permanent link">¤</a></h5>
 
 
-
-<h3 id="sanpy.bAnalysisResults.analysisResultList.__len__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
-
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-special"><code>special</code></small>
-  </span>
-
-<a href="#sanpy.bAnalysisResults.analysisResultList.__len__" class="headerlink" title="Permanent link">¤</a></h3>
-
-    <div class="doc doc-contents ">
-
+  <div class="doc doc-contents ">
+  
       <p>Allow len() with len(this)</p>
 
-        <details class="quote">
-          <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot; Allow len() with len(this)</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">)</span>
-</code></pre></div>
-        </details>
-    </div>
-
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">619</span>
+<span class="normal">620</span>
+<span class="normal">621</span>
+<span class="normal">622</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Allow len() with len(this)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+      </details>
   </div>
 
+</div>
+
+<div class="doc doc-object doc-function">
 
 
 
+<h5 id="sanpy.bAnalysisResults.analysisResultList.__next__" class="doc doc-heading">
+<code class="highlight language-python"><span class="fm">__next__</span><span class="p">()</span></code>
 
-  <div class="doc doc-object doc-method">
+<a href="#sanpy.bAnalysisResults.analysisResultList.__next__" class="headerlink" title="Permanent link">¤</a></h5>
 
 
-
-<h3 id="sanpy.bAnalysisResults.analysisResultList.__next__" class="doc doc-heading">
-<code class="highlight language-python"><span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
-
-  <span class="doc doc-properties">
-      <small class="doc doc-property doc-property-special"><code>special</code></small>
-  </span>
-
-<a href="#sanpy.bAnalysisResults.analysisResultList.__next__" class="headerlink" title="Permanent link">¤</a></h3>
-
-    <div class="doc doc-contents ">
-
+  <div class="doc doc-contents ">
+  
       <p>Allow iteration with "for item in self"</p>
 
-        <details class="quote">
-          <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Allow iteration with &quot;for item in self&quot;</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span> <span class="o">+=</span> <span class="mi">1</span>
-	<span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">):</span>
-		<span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="c1"># reset to initial value</span>
-		<span class="k">raise</span> <span class="ne">StopIteration</span>
-	<span class="k">else</span><span class="p">:</span>
-		<span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span><span class="p">]</span>
-</code></pre></div>
-        </details>
-    </div>
-
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">630</span>
+<span class="normal">631</span>
+<span class="normal">632</span>
+<span class="normal">633</span>
+<span class="normal">634</span>
+<span class="normal">635</span>
+<span class="normal">636</span>
+<span class="normal">637</span>
+<span class="normal">638</span>
+<span class="normal">639</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__next__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Allow iteration with &quot;for item in self&quot;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="c1"># reset to initial value</span>
+        <span class="k">raise</span> <span class="ne">StopIteration</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_iterIdx</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+      </details>
   </div>
 
+</div>
+
+<div class="doc doc-object doc-function">
 
 
 
+<h5 id="sanpy.bAnalysisResults.analysisResultList.appendDefault" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">appendDefault</span><span class="p">()</span></code>
+
+<a href="#sanpy.bAnalysisResults.analysisResultList.appendDefault" class="headerlink" title="Permanent link">¤</a></h5>
 
 
-
-
-  <div class="doc doc-object doc-method">
-
-
-
-<h3 id="sanpy.bAnalysisResults.analysisResultList.appendDefault" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">appendDefault</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
-
-
-<a href="#sanpy.bAnalysisResults.analysisResultList.appendDefault" class="headerlink" title="Permanent link">¤</a></h3>
-
-    <div class="doc doc-contents ">
-
+  <div class="doc doc-contents ">
+  
       <p>Append a spike to analysis.</p>
+<p>Used in bAnalysis spike detection.</p>
 
-        <details class="quote">
-          <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">appendDefault</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;Append a spike to analysis.&quot;&quot;&quot;</span>
-	<span class="n">oneResult</span> <span class="o">=</span> <span class="n">analysisResult</span><span class="p">()</span>
-	<span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oneResult</span><span class="p">)</span>
-</code></pre></div>
-        </details>
-    </div>
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">577</span>
+<span class="normal">578</span>
+<span class="normal">579</span>
+<span class="normal">580</span>
+<span class="normal">581</span>
+<span class="normal">582</span>
+<span class="normal">583</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">appendDefault</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Append a spike to analysis.</span>
 
+<span class="sd">    Used in bAnalysis spike detection.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">oneResult</span> <span class="o">=</span> <span class="n">analysisResult</span><span class="p">()</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oneResult</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+      </details>
   </div>
 
+</div>
+
+<div class="doc doc-object doc-function">
 
 
 
+<h5 id="sanpy.bAnalysisResults.analysisResultList.asDataFrame" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">asDataFrame</span><span class="p">()</span></code>
 
-  <div class="doc doc-object doc-method">
-
-
-
-<h3 id="sanpy.bAnalysisResults.analysisResultList.aslist" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">aslist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></code>
+<a href="#sanpy.bAnalysisResults.analysisResultList.asDataFrame" class="headerlink" title="Permanent link">¤</a></h5>
 
 
-<a href="#sanpy.bAnalysisResults.analysisResultList.aslist" class="headerlink" title="Permanent link">¤</a></h3>
+  <div class="doc doc-contents ">
+  
+      <p>Note: underlying _myList is a list of analysisResult</p>
 
-    <div class="doc doc-contents ">
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">603</span>
+<span class="normal">604</span>
+<span class="normal">605</span>
+<span class="normal">606</span>
+<span class="normal">607</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">asDataFrame</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Note: underlying _myList is a list of analysisResult</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">asList</span><span class="p">())</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
 
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h5 id="sanpy.bAnalysisResults.analysisResultList.asList" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">asList</span><span class="p">()</span></code>
+
+<a href="#sanpy.bAnalysisResults.analysisResultList.asList" class="headerlink" title="Permanent link">¤</a></h5>
+
+
+  <div class="doc doc-contents ">
+  
       <p>Return underlying list.</p>
-<p>Needed to create pandas dataframe from list.
-See bExport.xxx.</p>
 
-        <details class="quote">
-          <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">aslist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Return underlying list.</span>
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">596</span>
+<span class="normal">597</span>
+<span class="normal">598</span>
+<span class="normal">599</span>
+<span class="normal">600</span>
+<span class="normal">601</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">asList</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return underlying list.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1">#return [spike.asDict() for spike in self._myList]</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="o">.</span><span class="n">asDict</span><span class="p">()</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">]</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
 
-<span class="sd">	Needed to create pandas dataframe from list.</span>
-<span class="sd">	See bExport.xxx.</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="k">return</span> <span class="p">[</span><span class="n">spike</span><span class="o">.</span><span class="n">asDict</span><span class="p">()</span> <span class="k">for</span> <span class="n">spike</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="p">]</span>
-</code></pre></div>
-        </details>
-    </div>
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h5 id="sanpy.bAnalysisResults.analysisResultList.setFromListDict" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">setFromListDict</span><span class="p">(</span><span class="n">listOfDict</span><span class="p">)</span></code>
+
+<a href="#sanpy.bAnalysisResults.analysisResultList.setFromListDict" class="headerlink" title="Permanent link">¤</a></h5>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Set analysis results from a list of dict.</p>
+<p>Used when loading sanpy.bAnalysis from h5 file.</p>
+<p>When we create self (during spike detect) we have a list of class analysisResult.
+When we save/load we have a list of dict.</p>
+<p>This is assuming we re-create self every time we do spike detection</p>
+
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span>
+<span class="normal">533</span>
+<span class="normal">534</span>
+<span class="normal">535</span>
+<span class="normal">536</span>
+<span class="normal">537</span>
+<span class="normal">538</span>
+<span class="normal">539</span>
+<span class="normal">540</span>
+<span class="normal">541</span>
+<span class="normal">542</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">setFromListDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">listOfDict</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set analysis results from a list of dict.</span>
+
+<span class="sd">    Used when loading sanpy.bAnalysis from h5 file.</span>
+
+<span class="sd">    When we create self (during spike detect) we have a list of class analysisResult.</span>
+<span class="sd">    When we save/load we have a list of dict.</span>
+
+<span class="sd">    This is assuming we re-create self every time we do spike detection</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># do not do this, we are an analysisResultList as a list of analysisResult</span>
+    <span class="c1"># self._myList = listOfDict</span>
+
+    <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">oneDict</span> <span class="ow">in</span> <span class="n">listOfDict</span><span class="p">:</span>
+        <span class="n">oneAnalysisResult</span> <span class="o">=</span> <span class="n">analysisResult</span><span class="p">(</span><span class="n">theDict</span><span class="o">=</span><span class="n">oneDict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_myList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oneAnalysisResult</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+
 
   </div>
 
-
-
-
-
   </div>
 
-    </div>
+</div>
+<h2 id="sanpy.bAnalysisResults-functions">Functions<a href="#sanpy.bAnalysisResults-functions" class="headerlink" title="Permanent link">¤</a></h2>
 
-  </div>
-
-
-
+<div class="doc doc-object doc-function">
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-  <div class="doc doc-object doc-function">
-
-
-
-<h2 id="sanpy.bAnalysisResults.printDocs" class="doc doc-heading">
+<h3 id="sanpy.bAnalysisResults.printDocs" class="doc doc-heading">
 <code class="highlight language-python"><span class="n">printDocs</span><span class="p">()</span></code>
 
+<a href="#sanpy.bAnalysisResults.printDocs" class="headerlink" title="Permanent link">¤</a></h3>
 
-<a href="#sanpy.bAnalysisResults.printDocs" class="headerlink" title="Permanent link">¤</a></h2>
 
-    <div class="doc doc-contents ">
-
+  <div class="doc doc-contents ">
+  
       <p>Print out human readable detection parameters and convert to markdown table.</p>
-<div class="admonition requires">
-<p class="admonition-title">Requires<p>pip install tabulate</p>
-</p>
-</div>
+<p>Requires:
+    pip install tabulate</p>
 <p>See: bDetection.printDocs()</p>
 
-        <details class="quote">
-          <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
-          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">printDocs</span><span class="p">():</span>
-	<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">	Print out human readable detection parameters and convert to markdown table.</span>
+      <details class="quote">
+        <summary>Source code in <code>sanpy/bAnalysisResults.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span>
+<span class="normal">479</span>
+<span class="normal">480</span>
+<span class="normal">481</span>
+<span class="normal">482</span>
+<span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">printDocs</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print out human readable detection parameters and convert to markdown table.</span>
 
-<span class="sd">	Requires:</span>
-<span class="sd">		pip install tabulate</span>
+<span class="sd">    Requires:</span>
+<span class="sd">        pip install tabulate</span>
 
-<span class="sd">	See: bDetection.printDocs()</span>
-<span class="sd">	&quot;&quot;&quot;</span>
-	<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-	<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="sd">    See: bDetection.printDocs()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+    <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
 
-	<span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Ensure there are no errors&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Ensure there are no errors&#39;</span><span class="p">)</span>
 
-	<span class="n">dictList</span> <span class="o">=</span> <span class="p">[]</span>
-	<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">analysisResultDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-		<span class="c1"># iterating on getDefaultDict() to ensure all code above has valid k/v pairs</span>
-		<span class="c1">#lineStr = k + &#39;\t&#39;</span>
-		<span class="n">oneDict</span> <span class="o">=</span> <span class="p">{</span>
-			<span class="s1">&#39;Name&#39;</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span>
-		<span class="p">}</span>
-		<span class="k">for</span> <span class="n">k2</span> <span class="ow">in</span> <span class="n">getDefaultDict</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-			<span class="c1">#print(f&#39;  {k}: {k2}: {v[k2]}&#39;)</span>
-			<span class="c1">#lineStr += f&#39;{v[k2]}&#39; + &#39;\t&#39;</span>
-			<span class="n">oneDict</span><span class="p">[</span><span class="n">k2</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">k2</span><span class="p">]</span>
-		<span class="c1">#</span>
-		<span class="c1">#print(lineStr)</span>
+    <span class="n">dictList</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">analysisResultDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="c1"># iterating on getDefaultDict() to ensure all code above has valid k/v pairs</span>
+        <span class="c1">#lineStr = k + &#39;\t&#39;</span>
+        <span class="n">oneDict</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;Name&#39;</span><span class="p">:</span> <span class="n">k</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">for</span> <span class="n">k2</span> <span class="ow">in</span> <span class="n">getDefaultDict</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="c1">#print(f&#39;  {k}: {k2}: {v[k2]}&#39;)</span>
+            <span class="c1">#lineStr += f&#39;{v[k2]}&#39; + &#39;\t&#39;</span>
+            <span class="n">oneDict</span><span class="p">[</span><span class="n">k2</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="n">k2</span><span class="p">]</span>
+        <span class="c1">#</span>
+        <span class="c1">#print(lineStr)</span>
 
-		<span class="n">dictList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oneDict</span><span class="p">)</span>
+        <span class="n">dictList</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">oneDict</span><span class="p">)</span>
 
-		<span class="c1"># check that k is in headerDefaultDict</span>
-		<span class="k">for</span> <span class="n">k3</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
-			<span class="k">if</span> <span class="ow">not</span> <span class="n">k3</span> <span class="ow">in</span> <span class="n">getDefaultDict</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-				<span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Found extra key &quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&quot; in &quot;analysisResultDict&quot;&#39;</span><span class="p">)</span>
+        <span class="c1"># check that k is in headerDefaultDict</span>
+        <span class="k">for</span> <span class="n">k3</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">k3</span> <span class="ow">in</span> <span class="n">getDefaultDict</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Found extra key &quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&quot; in &quot;analysisResultDict&quot;&#39;</span><span class="p">)</span>
 
-	<span class="c1">#</span>
-	<span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">dictList</span><span class="p">)</span>
-	<span class="c1">#str = df.to_markdown()</span>
-	<span class="nb">str</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_html</span><span class="p">()</span>
-	<span class="n">myDate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
-	<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Generated </span><span class="si">{</span><span class="n">myDate</span><span class="si">}</span><span class="s1"> with sanpy.analysisVersion </span><span class="si">{</span><span class="n">sanpy</span><span class="o">.</span><span class="n">analysisVersion</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-	<span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
-</code></pre></div>
-        </details>
-    </div>
+    <span class="c1">#</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">dictList</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># to markdown for mkdocs md file</span>
+        <span class="c1">#str = df.to_markdown()</span>
+        <span class="nb">str</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_html</span><span class="p">()</span>
+        <span class="n">myDate</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Generated </span><span class="si">{</span><span class="n">myDate</span><span class="si">}</span><span class="s1"> with sanpy.analysisVersion </span><span class="si">{</span><span class="n">sanpy</span><span class="o">.</span><span class="n">analysisVersion</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;/Users/cudmore/Desktop/sanpy-analysis-results.csv&#39;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;saving:&#39;</span><span class="p">,</span> <span class="n">path</span><span class="p">)</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+
 
   </div>
 
-
-
-
-
-
-
-
-
-
-
   </div>
 
-    </div>
+</div>
 
-  </div>
+
+
+
+
                 
-              
-              
-                
-
-
-              
-            </article>
-          </div>
+              </article>
+            </div>
+          
+          
         </div>
         
       </main>
       
-        my footer
+        All material is Copyright 2011-2022 Robert H. Cudmore
       
     </div>
     <div class="md-dialog" data-md-component="dialog">
       <div class="md-dialog__inner md-typeset"></div>
     </div>
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant"], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../../assets/javascripts/workers/search.fcfe8b6d.min.js", "version": null}</script>
+    
+    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant"], "search": "../../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.b1047164.min.js"></script>
+      <script src="../../assets/javascripts/bundle.efa0ade1.min.js"></script>
       
     
   </body>
