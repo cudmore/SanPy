@@ -186,9 +186,13 @@ class sanpyPlugin(QtWidgets.QWidget):
             self.setStyleSheet("")
 
         # created in mplWindow2()
-        self.fig : "matplotlib.figure.Figure" = None
-        self.axs : "matplotlib.axes._axes.Axes" = None
-        self.mplToolbar : "matplotlib.backends.backend_qt.NavigationToolbar2QT" = None
+        # these are causing really freaking annoying failures on GitHub !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        # self.fig : "matplotlib.figure.Figure" = None
+        # self.axs : "matplotlib.axes._axes.Axes" = None
+        #self.mplToolbar : "matplotlib.backends.backend_qt.NavigationToolbar2QT" = None
+        self.fig = None
+        self.axs = None
+        self.mplToolbar = None
 
         self.keyIsDown = None
 
