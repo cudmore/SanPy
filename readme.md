@@ -25,7 +25,6 @@ If you find the code in this repository interesting, please email Robert Cudmore
 
 **Soon** we will be providing one file downloads to run the desktop application.
 
-
 <!-- <IMG SRC="docs/docs/img/spike-app.png" width=600> -->
 <IMG SRC="docs/docs/img/sanpy-app.png" width=600>
 
@@ -33,7 +32,7 @@ If you find the code in this repository interesting, please email Robert Cudmore
 
 ## Desktop Application - Plugins
 
-The desktop application comes bundled with a growing number of plugins. See our [plugin documentation page](docs/docs/plugins).
+The desktop application comes bundled with a growing number of plugins. See our [plugin documentation page](https://cudmore.github.io/SanPy/plugins/).
 
 <table>
 <tr>
@@ -56,11 +55,11 @@ The desktop application comes bundled with a growing number of plugins. See our 
 
 ## Install from source
 
-Please see the [install instructions](docs/docs/install) on the documentation website.
+Please see the [install instructions](https://cudmore.github.io/SanPy/install/) on the documentation website.
 
 ## Writing custom Python scripts
 
-Please see our [API documentation](docs/docs/scripting.ipynb) with some examples to get started.
+Please see our [API documentation](https://cudmore.github.io/SanPy/scripting/) with some examples to get started.
 
 ## Why is this useful?
 
