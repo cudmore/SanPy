@@ -1,4 +1,4 @@
-### Please note, this is experimental and under active development.
+**Please note**, this is experimental and under active development.
 
 The browser based web application uses the same backend code as the desktop interface. The web interface itself is a seperate set of code. We will move more and more interface to the web version, for now it is sufficient to browse, analyse, and save results.
 
@@ -12,7 +12,7 @@ Once data is analyzed, Pooling allows browsing detection parameters across any n
 
 ### Install the web application
 
-Please note, this is experimental and does not have all functions implemented. Please use the desktop version instead.
+**Please note**, this is experimental and does not have all functions implemented. Please use the desktop version instead.
 
 ```
 cd SanPy/dash

@@ -6,7 +6,6 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 import sanpy
-#import sanpy.interface
 from sanpy.interface.plugins import sanpyPlugin
 
 class resultsTable2(sanpyPlugin):

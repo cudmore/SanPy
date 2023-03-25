@@ -1238,11 +1238,11 @@ class fftPlugin(sanpyPlugin):
 
         return
 
-    def modelDetect(self):
+    def not_used_modelDetect(self):
         #mvThreshold = self.mvThresholdSpinBox.value() # for detection
         mvThreshold = -20
 
-        dDict = sanpy.bDetection.getDefaultDetection() # maybe specify a model epsp type?
+        dDict = sanpy.bDetection().getDetectionDict('SA Node')
         dDict['dvdtThreshold'] = np.nan
         dDict['mvThreshold'] = mvThreshold
         dDict['onlyPeaksAbove_mV'] = None

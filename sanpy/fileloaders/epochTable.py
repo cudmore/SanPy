@@ -66,6 +66,13 @@ class epochTable():
 
         Stop points are always the same as next epoch start point.
         Be sure to use '<' like pnt<stopPnt to get epoch index correct.
+
+        If not found, return None
+
+        Parameters
+        ----------
+        pnt : int
+            Point index into recording (within a sweep)
         """
         for epochIdx, epoch in enumerate(self._epochList):
             startPoint = epoch['startPoint']
@@ -73,7 +80,7 @@ class epochTable():
             if pnt >= startPoint and pnt < stopPoint:
                 return epochIdx
         #
-        return None
+        # return None
 
     def getLevel(self, epoch):
         """Given an epoch number return the 'level'

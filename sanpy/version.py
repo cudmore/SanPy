@@ -10,6 +10,8 @@ analysisVersion: saved for each spike
 #analysisVersion = '20210426a' # backend engine
 #interfaceVersion = '20210426a' # pyqt interface
 
-# Laura returned from ITaly, getting her most recent version
-analysisVersion = '20210803a' # backend engine
-interfaceVersion = '20210803a' # pyqt interface
+# Laura returned from Italy, getting her most recent version
+#analysisVersion = '20210803a' # backend engine
+analysisVersion = '20230324a' # backend engine
+
+interfaceVersion = '20230324a' # pyqt interface

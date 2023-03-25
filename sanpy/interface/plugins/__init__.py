@@ -28,5 +28,10 @@ from .kymographPlugin import kymographPlugin
 
 from .setSpineStat import SetSpineStat
 
+# eventually move this out of plotScatter
+from .plotScatter import myStatListWidget
+
+from .plotFi import plotFi
+
 # TODO: make this just one line, so user can drop a bplugin inn and restart
 from . import *

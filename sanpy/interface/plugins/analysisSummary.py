@@ -9,10 +9,10 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class analysisSummary(sanpyPlugin):
-    """
-    Plugin to display overview of analysis.
+    """Plugin to display overview of analysis.
 
-    Uses:
+    Notes
+    -----
         QTableView: sanpy.interface.bErrorTable.errorTableView()
         QAbstractTableModel: sanpy.interface.bFileTable.pandasModel
     """

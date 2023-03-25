@@ -190,7 +190,8 @@ class fileLoader_base(ABC):
         self._filteredY : np.ndarray = None  # set in _getDerivative
         self._filteredDeriv : np.ndarray = None
         self._currentSweep : int = 0
-        self._epochTableList = [sanpy.fileloaders.epochTable]  # used by abf
+
+        self._epochTableList : List[sanpy.fileloaders.epochTable]  = None
 
         # load file from inherited class
         self.loadFile()

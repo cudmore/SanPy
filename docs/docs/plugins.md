@@ -1,4 +1,4 @@
-SanPy supports user plugins. These are Python scripts that tap into the underlying architecture of the SanPy App.
+SanPy supports user plugins. These are Python scripts that tap into the underlying API architecture of the SanPy desktop GUI.
 
 With Plugins, users can easily extend the functionality of SanPy by:
 
@@ -7,6 +7,8 @@ With Plugins, users can easily extend the functionality of SanPy by:
  - Extend analysis in new ways
 
 All plugins are linked into the SanPy interface to respond to spike selection, zooming, and file switching. A selection in the main interface will propagate to the plugin and visa-versa.
+
+For a tutorial on writing your own plugin, please see our [writing-a-plugin](api/writing-a-plugin.md) guide.
 
 # Built-in plugins.
 
@@ -21,6 +23,12 @@ Plot a recording with an overlay of spike detection parameters.
 Plot all spikes aligned to their threshold. Also has waterfall and phase plots.
 
 <IMG SRC="../img/plugins/spike-clips.png" width=700>
+
+## Plot FI
+
+Analyze and plot analysis results versus current steps.
+
+<IMG SRC="../img/plugins/plot-fi.png" width=700>
 
 ## Plot Scatter
 

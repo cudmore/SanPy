@@ -1,26 +1,45 @@
-SanPy is software to perform analysis of whole-cell curent clamp recording. 
-
-It was originally designed for spontaneous [cardiac action potentials][cardiac action potential] from [whole-cell current-clamp][patch-clamp] recordings of [cardiac myocytes]
+SanPy is software to perform analysis of whole-cell curent clamp recordings. It is designed to work on a range of excitable cells including cardiac myocytes and neurons. Historically, it was originally designed for spontaneous [cardiac action potentials][cardiac action potential] from [whole-cell current-clamp][patch-clamp] recordings of [cardiac myocytes].
 
 This is a work-in-progress and under heavy development. If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.
 
-Key features:
+## Key features:
 
-1) Easy to use [desktop application](desktop-application).
+1) Easy to use [desktop application](desktop-application) with a growing number of built in [plugins](plugins).
 
-2) We have implemented a [plugin](plugins) architecture, provide a number of plugins and invite the community to build their own.
+2) An [API](api/overview) for full control of all aspects of file loading and analysis.
 
-3) We have also made [file loader](file-loaders) plugins so any type of raw data can be opened. We provide file loaders for Molecular Devices (Axon Instruments) abf and atf file formats, as well as general purpose comma-seperated-value files (csv).
+3) SanPy has a [plugin](api/writing-a-plugin.md) architecture and provides a wide range of pre-built plugins. We invite the community to build their own.
 
-4) We have implemented the most common analysis measurements such as spike threshold detection, interval statistics, and spike shape analysis. Like our plugin and file loading architecures, we also provide a simple plugin system to add [new analysis](user-analysis) measurements.
+4) SanPy has a [file loader](api/writing-a-file-loader.md) architecture so any type of raw data can be opened. We provide file loaders for Molecular Devices (Axon Instruments) abf and atf file formats (using pyAbf), as well as general purpose comma-seperated-value files (csv).
 
-## Desktop Application
+5) SanPY implements a rich range of [analysis results](methods/#analysis-results) such as spike threshold detection, interval statistics, and spike shape analysis. Like the plugin and file loading architecures, SanPy also provide a software architecute to add [new analysis](api/writing-new-analysis.md) measurements.
+
+## [Desktop Application](desktop-application)
 
 <IMG SRC="img/sanpy-pyqt-1.png" width=900>
 
-## Plugins
+## [Plugins](plugins)
 
-<IMG SRC="img/plugins/scatter-plot.png" width=700>
+<!-- <IMG SRC="img/plugins/scatter-plot.png" width=700> -->
+
+<table>
+<tr>
+    <td>
+    <IMG SRC="img/plugins/plot-recording.png" width=300>
+    </td>
+    <td>
+    <IMG SRC="img/plugins/spike-clips.png" width=300>
+    </td>
+</tr>
+<tr>
+    <td>
+    <IMG SRC="img/plugins/plot-fi.png" width=300>
+    </td>
+    <td>
+    <IMG SRC="img/plugins/scatter-plot.png" width=300>
+    </td>
+</tr>
+</table>
 
 <!-- ### On the web -->
 

@@ -344,7 +344,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         """Prompt user for filename and save both xlsx and txt
         """
         if self.ba is None or self.ba.numSpikes==0:
-            logger.warning('No analysis to save?')
+            _warning = 'No analysis to save'
+            logger.warning(_warning)
+            self.updateStatusBar(_warning)
             return
         xMin, xMax = self.getXRange()
         xMinStr = '%.2f'%(xMin)
@@ -1086,7 +1088,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.detectToolbarWidget.toggleInterface(item, on)
         elif item == 'Plot Options':
             self.detectToolbarWidget.toggleInterface(item, on)
-        elif item == 'Set Spines':
+        elif item == 'Set Spikes':
             self.detectToolbarWidget.toggleInterface(item, on)
 
         else:
@@ -1489,20 +1491,21 @@ class bDetectionWidget(QtWidgets.QWidget):
     def keyPressEvent(self, event):
         """Respond to user key press.
         
-        Args:
-            event: PyQt5.QtGui.QKeyEvent
+        Parameters
+        ----------
+        event : PyQt5.QtGui.QKeyEvent
         """
         key = event.key()
         text = event.text()
-        #print('== bDetectionWidget.keyPressEvent() key:', key, 'text:', text)
-        #logger.info(f'key:{key} text:{text}')
+        logger.info(f'bDetectionWidget key:{key} text:{text}')
 
+        # handled in 'View' menu
         #if text == 'h':
-        if key == QtCore.Qt.Key_H:
-            if self.detectToolbarWidget.isVisible():
-                self.detectToolbarWidget.hide()
-            else:
-                self.detectToolbarWidget.show()
+        # if key == QtCore.Qt.Key_H:
+        #     if self.detectToolbarWidget.isVisible():
+        #         self.detectToolbarWidget.hide()
+        #     else:
+        #         self.detectToolbarWidget.show()
 
         # if text == 'a':
         if key in [QtCore.Qt.Key_A, QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return]:
@@ -2293,7 +2296,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             else:
                 self.plotGroupBox.hide()
         # mar 11
-        elif panelName == 'Set Spines':
+        elif panelName == 'Set Spikes':
             if onoff:
                 self.setSpineGroupBox.show()
             else:
@@ -2492,9 +2495,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         tmpSweepLabel = QtWidgets.QLabel('Sweep')
         buttonName = '<'
         self.previousSweepButton = QtWidgets.QPushButton(buttonName)
+        self.previousSweepButton.setToolTip('Previous Sweep')
         self.previousSweepButton.clicked.connect(partial(self.on_button_click,buttonName))
         buttonName = '>'
         self.nextSweepButton = QtWidgets.QPushButton(buttonName)
+        self.nextSweepButton.setToolTip('Next Sweep')
         self.nextSweepButton.clicked.connect(partial(self.on_button_click,buttonName))
 
         self.sweepComboBox = QtWidgets.QComboBox()
@@ -2562,7 +2567,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # mar 11 set spine group box
         #
         # set spine group
-        self.setSpineGroupBox = QtWidgets.QGroupBox('Set Spines')
+        self.setSpineGroupBox = QtWidgets.QGroupBox('Set Spikes')
         setSpineLayout = QtWidgets.QHBoxLayout()
 
         # mar 11, created a setspinestat plugin
@@ -2713,6 +2718,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         hBoxSpikeBrowser.addWidget(button)
 
         buttonName = '[]'
+        button.setToolTip('Display Full Recording')
         button = QtWidgets.QPushButton(buttonName)
         button.clicked.connect(partial(self.on_button_click,buttonName))
         hBoxSpikeBrowser.addWidget(button)
@@ -2833,8 +2839,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.spikeNumber.blockSignals(False)
 
     def slot_dataChanged(self, columnName, value, rowDict):
-        """
-        User has edited main file table.
+        """User has edited main file table.
 
         Update detection widget for columns (Start(s), Stop(s), dvdtThreshold, mvThreshold)
         """

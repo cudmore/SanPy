@@ -254,10 +254,10 @@ class bAnalysisPlot():
             thresholdSec = self.ba.getStat('thresholdSec')  # x
             thresholdVal = self.ba.getStat('thresholdVal')  # y
             
-            #ax.plot(thresholdSec, thresholdVal, 'pr', markersize=markerSize)
+            ax.plot(thresholdSec, thresholdVal, 'pr', markersize=markerSize)
             df = self.ba.spikeDict.asDataFrame()  # regenerates, can be expensive
-            logger.info(f'df hue unique is: {df[hue].unique()}')
-            sns.scatterplot(x='thresholdSec', y='thresholdVal', hue=hue, data=df, ax=ax, legend=legend)
+            #logger.info(f'df hue unique is: {df[hue].unique()}')
+            #sns.scatterplot(x='thresholdSec', y='thresholdVal', hue=hue, data=df, ax=ax, legend=legend)
 
         # plot the peak
         if plotPeak:
@@ -273,6 +273,8 @@ class bAnalysisPlot():
         ax.set_xlabel(xUnits)
         ax.set_ylabel(yUnits)
 
+        return ax
+    
     def plotStat(self, xStat : str, yStat : str,
                  hue : Optional[str] = None,
                  ax = None):
@@ -352,8 +354,7 @@ class bAnalysisPlot():
         ax.set_xlabel('Time (sec)')
 
     def plotClips(self, plotType='Raw', preClipWidth_ms=None, postClipWidth_ms=None, ax=None):
-        '''
-        Plot clips of all detected spikes
+        """Plot clips of all detected spikes
 
         Clips are created in self.spikeDetect() and default to clipWidth_ms = 100 ms
 
@@ -364,7 +365,7 @@ class bAnalysisPlot():
         Returns:
             xPlot
             yPlot
-        '''
+        """
 
         '''
         if ax is None:

@@ -484,7 +484,7 @@ def printDocs():
     #
     df = pd.DataFrame(dictList)
     
-    if 0:
+    if 1:
         # to markdown for mkdocs md file
         #str = df.to_markdown()
         str = df.to_html()
@@ -492,7 +492,7 @@ def printDocs():
         print(f'Generated {myDate} with sanpy.analysisVersion {sanpy.analysisVersion}')
         print(str)
 
-    if 1:
+    if 0:
         path = '/Users/cudmore/Desktop/sanpy-analysis-results.csv'
         print('saving:', path)
         df.to_csv(path, index=False)

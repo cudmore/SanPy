@@ -43,13 +43,14 @@ setup(
             'tornado', # needed for pyinstaller
             'pyinstaller',
             'ipython',
-        ],
-        'test':[
             'tox',
             'pytest',
             'pytest-cov',
+            'pytest-qt',
             'flake8',
-            'pooch'],
+            'jupyter',
+            'pooch'  # what is this for?
+        ],
     },
     python_requires=">=3.7",
     entry_points={

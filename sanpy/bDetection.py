@@ -1,19 +1,21 @@
 """
-Functions to get default detection parameters.
+The bDetection class provides an interface to get and set detection paramers.
 
-Usage:
+Example
+-------
 
 ```python
 import sanpy
 
-# dDict is a dictionary with default parameters
-dDict = sanpy.bDetection.getDefaultDetection()
+# grab the presets for 'SA Node' cells
+dDict = sanpy.bDetection().getDetectionDict('SA Node')
+ba.spikeDetect(dDict)
 
-# set to your liking
+# tweek individual parameters
 dDict['dvdtThreshold'] = 50
 
 # load a recording
-myPath = '../data/19114001.abf'
+myPath = 'data/19114001.abf'
 ba = sanpy.bAnalysis(myPath)
 
 # perform spike detection
@@ -56,32 +58,11 @@ class detectionTypes_(Enum):
 # on what we find on the hard-drive
 # allow user to save to detection presets
 
-'''
-class old_detectionPresets_(Enum):
-    """
-    Detection presets is one of:
-    """
-    # default = 1
-    # saNode = 2
-    # ventricular = 3
-    # neuron = 4
-    # subthreshold = 5
-    # caSpikes = 6
-    # caKymograph = 7
-    default = 'Default'
-    saNode = 'SA Node'
-    ventricular = 'Ventricular'
-    neuron = 'Neuron'
-    fastNeuron = 'Fast Neuron'
-    subthreshold = 'Sub Threshold'
-    caSpikes = 'Ca Spikes'
-    caKymograph = 'Ca Kymograph'
-'''
-
 def getDefaultDetection():
-    """
-    Get detection parameters including mapping from backend
-    to human readable and long-format descriptions.
+    """Get detection parameters
+    
+    This includes a mapping from backend variable names to
+    front-end human readable and long-format descriptions.
 
     Args:
         detectionPreset (enum): bDetection.detectionPresets.default
@@ -571,7 +552,7 @@ class bDetection(object):
         self._detectionPreset = {}
         for item in self._detectionEnum:
             # item is like self.detectionEnum.sanode
-            logger.info(f'  loaded {item}, {item.name}, "{item.value}"')
+            #logger.info(f'  loaded {item}, {item.name}, "{item.value}"')
             presetValues = self._getPresetValues(item)
             if presetValues:
                 # got value of built in preset

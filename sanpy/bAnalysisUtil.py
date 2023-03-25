@@ -70,14 +70,48 @@ statList['Sweep Number'] = {
     'xStat': '',
     'xStatUnits': ''
     }
-statList['DAC Command'] = {
-    'name': 'dacCommand',
+# removed 20230320
+# statList['DAC Command'] = {
+    # 'name': 'dacCommand',
+    # 'units': '',
+    # 'yStat': 'dacCommand',
+    # 'yStatUnits': '',
+    # 'xStat': '',
+    # 'xStatUnits': ''
+    # }
+
+# added 20230320
+# stimulus epoch number a spike is within
+statList['Epoch'] = {
+    'name': 'epoch',
     'units': '',
-    'yStat': 'dacCommand',
+    'yStat': 'epoch',
     'yStatUnits': '',
     'xStat': '',
     'xStatUnits': ''
     }
+# added 20230320
+# the epoch level (for I-Clamp, corresponds to DAC command)
+statList['Epoch DAC'] = {
+    'name': 'epochLevel',
+    'units': '',
+    'yStat': 'epochLevel',
+    'yStatUnits': '',
+    'xStat': '',
+    'xStatUnits': ''
+    }
+# added 20230320
+# the spike number within the epoch
+# not implemented
+statList['Epoch Spike Number'] = {
+    'name': 'epochSpikeNumber',
+    'units': '',
+    'yStat': 'epochSpikeNumber',
+    'yStatUnits': '',
+    'xStat': '',
+    'xStatUnits': ''
+    }
+
 statList['Take Off Potential (mV)'] = {
     'name': 'thresholdVal',
     'units': 'mV',

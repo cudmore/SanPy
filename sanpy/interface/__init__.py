@@ -7,6 +7,7 @@ from .sanpy_app import SanPyWindow
 
 from .bDetectionWidget import bDetectionWidget
 from .bScatterPlotWidget2 import bScatterPlotMainWindow
+from .bScatterPlotWidget2 import myTableView as myTableView_tmp  # used by fi plugin
 from .bExportWidget import bExportWidget
 from .bFileTable import *
 

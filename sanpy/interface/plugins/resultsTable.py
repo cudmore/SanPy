@@ -41,9 +41,9 @@ class resultsTable(sanpyPlugin):
         #
         # connect clicks in error table to signal main sanpy_app with slot_selectSpike()
         logger.warning('FIX SPIKE SELECTION')
-        # if self.getSanPyApp() is not None:
-        #     fnPtr = self.getSanPyApp().slot_selectSpike
-        #     self.myErrorTable.signalSelectSpike.connect(fnPtr)
+        if self.getSanPyApp() is not None:
+            fnPtr = self.getSanPyApp().slot_selectSpike
+            self.myErrorTable.signalSelectSpike.connect(fnPtr)
 
         self.replot()
 
@@ -75,8 +75,9 @@ class resultsTable(sanpyPlugin):
             errorReportModel = sanpy.interface.bFileTable.pandasModel(dfPlot)
             self.myErrorTable.setModel(errorReportModel)
 
-            self._fileLabel.setText(f'{self.ba.fileLoader.filename}')
-            self._numSpikesLabel.setText(f'{len(dfPlot)} spikes')
+            # mar 21, when did i get rid of this?
+            # self._fileLabel.setText(f'{self.ba.fileLoader.filename}')
+            # self._numSpikesLabel.setText(f'{len(dfPlot)} spikes')
 
     def copyToClipboard(self):
         if self.ba is not None:

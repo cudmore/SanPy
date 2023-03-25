@@ -58,18 +58,17 @@ plugins:
 #  generator: false
 
 nav:
-    - SanPy: index.md
+    - Introducing SanPy: index.md
+    - Download: download.md
     - Install: install.md
     - Desktop Application: desktop-application.md
     - Plugins: plugins.md
-    - File Loaders: file-loaders.md
-    - User Analysis: user-analysis.md
-    - Scripting:
-        - Overview: scripting/overview.ipynb
-        - Examples: scripting/examples.ipynb
-        - Plotting Analysis: scripting/plotting-analysis.ipynb
+    - Using the API: scripting.ipynb
     - API:
         - Overview: api/overview.md
+        - Writing A File Loader: api/writing-a-file-loader.md
+        - Writing A Plugin: api/writing-a-plugin.md
+        - Writing New Analysis: api/writing-new-analysis.md
         - bAnalysis: api/bAnalysis.md
         - bAnalysisResults: api/bAnalysisResults.md
         - epochTable: api/epochTable.md

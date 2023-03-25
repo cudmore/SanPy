@@ -101,7 +101,8 @@ class plotRecording(sanpyPlugin):
             thresholdSec = [x+xCurrentOffset for x in thresholdSec]
             thresholdVal = self.ba.getStat('thresholdVal', sweepNumber=sweepIdx)
             thresholdVal = [x+yCurrentOffset for x in thresholdVal]
-            self.thresholdLine[sweepIdx] = self.axs.plot(thresholdSec, thresholdVal, 'r.')
+            markersize = 4
+            self.thresholdLine[sweepIdx] = self.axs.plot(thresholdSec, thresholdVal, 'r.', markersize=markersize)
             '''
             if thresholdSec is None or thresholdVal is None:
                 self.thresholdLine[sweepIdx].set_data([], [])

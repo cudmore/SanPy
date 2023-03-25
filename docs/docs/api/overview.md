@@ -1,37 +1,16 @@
-The SanPy API is split into two main sections: backend and frontend.
+The SanPy API is split into two main sections
 
-### Loading raw data
+1) **Backend.** This is where most of the work will be done. Provides the core functionality and all code can easily be used in a script, a Jupyter notebook, or an existing Python package.
 
-The following code loads from a file into a bAnalysis object.
+2) **Frontend.** This is the code that drives the SanPy desktop GUI. In general, we will not cover its usage here.
 
-```
-import sanpy
-path = 'xxx'
-ba = sanpy.bAnalysis(path)
-```
+See an example of how to use the backend API to [load, analyze, and plot](../scripting.ipynb).
 
-### Detecting Spikes
+The backend provides three additional software architectures that provide a powerful and easy to use mechanism to extend the capabilities of SanPy. This include:
 
-Spike detection takes a number of parameters but in its simplest form only requires a threshold in the derivative (dV/dt) of membrane potential (mV).
+- [Custom File Loaders](writing-a-file-loader.md). With this, new raw data formats can be loaded into sanpy.
 
-```
-# set detecction parameters
-dDict = ba.getDefaultDetection()
-dDict['dvdtThreshold'] = 50
+- [Extending the core analysis](writing-new-analysis.md). With this, new analysis can be performed and automatically integrated into the main SanPy analysis.
 
-# perform spike detection
-ba.spikeDetect(dDict)
-```
+- [Writing new plugins](writing-a-plugin.md). Wthis this, new plugins can be created for use in the frontend desktop GUI.
 
-### Plotting Results
-
-Once analyze, parameters can be plotted over the raw data
-
-```
-bp = sanpy.bAnalysisPlot(ba)
-fig, ax = bp.plotSpikes()
-```
-
-### Saved file formats
-
-TODO: Fill this in. xxx

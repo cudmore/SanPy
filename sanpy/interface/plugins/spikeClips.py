@@ -19,10 +19,7 @@ import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
 class spikeClips(sanpyPlugin):
-    """
-    Plot x/y statiistics as a scatter
-
-    Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
+    """Plot AP clips.
     """
     myHumanName = 'Plot Spike Clips'
 

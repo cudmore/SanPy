@@ -2,9 +2,7 @@ SanPy is designed to run on: macOS, Microsoft Windows, and Linux.
 
 ## Download the SanPy app.
 
-We are building apps so users can download a single SanPy.app and get working with just a double-click.
-
-This does not require anything special on our users end. No programming, no installing Python, and no command line.
+We are building apps so users can download a single SanPy.app and get working with just a double-click. This does not require anything special on our users end. No programming, no installing Python, and no command line.
 
 Check back for more info on this.
 
@@ -12,83 +10,53 @@ Check back for more info on this.
 
 Assuming you have the following
 
- - [Python 3.7.x][python3]
+ - [Python > 3.7][python3]
  - [pip][pip]
- - [git][git] (optional)
+ - [git][git]
 
 [python3]: https://www.python.org/downloads/
 [pip]: https://pip.pypa.io/en/stable/
 [git]: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
 
-### Install the desktop application
-
-#### Option 1) Install using ./install
+1) Clone the repository
 
 ```
-# If you have git installed.
-# Clone the github repository (this will create a SanPy/ folder).
-git clone https://github.com/cudmore/SanPy.git
-
-# If you do not have git installed you can download the .zip file manually.
-# In a browser, go to 'https://github.com/cudmore/SanPy'.
-# Click green button 'Clone or download'.
-# Select 'Download ZIP'.
-# Once downloaded, manually extract the contents of the .zip file and continue following this tutorial.
-
-# Change into the cloned or downloaded 'SanPy/' folder.
+git clone git@github.com:cudmore/SanPy.git
 cd SanPy
-
-# Install
-./install
-
-# Run
-./run
 ```
 
-#### Option 2) Install manually
+2) Create and activate a virtual environment with either `conda` or `venv`
+
+2.1) With `conda`
 
 ```
-# clone the github repository (this will create a SanPy/ folder)
-git clone https://github.com/cudmore/SanPy.git
-
-# change into the cloned SanPy folder
-cd SanPy
-
-# create a Python3 virtual environment in 'sanpy_env/' folder
-python -m venv sanpy_env
-
-# activate the virtual environment in sanpy_env/
-source sanpy_env/bin/activate
-
-# upgrade pip (scipy works with pip 21.1.2 but NOT with 20.1.1)
-pip install --upgrade pip
-
-# install the SanPy package
-cd SanPy
-pip install .[gui]
-
-# on macOS Big Sur (sorry for this!)
-cd SanPy
-pip install .\[gui\]
+conda create -y -n sanpy-env python=3.9
+conda activate sanpy-env
 ```
 
-### Running the desktop application
-
-#### Option 1) Using ./run
+2.2) With `venv`
 
 ```
-cd SanPy
-./run
+python -m venv sanpy-env
+source sanpy-env/bin/activate
 ```
 
-#### Option 2) Manually
+3) Install SanPy including the desktop GUI
 
 ```
-# activate the virtual environment in sanpy_env/
-cd SanPy
-source sanpy_env/bin/activate
+pip install -e .[gui]
+```
 
-# run the desktop application
-# python sanpy/sanpy_app.py
+Note, on newer macOS machines or if using the zsh shell in general, you need some extra quotes
+
+```
+pip install -e ".[gui]"
+```
+
+4) Run `sanpy`
+
+```
 sanpy
 ```
+
+5) Have fun

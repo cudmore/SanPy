@@ -359,6 +359,15 @@ class myStatListWidget(QtWidgets.QWidget):
     Gets list of stats from: sanpy.bAnalysisUtil.getStatList()
     """
     def __init__(self, myParent, statList=None, headerStr='Stat', parent=None):
+        """
+        Parameters
+        ----------
+        myParent : sanpy.interface.plugins.sanpyPlugin
+        statList : dict
+            from sanpy.bAnalysisUtil.getStatList()
+        headerStr : str
+            Show as label aove stat list
+        """
         super().__init__(parent)
 
         self.myParent = myParent
@@ -604,7 +613,7 @@ class myMplCanvas(QtWidgets.QFrame):
         selectDict['dataType'] = self.stateDict['dataType']
         #
         # emit
-        print('  myMplCanvas.signalSelectFromPlot.emit()', selectDict)
+        logger.info(f'  myMplCanvas.signalSelectFromPlot.emit() {selectDict}')
         self.signalSelectFromPlot.emit(selectDict)
 
     def _selectInd(self, ind):
@@ -1358,7 +1367,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         colSpan = 2
         self.xStatTableView = myStatListWidget(myParent=self, headerStr='X-Stat', statList=self.statListDict)
         self.layout.addWidget(self.xStatTableView, row, col, rowSpan, colSpan)
-        # table view of x stat
+        # table view of y stat
         row = 4
         col = 2
         rowSpan = 1
@@ -1581,7 +1590,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.myPlotCanvasList[0].signalSelectSquare.emit(0, None) #slotSelectSquare(0)
 
     def keyPressEvent(self, event):
-        print('keyPressEvent()')
+        logger.info('keyPressEvent()')
         if event.key() == QtCore.Qt.Key_Escape:
             self.cancelSelection()
         elif (event.type() == QtCore.QEvent.KeyPress and

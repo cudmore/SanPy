@@ -78,10 +78,16 @@ With this, our software is designed to be flexible in how it is used.
 
 ### Other existing analysis software
 
+These is of course other software to do similar things. This is not a complete list.
+
  - [ParamAP][ParamAP]{target=_blank} - Standardized parameterization of sinoatrial node myocyte action potentials
  - [stimfit][stimfit]{target=_blank} - A program for viewing and analyzing electrophysiological data
+
+C++ libraries
+
  - [biosig][biosig]{target=_blank} - A C/C++ library providing reading and writing routines for biosignal data formats
  - [sigviewer][sigviewer]{target=_blank} - SigViewer is a viewing application for biosignals.
+
 
 [ParamAP]: https://github.com/christianrickert/ParamAP
 [stimfit]: https://github.com/neurodroid/stimfit

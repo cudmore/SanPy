@@ -45,7 +45,7 @@ class bAnalysis:
     ```python
     path = 'data/19114001.abf'
     ba = bAnalysis(path)
-    dDict = sanpy.bDetection.getDefaultDetection()
+    dDict = sanpy.bDetection().getDetectionDict('SA Node')
     ba.spikeDetect(dDict)
     print(ba)
     ```
@@ -1151,12 +1151,17 @@ class bAnalysis:
             logger.info(f'Detected {len(self.spikeDict)} spikes in {round(stopTime-startTime,3)} seconds')
 
     def _spikeDetect2(self, sweepNumber : int):
-        """
-        Working on using bAnalysisResult.py.
+        """Detect all spikes in one sweep.
 
-        Args:
-            dDict: Detection Dict
-            sweepNumber:
+         Populate bAnalysisResult.py.
+
+        Notes
+        -----
+        First spike in a sweep cannot have interval statistics like freq or isi
+
+        Parameters
+        ----------
+        sweepNumber : int
         """
         dDict = self._detectionDict
         
@@ -1304,8 +1309,11 @@ class bAnalysis:
             spikeDict[i]['thresholdVal'] = filteredVm[spikeTime] # in vm
             spikeDict[i]['thresholdVal_dvdt'] = filteredDeriv[spikeTime] # in dvdt, spikeTime is points
 
+            #TODO: revamp this for 'Plot FI' plugin
+            # spikeTime falls into wrong epoch for first fast spike
             # DAC command at the precise spike point
-            spikeDict[i]['dacCommand'] = sweepC[spikeTime]  # spikeTime is in points
+            #spikeDict[i]['dacCommand'] = sweepC[spikeTime]  # spikeTime is in points
+            #spikeDict[i]['dacCommand'] = sweepC[peakPnt]  # spikeTime is in points
 
             spikeDict[i]['peakPnt'] = peakPnt
             spikeDict[i]['peakSec'] = peakSec
@@ -1560,7 +1568,7 @@ class bAnalysis:
             #
             # calculate instantaneous spike frequency and ISI, for first spike this is not defined
             spikeDict[iIdx]['cycleLength_ms'] = float('nan')
-            if i > 0:
+            if iIdx > 0:
                 isiPnts = spikeDict[iIdx]['thresholdPnt'] - spikeDict[iIdx-1]['thresholdPnt']
                 isi_ms = self.fileLoader.pnt2Ms_(isiPnts)
                 isi_hz = 1 / (isi_ms / 1000)
@@ -1897,7 +1905,7 @@ class bAnalysis:
             pass
         elif theMin is None or theMax is None:
             theMin = 0
-            theMax = self.recordingDur  # self.sweepX[-1]
+            theMax = self.fileLoader.recordingDur  # self.sweepX[-1]
 
         # new interface, spike detect no longer auto generates these
         # need to do this every time because we get here when sweepNumber changes
@@ -2114,8 +2122,7 @@ class bAnalysis:
             return self.spikeDict.analysisTime()
         
     def api_getHeader(self):
-        """
-        Get header as a dict.
+        """Get header as a dict.
 
         TODO:
             - add info on abf file, like samples per ms
@@ -2146,8 +2153,7 @@ class bAnalysis:
         return ret
 
     def api_getSpikeInfo(self, spikeNum=None):
-        """
-        Get info about each spike.
+        """Get info about each spike.
 
         Args:
             spikeNum (int): Get info for one spike, None for all spikes.
@@ -2162,8 +2168,7 @@ class bAnalysis:
         return ret
 
     def api_getSpikeStat(self, stat):
-        """
-        Get stat for each spike
+        """Get stat for each spike
 
         Args:
             stat (str): The name of the stat to get. Corresponds to key in self.spikeDict[i].
@@ -2175,8 +2180,7 @@ class bAnalysis:
         return statList
 
     def api_getRecording(self):
-        """
-        Return primary recording
+        """Return primary recording
 
         Returns:
             dict: {'header', 'sweepX', 'sweepY'}
@@ -2193,20 +2197,6 @@ class bAnalysis:
         #stop = time.time()
         #print(stop-start)
         return ret
-
-    def donotuse_openHeaderInBrowser(self):
-        """Open abf file header in browser. Only works for actual abf files."""
-        #ba.abf.headerLaunch()
-        if self.abf is None:
-            return
-        import webbrowser
-        logFile = sanpy.sanpyLogger.getLoggerFile()
-        htmlFile = os.path.splitext(logFile)[0] + '.html'
-        #print('htmlFile:', htmlFile)
-        html = pyabf.abfHeaderDisplay.abfInfoPage(self.abf).generateHTML()
-        with open(htmlFile, 'w') as f:
-            f.write(html)
-        webbrowser.open('file://' + htmlFile)
 
 class NumpyEncoder(json.JSONEncoder):
     """ Special json encoder for numpy types """

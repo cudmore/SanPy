@@ -253,6 +253,7 @@ class plotScatter(sanpyPlugin):
         self.axScatter.spines['right'].set_visible(False)
         self.axScatter.spines['top'].set_visible(False)
 
+        # TODO: refactor and use mplToolBar()
         self.cid = self.static_canvas.mpl_connect('pick_event', self.spike_pick_event2)
         
         self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
@@ -338,9 +339,7 @@ class plotScatter(sanpyPlugin):
             return
 
         # select spike in range
-        thresholdSec = self.ba.getStat('thresholdSec',
-                                       sweepNumber=self.sweepNumber,
-                                       epochNumber=self.epochNumber)
+        thresholdSec = self.getStat('thresholdSec')
 
         _selectedSpikeList = [spikeIdx for spikeIdx,spikeSec in enumerate(thresholdSec)
                               if (spikeSec>startSec and spikeSec<stopSec)]
@@ -367,15 +366,9 @@ class plotScatter(sanpyPlugin):
         else:
             xData = self.getStat(xStat)
             yData = self.getStat(yStat)
-            # xData = self.ba.getStat(xStat,
-            #                         sweepNumber=self.sweepNumber,
-            #                         epochNumber=self.epochNumber)
-            # yData = self.ba.getStat(yStat,
-            #                         sweepNumber=self.sweepNumber,
-            #                         epochNumber=self.epochNumber)
 
         #
-        # convert to numpy (TODO: use ba.getStat() option for this.)
+        # TODO: use ba.getStat() option for this.)
         xData = np.array(xData)
         yData = np.array(yData)
 
@@ -396,9 +389,6 @@ class plotScatter(sanpyPlugin):
 
         # keep track of x-axis spike number (for chase plot)
         xAxisSpikeNumber = self.getStat('spikeNumber')
-        # xAxisSpikeNumber = self.ba.getStat('spikeNumber',
-        #                                    sweepNumber=self.sweepNumber,
-        #                                    epochNumber=self.epochNumber)
         xAxisSpikeNumber = np.array(xAxisSpikeNumber)
 
         # need to mask color and marker
@@ -451,14 +441,8 @@ class plotScatter(sanpyPlugin):
             #cm = ListedColormap([color_dict[x] for x in color_dict.keys()])
             #self.lines.set_cmap(cm)
 
-            goodSpikes = self.ba.getStat('include')
-            userTypeList = self.ba.getStat('userType')
-            # goodSpikes = self.ba.getStat('include',
-            #                              sweepNumber=self.sweepNumber,
-            #                              epochNumber=self.epochNumber)
-            # userTypeList = self.ba.getStat('userType',
-            #                                sweepNumber=self.sweepNumber,
-            #                                epochNumber=self.epochNumber)
+            goodSpikes = self.getStat('include')
+            userTypeList = self.getStat('userType')
 
             if self.plotChasePlot:
                 #xData = xData[1:-1] # x is the reference spike for marking (bad, type)
@@ -668,8 +652,7 @@ class plotScatter(sanpyPlugin):
         return state in ['zoom rect', 'pan/zoom']
 
     def prependMenus(self, contextMenu):
-        """
-        Prepend menus to context menu
+        """Prepend menus to context menu
         """
 
         noSpikesSelected = len(self.getSelectedSpikes()) == 0
@@ -697,7 +680,7 @@ class plotScatter(sanpyPlugin):
     def handleContextMenu(self, action):
         """
         Returns:
-            True if handled, o.w. False
+            True if handled, otherwise False
         """
         if action is None:
             return False
@@ -746,29 +729,13 @@ class plotScatter(sanpyPlugin):
         
         For example: spike number, spike time (s), is bad, user type, and file name.
         """
-        spikeNumber = self.ba.getStat('spikeNumber',
-                                      sweepNumber=self.sweepNumber,
-                                      epochNumber=self.epochNumber)
-        spikeTimeSec = self.ba.getStat('thresholdSec',
-                                       sweepNumber=self.sweepNumber,
-                                       epochNumber=self.epochNumber)
-        #
-        xStat = self.ba.getStat(self.xStatName,
-                                sweepNumber=self.sweepNumber,
-                                epochNumber=self.epochNumber)
-        yStat = self.ba.getStat(self.yStatName,
-                                sweepNumber=self.sweepNumber,
-                                epochNumber=self.epochNumber)
-        #
-        goodSpikes = self.ba.getStat('include',
-                                     sweepNumber=self.sweepNumber,
-                                     epochNumber=self.epochNumber)
-        userType = self.ba.getStat('userType',
-                                   sweepNumber=self.sweepNumber,
-                                   epochNumber=self.epochNumber)
-        file = self.ba.getStat('file',
-                               sweepNumber=self.sweepNumber,
-                               epochNumber=self.epochNumber)
+        spikeNumber = self.getStat('spikeNumber')
+        spikeTimeSec = self.getStat('thresholdSec')
+        xStat = self.getStat(self.xStatName)
+        yStat = self.getStat(self.yStatName)
+        goodSpikes = self.getStat('include')
+        userType = self.getStat('userType')
+        file = self.getStat('file')
 
         columns = ['Spike Number',
                    'Spike Time(s)',
@@ -798,11 +765,19 @@ class myStatListWidget(QtWidgets.QWidget):
 
     Gets list of stats from: sanpy.bAnalysisUtil.getStatList()
     """
-    def __init__(self, myParent, headerStr='Stat', parent=None):
+    def __init__(self, myParent, statList=None, headerStr='Stat', parent=None):
+        """
+        Parameters
+        ----------
+        myParent : sanpy.interface.plugins.sanpyPlugin
+        """
         super().__init__(parent)
 
         self.myParent = myParent
-        self.statList = sanpy.bAnalysisUtil.getStatList()
+        if statList is not None:
+            self.statList = statList
+        else:
+            self.statList = sanpy.bAnalysisUtil.getStatList()
         self._rowHeight = 9
 
         self.myQVBoxLayout = QtWidgets.QVBoxLayout(self)
@@ -878,7 +853,7 @@ class myStatListWidget(QtWidgets.QWidget):
         row = self.myTableWidget.currentRow()
         if row == -1 or row is None:
             return
-        yStat = self.myTableWidget.item(row,0).text()
+        #yStat = self.myTableWidget.item(row,0).text()
         self.myParent.replot()
 
     '''

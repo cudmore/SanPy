@@ -3,9 +3,6 @@
 
 from curses.panel import bottom_panel
 import os, sys
-# import time
-# import math
-# import json
 #import traceback # to print call stack
 from functools import partial
 from collections import OrderedDict
@@ -15,15 +12,11 @@ from datetime import datetime
 
 from typing import Union, Dict, List, Tuple
 
-#import glob
-#from turtle import window_width
-#import numpy as np
 import pandas as pd
 
 import qdarkstyle
-#import breeze_resources
 
-import webbrowser
+import webbrowser  # to open online help
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -48,6 +41,8 @@ logging.getLogger('numexpr').setLevel(logging.WARNING)
 
 class SanPyWindow(QtWidgets.QMainWindow):
 
+    #TODO: define parameter block for all signals.
+    
     signalSetXAxis = QtCore.pyqtSignal(object)
     """Emit set axis."""
 
@@ -66,27 +61,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
     signalSelectSpikeList = QtCore.pyqtSignal(object)
     """Emit spike list selection."""
 
-    '''
-    # see sanpy.utils.getBundledDir()
-    def _getBundledDir():
-        """
-        TODO: use this in all cases
-        """
-        if getattr(sys, 'frozen', False):
-            # we are running in a bundle (frozen)
-            bundle_dir = sys._MEIPASS
-        else:
-            # we are running in a normal Python environment
-            bundle_dir = os.path.dirname(os.path.abspath(__file__))
-        logger.info(f'bundle_dir: {bundle_dir}')
-        
-        return bundle_dir
-    '''
-
     def __init__(self, path=None, parent=None):
         """
-        Args:
-            path (str): Full path to folder with raw file (abf,csv,tif).
+        Parameters
+        ----------
+        path : str
+            Full path to folder with raw files (abf,csv,tif).
         """
 
         super().__init__(parent)
@@ -108,17 +88,16 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.myModel = sanpy.interface.bFileTable.pandasModel(dfEmpty)
 
         self.fileFromDatabase = True  # if False then from folder
-        #self.csvPath = csvPath
 
         self.startSec = None
         self.stopSec = None
 
+        #TODO: put font size in options file
         myFontSize = 10
         myFont = self.font();
-        myFont.setPointSize(myFontSize);
+        myFont.setPointSize(myFontSize)
         self.setFont(myFont)
 
-        # todo: update this with selected folder
         if path is not None and os.path.isdir(path):
             windowTitle = f'SanPy {path}'
         else:
@@ -126,7 +105,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.setWindowTitle(windowTitle)
 
         self._rowHeight = 11
-        #self.selectedRow = None
 
         # path to loaded folder (using bAnalysisDir)
         self.configDict : sanpy.interface.preferences = sanpy.interface.preferences(self)
@@ -140,9 +118,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         else:
             self.path = None
 
-        # I changed saved preferences file,
-        # try not to screw up Laura's analysis
+        #TODO: refactor dark to light theme
         self.useDarkStyle = self.configDict['useDarkStyle']
+        self.useDarkStyle = True
 
         #
         # set window geometry
@@ -158,11 +136,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # order matter, _buildMenus uses objects created in _buildUI
         self._buildUI()
         self._buildMenus()
-
-        #self.myExportWidget = None
-
-        #self.dfReportForScatter = None
-        #self.dfError = None
 
         # 20210803, loadFolder was above? Still works down here
         # needed to update detection widget after buildUI()
@@ -195,10 +168,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
             self.slot_loadFolder(path=oneFolder)
 
     def _promptIfDirty(self) -> bool:
-        """If this return False, do not proceed with caller action.
+        """Prompt user if there is unsaved analysis.
+        
+        If this return False, do not proceed with caller action.
         e.g. on 'load folder'
 
-        If not dirty then always returns True
+        If this returns True then proceed with caller action
         """
         acceptAndContinue = True
         if self.myAnalysisDir is not None:
@@ -208,7 +183,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 userResp = sanpy.interface.bDialog.yesNoCancelDialog(
                                     'There is analysis that is not saved.\nDo you want to save?')
                 if userResp == QtWidgets.QMessageBox.Yes:
-                    self.slot_saveFilesTable()
+                    self.saveFilesTable()
                     acceptAndContinue = True
                 elif userResp == QtWidgets.QMessageBox.No:
                     acceptAndContinue = True
@@ -220,7 +195,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         """Called when user closes main window or selects quit.
         """
 
-        # check if our table view has been edited by uder and warn
+        # check if our table view has been edited by user and warn
         doQuit = True
         alreadyAsked = False
         # self.myAnalysisDir is only defined after we load a folder
@@ -231,7 +206,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 alreadyAsked = True
                 userResp = sanpy.interface.bDialog.yesNoCancelDialog('There is analysis that is not saved.\nDo you want to save?')
                 if userResp == QtWidgets.QMessageBox.Yes:
-                    self.slot_saveFilesTable()
+                    self.saveFilesTable()
                     event.accept()
                 elif userResp == QtWidgets.QMessageBox.No:
                     event.accept()
@@ -261,9 +236,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         return left, top, width, height
 
     def toggleStyleSheet(self, doDark=None, buildingInterface=False):
-        # breeze
-        return
-
+        logger.info('')
         if doDark is None:
             doDark = self.useDarkStyle
         self.useDarkStyle = doDark
@@ -292,10 +265,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
             self.configDict.save()
 
     def slot_loadFolder(self, path='', folderDepth=None):
-        """
-        Load a folder of .abf
+        """Load a folder of raw data files.
 
-        create df and save in sanpy_recording_db.csv
+        Parameters
+        ----------
+        path : str
+        folderDepth : int or None
         """
 
         if folderDepth is None:
@@ -324,7 +299,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         #logger.info(f'Loading path: {path}')
 
-        # will create/load csv and/or gzip (of all analysis)
+        # will create/load hd5 file for folder
         self.myAnalysisDir = sanpy.analysisDir(path, folderDepth=folderDepth, myApp=self)
 
         # set myAnalysisDir to file list model
@@ -381,10 +356,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.signalSelectSpikeList.emit(eDict)
 
     def mySignal(self, this, data=None):
-        """
-        this: the signal
-        data: depends on signal:
-            signal=='set x axis': data=[min,max]
+        """Receive signals from children widgets.
+
+        Parameters
+        ----------
+        this : str
+            The signal name
+        data : type depends on signal (this)
+            For example, signal 'set x axis' uses data=[min,max]
         """
         #print('=== sanpy_app.mySignal() "' + this +'"')
 
@@ -422,43 +401,45 @@ class SanPyWindow(QtWidgets.QMainWindow):
         else:
             logger.error(f'Did not understand this: "{this}"')
 
-    '''
-    def scatterPlot(self):
+    def old_keyPressEvent(self, event):
+        """Respond to key press
+        
+        TODO: does not seem to work?
         """
-        open a new window with an x/y scatter plot
-        """
-        print('=== MainWindow.scatterPlot() IS NOT IMPLEMENTED !!!')
-    '''
-
-    def keyPressEvent(self, event):
         key = event.key()
         text = event.text()
         logger.info(f'text:{text} key:{key} event:{event}')
 
+        # handled in bDetectionWidget
         # set full axis
-        if key in [70, 82]: # 'r' or 'f'
-            self.myDetectionWidget.setAxisFull()
+        #if key in [70, 82]: # 'r' or 'f'
+        # if key in [QtCore.Qt.Key.Key_R, QtCore.Qt.Key.Key_F]:
+        #     self.myDetectionWidget.setAxisFull()
 
         '''
         if key in [QtCore.Qt.Key.Key_P]: # 'r' or 'f'
             self.myDetectionWidget.myPrint()
         '''
 
+        # handled in bDetectionWidget
         # cancel all selections
-        if key == QtCore.Qt.Key.Key_Escape:
-            self.mySignal('cancel all selections')
+        # if key == QtCore.Qt.Key.Key_Escape:
+        #     self.mySignal('cancel all selections')
 
+        # handled in bDetectionWidget
         # hide detection widget
-        if text == 'h':
-            if self.myDetectionWidget.detectToolbarWidget.isVisible():
-                self.myDetectionWidget.detectToolbarWidget.hide()
-            else:
-                self.myDetectionWidget.detectToolbarWidget.show()
+        # if text == 'h':
+        #     if self.myDetectionWidget.detectToolbarWidget.isVisible():
+        #         self.myDetectionWidget.detectToolbarWidget.hide()
+        #     else:
+        #         self.myDetectionWidget.detectToolbarWidget.show()
 
+        # user can copy this to the clipboard
         # print file list model
-        if text == 'p':
-            print(self.myModel)
-            print(self.myModel._data) # this is df updated as user updates table
+        # this is df updated as user updates table
+        # if text == 'p':
+        #     print(self.myModel)
+        #     print(self.myModel._data)
 
         #
         event.accept()
@@ -532,7 +513,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         saveDatabaseAction = QtWidgets.QAction('Save Folder Analysis', self)
         saveDatabaseAction.setShortcut('Ctrl+S')
-        saveDatabaseAction.triggered.connect(self.slot_saveFilesTable)
+        saveDatabaseAction.triggered.connect(self.saveFilesTable)
 
         #buildDatabaseAction = QtWidgets.QAction('Build Big Database ...', self)
         #buildDatabaseAction.triggered.connect(self.buildDatabase)
@@ -568,7 +549,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         windowsMenu.addAction(exportRawDataAction)
         '''
 
-        # view menu to toggle theme
+        # view menu to toggle widgets on/off
         self.viewMenu = mainMenu.addMenu('&View')
         self.viewMenu.aboutToShow.connect(self._refreshViewMenu)
         self._refreshViewMenu()
@@ -591,14 +572,18 @@ class SanPyWindow(QtWidgets.QMainWindow):
         '''
 
         #
-        # plugins
+        # plugins menu
         pluginsMenu = mainMenu.addMenu('&Plugins')
-        # getHumanNames
-        pluginList = self.myPlugins.pluginList()
-        #logger.info(f'pluginList: {pluginList}')
-        for plugin in pluginList:
+        # list of plugin names
+        # pluginList = self.myPlugins.pluginList()
+        # each key is the name of theplugin
+        pluginDict = self.myPlugins.pluginDict
+        #print('pluginDict:', pluginDict)
+        _foundUserPlugin = False
+        for __humanName,v in pluginDict.items():
             #logger.info(f'adding plugin: {plugin}')
-            sanpyPluginAction = QtWidgets.QAction(plugin, self)
+            
+            sanpyPluginAction = QtWidgets.QAction(__humanName, self)
 
             # TODO: Add spacer between system and user plugins
             #fileMenu.addSeparator()
@@ -613,7 +598,17 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 sanpyPluginAction.setFont(f);
             '''
 
-            sanpyPluginAction.triggered.connect(lambda checked, pluginName=plugin: self.sanpyPlugin_action(pluginName))
+            #print(v['type'])
+            if v['type'] == 'user':
+                if not _foundUserPlugin:
+                    pluginsMenu.addSeparator()
+                    _foundUserPlugin = True
+                _font = sanpyPluginAction.font()
+                _font.setBold(True)    
+                _font.setItalic(True)    
+                sanpyPluginAction.setFont(_font)
+
+            sanpyPluginAction.triggered.connect(lambda checked, pluginName=__humanName: self.sanpyPlugin_action(pluginName))
             pluginsMenu.addAction(sanpyPluginAction)
 
         '''
@@ -660,7 +655,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
             webbrowser.open(url, new=2)
         
     def _refreshOpenRecent(self):
-        #logger.info('')
+        """Dynamically generate the open recent file menu.
+        """
         self.openRecentMenu.clear()
         for recentFolder in self.configDict.getRecentFolder():
 
@@ -671,7 +667,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
             self.openRecentMenu.addAction(loadFolderAction)
 
     def _refreshViewMenu(self):
-        #logger.info('****************')
+        """Dynamically create the main 'View' menu each time it is selected.
+        """
         
         self.viewMenu.clear()
 
@@ -682,6 +679,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         checkedMainPanel = self.configDict[key1]['File Panel']
         action = QtWidgets.QAction(name, self, checkable=True)
         action.setChecked(checkedMainPanel)
+        action.setShortcut(QtGui.QKeySequence('F'))
         action.triggered.connect(partial(self._viewMenuAction, key1, name))
         self.viewMenu.addAction(action)
 
@@ -693,6 +691,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         checkedMainPanel = self.configDict[key1]['Detection Panel']
         action = QtWidgets.QAction(name, self, checkable=True)
         action.setChecked(checkedMainPanel)
+        action.setShortcut(QtGui.QKeySequence('D'))
         action.triggered.connect(partial(self._viewMenuAction, key1, name))
         self.viewMenu.addAction(action)
 
@@ -723,7 +722,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.viewMenu.addAction(action)
 
         # mar 11
-        name = 'Set Spines'
+        name = 'Set Spikes'
         #checked = self.configDict['detectionPanels'][name]
         checked = True
         action = QtWidgets.QAction(name, self, checkable=True)
@@ -778,10 +777,22 @@ class SanPyWindow(QtWidgets.QMainWindow):
         action.triggered.connect(partial(self._viewMenuAction, key1, name))
         self.viewMenu.addAction(action)
 
+        self.viewMenu.addSeparator()
+
+        #TODO: refactor switching themes
+        name = 'Dark Theme'
+        checked = self.useDarkStyle
+        action = QtWidgets.QAction(name, self, checkable=True)
+        action.setChecked(checked)
+        action.setEnabled(False)
+        action.triggered.connect(partial(self._viewMenuAction, "Dark Theme", name))
+        self.viewMenu.addAction(action)
+
+
     def _viewMenuAction(self, key1, name, isChecked):
         """Respond to user selection in view menu.
         """
-        logger.info(f'{name} {isChecked}')
+        logger.info(f'{key1}, {name}, {isChecked}')
         
         try:
             self.configDict[key1][name] = isChecked
@@ -801,13 +812,24 @@ class SanPyWindow(QtWidgets.QMainWindow):
         elif key1 == 'detectionPanels':
             self.myDetectionWidget.toggleInterface(name, isChecked)
 
+        elif key1 == 'Dark Theme':
+            doDark = not self.useDarkStyle
+            self.toggleStyleSheet(doDark=doDark)
+
     def toggleInterface(self, name, on):
+        """Toggle named interface widgets show and hide.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the widget
+        on : bool
+            If True then show, otherwise hide.
+        """
         if name == 'File Panel':
             if on:
-                #self._fileListWidget.show()
                 self.fileDock.show()
             else:
-                #self._fileListWidget.hide()
                 self.fileDock.hide()
         elif name == 'Plugins 1':
             if on:
@@ -820,32 +842,25 @@ class SanPyWindow(QtWidgets.QMainWindow):
             else:
                 self.pluginDock2.hide()
 
-    def _populateOpenPlugins(self):
+    def old_populateOpenPlugins(self):
+        """Depreciated. Was to be a dynamic menu to show open plugins.
+        """
         self.windowsMenu.clear()
         actions = []
         for plugin in self.myPlugins._openSet:
             name = plugin.myHumanName
             windowTitle = plugin.windowTitle
             action = QtWidgets.QAction(windowTitle, self)
-            action.triggered.connect(partial(self._showOpenPlugin, name, plugin, windowTitle))
+            action.triggered.connect(partial(self.old_showOpenPlugin, name, plugin, windowTitle))
             actions.append(action)
         self.windowsMenu.addActions(actions)
 
-    def _showOpenPlugin(self, name, plugin, windowTitle, selected):
+    def old_showOpenPlugin(self, name, plugin, windowTitle, selected):
         logger.info(name)
         logger.info(plugin)
         logger.info(windowTitle)
         logger.info(selected)
         plugin.bringToFront()
-
-    '''
-    def toggleInterface(self, panelName, on):
-        if panelName == 'Detection Panel':
-            if on:
-                self.myDetectionWidget.show()
-            else:
-                self.myDetectionWidget.hide()
-    '''
 
     def _buildUI(self):
         """"
@@ -866,15 +881,16 @@ class SanPyWindow(QtWidgets.QMainWindow):
         on = self.configDict['detectionPanels']['Detection Panel']
         self.myDetectionWidget.toggleInterface('Detection Panel', on)
 
+        # myDetectionWidget listens to self
         self.signalSwitchFile.connect(self.myDetectionWidget.slot_switchFile)
-        self.signalSelectSpike.connect(self.myDetectionWidget.slot_selectSpike) # myDetectionWidget listens to self
-        self.signalSelectSpikeList.connect(self.myDetectionWidget.slot_selectSpikeList) # myDetectionWidget listens to self
+        self.signalSelectSpike.connect(self.myDetectionWidget.slot_selectSpike)
+        self.signalSelectSpikeList.connect(self.myDetectionWidget.slot_selectSpikeList)
+        self.signalUpdateAnalysis.connect(self.myDetectionWidget.slot_updateAnalysis)
 
-        self.signalUpdateAnalysis.connect(self.myDetectionWidget.slot_updateAnalysis) # myDetectionWidget listens to self
-
-        self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike) # self listens to myDetectionWidget
-        self.myDetectionWidget.signalSelectSpikeList.connect(self.slot_selectSpikeList) # self listens to myDetectionWidget
-        self.myDetectionWidget.signalSelectSweep.connect(self.slot_selectSweep) # self listens to myDetectionWidget
+        # self listens to myDetectionWidget
+        self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike)
+        self.myDetectionWidget.signalSelectSpikeList.connect(self.slot_selectSpikeList)
+        self.myDetectionWidget.signalSelectSweep.connect(self.slot_selectSweep)
         self.myDetectionWidget.signalDetect.connect(self.slot_detect)
 
         # detection widget is persistent
@@ -889,7 +905,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.detectionDock)
 
         #
-        # list of files
+        # list of files (in a dock)
         self._fileListWidget = sanpy.interface.fileListWidget(self.myModel)
         #self._fileListWidget.signalUpdateStatus.connect(self.slot_updateStatus)  # never used
         self._fileListWidget.signalLoadFolder.connect(self.slot_loadFolder)
@@ -900,11 +916,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.signalUpdateAnalysis.connect(self._fileListWidget.getTableView().slot_detect)
         #self.myDetectionWidget.signalDetect.connect(self._fileListWidget.slot_detect)
 
-        #
         self.fileDock = QtWidgets.QDockWidget('Files',self)
         self.fileDock.setWidget(self._fileListWidget)
         self.fileDock.setFloating(False)
-        self.fileDock.visibilityChanged.connect(self.slot_visibilityChanged)
+        self.fileDock.visibilityChanged.connect(self.on_fileDock_visibilityChanged)
         self.fileDock.topLevelChanged.connect(self.slot_topLevelChanged)
         self.fileDock.setAllowedAreas(QtCore.Qt.TopDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
         self.fileDock.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.fileDock))
@@ -919,7 +934,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.myPluginTab1.currentChanged.connect(partial(self.slot_changeTab, sender=self.myPluginTab1))
         # re-wire right-click
         self.myPluginTab1.setContextMenuPolicy(QtCore.Qt.CustomContextMenu);
-        self.myPluginTab1.customContextMenuRequested.connect(partial(self.slot_contextMenu, sender=self.myPluginTab1))
+        self.myPluginTab1.customContextMenuRequested.connect(partial(self.on_plugin_contextMenu, sender=self.myPluginTab1))
 
         #
         # add a number of plugins to QDockWidget 'Plugins 1'
@@ -959,7 +974,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.myPluginTab2.currentChanged.connect(partial(self.slot_changeTab, sender=self.myPluginTab2))
         # re-wire right-click
         self.myPluginTab2.setContextMenuPolicy(QtCore.Qt.CustomContextMenu);
-        self.myPluginTab2.customContextMenuRequested.connect(partial(self.slot_contextMenu, sender=self.myPluginTab2))
+        self.myPluginTab2.customContextMenuRequested.connect(partial(self.on_plugin_contextMenu, sender=self.myPluginTab2))
 
         # Open some default plugins
         # no plugins
@@ -971,32 +986,19 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.pluginDock2.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.pluginDock2))
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.pluginDock2)
 
-        #self.setLayout(layout)
-        #self.setWindowTitle('SanPy v3')
-
-
     def sanpyPlugin_action(self, pluginName):
-        """Responds to main menu 'Plugins'
+        """Responds to main menu 'Plugins'.
         
         Run a plugin using curent ba.
         
         Notes:
-            See also xxx for running a plugin in a tab
+            See also on_plugin_contextMenu for running a plugin in a tab
         """
         logger.info(f'opening pluginName: "{pluginName}"')
         ba = self.get_bAnalysis()
         
         # run the plugin
         _runningPlugin = self.myPlugins.runPlugin(pluginName, ba)
-        
-        # add the plugin to a tab, user can detatch it
-        # self.myPluginTab1.addTab(_runningPlugin, _runningPlugin.myHumanName)
-
-        # bring new tab to the front
-        # self.myPluginTab1.setCurrentWidget(_runningPlugin)
-
-        # make sure the dock is visible
-        # self.pluginDock1.setVisible(True)
 
         # add plugin to preferences so it opens next time we run the app
         if _runningPlugin is not None:
@@ -1013,17 +1015,28 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.selectSpikeList(spikeList, doZoom)
 
     def slot_selectSweep(self, ba, sweepNumber):
+        """Set view to new sweep.
+        
+        Parameters
+        ----------
+        ba : sanpy.bAnalysis
+        sweepNumber : int
+        """
         self.signalSelectSweep.emit(ba, sweepNumber)
 
-    def slot_saveFilesTable(self):
-        """Needed on user keyboard Ctrl+S
+    def saveFilesTable(self):
+        """Save the folder hdf5 file.
         """
         #logger.info('')
         self.myAnalysisDir.saveHdf()
         self.slot_updateStatus(f'Save analysis for folder: {self.myAnalysisDir.path}')
 
-    def slot_updateStatus(self, text):
+    def slot_updateStatus(self, text : str):
+        """Update the bottom status bar with new str
+        """
         logger.info(text)
+        
+        # having trouble with an immediate update?
         self.statusBar.showMessage(text)
         self.statusBar.repaint()
         #self.statusBar.update()
@@ -1034,72 +1047,68 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def slot_setDetectionParams(self, row, cellType):
         """Set detection parameters to presets.
 
-        Arguments:
-            row (int): Selected row in file table
-            cellType (str): One of ('SA Node Params', 'Ventricular Params', 'Neuron Params')
+        Parameters
+        ----------
+        row : int
+            Selected row in file table
+        cellType : str
+            One of ('SA Node Params', 'Ventricular Params', 'Neuron Params')
         """
         logger.info(f'row:{row} cellType:{cellType}')
         self.myModel.mySetDetectionParams(row, cellType)
 
     def slot_detect(self, ba):
-            #self.myScatterPlotWidget.plotToolbarWidget.on_scatter_toolbar_table_click()
+        """Respond to spike detection.
+        
+        Usually comes from the sanpy.interface.bDetectionWidget
+        """
 
-            # not used in buildUI2()
-            #dfError = ba.dfError
-            #errorReportModel = sanpy.interface.bFileTable.pandasModel(dfError)
-            #self.myErrorTable.setModel(errorReportModel)
+        # sweep number does not change
+        self.signalUpdateAnalysis.emit(ba)
 
-            # update stats of table load/analyzed columns
-            #self.myAnalysisDir._updateLoadedAnalyzed()
-            #self.myModel.myUpdateLoadedAnalyzed(ba)
+        self.slot_updateStatus(f'Detected {ba.numSpikes} spikes')
 
-            # TODO: This really should have payload
-            self.signalUpdateAnalysis.emit(ba)  # sweep number does not change
-
-            self.slot_updateStatus(f'Detected {ba.numSpikes} spikes')
-
-    def slot_contextMenu(self, point, sender):
-        """Build a menu of plugins
+    def on_plugin_contextMenu(self, point, sender):
+        """On right-click in dock, build a menu of plugins.
 
         On user selection, run the plugin in a tab.
 
         Notes:
-            See also xxx for running a plugin outside a tab (via main plugin menu)
+            See also sanpyPlugin_action for running a plugin outside a tab (via main plugin menu)
 
-        Args:
-            point (QtCore.QPoint): Not used
-            sender (QTabWidget):
+        Parameters
+        ----------
+        point :QtCore.QPoint)
+            Not used
+        sender : QTabWidget
         """
-        #sender = self.sender()  # PyQt5.QtWidgets.QDockWidget
-
         #logger.info(f'point:{point}, sender:{sender}')
 
         # list of available plugins
         pluginList = self.myPlugins.pluginList()
 
-        #contextMenu = QtWidgets.QMenu(self.myTab)
         contextMenu = QtWidgets.QMenu(self)
 
         for plugin in pluginList:
             contextMenu.addAction(plugin)
 
-        # get current mouse/cursor position, not sure what 'point' is?
+        # get current mouse/cursor position
+        # not sure what 'point' parameter is?
         pos = QtGui.QCursor.pos()
         action = contextMenu.exec_(pos)
 
         if action is None:
-            # n menu selected
+            # no menu selected
             return
 
         pluginName = action.text()
         ba = self.get_bAnalysis()
         newPlugin = self.myPlugins.runPlugin(pluginName, ba, show=False)
-        #scatterPlugin = self.myPlugins.runPlugin('Scatter Plot', ba=None, show=False)
 
         # only add if plugin wants to be shown
         if not newPlugin.getInitError() and newPlugin.getShowSelf():
             # add tab
-            #print('newPlugin:', newPlugin)
+
             # 1) either this
             #newPlugin.insertIntoScrollArea()
             '''
@@ -1117,20 +1126,25 @@ class SanPyWindow(QtWidgets.QMainWindow):
             #widgetPointer.insertIntoScrollArea()
 
             # bring tab to front
-            #count = sender.count()
-            #sender.setCurrentIndex(count-1)
             sender.setCurrentIndex(newTabIndex)
 
     def slot_dockLocationChanged(self, dock, area):
-        """
-        area (enum): QtCore.Qt.DockWidgetArea, basically left/top/right/bottom.
+        """Top level dock changed
+        
+        Parameters
+        ----------
+        dock : xxx
+        area : enum QtCore.Qt.DockWidgetArea
+            Basically left/top/right/bottom.
 
         Not triggered when user 'floats' a dock (See self.slot_topLevelChanged())
         """
-        logger.info(f'dock:"{dock.windowTitle()}" area enum: {area}')
+        logger.info(f'not implemented, dock:"{dock.windowTitle()}" area enum: {area}')
         return
 
-    def slot_visibilityChanged(self, visible : bool):
+    def on_fileDock_visibilityChanged(self, visible : bool):
+        """The file dock visibility was changed.
+        """
         self._viewMenuAction('filePanels', 'File Panel', visible)
 
     def slot_topLevelChanged(self, topLevel):
@@ -1144,12 +1158,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
         return
 
     def slot_closeTab(self, index, sender):
-        """
-        Close an open plugin tab.
+        """Close an open plugin tab.
 
-        Args:
-            sender (<PyQt5.QtWidgets.QTabWidget): The tab group where a single tab was was closed
-            index (int): The index into sender that gives us the tab, sender.widget(index)
+        Parameters
+        ----------
+        index : int
+            The index into sender that gives us the tab, sender.widget(index)
+        sender : PyQt5.QtWidgets.QTabWidget
+            The tab group where a single tab was was closed
         """
 
         logger.info(f'index:{index} sender:{type(sender)}')
@@ -1158,7 +1174,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # pluginInstancePointer is full class to actual plugin, like
         # sanpy.interface.plugins.detectionParams.detectionParams
         pluginInstancePointer = sender.widget(index)
-        logger.info(f'  pluginInstancePointer:{type(pluginInstancePointer)}')
+        logger.info(f'  closing pluginInstancePointer:{type(pluginInstancePointer)}')
 
         # remove from preferences
         if pluginInstancePointer is not None:
@@ -1170,17 +1186,15 @@ class SanPyWindow(QtWidgets.QMainWindow):
         sender.removeTab(index)
 
     def slot_changeTab(self, index, sender):
-        """
-        User brought a different tab to the front
+        """User brought a different tab to the front
 
         Make sure only front tab (plugins) receive signals
         """
-        logger.info(f'index:{index} sender:{sender}')
+        logger.info(f'not implemented, index:{index} sender:{sender}')
         pass
 
     def openLog(self):
-        """
-        Open sanpy.log in default app
+        """Open sanpy.log
         """
         logFilePath = sanpy.sanpyLogger.getLoggerFile()
         logFilePath = 'file://' + logFilePath
@@ -1248,7 +1262,8 @@ def main():
     else:
         logger.warning(f'    Did not find appIconPath: {appIconPathStr}')
 
-    #app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+    # for manuscript we need to allow user to set light/dark theme
+    # was this
     app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api=os.environ['PYQTGRAPH_QT_LIB']))
 
     w = SanPyWindow()

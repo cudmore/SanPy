@@ -57,7 +57,8 @@ class bPlugins():
         ignoreModuleList = ['sanpyPlugin', 'myWidget',
                             'ResponseType', 'SpikeSelectEvent',
                             'basePlotTool',
-                            'NavigationToolbar2QT']
+                            'NavigationToolbar2QT',
+                            'myStatListWidget']
 
         #
         # system plugins from sanpy.interface.plugins
