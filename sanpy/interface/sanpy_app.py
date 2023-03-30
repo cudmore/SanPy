@@ -154,6 +154,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         if self.path is not None and len(self.path)>0:
             self.slot_loadFolder(self.path)
 
+        # self.raise_()  # bring to front, raise is a python keyword
+        # self.activateWindow()  # bring to front
+
         self.slot_updateStatus('Ready')
         logger.info('SanPy started')
 
@@ -1322,6 +1325,9 @@ def main():
 
     w = SanPyWindow()
     w.show()
+
+    w.raise_()  # bring to front, raise is a python keyword
+    w.activateWindow()  # bring to front
 
     sys.exit(app.exec_())
 

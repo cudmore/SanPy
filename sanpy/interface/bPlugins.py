@@ -202,8 +202,8 @@ class bPlugins():
                                             _pluginDict['w'],
                                             _pluginDict['h'])
                     newPlugin.getWidget().show()
-                    newPlugin.getWidget().raise_()  # bring to front, raise is a python keyword
-                    newPlugin.getWidget().activateWindow()  # bring to front
+                    # newPlugin.getWidget().raise_()  # bring to front, raise is a python keyword
+                    # newPlugin.getWidget().activateWindow()  # bring to front
 
                 # add the plugin to open next time we run
                 

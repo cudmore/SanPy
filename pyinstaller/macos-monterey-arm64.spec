@@ -2,10 +2,10 @@
 
 block_cipher = None
 
-extras_toc = Tree('../sanpy/_userFiles', prefix='_userFiles', excludes=['.DS_Store'])
-print('extras_toc')
-print(extras_toc)
-
+# TODO: start using pyinstaller Tree
+#extras_toc = Tree('../sanpy/_userFiles', prefix='_userFiles', excludes=['.DS_Store'])
+#print('extras_toc')
+#print(extras_toc)
 
 a = Analysis(
     ['../sanpy/interface/sanpy_app.py'],

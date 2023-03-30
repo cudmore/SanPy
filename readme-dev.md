@@ -16,7 +16,7 @@
 
 - [done] Remove 'I' column from file list. This is supposed to be used for pooling (later versions will include this).
 
-- Preferences need to save/load the window position of internal plugins.
+- [done] Preferences need to save/load the window position of external plugins.
 
 ### TODO minor
 

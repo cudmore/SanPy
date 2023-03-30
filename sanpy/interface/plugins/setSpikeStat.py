@@ -31,11 +31,11 @@ class ComboBox(QtWidgets.QComboBox):
         # draw the icon and text
         painter.drawControl(QtWidgets.QStyle.CE_ComboBoxLabel, opt)
 
-setSpikeStatEvent = {
-    'spikeList': [],
-    'colStr': '',
-    'value': ''
-}
+# setSpikeStatEvent = {
+#     'spikeList': [],
+#     'colStr': '',
+#     'value': ''
+# }
 
 class SetSpikeStat(sanpyPlugin):
     """Plugin to provide an interface to set spike stats like condition, userType, isBad, etc.
@@ -165,6 +165,9 @@ class SetSpikeStat(sanpyPlugin):
         else:
             value = self._lineEdit.text()
 
+        if colStr == 'userType':
+            value = int(value)
+            
         #eventDict = setSpikeStatEvent
         setSpikeStatEvent = {}
         setSpikeStatEvent['spikeList'] = self.getSelectedSpikes()

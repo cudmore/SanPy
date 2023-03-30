@@ -33,10 +33,11 @@ setup(
     ],
     extras_require={
         'gui': [
+            'qtpy',
             #'pyqtgraph==0.12.4',
             'pyqtgraph',
-            #'qdarkstyle',
-            'pyqtdarktheme',
+            #'qdarkstyle',  # v1
+            'pyqtdarktheme',  # switched to this mar 2023
             #'PyQt5==5.15.6',  #
             'PyQt5',  #
         ],

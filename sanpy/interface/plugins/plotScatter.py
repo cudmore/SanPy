@@ -470,6 +470,10 @@ class plotScatter(sanpyPlugin):
             goodSpikes = self.getStat('include')
             userTypeList = self.getStat('userType')
 
+            logger.warning('   debug set spike stat, user types need to be int')
+            logger.warning('   we ARE NOT GETTING THE CORRECT SPIKE INDEX')
+            # print(userTypeList)
+
             if self.plotChasePlot:
                 #xData = xData[1:-1] # x is the reference spike for marking (bad, type)
                 #goodSpikes = goodSpikes[1:-1]

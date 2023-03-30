@@ -1,4 +1,78 @@
 
+## PyInstaller Workflow, Mar 30, 2023
+
+1) Create and activate a fresh conda environment
+
+This is required because if you use an old and bloated conda environment then the size of the built application gets huge. On macOS Monteray, my built app is ~366 MB.
+
+```
+conda create -y -n sanpy-env-pyinstaller python=3.9
+conda activate sanpy-env-pyinstaller    
+```
+
+2) install pyinstaller
+
+```
+pip install pyinstaller
+```
+
+3) Clone and install SanPy from source
+
+```
+git clone git@github.com:cudmore/SanPy.git
+```
+
+If that does not work, try
+
+```
+git clone https://github.com/cudmore/SanPy.git
+```
+
+```
+cd SanPy
+pip install .[gui]
+```
+
+On newer macOS, zsh shell in general, you need some quotes
+
+```
+pip install ".[gui]"
+```
+
+4) Run SanPy to make sure it works.
+
+This is critical because if it fails here, it will not work when bundled.
+
+You should click around in the interface a bit, open some plugins, etc.
+
+Try and 'Load Folder' from the included `Sanpy/data`.
+
+```
+sanpy
+```
+
+5) Build with a modified pyinstaller spec file
+
+I am using a hand modified spec file, `mocos-monterey-arm64.spec`.
+
+```
+pyinstaller --noconfirm --clean macos-monterey-arm64.spec
+```
+
+For Windows, make a copy of this spec file and tailor it to windows. In that new file, you have to get the windows paths correct, like this
+
+```
+/Users/cudmore/opt/miniconda3/envs/sanpy-env-pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib
+```
+
+6) First run of bundled app or exe
+
+I first run the app from the macOS app folder (use 'show package contents'). This way I get a command prompt with the logs and is easy to troubleshoot.
+
+If the app in general fails to run, you need to figure out how to run it and be able to see the console logging output on Windows.
+
+
+
 ## 20230316
 
 On M1 macOS laptop (Monteray, 12.4), build from a premade spec `macos-monterey-arm64.spec`.

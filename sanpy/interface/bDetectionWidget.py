@@ -1585,7 +1585,31 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.myMainWindow.mySignal('cancel all selections')
 
         elif key == QtCore.Qt.Key_C:
-            self.setSpikeStat()
+            logger.warning('what was this for ??? responding to keyboard C ???')
+            #self.setSpikeStat()
+
+    def slot_setSpikeStat(self, setSpikeStatEvent : dict):
+        """Respond to changes from setSpikeStack plugin.
+
+        Notes
+        -----
+        setSpikeStatEvent = {}
+        setSpikeStatEvent['spikeList'] = self.getSelectedSpikes()
+        setSpikeStatEvent['colStr'] = colStr
+        setSpikeStatEvent['value'] = value
+        """
+        logger.info(f'setSpikeStatEvent: {setSpikeStatEvent}')
+        
+        spikeList = setSpikeStatEvent['spikeList']
+        colStr = setSpikeStatEvent['colStr']
+        value = setSpikeStatEvent['value']
+
+        # set the stat
+        self.ba.setSpikeStat(spikeList, colStr, value)
+        
+        logger.info(f'  -->> emit signalDetect')
+        self.signalDetect.emit(self.ba)  # underlying _abf has new rect
+
 
     def slot_selectSweep(self, sweep : int):
         """Fake slot, not ising in emit/connect.
@@ -2661,6 +2685,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         setSpikeStatWidget = \
             sanpy.interface.plugins.SetSpikeStat(ba=self.detectionWidget.ba,
                                                  bPlugin=self.detectionWidget.myMainWindow.myPlugins)
+        setSpikeStatWidget.signalSetSpikeStat.connect(self.detectionWidget.slot_setSpikeStat)
+        # connect signal/slot
         setSpikeLayout.addWidget(setSpikeStatWidget)
 
         self.setSpikeGroupBox.setLayout(setSpikeLayout)
@@ -2821,6 +2847,19 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.mousePositionLabel.setText(labelStr)
         self.mousePositionLabel.repaint()
 
+    # def slot_setSpikeStat(self, setDict : dict):
+    #     """Respond to changes from setSpikeStack plugin.
+
+    #     Notes
+    #     -----
+    #     setSpikeStatEvent = {}
+    #     setSpikeStatEvent['spikeList'] = self.getSelectedSpikes()
+    #     setSpikeStatEvent['colStr'] = colStr
+    #     setSpikeStatEvent['value'] = value
+    #     """
+    #     logger.info(setDict)
+    #     self.detectionWidget.slot_setSpikeStat(setDict)
+
     def slot_selectSweep(self, sweep : int):
         """Fake slot, not ising in emit/connect.
         """
@@ -2841,7 +2880,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             spikeNumber = 0
         
         # convert absolute to sweep
-        sweepSpike = self.detectionWidget.ba.getSweepSpikeFromAbsolute(spikeNumber, self.detectionWidget.sweepNumber)
+        #sweepSpike = self.detectionWidget.ba.getSweepSpikeFromAbsolute(spikeNumber, self.detectionWidget.sweepNumber)
         
         '''
         print('    !!!! self.detectionWidget.sweepNumber:', self.detectionWidget.sweepNumber)
