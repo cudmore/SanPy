@@ -680,6 +680,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app-functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.main" class="md-nav__link">
+    main()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -861,6 +881,26 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app-functions" class="md-nav__link">
+    Functions
+  </a>
+  
+    <nav class="md-nav" aria-label="Functions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.interface.sanpy_app.main" class="md-nav__link">
+    main()
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -914,15 +954,7 @@
 
         <details class="quote">
           <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">  42</span>
-<span class="normal">  43</span>
-<span class="normal">  44</span>
-<span class="normal">  45</span>
-<span class="normal">  46</span>
-<span class="normal">  47</span>
-<span class="normal">  48</span>
-<span class="normal">  49</span>
-<span class="normal">  50</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">  50</span>
 <span class="normal">  51</span>
 <span class="normal">  52</span>
 <span class="normal">  53</span>
@@ -2074,7 +2106,51 @@
 <span class="normal">1199</span>
 <span class="normal">1200</span>
 <span class="normal">1201</span>
-<span class="normal">1202</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SanPyWindow</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMainWindow</span><span class="p">):</span>
+<span class="normal">1202</span>
+<span class="normal">1203</span>
+<span class="normal">1204</span>
+<span class="normal">1205</span>
+<span class="normal">1206</span>
+<span class="normal">1207</span>
+<span class="normal">1208</span>
+<span class="normal">1209</span>
+<span class="normal">1210</span>
+<span class="normal">1211</span>
+<span class="normal">1212</span>
+<span class="normal">1213</span>
+<span class="normal">1214</span>
+<span class="normal">1215</span>
+<span class="normal">1216</span>
+<span class="normal">1217</span>
+<span class="normal">1218</span>
+<span class="normal">1219</span>
+<span class="normal">1220</span>
+<span class="normal">1221</span>
+<span class="normal">1222</span>
+<span class="normal">1223</span>
+<span class="normal">1224</span>
+<span class="normal">1225</span>
+<span class="normal">1226</span>
+<span class="normal">1227</span>
+<span class="normal">1228</span>
+<span class="normal">1229</span>
+<span class="normal">1230</span>
+<span class="normal">1231</span>
+<span class="normal">1232</span>
+<span class="normal">1233</span>
+<span class="normal">1234</span>
+<span class="normal">1235</span>
+<span class="normal">1236</span>
+<span class="normal">1237</span>
+<span class="normal">1238</span>
+<span class="normal">1239</span>
+<span class="normal">1240</span>
+<span class="normal">1241</span>
+<span class="normal">1242</span>
+<span class="normal">1243</span>
+<span class="normal">1244</span>
+<span class="normal">1245</span>
+<span class="normal">1246</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">SanPyWindow</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMainWindow</span><span class="p">):</span>
 
     <span class="c1">#TODO: define parameter block for all signals.</span>
 
@@ -2113,7 +2189,7 @@
         <span class="c1"># create directories in &lt;user&gt;/Documents and add to python path</span>
         <span class="n">firstTimeRunning</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">_util</span><span class="o">.</span><span class="n">addUserPath</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">firstTimeRunning</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;We created &lt;user&gt;/Documents/Sanpy and need to restart&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;  We created &lt;user&gt;/Documents/Sanpy and need to restart&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_fileLoaderDict</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">fileloaders</span><span class="o">.</span><span class="n">getFileLoaders</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_detectionClass</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bDetection</span><span class="p">()</span>
@@ -2128,10 +2204,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">stopSec</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1">#TODO: put font size in options file</span>
-        <span class="n">myFontSize</span> <span class="o">=</span> <span class="mi">10</span>
-        <span class="n">myFont</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">();</span>
-        <span class="n">myFont</span><span class="o">.</span><span class="n">setPointSize</span><span class="p">(</span><span class="n">myFontSize</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">myFont</span><span class="p">)</span>
+        <span class="c1"># removed mar 26 2023</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        myFontSize = 10</span>
+<span class="sd">        myFont = self.font();</span>
+<span class="sd">        myFont.setPointSize(myFontSize)</span>
+<span class="sd">        self.setFont(myFont)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
             <span class="n">windowTitle</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;SanPy </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span>
@@ -2145,7 +2224,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span> <span class="p">:</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">preferences</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">preferences</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">myAnalysisDir</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">lastPath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">getMostRecentFolder</span><span class="p">()</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;preferences lastPath is &quot;</span><span class="si">{</span><span class="n">lastPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  preferences lastPath is &quot;</span><span class="si">{</span><span class="n">lastPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
         <span class="k">elif</span> <span class="n">lastPath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">lastPath</span><span class="p">):</span>
@@ -2155,7 +2234,8 @@
 
         <span class="c1">#TODO: refactor dark to light theme</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;useDarkStyle&#39;</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1">#self.useDarkStyle = True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">toggleStyleSheet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span><span class="p">,</span> <span class="n">buildingInterface</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="c1">#</span>
         <span class="c1"># set window geometry</span>
@@ -2228,7 +2308,13 @@
 
     <span class="k">def</span> <span class="nf">closeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Called when user closes main window or selects quit.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        event : PyQt5.QtGui.QCloseEvent</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
 
         <span class="c1"># check if our table view has been edited by user and warn</span>
         <span class="n">doQuit</span> <span class="o">=</span> <span class="kc">True</span>
@@ -2263,6 +2349,8 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span>
 
     <span class="k">def</span> <span class="nf">getWindowGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the current window position.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">myRect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">()</span>
         <span class="n">left</span> <span class="o">=</span> <span class="n">myRect</span><span class="o">.</span><span class="n">left</span><span class="p">()</span>
         <span class="n">top</span> <span class="o">=</span> <span class="n">myRect</span><span class="o">.</span><span class="n">top</span><span class="p">()</span>
@@ -2273,12 +2361,24 @@
     <span class="k">def</span> <span class="nf">toggleStyleSheet</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">doDark</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">buildingInterface</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">doDark</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">doDark</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span>
+            <span class="n">doDark</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span> <span class="o">=</span> <span class="n">doDark</span>
         <span class="k">if</span> <span class="n">doDark</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="n">qdarkstyle</span><span class="o">.</span><span class="n">load_stylesheet</span><span class="p">(</span><span class="n">qt_api</span><span class="o">=</span><span class="s1">&#39;pyqt5&#39;</span><span class="p">))</span>
+            <span class="c1"># v1</span>
+            <span class="c1">#self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api=&#39;pyqt5&#39;))</span>
+            <span class="c1"># v2</span>
+            <span class="n">qdarktheme</span><span class="o">.</span><span class="n">setup_theme</span><span class="p">(</span><span class="s1">&#39;dark&#39;</span><span class="p">)</span>
+
+            <span class="n">pg</span><span class="o">.</span><span class="n">setConfigOption</span><span class="p">(</span><span class="s1">&#39;background&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">)</span>
+            <span class="n">pg</span><span class="o">.</span><span class="n">setConfigOption</span><span class="p">(</span><span class="s1">&#39;foreground&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">setStyleSheet</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="c1"># v1</span>
+            <span class="c1"># self.setStyleSheet(&#39;&#39;)</span>
+            <span class="c1"># v2</span>
+            <span class="n">qdarktheme</span><span class="o">.</span><span class="n">setup_theme</span><span class="p">(</span><span class="s1">&#39;light&#39;</span><span class="p">)</span>
+
+            <span class="n">pg</span><span class="o">.</span><span class="n">setConfigOption</span><span class="p">(</span><span class="s1">&#39;background&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">pg</span><span class="o">.</span><span class="n">setConfigOption</span><span class="p">(</span><span class="s1">&#39;foreground&#39;</span><span class="p">,</span> <span class="s1">&#39;k&#39;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;useDarkStyle&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span>
 
@@ -2290,14 +2390,15 @@
         <span class="k">if</span> <span class="n">buildingInterface</span><span class="p">:</span>
             <span class="k">pass</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="p">()</span>
-            <span class="n">msg</span><span class="o">.</span><span class="n">setIcon</span><span class="p">(</span><span class="n">QtWidgets</span><span class="o">.</span><span class="n">QMessageBox</span><span class="o">.</span><span class="n">Warning</span><span class="p">)</span>
-            <span class="n">msg</span><span class="o">.</span><span class="n">setText</span><span class="p">(</span><span class="s2">&quot;Theme Changed&quot;</span><span class="p">)</span>
-            <span class="n">msg</span><span class="o">.</span><span class="n">setInformativeText</span><span class="p">(</span><span class="s1">&#39;Please restart SanPy for changes to take effect.&#39;</span><span class="p">)</span>
-            <span class="n">msg</span><span class="o">.</span><span class="n">setWindowTitle</span><span class="p">(</span><span class="s2">&quot;Theme Changed&quot;</span><span class="p">)</span>
-            <span class="n">retval</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">exec_</span><span class="p">()</span>
+            <span class="k">pass</span>
+            <span class="c1"># msg = QtWidgets.QMessageBox()</span>
+            <span class="c1"># msg.setIcon(QtWidgets.QMessageBox.Warning)</span>
+            <span class="c1"># msg.setText(&quot;Theme Changed&quot;)</span>
+            <span class="c1"># msg.setInformativeText(&#39;Please restart SanPy for changes to take effect.&#39;)</span>
+            <span class="c1"># msg.setWindowTitle(&quot;Theme Changed&quot;)</span>
+            <span class="c1"># retval = msg.exec_()</span>
 
-            <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="c1">#self.configDict.save()</span>
 
     <span class="k">def</span> <span class="nf">slot_loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">folderDepth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a folder of raw data files.</span>
@@ -2364,7 +2465,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">addFolder</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
 
         <span class="c1"># save preferences</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        <span class="c1">#self.configDict.save()</span>
 
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    def slot_dataChanged(self, columnName, value, rowDict):</span>
@@ -2434,7 +2535,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">selectSpikeList</span><span class="p">([])</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not understand this: &quot;</span><span class="si">{</span><span class="n">this</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not understand this: &quot;</span><span class="si">{</span><span class="n">this</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">old_keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Respond to key press</span>
@@ -2571,40 +2672,15 @@
         <span class="n">fileMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
         <span class="n">fileMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">showLogAction</span><span class="p">)</span>
 
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        scatterPlotAction = QtWidgets.QAction(&#39;Scatter Plot&#39;, self)</span>
-<span class="sd">        scatterPlotAction.triggered.connect(self.scatterPlot)</span>
-
-<span class="sd">        exportRawDataAction = QtWidgets.QAction(&#39;Export To pdf&#39;, self)</span>
-<span class="sd">        exportRawDataAction.triggered.connect(self.export_pdf)</span>
-
-<span class="sd">        windowsMenu = mainMenu.addMenu(&#39;&amp;Windows&#39;)</span>
-<span class="sd">        windowsMenu.addAction(scatterPlotAction)</span>
-<span class="sd">        windowsMenu.addSeparator()</span>
-<span class="sd">        windowsMenu.addAction(exportRawDataAction)</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-
         <span class="c1"># view menu to toggle widgets on/off</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">viewMenu</span> <span class="o">=</span> <span class="n">mainMenu</span><span class="o">.</span><span class="n">addMenu</span><span class="p">(</span><span class="s1">&#39;&amp;View&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">viewMenu</span><span class="o">.</span><span class="n">aboutToShow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_refreshViewMenu</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_refreshViewMenu</span><span class="p">()</span>
         <span class="c1">#self._populateViewMenu()</span>
 
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        statisticsPlotAction = QtWidgets.QAction(&#39;Statistics Plot&#39;, self)</span>
-<span class="sd">        statisticsPlotAction.triggered.connect(self.toggleStatisticsPlot)</span>
-<span class="sd">        statisticsPlotAction.setCheckable(True)</span>
-<span class="sd">        statisticsPlotAction.setChecked(True)</span>
-<span class="sd">        viewMenu.addAction(statisticsPlotAction)</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-
-<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        darkThemeAction = QtWidgets.QAction(&#39;Dark Theme&#39;, self)</span>
-<span class="sd">        darkThemeAction.triggered.connect(self.toggleStyleSheet)</span>
-<span class="sd">        darkThemeAction.setCheckable(True)</span>
-<span class="sd">        darkThemeAction.setChecked(self.useDarkStyle)</span>
-<span class="sd">        viewMenu.addAction(darkThemeAction)</span>
-<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="c1"># self.windowsMenu = mainMenu.addMenu(&#39;&amp;Window&#39;)</span>
+        <span class="c1"># self.windowsMenu.aboutToShow.connect(self._refreshWindowsMenu)</span>
+        <span class="c1"># self._refreshWindowsMenu()</span>
 
         <span class="c1">#</span>
         <span class="c1"># plugins menu</span>
@@ -2616,6 +2692,9 @@
         <span class="c1">#print(&#39;pluginDict:&#39;, pluginDict)</span>
         <span class="n">_foundUserPlugin</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">__humanName</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">pluginDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;showInMenu&#39;</span><span class="p">]:</span>
+                <span class="k">continue</span>
+
             <span class="c1">#logger.info(f&#39;adding plugin: {plugin}&#39;)</span>
 
             <span class="n">sanpyPluginAction</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAction</span><span class="p">(</span><span class="n">__humanName</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
@@ -2639,7 +2718,7 @@
                     <span class="n">pluginsMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
                     <span class="n">_foundUserPlugin</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="n">_font</span> <span class="o">=</span> <span class="n">sanpyPluginAction</span><span class="o">.</span><span class="n">font</span><span class="p">()</span>
-                <span class="n">_font</span><span class="o">.</span><span class="n">setBold</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>    
+                <span class="c1">#_font.setBold(True)    </span>
                 <span class="n">_font</span><span class="o">.</span><span class="n">setItalic</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>    
                 <span class="n">sanpyPluginAction</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">_font</span><span class="p">)</span>
 
@@ -2686,7 +2765,7 @@
 
     <span class="k">def</span> <span class="nf">_onHelpMenuAction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;SanPy Help (Opens In Browser)&#39;</span><span class="p">:</span>
-            <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;https://cudmore.github.io/SanPy/&#39;</span>
+            <span class="n">url</span> <span class="o">=</span> <span class="s1">&#39;https://cudmore.github.io/SanPy/desktop-application&#39;</span>
             <span class="n">webbrowser</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">new</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_refreshOpenRecent</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -2700,6 +2779,15 @@
             <span class="n">loadFolderAction</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_loadFolder</span><span class="p">,</span> <span class="n">recentFolder</span><span class="p">))</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">openRecentMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">loadFolderAction</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_refreshWindowsMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">windowsMenu</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+
+        <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;SanPy Window&#39;</span>
+        <span class="n">action</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAction</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">checkable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">action</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">isVisible</span><span class="p">())</span>
+        <span class="n">action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_windowsMenuAction</span><span class="p">,</span> <span class="s1">&#39;xxx&#39;</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">windowsMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_refreshViewMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Dynamically create the main &#39;View&#39; menu each time it is selected.</span>
@@ -2758,8 +2846,7 @@
 
         <span class="c1"># mar 11</span>
         <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Set Spikes&#39;</span>
-        <span class="c1">#checked = self.configDict[&#39;detectionPanels&#39;][name]</span>
-        <span class="n">checked</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">checked</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;detectionPanels&#39;</span><span class="p">][</span><span class="n">name</span><span class="p">]</span>
         <span class="n">action</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAction</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">checkable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">action</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">checked</span><span class="p">)</span>
         <span class="n">action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_viewMenuAction</span><span class="p">,</span> <span class="n">key1</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
@@ -2804,13 +2891,15 @@
         <span class="n">action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_viewMenuAction</span><span class="p">,</span> <span class="n">key1</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">viewMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
 
-        <span class="n">key1</span> <span class="o">=</span> <span class="s1">&#39;pluginDocks&#39;</span>
-        <span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;Plugins 2&#39;</span>
-        <span class="n">_isVisible</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock2</span><span class="o">.</span><span class="n">isVisible</span><span class="p">()</span>  <span class="c1"># assuming we _buildUI</span>
-        <span class="n">action</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAction</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">checkable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">action</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">_isVisible</span><span class="p">)</span>
-        <span class="n">action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_viewMenuAction</span><span class="p">,</span> <span class="n">key1</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">viewMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        key1 = &#39;pluginDocks&#39;</span>
+<span class="sd">        name = &#39;Plugins 2&#39;</span>
+<span class="sd">        _isVisible = self.pluginDock2.isVisible()  # assuming we _buildUI</span>
+<span class="sd">        action = QtWidgets.QAction(name, self, checkable=True)</span>
+<span class="sd">        action.setChecked(_isVisible)</span>
+<span class="sd">        action.triggered.connect(partial(self._viewMenuAction, key1, name))</span>
+<span class="sd">        self.viewMenu.addAction(action)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">viewMenu</span><span class="o">.</span><span class="n">addSeparator</span><span class="p">()</span>
 
@@ -2819,10 +2908,14 @@
         <span class="n">checked</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span>
         <span class="n">action</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QAction</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">checkable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">action</span><span class="o">.</span><span class="n">setChecked</span><span class="p">(</span><span class="n">checked</span><span class="p">)</span>
-        <span class="n">action</span><span class="o">.</span><span class="n">setEnabled</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+        <span class="c1">#action.setEnabled(False)</span>
         <span class="n">action</span><span class="o">.</span><span class="n">triggered</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_viewMenuAction</span><span class="p">,</span> <span class="s2">&quot;Dark Theme&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">viewMenu</span><span class="o">.</span><span class="n">addAction</span><span class="p">(</span><span class="n">action</span><span class="p">)</span>
 
+
+
+    <span class="k">def</span> <span class="nf">_windowsMenuAction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key1</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">isChecked</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">isVisible</span><span class="p">())</span>
 
     <span class="k">def</span> <span class="nf">_viewMenuAction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key1</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">isChecked</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Respond to user selection in view menu.</span>
@@ -2848,8 +2941,11 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">toggleInterface</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">isChecked</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="n">key1</span> <span class="o">==</span> <span class="s1">&#39;Dark Theme&#39;</span><span class="p">:</span>
-            <span class="n">doDark</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">toggleStyleSheet</span><span class="p">(</span><span class="n">doDark</span><span class="o">=</span><span class="n">doDark</span><span class="p">)</span>
+            <span class="c1"># doDark = not self.useDarkStyle</span>
+            <span class="c1"># self.toggleStyleSheet(doDark=doDark)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">toggleStyleSheet</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  no action for key1: &quot;</span><span class="si">{</span><span class="n">key1</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">toggleInterface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">on</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Toggle named interface widgets show and hide.</span>
@@ -2862,10 +2958,11 @@
 <span class="sd">            If True then show, otherwise hide.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;File Panel&#39;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">on</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">on</span><span class="p">)</span>
+            <span class="c1"># if on:</span>
+            <span class="c1">#     self.fileDock.show()</span>
+            <span class="c1"># else:</span>
+            <span class="c1">#     self.fileDock.hide()</span>
         <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;Plugins 1&#39;</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">on</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock1</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -2902,10 +2999,41 @@
 <span class="sd">        File List : sanpy.interface.fileListWidget</span>
 <span class="sd">        Detection Widget: sanpy.interface.bDetectionWidget</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">toggleStyleSheet</span><span class="p">(</span><span class="n">buildingInterface</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="c1">#self.toggleStyleSheet(buildingInterface=True)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">statusBar</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QStatusBar</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">setStatusBar</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">statusBar</span><span class="p">)</span>
+
+        <span class="c1"># typical wrapper for PyQt, we can&#39;t use setLayout(), we need to use setCentralWidget()</span>
+        <span class="n">_mainWidget</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QWidget</span><span class="p">()</span>
+        <span class="n">_mainVLayout</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QVBoxLayout</span><span class="p">()</span>
+        <span class="n">_mainWidget</span><span class="o">.</span><span class="n">setLayout</span><span class="p">(</span><span class="n">_mainVLayout</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setCentralWidget</span><span class="p">(</span><span class="n">_mainWidget</span><span class="p">)</span>
+
+        <span class="c1">#</span>
+        <span class="c1"># list of files (in a dock)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">fileListWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="p">)</span>
+        <span class="c1">#self._fileListWidget.signalUpdateStatus.connect(self.slot_updateStatus)  # never used</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span><span class="o">.</span><span class="n">signalLoadFolder</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_loadFolder</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span><span class="o">.</span><span class="n">getTableView</span><span class="p">()</span><span class="o">.</span><span class="n">signalSelectRow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_fileTableClicked</span><span class="p">)</span>
+        <span class="c1">#self._fileListWidget.getTableView().signalSetDefaultDetection.connect(self.slot_setDetectionParams)</span>
+
+        <span class="c1"># update dvdtThreshold, mvThreshold Start(s), Stop(s)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">signalUpdateAnalysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span><span class="o">.</span><span class="n">getTableView</span><span class="p">()</span><span class="o">.</span><span class="n">slot_detect</span><span class="p">)</span>
+        <span class="c1">#self.myDetectionWidget.signalDetect.connect(self._fileListWidget.slot_detect)</span>
+
+        <span class="c1"># file list as a widget</span>
+        <span class="n">_mainVLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span><span class="p">)</span>
+
+        <span class="c1"># file list as a dock</span>
+        <span class="c1"># self.fileDock = QtWidgets.QDockWidget(&#39;Files&#39;,self)</span>
+        <span class="c1"># self.fileDock.setWidget(self._fileListWidget)</span>
+        <span class="c1"># self.fileDock.setFloating(False)</span>
+        <span class="c1"># self.fileDock.visibilityChanged.connect(self.on_fileDock_visibilityChanged)</span>
+        <span class="c1"># self.fileDock.topLevelChanged.connect(self.slot_topLevelChanged)</span>
+        <span class="c1"># self.fileDock.setAllowedAreas(QtCore.Qt.TopDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)</span>
+        <span class="c1"># self.fileDock.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.fileDock))</span>
+        <span class="c1"># self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.fileDock)</span>
 
         <span class="c1">#</span>
         <span class="c1"># Detection widget</span>
@@ -2915,6 +3043,8 @@
         <span class="c1"># show/hide</span>
         <span class="n">on</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;detectionPanels&#39;</span><span class="p">][</span><span class="s1">&#39;Detection Panel&#39;</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">toggleInterface</span><span class="p">(</span><span class="s1">&#39;Detection Panel&#39;</span><span class="p">,</span> <span class="n">on</span><span class="p">)</span>
+
+        <span class="n">_mainVLayout</span><span class="o">.</span><span class="n">addWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="p">)</span>
 
         <span class="c1"># myDetectionWidget listens to self</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">signalSwitchFile</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">slot_switchFile</span><span class="p">)</span>
@@ -2929,7 +3059,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="o">.</span><span class="n">signalDetect</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_detect</span><span class="p">)</span>
 
         <span class="c1"># detection widget is persistent</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">setCentralWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myDetectionWidget</span><span class="p">)</span>
+        <span class="c1"># removed mar 26 2023</span>
+        <span class="c1"># self.setCentralWidget(self.myDetectionWidget)</span>
 
         <span class="c1"># TODO: detection widget as a dock</span>
         <span class="c1">#  detection widget has left panel of controls and right panel of plots</span>
@@ -2939,26 +3070,7 @@
         <span class="c1"># self.detectionDock.setFloating(False)</span>
         <span class="c1"># self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.detectionDock)</span>
 
-        <span class="c1">#</span>
-        <span class="c1"># list of files (in a dock)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">fileListWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="p">)</span>
-        <span class="c1">#self._fileListWidget.signalUpdateStatus.connect(self.slot_updateStatus)  # never used</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span><span class="o">.</span><span class="n">signalLoadFolder</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_loadFolder</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span><span class="o">.</span><span class="n">getTableView</span><span class="p">()</span><span class="o">.</span><span class="n">signalSelectRow</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_fileTableClicked</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span><span class="o">.</span><span class="n">getTableView</span><span class="p">()</span><span class="o">.</span><span class="n">signalSetDefaultDetection</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_setDetectionParams</span><span class="p">)</span>
-
-        <span class="c1"># update dvdtThreshold, mvThreshold Start(s), Stop(s)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">signalUpdateAnalysis</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span><span class="o">.</span><span class="n">getTableView</span><span class="p">()</span><span class="o">.</span><span class="n">slot_detect</span><span class="p">)</span>
-        <span class="c1">#self.myDetectionWidget.signalDetect.connect(self._fileListWidget.slot_detect)</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDockWidget</span><span class="p">(</span><span class="s1">&#39;Files&#39;</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="o">.</span><span class="n">setFloating</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="o">.</span><span class="n">visibilityChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_fileDock_visibilityChanged</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="o">.</span><span class="n">topLevelChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_topLevelChanged</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="o">.</span><span class="n">setAllowedAreas</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">TopDockWidgetArea</span> <span class="o">|</span> <span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">BottomDockWidgetArea</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="o">.</span><span class="n">dockLocationChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_dockLocationChanged</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">addDockWidget</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">TopDockWidgetArea</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="p">)</span>
+        <span class="c1">#self.setLayout(_mainVLayout)</span>
 
         <span class="c1">#</span>
         <span class="c1"># 2x docks for plugins</span>
@@ -2971,27 +3083,17 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab1</span><span class="o">.</span><span class="n">setContextMenuPolicy</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">CustomContextMenu</span><span class="p">);</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab1</span><span class="o">.</span><span class="n">customContextMenuRequested</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_plugin_contextMenu</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab1</span><span class="p">))</span>
 
-        <span class="c1">#</span>
-        <span class="c1"># add a number of plugins to QDockWidget &#39;Plugins 1&#39;</span>
-        <span class="c1"># we need to know the recice human name like &#39;Detection Parameters&#39;</span>
-
-        <span class="c1">#scatterPlugin = self.myPlugins.runPlugin(&#39;Plot Scatter&#39;, ba=None, show=False)</span>
-        <span class="c1">#errorSummaryPlugin = self.myPlugins.runPlugin(&#39;Error Summary&#39;, ba=None, show=False)</span>
-        <span class="c1">#summaryAnalysisPlugin = self.myPlugins.runPlugin(&#39;Summary Analysis&#39;, ba=None, show=False)</span>
-
-        <span class="c1"># on add tab, the QTabWIdget makes a copy !!!</span>
-        <span class="n">_openPlugins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;pluginPanels&#39;</span><span class="p">]</span> <span class="c1"># list of plugins to open</span>
-        <span class="k">for</span> <span class="n">_openPlugin</span> <span class="ow">in</span> <span class="n">_openPlugins</span><span class="p">:</span>
+        <span class="n">_openPlugins</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;pluginPanels&#39;</span><span class="p">]</span> <span class="c1"># dict of</span>
+        <span class="k">for</span> <span class="n">_openPlugin</span><span class="p">,</span> <span class="n">_externalWindow</span> <span class="ow">in</span> <span class="n">_openPlugins</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">_externalWindow</span> <span class="o">=</span> <span class="n">_externalWindow</span><span class="p">[</span><span class="s1">&#39;externalWindow&#39;</span><span class="p">]</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  _openPlugin:</span><span class="si">{</span><span class="n">_openPlugin</span><span class="si">}</span><span class="s1"> _externalWindow:</span><span class="si">{</span><span class="n">_externalWindow</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="n">_oneOpenPlugin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myPlugins</span><span class="o">.</span><span class="n">runPlugin</span><span class="p">(</span><span class="n">_openPlugin</span><span class="p">,</span> <span class="n">ba</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">show</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">_oneOpenPlugin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab1</span><span class="o">.</span><span class="n">addTab</span><span class="p">(</span><span class="n">_oneOpenPlugin</span><span class="p">,</span> <span class="n">_oneOpenPlugin</span><span class="o">.</span><span class="n">myHumanName</span><span class="p">)</span>
-
-        <span class="c1">#clipsPlugin = self.myPlugins.runPlugin(&#39;Export Trace&#39;, ba=None, show=False)</span>
-        <span class="c1">#self.myPluginTab1.addTab(clipsPlugin, clipsPlugin.myHumanName)</span>
-
-        <span class="c1">#self.myPluginTab1.addTab(scatterPlugin, scatterPlugin.myHumanName)</span>
-        <span class="c1">#self.myPluginTab1.addTab(errorSummaryPlugin, errorSummaryPlugin.myHumanName)</span>
-        <span class="c1">#self.myPluginTab1.addTab(summaryAnalysisPlugin, summaryAnalysisPlugin.myHumanName)</span>
+                <span class="k">if</span> <span class="n">_externalWindow</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sanpyPlugin_action</span><span class="p">(</span><span class="n">_openPlugin</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># on add tab, the QTabWIdget makes a copy !!!</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab1</span><span class="o">.</span><span class="n">addTab</span><span class="p">(</span><span class="n">_oneOpenPlugin</span><span class="p">,</span> <span class="n">_oneOpenPlugin</span><span class="o">.</span><span class="n">myHumanName</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock1</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDockWidget</span><span class="p">(</span><span class="s1">&#39;Plugins 1&#39;</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock1</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab1</span><span class="p">)</span>
@@ -3002,24 +3104,23 @@
 
         <span class="c1">#</span>
         <span class="c1"># tabs</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab2</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QTabWidget</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab2</span><span class="o">.</span><span class="n">setMovable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab2</span><span class="o">.</span><span class="n">setTabsClosable</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab2</span><span class="o">.</span><span class="n">tabCloseRequested</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_closeTab</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab2</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab2</span><span class="o">.</span><span class="n">currentChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_changeTab</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab2</span><span class="p">))</span>
-        <span class="c1"># re-wire right-click</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab2</span><span class="o">.</span><span class="n">setContextMenuPolicy</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">CustomContextMenu</span><span class="p">);</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab2</span><span class="o">.</span><span class="n">customContextMenuRequested</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">on_plugin_contextMenu</span><span class="p">,</span> <span class="n">sender</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab2</span><span class="p">))</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        self.myPluginTab2 = QtWidgets.QTabWidget()</span>
+<span class="sd">        self.myPluginTab2.setMovable(True)</span>
+<span class="sd">        self.myPluginTab2.setTabsClosable(True)</span>
+<span class="sd">        self.myPluginTab2.tabCloseRequested.connect(partial(self.slot_closeTab, sender=self.myPluginTab2))</span>
+<span class="sd">        self.myPluginTab2.currentChanged.connect(partial(self.slot_changeTab, sender=self.myPluginTab2))</span>
+<span class="sd">        # re-wire right-click</span>
+<span class="sd">        self.myPluginTab2.setContextMenuPolicy(QtCore.Qt.CustomContextMenu);</span>
+<span class="sd">        self.myPluginTab2.customContextMenuRequested.connect(partial(self.on_plugin_contextMenu, sender=self.myPluginTab2))</span>
 
-        <span class="c1"># Open some default plugins</span>
-        <span class="c1"># no plugins</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock2</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QDockWidget</span><span class="p">(</span><span class="s1">&#39;Plugins 2&#39;</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock2</span><span class="o">.</span><span class="n">setWidget</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">myPluginTab2</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock2</span><span class="o">.</span><span class="n">setFloating</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock2</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span> <span class="c1"># initially hide &#39;Plugins 2&#39;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock2</span><span class="o">.</span><span class="n">dockLocationChanged</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">partial</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">slot_dockLocationChanged</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock2</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">addDockWidget</span><span class="p">(</span><span class="n">QtCore</span><span class="o">.</span><span class="n">Qt</span><span class="o">.</span><span class="n">RightDockWidgetArea</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock2</span><span class="p">)</span>
+<span class="sd">        self.pluginDock2 = QtWidgets.QDockWidget(&#39;Plugins 2&#39;,self)</span>
+<span class="sd">        self.pluginDock2.setWidget(self.myPluginTab2)</span>
+<span class="sd">        self.pluginDock2.setFloating(False)</span>
+<span class="sd">        self.pluginDock2.hide() # initially hide &#39;Plugins 2&#39;</span>
+<span class="sd">        self.pluginDock2.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.pluginDock2))</span>
+<span class="sd">        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.pluginDock2)</span>
+<span class="sd">        &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="nf">sanpyPlugin_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pluginName</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Responds to main menu &#39;Plugins&#39;.</span>
@@ -3035,9 +3136,13 @@
         <span class="c1"># run the plugin</span>
         <span class="n">_runningPlugin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myPlugins</span><span class="o">.</span><span class="n">runPlugin</span><span class="p">(</span><span class="n">pluginName</span><span class="p">,</span> <span class="n">ba</span><span class="p">)</span>
 
+        <span class="n">ltwhTuple</span> <span class="o">=</span> <span class="n">_runningPlugin</span><span class="o">.</span><span class="n">getWindowGeometry</span><span class="p">()</span>
+
         <span class="c1"># add plugin to preferences so it opens next time we run the app</span>
         <span class="k">if</span> <span class="n">_runningPlugin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">addPlugin</span><span class="p">(</span><span class="n">_runningPlugin</span><span class="o">.</span><span class="n">getHumanName</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">addPlugin</span><span class="p">(</span><span class="n">_runningPlugin</span><span class="o">.</span><span class="n">getHumanName</span><span class="p">(),</span>
+                                      <span class="n">externalWindow</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                      <span class="n">ltwhTuple</span> <span class="o">=</span> <span class="n">ltwhTuple</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">slot_selectSpike</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sDict</span><span class="p">):</span>
         <span class="n">spikeNumber</span> <span class="o">=</span> <span class="n">sDict</span><span class="p">[</span><span class="s1">&#39;spikeNumber&#39;</span><span class="p">]</span>
@@ -3079,7 +3184,7 @@
         <span class="c1">#self.update()</span>
         <span class="n">QtWidgets</span><span class="o">.</span><span class="n">qApp</span><span class="o">.</span><span class="n">processEvents</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">slot_setDetectionParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">cellType</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_old_slot_setDetectionParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">cellType</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set detection parameters to presets.</span>
 
 <span class="sd">        Parameters</span>
@@ -3163,6 +3268,13 @@
             <span class="c1"># bring tab to front</span>
             <span class="n">sender</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">newTabIndex</span><span class="p">)</span>
 
+            <span class="n">ltwhTuple</span> <span class="o">=</span> <span class="n">newPlugin</span><span class="o">.</span><span class="n">getWindowGeometry</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="n">newPlugin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">addPlugin</span><span class="p">(</span><span class="n">newPlugin</span><span class="o">.</span><span class="n">getHumanName</span><span class="p">(),</span>
+                                        <span class="n">externalWindow</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                        <span class="n">ltwhTuple</span><span class="o">=</span><span class="n">ltwhTuple</span><span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">slot_dockLocationChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dock</span><span class="p">,</span> <span class="n">area</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Top level dock changed</span>
 
@@ -3212,8 +3324,8 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  closing pluginInstancePointer:</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">pluginInstancePointer</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
         <span class="c1"># remove from preferences</span>
-        <span class="k">if</span> <span class="n">pluginInstancePointer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">removePlugin</span><span class="p">(</span><span class="n">pluginInstancePointer</span><span class="o">.</span><span class="n">getHumanName</span><span class="p">())</span>
+        <span class="c1"># if pluginInstancePointer is not None:</span>
+        <span class="c1">#     self.configDict.removePlugin(pluginInstancePointer.getHumanName())</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">myPlugins</span><span class="o">.</span><span class="n">slot_closeWindow</span><span class="p">(</span><span class="n">pluginInstancePointer</span><span class="p">)</span>
 
@@ -3374,6 +3486,30 @@
 
 </div>
 
+<div class="doc doc-object doc-attribute">
+
+
+
+<h5 id="sanpy.interface.sanpy_app.SanPyWindow.stopSec" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">stopSec</span> <span class="o">=</span> <span class="kc">None</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-instance-attribute"><code>instance-attribute</code></small>
+  </span>
+
+<a href="#sanpy.interface.sanpy_app.SanPyWindow.stopSec" class="headerlink" title="Permanent link">¤</a></h5>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>myFontSize = 10
+myFont = self.font();
+myFont.setPointSize(myFontSize)
+self.setFont(myFont)</p>
+  </div>
+
+</div>
+
 <h4 id="sanpy.interface.sanpy_app.SanPyWindow-functions">Functions<a href="#sanpy.interface.sanpy_app.SanPyWindow-functions" class="headerlink" title="Permanent link">¤</a></h4>
 
 <div class="doc doc-object doc-function">
@@ -3415,15 +3551,7 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 64</span>
-<span class="normal"> 65</span>
-<span class="normal"> 66</span>
-<span class="normal"> 67</span>
-<span class="normal"> 68</span>
-<span class="normal"> 69</span>
-<span class="normal"> 70</span>
-<span class="normal"> 71</span>
-<span class="normal"> 72</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 72</span>
 <span class="normal"> 73</span>
 <span class="normal"> 74</span>
 <span class="normal"> 75</span>
@@ -3497,7 +3625,19 @@
 <span class="normal">143</span>
 <span class="normal">144</span>
 <span class="normal">145</span>
-<span class="normal">146</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parent</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -3514,7 +3654,7 @@
     <span class="c1"># create directories in &lt;user&gt;/Documents and add to python path</span>
     <span class="n">firstTimeRunning</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">_util</span><span class="o">.</span><span class="n">addUserPath</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">firstTimeRunning</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;We created &lt;user&gt;/Documents/Sanpy and need to restart&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;  We created &lt;user&gt;/Documents/Sanpy and need to restart&#39;</span><span class="p">)</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_fileLoaderDict</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">fileloaders</span><span class="o">.</span><span class="n">getFileLoaders</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_detectionClass</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bDetection</span><span class="p">()</span>
@@ -3529,10 +3669,13 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">stopSec</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="c1">#TODO: put font size in options file</span>
-    <span class="n">myFontSize</span> <span class="o">=</span> <span class="mi">10</span>
-    <span class="n">myFont</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">font</span><span class="p">();</span>
-    <span class="n">myFont</span><span class="o">.</span><span class="n">setPointSize</span><span class="p">(</span><span class="n">myFontSize</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">setFont</span><span class="p">(</span><span class="n">myFont</span><span class="p">)</span>
+    <span class="c1"># removed mar 26 2023</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    myFontSize = 10</span>
+<span class="sd">    myFont = self.font();</span>
+<span class="sd">    myFont.setPointSize(myFontSize)</span>
+<span class="sd">    self.setFont(myFont)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
         <span class="n">windowTitle</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;SanPy </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span>
@@ -3546,7 +3689,7 @@
     <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span> <span class="p">:</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">preferences</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">interface</span><span class="o">.</span><span class="n">preferences</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">myAnalysisDir</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">lastPath</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">getMostRecentFolder</span><span class="p">()</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;preferences lastPath is &quot;</span><span class="si">{</span><span class="n">lastPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  preferences lastPath is &quot;</span><span class="si">{</span><span class="n">lastPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
     <span class="k">elif</span> <span class="n">lastPath</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">lastPath</span><span class="p">):</span>
@@ -3556,7 +3699,8 @@
 
     <span class="c1">#TODO: refactor dark to light theme</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;useDarkStyle&#39;</span><span class="p">]</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1">#self.useDarkStyle = True</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">toggleStyleSheet</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">useDarkStyle</span><span class="p">,</span> <span class="n">buildingInterface</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1">#</span>
     <span class="c1"># set window geometry</span>
@@ -3600,21 +3744,33 @@
   
       <p>Called when user closes main window or selects quit.</p>
 
+  <p><strong>Parameters:</strong></p>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Default</th>
+      </tr>
+    </thead>
+    <tbody>
+        <tr>
+          <td><code>event</code></td>
+          <td>
+                <code>PyQt5.<span title="PyQt5.QtGui">QtGui</span>.<span title="PyQt5.QtGui.QCloseEvent">QCloseEvent</span></code>
+          </td>
+          <td></td>
+          <td>
+              <em>required</em>
+          </td>
+        </tr>
+    </tbody>
+  </table>
+
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">194</span>
-<span class="normal">195</span>
-<span class="normal">196</span>
-<span class="normal">197</span>
-<span class="normal">198</span>
-<span class="normal">199</span>
-<span class="normal">200</span>
-<span class="normal">201</span>
-<span class="normal">202</span>
-<span class="normal">203</span>
-<span class="normal">204</span>
-<span class="normal">205</span>
-<span class="normal">206</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">206</span>
 <span class="normal">207</span>
 <span class="normal">208</span>
 <span class="normal">209</span>
@@ -3633,9 +3789,33 @@
 <span class="normal">222</span>
 <span class="normal">223</span>
 <span class="normal">224</span>
-<span class="normal">225</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">closeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">closeEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Called when user closes main window or selects quit.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    event : PyQt5.QtGui.QCloseEvent</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
 
     <span class="c1"># check if our table view has been edited by user and warn</span>
     <span class="n">doQuit</span> <span class="o">=</span> <span class="kc">True</span>
@@ -3688,28 +3868,28 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">450</span>
-<span class="normal">451</span>
-<span class="normal">452</span>
-<span class="normal">453</span>
-<span class="normal">454</span>
-<span class="normal">455</span>
-<span class="normal">456</span>
-<span class="normal">457</span>
-<span class="normal">458</span>
-<span class="normal">459</span>
-<span class="normal">460</span>
-<span class="normal">461</span>
-<span class="normal">462</span>
-<span class="normal">463</span>
-<span class="normal">464</span>
-<span class="normal">465</span>
-<span class="normal">466</span>
-<span class="normal">467</span>
-<span class="normal">468</span>
-<span class="normal">469</span>
-<span class="normal">470</span>
-<span class="normal">471</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSelectedFileDict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">483</span>
+<span class="normal">484</span>
+<span class="normal">485</span>
+<span class="normal">486</span>
+<span class="normal">487</span>
+<span class="normal">488</span>
+<span class="normal">489</span>
+<span class="normal">490</span>
+<span class="normal">491</span>
+<span class="normal">492</span>
+<span class="normal">493</span>
+<span class="normal">494</span>
+<span class="normal">495</span>
+<span class="normal">496</span>
+<span class="normal">497</span>
+<span class="normal">498</span>
+<span class="normal">499</span>
+<span class="normal">500</span>
+<span class="normal">501</span>
+<span class="normal">502</span>
+<span class="normal">503</span>
+<span class="normal">504</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSelectedFileDict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Used by detection widget to get info in selected file.</span>
 
@@ -3731,6 +3911,45 @@
 <span class="sd">    rowDict = self.myModel.myGetRowDict(selectedRow)</span>
 <span class="sd">    return rowDict</span>
 <span class="sd">    &#39;&#39;&#39;</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+
+<h5 id="sanpy.interface.sanpy_app.SanPyWindow.getWindowGeometry" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">getWindowGeometry</span><span class="p">()</span></code>
+
+<a href="#sanpy.interface.sanpy_app.SanPyWindow.getWindowGeometry" class="headerlink" title="Permanent link">¤</a></h5>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Get the current window position.</p>
+
+      <details class="quote">
+        <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getWindowGeometry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current window position.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">myRect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">geometry</span><span class="p">()</span>
+    <span class="n">left</span> <span class="o">=</span> <span class="n">myRect</span><span class="o">.</span><span class="n">left</span><span class="p">()</span>
+    <span class="n">top</span> <span class="o">=</span> <span class="n">myRect</span><span class="o">.</span><span class="n">top</span><span class="p">()</span>
+    <span class="n">width</span> <span class="o">=</span> <span class="n">myRect</span><span class="o">.</span><span class="n">width</span><span class="p">()</span>
+    <span class="n">height</span> <span class="o">=</span> <span class="n">myRect</span><span class="o">.</span><span class="n">height</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">left</span><span class="p">,</span> <span class="n">top</span><span class="p">,</span> <span class="n">width</span><span class="p">,</span> <span class="n">height</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -3787,40 +4006,7 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">358</span>
-<span class="normal">359</span>
-<span class="normal">360</span>
-<span class="normal">361</span>
-<span class="normal">362</span>
-<span class="normal">363</span>
-<span class="normal">364</span>
-<span class="normal">365</span>
-<span class="normal">366</span>
-<span class="normal">367</span>
-<span class="normal">368</span>
-<span class="normal">369</span>
-<span class="normal">370</span>
-<span class="normal">371</span>
-<span class="normal">372</span>
-<span class="normal">373</span>
-<span class="normal">374</span>
-<span class="normal">375</span>
-<span class="normal">376</span>
-<span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span>
-<span class="normal">380</span>
-<span class="normal">381</span>
-<span class="normal">382</span>
-<span class="normal">383</span>
-<span class="normal">384</span>
-<span class="normal">385</span>
-<span class="normal">386</span>
-<span class="normal">387</span>
-<span class="normal">388</span>
-<span class="normal">389</span>
-<span class="normal">390</span>
-<span class="normal">391</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">391</span>
 <span class="normal">392</span>
 <span class="normal">393</span>
 <span class="normal">394</span>
@@ -3831,7 +4017,40 @@
 <span class="normal">399</span>
 <span class="normal">400</span>
 <span class="normal">401</span>
-<span class="normal">402</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">mySignal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">this</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">mySignal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">this</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Receive signals from children widgets.</span>
 
 <span class="sd">    Parameters</span>
@@ -3875,7 +4094,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">selectSpikeList</span><span class="p">([])</span>
 
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not understand this: &quot;</span><span class="si">{</span><span class="n">this</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Did not understand this: &quot;</span><span class="si">{</span><span class="n">this</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -3899,40 +4118,7 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">404</span>
-<span class="normal">405</span>
-<span class="normal">406</span>
-<span class="normal">407</span>
-<span class="normal">408</span>
-<span class="normal">409</span>
-<span class="normal">410</span>
-<span class="normal">411</span>
-<span class="normal">412</span>
-<span class="normal">413</span>
-<span class="normal">414</span>
-<span class="normal">415</span>
-<span class="normal">416</span>
-<span class="normal">417</span>
-<span class="normal">418</span>
-<span class="normal">419</span>
-<span class="normal">420</span>
-<span class="normal">421</span>
-<span class="normal">422</span>
-<span class="normal">423</span>
-<span class="normal">424</span>
-<span class="normal">425</span>
-<span class="normal">426</span>
-<span class="normal">427</span>
-<span class="normal">428</span>
-<span class="normal">429</span>
-<span class="normal">430</span>
-<span class="normal">431</span>
-<span class="normal">432</span>
-<span class="normal">433</span>
-<span class="normal">434</span>
-<span class="normal">435</span>
-<span class="normal">436</span>
-<span class="normal">437</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">437</span>
 <span class="normal">438</span>
 <span class="normal">439</span>
 <span class="normal">440</span>
@@ -3940,7 +4126,40 @@
 <span class="normal">442</span>
 <span class="normal">443</span>
 <span class="normal">444</span>
-<span class="normal">445</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">old_keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span>
+<span class="normal">450</span>
+<span class="normal">451</span>
+<span class="normal">452</span>
+<span class="normal">453</span>
+<span class="normal">454</span>
+<span class="normal">455</span>
+<span class="normal">456</span>
+<span class="normal">457</span>
+<span class="normal">458</span>
+<span class="normal">459</span>
+<span class="normal">460</span>
+<span class="normal">461</span>
+<span class="normal">462</span>
+<span class="normal">463</span>
+<span class="normal">464</span>
+<span class="normal">465</span>
+<span class="normal">466</span>
+<span class="normal">467</span>
+<span class="normal">468</span>
+<span class="normal">469</span>
+<span class="normal">470</span>
+<span class="normal">471</span>
+<span class="normal">472</span>
+<span class="normal">473</span>
+<span class="normal">474</span>
+<span class="normal">475</span>
+<span class="normal">476</span>
+<span class="normal">477</span>
+<span class="normal">478</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">old_keyPressEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Respond to key press</span>
 
 <span class="sd">    TODO: does not seem to work?</span>
@@ -4004,18 +4223,18 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">845</span>
-<span class="normal">846</span>
-<span class="normal">847</span>
-<span class="normal">848</span>
-<span class="normal">849</span>
-<span class="normal">850</span>
-<span class="normal">851</span>
-<span class="normal">852</span>
-<span class="normal">853</span>
-<span class="normal">854</span>
-<span class="normal">855</span>
-<span class="normal">856</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">old_populateOpenPlugins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">874</span>
+<span class="normal">875</span>
+<span class="normal">876</span>
+<span class="normal">877</span>
+<span class="normal">878</span>
+<span class="normal">879</span>
+<span class="normal">880</span>
+<span class="normal">881</span>
+<span class="normal">882</span>
+<span class="normal">883</span>
+<span class="normal">884</span>
+<span class="normal">885</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">old_populateOpenPlugins</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Depreciated. Was to be a dynamic menu to show open plugins.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">windowsMenu</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
@@ -4049,10 +4268,10 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1145</span>
-<span class="normal">1146</span>
-<span class="normal">1147</span>
-<span class="normal">1148</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">on_fileDock_visibilityChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visible</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1189</span>
+<span class="normal">1190</span>
+<span class="normal">1191</span>
+<span class="normal">1192</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">on_fileDock_visibilityChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">visible</span> <span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;The file dock visibility was changed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_viewMenuAction</span><span class="p">(</span><span class="s1">&#39;filePanels&#39;</span><span class="p">,</span> <span class="s1">&#39;File Panel&#39;</span><span class="p">,</span> <span class="n">visible</span><span class="p">)</span>
@@ -4114,44 +4333,7 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1071</span>
-<span class="normal">1072</span>
-<span class="normal">1073</span>
-<span class="normal">1074</span>
-<span class="normal">1075</span>
-<span class="normal">1076</span>
-<span class="normal">1077</span>
-<span class="normal">1078</span>
-<span class="normal">1079</span>
-<span class="normal">1080</span>
-<span class="normal">1081</span>
-<span class="normal">1082</span>
-<span class="normal">1083</span>
-<span class="normal">1084</span>
-<span class="normal">1085</span>
-<span class="normal">1086</span>
-<span class="normal">1087</span>
-<span class="normal">1088</span>
-<span class="normal">1089</span>
-<span class="normal">1090</span>
-<span class="normal">1091</span>
-<span class="normal">1092</span>
-<span class="normal">1093</span>
-<span class="normal">1094</span>
-<span class="normal">1095</span>
-<span class="normal">1096</span>
-<span class="normal">1097</span>
-<span class="normal">1098</span>
-<span class="normal">1099</span>
-<span class="normal">1100</span>
-<span class="normal">1101</span>
-<span class="normal">1102</span>
-<span class="normal">1103</span>
-<span class="normal">1104</span>
-<span class="normal">1105</span>
-<span class="normal">1106</span>
-<span class="normal">1107</span>
-<span class="normal">1108</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1108</span>
 <span class="normal">1109</span>
 <span class="normal">1110</span>
 <span class="normal">1111</span>
@@ -4172,7 +4354,51 @@
 <span class="normal">1126</span>
 <span class="normal">1127</span>
 <span class="normal">1128</span>
-<span class="normal">1129</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">on_plugin_contextMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">sender</span><span class="p">):</span>
+<span class="normal">1129</span>
+<span class="normal">1130</span>
+<span class="normal">1131</span>
+<span class="normal">1132</span>
+<span class="normal">1133</span>
+<span class="normal">1134</span>
+<span class="normal">1135</span>
+<span class="normal">1136</span>
+<span class="normal">1137</span>
+<span class="normal">1138</span>
+<span class="normal">1139</span>
+<span class="normal">1140</span>
+<span class="normal">1141</span>
+<span class="normal">1142</span>
+<span class="normal">1143</span>
+<span class="normal">1144</span>
+<span class="normal">1145</span>
+<span class="normal">1146</span>
+<span class="normal">1147</span>
+<span class="normal">1148</span>
+<span class="normal">1149</span>
+<span class="normal">1150</span>
+<span class="normal">1151</span>
+<span class="normal">1152</span>
+<span class="normal">1153</span>
+<span class="normal">1154</span>
+<span class="normal">1155</span>
+<span class="normal">1156</span>
+<span class="normal">1157</span>
+<span class="normal">1158</span>
+<span class="normal">1159</span>
+<span class="normal">1160</span>
+<span class="normal">1161</span>
+<span class="normal">1162</span>
+<span class="normal">1163</span>
+<span class="normal">1164</span>
+<span class="normal">1165</span>
+<span class="normal">1166</span>
+<span class="normal">1167</span>
+<span class="normal">1168</span>
+<span class="normal">1169</span>
+<span class="normal">1170</span>
+<span class="normal">1171</span>
+<span class="normal">1172</span>
+<span class="normal">1173</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">on_plugin_contextMenu</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point</span><span class="p">,</span> <span class="n">sender</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;On right-click in dock, build a menu of plugins.</span>
 
 <span class="sd">    On user selection, run the plugin in a tab.</span>
@@ -4231,6 +4457,13 @@
 
         <span class="c1"># bring tab to front</span>
         <span class="n">sender</span><span class="o">.</span><span class="n">setCurrentIndex</span><span class="p">(</span><span class="n">newTabIndex</span><span class="p">)</span>
+
+        <span class="n">ltwhTuple</span> <span class="o">=</span> <span class="n">newPlugin</span><span class="o">.</span><span class="n">getWindowGeometry</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">newPlugin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">addPlugin</span><span class="p">(</span><span class="n">newPlugin</span><span class="o">.</span><span class="n">getHumanName</span><span class="p">(),</span>
+                                    <span class="n">externalWindow</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">ltwhTuple</span><span class="o">=</span><span class="n">ltwhTuple</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -4253,13 +4486,13 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1196</span>
-<span class="normal">1197</span>
-<span class="normal">1198</span>
-<span class="normal">1199</span>
-<span class="normal">1200</span>
-<span class="normal">1201</span>
-<span class="normal">1202</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">openLog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1240</span>
+<span class="normal">1241</span>
+<span class="normal">1242</span>
+<span class="normal">1243</span>
+<span class="normal">1244</span>
+<span class="normal">1245</span>
+<span class="normal">1246</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">openLog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Open sanpy.log</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logFilePath</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">sanpyLogger</span><span class="o">.</span><span class="n">getLoggerFile</span><span class="p">()</span>
@@ -4291,23 +4524,27 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 989</span>
-<span class="normal"> 990</span>
-<span class="normal"> 991</span>
-<span class="normal"> 992</span>
-<span class="normal"> 993</span>
-<span class="normal"> 994</span>
-<span class="normal"> 995</span>
-<span class="normal"> 996</span>
-<span class="normal"> 997</span>
-<span class="normal"> 998</span>
-<span class="normal"> 999</span>
-<span class="normal">1000</span>
-<span class="normal">1001</span>
-<span class="normal">1002</span>
-<span class="normal">1003</span>
-<span class="normal">1004</span>
-<span class="normal">1005</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">sanpyPlugin_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pluginName</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1022</span>
+<span class="normal">1023</span>
+<span class="normal">1024</span>
+<span class="normal">1025</span>
+<span class="normal">1026</span>
+<span class="normal">1027</span>
+<span class="normal">1028</span>
+<span class="normal">1029</span>
+<span class="normal">1030</span>
+<span class="normal">1031</span>
+<span class="normal">1032</span>
+<span class="normal">1033</span>
+<span class="normal">1034</span>
+<span class="normal">1035</span>
+<span class="normal">1036</span>
+<span class="normal">1037</span>
+<span class="normal">1038</span>
+<span class="normal">1039</span>
+<span class="normal">1040</span>
+<span class="normal">1041</span>
+<span class="normal">1042</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">sanpyPlugin_action</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pluginName</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Responds to main menu &#39;Plugins&#39;.</span>
 
 <span class="sd">    Run a plugin using curent ba.</span>
@@ -4321,9 +4558,13 @@
     <span class="c1"># run the plugin</span>
     <span class="n">_runningPlugin</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">myPlugins</span><span class="o">.</span><span class="n">runPlugin</span><span class="p">(</span><span class="n">pluginName</span><span class="p">,</span> <span class="n">ba</span><span class="p">)</span>
 
+    <span class="n">ltwhTuple</span> <span class="o">=</span> <span class="n">_runningPlugin</span><span class="o">.</span><span class="n">getWindowGeometry</span><span class="p">()</span>
+
     <span class="c1"># add plugin to preferences so it opens next time we run the app</span>
     <span class="k">if</span> <span class="n">_runningPlugin</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">addPlugin</span><span class="p">(</span><span class="n">_runningPlugin</span><span class="o">.</span><span class="n">getHumanName</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">addPlugin</span><span class="p">(</span><span class="n">_runningPlugin</span><span class="o">.</span><span class="n">getHumanName</span><span class="p">(),</span>
+                                  <span class="n">externalWindow</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                  <span class="n">ltwhTuple</span> <span class="o">=</span> <span class="n">ltwhTuple</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -4346,12 +4587,12 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1027</span>
-<span class="normal">1028</span>
-<span class="normal">1029</span>
-<span class="normal">1030</span>
-<span class="normal">1031</span>
-<span class="normal">1032</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">saveFilesTable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1064</span>
+<span class="normal">1065</span>
+<span class="normal">1066</span>
+<span class="normal">1067</span>
+<span class="normal">1068</span>
+<span class="normal">1069</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">saveFilesTable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Save the folder hdf5 file.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1">#logger.info(&#39;&#39;)</span>
@@ -4380,13 +4621,13 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1188</span>
-<span class="normal">1189</span>
-<span class="normal">1190</span>
-<span class="normal">1191</span>
-<span class="normal">1192</span>
-<span class="normal">1193</span>
-<span class="normal">1194</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_changeTab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">sender</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1232</span>
+<span class="normal">1233</span>
+<span class="normal">1234</span>
+<span class="normal">1235</span>
+<span class="normal">1236</span>
+<span class="normal">1237</span>
+<span class="normal">1238</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_changeTab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">sender</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;User brought a different tab to the front</span>
 
 <span class="sd">    Make sure only front tab (plugins) receive signals</span>
@@ -4449,33 +4690,33 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1160</span>
-<span class="normal">1161</span>
-<span class="normal">1162</span>
-<span class="normal">1163</span>
-<span class="normal">1164</span>
-<span class="normal">1165</span>
-<span class="normal">1166</span>
-<span class="normal">1167</span>
-<span class="normal">1168</span>
-<span class="normal">1169</span>
-<span class="normal">1170</span>
-<span class="normal">1171</span>
-<span class="normal">1172</span>
-<span class="normal">1173</span>
-<span class="normal">1174</span>
-<span class="normal">1175</span>
-<span class="normal">1176</span>
-<span class="normal">1177</span>
-<span class="normal">1178</span>
-<span class="normal">1179</span>
-<span class="normal">1180</span>
-<span class="normal">1181</span>
-<span class="normal">1182</span>
-<span class="normal">1183</span>
-<span class="normal">1184</span>
-<span class="normal">1185</span>
-<span class="normal">1186</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_closeTab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">sender</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1204</span>
+<span class="normal">1205</span>
+<span class="normal">1206</span>
+<span class="normal">1207</span>
+<span class="normal">1208</span>
+<span class="normal">1209</span>
+<span class="normal">1210</span>
+<span class="normal">1211</span>
+<span class="normal">1212</span>
+<span class="normal">1213</span>
+<span class="normal">1214</span>
+<span class="normal">1215</span>
+<span class="normal">1216</span>
+<span class="normal">1217</span>
+<span class="normal">1218</span>
+<span class="normal">1219</span>
+<span class="normal">1220</span>
+<span class="normal">1221</span>
+<span class="normal">1222</span>
+<span class="normal">1223</span>
+<span class="normal">1224</span>
+<span class="normal">1225</span>
+<span class="normal">1226</span>
+<span class="normal">1227</span>
+<span class="normal">1228</span>
+<span class="normal">1229</span>
+<span class="normal">1230</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_closeTab</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">sender</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Close an open plugin tab.</span>
 
 <span class="sd">    Parameters</span>
@@ -4495,8 +4736,8 @@
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  closing pluginInstancePointer:</span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">pluginInstancePointer</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="c1"># remove from preferences</span>
-    <span class="k">if</span> <span class="n">pluginInstancePointer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">removePlugin</span><span class="p">(</span><span class="n">pluginInstancePointer</span><span class="o">.</span><span class="n">getHumanName</span><span class="p">())</span>
+    <span class="c1"># if pluginInstancePointer is not None:</span>
+    <span class="c1">#     self.configDict.removePlugin(pluginInstancePointer.getHumanName())</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">myPlugins</span><span class="o">.</span><span class="n">slot_closeWindow</span><span class="p">(</span><span class="n">pluginInstancePointer</span><span class="p">)</span>
 
@@ -4525,16 +4766,16 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1060</span>
-<span class="normal">1061</span>
-<span class="normal">1062</span>
-<span class="normal">1063</span>
-<span class="normal">1064</span>
-<span class="normal">1065</span>
-<span class="normal">1066</span>
-<span class="normal">1067</span>
-<span class="normal">1068</span>
-<span class="normal">1069</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_detect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1097</span>
+<span class="normal">1098</span>
+<span class="normal">1099</span>
+<span class="normal">1100</span>
+<span class="normal">1101</span>
+<span class="normal">1102</span>
+<span class="normal">1103</span>
+<span class="normal">1104</span>
+<span class="normal">1105</span>
+<span class="normal">1106</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_detect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Respond to spike detection.</span>
 
 <span class="sd">    Usually comes from the sanpy.interface.bDetectionWidget</span>
@@ -4601,19 +4842,19 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1131</span>
-<span class="normal">1132</span>
-<span class="normal">1133</span>
-<span class="normal">1134</span>
-<span class="normal">1135</span>
-<span class="normal">1136</span>
-<span class="normal">1137</span>
-<span class="normal">1138</span>
-<span class="normal">1139</span>
-<span class="normal">1140</span>
-<span class="normal">1141</span>
-<span class="normal">1142</span>
-<span class="normal">1143</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_dockLocationChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dock</span><span class="p">,</span> <span class="n">area</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1175</span>
+<span class="normal">1176</span>
+<span class="normal">1177</span>
+<span class="normal">1178</span>
+<span class="normal">1179</span>
+<span class="normal">1180</span>
+<span class="normal">1181</span>
+<span class="normal">1182</span>
+<span class="normal">1183</span>
+<span class="normal">1184</span>
+<span class="normal">1185</span>
+<span class="normal">1186</span>
+<span class="normal">1187</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_dockLocationChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dock</span><span class="p">,</span> <span class="n">area</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Top level dock changed</span>
 
 <span class="sd">    Parameters</span>
@@ -4648,33 +4889,33 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">473</span>
-<span class="normal">474</span>
-<span class="normal">475</span>
-<span class="normal">476</span>
-<span class="normal">477</span>
-<span class="normal">478</span>
-<span class="normal">479</span>
-<span class="normal">480</span>
-<span class="normal">481</span>
-<span class="normal">482</span>
-<span class="normal">483</span>
-<span class="normal">484</span>
-<span class="normal">485</span>
-<span class="normal">486</span>
-<span class="normal">487</span>
-<span class="normal">488</span>
-<span class="normal">489</span>
-<span class="normal">490</span>
-<span class="normal">491</span>
-<span class="normal">492</span>
-<span class="normal">493</span>
-<span class="normal">494</span>
-<span class="normal">495</span>
-<span class="normal">496</span>
-<span class="normal">497</span>
-<span class="normal">498</span>
-<span class="normal">499</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_fileTableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">,</span> <span class="n">selectingAgain</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span>
+<span class="normal">530</span>
+<span class="normal">531</span>
+<span class="normal">532</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_fileTableClicked</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">rowDict</span><span class="p">,</span> <span class="n">selectingAgain</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Respond to selections in file table.&quot;&quot;&quot;</span>
 
 <span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
@@ -4757,40 +4998,7 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">267</span>
-<span class="normal">268</span>
-<span class="normal">269</span>
-<span class="normal">270</span>
-<span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
-<span class="normal">281</span>
-<span class="normal">282</span>
-<span class="normal">283</span>
-<span class="normal">284</span>
-<span class="normal">285</span>
-<span class="normal">286</span>
-<span class="normal">287</span>
-<span class="normal">288</span>
-<span class="normal">289</span>
-<span class="normal">290</span>
-<span class="normal">291</span>
-<span class="normal">292</span>
-<span class="normal">293</span>
-<span class="normal">294</span>
-<span class="normal">295</span>
-<span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span>
-<span class="normal">299</span>
-<span class="normal">300</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">300</span>
 <span class="normal">301</span>
 <span class="normal">302</span>
 <span class="normal">303</span>
@@ -4822,7 +5030,37 @@
 <span class="normal">329</span>
 <span class="normal">330</span>
 <span class="normal">331</span>
-<span class="normal">332</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">folderDepth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">folderDepth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load a folder of raw data files.</span>
 
 <span class="sd">    Parameters</span>
@@ -4885,9 +5123,6 @@
 
     <span class="c1"># add to preferences recent folders</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">addFolder</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
-
-    <span class="c1"># save preferences</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -4944,15 +5179,15 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1017</span>
-<span class="normal">1018</span>
-<span class="normal">1019</span>
-<span class="normal">1020</span>
-<span class="normal">1021</span>
-<span class="normal">1022</span>
-<span class="normal">1023</span>
-<span class="normal">1024</span>
-<span class="normal">1025</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_selectSweep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1054</span>
+<span class="normal">1055</span>
+<span class="normal">1056</span>
+<span class="normal">1057</span>
+<span class="normal">1058</span>
+<span class="normal">1059</span>
+<span class="normal">1060</span>
+<span class="normal">1061</span>
+<span class="normal">1062</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_selectSweep</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Set view to new sweep.</span>
 
 <span class="sd">    Parameters</span>
@@ -4961,85 +5196,6 @@
 <span class="sd">    sweepNumber : int</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">signalSelectSweep</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">ba</span><span class="p">,</span> <span class="n">sweepNumber</span><span class="p">)</span>
-</code></pre></div></td></tr></table></div>
-      </details>
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<h5 id="sanpy.interface.sanpy_app.SanPyWindow.slot_setDetectionParams" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">slot_setDetectionParams</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">cellType</span><span class="p">)</span></code>
-
-<a href="#sanpy.interface.sanpy_app.SanPyWindow.slot_setDetectionParams" class="headerlink" title="Permanent link">¤</a></h5>
-
-
-  <div class="doc doc-contents ">
-  
-      <p>Set detection parameters to presets.</p>
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>row</code></td>
-          <td>
-                <code>int</code>
-          </td>
-          <td><p>Selected row in file table</p></td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-        <tr>
-          <td><code>cellType</code></td>
-          <td>
-                <code>str</code>
-          </td>
-          <td><p>One of ('SA Node Params', 'Ventricular Params', 'Neuron Params')</p></td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
-
-      <details class="quote">
-        <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1047</span>
-<span class="normal">1048</span>
-<span class="normal">1049</span>
-<span class="normal">1050</span>
-<span class="normal">1051</span>
-<span class="normal">1052</span>
-<span class="normal">1053</span>
-<span class="normal">1054</span>
-<span class="normal">1055</span>
-<span class="normal">1056</span>
-<span class="normal">1057</span>
-<span class="normal">1058</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_setDetectionParams</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">,</span> <span class="n">cellType</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Set detection parameters to presets.</span>
-
-<span class="sd">    Parameters</span>
-<span class="sd">    ----------</span>
-<span class="sd">    row : int</span>
-<span class="sd">        Selected row in file table</span>
-<span class="sd">    cellType : str</span>
-<span class="sd">        One of (&#39;SA Node Params&#39;, &#39;Ventricular Params&#39;, &#39;Neuron Params&#39;)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;row:</span><span class="si">{</span><span class="n">row</span><span class="si">}</span><span class="s1"> cellType:</span><span class="si">{</span><span class="n">cellType</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">myModel</span><span class="o">.</span><span class="n">mySetDetectionParams</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">cellType</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -5063,15 +5219,15 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1150</span>
-<span class="normal">1151</span>
-<span class="normal">1152</span>
-<span class="normal">1153</span>
-<span class="normal">1154</span>
-<span class="normal">1155</span>
-<span class="normal">1156</span>
-<span class="normal">1157</span>
-<span class="normal">1158</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_topLevelChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topLevel</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1194</span>
+<span class="normal">1195</span>
+<span class="normal">1196</span>
+<span class="normal">1197</span>
+<span class="normal">1198</span>
+<span class="normal">1199</span>
+<span class="normal">1200</span>
+<span class="normal">1201</span>
+<span class="normal">1202</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_topLevelChanged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topLevel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    topLevel (bool): True if the dock widget is now floating; otherwise False.</span>
 
@@ -5102,18 +5258,18 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1034</span>
-<span class="normal">1035</span>
-<span class="normal">1036</span>
-<span class="normal">1037</span>
-<span class="normal">1038</span>
-<span class="normal">1039</span>
-<span class="normal">1040</span>
-<span class="normal">1041</span>
-<span class="normal">1042</span>
-<span class="normal">1043</span>
-<span class="normal">1044</span>
-<span class="normal">1045</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_updateStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1071</span>
+<span class="normal">1072</span>
+<span class="normal">1073</span>
+<span class="normal">1074</span>
+<span class="normal">1075</span>
+<span class="normal">1076</span>
+<span class="normal">1077</span>
+<span class="normal">1078</span>
+<span class="normal">1079</span>
+<span class="normal">1080</span>
+<span class="normal">1081</span>
+<span class="normal">1082</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">slot_updateStatus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Update the bottom status bar with new str</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
@@ -5181,31 +5337,32 @@
 
       <details class="quote">
         <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">819</span>
-<span class="normal">820</span>
-<span class="normal">821</span>
-<span class="normal">822</span>
-<span class="normal">823</span>
-<span class="normal">824</span>
-<span class="normal">825</span>
-<span class="normal">826</span>
-<span class="normal">827</span>
-<span class="normal">828</span>
-<span class="normal">829</span>
-<span class="normal">830</span>
-<span class="normal">831</span>
-<span class="normal">832</span>
-<span class="normal">833</span>
-<span class="normal">834</span>
-<span class="normal">835</span>
-<span class="normal">836</span>
-<span class="normal">837</span>
-<span class="normal">838</span>
-<span class="normal">839</span>
-<span class="normal">840</span>
-<span class="normal">841</span>
-<span class="normal">842</span>
-<span class="normal">843</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">toggleInterface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">on</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">847</span>
+<span class="normal">848</span>
+<span class="normal">849</span>
+<span class="normal">850</span>
+<span class="normal">851</span>
+<span class="normal">852</span>
+<span class="normal">853</span>
+<span class="normal">854</span>
+<span class="normal">855</span>
+<span class="normal">856</span>
+<span class="normal">857</span>
+<span class="normal">858</span>
+<span class="normal">859</span>
+<span class="normal">860</span>
+<span class="normal">861</span>
+<span class="normal">862</span>
+<span class="normal">863</span>
+<span class="normal">864</span>
+<span class="normal">865</span>
+<span class="normal">866</span>
+<span class="normal">867</span>
+<span class="normal">868</span>
+<span class="normal">869</span>
+<span class="normal">870</span>
+<span class="normal">871</span>
+<span class="normal">872</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">toggleInterface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">on</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Toggle named interface widgets show and hide.</span>
 
 <span class="sd">    Parameters</span>
@@ -5216,10 +5373,11 @@
 <span class="sd">        If True then show, otherwise hide.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;File Panel&#39;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">on</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fileDock</span><span class="o">.</span><span class="n">hide</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fileListWidget</span><span class="o">.</span><span class="n">setVisible</span><span class="p">(</span><span class="n">on</span><span class="p">)</span>
+        <span class="c1"># if on:</span>
+        <span class="c1">#     self.fileDock.show()</span>
+        <span class="c1"># else:</span>
+        <span class="c1">#     self.fileDock.hide()</span>
     <span class="k">elif</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;Plugins 1&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">on</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">pluginDock1</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
@@ -5243,7 +5401,123 @@
   </div>
 
 </div>
+<h2 id="sanpy.interface.sanpy_app-functions">Functions<a href="#sanpy.interface.sanpy_app-functions" class="headerlink" title="Permanent link">¤</a></h2>
 
+<div class="doc doc-object doc-function">
+
+
+
+<h3 id="sanpy.interface.sanpy_app.main" class="doc doc-heading">
+<code class="highlight language-python"><span class="n">main</span><span class="p">()</span></code>
+
+<a href="#sanpy.interface.sanpy_app.main" class="headerlink" title="Permanent link">¤</a></h3>
+
+
+  <div class="doc doc-contents ">
+  
+      <p>Main entry point for the SanPy desktop app.</p>
+<p>Configured in setup.py</p>
+
+      <details class="quote">
+        <summary>Source code in <code>sanpy/interface/sanpy_app.py</code></summary>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1280</span>
+<span class="normal">1281</span>
+<span class="normal">1282</span>
+<span class="normal">1283</span>
+<span class="normal">1284</span>
+<span class="normal">1285</span>
+<span class="normal">1286</span>
+<span class="normal">1287</span>
+<span class="normal">1288</span>
+<span class="normal">1289</span>
+<span class="normal">1290</span>
+<span class="normal">1291</span>
+<span class="normal">1292</span>
+<span class="normal">1293</span>
+<span class="normal">1294</span>
+<span class="normal">1295</span>
+<span class="normal">1296</span>
+<span class="normal">1297</span>
+<span class="normal">1298</span>
+<span class="normal">1299</span>
+<span class="normal">1300</span>
+<span class="normal">1301</span>
+<span class="normal">1302</span>
+<span class="normal">1303</span>
+<span class="normal">1304</span>
+<span class="normal">1305</span>
+<span class="normal">1306</span>
+<span class="normal">1307</span>
+<span class="normal">1308</span>
+<span class="normal">1309</span>
+<span class="normal">1310</span>
+<span class="normal">1311</span>
+<span class="normal">1312</span>
+<span class="normal">1313</span>
+<span class="normal">1314</span>
+<span class="normal">1315</span>
+<span class="normal">1316</span>
+<span class="normal">1317</span>
+<span class="normal">1318</span>
+<span class="normal">1319</span>
+<span class="normal">1320</span>
+<span class="normal">1321</span>
+<span class="normal">1322</span>
+<span class="normal">1323</span>
+<span class="normal">1324</span>
+<span class="normal">1325</span>
+<span class="normal">1326</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Main entry point for the SanPy desktop app.</span>
+
+<span class="sd">    Configured in setup.py</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Starting sanpy_app.py in __main__()&#39;</span><span class="p">)</span>
+
+    <span class="n">date_time_str</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    </span><span class="si">{</span><span class="n">date_time_str</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    Python version is </span><span class="si">{</span><span class="n">platform</span><span class="o">.</span><span class="n">python_version</span><span class="p">()</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    PyQt version is </span><span class="si">{</span><span class="n">QtCore</span><span class="o">.</span><span class="n">QT_VERSION_STR</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">bundle_dir</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">_util</span><span class="o">.</span><span class="n">getBundledDir</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    bundle_dir is &quot;</span><span class="si">{</span><span class="n">bundle_dir</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+
+    <span class="n">_logFilePath</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">sanpyLogger</span><span class="o">.</span><span class="n">getLoggerFile</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    logging to file </span><span class="si">{</span><span class="n">_logFilePath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="c1"># for qdarkstyle</span>
+    <span class="c1">#os.environ[&#39;PYQTGRAPH_QT_LIB&#39;] = &#39;PyQt5&#39;</span>
+
+    <span class="n">app</span> <span class="o">=</span> <span class="n">QtWidgets</span><span class="o">.</span><span class="n">QApplication</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span>
+
+    <span class="n">app</span><span class="o">.</span><span class="n">setQuitOnLastWindowClosed</span><span class="p">(</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="c1"># for manuscript we need to allow user to set light/dark theme</span>
+    <span class="c1"># was this</span>
+    <span class="c1"># v1</span>
+    <span class="c1">#app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api=os.environ[&#39;PYQTGRAPH_QT_LIB&#39;]))</span>
+    <span class="c1"># v2</span>
+    <span class="n">qdarktheme</span><span class="o">.</span><span class="n">setup_theme</span><span class="p">()</span>
+
+    <span class="c1">#appIconPath = os.path.join(bundle_dir, &#39;interface/icons/sanpy_transparent.png&#39;)</span>
+    <span class="n">appIconPath</span> <span class="o">=</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">bundle_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s1">&#39;interface&#39;</span> <span class="o">/</span> <span class="s1">&#39;icons&#39;</span> <span class="o">/</span> <span class="s1">&#39;sanpy_transparent.png&#39;</span>
+    <span class="n">appIconPathStr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">appIconPath</span><span class="p">)</span>
+    <span class="c1">#logger.info(f&#39;appIconPath is &quot;{appIconPath}&quot;&#39;)</span>
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">appIconPathStr</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    setting app window icon with: &quot;</span><span class="si">{</span><span class="n">appIconPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">setWindowIcon</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">appIconPathStr</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    Did not find appIconPath: </span><span class="si">{</span><span class="n">appIconPathStr</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">w</span> <span class="o">=</span> <span class="n">SanPyWindow</span><span class="p">()</span>
+    <span class="n">w</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="n">app</span><span class="o">.</span><span class="n">exec_</span><span class="p">())</span>
+</code></pre></div></td></tr></table></div>
+      </details>
+  </div>
+
+</div>
 
 
 
