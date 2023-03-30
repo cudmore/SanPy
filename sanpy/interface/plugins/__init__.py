@@ -26,7 +26,7 @@ from .detectionParams import detectionParams
 from .kymographPlugin import kymographPlugin
 #from .kymographPlugin2 import kymographPlugin2
 
-from .setSpineStat import SetSpineStat
+from .setSpikeStat import SetSpikeStat
 
 # eventually move this out of plotScatter
 from .plotScatter import myStatListWidget

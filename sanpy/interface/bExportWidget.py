@@ -12,7 +12,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt # abb 202012 added to set theme
 import matplotlib.ticker as ticker
 
-import qdarkstyle
+#import qdarkstyle
 
 # abb 20200718
 # needed to import from SanPy which is one folder up
@@ -198,7 +198,7 @@ class bExportWidget(QtWidgets.QWidget):
                     darkTheme=False,
                     xMin=None,
                     xMax=None,
-                    xMargin=2,
+                    xMargin=0,
                     type='vm', # (vm, dvdt, meanclip)
                     parent=None,
                     ):
@@ -211,7 +211,7 @@ class bExportWidget(QtWidgets.QWidget):
         self.shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+w"), self)
         self.shortcut.activated.connect(self.myCloseAction)
 
-        self.setFont(QtGui.QFont("Helvetica", 11, QtGui.QFont.Normal, italic=False))
+        #self.setFont(QtGui.QFont("Helvetica", 11, QtGui.QFont.Normal, italic=False))
 
         self.myType = type # use this to size defaults for scale bar
         
@@ -268,10 +268,10 @@ class bExportWidget(QtWidgets.QWidget):
 
         #self._setXAxis(xMin, xMax)
 
-    def switchFile(self, ba : bAnalysis):
+    def switchFile(self, ba : bAnalysis, x, y):
         
-        self.mySweepX = ba.fileLoader.sweepX
-        self.mySweepY = ba.fileLoader.sweepY
+        self.mySweepX = x  #ba.fileLoader.sweepX
+        self.mySweepY = y  #ba.fileLoader.sweepY
         self.mySweepX_Downsample = self.mySweepX
         self.mySweepY_Downsample = self.mySweepY
 
@@ -289,9 +289,14 @@ class bExportWidget(QtWidgets.QWidget):
         # TODO: put in plot()
         xMin = np.nanmin(self.mySweepX_Downsample)
         xMax = np.nanmax(self.mySweepX_Downsample)
+        logger.info(f'xMin:{xMin} xMax:{xMax}')
         self.myAxis.set_xlim(xMin, xMax)
 
-        self.myAxis.relim()
+        try:
+            self.myAxis.relim()  # causing exception: ValueError: array of sample points is empty
+        except (ValueError) as e:
+            logger.warning(f'relim triggered ValueError?')
+
         self.myAxis.autoscale_view(True,True,True)
         #plt.draw()
 
@@ -308,7 +313,7 @@ class bExportWidget(QtWidgets.QWidget):
 
     def initUI(self):
 
-        self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+        #self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 
         '''
         myPath = os.path.dirname(os.path.abspath(__file__))

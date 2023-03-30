@@ -32,7 +32,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.backends import backend_qt5agg
 
-import qdarkstyle
+# import qdarkstyle
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
@@ -1044,10 +1044,10 @@ class stimGen(sanpyPlugin):
         #
         # finalize
         #self.mainWidget = QtWidgets.QWidget()
-        if qdarkstyle is not None:
-            self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
-        else:
-            self.setStyleSheet("")
+        # if qdarkstyle is not None:
+        #     self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+        # else:
+        #     self.setStyleSheet("")
 
         # set the layout of the main window
         #self.setLayout(vLayout)

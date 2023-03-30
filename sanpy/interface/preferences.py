@@ -23,6 +23,7 @@ class preferences():
         #self._version = 1.2  # increment when we change preferences
         self._version = 1.3  # added set spike
         self._version = 1.4  # converted plugins from list[str] to dict to include externalWindow option
+        self._version = 1.5  # adding keys to plugins (l, t, w, h)
         
         self._maxRecent = 7  # a lucky number
         self._configDict = self.load()
@@ -51,14 +52,20 @@ class preferences():
         # always set as the most recent folder
         self.configDict['mostRecentFolder'] = path
 
-    def addPlugin(self, pluginName : str, externalWindow : bool = True):
+    def addPlugin(self, pluginName : str, externalWindow : bool,
+                  ltwhTuple : tuple):
         """Add plugin to preferences.
         """
         # was this as list
         # if not pluginName in self.configDict['pluginPanels']:
         #     self.configDict['pluginPanels'].append(pluginName)
         if not pluginName in self.configDict['pluginPanels'].keys():
-            self.configDict['pluginPanels'][pluginName] = {'externalWindow': externalWindow}
+            self.configDict['pluginPanels'][pluginName] = {'externalWindow': externalWindow,
+                                                           'l': ltwhTuple[0],
+                                                           't': ltwhTuple[1],
+                                                           'w': ltwhTuple[2],
+                                                           'h': ltwhTuple[3],
+                                                           }
 
     def removePlugin(self, pluginName : str):
         """Remove plugin from preferences.
@@ -140,7 +147,11 @@ class preferences():
             logger.info(f'Using default options')
             return self.getDefaults()
 
-    def getDefaults(self):
+    def getDefaults(self) -> dict:
+        """Get default preferences.
+
+        Be sure to increment self._version when making changes.
+        """
         configDict = {}  # OrderedDict()
 
         configDict['version'] = self._version
@@ -190,12 +201,7 @@ class preferences():
         
         logger.info(f'Saving preferences file as: "{preferencesFile}"')
 
-        # myRect = self.geometry()
-        # left = myRect.left()
-        # top = myRect.top()
-        # width = myRect.width()
-        # height = myRect.height()
-
+        # get the current position and size of the main window
         left, top, width, height = self._sanpyApp.getWindowGeometry()
         
         self._configDict['windowGeometry']['x'] = left
@@ -205,6 +211,22 @@ class preferences():
 
         # TODO: extend to a list
         #self._configDict['lastPath'] = self._sanpyApp.path
+
+        # TODO: get window position and size of all open plugins
+        # self.configDict['pluginPanels'][pluginName] = {'externalWindow': externalWindow,
+        #                                                    'l': ltwhTuple[0],
+        #                                                    't': ltwhTuple[1],
+        #                                                    'w': ltwhTuple[2],
+        #                                                    'h': ltwhTuple[3],
+        #                                                    }
+        _openSet = self._sanpyApp.myPlugins._openSet
+        for _onePlugin in _openSet:
+            pluginName = _onePlugin.myHumanName
+            ltwhTuple = _onePlugin.getWindowGeometry()
+            self.configDict['pluginPanels'][pluginName]['l'] = ltwhTuple[0]
+            self.configDict['pluginPanels'][pluginName]['t'] = ltwhTuple[1]
+            self.configDict['pluginPanels'][pluginName]['w'] = ltwhTuple[2]
+            self.configDict['pluginPanels'][pluginName]['h'] = ltwhTuple[3]
 
         #
         # save

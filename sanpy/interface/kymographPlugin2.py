@@ -13,7 +13,7 @@ from qtpy import QtGui, QtSql, QtCore, QtWidgets
 
 import pyqtgraph as pg
 
-import qdarkstyle
+#import qdarkstyle
 
 # turn off qdarkstyle logging
 #import logging
@@ -593,7 +593,7 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
 
     #app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api=os.environ['PYQTGRAPH_QT_LIB']))
-    app.setStyleSheet(qdarkstyle.load_stylesheet())
+    #app.setStyleSheet(qdarkstyle.load_stylesheet())
 
     path = '/Users/cudmore/data/kym-example/control 2.5_0012.tif.frames/control 2.5_0012.tif'
     #path = '/Users/cudmore/data/sa-node-ca-video/HighK-aligned-8bit_ch1.tif'

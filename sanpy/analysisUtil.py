@@ -56,11 +56,11 @@ def getEddLines(ba):
     #
     # these are getting for current sweep
     preLinearFitPnt0 = ba.getStat('preLinearFitPnt0')
-    preLinearFitSec0 = [ba.pnt2Sec_(x) for x in preLinearFitPnt0]
+    preLinearFitSec0 = [ba.fileLoader.pnt2Sec_(x) for x in preLinearFitPnt0]
     preLinearFitVal0 = ba.getStat('preLinearFitVal0')
 
     preLinearFitPnt1 = ba.getStat('preLinearFitPnt1')
-    preLinearFitSec1 = [ba.pnt2Sec_(x) for x in preLinearFitPnt1]
+    preLinearFitSec1 = [ba.fileLoader.pnt2Sec_(x) for x in preLinearFitPnt1]
     preLinearFitVal1 = ba.getStat('preLinearFitVal1')
 
     thisNumSpikes = len(preLinearFitPnt0)

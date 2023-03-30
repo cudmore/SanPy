@@ -664,7 +664,11 @@ class stimGen(sanpyPlugin):
         vSplitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         vLayout.addWidget(vSplitter)
 
-        plt.style.use('dark_background')
+        # plt.style.use('dark_background')
+        if self.darkTheme:
+            plt.style.use('dark_background')
+        else:
+            plt.rcParams.update(plt.rcParamsDefault)
 
         self.fig = mpl.figure.Figure(constrained_layout=True)
         self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)

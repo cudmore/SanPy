@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-VERSION = "0.1.4"
+VERSION = "0.1.5"
 
 setup(
     name='sanpy',
@@ -25,15 +25,20 @@ setup(
         'mplcursors',
         'seaborn',
         'requests', #  to load from the cloud (for now github)
-        'tables',  # aka pytable for hdf5. this fails on arm64, neeed 'conda install pytables'
-        'scikit-image==0.19.3',  # used for line profile in kym analysis, 0.20.0 introduces pyinstaller bug because of lazy import
+        'tables',  # aka pytable for hdf5.
+        # used for line profile in kym analysis
+        # 0.20.0 introduces pyinstaller bug because of lazy import
+        'scikit-image==0.19.3', 
         'h5py',
     ],
     extras_require={
         'gui': [
-            'pyqtgraph==0.12.4',
-            'qdarkstyle',
-            'PyQt5==5.15.6',  # this fail on arm64, need 'conda install pyqt'
+            #'pyqtgraph==0.12.4',
+            'pyqtgraph',
+            #'qdarkstyle',
+            'pyqtdarktheme',
+            #'PyQt5==5.15.6',  #
+            'PyQt5',  #
         ],
         'dev': [
             'mkdocs',

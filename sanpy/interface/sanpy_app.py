@@ -14,7 +14,15 @@ from typing import Union, Dict, List, Tuple
 
 import pandas as pd
 
-import qdarkstyle
+import pyqtgraph as pg
+
+# v1
+#import qdarkstyle  # the one we originally used
+
+# v2
+import qdarktheme
+# Enable HiDPI.
+qdarktheme.enable_hi_dpi()
 
 import webbrowser  # to open online help
 
@@ -31,7 +39,7 @@ logger = get_logger(__name__)
 
 # turn off qdarkstyle logging
 import logging
-logging.getLogger('qdarkstyle').setLevel(logging.WARNING)
+# logging.getLogger('qdarkstyle').setLevel(logging.WARNING)
 
 # turn off numexpr 'INFO' logging
 logging.getLogger('numexpr').setLevel(logging.WARNING)
@@ -78,7 +86,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # create directories in <user>/Documents and add to python path
         firstTimeRunning = sanpy._util.addUserPath()
         if firstTimeRunning:
-            logger.info('We created <user>/Documents/Sanpy and need to restart')
+            logger.info('  We created <user>/Documents/Sanpy and need to restart')
 
         self._fileLoaderDict = sanpy.fileloaders.getFileLoaders()
         self._detectionClass = sanpy.bDetection()
@@ -93,10 +101,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.stopSec = None
 
         #TODO: put font size in options file
+        # removed mar 26 2023
+        '''
         myFontSize = 10
         myFont = self.font();
         myFont.setPointSize(myFontSize)
         self.setFont(myFont)
+        '''
 
         if path is not None and os.path.isdir(path):
             windowTitle = f'SanPy {path}'
@@ -110,7 +121,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.configDict : sanpy.interface.preferences = sanpy.interface.preferences(self)
         self.myAnalysisDir = None
         lastPath = self.configDict.getMostRecentFolder()
-        logger.info(f'preferences lastPath is "{lastPath}"')
+        logger.info(f'  preferences lastPath is "{lastPath}"')
         if path is not None:
             self.path = path
         elif lastPath is not None and os.path.isdir(lastPath):
@@ -120,7 +131,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         #TODO: refactor dark to light theme
         self.useDarkStyle = self.configDict['useDarkStyle']
-        self.useDarkStyle = True
+        #self.useDarkStyle = True
+        self.toggleStyleSheet(self.useDarkStyle, buildingInterface=True)
 
         #
         # set window geometry
@@ -193,7 +205,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
     def closeEvent(self, event):
         """Called when user closes main window or selects quit.
+        
+        Parameters
+        ----------
+        event : PyQt5.QtGui.QCloseEvent
         """
+
+        logger.info(event)
 
         # check if our table view has been edited by user and warn
         doQuit = True
@@ -228,6 +246,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         return self.configDict
 
     def getWindowGeometry(self):
+        """Get the current window position.
+        """
         myRect = self.geometry()
         left = myRect.left()
         top = myRect.top()
@@ -238,12 +258,24 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def toggleStyleSheet(self, doDark=None, buildingInterface=False):
         logger.info('')
         if doDark is None:
-            doDark = self.useDarkStyle
+            doDark = not self.useDarkStyle
         self.useDarkStyle = doDark
         if doDark:
-            self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+            # v1
+            #self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+            # v2
+            qdarktheme.setup_theme('dark')
+
+            pg.setConfigOption('background', 'k')
+            pg.setConfigOption('foreground', 'w')
         else:
-            self.setStyleSheet("")
+            # v1
+            # self.setStyleSheet('')
+            # v2
+            qdarktheme.setup_theme('light')
+
+            pg.setConfigOption('background', 'w')
+            pg.setConfigOption('foreground', 'k')
 
         self.configDict['useDarkStyle'] = self.useDarkStyle
 
@@ -255,14 +287,15 @@ class SanPyWindow(QtWidgets.QMainWindow):
         if buildingInterface:
             pass
         else:
-            msg = QtWidgets.QMessageBox()
-            msg.setIcon(QtWidgets.QMessageBox.Warning)
-            msg.setText("Theme Changed")
-            msg.setInformativeText('Please restart SanPy for changes to take effect.')
-            msg.setWindowTitle("Theme Changed")
-            retval = msg.exec_()
+            pass
+            # msg = QtWidgets.QMessageBox()
+            # msg.setIcon(QtWidgets.QMessageBox.Warning)
+            # msg.setText("Theme Changed")
+            # msg.setInformativeText('Please restart SanPy for changes to take effect.')
+            # msg.setWindowTitle("Theme Changed")
+            # retval = msg.exec_()
 
-            self.configDict.save()
+            #self.configDict.save()
 
     def slot_loadFolder(self, path='', folderDepth=None):
         """Load a folder of raw data files.
@@ -399,7 +432,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             self.selectSpikeList([])
 
         else:
-            logger.error(f'Did not understand this: "{this}"')
+            logger.warning(f'Did not understand this: "{this}"')
 
     def old_keyPressEvent(self, event):
         """Respond to key press
@@ -536,40 +569,15 @@ class SanPyWindow(QtWidgets.QMainWindow):
         fileMenu.addSeparator()
         fileMenu.addAction(showLogAction)
 
-        '''
-        scatterPlotAction = QtWidgets.QAction('Scatter Plot', self)
-        scatterPlotAction.triggered.connect(self.scatterPlot)
-
-        exportRawDataAction = QtWidgets.QAction('Export To pdf', self)
-        exportRawDataAction.triggered.connect(self.export_pdf)
-
-        windowsMenu = mainMenu.addMenu('&Windows')
-        windowsMenu.addAction(scatterPlotAction)
-        windowsMenu.addSeparator()
-        windowsMenu.addAction(exportRawDataAction)
-        '''
-
         # view menu to toggle widgets on/off
         self.viewMenu = mainMenu.addMenu('&View')
         self.viewMenu.aboutToShow.connect(self._refreshViewMenu)
         self._refreshViewMenu()
         #self._populateViewMenu()
 
-        '''
-        statisticsPlotAction = QtWidgets.QAction('Statistics Plot', self)
-        statisticsPlotAction.triggered.connect(self.toggleStatisticsPlot)
-        statisticsPlotAction.setCheckable(True)
-        statisticsPlotAction.setChecked(True)
-        viewMenu.addAction(statisticsPlotAction)
-        '''
-
-        '''
-        darkThemeAction = QtWidgets.QAction('Dark Theme', self)
-        darkThemeAction.triggered.connect(self.toggleStyleSheet)
-        darkThemeAction.setCheckable(True)
-        darkThemeAction.setChecked(self.useDarkStyle)
-        viewMenu.addAction(darkThemeAction)
-        '''
+        # self.windowsMenu = mainMenu.addMenu('&Window')
+        # self.windowsMenu.aboutToShow.connect(self._refreshWindowsMenu)
+        # self._refreshWindowsMenu()
 
         #
         # plugins menu
@@ -581,6 +589,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #print('pluginDict:', pluginDict)
         _foundUserPlugin = False
         for __humanName,v in pluginDict.items():
+            if not v['showInMenu']:
+                continue
+            
             #logger.info(f'adding plugin: {plugin}')
             
             sanpyPluginAction = QtWidgets.QAction(__humanName, self)
@@ -604,7 +615,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
                     pluginsMenu.addSeparator()
                     _foundUserPlugin = True
                 _font = sanpyPluginAction.font()
-                _font.setBold(True)    
+                #_font.setBold(True)    
                 _font.setItalic(True)    
                 sanpyPluginAction.setFont(_font)
 
@@ -651,7 +662,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
     def _onHelpMenuAction(self, name : str):
         if name == 'SanPy Help (Opens In Browser)':
-            url = 'https://cudmore.github.io/SanPy/'
+            url = 'https://cudmore.github.io/SanPy/desktop-application'
             webbrowser.open(url, new=2)
         
     def _refreshOpenRecent(self):
@@ -665,6 +676,15 @@ class SanPyWindow(QtWidgets.QMainWindow):
             loadFolderAction.triggered.connect(partial(self.slot_loadFolder, recentFolder))
 
             self.openRecentMenu.addAction(loadFolderAction)
+
+    def _refreshWindowsMenu(self):
+        self.windowsMenu.clear()
+
+        name = 'SanPy Window'
+        action = QtWidgets.QAction(name, self, checkable=True)
+        action.setChecked(self.isVisible())
+        action.triggered.connect(partial(self._windowsMenuAction, 'xxx', name))
+        self.windowsMenu.addAction(action)
 
     def _refreshViewMenu(self):
         """Dynamically create the main 'View' menu each time it is selected.
@@ -768,6 +788,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         action.triggered.connect(partial(self._viewMenuAction, key1, name))
         self.viewMenu.addAction(action)
 
+        '''
         key1 = 'pluginDocks'
         name = 'Plugins 2'
         _isVisible = self.pluginDock2.isVisible()  # assuming we _buildUI
@@ -775,6 +796,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         action.setChecked(_isVisible)
         action.triggered.connect(partial(self._viewMenuAction, key1, name))
         self.viewMenu.addAction(action)
+        '''
 
         self.viewMenu.addSeparator()
 
@@ -783,10 +805,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
         checked = self.useDarkStyle
         action = QtWidgets.QAction(name, self, checkable=True)
         action.setChecked(checked)
-        action.setEnabled(False)
+        #action.setEnabled(False)
         action.triggered.connect(partial(self._viewMenuAction, "Dark Theme", name))
         self.viewMenu.addAction(action)
 
+
+
+    def _windowsMenuAction(self, key1, name, isChecked):
+        self.setVisible(not self.isVisible())
 
     def _viewMenuAction(self, key1, name, isChecked):
         """Respond to user selection in view menu.
@@ -812,8 +838,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
             self.myDetectionWidget.toggleInterface(name, isChecked)
 
         elif key1 == 'Dark Theme':
-            doDark = not self.useDarkStyle
-            self.toggleStyleSheet(doDark=doDark)
+            # doDark = not self.useDarkStyle
+            # self.toggleStyleSheet(doDark=doDark)
+            self.toggleStyleSheet()
+        else:
+            logger.warning(f'  no action for key1: "{key1}"')
 
     def toggleInterface(self, name, on):
         """Toggle named interface widgets show and hide.
@@ -826,10 +855,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
             If True then show, otherwise hide.
         """
         if name == 'File Panel':
-            if on:
-                self.fileDock.show()
-            else:
-                self.fileDock.hide()
+            self._fileListWidget.setVisible(on)
+            # if on:
+            #     self.fileDock.show()
+            # else:
+            #     self.fileDock.hide()
         elif name == 'Plugins 1':
             if on:
                 self.pluginDock1.show()
@@ -866,10 +896,41 @@ class SanPyWindow(QtWidgets.QMainWindow):
         File List : sanpy.interface.fileListWidget
         Detection Widget: sanpy.interface.bDetectionWidget
         """
-        self.toggleStyleSheet(buildingInterface=True)
+        #self.toggleStyleSheet(buildingInterface=True)
 
         self.statusBar = QtWidgets.QStatusBar()
         self.setStatusBar(self.statusBar)
+
+        # typical wrapper for PyQt, we can't use setLayout(), we need to use setCentralWidget()
+        _mainWidget = QtWidgets.QWidget()
+        _mainVLayout = QtWidgets.QVBoxLayout()
+        _mainWidget.setLayout(_mainVLayout)
+        self.setCentralWidget(_mainWidget)
+
+        #
+        # list of files (in a dock)
+        self._fileListWidget = sanpy.interface.fileListWidget(self.myModel)
+        #self._fileListWidget.signalUpdateStatus.connect(self.slot_updateStatus)  # never used
+        self._fileListWidget.signalLoadFolder.connect(self.slot_loadFolder)
+        self._fileListWidget.getTableView().signalSelectRow.connect(self.slot_fileTableClicked)
+        #self._fileListWidget.getTableView().signalSetDefaultDetection.connect(self.slot_setDetectionParams)
+
+        # update dvdtThreshold, mvThreshold Start(s), Stop(s)
+        self.signalUpdateAnalysis.connect(self._fileListWidget.getTableView().slot_detect)
+        #self.myDetectionWidget.signalDetect.connect(self._fileListWidget.slot_detect)
+
+        # file list as a widget
+        _mainVLayout.addWidget(self._fileListWidget)
+
+        # file list as a dock
+        # self.fileDock = QtWidgets.QDockWidget('Files',self)
+        # self.fileDock.setWidget(self._fileListWidget)
+        # self.fileDock.setFloating(False)
+        # self.fileDock.visibilityChanged.connect(self.on_fileDock_visibilityChanged)
+        # self.fileDock.topLevelChanged.connect(self.slot_topLevelChanged)
+        # self.fileDock.setAllowedAreas(QtCore.Qt.TopDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
+        # self.fileDock.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.fileDock))
+        # self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.fileDock)
 
         #
         # Detection widget
@@ -879,6 +940,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # show/hide
         on = self.configDict['detectionPanels']['Detection Panel']
         self.myDetectionWidget.toggleInterface('Detection Panel', on)
+
+        _mainVLayout.addWidget(self.myDetectionWidget)
 
         # myDetectionWidget listens to self
         self.signalSwitchFile.connect(self.myDetectionWidget.slot_switchFile)
@@ -893,7 +956,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.myDetectionWidget.signalDetect.connect(self.slot_detect)
 
         # detection widget is persistent
-        self.setCentralWidget(self.myDetectionWidget)
+        # removed mar 26 2023
+        # self.setCentralWidget(self.myDetectionWidget)
         
         # TODO: detection widget as a dock
         #  detection widget has left panel of controls and right panel of plots
@@ -903,26 +967,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # self.detectionDock.setFloating(False)
         # self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.detectionDock)
 
-        #
-        # list of files (in a dock)
-        self._fileListWidget = sanpy.interface.fileListWidget(self.myModel)
-        #self._fileListWidget.signalUpdateStatus.connect(self.slot_updateStatus)  # never used
-        self._fileListWidget.signalLoadFolder.connect(self.slot_loadFolder)
-        self._fileListWidget.getTableView().signalSelectRow.connect(self.slot_fileTableClicked)
-        self._fileListWidget.getTableView().signalSetDefaultDetection.connect(self.slot_setDetectionParams)
-
-        # update dvdtThreshold, mvThreshold Start(s), Stop(s)
-        self.signalUpdateAnalysis.connect(self._fileListWidget.getTableView().slot_detect)
-        #self.myDetectionWidget.signalDetect.connect(self._fileListWidget.slot_detect)
-
-        self.fileDock = QtWidgets.QDockWidget('Files',self)
-        self.fileDock.setWidget(self._fileListWidget)
-        self.fileDock.setFloating(False)
-        self.fileDock.visibilityChanged.connect(self.on_fileDock_visibilityChanged)
-        self.fileDock.topLevelChanged.connect(self.slot_topLevelChanged)
-        self.fileDock.setAllowedAreas(QtCore.Qt.TopDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
-        self.fileDock.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.fileDock))
-        self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.fileDock)
+        #self.setLayout(_mainVLayout)
 
         #
         # 2x docks for plugins
@@ -935,21 +980,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.myPluginTab1.setContextMenuPolicy(QtCore.Qt.CustomContextMenu);
         self.myPluginTab1.customContextMenuRequested.connect(partial(self.on_plugin_contextMenu, sender=self.myPluginTab1))
 
-        #
-        # add a number of plugins to QDockWidget 'Plugins 1'
-        # we need to know the human name like 'Detection Parameters'
-
-        
-        # was a list, now is a dict
-        # _openPlugins = self.configDict['pluginPanels'] # list of plugins to open
-        # for _openPlugin in _openPlugins:
-        #     _oneOpenPlugin = self.myPlugins.runPlugin(_openPlugin, ba=None, show=False)
-        #     if _oneOpenPlugin is not None:
-        #         # on add tab, the QTabWIdget makes a copy !!!
-        #         self.myPluginTab1.addTab(_oneOpenPlugin, _oneOpenPlugin.myHumanName)
-
         _openPlugins = self.configDict['pluginPanels'] # dict of
         for _openPlugin, _externalWindow in _openPlugins.items():
+            _externalWindow = _externalWindow['externalWindow']
+            logger.info(f'  _openPlugin:{_openPlugin} _externalWindow:{_externalWindow}')
             _oneOpenPlugin = self.myPlugins.runPlugin(_openPlugin, ba=None, show=False)
             if _oneOpenPlugin is not None:
                 if _externalWindow:
@@ -967,6 +1001,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         #
         # tabs
+        '''
         self.myPluginTab2 = QtWidgets.QTabWidget()
         self.myPluginTab2.setMovable(True)
         self.myPluginTab2.setTabsClosable(True)
@@ -976,15 +1011,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.myPluginTab2.setContextMenuPolicy(QtCore.Qt.CustomContextMenu);
         self.myPluginTab2.customContextMenuRequested.connect(partial(self.on_plugin_contextMenu, sender=self.myPluginTab2))
 
-        # Open some default plugins
-        # no plugins
-
         self.pluginDock2 = QtWidgets.QDockWidget('Plugins 2',self)
         self.pluginDock2.setWidget(self.myPluginTab2)
         self.pluginDock2.setFloating(False)
         self.pluginDock2.hide() # initially hide 'Plugins 2'
         self.pluginDock2.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.pluginDock2))
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.pluginDock2)
+        '''
 
     def sanpyPlugin_action(self, pluginName):
         """Responds to main menu 'Plugins'.
@@ -1000,9 +1033,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # run the plugin
         _runningPlugin = self.myPlugins.runPlugin(pluginName, ba)
 
+        ltwhTuple = _runningPlugin.getWindowGeometry()
+
         # add plugin to preferences so it opens next time we run the app
         if _runningPlugin is not None:
-            self.configDict.addPlugin(_runningPlugin.getHumanName())
+            self.configDict.addPlugin(_runningPlugin.getHumanName(),
+                                      externalWindow=True,
+                                      ltwhTuple = ltwhTuple)
 
     def slot_selectSpike(self, sDict):
         spikeNumber = sDict['spikeNumber']
@@ -1044,7 +1081,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #self.update()
         QtWidgets.qApp.processEvents()
 
-    def slot_setDetectionParams(self, row, cellType):
+    def _old_slot_setDetectionParams(self, row, cellType):
         """Set detection parameters to presets.
 
         Parameters
@@ -1128,6 +1165,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
             # bring tab to front
             sender.setCurrentIndex(newTabIndex)
 
+            ltwhTuple = newPlugin.getWindowGeometry()
+
+            if newPlugin is not None:
+                self.configDict.addPlugin(newPlugin.getHumanName(),
+                                        externalWindow=False,
+                                        ltwhTuple=ltwhTuple)
+                
     def slot_dockLocationChanged(self, dock, area):
         """Top level dock changed
         
@@ -1177,8 +1221,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         logger.info(f'  closing pluginInstancePointer:{type(pluginInstancePointer)}')
 
         # remove from preferences
-        if pluginInstancePointer is not None:
-            self.configDict.removePlugin(pluginInstancePointer.getHumanName())
+        # if pluginInstancePointer is not None:
+        #     self.configDict.removePlugin(pluginInstancePointer.getHumanName())
 
         self.myPlugins.slot_closeWindow(pluginInstancePointer)
 
@@ -1234,6 +1278,10 @@ def testFFT(sanpyWindow):
     fftPlugin = sanpyWindow.myPlugins.runPlugin(pluginName, ba)
 
 def main():
+    """Main entry point for the SanPy desktop app.
+    
+    Configured in setup.py
+    """
     logger.info(f'Starting sanpy_app.py in __main__()')
 
     date_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -1248,9 +1296,19 @@ def main():
     _logFilePath = sanpy.sanpyLogger.getLoggerFile()
     logger.info(f'    logging to file {_logFilePath}')
 
-    os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt5'
+    # for qdarkstyle
+    #os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt5'
 
     app = QtWidgets.QApplication(sys.argv)
+
+    app.setQuitOnLastWindowClosed(True)
+
+    # for manuscript we need to allow user to set light/dark theme
+    # was this
+    # v1
+    #app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api=os.environ['PYQTGRAPH_QT_LIB']))
+    # v2
+    qdarktheme.setup_theme()
 
     #appIconPath = os.path.join(bundle_dir, 'interface/icons/sanpy_transparent.png')
     appIconPath = pathlib.Path(bundle_dir) / 'interface' / 'icons' / 'sanpy_transparent.png'
@@ -1262,16 +1320,8 @@ def main():
     else:
         logger.warning(f'    Did not find appIconPath: {appIconPathStr}')
 
-    # for manuscript we need to allow user to set light/dark theme
-    # was this
-    app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api=os.environ['PYQTGRAPH_QT_LIB']))
-
     w = SanPyWindow()
-
     w.show()
-
-    # to debug the meber function openLog()
-    #w.openLog()
 
     sys.exit(app.exec_())
 

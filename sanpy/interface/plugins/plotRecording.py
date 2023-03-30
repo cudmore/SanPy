@@ -13,6 +13,7 @@ import sanpy
 from sanpy import bAnalysis
 from sanpy.interface.plugins import sanpyPlugin
 from sanpy.bAnalysisUtil import statList
+from sanpy.interface.plugins import ResponseType  # to toggle response to set sweeps, etc
 
 class plotRecording(sanpyPlugin):
     """
@@ -32,6 +33,10 @@ class plotRecording(sanpyPlugin):
 
         #selectSpike = self.responseTypes.selectSpike
         #self.toggleResponseOptions(selectSpike, newValue=False)
+
+        # we are plotting all sweeps and all axis, turn these off
+        self.toggleResponseOptions(ResponseType.setSweep, False)  # we plot all sweeps
+        self.toggleResponseOptions(ResponseType.setAxis, False)
 
         setAxis = self.responseTypes.setAxis
         self.toggleResponseOptions(setAxis, newValue=False)
@@ -84,6 +89,8 @@ class plotRecording(sanpyPlugin):
         self.rawLine = [None] * numSweeps
         self.thresholdLine = [None] * numSweeps
 
+        _penColor = self.getPenColor()
+
         for sweepIdx in range(numSweeps):
             self.ba.fileLoader.setSweep(sweepIdx)
             
@@ -95,7 +102,8 @@ class plotRecording(sanpyPlugin):
             self.sweepX = sweepX
             self.sweepY = sweepY
 
-            self.rawLine[sweepIdx], = self.axs.plot(sweepX+xCurrentOffset, sweepY+yCurrentOffset, 'w-', linewidth=0.5)
+            self.rawLine[sweepIdx], = self.axs.plot(sweepX+xCurrentOffset, sweepY+yCurrentOffset,
+                                                    '-', color=_penColor, linewidth=0.5)
 
             thresholdSec = self.ba.getStat('thresholdSec', sweepNumber=sweepIdx)
             thresholdSec = [x+xCurrentOffset for x in thresholdSec]
@@ -214,6 +222,7 @@ class plotRecording(sanpyPlugin):
     def selectSpikeList(self):
         """Only respond to single spike selection.
         """
+        logger.info('')
         spikeList = self.getSelectedSpikes()
 
         if spikeList==[] or len(spikeList)>1:

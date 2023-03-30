@@ -59,12 +59,12 @@ _sanpyColumns = {
         'type': int,
         'isEditable': False,
     },
-    'I': {
-        # include
-        # problems with isinstance(bool), just using string
-        'type': bool,
-        'isEditable': True,
-    },
+    # 'I': {
+    #     # include
+    #     # problems with isinstance(bool), just using string
+    #     'type': bool,
+    #     'isEditable': True,
+    # },
     'File': {
         'type': str,
         'isEditable': False,
@@ -1209,7 +1209,7 @@ class analysisDir():
         #rowDict['mvThreshold'] = -20
         if ba.isAnalyzed():
             dDict = ba.getDetectionDict()
-            rowDict['I'] = dDict.getValue('include')
+            #rowDict['I'] = dDict.getValue('include')
             rowDict['dvdtThreshold'] = dDict.getValue('dvdtThreshold')
             rowDict['mvThreshold'] = dDict.getValue('mvThreshold')
             rowDict['Start(s)'] = dDict.getValue('startSeconds')

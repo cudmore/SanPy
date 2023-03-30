@@ -99,7 +99,7 @@ class bAnalysis:
                         = sanpy.bAnalysisResults.analysisResultList()
         # class to store all analysis results
 
-        self._spikesPerSweep : int = None
+        #self._spikesPerSweep : int = None
 
         self.spikeClips = []  # created in self.spikeDetect()
         self.spikeClips_x = []  #
@@ -310,9 +310,11 @@ class bAnalysis:
 
         See property numSpikes
         """
-        return self._spikesPerSweep[sweep]
-
-    def getAbsSpikeFromSweep(self, sweepSpikeIdx : int, sweep : int) -> int:
+        thresholdSec = self.getStat('thresholdSec', sweepNumber=sweep)
+        return len(thresholdSec)
+        #return self._spikesPerSweep[sweep]
+    
+    def _old_getAbsSpikeFromSweep(self, sweepSpikeIdx : int, sweep : int) -> int:
         """Given a spike index within a sweep, get the absolute spike index.
 
         See getSweepSpikeFromAbsolute()
@@ -501,7 +503,7 @@ class bAnalysis:
                 sweepNumber : Optional[int] = None,
                 epochNumber : Optional[int] = None,
                 asArray : Optional[bool] = False):
-        """Get a list of values for one or two analysis parameters.
+        """Get a list of values for one or two analysis results.
 
         Parameters
         ----------
@@ -518,10 +520,10 @@ class bAnalysis:
 
         Notes
         -----
-        For a list of available analysis parameters,
+        For a list of available analysis results,
             see [bDetection.getDefaultDetection()][sanpy.bDetection.bDetection]
 
-        If the returned list of analysis parameters are in points,
+        If the returned list of analysis results are in points,
             convert to seconds or ms using: pnt2Sec_(pnt) or pnt2Ms_(pnt).
 
         Returns
@@ -602,6 +604,9 @@ class bAnalysis:
         theRet = [spike for spike in self.spikeDict if sweepNumber=='All' or spike['sweep']==sweepNumber]
         return theRet
 
+    def getOneSpikeDict(self, spikeNumber : int):
+        return self.spikeDict[spikeNumber]
+    
     def _rebuildFiltered(self):
         if self.fileLoader.sweepX is None:
             # no data
@@ -1136,7 +1141,7 @@ class bAnalysis:
          # we are filling this in, one dict for each spike
         #self.spikeDict = [] # we are filling this in, one dict for each spike
 
-        self._spikesPerSweep = [0] * self.fileLoader.numSweeps
+        #self._spikesPerSweep = [0] * self.fileLoader.numSweeps
 
         for sweepNumber in self.fileLoader.sweepList:
             #self.setSweep(sweep)
@@ -1624,7 +1629,7 @@ class bAnalysis:
         #print(self.spikeDict)
 
         # keep track of spikes per sweep (expensive to calculate)
-        self._spikesPerSweep[sweepNumber] = len(spikeDict)
+        #self._spikesPerSweep[sweepNumber] = len(spikeDict)
 
         # run all user analysis ... what if this fails ???
         sanpy.user_analysis.baseUserAnalysis.runAllUserAnalysis(self)
@@ -2053,7 +2058,7 @@ class bAnalysis:
     def saveAnalysis(self, forceSave=False):
         """Not used.
 
-        Save detection parameters and analysis as json.
+        Save detection parameters and analysis results as json.
         """
         if not self._detectionDirty and not forceSave:
             return

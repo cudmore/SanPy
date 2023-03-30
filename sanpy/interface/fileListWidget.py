@@ -71,7 +71,7 @@ class fileListWidget(QtWidgets.QWidget):
 
         aSpinBox = QtWidgets.QSpinBox()
         aSpinBox.setMinimum(1)
-        aSpinBox.setMaximum(10)
+        aSpinBox.setMaximum(5)
         aSpinBox.setValue(1)
         aSpinBox.valueChanged.connect(self.on_depth_spin_box)
         self._hToolbarLayout.addWidget(aSpinBox, alignment=QtCore.Qt.AlignLeft)

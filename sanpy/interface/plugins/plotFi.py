@@ -116,7 +116,7 @@ def getStatFi(dfMaster : pd.DataFrame,
     dfSweepsSummary = dfSweepsSummary.reset_index()
 
     _stopSec = time.time()
-    print(f'Took {round(_stopSec-_startSec,3)} seconds')
+    #print(f'Took {round(_stopSec-_startSec,3)} seconds')
 
     return dfSweepsSummary
 
@@ -221,6 +221,8 @@ class plotFi(sanpyPlugin):
 
         logger.info(f'{name} is checked {isChecked}')
 
+        _doReplot = False
+        
         if name == 'Results Table':
             self._fiTableView.setVisible(isChecked)
         elif name == 'Plot Toolbar':
@@ -228,13 +230,16 @@ class plotFi(sanpyPlugin):
         elif name in self._plotDict.keys():
             # top level like [Raw, Legend, Error]
             self._plotDict[name] = isChecked
+            _doReplot = True
         elif name in self._plotDict['overlays'].keys():
             self._plotDict['overlays'][name] = isChecked
+            _doReplot = True
         else:
             logger.warning(f'Did not understand checkbox "{name}"')
             return
         
-        self.replot()
+        if _doReplot:
+            self.replot()
 
     def _buildTopToolbar(self):
         _topToolbar = QtWidgets.QHBoxLayout()
@@ -335,14 +340,19 @@ class plotFi(sanpyPlugin):
         # get from stat lists
         yHumanStat, yStat = self._yStatListWidget.getCurrentStat()
 
+        # always clear the axis
+        self.axs.clear()
+
+        self.axs.autoscale(enable=True, axis='y', tight=None)
+
         # get masterDf
-        dfMaster = self.ba.asDataFrame()
-        if dfMaster is None:
+        dfMaster = self.ba.spikeDict.asDataFrame()
+        if dfMaster is None or dfMaster.empty:
             # no spikes
+            logger.info('no spikes to plot -> return')
             return
         
         # user has to specify which epoch
-        self.axs.clear()
         plotRaw = self._plotDict['Raw']
         if plotRaw:
             # reduce to only spikes for given epochNumber
@@ -357,11 +367,20 @@ class plotFi(sanpyPlugin):
         intervalStat = False
         if yStat in ['spikeFreq_hz', 'isi_ms']:
             intervalStat = True
+        _filename = self.ba.getFileName()
+        logger.info(f'calling getStatFi() with epoch:{self.epochNumber} intervalStat:{intervalStat} filename:{_filename}')
         self.df_fi = getStatFi(dfMaster, yStat,
                             epochNumber=self.epochNumber,
                             intervalStat=intervalStat,
-                            filename=self.ba.getFileName())
+                            filename=_filename)
 
+        logger.info('generated new fi table self.df_fi:')
+        print(self.df_fi)
+
+        if self.df_fi.empty:
+            logger.warning('  got empty dataframe -> return')
+            return
+        
         self._fiTableView.slotSwitchTableDf(self.df_fi)
 
         # cycle color
@@ -378,7 +397,7 @@ class plotFi(sanpyPlugin):
             #_ax = sns.scatterplot(x='epochLevel', y=_stat, data=df_fi, ax=_ax)
             # _ax.plot('epochLevel', _stat, data=df_fi, linestyle='-', marker='o', color='k')
             currentColor = _fiStatColor[plotIdx]
-            print('plotting _stat:', _stat)
+            logger.info(f'plotting _stat:"{_stat}"')
             _errorType = self._plotDict['Error']
             if _fiStat == 'Mean' and _errorType is not None:
                 _yerr = yStat + '_' + _errorType
@@ -399,7 +418,13 @@ class plotFi(sanpyPlugin):
         _maxEpochLevel = np.max(epochLevels)
         _xRange = _maxEpochLevel - _minEpochLevel
         _xPad = _xRange * 0.1
-        self.axs.set_xlim([_minEpochLevel-_xPad, _maxEpochLevel+_xPad])
+        _xMin = _minEpochLevel - _xPad
+        _xMax = _maxEpochLevel + _xPad
+        logger.info(f'_xMin:{_xMin} _xMax:{_xMax}')
+        if np.isnan(_xMin) or np.isnan(_xMax):
+            pass
+        else:
+            self.axs.set_xlim([_xMin, _xMax])
 
         # set axis labels
         self.axs.set_xlabel('Current Step (pA)')

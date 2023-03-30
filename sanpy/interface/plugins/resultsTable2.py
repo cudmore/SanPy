@@ -7,6 +7,7 @@ logger = get_logger(__name__)
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
+from sanpy.interface.plugins import ResponseType
 
 class resultsTable2(sanpyPlugin):
     """
@@ -21,6 +22,9 @@ class resultsTable2(sanpyPlugin):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.toggleResponseOptions(ResponseType.setSweep, False)  # we plot all sweeps
+        self.toggleResponseOptions(ResponseType.setAxis, False)
 
         self.cardiacDf = None
 
@@ -88,6 +92,11 @@ class resultsTable2(sanpyPlugin):
         if self.ba is not None and self.cardiacDf is not None:
             logger.info('Copy to clipboard')
             self.cardiacDf.to_clipboard(sep='\t', index=False)
+
+    def selectSpikeList(self):
+        spikeList = self.getSelectedSpikes()
+        logger.info(f'{spikeList}')
+        self.myErrorTable.mySelectRows(spikeList)
 
 def main():
     path = '/home/cudmore/Sites/SanPy/data/19114001.abf'

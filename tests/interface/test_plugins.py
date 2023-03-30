@@ -74,7 +74,7 @@ def test_app(sanpyAppObject):
     _tableView._onLeftClick(_rowZero)
 
     _dict = _tableView.getSelectedRowDict()
-    #assert _dict['File'] == '19114000.abf'
+    assert _dict['File'] == '19114000.abf'
 
     _dict2 = sanpyAppObject.getSelectedFileDict()
     #assert _dict2['File'] == '19114000.abf'
@@ -124,6 +124,10 @@ def test_init(pluginsObject, qtbot):
     pathCsv = os.path.join('data', '19114001.csv')
     baCsv = sanpy.bAnalysis(path)
 
+    pathSweeps = os.path.join('data', '2021_07_20_0010.abf')
+    baSweeps = sanpy.bAnalysis(pathSweeps)
+    dDict = bd.getDetectionDict('Fast Neuron')
+    baSweeps.spikeDetect(dDict)
 
     # github is running out of memory
     for _pluginName in _pluginList:
@@ -155,5 +159,8 @@ def test_init(pluginsObject, qtbot):
 
         # switch back to ba with spikes
         _newPlugin.slot_switchFile(ba=ba)
+
+        # switch to a file with sweeps
+        _newPlugin.slot_switchFile(ba=baSweeps)
 
         # TODO: test set sweep

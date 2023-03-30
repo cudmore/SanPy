@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
 
-import qdarkstyle
+# import qdarkstyle
 
 import sanpy
 import sanpy.interface
@@ -145,6 +145,13 @@ class sanpyPlugin(QtWidgets.QWidget):
                 Used by 'plot tool' to plot a pool using app analysisDir dfMaster.
         """
         super().__init__(parent)
+
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+
+        # does not work, key press gets called first?
+        # self._closeAction = QtWidgets.QAction("Exit Application", self)
+        # self._closeAction.setShortcut('Ctrl+W')
+        # self._closeAction.triggered.connect(self.close)
         
         # derived classes will set this in init (see kymographPlugin)
         self._initError : bool = False
@@ -158,6 +165,11 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         self._bPlugins : "sanpy.interface.bPlugin" = bPlugin
         # pointer to object, send signal back on close
+
+        self.darkTheme = True
+        if self.getSanPyApp() is not None:
+            _useDarkStyle = self.getSanPyApp().useDarkStyle
+            self.darkTheme = _useDarkStyle
 
         # to show as a widget
         self._showSelf : bool = True
@@ -179,11 +191,12 @@ class sanpyPlugin(QtWidgets.QWidget):
             #print(type(option))
             self._responseOptions[option.name] = True
 
-        doDark = False
-        if doDark and qdarkstyle is not None:
-            self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
-        else:
-            self.setStyleSheet("")
+        # mar 26 2023 was this
+        # doDark = self.getSanPyApp().useDarkStyle
+        # if doDark and qdarkstyle is not None:
+        #     self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+        # else:
+        #     self.setStyleSheet("")
 
         # created in mplWindow2()
         # these are causing really freaking annoying failures on GitHub !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -215,6 +228,17 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._updateTopToolbar()
         self._vBoxLayout.addWidget(self._topToolbarWidget)
 
+    def _myClassName(self):
+        return self.__class__.__name__
+
+    def getPenColor(self) -> str:
+        """Get pen color for pyqtgraph traces based on dark theme.
+        """
+        if self.darkTheme:
+            return 'w'
+        else:
+            return 'k'
+        
     def getStat(self, stat : str) -> list:
         """Convenianece function to get a stat from underling sanpy.bAnalysis.
         
@@ -481,14 +505,17 @@ class sanpyPlugin(QtWidgets.QWidget):
         key = None
         text = None
         doCopy = False
+        doClose = False
         if isQt:
             key = event.key()
             text = event.text()
             doCopy = event.matches(QtGui.QKeySequence.Copy)
+            doClose = event.matches(QtGui.QKeySequence.Close)
         elif isMpl:
             # q will quit !!!!
             text = event.key
-            doCopy = text == 'ctrl+c'
+            doCopy = text in ['ctrl+c', 'cmd+c']
+            doClose = text in ['ctrl+w', 'cmd+w']
             logger.info(f'mpl key: "{text}"')
         else:
             logger.warning(f'Unknown event type: {type(event)}')
@@ -498,6 +525,8 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         if doCopy:
             self.copyToClipboard()
+        elif doClose:
+            self.close()
         elif key==QtCore.Qt.Key_Escape or text=='esc' or text=='escape':
             # single spike
             # sDict = {
@@ -617,6 +646,10 @@ class sanpyPlugin(QtWidgets.QWidget):
         
         """
         #plt.style.use('dark_background')
+        if self.darkTheme:
+            plt.style.use('dark_background')
+        else:
+            plt.rcParams.update(plt.rcParamsDefault)
         
         # this is dangerous, collides with self.mplWindow()
         # these are causing really freaking annoying failures on GitHub !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -635,7 +668,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         if numRow==1 and numCol==1:
             _static_ax = self.static_canvas.figure.subplots()
             self.axs = _static_ax
-            print('self.axs:', type(self.axs))
+            #print('self.axs:', type(self.axs))
         else:
             for idx in range(numRow):
                 plotNum = idx + 1
@@ -713,13 +746,16 @@ class sanpyPlugin(QtWidgets.QWidget):
         self.signalSelectSpikeList.emit(sDict)
 
     def closeEvent(self, event):
-        """Signal close event back to parent bPlugin object.
+        """Called when window is closed.
+        
+        Signal close event back to parent bPlugin object.
 
         Parameters
         ----------
         event Union[matplotlib.backend_bases.CloseEvent, PyQt5.QtGui.QCloseEvent]
             The close event from either PyQt or matplotlib
         """
+        logger.info(f'  -->> emit signalCloseWindow(self)')
         self.signalCloseWindow.emit(self)
 
     def slot_switchFile(self,
@@ -805,10 +841,11 @@ class sanpyPlugin(QtWidgets.QWidget):
     def slot_setSweep(self, ba : sanpy.bAnalysis, sweepNumber : int):
         """Respond to user selecting a sweep.
         """
-        logger.info('')
         
         if not self._getResponseOption(self.responseTypes.setSweep):
             return
+
+        logger.info(f'{self._myClassName()}')
 
         if ba is None:
             return
@@ -831,7 +868,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         TODO: convert dict to class spikeSelection
         """
 
-        logger.info(f'mar 11 eDict:{eDict}')
+        logger.info(f'{self._myClassName()} eDict:{eDict}')
         
         # don't respond if we are showing a different ba (bAnalysis)
         ba = eDict['ba']
@@ -988,6 +1025,8 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         if action == switchFile:
             self.toggleResponseOptions(self.responseTypes.switchFile)
+        elif action == setSweep:
+            self.toggleResponseOptions(self.responseTypes.setSweep)
         elif action == analysisChange:
             self.toggleResponseOptions(self.responseTypes.analysisChange)
         elif action == selectSpike:
@@ -1113,26 +1152,31 @@ class sanpyPlugin(QtWidgets.QWidget):
         """Top toolbar to show file, toggle responses on/off, etc
         """
             
+        # TODO: Super annoying that popups come up blank if using AlignLeft ???
+        
         #
         # first row of controls
         hLayout0 = QtWidgets.QHBoxLayout()
 
         # sweep popup
         aLabel = QtWidgets.QLabel('Sweeps')
-        hLayout0.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
+        # hLayout0.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
+        hLayout0.addWidget(aLabel)
         self._sweepComboBox = QtWidgets.QComboBox()
         self._sweepComboBox.currentIndexChanged.connect(self._on_sweep_combo_box)
         #hLayout0.addWidget(self._sweepComboBox, alignment=QtCore.Qt.AlignLeft)
         hLayout0.addWidget(self._sweepComboBox)
 
-        hLayout0.addStretch()
+        #hLayout0.addStretch()
 
         # epoch popup
         aLabel = QtWidgets.QLabel('Epochs')
         hLayout0.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
+        #hLayout0.addWidget(aLabel)
         self._epochComboBox = QtWidgets.QComboBox()
         self._epochComboBox.currentIndexChanged.connect(self._on_epoch_combo_box)
-        hLayout0.addWidget(self._epochComboBox, alignment=QtCore.Qt.AlignLeft)
+        #hLayout0.addWidget(self._epochComboBox, alignment=QtCore.Qt.AlignLeft)
+        hLayout0.addWidget(self._epochComboBox)
 
         # update on switch file
         # self._fileLabel = QtWidgets.QLabel('File')
@@ -1142,7 +1186,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         # self._numSpikesLabel = QtWidgets.QLabel('unknown spikes')
         # hLayout0.addWidget(self._numSpikesLabel, alignment=QtCore.Qt.AlignLeft)
 
-        hLayout0.addStretch()
+        #hLayout0.addStretch()
 
         #
         # second row of controls
@@ -1155,7 +1199,7 @@ class sanpyPlugin(QtWidgets.QWidget):
             aCheckbox.stateChanged.connect(functools.partial(self.toggleResponseOptions, item))
             hLayout1.addWidget(aCheckbox, alignment=QtCore.Qt.AlignLeft)
 
-        hLayout0.addStretch()
+        hLayout1.addStretch()
 
         #toolbar layout needs to be in a widget so it can be hidden
         _mainWidget = QtWidgets.QWidget()
@@ -1167,6 +1211,16 @@ class sanpyPlugin(QtWidgets.QWidget):
     
     # def __on_checkbox_clicked(self, checkBoxName, checkBoxState):
     #     logger.info(checkBoxName, checkBoxState)
+
+    def getWindowGeometry(self):
+        """Get the current window position.
+        """
+        myRect = self.geometry()
+        left = myRect.left()
+        top = myRect.top()
+        width = myRect.width()
+        height = myRect.height()
+        return left, top, width, height
 
 def test_plugin():
     import sys

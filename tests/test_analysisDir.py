@@ -65,7 +65,7 @@ class Test_Analysis_Dir(unittest.TestCase):
         ba2 = ad.getAnalysis(2)
 
         # delete a row
-        ad.deleteRow(1)
+        #ad.deleteRow(1)
 
         # remove from database
         #ad.removeRowFromDatabase(0)

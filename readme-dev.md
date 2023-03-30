@@ -1,15 +1,36 @@
 ## TODO for manuscript march 2023
 
-- Refactor all things having to do with light/dark theme. This is critical as copy paste from the interface cannot be trapped in a dark theme (for printing, manuscripts, etc)
+- [done, satisfactory] Refactor all things having to do with light/dark theme. This is critical as copy paste from the interface cannot be trapped in a dark theme (for printing, manuscripts, etc)
 
 - Finish implementation of setSpikeStat plugin. Make sure it responds to interface changes and actually sets backend data in bAnalysis results.
 
 - Update main sanpy app preferences, add mechanism to
 
-    1) remember if a plugin is in a standalone window or embedded in a toolbar.
-    2) Add in show/hide of setSpineStat plugin
+    1) [done] remember if a plugin is in a standalone window or embedded in a toolbar.
+    2) [done] Add in show/hide of setSpineStat plugin
 
-- Implement command+w and ctrl+w to close windows
+- [done] Implement command+w and ctrl+w to close windows
+
+- [done] track down errors in bAnalysis self._spikesPerSweep
+    TODO: remove self._spikesPerSweep
+
+- [done] Remove 'I' column from file list. This is supposed to be used for pooling (later versions will include this).
+
+- Preferences need to save/load the window position of internal plugins.
+
+### TODO minor
+
+- Single spike selection in table plugin (That sets the swep) does not also set the spike
+
+- Add simple spike selection (using threshold) to plot fi plugin. Use code in plot scatter plugin.
+
+- The file table needs to be expanded/colapsed by the user, it gets incredibly small. Previously was in a dock and could do this. Got rid of dock because it was getting complicated with show/hide of panels.
+
+## TODO for version 2 (after submit to bioarchive)
+
+- Implement class spikeSelection() and have all signal emit and connected slots use it. This will be a list of spikes [int] to select and will provide some utility functions like getting spikes for a sweep, etc.
+
+- Implement class sanpyTablePlugin() and have all table plugins derive from it. Right now the table plugins leave a lot to be desired, in particular with spike selections. They emit single spike selection (not multiple). They are not responding in a slot to spike selection! Need to implement a sort proxy to get the currect row selection (see PyMapManager for an example sort proxy).
 
 # Random development notes, not really used
 

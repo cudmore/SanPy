@@ -286,7 +286,7 @@ class myTableView(QtWidgets.QTableView):
         self.doIncludeCheckbox = False # todo: turn this on
         self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
 
-        self.setFont(QtGui.QFont('Arial', 10))
+        #self.setFont(QtGui.QFont('Arial', 10))
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
                                   QtWidgets.QSizePolicy.Expanding)
         self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
@@ -800,12 +800,12 @@ class myMplCanvas(QtWidgets.QFrame):
                 if xIsCategorical or yIsCategorical:
                     pass
                 else:
-                    print('  grabbing mean +- sem for self.groupByColumnName:', groupByColumnName)
+                    logger.info(f'  grabbing mean +- sem for self.groupByColumnName: {groupByColumnName}')
                     color = 'k'
-                    xd = masterDf.groupby(groupByColumnName).mean()[xStat]
-                    xerrd = masterDf.groupby(groupByColumnName).sem()[xStat]
-                    yd = masterDf.groupby(groupByColumnName).mean()[yStat]
-                    yerrd = masterDf.groupby(groupByColumnName).sem()[yStat]
+                    xd = masterDf.groupby(groupByColumnName).mean(numeric_only=True)[xStat]
+                    xerrd = masterDf.groupby(groupByColumnName).sem(numeric_only=True)[xStat]
+                    yd = masterDf.groupby(groupByColumnName).mean(numeric_only=True)[yStat]
+                    yerrd = masterDf.groupby(groupByColumnName).sem(numeric_only=True)[yStat]
                     self.canvas.axes.errorbar(xd, yd, xerr=xerrd, yerr=yerrd,
                         fmt='none', capsize=0, zorder=10, color=color, alpha=0.5);
 

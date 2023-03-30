@@ -43,7 +43,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         self._blockSlots : bool = False
 
-        self.mySetTheme()
+        #self.mySetTheme()
 
         #self._sweepNumber = None  # 'All'
 
@@ -270,10 +270,10 @@ class bDetectionWidget(QtWidgets.QWidget):
             detectionDict['startSeconds'] = startSec
             detectionDict['stopSeconds'] = stopSec
 
-            #
-            detectionDict['cellType'] = myDetectionDict['Cell Type']
-            detectionDict['sex'] = myDetectionDict['Sex']
-            detectionDict['condition'] = myDetectionDict['Condition']
+            # mar 2023, I removed these from the table
+            # detectionDict['cellType'] = myDetectionDict['Cell Type']
+            # detectionDict['sex'] = myDetectionDict['Sex']
+            # detectionDict['condition'] = myDetectionDict['Condition']
 
         #
         # detect
@@ -309,15 +309,17 @@ class bDetectionWidget(QtWidgets.QWidget):
         updateStr = f'Detected {numSpikes} in {_elapsedSec} seconds'
         self.updateStatusBar(updateStr)
 
-    def mySetTheme(self):
+    def mySetTheme(self, doReplot=True):
         if self.myMainWindow is not None and self.myMainWindow.useDarkStyle:
-            pg.setConfigOption('background', 'k')
-            pg.setConfigOption('foreground', 'w')
+            # pg.setConfigOption('background', 'k')
+            # pg.setConfigOption('foreground', 'w')
             self.useDarkStyle = True
         else:
-            pg.setConfigOption('background', 'w')
-            pg.setConfigOption('foreground', 'k')
+            # pg.setConfigOption('background', 'w')
+            # pg.setConfigOption('foreground', 'k')
             self.useDarkStyle = False
+        if doReplot:
+            self._replot(startSec=None, stopSec=None)
 
     def getMainWindowOptions(self):
         theRet = None
@@ -517,6 +519,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # todo: make this a signal, with slot in main window
         if self.myMainWindow is not None:
             # currently, this will just update scatte plot
+            logger.info('calling myMainWindow "set full x axis"')
             self.myMainWindow.mySignal('set full x axis')
 
     def setAxis(self, start, stop, set_xyBoth='xAxis', whichPlot='vm'):
@@ -560,8 +563,12 @@ class bDetectionWidget(QtWidgets.QWidget):
 
     def on_scatterClicked(self, item, points, ev=None):
         """
-        item: PlotDataItem that was clicked
-        points: list of points clicked (pyqtgraph.graphicsItems.ScatterPlotItem.SpotItem)
+        
+        Parameters
+        ----------
+        item : PlotDataItem
+            that was clicked
+        points : list of points clicked (pyqtgraph.graphicsItems.ScatterPlotItem.SpotItem)
         """
 
         '''
@@ -576,14 +583,17 @@ class bDetectionWidget(QtWidgets.QWidget):
         #    print(f'    points[{idx}].data():{p.data()} p.index:{p.index()} p.pos:{p.pos()}')
 
         if len(points) > 0:
+            # just one point
+            # when showing a sweep, this is relative to sweep (not abs in all analysis)
             sweepSpikeNumber = points[0].index()
 
             # convert sweep spike index to absolute
-            absIndex = self.ba.getAbsSpikeFromSweep(sweepSpikeNumber, self.sweepNumber)
+            _spikeNumber = self.ba.getStat('spikeNumber', sweepNumber=self.sweepNumber)
+            absSpikeNumber = _spikeNumber[sweepSpikeNumber]
 
-            logger.info(f'self.sweepNumber:{self.sweepNumber} sweepSpikeNumber:{sweepSpikeNumber} absIndex:{absIndex}')
+            logger.info(f'self.sweepNumber:{self.sweepNumber} sweepSpikeNumber:{sweepSpikeNumber} absIndex:{absSpikeNumber}')
             eDict = {
-                'spikeNumber': absIndex,
+                'spikeNumber': absSpikeNumber,
                 'doZoom': False,
                 'ba': self.ba,
             }
@@ -693,7 +703,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         return x, y
 
     def replot(self, oneIndex=None):
-
+        """Replot analysis results overlays.
+        
+        Parameters
+        ----------
+        oneIndex : int
+            If specified then replot just one overlay from self.myPlots
+        """
         if self.ba is None:
             return
 
@@ -713,6 +729,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 #filteredVm = filteredVm[:,0]
                 xPlot, yPlot = sanpy.analysisUtil.getHalfWidthLines(sweepX, sweepY, spikeDictionaries)
             elif plotIsOn and plot['humanName'] == 'Epoch Lines':
+                # vertical lines showing epoch within a sweep
                 _epochTable = self.ba.fileLoader.getEpochTable(self.sweepNumber)
                 if _epochTable is not None:
                     # happens when file is tif kymograph
@@ -785,9 +802,19 @@ class bDetectionWidget(QtWidgets.QWidget):
         # always replot everything
         self.replot(oneIndex=idx)
 
-    def selectSweep(self, sweepNumber, startSec=None, stopSec=None, doEmit=True):
+    def selectSweep(self, sweepNumber, startSec=None, stopSec=None,
+                    doEmit=True, doReplot=True):
         """
-        sweepNumber (str): from ('All', 0, 1, 2, 3, ...)
+        Parameters
+        ----------
+        sweepNumber : str or int
+            From ('All', 0, 1, 2, 3, ...)
+        startSec : float or None
+        stopSec : float or None
+        doEmit : bool
+            If True then emit signal signalSelectSweep
+        doReplot : bool
+            If True then call _replot()
         """
         if sweepNumber == '':
             logger.error('')
@@ -798,7 +825,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         else:
             sweepNumber = int(sweepNumber)
 
-        if sweepNumber<0 or sweepNumber>self.ba.fileLoader.numSweeps-1:
+        if sweepNumber is not None and (sweepNumber<0 or sweepNumber>self.ba.fileLoader.numSweeps-1):
             return
 
         logger.info(f'sweepNumber:"{sweepNumber}" {type(sweepNumber)} doEmit:{doEmit} startSec:"{startSec}" stopSec:"{stopSec}"')
@@ -815,7 +842,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         # cancel spike selection
         self.selectSpike(None)
 
-        self._replot(startSec, stopSec)  # will set full axis
+        if doReplot:
+            self._replot(startSec, stopSec)  # will set full axis
 
         if doEmit:
             self.signalSelectSweep.emit(self.ba, sweepNumber)
@@ -829,6 +857,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 
     def selectSpike(self, spikeNumber : int, doZoom : bool = False, doEmit : bool = False):
         """
+
+        Notes
+        -----
+        Will set the sweep if we are not looking at the sweep of spikeNumber
+
         Args:
             spikeNumber: absolute
             doZoom:
@@ -874,9 +907,11 @@ class bDetectionWidget(QtWidgets.QWidget):
             sweep = self.ba.getSpikeStat(spikeList, 'sweep')
             sweep = sweep[0]  # just the first
             if sweep != self.sweepNumber:
-                logger.info('!!! SWITCHING to sweep: {sweep} from self.sweepNumber:{self.sweepNumber}')
+                logger.info(f'!!! SWITCHING to sweep: {sweep} from self.sweepNumber:{self.sweepNumber}')
                 self.slot_selectSweep(sweep)
 
+            # our plot is of ONE SWEEP, we need to convert abs spike number to
+            # spike number within the sweep
             logger.info(f'spikeNumber: {spikeNumber}, sweep {sweep}, doZoom {doZoom}')
             sweepSpikeNumber = self.ba.getSweepSpikeFromAbsolute(spikeNumber, sweep)
             
@@ -940,17 +975,46 @@ class bDetectionWidget(QtWidgets.QWidget):
                         doZoom : bool = False,
                         doEmit : bool = False):
         """Visually select a number of spikes.
+        
+        Parameters
+        ----------
+        spikeList : list of int
+            A list of spikes (absolute)
+        
+        Notes
+        -----
+        spikeList is absolute but we are only plotting a subset (for one sweep).
         """
         
         x = None
         y = None
 
         if len(spikeList) > 0:
+            _xSweepSpikeNumber = self.ba.getStat('sweepSpikeNumber', sweepNumber=self.sweepNumber)
+            
+            # get the abs spike numbers we are showing
+            _xSpikeNumber = self.ba.getStat('spikeNumber', sweepNumber=self.sweepNumber)
+            
+            # convert abs spike number (across sweeps) to relative to one sweep
+            _sweepSpikeList = [_sweepIdx for _sweepIdx,x in enumerate(_xSpikeNumber) if x in spikeList]
+
+            # logger.info('xxx')
+            # print('spikeList:', spikeList)
+            # print('_sweepSpikeList:', _sweepSpikeList)
+
             xPlot, yPlot = self.ba.getStat('peakSec', 'peakVal', sweepNumber=self.sweepNumber)
             xPlot = np.array(xPlot)
             yPlot = np.array(yPlot)
-            x = xPlot[spikeList]
-            y = yPlot[spikeList]
+            #try:
+            if 1:
+                x = xPlot[_sweepSpikeList]
+                y = yPlot[_sweepSpikeList]
+            # except (IndexError) as e:
+            #     # TODO: Cludge to handle spike selection (in a plugin) but we are not looking at that sweep
+            #     # see selectSpike()
+            #     # sweepSpikeNumber = self.ba.getSweepSpikeFromAbsolute(spikeNumber, sweep)
+            #     logger.warning(f'  We are not looking at the correct sweep, self.sweepNumber:{self.sweepNumber}')
+            #     return
 
         self._selectedSpikeList = spikeList
 
@@ -1162,6 +1226,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.signalDetect.emit(self.ba)  # underlying _abf has new rect
 
     def _buildUI(self):
+        self.mySetTheme(doReplot=False)
+
         # left is toolbar, right is PYQtGraph (self.view)
         self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
         self.myHBoxLayout_detect.setAlignment(QtCore.Qt.AlignTop)
@@ -1511,14 +1577,14 @@ class bDetectionWidget(QtWidgets.QWidget):
         #         self.detectToolbarWidget.show()
 
         # if text == 'a':
-        if key in [QtCore.Qt.Key_A, QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return]:
+        if key in [QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return]:
             #self.detectToolbarWidget.keyPressEvent(event)
             self.setAxisFull()
 
-        if key == QtCore.Qt.Key.Key_Escape:
+        elif key == QtCore.Qt.Key.Key_Escape:
             self.myMainWindow.mySignal('cancel all selections')
 
-        if key == QtCore.Qt.Key_C:
+        elif key == QtCore.Qt.Key_C:
             self.setSpikeStat()
 
     def slot_selectSweep(self, sweep : int):
@@ -1534,7 +1600,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         doZoom = sDict['doZoom']
         
         # march 11, 2023 was this
-        #self.selectSpike(spikeNumber, doZoom=doZoom)
+        # this will set the correct sweep
+        self.selectSpike(spikeNumber, doZoom=doZoom)
 
         if spikeNumber is None:
             spikeList = []
@@ -1608,11 +1675,11 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.selectSpike(None)
 
         # set sweep to 0
-        self.selectSweep(0, startSec, stopSec, doEmit=False) # calls self._replot()
+        self.selectSweep(0, startSec, stopSec, doEmit=False, doReplot=False) 
 
         # set full axis
         # abb 20220615
-        self.setAxisFull()
+        #self.setAxisFull()
 
         # abb implement sweep, move to function()
         #abb 20220615
@@ -1646,7 +1713,15 @@ class bDetectionWidget(QtWidgets.QWidget):
         #self.refreshClips(None, None)
 
     def _replot(self, startSec, stopSec, userUpdate=False):
+        """Full replot.
         
+        Parameters
+        ----------
+        startSec : float or None
+        stopSec : float or None
+        userUpdate : bool
+            Depreciated, not used
+        """
         logger.info(f'startSec:{startSec} stopSec:{stopSec} userUpdate:{userUpdate}')
         
         if startSec is None or stopSec is None:
@@ -1672,6 +1747,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         #self.dvdtLines = MultiLine(self.ba.abf.sweepX, self.ba.deriv,
         #                    self, type='dvdt')
 
+        if self.ba is None:
+            return
+        
         # shared by all plot
         sweepX = self.ba.fileLoader.sweepX
         filteredDeriv = self.ba.fileLoader.filteredDeriv  # dec 2022, check if exists
@@ -1859,7 +1937,13 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
     def shape(self):
         # override because QGraphicsPathItem.shape is too expensive.
         #print(time.time(), 'MultiLine.shape()', pg.QtGui.QGraphicsItem.shape(self))
-        return pg.QtGui.QGraphicsItem.shape(self)
+        
+        # removed mar 26 2023
+        # gives error in pyqtgraph-0.13.2
+        # return pg.QtGui.QGraphicsItem.shape(self)
+        
+        # now this
+        return super().shape()
 
     def boundingRect(self):
         #print(time.time(), 'MultiLine.boundingRect()', self.path.boundingRect())
@@ -2301,9 +2385,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # mar 11
         elif panelName == 'Set Spikes':
             if onoff:
-                self.setSpineGroupBox.show()
+                self.setSpikeGroupBox.show()
             else:
-                self.setSpineGroupBox.hide()
+                self.setSpikeGroupBox.hide()
 
         else:
             logger.warning(f'did not understand panelName "{panelName}"')
@@ -2570,17 +2654,17 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # mar 11 set spike group box
         #
         # set spike group
-        self.setSpineGroupBox = QtWidgets.QGroupBox('Set Spikes')
-        setSpineLayout = QtWidgets.QHBoxLayout()
+        self.setSpikeGroupBox = QtWidgets.QGroupBox('Set Spikes')
+        setSpikeLayout = QtWidgets.QHBoxLayout()
 
-        # mar 11, created a setspinestat plugin
-        setSpineStatWidget = \
-            sanpy.interface.plugins.SetSpineStat(ba=self.detectionWidget.ba,
+        # mar 11, created a setSpikestat plugin
+        setSpikeStatWidget = \
+            sanpy.interface.plugins.SetSpikeStat(ba=self.detectionWidget.ba,
                                                  bPlugin=self.detectionWidget.myMainWindow.myPlugins)
-        setSpineLayout.addWidget(setSpineStatWidget)
+        setSpikeLayout.addWidget(setSpikeStatWidget)
 
-        self.setSpineGroupBox.setLayout(setSpineLayout)
-        self.mainLayout.addWidget(self.setSpineGroupBox)
+        self.setSpikeGroupBox.setLayout(setSpikeLayout)
+        self.mainLayout.addWidget(self.setSpikeGroupBox)
 
         #
         # plots  group
@@ -2687,8 +2771,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         """Build interface to go to spike number, previous <<, and next >>"""
         hBoxSpikeBrowser = QtWidgets.QHBoxLayout()
 
-        aLabel = QtWidgets.QLabel('Spike')
-        hBoxSpikeBrowser.addWidget(aLabel)
+        # aLabel = QtWidgets.QLabel('Spike')
+        # hBoxSpikeBrowser.addWidget(aLabel)
 
         # absolute spike number
         self.spikeNumber = QtWidgets.QSpinBox()
@@ -2815,7 +2899,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         # populate sweep combo box
         self.sweepComboBox.clear()
-        self.sweepComboBox.addItem('All')
+        #self.sweepComboBox.addItem('All')
         for sweep in range(self.detectionWidget.ba.fileLoader.numSweeps):
             self.sweepComboBox.addItem(str(sweep))
         # always select sweep 0

@@ -164,6 +164,7 @@ class spikeClips(sanpyPlugin):
         # pyqt graph
         self.view = pg.GraphicsLayoutWidget()
         self.clipPlot = self.view.addPlot(row=0, col=0)
+        
         self.clipPlot.enableAutoRange()
 
         #self.clipPlot.hideButtons()
@@ -263,6 +264,9 @@ class spikeClips(sanpyPlugin):
 
         # always remove existing
         self.clipPlot.clear()
+        
+        #self.clipPlot.enableAutoRange()
+
         self.variancePlot.clear()
 
         if self.ba is None or self.ba.numSpikes == 0:
@@ -362,7 +366,9 @@ class spikeClips(sanpyPlugin):
             if doColor:
                 currentStep = tmpLinSpace[i]
                 forcePenColor = tmpColors[currentStep]
-
+            else:
+                forcePenColor = self.getPenColor()
+                
             xPlot = xTmp[i,:]
             yPlot = yTmp[i,:]
             tmpClipLines = MultiLine(xPlot, yPlot, self, allowXAxisDrag=False, forcePenColor=forcePenColor, type='clip')
@@ -400,6 +406,9 @@ class spikeClips(sanpyPlugin):
             yLabel = 'd/dt'
         self.clipPlot.getAxis('left').setLabel(yLabel)
         self.clipPlot.getAxis('bottom').setLabel(xLabel)
+
+        # mar 27 2023
+        self.clipPlot.autoRange()  # 20230327
 
         #
         # store so we can export
@@ -476,8 +485,7 @@ class spikeClips(sanpyPlugin):
             self.clipPlot.addItem(self.singleSpikeMultiLine)
 
     def selectSpikeList(self):
-        """
-        Select spikes based on self.getSelectedSpikes().
+        """Select spikes based on self.getSelectedSpikes().
 
         sDict (dict): NOT USED
         """
@@ -540,11 +548,8 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
         #pg.QtGui.QGraphicsPathItem.__init__(self, self.path)
         super().__init__(self.path)
 
-        doDarkTheme = True
         if forcePenColor is not None:
             penColor = forcePenColor
-        elif doDarkTheme:
-            penColor = 'w'
         else:
             penColor = 'k'
         #
@@ -569,7 +574,9 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
     def shape(self):
         # override because QGraphicsPathItem.shape is too expensive.
         #print(time.time(), 'MultiLine.shape()', pg.QtGui.QGraphicsItem.shape(self))
-        return pg.QtGui.QGraphicsItem.shape(self)
+        #return pg.QtGui.QGraphicsItem.shape(self)
+        # now this
+        return super().shape()
 
     def boundingRect(self):
         #print(time.time(), 'MultiLine.boundingRect()', self.path.boundingRect())

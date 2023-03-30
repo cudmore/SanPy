@@ -29,12 +29,14 @@ class exportTrace(sanpyPlugin):
         self.plot()
 
     def replot(self):
-        logger.info('')
+        logger.info(f'sweepNumber: {self.sweepNumber}')
 
         if self.mainWidget is None:
             self.plot()
 
-        self.mainWidget.switchFile(self.ba)
+        x = self.getSweep('x')  # get for current sweep
+        y = self.getSweep('y')
+        self.mainWidget.switchFile(self.ba, x, y)
         
     def plot(self):
         if self.ba is None:
@@ -71,6 +73,9 @@ class exportTrace(sanpyPlugin):
         else:
             xMargin = 2
 
+        # a large x margin was causing matplotlib erors when a swep was short, like 0.2 sec
+        xMargin = 0
+        
         tmpLayout = QtWidgets.QVBoxLayout()
 
         self.mainWidget = sanpy.interface.bExportWidget(x, y,

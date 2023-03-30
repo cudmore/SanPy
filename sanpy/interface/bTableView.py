@@ -96,12 +96,17 @@ class bTableView(QtWidgets.QTableView):
 
         self.setSortingEnabled(True)
 
-        self.setFont(QtGui.QFont('Arial', 10))
+        self.setAlternatingRowColors(True)
+        
+        #TODO: add font size to options
+        """
+        _fonSize = 10
+        self.setFont(QtGui.QFont('Arial', _fonSize))
         self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
                             QtWidgets.QSizePolicy.Expanding)
         self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
-        # only allow one row to be selected
-        # should ignore shift+click
+        
+        # only allow one row to be selected, should ignore shift+click
         self.setSelectionMode(QtWidgets.QTableView.SingleSelection)
 
 
@@ -110,13 +115,14 @@ class bTableView(QtWidgets.QTableView):
 
         self.horizontalHeader().setStretchLastSection(True)
 
-        rowHeight = 11
+        rowHeight = _fonSize + 1
         fnt = self.font()
         fnt.setPointSize(rowHeight)
 
         self.setFont(fnt)
         self.verticalHeader().setDefaultSectionSize(rowHeight)
-
+        """
+        
         # todo: minimize all column widths
         #for col in range(showNumCol):
         #    self.frozenTableView.setColumnWidth(col, self.columnWidth(col))
@@ -131,19 +137,19 @@ class bTableView(QtWidgets.QTableView):
         # original was this
         # active background-color: #346792;
         # !active background-color: #37414F;
-        qss = """
-            QTableView::item:selected:active {
-                background-color: #346792;
-            }
+        # removed for manuscript 2023
+        # qss = """
+        #     QTableView::item:selected:active {
+        #         background-color: #346792;
+        #     }
 
-            QTableView::item:selected:!active {
-                color: #E0E1E3;
-                background-color: #346792;
-            }
-            """
+        #     QTableView::item:selected:!active {
+        #         color: #E0E1E3;
+        #         background-color: #346792;
+        #     }
+        #     """
         # this almost works but header becomes white???
-        self.setStyleSheet(qss)
-        #self.frozenTableView.setStyleSheet(qss)
+        #self.setStyleSheet(qss)
 
     # def dragEnterEvent(self, event):
     #     logger.info('')
@@ -318,10 +324,10 @@ class bTableView(QtWidgets.QTableView):
     '''
 
     def contextMenuEvent(self, event):
-        """
-        handle right mouse click
+        """hHandle right mouse click
         """
         contextMenu = QtWidgets.QMenu(self)
+
         #
         unloadData = contextMenu.addAction("Unload Data")
 
@@ -331,18 +337,19 @@ class bTableView(QtWidgets.QTableView):
         # contextMenu.addSeparator()
         # duplicateRow = contextMenu.addAction("Duplicate Row")
         contextMenu.addSeparator()
-        deleteRow = contextMenu.addAction("Delete Row")
-        contextMenu.addSeparator()
+        # deleteRow = contextMenu.addAction("Delete Row")
+        # contextMenu.addSeparator()
         findNewFiles = contextMenu.addAction("Sync With Folder")
         contextMenu.addSeparator()
         saveAllAnalysis = contextMenu.addAction("Save All Analysis")
         contextMenu.addSeparator()
         copyTable = contextMenu.addAction("Copy Table")
-        contextMenu.addSeparator()
-        saNodeParams = contextMenu.addAction('SA Node Params')
-        ventricularParams = contextMenu.addAction('Ventricular Params')
-        neuronParams = contextMenu.addAction('Neuron Params')
-        subthresholdParams = contextMenu.addAction('Subthreshold Params')
+
+        # contextMenu.addSeparator()
+        # saNodeParams = contextMenu.addAction('SA Node Params')
+        # ventricularParams = contextMenu.addAction('Ventricular Params')
+        # neuronParams = contextMenu.addAction('Neuron Params')
+        # subthresholdParams = contextMenu.addAction('Subthreshold Params')
 
         #
         action = contextMenu.exec_(self.mapToGlobal(event.pos()))
@@ -370,9 +377,10 @@ class bTableView(QtWidgets.QTableView):
         #     #self.signalDuplicateRow.emit(selectedRow) # not in sort order
         #     self.model().myDuplicateRow(selectedRow)
 
-        elif action == deleteRow:
-            #self.signalDeleteRow.emit(selectedRow)
-            self.model().myDeleteRow(selectedRow)
+        # elif action == deleteRow:
+        #     #self.signalDeleteRow.emit(selectedRow)
+        #     self.model().myDeleteRow(selectedRow)
+
         elif action == copyTable:
             #self.signalCopyTable.emit()
             self.model().myCopyTable()
@@ -382,12 +390,16 @@ class bTableView(QtWidgets.QTableView):
         elif action == saveAllAnalysis:
             #self.signalSaveFileTable.emit()
             self.model().mySave()
-        elif action in [saNodeParams, ventricularParams, neuronParams, subthresholdParams]:
-            #print(action, action.text())
-            if selectedRow is not None:
-                self.signalSetDefaultDetection.emit(selectedRow, action.text())
+
+        # not sure what this was supposed to do
+        # elif action in [saNodeParams, ventricularParams, neuronParams, subthresholdParams]:
+        #     #print(action, action.text())
+        #     if selectedRow is not None:
+        #         self.signalSetDefaultDetection.emit(selectedRow, action.text())
+
         elif action is not None:
             logger.warning(f'Action not taken "{action.text()}"')
+
         else:
             # user did not select action
             pass
@@ -483,8 +495,8 @@ def test():
     import sys
     app = QtWidgets.QApplication([])
     
-    import qdarkstyle
-    app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
+    # import qdarkstyle
+    # app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
 
     path = 'data'  # assuming we are run from SanPy repo
     ad = sanpy.analysisDir(path)

@@ -66,7 +66,7 @@ Display a table of all per-spike analysis results, one row per spike. User can c
 
 <IMG SRC="../img/plugins/summary-spikes.png" width=700>
 
-## Error Summary
+## Summary Error
 
 Display per-spike detection errors. Clicking on an error in the table will highlight the spike in the main interface.
 
@@ -86,6 +86,6 @@ A plugin to generate stimuli and save them as csv or Axon Text Files (ATF). Opti
 
 ## Sanpy Log
 
-Display the SanPy log. As a user interacts with SanPY, most actions are logged to a file. This is useful for debugging and communicating with developers :)
+Display the SanPy log. As a user interacts with SanPy, most actions are logged to a file. This is useful for debugging and communicating with developers :)
 
 <IMG SRC="../img/plugins/sanpy-log.png" width=700>

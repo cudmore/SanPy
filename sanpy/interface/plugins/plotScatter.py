@@ -32,8 +32,8 @@ class plotScatter(sanpyPlugin):
         super().__init__(**kwargs)
 
         self.plotChasePlot = False # i vs i-1
-        self.plotColorTime = False
-        #self.plotColorType = True  # Plot userType1, userType2, userType3
+        #self.plotColorTime = False
+        self._hue = 'None'
         #self.plotIsBad= True
         self.plotHistograms = True
 
@@ -45,7 +45,7 @@ class plotScatter(sanpyPlugin):
 
         self.xData = []
         self.yData = []
-        self.xAxisSpikeNumber = []  # We need to keep track of this for 'Chase Plot'
+        #self.xAxisSpikeNumber = []  # We need to keep track of this for 'Chase Plot'
 
         # main layout
         hLayout = QtWidgets.QHBoxLayout()
@@ -68,10 +68,18 @@ class plotScatter(sanpyPlugin):
         hLayout2.addWidget(self.b2)
 
         #
-        self.colorTime = QtWidgets.QCheckBox("Color Time")
-        self.colorTime.setChecked(self.plotColorTime)
-        self.colorTime.stateChanged.connect(lambda:self.btnstate(self.colorTime))
-        hLayout2.addWidget(self.colorTime)
+        # self.colorTime = QtWidgets.QCheckBox("Color Time")
+        # self.colorTime.setChecked(self.plotColorTime)
+        # self.colorTime.stateChanged.connect(lambda:self.btnstate(self.colorTime))
+        # hLayout2.addWidget(self.colorTime)
+
+        aLabel = QtWidgets.QLabel('Hue')
+        hLayout2.addWidget(aLabel)
+        aComboBox = QtWidgets.QComboBox()
+        _items = ['None', 'Time', 'Sweep']
+        aComboBox.addItems(_items)
+        aComboBox.currentTextChanged.connect(self.on_select_hue)
+        hLayout2.addWidget(aComboBox)
 
         #
         '''
@@ -121,7 +129,12 @@ class plotScatter(sanpyPlugin):
         #
         # create a mpl plot (self._static_ax, self.static_canvas)
         #self.mplWindow2()
-        plt.style.use('dark_background')
+        # plt.style.use('dark_background')
+        if self.darkTheme:
+            plt.style.use('dark_background')
+        else:
+            plt.rcParams.update(plt.rcParamsDefault)
+            
         # this is dangerous, collides with self.mplWindow()
         self.fig = mpl.figure.Figure()
         self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
@@ -230,7 +243,7 @@ class plotScatter(sanpyPlugin):
         self.myHighlighter = Highlighter(self, self.axScatter, [], [])
 
         #
-        # we wil always have axScatter
+        # we will always have axScatter
         #
         # make initial empty scatter plot
         self.cmap = mpl.pyplot.cm.coolwarm.copy()
@@ -308,10 +321,11 @@ class plotScatter(sanpyPlugin):
             self.plotChasePlot = state
             logger.info(f'plotChasePlot:{self.plotChasePlot}')
             self.replot()
-        elif b.text() == 'Color Time':
-            self.plotColorTime = state
-            logger.info(f'plotColorTime:{self.plotColorTime}')
-            self.replot()
+        # elif b.text() == 'Color Time':
+        #     self.plotColorTime = state
+        #     logger.info(f'plotColorTime:{self.plotColorTime}')
+        #     self.replot()
+
         #elif b.text() == 'Color Type':
         #    self.plotColorType = state
         #    logger.info(f'plotColorType:{self.plotColorType}')
@@ -327,6 +341,10 @@ class plotScatter(sanpyPlugin):
             self.replot()
         else:
             logger.warning(f'Did not respond to button "{b.text()}"')
+
+    def on_select_hue(self, hue : str):
+        self._hue = hue
+        self.replot()
 
     def setAxis(self):
         """Inherited, respond to user setting x-axis.
@@ -351,7 +369,7 @@ class plotScatter(sanpyPlugin):
         """Replot when file or analysis changes.
         """
 
-        logger.info('')
+        logger.info(f'sweepNumber:{self.sweepNumber} epochNumber:{self.epochNumber}')
         
         # get from stat lists
         xHumanStat, xStat = self.xPlotWidget.getCurrentStat()
@@ -387,12 +405,12 @@ class plotScatter(sanpyPlugin):
         self.xStatHumanName = xHumanStat
         self.yStatHumanName = yHumanStat
 
-        # keep track of x-axis spike number (for chase plot)
-        xAxisSpikeNumber = self.getStat('spikeNumber')
-        xAxisSpikeNumber = np.array(xAxisSpikeNumber)
-
         # need to mask color and marker
         if self.plotChasePlot:
+            # keep track of x-axis spike number (for chase plot)
+            xAxisSpikeNumber = self.getStat('spikeNumber')
+            xAxisSpikeNumber = np.array(xAxisSpikeNumber)
+
             # on selection, ind will refer to y-axis spike
             xData = xData[1:-1] # x is the reference spike for marking (bad, type)
             yData = yData[0:-2]
@@ -402,7 +420,7 @@ class plotScatter(sanpyPlugin):
 
         self.xData = xData
         self.yData = yData
-        self.xAxisSpikeNumber = xAxisSpikeNumber
+        #self.xAxisSpikeNumber = xAxisSpikeNumber
 
         # data
         data = np.stack([xData, yData], axis=1)
@@ -410,11 +428,19 @@ class plotScatter(sanpyPlugin):
 
         #
         # color
-        if self.plotColorTime:
+        if self._hue == 'Time':
             tmpColor = np.array(range(len(xData)))
             self.lines.set_array(tmpColor)  # set_array is for a color map
             self.lines.set_cmap(self.cmap)  # mpl.pyplot.cm.coolwarm
             self.lines.set_color(None)
+        elif self._hue == 'Sweep':
+            # color sweeps
+            _sweeps = self.getStat('sweep')
+            tmpColor = np.array(range(len(_sweeps)))
+            self.lines.set_array(tmpColor)  # set_array is for a color map
+            self.lines.set_cmap(self.cmap)  # mpl.pyplot.cm.coolwarm
+            self.lines.set_color(None)
+
         else:
             #tmpColor = np.array(range(len(xData)))
             # assuming self.cmap.set_under("white")
@@ -452,6 +478,7 @@ class plotScatter(sanpyPlugin):
                 userTypeList = userTypeList[0:-2]
 
             tmpColors = [color_dict['bad']] * len(xData) # start as all good
+            
             # user types will use symbols
             #tmpColors = [color_dict['type'+num2str(x)] if x>0 else tmpColors[idx] for idx,x in enumerate(userTypeList)]
             # bad needs to trump user type !!!
@@ -574,7 +601,7 @@ class plotScatter(sanpyPlugin):
     def selectSpikeList(self):
         """
         """
-        logger.info('')
+        logger.info(f'{self._myClassName()}')
         
         if self.xStatName is None or self.yStatName is None:
             return
@@ -589,8 +616,19 @@ class plotScatter(sanpyPlugin):
             xData = []
             yData = []
 
-        logger.info(f'!!! SET DATA {xData} {yData}')
+        # logger.info(f'!!! SET DATA {xData} {yData}')
         self.spikeListSel.set_data(xData, yData)
+
+        # update a little info about first spike
+        _str = ''
+        if len(spikeList) > 0:
+            firstSpike = spikeList[0]
+            _oneDict = self.ba.getOneSpikeDict(firstSpike)
+            _str += f"Spike Number {_oneDict['spikeNumber']}"
+            _str += f" Sweep {_oneDict['sweep']}"
+            _str += f" Epoch {_oneDict['epoch']}"
+
+        self.spikeNumberLabel.setText(f'Spike: {_str}')
 
         self.static_canvas.draw()
         # was this
@@ -870,7 +908,10 @@ class Highlighter(object):
         self._parentPlot = parentPlot
         self.ax = ax
         self.canvas = ax.figure.canvas
-        self.x, self.y = x, y
+        
+        self.setData(x, y)
+        # self.x = x
+        # self.y = y
 
         # mask will be set in self.setData
         if x and y:

@@ -7,6 +7,7 @@ logger = get_logger(__name__)
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
+from sanpy.interface.plugins import ResponseType
 
 class resultsTable(sanpyPlugin):
     """Plugin to display summary of all spikes, one spike per row.
@@ -19,6 +20,9 @@ class resultsTable(sanpyPlugin):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+        self.toggleResponseOptions(ResponseType.setSweep, False)  # we plot all sweeps
+        self.toggleResponseOptions(ResponseType.setAxis, False)
 
         #self.pyqtWindow() # makes self.mainWidget
 

@@ -24,6 +24,7 @@ class bPlugins():
         - folder, <user>/sanpy_plugins
     """
     def __init__(self, sanpyApp : Optional["sanpy.interface.SanPyWindow"] = None):
+        
         self._sanpyApp = sanpyApp
 
         self.userPluginFolder : str = sanpy._util._getUserPluginFolder()
@@ -158,6 +159,8 @@ class bPlugins():
         else:
             humanName = self.pluginDict[pluginName]['constructor'].myHumanName
 
+            ltwhTuple = None
+            
             # get the visible x-axis from main app
             startStop = None
             app = self.getSanPyApp()
@@ -169,10 +172,21 @@ class bPlugins():
                 else:
                     startStop = [startSec, stopSec]
 
+                # has keys for (l, t, w, h)
+                _pluginDict = app.getOptions().preferencesGet('pluginPanels', humanName)
+                # ltwhTuple = None
+                # if _pluginDict is not None:
+                #     ltwhTuple = tuple(
+                #         _pluginDict['l'],
+                #         _pluginDict['t'],
+                #         _pluginDict['w'],
+                #         _pluginDict['h'],
+                #     )
             logger.info(f'Running plugin:')
             logger.info(f'  pluginName:{pluginName}')
             logger.info(f'  humanName:{humanName}')
             logger.info(f'  startStop:{startStop}')
+            logger.info(f'  _pluginDict:{_pluginDict}')
             logger.info(f'  TODO: put try except back in !!!')
             # TODO: to open PyQt windows, we need to keep a local (persistent) variable
             #try:
@@ -182,7 +196,14 @@ class bPlugins():
                     self.pluginDict[pluginName]['constructor'](ba=ba, bPlugin=self, startStop=startStop)
                 #print(2)
                 if not newPlugin.getInitError() and show:
+                    if _pluginDict is not None:
+                        newPlugin.setGeometry(_pluginDict['l'],
+                                            _pluginDict['t'],
+                                            _pluginDict['w'],
+                                            _pluginDict['h'])
                     newPlugin.getWidget().show()
+                    newPlugin.getWidget().raise_()  # bring to front, raise is a python keyword
+                    newPlugin.getWidget().activateWindow()  # bring to front
 
                 # add the plugin to open next time we run
                 
@@ -256,6 +277,11 @@ class bPlugins():
             # Critical to detatch signal/slot, removing from set does not seem to do this?
             pluginObj._disconnectSignalSlot()
             self._openSet.remove(pluginObj)
+
+            # remove from preferences
+            if pluginObj is not None and self.getSanPyApp() is not None:
+                self.getSanPyApp().configDict.removePlugin(pluginObj.getHumanName())
+
         except (KeyError) as e:
             logger.exception(e)
 
