@@ -57,10 +57,11 @@ setup(
             'jupyter',
             'pooch'  # what is this for?
         ],
+        #"test": ["pytest", "pytest-cov", "scikit-image", "pooch"],
         'test': [
             'pytest',
             'pytest-cov',
-            'pytest-qt',
+            #'pytest-qt',
             'flake8',
         ]
     },
