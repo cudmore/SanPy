@@ -26,7 +26,8 @@ jobs:
         pip install '.[test]'
     - name: Run tests
       run: |
-        pytest
+        # we are not testing the PyQt interface on GitHub, it kept running out of memory ???
+        pytest --cov=./tests --cov-report=xml --ignore=./tests/interface ./tests
   deploy:
     runs-on: ubuntu-latest
     needs: [test]
