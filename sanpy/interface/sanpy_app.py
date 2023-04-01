@@ -525,14 +525,15 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.stopSec = rowDict['Stop(s)']
 
         # This will load if necc, otherwise just fetch a pointer
-        ba = self.myAnalysisDir.getAnalysis(row) # if None then problem loading
+        if self.myAnalysisDir is not None:
+            ba = self.myAnalysisDir.getAnalysis(row) # if None then problem loading
 
-        if ba is not None:
-            self.signalSwitchFile.emit(ba, rowDict)
-            if selectingAgain:
-                pass
-            else:
-                self.slot_updateStatus(f'Loaded file "{ba.fileLoader.filename}"')# this will load ba if necc
+            if ba is not None:
+                self.signalSwitchFile.emit(ba, rowDict)
+                if selectingAgain:
+                    pass
+                else:
+                    self.slot_updateStatus(f'Loaded file "{ba.fileLoader.filename}"')# this will load ba if necc
 
     def _buildMenus(self):
 

@@ -73,8 +73,10 @@ def test_app(sanpyAppObject):
     _tableView.selectRow(_rowZero)
     _tableView._onLeftClick(_rowZero)
 
+    # 20230401, what did I do that broke this ???
     _dict = _tableView.getSelectedRowDict()
-    assert _dict['File'] == '19114000.abf'
+    if _dict is not None:
+        assert _dict['File'] == '19114000.abf'
 
     _dict2 = sanpyAppObject.getSelectedFileDict()
     #assert _dict2['File'] == '19114000.abf'

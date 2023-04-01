@@ -45,6 +45,9 @@ class exampleUserPlugin1(sanpyPlugin):
         
         logger.info('')
         
+        if self.ba is None:
+            return
+        
         # get the x/y values from the recording
         sweepX = self.getSweep('x')  # self.ba.sweepX(sweepNumber=self.sweepNumber)
         sweepY = self.getSweep('y')  # self.ba.sweepY(sweepNumber=self.sweepNumber)

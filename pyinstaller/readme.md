@@ -71,7 +71,100 @@ I first run the app from the macOS app folder (use 'show package contents'). Thi
 
 If the app in general fails to run, you need to figure out how to run it and be able to see the console logging output on Windows.
 
+## Using create-dmg
 
+Got this working but when I put it in a GitHub Release and then download the dmg, I get
+
+```
+... is damaged and can't be opened. You should move it to the Trash.
+```
+
+I can easily fix this with the following ... but the whole point of making an app or a dmg was so the end user would not have to use the command line. Uggghhhh.
+
+```
+xattr -cr /Applications/SanPy-Monterey.app
+```
+
+Monterey is macOS 12.4
+
+Need to use codesign, how to pay to become a macOS developer?
+
+https://github.com/create-dmg/create-dmg
+
+General usage is
+
+```
+create-dmg [options ...] <output_name.dmg> <source_folder>
+```
+
+See my script that seems to work `build-dmg.sh`
+
+See a tutorial here:
+    https://www.pythonguis.com/tutorials/packaging-pyqt5-applications-pyinstaller-macos-dmg/
+
+
+Still is corrupt after putting up on GitHub release?
+
+## How do we codesign or notarize an app and a dmg ???
+
+Briefcase has a pretty good recipe on codesign
+
+https://briefcase.readthedocs.io/en/stable/how-to/code-signing/macOS.html
+
+
+### Test the dmg
+
+```
+(base) cudmore pyinstaller:spctl -a -vvv /Users/cudmore/Sites/SanPy/pyinstaller/dist/SanPy-Monterey.dmg
+
+/Users/cudmore/Sites/SanPy/pyinstaller/dist/SanPy-Monterey.dmg: rejected
+source=no usable signature
+```
+
+Test the app installed from the dmg
+
+```
+(base) cudmore pyinstaller:spctl -a -v /Applications/SanPy-Monterey.app
+/Applications/SanPy-Monterey.app: code has no resources but signature indicates they must be present
+```
+
+```
+(base) cudmore pyinstaller:spctl -a -t open --context context:primary-signature -v /Users/cudmore/Sites/SanPy/pyinstaller/dist/SanPy-Monterey.dmg
+
+/Users/cudmore/Sites/SanPy/pyinstaller/dist/SanPy-Monterey.dmg: rejected
+source=no usable signature
+```
+
+```
+spctl -a -t open --context context:primary-signature -v /Users/cudmore/Sites/SanPy/pyinstaller/dist/SanPy-Monterey.dmg
+
+# yields
+/Users/cudmore/Sites/SanPy/pyinstaller/dist/SanPy-Monterey.dmg: rejected
+source=no usable signature
+```
+
+## Trying to use codesign
+
+```
+codesign -f -o runtime --timestamp -s "robert.cudmore@gmail.com: Robert Cudmore" /Applications/SanPy-Monterey.app
+```
+
+```
+codesign -dv -r- /Applications/SanPy-Monterey.app
+
+# gives
+(base) cudmore pyinstaller:codesign -dv -r- /Applications/SanPy-Monterey.app
+
+Executable=/Applications/SanPy-Monterey.app/Contents/MacOS/SanPy-Monterey
+Identifier=SanPy-Monterey-555549441f738c84b5623e6891857c4a489d2a4f
+Format=app bundle with Mach-O thin (x86_64)
+CodeDirectory v=20400 size=115024 flags=0x2(adhoc) hashes=3588+2 location=embedded
+Signature=adhoc
+Info.plist=not bound
+TeamIdentifier=not set
+Sealed Resources=none
+# designated => cdhash H"35dd62ef6d0dcc8411bcf7ba2d4af88c7d310db0"
+```
 
 ## 20230316
 

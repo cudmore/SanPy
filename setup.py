@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
-VERSION = "0.1.5"
+VERSION = "0.1.6"
 
 setup(
-    name='sanpy',
+    name='sanpy-ephys',  # thepackage name (on PyPi), still use 'import sanpy'
     version=VERSION,
     description='Whole cell current clamp analysis.',
     url='http://github.com/cudmore/SanPy',

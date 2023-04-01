@@ -164,6 +164,7 @@ class bPlugins():
             # get the visible x-axis from main app
             startStop = None
             app = self.getSanPyApp()
+            _pluginDict = None
             if app is not None:
                 startSec = app.startSec
                 stopSec = app.stopSec
@@ -186,7 +187,8 @@ class bPlugins():
             logger.info(f'  pluginName:{pluginName}')
             logger.info(f'  humanName:{humanName}')
             logger.info(f'  startStop:{startStop}')
-            logger.info(f'  _pluginDict:{_pluginDict}')
+            if _pluginDict is not None:
+                logger.info(f'  _pluginDict:{_pluginDict}')
             logger.info(f'  TODO: put try except back in !!!')
             # TODO: to open PyQt windows, we need to keep a local (persistent) variable
             #try:

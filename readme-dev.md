@@ -2,7 +2,7 @@
 
 - [done, satisfactory] Refactor all things having to do with light/dark theme. This is critical as copy paste from the interface cannot be trapped in a dark theme (for printing, manuscripts, etc)
 
-- Finish implementation of setSpikeStat plugin. Make sure it responds to interface changes and actually sets backend data in bAnalysis results.
+- [done]Finish implementation of setSpikeStat plugin. Make sure it responds to interface changes and actually sets backend data in bAnalysis results.
 
 - Update main sanpy app preferences, add mechanism to
 
@@ -18,6 +18,12 @@
 
 - [done] Preferences need to save/load the window position of external plugins.
 
+- Use spike pre clip ms and spike clip post ms to set zoom on a spike in the main sanpy widnow. Currently my zoom is large (for myocytes) but needs to be 10x smaller for neurons.
+
+## Bugs
+
+Selecting spike and setting user type with set spike stat results in incorrect spike symbol bein set in plot scatter widget.
+
 ### TODO minor
 
 - Single spike selection in table plugin (That sets the swep) does not also set the spike
@@ -30,7 +36,10 @@
 
 - Implement class spikeSelection() and have all signal emit and connected slots use it. This will be a list of spikes [int] to select and will provide some utility functions like getting spikes for a sweep, etc.
 
-- Implement class sanpyTablePlugin() and have all table plugins derive from it. Right now the table plugins leave a lot to be desired, in particular with spike selections. They emit single spike selection (not multiple). They are not responding in a slot to spike selection! Need to implement a sort proxy to get the currect row selection (see PyMapManager for an example sort proxy).
+- Implement class sanpyTablePlugin(sanpy.interface.plugins.sanpyPlugin) and have all table plugins derive from it. Right now the table plugins leave a lot to be desired, in particular with spike selections. They emit single spike selection (not multiple). They are not responding in a slot to spike selection! Need to implement a sort proxy to get the currect row selection (see PyMapManager for an example sort proxy).
+
+- Create a preferences panel to set sanpy app preferences. Things like raw plot line width, symbol size, font size.
+
 
 # Random development notes, not really used
 
