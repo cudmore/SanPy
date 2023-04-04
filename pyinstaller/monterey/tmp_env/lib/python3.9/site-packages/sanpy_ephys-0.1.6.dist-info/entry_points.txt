@@ -1,0 +1,2 @@
+[console_scripts]
+sanpy = sanpy.interface.sanpy_app:main

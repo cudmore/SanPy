@@ -1,0 +1,14 @@
+prefix=/Users/runner/work/python-blosc2/python-blosc2/_skbuild/macosx-10.9-x86_64-3.9/cmake-install
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+sharedlibdir=${libdir}
+includedir=${prefix}/include
+
+Name: blosc2
+Description: A blocking, shuffling and lossless compression library
+URL: https://blosc.org/
+Version: 2.6.1
+
+Requires:
+Libs: -L${libdir} -L${sharedlibdir} -lblosc2
+Cflags: -I${includedir}
