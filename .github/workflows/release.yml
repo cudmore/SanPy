@@ -1,0 +1,20 @@
+# create a release when we get a push with a v* tag
+name: Releases
+
+on: 
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v3
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "data/2021_07_20_0010.csv"
+        bodyFile: "CHANGELOG.md"
