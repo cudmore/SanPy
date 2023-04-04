@@ -8,20 +8,22 @@ import pandas as pd
 from PyQt5 import QtCore, QtWidgets
 import pyqtgraph as pg
 
-#from matplotlib.backends import backend_qt5agg
+# from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from sanpy.sanpyLogger import get_logger
+
 logger = get_logger(__name__)
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
+
 class spikeClips(sanpyPlugin):
-    """Plot AP clips.
-    """
-    myHumanName = 'Plot Spike Clips'
+    """Plot AP clips."""
+
+    myHumanName = "Plot Spike Clips"
 
     def __init__(self, **kwargs):
         """
@@ -33,11 +35,11 @@ class spikeClips(sanpyPlugin):
         self.preClipWidth_ms = 100
         self.postClipWidth_ms = 500
         if self.ba is not None and self.ba.isAnalyzed():
-            #self.clipWidth_ms = self.ba.detectionClass['spikeClipWidth_ms']
-            self.preClipWidth_ms = self.ba._detectionDict['preSpikeClipWidth_ms']
-            self.postClipWidth_ms = self.ba._detectionDict['postSpikeClipWidth_ms']
+            # self.clipWidth_ms = self.ba.detectionClass['spikeClipWidth_ms']
+            self.preClipWidth_ms = self.ba._detectionDict["preSpikeClipWidth_ms"]
+            self.postClipWidth_ms = self.ba._detectionDict["postSpikeClipWidth_ms"]
 
-        self.respondTo = 'All' # ('All', 'X-Axis', 'Spike Selection')
+        self.respondTo = "All"  # ('All', 'X-Axis', 'Spike Selection')
 
         # keep track so we can export to clipboard
         self.x = None
@@ -48,8 +50,8 @@ class spikeClips(sanpyPlugin):
         self.xMult = 0.1
         self.yMult = 0.1
 
-        #self.clipLines = None
-        #self.meanClipLine = None
+        # self.clipLines = None
+        # self.meanClipLine = None
         self.singleSpikeMultiLine = None
         self.spikeListMultiLine = None
 
@@ -60,27 +62,27 @@ class spikeClips(sanpyPlugin):
         # controls
         hLayout2 = QtWidgets.QHBoxLayout()
 
-        self.numSpikesLabel = QtWidgets.QLabel('Num Spikes:None')
+        self.numSpikesLabel = QtWidgets.QLabel("Num Spikes:None")
         hLayout2.addWidget(self.numSpikesLabel)
 
-        self.colorCheckBox = QtWidgets.QCheckBox('Color')
+        self.colorCheckBox = QtWidgets.QCheckBox("Color")
         self.colorCheckBox.setChecked(False)
-        self.colorCheckBox.stateChanged.connect(lambda:self.replot())
+        self.colorCheckBox.stateChanged.connect(lambda: self.replot())
         hLayout2.addWidget(self.colorCheckBox)
 
-        self.meanCheckBox = QtWidgets.QCheckBox('Mean Trace (red)')
+        self.meanCheckBox = QtWidgets.QCheckBox("Mean Trace (red)")
         self.meanCheckBox.setChecked(True)
-        self.meanCheckBox.stateChanged.connect(lambda:self.replot())
+        self.meanCheckBox.stateChanged.connect(lambda: self.replot())
         hLayout2.addWidget(self.meanCheckBox)
 
-        self.varianceCheckBox = QtWidgets.QCheckBox('Variance')
+        self.varianceCheckBox = QtWidgets.QCheckBox("Variance")
         self.varianceCheckBox.setChecked(False)
-        self.varianceCheckBox.stateChanged.connect(lambda:self.replot())
+        self.varianceCheckBox.stateChanged.connect(lambda: self.replot())
         hLayout2.addWidget(self.varianceCheckBox)
 
-        self.phasePlotCheckBox = QtWidgets.QCheckBox('Phase')
+        self.phasePlotCheckBox = QtWidgets.QCheckBox("Phase")
         self.phasePlotCheckBox.setChecked(False)
-        self.phasePlotCheckBox.stateChanged.connect(lambda:self.replot())
+        self.phasePlotCheckBox.stateChanged.connect(lambda: self.replot())
         hLayout2.addWidget(self.phasePlotCheckBox)
 
         vLayout.addLayout(hLayout2)
@@ -88,13 +90,13 @@ class spikeClips(sanpyPlugin):
         #
         hLayout2_5 = QtWidgets.QHBoxLayout()
 
-        self.waterfallCheckBox = QtWidgets.QCheckBox('Waterfall')
+        self.waterfallCheckBox = QtWidgets.QCheckBox("Waterfall")
         self.waterfallCheckBox.setChecked(False)
-        self.waterfallCheckBox.stateChanged.connect(lambda:self.replot())
+        self.waterfallCheckBox.stateChanged.connect(lambda: self.replot())
         hLayout2_5.addWidget(self.waterfallCheckBox)
 
         # x mult for waterfall
-        aLabel = QtWidgets.QLabel('X-Offset')
+        aLabel = QtWidgets.QLabel("X-Offset")
         hLayout2_5.addWidget(aLabel)
         self.xMultSpinBox = QtWidgets.QDoubleSpinBox()
         self.xMultSpinBox.setKeyboardTracking(False)
@@ -105,7 +107,7 @@ class spikeClips(sanpyPlugin):
         hLayout2_5.addWidget(self.xMultSpinBox)
 
         # y mult for waterfall
-        aLabel = QtWidgets.QLabel('Y-Offset')
+        aLabel = QtWidgets.QLabel("Y-Offset")
         hLayout2_5.addWidget(aLabel)
         self.yMultSpinBox = QtWidgets.QDoubleSpinBox()
         self.yMultSpinBox.setKeyboardTracking(False)
@@ -120,39 +122,39 @@ class spikeClips(sanpyPlugin):
         #
         hLayout3 = QtWidgets.QHBoxLayout()
 
-        aLabel = QtWidgets.QLabel('Pre (ms)')
+        aLabel = QtWidgets.QLabel("Pre (ms)")
         hLayout3.addWidget(aLabel)
         self.preClipWidthSpinBox = QtWidgets.QSpinBox()
         self.preClipWidthSpinBox.setKeyboardTracking(False)
         self.preClipWidthSpinBox.setRange(1, 2**16)
         self.preClipWidthSpinBox.setValue(self.preClipWidth_ms)
-        #self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
+        # self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
         self.preClipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
         hLayout3.addWidget(self.preClipWidthSpinBox)
 
-        aLabel = QtWidgets.QLabel('Post (ms)')
+        aLabel = QtWidgets.QLabel("Post (ms)")
         hLayout3.addWidget(aLabel)
         self.postClipWidthSpinBox = QtWidgets.QSpinBox()
         self.postClipWidthSpinBox.setKeyboardTracking(False)
         self.postClipWidthSpinBox.setRange(1, 2**16)
         self.postClipWidthSpinBox.setValue(self.postClipWidth_ms)
-        #self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
+        # self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
         self.postClipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
         hLayout3.addWidget(self.postClipWidthSpinBox)
 
         #
         # radio buttons
-        self.respondToAll = QtWidgets.QRadioButton('All')
+        self.respondToAll = QtWidgets.QRadioButton("All")
         self.respondToAll.setChecked(True)
         self.respondToAll.toggled.connect(self.on_radio)
         hLayout3.addWidget(self.respondToAll)
 
-        self.respondToAxisRange = QtWidgets.QRadioButton('X-Axis')
+        self.respondToAxisRange = QtWidgets.QRadioButton("X-Axis")
         self.respondToAxisRange.setChecked(False)
         self.respondToAxisRange.toggled.connect(self.on_radio)
         hLayout3.addWidget(self.respondToAxisRange)
 
-        self.respondToSpikeSel = QtWidgets.QRadioButton('Spike Selection')
+        self.respondToSpikeSel = QtWidgets.QRadioButton("Spike Selection")
         self.respondToSpikeSel.setChecked(False)
         self.respondToSpikeSel.toggled.connect(self.on_radio)
         hLayout3.addWidget(self.respondToSpikeSel)
@@ -164,41 +166,40 @@ class spikeClips(sanpyPlugin):
         # pyqt graph
         self.view = pg.GraphicsLayoutWidget()
         self.clipPlot = self.view.addPlot(row=0, col=0)
-        
+
         self.clipPlot.enableAutoRange()
 
-        #self.clipPlot.hideButtons()
-        #self.clipPlot.setMenuEnabled(False)
-        #self.clipPlot.setMouseEnabled(x=False, y=False)
+        # self.clipPlot.hideButtons()
+        # self.clipPlot.setMenuEnabled(False)
+        # self.clipPlot.setMouseEnabled(x=False, y=False)
 
-        self.clipPlot.getAxis('left').setLabel('mV')
-        self.clipPlot.getAxis('bottom').setLabel('time (ms)')
+        self.clipPlot.getAxis("left").setLabel("mV")
+        self.clipPlot.getAxis("bottom").setLabel("time (ms)")
 
         # kymograph analysis
         self.variancePlot = self.view.addPlot(row=1, col=0)
 
-        vLayout.addWidget(self.view) #, stretch=8)
+        vLayout.addWidget(self.view)  # , stretch=8)
 
         # set the layout of the main window
-        #self.mainWidget.setLayout(vLayout)
-        #self.setLayout(vLayout)
+        # self.mainWidget.setLayout(vLayout)
+        # self.setLayout(vLayout)
         self.getVBoxLayout().addLayout(vLayout)
-        
+
         self.replot()
 
-    def slot_switchFile(self,
-                        ba : sanpy.bAnalysis,
-                        rowDict : Optional[dict] = None,
-                        replot : bool = True):
-        #logger.info('')
-        
+    def slot_switchFile(
+        self, ba: sanpy.bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
+    ):
+        # logger.info('')
+
         # don't replot until we set our detectionClass
         replot = False
         super().slot_switchFile(ba, rowDict, replot=replot)
 
         if self.ba is not None and self.ba.isAnalyzed():
-            self.preClipWidth_ms = self.ba.getDetectionDict()['preSpikeClipWidth_ms']
-            self.postClipWidth_ms = self.ba.getDetectionDict()['postSpikeClipWidth_ms']
+            self.preClipWidth_ms = self.ba.getDetectionDict()["preSpikeClipWidth_ms"]
+            self.postClipWidth_ms = self.ba.getDetectionDict()["postSpikeClipWidth_ms"]
 
         self.replot()
 
@@ -207,26 +208,26 @@ class spikeClips(sanpyPlugin):
         Will receive this callback n times where n is # buttons/checkboxes in group
         Only one callback will have isChecked, all other will be !isChecked
         """
-        #logger.info('')
+        # logger.info('')
         sender = self.sender()
         senderText = sender.text()
         isChecked = sender.isChecked()
 
-        if senderText == 'All' and isChecked:
-            self.respondTo = 'All'
-        elif senderText == 'X-Axis' and isChecked:
-            self.respondTo = 'X-Axis'
-        elif senderText == 'Spike Selection' and isChecked:
-            self.respondTo = 'Spike Selection'
+        if senderText == "All" and isChecked:
+            self.respondTo = "All"
+        elif senderText == "X-Axis" and isChecked:
+            self.respondTo = "X-Axis"
+        elif senderText == "Spike Selection" and isChecked:
+            self.respondTo = "Spike Selection"
             # debug
-            #self.selectedSpikeList = [5, 7, 10]
+            # self.selectedSpikeList = [5, 7, 10]
 
         #
         if isChecked:
             self.replot()
 
     def on_spinbox(self, label):
-        #logger.info('')
+        # logger.info('')
         # grab from interface
         self.preClipWidth_ms = self.preClipWidthSpinBox.value()
         self.postClipWidth_ms = self.postClipWidthSpinBox.value()
@@ -239,11 +240,10 @@ class spikeClips(sanpyPlugin):
         self.replot()
 
     def replot(self):
-        """Replot when analysis changes or file changes
-        """
+        """Replot when analysis changes or file changes"""
         self._myReplotClips()
         #
-        #self.mainWidget.repaint() # update the widget
+        # self.mainWidget.repaint() # update the widget
 
     '''
     def setAxis(self):
@@ -258,14 +258,14 @@ class spikeClips(sanpyPlugin):
         Note: This is the same code as in bDetectionWidget.refreshClips() MERGE THEM.
         """
 
-        #logger.info('')
+        # logger.info('')
 
         isPhasePlot = self.phasePlotCheckBox.isChecked()
 
         # always remove existing
         self.clipPlot.clear()
-        
-        #self.clipPlot.enableAutoRange()
+
+        # self.clipPlot.enableAutoRange()
 
         self.variancePlot.clear()
 
@@ -279,29 +279,32 @@ class spikeClips(sanpyPlugin):
         startSec = None
         stopSec = None
         selectedSpikeList = []
-        if self.respondTo == 'All':
+        if self.respondTo == "All":
             startSec = 0
             stopSec = self.ba.fileLoader.recordingDur
-        elif self.respondTo == 'X-Axis':
+        elif self.respondTo == "X-Axis":
             startSec, stopSec = self.getStartStop()
             if startSec is None or stopSec is None:
                 startSec = 0
                 stopSec = self.ba.fileLoader.recordingDur
-        elif self.respondTo == 'Spike Selection':
+        elif self.respondTo == "Spike Selection":
             selectedSpikeList = self.getSelectedSpikes()
 
-        #print('=== selectedSpikeList:', selectedSpikeList)
+        # print('=== selectedSpikeList:', selectedSpikeList)
 
         # this returns x-axis in ms
         # theseClips is a [list] of clips
         # theseClips_x is in ms
-        theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(startSec, stopSec,
-                                                spikeSelection=selectedSpikeList,
-                                                preSpikeClipWidth_ms=self.preClipWidth_ms,
-                                                postSpikeClipWidth_ms=self.postClipWidth_ms,
-                                                sweepNumber=self.sweepNumber)
+        theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(
+            startSec,
+            stopSec,
+            spikeSelection=selectedSpikeList,
+            preSpikeClipWidth_ms=self.preClipWidth_ms,
+            postSpikeClipWidth_ms=self.postClipWidth_ms,
+            sweepNumber=self.sweepNumber,
+        )
         numClips = len(theseClips)
-        self.numSpikesLabel.setText(f'Num Spikes: {numClips}')
+        self.numSpikesLabel.setText(f"Num Spikes: {numClips}")
 
         if numClips == 0:
             return
@@ -313,19 +316,19 @@ class spikeClips(sanpyPlugin):
 
         if isPhasePlot:
             # plot x mV versus y dV/dt
-            dvdt = np.zeros((yTmp.shape[0], yTmp.shape[1]-1))  #
+            dvdt = np.zeros((yTmp.shape[0], yTmp.shape[1] - 1))  #
             for i in range(dvdt.shape[0]):
-                dvdt[i,:] = np.diff(yTmp[i,:])
+                dvdt[i, :] = np.diff(yTmp[i, :])
                 # drop first pnt in x
 
             #
-            xTmp = yTmp[:, 1:] # drop first column of mV and swap to x-axis
+            xTmp = yTmp[:, 1:]  # drop first column of mV and swap to x-axis
             yTmp = dvdt
-            #print(xTmp.shape, yTmp.shape)
+            # print(xTmp.shape, yTmp.shape)
 
         # for waterfall we need x-axis to have different values for each spike
         if self.waterfallCheckBox.isChecked():
-            #print(xTmp.shape, yTmp.shape)
+            # print(xTmp.shape, yTmp.shape)
             # xTmp and yTmp are 2D with rows/clips and cols/data_pnts
             xMin = np.nanmin(xTmp)
             xMax = np.nanmax(xTmp)
@@ -335,54 +338,72 @@ class spikeClips(sanpyPlugin):
             yRange = yMax - yMin
             xOffset = 0
             yOffset = 0
-            xInc = xRange * self.xMult # ms, xInc is 10% of x-range
+            xInc = xRange * self.xMult  # ms, xInc is 10% of x-range
             yInc = yRange * self.yMult
             for i in range(xTmp.shape[0]):
-                xTmp[i,:] += xOffset
-                yTmp[i,:] += yOffset
-                xOffset += xInc # ms
-                yOffset += yInc # mV
+                xTmp[i, :] += xOffset
+                yTmp[i, :] += yOffset
+                xOffset += xInc  # ms
+                yOffset += yInc  # mV
 
         #
         # original, one multiline for all clips (super fast)
-        #self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type='clip')
+        # self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type='clip')
         #
         # each clip so we can set color
-        #cmap = pg.colormap.get('Greens', source='matplotlib') # prepare a linear color map
+        # cmap = pg.colormap.get('Greens', source='matplotlib') # prepare a linear color map
         numSpikes = xTmp.shape[0]
 
         doColor = self.colorCheckBox.isChecked()
         if doColor:
-            #cmap = pg.colormap.get('CET-L18') # prepare a linear color map
-            cmap = pg.colormap.get('gist_rainbow', source='matplotlib') # prepare a linear color map
-            
+            # cmap = pg.colormap.get('CET-L18') # prepare a linear color map
+            cmap = pg.colormap.get(
+                "gist_rainbow", source="matplotlib"
+            )  # prepare a linear color map
+
             tmpColors = cmap.getColors()
-            tmpLinSpace = np.linspace(0, len(tmpColors), numSpikes, endpoint=False, dtype=np.uint16)
-        #for tmp in tmps:
+            tmpLinSpace = np.linspace(
+                0, len(tmpColors), numSpikes, endpoint=False, dtype=np.uint16
+            )
+        # for tmp in tmps:
         #    print(tmp)
         for i in range(numSpikes):
-            #forcePenColor = cmap.getByIndex(i)  # returns PyQt5.QtGui.QColor
+            # forcePenColor = cmap.getByIndex(i)  # returns PyQt5.QtGui.QColor
             forcePenColor = None
             if doColor:
                 currentStep = tmpLinSpace[i]
                 forcePenColor = tmpColors[currentStep]
             else:
                 forcePenColor = self.getPenColor()
-                
-            xPlot = xTmp[i,:]
-            yPlot = yTmp[i,:]
-            tmpClipLines = MultiLine(xPlot, yPlot, self, allowXAxisDrag=False, forcePenColor=forcePenColor, type='clip')
+
+            xPlot = xTmp[i, :]
+            yPlot = yTmp[i, :]
+            tmpClipLines = MultiLine(
+                xPlot,
+                yPlot,
+                self,
+                allowXAxisDrag=False,
+                forcePenColor=forcePenColor,
+                type="clip",
+            )
             self.clipPlot.addItem(tmpClipLines)
 
         #
         # always calculate mean clip
         # x mean is redundant but works well for waterfall
-        xMeanClip = np.nanmean(xTmp, axis=0) # xTmp is in ms
+        xMeanClip = np.nanmean(xTmp, axis=0)  # xTmp is in ms
         yMeanClip = np.nanmean(yTmp, axis=0)
 
         # plot if checkbox is on
         if self.meanCheckBox.isChecked():
-            tmpMeanClipLine = MultiLine(xMeanClip, yMeanClip, self, width=3, allowXAxisDrag=False, type='meanclip')
+            tmpMeanClipLine = MultiLine(
+                xMeanClip,
+                yMeanClip,
+                self,
+                width=3,
+                allowXAxisDrag=False,
+                type="meanclip",
+            )
             self.clipPlot.addItem(tmpMeanClipLine)
 
         #
@@ -390,31 +411,32 @@ class spikeClips(sanpyPlugin):
             self.variancePlot.hide()
         else:
             self.variancePlot.show()
-            #self.variancePlot.clear()
-            xVarClip = np.nanmean(xTmp, axis=0) # xTmp is in ms
+            # self.variancePlot.clear()
+            xVarClip = np.nanmean(xTmp, axis=0)  # xTmp is in ms
             yVarClip = np.nanvar(yTmp, axis=0)
-            tmpVarClipLine = MultiLine(xVarClip, yVarClip, self, width=3, allowXAxisDrag=False, type='meanclip')
+            tmpVarClipLine = MultiLine(
+                xVarClip, yVarClip, self, width=3, allowXAxisDrag=False, type="meanclip"
+            )
             self.variancePlot.addItem(tmpVarClipLine)
-            self.variancePlot.getAxis('left').setLabel('Variance')
-
+            self.variancePlot.getAxis("left").setLabel("Variance")
 
         # set axis
-        xLabel = 'time (s)'
+        xLabel = "time (s)"
         yLabel = self.ba.fileLoader.get_yUnits()
         if isPhasePlot:
             xLabel = self.ba.fileLoader.get_yUnits()
-            yLabel = 'd/dt'
-        self.clipPlot.getAxis('left').setLabel(yLabel)
-        self.clipPlot.getAxis('bottom').setLabel(xLabel)
+            yLabel = "d/dt"
+        self.clipPlot.getAxis("left").setLabel(yLabel)
+        self.clipPlot.getAxis("bottom").setLabel(xLabel)
 
         # mar 27 2023
         self.clipPlot.autoRange()  # 20230327
 
         #
         # store so we can export
-        #print('  xTmp:', xTmp.shape)
-        #print('  yTmp:', yTmp.shape)
-        #print('  yMeanClip:', yMeanClip.shape)
+        # print('  xTmp:', xTmp.shape)
+        # print('  yTmp:', yTmp.shape)
+        # print('  yMeanClip:', yMeanClip.shape)
         self.x = xTmp  # 1D
         self.y = yTmp  # 2D
         self.yMean = yMeanClip
@@ -425,35 +447,35 @@ class spikeClips(sanpyPlugin):
 
         #
         # replot any selected spikes
-        #self.old_selectSpike()
+        # self.old_selectSpike()
         self.selectSpikeList()
 
     def saveResultsFigure(self):
         super().saveResultsFigure(pgPlot=self.clipPlot)
-        
+
     def copyToClipboard(self):
         """
         Save instead
         Copy to clipboard is not going to work, data is too complex/big
         """
-        
+
         numSpikes = self.y.shape[0]
 
-        columns = ['time(ms)', 'meanClip']
+        columns = ["time(ms)", "meanClip"]
         # iterate through spikes
         for i in range(numSpikes):
-            columns.append(f'clip_{i}')
+            columns.append(f"clip_{i}")
         df = pd.DataFrame(columns=columns)
 
-        #print('self.x:', type(self.x), self.x.shape)
+        # print('self.x:', type(self.x), self.x.shape)
 
-        df['time(ms)'] = self.x[0,:]
-        df['meanClip'] = self.yMean
+        df["time(ms)"] = self.x[0, :]
+        df["meanClip"] = self.yMean
         for i in range(numSpikes):
-            df[f'clip_{i}'] = self.y[i]
+            df[f"clip_{i}"] = self.y[i]
 
         super().copyToClipboard(df=df)
-        
+
     def old_selectSpike(self, sDict=None):
         """
         Leave existing spikes and select one spike with a different color.
@@ -462,7 +484,7 @@ class spikeClips(sanpyPlugin):
         """
 
         if sDict is not None:
-            spikeNumber = sDict['spikeNumber']
+            spikeNumber = sDict["spikeNumber"]
         else:
             spikeNumber = self.selectedSpike
 
@@ -472,7 +494,7 @@ class spikeClips(sanpyPlugin):
             try:
                 x = self.x[spikeNumber]
                 y = self.y[spikeNumber]
-            except (IndexError) as e:
+            except IndexError as e:
                 pass
 
         # TODO: Fix this. Not sure how to recycle single spike selection
@@ -481,7 +503,15 @@ class spikeClips(sanpyPlugin):
             self.clipPlot.removeItem(self.singleSpikeMultiLine)
         if spikeNumber is not None:
             # only add i fwe have a spike
-            self.singleSpikeMultiLine = MultiLine(x, y, self, width=3, allowXAxisDrag=False, forcePenColor='y', type='spike selection')
+            self.singleSpikeMultiLine = MultiLine(
+                x,
+                y,
+                self,
+                width=3,
+                allowXAxisDrag=False,
+                forcePenColor="y",
+                type="spike selection",
+            )
             self.clipPlot.addItem(self.singleSpikeMultiLine)
 
     def selectSpikeList(self):
@@ -489,7 +519,7 @@ class spikeClips(sanpyPlugin):
 
         sDict (dict): NOT USED
         """
-        #logger.info(sDict)
+        # logger.info(sDict)
 
         x = np.zeros(1) * np.nan
         y = np.zeros(1) * np.nan
@@ -500,19 +530,24 @@ class spikeClips(sanpyPlugin):
             try:
                 x = self.x[_selectedSpikes]
                 y = self.y[_selectedSpikes]
-            except (IndexError) as e:
+            except IndexError as e:
                 pass
         if self.spikeListMultiLine is not None:
             self.clipPlot.removeItem(self.spikeListMultiLine)
         if len(_selectedSpikes) > 0:
-            self.spikeListMultiLine = MultiLine(x, y, self,
-                                                width=3,
-                                                allowXAxisDrag=False,
-                                                forcePenColor='c',
-                                                type='spike list selection')
+            self.spikeListMultiLine = MultiLine(
+                x,
+                y,
+                self,
+                width=3,
+                allowXAxisDrag=False,
+                forcePenColor="c",
+                type="spike list selection",
+            )
             self.clipPlot.addItem(self.spikeListMultiLine)
 
-#class MultiLine(pg.QtGui.QGraphicsPathItem):
+
+# class MultiLine(pg.QtGui.QGraphicsPathItem):
 class MultiLine(QtWidgets.QGraphicsPathItem):
     """
     This will display a time-series whole-cell recording efficiently
@@ -520,7 +555,17 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
 
     see: https://stackoverflow.com/questions/17103698/plotting-large-arrays-in-pyqtgraph/17108463#17108463
     """
-    def __init__(self, x, y, detectionWidget, type, width=1, forcePenColor=None, allowXAxisDrag=True):
+
+    def __init__(
+        self,
+        x,
+        y,
+        detectionWidget,
+        type,
+        width=1,
+        forcePenColor=None,
+        allowXAxisDrag=True,
+    ):
         """
         x and y are 2D arrays of shape (Nplots, Nsamples)
         type: (dvdt, vm)
@@ -534,67 +579,67 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
         self.myType = type
         self.allowXAxisDrag = allowXAxisDrag
 
-        self.xDrag = None # if true, user is dragging x-axis, otherwise y-axis
+        self.xDrag = None  # if true, user is dragging x-axis, otherwise y-axis
         self.xStart = None
         self.xCurrent = None
         self.linearRegionItem = None
 
         if len(x.shape) == 2:
             connect = np.ones(x.shape, dtype=bool)
-            connect[:,-1] = 0 # don't draw the segment between each trace
+            connect[:, -1] = 0  # don't draw the segment between each trace
             self.path = pg.arrayToQPath(x.flatten(), y.flatten(), connect.flatten())
         else:
-            self.path = pg.arrayToQPath(x.flatten(), y.flatten(), connect='all')
-        #pg.QtGui.QGraphicsPathItem.__init__(self, self.path)
+            self.path = pg.arrayToQPath(x.flatten(), y.flatten(), connect="all")
+        # pg.QtGui.QGraphicsPathItem.__init__(self, self.path)
         super().__init__(self.path)
 
         if forcePenColor is not None:
             penColor = forcePenColor
         else:
-            penColor = 'k'
+            penColor = "k"
         #
-        if self.myType == 'meanclip':
-            penColor = 'r'
+        if self.myType == "meanclip":
+            penColor = "r"
             width = 3
 
-        #print('MultiLine penColor:', penColor)
-        #logger.info(f'{self.myType} penColor: {penColor}')
+        # print('MultiLine penColor:', penColor)
+        # logger.info(f'{self.myType} penColor: {penColor}')
         pen = pg.mkPen(color=penColor, width=width)
 
         # testing gradient pen
-        '''
+        """
         cm = pg.colormap.get('CET-L17') # prepare a linear color map
         #cm.reverse()                    # reverse it to put light colors at the top
         pen = cm.getPen( span=(0.0,1.0), width=5 ) # gradient from blue (y=0) to white (y=1)
-        '''
+        """
 
         # this works
         self.setPen(pen)
 
     def shape(self):
         # override because QGraphicsPathItem.shape is too expensive.
-        #print(time.time(), 'MultiLine.shape()', pg.QtGui.QGraphicsItem.shape(self))
-        #return pg.QtGui.QGraphicsItem.shape(self)
+        # print(time.time(), 'MultiLine.shape()', pg.QtGui.QGraphicsItem.shape(self))
+        # return pg.QtGui.QGraphicsItem.shape(self)
         # now this
         return super().shape()
 
     def boundingRect(self):
-        #print(time.time(), 'MultiLine.boundingRect()', self.path.boundingRect())
+        # print(time.time(), 'MultiLine.boundingRect()', self.path.boundingRect())
         return self.path.boundingRect()
 
     def old_mouseClickEvent(self, event):
         if event.button() == QtCore.Qt.RightButton:
-            print('mouseClickEvent() right click', self.myType)
+            print("mouseClickEvent() right click", self.myType)
             self.contextMenuEvent(event)
 
     def old_contextMenuEvent(self, event):
         myType = self.myType
 
-        if myType == 'clip':
-            print('WARNING: no export for clips, try clicking again')
+        if myType == "clip":
+            print("WARNING: no export for clips, try clicking again")
             return
 
-        '''
+        """
         contextMenu = QtWidgets.QMenu()
         exportTraceAction = contextMenu.addAction(f'Export Trace {myType}')
         contextMenu.addSeparator()
@@ -656,65 +701,71 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
             self.detectionWidget.setAxisFull_y(self.myType)
         else:
             logger.warning(f'action not taken: {action}')
-        '''
+        """
 
     def old_slot_closeChildWindow(self, windowPointer):
-        #print('closeChildWindow()', windowPointer)
-        #print('  exportWidgetList:', self.exportWidgetList)
+        # print('closeChildWindow()', windowPointer)
+        # print('  exportWidgetList:', self.exportWidgetList)
 
         idx = self.exportWidgetList.index(windowPointer)
         if idx is not None:
             popedItem = self.exportWidgetList.pop(idx)
-            #print('  popedItem:', popedItem)
+            # print('  popedItem:', popedItem)
         else:
-            print(' slot_closeChildWindow() did not find', windowPointer)
+            print(" slot_closeChildWindow() did not find", windowPointer)
 
     def old_mouseDragEvent(self, ev):
         """
         default is to drag x-axis, use alt_drag for y-axis
         """
-        #print('MultiLine.mouseDragEvent():', type(ev), ev)
+        # print('MultiLine.mouseDragEvent():', type(ev), ev)
 
         if ev.button() != QtCore.Qt.LeftButton:
             ev.ignore()
             return
 
-        #modifiers = QtWidgets.QApplication.keyboardModifiers()
-        #isAlt = modifiers == QtCore.Qt.AltModifier
+        # modifiers = QtWidgets.QApplication.keyboardModifiers()
+        # isAlt = modifiers == QtCore.Qt.AltModifier
         isAlt = ev.modifiers() == QtCore.Qt.AltModifier
 
-        #xDrag = not isAlt # x drag is dafault, when alt is pressed, xDrag==False
+        # xDrag = not isAlt # x drag is dafault, when alt is pressed, xDrag==False
 
         # allowXAxisDrag is now used for both x and y
         if not self.allowXAxisDrag:
-            ev.accept() # this prevents click+drag of plot
+            ev.accept()  # this prevents click+drag of plot
             return
 
         if ev.isStart():
             self.xDrag = not isAlt
             if self.xDrag:
                 self.xStart = ev.buttonDownPos()[0]
-                self.linearRegionItem = pg.LinearRegionItem(values=(self.xStart,0), orientation=pg.LinearRegionItem.Vertical)
+                self.linearRegionItem = pg.LinearRegionItem(
+                    values=(self.xStart, 0), orientation=pg.LinearRegionItem.Vertical
+                )
             else:
                 # in y-drag, we need to know (vm, dvdt)
                 self.xStart = ev.buttonDownPos()[1]
-                self.linearRegionItem = pg.LinearRegionItem(values=(0,self.xStart), orientation=pg.LinearRegionItem.Horizontal)
-            #self.linearRegionItem.sigRegionChangeFinished.connect(self.update_x_axis)
+                self.linearRegionItem = pg.LinearRegionItem(
+                    values=(0, self.xStart), orientation=pg.LinearRegionItem.Horizontal
+                )
+            # self.linearRegionItem.sigRegionChangeFinished.connect(self.update_x_axis)
             # add the LinearRegionItem to the parent widget (Cannot add to self as it is an item)
             self.parentWidget().addItem(self.linearRegionItem)
         elif ev.isFinish():
             if self.xDrag:
-                set_xyBoth = 'xAxis'
+                set_xyBoth = "xAxis"
             else:
-                set_xyBoth = 'yAxis'
-            #self.parentWidget().setXRange(self.xStart, self.xCurrent)
-            self.detectionWidget.setAxis(self.xStart, self.xCurrent, set_xyBoth=set_xyBoth, whichPlot=self.myType)
+                set_xyBoth = "yAxis"
+            # self.parentWidget().setXRange(self.xStart, self.xCurrent)
+            self.detectionWidget.setAxis(
+                self.xStart, self.xCurrent, set_xyBoth=set_xyBoth, whichPlot=self.myType
+            )
 
             self.xDrag = None
             self.xStart = None
             self.xCurrent = None
 
-            '''
+            """
             if self.myType == 'clip':
                 if self.xDrag:
                     self.clipPlot.setXRange(self.xStart, self.xCurrent, padding=padding)
@@ -722,7 +773,7 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
                     self.clipPlot.setYRange(self.xStart, self.xCurrent, padding=padding)
             else:
                 self.parentWidget().removeItem(self.linearRegionItem)
-            '''
+            """
             self.parentWidget().removeItem(self.linearRegionItem)
 
             self.linearRegionItem = None
@@ -731,43 +782,47 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
 
         if self.xDrag:
             self.xCurrent = ev.pos()[0]
-            #print('xStart:', self.xStart, 'self.xCurrent:', self.xCurrent)
+            # print('xStart:', self.xStart, 'self.xCurrent:', self.xCurrent)
             self.linearRegionItem.setRegion((self.xStart, self.xCurrent))
         else:
             self.xCurrent = ev.pos()[1]
-            #print('xStart:', self.xStart, 'self.xCurrent:', self.xCurrent)
+            # print('xStart:', self.xStart, 'self.xCurrent:', self.xCurrent)
             self.linearRegionItem.setRegion((self.xStart, self.xCurrent))
         ev.accept()
 
-if __name__ == '__main__':
-    #path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
-    #path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
-    path = '/media/cudmore/data/rabbit-ca-transient/jan-12-2022/Control/220110n_0003.tif.frames/220110n_0003.tif'
+
+if __name__ == "__main__":
+    # path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+    # path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+    path = "/media/cudmore/data/rabbit-ca-transient/jan-12-2022/Control/220110n_0003.tif.frames/220110n_0003.tif"
     ba = sanpy.bAnalysis(path)
 
-    '''
+    """
     detectionClass = sanpy.bDetection()
     print(type(detectionClass))
     detectionClass['dvdtThreshold'] = math.nan #if None then detect only using mvThreshold
     detectionClass['mvThreshold'] = -0 #0.5
-    '''
+    """
 
-    mvThreshold = 1.2 #0
-    detectionClass = sanpy.bDetection() # gets default detection class
+    mvThreshold = 1.2  # 0
+    detectionClass = sanpy.bDetection()  # gets default detection class
     detectionType = sanpy.bDetection.detectionTypes.mv
-    detectionClass['detectionType'] = detectionType  # set detection type to ('dvdt', 'vm')
-    detectionClass['dvdtThreshold'] = math.nan
-    detectionClass['mvThreshold'] = mvThreshold
-    detectionClass['preSpikeClipWidth_ms'] = 100
-    detectionClass['postSpikeClipWidth_ms'] = 1000
+    detectionClass[
+        "detectionType"
+    ] = detectionType  # set detection type to ('dvdt', 'vm')
+    detectionClass["dvdtThreshold"] = math.nan
+    detectionClass["mvThreshold"] = mvThreshold
+    detectionClass["preSpikeClipWidth_ms"] = 100
+    detectionClass["postSpikeClipWidth_ms"] = 1000
 
     ba.spikeDetect(detectionClass=detectionClass)
-    #ba.spikeDetect()
+    # ba.spikeDetect()
     print(ba)
 
-    #sys.exit(1)
+    # sys.exit(1)
 
     import sys
+
     app = QtWidgets.QApplication([])
     sc = spikeClips(ba=ba)
     sc.show()

@@ -2,7 +2,9 @@ import numpy as np
 
 from sanpy.user_analysis.baseUserAnalysis import baseUserAnalysis
 from sanpy.sanpyLogger import get_logger
+
 logger = get_logger(__name__)
+
 
 class exampleUserAnalysis(baseUserAnalysis):
     """
@@ -24,13 +26,11 @@ class exampleUserAnalysis(baseUserAnalysis):
     """
 
     def defineUserStats(self):
-        """Add your user stats here.
-        """
-        self.addUserStat('User Time To Peak (ms)', 'user_timeToPeak_ms')
+        """Add your user stats here."""
+        self.addUserStat("User Time To Peak (ms)", "user_timeToPeak_ms")
 
     def run(self):
-        """This is the user code to create and then fill in a new name/value for each spike.
-        """
+        """This is the user code to create and then fill in a new name/value for each spike."""
 
         # get filtered vm for the entire trace
         filteredVm = self.getFilteredVm()
@@ -38,19 +38,19 @@ class exampleUserAnalysis(baseUserAnalysis):
         lastThresholdPnt = None
         for spikeIdx, spikeDict in enumerate(self.ba.spikeDict):
             # add time to peak
-            thresholdSec = spikeDict['thresholdSec']
-            peakSecond = spikeDict['peakSec']
+            thresholdSec = spikeDict["thresholdSec"]
+            peakSecond = spikeDict["peakSec"]
             timeToPeak_ms = (peakSecond - thresholdSec) * 1000
 
             # assign to underlying bAnalysis
-            #print(f'  exampleUserAnalysis() {spikeIdx} user_timeToPeak_ms {timeToPeak_ms}')
-            self.setSpikeValue(spikeIdx, 'user_timeToPeak_ms', timeToPeak_ms)
+            # print(f'  exampleUserAnalysis() {spikeIdx} user_timeToPeak_ms {timeToPeak_ms}')
+            self.setSpikeValue(spikeIdx, "user_timeToPeak_ms", timeToPeak_ms)
 
-            thisThresholdPnt = spikeDict['thresholdPnt']
+            thisThresholdPnt = spikeDict["thresholdPnt"]
 
             # TODO: need to improve this, it cannot compare spikes across different sweeps !!!
-            sweep = spikeDict['sweep']
-            '''
+            sweep = spikeDict["sweep"]
+            """
             if spikeIdx == 0:
                 # first spike does not have a mdp
                 pass
@@ -77,23 +77,26 @@ class exampleUserAnalysis(baseUserAnalysis):
             
             #
             lastThresholdPnt = thisThresholdPnt
-            '''
+            """
+
 
 def test1():
     from pprint import pprint
     import sanpy
-    path = ''
-    path = '/Users/cudmore/Sites/SanPy/data/19114000.abf'
+
+    path = ""
+    path = "/Users/cudmore/Sites/SanPy/data/19114000.abf"
     ba = sanpy.bAnalysis(path)
-    
+
     # detectionClass = ba.detectionClass
     # detectionClass['verbose'] = False
     # sweepNumber = 0
     # ba.spikeDetect2__(sweepNumber, detectionClass)
     ba.spikeDetect()
-    
+
     # checking user analysis exists
     import inspect
+
     # userFunctions = inspect.getmembers(sanpy.user_analysis, inspect.isfunction)
     # print('userFunctions:', userFunctions)
     # for userFunction in userFunctions:
@@ -102,9 +105,9 @@ def test1():
     for item in objList:
         pprint(item)
 
+    # eua = exampleUserAnalysis(ba)
+    # eua.run()
 
-    #eua = exampleUserAnalysis(ba)
-    #eua.run()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test1()

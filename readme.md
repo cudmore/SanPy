@@ -1,9 +1,10 @@
 
 [![Python](https://img.shields.io/badge/python-3.7|3.8|3.9|3.10|3.11-blue.svg)](https://www.python.org/downloads/release/python-3111/)
 [![tests](https://github.com/cudmore/SanPy/workflows/Test/badge.svg)](https://github.com/cudmore/SanPy/actions)
-[![codecov](https://codecov.io/github/cudmore/SanPy/branch/master/graph/badge.svg?token=0ZR226588I)](https://codecov.io/github/cudmore/SanPy)
+[![codecov](https://codecov.io/gh/cudmore/SanPy/branch/master/graph/badge.svg?token=L7L3FB04IP)](https://codecov.io/gh/cudmore/SanPy)
 [![OS](https://img.shields.io/badge/OS-Linux|Windows|macOS-blue.svg)]()
 [![License](https://img.shields.io/badge/license-GPLv3-blue)](https://github.com/cudmore/SanPy/blob/master/LICENSE)
+
 
 ## SanPy is software for whole-cell current clamp analysis
 

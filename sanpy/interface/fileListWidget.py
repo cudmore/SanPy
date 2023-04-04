@@ -11,35 +11,37 @@ import sanpy.bDetection
 from sanpy.interface.bFileTable import pandasModel
 
 from sanpy.sanpyLogger import get_logger
+
 logger = get_logger(__name__)
+
 
 class fileListWidget(QtWidgets.QWidget):
     """A widget showing
-        - file list controls
-        - file list widget, see: sanpy.interface.bTableView
+    - file list controls
+    - file list widget, see: sanpy.interface.bTableView
     """
 
     signalLoadFolder = QtCore.pyqtSignal(object, object)  # path, depth
 
-    #signalSelectRow = QtCore.pyqtSignal(object, object, object)  # (row, rowDict, selectingAgain)
-    #signalUpdateStatus = QtCore.pyqtSignal(object)
+    # signalSelectRow = QtCore.pyqtSignal(object, object, object)  # (row, rowDict, selectingAgain)
+    # signalUpdateStatus = QtCore.pyqtSignal(object)
     """Update status in main SanPy app."""
-    #signalSetDefaultDetection = QtCore.pyqtSignal(object, object)  # selected row, detection type
+    # signalSetDefaultDetection = QtCore.pyqtSignal(object, object)  # selected row, detection type
 
-    def __init__(self, myModel : pandasModel, parent=None):
+    def __init__(self, myModel: pandasModel, parent=None):
         """
         Args:
             myModel: sanpy.interface.bFileTable.pandasModel
         """
         super().__init__(parent)
-        self._myModel : pandasModel = myModel
+        self._myModel: pandasModel = myModel
         # self.setAcceptDrops(True)
         self._folderDepth = 1
         self._buildUI()
 
     # def dragEnterEvent(self, event):
     #     logger.info('')
-    
+
     # def dropEvent(self, event):
     #     logger.info('')
 
@@ -59,13 +61,13 @@ class fileListWidget(QtWidgets.QWidget):
 
         self._hToolbarLayout = QtWidgets.QHBoxLayout()
 
-        buttonName = 'Load Folder'
+        buttonName = "Load Folder"
         button = QtWidgets.QPushButton(buttonName)
-        #button.setToolTip('Save Detected Spikes to Excel file')
-        button.clicked.connect(partial(self.on_button_click,buttonName))
+        # button.setToolTip('Save Detected Spikes to Excel file')
+        button.clicked.connect(partial(self.on_button_click, buttonName))
         self._hToolbarLayout.addWidget(button, alignment=QtCore.Qt.AlignLeft)
 
-        labelName = 'Depth'
+        labelName = "Depth"
         aLabel = QtWidgets.QLabel(labelName)
         self._hToolbarLayout.addWidget(aLabel)
 
@@ -91,15 +93,10 @@ class fileListWidget(QtWidgets.QWidget):
         self._folderDepth = value
 
     def on_button_click(self, name):
-        logger.info(f'{name}')
-        if name == 'Load Folder':
+        logger.info(f"{name}")
+        if name == "Load Folder":
             self.signalLoadFolder.emit(None, self._folderDepth)
 
     def getDepth(self):
-        """Get the folder depth.
-        """
+        """Get the folder depth."""
         return self._folderDepth
-
-
-
-

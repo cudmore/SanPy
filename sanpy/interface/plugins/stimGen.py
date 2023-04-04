@@ -32,13 +32,15 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.backends import backend_qt5agg
 
-#import qdarkstyle
+# import qdarkstyle
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
 from sanpy.sanpyLogger import get_logger
+
 logger = get_logger(__name__)
+
 
 def readFolderParams(folderPath):
     """
@@ -46,50 +48,51 @@ def readFolderParams(folderPath):
     """
     dList = []
     for file in sorted(os.listdir(folderPath)):
-        if not file.endswith('.atf'):
+        if not file.endswith(".atf"):
             continue
         filePath = os.path.join(folderPath, file)
         d = readFileParams(filePath)
         dList.append(d)
     #
     df = pd.DataFrame(dList)
-    outFile = os.path.join(folderPath, 'stimGen_db.csv')
-    print('saving:', outFile)
+    outFile = os.path.join(folderPath, "stimGen_db.csv")
+    print("saving:", outFile)
     df.to_csv(outFile)
 
     return df
+
 
 def readFileParams(path):
     """
     Read stimGen params from one atf file
     """
     retDict = {}
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         while True:
-            #lines = f.readlines()
+            # lines = f.readlines()
             line = f.readline()
             if not line:
                 break  # EOF
             if line.startswith('"Comment='):
                 # looks like
                 # "Comment=version=0.2;numSweeps=5;sweepDurSeconds=30.0;stimType=Sin;stimStartSeconds=5.0;durSeconds=20.0;yStimOffset=0.0;amplitude=0.002;frequency=1.0;noiseAmplitude=0.0;amplitudeStep=0.0;frequencyStep=0.0;noiseStep=0.0;doRectify=False;"
-                line = line.replace('"Comment=','')
+                line = line.replace('"Comment=', "")
                 line = line[0:-2]  # remove trailing "
-                #print(line)
-                for param in line.split(';'):
-                    kv = param.split('=')
-                    #print(kv)
+                # print(line)
+                for param in line.split(";"):
+                    kv = param.split("=")
+                    # print(kv)
                     if len(kv) != 2:
                         continue
                     k = kv[0]
                     v = kv[1]
-                    #print(k, v)
+                    # print(k, v)
 
-                    if k == 'stimType':
+                    if k == "stimType":
                         pass
-                    elif k == 'doRectify':
+                    elif k == "doRectify":
                         v = bool(v)
-                    elif k == 'numSweeps':
+                    elif k == "numSweeps":
                         v = int(v)
                     else:
                         v = float(v)
@@ -100,8 +103,9 @@ def readFileParams(path):
     #
     return retDict
 
+
 class stimGen(sanpyPlugin):
-    myHumanName = 'Stim Gen'
+    myHumanName = "Stim Gen"
 
     def __init__(self, myAnalysisDir=None, **kwargs):
         """
@@ -123,15 +127,15 @@ class stimGen(sanpyPlugin):
         self._t = []
 
         self.stimTypes = [
-                        'Sin',
-                        'Chirp',
-                        'Noise',
-                        'Epsp train',
-                        #'Stochastic HH',
-                        'Integrate and Fire'
-                        ]
+            "Sin",
+            "Chirp",
+            "Noise",
+            "Epsp train",
+            #'Stochastic HH',
+            "Integrate and Fire",
+        ]
         # TODO: add (save index, ...)
-        self.stimType = 'Sin'
+        self.stimType = "Sin"
         self.sweepDurSeconds = 30.0
         self.stimStartSeconds = 5.0
         self.durSeconds = 20.0  # of stim
@@ -151,7 +155,7 @@ class stimGen(sanpyPlugin):
         self.scale = 1
         """ scale output stim by this factor"""
 
-        self.savePath = ''  # remember last save folder
+        self.savePath = ""  # remember last save folder
 
         # TODO: all params need to be in dictionary
         # when user clicks on interface (spinbox), we need to update this dict
@@ -163,49 +167,47 @@ class stimGen(sanpyPlugin):
 
     def defaultParams(self):
         paramDict = {
-            'version': 0.3,
-            'stimType': 'Sin',  # str of stim types
-            'fs': 10000,  # int, samples per second
-            'numSweeps': 5,  # int
-            'sweepDur_sec': 30.0,
-            'stimStart_sec': 5.0,
-            'stimDur_sec': 20.0,
-            'yOffset': 0.0,
+            "version": 0.3,
+            "stimType": "Sin",  # str of stim types
+            "fs": 10000,  # int, samples per second
+            "numSweeps": 5,  # int
+            "sweepDur_sec": 30.0,
+            "stimStart_sec": 5.0,
+            "stimDur_sec": 20.0,
+            "yOffset": 0.0,
             # First sweep parameters
-            'stimFreq': 1.0,
-            'stimAmp': 0.002,
-            'stimNoiseAmp': 0.0,
+            "stimFreq": 1.0,
+            "stimAmp": 0.002,
+            "stimNoiseAmp": 0.0,
             # step parameters
-            'stimFreqStep': 0.0,
-            'stimAmpStep': 0.0,
-            'stimNoiseStep': 0.0,
+            "stimFreqStep": 0.0,
+            "stimAmpStep": 0.0,
+            "stimNoiseStep": 0.0,
             #
-            'rectify': False,
-            'scale': 1,
-
-
+            "rectify": False,
+            "scale": 1,
         }
 
     def getComment(self):
-        comment = '' # '"Comment='
+        comment = ""  # '"Comment='
 
-        comment +=  f'version={self.version};'
-        comment +=  f'numSweeps={self.numSweeps};'
-        comment +=  f'sweepDurSeconds={self.sweepDurSeconds};'
-        comment +=  f'stimType={self.stimType};'
-        comment +=  f'stimStartSeconds={self.stimStartSeconds};'
-        comment +=  f'durSeconds={self.durSeconds};'
-        comment +=  f'yStimOffset={self.yStimOffset};'
-        comment +=  f'amplitude={self.amplitude};'
-        comment +=  f'frequency={self.frequency};'
-        comment +=  f'noiseAmplitude={self.noiseAmplitude};'
-        comment +=  f'amplitudeStep={self.amplitudeStep};'
-        comment +=  f'frequencyStep={self.frequencyStep};'
-        comment +=  f'noiseStep={self.noiseStep};'
-        comment +=  f'doRectify={self.doRectify};'
+        comment += f"version={self.version};"
+        comment += f"numSweeps={self.numSweeps};"
+        comment += f"sweepDurSeconds={self.sweepDurSeconds};"
+        comment += f"stimType={self.stimType};"
+        comment += f"stimStartSeconds={self.stimStartSeconds};"
+        comment += f"durSeconds={self.durSeconds};"
+        comment += f"yStimOffset={self.yStimOffset};"
+        comment += f"amplitude={self.amplitude};"
+        comment += f"frequency={self.frequency};"
+        comment += f"noiseAmplitude={self.noiseAmplitude};"
+        comment += f"amplitudeStep={self.amplitudeStep};"
+        comment += f"frequencyStep={self.frequencyStep};"
+        comment += f"noiseStep={self.noiseStep};"
+        comment += f"doRectify={self.doRectify};"
 
         #
-        #comment += '"'
+        # comment += '"'
         return comment
 
     def getAtfHeader(self, numChannels=1):
@@ -229,14 +231,14 @@ class stimGen(sanpyPlugin):
         1e-4    2.44141    1.2207    0.610352    2.44141    2.44141    0.610352    0.610352    1.2207    3.05176    3.05176
         """
 
-        myUnits = 'pA'
-        #myComment = 'fill in with stim params'
+        myUnits = "pA"
+        # myComment = 'fill in with stim params'
 
         numDataColumns = numChannels + 1  # time + number of channels
-        eol = '\n'
-        tab = '\t'
+        eol = "\n"
+        tab = "\t"
         ATF_HEADER = "ATF    1.0" + eol
-        ATF_HEADER += f'8\t{numDataColumns}' + eol
+        ATF_HEADER += f"8\t{numDataColumns}" + eol
 
         ATF_HEADER += '"AcquisitionMode=Episodic Stimulation"' + eol
 
@@ -249,15 +251,15 @@ class stimGen(sanpyPlugin):
 
         # for a 200 ms sweep, looks like this
         # "SweepStartTimesMS=21.000,221.000,421.000,621.000,821.000,1021.000,1221.000,1421.000,1621.000,1821.000"
-        #durMs = self.durSeconds *1000
-        durMs = self.sweepDurSeconds *1000  # new 20211202
+        # durMs = self.durSeconds *1000
+        durMs = self.sweepDurSeconds * 1000  # new 20211202
         numSweeps = self.numSweeps
         sweepRange = range(numSweeps)
         SweepStartTimesMS = '"SweepStartTimesMS='
         preRollMs = 21
         for sweepIdx, sweep in enumerate(sweepRange):
             currStartTime = preRollMs + (sweepIdx * durMs)
-            SweepStartTimesMS += f'{round(float(currStartTime),3)}' + ','
+            SweepStartTimesMS += f"{round(float(currStartTime),3)}" + ","
         # remove last comma
         SweepStartTimesMS = SweepStartTimesMS[0:-1]
         SweepStartTimesMS += '"'
@@ -267,22 +269,24 @@ class stimGen(sanpyPlugin):
 
         # signals looks like this
         # "Signals="    "IN 0"    "IN 0"    "IN 0"    "IN 0"    "IN 0"    "IN 0"    "IN 0"    "IN 0"    "IN 0"    "IN 0"
-        Signals = '"Signals="' + '\t'
+        Signals = '"Signals="' + "\t"
         for sweepIdx, sweep in enumerate(sweepRange):
-            Signals += '"IN 0"' + '\t'
+            Signals += '"IN 0"' + "\t"
         # remove last tab
         Signals = Signals[0:-1]
         ATF_HEADER += Signals + eol
 
         ATF_HEADER += f'"Time (s)"' + tab
-        traceStr = ''
+        traceStr = ""
         for channel in range(numChannels):
-            traceStr += f'"Trace #{channel+1} ({myUnits})"' + tab  # not sure if trailing tab is ok???
+            traceStr += (
+                f'"Trace #{channel+1} ({myUnits})"' + tab
+            )  # not sure if trailing tab is ok???
         # remove last tab
         traceStr = traceStr[0:-1]
         ATF_HEADER += traceStr + eol
 
-        print('=== ATF_HEADER:')
+        print("=== ATF_HEADER:")
         print(ATF_HEADER)
 
         '''
@@ -303,11 +307,11 @@ class stimGen(sanpyPlugin):
 
         return ATF_HEADER
 
-    '''
+    """
     @property
     def data(self):
         return self._data
-    '''
+    """
 
     @property
     def t(self):
@@ -339,32 +343,43 @@ class stimGen(sanpyPlugin):
             currFreq = freq + (sweepNum * frequencyStep)
             currNoiseAmp = noiseAmp + (sweepNum * noiseStep)
             autoPad = False
-            print(f'  makeStim() {type} sweep:{sweepNum} durSec:{durSec} amp:{currAmp} freq:{currFreq} noiseAmp:{currNoiseAmp}')
-            self._data[sweepNum] = sanpy.atfStim.makeStim(type, sweepDurSec=sweepDurSeconds,
-                            startStimSec=stimStartSeconds, durSec=durSec,
-                            yStimOffset=yStimOffset, amp=currAmp,
-                            freq=currFreq, fs=fs, noiseAmp=currNoiseAmp, rectify=doRectify,
-                            autoPad=autoPad, autoSave=False)
+            print(
+                f"  makeStim() {type} sweep:{sweepNum} durSec:{durSec} amp:{currAmp} freq:{currFreq} noiseAmp:{currNoiseAmp}"
+            )
+            self._data[sweepNum] = sanpy.atfStim.makeStim(
+                type,
+                sweepDurSec=sweepDurSeconds,
+                startStimSec=stimStartSeconds,
+                durSec=durSec,
+                yStimOffset=yStimOffset,
+                amp=currAmp,
+                freq=currFreq,
+                fs=fs,
+                noiseAmp=currNoiseAmp,
+                rectify=doRectify,
+                autoPad=autoPad,
+                autoSave=False,
+            )
             if self._data[sweepNum] is None:
-                print(f'makeStim() error making {type} at sweep number {sweepNum}')
+                print(f"makeStim() error making {type} at sweep number {sweepNum}")
             #
             # scale
             self._data[sweepNum] *= self.scale
-            print('  self._data[sweepNum].dtype:', self._data[sweepNum].dtype)
+            print("  self._data[sweepNum].dtype:", self._data[sweepNum].dtype)
 
         self._t = np.arange(len(self._data[0])) / fs  # just using first sweep
 
-    '''
+    """
     def plotStim(self):
         logger.info(f'_t:{self._t.shape}')
         logger.info(f'_data:{self._data.shape}')
         plt.plot(self._t, self._data)
-    '''
+    """
 
-    '''
+    """
     def saveStim(Self):
         sanpy.atfStim.saveAtf(self.data, fileName="output.atf", fs=10000)
-    '''
+    """
 
     def _grabParams(self):
         """
@@ -388,13 +403,13 @@ class stimGen(sanpyPlugin):
         self.doRectify = self.rectifyCheckBox.isChecked()
         self._fs = self.fsSpinBox.value()
 
-        '''
+        """
         rmsMult = 1/np.sqrt(2)
         sinRms = self.amplitude * rmsMult
         sinRms = round(sinRms,2)
         aName = f'RMS:{sinRms}'
         self.sinRms.setText(aName)
-        '''
+        """
 
     def updateStim(self):
         self._grabParams()
@@ -406,10 +421,10 @@ class stimGen(sanpyPlugin):
 
     def on_spin_box(self, name):
         logger.info(name)
-        if name == 'Number Of Sweeps':
+        if name == "Number Of Sweeps":
             numSweeps = self.numSweepsSpinBox.value()
             self._updateNumSweeps(numSweeps)
-        elif name == 'Save Index':
+        elif name == "Save Index":
             saveStimIndex = self.saveIndexSpinBox.value()
             self.saveStimIndex = saveStimIndex
             #
@@ -427,9 +442,9 @@ class stimGen(sanpyPlugin):
 
     def on_button_click(self, name):
         logger.info(name)
-        if name == 'Make Stimulus':
+        if name == "Make Stimulus":
             self.makeStim()
-        elif name == 'Save As...':
+        elif name == "Save As...":
             # TODO: srt a feeback red as we save, set to green when done
             # self.saveAsButton
             self.saveAs()
@@ -444,19 +459,19 @@ class stimGen(sanpyPlugin):
         vLayout = QtWidgets.QVBoxLayout()
         controlLayout = QtWidgets.QHBoxLayout()
 
-        '''
+        """
         aName = 'Make Stimulus'
         aButton = QtWidgets.QPushButton(aName)
         aButton.clicked.connect(partial(self.on_button_click,aName))
         controlLayout.addWidget(aButton)
-        '''
+        """
 
-        aName = 'Save As...'
+        aName = "Save As..."
         self.saveAsButton = QtWidgets.QPushButton(aName)
-        self.saveAsButton.clicked.connect(partial(self.on_button_click,aName))
+        self.saveAsButton.clicked.connect(partial(self.on_button_click, aName))
         controlLayout.addWidget(self.saveAsButton)
 
-        aName = 'Save Index'
+        aName = "Save Index"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout.addWidget(aLabel)
         self.saveIndexSpinBox = QtWidgets.QSpinBox()
@@ -464,10 +479,10 @@ class stimGen(sanpyPlugin):
         self.saveIndexSpinBox.setRange(0, 9999)
         self.saveIndexSpinBox.setValue(self.saveStimIndex)
         self.saveIndexSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
-        #self.saveIndexSpinBox.valueChanged.connect(partial(self.on_spin_box2, aName, self.saveIndexSpinBox))
+        # self.saveIndexSpinBox.valueChanged.connect(partial(self.on_spin_box2, aName, self.saveIndexSpinBox))
         controlLayout.addWidget(self.saveIndexSpinBox)
 
-        aName = 'Stim Type'
+        aName = "Stim Type"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout.addWidget(aLabel)
         self.stimTypeDropdown = QtWidgets.QComboBox()
@@ -476,7 +491,7 @@ class stimGen(sanpyPlugin):
         self.stimTypeDropdown.currentTextChanged.connect(self.on_stim_type)
         controlLayout.addWidget(self.stimTypeDropdown)
 
-        aName = 'Sweep Duration(s)'
+        aName = "Sweep Duration(s)"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout.addWidget(aLabel)
         self.sweepDurationSpinBox = QtWidgets.QDoubleSpinBox()
@@ -486,7 +501,7 @@ class stimGen(sanpyPlugin):
         self.sweepDurationSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
         controlLayout.addWidget(self.sweepDurationSpinBox)
 
-        aName = 'Number Of Sweeps'
+        aName = "Number Of Sweeps"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout.addWidget(aLabel)
         self.numSweepsSpinBox = QtWidgets.QSpinBox()
@@ -496,12 +511,12 @@ class stimGen(sanpyPlugin):
         self.numSweepsSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
         controlLayout.addWidget(self.numSweepsSpinBox)
 
-        vLayout.addLayout(controlLayout) # add mpl canvas
+        vLayout.addLayout(controlLayout)  # add mpl canvas
 
         # row 1.5
         controlLayout_row1_5 = QtWidgets.QHBoxLayout()
 
-        aName = 'Stim Start(s)'
+        aName = "Stim Start(s)"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout_row1_5.addWidget(aLabel)
         self.stimStartSpinBox = QtWidgets.QDoubleSpinBox()
@@ -511,7 +526,7 @@ class stimGen(sanpyPlugin):
         self.stimStartSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
         controlLayout_row1_5.addWidget(self.stimStartSpinBox)
 
-        aName = 'Stim Duration(s)'
+        aName = "Stim Duration(s)"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout_row1_5.addWidget(aLabel)
         self.durationSpinBox = QtWidgets.QDoubleSpinBox()
@@ -521,7 +536,7 @@ class stimGen(sanpyPlugin):
         self.durationSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
         controlLayout_row1_5.addWidget(self.durationSpinBox)
 
-        aName = 'Stim Offset(y)'
+        aName = "Stim Offset(y)"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout_row1_5.addWidget(aLabel)
         self.yStimOffsetSpinBox = QtWidgets.QDoubleSpinBox()
@@ -531,7 +546,7 @@ class stimGen(sanpyPlugin):
         self.yStimOffsetSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
         controlLayout_row1_5.addWidget(self.yStimOffsetSpinBox)
 
-        vLayout.addLayout(controlLayout_row1_5) # add mpl canvas
+        vLayout.addLayout(controlLayout_row1_5)  # add mpl canvas
 
         # 2nd row
         controlLayout_row2 = QtWidgets.QGridLayout()
@@ -540,7 +555,7 @@ class stimGen(sanpyPlugin):
         row = 0
         col = 0
 
-        aName = 'Amplitude'
+        aName = "Amplitude"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout_row2.addWidget(aLabel, row, col, rowSpan, colSpan)
         self.amplitudeSpinBox = QtWidgets.QDoubleSpinBox()
@@ -552,16 +567,16 @@ class stimGen(sanpyPlugin):
         controlLayout_row2.addWidget(self.amplitudeSpinBox, 0, 1, rowSpan, colSpan)
 
         # rms of sin (amp and freq)
-        '''
+        """
         rmsMult = 1/np.sqrt(2)
         sinRms = self.amplitude * rmsMult
         sinRms = round(sinRms,2)
         aName = f'RMS:{sinRms}'
         self.sinRms = QtWidgets.QLabel(aName)
         controlLayout_row2.addWidget(self.sinRms, 0, 2, rowSpan, colSpan)
-        '''
+        """
 
-        aName = 'Frequency (Hz)'
+        aName = "Frequency (Hz)"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout_row2.addWidget(aLabel, 0, 3, rowSpan, colSpan)
         self.frequencySpinBox = QtWidgets.QDoubleSpinBox()
@@ -571,7 +586,7 @@ class stimGen(sanpyPlugin):
         self.frequencySpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
         controlLayout_row2.addWidget(self.frequencySpinBox, 0, 4, rowSpan, colSpan)
 
-        aName = 'Noise Amplitude'
+        aName = "Noise Amplitude"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout_row2.addWidget(aLabel, 0, 5, rowSpan, colSpan)
         self.noiseAmpSpinBox = QtWidgets.QDoubleSpinBox()
@@ -585,9 +600,9 @@ class stimGen(sanpyPlugin):
 
         #
         # row 2
-        #controlLayout_row2 = QtWidgets.QHBoxLayout()
+        # controlLayout_row2 = QtWidgets.QHBoxLayout()
 
-        aName = 'Amplitude Step'
+        aName = "Amplitude Step"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout_row2.addWidget(aLabel, 1, 0, rowSpan, colSpan)
         self.amplitudeStepSpinBox = QtWidgets.QDoubleSpinBox()
@@ -599,7 +614,7 @@ class stimGen(sanpyPlugin):
         self.amplitudeStepSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
         controlLayout_row2.addWidget(self.amplitudeStepSpinBox, 1, 1, rowSpan, colSpan)
 
-        aName = 'Frequency Step'
+        aName = "Frequency Step"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout_row2.addWidget(aLabel, 1, 3, rowSpan, colSpan)
         self.frequencyStepSpinBox = QtWidgets.QDoubleSpinBox()
@@ -612,7 +627,7 @@ class stimGen(sanpyPlugin):
 
         # first row in grid has freq rms
 
-        aName = 'Noise Step'
+        aName = "Noise Step"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout_row2.addWidget(aLabel, 1, 5, rowSpan, colSpan)
         self.noiseStepSpinBox = QtWidgets.QDoubleSpinBox()
@@ -625,17 +640,19 @@ class stimGen(sanpyPlugin):
         controlLayout_row2.addWidget(self.noiseStepSpinBox, 1, 6, rowSpan, colSpan)
 
         #
-        vLayout.addLayout(controlLayout_row2) # add mpl canvas
+        vLayout.addLayout(controlLayout_row2)  # add mpl canvas
 
         controlLayout_row3 = QtWidgets.QHBoxLayout()
 
-        checkboxName = 'Rectify'
+        checkboxName = "Rectify"
         self.rectifyCheckBox = QtWidgets.QCheckBox(checkboxName)
         self.rectifyCheckBox.setChecked(self.doRectify)
-        self.rectifyCheckBox.stateChanged.connect(partial(self.on_checkbox_clicked, checkboxName))
+        self.rectifyCheckBox.stateChanged.connect(
+            partial(self.on_checkbox_clicked, checkboxName)
+        )
         controlLayout_row3.addWidget(self.rectifyCheckBox)
 
-        aName = 'Samples Per Second'
+        aName = "Samples Per Second"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout_row3.addWidget(aLabel)
         self.fsSpinBox = QtWidgets.QSpinBox()
@@ -645,7 +662,7 @@ class stimGen(sanpyPlugin):
         self.fsSpinBox.valueChanged.connect(partial(self.on_spin_box, aName))
         controlLayout_row3.addWidget(self.fsSpinBox)
 
-        aName = 'Scale'
+        aName = "Scale"
         aLabel = QtWidgets.QLabel(aName)
         controlLayout_row3.addWidget(aLabel)
         self.scaleDropdown = QtWidgets.QComboBox()
@@ -659,35 +676,37 @@ class stimGen(sanpyPlugin):
         controlLayout_row3.addWidget(self.scaleDropdown)
 
         #
-        vLayout.addLayout(controlLayout_row3) # add mpl canvas
+        vLayout.addLayout(controlLayout_row3)  # add mpl canvas
 
         vSplitter = QtWidgets.QSplitter(QtCore.Qt.Vertical)
         vLayout.addWidget(vSplitter)
 
         # plt.style.use('dark_background')
         if self.darkTheme:
-            plt.style.use('dark_background')
+            plt.style.use("dark_background")
         else:
             plt.rcParams.update(plt.rcParamsDefault)
 
         self.fig = mpl.figure.Figure(constrained_layout=True)
         self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
-        self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus )
+        self.static_canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.static_canvas.setFocus()
 
-        #can do self.mplToolbar.hide()
-        self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(self.static_canvas, self.static_canvas)
+        # can do self.mplToolbar.hide()
+        self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(
+            self.static_canvas, self.static_canvas
+        )
 
         self._updateNumSweeps(self.numSweeps)
-        #self.rawAxes = self.static_canvas.figure.add_subplot(self.numSweeps,1,1)
-        #self.plotLine, = self.rawAxes[0].plot([], [], '-w', linewidth=1)
+        # self.rawAxes = self.static_canvas.figure.add_subplot(self.numSweeps,1,1)
+        # self.plotLine, = self.rawAxes[0].plot([], [], '-w', linewidth=1)
 
-        vSplitter.addWidget(self.static_canvas) # add mpl canvas
-        vSplitter.addWidget(self.mplToolbar) # add mpl canvas
+        vSplitter.addWidget(self.static_canvas)  # add mpl canvas
+        vSplitter.addWidget(self.mplToolbar)  # add mpl canvas
 
         #
         # finalize
-        #self.mainWidget = QtWidgets.QWidget()
+        # self.mainWidget = QtWidgets.QWidget()
         # if qdarkstyle is not None:
         #     self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
         # else:
@@ -710,21 +729,25 @@ class stimGen(sanpyPlugin):
 
         for i in range(numSweeps):
             if i == 0:
-                self.rawAxes[i] = self.static_canvas.figure.add_subplot(numSweeps,1, i+1)  # +1 because subplot index is 1 based
+                self.rawAxes[i] = self.static_canvas.figure.add_subplot(
+                    numSweeps, 1, i + 1
+                )  # +1 because subplot index is 1 based
             else:
-                self.rawAxes[i] = self.static_canvas.figure.add_subplot(numSweeps,1, i+1, sharex=self.rawAxes[0])  # +1 because subplot index is 1 based
-            self.plotLine[i], = self.rawAxes[i].plot([], [], '-w', linewidth=0.5)
+                self.rawAxes[i] = self.static_canvas.figure.add_subplot(
+                    numSweeps, 1, i + 1, sharex=self.rawAxes[0]
+                )  # +1 because subplot index is 1 based
+            (self.plotLine[i],) = self.rawAxes[i].plot([], [], "-w", linewidth=0.5)
 
-            self.rawAxes[i].spines['right'].set_visible(False)
-            self.rawAxes[i].spines['top'].set_visible(False)
+            self.rawAxes[i].spines["right"].set_visible(False)
+            self.rawAxes[i].spines["top"].set_visible(False)
 
             lastSweep = i == (numSweeps - 1)
             if not lastSweep:
-                self.rawAxes[i].spines['bottom'].set_visible(False)
-                self.rawAxes[i].tick_params(axis="x", labelbottom=False) # no labels
+                self.rawAxes[i].spines["bottom"].set_visible(False)
+                self.rawAxes[i].tick_params(axis="x", labelbottom=False)  # no labels
 
     def replot(self):
-        logger.info(f't:{len(self._t)}, data:{len(self._data)}')
+        logger.info(f"t:{len(self._t)}, data:{len(self._data)}")
 
         yMin = 1e9
         yMax = -1e9
@@ -734,7 +757,7 @@ class stimGen(sanpyPlugin):
             self.plotLine[i].set_ydata(self._data[i])
             #
             self.rawAxes[i].relim()
-            self.rawAxes[i].autoscale_view(True,True,True)
+            self.rawAxes[i].autoscale_view(True, True, True)
 
             thisMin = np.nanmin(self._data[i])
             thisMax = np.nanmax(self._data[i])
@@ -766,47 +789,52 @@ class stimGen(sanpyPlugin):
         fileName = self.getFileName()
         options = QtWidgets.QFileDialog.Options()
         savePath = os.path.join(self.savePath, fileName)
-        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self,"Save .atf file",
-                            savePath,"Atf Files (*.atf);;CSV Files (*.csv)", options=options)
+        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self,
+            "Save .atf file",
+            savePath,
+            "Atf Files (*.atf);;CSV Files (*.csv)",
+            options=options,
+        )
         if not fileName:
             return
 
         self.savePath = os.path.split(fileName)[0]
 
-        if fileName.endswith('.atf'):
+        if fileName.endswith(".atf"):
             numSweeps = self.numSweeps
             out = self.getAtfHeader(numChannels=numSweeps)
             data = self._data  # list of sweeps
             fs = self._fs
 
-            #if numChannels == 2:
+            # if numChannels == 2:
             #    myNoise = np.random.normal(scale=np.sqrt(5), size=data.shape)
 
             # TODO: getAtfHeader needs to append trailing eol
             #         Then here we don't pre-pend with \n but append each line
-            eol = '\n'
+            eol = "\n"
             pntsPerSweep = len(self._data[0])
             for i in range(pntsPerSweep):
                 for sweepNumber in range(self.numSweeps):
-                    #sweepData = self._data[sweepNumber]
+                    # sweepData = self._data[sweepNumber]
                     val = self._data[sweepNumber][i]
                     # TODO: Convert to f'' format
                     if sweepNumber == 0:
                         # time and sweep 0
-                        out += '%.05f\t%.05f'%(i/fs,val)
+                        out += "%.05f\t%.05f" % (i / fs, val)
                     else:
                         # append value for next sweep
-                        out += '\t%.05f'%(val)
+                        out += "\t%.05f" % (val)
                 #
                 out += eol
             #
-            with open(fileName,'w') as f:
+            with open(fileName, "w") as f:
                 f.write(out)
 
-        elif fileName.endswith('.csv'):
-            df = pd.DataFrame(columns=['sec', 'pA'])
-            df['sec'] = self._t
-            df['pA'] = self._data
+        elif fileName.endswith(".csv"):
+            df = pd.DataFrame(columns=["sec", "pA"])
+            df["sec"] = self._t
+            df["pA"] = self._data
             df.to_csv(fileName, index=False)
         #
         logger.info(f'Saved: "{fileName}"')
@@ -836,13 +864,13 @@ class stimGen(sanpyPlugin):
         return filename
         """
 
-        filename = 'sanpy_' + datetime.today().strftime('%Y%m%d')
-        filename += '_'
+        filename = "sanpy_" + datetime.today().strftime("%Y%m%d")
+        filename += "_"
 
         saveStimIndex = self.saveStimIndex
-        filename += f'{saveStimIndex:04}'
+        filename += f"{saveStimIndex:04}"
 
-        filename += '.atf'
+        filename += ".atf"
 
         # increment for next save
         self.saveStimIndex += 1
@@ -860,11 +888,12 @@ class stimGen(sanpyPlugin):
         """
         myVars = vars(self)
         print(myVars)
-        for k,v in d.items():
+        for k, v in d.items():
             print(k, v, type(v))
             myVars[k] = v
 
         self.replot()
+
 
 def run():
     app = QtWidgets.QApplication(sys.argv)
@@ -874,20 +903,21 @@ def run():
 
     sys.exit(app.exec_())
 
+
 def testDict():
-    folderPath = '/home/cudmore/Sites/SanPy'
+    folderPath = "/home/cudmore/Sites/SanPy"
     df = readFolderParams(folderPath)
 
     sys.exit(1)
 
-    path = '/home/cudmore/Sites/SanPy/sanpy_20211206_0000.atf'
-    path = '/home/cudmore/Sites/SanPy/sanpy_20211206_0001.atf'
+    path = "/home/cudmore/Sites/SanPy/sanpy_20211206_0000.atf"
+    path = "/home/cudmore/Sites/SanPy/sanpy_20211206_0001.atf"
 
     d = readFileParams(path)
-    for k,v in d.items():
-        print(k,v)
+    for k, v in d.items():
+        print(k, v)
 
-    '''
+    """
     app = QtWidgets.QApplication(sys.argv)
     sg = stimGen()
     sg.buildFromDict(d)
@@ -895,9 +925,10 @@ def testDict():
     sg.show()
 
     sys.exit(app.exec_())
-    '''
+    """
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     run()
 
-    #testDict()
+    # testDict()

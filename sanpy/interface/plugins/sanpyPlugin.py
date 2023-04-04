@@ -20,39 +20,43 @@ import sanpy
 import sanpy.interface
 
 from sanpy.sanpyLogger import get_logger
+
 logger = get_logger(__name__)
 
-class ResponseType(enum.Enum):
-    """Enum representing the types of events a Plugin will respond to.
-    """
-    switchFile = 'Switch File'
-    setSweep = 'Set Sweep'
-    analysisChange = 'Analysis Change'
-    selectSpike = 'Select Spike'
-    setAxis = 'Set Axis'
 
-class SpikeSelectEvent():
-    """Class that encapsulates a spike(s) selection event.
-    """
-    def __init__(self, spikeList : List[int] = [],
-                 ba : sanpy.bAnalysis = None,
-                 isAlt : bool = False):
+class ResponseType(enum.Enum):
+    """Enum representing the types of events a Plugin will respond to."""
+
+    switchFile = "Switch File"
+    setSweep = "Set Sweep"
+    analysisChange = "Analysis Change"
+    selectSpike = "Select Spike"
+    setAxis = "Set Axis"
+
+
+class SpikeSelectEvent:
+    """Class that encapsulates a spike(s) selection event."""
+
+    def __init__(
+        self, spikeList: List[int] = [], ba: sanpy.bAnalysis = None, isAlt: bool = False
+    ):
         self._spikeList = spikeList
         self._ba = ba
         self._isAlt = isAlt
 
     def getSpikeList(self):
         return self._spikeList
-    
+
     def getAnalysis(self):
         return self._ba
-    
+
     def getDoZoom(self):
         return self._isAlt
-    
+
+
 class sanpyPlugin(QtWidgets.QWidget):
     """Base class for all SanPy plugins.
-    
+
     Provides general purpose API to build plugings including:
 
     - Open PyQt and Matplotlib plots
@@ -106,7 +110,7 @@ class sanpyPlugin(QtWidgets.QWidget):
     signalCloseWindow = QtCore.pyqtSignal(object)
     """Emit signal on window close."""
 
-    #signalSelectSpike = QtCore.pyqtSignal(object)
+    # signalSelectSpike = QtCore.pyqtSignal(object)
     """Emit signal on spike selection."""
 
     signalSelectSpikeList = QtCore.pyqtSignal(object)
@@ -115,7 +119,7 @@ class sanpyPlugin(QtWidgets.QWidget):
     signalDetect = QtCore.pyqtSignal(object)
     """Emit signal on spike selection."""
 
-    myHumanName = 'UNDEFINED-PLUGIN-NAME'
+    myHumanName = "UNDEFINED-PLUGIN-NAME"
     """Each derived class needs to define this."""
 
     # mar 11, if True then show in menus
@@ -124,12 +128,14 @@ class sanpyPlugin(QtWidgets.QWidget):
     responseTypes = ResponseType
     """Defines how a plugin will response to interface changes. Includes (switchFile, analysisChange, selectSpike, setAxis)."""
 
-    def __init__(self,
-                 ba : Optional[sanpy.bAnalysis] = None,
-                 bPlugin : Optional["sanpy.interface.bPlugin"] = None,
-                 startStop : Optional[List[float]] = None,
-                 options=None,
-                 parent=None):
+    def __init__(
+        self,
+        ba: Optional[sanpy.bAnalysis] = None,
+        bPlugin: Optional["sanpy.interface.bPlugin"] = None,
+        startStop: Optional[List[float]] = None,
+        options=None,
+        parent=None,
+    ):
         """
         Parameters
         ----------
@@ -152,18 +158,18 @@ class sanpyPlugin(QtWidgets.QWidget):
         # self._closeAction = QtWidgets.QAction("Exit Application", self)
         # self._closeAction.setShortcut('Ctrl+W')
         # self._closeAction.triggered.connect(self.close)
-        
+
         # derived classes will set this in init (see kymographPlugin)
-        self._initError : bool = False
+        self._initError: bool = False
 
         # underlying bAnalaysis
-        self._ba : sanpy.bAnalysis = ba
+        self._ba: sanpy.bAnalysis = ba
 
         # the sweep number of the sanpy.bAnalaysis
-        self._sweepNumber : Union[int,str] = 0
-        self._epochNumber : Union[int,str] = 'All'
+        self._sweepNumber: Union[int, str] = 0
+        self._epochNumber: Union[int, str] = "All"
 
-        self._bPlugins : "sanpy.interface.bPlugin" = bPlugin
+        self._bPlugins: "sanpy.interface.bPlugin" = bPlugin
         # pointer to object, send signal back on close
 
         self.darkTheme = True
@@ -172,23 +178,23 @@ class sanpyPlugin(QtWidgets.QWidget):
             self.darkTheme = _useDarkStyle
 
         # to show as a widget
-        self._showSelf : bool = True
+        self._showSelf: bool = True
 
         # the start and stop secinds to display
-        self._startSec : Optional[float] = None
-        self._stopSec : Optional[float] = None
+        self._startSec: Optional[float] = None
+        self._stopSec: Optional[float] = None
         if startStop is not None:
             self._startSec = startStop[0]
             self._stopSec = startStop[1]
 
         # keep track of spike selection
-        self._selectedSpikeList : List[int] = []
+        self._selectedSpikeList: List[int] = []
 
         # build a dict of boolean from ResponseType enum class
         # Things to respond to like switch file, set sweep, etc
-        self._responseOptions : dict = {}
-        for option in (self.responseTypes):
-            #print(type(option))
+        self._responseOptions: dict = {}
+        for option in self.responseTypes:
+            # print(type(option))
             self._responseOptions[option.name] = True
 
         # mar 26 2023 was this
@@ -202,7 +208,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         # these are causing really freaking annoying failures on GitHub !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # self.fig : "matplotlib.figure.Figure" = None
         # self.axs : "matplotlib.axes._axes.Axes" = None
-        #self.mplToolbar : "matplotlib.backends.backend_qt.NavigationToolbar2QT" = None
+        # self.mplToolbar : "matplotlib.backends.backend_qt.NavigationToolbar2QT" = None
         self.fig = None
         self.axs = None
         self.mplToolbar = None
@@ -220,9 +226,9 @@ class sanpyPlugin(QtWidgets.QWidget):
         # all plugin widgets always have a single QtWidgetQVBoxLayout
         # both widget and layouts can be added to this
         self._vBoxLayout = self.makeVLayout()
-        
+
         # the top toolbar is always present
-        self._blockComboBox : bool = False
+        self._blockComboBox: bool = False
         self._topToolbarWidget = self._buildTopToolbarWidget()
         self.toggleTopToobar(False)  # initially hidden
         self._updateTopToolbar()
@@ -232,32 +238,31 @@ class sanpyPlugin(QtWidgets.QWidget):
         return self.__class__.__name__
 
     def getPenColor(self) -> str:
-        """Get pen color for pyqtgraph traces based on dark theme.
-        """
+        """Get pen color for pyqtgraph traces based on dark theme."""
         if self.darkTheme:
-            return 'w'
+            return "w"
         else:
-            return 'k'
-        
-    def getStat(self, stat : str) -> list:
+            return "k"
+
+    def getStat(self, stat: str) -> list:
         """Convenianece function to get a stat from underling sanpy.bAnalysis.
-        
+
         Parameters
         ----------
         stat : str
             Stat to get, corresponds to a column in sanpy.bAnalysis
         """
-        return self.ba.getStat(stat,
-                               sweepNumber=self.sweepNumber,
-                               epochNumber=self.epochNumber)
-                              
+        return self.ba.getStat(
+            stat, sweepNumber=self.sweepNumber, epochNumber=self.epochNumber
+        )
+
     @property
     def responseOptions(self):
         return self._responseOptions
-    
-    def toggleTopToobar(self, visible : bool = None):
+
+    def toggleTopToobar(self, visible: bool = None):
         """Toggle or set the top toolbar.
-        
+
         Parameters
         ----------
         visible : bool or None
@@ -269,17 +274,16 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def getVBoxLayout(self):
         """Get the main PyQt.QWidgets.QVBoxLayout
-        
+
         Derived plugins can add to this with addWidget() and addLayout()
         """
         return self._vBoxLayout
-    
+
     def getSelectedSpikes(self) -> List[int]:
-        """Get the currently selected spikes.
-        """
+        """Get the currently selected spikes."""
         return self._selectedSpikeList
-    
-    def setSelectedSpikes(self, spikes : List[int]):
+
+    def setSelectedSpikes(self, spikes: List[int]):
         """Set the currently selected spikes.
 
         Parameters
@@ -290,44 +294,42 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def getHumanName(self):
         """Get the human readable name for the plugin.
-        
+
         Each plugin needs a unique name specified in the static property `myHumanName`.
-        
+
         This is used to display the plugin in the menus.
         """
         return self.myHumanName
-    
+
     def getInitError(self):
         return self._initError
 
     def getWidget(self):
         """Over-ride if plugin makes its own PyQt widget.
-        
+
         By default, all plugins inherit from PyQt.QWidgets.QWidget
         """
         return self
-    
+
     def getShowSelf(self):
         return self._showSelf
 
-    def setShowSelf(self, show : bool):
+    def setShowSelf(self, show: bool):
         self._showSelf = show
 
     @property
     def sweepNumber(self):
-        """Get the current sweep number, can be 'All'.
-        """
+        """Get the current sweep number, can be 'All'."""
         return self._sweepNumber
 
     @property
     def epochNumber(self):
-        """Get the current epoch number, can be 'All'.
-        """
+        """Get the current epoch number, can be 'All'."""
         return self._epochNumber
 
-    def getSweep(self, type : str):
+    def getSweep(self, type: str):
         """Get the raw data from a sweep.
-        
+
         Parameters
         ----------
         type : str
@@ -337,25 +339,25 @@ class sanpyPlugin(QtWidgets.QWidget):
         type = type.upper()
         if self.ba is None:
             return theRet
-        if type == 'X':
+        if type == "X":
             theRet = self.ba.fileLoader.sweepX
-        elif type == 'Y':
+        elif type == "Y":
             theRet = self.ba.fileLoader.sweepY
-        elif type == 'C':
+        elif type == "C":
             theRet = self.ba.fileLoader.sweepC
-        elif type == 'filteredDeriv':
+        elif type == "filteredDeriv":
             theRet = self.ba.fileLoader.filteredDeriv
-        elif type == 'filteredVm':
+        elif type == "filteredVm":
             theRet = self.ba.fileLoader.sweepY_filtered
         else:
             logger.error(f'Did not understand type: "{type}"')
-        
+
         return theRet
 
     @property
     def ba(self):
         """Get the current sanpy.bAnalysis object.
-        
+
         Returns
         -------
         sanpy.bAnalysis
@@ -374,7 +376,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def getSanPyApp(self) -> "sanpy.interface.sanpy_app":
         """Return underlying SanPy app.
-        
+
         Only exists if running in SanPy Qt Gui
 
         Returns
@@ -386,7 +388,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def _installSignalSlot(self):
         """Set up PyQt signals/slots.
-        
+
         Be sure to call _disconnectSignalSlot() on plugin destruction.
         """
         app = self.getSanPyApp()
@@ -418,8 +420,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         self.signalSelectSpikeList.connect(self.slot_selectSpikeList)
 
     def _disconnectSignalSlot(self):
-        """Disconnect PyQt signal/slot on destruction.
-        """
+        """Disconnect PyQt signal/slot on destruction."""
         app = self.getSanPyApp()
         if app is not None:
             # receive spike selection
@@ -432,9 +433,7 @@ class sanpyPlugin(QtWidgets.QWidget):
             # recieve set x axis
             app.signalSetXAxis.disconnect(self.slot_set_x_axis)
 
-    def toggleResponseOptions(self,
-                              thisOption : ResponseType,
-                              newValue : bool = None):
+    def toggleResponseOptions(self, thisOption: ResponseType, newValue: bool = None):
         """Set underlying responseOptions based on name of thisOption.
 
         Parameters
@@ -443,12 +442,12 @@ class sanpyPlugin(QtWidgets.QWidget):
         newValue : Optional[bool]
             If boolean then set, if None then toggle.
         """
-        #logger.info(f'{thisOption} {newValue}')
+        # logger.info(f'{thisOption} {newValue}')
         if newValue is None:
             newValue = not self.responseOptions[thisOption.name]
         self.responseOptions[thisOption.name] = newValue
 
-    def _getResponseOption(self, thisOption : ResponseType) -> str:
+    def _getResponseOption(self, thisOption: ResponseType) -> str:
         """Get the state of a plot option from responseOptions.
 
         Parameters
@@ -471,7 +470,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def selectSpikeList(self):
         """Derived class adds code to select spike from sDict.
-        
+
         Get selected spike list with getSelectedSpikes()
         """
         pass
@@ -514,11 +513,11 @@ class sanpyPlugin(QtWidgets.QWidget):
         elif isMpl:
             # q will quit !!!!
             text = event.key
-            doCopy = text in ['ctrl+c', 'cmd+c']
-            doClose = text in ['ctrl+w', 'cmd+w']
+            doCopy = text in ["ctrl+c", "cmd+c"]
+            doClose = text in ["ctrl+w", "cmd+w"]
             logger.info(f'mpl key: "{text}"')
         else:
-            logger.warning(f'Unknown event type: {type(event)}')
+            logger.warning(f"Unknown event type: {type(event)}")
             return
 
         self.keyIsDown = text
@@ -527,7 +526,7 @@ class sanpyPlugin(QtWidgets.QWidget):
             self.copyToClipboard()
         elif doClose:
             self.close()
-        elif key==QtCore.Qt.Key_Escape or text=='esc' or text=='escape':
+        elif key == QtCore.Qt.Key_Escape or text == "esc" or text == "escape":
             # single spike
             # sDict = {
             #     'spikeNumber': None,
@@ -538,81 +537,83 @@ class sanpyPlugin(QtWidgets.QWidget):
             # self.signalSelectSpike.emit(sDict)
             # spike list
             sDict = {
-                'spikeList': [],
-                'doZoom': False,
-                'ba': self.ba,
+                "spikeList": [],
+                "doZoom": False,
+                "ba": self.ba,
             }
             self.signalSelectSpikeList.emit(sDict)
-        elif key==QtCore.Qt.Key_T or text=='t':
+        elif key == QtCore.Qt.Key_T or text == "t":
             self.toggleTopToobar()
-        elif text == '':
+        elif text == "":
             pass
 
         # critical difference between mpl and qt
         if isMpl:
             return text
         else:
-            #return event
+            # return event
             return
 
-    def copyToClipboard(self, df = None):
-        """Derived classes add code to copy plugin to clipboard.
-        """
+    def copyToClipboard(self, df=None):
+        """Derived classes add code to copy plugin to clipboard."""
         if df is None:
             return
-    
-        logger.info('')
+
+        logger.info("")
         if self.ba is None:
             return
-        
+
         fileName = self.ba.fileLoader.filename
-        fileName += '.csv'
+        fileName += ".csv"
         savePath = fileName
         options = QtWidgets.QFileDialog.Options()
-        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self,"Save .csv file",
-                            savePath,"CSV Files (*.csv)", options=options)
+        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save .csv file", savePath, "CSV Files (*.csv)", options=options
+        )
         if not fileName:
             return
 
         logger.info(f'Saving: "{fileName}"')
         df.to_csv(fileName, index=False)
 
-    def saveResultsFigure(self, pgPlot = None):
+    def saveResultsFigure(self, pgPlot=None):
         """In derived, add code to save main figure to file.
-        
+
         In derived, pass in a pg plot from a view and we will save it.
         """
         if pgPlot is None:
             return
-        
+
         exporter = pg.exporters.ImageExporter(pgPlot)
-        #print(f'exporter: {type(exporter)}')
-        #print('getSupportedImageFormats:', exporter.getSupportedImageFormats())
+        # print(f'exporter: {type(exporter)}')
+        # print('getSupportedImageFormats:', exporter.getSupportedImageFormats())
         # set export parameters if needed
-        
+
         # (width, height, antialias, background, invertvalue)
-        exporter.parameters()['width'] = 1000   # (note this also affects height parameter)
-        
+        exporter.parameters()[
+            "width"
+        ] = 1000  # (note this also affects height parameter)
+
         # ask user for file
         fileName = self.ba.fileLoader.filename
-        fileName += '.png'
+        fileName += ".png"
         savePath = fileName
         options = QtWidgets.QFileDialog.Options()
-        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self,"Save .png file",
-                            savePath,"CSV Files (*.png)", options=options)
+        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(
+            self, "Save .png file", savePath, "CSV Files (*.png)", options=options
+        )
         if not fileName:
             return
-        
+
         # save to file
-        logger.info(f'Saving to: {fileName}')
+        logger.info(f"Saving to: {fileName}")
         exporter.export(fileName)
 
     def bringToFront(self):
-        """Bring the widget to the front.
-        """
+        """Bring the widget to the front."""
         if not self._showSelf:
             return
-        
+
         # Qt
         self.getWidget().show()
         self.getWidget().activateWindow()
@@ -624,15 +625,14 @@ class sanpyPlugin(QtWidgets.QWidget):
             FigureManagerQT.window.raise_()
 
     def makeVLayout(self):
-        """Make a PyQt QVBoxLayout.
-        """
+        """Make a PyQt QVBoxLayout."""
         vBoxLayout = QtWidgets.QVBoxLayout()
         self.setLayout(vBoxLayout)
         return vBoxLayout
-    
-    def mplWindow2(self, numRow=1, numCol=1, addToLayout : bool = True):
+
+    def mplWindow2(self, numRow=1, numCol=1, addToLayout: bool = True):
         """Make a matplotlib figure, canvas, and axis.
-        
+
         Parameters
         ----------
         numRow : int
@@ -643,65 +643,70 @@ class sanpyPlugin(QtWidgets.QWidget):
         Returns
         -------
         self.static_canvas, self.mplToolbar
-        
+
         """
-        #plt.style.use('dark_background')
+        # plt.style.use('dark_background')
         if self.darkTheme:
-            plt.style.use('dark_background')
+            plt.style.use("dark_background")
         else:
             plt.rcParams.update(plt.rcParamsDefault)
-        
+
         # this is dangerous, collides with self.mplWindow()
         # these are causing really freaking annoying failures on GitHub !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         # self.fig : "matplotlib.figure.Figure" = mpl.figure.Figure()
         self.fig = mpl.figure.Figure()
 
         # not working
-        #self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
+        # self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
 
         self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
-        self.static_canvas.setFocusPolicy( QtCore.Qt.ClickFocus ) # this is really triccky and annoying
+        self.static_canvas.setFocusPolicy(
+            QtCore.Qt.ClickFocus
+        )  # this is really triccky and annoying
         self.static_canvas.setFocus()
-        self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
+        self.fig.canvas.mpl_connect("key_press_event", self.keyPressEvent)
 
         self.axs = [None] * numRow  # empty list
-        if numRow==1 and numCol==1:
+        if numRow == 1 and numCol == 1:
             _static_ax = self.static_canvas.figure.subplots()
             self.axs = _static_ax
-            #print('self.axs:', type(self.axs))
+            # print('self.axs:', type(self.axs))
         else:
             for idx in range(numRow):
                 plotNum = idx + 1
-                #print('mplWindow2()', idx)
-                self.axs[idx] = self.static_canvas.figure.add_subplot(numRow,1,plotNum)
+                # print('mplWindow2()', idx)
+                self.axs[idx] = self.static_canvas.figure.add_subplot(
+                    numRow, 1, plotNum
+                )
 
         # does not work
-        #self.static_canvas.mpl_connect('key_press_event', self.keyPressEvent)
+        # self.static_canvas.mpl_connect('key_press_event', self.keyPressEvent)
 
         # pick_event assumes 'picker=5' in any .plot()
         # does this need to be a member? I think so?
-        self._cid = self.static_canvas.mpl_connect('pick_event', self.spike_pick_event)
+        self._cid = self.static_canvas.mpl_connect("pick_event", self.spike_pick_event)
 
         # matplotlib plot tools toolbar (zoom, pan, save, etc)
-        #from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-        self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(self.static_canvas, self.static_canvas)
-              
-        #layout = QtWidgets.QVBoxLayout()
+        # from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+        self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(
+            self.static_canvas, self.static_canvas
+        )
+
+        # layout = QtWidgets.QVBoxLayout()
         if addToLayout:
             layout = self.getVBoxLayout()
             layout.addWidget(self.static_canvas)
             layout.addWidget(self.mplToolbar)
         else:
             return self.static_canvas, self.mplToolbar
-        
+
     def _mySetWindowTitle(self):
-        """Set the window title based on ba.
-        """
+        """Set the window title based on ba."""
         if self.ba is not None:
             fileName = self.ba.fileLoader.filename
         else:
-            fileName = ''
-        _windowTitle = self.myHumanName + ':' + fileName
+            fileName = ""
+        _windowTitle = self.myHumanName + ":" + fileName
 
         # mpl
         if self.fig is not None:
@@ -709,14 +714,14 @@ class sanpyPlugin(QtWidgets.QWidget):
                 self.fig.canvas.manager.set_window_title(_windowTitle)
 
         # pyqt
-        #self.mainWidget._mySetWindowTitle(self.windowTitle)
+        # self.mainWidget._mySetWindowTitle(self.windowTitle)
         self.getWidget().setWindowTitle(_windowTitle)
 
     def spike_pick_event(self, event):
         """Respond to user clicks in mpl plot
-        
+
         Assumes plot(..., picker=5)
-        
+
         Parameters
         ----------
         event : matplotlib.backend_bases.PickEvent
@@ -725,7 +730,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         if len(event.ind) < 1:
             return
 
-        #logger.info(f'{event.ind}')
+        # logger.info(f'{event.ind}')
 
         spikeNumber = event.ind[0]
 
@@ -734,20 +739,22 @@ class sanpyPlugin(QtWidgets.QWidget):
         if modifiers == QtCore.Qt.ShiftModifier:
             doZoom = True
 
-        logger.info(f'got {len(event.ind)} candidates, first is spike:{spikeNumber} doZoom:{doZoom}')
+        logger.info(
+            f"got {len(event.ind)} candidates, first is spike:{spikeNumber} doZoom:{doZoom}"
+        )
 
         # propagate a signal to parent
         # TODO: use class SpikeSelectEvent()
         sDict = {
-            'spikeList': [spikeNumber],
-            'doZoom': doZoom,
-            'ba': self.ba,
+            "spikeList": [spikeNumber],
+            "doZoom": doZoom,
+            "ba": self.ba,
         }
         self.signalSelectSpikeList.emit(sDict)
 
     def closeEvent(self, event):
         """Called when window is closed.
-        
+
         Signal close event back to parent bPlugin object.
 
         Parameters
@@ -755,15 +762,14 @@ class sanpyPlugin(QtWidgets.QWidget):
         event Union[matplotlib.backend_bases.CloseEvent, PyQt5.QtGui.QCloseEvent]
             The close event from either PyQt or matplotlib
         """
-        logger.info(f'  -->> emit signalCloseWindow(self)')
+        logger.info(f"  -->> emit signalCloseWindow(self)")
         self.signalCloseWindow.emit(self)
 
-    def slot_switchFile(self,
-                        ba : sanpy.bAnalysis,
-                        rowDict : Optional[dict] = None,
-                        replot : bool = True):
+    def slot_switchFile(
+        self, ba: sanpy.bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
+    ):
         """Respond to switch file.
-        
+
         Parameters
         ----------
         rowDict : dict
@@ -778,13 +784,13 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         if ba is None:
             return
-        
+
         # don't respond if we are already using ba
         if self._ba == ba:
             return
-        
+
         self._ba = ba
-        #self.fileRowDict = rowDict  # for detectionParams plugin
+        # self.fileRowDict = rowDict  # for detectionParams plugin
 
         # rest sweep
         self._sweepNumber = 0
@@ -793,8 +799,8 @@ class sanpyPlugin(QtWidgets.QWidget):
         startSec = None
         stopSec = None
         if rowDict is not None:
-            startSec = rowDict['Start(s)']
-            stopSec = rowDict['Stop(s)']
+            startSec = rowDict["Start(s)"]
+            stopSec = rowDict["Stop(s)"]
             if math.isnan(startSec):
                 startSec = None
             if math.isnan(stopSec):
@@ -805,9 +811,9 @@ class sanpyPlugin(QtWidgets.QWidget):
         # reset spike and spike list selection
         self._selectedSpikeList = []
         self.selectedSpike = None
-        
+
         # inform derived classes of change
-        #self.old_selectSpike()
+        # self.old_selectSpike()
         self.selectSpikeList()
 
         # set pyqt window title
@@ -825,35 +831,34 @@ class sanpyPlugin(QtWidgets.QWidget):
         ----------
         ba : sanpy.bAnalysis
         """
-        logger.info('')
+        logger.info("")
         if not self._getResponseOption(self.responseTypes.analysisChange):
             return
-        
+
         if ba is None:
             return
-        
+
         # don't update analysis if we are showing different ba
         if self._ba != ba:
             return
 
         self.replot()
 
-    def slot_setSweep(self, ba : sanpy.bAnalysis, sweepNumber : int):
-        """Respond to user selecting a sweep.
-        """
-        
+    def slot_setSweep(self, ba: sanpy.bAnalysis, sweepNumber: int):
+        """Respond to user selecting a sweep."""
+
         if not self._getResponseOption(self.responseTypes.setSweep):
             return
 
-        logger.info(f'{self._myClassName()}')
+        logger.info(f"{self._myClassName()}")
 
         if ba is None:
             return
-        
+
         # don't respond if we are showing different ba
         if self._ba != ba:
             return
-            
+
         self._sweepNumber = sweepNumber
 
         # reset selection
@@ -862,42 +867,41 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         self.replot()
 
-    def slot_selectSpikeList(self, eDict : dict):
+    def slot_selectSpikeList(self, eDict: dict):
         """Respond to spike selection.
 
         TODO: convert dict to class spikeSelection
         """
 
-        logger.info(f'{self._myClassName()} eDict:{eDict}')
-        
+        logger.info(f"{self._myClassName()} eDict:{eDict}")
+
         # don't respond if we are showing a different ba (bAnalysis)
-        ba = eDict['ba']
+        ba = eDict["ba"]
         if self.ba != ba:
             return
 
-        spikeList = eDict['spikeList']
+        spikeList = eDict["spikeList"]
         self._selectedSpikeList = spikeList  # [] on no selection
 
         self.selectSpikeList()
 
     def old_slot_selectSpike(self, eDict):
-        """Respond to spike selection.
-        """
+        """Respond to spike selection."""
 
         # don't respond if user/code has turned this off
         if not self._getResponseOption(self.responseTypes.selectSpike):
             return
 
         # don't respond if we are showing a different ba (bAnalysis)
-        ba = eDict['ba']
+        ba = eDict["ba"]
         if self.ba != ba:
             return
 
-        self.selectedSpike = eDict['spikeNumber']
+        self.selectedSpike = eDict["spikeNumber"]
 
         self.old_selectSpike(eDict)
 
-    def slot_set_x_axis(self, startStopList : List[float]):
+    def slot_set_x_axis(self, startStopList: List[float]):
         """Respond to changes in x-axis.
 
         Parameters
@@ -907,7 +911,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         """
         if not self._getResponseOption(self.responseTypes.setAxis):
             return
-        
+
         # don't set axis if we are showing different ba
         app = self.getSanPyApp()
         if app is not None:
@@ -934,8 +938,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         pass
 
     def _turnOffAllSignalSlot(self):
-        """Make plugin not respond to any changes in interface.
-        """
+        """Make plugin not respond to any changes in interface."""
         # turn off all signal/slot
         switchFile = self.responseTypes.switchFile
         self.toggleResponseOptions(switchFile, newValue=False)
@@ -967,46 +970,46 @@ class sanpyPlugin(QtWidgets.QWidget):
         """
         if self.mplToolbar is not None:
             state = self.mplToolbar.mode
-            if state in ['zoom rect', 'pan/zoom']:
+            if state in ["zoom rect", "pan/zoom"]:
                 # don't process right-click when toolbar is active
                 return
 
-        logger.info('')
+        logger.info("")
 
         contextMenu = QtWidgets.QMenu(self)
-        
+
         # prepend any menu from derived classes
         self.prependMenus(contextMenu)
 
         switchFile = contextMenu.addAction("Switch File")
         switchFile.setCheckable(True)
-        switchFile.setChecked(self.responseOptions['switchFile'])
+        switchFile.setChecked(self.responseOptions["switchFile"])
 
         setSweep = contextMenu.addAction("Set Sweep")
         setSweep.setCheckable(True)
-        setSweep.setChecked(self.responseOptions['setSweep'])
+        setSweep.setChecked(self.responseOptions["setSweep"])
 
         analysisChange = contextMenu.addAction("Analysis Change")
         analysisChange.setCheckable(True)
-        analysisChange.setChecked(self.responseOptions['analysisChange'])
+        analysisChange.setChecked(self.responseOptions["analysisChange"])
 
         selectSpike = contextMenu.addAction("Select Spike")
         selectSpike.setCheckable(True)
-        selectSpike.setChecked(self.responseOptions['selectSpike'])
+        selectSpike.setChecked(self.responseOptions["selectSpike"])
 
-        axisChange = contextMenu.addAction('Axis Change')
+        axisChange = contextMenu.addAction("Axis Change")
         axisChange.setCheckable(True)
-        axisChange.setChecked(self.responseOptions['setAxis'])
+        axisChange.setChecked(self.responseOptions["setAxis"])
 
         contextMenu.addSeparator()
-        copyTable = contextMenu.addAction('Copy Results')
-        saveFigure = contextMenu.addAction('Save Figure')
+        copyTable = contextMenu.addAction("Copy Results")
+        saveFigure = contextMenu.addAction("Save Figure")
 
         contextMenu.addSeparator()
-        showTopToolbar = contextMenu.addAction('Toggle Top Toolbar')
+        showTopToolbar = contextMenu.addAction("Toggle Top Toolbar")
 
-        #contextMenu.addSeparator()
-        #saveTable = contextMenu.addAction("Save Table")
+        # contextMenu.addSeparator()
+        # saveTable = contextMenu.addAction("Save Table")
 
         #
         # open the menu
@@ -1039,25 +1042,25 @@ class sanpyPlugin(QtWidgets.QWidget):
             self.saveResultsFigure()
         elif action == showTopToolbar:
             self.toggleTopToobar()
-        #elif action == saveTable:
+        # elif action == saveTable:
         #    #self.saveToFile()
         #    logger.info('NOT IMPLEMENTED')
 
         elif action is not None:
-                logger.warning(f'Menu action not taken "{action.text}"')
+            logger.warning(f'Menu action not taken "{action.text}"')
 
-    def prependMenus(self, contextMenu : "QtWidgets.QMenu"):
+    def prependMenus(self, contextMenu: "QtWidgets.QMenu"):
         """Prepend menus to mouse right-click contect menu.
-        
+
         Parameters
         ----------
         contextMenu : QtWidgets.QMenu
         """
         pass
 
-    def handleContextMenu(self, action : "QtGui.QAction"):
+    def handleContextMenu(self, action: "QtGui.QAction"):
         """Derived plugins need to define this to handle right-click contect menu actions.
-        
+
         Only needed if `prependMenus` is used.
 
         Parameters
@@ -1067,23 +1070,22 @@ class sanpyPlugin(QtWidgets.QWidget):
         pass
 
     def _updateTopToolbar(self):
-        """Update the top toolbar on state change like switch file.
-        """
+        """Update the top toolbar on state change like switch file."""
         if self.ba is None:
             return
-        
+
         _sweepList = self.ba.fileLoader.sweepList
         self._blockComboBox = True
         self._sweepComboBox.clear()
-        self._sweepComboBox.addItem('All')
+        self._sweepComboBox.addItem("All")
         for _sweep in _sweepList:
             self._sweepComboBox.addItem(str(_sweep))
         _enabled = len(_sweepList) > 1
         self._sweepComboBox.setEnabled(_enabled)
-        if self.sweepNumber == 'All':
+        if self.sweepNumber == "All":
             self._sweepComboBox.setCurrentIndex(0)
         else:
-            self._sweepComboBox.setCurrentIndex(self.sweepNumber+1)
+            self._sweepComboBox.setCurrentIndex(self.sweepNumber + 1)
         self._blockComboBox = False
 
         # minimum of 2 (never 1 or 0)
@@ -1092,7 +1094,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         if _numEpochs is not None:
             self._blockComboBox = True
             self._epochComboBox.clear()
-            self._epochComboBox.addItem('All')
+            self._epochComboBox.addItem("All")
             for _epoch in range(_numEpochs):
                 self._epochComboBox.addItem(str(_epoch))
             _enabled = _numEpochs > 2
@@ -1106,7 +1108,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         # filename = self.ba.getFileName()
         # self._fileLabel.setText(filename)
 
-    def _on_sweep_combo_box(self, idx : int):
+    def _on_sweep_combo_box(self, idx: int):
         """Respond to user selecting sweep combobox.
 
         Notes
@@ -1115,19 +1117,19 @@ class sanpyPlugin(QtWidgets.QWidget):
         """
         if self._blockComboBox:
             return
-        
+
         idx = idx - 1  # first item is always 'All'
         if idx == -1:
-            idx = 'All'
+            idx = "All"
         logger.info(idx)
         self._sweepNumber = idx
 
         if self.ba is None:
             return
-        
+
         self.replot()
 
-    def _on_epoch_combo_box(self, idx : int):
+    def _on_epoch_combo_box(self, idx: int):
         """Respond to user selecting epoch combobox.
 
         Notes
@@ -1136,46 +1138,45 @@ class sanpyPlugin(QtWidgets.QWidget):
         """
         if self._blockComboBox:
             return
-        
+
         idx = idx - 1  # first item is always 'All'
         if idx == -1:
-            idx = 'All'
+            idx = "All"
         logger.info(idx)
         self._epochNumber = idx
 
         if self.ba is None:
             return
-        
+
         self.replot()
 
     def _buildTopToolbarWidget(self) -> QtWidgets.QWidget:
-        """Top toolbar to show file, toggle responses on/off, etc
-        """
-            
+        """Top toolbar to show file, toggle responses on/off, etc"""
+
         # TODO: Super annoying that popups come up blank if using AlignLeft ???
-        
+
         #
         # first row of controls
         hLayout0 = QtWidgets.QHBoxLayout()
 
         # sweep popup
-        aLabel = QtWidgets.QLabel('Sweeps')
+        aLabel = QtWidgets.QLabel("Sweeps")
         # hLayout0.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
         hLayout0.addWidget(aLabel)
         self._sweepComboBox = QtWidgets.QComboBox()
         self._sweepComboBox.currentIndexChanged.connect(self._on_sweep_combo_box)
-        #hLayout0.addWidget(self._sweepComboBox, alignment=QtCore.Qt.AlignLeft)
+        # hLayout0.addWidget(self._sweepComboBox, alignment=QtCore.Qt.AlignLeft)
         hLayout0.addWidget(self._sweepComboBox)
 
-        #hLayout0.addStretch()
+        # hLayout0.addStretch()
 
         # epoch popup
-        aLabel = QtWidgets.QLabel('Epochs')
+        aLabel = QtWidgets.QLabel("Epochs")
         hLayout0.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
-        #hLayout0.addWidget(aLabel)
+        # hLayout0.addWidget(aLabel)
         self._epochComboBox = QtWidgets.QComboBox()
         self._epochComboBox.currentIndexChanged.connect(self._on_epoch_combo_box)
-        #hLayout0.addWidget(self._epochComboBox, alignment=QtCore.Qt.AlignLeft)
+        # hLayout0.addWidget(self._epochComboBox, alignment=QtCore.Qt.AlignLeft)
         hLayout0.addWidget(self._epochComboBox)
 
         # update on switch file
@@ -1186,7 +1187,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         # self._numSpikesLabel = QtWidgets.QLabel('unknown spikes')
         # hLayout0.addWidget(self._numSpikesLabel, alignment=QtCore.Qt.AlignLeft)
 
-        #hLayout0.addStretch()
+        # hLayout0.addStretch()
 
         #
         # second row of controls
@@ -1196,31 +1197,33 @@ class sanpyPlugin(QtWidgets.QWidget):
         for item in ResponseType:
             aCheckbox = QtWidgets.QCheckBox(item.value)
             aCheckbox.setChecked(self.responseOptions[item.name])
-            aCheckbox.stateChanged.connect(functools.partial(self.toggleResponseOptions, item))
+            aCheckbox.stateChanged.connect(
+                functools.partial(self.toggleResponseOptions, item)
+            )
             hLayout1.addWidget(aCheckbox, alignment=QtCore.Qt.AlignLeft)
 
         hLayout1.addStretch()
 
-        #toolbar layout needs to be in a widget so it can be hidden
+        # toolbar layout needs to be in a widget so it can be hidden
         _mainWidget = QtWidgets.QWidget()
         _topToolbarLayout = QtWidgets.QVBoxLayout(_mainWidget)
         _topToolbarLayout.addLayout(hLayout0)
         _topToolbarLayout.addLayout(hLayout1)
 
         return _mainWidget
-    
+
     # def __on_checkbox_clicked(self, checkBoxName, checkBoxState):
     #     logger.info(checkBoxName, checkBoxState)
 
     def getWindowGeometry(self):
-        """Get the current window position.
-        """
+        """Get the current window position."""
         myRect = self.geometry()
         left = myRect.left()
         top = myRect.top()
         width = myRect.width()
         height = myRect.height()
         return left, top, width, height
+
 
 def test_plugin():
     import sys
@@ -1232,7 +1235,7 @@ def test_plugin():
     app = QtWidgets.QApplication([])
 
     # load and analyze sample data
-    path = '/home/cudmore/Sites/SanPy/data/19114001.abf'
+    path = "/home/cudmore/Sites/SanPy/data/19114001.abf"
     ba = sanpy.bAnalysis(path)
     ba.spikeDetect()
 
@@ -1241,5 +1244,6 @@ def test_plugin():
 
     sys.exit(app.exec_())
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_plugin()

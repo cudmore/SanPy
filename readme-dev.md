@@ -20,6 +20,10 @@
 
 - Use spike pre clip ms and spike clip post ms to set zoom on a spike in the main sanpy widnow. Currently my zoom is large (for myocytes) but needs to be 10x smaller for neurons.
 
+- Switch all `from PyQt5` to `from qtpy`. Switch all `QtCore.pyqtSignal` to `QtCore.Signal`
+
+- [done] Get releases on PyPi
+
 ## Bugs
 
 Selecting spike and setting user type with set spike stat results in incorrect spike symbol bein set in plot scatter widget.

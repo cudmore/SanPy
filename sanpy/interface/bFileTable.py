@@ -11,7 +11,9 @@ import sanpy.analysisDir
 import sanpy.bDetection
 
 from sanpy.sanpyLogger import get_logger
+
 logger = get_logger(__name__)
+
 
 def old_loadDatabase(path):
     """
@@ -28,23 +30,29 @@ def old_loadDatabase(path):
         pass
     elif not os.path.isfile(path):
         print(f'error: bUtil.loadDatabase() did not find file: "{path}"')
-    elif path.endswith('.csv'):
-        masterDf = pd.read_csv(path, header=0, index_col=False)  # , dtype={'ABF File': str})
-    elif path.endswith('.xls'):
+    elif path.endswith(".csv"):
+        masterDf = pd.read_csv(
+            path, header=0, index_col=False
+        )  # , dtype={'ABF File': str})
+    elif path.endswith(".xls"):
         masterDf = pd.read_excel(path, header=0)  # , dtype={'ABF File': str})
-    elif path.endswith('.xlsx'):
-        masterDf = pd.read_excel(path, header=0, engine='openpyxl')  # , dtype={'ABF File': str})
+    elif path.endswith(".xlsx"):
+        masterDf = pd.read_excel(
+            path, header=0, engine="openpyxl"
+        )  # , dtype={'ABF File': str})
     else:
-        print('error: file type not supported. Expecting csv/xls/xlsx. Path:', path)
+        print("error: file type not supported. Expecting csv/xls/xlsx. Path:", path)
     #
     return masterDf
 
+
 def printDict(d, withType=False):
-    for k,v in d.items():
+    for k, v in d.items():
         if withType:
-            print(f'  {k}: {v} {type(v)}')
+            print(f"  {k}: {v} {type(v)}")
         else:
-            print(f'  {k}: {v}')
+            print(f"  {k}: {v}")
+
 
 class myTableView(QtWidgets.QTableView):
     """Table view to display list of files.
@@ -54,41 +62,43 @@ class myTableView(QtWidgets.QTableView):
     See: https://doc.qt.io/qt-5/qtwidgets-itemviews-frozencolumn-example.html
     """
 
-    signalDuplicateRow = QtCore.pyqtSignal(object) # row index
-    signalDeleteRow = QtCore.pyqtSignal(object) # row index
-    #signalRefreshTabe = QtCore.pyqtSignal(object) # row index
+    signalDuplicateRow = QtCore.pyqtSignal(object)  # row index
+    signalDeleteRow = QtCore.pyqtSignal(object)  # row index
+    # signalRefreshTabe = QtCore.pyqtSignal(object) # row index
     signalCopyTable = QtCore.pyqtSignal()
     signalFindNewFiles = QtCore.pyqtSignal()
     signalSaveFileTable = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
-        """
-        """
+        """ """
         super(myTableView, self).__init__(parent)
 
         self.doIncludeCheckbox = False  # todo: turn this on
         # need a local reference to delegate else 'segmentation fault'
-        #self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
+        # self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
 
-        #self.setFont(QtGui.QFont('Arial', 10))
-        
-        self.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
-                            QtWidgets.QSizePolicy.Expanding)
+        # self.setFont(QtGui.QFont('Arial', 10))
+
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        )
         self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
 
-        self.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers
-                            | QtWidgets.QAbstractItemView.DoubleClicked)
+        self.setEditTriggers(
+            QtWidgets.QAbstractItemView.NoEditTriggers
+            | QtWidgets.QAbstractItemView.DoubleClicked
+        )
 
         # removed mar 26 2023
-        '''
+        """
         rowHeight = 11
         fnt = self.font()
         fnt.setPointSize(rowHeight)
         self.setFont(fnt)
         self.verticalHeader().setDefaultSectionSize(rowHeight)
-        '''
-    
-        '''
+        """
+
+        """
         p = self.palette()
         color1 = QtGui.QColor('#dddddd')
         color2 = QtGui.QColor('#ffffff')
@@ -96,9 +106,9 @@ class myTableView(QtWidgets.QTableView):
         p.setColor(QtGui.QPalette.AlternateBase, color2)
         self.setPalette(p)
         self.setAlternatingRowColors(True)
-        '''
+        """
 
-    #def keyPressEvent(self, event): #Reimplement the event here, in your case, do nothing
+    # def keyPressEvent(self, event): #Reimplement the event here, in your case, do nothing
     #    return
 
     def mySetModel(self, model):
@@ -107,45 +117,44 @@ class myTableView(QtWidgets.QTableView):
         """
         self.setModel(model)
 
-        #print('---trying to hide columns')
-        #self.hideColumn(1)
-        #self.setColumnHidden(1,True);
-        #self.setColumnHidden(1, True)
-        #self.horizontalHeader().hideSection(1)
+        # print('---trying to hide columns')
+        # self.hideColumn(1)
+        # self.setColumnHidden(1,True);
+        # self.setColumnHidden(1, True)
+        # self.horizontalHeader().hideSection(1)
 
-    '''
+    """
     # trying to use this to remove tooltip when it comes up as empty ''
     def viewportEvent(self, event):
         logger.info('')
         return True
-    '''
+    """
 
     def contextMenuEvent(self, event):
-        """Handle right mouse click
-        """
+        """Handle right mouse click"""
         contextMenu = QtWidgets.QMenu(self)
-        
+
         duplicateRow = contextMenu.addAction("Duplicate Row")
         contextMenu.addSeparator()
-        
+
         # deleteRow = contextMenu.addAction("Delete Row")
         # contextMenu.addSeparator()
-        
+
         copyTable = contextMenu.addAction("Copy Table")
         contextMenu.addSeparator()
-        
+
         findNewFiles = contextMenu.addAction("Sync With Folder")
         contextMenu.addSeparator()
-        
+
         saveTable = contextMenu.addAction("Save Table")
-        
+
         #
         action = contextMenu.exec_(self.mapToGlobal(event.pos()))
-        #logger.info(f'  action:{action}')
+        # logger.info(f'  action:{action}')
         if action == duplicateRow:
-            #print('  todo: duplicateRow')
+            # print('  todo: duplicateRow')
             tmp = self.selectedIndexes()
-            if len(tmp)>0:
+            if len(tmp) > 0:
                 selectedRow = tmp[0].row()
                 self.signalDuplicateRow.emit(selectedRow)
 
@@ -159,22 +168,22 @@ class myTableView(QtWidgets.QTableView):
         #         logger.warning('no selection?')
 
         elif action == copyTable:
-            #print('  todo: copyTable')
+            # print('  todo: copyTable')
             self.signalCopyTable.emit()
 
         elif action == findNewFiles:
-            #print('  todo: findNewFiles')
+            # print('  todo: findNewFiles')
             self.signalFindNewFiles.emit()
 
         elif action == saveTable:
-            #print('  todo: saveTable')
+            # print('  todo: saveTable')
             self.signalSaveFileTable.emit()
 
         else:
             logger.warning(f'action not taken "{action}"')
 
-class pandasModel(QtCore.QAbstractTableModel):
 
+class pandasModel(QtCore.QAbstractTableModel):
     signalMyDataChanged = QtCore.pyqtSignal(object, object, object)
     """Emit on user editing a cell."""
 
@@ -196,15 +205,15 @@ class pandasModel(QtCore.QAbstractTableModel):
         elif isinstance(data, sanpy.analysisDir):
             self.isAnalysisDir = True
         else:
-            logger.error('Expecting data in (DataFrame, sanpy.analysisDir)')
+            logger.error("Expecting data in (DataFrame, sanpy.analysisDir)")
         self._data = data
 
-        #self.setSortingEnabled(True)
+        # self.setSortingEnabled(True)
 
-    '''
+    """
     def modelReset(self):
         print('modelReset()')
-    '''
+    """
 
     def rowCount(self, parent=None):
         return self._data.shape[0]
@@ -218,7 +227,7 @@ class pandasModel(QtCore.QAbstractTableModel):
                 # removed
                 # swapped sanpy.bDetection.defaultDetection to a class
                 # do not want to instantiate every time
-                '''
+                """
                 # get default value from bAnalysis
                 defaultDetection = sanpy.bDetection.defaultDetection
                 columnName = self._data.columns[index.column()]
@@ -229,36 +238,36 @@ class pandasModel(QtCore.QAbstractTableModel):
                 except (KeyError):
                     pass
                 return toolTip
-                '''
+                """
             elif role in [QtCore.Qt.DisplayRole, QtCore.Qt.EditRole]:
                 columnName = self._data.columns[index.column()]
-                if self.isAnalysisDir and columnName == 'I':
-                    return ''
+                if self.isAnalysisDir and columnName == "I":
+                    return ""
 
                 # don't get col from index, get from name
-                #retVal = self._data.iloc[index.row(), index.column()]
-                #retVal = self._data.loc[index.row(), columnName]
+                # retVal = self._data.iloc[index.row(), index.column()]
+                # retVal = self._data.loc[index.row(), columnName]
                 realRow = self._data.index[index.row()]
-                #retVal = self._data.iloc[realRow, index.column()]
+                # retVal = self._data.iloc[realRow, index.column()]
                 retVal = self._data.loc[realRow, columnName]
                 if isinstance(retVal, np.float64):
                     retVal = float(retVal)
                 elif isinstance(retVal, np.int64):
                     retVal = int(retVal)
-                elif isinstance(retVal, str) and retVal == 'nan':
-                    retVal = ''
+                elif isinstance(retVal, str) and retVal == "nan":
+                    retVal = ""
 
                 if isinstance(retVal, float) and math.isnan(retVal):
                     # don't show 'nan' in table
-                    retVal = ''
+                    retVal = ""
                 return retVal
 
             elif role == QtCore.Qt.CheckStateRole:
                 columnName = self._data.columns[index.column()]
                 realRow = self._data.index[index.row()]
-                #retVal = self._data.iloc[index.row(), index.column()]
+                # retVal = self._data.iloc[index.row(), index.column()]
                 retVal = self._data.loc[realRow, columnName]
-                if columnName == 'I':
+                if columnName == "I":
                     if retVal:
                         return QtCore.Qt.Checked
                     else:
@@ -268,32 +277,36 @@ class pandasModel(QtCore.QAbstractTableModel):
             elif role == QtCore.Qt.FontRole:
                 realRow = self._data.index[index.row()]
                 columnName = self._data.columns[index.column()]
-                if columnName == 'L':
+                if columnName == "L":
                     if self._data.isLoaded(realRow):  # or self._data.isSaved(realRow):
-                        return QtCore.QVariant(QtGui.QFont('Arial', pointSize=32))
-                elif columnName == 'A':
-                    if self._data.isAnalyzed(realRow):  # or self._data.isSaved(realRow):
-                        return QtCore.QVariant(QtGui.QFont('Arial', pointSize=32))
-                elif columnName == 'S':
+                        return QtCore.QVariant(QtGui.QFont("Arial", pointSize=32))
+                elif columnName == "A":
+                    if self._data.isAnalyzed(
+                        realRow
+                    ):  # or self._data.isSaved(realRow):
+                        return QtCore.QVariant(QtGui.QFont("Arial", pointSize=32))
+                elif columnName == "S":
                     if self._data.isSaved(realRow):
-                        return QtCore.QVariant(QtGui.QFont('Arial', pointSize=32))
+                        return QtCore.QVariant(QtGui.QFont("Arial", pointSize=32))
                 return QtCore.QVariant()
             elif role == QtCore.Qt.ForegroundRole:
                 if self.isAnalysisDir:
                     realRow = self._data.index[index.row()]
                     columnName = self._data.columns[index.column()]
-                    if columnName == 'L':
+                    if columnName == "L":
                         if self._data.isLoaded(realRow):
-                            return QtCore.QVariant(QtGui.QColor('#4444EE'))
-                    elif columnName == 'A':
+                            return QtCore.QVariant(QtGui.QColor("#4444EE"))
+                    elif columnName == "A":
                         if self._data.analysisIsDirty(realRow):
                             # has been analyzed but not saved
-                            return QtCore.QVariant(QtGui.QColor('#994444'))  # red
+                            return QtCore.QVariant(QtGui.QColor("#994444"))  # red
                         elif self._data.isAnalyzed(realRow):
-                            return QtCore.QVariant(QtGui.QColor('#449944'))  # green
-                    elif columnName == 'S':
+                            return QtCore.QVariant(QtGui.QColor("#449944"))  # green
+                    elif columnName == "S":
                         if self._data.isSaved(realRow):
-                            return QtCore.QVariant(QtGui.QColor('#999944'))  # mustard yellow
+                            return QtCore.QVariant(
+                                QtGui.QColor("#999944")
+                            )  # mustard yellow
                 return QtCore.QVariant()
             elif role == QtCore.Qt.BackgroundRole:
                 # set colors of alternating background
@@ -302,7 +315,7 @@ class pandasModel(QtCore.QAbstractTableModel):
                 # else:
                 #     return QtCore.QVariant(QtGui.QColor('#666666'))
                 pass
-            
+
         #
         return QtCore.QVariant()
 
@@ -333,23 +346,23 @@ class pandasModel(QtCore.QAbstractTableModel):
                 columnName = self._data.columns[index.column()]
                 realRow = self._data.index[index.row()]
                 v = self._data.loc[realRow, columnName]
-                #logger.info(f'Existing value for column "{columnName}" is v: "{v}" {type(v)}')
-                #logger.info(f'  proposed value:"{value}" {type(value)}')
+                # logger.info(f'Existing value for column "{columnName}" is v: "{v}" {type(v)}')
+                # logger.info(f'  proposed value:"{value}" {type(value)}')
                 if isinstance(v, np.float64):
                     try:
-                        if value == '':
+                        if value == "":
                             value = np.nan
                         else:
                             value = float(value)
-                    except (ValueError) as e:
-                        logger.info('  No action -->> please enter a number')
-                        #self.signalUpdateStatus.emit('Please enter a number')
+                    except ValueError as e:
+                        logger.info("  No action -->> please enter a number")
+                        # self.signalUpdateStatus.emit('Please enter a number')
                         return False
 
                 # set
-                #logger.info(f'  New value for column "{columnName}" is "{value}" {type(value)}')
+                # logger.info(f'  New value for column "{columnName}" is "{value}" {type(value)}')
                 self._data.loc[realRow, columnName] = value
-                #self._data.iloc[rowIdx, columnIdx] = value
+                # self._data.iloc[rowIdx, columnIdx] = value
 
                 # emit change
                 emitRowDict = self.myGetRowDict(realRow)
@@ -362,8 +375,8 @@ class pandasModel(QtCore.QAbstractTableModel):
                 columnIdx = index.column()
                 columnName = self._data.columns[index.column()]
                 realRow = self._data.index[index.row()]
-                logger.info(f'CheckStateRole column:{columnName} value:{value}')
-                if columnName == 'I':
+                logger.info(f"CheckStateRole column:{columnName} value:{value}")
+                if columnName == "I":
                     self._data.loc[realRow, columnName] = value == 2
                     self.dataChanged.emit(index, index)
                     return QtCore.Qt.Checked
@@ -373,7 +386,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 
     def flags(self, index):
         if not index.isValid():
-            logger.warning('index is not valid')
+            logger.warning("index is not valid")
 
         rowIdx = index.row()
         columnIdx = index.column()
@@ -381,9 +394,11 @@ class pandasModel(QtCore.QAbstractTableModel):
         # use to check isEditable
         try:
             columnName = self._data.columns[columnIdx]
-        except(IndexError) as e:
-            logger.warning(f'IndexError for columnIdx:{columnIdx} len:{len(self._data.columns)}')
-            print('self._data.columns:', self._data.columns)
+        except IndexError as e:
+            logger.warning(
+                f"IndexError for columnIdx:{columnIdx} len:{len(self._data.columns)}"
+            )
+            print("self._data.columns:", self._data.columns)
             raise
 
         theRet = QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsSelectable
@@ -396,7 +411,7 @@ class pandasModel(QtCore.QAbstractTableModel):
         if isEditable:
             theRet |= QtCore.Qt.ItemIsEditable
         if isCheckbox:
-            #logger.info(f'isCheckbox {columnIdx}')
+            # logger.info(f'isCheckbox {columnIdx}')
             theRet |= QtCore.Qt.ItemIsUserCheckable
         #
         return theRet
@@ -408,9 +423,11 @@ class pandasModel(QtCore.QAbstractTableModel):
             if orientation == QtCore.Qt.Horizontal:
                 try:
                     return self._data.columns[col]
-                except(IndexError) as e:
-                    logger.warning(f'IndexError for col:{col} len:{len(self._data.columns)}, shape:{self._data.shape}')
-                    #raise
+                except IndexError as e:
+                    logger.warning(
+                        f"IndexError for col:{col} len:{len(self._data.columns)}, shape:{self._data.shape}"
+                    )
+                    # raise
             elif orientation == QtCore.Qt.Vertical:
                 # this is to show pandas 'index' column
                 return col
@@ -418,12 +435,14 @@ class pandasModel(QtCore.QAbstractTableModel):
         return QtCore.QVariant()
 
     def sort(self, Ncol, order):
-        #logger.info(f'Ncol:{Ncol} order:{order}')
+        # logger.info(f'Ncol:{Ncol} order:{order}')
         self.layoutAboutToBeChanged.emit()
         if self.isAnalysisDir:
             self._data.sort_values(Ncol, order)
         else:
-            self._data = self._data.sort_values(self._data.columns[Ncol], ascending=not order)
+            self._data = self._data.sort_values(
+                self._data.columns[Ncol], ascending=not order
+            )
         self.layoutChanged.emit()
 
     def myCopyTable(self):
@@ -431,14 +450,14 @@ class pandasModel(QtCore.QAbstractTableModel):
         Copy model data to clipboard.
         """
         dfCopy = self._data.copy()
-        dfCopy.to_clipboard(sep='\t', index=False)
+        dfCopy.to_clipboard(sep="\t", index=False)
 
     def myGetValue(self, rowIdx, colStr):
         val = None
         if colStr not in self._data.columns:  #  columns is a list
             logger.error(f'Got bad column name: "{colStr}"')
-        elif len(self._data)-1 < rowIdx:
-            logger.error(f'Got bad row:{rowIdx} from possible {len(self._data)}')
+        elif len(self._data) - 1 < rowIdx:
+            logger.error(f"Got bad row:{rowIdx} from possible {len(self._data)}")
         else:
             val = self._data.loc[rowIdx, colStr]
         return val
@@ -478,7 +497,7 @@ class pandasModel(QtCore.QAbstractTableModel):
         msg.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
         msg.setDefaultButton(QtWidgets.QMessageBox.Ok)
         msg.setIcon(QtWidgets.QMessageBox.Warning)
-        msg.setText(f'Are you sure you want to delete row {rowIdx}?')
+        msg.setText(f"Are you sure you want to delete row {rowIdx}?")
         msg.setWindowTitle("Delete Row")
         returnValue = msg.exec_()
         if returnValue == QtWidgets.QMessageBox.Ok:
@@ -499,24 +518,22 @@ class pandasModel(QtCore.QAbstractTableModel):
             self.endRemoveRows()
 
     def myUnloadRow(self, rowIdx):
-        """Unload raw data by setting column ['_ba'] = None
-        """
+        """Unload raw data by setting column ['_ba'] = None"""
         rowIdx = self._data.index[rowIdx]  # assume rows are sorted
-        #self._data.loc[rowIdx, '_ba'] = None
+        # self._data.loc[rowIdx, '_ba'] = None
         if self.isAnalysisDir:
             # if using analysis dir, azll actions are in-place
             self._data.unloadRow(rowIdx)
 
             # we changed the model, we need to emit dataChanged
             indexStart = self.createIndex(rowIdx, 0)
-            indexStop = self.createIndex(rowIdx+1, 0)
+            indexStop = self.createIndex(rowIdx + 1, 0)
             self.dataChanged.emit(indexStart, indexStop)
 
     def myRemoveFromDatabase(self, rowIdx):
-        """Remove bAnalysis from h5 database
-        """
+        """Remove bAnalysis from h5 database"""
         rowIdx = self._data.index[rowIdx]  # assume rows are sorted
-        #self.beginInsertRows(QtCore.QModelIndex(), rowIdx, rowIdx)
+        # self.beginInsertRows(QtCore.QModelIndex(), rowIdx, rowIdx)
         if self.isAnalysisDir:
             # if using analysis dir, azll actions are in-place
             # self.beginResetModel()
@@ -525,18 +542,18 @@ class pandasModel(QtCore.QAbstractTableModel):
 
             # we changed the model, we need to emit dataChanged
             indexStart = self.createIndex(rowIdx, 0)
-            indexStop = self.createIndex(rowIdx+1, 0)
+            indexStop = self.createIndex(rowIdx + 1, 0)
             self.dataChanged.emit(indexStart, indexStop)
-        #self.endInsertRows()
+        # self.endInsertRows()
 
     def myDuplicateRow(self, rowIdx):
         rowIdx = self._data.index[rowIdx]  # assume rows are sorted
-        self.beginInsertRows(QtCore.QModelIndex(), rowIdx+1, rowIdx+1)
+        self.beginInsertRows(QtCore.QModelIndex(), rowIdx + 1, rowIdx + 1)
         #
         # duplicate rowIdx
 
         if self.isAnalysisDir:
-            df = self._data._df # either Dataframe or analysisDir
+            df = self._data._df  # either Dataframe or analysisDir
             self._data.duplicateRow(rowIdx)
         else:
             # make copy
@@ -544,13 +561,15 @@ class pandasModel(QtCore.QAbstractTableModel):
             newIdx = rowIdx + 0.5
             dfRow = pd.DataFrame(rowDict, index=[newIdx])
 
-            df = self._data # either Dataframe or analysisDir
+            df = self._data  # either Dataframe or analysisDir
 
             # append dfRow to the end
             df = df.append(dfRow, ignore_index=True)
 
             # sort by file name
-            df = df.sort_values(by=['File'], axis='index', ascending=True, inplace=False)
+            df = df.sort_values(
+                by=["File"], axis="index", ascending=True, inplace=False
+            )
             df = df.reset_index(drop=True)
             #
             self._data = df
@@ -558,27 +577,26 @@ class pandasModel(QtCore.QAbstractTableModel):
         self.endInsertRows()
 
     def mySetRow(self, rowIdx, rowDict):
-        """Only set keys already in self._data.columns
-        """
+        """Only set keys already in self._data.columns"""
         rowIdx = self._data.index[rowIdx]  # assume rows are sorted
-        #rowSeries = pd.Series(rowDict)
-        #self._data.loc[rowIdx] = rowSeries
-        #self._data = self._data.reset_index(drop=True)
-        for k,v in rowDict.items():
+        # rowSeries = pd.Series(rowDict)
+        # self._data.loc[rowIdx] = rowSeries
+        # self._data = self._data.reset_index(drop=True)
+        for k, v in rowDict.items():
             if k in self._data.columns:
                 self._data.at[rowIdx, k] = v
 
     def mySaveDb(self, path):
-        #print('pandasModel.mySaveDb() path:', path)
-        #logger.info(f'Saving csv {path}')
+        # print('pandasModel.mySaveDb() path:', path)
+        # logger.info(f'Saving csv {path}')
         self._data.to_csv(path, index=False)
         self.isDirty = False
 
-    '''
+    """
     def saveHdf(self):
         if self.isAnalysisDir:
             self._data.saveHdf()
-    '''
+    """
 
     def mySave(self):
         if self.isAnalysisDir:
@@ -597,33 +615,33 @@ class pandasModel(QtCore.QAbstractTableModel):
 
             # we changed the model, we need to emit dataChanged
             indexStart = self.createIndex(rowIdx, 0)
-            indexStop = self.createIndex(rowIdx+1, 0)
+            indexStop = self.createIndex(rowIdx + 1, 0)
             self.dataChanged.emit(indexStart, indexStop)
 
     def _old_mySetDetectionParams(self, rowIdx, cellType):
         """Set predefined detection paramers.
-        
+
         For example: SA Node, Neuron, Subthreshold, etc
         """
-        logger.info(f'rowIdx:{rowIdx} cellType:{cellType}')
+        logger.info(f"rowIdx:{rowIdx} cellType:{cellType}")
         rowDict = self.myGetRowDict(rowIdx)
-        #print('  [1] rowDict:', rowDict)
+        # print('  [1] rowDict:', rowDict)
         # get defaults
         dDict = sanpy.bAnalysis.getDefaultDetection(cellType=cellType)
-        for k,v in dDict.items():
+        for k, v in dDict.items():
             if k in rowDict.keys():
                 rowDict[k] = v
-        #print('  [2] rowDict:', rowDict)
+        # print('  [2] rowDict:', rowDict)
         self.mySetRow(rowIdx, rowDict)
-        #print(self._data._df['_ba'])
+        # print(self._data._df['_ba'])
 
         # signal data change
         indexStart = self.createIndex(rowIdx, 0)
-        indexStop = self.createIndex(rowIdx+1, 0)
+        indexStop = self.createIndex(rowIdx + 1, 0)
         self.dataChanged.emit(indexStart, indexStop)
 
         # detection widget needs to update (dvdtThreshold, mVThreshold, ...)
-        #emitRowDict = self.myGetRowDict(rowIdx)
+        # emitRowDict = self.myGetRowDict(rowIdx)
         self.signalMyDataChanged.emit(None, None, rowDict)
 
     '''
@@ -634,11 +652,13 @@ class pandasModel(QtCore.QAbstractTableModel):
         self.sanpyColumns = columnsDict
     '''
 
+
 # see: https://stackoverflow.com/questions/17748546/pyqt-column-of-checkboxes-in-a-qtableview
 class old_myCheckBoxDelegate(QtWidgets.QItemDelegate):
     """
     A delegate that places a fully functioning QCheckBox cell of the column to which it's applied.
     """
+
     def __init__(self, parent):
         QtWidgets.QItemDelegate.__init__(self, parent)
 
@@ -652,26 +672,34 @@ class old_myCheckBoxDelegate(QtWidgets.QItemDelegate):
         """
         Paint a checkbox without the label.
         """
-        self.drawCheck(painter, option, option.rect, QtCore.Qt.Unchecked if int(index.data()) == 0 else QtCore.Qt.Checked)
+        self.drawCheck(
+            painter,
+            option,
+            option.rect,
+            QtCore.Qt.Unchecked if int(index.data()) == 0 else QtCore.Qt.Checked,
+        )
 
     def editorEvent(self, event, model, option, index):
-        '''
+        """
         Change the data in the model and the state of the checkbox
         if the user presses the left mousebutton and this cell is editable. Otherwise do nothing.
-        '''
+        """
         if not int(index.flags() & QtCore.Qt.ItemIsEditable) > 0:
             return False
 
-        if event.type() == QtCore.QEvent.MouseButtonRelease and event.button() == QtCore.Qt.LeftButton:
+        if (
+            event.type() == QtCore.QEvent.MouseButtonRelease
+            and event.button() == QtCore.Qt.LeftButton
+        ):
             # Change the checkbox-state
             self.setModelData(None, model, index)
             return True
 
         return False
 
-    def setModelData (self, editor, model, index):
-        '''
+    def setModelData(self, editor, model, index):
+        """
         The user wanted to change the old state in the opposite.
-        '''
-        print('myCheckBoxDelegate.setModelData()')
+        """
+        print("myCheckBoxDelegate.setModelData()")
         model.setData(index, 1 if int(index.data()) == 0 else 0, QtCore.Qt.EditRole)

@@ -1,7 +1,7 @@
-#import os, sys;
-#sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+# import os, sys;
+# sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
-#from . import *
+# from . import *
 
 from .sanpy_app import SanPyWindow
 
@@ -16,14 +16,16 @@ from .fileListWidget import fileListWidget
 
 from .bErrorTable import *
 from .bDialog import *
-#from .bFileTable import *
+
+# from .bFileTable import *
 from .bPlugins import *
-#from .aPlugin import *
+
+# from .aPlugin import *
 
 # critical for plugins to be loaded dynamically
-#from .plugins import *
+# from .plugins import *
 
-#from .breeze_resources import *
+# from .breeze_resources import *
 
 from .bKymographWidget import kymographWidget
 from .kymographPlugin2 import kymographPlugin2

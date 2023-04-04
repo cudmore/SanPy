@@ -1,4 +1,4 @@
-#from . import *
+# from . import *
 
 from .sanpyPlugin import *
 
@@ -24,7 +24,8 @@ from .stimGen import stimGen
 from .detectionParams import detectionParams
 
 from .kymographPlugin import kymographPlugin
-#from .kymographPlugin2 import kymographPlugin2
+
+# from .kymographPlugin2 import kymographPlugin2
 
 from .setSpikeStat import SetSpikeStat
 

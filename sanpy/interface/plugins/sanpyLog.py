@@ -1,11 +1,12 @@
-
 from PyQt5 import QtCore, QtWidgets, QtGui
 
 from sanpy.sanpyLogger import get_logger
+
 logger = get_logger(__name__)
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
+
 
 class sanpyLog(sanpyPlugin):
     """
@@ -13,7 +14,8 @@ class sanpyLog(sanpyPlugin):
 
     Good example of PyQt plugin
     """
-    myHumanName = 'SanPy Log'
+
+    myHumanName = "SanPy Log"
 
     def __init__(self, **kwargs):
         """
@@ -22,7 +24,7 @@ class sanpyLog(sanpyPlugin):
         """
         super(sanpyLog, self).__init__(**kwargs)
 
-        #self.pyqtWindow() # makes self.mainWidget
+        # self.pyqtWindow() # makes self.mainWidget
 
         layout = QtWidgets.QVBoxLayout()
         widget = QtWidgets.QPlainTextEdit()
@@ -31,24 +33,26 @@ class sanpyLog(sanpyPlugin):
 
         # load sanpy.log
         logFilePath = sanpy.sanpyLogger.getLoggerFile()
-        with open(logFilePath, 'r') as f:
+        with open(logFilePath, "r") as f:
             lines = f.readlines()
-        text = ''
+        text = ""
         for line in lines:
-            text += line # line already has CR
+            text += line  # line already has CR
 
         # add text to widget
-        widget.document().setPlainText(text);
+        widget.document().setPlainText(text)
 
-        logger.info(f'logFilePath: {logFilePath}')
+        logger.info(f"logFilePath: {logFilePath}")
 
         self._mySetWindowTitle()
 
-        #self.setLayout(layout)
+        # self.setLayout(layout)
         self.getVBoxLayout().addLayout(layout)
-    
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     import sys
+
     app = QtWidgets.QApplication([])
     spl = sanpyLog()
     spl.show()

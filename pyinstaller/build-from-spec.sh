@@ -1,1 +1,0 @@
-pyinstaller --noconfirm --clean macos-monterey-arm64.spec

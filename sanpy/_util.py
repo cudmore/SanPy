@@ -7,10 +7,13 @@ from typing import List, Union
 import uuid
 
 from sanpy.sanpyLogger import get_logger
+
 logger = get_logger(__name__)
 
+
 def getNewUuid():
-    return 't' + str(uuid.uuid4()).replace('-', '_')
+    return "t" + str(uuid.uuid4()).replace("-", "_")
+
 
 def getBundledDir():
     """Get the working directory where user preferences are save.
@@ -18,17 +21,18 @@ def getBundledDir():
     This will be source code folder when running from source,
       will be a more freeform folder when running as a frozen app/exe
     """
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         # we are running in a bundle (frozen)
         bundle_dir = sys._MEIPASS
     else:
         # we are running in a normal Python environment
-        bundle_dir = os.path.dirname(os.path.abspath(__file__))    
+        bundle_dir = os.path.dirname(os.path.abspath(__file__))
     return bundle_dir
 
-def _module_from_file(module_name : str, file_path : str):
+
+def _module_from_file(module_name: str, file_path: str):
     """
-    
+
     Args:
         module_name: Is like sanpy.interface.plugins.onePluginFile
         file_path: Full path to onePluginFile source code (onePluginFile.py)
@@ -38,37 +42,38 @@ def _module_from_file(module_name : str, file_path : str):
     spec.loader.exec_module(module)
     return module
 
+
 def addUserPath():
     """Make <user>/Documents/SanPy folder and add it to the Python sys.path
-    
+
     Returns:
         True: If we made the folder (first time SanPy is running)
     """
-    
-    logger.info('')
+
+    logger.info("")
 
     madeUserFolder = _makeSanPyFolders()  # make <user>/Documents/SanPy if necc
-            
+
     userSanPyFolder = _getUserSanPyFolder()
 
     # if userSanPyFolder in sys.path:
     #     sys.path.remove(userSanPyFolder)
 
     if not userSanPyFolder in sys.path:
-        logger.info(f'Adding to sys.path: {userSanPyFolder}')
+        logger.info(f"Adding to sys.path: {userSanPyFolder}")
         sys.path.append(userSanPyFolder)
 
-    logger.info('sys.path is now:')
+    logger.info("sys.path is now:")
     for path in sys.path:
-        logger.info(f'    {path}')
+        logger.info(f"    {path}")
 
     return madeUserFolder
-    
+
+
 def _getUserDocumentsFolder():
-    """Get <user>/Documents folder.
-    """
+    """Get <user>/Documents folder."""
     userPath = pathlib.Path.home()
-    userDocumentsFolder = os.path.join(userPath, 'Documents')
+    userDocumentsFolder = os.path.join(userPath, "Documents")
     if not os.path.isdir(userDocumentsFolder):
         logger.error(f'Did not find path "{userDocumentsFolder}"')
         logger.error(f'   Using "{userPath}"')
@@ -76,62 +81,68 @@ def _getUserDocumentsFolder():
     else:
         return userDocumentsFolder
 
+
 def _getUserSanPyFolder():
-    """Get <user>/Documents/SanPy folder.
-    """
+    """Get <user>/Documents/SanPy folder."""
     userDocumentsFolder = _getUserDocumentsFolder()
-    sanpyFolder = os.path.join(userDocumentsFolder, 'SanPy')
+    sanpyFolder = os.path.join(userDocumentsFolder, "SanPy")
     return sanpyFolder
 
-def old_getUserFolder(folder : str) -> str:
+
+def old_getUserFolder(folder: str) -> str:
     userSanPyFolder = _getUserSanPyFolder()
-    if folder == 'plugins':
-        theFolder = os.path.join(userSanPyFolder, 'plugins')
-    elif folder == 'analysis':
-        theFolder = os.path.join(userSanPyFolder, 'analysis')
-    elif folder == 'preferences':
-        theFolder = os.path.join(userSanPyFolder, 'preferences')
+    if folder == "plugins":
+        theFolder = os.path.join(userSanPyFolder, "plugins")
+    elif folder == "analysis":
+        theFolder = os.path.join(userSanPyFolder, "analysis")
+    elif folder == "preferences":
+        theFolder = os.path.join(userSanPyFolder, "preferences")
     else:
         logger.error(f'did not understand folder: "{folder}"')
         return None
     return theFolder
 
+
 def _getUserFileLoaderFolder():
     userSanPyFolder = _getUserSanPyFolder()
-    fileLoaderFolder = os.path.join(userSanPyFolder, 'file loaders')
+    fileLoaderFolder = os.path.join(userSanPyFolder, "file loaders")
     return fileLoaderFolder
+
 
 def _getUserPluginFolder():
     userSanPyFolder = _getUserSanPyFolder()
-    userPluginFolder = os.path.join(userSanPyFolder, 'plugins')
+    userPluginFolder = os.path.join(userSanPyFolder, "plugins")
     return userPluginFolder
+
 
 def _getUserDetectionFolder():
     """Folder of saved user detection presets.
-    
+
     Each is a json file.
     """
     userSanPyFolder = _getUserSanPyFolder()
-    userDetectionFolder = os.path.join(userSanPyFolder, 'detection')
+    userDetectionFolder = os.path.join(userSanPyFolder, "detection")
     return userDetectionFolder
 
+
 def _getUserAnalysisFolder():
-    """Folder of custom user analysis code.
-    """
+    """Folder of custom user analysis code."""
     userAnalysisFolder = _getUserSanPyFolder()
-    userAnalysisFolder = os.path.join(userAnalysisFolder, 'analysis')
+    userAnalysisFolder = os.path.join(userAnalysisFolder, "analysis")
     return userAnalysisFolder
 
+
 def _getUserPreferencesFolder():
-    """Folder of SanPy app preferences and logs (user does not modify this.
-    """
+    """Folder of SanPy app preferences and logs (user does not modify this."""
     userPreferencesFolder = _getUserSanPyFolder()
-    userPreferencesFolder = os.path.join(userPreferencesFolder, 'preferences')
+    userPreferencesFolder = os.path.join(userPreferencesFolder, "preferences")
     return userPreferencesFolder
 
-def pprint(d : dict):
-    for k,v in d.items():
-        print(f'  {k}: {v}')
+
+def pprint(d: dict):
+    for k, v in d.items():
+        print(f"  {k}: {v}")
+
 
 def _makeSanPyFolders():
     """Make <user>/Documents/SanPy folder .
@@ -141,7 +152,7 @@ def _makeSanPyFolders():
     userDocumentsFolder = _getUserDocumentsFolder()
 
     madeUserFolder = False
-    
+
     # main <user>/DOcuments/SanPy folder
     sanpyFolder = _getUserSanPyFolder()
     if not os.path.isdir(sanpyFolder):
@@ -151,11 +162,11 @@ def _makeSanPyFolders():
         #
         # copy entire xxx into <user>/Documents/SanPy
         _bundDir = getBundledDir()
-        _srcPath = pathlib.Path(_bundDir) / '_userFiles' / 'SanPy'
+        _srcPath = pathlib.Path(_bundDir) / "_userFiles" / "SanPy"
         _dstPath = pathlib.Path(sanpyFolder)
-        logger.info(f'    copying folder tree to <user>/Documents/SanPy folder')
-        logger.info(f'    _srcPath:{_srcPath}')
-        logger.info(f'    _dstPath:{_dstPath}')
+        logger.info(f"    copying folder tree to <user>/Documents/SanPy folder")
+        logger.info(f"    _srcPath:{_srcPath}")
+        logger.info(f"    _dstPath:{_dstPath}")
         shutil.copytree(_srcPath, _dstPath)
     else:
         # already exists, make sure we have all sub-folders that are expected
@@ -163,7 +174,7 @@ def _makeSanPyFolders():
 
     return madeUserFolder
 
-    '''
+    """
     # SanPyapplication preferences
     preferencesFolder = _getUserPreferencesFolder()
     if not os.path.isdir(preferencesFolder):
@@ -193,13 +204,15 @@ def _makeSanPyFolders():
         # _bundDir = getBundledDir()
         # _srcPath = pathlib.Path(self._bundDir) / tmpHdfFile
         # shutil.copyfile(hdfFilePath,tmpHdfPath)
-    '''
+    """
+
 
 # def _module_from_file(module_name, file_path):
 # 	spec = importlib.util.spec_from_file_location(module_name, file_path)
 # 	module = importlib.util.module_from_spec(spec)
 # 	spec.loader.exec_module(module)
 # 	return module
+
 
 def _loadLineScanHeader(path):
     """
@@ -220,58 +233,58 @@ def _loadLineScanHeader(path):
     # 20220606, adding
     # "Image Size"	"294 * 1000 [pixel]"
 
-    txtFile = os.path.splitext(path)[0] + '.txt'
+    txtFile = os.path.splitext(path)[0] + ".txt"
 
     if not os.path.isfile(txtFile):
-        logger.error(f'did not find file:{txtFile}')
+        logger.error(f"did not find file:{txtFile}")
         return None
 
-    theRet = {'tif': path}
+    theRet = {"tif": path}
 
     # tif shape is (lines, pixels)
-    #theRet['numLines'] = self.tif.shape[1]
-    #theRet['numLines'] = tifData.shape[0]
+    # theRet['numLines'] = self.tif.shape[1]
+    # theRet['numLines'] = tifData.shape[0]
 
     gotImageSize = False
 
-    with open(txtFile, 'r') as fp:
+    with open(txtFile, "r") as fp:
         lines = fp.readlines()
         for line in lines:
             line = line.strip()
             if line.startswith('"X Dimension"'):
                 line = line.replace('"', "")
-                line = line.replace(',', "")
-                #print('loadLineScanHeader:', line)
+                line = line.replace(",", "")
+                # print('loadLineScanHeader:', line)
                 # 2 number of pixels in line
                 # 5 um length of line
                 # 7 um/pixel
                 splitLine = line.split()
                 for idx, split in enumerate(splitLine):
-                    #print('  ', idx, split)
+                    # print('  ', idx, split)
                     if idx == 2:
                         numPixels = int(split)
-                        theRet['numPixels'] = numPixels
+                        theRet["numPixels"] = numPixels
                     elif idx == 5:
                         umLength = float(split)
-                        theRet['umLength'] = umLength
+                        theRet["umLength"] = umLength
                     elif idx == 7:
                         umPerPixel = float(split)
-                        theRet['umPerPixel'] = umPerPixel
+                        theRet["umPerPixel"] = umPerPixel
 
             elif line.startswith('"T Dimension"'):
                 # "T Dimension"	"1, 0.000 - 35.496 [s], Interval FreeRun"
                 line = line.replace('"', "")
-                line = line.replace(',', "")
-                #print('loadLineScanHeader:', line)
+                line = line.replace(",", "")
+                # print('loadLineScanHeader:', line)
                 # 5 total duration of image acquisition (seconds)
                 splitLine = line.split()
                 for idx, split in enumerate(splitLine):
-                    #print('  ', idx, split)
+                    # print('  ', idx, split)
                     if idx == 5:
                         totalSeconds = float(split)
-                        theRet['totalSeconds'] = totalSeconds
+                        theRet["totalSeconds"] = totalSeconds
 
-                        #theRet['secondsPerLine'] =
+                        # theRet['secondsPerLine'] =
 
             # order in file will matter, there are multiple "Image Size" lines
             # we want the first
@@ -283,23 +296,23 @@ def _loadLineScanHeader(path):
                     continue
                 gotImageSize = True
                 line = line.replace('"', "")
-                line = line.replace(',', "")
-                splitLine = line.split('\t')  # yes, a FREAKING tab !!!!
+                line = line.replace(",", "")
+                splitLine = line.split("\t")  # yes, a FREAKING tab !!!!
                 splitLine = splitLine[1]
                 splitLine2 = splitLine.split()
-                #print('splitLine2:', splitLine2)
+                # print('splitLine2:', splitLine2)
 
-                theRet['numLines'] = int(splitLine2[2])
+                theRet["numLines"] = int(splitLine2[2])
 
-            #elif line.startswith('"Image Size(Unit Converted)"'):
-            #	print('loadLineScanHeader:', line)
+            # elif line.startswith('"Image Size(Unit Converted)"'):
+            # 	print('loadLineScanHeader:', line)
 
     # tif shape is (lines, pixels)
-    shape = (theRet['numLines'], theRet['numPixels'])
-    #theRet['shape'] = self.tif.shape
-    #theRet['shape'] = tifData.shape
-    theRet['shape'] = shape
-    theRet['secondsPerLine'] = theRet['totalSeconds'] / theRet['shape'][0]
-    theRet['linesPerSecond'] = 1 / theRet['secondsPerLine']
+    shape = (theRet["numLines"], theRet["numPixels"])
+    # theRet['shape'] = self.tif.shape
+    # theRet['shape'] = tifData.shape
+    theRet["shape"] = shape
+    theRet["secondsPerLine"] = theRet["totalSeconds"] / theRet["shape"][0]
+    theRet["linesPerSecond"] = 1 / theRet["secondsPerLine"]
     #
     return theRet

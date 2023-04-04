@@ -1,14 +1,14 @@
-
-
 from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from sanpy.sanpyLogger import get_logger
+
 logger = get_logger(__name__)
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
+
 
 class exampleUserPlugin1(sanpyPlugin):
     """
@@ -16,7 +16,8 @@ class exampleUserPlugin1(sanpyPlugin):
 
     Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
     """
-    myHumanName = 'Example User Plugin 1'
+
+    myHumanName = "Example User Plugin 1"
 
     def __init__(self, **kwargs):
         """
@@ -29,55 +30,54 @@ class exampleUserPlugin1(sanpyPlugin):
         self.replot()
 
     def plot(self):
-        """Create the plot in the widget (called once).
-        """
-        self.mplWindow2() # assigns (self.fig, self.axs)
+        """Create the plot in the widget (called once)."""
+        self.mplWindow2()  # assigns (self.fig, self.axs)
 
         # white line with raw data
-        self.line, = self.axs.plot([], [], '-w', linewidth=0.5)
+        (self.line,) = self.axs.plot([], [], "-w", linewidth=0.5)
 
         # red circles with spike threshold
-        self.lineDetection, = self.axs.plot([], [], 'ro')
+        (self.lineDetection,) = self.axs.plot([], [], "ro")
 
     def replot(self):
-        """Replot the widget. Usually when the file is switched
-        """
-        
-        logger.info('')
-        
+        """Replot the widget. Usually when the file is switched"""
+
+        logger.info("")
+
         if self.ba is None:
             return
-        
+
         # get the x/y values from the recording
-        sweepX = self.getSweep('x')  # self.ba.sweepX(sweepNumber=self.sweepNumber)
-        sweepY = self.getSweep('y')  # self.ba.sweepY(sweepNumber=self.sweepNumber)
+        sweepX = self.getSweep("x")  # self.ba.sweepX(sweepNumber=self.sweepNumber)
+        sweepY = self.getSweep("y")  # self.ba.sweepY(sweepNumber=self.sweepNumber)
 
         # update plot of raw data
         self.line.set_data(sweepX, sweepY)
 
         # update plot of spike threshold
-        thresholdSec = self.ba.getStat('thresholdSec')
-        thresholdVal = self.ba.getStat('thresholdVal')
+        thresholdSec = self.ba.getStat("thresholdSec")
+        thresholdVal = self.ba.getStat("thresholdVal")
         self.lineDetection.set_data(thresholdSec, thresholdVal)
 
         # make sure the matplotlib axis auto scale
         self.axs.relim()
-        self.axs.autoscale_view(True,True,True)
-        
+        self.axs.autoscale_view(True, True, True)
+
         # plt.draw()
         self.static_canvas.draw()
-        
-if __name__ == '__main__':
+
+
+if __name__ == "__main__":
     # load an example file
-    path = '/Users/cudmore/Sites/SanPy/data/19114001.abf'
+    path = "/Users/cudmore/Sites/SanPy/data/19114001.abf"
     ba = sanpy.bAnalysis(path)
 
     # set detection parameters
     detectionPreset = sanpy.bDetection.detectionPresets.default
     detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
 
-    #detectionClass['preSpikeClipWidth_ms'] = 100
-    #detectionClass['postSpikeClipWidth_ms'] = 400
+    # detectionClass['preSpikeClipWidth_ms'] = 100
+    # detectionClass['postSpikeClipWidth_ms'] = 400
 
     # spike detect
     ba.spikeDetect(detectionClass=detectionClass)
