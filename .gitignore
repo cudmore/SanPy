@@ -1,3 +1,5 @@
+pyinstaller/monterey/tmp_env
+
 build/
 dist/
 *.app
