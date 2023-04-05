@@ -13,7 +13,8 @@ for _binary in binaries:
 # for conda env
 #binaries = [('/Users/cudmore/opt/miniconda3/envs/sanpy-env-pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
 # for venv
-binaries = [('/Users/cudmore/Sites/SanPy/pyinstaller/tmp_env/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
+#binaries = [('/Users/cudmore/Sites/SanPy/pyinstaller/monterey/sanpy_env_pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
+binaries = [('sanpy_env_pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
 print('2 xxx got binaries:')
 for _binary in binaries:
     print('  ', _binary)
@@ -35,14 +36,15 @@ block_cipher = None
 #print(extras_toc)
 
 a = Analysis(
-    ['../sanpy/interface/sanpy_app.py'],
-    pathex=['/Users/cudmore/opt/miniconda3/envs/sanpy-env-pyinstaller/lib/python3.9/site-packages/'],
+    ['../../sanpy/interface/sanpy_app.py'],
+    #pathex=['/Users/cudmore/opt/miniconda3/envs/sanpy-env-pyinstaller/lib/python3.9/site-packages/'],
+    pathex=['sanpy_env_pyinstaller/lib/python3.9/site-packages'],
     binaries=binaries,
     datas=[
             # ('/Users/cudmore/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors', 'pyqtgraph/colors'),
             # removed april 4, 2023
             #('/Users/cudmore/opt/miniconda3/envs/sanpy-env-pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables'),
-            ('../sanpy/_userFiles', '_userFiles'),
+            ('../../sanpy/_userFiles', '_userFiles'),
         ],
     hiddenimports=hiddenimports,
     hookspath=[],
@@ -69,10 +71,10 @@ exe = EXE(
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
-    target_arch=None,
+    target_arch=universal2,
     codesign_identity=None,  #"Developer ID Application: Robert Cudmore (794C773KDS)",
     entitlements_file=None,
-    icon='../sanpy/interface/icons/sanpy_transparent.icns',
+    icon='../../sanpy/interface/icons/sanpy_transparent.icns',
 )
 coll = COLLECT(
     exe,
@@ -87,6 +89,6 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name='SanPy-Monterey.app',
-    icon='../sanpy/interface/icons/sanpy_transparent.icns',
+    icon='../../sanpy/interface/icons/sanpy_transparent.icns',
     bundle_identifier=None,
 )

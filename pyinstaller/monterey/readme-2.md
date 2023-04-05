@@ -8,19 +8,10 @@ find dist/SanPy-Monterey.app -name .DS_Store -delete
 
 ## Codesign
 
+# needed to harden "--timestamp -o runtime"
 codesign -f -s "Developer ID Application: Robert Cudmore (794C773KDS)" \
                 --deep --timestamp --entitlements entitlements.plist \
                 -o runtime "dist/SanPy-Monterey.app"
-
-# without deep does not work
-codesign -f -s "Developer ID Application: Robert Cudmore (794C773KDS)" \
-                --timestamp --entitlements entitlements.plist \
-                -o runtime "dist/SanPy-Monterey.app"
-
-# without timestamp
-codesign --deep -f -s "Developer ID Application: Robert Cudmore (794C773KDS)" \
-                --entitlements entitlements.plist \
-                -o runtime dist/SanPy-Monterey.app
 
 ### Error 2
 

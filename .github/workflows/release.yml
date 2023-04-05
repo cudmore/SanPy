@@ -1,4 +1,5 @@
 # create a release when we get a push with a v* tag
+# see tutorial: https://github.com/marketplace/actions/create-release
 name: Releases
 
 on: 
