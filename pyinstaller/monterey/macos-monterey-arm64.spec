@@ -13,8 +13,8 @@ for _binary in binaries:
 # for conda env
 #binaries = [('/Users/cudmore/opt/miniconda3/envs/sanpy-env-pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
 # for venv
-#binaries = [('/Users/cudmore/Sites/SanPy/pyinstaller/monterey/sanpy_env_pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
-binaries = [('sanpy_env_pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
+#binaries = [('/Users/cudmore/Sites/SanPy/pyinstaller/monterey/sanpy-env-pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
+binaries = [('sanpy-env-pyinstaller/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
 print('2 xxx got binaries:')
 for _binary in binaries:
     print('  ', _binary)
@@ -38,7 +38,7 @@ block_cipher = None
 a = Analysis(
     ['../../sanpy/interface/sanpy_app.py'],
     #pathex=['/Users/cudmore/opt/miniconda3/envs/sanpy-env-pyinstaller/lib/python3.9/site-packages/'],
-    pathex=['sanpy_env_pyinstaller/lib/python3.9/site-packages'],
+    pathex=['sanpy-env-pyinstaller/lib/python3.9/site-packages'],
     binaries=binaries,
     datas=[
             # ('/Users/cudmore/opt/miniconda3/envs/sanpy-env/lib/python3.9/site-packages/pyqtgraph/colors', 'pyqtgraph/colors'),
