@@ -1,5 +1,5 @@
 
-[![Python](https://img.shields.io/badge/python-3.7|3.8|3.9|3.10|3.11-blue.svg)](https://www.python.org/downloads/release/python-3111/)
+[![Python](https://img.shields.io/badge/python-3.8|3.9|3.10|3.11-blue.svg)](https://www.python.org/downloads/release/python-3111/)
 [![tests](https://github.com/cudmore/SanPy/workflows/Test/badge.svg)](https://github.com/cudmore/SanPy/actions)
 [![codecov](https://codecov.io/gh/cudmore/SanPy/branch/master/graph/badge.svg?token=L7L3FB04IP)](https://codecov.io/gh/cudmore/SanPy)
 [![OS](https://img.shields.io/badge/OS-Linux|Windows|macOS-blue.svg)]()
@@ -32,7 +32,7 @@ If you find the code in this repository interesting, please email Robert Cudmore
 <!-- <IMG SRC="docs/docs/img/meta-window-example.png" width=600> -->
 
 ## Desktop Application - Plugins
-
+ 
 The desktop application comes bundled with a growing number of plugins. See our [plugin documentation page](https://cudmore.github.io/SanPy/plugins/).
 
 <table>

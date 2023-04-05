@@ -43,6 +43,9 @@ class Test_Analysis_Dir(unittest.TestCase):
         
         ad = sanpy.analysisDir(path=self.test_dir)
 
+        print('xxx')
+        print(ad._df)
+
         self.assertEqual(len(ad._df), 2)
 
         ad.saveHdf()

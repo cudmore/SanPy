@@ -163,6 +163,16 @@ Processing: /Users/cudmore/Sites/SanPy/pyinstaller/monterey/dist/SanPy-Monterey.
 The staple and validate action worked!
 ```
 
+Check staple
+
+spctl --assess --type execute -vvv "dist/SanPy-Monterey.app"
+
+```
+dist/SanPy-Monterey.app: accepted
+source=Notarized Developer ID
+origin=Developer ID Application: Robert Cudmore (794C773KDS)
+```
+
 # Build dmg
 
 Use my script `build-dmg.sh`
