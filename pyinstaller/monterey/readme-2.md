@@ -8,10 +8,10 @@ find dist/SanPy-Monterey.app -name .DS_Store -delete
 
 ## Codesign
 
-# needed to harden "--timestamp -o runtime"
-codesign -f -s "Developer ID Application: Robert Cudmore (794C773KDS)" \
-                --deep --timestamp --entitlements entitlements.plist \
-                -o runtime "dist/SanPy-Monterey.app"
+    # needed to harden "--timestamp -o runtime"
+    codesign -f -s "Developer ID Application: Robert Cudmore (794C773KDS)" \
+                    --deep --timestamp --entitlements entitlements.plist \
+                    -o runtime "dist/SanPy-Monterey.app"
 
 ### Error 2
 
@@ -58,14 +58,14 @@ dist/SanPy-Monterey.app: satisfies its Designated Requirement
 
 # Notarize
 
-# Since altool expects a Zip archive and not a bare .app directory, create a Zip file first and then notarize it: .
+    # Since altool expects a Zip archive and not a bare .app directory, create a Zip file first and then notarize it: .
 
-ditto -c -k --keepParent "dist/SanPy-Monterey.app" dist/SanPy-Monterey.zip
+    ditto -c -k --keepParent "dist/SanPy-Monterey.app" dist/SanPy-Monterey.zip
 
-# the bundle-id seems to have rules? No '_' and no numbers?
+    # the bundle-id seems to have rules? No '_' and no numbers?
 
-xcrun altool --notarize-app -t osx -f dist/SanPy-Monterey.zip \
-    --primary-bundle-id "tueaprilva" -u "robert.cudmore@gmail.com" --password "bisd-xacv-hsiv-okrd"
+    xcrun altool --notarize-app -t osx -f dist/SanPy-Monterey.zip \
+        --primary-bundle-id "tueaprilva" -u "robert.cudmore@gmail.com" --password "bisd-xacv-hsiv-okrd"
 
 ```
 No errors uploading 'dist/SanPy-Monterey.zip'.
@@ -152,6 +152,54 @@ OSError: dlopen(libblosc2.dylib, 0x0006): tried: '/Users/cudmore/Sites/SanPy/pyi
 https://github.com/pyinstaller/pyinstaller/issues/7408
 
 "Just add --collect-binaries=tables to your pyinstaller command."
+
+# Staple
+
+    xcrun stapler staple "dist/SanPy-Monterey.app"
+
+```
+Processing: /Users/cudmore/Sites/SanPy/pyinstaller/monterey/dist/SanPy-Monterey.app
+Processing: /Users/cudmore/Sites/SanPy/pyinstaller/monterey/dist/SanPy-Monterey.app
+The staple and validate action worked!
+```
+
+# Build dmg
+
+Use my script `build-dmg.sh`
+
+For this I had to make another password so the dmg could get notarized
+
+```
+xcrun notarytool store-credentials
+                --apple-id "robert.cudmore@gmail.com"
+                --team-id "794C773KDS"
+```
+
+had to answer questions,
+    like 'app specific password' which is currently "bisd-xacv-hsiv-okrd",
+    then I chose the name "tmp_profile_name_for_dmg"
+
+```
+To use them, specify `--keychain-profile "tmp_profile_name_for_dmg"`
+```
+
+added `--notarize tmp_profile_name_for_dmg` to build-dmg.sh
+
+running build-dmg.sh gave output at the end
+
+```
+Submission ID received
+  id: 7d52b435-ca66-4b10-8784-56292d0ca233
+Successfully uploaded file116 MB of 116 MB)    
+  id: 7d52b435-ca66-4b10-8784-56292d0ca233
+  path: /Users/cudmore/Sites/SanPy/pyinstaller/monterey/dist/SanPy-Monterey.dmg
+Waiting for processing to complete.
+Current status: Invalid..........................
+Processing complete
+  id: 7d52b435-ca66-4b10-8784-56292d0ca233
+  status: Invalid
+Stapling the notarization ticket
+```
 
 # Troubleshooting
 
