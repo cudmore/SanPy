@@ -14,7 +14,7 @@ setup(
     packages=find_packages(include=['sanpy', 'sanpy.*', 'sanpy.interface', 'sanpy.fileloaders']),
     install_requires=[
         'numpy',
-        'pandas==1.5.0',
+        'pandas==1.5',
         'scipy',
         'pyabf',
         'tifffile',
