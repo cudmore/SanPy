@@ -26,7 +26,7 @@ with open(os.path.abspath(_thisPath+"/readme.md")) as f:
         'mplcursors',
         'seaborn',
         'requests', #  to load from the cloud (for now github)
-        'tables',  # aka pytable for hdf5.
+        'tables',  # aka pytables for hdf5.
         # used for line profile in kym analysis
         # 0.20.0 introduces pyinstaller bug because of lazy import
         'scikit-image==0.19.3', 

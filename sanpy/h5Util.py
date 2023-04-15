@@ -6,7 +6,8 @@ import shutil
 
 import pandas as pd
 
-import tables.scripts.ptrepack  # to save compressed .h5 file
+# april 5, removed
+#import tables.scripts.ptrepack  # to save compressed .h5 file
 
 # import logging
 # logging.getLogger('numexpr').setLevel(logging.WARNING)
