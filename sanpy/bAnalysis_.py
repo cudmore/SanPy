@@ -70,8 +70,10 @@ class bAnalysis:
             filepath (str): Path to either .abf or .csv with time/mV columns.
             byteStream (io.BytesIO): Binary stream for use in the cloud.
             loadData: If true, load raw data, otherwise just load header
-            fileLoaderDict: if None then fetch from sanpy.fileloaders.getFileLoaders()
-                Do this if running in a script. If running an SanPy app, we pass the dict
+            fileLoaderDict (dict)
+                If None then fetch from sanpy.fileloaders.getFileLoaders()
+                Do this if running in a script.
+                If running an SanPy app, we pass the dict
             stimulusFileFolder:
         """
 
@@ -513,6 +515,7 @@ class bAnalysis:
         sweepNumber: Optional[int] = None,
         epochNumber: Optional[int] = None,
         asArray: Optional[bool] = False,
+        getFullList : Optional[bool] = False
     ):
         """Get a list of values for one or two analysis results.
 
@@ -572,13 +575,32 @@ class bAnalysis:
         if not error:
             # original
             # x = [clean(spike[statName1]) for spike in self.spikeDict]
-            # only current spweek
-            x = [
-                clean(spike[statName1])
-                for spike in self.spikeDict
-                if (sweepNumber == "All" or spike["sweep"] == sweepNumber)
-                and (epochNumber == "All" or spike["epoch"] == epochNumber)
-            ]
+            
+            if getFullList:
+                # April 15, 2023, trying to fix bug in scatter plugin when we are
+                # using sweep and epoch
+                # strategy is to return all spikes, just nan out the ones we 
+                # are not interested in
+                x = []
+                for spike in self.spikeDict:
+                    _include = \
+                        (sweepNumber == "All" or spike["sweep"] == sweepNumber) \
+                            and (epochNumber == "All" or spike["epoch"] == epochNumber)
+                    if _include:
+                        x.append(clean(spike[statName1]))
+                    else:
+                        x.append(float("nan"))
+            
+            else:
+                # only current sweep and epoch
+                # (1) was this
+                x = [
+                    clean(spike[statName1])
+                    for spike in self.spikeDict
+                    if (sweepNumber == "All" or spike["sweep"] == sweepNumber)
+                    and (epochNumber == "All" or spike["epoch"] == epochNumber)
+                ]
+
 
             if statName2 is not None:
                 # original

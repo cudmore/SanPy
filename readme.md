@@ -47,6 +47,6 @@ Please see the [install instructions](https://cudmore.github.io/SanPy/install/) 
 
 ## Writing custom Python scripts
 
-We realize that SanPy need to be extensible. To acheive this we have created software architectures such that our programming users can write custom file loders, create new analysis, and even create full GUI plugins. Please see our [API documentation](https://cudmore.github.io/SanPy/scripting/) with lots of examples to get started.
+We realize that SanPy needs to be extensible. To acheive this we have created software architectures such that our programming users can write custom file loders, create new analysis, and even create full GUI plugins. Please see our [API documentation](https://cudmore.github.io/SanPy/scripting/) with lots of examples to get started.
 
 If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.

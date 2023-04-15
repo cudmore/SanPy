@@ -491,7 +491,7 @@ class fileLoader_base(ABC):
             return None
 
     @property
-    def numEpochs(self):
+    def numEpochs(self) -> Optional[int]:
         """Get the number of epochs.
 
         Epochs are mostly for pClamp abf files. We are assuming each sweep has the same namber of epochs.

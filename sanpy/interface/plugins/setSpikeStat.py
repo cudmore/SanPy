@@ -63,9 +63,12 @@ class SetSpikeStat(sanpyPlugin):
 
     def _buildUI(self):
         vBoxLayout = self.getVBoxLayout()
+        vBoxLayout.setAlignment(QtCore.Qt.AlignTop)
+        # vBoxLayout.setContentsMargins(0,0,0,0)
 
         # first row
         hBoxLayout = QtWidgets.QHBoxLayout()
+        # hBoxLayout.setContentsMargins(0,0,0,0)
         vBoxLayout.addLayout(hBoxLayout)
 
         # a button to set
@@ -79,6 +82,7 @@ class SetSpikeStat(sanpyPlugin):
 
         # second row
         hBoxLayout = QtWidgets.QHBoxLayout()
+        # hBoxLayout.setContentsMargins(0,0,0,0)
         vBoxLayout.addLayout(hBoxLayout)
 
         # popup with column types

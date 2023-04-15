@@ -850,7 +850,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         action.setEnabled(checkedMainPanel)
         self.viewMenu.addAction(action)
 
-        name = "Plot Options"
+        # mar 11
+        name = "Set Spikes"
         checked = self.configDict["detectionPanels"][name]
         action = QtWidgets.QAction(name, self, checkable=True)
         action.setChecked(checked)
@@ -858,8 +859,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         action.setEnabled(checkedMainPanel)
         self.viewMenu.addAction(action)
 
-        # mar 11
-        name = "Set Spikes"
+        name = "Plot Options"
         checked = self.configDict["detectionPanels"][name]
         action = QtWidgets.QAction(name, self, checkable=True)
         action.setChecked(checked)
@@ -1053,17 +1053,16 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # self.myDetectionWidget.signalDetect.connect(self._fileListWidget.slot_detect)
 
         # file list as a widget
-        _mainVLayout.addWidget(self._fileListWidget)
+        #_mainVLayout.addWidget(self._fileListWidget)
 
         # file list as a dock
-        # self.fileDock = QtWidgets.QDockWidget('Files',self)
-        # self.fileDock.setWidget(self._fileListWidget)
-        # self.fileDock.setFloating(False)
-        # self.fileDock.visibilityChanged.connect(self.on_fileDock_visibilityChanged)
-        # self.fileDock.topLevelChanged.connect(self.slot_topLevelChanged)
-        # self.fileDock.setAllowedAreas(QtCore.Qt.TopDockWidgetArea | QtCore.Qt.BottomDockWidgetArea)
-        # self.fileDock.dockLocationChanged.connect(partial(self.slot_dockLocationChanged, self.fileDock))
-        # self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.fileDock)
+        self.fileDock = QtWidgets.QDockWidget('Files',self)
+        self.fileDock.setWidget(self._fileListWidget)
+        self.fileDock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures | \
+                                  QtWidgets.QDockWidget.DockWidgetVerticalTitleBar)
+        self.fileDock.setFloating(False)
+        self.fileDock.setTitleBarWidget(QtWidgets.QWidget())
+        self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.fileDock)
 
         #
         # Detection widget
@@ -1076,6 +1075,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         on = self.configDict["detectionPanels"]["Detection Panel"]
         self.myDetectionWidget.toggleInterface("Detection Panel", on)
 
+        # (1) detection widget in main v layout
         _mainVLayout.addWidget(self.myDetectionWidget)
 
         # myDetectionWidget listens to self
@@ -1090,16 +1090,15 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.myDetectionWidget.signalSelectSweep.connect(self.slot_selectSweep)
         self.myDetectionWidget.signalDetect.connect(self.slot_detect)
 
-        # detection widget is persistent
-        # removed mar 26 2023
-        # self.setCentralWidget(self.myDetectionWidget)
-
-        # TODO: detection widget as a dock
+        # (2) detection widget as a dock
         #  detection widget has left panel of controls and right panel of plots
         #  just make left controls a dock widget
         # self.detectionDock = QtWidgets.QDockWidget('Detection',self)
         # self.detectionDock.setWidget(self.myDetectionWidget)
+        # self.detectionDock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures | \
+        #                           QtWidgets.QDockWidget.DockWidgetVerticalTitleBar)
         # self.detectionDock.setFloating(False)
+        # self.detectionDock.setTitleBarWidget(QtWidgets.QWidget())
         # self.addDockWidget(QtCore.Qt.LeftDockWidgetArea, self.detectionDock)
 
         # self.setLayout(_mainVLayout)
@@ -1135,7 +1134,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
                     # on add tab, the QTabWIdget makes a copy !!!
                     self.myPluginTab1.addTab(_oneOpenPlugin, _oneOpenPlugin.myHumanName)
 
-        self.pluginDock1 = QtWidgets.QDockWidget("Plugins 1", self)
+        self.pluginDock1 = QtWidgets.QDockWidget("Plugins", self)
         self.pluginDock1.setWidget(self.myPluginTab1)
         self.pluginDock1.setVisible(self.myPluginTab1.count() > 0)
         self.pluginDock1.setFloating(False)

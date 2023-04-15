@@ -81,17 +81,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "plotOn": "vmGlobal",  # which plot to overlay (vm, dvdt)
                 "plotIsOn": True,
             },
-            {
-                "humanName": "Threshold (mV)",
-                "x": "thresholdSec",
-                "y": "thresholdVal",
-                "convertx_tosec": False,  # some stats are in points, we need to convert to seconds
-                "color": "r",
-                "styleColor": "color: red",
-                "symbol": "o",
-                "plotOn": "vm",  # which plot to overlay (vm, dvdt)
-                "plotIsOn": True,
-            },
+
             {
                 "humanName": "Threshold (dV/dt)",
                 "x": "thresholdSec",
@@ -103,6 +93,19 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "plotOn": "dvdt",  # which plot to overlay (vm, dvdt)
                 "plotIsOn": True,
             },
+
+            {
+                "humanName": "Threshold (mV)",
+                "x": "thresholdSec",
+                "y": "thresholdVal",
+                "convertx_tosec": False,  # some stats are in points, we need to convert to seconds
+                "color": "r",
+                "styleColor": "color: red",
+                "symbol": "o",
+                "plotOn": "vm",  # which plot to overlay (vm, dvdt)
+                "plotIsOn": True,
+            },
+
             {
                 "humanName": "AP Peak (mV)",
                 "x": "peakSec",
@@ -136,17 +139,19 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "plotOn": "vm",
                 "plotIsOn": True,
             },
-            {
-                "humanName": "Pre AP Min (mV)",
-                "x": "preMinPnt",
-                "y": "preMinVal",
-                "convertx_tosec": True,
-                "color": "y",
-                "styleColor": "color: green",
-                "symbol": "o",
-                "plotOn": "vm",
-                "plotIsOn": False,
-            },
+            # removed april 15, 2023
+            # {
+            #     "humanName": "Pre AP Min (mV)",
+            #     "x": "preMinPnt",
+            #     "y": "preMinVal",
+            #     "convertx_tosec": True,
+            #     "color": "y",
+            #     "styleColor": "color: green",
+            #     "symbol": "o",
+            #     "plotOn": "vm",
+            #     "plotIsOn": False,
+            # },
+            
             # {
             #    'humanName': 'Post AP Min (mV)',
             #    'x': 'postMinPnt',
@@ -158,28 +163,33 @@ class bDetectionWidget(QtWidgets.QWidget):
             #    'plotOn': 'vm',
             #    'plotIsOn': False,
             # },
-            {
-                "humanName": "EDD",
-                "x": None,
-                "y": None,
-                "convertx_tosec": True,
-                "color": "m",
-                "styleColor": "color: megenta",
-                "symbol": "o",
-                "plotOn": "vm",
-                "plotIsOn": False,
-            },
-            {
-                "humanName": "EDD Rate",
-                "x": None,
-                "y": None,
-                "convertx_tosec": False,
-                "color": "m",
-                "styleColor": "color: megenta",
-                "symbol": "--",
-                "plotOn": "vm",
-                "plotIsOn": False,
-            },
+
+            # removed april 15, 2023
+            # {
+            #     "humanName": "EDD",
+            #     "x": None,
+            #     "y": None,
+            #     "convertx_tosec": True,
+            #     "color": "m",
+            #     "styleColor": "color: megenta",
+            #     "symbol": "o",
+            #     "plotOn": "vm",
+            #     "plotIsOn": False,
+            # },
+
+            # removed april 15, 2023
+            # {
+            #     "humanName": "EDD Rate",
+            #     "x": None,
+            #     "y": None,
+            #     "convertx_tosec": False,
+            #     "color": "m",
+            #     "styleColor": "color: megenta",
+            #     "symbol": "--",
+            #     "plotOn": "vm",
+            #     "plotIsOn": False,
+            # },
+
         ]
 
         # for kymograph
@@ -428,9 +438,9 @@ class bDetectionWidget(QtWidgets.QWidget):
             # self.derivPlot.setXRange(start, stop, padding=padding) # linked to Vm
             self.vmPlot.setXRange(start, stop, padding=padding)  # linked to Vm
 
-            self.myKymWidget.kymographPlot.setXRange(
-                start, stop, padding=padding
-            )  # row major is different
+            # self.myKymWidget.kymographPlot.setXRange(
+            #     start, stop, padding=padding
+            # )  # row major is different
 
         if set_xyBoth == "yAxis":
             if whichPlot in ["dvdt", "dvdtFiltered"]:
@@ -522,7 +532,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # kymograph
         # self.myKymWidget.kymographPlot.setXRange(start, stop, padding=padding)  # row major is different
-        self.myKymWidget.kymographPlot.autoRange()  # row major is different
+        #self.myKymWidget.kymographPlot.autoRange()  # row major is different
 
         #
         # update detection toolbar
@@ -785,25 +795,25 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # update label with number of spikes detected
         # print('todo: bDetectionWidget.replot(), make numSpikesLabel respond to signal/slot')
-        numSpikesStr = str(self.ba.numSpikes)
-        self.detectToolbarWidget.numSpikesLabel.setText("Spikes: " + numSpikesStr)
-        self.detectToolbarWidget.numSpikesLabel.repaint()
+        # numSpikesStr = str(self.ba.numSpikes)
+        # self.detectToolbarWidget.numSpikesLabel.setText("Spikes: " + numSpikesStr)
+        # self.detectToolbarWidget.numSpikesLabel.repaint()
 
         # spike freq
         # print('todo: bDetectionWidget.replot(), make spikeFreqLabel respond to signal/slot')
-        meanSpikeFreq = self.ba.getStatMean(
-            "spikeFreq_hz", sweepNumber=self.sweepNumber
-        )
-        if meanSpikeFreq is not None:
-            meanSpikeFreq = round(meanSpikeFreq, 2)
-        self.detectToolbarWidget.spikeFreqLabel.setText("Freq: " + str(meanSpikeFreq))
-        self.detectToolbarWidget.spikeFreqLabel.repaint()
+        # meanSpikeFreq = self.ba.getStatMean(
+        #     "spikeFreq_hz", sweepNumber=self.sweepNumber
+        # )
+        # if meanSpikeFreq is not None:
+        #     meanSpikeFreq = round(meanSpikeFreq, 2)
+        # self.detectToolbarWidget.spikeFreqLabel.setText("Freq: " + str(meanSpikeFreq))
+        # self.detectToolbarWidget.spikeFreqLabel.repaint()
 
         # num errors
-        self.detectToolbarWidget.numErrorsLabel.setText(
-            "Errors: " + str(self.ba.numErrors())
-        )
-        self.detectToolbarWidget.numErrorsLabel.repaint()
+        # self.detectToolbarWidget.numErrorsLabel.setText(
+        #     "Errors: " + str(self.ba.numErrors())
+        # )
+        # self.detectToolbarWidget.numErrorsLabel.repaint()
 
     def togglePlot(self, idx: int, on: bool):
         """Toggle overlay of stats like (spike threshold, spike peak, ...).
@@ -1287,40 +1297,37 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
         self.myHBoxLayout_detect.setAlignment(QtCore.Qt.AlignTop)
 
+        # hSplitter gets added to h layout
+        # then we add left/right widgets to the splitter
+        _hSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+
         # detection widget toolbar
-        # abb 20201110, switching over to a better layout
-        # self.detectToolbarWidget = myDetectToolbarWidget(self.myPlots, self)
-        # self.myHBoxLayout_detect.addLayout(self.detectToolbarWidget, stretch=1) # stretch=10, not sure on the units???
         self.detectToolbarWidget = myDetectToolbarWidget2(self.myPlots, self)
         self.signalSelectSpike.connect(self.detectToolbarWidget.slot_selectSpike)
         self.signalSelectSpikeList.connect(
             self.detectToolbarWidget.slot_selectSpikeList
         )
-        # if self.myMainWindow is not None:
-        #    self.detectToolbarWidget.signalSelectSpike.connect(self.myMainWindow.slotSelectSpike)
 
-        # was this
-        # self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget, stretch=1) # stretch=10, not sure on the units???
-        self.myHBoxLayout_detect.addWidget(
-            self.detectToolbarWidget
-        )  # stretch=10, not sure on the units???
+        # v1
+        # self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget)
+        # v2
+        _hSplitter.addWidget(self.detectToolbarWidget)
+        self.myHBoxLayout_detect.addWidget(_hSplitter)
 
         # kymograph, we need a vboxlayout to hollder (kym widget, self.view)
         vBoxLayoutForPlot = QtWidgets.QVBoxLayout(self)
 
-        self.myKymWidget = sanpy.interface.kymographWidget()
-        self.myKymWidget.signalKymographRoiChanged.connect(self.slot_kymographChanged)
-        self.myKymWidget.setVisible(False)
-        self.myKymWidget.showLineSlider(False)
-        vBoxLayoutForPlot.addWidget(self.myKymWidget)
+        # for publication, don't do kymographs
+        # make a branch and get this working
+        if 0:
+            self.myKymWidget = sanpy.interface.kymographWidget()
+            self.myKymWidget.signalKymographRoiChanged.connect(self.slot_kymographChanged)
+            self.myKymWidget.setVisible(False)
+            self.myKymWidget.showLineSlider(False)
+            vBoxLayoutForPlot.addWidget(self.myKymWidget)
 
         # was this
         self.view = pg.GraphicsLayoutWidget()
-
-        # self.view.scene().sigMouseClicked.connect(self.tmpOnClick)
-
-        # works but does not stick
-        # self.view.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
         self.view.show()
 
         row = 0
@@ -1448,33 +1455,17 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.derivPlot.setMenuEnabled(False)
         self.dacPlot.setMenuEnabled(False)
         self.vmPlot.setMenuEnabled(False)
-        # self.clipPlot.setMenuEnabled(False)
 
         # 20221003 just link everything to vmPlot
-        # link x-axis of deriv and vm
-        # self.derivPlot.setXLink(self.vmPlot)
-        # self.derivPlot.setXLink(self.dacPlot)
-        # self.dacPlot.setXLink(self.derivPlot)
-        # self.dacPlot.setXLink(self.vmPlot)
-        # self.vmPlot.setXLink(self.derivPlot)
-        # self.vmPlot.setXLink(self.dacPlot)
         self.derivPlot.setXLink(self.vmPlot)
         self.dacPlot.setXLink(self.vmPlot)
-
-        # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
-
-        #
-        # self.kymographPlot.setXLink(self.vmPlot)  # TODO: need to set scale of kymograph x-axis
-        # self.kymographPlot.setXLink(self.derivPlot)
 
         # turn off x/y dragging of deriv and vm
         self.vmPlotGlobal.setMouseEnabled(x=False, y=False)
         self.derivPlot.setMouseEnabled(x=False, y=False)
         self.dacPlot.setMouseEnabled(x=False, y=False)
         self.vmPlot.setMouseEnabled(x=False, y=False)
-        # self.clipPlot.setMouseEnabled(x=False, y=False)
 
-        # self.toggleClips(False)
 
         # single spike selection
         # removed mar 11 2023
@@ -1544,25 +1535,16 @@ class bDetectionWidget(QtWidgets.QWidget):
             elif plot["plotOn"] == "dvdt":
                 self.derivPlot.addItem(myScatterPlot)
 
-        # axis labels
-        # TODO (cudmore) get the units correct, grab from y-axis of abf file
-        # 20221003 was this, on removal different y-axis label withs (x axis aligns correctly) ???
-        # self.vmPlotGlobal.getAxis('left').setLabel('mV')
-        # self.derivPlot.getAxis('left').setLabel('Derivative')
-        # self.dacPlot.getAxis('left').setLabel('DAC')
-        # self.vmPlot.getAxis('left').setLabel('mV')
-        # self.vmPlot.getAxis('bottom').setLabel('Seconds')
-
         self.replot()
 
-        # kymograph
-        # tmpVLayout = QtWidgets.QVBoxLayout()
         vBoxLayoutForPlot.addWidget(self.view)
 
-        self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot)
-
-        # was this, switchin to kym
-        # self.myHBoxLayout_detect.addWidget(self.view)
+        # v1
+        #self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot)
+        # v2
+        _tmpSplitterWidget = QtWidgets.QWidget()
+        _tmpSplitterWidget.setLayout(vBoxLayoutForPlot)
+        _hSplitter.addWidget(_tmpSplitterWidget)
 
     def toggleCrosshair(self, onOff):
         for plotName in self.crosshairDict.keys():
@@ -1814,7 +1796,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot.getAxis("left").setLabel(yLabel)
         self.vmPlot.getAxis("bottom").setLabel("Seconds")
 
-        self.myKymWidget.slot_switchFile(ba, startSec, stopSec)
+        #self.myKymWidget.slot_switchFile(ba, startSec, stopSec)
 
         # reconnect relink x-axis
         # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
@@ -1920,8 +1902,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlotGlobal.addItem(self.linearRegionItem2)
 
         # Kymograph
-        isKymograph = self.ba.fileLoader.isKymograph()
-        self.myKymWidget.setVisible(isKymograph)
+        # isKymograph = self.ba.fileLoader.isKymograph()
+        # self.myKymWidget.setVisible(isKymograph)
         # self.kymographPlot.hide()
 
         #
@@ -2288,7 +2270,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         self._selectedDetection = None
 
-        self.buildUI()
+        self._buildUI()
 
     def fillInDetectionParameters(self, tableRowDict):
         """
@@ -2549,24 +2531,22 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
                 self.displayGroupBox.show()
             else:
                 self.displayGroupBox.hide()
-        elif panelName == "Plot Options":
-            if onoff:
-                self.plotGroupBox.show()
-            else:
-                self.plotGroupBox.hide()
         # mar 11
         elif panelName == "Set Spikes":
             if onoff:
                 self.setSpikeGroupBox.show()
             else:
                 self.setSpikeGroupBox.hide()
+        elif panelName == "Plot Options":
+            if onoff:
+                self.plotGroupBox.show()
+            else:
+                self.plotGroupBox.hide()
 
         else:
             logger.warning(f'did not understand panelName "{panelName}"')
 
-    def buildUI(self):
-        # self.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
-
+    def _buildUI(self):
         myPath = os.path.dirname(os.path.abspath(__file__))
 
         windowOptions = self.detectionWidget.getMainWindowOptions()
@@ -2575,8 +2555,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         showGlobalVm = True
         showDvDt = True
         showDAC = True
-        # showClips = False
-        # showScatter = True
         if windowOptions is not None:
             detectDvDt = windowOptions["detect"]["detectDvDt"]
             detectMv = windowOptions["detect"]["detectMv"]
@@ -2584,19 +2562,19 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             showDvDt = windowOptions["rawDataPanels"]["Derivative"]
             showDAC = windowOptions["rawDataPanels"]["DAC"]
             showGlobalVm = windowOptions["rawDataPanels"]["Full Recording"]
-            # showClips = windowOptions['display']['showClips']
-            # showScatter = windowOptions['display']['showScatter']
-            # showErrors = windowOptions['display']['showErrors']
 
-        self.setFixedWidth(300)
+        # April 15, 2023, removed when adding horizontal splitter
+        self.setFixedWidth(280)
 
         # why do I need self here?
         self.mainLayout = QtWidgets.QVBoxLayout()
-
         self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
+
+        self.mainLayout.setContentsMargins(0,0,0,0)
 
         # Show selected file
         self.mySelectedFileLabel = QtWidgets.QLabel("None")
+        self.mySelectedFileLabel.setContentsMargins(0,0,0,0)
         self.mainLayout.addWidget(self.mySelectedFileLabel)
 
         #
@@ -2705,24 +2683,22 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.stopSeconds.editingFinished.connect(self.on_start_stop)
         detectionGridLayout.addWidget(self.stopSeconds, row, 3)
 
-        row += 1
-        tmpHLayout = QtWidgets.QHBoxLayout()
+        # removed april 15, 2023 to conserve space
+        # row += 1
+        # tmpHLayout = QtWidgets.QHBoxLayout()
 
-        self.numSpikesLabel = QtWidgets.QLabel("Spikes: None")
-        tmpHLayout.addWidget(self.numSpikesLabel)
-        # detectionGridLayout.addWidget(self.numSpikesLabel, row, 0, tmpRowSpan, tmpColSpan)
+        # self.numSpikesLabel = QtWidgets.QLabel("Spikes: None")
+        # tmpHLayout.addWidget(self.numSpikesLabel)
 
-        self.spikeFreqLabel = QtWidgets.QLabel("Freq: None")
-        tmpHLayout.addWidget(self.spikeFreqLabel)
-        # detectionGridLayout.addWidget(self.spikeFreqLabel, row, 1, tmpRowSpan, tmpColSpan)
+        # self.spikeFreqLabel = QtWidgets.QLabel("Freq: None")
+        # tmpHLayout.addWidget(self.spikeFreqLabel)
 
-        self.numErrorsLabel = QtWidgets.QLabel("Errors: None")
-        tmpHLayout.addWidget(self.numErrorsLabel)
-        # detectionGridLayout.addWidget(self.numErrorsLabel, row, 2, tmpRowSpan, tmpColSpan)
-        col = 0
-        rowSpan = 1
-        colSpan = 4
-        detectionGridLayout.addLayout(tmpHLayout, row, col, rowSpan, colSpan)
+        # self.numErrorsLabel = QtWidgets.QLabel("Errors: None")
+        # tmpHLayout.addWidget(self.numErrorsLabel)
+        # col = 0
+        # rowSpan = 1
+        # colSpan = 4
+        # detectionGridLayout.addLayout(tmpHLayout, row, col, rowSpan, colSpan)
 
         row += 1
         buttonName = "Export Spike Report"
@@ -2837,7 +2813,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         #
         # set spike group
         self.setSpikeGroupBox = QtWidgets.QGroupBox("Set Spikes")
+        self.setContentsMargins(0,0,0,0)
         setSpikeLayout = QtWidgets.QHBoxLayout()
+        setSpikeLayout.setContentsMargins(0,0,0,0)
 
         # mar 11, created a setSpikestat plugin
         setSpikeStatWidget = sanpy.interface.plugins.SetSpikeStat(
@@ -2856,42 +2834,14 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         #
         # plots  group
         self.plotGroupBox = QtWidgets.QGroupBox("Plot Options")
-
-        # breeze
-        # plotGroupBox.setStyleSheet(myStyleSheet)
+        # self.plotGroupBox.setContentsMargins(0,0,0,0)
 
         plotGridLayout = QtWidgets.QGridLayout()
+        plotGridLayout.setContentsMargins(4,4,0,0)
 
         row = 0
 
         # add widgets
-        """
-        row = 0
-        col = 0
-        aCheckbox = QtWidgets.QCheckBox('Global Vm')
-        aCheckbox.setChecked(showGlobalVm)
-        aCheckbox.stateChanged.connect(partial(self.on_check_click,aCheckbox,'Global Vm'))
-        plotGridLayout.addWidget(aCheckbox, row, col)
-        """
-
-        """
-        row = 0
-        col += 1
-        show_dvdt_checkbox = QtWidgets.QCheckBox('dV/dt')
-        show_dvdt_checkbox.setChecked(showDvDt)
-        show_dvdt_checkbox.stateChanged.connect(partial(self.on_check_click,show_dvdt_checkbox,'dV/dt'))
-        plotGridLayout.addWidget(show_dvdt_checkbox, row, col)
-        """
-
-        """
-        row = 0
-        col += 1
-        show_dac_checkbox = QtWidgets.QCheckBox('DAC')
-        show_dac_checkbox.setChecked(showDAC)
-        show_dac_checkbox.stateChanged.connect(partial(self.on_check_click,show_dac_checkbox,'DAC'))
-        plotGridLayout.addWidget(show_dac_checkbox, row, col)
-        """
-
         # a number of stats that will get overlaid on dv/dt and Vm
         # row += 1
         row += 1

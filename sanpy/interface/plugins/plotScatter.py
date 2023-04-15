@@ -48,6 +48,7 @@ class plotScatter(sanpyPlugin):
 
         self.xData = []
         self.yData = []
+        #self._plotSpikeNumber = []
         # self.xAxisSpikeNumber = []  # We need to keep track of this for 'Chase Plot'
 
         # main layout
@@ -66,6 +67,7 @@ class plotScatter(sanpyPlugin):
 
         #
         self.b2 = QtWidgets.QCheckBox("Chase Plot")
+        self.b2.setEnabled(False)  # april 15, 2023, disbale for now (need to debug)
         self.b2.setChecked(self.plotChasePlot)
         self.b2.stateChanged.connect(lambda: self.btnstate(self.b2))
         hLayout2.addWidget(self.b2)
@@ -409,8 +411,14 @@ class plotScatter(sanpyPlugin):
             xData = []
             yData = []
         else:
-            xData = self.getStat(xStat)
-            yData = self.getStat(yStat)
+            # use getFullList when we have a recording with
+            # multiple sweeps and epochs
+            xData = self.getStat(xStat, getFullList=True)
+            yData = self.getStat(yStat, getFullList=True)
+            #self._plotSpikeNumber = self.getStat('spikeNumber')
+
+        # logger.warning('debug plotting epochs')
+        # print('xData:', xData)
 
         #
         # TODO: use ba.getStat() option for this.)
@@ -647,13 +655,15 @@ class plotScatter(sanpyPlugin):
 
     def selectSpikeList(self):
         """ """
-        logger.info(f"{self._myClassName()}")
+        spikeList = self.getSelectedSpikes()
+
+        logger.info(f"{self._myClassName()} spikeList:{spikeList}")
 
         if self.xStatName is None or self.yStatName is None:
             return
 
-        spikeList = self.getSelectedSpikes()
-
+        # TODO (error) when we are plotting just one epoch (like 2), we get index errors
+        
         # if spikeList is not None:
         if len(spikeList) > 0:
             xData = [self.xData[spikeList]]

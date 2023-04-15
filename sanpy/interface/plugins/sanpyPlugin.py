@@ -230,7 +230,15 @@ class sanpyPlugin(QtWidgets.QWidget):
         # the top toolbar is always present
         self._blockComboBox: bool = False
         self._topToolbarWidget = self._buildTopToolbarWidget()
-        self.toggleTopToobar(False)  # initially hidden
+        
+        # if ba has > 1 sweep or > 2 epochs then show top toolbar
+        _showTop = False
+        if self.ba is not None:
+            _numEpochs = self.ba.fileLoader.numEpochs  # can be None
+            _showTop = self.ba.fileLoader.numSweeps>1
+            _showTop = _showTop | _numEpochs is not None and _numEpochs>2
+        self.toggleTopToobar(_showTop)  # initially hidden
+        
         self._updateTopToolbar()
         self._vBoxLayout.addWidget(self._topToolbarWidget)
 
@@ -244,7 +252,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         else:
             return "k"
 
-    def getStat(self, stat: str) -> list:
+    def getStat(self, stat: str, getFullList : bool = False) -> list:
         """Convenianece function to get a stat from underling sanpy.bAnalysis.
 
         Parameters
@@ -253,7 +261,9 @@ class sanpyPlugin(QtWidgets.QWidget):
             Stat to get, corresponds to a column in sanpy.bAnalysis
         """
         return self.ba.getStat(
-            stat, sweepNumber=self.sweepNumber, epochNumber=self.epochNumber
+            stat, sweepNumber=self.sweepNumber,
+            epochNumber=self.epochNumber,
+            getFullList=getFullList
         )
 
     @property
