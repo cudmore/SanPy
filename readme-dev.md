@@ -24,7 +24,12 @@
 
 - [done] Get releases on PyPi
 
+- Replace `<user>/Documents/SanPy` with `<user>.SanPy`
+
+
 ## Bugs
+
+Selecting spike in an epoch does not update correctly in Scatter plot widget
 
 Selecting spike and setting user type with set spike stat results in incorrect spike symbol bein set in plot scatter widget.
 

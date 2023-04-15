@@ -60,9 +60,9 @@ plugins:
 nav:
     - Introducing SanPy: index.md
     - Download: download.md
-    - Install: install.md
     - Desktop Application: desktop-application.md
     - Plugins: plugins.md
+    - Install: install.md
     - Using the API: scripting.ipynb
     - API:
         - Overview: api/overview.md
@@ -89,4 +89,4 @@ nav:
     - Methods: methods.md
     - Web Application: web-application.md
     - Open Source: open-source.md
-    - About: about.md
+    - About SanPy: about.md

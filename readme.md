@@ -10,26 +10,13 @@
 
 Originally designed for cardiac myocytes, we have been busy extending SanPy to handle most whole-cell current clamp recordings and analysis including neurons.
 
-SanPy is pronounced ['senpai']['senpai']
-
-['senpai']: https://en.wikipedia.org/wiki/Senpai_and_k%C5%8Dhai
-
-If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.
-
-## Please see our documentation website
-
-[https://cudmore.github.io/SanPy/](https://cudmore.github.io/SanPy/)
-
-['sanpy-docs']: https://cudmore.github.io/SanPy/
+## Please see our [documentation website](https://cudmore.github.io/SanPy/).
 
 ## Desktop Application
 
-**Soon** we will be providing one file downloads to run the desktop application.
+We now provide [macOS and Windows downloads](https://cudmore.github.io/SanPy/download/) to run the desktop application. No command line, no complicated installation, just an easy to use point and click GUI.
 
-<!-- <IMG SRC="docs/docs/img/spike-app.png" width=600> -->
 <IMG SRC="docs/docs/img/sanpy-app.png" width=600>
-
-<!-- <IMG SRC="docs/docs/img/meta-window-example.png" width=600> -->
 
 ## Desktop Application - Plugins
  
@@ -60,13 +47,6 @@ Please see the [install instructions](https://cudmore.github.io/SanPy/install/) 
 
 ## Writing custom Python scripts
 
-Please see our [API documentation](https://cudmore.github.io/SanPy/scripting/) with some examples to get started.
+We realize that SanPy need to be extensible. To acheive this we have created software architectures such that our programming users can write custom file loders, create new analysis, and even create full GUI plugins. Please see our [API documentation](https://cudmore.github.io/SanPy/scripting/) with lots of examples to get started.
 
-## Why is this useful?
-
-We provide a Python package that can load, analyze, plot, and save eletropysiology recordings. This package is then accessed through a desktop application with a simple to use graphical user interface (GUI). Finally, the same code that drives the GUI  can be scripted. In just a few lines of code, the exact same loading, analysis, plotting, saving can be performed as is done with the GUIs.
-
-## Why is this important?
-
-When you publish a paper, you need to ensure your primary data is available for interogation and that your analysis can be reproduced. This software facilitates that by allowing you to share the raw data, provide the code that was used to analyze it, and explicity show how it was analyzed such that it can be verified and reproduced.
-
+If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.

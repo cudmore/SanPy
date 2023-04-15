@@ -83,6 +83,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         super().__init__(parent)
 
+        logger.info(f"Constructing SanPyWindow")
+        date_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        logger.info(f'{date_time_str}')
+
+        _version = self._getVersionInfo()
+        for k,v in _version.items():
+            logger.info(f'{k}: {v}')
+
         self.setAcceptDrops(True)
 
         # TODO: if first time run (no <user>/Documents/SanPy) then warn user to quit and restart
@@ -558,6 +566,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def _buildMenus(self):
         mainMenu = self.menuBar()
 
+        #self.aboutAction = QtWidgets.QAction("&About", self)
+
         # load
         loadFolderAction = QtWidgets.QAction("Load Folder ...", self)
         loadFolderAction.setShortcut("Ctrl+O")
@@ -577,20 +587,24 @@ class SanPyWindow(QtWidgets.QMainWindow):
         savePreferencesAction = QtWidgets.QAction("Save Preferences", self)
         savePreferencesAction.triggered.connect(self.configDict.save)
 
-        showLogAction = QtWidgets.QAction("Show Log", self)
-        showLogAction.triggered.connect(self.openLog)
+        # showLogAction = QtWidgets.QAction("Show Log", self)
+        # showLogAction.triggered.connect(self.openLog)
 
         fileMenu = mainMenu.addMenu("&File")
+
         fileMenu.addAction(loadFolderAction)
         fileMenu.addMenu(self.openRecentMenu)
+
         fileMenu.addSeparator()
         fileMenu.addAction(saveDatabaseAction)
+
         fileMenu.addSeparator()
         # fileMenu.addAction(buildDatabaseAction)
         # fileMenu.addSeparator()
         fileMenu.addAction(savePreferencesAction)
-        fileMenu.addSeparator()
-        fileMenu.addAction(showLogAction)
+
+        # fileMenu.addSeparator()
+        # fileMenu.addAction(showLogAction)
 
         # view menu to toggle widgets on/off
         self.viewMenu = mainMenu.addMenu("&View")
@@ -598,9 +612,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self._refreshViewMenu()
         # self._populateViewMenu()
 
-        # self.windowsMenu = mainMenu.addMenu('&Window')
-        # self.windowsMenu.aboutToShow.connect(self._refreshWindowsMenu)
-        # self._refreshWindowsMenu()
+        self.windowsMenu = mainMenu.addMenu('&Window')
+        self.windowsMenu.aboutToShow.connect(self._refreshWindowsMenu)
+        self._refreshWindowsMenu()
 
         #
         # plugins menu
@@ -682,9 +696,23 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         # help menu
         helpMenu = mainMenu.addMenu("&Help")
+
         name = "SanPy Help (Opens In Browser)"
         action = QtWidgets.QAction(name, self)
         action.triggered.connect(partial(self._onHelpMenuAction, name))
+        helpMenu.addAction(action)
+
+        # this actually does not show up in the help menu!
+        # PyQt reroutes it to the main python/SanPy menu
+        name = "About SanPy"
+        action = QtWidgets.QAction(name, self)
+        action.triggered.connect(self._onAboutMenuAction)
+        helpMenu.addAction(action)
+
+        # like the help menu, this gets rerouted to the main python/sanp menu
+        name = "Preferences ..."
+        action = QtWidgets.QAction(name, self)
+        action.triggered.connect(self._onPreferencesMenuAction)
         helpMenu.addAction(action)
 
     def _onHelpMenuAction(self, name: str):
@@ -692,6 +720,60 @@ class SanPyWindow(QtWidgets.QMainWindow):
             url = "https://cudmore.github.io/SanPy/desktop-application"
             webbrowser.open(url, new=2)
 
+    def _onPreferencesMenuAction(self):
+        logger.info('')
+
+    def _onAboutMenuAction(self):
+        """Show a dialog with help.
+        """
+        print(self._getVersionInfo())
+
+        dlg = QtWidgets.QDialog(self)
+        dlg.setWindowTitle('About SanPy')
+
+        vLayout = QtWidgets.QVBoxLayout()
+
+        _versionInfo = self._getVersionInfo()
+        for k,v in _versionInfo.items():
+            aText = k + ' ' + str(v)
+            aLabel = QtWidgets.QLabel(aText)
+
+            if 'https' in v:
+                aLabel.setText(f'{k} <a href="{v}">{v}</a>')
+                aLabel.setTextFormat(QtCore.Qt.RichText)
+                aLabel.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+                aLabel.setOpenExternalLinks(True)
+
+            if k == 'email':
+                # <a href = "mailto: abc@example.com">Send Email</a>
+                aLabel.setText(f'{k} <a href="mailto:{v}">{v}</a>')
+                aLabel.setTextFormat(QtCore.Qt.RichText)
+                aLabel.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+                aLabel.setOpenExternalLinks(True)
+            
+            vLayout.addWidget(aLabel)
+
+        dlg.setLayout(vLayout)
+
+        dlg.exec()
+  
+    def _getVersionInfo(self) -> dict:
+        retDict = {}
+
+        from sanpy.version import __version__
+
+        retDict['SanPy version'] = __version__
+        retDict['Python version'] = platform.python_version()
+        retDict['Python platform'] = platform.platform()
+        retDict['PyQt version'] = QtCore.__version__  # when using import qtpy
+        # retDict['Bundle folder'] = sanpy._util.getBundledDir()
+        # retDict['Log file'] = sanpy.sanpyLogger.getLoggerFile()
+        retDict['GitHub'] = 'https://github.com/cudmore/sanpy'
+        retDict['Documentation'] = 'https://cudmore.github.io/SanPy/'
+        retDict['email'] = 'rhcudmore@ucdavis.edu'
+
+        return retDict
+    
     def _refreshOpenRecent(self):
         """Dynamically generate the open recent file menu."""
         self.openRecentMenu.clear()
@@ -709,9 +791,18 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         name = "SanPy Window"
         action = QtWidgets.QAction(name, self, checkable=True)
-        action.setChecked(self.isVisible())
-        action.triggered.connect(partial(self._windowsMenuAction, "xxx", name))
+        action.setChecked(self.isActiveWindow())
+        action.triggered.connect(partial(self._windowsMenuAction, self, name))
         self.windowsMenu.addAction(action)
+
+        for _widget in QtWidgets.QApplication.topLevelWidgets():
+            if 'sanpy.interface.plugins' in str(type(_widget)):
+                myHumanName = _widget.myHumanName
+                print(f'{myHumanName} {_widget}')
+                action = QtWidgets.QAction(myHumanName, self, checkable=True)
+                action.setChecked(_widget.isActiveWindow())
+                action.triggered.connect(partial(self._windowsMenuAction, _widget, myHumanName))
+                self.windowsMenu.addAction(action)
 
     def _refreshViewMenu(self):
         """Dynamically create the main 'View' menu each time it is selected."""
@@ -835,8 +926,22 @@ class SanPyWindow(QtWidgets.QMainWindow):
         action.triggered.connect(partial(self._viewMenuAction, "Dark Theme", name))
         self.viewMenu.addAction(action)
 
-    def _windowsMenuAction(self, key1, name, isChecked):
-        self.setVisible(not self.isVisible())
+    def _windowsMenuAction(self, widget, name, isChecked):
+        """
+        Parameters
+        ----------
+        widget : QtWidgets.QWidget
+            Either self or an open plugin widget
+        name : str
+            Name of the window
+        """
+        
+        # don't toggle visibility
+        # widget.setVisible(not widget.isVisible())
+
+        QtWidgets.QApplication.setActiveWindow(widget)
+        widget.activateWindow()
+        widget.raise_()
 
     def _viewMenuAction(self, key1, name, isChecked):
         """Respond to user selection in view menu."""
@@ -1276,7 +1381,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         logger.info(f"not implemented, index:{index} sender:{sender}")
         pass
 
-    def openLog(self):
+    def _old_openLog(self):
         """Open sanpy.log"""
         logFilePath = sanpy.sanpyLogger.getLoggerFile()
         logFilePath = "file://" + logFilePath
@@ -1317,18 +1422,21 @@ def testFFT(sanpyWindow):
     pluginName = "FFT"
     fftPlugin = sanpyWindow.myPlugins.runPlugin(pluginName, ba)
 
+def _old__getVersionInfo() -> dict:
+    retDict = {}
 
-def main():
-    """Main entry point for the SanPy desktop app.
+    from sanpy.version import __version__
 
-    Configured in setup.py
-    """
-    logger.info(f"Starting sanpy_app.py in __main__()")
+    retDict['SanPy version'] = __version__
+    retDict['Python version'] = platform.python_version()
+    retDict['Python platform'] = platform.platform()
+    retDict['PyQt version'] = QtCore.__version__  # when using import qtpy
+    retDict['Bundle folder'] = sanpy._util.getBundledDir()
+    retDict['Log file'] = sanpy.sanpyLogger.getLoggerFile()
+    return retDict
 
-    date_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    logger.info(f"    {date_time_str}")
-
-    logger.info(f"    Python version is {platform.python_version()}")
+    logger.info(f'    Python version is {platform.python_version()}')
+    logger.info(f'    Python platform is {platform.platform()}')
 
     # when using import PyQt5
     #logger.info(f"    PyQt version is {QtCore.QT_VERSION_STR}")
@@ -1340,6 +1448,35 @@ def main():
 
     _logFilePath = sanpy.sanpyLogger.getLoggerFile()
     logger.info(f"    logging to file {_logFilePath}")
+
+def main():
+    """Main entry point for the SanPy desktop app.
+
+    Configured in setup.py
+    """
+    logger.info(f"Starting sanpy_app.py in main()")
+    # date_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    # logger.info(f'    {date_time_str}')
+
+    # _version = _getVersionInfo()
+    # for k,v in _version.items():
+    #     logger.info(f'{k} {v}')
+
+    '''
+    logger.info(f'    Python version is {platform.python_version()}')
+    logger.info(f'    Python platform is {platform.platform()}')
+
+    # when using import PyQt5
+    #logger.info(f"    PyQt version is {QtCore.QT_VERSION_STR}")
+    # when using import qtpy
+    logger.info(f"    PyQt version is {QtCore.__version__}")
+
+    bundle_dir = sanpy._util.getBundledDir()
+    logger.info(f'    bundle_dir is "{bundle_dir}"')
+
+    _logFilePath = sanpy.sanpyLogger.getLoggerFile()
+    logger.info(f"    logging to file {_logFilePath}")
+    '''
 
     # for qdarkstyle
     # os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt5'
@@ -1356,25 +1493,24 @@ def main():
     qdarktheme.setup_theme()
 
     # appIconPath = os.path.join(bundle_dir, 'interface/icons/sanpy_transparent.png')
+    bundle_dir = sanpy._util.getBundledDir()
     appIconPath = (
         pathlib.Path(bundle_dir) / "interface" / "icons" / "sanpy_transparent.png"
     )
     appIconPathStr = str(appIconPath)
     # logger.info(f'appIconPath is "{appIconPath}"')
     if os.path.isfile(appIconPathStr):
-        logger.info(f'    setting app window icon with: "{appIconPath}"')
+        logger.info(f'  app.setWindowIcon with: "{appIconPath}"')
         app.setWindowIcon(QtGui.QIcon(appIconPathStr))
     else:
         logger.warning(f"    Did not find appIconPath: {appIconPathStr}")
 
     w = SanPyWindow()
     w.show()
-
     w.raise_()  # bring to front, raise is a python keyword
     w.activateWindow()  # bring to front
 
     sys.exit(app.exec_())
-
 
 if __name__ == "__main__":
     main()

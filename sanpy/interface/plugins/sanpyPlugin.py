@@ -401,8 +401,10 @@ class sanpyPlugin(QtWidgets.QWidget):
             app.signalUpdateAnalysis.connect(self.slot_updateAnalysis)
             # recieve set sweep
             app.signalSelectSweep.connect(self.slot_setSweep)
+            
+            # april 6, 2023, turned off
             # recieve set x axis
-            app.signalSetXAxis.connect(self.slot_set_x_axis)
+            #app.signalSetXAxis.connect(self.slot_set_x_axis)
 
             # emit when we spike detect (used in detectionParams plugin)
             self.signalDetect.connect(app.slot_detect)
@@ -431,7 +433,7 @@ class sanpyPlugin(QtWidgets.QWidget):
             # recieve set sweep
             app.signalSelectSweep.disconnect(self.slot_setSweep)
             # recieve set x axis
-            app.signalSetXAxis.disconnect(self.slot_set_x_axis)
+            #app.signalSetXAxis.disconnect(self.slot_set_x_axis)
 
     def toggleResponseOptions(self, thisOption: ResponseType, newValue: bool = None):
         """Set underlying responseOptions based on name of thisOption.

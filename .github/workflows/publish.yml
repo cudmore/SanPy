@@ -23,6 +23,7 @@ jobs:
         cache-dependency-path: setup.py
     - name: Install dependencies
       run: |
+        pip install '.[gui]'
         pip install '.[test]'
     - name: Run tests
       run: |

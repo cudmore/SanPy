@@ -85,11 +85,11 @@ def _getUserDocumentsFolder():
 def _getUserSanPyFolder():
     """Get <user>/Documents/SanPy folder."""
     userDocumentsFolder = _getUserDocumentsFolder()
-    sanpyFolder = os.path.join(userDocumentsFolder, "SanPy")
+    sanpyFolder = os.path.join(userDocumentsFolder, "SanPy-User-Files")
     return sanpyFolder
 
 
-def old_getUserFolder(folder: str) -> str:
+def _old_getUserFolder(folder: str) -> str:
     userSanPyFolder = _getUserSanPyFolder()
     if folder == "plugins":
         theFolder = os.path.join(userSanPyFolder, "plugins")
@@ -145,7 +145,7 @@ def pprint(d: dict):
 
 
 def _makeSanPyFolders():
-    """Make <user>/Documents/SanPy folder .
+    """Make <user>/Documents/SanPy-User-Files folder .
 
     If no Documents folder then make SanPy folder directly in <user> path.
     """
@@ -153,18 +153,18 @@ def _makeSanPyFolders():
 
     madeUserFolder = False
 
-    # main <user>/DOcuments/SanPy folder
+    # main <user>/Documents/SanPy folder
     sanpyFolder = _getUserSanPyFolder()
     if not os.path.isdir(sanpyFolder):
         # first time run
-        logger.info(f'Making <user>/SanPy folder "{sanpyFolder}"')
+        logger.info(f'Making <user>/SanPy-User-Files folder "{sanpyFolder}"')
         madeUserFolder = True
         #
         # copy entire xxx into <user>/Documents/SanPy
         _bundDir = getBundledDir()
-        _srcPath = pathlib.Path(_bundDir) / "_userFiles" / "SanPy"
+        _srcPath = pathlib.Path(_bundDir) / "_userFiles" / "SanPy-User-Files"
         _dstPath = pathlib.Path(sanpyFolder)
-        logger.info(f"    copying folder tree to <user>/Documents/SanPy folder")
+        logger.info(f"    copying folder tree to <user>/Documents/SanPy-User-Folder")
         logger.info(f"    _srcPath:{_srcPath}")
         logger.info(f"    _dstPath:{_dstPath}")
         shutil.copytree(_srcPath, _dstPath)
@@ -173,46 +173,6 @@ def _makeSanPyFolders():
         pass
 
     return madeUserFolder
-
-    """
-    # SanPyapplication preferences
-    preferencesFolder = _getUserPreferencesFolder()
-    if not os.path.isdir(preferencesFolder):
-        logger.info(f'Making user preferences folder "{preferencesFolder}"')
-        os.mkdir(preferencesFolder)
-    
-    # to save detection parameters json
-    detectionFolder = os.path.join(sanpyFolder, 'detection')
-    if not os.path.isdir(detectionFolder):
-        logger.info(f'Making user detection folder "{detectionFolder}"')
-        os.mkdir(detectionFolder)
-
-    # to hold custom .py plugins
-    pluginFolder = _getUserPluginFolder()  # os.path.join(sanpyFolder, 'plugins')
-    if not os.path.isdir(pluginFolder):
-        # TODO: add __init__.py
-        logger.info(f'Making user plugin folder "{pluginFolder}"')
-        os.mkdir(pluginFolder)
-
-    # to hold custom .py analysis
-    analysisFolder = _getUserAnalysisFolder()
-    if not os.path.isdir(detectionFolder):
-        # TODO: add __init__.py
-        logger.info(f'Making user analysis folder "{analysisFolder}"')
-        os.mkdir(analysisFolder)
-        # copy from _userFiles into this folder
-        # _bundDir = getBundledDir()
-        # _srcPath = pathlib.Path(self._bundDir) / tmpHdfFile
-        # shutil.copyfile(hdfFilePath,tmpHdfPath)
-    """
-
-
-# def _module_from_file(module_name, file_path):
-# 	spec = importlib.util.spec_from_file_location(module_name, file_path)
-# 	module = importlib.util.module_from_spec(spec)
-# 	spec.loader.exec_module(module)
-# 	return module
-
 
 def _loadLineScanHeader(path):
     """

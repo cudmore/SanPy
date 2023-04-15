@@ -1494,6 +1494,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         )
         self.vmPlot.addItem(self.mySpikeListScatterPlot)
 
+        # TODO: add this to application options
+        _defaultScatterCircleSize = 8  # 6
+        
         # add all overlaid scatter plots
         self.myPlotList = []  # list of pg.ScatterPlotItem
         for idx, plot in enumerate(self.myPlots):
@@ -1510,7 +1513,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 # TODO: this is causing an error on linux after pip install sanpy-ephys[gui]
                 # TODO: clone sanpy repo on linux and troubleshoot (do not go through the whole PyPi workflow
                 myScatterPlot = pg.PlotDataItem(
-                    pen=pg.mkPen(width=1, color=color, style=QtCore.Qt.DashLine),
+                    pen=pg.mkPen(width=2, color=color, style=QtCore.Qt.DashLine),
                     connect="finite",
                 )  # default is no symbol
             elif humanName == "EDD Rate":
@@ -1523,7 +1526,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 myScatterPlot = pg.PlotDataItem(
                     pen=None,
                     symbol=symbol,
-                    symbolSize=6,
+                    symbolSize=_defaultScatterCircleSize,
                     symbolPen=None,
                     symbolBrush=color,
                 )

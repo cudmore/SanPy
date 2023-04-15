@@ -15,6 +15,7 @@ from .bExport import bExport
 
 from .version import analysisVersion
 from .version import interfaceVersion
+from .version import __version__
 
 from .bDetection import bDetection
 

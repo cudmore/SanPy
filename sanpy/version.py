@@ -3,7 +3,7 @@ Started versioning very late, as of 20210425
 
 analysisVersion: saved for each spike
 				indicates the analysis we used
-				update this file as I c hange the analysis
+				update this file as I change the analysis
 """
 
 # 20210425
@@ -15,3 +15,5 @@ analysisVersion: saved for each spike
 analysisVersion = "20230324a"  # backend engine
 
 interfaceVersion = "20230324a"  # pyqt interface
+
+__version__ = "0.1.6"
