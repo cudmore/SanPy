@@ -2111,7 +2111,8 @@ class bAnalysis:
         preSpikeClipWidth_ms=None,
         postSpikeClipWidth_ms=None,
         sweepNumber=None,
-        epochNumber='All'
+        epochNumber='All',
+        ignoreMinMax=False  # added 20230418
     ):
         """Get 2d list of spike clips, spike clips x, and 1d mean spike clip.
 
@@ -2172,7 +2173,7 @@ class bAnalysis:
             else:
                 spikeTime = spikeTimes[idx]
                 spikeTime = self.fileLoader.pnt2Sec_(spikeTime)
-                if spikeTime >= theMin and spikeTime <= theMax:
+                if ignoreMinMax or (spikeTime >= theMin and spikeTime <= theMax):
                     doThisSpike = True
             if doThisSpike:
                 theseClips.append(clip)

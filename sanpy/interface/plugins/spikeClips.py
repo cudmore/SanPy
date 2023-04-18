@@ -305,7 +305,8 @@ class spikeClips(sanpyPlugin):
             preSpikeClipWidth_ms=self.preClipWidth_ms,
             postSpikeClipWidth_ms=self.postClipWidth_ms,
             sweepNumber=self.sweepNumber,
-            epochNumber=self.epochNumber
+            epochNumber=self.epochNumber,
+            ignoreMinMax=False  # 20230418 trying to get sweeps/epochs working
         )
         numClips = len(theseClips)
         logger.info(f'  got numClips:{numClips}')

@@ -439,7 +439,7 @@ class plotScatter(sanpyPlugin):
             # get real spike number from subset of plotted psikes
             _realSpikeNumber = self._plotSpikeNumber[_clickedPlotIdx]
         except (IndexError) as e:
-            logger.warning(f'  xxx we are not plotting spike {_spikeNumber}')
+            logger.warning(f'  xxx we are not plotting _clickedPlotIdx {_clickedPlotIdx}')
 
         logger.info(f'  _clickedPlotIdx:{_clickedPlotIdx} _realSpikeNumber:{_realSpikeNumber}')
 
