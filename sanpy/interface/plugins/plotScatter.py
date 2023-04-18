@@ -1,4 +1,7 @@
 import math
+
+from typing import Union, Dict, List, Tuple, Optional
+
 import numpy as np
 import pandas as pd
 
@@ -17,10 +20,116 @@ logger = get_logger(__name__)
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
+def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
+                            spikeList : List[int],
+                            hue = '') -> dict:
+    """Given a list of spikes, get plotting color and symbol.
+    
+    Parse bAnalysis for 'condition' and usertype'
+
+    Parameters
+    ----------
+    ba : sanpy.bAnalysis
+    spikeList List[int]
+    hue : str
+        In ("", "Time", "Sweep")
+
+    """
+    cMap = mpl.pyplot.cm.coolwarm.copy()
+    cMap.set_under("white")  # only works for dark theme
+    # do not specify 'c' argument, we set colors using set_facecolor, set_color
+
+    colorMapArray = None
+    faceColors = None
+    pathList = None
+
+    if hue == "Time":
+        colorMapArray = np.array(range(len(spikeList)))
+        # self.lines.set_array(colorMapArray)  # set_array is for a color map
+        # self.lines.set_cmap(cmap)  # mpl.pyplot.cm.coolwarm
+        # self.lines.set_color(faceColors)
+
+    elif hue == "Sweep":
+        # color sweeps
+        _sweeps = ba.getSpikeStat(spikeList, 'sweep')
+        colorMapArray = np.array(range(len(_sweeps)))
+        # self.lines.set_array(colorMapArray)  # set_array is for a color map
+        # self.lines.set_cmap(self.cmap)  # mpl.pyplot.cm.coolwarm
+        # self.lines.set_color(faceColors)
+
+    else:
+        # tmpColor = np.array(range(len(xData)))
+        # assuming self.cmap.set_under("white")
+
+        # from matplotlib.colors import ListedColormap
+        #_color_dict = {1: "blue", 2: "red", 13: "orange", 7: "green"}
+        _color_dict = {
+            "good": (0, 1, 1, 1),  # cyan
+            "bad": (1, 0, 0, 1),  # red
+            #'userType1':(0,0,1,1), # blue
+            #'userType2':(0,1,1,1), # cyan
+            #'userType3':(1,0,1,1), # magenta
+        }
+        _marker_dict = {
+            "noUserType": mmarkers.MarkerStyle("o"),  # circle
+            "userType1": mmarkers.MarkerStyle("*"),  # star
+            "userType2": mmarkers.MarkerStyle("v"),  # triangle_down
+            "userType3": mmarkers.MarkerStyle("<"),  # triangle_left
+        }
+
+        # no need for a cmap ???
+        # cm = ListedColormap([_color_dict[x] for x in _color_dict.keys()])
+        # self.lines.set_cmap(cm)
+
+        goodSpikes = ba.getSpikeStat(spikeList, "include")
+        userTypeList = ba.getSpikeStat(spikeList, "userType")
+
+        logger.warning("   debug set spike stat, user types need to be int")
+        # print(userTypeList)
+
+        # user types will use symbols
+        # tmpColors = [_color_dict['type'+num2str(x)] if x>0 else tmpColors[idx] for idx,x in enumerate(userTypeList)]
+        # bad needs to trump user type !!!
+        # faceColors is used to set_facecolor() and set_color
+        faceColors = [
+            _color_dict["good"] if x else _color_dict["bad"]
+            for idx, x in enumerate(goodSpikes)  # x is (good, bad), (1,0)
+        ]
+        #faceColors = np.array(faceColors)
+        # print('tmpColors', type(tmpColors), tmpColors.shape, tmpColors)
+
+        # self.lines.set_array(None)  # used to map [0,1] to color map
+        # self.lines.set_facecolor(faceColors)
+        # self.lines.set_color(faceColors)  # sets the outline
+
+        # set user type 2 to 'star'
+        # see: https://stackoverflow.com/questions/52303660/iterating-markers-in-plots/52303895#52303895
+        # import matplotlib.markers as mmarkers
+        markerList = [
+            _marker_dict["userType" + str(x)] if x > 0 else _marker_dict['noUserType']
+            for x in userTypeList
+        ]
+        pathList = []
+        for marker in markerList:
+            path = marker.get_path().transformed(marker.get_transform())
+            pathList.append(path)
+        #self.lines.set_paths(pathList)
+
+    retDict = {
+        'cMap': cMap,
+        'colorMapArray': colorMapArray,
+        'faceColors': faceColors,
+        'pathList': pathList,
+    }
+
+    # logger.info(f'spikeList: {spikeList}')
+    # for k,v in retDict.items():
+    #     print('    ', k, ':', v)
+
+    return retDict
 
 class plotScatter(sanpyPlugin):
-    """
-    Plot x/y statiistics as a scatter
+    """Plot x/y statiistics as a scatter.
 
     Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
     """
@@ -34,13 +143,17 @@ class plotScatter(sanpyPlugin):
         """
         super().__init__(**kwargs)
 
+        self._hueList = ["None", "Time", "Sweep"]
+        self._hue = "None"  # from ["None", "Time", "Sweep"]
+        
+        # april 2023, deactivated this, need to debug
         self.plotChasePlot = False  # i vs i-1
-        # self.plotColorTime = False
-        self._hue = "None"
+        
         # self.plotIsBad= True
         self.plotHistograms = True
 
-        # keep track of what we are plotting, use this in replot()
+        # keep track of what we are plotting.
+        # use this in replot() and copy to clipboard.
         self.xStatName = None
         self.yStatName = None
         self.xStatHumanName = None
@@ -48,7 +161,11 @@ class plotScatter(sanpyPlugin):
 
         self.xData = []
         self.yData = []
-        #self._plotSpikeNumber = []
+        
+        # when we plot, we plot a subset of spikes
+        # this list tells us the spikes we are plotting and [ind_1] gives us the real spike number
+        self._plotSpikeNumber = []
+        
         # self.xAxisSpikeNumber = []  # We need to keep track of this for 'Chase Plot'
 
         # main layout
@@ -59,7 +176,6 @@ class plotScatter(sanpyPlugin):
         # coontrols and 2x stat list
         vLayout = QtWidgets.QVBoxLayout()
 
-        #
         # controls
         controlWidget = QtWidgets.QWidget()
 
@@ -81,9 +197,8 @@ class plotScatter(sanpyPlugin):
         aLabel = QtWidgets.QLabel("Hue")
         hLayout2.addWidget(aLabel)
         aComboBox = QtWidgets.QComboBox()
-        _items = ["None", "Time", "Sweep"]
-        aComboBox.addItems(_items)
-        aComboBox.currentTextChanged.connect(self.on_select_hue)
+        aComboBox.addItems(self._hueList)  # from none, time, sweep
+        aComboBox.currentTextChanged.connect(self._on_select_hue)
         hLayout2.addWidget(aComboBox)
 
         #
@@ -147,7 +262,7 @@ class plotScatter(sanpyPlugin):
         self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
         self.static_canvas.setFocusPolicy(
             QtCore.Qt.ClickFocus
-        )  # this is really triccky and annoying
+        )  # this is really tricky and annoying
         self.static_canvas.setFocus()
         # self.axs[idx] = self.static_canvas.figure.add_subplot(numRow,1,plotNum)
 
@@ -196,7 +311,6 @@ class plotScatter(sanpyPlugin):
         vLayoutPlot.addWidget(self.mplToolbar)
         plotWidget.setLayout(vLayoutPlot)
 
-        #
         # finalize
         # hLayout.addLayout(vLayout)
         hSplitter.addWidget(controlWidget)
@@ -263,7 +377,7 @@ class plotScatter(sanpyPlugin):
 
         # we might have memory garbage collection issues
         # passing self so we can receive selectSpikesFromHighlighter()
-        self.myHighlighter = Highlighter(self, self.axScatter, [], [])
+        self.myHighlighter = Highlighter(self, self.axScatter, [], [], [])
 
         #
         # we will always have axScatter
@@ -281,7 +395,7 @@ class plotScatter(sanpyPlugin):
         # TODO: standardize this with Highlighter scatter
         # was this
         # self.spikeListSel, = self.axScatter.plot([], [], 'o', markerfacecolor='none', color='y', markersize=10)  # no picker for selection
-        logger.info("!!!!!!!!!!!!!!!")
+        logger.info("hard coding markerSize=10")
         markerSize = 10
         (self.spikeListSel,) = self.axScatter.plot(
             [], [], "o", markersize=markerSize, color="yellow", zorder=10
@@ -292,14 +406,14 @@ class plotScatter(sanpyPlugin):
         self.axScatter.spines["top"].set_visible(False)
 
         # TODO: refactor and use mplToolBar()
-        self.cid = self.static_canvas.mpl_connect("pick_event", self.spike_pick_event2)
+        self.cid = self.static_canvas.mpl_connect("pick_event", self._on_spike_pick_event2)
 
         self.fig.canvas.mpl_connect("key_press_event", self.keyPressEvent)
 
         #
         # self.replot()
 
-    def spike_pick_event2(self, event):
+    def _on_spike_pick_event2(self, event):
         """Respond to user left-mouse clicks in mpl plot.
 
         Args:
@@ -317,10 +431,17 @@ class plotScatter(sanpyPlugin):
         if len(event.ind) < 1:
             return
 
-        logger.info(f"{event}")
-        logger.info(f"{event.mouseevent}")
+        _clickedPlotIdx = event.ind[0]
 
-        spikeNumber = event.ind[0]
+        # convert to what we are actually plotting
+        try:
+            #_realSpikeNumber = self._plotSpikeNumber.index(_clickedPlotIdx)
+            # get real spike number from subset of plotted psikes
+            _realSpikeNumber = self._plotSpikeNumber[_clickedPlotIdx]
+        except (IndexError) as e:
+            logger.warning(f'  xxx we are not plotting spike {_spikeNumber}')
+
+        logger.info(f'  _clickedPlotIdx:{_clickedPlotIdx} _realSpikeNumber:{_realSpikeNumber}')
 
         doZoom = False
         modifiers = QtWidgets.QApplication.keyboardModifiers()
@@ -328,16 +449,17 @@ class plotScatter(sanpyPlugin):
             doZoom = True
 
         logger.info(
-            f"got {len(event.ind)} candidates, first is spike:{spikeNumber} doZoom:{doZoom}"
+            f"  got {len(event.ind)} candidates, first is spike:{_realSpikeNumber} doZoom:{doZoom}"
         )
 
         # propagate a signal to parent
         # TODO: use class SpikeSelectEvent()
         sDict = {
-            "spikeList": [spikeNumber],
+            "spikeList": [_realSpikeNumber],
             "doZoom": doZoom,
             "ba": self.ba,
         }
+        logger.info(f'{self._myClassName()} -->> emit signalSelectSpikeList')
         self.signalSelectSpikeList.emit(sDict)
 
     def btnstate(self, b):
@@ -369,7 +491,7 @@ class plotScatter(sanpyPlugin):
         else:
             logger.warning(f'Did not respond to button "{b.text()}"')
 
-    def on_select_hue(self, hue: str):
+    def _on_select_hue(self, hue: str):
         self._hue = hue
         self.replot()
 
@@ -398,7 +520,7 @@ class plotScatter(sanpyPlugin):
     def replot(self):
         """Replot when file or analysis changes."""
 
-        logger.info(f"sweepNumber:{self.sweepNumber} epochNumber:{self.epochNumber}")
+        logger.info(f"{self._myClassName()} sweepNumber:{self.sweepNumber} epochNumber:{self.epochNumber}")
 
         # get from stat lists
         xHumanStat, xStat = self.xPlotWidget.getCurrentStat()
@@ -410,12 +532,13 @@ class plotScatter(sanpyPlugin):
         if self.ba is None or xHumanStat is None or yHumanStat is None:
             xData = []
             yData = []
+            self._plotSpikeNumber = []
         else:
             # use getFullList when we have a recording with
             # multiple sweeps and epochs
-            xData = self.getStat(xStat, getFullList=True)
-            yData = self.getStat(yStat, getFullList=True)
-            #self._plotSpikeNumber = self.getStat('spikeNumber')
+            xData = self.getStat(xStat, getFullList=False)
+            yData = self.getStat(yStat, getFullList=False)
+            self._plotSpikeNumber = self.getStat('spikeNumber')
 
         # logger.warning('debug plotting epochs')
         # print('xData:', xData)
@@ -466,86 +589,101 @@ class plotScatter(sanpyPlugin):
         data = np.stack([xData, yData], axis=1)
         self.lines.set_offsets(data)  # (N, 2)
 
+        # 20230417
+        plotSpikeNumberList = self.getStat('spikeNumber', getFullList=False)
+        _tmpDict = getPlotMarkersAndColors(self.ba, plotSpikeNumberList, self._hue)
+
+        cMap = _tmpDict['cMap']
+        colorMapArray = _tmpDict['colorMapArray']
+        faceColors = _tmpDict['faceColors']
+        pathList = _tmpDict['pathList']
+
+        self.lines.set_array(colorMapArray)  # set_array is for a color map
+        self.lines.set_cmap(cMap)  # mpl.pyplot.cm.coolwarm
+        self.lines.set_color(faceColors)
+        self.lines.set_color(faceColors)  # sets the outline
+        self.lines.set_paths(pathList)
+
         #
         # color
-        if self._hue == "Time":
-            tmpColor = np.array(range(len(xData)))
-            self.lines.set_array(tmpColor)  # set_array is for a color map
-            self.lines.set_cmap(self.cmap)  # mpl.pyplot.cm.coolwarm
-            self.lines.set_color(None)
-        elif self._hue == "Sweep":
-            # color sweeps
-            _sweeps = self.getStat("sweep")
-            tmpColor = np.array(range(len(_sweeps)))
-            self.lines.set_array(tmpColor)  # set_array is for a color map
-            self.lines.set_cmap(self.cmap)  # mpl.pyplot.cm.coolwarm
-            self.lines.set_color(None)
+        # if self._hue == "Time":
+        #     tmpColor = np.array(range(len(xData)))
+        #     self.lines.set_array(tmpColor)  # set_array is for a color map
+        #     self.lines.set_cmap(self.cmap)  # mpl.pyplot.cm.coolwarm
+        #     self.lines.set_color(None)
+        # elif self._hue == "Sweep":
+        #     # color sweeps
+        #     _sweeps = self.getStat("sweep")
+        #     tmpColor = np.array(range(len(_sweeps)))
+        #     self.lines.set_array(tmpColor)  # set_array is for a color map
+        #     self.lines.set_cmap(self.cmap)  # mpl.pyplot.cm.coolwarm
+        #     self.lines.set_color(None)
 
-        else:
-            # tmpColor = np.array(range(len(xData)))
-            # assuming self.cmap.set_under("white")
+        # else:
+        #     # tmpColor = np.array(range(len(xData)))
+        #     # assuming self.cmap.set_under("white")
 
-            # from matplotlib.colors import ListedColormap
-            color_dict = {1: "blue", 2: "red", 13: "orange", 7: "green"}
-            color_dict = {
-                "good": (0, 1, 1, 1),  # cyan
-                "bad": (1, 0, 0, 1),  # red
-                #'userType1':(0,0,1,1), # blue
-                #'userType2':(0,1,1,1), # cyan
-                #'userType3':(1,0,1,1), # magenta
-            }
-            marker_dict = {
-                "userType1": mmarkers.MarkerStyle("*"),  # star
-                "userType2": mmarkers.MarkerStyle("v"),  # triangle_down
-                "userType3": mmarkers.MarkerStyle("<"),  # triangle_left
-            }
+        #     # from matplotlib.colors import ListedColormap
+        #     color_dict = {1: "blue", 2: "red", 13: "orange", 7: "green"}
+        #     color_dict = {
+        #         "good": (0, 1, 1, 1),  # cyan
+        #         "bad": (1, 0, 0, 1),  # red
+        #         #'userType1':(0,0,1,1), # blue
+        #         #'userType2':(0,1,1,1), # cyan
+        #         #'userType3':(1,0,1,1), # magenta
+        #     }
+        #     marker_dict = {
+        #         "userType1": mmarkers.MarkerStyle("*"),  # star
+        #         "userType2": mmarkers.MarkerStyle("v"),  # triangle_down
+        #         "userType3": mmarkers.MarkerStyle("<"),  # triangle_left
+        #     }
 
-            # no need for a cmap ???
-            # cm = ListedColormap([color_dict[x] for x in color_dict.keys()])
-            # self.lines.set_cmap(cm)
+        #     # no need for a cmap ???
+        #     # cm = ListedColormap([color_dict[x] for x in color_dict.keys()])
+        #     # self.lines.set_cmap(cm)
 
-            goodSpikes = self.getStat("include")
-            userTypeList = self.getStat("userType")
+        #     goodSpikes = self.getStat("include")
+        #     userTypeList = self.getStat("userType")
 
-            logger.warning("   debug set spike stat, user types need to be int")
-            logger.warning("   we ARE NOT GETTING THE CORRECT SPIKE INDEX")
-            # print(userTypeList)
+        #     logger.warning("   debug set spike stat, user types need to be int")
+        #     logger.warning("   we ARE NOT GETTING THE CORRECT SPIKE INDEX")
+        #     # print(userTypeList)
 
-            if self.plotChasePlot:
-                # xData = xData[1:-1] # x is the reference spike for marking (bad, type)
-                # goodSpikes = goodSpikes[1:-1]
-                # userTypeList = userTypeList[1:-1]
-                goodSpikes = goodSpikes[0:-2]
-                userTypeList = userTypeList[0:-2]
+        #     if self.plotChasePlot:
+        #         # xData = xData[1:-1] # x is the reference spike for marking (bad, type)
+        #         # goodSpikes = goodSpikes[1:-1]
+        #         # userTypeList = userTypeList[1:-1]
+        #         goodSpikes = goodSpikes[0:-2]
+        #         userTypeList = userTypeList[0:-2]
 
-            tmpColors = [color_dict["bad"]] * len(xData)  # start as all good
+        #     tmpColors = [color_dict["bad"]] * len(xData)  # start as all good
 
-            # user types will use symbols
-            # tmpColors = [color_dict['type'+num2str(x)] if x>0 else tmpColors[idx] for idx,x in enumerate(userTypeList)]
-            # bad needs to trump user type !!!
-            tmpColors = [
-                color_dict["good"] if x else tmpColors[idx]
-                for idx, x in enumerate(goodSpikes)
-            ]
-            tmpColors = np.array(tmpColors)
-            # print('tmpColors', type(tmpColors), tmpColors.shape, tmpColors)
+        #     # user types will use symbols
+        #     # tmpColors = [color_dict['type'+num2str(x)] if x>0 else tmpColors[idx] for idx,x in enumerate(userTypeList)]
+        #     # bad needs to trump user type !!!
+        #     tmpColors = [
+        #         color_dict["good"] if x else tmpColors[idx]
+        #         for idx, x in enumerate(goodSpikes)
+        #     ]
+        #     tmpColors = np.array(tmpColors)
+        #     # print('tmpColors', type(tmpColors), tmpColors.shape, tmpColors)
 
-            self.lines.set_array(None)  # used to map [0,1] to color map
-            self.lines.set_facecolor(tmpColors)
-            self.lines.set_color(tmpColors)  # sets the outline
+        #     self.lines.set_array(None)  # used to map [0,1] to color map
+        #     self.lines.set_facecolor(tmpColors)
+        #     self.lines.set_color(tmpColors)  # sets the outline
 
-            # set user type 2 to 'star'
-            # see: https://stackoverflow.com/questions/52303660/iterating-markers-in-plots/52303895#52303895
-            # import matplotlib.markers as mmarkers
-            myMarkerList = [
-                marker_dict["userType" + str(x)] if x > 0 else mmarkers.MarkerStyle("o")
-                for x in userTypeList
-            ]
-            myPathList = []
-            for myMarker in myMarkerList:
-                path = myMarker.get_path().transformed(myMarker.get_transform())
-                myPathList.append(path)
-            self.lines.set_paths(myPathList)
+        #     # set user type 2 to 'star'
+        #     # see: https://stackoverflow.com/questions/52303660/iterating-markers-in-plots/52303895#52303895
+        #     # import matplotlib.markers as mmarkers
+        #     myMarkerList = [
+        #         marker_dict["userType" + str(x)] if x > 0 else mmarkers.MarkerStyle("o")
+        #         for x in userTypeList
+        #     ]
+        #     myPathList = []
+        #     for myMarker in myMarkerList:
+        #         path = myMarker.get_path().transformed(myMarker.get_transform())
+        #         myPathList.append(path)
+        #     self.lines.set_paths(myPathList)
 
         #
         # update highlighter, needs coordinates of x/y to highlight
@@ -584,6 +722,7 @@ class plotScatter(sanpyPlugin):
         yMin -= percentSpan
         yMax += percentSpan
 
+        logger.warning(f'refactor this, do not always set x/y lim')
         self.axScatter.set_xlim([xMin, xMax])
         self.axScatter.set_ylim([yMin, yMax])
 
@@ -654,7 +793,13 @@ class plotScatter(sanpyPlugin):
             # print('  binsHistY:', len(binsHistY))
 
     def selectSpikeList(self):
-        """ """
+        """Use getSelectedSpikes() to select spikes.
+        
+        Notes
+        -----
+        Always have to use the list of spikes we are actually plotting
+        self._plotSpikeNumber
+        """
         spikeList = self.getSelectedSpikes()
 
         logger.info(f"{self._myClassName()} spikeList:{spikeList}")
@@ -666,8 +811,23 @@ class plotScatter(sanpyPlugin):
         
         # if spikeList is not None:
         if len(spikeList) > 0:
-            xData = [self.xData[spikeList]]
-            yData = [self.yData[spikeList]]
+            _plotSpikeList = []
+            for _realSpikeNumber in spikeList:
+                # _realSpikeNumber is the actual spike number of bAnalysis
+                try:
+                    # for each spike in spikeList
+                    # need to find the index into the actual plot
+                    # this is the only place we need index() and it runs at n^2
+                    _plotSpikeIndex = self._plotSpikeNumber.index(_realSpikeNumber)
+                    _plotSpikeList.append(_plotSpikeIndex)
+                except (ValueError) as e:
+                    logger.warning(f'we are not plotting spike number {_realSpikeNumber}')
+
+            # xData = [self.xData[spikeList]]
+            # yData = [self.yData[spikeList]]
+            xData = [self.xData[_plotSpikeList]]
+            yData = [self.yData[_plotSpikeList]]
+
         else:
             xData = []
             yData = []
@@ -725,10 +885,29 @@ class plotScatter(sanpyPlugin):
         # self.repaint() # update the widget
 
     def selectSpikesFromHighlighter(self, selectedSpikeList):
-        """User selected some spikes with Highlighter -->> Propogate to main"""
+        """User selected some spikes with Highlighter -->> Propogate to main.
+        
+        Notes
+        =====
+        selectedSpikeList is based on what we are plotting (a subset of all spikes)
+        get actual spikes from self._plotSpikeNumber
+        """
+        logger.info(f'got highlighter plot selectedSpikeList: {selectedSpikeList}')
 
         if len(selectedSpikeList) > 0:
-            self.setSelectedSpikes(selectedSpikeList)
+            actualSpikeList = []
+            for _plotSpike in selectedSpikeList:
+                try:
+                    actualSpike = self._plotSpikeNumber[_plotSpike]
+                    actualSpikeList.append(actualSpike)
+                except (IndexError) as e:
+                    logger.warning(f'we are not plotting spike {_plotSpike}')
+
+            print('    selectedSpikeList:', selectedSpikeList)
+            print('    actualSpikeList:', actualSpikeList)
+
+            #self.setSelectedSpikes(selectedSpikeList)
+            self.setSelectedSpikes(actualSpikeList)
             sDict = {
                 "spikeList": self.getSelectedSpikes(),
                 "doZoom": False,  # never zoom on multiple spike selection
@@ -745,7 +924,10 @@ class plotScatter(sanpyPlugin):
         return state in ["zoom rect", "pan/zoom"]
 
     def prependMenus(self, contextMenu):
-        """Prepend menus to context menu"""
+        """Prepend menus to context menu.
+        
+        Inherited from sanpyPlugin
+        """
 
         noSpikesSelected = len(self.getSelectedSpikes()) == 0
 
@@ -964,14 +1146,16 @@ class Highlighter(object):
     See: https://stackoverflow.com/questions/31919765/choosing-a-box-of-data-points-from-a-plot
     """
 
-    def __init__(self, parentPlot, ax, x, y):
+    def __init__(self, parentPlot, ax, x, y, plotSpikeNumber):
         self._parentPlot = parentPlot
         self.ax = ax
         self.canvas = ax.figure.canvas
 
+        self.x = None  # these are set in setData
+        self.y = None
+        #self._plotSpikeNumber = None
+
         self.setData(x, y)
-        # self.x = x
-        # self.y = y
 
         # mask will be set in self.setData
         if x and y:
@@ -1018,7 +1202,7 @@ class Highlighter(object):
         self.keyIsDown = None
 
     def on_button_release(self, event):
-        logger.info(event)
+        logger.info(f'Highlighter')
 
         # don't take action on right-click
         if event.button != 1:
@@ -1033,7 +1217,7 @@ class Highlighter(object):
         Args:
             event (matplotlib.backend_bases.MouseEvent):
         """
-        logger.info(event)
+        logger.info(f'Highlighter')
 
         # don't take action on right-click
         if event.button != 1:
@@ -1098,7 +1282,9 @@ class Highlighter(object):
         self.canvas.draw()
 
     def setData(self, x, y):
-        """Set underlying highlighter data, call this when we replot() scatter"""
+        """Set underlying highlighter data, call this when we replot() scatter
+        
+        """
         # convert list to np array
         xArray = np.array(x)
         yArray = np.array(y)
@@ -1106,6 +1292,8 @@ class Highlighter(object):
         self.mask = np.zeros(xArray.shape, dtype=bool)
         self.x = xArray
         self.y = yArray
+
+        #self._plotSpikeNumber = plotSpikeNumber
 
     # def __call__(self, event1, event2):
     def _HighlighterReleasedEvent(self, event1, event2):
@@ -1116,9 +1304,6 @@ class Highlighter(object):
         event2:
             button_release_event: xy=(131.0, 211.99999999999991) xydata=(48.83371692821588, 657.6677439956331) button=1 dblclick=False inaxes=AxesSubplot(0.1,0.1;0.607046x0.607046)
         """
-
-        # logger.info(event1)
-        # logger.info(event2)
 
         self.mouseDownEvent = None
 
@@ -1138,7 +1323,8 @@ class Highlighter(object):
 
     def inside(self, event1, event2):
         """Returns a boolean mask of the points inside the
-        rectangle defined by event1 and event2."""
+        rectangle defined by event1 and event2.
+        """
         # Note: Could use points_inside_poly, as well
         x0, x1 = sorted([event1.xdata, event2.xdata])
         y0, y1 = sorted([event1.ydata, event2.ydata])

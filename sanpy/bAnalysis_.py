@@ -375,6 +375,13 @@ class bAnalysis:
         return theMean
 
     def getSpikeStat(self, spikeList, stat):
+        """Get one stat from a list of spikes
+        
+        Parameters
+        ----------
+        spikeList : List[int]
+        stat : str
+        """
         if len(spikeList) == 0:
             return None
 
@@ -622,10 +629,10 @@ class bAnalysis:
         else:
             return x
 
-    def getSpikeTimes(self, sweepNumber=None):
+    def getSpikeTimes(self, sweepNumber=None, epochNumber='All'):
         """Get spike times (points) for current sweep"""
         # theRet = [spike['thresholdPnt'] for spike in self.spikeDict if spike['sweep']==self.currentSweep]
-        theRet = self.getStat("thresholdPnt", sweepNumber=sweepNumber)
+        theRet = self.getStat("thresholdPnt", sweepNumber=sweepNumber, epochNumber=epochNumber)
         return theRet
 
     def getSpikeSeconds(self, sweepNumber=None):
@@ -1987,6 +1994,7 @@ class bAnalysis:
         postSpikeClipWidth_ms=None,
         theseTime_sec=None,
         sweepNumber=None,
+        epochNumber='All'
     ):
         """
         (Internal) Make small clips for each spike.
@@ -2013,7 +2021,7 @@ class bAnalysis:
 
         # print('makeSpikeClips() spikeClipWidth_ms:', spikeClipWidth_ms, 'theseTime_sec:', theseTime_sec)
         if theseTime_sec is None:
-            theseTime_pnts = self.getSpikeTimes(sweepNumber=sweepNumber)
+            theseTime_pnts = self.getSpikeTimes(sweepNumber=sweepNumber, epochNumber=epochNumber)
         else:
             # convert theseTime_sec to pnts
             theseTime_ms = [x * 1000 for x in theseTime_sec]
@@ -2103,9 +2111,9 @@ class bAnalysis:
         preSpikeClipWidth_ms=None,
         postSpikeClipWidth_ms=None,
         sweepNumber=None,
+        epochNumber='All'
     ):
-        """
-        Get 2d list of spike clips, spike clips x, and 1d mean spike clip
+        """Get 2d list of spike clips, spike clips x, and 1d mean spike clip.
 
         Args:
             theMin (float): Start seconds.
@@ -2143,6 +2151,7 @@ class bAnalysis:
             preSpikeClipWidth_ms=preSpikeClipWidth_ms,
             postSpikeClipWidth_ms=postSpikeClipWidth_ms,
             sweepNumber=sweepNumber,
+            epochNumber=epochNumber
         )
 
         # make a list of clips within start/stop (Seconds)
@@ -2150,7 +2159,7 @@ class bAnalysis:
         theseClips_x = []
         tmpMeanClips = []  # for mean clip
         meanClip = []
-        spikeTimes = self.getSpikeTimes(sweepNumber=sweepNumber)
+        spikeTimes = self.getSpikeTimes(sweepNumber=sweepNumber, epochNumber=epochNumber)
 
         # if len(spikeTimes) != len(self.spikeClips):
         #    logger.error(f'len spikeTimes {len(spikeTimes)} !=  spikeClips {len(self.spikeClips)}')

@@ -44,7 +44,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         super(bDetectionWidget, self).__init__(parent)
 
-        self.ba: sanpy.bAnalysis = ba
+        self.ba : sanpy.bAnalysis = ba
         self.myMainWindow: "sanpy.interface.SanPyWindow" = mainWindow
 
         self._blockSlots: bool = False
@@ -271,6 +271,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             startSec = 0
             stopSec = self.ba.fileLoader.recordingDur
 
+        # TODO: replace with a member function
         _selectedDetection = self.detectToolbarWidget._selectedDetection
         detectionDict = self.getMainWindowDetectionClass().getDetectionDict(
             _selectedDetection
@@ -988,7 +989,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # removed mar 11 2023
         # self.mySingleSpikeScatterPlot.setData(x=x, y=y)
 
-        # zoom
+        # zoom to one selected spike
         if spikeNumber is not None and doZoom:
             thresholdSeconds = self.ba.getStat(
                 "thresholdSec", sweepNumber=self.sweepNumber
@@ -998,10 +999,29 @@ class bDetectionWidget(QtWidgets.QWidget):
                 # thresholdSecond = thresholdSeconds[spikeNumber]
                 thresholdSecond = thresholdSeconds[sweepSpikeNumber]
                 thresholdSecond = round(thresholdSecond, 3)
-                startSec = thresholdSecond - 0.5
-                startSec = round(startSec, 2)
-                stopSec = thresholdSecond + 0.5
-                stopSec = round(stopSec, 2)
+                
+                # TODO: replace with a member function
+                # _selectedDetection = self.detectToolbarWidget._selectedDetection
+                # detectionDict = self.getMainWindowDetectionClass().getDetectionDict(
+                #     _selectedDetection
+                # )
+
+                # if we get here, we assume we have a banalysis and it has been detected
+                detectionDict = self.ba.getDetectionDict()
+
+                #print(detectionDict.keys())
+                preSpikeClipWidth_ms = detectionDict['preSpikeClipWidth_ms']
+                preSpikeClipWidth_sec = preSpikeClipWidth_ms / 1000
+                
+                postSpikeClipWidth_ms = detectionDict['postSpikeClipWidth_ms']
+                postSpikeClipWidth_sec = postSpikeClipWidth_ms / 1000
+
+                logger.info(f'zooming to preSpikeClipWidth_sec:{preSpikeClipWidth_sec}, postSpikeClipWidth_sec:{postSpikeClipWidth_sec}')
+                
+                startSec = thresholdSecond - preSpikeClipWidth_sec
+                #startSec = round(startSec, 2)
+                stopSec = thresholdSecond + postSpikeClipWidth_sec
+                #stopSec = round(stopSec, 2)
                 # print('  spikeNumber:', spikeNumber, 'thresholdSecond:', thresholdSecond, 'startSec:', startSec, 'stopSec:', stopSec)
                 start = self.setAxis(startSec, stopSec)
 

@@ -1,6 +1,6 @@
 ## TODO for manuscript march 2023
 
-- [done, satisfactory] Refactor all things having to do with light/dark theme. This is critical as copy paste from the interface cannot be trapped in a dark theme (for printing, manuscripts, etc)
+- [done] Refactor all things having to do with light/dark theme. This is critical as copy paste from the interface cannot be trapped in a dark theme (for printing, manuscripts, etc)
 
 - [done]Finish implementation of setSpikeStat plugin. Make sure it responds to interface changes and actually sets backend data in bAnalysis results.
 
@@ -18,28 +18,37 @@
 
 - [done] Preferences need to save/load the window position of external plugins.
 
-- Use spike pre clip ms and spike clip post ms to set zoom on a spike in the main sanpy widnow. Currently my zoom is large (for myocytes) but needs to be 10x smaller for neurons.
+- [done] Use spike pre clip ms and spike clip post ms to set zoom on a spike in the main sanpy widnow. Currently my zoom is large (for myocytes) but needs to be 10x smaller for neurons.
 
 - Switch all `from PyQt5` to `from qtpy`. Switch all `QtCore.pyqtSignal` to `QtCore.Signal`
 
 - [done] Get releases on PyPi
 
-- Replace `<user>/Documents/SanPy` with `<user>.SanPy`
+- [done] Replace `<user>/Documents/SanPy` with `<user>/SanPy-User-Files`
 
+- Implement markers and colors in main detection widget
+    - Symbols will be user type
+    - Color will cycle through a number of conditions (use pd df unique()
+    
+- Add an Error (E) column to main file table
+
+- Fix plot spike clip plugin. Basically make self.ba.getSpikeClips() fetch spike clips for just one sweep and one epoch.
+
+- Reactivate limiting spike clips in plugin when user selects the x-axis. In general, my plugins no longer respond to x-axis changes. Turn code back on and just be sure to not select in scatter plugin (that was my original intention)
 
 ## Bugs
 
-Selecting spike in an epoch does not update correctly in Scatter plot widget
+[fixed] Selecting spike in an epoch does not update correctly in Scatter plot widget
 
-Selecting spike and setting user type with set spike stat results in incorrect spike symbol bein set in plot scatter widget.
+[fixed] Selecting spike and setting user type with set spike stat results in incorrect spike symbol being set in plot scatter widget.
 
 ### TODO minor
 
-- Single spike selection in table plugin (That sets the swep) does not also set the spike
+- Single spike selection in table plugin (That sets the sweep) does not also set the spike
 
-- Add simple spike selection (using threshold) to plot fi plugin. Use code in plot scatter plugin.
+- Add simple spike selection (using threshold) to 'plot fi' plugin. Use code in plot scatter plugin.
 
-- The file table needs to be expanded/colapsed by the user, it gets incredibly small. Previously was in a dock and could do this. Got rid of dock because it was getting complicated with show/hide of panels.
+- [done] The file table needs to be expanded/colapsed by the user, it gets incredibly small. Previously was in a dock and could do this. Got rid of dock because it was getting complicated with show/hide of panels.
 
 ## TODO for version 2 (after submit to bioarchive)
 

@@ -103,7 +103,7 @@ class spikeClips(sanpyPlugin):
         self.xMultSpinBox.setSingleStep(0.05)
         self.xMultSpinBox.setRange(0, 1)
         self.xMultSpinBox.setValue(self.xMult)
-        self.xMultSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
+        self.xMultSpinBox.valueChanged.connect(partial(self._on_spinbox, aLabel))
         hLayout2_5.addWidget(self.xMultSpinBox)
 
         # y mult for waterfall
@@ -114,7 +114,7 @@ class spikeClips(sanpyPlugin):
         self.yMultSpinBox.setSingleStep(0.05)
         self.yMultSpinBox.setRange(0, 1)
         self.yMultSpinBox.setValue(self.yMult)
-        self.yMultSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
+        self.yMultSpinBox.valueChanged.connect(partial(self._on_spinbox, aLabel))
         hLayout2_5.addWidget(self.yMultSpinBox)
 
         vLayout.addLayout(hLayout2_5)
@@ -129,7 +129,7 @@ class spikeClips(sanpyPlugin):
         self.preClipWidthSpinBox.setRange(1, 2**16)
         self.preClipWidthSpinBox.setValue(self.preClipWidth_ms)
         # self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
-        self.preClipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
+        self.preClipWidthSpinBox.valueChanged.connect(partial(self._on_spinbox, aLabel))
         hLayout3.addWidget(self.preClipWidthSpinBox)
 
         aLabel = QtWidgets.QLabel("Post (ms)")
@@ -139,7 +139,7 @@ class spikeClips(sanpyPlugin):
         self.postClipWidthSpinBox.setRange(1, 2**16)
         self.postClipWidthSpinBox.setValue(self.postClipWidth_ms)
         # self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
-        self.postClipWidthSpinBox.valueChanged.connect(partial(self.on_spinbox, aLabel))
+        self.postClipWidthSpinBox.valueChanged.connect(partial(self._on_spinbox, aLabel))
         hLayout3.addWidget(self.postClipWidthSpinBox)
 
         #
@@ -226,7 +226,7 @@ class spikeClips(sanpyPlugin):
         if isChecked:
             self.replot()
 
-    def on_spinbox(self, label):
+    def _on_spinbox(self, label):
         # logger.info('')
         # grab from interface
         self.preClipWidth_ms = self.preClipWidthSpinBox.value()
@@ -279,6 +279,7 @@ class spikeClips(sanpyPlugin):
         startSec = None
         stopSec = None
         selectedSpikeList = []
+        logger.info(f'self.respondTo: {self.respondTo}')
         if self.respondTo == "All":
             startSec = 0
             stopSec = self.ba.fileLoader.recordingDur
@@ -289,6 +290,8 @@ class spikeClips(sanpyPlugin):
                 stopSec = self.ba.fileLoader.recordingDur
         elif self.respondTo == "Spike Selection":
             selectedSpikeList = self.getSelectedSpikes()
+
+        logger.info(f'  startSec:{startSec} stopSec:{stopSec}')
 
         # print('=== selectedSpikeList:', selectedSpikeList)
 
@@ -302,8 +305,10 @@ class spikeClips(sanpyPlugin):
             preSpikeClipWidth_ms=self.preClipWidth_ms,
             postSpikeClipWidth_ms=self.postClipWidth_ms,
             sweepNumber=self.sweepNumber,
+            epochNumber=self.epochNumber
         )
         numClips = len(theseClips)
+        logger.info(f'  got numClips:{numClips}')
         self.numSpikesLabel.setText(f"Num Spikes: {numClips}")
 
         if numClips == 0:
