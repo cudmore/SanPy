@@ -13,10 +13,10 @@
       
       
       
-        <link rel="prev" href="../download/">
+        <link rel="prev" href="../plugins/">
       
       
-        <link rel="next" href="../desktop-application/">
+        <link rel="next" href="../scripting/">
       
       <link rel="icon" href="../img/sanpy-transparent.png">
       <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.3">
@@ -246,6 +246,36 @@
 
   
   
+  
+    <li class="md-nav__item">
+      <a href="../desktop-application/" class="md-nav__link">
+        Desktop Application
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../plugins/" class="md-nav__link">
+        Plugins
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
     
   
   
@@ -285,8 +315,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#manual-install-from-the-command-line" class="md-nav__link">
-    Manual install from the command line
+  <a href="#install-from-pypi" class="md-nav__link">
+    Install from PyPi
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-the-front-end-gui" class="md-nav__link">
+    Install the front-end GUI
+  </a>
+  
+    <nav class="md-nav" aria-label="Install the front-end GUI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-the-sanpy-backend" class="md-nav__link">
+    Install the SanPy backend
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-from-a-local-source" class="md-nav__link">
+    Install from a local source
   </a>
   
 </li>
@@ -295,36 +352,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../desktop-application/" class="md-nav__link">
-        Desktop Application
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../plugins/" class="md-nav__link">
-        Plugins
-      </a>
     </li>
   
 
@@ -787,7 +814,7 @@
   
     <li class="md-nav__item">
       <a href="../about/" class="md-nav__link">
-        About
+        About SanPy
       </a>
     </li>
   
@@ -825,8 +852,35 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#manual-install-from-the-command-line" class="md-nav__link">
-    Manual install from the command line
+  <a href="#install-from-pypi" class="md-nav__link">
+    Install from PyPi
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-the-front-end-gui" class="md-nav__link">
+    Install the front-end GUI
+  </a>
+  
+    <nav class="md-nav" aria-label="Install the front-end GUI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#install-the-sanpy-backend" class="md-nav__link">
+    Install the SanPy backend
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#install-from-a-local-source" class="md-nav__link">
+    Install from a local source
   </a>
   
 </li>
@@ -850,9 +904,22 @@
 
 <p>SanPy is designed to run on: macOS, Microsoft Windows, and Linux.</p>
 <h2 id="download-the-sanpy-app">Download the SanPy app.<a class="headerlink" href="#download-the-sanpy-app" title="Permanent link">¤</a></h2>
-<p>We are building apps so users can download a single SanPy.app and get working with just a double-click. This does not require anything special on our users end. No programming, no installing Python, and no command line.</p>
-<p>Check back for more info on this.</p>
-<h2 id="manual-install-from-the-command-line">Manual install from the command line<a class="headerlink" href="#manual-install-from-the-command-line" title="Permanent link">¤</a></h2>
+<p>We are building SanPy desktop applications so users can download a single file and get working with just a double-click. This does not require anything special on our users end. <strong>No programming, no installing Python, and no command line</strong>.</p>
+<p>See our <a href="download">Download</a> page.</p>
+<h2 id="install-from-pypi">Install from PyPi<a class="headerlink" href="#install-from-pypi" title="Permanent link">¤</a></h2>
+<p>Both the SanPy backend and front-end GUI can be installed from PyPi.</p>
+<h2 id="install-the-front-end-gui">Install the front-end GUI<a class="headerlink" href="#install-the-front-end-gui" title="Permanent link">¤</a></h2>
+<div class="highlight"><pre><span></span><code>pip install sanpy-ephys[gui]
+</code></pre></div>
+<p>On newer macOS machines or from a zsh shell in general, you need some quotes</p>
+<div class="highlight"><pre><span></span><code>pip install &quot;sanpy-ephys[gui]&quot;
+</code></pre></div>
+<h3 id="install-the-sanpy-backend">Install the SanPy backend<a class="headerlink" href="#install-the-sanpy-backend" title="Permanent link">¤</a></h3>
+<p>This is designed to work as an engine to allow interoperability with other Python packages and to run in the cloud.</p>
+<div class="highlight"><pre><span></span><code>pip install sanpy-ephys
+</code></pre></div>
+<h2 id="install-from-a-local-source">Install from a local source<a class="headerlink" href="#install-from-a-local-source" title="Permanent link">¤</a></h2>
+<p>For users interested in modifying the source code, you can clone the GitHub repository and install from loacl source.</p>
 <p>Assuming you have the following</p>
 <ul>
 <li><a href="https://www.python.org/downloads/">Python &gt; 3.7</a></li>

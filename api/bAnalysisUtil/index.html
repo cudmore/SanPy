@@ -248,21 +248,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../install/" class="md-nav__link">
-        Install
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../desktop-application/" class="md-nav__link">
         Desktop Application
       </a>
@@ -280,6 +265,21 @@
     <li class="md-nav__item">
       <a href="../../plugins/" class="md-nav__link">
         Plugins
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../install/" class="md-nav__link">
+        Install
       </a>
     </li>
   
@@ -802,7 +802,7 @@
   
     <li class="md-nav__item">
       <a href="../../about/" class="md-nav__link">
-        About
+        About SanPy
       </a>
     </li>
   
@@ -886,12 +886,7 @@
 
         <details class="quote">
           <summary>Source code in <code>sanpy/bAnalysisUtil.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">359</span>
-<span class="normal">360</span>
-<span class="normal">361</span>
-<span class="normal">362</span>
-<span class="normal">363</span>
-<span class="normal">364</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">364</span>
 <span class="normal">365</span>
 <span class="normal">366</span>
 <span class="normal">367</span>
@@ -1033,18 +1028,41 @@
 <span class="normal">503</span>
 <span class="normal">504</span>
 <span class="normal">505</span>
-<span class="normal">506</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">bAnalysisUtil</span><span class="p">:</span>
+<span class="normal">506</span>
+<span class="normal">507</span>
+<span class="normal">508</span>
+<span class="normal">509</span>
+<span class="normal">510</span>
+<span class="normal">511</span>
+<span class="normal">512</span>
+<span class="normal">513</span>
+<span class="normal">514</span>
+<span class="normal">515</span>
+<span class="normal">516</span>
+<span class="normal">517</span>
+<span class="normal">518</span>
+<span class="normal">519</span>
+<span class="normal">520</span>
+<span class="normal">521</span>
+<span class="normal">522</span>
+<span class="normal">523</span>
+<span class="normal">524</span>
+<span class="normal">525</span>
+<span class="normal">526</span>
+<span class="normal">527</span>
+<span class="normal">528</span>
+<span class="normal">529</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">bAnalysisUtil</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDefault</span><span class="p">()</span>
 
         <span class="c1"># load preferences</span>
-        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="s1">&#39;frozen&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">sys</span><span class="p">,</span> <span class="s2">&quot;frozen&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
             <span class="c1"># we are running in a bundle (frozen)</span>
             <span class="n">bundle_dir</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">_MEIPASS</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># we are running in a normal Python environment</span>
             <span class="n">bundle_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">configFilePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bundle_dir</span><span class="p">,</span> <span class="s1">&#39;AnalysisApp_Config.json&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">configFilePath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">bundle_dir</span><span class="p">,</span> <span class="s2">&quot;AnalysisApp_Config.json&quot;</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">configLoad</span><span class="p">()</span>
 
@@ -1059,11 +1077,11 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">coreStatList</span> <span class="o">=</span> <span class="n">statList</span>  <span class="c1"># from global withing function</span>
 
-        <span class="c1">#userStatList = sanpy.userAnalysis.findUserAnalysis()</span>
-        <span class="c1">#userStatList = sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis()</span>
-        <span class="c1">#userStatList = findUserAnalysis()</span>
+        <span class="c1"># userStatList = sanpy.userAnalysis.findUserAnalysis()</span>
+        <span class="c1"># userStatList = sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis()</span>
+        <span class="c1"># userStatList = findUserAnalysis()</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;need to reactivate getting user stats&#39;</span><span class="p">)</span>
+        <span class="c1">#logger.warning(f&quot;need to reactivate getting user stats&quot;)</span>
 
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Each entry in statList looks like:</span>
@@ -1077,11 +1095,15 @@
 <span class="sd">            &#39;xStatUnits&#39;: &#39;s&#39;</span>
 <span class="sd">            }</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">userStatList</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">user_analysis</span><span class="o">.</span><span class="n">baseUserAnalysis</span><span class="o">.</span><span class="n">findUserAnalysisStats</span><span class="p">()</span>
+        <span class="n">userStatList</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span>
+            <span class="nb">dict</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">user_analysis</span><span class="o">.</span><span class="n">baseUserAnalysis</span><span class="o">.</span><span class="n">findUserAnalysisStats</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">userStatDict</span> <span class="ow">in</span> <span class="n">userStatList</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">userStatDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
                 <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">coreStatList</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;user analysis key &quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&quot; already exists in core stat List&#39;</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s1">&#39;user analysis key &quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&quot; already exists in core stat List&#39;</span>
+                    <span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="c1"># name = v[&#39;name&#39;]</span>
                     <span class="c1"># coreStatList[k] = {}</span>
@@ -1090,25 +1112,27 @@
 
         <span class="k">return</span> <span class="n">coreStatList</span>
 
-        <span class="c1">#20220630, was this</span>
+        <span class="c1"># 20220630, was this</span>
         <span class="n">userStatList</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">user_analysis</span><span class="o">.</span><span class="n">baseUserAnalysis</span><span class="o">.</span><span class="n">findUserAnalysis</span><span class="p">()</span>
 
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">userStatList</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="c1"># check if key exists !!!</span>
             <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">coreStatList</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;user analysis key </span><span class="si">{</span><span class="s2">&quot;k&quot;</span><span class="si">}</span><span class="s1"> already exists in core stat List&#39;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;user analysis key </span><span class="si">{</span><span class="s2">&quot;k&quot;</span><span class="si">}</span><span class="s1"> already exists in core stat List&#39;</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">name</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+                <span class="n">name</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
                 <span class="n">coreStatList</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
                 <span class="n">coreStatList</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
 
         <span class="k">return</span> <span class="n">coreStatList</span>
 
-<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    @staticmethod</span>
 <span class="sd">    def humanStatToBackend(theStat):</span>
 <span class="sd">        return &#39;&#39;</span>
-<span class="sd">    &#39;&#39;&#39;</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">prettyPrint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
@@ -1117,67 +1141,79 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
 
     <span class="k">def</span> <span class="nf">getDetectionParam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theParam</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">theParam</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">][</span><span class="n">theParam</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">theParam</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="n">theParam</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;error: bAnalysisUtil.getDetectionParam() detection parameter not found:&#39;</span><span class="p">,</span> <span class="n">theParam</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;error: bAnalysisUtil.getDetectionParam() detection parameter not found:&quot;</span><span class="p">,</span>
+                <span class="n">theParam</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">getDetectionDescription</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theParam</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">theParam</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">][</span><span class="n">theParam</span><span class="p">][</span><span class="s1">&#39;meaning&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">theParam</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="n">theParam</span><span class="p">][</span><span class="s2">&quot;meaning&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;error: bAnalysisUtil.getDetectionDescription() detection parameter not found:&#39;</span><span class="p">,</span> <span class="n">theParam</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;error: bAnalysisUtil.getDetectionDescription() detection parameter not found:&quot;</span><span class="p">,</span>
+                <span class="n">theParam</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">setDetectionParam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theParam</span><span class="p">,</span> <span class="n">theValue</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">theParam</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">][</span><span class="n">theParam</span><span class="p">][</span><span class="s1">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">theValue</span>
+        <span class="k">if</span> <span class="n">theParam</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="n">theParam</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">theValue</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;error: bAnalysisUtil.setDetectionParam() detection parameter not found:&#39;</span><span class="p">,</span> <span class="n">theParam</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;error: bAnalysisUtil.setDetectionParam() detection parameter not found:&quot;</span><span class="p">,</span>
+                <span class="n">theParam</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">configSave</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;bAnalysisUtil.configSave()&#39;</span><span class="p">)</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configFilePath</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;bAnalysisUtil.configSave()&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configFilePath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
             <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">configLoad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configFilePath</span><span class="p">):</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;    bAnalysisUtil.configLoad() loading configFile file:&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">configFilePath</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="s2">&quot;    bAnalysisUtil.configLoad() loading configFile file:&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">configFilePath</span><span class="p">,</span>
+            <span class="p">)</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configFilePath</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1">#print(&#39;    bAnalysisUtil.preferencesLoad() using program provided default options&#39;)</span>
+            <span class="c1"># print(&#39;    bAnalysisUtil.preferencesLoad() using program provided default options&#39;)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">configDefault</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">configDefault</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">theRet</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
 
-        <span class="n">theRet</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="n">theRet</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
 
-        <span class="n">theRet</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">][</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
-        <span class="n">theRet</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">][</span><span class="s1">&#39;dvdtThreshold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
-            <span class="s1">&#39;meaning&#39;</span><span class="p">:</span> <span class="s1">&#39;Threshold crossing in dV/dt&#39;</span><span class="p">,</span>
+        <span class="n">theRet</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="s2">&quot;dvdtThreshold&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="n">theRet</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="s2">&quot;dvdtThreshold&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+            <span class="s2">&quot;meaning&quot;</span><span class="p">:</span> <span class="s2">&quot;Threshold crossing in dV/dt&quot;</span><span class="p">,</span>
         <span class="p">}</span>
 
-        <span class="n">theRet</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">][</span><span class="s1">&#39;minSpikeVm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
-        <span class="n">theRet</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">][</span><span class="s1">&#39;minSpikeVm&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span>
-            <span class="s1">&#39;meaning&#39;</span><span class="p">:</span> <span class="s1">&#39;Minimum Vm to accept a detected spike&#39;</span><span class="p">,</span>
+        <span class="n">theRet</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="s2">&quot;minSpikeVm&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="n">theRet</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="s2">&quot;minSpikeVm&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">20</span><span class="p">,</span>
+            <span class="s2">&quot;meaning&quot;</span><span class="p">:</span> <span class="s2">&quot;Minimum Vm to accept a detected spike&quot;</span><span class="p">,</span>
         <span class="p">}</span>
 
-        <span class="n">theRet</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">][</span><span class="s1">&#39;medianFilter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
-        <span class="n">theRet</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">][</span><span class="s1">&#39;medianFilter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
-            <span class="s1">&#39;meaning&#39;</span><span class="p">:</span> <span class="s1">&#39;Median filter for Vm (must be odd)&#39;</span><span class="p">,</span>
+        <span class="n">theRet</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="s2">&quot;medianFilter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="n">theRet</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="s2">&quot;medianFilter&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span>
+            <span class="s2">&quot;meaning&quot;</span><span class="p">:</span> <span class="s2">&quot;Median filter for Vm (must be odd)&quot;</span><span class="p">,</span>
         <span class="p">}</span>
 
-        <span class="n">theRet</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">][</span><span class="s1">&#39;minISI_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
-        <span class="n">theRet</span><span class="p">[</span><span class="s1">&#39;detection&#39;</span><span class="p">][</span><span class="s1">&#39;minISI_ms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;value&#39;</span><span class="p">:</span> <span class="mi">75</span><span class="p">,</span>
-            <span class="s1">&#39;meaning&#39;</span><span class="p">:</span> <span class="s1">&#39;Minimum allowable inter-spike-interval (ms), anything shorter than this will be rejected&#39;</span><span class="p">,</span>
+        <span class="n">theRet</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="s2">&quot;minISI_ms&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="n">theRet</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="s2">&quot;minISI_ms&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="mi">75</span><span class="p">,</span>
+            <span class="s2">&quot;meaning&quot;</span><span class="p">:</span> <span class="s2">&quot;Minimum allowable inter-spike-interval (ms), anything shorter than this will be rejected&quot;</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">return</span> <span class="n">theRet</span>
@@ -1218,12 +1254,7 @@ We then ask for user defined stat functions static members xxx</p>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/bAnalysisUtil.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">376</span>
-<span class="normal">377</span>
-<span class="normal">378</span>
-<span class="normal">379</span>
-<span class="normal">380</span>
-<span class="normal">381</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">381</span>
 <span class="normal">382</span>
 <span class="normal">383</span>
 <span class="normal">384</span>
@@ -1270,7 +1301,18 @@ We then ask for user defined stat functions static members xxx</p>
 <span class="normal">425</span>
 <span class="normal">426</span>
 <span class="normal">427</span>
-<span class="normal">428</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@staticmethod</span>
 <span class="k">def</span> <span class="nf">getStatList</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;20210929 working on extending stat list with sanpy.userAnalysis</span>
 
@@ -1279,11 +1321,11 @@ We then ask for user defined stat functions static members xxx</p>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">coreStatList</span> <span class="o">=</span> <span class="n">statList</span>  <span class="c1"># from global withing function</span>
 
-    <span class="c1">#userStatList = sanpy.userAnalysis.findUserAnalysis()</span>
-    <span class="c1">#userStatList = sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis()</span>
-    <span class="c1">#userStatList = findUserAnalysis()</span>
+    <span class="c1"># userStatList = sanpy.userAnalysis.findUserAnalysis()</span>
+    <span class="c1"># userStatList = sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis()</span>
+    <span class="c1"># userStatList = findUserAnalysis()</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;need to reactivate getting user stats&#39;</span><span class="p">)</span>
+    <span class="c1">#logger.warning(f&quot;need to reactivate getting user stats&quot;)</span>
 
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Each entry in statList looks like:</span>
@@ -1297,11 +1339,15 @@ We then ask for user defined stat functions static members xxx</p>
 <span class="sd">        &#39;xStatUnits&#39;: &#39;s&#39;</span>
 <span class="sd">        }</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">userStatList</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">user_analysis</span><span class="o">.</span><span class="n">baseUserAnalysis</span><span class="o">.</span><span class="n">findUserAnalysisStats</span><span class="p">()</span>
+    <span class="n">userStatList</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span>
+        <span class="nb">dict</span>
+    <span class="p">]</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">user_analysis</span><span class="o">.</span><span class="n">baseUserAnalysis</span><span class="o">.</span><span class="n">findUserAnalysisStats</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">userStatDict</span> <span class="ow">in</span> <span class="n">userStatList</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">userStatDict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">coreStatList</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;user analysis key &quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&quot; already exists in core stat List&#39;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;user analysis key &quot;</span><span class="si">{</span><span class="n">k</span><span class="si">}</span><span class="s1">&quot; already exists in core stat List&#39;</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="c1"># name = v[&#39;name&#39;]</span>
                 <span class="c1"># coreStatList[k] = {}</span>
@@ -1310,15 +1356,17 @@ We then ask for user defined stat functions static members xxx</p>
 
     <span class="k">return</span> <span class="n">coreStatList</span>
 
-    <span class="c1">#20220630, was this</span>
+    <span class="c1"># 20220630, was this</span>
     <span class="n">userStatList</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">user_analysis</span><span class="o">.</span><span class="n">baseUserAnalysis</span><span class="o">.</span><span class="n">findUserAnalysis</span><span class="p">()</span>
 
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">userStatList</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
         <span class="c1"># check if key exists !!!</span>
         <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">coreStatList</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;user analysis key </span><span class="si">{</span><span class="s2">&quot;k&quot;</span><span class="si">}</span><span class="s1"> already exists in core stat List&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;user analysis key </span><span class="si">{</span><span class="s2">&quot;k&quot;</span><span class="si">}</span><span class="s1"> already exists in core stat List&#39;</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">]</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
             <span class="n">coreStatList</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="n">coreStatList</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">name</span>
 

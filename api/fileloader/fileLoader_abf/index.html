@@ -248,21 +248,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../install/" class="md-nav__link">
-        Install
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../desktop-application/" class="md-nav__link">
         Desktop Application
       </a>
@@ -280,6 +265,21 @@
     <li class="md-nav__item">
       <a href="../../../plugins/" class="md-nav__link">
         Plugins
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../install/" class="md-nav__link">
+        Install
       </a>
     </li>
   
@@ -804,7 +804,7 @@
   
     <li class="md-nav__item">
       <a href="../../../about/" class="md-nav__link">
-        About
+        About SanPy
       </a>
     </li>
   
@@ -914,9 +914,7 @@
 
         <details class="quote">
           <summary>Source code in <code>sanpy/fileloaders/fileLoader_abf.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 11</span>
-<span class="normal"> 12</span>
-<span class="normal"> 13</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 13</span>
 <span class="normal"> 14</span>
 <span class="normal"> 15</span>
 <span class="normal"> 16</span>
@@ -1034,8 +1032,28 @@
 <span class="normal">128</span>
 <span class="normal">129</span>
 <span class="normal">130</span>
-<span class="normal">131</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">fileLoader_abf</span><span class="p">(</span><span class="n">fileLoader_base</span><span class="p">):</span>
-    <span class="n">loadFileType</span> <span class="o">=</span> <span class="s1">&#39;abf&#39;</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">fileLoader_abf</span><span class="p">(</span><span class="n">fileLoader_base</span><span class="p">):</span>
+    <span class="n">loadFileType</span> <span class="o">=</span> <span class="s2">&quot;abf&quot;</span>
 
     <span class="c1"># @property</span>
     <span class="c1"># def loadFileType(self):</span>
@@ -1044,75 +1062,91 @@
     <span class="k">def</span> <span class="nf">loadFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_loadAbf</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">_loadAbf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">byteStream</span> <span class="o">=</span>  <span class="kc">None</span><span class="p">,</span> <span class="n">loadData</span> <span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">stimulusFileFolder</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_loadAbf</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">byteStream</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loadData</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">stimulusFileFolder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load pyAbf from path.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="c1">#logger.info(f&#39;loadData:{loadData}&#39;)</span>
+            <span class="c1"># logger.info(f&#39;loadData:{loadData}&#39;)</span>
             <span class="k">if</span> <span class="n">byteStream</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Loading byte stream&#39;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading byte stream&quot;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="o">=</span> <span class="n">pyabf</span><span class="o">.</span><span class="n">ABF</span><span class="p">(</span><span class="n">byteStream</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_isBytesIO</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="c1">#logger.info(f&#39;Loading file: {self.filepath}&#39;)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="o">=</span> <span class="n">pyabf</span><span class="o">.</span><span class="n">ABF</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">,</span> <span class="n">loadData</span><span class="o">=</span><span class="n">loadData</span><span class="p">,</span> <span class="n">stimulusFileFolder</span><span class="o">=</span><span class="n">stimulusFileFolder</span><span class="p">)</span>
+                <span class="c1"># logger.info(f&#39;Loading file: {self.filepath}&#39;)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="o">=</span> <span class="n">pyabf</span><span class="o">.</span><span class="n">ABF</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="p">,</span>
+                    <span class="n">loadData</span><span class="o">=</span><span class="n">loadData</span><span class="p">,</span>
+                    <span class="n">stimulusFileFolder</span><span class="o">=</span><span class="n">stimulusFileFolder</span><span class="p">,</span>
+                <span class="p">)</span>
 
-        <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    did not load abf file: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;      NotImplementedError exception was: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">NotImplementedError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    did not load abf file: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;      NotImplementedError exception was: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_loadError</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="k">except</span> <span class="p">(</span><span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="c1"># some abf files throw: &#39;unpack requires a buffer of 234 bytes&#39;</span>
             <span class="c1"># &#39;ABF&#39; object has no attribute &#39;sweepEpochs&#39;</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    did not load abf file: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;        unknown Exception was: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    did not load abf file: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;        unknown Exception was: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_loadError</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">loadData</span><span class="p">:</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">_tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepEpochs</span><span class="o">.</span><span class="n">p1s</span>
-            <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    did not find epochTable loadData:</span><span class="si">{</span><span class="n">loadData</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1"> in file </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;    did not find epochTable loadData:</span><span class="si">{</span><span class="n">loadData</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2"> in file </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">filepath</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">_numSweeps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepList</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_epochTableList</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">_numSweeps</span>
                 <span class="k">for</span> <span class="n">_sweepIdx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_numSweeps</span><span class="p">):</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">setSweep</span><span class="p">(</span><span class="n">_sweepIdx</span><span class="p">)</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">_epochTableList</span><span class="p">[</span><span class="n">_sweepIdx</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">fileloaders</span><span class="o">.</span><span class="n">epochTable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_epochTableList</span><span class="p">[</span><span class="n">_sweepIdx</span><span class="p">]</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">fileloaders</span><span class="o">.</span><span class="n">epochTable</span><span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span>
+                    <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">setSweep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_sweepList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepList</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_sweepLengthSec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepLengthSec</span>  <span class="c1"># assuming all sweeps have the same duration</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sweepLengthSec</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepLengthSec</span>
+            <span class="p">)</span>  <span class="c1"># assuming all sweeps have the same duration</span>
 
             <span class="c1"># on load, sweep is 0</span>
             <span class="k">if</span> <span class="n">loadData</span><span class="p">:</span>
                 <span class="n">_numRows</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepX</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="n">numSweeps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sweepList</span><span class="p">)</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_sweepX</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">_numRows</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_sweepY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">_numRows</span><span class="p">,</span><span class="n">numSweeps</span><span class="p">))</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_sweepC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">_numRows</span><span class="p">,</span><span class="n">numSweeps</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sweepX</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">_numRows</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sweepY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">_numRows</span><span class="p">,</span> <span class="n">numSweeps</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_sweepC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">_numRows</span><span class="p">,</span> <span class="n">numSweeps</span><span class="p">))</span>
 
                 <span class="n">_channel</span> <span class="o">=</span> <span class="mi">0</span>
                 <span class="k">for</span> <span class="n">sweep</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sweepList</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">setSweep</span><span class="p">(</span><span class="n">sweepNumber</span><span class="o">=</span><span class="n">sweep</span><span class="p">,</span> <span class="n">channel</span><span class="o">=</span><span class="n">_channel</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">sweep</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_sweepX</span><span class="p">[:,</span> <span class="n">sweep</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepX</span>  <span class="c1"># &lt;class &#39;numpy.ndarray&#39;&gt;, (60000,)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_sweepX</span><span class="p">[</span>
+                            <span class="p">:,</span> <span class="n">sweep</span>
+                        <span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepX</span>  <span class="c1"># &lt;class &#39;numpy.ndarray&#39;&gt;, (60000,)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_sweepY</span><span class="p">[:,</span> <span class="n">sweep</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepY</span>
                     <span class="k">try</span><span class="p">:</span>
                         <span class="bp">self</span><span class="o">.</span><span class="n">_sweepC</span><span class="p">[:,</span> <span class="n">sweep</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepC</span>
-                    <span class="k">except</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                         <span class="c1"># pyabf will raise this error if it is an atf file</span>
-                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    exception fetching sweepC for sweep </span><span class="si">{</span><span class="n">sweep</span><span class="si">}</span><span class="s1"> with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">numSweeps</span><span class="si">}</span><span class="s1">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;    exception fetching sweepC for sweep </span><span class="si">{</span><span class="n">sweep</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">numSweeps</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
                         <span class="c1">#</span>
                         <span class="c1"># if we were recorded with a stimulus file abf</span>
                         <span class="c1"># needed to assign stimulusWaveformFromFile</span>
                         <span class="k">try</span><span class="p">:</span>
                             <span class="n">tmpSweepC</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepC</span>
                             <span class="bp">self</span><span class="o">.</span><span class="n">_sweepC</span><span class="p">[:,</span> <span class="n">sweep</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">sweepC</span>
-                        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;ba has no sweep </span><span class="si">{</span><span class="n">sweep</span><span class="si">}</span><span class="s1"> sweepC ???&#39;</span><span class="p">)</span>
+                        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ba has no sweep </span><span class="si">{</span><span class="n">sweep</span><span class="si">}</span><span class="s2"> sweepC ???&quot;</span><span class="p">)</span>
 
                 <span class="c1"># not needed</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">setSweep</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
@@ -1127,33 +1161,35 @@
 
             <span class="bp">self</span><span class="o">.</span><span class="n">_numChannels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">adcUnits</span><span class="p">)</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_numChannels</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;    SanPy does not work with multi-channel recordings numChannels is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_numChannels</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;    SanPy does not work with multi-channel recordings numChannels is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_numChannels</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_path</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
                 <span class="c1"># logger.warning(&#39;    Will default to channel 0&#39;)</span>
 
-            <span class="c1">#self.sweepUnitsY = self.adcUnits[channel]</span>
+            <span class="c1"># self.sweepUnitsY = self.adcUnits[channel]</span>
             <span class="n">channel</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="c1">#dacUnits = self._abf.dacUnits[channel]</span>
+            <span class="c1"># dacUnits = self._abf.dacUnits[channel]</span>
             <span class="n">adcUnits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span><span class="o">.</span><span class="n">adcUnits</span><span class="p">[</span><span class="n">channel</span><span class="p">]</span>
-            <span class="c1">#print(&#39;  adcUnits:&#39;, adcUnits)  # &#39;mV&#39;</span>
+            <span class="c1"># print(&#39;  adcUnits:&#39;, adcUnits)  # &#39;mV&#39;</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_sweepLabelY</span> <span class="o">=</span> <span class="n">adcUnits</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_sweepLabelX</span> <span class="o">=</span> <span class="s2">&quot;sec&quot;</span>
 
-            <span class="c1">#self._sweepLabelX = self._abf.sweepLabelX</span>
-            <span class="c1">#self._sweepLabelY = self._abf.sweepLabelY</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sweepLabelY</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;pA&#39;</span><span class="p">,</span> <span class="s1">&#39;nA&#39;</span><span class="p">]:</span>
+            <span class="c1"># self._sweepLabelX = self._abf.sweepLabelX</span>
+            <span class="c1"># self._sweepLabelY = self._abf.sweepLabelY</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sweepLabelY</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;pA&quot;</span><span class="p">,</span> <span class="s2">&quot;nA&quot;</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_recordingMode</span> <span class="o">=</span> <span class="n">recordingModes</span><span class="o">.</span><span class="n">vclamp</span>  <span class="c1"># &#39;V-Clamp&#39;</span>
-                <span class="c1">#self._sweepY_label = self._abf.sweepUnitsY</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sweepLabelY</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;mV&#39;</span><span class="p">]:</span>
+                <span class="c1"># self._sweepY_label = self._abf.sweepUnitsY</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sweepLabelY</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mV&quot;</span><span class="p">]:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_recordingMode</span> <span class="o">=</span> <span class="n">recordingModes</span><span class="o">.</span><span class="n">iclamp</span>  <span class="c1">#&#39;I-Clamp&#39;</span>
-                <span class="c1">#self._sweepY_label = self._abf.sweepUnitsY</span>
+                <span class="c1"># self._sweepY_label = self._abf.sweepUnitsY</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;did not understand adcUnit &quot;</span><span class="si">{</span><span class="n">adcUnits</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
 
         <span class="c1">#</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">myFileType</span> <span class="o">=</span> <span class="s1">&#39;abf&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">myFileType</span> <span class="o">=</span> <span class="s2">&quot;abf&quot;</span>
 
         <span class="c1"># base sanpy does not keep the abf around</span>
-        <span class="c1">#logger.warning(&#39;[[[TURNED BACK ON]]] I turned off assigning self._abf=None for stoch-res stim file load&#39;)</span>
+        <span class="c1"># logger.warning(&#39;[[[TURNED BACK ON]]] I turned off assigning self._abf=None for stoch-res stim file load&#39;)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_abf</span> <span class="o">=</span> <span class="kc">None</span>
 </code></pre></div></td></tr></table></div>
         </details>

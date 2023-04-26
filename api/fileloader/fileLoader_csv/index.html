@@ -248,21 +248,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../install/" class="md-nav__link">
-        Install
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../desktop-application/" class="md-nav__link">
         Desktop Application
       </a>
@@ -280,6 +265,21 @@
     <li class="md-nav__item">
       <a href="../../../plugins/" class="md-nav__link">
         Plugins
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../install/" class="md-nav__link">
+        Install
       </a>
     </li>
   
@@ -804,7 +804,7 @@
   
     <li class="md-nav__item">
       <a href="../../../about/" class="md-nav__link">
-        About
+        About SanPy
       </a>
     </li>
   
@@ -914,9 +914,7 @@
 
         <details class="quote">
           <summary>Source code in <code>sanpy/fileloaders/fileLoader_csv.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 9</span>
-<span class="normal">10</span>
-<span class="normal">11</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">11</span>
 <span class="normal">12</span>
 <span class="normal">13</span>
 <span class="normal">14</span>
@@ -975,8 +973,12 @@
 <span class="normal">67</span>
 <span class="normal">68</span>
 <span class="normal">69</span>
-<span class="normal">70</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">fileLoader_csv</span><span class="p">(</span><span class="n">fileLoader_base</span><span class="p">):</span>
-    <span class="n">loadFileType</span> <span class="o">=</span> <span class="s1">&#39;csv&#39;</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">fileLoader_csv</span><span class="p">(</span><span class="n">fileLoader_base</span><span class="p">):</span>
+    <span class="n">loadFileType</span> <span class="o">=</span> <span class="s2">&quot;csv&quot;</span>
 
     <span class="c1"># @property</span>
     <span class="c1"># def loadFileType(self):</span>
@@ -995,47 +997,49 @@
         <span class="n">_columns</span> <span class="o">=</span> <span class="n">_df</span><span class="o">.</span><span class="n">columns</span>
         <span class="n">_numColumns</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_columns</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">_numColumns</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;expecting 2 or more columns but got </span><span class="si">{</span><span class="n">_numColumns</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;expecting 2 or more columns but got </span><span class="si">{</span><span class="n">_numColumns</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">_numSamples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_df</span><span class="p">)</span>
         <span class="n">_numSweeps</span> <span class="o">=</span> <span class="n">_numColumns</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># assuming no DAC columns</span>
 
         <span class="c1"># TODO: check that the columns we will read are float (not str or object)</span>
-        <span class="c1">#           </span>
+        <span class="c1">#</span>
         <span class="c1"># make sweepX (assuming all sweeps have the same sweepX)</span>
-        <span class="n">sweepX</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span> <span class="p">(</span><span class="n">_numSamples</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">sweepX</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">((</span><span class="n">_numSamples</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">sweepX</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">_df</span><span class="p">[</span><span class="n">_columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">sweepX</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">_df</span><span class="p">[</span><span class="n">_columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span>
 
         <span class="c1"># make sweepY to hold (samples, sweeps) values, the values in each sweep are different</span>
-        <span class="n">sweepY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span> <span class="p">(</span><span class="n">_numSamples</span><span class="p">,</span><span class="n">_numSweeps</span><span class="p">))</span>
+        <span class="n">sweepY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">((</span><span class="n">_numSamples</span><span class="p">,</span> <span class="n">_numSweeps</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">sweep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_numSweeps</span><span class="p">):</span>
             <span class="n">colIdx</span> <span class="o">=</span> <span class="n">sweep</span> <span class="o">+</span> <span class="mi">1</span>
-            <span class="n">sweepY</span><span class="p">[:,</span><span class="n">sweep</span><span class="p">]</span> <span class="o">=</span> <span class="n">_df</span><span class="p">[</span><span class="n">_columns</span><span class="p">[</span><span class="n">colIdx</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+            <span class="n">sweepY</span><span class="p">[:,</span> <span class="n">sweep</span><span class="p">]</span> <span class="o">=</span> <span class="n">_df</span><span class="p">[</span><span class="n">_columns</span><span class="p">[</span><span class="n">colIdx</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
-        <span class="c1">#sweepC = None  # not defined</span>
+        <span class="c1"># sweepC = None  # not defined</span>
 
         <span class="c1"># determine recording mode from name of column 1</span>
-        <span class="n">_tmpColName</span> <span class="o">=</span> <span class="n">_columns</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_0&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">_tmpColName</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;pA&#39;</span><span class="p">,</span> <span class="s1">&#39;nA&#39;</span><span class="p">]:</span>
+        <span class="n">_tmpColName</span> <span class="o">=</span> <span class="n">_columns</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_0&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_tmpColName</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;pA&quot;</span><span class="p">,</span> <span class="s2">&quot;nA&quot;</span><span class="p">]:</span>
             <span class="n">_recordingMode</span> <span class="o">=</span> <span class="n">recordingModes</span><span class="o">.</span><span class="n">vclamp</span>
-        <span class="k">elif</span> <span class="n">_tmpColName</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span> <span class="s1">&#39;mv&#39;</span><span class="p">]:</span>
+        <span class="k">elif</span> <span class="n">_tmpColName</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mV&quot;</span><span class="p">,</span> <span class="s2">&quot;mv&quot;</span><span class="p">]:</span>
             <span class="n">_recordingMode</span> <span class="o">=</span> <span class="n">recordingModes</span><span class="o">.</span><span class="n">iclamp</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;did not infer recording mode from column name </span><span class="si">{</span><span class="n">_tmpColName</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;did not infer recording mode from column name </span><span class="si">{</span><span class="n">_tmpColName</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
             <span class="n">_recordingMode</span> <span class="o">=</span> <span class="n">recordingModes</span><span class="o">.</span><span class="n">unknown</span>
 
         <span class="n">xLabel</span> <span class="o">=</span> <span class="n">_columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="n">yLabel</span> <span class="o">=</span> <span class="n">_tmpColName</span>  <span class="c1">#_columns[1]</span>
+        <span class="n">yLabel</span> <span class="o">=</span> <span class="n">_tmpColName</span>  <span class="c1"># _columns[1]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">setLoadedData</span><span class="p">(</span>
-                <span class="n">sweepX</span> <span class="o">=</span> <span class="n">sweepX</span><span class="p">,</span>
-                <span class="n">sweepY</span> <span class="o">=</span> <span class="n">sweepY</span><span class="p">,</span>
-                <span class="c1">#sweepC = sweepC,</span>
-                <span class="n">xLabel</span> <span class="o">=</span> <span class="n">xLabel</span><span class="p">,</span>
-                <span class="n">yLabel</span> <span class="o">=</span> <span class="n">yLabel</span><span class="p">,</span>
+            <span class="n">sweepX</span><span class="o">=</span><span class="n">sweepX</span><span class="p">,</span>
+            <span class="n">sweepY</span><span class="o">=</span><span class="n">sweepY</span><span class="p">,</span>
+            <span class="c1"># sweepC = sweepC,</span>
+            <span class="n">xLabel</span><span class="o">=</span><span class="n">xLabel</span><span class="p">,</span>
+            <span class="n">yLabel</span><span class="o">=</span><span class="n">yLabel</span><span class="p">,</span>
         <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
         </details>
@@ -1071,9 +1075,7 @@ Column 1 is recording in ['mV', 'pA']</p>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/fileloaders/fileLoader_csv.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">18</span>
 <span class="normal">19</span>
 <span class="normal">20</span>
 <span class="normal">21</span>
@@ -1125,7 +1127,11 @@ Column 1 is recording in ['mV', 'pA']</p>
 <span class="normal">67</span>
 <span class="normal">68</span>
 <span class="normal">69</span>
-<span class="normal">70</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">loadFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">loadFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load file and call setLoadedData().</span>
 
 <span class="sd">    Use self.filepath for the file</span>
@@ -1138,47 +1144,49 @@ Column 1 is recording in ['mV', 'pA']</p>
     <span class="n">_columns</span> <span class="o">=</span> <span class="n">_df</span><span class="o">.</span><span class="n">columns</span>
     <span class="n">_numColumns</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_columns</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">_numColumns</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
-         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;expecting 2 or more columns but got </span><span class="si">{</span><span class="n">_numColumns</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;expecting 2 or more columns but got </span><span class="si">{</span><span class="n">_numColumns</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">_numSamples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">_df</span><span class="p">)</span>
     <span class="n">_numSweeps</span> <span class="o">=</span> <span class="n">_numColumns</span> <span class="o">-</span> <span class="mi">1</span>  <span class="c1"># assuming no DAC columns</span>
 
     <span class="c1"># TODO: check that the columns we will read are float (not str or object)</span>
-    <span class="c1">#           </span>
+    <span class="c1">#</span>
     <span class="c1"># make sweepX (assuming all sweeps have the same sweepX)</span>
-    <span class="n">sweepX</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span> <span class="p">(</span><span class="n">_numSamples</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">sweepX</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">((</span><span class="n">_numSamples</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
     <span class="k">try</span><span class="p">:</span>
-        <span class="n">sweepX</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">_df</span><span class="p">[</span><span class="n">_columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
-    <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">sweepX</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">_df</span><span class="p">[</span><span class="n">_columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span>
 
     <span class="c1"># make sweepY to hold (samples, sweeps) values, the values in each sweep are different</span>
-    <span class="n">sweepY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">(</span> <span class="p">(</span><span class="n">_numSamples</span><span class="p">,</span><span class="n">_numSweeps</span><span class="p">))</span>
+    <span class="n">sweepY</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">((</span><span class="n">_numSamples</span><span class="p">,</span> <span class="n">_numSweeps</span><span class="p">))</span>
     <span class="k">for</span> <span class="n">sweep</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_numSweeps</span><span class="p">):</span>
         <span class="n">colIdx</span> <span class="o">=</span> <span class="n">sweep</span> <span class="o">+</span> <span class="mi">1</span>
-        <span class="n">sweepY</span><span class="p">[:,</span><span class="n">sweep</span><span class="p">]</span> <span class="o">=</span> <span class="n">_df</span><span class="p">[</span><span class="n">_columns</span><span class="p">[</span><span class="n">colIdx</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+        <span class="n">sweepY</span><span class="p">[:,</span> <span class="n">sweep</span><span class="p">]</span> <span class="o">=</span> <span class="n">_df</span><span class="p">[</span><span class="n">_columns</span><span class="p">[</span><span class="n">colIdx</span><span class="p">]]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
 
-    <span class="c1">#sweepC = None  # not defined</span>
+    <span class="c1"># sweepC = None  # not defined</span>
 
     <span class="c1"># determine recording mode from name of column 1</span>
-    <span class="n">_tmpColName</span> <span class="o">=</span> <span class="n">_columns</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;_0&#39;</span><span class="p">,</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">_tmpColName</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;pA&#39;</span><span class="p">,</span> <span class="s1">&#39;nA&#39;</span><span class="p">]:</span>
+    <span class="n">_tmpColName</span> <span class="o">=</span> <span class="n">_columns</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_0&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_tmpColName</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;pA&quot;</span><span class="p">,</span> <span class="s2">&quot;nA&quot;</span><span class="p">]:</span>
         <span class="n">_recordingMode</span> <span class="o">=</span> <span class="n">recordingModes</span><span class="o">.</span><span class="n">vclamp</span>
-    <span class="k">elif</span> <span class="n">_tmpColName</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;mV&#39;</span><span class="p">,</span> <span class="s1">&#39;mv&#39;</span><span class="p">]:</span>
+    <span class="k">elif</span> <span class="n">_tmpColName</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;mV&quot;</span><span class="p">,</span> <span class="s2">&quot;mv&quot;</span><span class="p">]:</span>
         <span class="n">_recordingMode</span> <span class="o">=</span> <span class="n">recordingModes</span><span class="o">.</span><span class="n">iclamp</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;did not infer recording mode from column name </span><span class="si">{</span><span class="n">_tmpColName</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;did not infer recording mode from column name </span><span class="si">{</span><span class="n">_tmpColName</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
         <span class="n">_recordingMode</span> <span class="o">=</span> <span class="n">recordingModes</span><span class="o">.</span><span class="n">unknown</span>
 
     <span class="n">xLabel</span> <span class="o">=</span> <span class="n">_columns</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-    <span class="n">yLabel</span> <span class="o">=</span> <span class="n">_tmpColName</span>  <span class="c1">#_columns[1]</span>
+    <span class="n">yLabel</span> <span class="o">=</span> <span class="n">_tmpColName</span>  <span class="c1"># _columns[1]</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">setLoadedData</span><span class="p">(</span>
-            <span class="n">sweepX</span> <span class="o">=</span> <span class="n">sweepX</span><span class="p">,</span>
-            <span class="n">sweepY</span> <span class="o">=</span> <span class="n">sweepY</span><span class="p">,</span>
-            <span class="c1">#sweepC = sweepC,</span>
-            <span class="n">xLabel</span> <span class="o">=</span> <span class="n">xLabel</span><span class="p">,</span>
-            <span class="n">yLabel</span> <span class="o">=</span> <span class="n">yLabel</span><span class="p">,</span>
+        <span class="n">sweepX</span><span class="o">=</span><span class="n">sweepX</span><span class="p">,</span>
+        <span class="n">sweepY</span><span class="o">=</span><span class="n">sweepY</span><span class="p">,</span>
+        <span class="c1"># sweepC = sweepC,</span>
+        <span class="n">xLabel</span><span class="o">=</span><span class="n">xLabel</span><span class="p">,</span>
+        <span class="n">yLabel</span><span class="o">=</span><span class="n">yLabel</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
       </details>

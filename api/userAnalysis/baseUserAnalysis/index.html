@@ -248,21 +248,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../install/" class="md-nav__link">
-        Install
-      </a>
-    </li>
-  
-
-    
-      
-      
-      
-
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../desktop-application/" class="md-nav__link">
         Desktop Application
       </a>
@@ -280,6 +265,21 @@
     <li class="md-nav__item">
       <a href="../../../plugins/" class="md-nav__link">
         Plugins
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../install/" class="md-nav__link">
+        Install
       </a>
     </li>
   
@@ -829,7 +829,7 @@
   
     <li class="md-nav__item">
       <a href="../../../about/" class="md-nav__link">
-        About
+        About SanPy
       </a>
     </li>
   
@@ -966,17 +966,7 @@
 
         <details class="quote">
           <summary>Source code in <code>sanpy/user_analysis/baseUserAnalysis.py</code></summary>
-          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">159</span>
-<span class="normal">160</span>
-<span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
+          <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">169</span>
 <span class="normal">170</span>
 <span class="normal">171</span>
 <span class="normal">172</span>
@@ -1105,21 +1095,29 @@
 <span class="normal">295</span>
 <span class="normal">296</span>
 <span class="normal">297</span>
-<span class="normal">298</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">baseUserAnalysis</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a userAnalysis object after bAnalysis has been analyzed with the core analysis results.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">baseUserAnalysis</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a userAnalysis object after bAnalysis has been analyzed with the core analysis results.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span> <span class="p">:</span> <span class="s2">&quot;sanpy.bAnalysis&quot;</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_myAnalysis</span> <span class="p">:</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span> <span class="o">=</span> <span class="n">ba</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ba</span><span class="p">:</span> <span class="s2">&quot;sanpy.bAnalysis&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_myAnalysis</span><span class="p">:</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span> <span class="o">=</span> <span class="n">ba</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_userStatDict</span> <span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_userStatDict</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="c1"># add to this with addUserStat()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">defineUserStats</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_getUserStatDict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get dict of user defined stats, one key per stat.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get dict of user defined stats, one key per stat.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_userStatDict</span>
 
     <span class="k">def</span> <span class="nf">defineUserStats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1131,8 +1129,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">pass</span>
 
-
-    <span class="k">def</span> <span class="nf">addUserStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">humanName</span> <span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">internalName</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">addUserStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">humanName</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">internalName</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a user stat. Derived classes do this in defineUserStats().</span>
 
 <span class="sd">        Parameters</span>
@@ -1161,12 +1158,12 @@
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;User stat with human name &quot;</span><span class="si">{</span><span class="n">humanName</span><span class="si">}</span><span class="s1">&quot; already exists&#39;</span><span class="p">)</span>
             <span class="k">return</span>
         <span class="n">statDict</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">internalName</span><span class="p">,</span>
-            <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s1">&#39;yStat&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s1">&#39;yStatUnits&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s1">&#39;xStat&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s1">&#39;xStatUnits&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">internalName</span><span class="p">,</span>
+            <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;yStat&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;yStatUnits&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;xStat&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s2">&quot;xStatUnits&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_userStatDict</span><span class="p">[</span><span class="n">humanName</span><span class="p">]</span> <span class="o">=</span> <span class="n">statDict</span>
 
@@ -1212,10 +1209,12 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">spikeIdx</span><span class="p">][</span><span class="n">theKey</span><span class="p">]</span> <span class="o">=</span> <span class="n">theVal</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;User internal stat does not exist &quot;</span><span class="si">{</span><span class="n">theKey</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;spikeIdx </span><span class="si">{</span><span class="n">spikeIdx</span><span class="si">}</span><span class="s1"> is out of range, max value is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;spikeIdx </span><span class="si">{</span><span class="n">spikeIdx</span><span class="si">}</span><span class="s2"> is out of range, max value is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">getSpikeValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeIdx</span><span class="p">,</span> <span class="n">theKey</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a single spike analysis result from key.</span>
@@ -1237,14 +1236,15 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">theRet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">spikeIdx</span><span class="p">][</span><span class="n">theKey</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">theRet</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;User internal stat does not exist &quot;</span><span class="si">{</span><span class="n">theKey</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;spikeIdx </span><span class="si">{</span><span class="n">spikeIdx</span><span class="si">}</span><span class="s1"> is out of range, max value is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;spikeIdx </span><span class="si">{</span><span class="n">spikeIdx</span><span class="si">}</span><span class="s2"> is out of range, max value is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run user analysis. Calculate values for each new user stat.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run user analysis. Calculate values for each new user stat.&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
         </details>
 
@@ -1344,14 +1344,7 @@ Can contain '_'</p></td>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/user_analysis/baseUserAnalysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">186</span>
-<span class="normal">187</span>
-<span class="normal">188</span>
-<span class="normal">189</span>
-<span class="normal">190</span>
-<span class="normal">191</span>
-<span class="normal">192</span>
-<span class="normal">193</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">193</span>
 <span class="normal">194</span>
 <span class="normal">195</span>
 <span class="normal">196</span>
@@ -1380,7 +1373,14 @@ Can contain '_'</p></td>
 <span class="normal">219</span>
 <span class="normal">220</span>
 <span class="normal">221</span>
-<span class="normal">222</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">addUserStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">humanName</span> <span class="p">:</span><span class="nb">str</span><span class="p">,</span> <span class="n">internalName</span> <span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">addUserStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">humanName</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">internalName</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add a user stat. Derived classes do this in defineUserStats().</span>
 
 <span class="sd">    Parameters</span>
@@ -1409,12 +1409,12 @@ Can contain '_'</p></td>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;User stat with human name &quot;</span><span class="si">{</span><span class="n">humanName</span><span class="si">}</span><span class="s1">&quot; already exists&#39;</span><span class="p">)</span>
         <span class="k">return</span>
     <span class="n">statDict</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="n">internalName</span><span class="p">,</span>
-        <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s1">&#39;yStat&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s1">&#39;yStatUnits&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s1">&#39;xStat&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="s1">&#39;xStatUnits&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">internalName</span><span class="p">,</span>
+        <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;yStat&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;yStatUnits&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;xStat&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;xStatUnits&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
     <span class="p">}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_userStatDict</span><span class="p">[</span><span class="n">humanName</span><span class="p">]</span> <span class="o">=</span> <span class="n">statDict</span>
 </code></pre></div></td></tr></table></div>
@@ -1441,14 +1441,14 @@ Can contain '_'</p></td>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/user_analysis/baseUserAnalysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">176</span>
-<span class="normal">177</span>
-<span class="normal">178</span>
-<span class="normal">179</span>
-<span class="normal">180</span>
-<span class="normal">181</span>
-<span class="normal">182</span>
-<span class="normal">183</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">defineUserStats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">defineUserStats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Derived classes add each stat with addUserStat().</span>
 
 <span class="sd">    See Also</span>
@@ -1536,16 +1536,7 @@ Can contain '_'</p></td>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/user_analysis/baseUserAnalysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">271</span>
-<span class="normal">272</span>
-<span class="normal">273</span>
-<span class="normal">274</span>
-<span class="normal">275</span>
-<span class="normal">276</span>
-<span class="normal">277</span>
-<span class="normal">278</span>
-<span class="normal">279</span>
-<span class="normal">280</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">280</span>
 <span class="normal">281</span>
 <span class="normal">282</span>
 <span class="normal">283</span>
@@ -1559,7 +1550,18 @@ Can contain '_'</p></td>
 <span class="normal">291</span>
 <span class="normal">292</span>
 <span class="normal">293</span>
-<span class="normal">294</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSpikeValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeIdx</span><span class="p">,</span> <span class="n">theKey</span><span class="p">):</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSpikeValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeIdx</span><span class="p">,</span> <span class="n">theKey</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a single spike analysis result from key.</span>
 
 <span class="sd">    Parameters</span>
@@ -1579,10 +1581,12 @@ Can contain '_'</p></td>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">theRet</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">spikeIdx</span><span class="p">][</span><span class="n">theKey</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">theRet</span>
-    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;User internal stat does not exist &quot;</span><span class="si">{</span><span class="n">theKey</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-    <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;spikeIdx </span><span class="si">{</span><span class="n">spikeIdx</span><span class="si">}</span><span class="s1"> is out of range, max value is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;spikeIdx </span><span class="si">{</span><span class="n">spikeIdx</span><span class="si">}</span><span class="s2"> is out of range, max value is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -1605,9 +1609,9 @@ Can contain '_'</p></td>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/user_analysis/baseUserAnalysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">237</span>
-<span class="normal">238</span>
-<span class="normal">239</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSweepC</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSweepC</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the DAC axis of a recording.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">fileLoader</span><span class="o">.</span><span class="n">sweepC</span>
 </code></pre></div></td></tr></table></div>
@@ -1632,9 +1636,9 @@ Can contain '_'</p></td>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/user_analysis/baseUserAnalysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">229</span>
-<span class="normal">230</span>
-<span class="normal">231</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSweepX</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSweepX</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the x-axis of a recording.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">fileLoader</span><span class="o">.</span><span class="n">sweepX</span>
 </code></pre></div></td></tr></table></div>
@@ -1659,9 +1663,9 @@ Can contain '_'</p></td>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/user_analysis/baseUserAnalysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">233</span>
-<span class="normal">234</span>
-<span class="normal">235</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSweepY</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSweepY</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the y-axis of a recording.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">fileLoader</span><span class="o">.</span><span class="n">sweepY</span>
 </code></pre></div></td></tr></table></div>
@@ -1686,11 +1690,9 @@ Can contain '_'</p></td>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/user_analysis/baseUserAnalysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">296</span>
-<span class="normal">297</span>
-<span class="normal">298</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run user analysis. Calculate values for each new user stat.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">307</span>
+<span class="normal">308</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Run user analysis. Calculate values for each new user stat.&quot;&quot;&quot;</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -1781,14 +1783,7 @@ Can contain '_'</p></td>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/user_analysis/baseUserAnalysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">244</span>
-<span class="normal">245</span>
-<span class="normal">246</span>
-<span class="normal">247</span>
-<span class="normal">248</span>
-<span class="normal">249</span>
-<span class="normal">250</span>
-<span class="normal">251</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">251</span>
 <span class="normal">252</span>
 <span class="normal">253</span>
 <span class="normal">254</span>
@@ -1806,7 +1801,16 @@ Can contain '_'</p></td>
 <span class="normal">266</span>
 <span class="normal">267</span>
 <span class="normal">268</span>
-<span class="normal">269</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">setSpikeValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeIdx</span><span class="p">,</span> <span class="n">theKey</span><span class="p">,</span> <span class="n">theVal</span><span class="p">):</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">setSpikeValue</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spikeIdx</span><span class="p">,</span> <span class="n">theKey</span><span class="p">,</span> <span class="n">theVal</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the value of a spike key.</span>
 
 <span class="sd">    Parameters</span>
@@ -1828,10 +1832,12 @@ Can contain '_'</p></td>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">spikeIdx</span><span class="p">][</span><span class="n">theKey</span><span class="p">]</span> <span class="o">=</span> <span class="n">theVal</span>
-    <span class="k">except</span> <span class="p">(</span><span class="ne">KeyError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;User internal stat does not exist &quot;</span><span class="si">{</span><span class="n">theKey</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-    <span class="k">except</span> <span class="p">(</span><span class="ne">IndexError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;spikeIdx </span><span class="si">{</span><span class="n">spikeIdx</span><span class="si">}</span><span class="s1"> is out of range, max value is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">IndexError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;spikeIdx </span><span class="si">{</span><span class="n">spikeIdx</span><span class="si">}</span><span class="s2"> is out of range, max value is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">numSpikes</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
 </code></pre></div></td></tr></table></div>
       </details>
   </div>
@@ -1863,16 +1869,7 @@ Can contain '_'</p></td>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/user_analysis/baseUserAnalysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">119</span>
 <span class="normal">120</span>
 <span class="normal">121</span>
 <span class="normal">122</span>
@@ -1881,17 +1878,24 @@ Can contain '_'</p></td>
 <span class="normal">125</span>
 <span class="normal">126</span>
 <span class="normal">127</span>
-<span class="normal">128</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">findUserAnalysisStats</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the stat names of all user defined analysis.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">userStatList</span> <span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">findUserAnalysisStats</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the stat names of all user defined analysis.&quot;&quot;&quot;</span>
+    <span class="n">userStatList</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">objList</span> <span class="o">=</span> <span class="n">_getObjectList</span><span class="p">()</span>  <span class="c1"># list of dict</span>
     <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objList</span><span class="p">:</span>
         <span class="c1"># sanpy._util.pprint(obj)</span>
         <span class="c1"># print(&#39;&#39;)</span>
 
         <span class="c1"># instantiate the object</span>
-        <span class="n">userObj</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;constructor&#39;</span><span class="p">](</span><span class="n">ba</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">userObj</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;constructor&quot;</span><span class="p">](</span><span class="n">ba</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
         <span class="n">userObjStatDict</span> <span class="o">=</span> <span class="n">userObj</span><span class="o">.</span><span class="n">_getUserStatDict</span><span class="p">()</span>
 
@@ -1924,16 +1928,7 @@ Can contain '_'</p></td>
 
       <details class="quote">
         <summary>Source code in <code>sanpy/user_analysis/baseUserAnalysis.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">130</span>
-<span class="normal">131</span>
-<span class="normal">132</span>
-<span class="normal">133</span>
-<span class="normal">134</span>
-<span class="normal">135</span>
-<span class="normal">136</span>
-<span class="normal">137</span>
-<span class="normal">138</span>
-<span class="normal">139</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">139</span>
 <span class="normal">140</span>
 <span class="normal">141</span>
 <span class="normal">142</span>
@@ -1951,7 +1946,16 @@ Can contain '_'</p></td>
 <span class="normal">154</span>
 <span class="normal">155</span>
 <span class="normal">156</span>
-<span class="normal">157</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">runAllUserAnalysis</span><span class="p">(</span><span class="n">ba</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">runAllUserAnalysis</span><span class="p">(</span><span class="n">ba</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run all user defined analysis.</span>
 
 <span class="sd">    Notes</span>
@@ -1963,21 +1967,21 @@ Can contain '_'</p></td>
     <span class="n">objList</span> <span class="o">=</span> <span class="n">_getObjectList</span><span class="p">()</span>  <span class="c1"># list of dict</span>
 
     <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;objList: </span><span class="si">{</span><span class="n">objList</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;objList: </span><span class="si">{</span><span class="n">objList</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">objList</span><span class="p">:</span>
         <span class="c1"># instantiate and call run (will add values for stats</span>
         <span class="c1"># was this</span>
-        <span class="c1">#userObj = obj(ba)</span>
-        <span class="c1">#userObj.run()</span>
+        <span class="c1"># userObj = obj(ba)</span>
+        <span class="c1"># userObj.run()</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># instantiate a user object</span>
-            <span class="n">userObj</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="s1">&#39;constructor&#39;</span><span class="p">](</span><span class="n">ba</span><span class="p">)</span>
+            <span class="n">userObj</span> <span class="o">=</span> <span class="n">obj</span><span class="p">[</span><span class="s2">&quot;constructor&quot;</span><span class="p">](</span><span class="n">ba</span><span class="p">)</span>
 
             <span class="c1"># run the analysis</span>
             <span class="n">userObj</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>  <span class="c1"># run the analysis and append to actual ba object</span>
-        <span class="k">except</span> <span class="p">(</span><span class="ne">Exception</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Exception in running user defined analysis: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exception in running user defined analysis: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">traceback</span><span class="o">.</span><span class="n">format_exc</span><span class="p">())</span>
 </code></pre></div></td></tr></table></div>
       </details>
