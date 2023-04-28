@@ -776,6 +776,7 @@ class plotScatter(sanpyPlugin):
         yMax += percentSpan
 
         #logger.warning(f'refactor this, do not always set x/y lim')
+        # UserWarning: Attempting to set identical left == right == 0.0275 results in singular transformations; automatically expanding.
         self.axScatter.set_xlim([xMin, xMax])
         self.axScatter.set_ylim([yMin, yMax])
 

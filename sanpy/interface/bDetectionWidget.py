@@ -1814,12 +1814,14 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.myMainWindow.mySignal("cancel all selections")
 
         elif key in [QtCore.Qt.Key.Key_Plus, QtCore.Qt.Key.Key_Equal]:
-            self._pgPointSize += 1
+            self._pgPointSize *= 5
+            logger.info(f'_pgPointSize:{self._pgPointSize}')
             self._replot()
         elif key in [QtCore.Qt.Key.Key_Minus]:
-            self._pgPointSize -= 1
+            self._pgPointSize -= 10
             if self._pgPointSize < 0:
                 self._pgPointSize = 0
+            logger.info(f'_pgPointSize:{self._pgPointSize}')
             self._replot()
 
         # elif key == QtCore.Qt.Key_C:

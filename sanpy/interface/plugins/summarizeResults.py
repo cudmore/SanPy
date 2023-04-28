@@ -168,7 +168,7 @@ class SummarizeResults(sanpyPlugin):
             self.cardiacDf = self.ba.dfError
 
         else:
-            logger.warning(f'Did not understand _reportType:{_reportType}')
+            logger.warning(f'Did not understand _reportType:{self._reportType}')
 
         if self.cardiacDf is None:
             return
@@ -203,7 +203,7 @@ def main():
     import sys
 
     app = QtWidgets.QApplication([])
-    rt = resultsTable2(ba=ba)
+    rt = SummarizeResults(ba=ba)
     rt.show()
     sys.exit(app.exec_())
 

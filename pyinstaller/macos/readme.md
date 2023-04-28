@@ -52,6 +52,8 @@ pip install --upgrade pip
 
 This is all for SanPy
 
+conda install -y numpy pandas==1.5.3 scipy scikit-image==0.19.3 tifffile h5py requests
+
 ```
 conda install -y numpy
 conda install -y pandas==1.5.3
@@ -77,7 +79,9 @@ pip install pyqtdarktheme
 
 ## 3. Install modified version of SanPy
 
-I modified SanPy/setup.py to install no dependencies. For normal operation we have to use `pip install -e ".[gui]"`
+I modified SanPy/setup.py to install no dependencies. For normal install we have to use `pip install -e ".[gui]"`
+
+Use this to not install dependencies (we installed above with conda)
 
 ```
 pip install -e "../../."
@@ -85,15 +89,45 @@ pip install -e "../../."
 
 # Check which arch the python kernel is running in
 
-We don't want any reference to `x86_64` or `i386`.
-
 python -c 'import platform; print(platform.platform())'
 
 ```
+# arm
 macOS-12.4-arm64-arm-64bit
 
-# was previously
+# x86
 # macOS-10.16-x86_64-i386-64bit
+```
+
+# install my branch of pyinstaller
+
+This branch removes DS_Store so codesign and notarize work
+
+```
+pip install -e ~/Sites/pyinstaller/.
+```
+
+# Run pyinstaller script
+
+```
+python macos_build.py
+```
+
+# New Errors
+
+April 28, 2023
+
+See:
+    https://stackoverflow.com/questions/62903775/intel-mkl-error-using-conda-and-matplotlib-library-not-loaded-rpath-libiomp5
+
+See also:
+    https://stackoverflow.com/questions/35478526/pyinstaller-numpy-intel-mkl-fatal-error-cannot-load-mkl-intel-thread-dll
+    
+```
+INTEL MKL ERROR: dlopen(/Users/cudmore/Sites/SanPy/pyinstaller/macos/dist_x86/SanPy.app/Contents/MacOS/libmkl_intel_thread.1.dylib, 0x0009): Library not loaded: @rpath/libiomp5.dylib
+  Referenced from: <F8EB4FC6-5255-330A-90E0-90B2F3E5F7E1> /Users/cudmore/Sites/SanPy/pyinstaller/macos/dist_x86/SanPy.app/Contents/Resources/libmkl_intel_thread.1.dylib
+  Reason: tried: '/usr/lib/libiomp5.dylib' (no such file, not in dyld cache).
+Intel MKL FATAL ERROR: Cannot load libmkl_intel_thread.1.dylib.
 ```
 
 # Next steps
