@@ -5979,7 +5979,7 @@ Spike detection, Error checking, Plotting, and Saving.</p>
         <span class="k">for</span> <span class="n">_spikeNumber</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numSpikes</span><span class="p">):</span>
             <span class="n">spike</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">_spikeNumber</span><span class="p">]</span>
             <span class="c1"># spike is sanpy.bAnalysisResults.analysisResult</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;spike:&#39;</span><span class="p">,</span> <span class="n">spike</span><span class="p">)</span>
+            <span class="c1">#print(&#39;spike:&#39;, spike)</span>
             <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">spike</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]:</span>
                 <span class="c1"># spike[&quot;errors&quot;] is a list of dict</span>
                 <span class="c1"># error is dict from _getErrorDict</span>
@@ -6801,7 +6801,7 @@ Spike detection, Error checking, Plotting, and Saving.</p>
     <span class="k">for</span> <span class="n">_spikeNumber</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">numSpikes</span><span class="p">):</span>
         <span class="n">spike</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">[</span><span class="n">_spikeNumber</span><span class="p">]</span>
         <span class="c1"># spike is sanpy.bAnalysisResults.analysisResult</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;spike:&#39;</span><span class="p">,</span> <span class="n">spike</span><span class="p">)</span>
+        <span class="c1">#print(&#39;spike:&#39;, spike)</span>
         <span class="k">for</span> <span class="n">error</span> <span class="ow">in</span> <span class="n">spike</span><span class="p">[</span><span class="s2">&quot;errors&quot;</span><span class="p">]:</span>
             <span class="c1"># spike[&quot;errors&quot;] is a list of dict</span>
             <span class="c1"># error is dict from _getErrorDict</span>
