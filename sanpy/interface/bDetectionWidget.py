@@ -5,7 +5,7 @@ import time
 
 # import inspect # to print call stack
 from functools import partial
-from typing import Union, Dict, List, Tuple
+from typing import Union, Dict, List, Tuple, Optional
 
 import numpy as np
 
@@ -47,11 +47,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.ba : sanpy.bAnalysis = ba
         self.myMainWindow: "sanpy.interface.SanPyWindow" = mainWindow
 
+        self._pgPointSize = 10  # use +/- to increase decrease
+
         self._blockSlots: bool = False
-
-        # self.mySetTheme()
-
-        # self._sweepNumber = None  # 'All'
 
         self._selectedSpikeList: List[int] = None
 
@@ -64,6 +62,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.linearRegionItem2 = None  # rectangle over global Vm
         self.clipLines = None
         self.meanClipLine = None
+
+        self._showCrosshair = False
 
         self.myPlotList = []
 
@@ -316,7 +316,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # this is done in analysisDir.xxx()
         # setCellValue(self, rowIdx, colStr, value)
 
-        self.replot()  # replot statistics over traces
+        self.replotOverlays()  # replot statistics over traces
 
         # 20210821
         # refresh spike clips
@@ -456,10 +456,14 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # update detection toolbar
         if set_xyBoth == "xAxis":
-            self.detectToolbarWidget.startSeconds.setValue(start)
-            self.detectToolbarWidget.startSeconds.repaint()
-            self.detectToolbarWidget.stopSeconds.setValue(stop)
-            self.detectToolbarWidget.stopSeconds.repaint()
+            # 20230419
+            # self.detectToolbarWidget.startSeconds.setValue(start)
+            # self.detectToolbarWidget.startSeconds.repaint()
+            # self.detectToolbarWidget.stopSeconds.setValue(stop)
+            # self.detectToolbarWidget.stopSeconds.repaint()
+            self.detectToolbarWidget._startSec = start
+            self.detectToolbarWidget._stopSec = stop
+
         # else:
         #    print('todo: add interface for y range in bDetectionWidget._setAxis()')
 
@@ -468,7 +472,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         return start, stop
 
-    def old_setAxis_OnFileChange(self, startSec, stopSec):
+    def _old_setAxis_OnFileChange(self, startSec, stopSec):
         if (
             startSec is None
             or stopSec is None
@@ -510,7 +514,8 @@ class bDetectionWidget(QtWidgets.QWidget):
             logger.error(f'Did not understand thisAxis:"{thisAxis}"')
 
     def setAxisFull(self):
-        """Set full axis for (deriv, daq, vm, clips)."""
+        """Set full axis for (deriv, daq, vm, clips).
+        """
         if self.ba is None:
             return
 
@@ -539,11 +544,14 @@ class bDetectionWidget(QtWidgets.QWidget):
         # update detection toolbar
         start = 0
         stop = self.ba.fileLoader.recordingDur
-        self.detectToolbarWidget.startSeconds.setValue(start)
-        self.detectToolbarWidget.startSeconds.repaint()
-        self.detectToolbarWidget.stopSeconds.setValue(stop)
-        self.detectToolbarWidget.stopSeconds.repaint()
-
+        # removed 20230419
+        # self.detectToolbarWidget.startSeconds.setValue(start)
+        # self.detectToolbarWidget.startSeconds.repaint()
+        # self.detectToolbarWidget.stopSeconds.setValue(stop)
+        # self.detectToolbarWidget.stopSeconds.repaint()
+        self.detectToolbarWidget._startSec = start
+        self.detectToolbarWidget._stopSec = stop
+        
         # todo: make this a signal, with slot in main window
         if self.myMainWindow is not None:
             # currently, this will just update scatte plot
@@ -679,7 +687,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # print ('  returning', len(x), len(y))
         return x, y
 
-    def old_getHalfWidths(self):
+    def _old_getHalfWidths(self):
         """Get x/y pair for plotting all half widths."""
         # defer until we know how many half-widths 20/50/80
         x = []
@@ -734,7 +742,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         #
         return x, y
 
-    def replot(self, oneIndex=None):
+    def replotOverlays(self, oneIndex=None):
         """Replot analysis results overlays.
 
         Parameters
@@ -745,11 +753,29 @@ class bDetectionWidget(QtWidgets.QWidget):
         if self.ba is None:
             return
 
+        # get marker symbols once (for spikes we are plotting)
+        # if _spikeNumbers is None then no spikes
+        _spikeNumbers = self.ba.getStat('spikeNumber', sweepNumber=self.sweepNumber)
+        
+        _n = None
+        if _spikeNumbers is not None:
+            _n = len(_spikeNumbers)
+        logger.info(f'fetching {_n} markers and colors -- WILL  BE SLOW')
+        
+        _plotMarkerDict = sanpy.interface.plugins.getPlotMarkersAndColors(self.ba, _spikeNumbers)
+        markerList_pg = _plotMarkerDict['markerList_pg']
+        faceColors = _plotMarkerDict['faceColors']
+
         for idx, plot in enumerate(self.myPlots):
             if oneIndex is not None and idx != oneIndex:
                 continue
+            
+            #print(plot)
+            
             xPlot = []
             yPlot = []
+            markers = []
+            colors = []
             plotIsOn = plot["plotIsOn"]
             #  TODO: fix the logic here, we are not calling replot() when user toggles plot radio checkboxes
             # plotIsOn = True
@@ -764,6 +790,8 @@ class bDetectionWidget(QtWidgets.QWidget):
                 xPlot, yPlot = sanpy.analysisUtil.getHalfWidthLines(
                     sweepX, sweepY, spikeDictionaries
                 )
+                self.myPlotList[idx].setData(x=xPlot, y=yPlot)
+
             elif plotIsOn and plot["humanName"] == "Epoch Lines":
                 # vertical lines showing epoch within a sweep
                 _epochTable = self.ba.fileLoader.getEpochTable(self.sweepNumber)
@@ -774,10 +802,16 @@ class bDetectionWidget(QtWidgets.QWidget):
                     xPlot, yPlot = _epochTable.getEpochLines(
                         yMin=np.nanmin(sweepY), yMax=np.nanmax(sweepY)
                     )
+                self.myPlotList[idx].setData(x=xPlot, y=yPlot)
+
             elif plotIsOn and plot["humanName"] == "EDD":
                 xPlot, yPlot = self.getEDD()
+                self.myPlotList[idx].setData(x=xPlot, y=yPlot)
+
             elif plotIsOn and plot["humanName"] == "EDD Rate":
                 xPlot, yPlot = sanpy.analysisUtil.getEddLines(self.ba)
+                self.myPlotList[idx].setData(x=xPlot, y=yPlot)
+
             elif plotIsOn:
                 xPlot, yPlot = self.ba.getStat(
                     plot["x"], plot["y"], sweepNumber=self.sweepNumber
@@ -786,12 +820,27 @@ class bDetectionWidget(QtWidgets.QWidget):
                     xPlot = [
                         self.ba.fileLoader.pnt2Sec_(x) for x in xPlot
                     ]  # convert pnt to sec
-            #
-            # added connect='finite' to respect nan in half-width
-            # not sure how connect='finite' affect all other plots using scatter???
-            # print(f'{plot}')
-            # print('  ', xPlot, yPlot)
-            self.myPlotList[idx].setData(x=xPlot, y=yPlot)
+                
+                _brushList = [None] * len(xPlot)
+                #_penList = [None] * len(xPlot)
+                
+                #print('faceColors:', faceColors)
+                #print('markerList_pg:', markerList_pg)
+                
+                if faceColors is not None:
+                    for _idx in range(len(xPlot)):
+                        _brushList[_idx] = pg.mkBrush(faceColors[_idx])
+                        #_penList[_idx] = pg.mkPen(faceColors[_idx])
+                
+                # use symbolBrush, not brush
+                # see: https://stackoverflow.com/questions/41060163/pyqtgraph-scatterplotitem-setbrush
+                self.myPlotList[idx].setData(x=xPlot, y=yPlot,
+                                             symbolBrush=_brushList,
+                                             #brush=_brushList,
+                                             pen=None,
+                                             symbol=markerList_pg,
+                                             size=self._pgPointSize)
+
             # self.togglePlot(idx, plot['plotIsOn'])
 
         # update label with number of spikes detected
@@ -848,7 +897,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             # self.myPlotList[idx].setSize(0)
 
         # always replot everything
-        self.replot(oneIndex=idx)
+        self.replotOverlays(oneIndex=idx)
 
     def selectSweep(
         self, sweepNumber, startSec=None, stopSec=None, doEmit=True, doReplot=True
@@ -1048,9 +1097,10 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         self._blockSlots = False
 
-    def selectSpikeList(
-        self, spikeList: List[int], doZoom: bool = False, doEmit: bool = False
-    ):
+    def selectSpikeList(self,
+                        spikeList: List[int],
+                        doZoom: bool = False,
+                        doEmit: bool = False):
         """Visually select a number of spikes.
 
         Parameters
@@ -1065,6 +1115,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         x = None
         y = None
+        markerList_pg = None
 
         if len(spikeList) > 0:
             _xSweepSpikeNumber = self.ba.getStat(
@@ -1099,9 +1150,18 @@ class bDetectionWidget(QtWidgets.QWidget):
             #     logger.warning(f'  We are not looking at the correct sweep, self.sweepNumber:{self.sweepNumber}')
             #     return
 
+            # make selection symbol match user type
+            # remember, not all selected spikes are in the sweep we are showing
+            _plotMarkerDict = sanpy.interface.plugins.getPlotMarkersAndColors(self.ba, _sweepSpikeList)
+            markerList_pg = _plotMarkerDict['markerList_pg']
+
         self._selectedSpikeList = spikeList
 
         self.mySpikeListScatterPlot.setData(x=x, y=y)
+        
+        # set symbol for userType
+        if markerList_pg is not None:
+            self.mySpikeListScatterPlot.setSymbol(markerList_pg)
 
         # TODO: I don't think anybody is listening to this
         if doEmit:
@@ -1113,11 +1173,11 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "doZoom": doZoom,
                 "ba": self.ba,
             }
-            logger.info(f"  -->> emit signalSelectSpikeList eDict:{eDict}")
+            logger.info(f"  -->> emit signalSelectSpikeList eDict")
             self.signalSelectSpikeList.emit(eDict)
             self._blockSlots = False
 
-    def old_refreshClips(self, xMin=None, xMax=None):
+    def _old_refreshClips(self, xMin=None, xMax=None):
         if not self.clipPlot.isVisible():
             # clips are not being displayed
             # logger.info('Clips not visible --- RETURNING')
@@ -1247,7 +1307,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             # Toggle overlay of stats like (TOP, spike peak, half-width, ...)
             self.togglePlot(item, on)  # assuming item is int !!!
 
-    def old_kymographChanged(self, event):
+    def _old_kymographChanged(self, event):
         """
         User finished gragging the ROI
 
@@ -1329,10 +1389,10 @@ class bDetectionWidget(QtWidgets.QWidget):
         )
 
         # v1
-        # self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget)
+        self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget)
         # v2
-        _hSplitter.addWidget(self.detectToolbarWidget)
-        self.myHBoxLayout_detect.addWidget(_hSplitter)
+        # _hSplitter.addWidget(self.detectToolbarWidget)
+        # self.myHBoxLayout_detect.addWidget(_hSplitter)
 
         # kymograph, we need a vboxlayout to hollder (kym widget, self.view)
         vBoxLayoutForPlot = QtWidgets.QVBoxLayout(self)
@@ -1375,7 +1435,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         row += rowSpan
         """
 
-        #
+        # addPlot return a plotItem
         rowSpan = 1
         self.vmPlotGlobal = self.view.addPlot(
             row=row, col=0, rowSpan=rowSpan, colSpan=colSpan
@@ -1399,6 +1459,16 @@ class bDetectionWidget(QtWidgets.QWidget):
             row=row, col=0, rowSpan=rowSpan, colSpan=colSpan
         )
         self.vmPlot.enableAutoRange()
+
+        # show hover text when showing crosshairs
+        self._displayHoverText= pg.TextItem(text='xxx hover', color=(200,200,200), anchor=(1,1))
+        self._displayHoverText.hide()
+        self.vmPlot.addItem(self._displayHoverText)
+
+        self._displayHoverText_deriv = pg.TextItem(text='xxx hover', color=(200,200,200), anchor=(1,1))
+        self._displayHoverText_deriv.hide()
+        self.derivPlot.addItem(self._displayHoverText_deriv)
+
         # row += rowSpan
         # rowSpan = 1
         # self.clipPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
@@ -1456,9 +1526,9 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # trying to implement mouse moved events
         self.myProxy = pg.SignalProxy(
-            self.vmPlot.scene().sigMouseMoved, rateLimit=60, slot=self.myMouseMoved
+            self.vmPlot.scene().sigMouseMoved, rateLimit=60, slot=self._myMouseMoved
         )
-        # self.vmPlot.scene().sigMouseMoved.connect(self.myMouseMoved)
+        # self.vmPlot.scene().sigMouseMoved.connect(self._myMouseMoved)
 
         # does not have setStyleSheet
         # self.derivPlot.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
@@ -1555,23 +1625,33 @@ class bDetectionWidget(QtWidgets.QWidget):
             elif plot["plotOn"] == "dvdt":
                 self.derivPlot.addItem(myScatterPlot)
 
-        self.replot()
+        self.replotOverlays()
 
         vBoxLayoutForPlot.addWidget(self.view)
 
         # v1
-        #self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot)
+        self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot)
         # v2
-        _tmpSplitterWidget = QtWidgets.QWidget()
-        _tmpSplitterWidget.setLayout(vBoxLayoutForPlot)
-        _hSplitter.addWidget(_tmpSplitterWidget)
+        # _tmpSplitterWidget = QtWidgets.QWidget()
+        # _tmpSplitterWidget.setLayout(vBoxLayoutForPlot)
+        # _hSplitter.addWidget(_tmpSplitterWidget)
 
     def toggleCrosshair(self, onOff):
+        """Toggle mouse crosshair on and off.
+        """
+        self._showCrosshair = onOff
+        if onOff:
+            self._displayHoverText.show()
+            self._displayHoverText_deriv.show()
+        else:
+            self._displayHoverText.hide()
+            self._displayHoverText_deriv.hide()
+
         for plotName in self.crosshairDict.keys():
             self.crosshairDict[plotName]["h"].setVisible(onOff)
             self.crosshairDict[plotName]["v"].setVisible(onOff)
 
-    def myMouseMoved(self, event):
+    def _myMouseMoved(self, event):
         """Respond to mouse moves.
 
             Update cursor position
@@ -1583,7 +1663,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # looking directly at checkbox in myDetectionToolbarWidget2
         # _crossHairIsOn = self.detectToolbarWidget.crossHairCheckBox.isChecked()
-        if not self.detectToolbarWidget.crossHairCheckBox.isChecked():
+       #if not self.detectToolbarWidget.crossHairCheckBox.isChecked():
+        if not self._showCrosshair:
             return
 
         pos = event[0]  ## using signal proxy turns original arguments into a tuple
@@ -1604,6 +1685,17 @@ class bDetectionWidget(QtWidgets.QWidget):
             # hide the horizontal in vmPlot
             self.crosshairDict["vmPlot"]["v"].show()
             self.crosshairDict["vmPlot"]["h"].hide()
+
+            x = mousePoint.x()
+            y = mousePoint.y()
+
+            x = round(x,4)
+            y = round(y,4)
+
+            if self._showCrosshair:
+                _hoverText = f'x:{x} \n y:{y}'
+                self._displayHoverText_deriv.setText(_hoverText)
+                self._displayHoverText_deriv.setPos(x, y)
 
         elif self.dacPlot.sceneBoundingRect().contains(pos):
             # dac
@@ -1631,6 +1723,23 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.crosshairDict["derivPlot"]["v"].show()
             self.crosshairDict["derivPlot"]["h"].hide()
 
+            #
+            # 20230419 implementing mouse hover tooltip
+            # moved to _buildUI()
+            # self._displayHoverText= pg.TextItem(text='444',color=(176,23,31),anchor=(1,1))
+            # self.vmPlot.addItem(self._displayHoverText)
+
+            if self._showCrosshair:
+                x = mousePoint.x()
+                y = mousePoint.y()
+
+                x = round(x,4)
+                y = round(y,4)
+
+                _hoverText = f'x:{x} \n y:{y}'
+                self._displayHoverText.setText(_hoverText)
+                self._displayHoverText.setPos(x, y)
+
         # elif self.clipPlot.sceneBoundingRect().contains(pos):
         #    # clip
         #    inPlot = 'clipPlot'
@@ -1646,19 +1755,36 @@ class bDetectionWidget(QtWidgets.QWidget):
         if inPlot == "derivPlot":
             self.crosshairDict["dacPlot"]["v"].setPos(mousePoint.x())
             self.crosshairDict["vmPlot"]["v"].setPos(mousePoint.x())
+            if self._showCrosshair:
+                self._displayHoverText_deriv.show()
+                self._displayHoverText.hide()
+
         elif inPlot == "dacPlot":
             self.crosshairDict["derivPlot"]["v"].setPos(mousePoint.x())
             self.crosshairDict["vmPlot"]["v"].setPos(mousePoint.x())
+            self._displayHoverText.hide()
+            if self._showCrosshair:
+                self._displayHoverText_deriv.hide()
+                self._displayHoverText.hide()
+
         if inPlot == "vmPlot":
             self.crosshairDict["derivPlot"]["v"].setPos(mousePoint.x())
             self.crosshairDict["dacPlot"]["v"].setPos(mousePoint.x())
+            if self._showCrosshair:
+                self._displayHoverText_deriv.hide()
+                self._displayHoverText.show()
 
-        if mousePoint is not None:
-            x = mousePoint.x()
-            y = mousePoint.y()
+        # if mousePoint is not None:
+        #     x = mousePoint.x()
+        #     y = mousePoint.y()
 
         # x/y can still be None
-        self.detectToolbarWidget.setMousePositionLabel(x, y)
+        # removed 20230419 on adding _displayHoverText
+        # self.detectToolbarWidget.setMousePositionLabel(x, y)
+
+        # _hoverText = f'x:{x} \n y:{y}'
+        # self._displayHoverText.setText(_hoverText)
+        # self._displayHoverText.setPos(mousePoint.x(), mousePoint.y())
 
     def keyPressEvent(self, event):
         """Respond to user key press.
@@ -1687,9 +1813,18 @@ class bDetectionWidget(QtWidgets.QWidget):
         elif key == QtCore.Qt.Key.Key_Escape:
             self.myMainWindow.mySignal("cancel all selections")
 
-        elif key == QtCore.Qt.Key_C:
-            logger.warning("what was this for ??? responding to keyboard C ???")
-            # self.setSpikeStat()
+        elif key in [QtCore.Qt.Key.Key_Plus, QtCore.Qt.Key.Key_Equal]:
+            self._pgPointSize += 1
+            self._replot()
+        elif key in [QtCore.Qt.Key.Key_Minus]:
+            self._pgPointSize -= 1
+            if self._pgPointSize < 0:
+                self._pgPointSize = 0
+            self._replot()
+
+        # elif key == QtCore.Qt.Key_C:
+        #     logger.warning("what was this for ??? responding to keyboard C ???")
+        #     # self.setSpikeStat()
 
     def slot_setSpikeStat(self, setSpikeStatEvent: dict):
         """Respond to changes from setSpikeStack plugin.
@@ -1710,8 +1845,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         # set the stat
         self.ba.setSpikeStat(spikeList, colStr, value)
 
-        logger.info(f"  -->> emit signalDetect")
-        self.signalDetect.emit(self.ba)  # underlying _abf has new rect
+        # logger.info(f"  -->> emit signalDetect")
+        # self.signalDetect.emit(self.ba)  # underlying _abf has new rect
 
     def slot_selectSweep(self, sweep: int):
         """Fake slot, not ising in emit/connect."""
@@ -1770,7 +1905,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.ba = ba
 
         if self.ba.loadError:
-            self.replot()
+            self.replotOverlays()
             fileName = self.ba.fileLoader.filename()  # tableRowDict['File']
             errStr = f'The bAnalysis file was flagged with loadError ... aborting: "{fileName}".'
             logger.error(errStr)
@@ -1792,7 +1927,9 @@ class bDetectionWidget(QtWidgets.QWidget):
             stopSec = self.ba.fileLoader.recordingDur
 
         # cancel spike selection
-        self.selectSpike(None)
+        self.selectSpikeList([])
+        # self.selectSpike(None)
+        # self.selectSpikeList(self._selectedSpikeList)
 
         # set sweep to 0
         self.selectSweep(0, startSec, stopSec, doEmit=False, doReplot=False)
@@ -1827,12 +1964,17 @@ class bDetectionWidget(QtWidgets.QWidget):
         """User has edited main file table."""
         self.detectToolbarWidget.slot_dataChanged(columnName, value, rowDict)
 
-    def slot_updateAnalysis(self):
-        self.replot()  # replot statistics over traces
-        # refresh spike clips
-        # self.refreshClips(None, None)
+    def slot_updateAnalysis(self, sDict : dict):
+        logger.info('')
+        self.replotOverlays()  # replot statistics over traces
+        
+        # reselect selected spikes on analysis changed
+        # this is needed to refresh the symbols of the selection
+        self.selectSpikeList(self._selectedSpikeList)
 
-    def _replot(self, startSec, stopSec, userUpdate=False):
+    def _replot(self, startSec : Optional[float] = None,
+                stopSec : Optional[float] = None,
+                userUpdate : bool = False):
         """Full replot.
 
         Parameters
@@ -1930,6 +2072,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         # remove and re-add plot overlays
         for idx, plot in enumerate(self.myPlots):
             plotItem = self.myPlotList[idx]
+            
+            # moved to rpelotOverlays
+            # adjust symbol size
+            # plotItem.setSymbolSize(self._pgPointSize)
+            # plotItem.setSymbol(_pg_symbols)
+
             if plot["plotOn"] == "vm":
                 self.vmPlot.removeItem(plotItem)
                 self.vmPlot.addItem(plotItem)
@@ -1959,7 +2107,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         #
         # critical, replot() is inherited
-        self.replot()
+        self.replotOverlays()
 
 
 class kymographImage(pg.ImageItem):
@@ -2184,6 +2332,10 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
         ev.accept()
 
     def contextMenuEvent(self, event):
+        """Show popup context menu in response to right(command)+click.
+        
+        This is inherited from QWidget.
+        """
         myType = self.myType
 
         """
@@ -2193,17 +2345,28 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
         """
 
         contextMenu = QtWidgets.QMenu()
+
+        showCrosshairAction = contextMenu.addAction(f"Crosshair")
+        showCrosshairAction.setCheckable(True)
+        showCrosshairAction.setChecked(self.detectionWidget._showCrosshair)
+        
+        contextMenu.addSeparator()
+
         exportTraceAction = contextMenu.addAction(f"Export Trace {myType}")
         contextMenu.addSeparator()
+
         resetAllAxisAction = contextMenu.addAction(f"Reset All Axis")
         resetYAxisAction = contextMenu.addAction(f"Reset Y-Axis")
         # openAct = contextMenu.addAction("Open")
         # quitAct = contextMenu.addAction("Quit")
         # action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+
+        # show menu
         posQPoint = QtCore.QPoint(event.screenPos().x(), event.screenPos().y())
         action = contextMenu.exec_(posQPoint)
         if action is None:
             return
+        
         actionText = action.text()
         if actionText == f"Export Trace {myType}":
             #
@@ -2225,14 +2388,7 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
 
             path = self.detectionWidget.ba.fileLoader.filepath
 
-            # xMin = None
-            # xMax = None
-            # if self.myType in ['clip', 'meanclip']:
-            #    xMin, xMax = self.detectionWidget.clipPlot.getAxis('bottom').range
-            # else:
-            #    xMin, xMax = self.detectionWidget.getXRange()
             xMin, xMax = self.detectionWidget.getXRange()
-            # print('  xMin:', xMin, 'xMax:', xMax)
 
             if self.myType in ["vm", "dvdt"]:
                 xMargin = 2  # seconds
@@ -2255,12 +2411,21 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
             exportWidget.show()
 
             self.exportWidgetList.append(exportWidget)
+
         elif actionText == "Reset All Axis":
             # print('Reset Y-Axis', self.myType)
             self.detectionWidget.setAxisFull()
+
         elif actionText == "Reset Y-Axis":
             # print('Reset Y-Axis', self.myType)
             self.detectionWidget.setAxisFull_y(self.myType)
+
+        elif actionText == 'Crosshair':
+            isChecked = action.isChecked()
+            #isChecked = not isChecked
+            logger.info(f'{actionText} {isChecked}')
+            self.detectionWidget.toggleCrosshair(isChecked)
+            
         else:
             logger.warning(f"action not taken: {action}")
 
@@ -2335,8 +2500,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             # stopSeconds = self.detectionWidget.ba.sweepX[-1]
             stopSeconds = self.detectionWidget.ba.fileLoader.recordingDur
 
-        self.startSeconds.setValue(startSeconds)
-        self.stopSeconds.setValue(stopSeconds)
+        # removed 20230419
+        # self.startSeconds.setValue(startSeconds)
+        # self.stopSeconds.setValue(stopSeconds)
 
     """
     def sweepSelectionChange(self,i):
@@ -2406,8 +2572,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # update combobox
         # self.sweepComboBox.setCurrentIndex(newSweep+1)
 
-    # @QtCore.pyqtSlot()
-    def on_start_stop(self):
+    def _old_on_start_stop(self):
+        """Respond to user changing start/stop seconds
+        """
         start = self.startSeconds.value()
         stop = self.stopSeconds.value()
 
@@ -2421,8 +2588,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
     def on_plot_every(self):
         logger.info("TODO: update plots with plot every.")
 
-    # @QtCore.pyqtSlot()
-    def on_button_click(self, name):
+    def _on_button_click(self, name):
         """User clicked a button."""
         logger.info(f'User clicked button "{name}"')
 
@@ -2442,8 +2608,13 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
                 str = "Please set a threshold greater than 0"
                 self.detectionWidget.updateStatusBar(str)
                 return
-            startSec = self.startSeconds.value()
-            stopSec = self.stopSeconds.value()
+            
+            # removed 20230419
+            # startSec = self.startSeconds.value()
+            # stopSec = self.stopSeconds.value()
+            startSec = self._startSec
+            stopSec = self._stopSec
+
             #
             detectionType = sanpy.bDetection.detectionTypes.dvdt
             self.detectionWidget.detect(
@@ -2466,10 +2637,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             # was this, switching to detection class
             # dvdtThreshold = None
 
-            # print('    dvdtThreshold:', dvdtThreshold)
-            # print('    mvThreshold:', mvThreshold)
-            startSec = self.startSeconds.value()
-            stopSec = self.stopSeconds.value()
+            # startSec = self.startSeconds.value()
+            # stopSec = self.stopSeconds.value()
+            startSec = self._startSec
+            stopSec = self._stopSec
+
             #
             detectionType = sanpy.bDetection.detectionTypes.mv
             self.detectionWidget.detect(
@@ -2494,13 +2666,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             self.on_sweep_change_2("previous")
         elif name == ">":
             self.on_sweep_change_2("next")
-
-        # elif name == 'Explore':
-        #    # open bScatterPlot2 for one recording
-        #    self.detectionWidget.exploreSpikes()
-
-        # elif name == 'Error':
-        #    self.detectionWidget.ba.errorReport()
 
         elif name == "Go":
             spikeNumber = self.spikeNumber.value()
@@ -2533,7 +2698,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # print('on_check_click() text:', checkbox.text(), 'isChecked:', isChecked, 'idx:', idx)
         self.detectionWidget.toggleInterface(idx, isChecked)
 
-    def on_crosshair_clicked(self, value):
+    def _old_on_crosshair_clicked(self, value):
         # print('on_crosshair_clicked() value:', value)
         onOff = value == 2
         self.detectionWidget.toggleCrosshair(onOff)
@@ -2567,6 +2732,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             logger.warning(f'did not understand panelName "{panelName}"')
 
     def _buildUI(self):
+        """
+        Notes
+        -----
+        Using setFixedWidth()
+        """
         myPath = os.path.dirname(os.path.abspath(__file__))
 
         windowOptions = self.detectionWidget.getMainWindowOptions()
@@ -2584,6 +2754,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             showGlobalVm = windowOptions["rawDataPanels"]["Full Recording"]
 
         # April 15, 2023, removed when adding horizontal splitter
+        #self.setFixedWidth(280)
         self.setFixedWidth(280)
 
         # why do I need self here?
@@ -2593,9 +2764,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.mainLayout.setContentsMargins(0,0,0,0)
 
         # Show selected file
-        self.mySelectedFileLabel = QtWidgets.QLabel("None")
-        self.mySelectedFileLabel.setContentsMargins(0,0,0,0)
-        self.mainLayout.addWidget(self.mySelectedFileLabel)
+        # self.mySelectedFileLabel = QtWidgets.QLabel("None")
+        # self.mySelectedFileLabel.setContentsMargins(0,0,0,0)
+        # self.mainLayout.addWidget(self.mySelectedFileLabel)
 
         #
         # detection parameters group
@@ -2641,7 +2812,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         buttonName = "Detect dV/dt"
         button = QtWidgets.QPushButton(buttonName)
         button.setToolTip("Detect spikes using dV/dt threshold.")
-        button.clicked.connect(partial(self.on_button_click, buttonName))
+        button.clicked.connect(partial(self._on_button_click, buttonName))
 
         # row = 0
         rowSpan = 1
@@ -2649,6 +2820,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)
 
         self.dvdtThreshold = QtWidgets.QDoubleSpinBox()
+        self.dvdtThreshold.setToolTip("dV/dt threshold.")
         self.dvdtThreshold.setMinimum(0)
         self.dvdtThreshold.setMaximum(+1e6)
         self.dvdtThreshold.setValue(detectDvDt)
@@ -2662,7 +2834,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         buttonName = "Detect mV"
         button = QtWidgets.QPushButton(buttonName)
         button.setToolTip("Detect spikes using mV threshold.")
-        button.clicked.connect(partial(self.on_button_click, buttonName))
+        button.clicked.connect(partial(self._on_button_click, buttonName))
         detectionGridLayout.addWidget(button, row, 0, rowSpan, columnSpan)
 
         # Vm Threshold (mV)
@@ -2671,37 +2843,47 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         # row += 1
         self.mvThreshold = QtWidgets.QDoubleSpinBox()
+        self.mvThreshold.setToolTip("mV threshold.")
         self.mvThreshold.setMinimum(-1e6)
         self.mvThreshold.setMaximum(+1e6)
         self.mvThreshold.setValue(detectMv)
         detectionGridLayout.addWidget(self.mvThreshold, row, 2, rowSpan, columnSpan)
 
-        # tmpRowSpan = 1
-        # tmpColSpan = 2
-        row += 1
-        startSeconds = QtWidgets.QLabel("From (s)")
-        detectionGridLayout.addWidget(startSeconds, row, 0)
+        # removed 20230419
+        # decided to not show start/stop seconds ???
         #
-        self.startSeconds = QtWidgets.QDoubleSpinBox()
-        self.startSeconds.setMinimum(-1e6)
-        self.startSeconds.setMaximum(+1e6)
-        self.startSeconds.setKeyboardTracking(False)
-        self.startSeconds.setValue(0)
-        # self.startSeconds.valueChanged.connect(self.on_start_stop)
-        self.startSeconds.editingFinished.connect(self.on_start_stop)
-        detectionGridLayout.addWidget(self.startSeconds, row, 1)
-        #
-        stopSeconds = QtWidgets.QLabel("To (s)")
-        detectionGridLayout.addWidget(stopSeconds, row, 2)
 
-        self.stopSeconds = QtWidgets.QDoubleSpinBox()
-        self.stopSeconds.setMinimum(-1e6)
-        self.stopSeconds.setMaximum(+1e6)
-        self.stopSeconds.setKeyboardTracking(False)
-        self.stopSeconds.setValue(0)
-        # self.stopSeconds.valueChanged.connect(self.on_start_stop)
-        self.stopSeconds.editingFinished.connect(self.on_start_stop)
-        detectionGridLayout.addWidget(self.stopSeconds, row, 3)
+        self._startSeconds = 0
+        self._stopSeconds = 0
+
+        # instead, we need a member variable to keep track of this
+        # see
+        # self._startSec and self._stopSec
+        
+        # row += 1
+
+        # startSeconds = QtWidgets.QLabel("From (s)")
+        # detectionGridLayout.addWidget(startSeconds, row, 0)
+
+        # self.startSeconds = QtWidgets.QDoubleSpinBox()
+        # self.startSeconds.setMinimum(-1e6)
+        # self.startSeconds.setMaximum(+1e6)
+        # self.startSeconds.setKeyboardTracking(False)
+        # self.startSeconds.setValue(0)
+        # self.startSeconds.editingFinished.connect(self._on_start_stop)
+        # detectionGridLayout.addWidget(self.startSeconds, row, 1)
+
+        # stopSeconds = QtWidgets.QLabel("To (s)")
+        # detectionGridLayout.addWidget(stopSeconds, row, 2)
+
+        # self.stopSeconds = QtWidgets.QDoubleSpinBox()
+        # self.stopSeconds.setMinimum(-1e6)
+        # self.stopSeconds.setMaximum(+1e6)
+        # self.stopSeconds.setKeyboardTracking(False)
+        # self.stopSeconds.setValue(0)
+        # # self.stopSeconds.valueChanged.connect(self.on_start_stop)
+        # self.stopSeconds.editingFinished.connect(self._on_start_stop)
+        # detectionGridLayout.addWidget(self.stopSeconds, row, 3)
 
         # removed april 15, 2023 to conserve space
         # row += 1
@@ -2723,9 +2905,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         row += 1
         buttonName = "Export Spike Report"
         button = QtWidgets.QPushButton(buttonName)
-        button.setToolTip("Save Detected Spikes to Excel file")
+        button.setToolTip("Save Detected Spikes to csv file")
         # button.setStyleSheet("background-color: green")
-        button.clicked.connect(partial(self.on_button_click, buttonName))
+        button.clicked.connect(partial(self._on_button_click, buttonName))
         rowSpan = 1
         colSpan = 4
         detectionGridLayout.addWidget(button, row, 0, rowSpan, colSpan)
@@ -2756,14 +2938,15 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self.previousSweepButton = QtWidgets.QPushButton(buttonName)
         self.previousSweepButton.setToolTip("Previous Sweep")
         self.previousSweepButton.clicked.connect(
-            partial(self.on_button_click, buttonName)
+            partial(self._on_button_click, buttonName)
         )
         buttonName = ">"
         self.nextSweepButton = QtWidgets.QPushButton(buttonName)
         self.nextSweepButton.setToolTip("Next Sweep")
-        self.nextSweepButton.clicked.connect(partial(self.on_button_click, buttonName))
+        self.nextSweepButton.clicked.connect(partial(self._on_button_click, buttonName))
 
         self.sweepComboBox = QtWidgets.QComboBox()
+        self.sweepComboBox.setToolTip("Select Sweep")
         self.sweepComboBox.currentTextChanged.connect(self.on_sweep_change)
         # will be set in self.slot_selectFile()
         # for sweep in range(self.detectionWidget.ba.numSweeps):
@@ -2802,21 +2985,22 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         displayGridLayout.addWidget(self.plotEverySpinBox, row, 1, tmpRowSpan, tmpColSpan)
         """
 
-        row += 1
-        self.crossHairCheckBox = QtWidgets.QCheckBox("Crosshair")
-        self.crossHairCheckBox.setChecked(False)
-        self.crossHairCheckBox.stateChanged.connect(self.on_crosshair_clicked)
-        tmpRowSpan = 1
-        tmpColSpan = 1
-        displayGridLayout.addWidget(
-            self.crossHairCheckBox, row, 0, tmpRowSpan, tmpColSpan
-        )
+        # removed in favor of showing tooltip on mouse move
+        # row += 1
+        # self.crossHairCheckBox = QtWidgets.QCheckBox("Crosshair")
+        # self.crossHairCheckBox.setChecked(False)
+        # self.crossHairCheckBox.stateChanged.connect(self.on_crosshair_clicked)
+        # tmpRowSpan = 1
+        # tmpColSpan = 1
+        # displayGridLayout.addWidget(
+        #     self.crossHairCheckBox, row, 0, tmpRowSpan, tmpColSpan
+        # )
 
-        # x/y coordinates of mouse in each of derivPlot, vmPlot, clipPlot)
-        self.mousePositionLabel = QtWidgets.QLabel("x:None\ty:None")
-        displayGridLayout.addWidget(
-            self.mousePositionLabel, row, 1, tmpRowSpan, tmpColSpan
-        )
+        # # x/y coordinates of mouse in each of derivPlot, vmPlot, clipPlot)
+        # self.mousePositionLabel = QtWidgets.QLabel("x:None\ty:None")
+        # displayGridLayout.addWidget(
+        #     self.mousePositionLabel, row, 1, tmpRowSpan, tmpColSpan
+        # )
 
         hBoxSpikeBrowser = self._buildSpikeBrowser()  # includes (Spike, Go, <<, >>, [])
         row += 1
@@ -2842,10 +3026,12 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             ba=self.detectionWidget.ba,
             bPlugin=self.detectionWidget.myMainWindow.myPlugins,
         )
-        setSpikeStatWidget.signalSetSpikeStat.connect(
-            self.detectionWidget.slot_setSpikeStat
-        )
-        # connect signal/slot
+
+        # signalSetSpikeStat is now in sanpyPlugin base class
+        # setSpikeStatWidget.signalSetSpikeStat.connect(
+        #     self.detectionWidget.slot_setSpikeStat
+        # )
+
         setSpikeLayout.addWidget(setSpikeStatWidget)
 
         self.setSpikeGroupBox.setLayout(setSpikeLayout)
@@ -2918,10 +3104,17 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # finalize
         self.setLayout(self.mainLayout)
 
-    def on_spike_number(self, spikeNumber):
-        logger.info(f"!!! THIS IS A PROBLEM spikeNumber:{spikeNumber}")
-        doZoom = False
-        self.detectionWidget.selectSpike(spikeNumber, doZoom, doEmit=True)
+    def _on_spike_number(self, spikeNumber):
+        """Respond to user setting spike number.
+        """
+        modifiers = QtWidgets.QApplication.keyboardModifiers()
+        isShift = modifiers == QtCore.Qt.ShiftModifier
+
+        self.detectionWidget.selectSpike(spikeNumber, isShift, doEmit=True)
+
+        # spikeNumber = self.spikeNumber.value()
+        # doZoom = isShift
+        # self.detectionWidget.selectSpike(spikeNumber, doZoom, doEmit=True)
 
     def _buildSpikeBrowser(self):
         """Build interface to go to spike number, previous <<, and next >>"""
@@ -2931,39 +3124,45 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # hBoxSpikeBrowser.addWidget(aLabel)
 
         # absolute spike number
-        self.spikeNumber = QtWidgets.QSpinBox()
-        self.spikeNumber.setMinimum(0)
-        self.spikeNumber.setMaximum(2**16)
-        self.spikeNumber.setKeyboardTracking(False)
-        self.spikeNumber.setValue(0)
-        self.spikeNumber.valueChanged.connect(self.on_spike_number)
-        # self.spikeNumber.editingFinished.connect(self.on_spike_number)
-        # self.spikeNumber.setKeyboardTracking(False)
-
-        hBoxSpikeBrowser.addWidget(self.spikeNumber)
-
-        buttonName = "Go"
-        button = QtWidgets.QPushButton(buttonName)
-        button.setToolTip("Go To Spike Number")
-        button.clicked.connect(partial(self.on_button_click, buttonName))
-        hBoxSpikeBrowser.addWidget(button)
+        aLabel = QtWidgets.QLabel('Spike')
+        hBoxSpikeBrowser.addWidget(aLabel)
 
         buttonName = "<<"
         button = QtWidgets.QPushButton(buttonName)
         button.setToolTip("Previous Spike")
-        button.clicked.connect(partial(self.on_button_click, buttonName))
+        button.clicked.connect(partial(self._on_button_click, buttonName))
         hBoxSpikeBrowser.addWidget(button)
+
+        self.spikeNumber = QtWidgets.QSpinBox()
+        self.spikeNumber.setToolTip("Go To Spike")
+        self.spikeNumber.setMinimum(0)
+        self.spikeNumber.setMaximum(2**16)
+        self.spikeNumber.setKeyboardTracking(False)
+        self.spikeNumber.setValue(0)
+        self.spikeNumber.valueChanged.connect(self._on_spike_number)
+        # self.spikeNumber.editingFinished.connect(self.on_spike_number)
+        # self.spikeNumber.setKeyboardTracking(False)
+        hBoxSpikeBrowser.addWidget(self.spikeNumber)
+
+        # 20230419 removing Go, <<, >>
+        # condense everything into self.spikeNumber QtWidgets.QSpinBox
+        
+        # buttonName = "Go"
+        # button = QtWidgets.QPushButton(buttonName)
+        # button.setToolTip("Go To Spike Number")
+        # button.clicked.connect(partial(self.on_button_click, buttonName))
+        # hBoxSpikeBrowser.addWidget(button)
 
         buttonName = ">>"
         button = QtWidgets.QPushButton(buttonName)
         button.setToolTip("Next Spike")
-        button.clicked.connect(partial(self.on_button_click, buttonName))
+        button.clicked.connect(partial(self._on_button_click, buttonName))
         hBoxSpikeBrowser.addWidget(button)
 
         buttonName = "[]"
-        button.setToolTip("Display Full Recording")
         button = QtWidgets.QPushButton(buttonName)
-        button.clicked.connect(partial(self.on_button_click, buttonName))
+        button.setToolTip("Display Full Recording")
+        button.clicked.connect(partial(self._on_button_click, buttonName))
         hBoxSpikeBrowser.addWidget(button)
 
         return hBoxSpikeBrowser
@@ -3044,7 +3243,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
     def slot_selectFile(self, rowDict):
         file = rowDict["File"]
-        self.mySelectedFileLabel.setText(file)
+        
+        #self.mySelectedFileLabel.setText(file)
 
         # handled in fill in detection parameters
         # set start(s) stop(s)
@@ -3109,10 +3309,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
                 self.dvdtThreshold.setValue(value)
             elif columnName == "mvThreshold":
                 self.mvThreshold.setValue(value)
-            elif columnName == "Start(s)" and not math.isnan(value):
-                self.startSeconds.setValue(value)
-            elif columnName == "Stop(s)" and not math.isnan(value):
-                self.stopSeconds.setValue(value)
+            # removed 20230419
+            # elif columnName == "Start(s)" and not math.isnan(value):
+            #     self.startSeconds.setValue(value)
+            # elif columnName == "Stop(s)" and not math.isnan(value):
+            #     self.stopSeconds.setValue(value)
         else:
             # entire row has updated
             dvdtThreshold = rowDict["dvdtThreshold"]
@@ -3122,12 +3323,14 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             self.dvdtThreshold.setValue(dvdtThreshold)
             mvThreshold = rowDict["mvThreshold"]
             self.mvThreshold.setValue(mvThreshold)
-            startSeconds = rowDict["Start(s)"]
-            if not math.isnan(startSeconds):
-                self.startSeconds.setValue(startSeconds)
-            stopSeconds = rowDict["Stop(s)"]
-            if not math.isnan(stopSeconds):
-                self.stopSeconds.setValue(stopSeconds)
+            
+            # removed 20230419
+            # startSeconds = rowDict["Start(s)"]
+            # if not math.isnan(startSeconds):
+            #     self.startSeconds.setValue(startSeconds)
+            # stopSeconds = rowDict["Stop(s)"]
+            # if not math.isnan(stopSeconds):
+            #     self.stopSeconds.setValue(stopSeconds)
 
 
 if __name__ == "__main__":

@@ -41,12 +41,10 @@ class ComboBox(QtWidgets.QComboBox):
 
 
 class SetSpikeStat(sanpyPlugin):
-    """Plugin to provide an interface to set spike stats like condition, userType, isBad, etc.
+    """Plugin to provide an interface to set spike stats like condition, userType, include, etc.
 
     Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
     """
-
-    signalSetSpikeStat = QtCore.Signal(dict)
 
     myHumanName = "Set Spike Stats"
     showInMenu = False
@@ -86,7 +84,7 @@ class SetSpikeStat(sanpyPlugin):
         vBoxLayout.addLayout(hBoxLayout)
 
         # popup with column types
-        _items = ["condition", "userType", "isBad"]
+        _items = ["condition", "userType", "include"]
         self._statComboBox = ComboBox()
         for item in _items:
             self._statComboBox.addItem(item)
@@ -108,7 +106,7 @@ class SetSpikeStat(sanpyPlugin):
         )
         hBoxLayout.addWidget(self._lineEdit, alignment=QtCore.Qt.AlignLeft)
 
-        # popup with true false (for some column types like 'isBad')
+        # popup with true false (for some column types like 'include')
         # switch to userType [1,2,3,4, ...]
         _items = ["True", "False"]
         self._valueComboBox = ComboBox()
@@ -138,19 +136,19 @@ class SetSpikeStat(sanpyPlugin):
 
         self._spikeLabel.setText(f"{len(_selectedSpikes)} Spikes")
 
-        # isBad sets combobox to trueFalseItems
+        # include sets combobox to trueFalseItems
         # userType sets combobox to userTypeItems
         colStr = self._statComboBox.currentText()
 
         # like a radio button, either one or the other but not both (disjoint)
-        trueFalseEnabled = colStr in ["isBad", "userType"]
+        trueFalseEnabled = colStr in ["include", "userType"]
         self._lineEdit.setEnabled(not trueFalseEnabled)
         self._valueComboBox.setEnabled(trueFalseEnabled)
 
         # switch items in combobox
         if "userType" in colStr:
             items = self.userTypeItems
-        elif colStr == "isBad":
+        elif colStr == "include":
             items = self.trueFalseItems
         else:
             items = None
@@ -168,7 +166,13 @@ class SetSpikeStat(sanpyPlugin):
         """Respond to user clicking the 'set' button."""
         colStr = self._statComboBox.currentText()
 
-        if colStr in ["isBad", "userType"]:
+        if colStr in ["include"]:
+            value = self._valueComboBox.currentText()
+            if value == 'True':
+                value = True
+            else:
+                value = False
+        elif colStr in ["userType"]:
             value = self._valueComboBox.currentText()
         else:
             value = self._lineEdit.text()
@@ -178,12 +182,13 @@ class SetSpikeStat(sanpyPlugin):
 
         # eventDict = setSpikeStatEvent
         setSpikeStatEvent = {}
+        setSpikeStatEvent['ba'] = self.ba
         setSpikeStatEvent["spikeList"] = self.getSelectedSpikes()
         setSpikeStatEvent["colStr"] = colStr
         setSpikeStatEvent["value"] = value
 
-        logger.info(f"  -->> emit setSpikeStatEvent:{setSpikeStatEvent}")
-        self.signalSetSpikeStat.emit(setSpikeStatEvent)
+        logger.info(f"  -->> emit signalUpdateAnalysis:{setSpikeStatEvent}")
+        self.signalUpdateAnalysis.emit(setSpikeStatEvent)
 
     def on_stat_change(self, index: int):
         """User has selected an item in the stat combo box."""

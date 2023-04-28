@@ -1121,13 +1121,16 @@ class fftPlugin(sanpyPlugin):
 
         printStr = f"Type\tFile\tstartSec\tstopSec\tmaxFreqPsd\tmaxPsd"  # \tmaxFreqFft\tmaxFft'
         # self.appendResultsStr(printStr)
-        print("=== FFT results are:")
-        print(printStr)
+
+        # print("=== FFT results are:")
+        # print(printStr)
+
         printStr = f"fftPlugin\t{self.ba.fileLoader.filename}\t{pStart}\t{pStop}\t{pMaxFreq}\t{pMaxPsd}"
+
         self.appendResultsStr(
             printStr, maxFreq=pMaxFreq, maxPsd=pMaxPsd, freqs=freqsLog10, psd=pxxLog10
         )
-        print(printStr)
+        # print(printStr)
 
         #
         # plot np fft

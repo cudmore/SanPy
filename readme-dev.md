@@ -32,15 +32,38 @@
     
 - Add an Error (E) column to main file table
 
-- Fix plot spike clip plugin. Basically make self.ba.getSpikeClips() fetch spike clips for just one sweep and one epoch.
+- Fix plot spike clip plugin. Basically make self.ba.getSpikeClips() fetch spike clips for just one sweep and one epoch. Also is a problem with spike time wrt sweep?
 
 - Reactivate limiting spike clips in plugin when user selects the x-axis. In general, my plugins no longer respond to x-axis changes. Turn code back on and just be sure to not select in scatter plugin (that was my original intention)
+
+- Add detection option to not allow spikes within some window of start of an epoch, use like 1-2 ms. Fasted Theanne spikes seem to be out  at like 10 ms.
+
+- Add current step (DAC) to plot recording plugin.
+
+- Fix resultsTable and resultsTable2. They currently display spike based on the x-axis. This was usefull for one sweep but not useful for multiple sweeps.
+    Use self.getStat('spikeNumber) which respects the selected sweep and epoch (including all)
+    Then prune the main df to just those spikeNumber
+
+- sweep popup is not always updating when i programatically set it.
+
+- depreciate shift+click in favor of double-clik to zoom on one spike
+
+- [done] Added keyboard +/- to detection widget and scatter plot plugin to increase/decrease the scatter plot point size.
+
+- [done] revamped crosshairs to show values next to the cursor.
+
+- [done] set usertype marker in detection widget
+    - [done] Need to reselect (to change marker) on set user type in set spike plugin. In general, reselect spikes on analysis changed.
+
+- When setting user type in scatter plot, selection seems to update in plugin but not in main detection widget. The opposite does work, changing user type in main interface propogates to scatter plot plugin.
 
 ## Bugs
 
 [fixed] Selecting spike in an epoch does not update correctly in Scatter plot widget
 
 [fixed] Selecting spike and setting user type with set spike stat results in incorrect spike symbol being set in plot scatter widget.
+
+interface, raw data no longer expands to fit window. Something with detection widget being a toolbar?
 
 ### TODO minor
 
@@ -58,6 +81,7 @@
 
 - Create a preferences panel to set sanpy app preferences. Things like raw plot line width, symbol size, font size.
 
+- Add a note to each file. Use keyboard 'n' and popup a dialog
 
 # Random development notes, not really used
 

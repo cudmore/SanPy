@@ -61,6 +61,11 @@ _sanpyColumns = {
         "type": int,
         "isEditable": False,
     },
+    "E": {
+        # number of errors
+        "type": int,
+        "isEditable": False,
+    },
     # 'I': {
     #     # include
     #     # problems with isinstance(bool), just using string
@@ -943,6 +948,11 @@ class analysisDir:
             if self.isAnalyzed(rowIdx):
                 theChar = "\u2022"  # FILLED BULLET
                 self._df.loc[rowIdx, "N"] = ba.numSpikes
+                _numErrors = ba.numErrors
+                if _numErrors is None:
+                    _numErrors = ''
+                logger.warning(f'setting E to _numErrors {_numErrors}')
+                self._df.loc[rowIdx, "E"] = _numErrors
             # elif uuid:
             #    #theChar = '\u25CB'
             #    theChar = '\u25e6'  # white bullet

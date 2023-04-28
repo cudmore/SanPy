@@ -122,6 +122,10 @@ class sanpyPlugin(QtWidgets.QWidget):
     myHumanName = "UNDEFINED-PLUGIN-NAME"
     """Each derived class needs to define this."""
 
+    #signalSetSpikeStat = QtCore.Signal(dict)
+    signalUpdateAnalysis = QtCore.Signal(dict)
+    """Set stats (columns) for a list of spikes."""
+
     # mar 11, if True then show in menus
     showInMenu = True
 
@@ -166,7 +170,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._ba: sanpy.bAnalysis = ba
 
         # the sweep number of the sanpy.bAnalaysis
-        self._sweepNumber: Union[int, str] = 0
+        self._sweepNumber: Union[int, str] = "All"
         self._epochNumber: Union[int, str] = "All"
 
         self._bPlugins: "sanpy.interface.bPlugin" = bPlugin
@@ -404,21 +408,25 @@ class sanpyPlugin(QtWidgets.QWidget):
         app = self.getSanPyApp()
         if app is not None:
             # receive spike selection
-            # app.signalSelectSpike.connect(self.slot_selectSpike)
             app.signalSelectSpikeList.connect(self.slot_selectSpikeList)
+            
             # receive update analysis (both file change and detect)
-            app.signalSwitchFile.connect(self.slot_switchFile)
             app.signalUpdateAnalysis.connect(self.slot_updateAnalysis)
+            self.signalUpdateAnalysis.connect(app.slot_updateAnalysis)
+
+            app.signalSwitchFile.connect(self.slot_switchFile)
+
             # recieve set sweep
             app.signalSelectSweep.connect(self.slot_setSweep)
             
-            # april 6, 2023, turned off
             # recieve set x axis
             app.signalSetXAxis.connect(self.slot_set_x_axis)
+
 
             # emit when we spike detect (used in detectionParams plugin)
             self.signalDetect.connect(app.slot_detect)
 
+            
         bPlugins = self.get_bPlugins()
         if bPlugins is not None:
             # emit spike selection
@@ -804,8 +812,9 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._ba = ba
         # self.fileRowDict = rowDict  # for detectionParams plugin
 
-        # rest sweep
+        # rest sweep and epoch
         self._sweepNumber = 0
+        self._epochNumber = 'All'
 
         # reset start/stop
         startSec = None
@@ -836,7 +845,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         if replot:
             self.replot()
 
-    def slot_updateAnalysis(self, ba):
+    def slot_updateAnalysis(self, sDict : dict):
         """Respond to new spike detection.
 
         Parameters
@@ -847,6 +856,8 @@ class sanpyPlugin(QtWidgets.QWidget):
         if not self._getResponseOption(self.responseTypes.analysisChange):
             return
 
+        ba = sDict['ba']
+        
         if ba is None:
             return
 
@@ -877,6 +888,9 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._selectedSpikeList = []
         self.selectedSpike = None
 
+        # update toolbar
+        self._updateTopToolbar()
+
         self.replot()
 
     def slot_selectSpikeList(self, eDict: dict):
@@ -885,7 +899,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         TODO: convert dict to class spikeSelection
         """
 
-        logger.info(f"{self._myClassName()} eDict:{eDict}")
+        logger.info(f"{self._myClassName()} num spikes:{len(eDict['spikeList'])}")
 
         # don't respond if we are showing a different ba (bAnalysis)
         ba = eDict["ba"]
@@ -1083,6 +1097,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def _updateTopToolbar(self):
         """Update the top toolbar on state change like switch file."""
+        
         if self.ba is None:
             return
 
@@ -1109,13 +1124,16 @@ class sanpyPlugin(QtWidgets.QWidget):
             self._epochComboBox.addItem("All")
             for _epoch in range(_numEpochs):
                 self._epochComboBox.addItem(str(_epoch))
-            _enabled = _numEpochs > 2
+            _enabled = True  # _numEpochs > 2
             self._epochComboBox.setEnabled(_enabled)
-            self._epochComboBox.setCurrentIndex(0)
+            if self.epochNumber == "All":
+                self._epochComboBox.setCurrentIndex(0)
+            else:
+                self._epochComboBox.setCurrentIndex(self.epochNumber + 1)
             self._blockComboBox = False
-            # for sweeps with not epochs
-            if not _enabled:
-                self._epochNumber = 1
+        else:
+            # no epochs defined
+            self._epochComboBox.setEnabled(False)
 
         # filename = self.ba.getFileName()
         # self._fileLabel.setText(filename)

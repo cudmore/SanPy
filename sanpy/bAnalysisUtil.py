@@ -391,7 +391,7 @@ class bAnalysisUtil:
         # userStatList = sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis()
         # userStatList = findUserAnalysis()
 
-        logger.warning(f"need to reactivate getting user stats")
+        #logger.warning(f"need to reactivate getting user stats")
 
         """
         Each entry in statList looks like:

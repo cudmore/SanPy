@@ -1,11 +1,3 @@
-"""
-Dec 2022, NOT USED BY ANY OTHER CODE ?
-
-Utilities to define analysis results.
-
-These are keys in bAnalysis_ spike dict and columns in output reports
-"""
-
 import json
 import os
 from typing import Dict, List, Tuple
@@ -20,7 +12,6 @@ logger = get_logger(__name__)
 
 defaultVal = float("nan")
 
-
 # each key in analysisResultDict needs to have the same dict
 def getDefaultDict():
     defaultDict = {
@@ -33,8 +24,82 @@ def getDefaultDict():
     }
     return defaultDict.copy()
 
-
 analysisResultDict = {}
+
+key = "spikeNumber"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = "int"
+analysisResultDict[key]["default"] = None  # todo: not sure
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key]["description"] = "Spike number across all sweeps. Zero based."
+
+key = "include"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = "bool"
+analysisResultDict[key]["default"] = True
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key][
+    "description"
+] = "Boolean indication include or not. Can be set by user/programmatically  after analysis."
+
+key = "detectionType"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = ""
+analysisResultDict[key]["default"] = None
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key][
+    "description"
+] = "Type of detection, either vm or dvdt. See enum sanpy.bDetection.detectionTypes"
+
+#
+# start real analysis results
+key = "sweep"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = "int"
+analysisResultDict[key]["default"] = 0  # todo: not sure
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key]["description"] = "Sweep number of analyzed sweep. Zero based."
+
+key = "epoch"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = "int"
+analysisResultDict[key]["default"] = np.nan  # todo: not sure
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key][
+    "description"
+] = "Stimulus epoch number the spike occured in. Zero based."
+
+key = "epochLevel"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = "float"
+analysisResultDict[key]["default"] = np.nan  # todo: not sure
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key]["description"] = "Epoch level (DAC) stimulus during the spike."
+
+key = "sweepSpikeNumber"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = "int"
+analysisResultDict[key]["default"] = None  # todo: not sure
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key]["description"] = "Spike number within the sweep. Zero based."
+
+key = "userType"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = "int"
+analysisResultDict[key]["default"] = 0
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key][
+    "description"
+] = "Integer indication user type. Can be set by user/programmatically  after analysis."
+
+key = "errors"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = "list"
+analysisResultDict[key]["default"] = []
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key][
+    "description"
+] = "List of dictionary to hold detection errors for this spike"
 
 key = "analysisDate"
 analysisResultDict[key] = getDefaultDict()
@@ -93,15 +158,6 @@ analysisResultDict[key]["default"] = ""
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["description"] = "Name of raw data file analyzed"
 
-key = "detectionType"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["type"] = ""
-analysisResultDict[key]["default"] = None
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key][
-    "description"
-] = "Type of detection, either vm or dvdt. See enum sanpy.bDetection.detectionTypes"
-
 key = "cellType"
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]["type"] = "str"
@@ -122,73 +178,6 @@ analysisResultDict[key]["type"] = "str"
 analysisResultDict[key]["default"] = ""
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["description"] = "User specified condition"
-
-#
-# start real analysis results
-key = "sweep"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = 0  # todo: not sure
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["description"] = "Sweep number of analyzed sweep. Zero based."
-
-key = "epoch"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = np.nan  # todo: not sure
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key][
-    "description"
-] = "Stimulus epoch number the spike occured in. Zero based."
-
-key = "epochLevel"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["type"] = "float"
-analysisResultDict[key]["default"] = np.nan  # todo: not sure
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["description"] = "Epoch level (DAC) stimulus during the spike."
-
-key = "sweepSpikeNumber"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = None  # todo: not sure
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["description"] = "Spike number within the sweep. Zero based."
-
-key = "spikeNumber"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = None  # todo: not sure
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["description"] = "Spike number across all sweeps. Zero based."
-
-key = "include"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["type"] = "bool"
-analysisResultDict[key]["default"] = True
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key][
-    "description"
-] = "Boolean indication include or not. Can be set by user/programmatically  after analysis."
-
-key = "userType"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["type"] = "int"
-analysisResultDict[key]["default"] = 0
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key][
-    "description"
-] = "Integer indication user type. Can be set by user/programmatically  after analysis."
-
-
-key = "errors"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["type"] = "list"
-analysisResultDict[key]["default"] = []
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key][
-    "description"
-] = "List of dictionary to hold detection errors for this spike"
 
 #
 # detection parameters
@@ -568,7 +557,12 @@ class NumpyEncoder(json.JSONEncoder):
 
 
 class analysisResultList:
-    """Class encapsulating a list of analysisResultDict (one dict per spike)."""
+    """Class encapsulating a list of analysis results.
+    
+    Each row is an analysisResultDict for one spike.
+
+    These are keys in bAnalysis_ spike dict and columns in output reports
+    """
 
     def __init__(self):
         # one copy for entire list
@@ -612,7 +606,7 @@ class analysisResultList:
         else:
             return None
 
-    def old_save(self, saveBase):
+    def _old_save(self, saveBase):
         savePath = saveBase + "-analysis.json"
 
         analysisList = self.asList()
@@ -623,7 +617,7 @@ class analysisResultList:
         with open(savePath, "w") as f:
             json.dump(analysisList, f, cls=NumpyEncoder, indent=4)
 
-    def old_load(self, loadBase):
+    def _old_load(self, loadBase):
         loadPath = loadBase + "-analysis.json"
 
         if not os.path.isfile(loadPath):
@@ -679,14 +673,13 @@ class analysisResultList:
         return len(self._myList)
 
     def __iter__(self):
+        """Allow iteration with "for item in self"
         """
-        Allow iteration with "for item in self"
-        """
+        _iterIdx = -1
         return self
 
     def __next__(self):
-        """
-        Allow iteration with "for item in self"
+        """Allow iteration with "for item in self"
         """
         self._iterIdx += 1
         if self._iterIdx >= len(self._myList):

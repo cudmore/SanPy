@@ -1,91 +1,133 @@
-SanPy supports user plugins. These are Python scripts that tap into the underlying API architecture of the SanPy desktop GUI.
+## Overview
 
-With Plugins, users can easily extend the functionality of SanPy by:
+SanPy supports user plugins. These are Python classes that tap into the underlying API architecture of the SanPy desktop GUI.
+
+With Plugins, the core funtionality of SanPy can easily be extended, including:
 
  - Plotting raw data
  - Plotting analysis
+ - Tabular reports
  - Extend analysis in new ways
-
-All plugins are linked into the SanPy interface to respond to spike selection, zooming, and file switching. A selection in the main interface will propagate to the plugin and visa-versa.
 
 For a tutorial on writing your own plugin, please see our [writing-a-plugin](api/writing-a-plugin.md) guide.
 
-# Built-in plugins.
+## Common plugin interface
 
-## Plot Recording
+All plugins are linked into the SanPy interface to respond to file and sweep selections, changes to the analysis, spike selection, and changes in the zooming of a recording.
+
+Each plugin shares a common interface to turn these actions on and off. This interface can be toggled with a right-mouse-click and selecting `Toggle Top Toolbar`.
+
+<IMG SRC="../img/plugins/plugin-common-interface.png" width=500>
+
+
+## Built-in plugins.
+
+### Plot Recording
 
 Plot a recording with an overlay of spike detection parameters.
 
 <IMG SRC="../img/plugins/plot-recording.png" width=700>
 
-## Spike Clips
+### Spike Clips
 
 Plot all spikes aligned to their threshold. Also has waterfall and phase plots.
 
-<IMG SRC="../img/plugins/spike-clips.png" width=700>
+<table style="border:1px">
+<tr>
+    <td>
+    <IMG SRC="../img/plugins/plot-spike-clips-1.png" width=700>
+    </td>
+    <td>
+    <IMG SRC="../img/plugins/plot-spike-clips-2.png" width=700>
+    </td>
+</tr>
+</table>
 
-## Plot FI
+### Plot Scatter
+
+A plugin to explore scatter plots of analysis results. Possibly the most useful plugin!
+
+<IMG SRC="../img/plugins/scatter-plot.png" width=700>
+
+### Plot FI
 
 Analyze and plot analysis results versus current steps.
 
 <IMG SRC="../img/plugins/plot-fi.png" width=700>
 
-## Plot Scatter
-
-Plot x/y scatter of spike detection parameters. Includes x/y histograms and 'shot' plots of spike i versus spike -1.
-
-<IMG SRC="../img/plugins/scatter-plot.png" width=700>
-
-## Plot Analysis
+### Plot Analysis
 
 Visualize a number of plot types including: Scatter, Histograms, Mean , etc. Basically 'Plot Scatter' on steroids.
 
 <IMG SRC="../img/plugins/plot-tool.png" width=700>
 
-## Detection Parameters
+### Detection Parameters
 
 Allows setting of all detection parameters, includes a description of each as well as presets for different types of cells and recordings.
 
 <IMG SRC="../img/plugins/detection-parameters.png" width=700>
 
-## Export Trace
+### Export Trace
 
 Plot a trace, set some display parameters and export to a file. File formats include Png, Pdf, and SVG.
 
 <IMG SRC="../img/plugins/export-trace.png" width=700>
 
-## Summary Analysis
+### Summarize Results
 
-Display a table with a summary of analysis results and detection parameters. User can copy/paste into a spreadsheet for further analysis.
+This plugin will display a table of analysis results with four different views including:
 
-<IMG SRC="../img/plugins/summary-analysis.png" width=500>
+ - Full Export - The same table saved as `Export Spike Report`.
+ - Human Readable - A nicer looking table with human readable column names.
+ - Sweep Summary - A summary of spike statistics for one sweep. Useful if your recordings have just one sweep.
+ - Detection Errors - A list of spike detection errors. Usefull while searching for the correct detection parameters.
 
-## Summary Spikes
+Each row in the tble represents one spike. On selecting a spike, the corresponding spike will be selected in the main interface. Double-click on a spike to zoom into one spike.
+ 
+ All reports can be copied to the clipboard and then pasted into a spreadsheet.
 
-Display a table of all per-spike analysis results, one row per spike. User can copy/paste into spreadsheet for further analysis. This is the same information as when saving.
+#### Full Export
 
-<IMG SRC="../img/plugins/summary-spikes.png" width=700>
+Export all spikes like saving csv.
 
-## Summary Error
+<IMG SRC="../img/plugins/summarize-results/full-export.png" width=500>
 
-Display per-spike detection errors. Clicking on an error in the table will highlight the spike in the main interface.
+#### Human Readable
 
-<IMG SRC="../img/plugins/error-summary.png" width=700>
+A slightly nicer table where column names are human readable.
 
-## FFT
+<IMG SRC="../img/plugins/summarize-results/human-readable.png" width=500>
 
-Calculate and display the Power-Spectral-Density (PSD) of any recording using the Fast-Fourier-Transform (FFT).
+#### Sweep Summary
 
-<IMG SRC="../img/plugins/fft.png" width=700>
+A summary of a single sweep. This is particularly usefull if a recording uses just one sweep..
 
-## Stim Gen
+<IMG SRC="../img/plugins/summarize-results/sweep-summary.png" width=500>
 
-A plugin to generate stimuli and save them as csv or Axon Text Files (ATF). Optimized to generate noisy sin waves!
+#### Detection Errors
 
-<IMG SRC="../img/plugins/stimgen.png" width=700>
+A summary of all detection errors.
 
-## Sanpy Log
+!!! Important
+
+    This plugin allows the browsing of `Detection Errors` and is critical for the curation of data analysis! Browe through these errors and adjust [detection parameters](#detection-parameters) as neccessary.
+
+<IMG SRC="../img/plugins/summarize-results/detection-errors.png" width=500>
+
+### Sanpy Log
 
 Display the SanPy log. As a user interacts with SanPy, most actions are logged to a file. This is useful for debugging and communicating with developers :)
 
 <IMG SRC="../img/plugins/sanpy-log.png" width=700>
+
+### FFT
+
+Calculate and plot the Power-Spectral-Density (PSD) of any recording using the Fast-Fourier-Transform (FFT).
+
+<IMG SRC="../img/plugins/fft.png" width=700>
+
+### Stim Gen
+
+A plugin to generate stimuli and save them as csv or Axon Text Files (ATF). Optimized to generate noisy sin waves! These files can then be presented as a stimulus during an ePhys recording.
+
+<IMG SRC="../img/plugins/stimgen.png" width=700>

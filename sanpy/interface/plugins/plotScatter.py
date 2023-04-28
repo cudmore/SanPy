@@ -34,14 +34,17 @@ def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
     hue : str
         In ("", "Time", "Sweep")
 
+    TODO: Add one more return for pyqtgraph markers in ('o', 'star', 't', 't3')
     """
     cMap = mpl.pyplot.cm.coolwarm.copy()
     cMap.set_under("white")  # only works for dark theme
     # do not specify 'c' argument, we set colors using set_facecolor, set_color
 
+    cMap = None
     colorMapArray = None
     faceColors = None
     pathList = None
+    markerList_pg = None
 
     if hue == "Time":
         colorMapArray = np.array(range(len(spikeList)))
@@ -64,8 +67,8 @@ def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
         # from matplotlib.colors import ListedColormap
         #_color_dict = {1: "blue", 2: "red", 13: "orange", 7: "green"}
         _color_dict = {
-            "good": (0, 1, 1, 1),  # cyan
-            "bad": (1, 0, 0, 1),  # red
+            "good": 'c',  # cyan
+            "bad": 'r',  # red
             #'userType1':(0,0,1,1), # blue
             #'userType2':(0,1,1,1), # cyan
             #'userType3':(1,0,1,1), # magenta
@@ -77,24 +80,34 @@ def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
             "userType3": mmarkers.MarkerStyle("<"),  # triangle_left
         }
 
+        _marker_dict_pg = {
+            "noUserType": 'o',
+            "userType1": 'star',
+            "userType2": 't',
+            "userType3": 't3',
+        }
+
         # no need for a cmap ???
         # cm = ListedColormap([_color_dict[x] for x in _color_dict.keys()])
         # self.lines.set_cmap(cm)
 
         goodSpikes = ba.getSpikeStat(spikeList, "include")
+        #print('goodSpikes:', goodSpikes)
         userTypeList = ba.getSpikeStat(spikeList, "userType")
 
-        logger.warning("   debug set spike stat, user types need to be int")
+        # logger.warning("   debug set spike stat, user types need to be int")
+        # print('userTypeList:', type(userTypeList))
         # print(userTypeList)
 
         # user types will use symbols
         # tmpColors = [_color_dict['type'+num2str(x)] if x>0 else tmpColors[idx] for idx,x in enumerate(userTypeList)]
         # bad needs to trump user type !!!
         # faceColors is used to set_facecolor() and set_color
-        faceColors = [
-            _color_dict["good"] if x else _color_dict["bad"]
-            for idx, x in enumerate(goodSpikes)  # x is (good, bad), (1,0)
-        ]
+        if goodSpikes is not None:
+            faceColors = [
+                _color_dict["good"] if x else _color_dict["bad"]
+                for idx, x in enumerate(goodSpikes)  # x is (good, bad), (1,0)
+            ]
         #faceColors = np.array(faceColors)
         # print('tmpColors', type(tmpColors), tmpColors.shape, tmpColors)
 
@@ -105,10 +118,18 @@ def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
         # set user type 2 to 'star'
         # see: https://stackoverflow.com/questions/52303660/iterating-markers-in-plots/52303895#52303895
         # import matplotlib.markers as mmarkers
-        markerList = [
-            _marker_dict["userType" + str(x)] if x > 0 else _marker_dict['noUserType']
-            for x in userTypeList
-        ]
+        markerList = []
+        markerList_pg = []
+        if userTypeList is not None:
+            for x in userTypeList:
+                markerList.append(
+                    _marker_dict["userType" + str(x)] if x > 0 else _marker_dict['noUserType']
+                )
+                markerList_pg.append(
+                    _marker_dict_pg["userType" + str(x)] if x > 0 else _marker_dict_pg['noUserType']
+                )
+            
+        # tODO: roll this into above for loop
         pathList = []
         for marker in markerList:
             path = marker.get_path().transformed(marker.get_transform())
@@ -120,6 +141,7 @@ def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
         'colorMapArray': colorMapArray,
         'faceColors': faceColors,
         'pathList': pathList,
+        'markerList_pg': markerList_pg,
     }
 
     # logger.info(f'spikeList: {spikeList}')
@@ -162,6 +184,8 @@ class plotScatter(sanpyPlugin):
         self.xData = []
         self.yData = []
         
+        self._markerSize = 20
+
         # when we plot, we plot a subset of spikes
         # this list tells us the spikes we are plotting and [ind_1] gives us the real spike number
         self._plotSpikeNumber = []
@@ -182,11 +206,11 @@ class plotScatter(sanpyPlugin):
         hLayout2 = QtWidgets.QHBoxLayout()
 
         #
-        self.b2 = QtWidgets.QCheckBox("Chase Plot")
-        self.b2.setEnabled(False)  # april 15, 2023, disbale for now (need to debug)
-        self.b2.setChecked(self.plotChasePlot)
-        self.b2.stateChanged.connect(lambda: self.btnstate(self.b2))
-        hLayout2.addWidget(self.b2)
+        # self.b2 = QtWidgets.QCheckBox("Chase Plot")
+        # self.b2.setEnabled(False)  # april 15, 2023, disbale for now (need to debug)
+        # self.b2.setChecked(self.plotChasePlot)
+        # self.b2.stateChanged.connect(lambda: self.btnstate(self.b2))
+        # hLayout2.addWidget(self.b2)
 
         #
         # self.colorTime = QtWidgets.QCheckBox("Color Time")
@@ -329,6 +353,28 @@ class plotScatter(sanpyPlugin):
 
         self.replot()
 
+    def keyPressEvent(self, event):
+        _handled = False
+        isMpl = isinstance(event, mpl.backend_bases.KeyEvent)
+        if isMpl:
+            text = event.key
+            logger.info(f'mpl key: "{text}"')
+            if text in ['=', '+']:
+                # increase scatter points
+                _handled = True
+                self._markerSize += 10
+                logger.info(f'marker size is now {self._markerSize}')
+                self.replot()
+            elif text in ['-']:
+                _handled = True
+                self._markerSize -= 10
+                if self._markerSize<0:
+                    self._markerSize = 0
+                logger.info(f'marker size is now {self._markerSize}')
+                self.replot()
+        if not _handled:
+            super().keyPressEvent(event)
+
     def _switchScatter(self):
         """Switch between single scatter plot and scatter + marginal histograms"""
 
@@ -395,8 +441,8 @@ class plotScatter(sanpyPlugin):
         # TODO: standardize this with Highlighter scatter
         # was this
         # self.spikeListSel, = self.axScatter.plot([], [], 'o', markerfacecolor='none', color='y', markersize=10)  # no picker for selection
-        logger.info("hard coding markerSize=10")
-        markerSize = 10
+        #logger.info("hard coding spike selection markerSize=10")
+        markerSize = self._markerSize / 2  # 10
         (self.spikeListSel,) = self.axScatter.plot(
             [], [], "o", markersize=markerSize, color="yellow", zorder=10
         )
@@ -549,7 +595,7 @@ class plotScatter(sanpyPlugin):
         yData = np.array(yData)
 
         #
-        # return if we got no data, happend when there is no analysis
+        # return if we got no data, happens when there is no analysis
         if (
             xData is None
             or yData is None
@@ -588,6 +634,13 @@ class plotScatter(sanpyPlugin):
         # data
         data = np.stack([xData, yData], axis=1)
         self.lines.set_offsets(data)  # (N, 2)
+        
+        _sizes = [self._markerSize] * len(xData)
+        self.lines.set_sizes(_sizes)
+
+        # AttributeError: 'Line2D' object has no attribute 'set_sizes'
+        # _sizes = [self._markerSize * 0.3] * len(xData)
+        # self.spikeListSel.set_sizes()
 
         # 20230417
         plotSpikeNumberList = self.getStat('spikeNumber', getFullList=False)
@@ -722,7 +775,7 @@ class plotScatter(sanpyPlugin):
         yMin -= percentSpan
         yMax += percentSpan
 
-        logger.warning(f'refactor this, do not always set x/y lim')
+        #logger.warning(f'refactor this, do not always set x/y lim')
         self.axScatter.set_xlim([xMin, xMax])
         self.axScatter.set_ylim([yMin, yMax])
 
@@ -840,11 +893,12 @@ class plotScatter(sanpyPlugin):
         if len(spikeList) > 0:
             firstSpike = spikeList[0]
             _oneDict = self.ba.getOneSpikeDict(firstSpike)
-            _str += f"Spike Number {_oneDict['spikeNumber']}"
+            _str += f"Number {_oneDict['spikeNumber']}"
+            _str += f" UserType {_oneDict['userType']}"
             _str += f" Sweep {_oneDict['sweep']}"
             _str += f" Epoch {_oneDict['epoch']}"
 
-        self.spikeNumberLabel.setText(f"Spike: {_str}")
+        self.spikeNumberLabel.setText(f"First Spike Selection: {_str}")
 
         self.static_canvas.draw()
         # was this
@@ -892,7 +946,7 @@ class plotScatter(sanpyPlugin):
         selectedSpikeList is based on what we are plotting (a subset of all spikes)
         get actual spikes from self._plotSpikeNumber
         """
-        logger.info(f'got highlighter plot selectedSpikeList: {selectedSpikeList}')
+        # logger.info(f'got highlighter plot selectedSpikeList: {selectedSpikeList}')
 
         if len(selectedSpikeList) > 0:
             actualSpikeList = []
@@ -946,6 +1000,12 @@ class plotScatter(sanpyPlugin):
         userType3_action = contextMenu.addAction("User Type 3")
         userType3_action.setDisabled(noSpikesSelected)
 
+        userType4_action = contextMenu.addAction("User Type 4")
+        userType4_action.setDisabled(noSpikesSelected)
+
+        userType5_action = contextMenu.addAction("User Type 5")
+        userType5_action.setDisabled(noSpikesSelected)
+
         userType4_action = contextMenu.addAction("Reset User Type")
         userType4_action.setDisabled(noSpikesSelected)
 
@@ -964,38 +1024,71 @@ class plotScatter(sanpyPlugin):
 
         _selectedSpikes = self.getSelectedSpikes()
 
+        # eventDict = setSpikeStatEvent
+        setSpikeStatEvent = {}
+        setSpikeStatEvent["ba"] = self.ba
+        setSpikeStatEvent["spikeList"] = self.getSelectedSpikes()
+        setSpikeStatEvent["colStr"] = None  # colStr
+        setSpikeStatEvent["value"] = None  # value
+
+        # logger.info(f"  -->> emit setSpikeStatEvent:{setSpikeStatEvent}")
+        # self.signalSetSpikeStat.emit(setSpikeStatEvent)
+
         handled = False
         if text == "Accept":
             # print('Set selected spikes to include (not isbad)')
-            self.ba.setSpikeStat(_selectedSpikes, "include", False)
-            self.replot()
+            # self.ba.setSpikeStat(_selectedSpikes, "include", False)
+            setSpikeStatEvent["colStr"] = 'include'  # colStr
+            setSpikeStatEvent["value"] = True  # value
+            # self.replot()
             handled = True
         elif text == "Reject":
             # print('Set selected spikes to reject (isbad)')
-            self.ba.setSpikeStat(_selectedSpikes, "include", True)
-            self.replot()
+            # self.ba.setSpikeStat(_selectedSpikes, "include", True)
+            setSpikeStatEvent["colStr"] = 'include'  # colStr
+            setSpikeStatEvent["value"] = False  # value
+            # self.replot()
             handled = True
         elif text == "User Type 1":
-            self.ba.setSpikeStat(_selectedSpikes, "userType", 1)
-            self.replot()
+            # self.ba.setSpikeStat(_selectedSpikes, "userType", 1)
+            setSpikeStatEvent["colStr"] = 'userType'  # colStr
+            setSpikeStatEvent["value"] = 1  # value
+            # self.replot()
             handled = True
         elif text == "User Type 2":
-            self.ba.setSpikeStat(_selectedSpikes, "userType", 2)
-            self.replot()
+            # self.ba.setSpikeStat(_selectedSpikes, "userType", 2)
+            setSpikeStatEvent["colStr"] = 'userType'  # colStr
+            setSpikeStatEvent["value"] = 2  # value
+            # self.replot()
             handled = True
         elif text == "User Type 3":
-            self.ba.setSpikeStat(_selectedSpikes, "userType", 3)
-            self.replot()
+            # self.ba.setSpikeStat(_selectedSpikes, "userType", 3)
+            setSpikeStatEvent["colStr"] = 'userType'  # colStr
+            setSpikeStatEvent["value"] = 3  # value
+            # self.replot()
+            handled = True
+        elif text == "User Type 4":
+            setSpikeStatEvent["colStr"] = 'userType'  # colStr
+            setSpikeStatEvent["value"] = 4  # value
+            handled = True
+        elif text == "User Type 5":
+            setSpikeStatEvent["colStr"] = 'userType'  # colStr
+            setSpikeStatEvent["value"] = 5  # value
             handled = True
         elif text == "Reset User Type":
-            self.ba.setSpikeStat(_selectedSpikes, "userType", 0)
-            self.replot()
+            # self.ba.setSpikeStat(_selectedSpikes, "userType", 0)
+            setSpikeStatEvent["colStr"] = 'userType'  # colStr
+            setSpikeStatEvent["value"] = 0  # value
+            # self.replot()
             handled = True
         else:
             # logger.info(f'Action not understood "{text}"')
             pass
 
-        #
+        if handled:
+            logger.info(f"  -->> emit setSpikeStatEvent:{setSpikeStatEvent}")
+            self.signalUpdateAnalysis.emit(setSpikeStatEvent)
+
         return handled
 
     def copyToClipboard(self):
@@ -1070,9 +1163,9 @@ class myStatListWidget(QtWidgets.QWidget):
         self.myTableWidget.cellClicked.connect(self.on_scatter_toolbar_table_click)
 
         # set font size of table (default seems to be 13 point)
-        fnt = self.font()
-        fnt.setPointSize(self._rowHeight)
-        self.myTableWidget.setFont(fnt)
+        # fnt = self.font()
+        # fnt.setPointSize(self._rowHeight)
+        # self.myTableWidget.setFont(fnt)
 
         headerLabels = [headerStr]
         self.myTableWidget.setHorizontalHeaderLabels(headerLabels)

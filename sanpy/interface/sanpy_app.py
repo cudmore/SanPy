@@ -1185,6 +1185,30 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 _runningPlugin.getHumanName(), externalWindow=True, ltwhTuple=ltwhTuple
             )
 
+    def slot_updateAnalysis(self, sDict : dict):
+        """Respond to both detect and user setting columns in ba.
+        
+        sDict : dict
+            setSpikeStatEvent = {}
+            setSpikeStatEvent['ba'] = self.ba
+            setSpikeStatEvent["spikeList"] = self.getSelectedSpikes()
+            setSpikeStatEvent["colStr"] = colStr
+            setSpikeStatEvent["value"] = value
+        """
+        
+        logger.info('')
+        
+        # do the actual update
+        ba = sDict['ba']
+        spikeList = sDict['spikeList']
+        colStr = sDict['colStr']
+        value = sDict['value']
+        if spikeList is not None and colStr is not None and value is not None:
+            logger.info(f'setting backend: {spikeList} colStr: {colStr} to value:{value}')
+            ba.setSpikeStat(spikeList, colStr, value)
+
+        self.signalUpdateAnalysis.emit(sDict)
+
     def slot_selectSpike(self, sDict):
         spikeNumber = sDict["spikeNumber"]
         doZoom = sDict["doZoom"]
@@ -1242,8 +1266,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
         Usually comes from the sanpy.interface.bDetectionWidget
         """
 
+        setSpikeStatEvent = {}
+        setSpikeStatEvent['ba'] = ba
+        setSpikeStatEvent["spikeList"] = None  # self.getSelectedSpikes()
+        setSpikeStatEvent["colStr"] = None  # colStr
+        setSpikeStatEvent["value"] = None  # value
+
         # sweep number does not change
-        self.signalUpdateAnalysis.emit(ba)
+        self.signalUpdateAnalysis.emit(setSpikeStatEvent)
 
         self.slot_updateStatus(f"Detected {ba.numSpikes} spikes")
 

@@ -32,8 +32,6 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.backends import backend_qt5agg
 
-# import qdarkstyle
-
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
@@ -343,9 +341,11 @@ class stimGen(sanpyPlugin):
             currFreq = freq + (sweepNum * frequencyStep)
             currNoiseAmp = noiseAmp + (sweepNum * noiseStep)
             autoPad = False
-            print(
-                f"  makeStim() {type} sweep:{sweepNum} durSec:{durSec} amp:{currAmp} freq:{currFreq} noiseAmp:{currNoiseAmp}"
-            )
+
+            # print(
+            #     f"  makeStim() {type} sweep:{sweepNum} durSec:{durSec} amp:{currAmp} freq:{currFreq} noiseAmp:{currNoiseAmp}"
+            # )
+
             self._data[sweepNum] = sanpy.atfStim.makeStim(
                 type,
                 sweepDurSec=sweepDurSeconds,

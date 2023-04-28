@@ -25,7 +25,6 @@ import matplotlib.pyplot as plt
 
 import sanpy
 
-
 def getAtfHeader():
     ATF_HEADER = """
 	ATF	1.0

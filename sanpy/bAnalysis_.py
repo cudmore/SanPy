@@ -249,11 +249,13 @@ class bAnalysis:
         return True
 
     def _loadHdf_pytables(self, hdfPath, uuid):
-        """
-        Load analysis from an h5 file using key 'uuid'.
+        """Load analysis from an h5 file using key 'uuid'.
 
-        Notes:
+        Notes
+        -----
             df.to_dict() requires into=OrderedDIct, o.w. column order is sorted
+            Error report needs to be generated (is not in h5 file)
+                use getErrorReport()
         """
 
         # cant use pd.HDFStore(<path>) as read_hdf does not understand file pointer
@@ -297,6 +299,9 @@ class bAnalysis:
             # recreate spike analysis dataframe
             self._dfReportForScatter = dfAnalysis
 
+            # regenerate error report
+            self.dfError = self.getErrorReport()
+
             # dec 2022
             self._isAnalyzed = True
 
@@ -327,6 +332,16 @@ class bAnalysis:
         return len(thresholdSec)
         # return self._spikesPerSweep[sweep]
 
+    @property
+    def numErrors(self) -> int:
+        """Get number of detection errors.
+        """
+        if self.dfError is None:
+            # no analysis
+            return None
+        else:
+            return len(self.dfError)
+        
     def _old_getAbsSpikeFromSweep(self, sweepSpikeIdx: int, sweep: int) -> int:
         """Given a spike index within a sweep, get the absolute spike index.
 
@@ -374,7 +389,7 @@ class bAnalysis:
             theMean = np.nanmean(x)
         return theMean
 
-    def getSpikeStat(self, spikeList, stat):
+    def getSpikeStat(self, spikeList : List[int], stat : str):
         """Get one stat from a list of spikes
         
         Parameters
@@ -382,19 +397,27 @@ class bAnalysis:
         spikeList : List[int]
         stat : str
         """
+
+        # if isinstance(spikeList, int):
+        #     spikeList = [spikeList]
+
         if len(spikeList) == 0:
             return None
 
+        # logger.info(f'spikeList: {spikeList} stat:{stat}')
+        
         retList = []
         # count = 0
         for idx, spike in enumerate(self.spikeDict):
+            # logger.info(f'  idx:{idx}')
             if idx in spikeList:
                 try:
                     val = spike[stat]
                     retList.append(val)
                     # count += 1
                 except KeyError as e:
-                    logger.info(e)
+                    logger.error(e)
+        # logger.info(f'  retList: {retList}')
         return retList
 
     def setSpikeStat_time(self, startSec: int, stopSec: int, stat: str, value):
@@ -642,7 +665,8 @@ class bAnalysis:
         return theRet
 
     def getSpikeDictionaries(self, sweepNumber=None):
-        """Get spike dictionaries for current sweep"""
+        """Get spike dictionaries for current sweep
+        """
         if sweepNumber is None:
             sweepNumber = "All"
         # logger.info(f'sweepNumber:{sweepNumber}')
@@ -974,19 +998,26 @@ class bAnalysis:
         #
         # return widthDictList, errorList
 
-    def _getErrorDict(self, spikeNumber, pnt, type, detailStr):
-        """
-        Get error dict for one spike
-
-        TODO: xxx
+    def _getErrorDict(self, spikeNumber, pnt, _type : str, detailStr) -> dict:
+        """Get error dict for one spike
+        
+        Notes
+        -----
+        Can't use self.getSpikeStat() because it is not created yet.
+            We are in the middle of analysis
         """
         sec = self.fileLoader.pnt2Sec_(pnt)  # pnt / self.dataPointsPerMs / 1000
         sec = round(sec, 4)
 
+        # print(f'  spikeNumber: {spikeNumber} {type(spikeNumber)}')
+        # print('    sweep:', self.getSpikeStat([spikeNumber], 'sweep'))
+
         eDict = {
             "Spike": spikeNumber,
             "Seconds": sec,
-            "Type": type,
+            "Sweep": '',  # self.getSpikeStat([spikeNumber], 'sweep')[0],
+            "Epoch": '',  # self.getSpikeStat([spikeNumber], 'epoch')[0],
+            "Type": _type,
             "Details": detailStr,
         }
         return eDict
@@ -1684,16 +1715,17 @@ class bAnalysis:
                     spikeDict[iIdx]["errors"].append(eDict)
                     if verbose:
                         print(f"  spike:{iIdx} error:{eDict}")
-                except:
-                    logger.error(
-                        f" !!!!!!!!!!!!!!!!!!!!!!!!!!! UNKNOWN EXCEPTION DURING EDD LINEAR FIT for spike {i}"
-                    )
-                    spikeDict[iIdx]["earlyDiastolicDurationRate"] = defaultVal
-                    errorType = "Fit EDD"
-                    errorStr = "Early diastolic duration rate fit - Unknown Exception"
-                    eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
-                    if verbose:
-                        print(f"  spike:{iIdx} error:{eDict}")
+                # 20230422, don't ever catch an unknown exception
+                # except:
+                #     logger.error(
+                #         f" !!!!!!!!!!!!!!!!!!!!!!!!!!! UNKNOWN EXCEPTION DURING EDD LINEAR FIT for spike {i}"
+                #     )
+                #     spikeDict[iIdx]["earlyDiastolicDurationRate"] = defaultVal
+                #     errorType = "Fit EDD"
+                #     errorStr = "Early diastolic duration rate fit - Unknown Exception"
+                #     eDict = self._getErrorDict(i, spikeTimes[i], errorType, errorStr)
+                #     if verbose:
+                #         print(f"  spike:{iIdx} error:{eDict}")
 
             # not implemented
             # self.spikeDict[i]['lateDiastolicDuration'] = ???
@@ -1843,10 +1875,11 @@ class bAnalysis:
         else:
             self.dfReportForScatter = None
 
-        self.dfError = self.errorReport()
+        # generate error report
+        self.dfError = self.getErrorReport()
 
+        # bAnalysis needs to be saved
         self._detectionDirty = True
-        # e.g. bAnalysis needs to be saved
 
         ## done
 
@@ -2160,7 +2193,11 @@ class bAnalysis:
         theseClips_x = []
         tmpMeanClips = []  # for mean clip
         meanClip = []
+        
+        # spikeTimes are in pnts
         spikeTimes = self.getSpikeTimes(sweepNumber=sweepNumber, epochNumber=epochNumber)
+
+        logger.info(f'spikeTimes:{len(spikeTimes)} sweepNumber:{sweepNumber} epochNumber:{epochNumber}')
 
         # if len(spikeTimes) != len(self.spikeClips):
         #    logger.error(f'len spikeTimes {len(spikeTimes)} !=  spikeClips {len(self.spikeClips)}')
@@ -2187,15 +2224,16 @@ class bAnalysis:
 
         return theseClips, theseClips_x, meanClip
 
-    def numErrors(self):
-        if self.dfError is None:
-            return "N/A"
-        else:
-            return len(self.dfError)
+    # def numErrors(self):
+    #     if self.dfError is None:
+    #         return "N/A"
+    #     else:
+    #         return len(self.dfError)
 
-    def errorReport(self):
-        """
-        Generate an error report, one row per error. Spikes can have more than one error.
+    def getErrorReport(self):
+        """Generate an error report, one row per error.
+        
+        Spikes can have more than one error.
 
         Returns:
             (pandas DataFrame): Pandas DataFrame, one row per error.
@@ -2203,13 +2241,38 @@ class bAnalysis:
 
         dictList = []
 
-        numError = 0
-        errorList = []
-        for spikeIdx, spike in enumerate(self.spikeDict):
-            for idx, error in enumerate(spike["errors"]):
-                # error is dict from _getErorDict
+        # numError = 0
+        # errorList = []
+
+        logger.info(f'Generating error report for {len(self.spikeDict)} spikes')
+
+        #  20230422 spikeDict is not working as an iterable
+        # use it as a list instead
+        numSpikes = len(self.spikeDict)
+        #for spike in self.spikeDict:
+        for _spikeNumber in range(numSpikes):
+            spike = self.spikeDict[_spikeNumber]
+            # spike is sanpy.bAnalysisResults.analysisResult
+            #print('spike:', spike)
+            for error in spike["errors"]:
+                # spike["errors"] is a list of dict
+                # error is dict from _getErrorDict
                 if error is None or error == np.nan or error == "nan":
                     continue
+
+                # 20230422 add sweep and epoch to error dict
+                #_spikeNumber = error['Spike']
+                
+                #print('  _spikeNumber:', _spikeNumber, type(_spikeNumber))
+                
+                # _sweep = self.getSpikeStat([_spikeNumber], 'sweep')
+                # if len(_sweep)==0:
+                #     logger.error(f"_spikeNumber:{_spikeNumber} sweep:{_sweep}")
+                #     #print(self.getOneSpikeDict(_spikeNumber))
+                
+                error['Sweep'] = self.getSpikeStat([_spikeNumber], 'sweep')[0]
+                error['Epoch'] = self.getSpikeStat([_spikeNumber], 'epoch')[0]
+
                 dictList.append(error)
 
         if len(dictList) == 0:
@@ -2218,11 +2281,9 @@ class bAnalysis:
         else:
             dfError = pd.DataFrame(dictList)
 
-        # print('bAnalysis.errorReport() returning len(dfError):', len(dfError))
         if self._detectionDict["verbose"]:
             logger.info(f"Found {len(dfError)} errors in spike detection")
 
-        #
         return dfError
 
     def _old_to_csv(self):
@@ -2359,7 +2420,7 @@ class bAnalysis:
         if self.spikeDict is not None:
             return self.spikeDict.analysisTime()
 
-    def api_getHeader(self):
+    def _api_getHeader(self):
         """Get header as a dict.
 
         TODO:
@@ -2390,7 +2451,7 @@ class bAnalysis:
         }
         return ret
 
-    def api_getSpikeInfo(self, spikeNum=None):
+    def _api_getSpikeInfo(self, spikeNum=None):
         """Get info about each spike.
 
         Args:
@@ -2405,7 +2466,7 @@ class bAnalysis:
             ret = self.spikeDict
         return ret
 
-    def api_getSpikeStat(self, stat):
+    def _api_getSpikeStat(self, stat):
         """Get stat for each spike
 
         Args:
@@ -2417,7 +2478,7 @@ class bAnalysis:
         statList = self.getStat(statName1=stat, statName2=None)
         return statList
 
-    def api_getRecording(self):
+    def _api_getRecording(self):
         """Return primary recording
 
         Returns:

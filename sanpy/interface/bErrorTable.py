@@ -23,9 +23,20 @@ class errorTableView(QtWidgets.QTableView):
 
         self.setSortingEnabled(True)
 
-        self.setSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
-        )
+        # self.setSizePolicy(
+        #     QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding
+        # )
+
+        _hHeader = self.horizontalHeader()
+        _hHeader.setSectionResizeMode(QtWidgets.QHeaderView.ResizeToContents)
+        # _hHeader.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.Stretch)
+
+        # see
+        # https://stackoverflow.com/questions/38098763/pyside-pyqt-how-to-make-set-qtablewidget-column-width-as-proportion-of-the-a
+        # _hHeader = self.horizontalHeader()       
+        # _hHeader.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        # _hHeader.setSectionResizeMode(1, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        # _hHeader.setSectionResizeMode(2, QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
 
         self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
 
@@ -50,6 +61,7 @@ class errorTableView(QtWidgets.QTableView):
         # self.resizeColumnsToContents()
 
         self.clicked.connect(self.errorTableClicked)
+        self.doubleClicked.connect(self._on_doubleClick)
 
     def mySelectRows(self, rows: List[int]):
         """Select rows in the table
@@ -93,14 +105,29 @@ class errorTableView(QtWidgets.QTableView):
         #
         self._blockTableUpdate = False
 
-    def errorTableClicked(self, index):
+    def _on_doubleClick(self, index):
+        """
+        Parameters
+        ----------
+        index : QtCore.QModelIndex
+        """
+        row = self.model()._data.index[index.row()]  # take sorting into account
+        logger.info(index.row())
+        self.errorTableClicked(index, doubleClick=True)
+
+    def errorTableClicked(self, index, doubleClick=False):
+        """
+        Parameters
+        ----------
+        index : QtCore.QModelIndex
+        """
         row = self.model()._data.index[index.row()]  # take sorting into account
 
-        doZoom = False
-        modifiers = QtWidgets.QApplication.keyboardModifiers()
-        if modifiers == QtCore.Qt.ShiftModifier:
-            # zoomm on shift+click
-            doZoom = True
+        doZoom = doubleClick
+        # modifiers = QtWidgets.QApplication.keyboardModifiers()
+        # if modifiers == QtCore.Qt.ShiftModifier:
+        #     # zoomm on shift+click
+        #     doZoom = True
 
         try:
             # .loc[i,'col'] gets from index label (correct)

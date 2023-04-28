@@ -83,7 +83,7 @@ def test_app(sanpyAppObject):
 
     # simulate detect dv/dt
     # print('qqqq dv/dt')
-    sanpyAppObject.myDetectionWidget.detectToolbarWidget.on_button_click('Detect dV/dt')
+    sanpyAppObject.myDetectionWidget.detectToolbarWidget._on_button_click('Detect dV/dt')
 
 # def _slot_selectRow(rowIdx : int, rowDict : dict, selectAgain : bool):
 #     logger.info(f'{rowIdx} {rowDict}')

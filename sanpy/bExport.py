@@ -1,6 +1,7 @@
 import os
 from collections import OrderedDict
 from pprint import pprint
+from typing import Union, Dict, List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
@@ -98,28 +99,68 @@ class bExport:
 
         return df
 
-    def report2(self, theMin: float, theMax: float) -> pd.DataFrame:
+    def report3(self, sweep='All',
+                epoch='All',
+                theMin : Optional[float] = None,
+                theMax : Optional[float] = None,
+                ) -> pd.DataFrame:
+        """Generate a full report of all spike columns.
+        
+        Like what is save in csv but limited by sweep, epoch, etc
         """
-        Generate a human readable report of spikes.
+
+        if self.ba.numSpikes == 0:
+            logger.warning(f"did not find and spikes for summary")
+            return None
+
+        df = self.ba.asDataFrame()  # full df with all spikes
+
+        spikeList = self.ba.getStat('spikeNumber', sweepNumber=sweep, epochNumber=epoch)
+
+        # reduce to spikes in list
+        df = df.loc[df['spikeNumber'].isin(spikeList)]
+
+        if theMin is not None and theMax is not None:
+            df = df[ (df['thresholdSec']>=theMin) & (df['thresholdSec']<theMax)]
+        
+        return df
+    
+    def report2(self, sweep='All',
+                epoch='All',
+                theMin : Optional[float] = None,
+                theMax : Optional[float] = None,
+                ) -> pd.DataFrame:
+
+        """Generate a human readable report of spikes.
         Include spike times between theMin and theMax (Sec).
 
         Args:
+            sweep ('All' or int') : 'All' for all sweeps or int for one sweep
+            epoch ('All' or int) : 'All' for all epochs or int for one epoch
             theMin (float): Start seconds to save, inclusive
             theMax (float): Stop seconds to save, inclusive
 
         Returns:
             df: pd.DataFrame
         """
+
+        spikeList = self.ba.getStat('spikeNumber', sweepNumber=sweep, epochNumber=epoch)
+
         newList = []
-        for spikeIdx, spike in enumerate(self.ba.spikeDict):
-            # if current spike time is out of bounds then continue (e.g. it is not between theMin (sec) and theMax (sec)
+        for spikeIdx in spikeList:
+            spike = self.ba.getOneSpikeDict(spikeIdx)
+            
+            # if current spike time is out of bounds
+            # then continue (e.g. it is not between theMin (sec) and theMax (sec)
             spikeTime_sec = self.ba.fileLoader.pnt2Sec_(spike["thresholdPnt"])
-            if spikeTime_sec < theMin or spikeTime_sec > theMax:
-                continue
+            if theMin is not None and theMax is not None:
+                if spikeTime_sec < theMin or spikeTime_sec > theMax:
+                    continue
 
             spikeDict = (
                 OrderedDict()
             )  # use OrderedDict so Pandas output is in the correct order
+
             spikeDict["Spike"] = spikeIdx
             spikeDict["Take Off Potential (s)"] = self.ba.fileLoader.pnt2Sec_(
                 spike["thresholdPnt"]
@@ -174,8 +215,14 @@ class bExport:
         df = pd.DataFrame(newList)
         return df
 
-    def getSummary(self, theMin: float = None, theMax: float = None) -> pd.DataFrame:
+    def getSummary(self,
+                   sweep='All',
+                    epoch='All',
+                    theMin: float = None, 
+                    theMax: float = None
+                    ) -> pd.DataFrame:
         """Get analysis summary as df.
+        
         This adds some header information to spike report bExport.report2().
         """
 
@@ -183,13 +230,17 @@ class bExport:
             logger.warning(f"did not find and spikes for summary")
             return None
 
-        if theMin is None or theMax is None:
-            theMin = 0
-            theMax = self.ba.fileLoader.recordingDur
+        # if theMin is None or theMax is None:
+        #     theMin = 0
+        #     theMax = self.ba.fileLoader.recordingDur
 
         #
         # cardiac style analysis to sheet 'cardiac'
-        cardiac_df = self.report2(theMin, theMax)  # report2 is more 'cardiac'
+        # human readable columns
+        cardiac_df = self.report2(sweep=sweep,
+                                  epoch=epoch,
+                                  theMin=theMin,
+                                  theMax=theMax)
 
         dDict = self.ba.getDetectionDict()
 
@@ -240,7 +291,14 @@ class bExport:
 
         # mean
         theMean = cardiac_df.mean(numeric_only=True)  # skipna default is True
+
+        logger.info('cardiac_df:')
+        print(cardiac_df)
+        logger.info('theMean:')
+        print(theMean)
+
         theMean["errors"] = ""
+                
         # sd
         theSD = cardiac_df.std(numeric_only=True)  # skipna default is True
         theSD["errors"] = ""

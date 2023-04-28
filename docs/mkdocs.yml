@@ -29,6 +29,7 @@ markdown_extensions:
 - pymdownx.superfences
 - pymdownx.tabbed
 - pymdownx.tasklist
+- pymdownx.details
 - toc:
     permalink: "¤"
     toc_depth: 3

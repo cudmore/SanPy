@@ -11,11 +11,14 @@ from .plotTool import plotTool
 from .plotToolPool import plotToolPool
 
 from .plotScatter import plotScatter
-from .detectionErrors import detectionErrors
+# from .detectionErrors import detectionErrors
 from .spikeClips import spikeClips
-from .resultsTable import resultsTable
-from .resultsTable2 import resultsTable2
-from .analysisSummary import analysisSummary
+
+# from .resultsTable import resultsTable
+# from .resultsTable2 import resultsTable2
+# from .analysisSummary import analysisSummary
+from .summarizeResults import SummarizeResults
+
 from .exportTrace import exportTrace
 
 from .fftPlugin import fftPlugin
@@ -23,7 +26,8 @@ from .stimGen import stimGen
 
 from .detectionParams import detectionParams
 
-from .kymographPlugin import kymographPlugin
+# remove for publication
+# from .kymographPlugin import kymographPlugin
 
 # from .kymographPlugin2 import kymographPlugin2
 
@@ -31,6 +35,7 @@ from .setSpikeStat import SetSpikeStat
 
 # eventually move this out of plotScatter
 from .plotScatter import myStatListWidget
+from .plotScatter import getPlotMarkersAndColors
 
 from .plotFi import plotFi
 

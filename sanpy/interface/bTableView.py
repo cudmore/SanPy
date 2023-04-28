@@ -104,6 +104,8 @@ class bTableView(QtWidgets.QTableView):
 
         self.setAlternatingRowColors(True)
 
+        self.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
+
         # TODO: add font size to options
         """
         _fonSize = 10
@@ -165,7 +167,7 @@ class bTableView(QtWidgets.QTableView):
 
     #
     # frozen
-    def old_initFrozenColumn(self):
+    def _old_initFrozenColumn(self):
         self.frozenTableView.setModel(self.model())
 
         # this is causing selection to be in muted blue
@@ -259,7 +261,7 @@ class bTableView(QtWidgets.QTableView):
         # print('!!!!! TODO: _onLeftClick needs to always emit on click but pass along if row was already selected')
         self.lastSeletedRow = realRow
 
-    def old_selectionChanged(self, selected, deselected):
+    def _old_selectionChanged(self, selected, deselected):
         logger.info("")
         modelIndexList = selected.indexes()
         if len(modelIndexList) == 0:
@@ -422,7 +424,7 @@ class bTableView(QtWidgets.QTableView):
 
     #
     # frozen
-    def updateSectionWidth(self, logicalIndex, oldSize, newSize):
+    def _old_updateSectionWidth(self, logicalIndex, oldSize, newSize):
         # if self.logicalIndex == 0:
         if logicalIndex == 0:
             # logger.info(f'XXX {newSize}')
@@ -431,14 +433,14 @@ class bTableView(QtWidgets.QTableView):
             """
             self.updateFrozenTableGeometry()
 
-    def old_updateSectionHeight(self, logicalIndex, oldSize, newSize):
+    def _old_updateSectionHeight(self, logicalIndex, oldSize, newSize):
         self.frozenTableView.setRowHeight(logicalIndex, newSize)
 
-    def old_resizeEvent(self, event):
+    def _old_resizeEvent(self, event):
         super(bTableView, self).resizeEvent(event)
         self.updateFrozenTableGeometry()
 
-    def old_moveCursor(self, cursorAction, modifiers):
+    def _old_moveCursor(self, cursorAction, modifiers):
         # logger.info('')
         current = super(bTableView, self).moveCursor(cursorAction, modifiers)
         if (
@@ -461,7 +463,7 @@ class bTableView(QtWidgets.QTableView):
         if index.column() > 0:
             super(bTableView, self).scrollTo(index, hint)
 
-    def old_updateFrozenTableGeometry(self):
+    def _old_updateFrozenTableGeometry(self):
         """ """
         myWidth = 400
         theGeometryRect = self.geometry()
