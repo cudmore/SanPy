@@ -442,24 +442,25 @@ class plotScatter(sanpyPlugin):
         # was this
         # self.spikeListSel, = self.axScatter.plot([], [], 'o', markerfacecolor='none', color='y', markersize=10)  # no picker for selection
         #logger.info("hard coding spike selection markerSize=10")
-        markerSize = self._markerSize / 2  # 10
-        (self.spikeListSel,) = self.axScatter.plot(
-            [], [], "o", markersize=markerSize, color="yellow", zorder=10
-        )
+
+        # markerSize = self._markerSize / 2  # 10
+        # (self.spikeListSel,) = self.axScatter.plot(
+        #     [], [], "o", markersize=markerSize, color="yellow", zorder=10
+        # )
 
         # despine top/right
         self.axScatter.spines["right"].set_visible(False)
         self.axScatter.spines["top"].set_visible(False)
 
         # TODO: refactor and use mplToolBar()
-        self.cid = self.static_canvas.mpl_connect("pick_event", self._on_spike_pick_event2)
+        # self.cid = self.static_canvas.mpl_connect("pick_event", self._on_spike_pick_event2)
 
         self.fig.canvas.mpl_connect("key_press_event", self.keyPressEvent)
 
         #
         # self.replot()
 
-    def _on_spike_pick_event2(self, event):
+    def _old__on_spike_pick_event2(self, event):
         """Respond to user left-mouse clicks in mpl plot.
 
         Args:
@@ -474,6 +475,7 @@ class plotScatter(sanpyPlugin):
         if event.mouseevent.button != 1:
             return
 
+        # no hits
         if len(event.ind) < 1:
             return
 
@@ -487,13 +489,12 @@ class plotScatter(sanpyPlugin):
         except (IndexError) as e:
             logger.warning(f'  xxx we are not plotting _clickedPlotIdx {_clickedPlotIdx}')
 
-        logger.info(f'  _clickedPlotIdx:{_clickedPlotIdx} _realSpikeNumber:{_realSpikeNumber}')
-
         doZoom = False
         modifiers = QtWidgets.QApplication.keyboardModifiers()
         if modifiers == QtCore.Qt.ShiftModifier:
             doZoom = True
 
+        #logger.info(f'  _clickedPlotIdx:{_clickedPlotIdx} _realSpikeNumber:{_realSpikeNumber}')
         logger.info(
             f"  got {len(event.ind)} candidates, first is spike:{_realSpikeNumber} doZoom:{doZoom}"
         )
@@ -547,24 +548,28 @@ class plotScatter(sanpyPlugin):
         Generate a list of spikes and select them.
         """
 
+        logger.info('deactivated - april 30')
+
+        # as of april 30, 2023, do nothin on set axis
+        return
+    
         startSec, stopSec = self.getStartStop()
         if startSec is None or stopSec is None:
             return
 
         # select spike in range
         thresholdSec = self.getStat("thresholdSec")
-
         _selectedSpikeList = [
             spikeIdx
             for spikeIdx, spikeSec in enumerate(thresholdSec)
             if (spikeSec > startSec and spikeSec < stopSec)
         ]
-
         self.setSelectedSpikes(_selectedSpikeList)
         self.selectSpikeList()
 
     def replot(self):
-        """Replot when file or analysis changes."""
+        """Replot when file or analysis changes.
+        """
 
         logger.info(f"{self._myClassName()} sweepNumber:{self.sweepNumber} epochNumber:{self.epochNumber}")
 
@@ -740,7 +745,7 @@ class plotScatter(sanpyPlugin):
 
         #
         # update highlighter, needs coordinates of x/y to highlight
-        self.myHighlighter.setData(xData, yData)
+        self.myHighlighter.setData(xData, yData, self._plotSpikeNumber)
 
         # label axes
         xStatLabel = xHumanStat
@@ -856,7 +861,7 @@ class plotScatter(sanpyPlugin):
         """
         spikeList = self.getSelectedSpikes()
 
-        logger.info(f"{self._myClassName()} spikeList:{spikeList}")
+        logger.info(f"{self._myClassName()} spikeList:{len(spikeList)} {self}")
 
         if self.xStatName is None or self.yStatName is None:
             return
@@ -864,8 +869,8 @@ class plotScatter(sanpyPlugin):
         # TODO (error) when we are plotting just one epoch (like 2), we get index errors
         
         # if spikeList is not None:
+        _plotSpikeIndexList = []
         if len(spikeList) > 0:
-            _plotSpikeList = []
             for _realSpikeNumber in spikeList:
                 # _realSpikeNumber is the actual spike number of bAnalysis
                 try:
@@ -873,21 +878,23 @@ class plotScatter(sanpyPlugin):
                     # need to find the index into the actual plot
                     # this is the only place we need index() and it runs at n^2
                     _plotSpikeIndex = self._plotSpikeNumber.index(_realSpikeNumber)
-                    _plotSpikeList.append(_plotSpikeIndex)
+                    _plotSpikeIndexList.append(_plotSpikeIndex)
                 except (ValueError) as e:
                     logger.warning(f'we are not plotting spike number {_realSpikeNumber}')
 
             # xData = [self.xData[spikeList]]
             # yData = [self.yData[spikeList]]
-            xData = [self.xData[_plotSpikeList]]
-            yData = [self.yData[_plotSpikeList]]
+            xData = [self.xData[_plotSpikeIndexList]]
+            yData = [self.yData[_plotSpikeIndexList]]
 
         else:
             xData = []
             yData = []
 
         # logger.info(f'!!! SET DATA {xData} {yData}')
-        self.spikeListSel.set_data(xData, yData)
+        #self.spikeListSel.set_data(xData, yData)
+        #self.myHighlighter.setData(xData, yData, _plotSpikeIndexList)
+        self.myHighlighter.selectSpikeList(_plotSpikeIndexList)
 
         # update a little info about first spike
         _str = ""
@@ -958,9 +965,9 @@ class plotScatter(sanpyPlugin):
                 except (IndexError) as e:
                     logger.warning(f'we are not plotting spike {_plotSpike}')
 
-            print('    selectedSpikeList:', selectedSpikeList)
-            print('    actualSpikeList:', actualSpikeList)
-
+            # print('    selectedSpikeList:', selectedSpikeList)
+            # print('    actualSpikeList:', actualSpikeList)
+            
             #self.setSelectedSpikes(selectedSpikeList)
             self.setSelectedSpikes(actualSpikeList)
             sDict = {
@@ -968,7 +975,12 @@ class plotScatter(sanpyPlugin):
                 "doZoom": False,  # never zoom on multiple spike selection
                 "ba": self.ba,
             }
+            logger.info(f'{self._myClassName()} -->> emit signalSelectSpikeList')
+            logger.info(f"spikeList: {sDict['spikeList']}")
+            
+            self._blockSlots = True
             self.signalSelectSpikeList.emit(sDict)
+            self._blockSlots = False
 
     def toolbarHasSelection(self):
         """Return true if either ['zoom rect', 'pan/zoom'] are selected
@@ -1247,9 +1259,10 @@ class Highlighter(object):
 
         self.x = None  # these are set in setData
         self.y = None
+        self._plotSpikeNumber = None
         #self._plotSpikeNumber = None
 
-        self.setData(x, y)
+        self.setData(x, y, self._plotSpikeNumber)
 
         # mask will be set in self.setData
         if x and y:
@@ -1262,6 +1275,7 @@ class Highlighter(object):
 
         # here self is setting the callback and calls __call__
         # self.selector = RectangleSelector(ax, self, useblit=True, interactive=False)
+        # matplotlib.widgets.RectangleSelector
         self.selector = RectangleSelector(
             ax,
             self._HighlighterReleasedEvent,
@@ -1272,6 +1286,9 @@ class Highlighter(object):
 
         self.mouseDownEvent = None
         self.keyIsDown = None
+
+        # april 2023, adding ?
+        self._keepPickEvent = self.ax.figure.canvas.mpl_connect("pick_event", self._on_spike_pick_event3)
 
         self.ax.figure.canvas.mpl_connect("key_press_event", self._keyPressEvent)
         self.ax.figure.canvas.mpl_connect("key_release_event", self._keyReleaseEvent)
@@ -1295,23 +1312,83 @@ class Highlighter(object):
         # logger.info(event)
         self.keyIsDown = None
 
-    def on_button_release(self, event):
-        logger.info(f'Highlighter')
+    def _on_spike_pick_event3(self, event):
+        """
+        
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.PickEvent
+        """
 
-        # don't take action on right-click
-        if event.button != 1:
-            # not the left button
-            # print('  rejecting not button 1')
+        # ignore when not left mouse button
+        if event.mouseevent.button != 1:
             return
 
-        self.mouseDownEvent = None
+        # no hits
+        if len(event.ind) < 1:
+            return
+
+        _clickedPlotIdx = event.ind[0]
+        logger.info(f'HighLighter _clickedPlotIdx: {_clickedPlotIdx} keyIsDown:{self.keyIsDown}')
+
+        # convert to what we are actually plotting
+        try:
+            #_realSpikeNumber = self._plotSpikeNumber.index(_clickedPlotIdx)
+            # get real spike number from subset of plotted psikes
+            _realSpikeNumber = self._plotSpikeNumber[_clickedPlotIdx]
+        except (IndexError) as e:
+            logger.warning(f'  xxx we are not plotting _clickedPlotIdx {_clickedPlotIdx}')
+
+        logger.info(f'_realSpikeNumber: {_realSpikeNumber}')
+
+        # xData = self.x[_realSpikeNumber]
+        # yData = self.y[_realSpikeNumber]
+        # self._highlight.set_offsets([xData, yData])
+
+        # if shift then add to mask
+        # self.mask |= _insideMask
+        newMask = np.zeros(self.x.shape, dtype=bool)
+        newMask[_clickedPlotIdx] = True
+        
+        if self.keyIsDown == "shift":
+            # oldMask = np.where(self.mask == True)
+            # oldMask = oldMask[0]  # why does np do this ???
+            # print('oldMask:', oldMask)
+
+            newSelectedSpikes = np.where(newMask == True)
+            newSelectedSpikes = newSelectedSpikes[0]  # why does np do this ???
+            #print('newSelectedSpikes:', newSelectedSpikes)
+
+            # add to mask
+            self.mask |= newMask
+
+            # print('newMask:')
+            # print(newMask)
+            # print('self.mask:')
+            # print(self.mask)
+            
+        else:
+            # replace with new
+            self.mask = newMask
+
+        # newMask = np.where(self.mask == True)
+        # newMask = newMask[0]  # why does np do this ???
+        # print('2) newMask:', newMask)
+
+        xy = np.column_stack([self.x[self.mask], self.y[self.mask]])
+        self._highlight.set_offsets(xy)
+        
+        self._HighlighterReleasedEvent()
+
+        self.canvas.draw()
 
     def on_button_press(self, event):
         """
         Args:
-            event (matplotlib.backend_bases.MouseEvent):
+            event : matplotlib.backend_bases.MouseEvent
         """
-        logger.info(f'Highlighter')
+    
+        # logger.info(f'Highlighter')
 
         # don't take action on right-click
         if event.button != 1:
@@ -1332,20 +1409,37 @@ class Highlighter(object):
         #    return
 
         self.mouseDownEvent = event
-
-        # if shift is down then add to mask
-        # print('  self.keyIsDown', self.keyIsDown)
+    
+        # not sure why I was clearing the mask here
         if self.keyIsDown == "shift":
+            # if shift is down then add to mask
             pass
         else:
-            self.mask = np.zeros(self.x.shape, dtype=bool)
+            # create a new mask
+            #logger.info('CLEARING MASK')
+            #self.mask = np.zeros(self.x.shape, dtype=bool)
+            pass
+
+    def on_button_release(self, event):
+        logger.info(f'Highlighter')
+
+        # don't take action on right-click
+        if event.button != 1:
+            # not the left button
+            # print('  rejecting not button 1')
+            return
+
+        self.mouseDownEvent = None
 
     def on_mouse_move(self, event):
         """When mouse is down, respond to movement and select points.
 
-        Args:
-            event (<class 'matplotlib.backend_bases.MouseEvent'>):
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
 
+        Notes
+        -----
         event contains:
             motion_notify_event: xy=(113, 36)
             xydata=(None, None)
@@ -1362,20 +1456,21 @@ class Highlighter(object):
         if self.mouseDownEvent is None:
             return
 
-        # logger.info('')
-
         event1 = self.mouseDownEvent
         event2 = event
 
         if event1 is None or event2 is None:
             return
 
-        self.mask |= self.inside(event1, event2)
+        _insideMask = self.inside(event1, event2)
+        # print(f'_insideMask: {_insideMask}')
+
+        self.mask |= _insideMask
         xy = np.column_stack([self.x[self.mask], self.y[self.mask]])
         self._highlight.set_offsets(xy)
         self.canvas.draw()
 
-    def setData(self, x, y):
+    def setData(self, x, y, plotSpikeNumber : List[int]):
         """Set underlying highlighter data, call this when we replot() scatter
         
         """
@@ -1386,12 +1481,44 @@ class Highlighter(object):
         self.mask = np.zeros(xArray.shape, dtype=bool)
         self.x = xArray
         self.y = yArray
+        self._plotSpikeNumber = plotSpikeNumber
 
-        #self._plotSpikeNumber = plotSpikeNumber
+    def selectSpikeList(self, plotIdxList):
+        """
+        plotIdxList : List[int]
+            List of plot indices to select
+        """
+        self.mask = np.zeros(self.x.shape, dtype=bool)
+        self.mask[plotIdxList] = True
+
+        xy = np.column_stack([self.x[self.mask], self.y[self.mask]])
+        self._highlight.set_offsets(xy)
+        
+        # self._HighlighterReleasedEvent()
+
+        self.canvas.draw()
+
+    # def selectSpikes(self, spikeList):
+        
+    #     self.mask = np.zeros(self.x.shape, dtype=bool)
+        
+    #     # the spike numbers we are plotting self._plotSpikeNumber
+    #     _selectionIdx = []
+    #     for spike in spikeList:
+    #         if spike in self._plotSpikeNumber:
+
+    #     self.mask
+
+    #     xy = np.column_stack([self.x[self.mask], self.y[self.mask]])
+    #     self._highlight.set_offsets(xy)
+        
+    #     self._HighlighterReleasedEvent()
+
+    #     self.canvas.draw()
 
     # def __call__(self, event1, event2):
-    def _HighlighterReleasedEvent(self, event1, event2):
-        """Callback when mouse is released
+    def _HighlighterReleasedEvent(self, event1=None, event2=None):
+        """RectangleSelector callback when mouse is released
 
         event1:
             button_press_event: xy=(87.0, 136.99999999999991) xydata=(27.912559411227885, 538.8555851528383) button=1 dblclick=False inaxes=AxesSubplot(0.1,0.1;0.607046x0.607046)
@@ -1405,13 +1532,14 @@ class Highlighter(object):
         selectedSpikes = np.where(self.mask == True)
         selectedSpikes = selectedSpikes[0]  # why does np do this ???
 
-        # logger.info(f'Num Spikes Select:{len(selectedSpikes)}')
+        logger.info(f'selectedSpikes: {selectedSpikes}')
 
         selectedSpikesList = selectedSpikes.tolist()
         self._parentPlot.selectSpikesFromHighlighter(selectedSpikesList)
 
-        # clear the selection user just made, will get 'reselected' in signal/slot
-        self._highlight.set_offsets([np.nan, np.nan])
+        # we now use self._blockSlots
+        # # clear the selection user just made, will get 'reselected' in signal/slot
+        #self._highlight.set_offsets([np.nan, np.nan])
 
         return
 

@@ -184,6 +184,8 @@ class sanpyPlugin(QtWidgets.QWidget):
         # to show as a widget
         self._showSelf: bool = True
 
+        self._blockSlots = False
+
         # the start and stop secinds to display
         self._startSec: Optional[float] = None
         self._stopSec: Optional[float] = None
@@ -422,22 +424,25 @@ class sanpyPlugin(QtWidgets.QWidget):
             # recieve set x axis
             app.signalSetXAxis.connect(self.slot_set_x_axis)
 
-
             # emit when we spike detect (used in detectionParams plugin)
             self.signalDetect.connect(app.slot_detect)
 
+            self.signalSelectSpikeList.connect(app.slot_selectSpikeList)
             
         bPlugins = self.get_bPlugins()
         if bPlugins is not None:
             # emit spike selection
             # self.signalSelectSpike.connect(bPlugins.slot_selectSpike)
-            self.signalSelectSpikeList.connect(bPlugins.slot_selectSpikeList)
+            
+            # removed april 29
+            #self.signalSelectSpikeList.connect(bPlugins.slot_selectSpikeList)
+            
             # emit on close window
             self.signalCloseWindow.connect(bPlugins.slot_closeWindow)
 
         # connect to self
         # self.signalSelectSpike.connect(self.slot_selectSpike)
-        self.signalSelectSpikeList.connect(self.slot_selectSpikeList)
+        # self.signalSelectSpikeList.connect(self.slot_selectSpikeList)
 
     def _disconnectSignalSlot(self):
         """Disconnect PyQt signal/slot on destruction."""
@@ -899,6 +904,9 @@ class sanpyPlugin(QtWidgets.QWidget):
         TODO: convert dict to class spikeSelection
         """
 
+        if self._blockSlots:
+            return
+    
         logger.info(f"{self._myClassName()} num spikes:{len(eDict['spikeList'])}")
 
         # don't respond if we are showing a different ba (bAnalysis)

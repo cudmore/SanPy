@@ -300,7 +300,7 @@ class bPlugins:
         except KeyError as e:
             logger.exception(e)
 
-    def slot_selectSpike(self, sDict):
+    def _old_slot_selectSpike(self, sDict):
         """
         On user selection of spike in a plugin
 
@@ -313,7 +313,7 @@ class bPlugins:
             doZoom = sDict["doZoom"]
             app.selectSpike(spikeNumber, doZoom=doZoom)
 
-    def slot_selectSpikeList(self, sDict: dict):
+    def _old_slot_selectSpikeList(self, sDict: dict):
         """On user selection of spike(s) in a plugin
 
         Tell main app to select a spike everywhere

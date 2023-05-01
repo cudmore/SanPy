@@ -559,8 +559,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.myMainWindow.mySignal("set full x axis")
 
     def setAxis(self, start, stop, set_xyBoth="xAxis", whichPlot="vm"):
-        """
-        Called when user click+drag in a pyQtGraph plot.
+        """Called when user click+drag in a pyQtGraph plot.
 
         Args:
             start
@@ -1440,12 +1439,14 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlotGlobal = self.view.addPlot(
             row=row, col=0, rowSpan=rowSpan, colSpan=colSpan
         )
+
         self.vmPlotGlobal.enableAutoRange()
         row += rowSpan
         rowSpan = 1
         self.derivPlot = self.view.addPlot(
             row=row, col=0, rowSpan=rowSpan, colSpan=colSpan
         )
+
         self.derivPlot.enableAutoRange()
         row += rowSpan
         rowSpan = 1
@@ -1453,6 +1454,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             row=row, col=0, rowSpan=rowSpan, colSpan=colSpan
         )
         self.dacPlot.enableAutoRange()
+
         row += rowSpan
         rowSpan = 2  # make Vm plot taller than others
         self.vmPlot = self.view.addPlot(
@@ -1551,10 +1553,10 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.dacPlot.setXLink(self.vmPlot)
 
         # turn off x/y dragging of deriv and vm
-        self.vmPlotGlobal.setMouseEnabled(x=False, y=False)
-        self.derivPlot.setMouseEnabled(x=False, y=False)
-        self.dacPlot.setMouseEnabled(x=False, y=False)
-        self.vmPlot.setMouseEnabled(x=False, y=False)
+        self.vmPlotGlobal.setMouseEnabled(x=True, y=False)
+        self.derivPlot.setMouseEnabled(x=True, y=False)
+        self.dacPlot.setMouseEnabled(x=True, y=False)
+        self.vmPlot.setMouseEnabled(x=True, y=False)
 
 
         # single spike selection
@@ -1974,6 +1976,31 @@ class bDetectionWidget(QtWidgets.QWidget):
         # this is needed to refresh the symbols of the selection
         self.selectSpikeList(self._selectedSpikeList)
 
+    def _slot_x_range_changed(self, viewbox, range_):
+        """Respond to changes in x-axis
+
+        Parameters
+        ----------
+        viewbox : pyqtgraph.graphicsItems.ViewBox.ViewBox.ViewBox
+        range_ : (float, float)
+            The current x-axis range
+        Notes
+        -----
+        Trying to connect but not working yet
+
+        self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
+
+        """
+        # logger.info(event)
+        # logger.info(f'v:{v}')
+        #logger.info(f'range_:{range_}')
+        
+        # set glbal vm to this range
+        # update rectangle in vmPlotGlobal
+        start = range_[0]
+        stop = range_[1]
+        self.linearRegionItem2.setRegion([start, stop])
+
     def _replot(self, startSec : Optional[float] = None,
                 stopSec : Optional[float] = None,
                 userUpdate : bool = False):
@@ -2047,9 +2074,13 @@ class bDetectionWidget(QtWidgets.QWidget):
             self,
             forcePenColor=None,
             type="vmFiltered",
+            allowXAxisDrag=True,  #default is True
             columnOrder=True,
         )
         self.vmPlot.addItem(self.vmLinesFiltered)
+
+        # april 30, 2023
+        self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
 
         # can't add a multi line to 2 different plots???
         self.vmLinesFiltered2 = MultiLine(
@@ -2059,7 +2090,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.linearRegionItem2 = pg.LinearRegionItem(
             values=(0, self.ba.fileLoader.recordingDur),
             orientation=pg.LinearRegionItem.Vertical,
-            brush=pg.mkBrush(100, 100, 100, 100),
+            brush=pg.mkBrush(150, 150, 150, 100),
             pen=pg.mkPen(None),
         )
         self.linearRegionItem2.setMovable(False)
@@ -2208,9 +2239,9 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
         # pg.QtGui.QGraphicsPathItem.__init__(self, self.path)
         super().__init__(self.path)
 
-        # holy shit, this is bad, without this the app becomes non responsive???
+        # this is bad, without this the app becomes non responsive???
         # if width > 1.0 then this whole app STALLS
-        # default heme
+        # default theme
         # self.setPen(pg.mkPen(color='k', width=1))
         # dark theme
         if forcePenColor is not None:
@@ -2252,7 +2283,7 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
             self.contextMenuEvent(event)
 
     def mouseDragEvent(self, ev):
-        """Default is to drag x-axis, use alt+drag for y-axis.
+        """Default is to drag x-axis, use alt+drag for y-axis (option+drag on macOS).
 
         TODO: implement option+drag to select spike point from scatter
 
@@ -2261,14 +2292,25 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
         """
         # print('MultiLine.mouseDragEvent():', type(ev), ev)
 
+        # if we do nothing here, we recover pyqtgraph click+drag to pan
+        # return
+    
+        # april 30, only allow this on isAlt so user can zoom into y-axis
+
         if ev.button() != QtCore.Qt.LeftButton:
             ev.ignore()
             return
 
         # modifiers = QtWidgets.QApplication.keyboardModifiers()
         # isAlt = modifiers == QtCore.Qt.AltModifier
-        isAlt = ev.modifiers() == QtCore.Qt.AltModifier
+        # alt on macOS is 'option'
+        # isAlt = ev.modifiers() == QtCore.Qt.AltModifier
+        #logger.info(f'isAlt:{isAlt}')
 
+        # april 30, only allow this on isAlt so user can zoom into y-axis
+        if not isAlt:
+            return
+        
         # xDrag = not isAlt # x drag is dafault, when alt is pressed, xDrag==False
 
         # allowXAxisDrag is now used for both x and y

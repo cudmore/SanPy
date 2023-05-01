@@ -30,13 +30,13 @@
     - Symbols will be user type
     - Color will cycle through a number of conditions (use pd df unique()
     
-- Add an Error (E) column to main file table
+- [done] Add an Error (E) column to main file table
 
 - Fix plot spike clip plugin. Basically make self.ba.getSpikeClips() fetch spike clips for just one sweep and one epoch. Also is a problem with spike time wrt sweep?
 
 - Reactivate limiting spike clips in plugin when user selects the x-axis. In general, my plugins no longer respond to x-axis changes. Turn code back on and just be sure to not select in scatter plugin (that was my original intention)
 
-- Add detection option to not allow spikes within some window of start of an epoch, use like 1-2 ms. Fasted Theanne spikes seem to be out  at like 10 ms.
+- Add detection option to not allow spikes within some window of start of an epoch, use like 1-2 ms. Fastest Theanne spikes seem to be out  at like 10 ms.
 
 - Add current step (DAC) to plot recording plugin.
 
@@ -46,7 +46,7 @@
 
 - sweep popup is not always updating when i programatically set it.
 
-- depreciate shift+click in favor of double-clik to zoom on one spike
+- depreciate shift+click in favor of double-click to zoom on one spike
 
 - [done] Added keyboard +/- to detection widget and scatter plot plugin to increase/decrease the scatter plot point size.
 

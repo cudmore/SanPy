@@ -40,8 +40,12 @@ pip install --upgrade pip
 x86
 
 ```
-conda create -y -n sanpy-env-pyinstaller-i386 python=3.11
-conda activate sanpy-env-pyinstaller-i386
+conda create -y -n sanpy-pyinstaller-i386-3-11 python=3.11
+conda activate sanpy-pyinstaller-i386-3-11
+
+conda create -y -n sanpy-pyinstaller-i386-3-9 python=3.9
+conda activate sanpy-pyinstaller-i386-3-9
+
 #conda env config vars set CONDA_SUBDIR=osx-arm64
 
 pip install --upgrade pip
@@ -52,7 +56,7 @@ pip install --upgrade pip
 
 This is all for SanPy
 
-conda install -y numpy pandas==1.5.3 scipy scikit-image==0.19.3 tifffile h5py requests
+conda install -y numpy pandas==1.5.3 scipy scikit-image==0.19.3 tifffile h5py requests matplotlib seaborn pyqt qtpy pyqtgraph
 
 ```
 conda install -y numpy
@@ -63,15 +67,19 @@ conda install -y tifffile
 conda install -y h5py
 conda install -y requests
 
-conda install -y -c anaconda pytables
-
 conda install -y matplotlib
-conda install -y -c conda-forge mplcursors
 conda install -y seaborn
 
 conda install -y pyqt
 conda install -y qtpy
 conda install -y pyqtgraph
+
+# in python 3.11
+conda install -y -c anaconda pytables
+# in python 3.9
+conda install -y pytables
+
+conda install -y -c conda-forge mplcursors
 
 pip install pyabf
 pip install pyqtdarktheme
@@ -117,8 +125,33 @@ python macos_build.py
 
 April 28, 2023
 
+Johnson found this solution
+
+```
+conda remove mkl
+conda install nomkl
+```
+
+That will remove most packages that depend on mkl. Need to reinstall with conda after.
+
+https://www.l3harrisgeospatial.com/Support/Self-Help-Tools/Help-Articles/Help-Articles-Detail/ArtMID/10220/ArticleID/24118/Workaround-when-IDL-to-python-bridge-is-crashing-due-to-MKL-library-conflict
+
+From this stackoverflow question
+
+https://stackoverflow.com/questions/72343334/intel-mkl-fatal-error-cannot-load-libmkl-intel-thread-1-dylib
+
+
+
+Cudmore was trying to fix
+
 See:
     https://stackoverflow.com/questions/62903775/intel-mkl-error-using-conda-and-matplotlib-library-not-loaded-rpath-libiomp5
+
+Trying the suggestion there
+
+```
+conda install -c conda-forge llvm-openmp
+```
 
 See also:
     https://stackoverflow.com/questions/35478526/pyinstaller-numpy-intel-mkl-fatal-error-cannot-load-mkl-intel-thread-dll

@@ -414,6 +414,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             "doZoom": doZoom,
             "ba": self.get_bAnalysis(),
         }
+        logger.info(f'-->> emit signalSelectSpikeList {eDict}')
         self.signalSelectSpikeList.emit(eDict)
 
     def mySignal(self, this, data=None):
@@ -443,6 +444,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             # old
             # self.myScatterPlotWidget.selectXRange(data[0], data[1])
             # new
+            logger.info(f'"-->> emit signalSetXAxis set full x axis" {data[0]} {data[1]}')
             self.signalSetXAxis.emit([data[0], data[1]])  # emits to scatter plot ONLY
 
         elif this == "set full x axis":
@@ -451,7 +453,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 self.stopSec = self.get_bAnalysis().fileLoader.recordingDur
             else:
                 self.stopSec = None
-            logger.info(f'"set full x axis" {self.startSec} {self.stopSec}')
+            logger.info(f'"-->> emit signalSetXAxis set full x axis" {self.startSec} {self.stopSec}')
             self.signalSetXAxis.emit(
                 [self.startSec, self.stopSec]
             )  # emits to scatter plot ONLY
@@ -1126,10 +1128,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
             logger.info(
                 f"  _openPlugin:{_openPlugin} _externalWindow:{_externalWindow}"
             )
-            _oneOpenPlugin = self.myPlugins.runPlugin(_openPlugin, ba=None, show=False)
+            _oneOpenPlugin = self.myPlugins.runPlugin(_openPlugin, ba=None, show=True)
             if _oneOpenPlugin is not None:
                 if _externalWindow:
-                    self.sanpyPlugin_action(_openPlugin)
+                    # april 30, 2023. Removed! We were opening plugins twice
+                    # self.sanpyPlugin_action(_openPlugin)
+                    pass
                 else:
                     # on add tab, the QTabWIdget makes a copy !!!
                     self.myPluginTab1.addTab(_oneOpenPlugin, _oneOpenPlugin.myHumanName)
@@ -1535,6 +1539,7 @@ def main():
         logger.warning(f"    Did not find appIconPath: {appIconPathStr}")
 
     w = SanPyWindow()
+
     w.show()
     w.raise_()  # bring to front, raise is a python keyword
     w.activateWindow()  # bring to front
