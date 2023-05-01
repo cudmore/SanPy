@@ -2304,7 +2304,7 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
         # modifiers = QtWidgets.QApplication.keyboardModifiers()
         # isAlt = modifiers == QtCore.Qt.AltModifier
         # alt on macOS is 'option'
-        # isAlt = ev.modifiers() == QtCore.Qt.AltModifier
+        isAlt = ev.modifiers() == QtCore.Qt.AltModifier
         #logger.info(f'isAlt:{isAlt}')
 
         # april 30, only allow this on isAlt so user can zoom into y-axis
