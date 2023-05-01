@@ -14,6 +14,8 @@ from .plotScatter import plotScatter
 # from .detectionErrors import detectionErrors
 from .spikeClips import spikeClips
 
+#from .sanpyPlugin import sanpyPlugin
+
 # from .resultsTable import resultsTable
 # from .resultsTable2 import resultsTable2
 # from .analysisSummary import analysisSummary

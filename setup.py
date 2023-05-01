@@ -2,7 +2,7 @@ import os
 import sys
 from setuptools import setup, find_packages
 
-VERSION = "0.1.6"
+VERSION = "0.1.7"
 
 # with open(os.path.join('sanpy', 'VERSION')) as version_file:
 #     VERSION = version_file.read().strip()
@@ -94,6 +94,7 @@ setup(
             'mkdocs-material',
             'mkdocs-jupyter',
             'mkdocstrings',
+            'mkdocstrings-python', # resolve erro as of April 30, 2023
             'tornado', # needed for pyinstaller
             'pyinstaller',
             'ipython',

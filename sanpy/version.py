@@ -16,4 +16,4 @@ analysisVersion = "20230324a"  # backend engine
 
 interfaceVersion = "20230324a"  # pyqt interface
 
-__version__ = "0.1.6"
+__version__ = "0.1.7"

@@ -30,8 +30,8 @@ dist_x86/SanPy.app: satisfies its Designated Requirement
 Arm
 
 ```
-CONDA_SUBDIR=osx-arm64 conda create -y -n sanpy-env-pyinstaller python=3.11
-conda activate sanpy-env-pyinstaller
+CONDA_SUBDIR=osx-arm64 conda create -y -n sanpy-pyinstaller-arm python=3.9
+conda activate sanpy-pyinstaller-arm
 conda env config vars set CONDA_SUBDIR=osx-arm64
 
 pip install --upgrade pip
@@ -124,6 +124,8 @@ python macos_build.py
 # New Errors
 
 April 28, 2023
+
+This error does not occur in Python 3.9
 
 Johnson found this solution
 

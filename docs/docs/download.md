@@ -1,17 +1,14 @@
 
 
-## macOS Releases
-
-For now, March-April 2023, once you download the dmg and copy to your Applicaitions/ folder, you will have to do the following in the terminal to actually run SanPy
-
-```
-xattr -cr /Applications/SanPy-Monterey.app
-```
+We are working hard to provide one click downloads to run SanPy as a desktop applicaition. Please check back here as we make progress.
 
 <table>
 <tr>
     <th>
     Release Date
+    </th>
+    <th>
+    Version
     </th>
     <th>
     Operating System
@@ -27,11 +24,15 @@ xattr -cr /Applications/SanPy-Monterey.app
 <tr>
 
     <td>
-    March 30, 2023
+    April 30, 2023
     </td>
 
     <td>
-    macOS Monterey
+    0.1.7
+    </td>
+
+    <td>
+    macOS i386
     </td>
 
     <td>
@@ -45,8 +46,4 @@ xattr -cr /Applications/SanPy-Monterey.app
 </tr>
 </table>
 
-## Windows Releases
 
-**Comin Soon**
-
-See all releases on the SanPy GitHub [release](https://github.com/cudmore/SanPy/releases) page.
