@@ -1,6 +1,6 @@
 
 
-We are working hard to provide one click downloads to run SanPy as a desktop applicaition. Please check back here as we make progress.
+We are working hard to provide one click downloads to run SanPy as a desktop application.
 
 <table>
 <tr>
@@ -24,11 +24,11 @@ We are working hard to provide one click downloads to run SanPy as a desktop app
 <tr>
 
     <td>
-    April 30, 2023
+    May 2, 2023
     </td>
 
     <td>
-    0.1.7
+    0.1.8
     </td>
 
     <td>
@@ -36,14 +36,39 @@ We are working hard to provide one click downloads to run SanPy as a desktop app
     </td>
 
     <td>
-    <A HREF="https://github.com/cudmore/SanPy/releases/download/v0.1-alpha.2/SanPy-Monterey.dmg">Download</>
+    <A HREF="https://github.com/cudmore/SanPy/releases/download/v0.1.8/SanPy-x86.zip">Download</>
     </td>
 
     <td>
-    <A HREF="https://github.com/cudmore/SanPy/releases/tag/v0.1-alpha.2">link</A>
+    <A HREF="https://github.com/cudmore/SanPy/releases/tag/v0.1.8">link</A>
     </td>
 
 </tr>
+
+<tr>
+
+    <td>
+    May 2, 2023
+    </td>
+
+    <td>
+    0.1.8
+    </td>
+
+    <td>
+    Window
+    </td>
+
+    <td>
+    <A HREF="https://github.com/cudmore/SanPy/releases/download/v0.1.8/SanPy-windows.zip">Download</>
+    </td>
+
+    <td>
+    <A HREF="https://github.com/cudmore/SanPy/releases/tag/v0.1.8">link</A>
+    </td>
+
+</tr>
+
 </table>
 
 
