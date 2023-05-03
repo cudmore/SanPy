@@ -24,11 +24,18 @@ class fileLoader_csv(fileLoader_base):
         Column 1 is recording in ['mV', 'pA']
         """
         # load the csv file
-        _df = pd.read_csv(self.filepath)
+        try:
+            _df = pd.read_csv(self.filepath)
+        except (pd.errors.EmptyDataError):
+            self._loadError = True
+            return
+        
         _columns = _df.columns
         _numColumns = len(_columns)
         if _numColumns < 2:
             logger.error(f"expecting 2 or more columns but got {_numColumns}")
+            self._loadError = True
+            return
 
         _numSamples = len(_df)
         _numSweeps = _numColumns - 1  # assuming no DAC columns
@@ -40,7 +47,10 @@ class fileLoader_csv(fileLoader_base):
         try:
             sweepX[:, 0] = _df[_columns[0]].to_numpy()
         except ValueError as e:
-            raise ValueError
+            # raise ValueError
+            logger.error(f"ValueError assigning the first column")
+            self._loadError = True
+            return
 
         # make sweepY to hold (samples, sweeps) values, the values in each sweep are different
         sweepY = np.ndarray((_numSamples, _numSweeps))

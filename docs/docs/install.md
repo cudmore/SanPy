@@ -32,11 +32,11 @@ pip install sanpy-ephys
 
 ## Install from a local source
 
-For users interested in modifying the source code, you can clone the GitHub repository and install from loacl source.
+For users interested in modifying the source code, you can clone the GitHub repository and install from local source.
 
 Assuming you have the following
 
- - [Python > 3.7][python3]
+ - [Python > 3.8][python3]
  - [pip][pip]
  - [git][git]
 

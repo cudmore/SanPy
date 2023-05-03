@@ -195,6 +195,8 @@ class fileLoader_base(ABC):
 
         super().__init__()
 
+        self._loadError = False
+
         self._path = filepath
 
         self._filteredY: np.ndarray = None  # set in _getDerivative

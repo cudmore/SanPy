@@ -853,6 +853,10 @@ class analysisDir:
                 # loads bAnalysis
                 ba, rowDict = self.getFileRow(fullFilePath, loadData=loadData)
 
+                if rowDict is None:
+                    logger.warning(f'error loading file {fullFilePath}')
+                    continue
+                
                 # TODO: calculating time, remove this
                 # This is 2x faster than loading from pandas gzip ???
                 # dDict = sanpy.bAnalysis.getDefaultDetection()
@@ -897,21 +901,22 @@ class analysisDir:
         return df
 
     def _checkColumns(self):
-        """Check columns in loaded vs sanpyColumns (and vica versa"""
+        """Check columns in loaded vs sanpyColumns (and vica versa).
+        """
         if self._df is None:
             return
         loadedColumns = self._df.columns
         for col in loadedColumns:
             if not col in self.sanpyColumns.keys():
                 # loaded has unexpected column, leave it
-                logger.error(
-                    f'error: bAnalysisDir did not find loaded col: "{col}" in sanpyColumns.keys()'
+                logger.info(
+                    f'did not find loaded col: "{col}" in sanpyColumns.keys() ... ignore it'
                 )
         for col in self.sanpyColumns.keys():
             if not col in loadedColumns:
                 # loaded is missing expected, add it
-                logger.error(
-                    f'error: bAnalysisDir did not find sanpyColumns.keys() col: "{col}" in loadedColumns'
+                logger.info(
+                    f'did not find sanpyColumns.keys() col: "{col}" in loadedColumns ... adding col'
                 )
                 self._df[col] = ""
 
@@ -1224,6 +1229,9 @@ class analysisDir:
             rowDict['I'] = 2 # need 2 because checkbox value is in (0,2)
         """
 
+        if ba.loadError:
+            return None, None
+        
         rowDict["File"] = ba.fileLoader.filename  # os.path.split(ba.path)[1]
         rowDict["Dur(s)"] = ba.fileLoader.recordingDur
 

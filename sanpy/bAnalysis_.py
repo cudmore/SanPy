@@ -145,6 +145,11 @@ class bAnalysis:
                     logger.info(f"Loading file with extension: {_ext}")
                 constructorObject = fileLoaderDict[_ext]["constructor"]
                 self._fileLoader = constructorObject(filepath)
+                # may 2, 2023
+                if self._fileLoader._loadError:
+                    logger.error(f'load error in file loader for ext: "{_ext}"')
+                    self.loadError = True
+
             except KeyError as e:
                 logger.error(f'did not find a file loader for extension "{_ext}"')
                 self.loadError = True
