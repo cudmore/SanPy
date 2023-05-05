@@ -174,7 +174,7 @@ class bAnalysis:
         """
 
         # get default derivative
-        if loadData:
+        if loadData and not self.loadError:
             self._rebuildFiltered()
 
         self._detectionDirty = False

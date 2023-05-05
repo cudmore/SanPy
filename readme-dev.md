@@ -1,3 +1,16 @@
+## Pushing tags to github
+
+```
+# make a tag
+tag v0.1.10 
+# push the tag
+push origin v0.1.10
+```
+
+## Lock down a version to accompany SanPy manuscript
+
+Working on publishing v0.1.8
+
 ## TODO for manuscript march 2023
 
 - [done] Refactor all things having to do with light/dark theme. This is critical as copy paste from the interface cannot be trapped in a dark theme (for printing, manuscripts, etc)
@@ -27,8 +40,8 @@
 - [done] Replace `<user>/Documents/SanPy` with `<user>/SanPy-User-Files`
 
 - Implement markers and colors in main detection widget
-    - Symbols will be user type
-    - Color will cycle through a number of conditions (use pd df unique()
+    - [done] Symbols will be user type
+    - [done] Color will cycle through a number of conditions (use pd df unique()
     
 - [done] Add an Error (E) column to main file table
 
@@ -55,15 +68,19 @@
 - [done] set usertype marker in detection widget
     - [done] Need to reselect (to change marker) on set user type in set spike plugin. In general, reselect spikes on analysis changed.
 
-- When setting user type in scatter plot, selection seems to update in plugin but not in main detection widget. The opposite does work, changing user type in main interface propogates to scatter plot plugin.
+- [done] When setting user type in scatter plot, selection seems to update in plugin but not in main detection widget. The opposite does work, changing user type in main interface propogates to scatter plot plugin.
 
 ## Bugs
+
+- If user saves h5f and then deleted raw data file (like an abf)
+    File still appears in the table but we get runtime exception when clicked.
+    To fix, check if abf exists when loading h5f and flag file 'missing' in table
 
 [fixed] Selecting spike in an epoch does not update correctly in Scatter plot widget
 
 [fixed] Selecting spike and setting user type with set spike stat results in incorrect spike symbol being set in plot scatter widget.
 
-interface, raw data no longer expands to fit window. Something with detection widget being a toolbar?
+[fixed] interface, raw data no longer expands to fit window. Something with detection widget being a toolbar?
 
 ### TODO minor
 

@@ -714,8 +714,7 @@ class analysisDir:
         return df
 
     def loadOneAnalysis(self, path, uuid=None, allowAutoLoad=True, verbose=True):
-        """
-        Load one bAnalysis either from original file path or uuid of h5 file.
+        """Load one bAnalysis either from original file path or uuid of h5 file.
 
         If from h5, we still need to reload sweeps !!!
         They are binary and fast, saving to h5 (in this case) is slow.
@@ -1257,10 +1256,22 @@ class analysisDir:
 
         # remove the path to the folder we have loaded
         relPath = path.replace(self.path, "")
+        
+        # logger.info(f'xxx self.path: "{self.path}"')
+        # logger.info(f'xxx path: "{path}"')
+        # logger.info(f'xxx relPath: "{relPath}"')
+        
         if relPath.startswith("/"):
             # so we can use os.path.join()
             relPath = relPath[1:]
+        # added 20230505 working with johnson in 1313 to fix windows bug ???
+        if relPath.startswith("\\"):
+            # so we can use os.path.join()
+            relPath = relPath[1:]
+
         rowDict["relPath"] = relPath
+
+        #logger.info(f'2) xxx relPath: "{relPath}"')
 
         return ba, rowDict
 

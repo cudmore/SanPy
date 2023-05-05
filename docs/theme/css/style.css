@@ -5,3 +5,11 @@ div.doc-contents:not(.first) {
   border-left: 4px solid rgba(230, 230, 230);
   margin-bottom: 80px;
 }
+
+.md-button--myred {
+    background: rgb(154, 30, 30, 1.0);
+  }
+
+.md-button--myred:not([disabled]):hover {
+    background: rgba(154, 30, 30, 0.8);
+}

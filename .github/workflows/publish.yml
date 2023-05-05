@@ -1,16 +1,62 @@
+# my twine key is in
+#         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+
 name: Publish Python Package
 
 on:
-  release:
-    types: [created]
+  workflow_run:
+    workflows: ["Release"]
+    types: [completed]
+    branches: [main]
 
 permissions:
   contents: read
 
 jobs:
-  test:
+  publish-linux:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+        - ["3.8", "cp38"]
+        - ["3.9", "cp39"]
+        - ["3.10", "cp310"]
+        - ["3.11", "cp311"]
+        platform: ["manylinux_x86_64"]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version[0] }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version[0] }}
+        cache: pip
+        cache-dependency-path: setup.py
+    - name: Install dependencies
+      run: |
+        pip install setuptools wheel twine build
+        pip install '.[gui]'
+    - name: Build wheels
+      uses: pypa/cibuildwheel@v2.12.1
+      env:
+        CIBW_BUILD: ${{ matrix.python-version[1] }}-${{ matrix.platform }}
+        CIBW_BUILD_FRONTEND: "build" # "pip"
+      with:
+        output-dir: "dist"
+        config-file: "pyproject.toml"
+    - name: Publish
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.TWINE_API_KEY }}
+      run: |
+        git tag
+        twine upload dist/*manylinux*.whl --verbose
+      continue-on-error: true
+
+  publish-windows:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
@@ -23,30 +69,42 @@ jobs:
         cache-dependency-path: setup.py
     - name: Install dependencies
       run: |
-        pip install '.[gui]'
-        pip install '.[test]'
-    - name: Run tests
-      run: |
-        # we are not testing the PyQt interface on GitHub, it kept running out of memory ???
-        pytest --cov=./tests --cov-report=xml --ignore=./tests/interface ./tests
-  deploy:
-    runs-on: ubuntu-latest
-    needs: [test]
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.11"
-        cache: pip
-        cache-dependency-path: setup.py
-    - name: Install dependencies
-      run: |
         pip install setuptools wheel twine build
+        pip install '.[gui]'
     - name: Publish
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: |
-        python -m build
-        twine upload dist/*
+        git tag
+        python -m build .
+        twine upload dist/* --verbose
+      continue-on-error: true
+
+  publish-macos:
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: pip
+        cache-dependency-path: setup.py
+    - name: Install dependencies
+      run: |
+        pip install setuptools wheel twine build
+        pip install '.[gui]'
+    - name: Publish
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+      run: |
+        git tag
+        python -m build .
+        twine upload dist/* --verbose
+      continue-on-error: true
