@@ -55,8 +55,8 @@ class exampleUserPlugin1(sanpyPlugin):
         self.line.set_data(sweepX, sweepY)
 
         # update plot of spike threshold
-        thresholdSec = self.ba.getStat("thresholdSec")
-        thresholdVal = self.ba.getStat("thresholdVal")
+        thresholdSec = self.getStat("thresholdSec")
+        thresholdVal = self.getStat("thresholdVal")
         self.lineDetection.set_data(thresholdSec, thresholdVal)
 
         # make sure the matplotlib axis auto scale

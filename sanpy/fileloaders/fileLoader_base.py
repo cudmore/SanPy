@@ -199,14 +199,17 @@ class fileLoader_base(ABC):
 
         self._path = filepath
 
-        self._filteredY: np.ndarray = None  # set in _getDerivative
-        self._filteredDeriv: np.ndarray = None
+        self._filteredY : np.ndarray = None  # set in _getDerivative
+        self._filteredDeriv : np.ndarray = None
         self._currentSweep: int = 0
 
         self._epochTableList: List[sanpy.fileloaders.epochTable] = None
 
         # load file from inherited class
         self.loadFile()
+
+        # check our work
+        self._checkLoadedData()
 
     def __str__(self):
         """Get a short string representing this file."""
@@ -501,6 +504,11 @@ class fileLoader_base(ABC):
         if self._epochTableList is not None:
             return self._epochTableList[0].numEpochs()
 
+    def _checkLoadedData(self):
+        # TODO: check all the member vraiables are correct
+        # set error if they are not
+        pass
+    
     def setLoadedData(
         self,
         sweepX: np.ndarray,
@@ -537,11 +545,8 @@ class fileLoader_base(ABC):
         self._sweepY = sweepY
         self._sweepC = sweepC
 
-        self._recordingMode: recordingModes = recordingMode
         self._numSweeps: int = self._sweepY.shape[1]
         self._sweepList: List[int] = list(range(self._numSweeps))
-        self._sweepLabelX: str = xLabel
-        self._sweepLabelY: str = yLabel
 
         self._sweepLengthSec: float = self._sweepX[-1, 0]  # from 0 to last sample point
 
@@ -552,8 +557,9 @@ class fileLoader_base(ABC):
         # logger.info(f'dtSeconds:{dtSeconds} dtMilliseconds:{dtMilliseconds} _dataPointsPerMs:{_dataPointsPerMs}')
         self._dataPointsPerMs: int = _dataPointsPerMs
 
-        # check our work
-
+        self._recordingMode: recordingModes = recordingMode
+        self._sweepLabelX: str = xLabel
+        self._sweepLabelY: str = yLabel
 
 if __name__ == "__main__":
     d = getFileLoaders()

@@ -243,6 +243,8 @@ That url tells me that none of the Contents/Resources binaries are signed or tim
 
 ## Staple
 
+After submitting to apple for notarization using `xcrun altool`, they wil send an email if it passed.
+
 Remember, once we staple, we need to remake the zip from the app.
 
 ```

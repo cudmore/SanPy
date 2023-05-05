@@ -1,74 +1,15 @@
 
 
-We are working hard to provide one click downloads to run SanPy as a desktop application.
+## Download the SanPy desktop application.
 
-<table>
-<tr>
-    <th>
-    Release Date
-    </th>
-    <th>
-    Version
-    </th>
-    <th>
-    Operating System
-    </th>
-    <th>
-    Download
-    </th>
-    <th>
-    Release Notes
-    </th>
-</tr>
+[Download macOS x86 ](https://github.com/cudmore/SanPy/releases/download/v0.1.9/SanPy-macOS-x86.zip){ .md-button .md-button--primary}
+[Download Windows](https://github.com/cudmore/SanPy/releases/download/v0.1.9/SanPy-windows.zip){ .md-button .md-button--accent }
 
-<tr>
+## Current Version
+ - Version 0.1.8
+ - Released on May 2, 2023
 
-    <td>
-    May 2, 2023
-    </td>
+## Current and previous releases (on GitHub)
 
-    <td>
-    0.1.8
-    </td>
-
-    <td>
-    macOS i386
-    </td>
-
-    <td>
-    <A HREF="https://github.com/cudmore/SanPy/releases/download/v0.1.8/SanPy-x86.zip">Download</>
-    </td>
-
-    <td>
-    <A HREF="https://github.com/cudmore/SanPy/releases/tag/v0.1.8">link</A>
-    </td>
-
-</tr>
-
-<tr>
-
-    <td>
-    May 2, 2023
-    </td>
-
-    <td>
-    0.1.8
-    </td>
-
-    <td>
-    Window
-    </td>
-
-    <td>
-    <A HREF="https://github.com/cudmore/SanPy/releases/download/v0.1.8/SanPy-windows.zip">Download</>
-    </td>
-
-    <td>
-    <A HREF="https://github.com/cudmore/SanPy/releases/tag/v0.1.8">link</A>
-    </td>
-
-</tr>
-
-</table>
-
+[Go To Current Release](https://github.com/cudmore/SanPy/releases/tag/v0.1.9){ .md-button .md-button--primary }
 

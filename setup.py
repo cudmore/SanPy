@@ -3,7 +3,7 @@ import sys
 from setuptools import setup, find_packages
 
 # manually keep in sync with sanpy/version.py
-VERSION = "0.1.9"
+VERSION = "0.1.10"
 
 # with open(os.path.join('sanpy', 'VERSION')) as version_file:
 #     VERSION = version_file.read().strip()

@@ -1482,6 +1482,18 @@ def _old__getVersionInfo() -> dict:
     _logFilePath = sanpy.sanpyLogger.getLoggerFile()
     logger.info(f"    logging to file {_logFilePath}")
 
+def getAppIconPath():
+    bundle_dir = sanpy._util.getBundledDir()
+    if getattr(sys, "frozen", False):
+        appIconPath = (
+            pathlib.Path(bundle_dir) / "sanpy_transparent.png"
+        )
+    else:
+        appIconPath = (
+            pathlib.Path(bundle_dir) / "interface" / "icons" / "sanpy_transparent.png"
+        )
+    return str(appIconPath)
+
 def main():
     """Main entry point for the SanPy desktop app.
 
@@ -1525,18 +1537,12 @@ def main():
     # v2
     qdarktheme.setup_theme()
 
-    # appIconPath = os.path.join(bundle_dir, 'interface/icons/sanpy_transparent.png')
-    bundle_dir = sanpy._util.getBundledDir()
-    appIconPath = (
-        pathlib.Path(bundle_dir) / "interface" / "icons" / "sanpy_transparent.png"
-    )
-    appIconPathStr = str(appIconPath)
-    # logger.info(f'appIconPath is "{appIconPath}"')
-    if os.path.isfile(appIconPathStr):
+    appIconPath = getAppIconPath()    
+    if os.path.isfile(appIconPath):
         logger.info(f'  app.setWindowIcon with: "{appIconPath}"')
-        app.setWindowIcon(QtGui.QIcon(appIconPathStr))
+        app.setWindowIcon(QtGui.QIcon(appIconPath))
     else:
-        logger.warning(f"    Did not find appIconPath: {appIconPathStr}")
+        logger.warning(f"    Did not find appIconPath: {appIconPath}")
 
     w = SanPyWindow()
 
