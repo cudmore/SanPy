@@ -2531,8 +2531,7 @@
 <span class="normal">1535</span>
 <span class="normal">1536</span>
 <span class="normal">1537</span>
-<span class="normal">1538</span>
-<span class="normal">1539</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">analysisDir</span><span class="p">:</span>
+<span class="normal">1538</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">analysisDir</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to manage a list of files loaded from a folder.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -2970,8 +2969,7 @@
         <span class="k">return</span> <span class="n">df</span>
 
     <span class="k">def</span> <span class="nf">loadOneAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">uuid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allowAutoLoad</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Load one bAnalysis either from original file path or uuid of h5 file.</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load one bAnalysis either from original file path or uuid of h5 file.</span>
 
 <span class="sd">        If from h5, we still need to reload sweeps !!!</span>
 <span class="sd">        They are binary and fast, saving to h5 (in this case) is slow.</span>
@@ -4089,13 +4087,13 @@ Number of columns is based on self.columns</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1046</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1045</span>
+<span class="normal">1046</span>
 <span class="normal">1047</span>
 <span class="normal">1048</span>
 <span class="normal">1049</span>
 <span class="normal">1050</span>
-<span class="normal">1051</span>
-<span class="normal">1052</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">analysisIsDirty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
+<span class="normal">1051</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">analysisIsDirty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Analysis is dirty when there has been detection but not saved to h5.&quot;&quot;&quot;</span>
     <span class="n">isDirty</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">ba</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">rowIdx</span><span class="p">,</span> <span class="s2">&quot;_ba&quot;</span><span class="p">]</span>
@@ -4124,7 +4122,8 @@ Number of columns is based on self.columns</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1352</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1351</span>
+<span class="normal">1352</span>
 <span class="normal">1353</span>
 <span class="normal">1354</span>
 <span class="normal">1355</span>
@@ -4147,8 +4146,7 @@ Number of columns is based on self.columns</p>
 <span class="normal">1372</span>
 <span class="normal">1373</span>
 <span class="normal">1374</span>
-<span class="normal">1375</span>
-<span class="normal">1376</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">appendRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowDict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ba</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">1375</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">appendRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowDict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ba</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Append an empty row.&quot;&quot;&quot;</span>
 
     <span class="c1"># logger.info(&#39;&#39;)</span>
@@ -4277,7 +4275,8 @@ Return:
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1068</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1067</span>
+<span class="normal">1068</span>
 <span class="normal">1069</span>
 <span class="normal">1070</span>
 <span class="normal">1071</span>
@@ -4348,8 +4347,7 @@ Return:
 <span class="normal">1136</span>
 <span class="normal">1137</span>
 <span class="normal">1138</span>
-<span class="normal">1139</span>
-<span class="normal">1140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">,</span> <span class="n">allowAutoLoad</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">:</span>
+<span class="normal">1139</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">,</span> <span class="n">allowAutoLoad</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">bAnalysis</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get bAnalysis object, will load if necc.</span>
 
 <span class="sd">    Args:</span>
@@ -4472,7 +4470,8 @@ Return:
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1267</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1266</span>
+<span class="normal">1267</span>
 <span class="normal">1268</span>
 <span class="normal">1269</span>
 <span class="normal">1270</span>
@@ -4536,8 +4535,7 @@ Return:
 <span class="normal">1328</span>
 <span class="normal">1329</span>
 <span class="normal">1330</span>
-<span class="normal">1331</span>
-<span class="normal">1332</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getFileList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">1331</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getFileList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get file paths from path.</span>
 
 <span class="sd">    Uses self.theseFileTypes</span>
@@ -4635,7 +4633,8 @@ Return:
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1173</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1172</span>
+<span class="normal">1173</span>
 <span class="normal">1174</span>
 <span class="normal">1175</span>
 <span class="normal">1176</span>
@@ -4726,8 +4725,7 @@ Return:
 <span class="normal">1261</span>
 <span class="normal">1262</span>
 <span class="normal">1263</span>
-<span class="normal">1264</span>
-<span class="normal">1265</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getFileRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">loadData</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="normal">1264</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getFileRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">loadData</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get dict representing one file (row in table). Loads bAnalysis to get headers.</span>
 
 <span class="sd">    On load error of proper file type (abf, csv), ba.loadError==True</span>
@@ -4894,7 +4892,8 @@ Return:
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1334</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1333</span>
+<span class="normal">1334</span>
 <span class="normal">1335</span>
 <span class="normal">1336</span>
 <span class="normal">1337</span>
@@ -4909,8 +4908,7 @@ Return:
 <span class="normal">1346</span>
 <span class="normal">1347</span>
 <span class="normal">1348</span>
-<span class="normal">1349</span>
-<span class="normal">1350</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getRowDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
+<span class="normal">1349</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getRowDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return a dict with selected row as dict (includes detection parameters).</span>
 
@@ -4949,15 +4947,15 @@ Return:
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1054</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1053</span>
+<span class="normal">1054</span>
 <span class="normal">1055</span>
 <span class="normal">1056</span>
 <span class="normal">1057</span>
 <span class="normal">1058</span>
 <span class="normal">1059</span>
 <span class="normal">1060</span>
-<span class="normal">1061</span>
-<span class="normal">1062</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">hasDirty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">1061</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">hasDirty</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return true if any bAnalysis in list has been analyzed but not saved (e.g. is dirty)&quot;&quot;&quot;</span>
     <span class="n">haveDirty</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="n">numRows</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_df</span><span class="p">)</span>
@@ -4990,7 +4988,8 @@ TODO: extend the logic to load from cloud (after we were instantiated)</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">789</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">788</span>
+<span class="normal">789</span>
 <span class="normal">790</span>
 <span class="normal">791</span>
 <span class="normal">792</span>
@@ -5101,8 +5100,7 @@ TODO: extend the logic to load from cloud (after we were instantiated)</p>
 <span class="normal">897</span>
 <span class="normal">898</span>
 <span class="normal">899</span>
-<span class="normal">900</span>
-<span class="normal">901</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loadData</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="normal">900</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">loadFolder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">loadData</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parse a folder and load all (abf, csv, ...). Only called if no h5 file.</span>
 
@@ -5379,10 +5377,8 @@ They are binary and fast, saving to h5 (in this case) is slow.</p>
 <span class="normal">749</span>
 <span class="normal">750</span>
 <span class="normal">751</span>
-<span class="normal">752</span>
-<span class="normal">753</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">loadOneAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">uuid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allowAutoLoad</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Load one bAnalysis either from original file path or uuid of h5 file.</span>
+<span class="normal">752</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">loadOneAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">uuid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allowAutoLoad</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Load one bAnalysis either from original file path or uuid of h5 file.</span>
 
 <span class="sd">    If from h5, we still need to reload sweeps !!!</span>
 <span class="sd">    They are binary and fast, saving to h5 (in this case) is slow.</span>
@@ -5441,7 +5437,8 @@ this is now handled by condiiton column.</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1406</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1405</span>
+<span class="normal">1406</span>
 <span class="normal">1407</span>
 <span class="normal">1408</span>
 <span class="normal">1409</span>
@@ -5475,8 +5472,7 @@ this is now handled by condiiton column.</p>
 <span class="normal">1437</span>
 <span class="normal">1438</span>
 <span class="normal">1439</span>
-<span class="normal">1440</span>
-<span class="normal">1441</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">old_duplicateRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
+<span class="normal">1440</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">old_duplicateRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Depreciated, Was used to have different ocnditions within a recording,</span>
 <span class="sd">    this is now handled by condiiton column.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -5675,7 +5671,8 @@ this is now handled by condiiton column.</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1491</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1490</span>
+<span class="normal">1491</span>
 <span class="normal">1492</span>
 <span class="normal">1493</span>
 <span class="normal">1494</span>
@@ -5699,8 +5696,7 @@ this is now handled by condiiton column.</p>
 <span class="normal">1512</span>
 <span class="normal">1513</span>
 <span class="normal">1514</span>
-<span class="normal">1515</span>
-<span class="normal">1516</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">pool_build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">1515</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">pool_build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build one df with all analysis. Use this in plot tool plugin.&quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="n">masterDf</span> <span class="o">=</span> <span class="kc">None</span>
@@ -5887,7 +5883,8 @@ this is now handled by condiiton column.</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1518</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1517</span>
+<span class="normal">1518</span>
 <span class="normal">1519</span>
 <span class="normal">1520</span>
 <span class="normal">1521</span>
@@ -5895,8 +5892,7 @@ this is now handled by condiiton column.</p>
 <span class="normal">1523</span>
 <span class="normal">1524</span>
 <span class="normal">1525</span>
-<span class="normal">1526</span>
-<span class="normal">1527</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">signalApp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<span class="normal">1526</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">signalApp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Update status bar of SanPy app.</span>
 
 <span class="sd">    TODO make this a signal and connect app to it.</span>
@@ -5928,7 +5924,8 @@ this is now handled by condiiton column.</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1443</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1442</span>
+<span class="normal">1443</span>
 <span class="normal">1444</span>
 <span class="normal">1445</span>
 <span class="normal">1446</span>
@@ -5973,8 +5970,7 @@ this is now handled by condiiton column.</p>
 <span class="normal">1485</span>
 <span class="normal">1486</span>
 <span class="normal">1487</span>
-<span class="normal">1488</span>
-<span class="normal">1489</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">syncDfWithPath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">1488</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">syncDfWithPath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sync path with existing df. Used to detect new/removed files.&quot;&quot;&quot;</span>
 
     <span class="n">pathFileList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileList</span><span class="p">()</span>  <span class="c1"># always full path</span>

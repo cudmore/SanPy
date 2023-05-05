@@ -3899,7 +3899,7 @@ Spike detection, Error checking, Plotting, and Saving.</p>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># get default derivative</span>
-        <span class="k">if</span> <span class="n">loadData</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">loadData</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_rebuildFiltered</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_detectionDirty</span> <span class="o">=</span> <span class="kc">False</span>
@@ -6593,7 +6593,7 @@ Spike detection, Error checking, Plotting, and Saving.</p>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># get default derivative</span>
-    <span class="k">if</span> <span class="n">loadData</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">loadData</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">loadError</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_rebuildFiltered</span><span class="p">()</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">_detectionDirty</span> <span class="o">=</span> <span class="kc">False</span>

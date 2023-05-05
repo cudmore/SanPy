@@ -5860,19 +5860,7 @@ self.setFont(myFont)</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/interface/sanpy_app.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1485</span>
-<span class="normal">1486</span>
-<span class="normal">1487</span>
-<span class="normal">1488</span>
-<span class="normal">1489</span>
-<span class="normal">1490</span>
-<span class="normal">1491</span>
-<span class="normal">1492</span>
-<span class="normal">1493</span>
-<span class="normal">1494</span>
-<span class="normal">1495</span>
-<span class="normal">1496</span>
-<span class="normal">1497</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1497</span>
 <span class="normal">1498</span>
 <span class="normal">1499</span>
 <span class="normal">1500</span>
@@ -5922,7 +5910,13 @@ self.setFont(myFont)</p>
 <span class="normal">1544</span>
 <span class="normal">1545</span>
 <span class="normal">1546</span>
-<span class="normal">1547</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+<span class="normal">1547</span>
+<span class="normal">1548</span>
+<span class="normal">1549</span>
+<span class="normal">1550</span>
+<span class="normal">1551</span>
+<span class="normal">1552</span>
+<span class="normal">1553</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Main entry point for the SanPy desktop app.</span>
 
 <span class="sd">    Configured in setup.py</span>
@@ -5965,18 +5959,12 @@ self.setFont(myFont)</p>
     <span class="c1"># v2</span>
     <span class="n">qdarktheme</span><span class="o">.</span><span class="n">setup_theme</span><span class="p">()</span>
 
-    <span class="c1"># appIconPath = os.path.join(bundle_dir, &#39;interface/icons/sanpy_transparent.png&#39;)</span>
-    <span class="n">bundle_dir</span> <span class="o">=</span> <span class="n">sanpy</span><span class="o">.</span><span class="n">_util</span><span class="o">.</span><span class="n">getBundledDir</span><span class="p">()</span>
-    <span class="n">appIconPath</span> <span class="o">=</span> <span class="p">(</span>
-        <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">bundle_dir</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;interface&quot;</span> <span class="o">/</span> <span class="s2">&quot;icons&quot;</span> <span class="o">/</span> <span class="s2">&quot;sanpy_transparent.png&quot;</span>
-    <span class="p">)</span>
-    <span class="n">appIconPathStr</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">appIconPath</span><span class="p">)</span>
-    <span class="c1"># logger.info(f&#39;appIconPath is &quot;{appIconPath}&quot;&#39;)</span>
-    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">appIconPathStr</span><span class="p">):</span>
+    <span class="n">appIconPath</span> <span class="o">=</span> <span class="n">getAppIconPath</span><span class="p">()</span>    
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">appIconPath</span><span class="p">):</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  app.setWindowIcon with: &quot;</span><span class="si">{</span><span class="n">appIconPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-        <span class="n">app</span><span class="o">.</span><span class="n">setWindowIcon</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">appIconPathStr</span><span class="p">))</span>
+        <span class="n">app</span><span class="o">.</span><span class="n">setWindowIcon</span><span class="p">(</span><span class="n">QtGui</span><span class="o">.</span><span class="n">QIcon</span><span class="p">(</span><span class="n">appIconPath</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Did not find appIconPath: </span><span class="si">{</span><span class="n">appIconPathStr</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Did not find appIconPath: </span><span class="si">{</span><span class="n">appIconPath</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
     <span class="n">w</span> <span class="o">=</span> <span class="n">SanPyWindow</span><span class="p">()</span>
 
