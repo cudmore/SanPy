@@ -1,4 +1,12 @@
-A folder of raw data files is loaded (top table). Selecting a file will display the raw data recording. Spike detection is then performed by specifying a threshold in either the derivative of the membrane potential (Detect dV/dt) or the membrane potential (Detect mV). Once spikes are detected, the analysis results are overlaid over the plots of the raw data. Finally, [plugins](../plugins) can be used to inspect the analysis results.
+The SanPy deskop application is an easy to use and powerful GUI designed to satisfy all your analysis needs.
+
+## Getting Started
+
+Load a folder of raw data with the `Load Folder` button, use the menu  `File - Load Folder ...` or drag and drop a folder from your hard-drive. Once a folder of raw data is loaded, each file in the folder will be shown in a list, one row per raw data file. Selecting a file will display the raw data recording.
+
+Spike detection is then performed by specifying a threshold in either the derivative of the membrane potential (Detect dV/dt) or the membrane potential (Detect mV).
+
+Once spikes are detected, the analysis results are overlaid over the plots of the raw data. Finally, [plugins](../plugins) can be used to inspect the analysis results.
 
 <IMG SRC="../img/sanpy-app.png" width=700>
 
@@ -162,7 +170,7 @@ To open a plugin within the main SanPy window, use the `View - Plugins` menu to 
 
 All open plugins can be saved and re-opened with the next run of SanPy by saving the SanPy preferences with the `File - Save Preferences` menu.
 
-<!-- move byond the pervious image. My generation X comes through !!! -->
+<!-- move beyond the pervious image. My generation X comes through !!! -->
 <p style="clear: both;">
 </p>
 
@@ -186,18 +194,40 @@ There is a dedicated [plugin](../plugins) documentaion page. Here we want to hig
 
 ### [Plot Scatter](../plugins#plot-scatter)
 
-<img src="../img/plugins/scatter-plot.png" width="600" align="right">
+The `plot scatter` plugin is designed to plot any [analysis results](../methods#analysis-results-full). Spike selections are bi-directional between the plot scatter widget and the main interface. The markers symbols and colors can be used to specify detailed results per spike. For example, coloring based on time or sweep, if the spike is marked bad, and if the spike has a specified user type. These types of things can be set in the main interface `Detection Panel - Set Spikes`.
 
-The plot scatter plugin is designed to plot any [analysis results](../methods#analysis-results-full). Spike selections are bi-directional between the plot scatter widget and the main interface. The markers symbols and colors can be used to specify detailed results per spike. For example, coloring based on time or swep, if the spike is marked bad, and if the spike has a specified user type. These types of things can be set in the main interface `Detection Panel - Set Spikes`.
+<img src="../img/plugins/scatter-plot.png" width="600" align="right">
 
 <!-- move byond the pervious image. My generation X comes through !!! -->
 <p style="clear: both;">
 </p>
 
-### [Summary Error](../plugins#summary-error)
+### [Plot FI](../plugins#plot-fi)
 
-<img src="../img/plugins/error-summary.png" width="600" align="right">
+The `plot fi` plugin is designed to visualize the raw data and analysis of a current-clamp experiment where a range of hyperpolarizing and depolarizing current steps are delivered.
 
-The summary error shows any errors that occured during spike detection. Each row represents and error in an individual spikke. Selecting the error will select the spike in the main interface. This should be used in a curation fedback loop. Once spikes are detected, check for errors and adjust the detection parameters until the errors are acceptable.
+<img src="../img/plugins/plot-fi.png" width="600" align="right">
+
+<!-- move byond the pervious image. My generation X comes through !!! -->
+<p style="clear: both;">
+</p>
+
+### [Summarize Results](../plugins/#summarize-results)
+
+The `summarize results` plugin shows a number of different tables to review the analysis results. Here, we focus on errors that occured during spike detection. Each row represents an error in an individual spike. Selecting the error will select the spike in the main interface. This should be used in a curation fedback loop. Once spikes are detected, check for errors and adjust the detection parameters until the errors are acceptable. Alternatively, you can set a tag in individual spikes to 'reject' them.
+
+<img src="../img/plugins/detection-errors.png" width="600" align="right">
+
+<!-- move byond the pervious image. My generation X comes through !!! -->
+<p style="clear: both;">
+</p>
+
+## User Files
+
+When the SanPy desktop application is first run, it creates a folder to contain user files in `<username>/Documents/SanPy-User-Files`. This is where you drop in your custom code to extend the capabilities of SanPy. This includes:
+
+- [Writing a file loader](../api/writing-a-file-loader)
+- [Writing new analysis](../api/writing-new-analysis)
+- [Writing a plugin](../api/writing-a-plugin)
 
 

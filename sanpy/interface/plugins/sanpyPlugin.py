@@ -855,7 +855,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         Parameters
         ----------
-        ba : sanpy.bAnalysis
+        sDict : dict
         """
         logger.info("")
         if not self._getResponseOption(self.responseTypes.analysisChange):
