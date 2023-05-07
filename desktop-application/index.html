@@ -69,7 +69,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#file-list-table" class="md-skip">
+        <a href="#getting-started" class="md-skip">
           Skip to content
         </a>
       
@@ -272,6 +272,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    Getting Started
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#file-list-table" class="md-nav__link">
     File List Table
   </a>
@@ -410,14 +417,28 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#summary-error" class="md-nav__link">
-    Summary Error
+  <a href="#plot-fi" class="md-nav__link">
+    Plot FI
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarize-results" class="md-nav__link">
+    Summarize Results
   </a>
   
 </li>
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-files" class="md-nav__link">
+    User Files
+  </a>
   
 </li>
       
@@ -948,6 +969,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    Getting Started
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#file-list-table" class="md-nav__link">
     File List Table
   </a>
@@ -1086,14 +1114,28 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#summary-error" class="md-nav__link">
-    Summary Error
+  <a href="#plot-fi" class="md-nav__link">
+    Plot FI
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#summarize-results" class="md-nav__link">
+    Summarize Results
   </a>
   
 </li>
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#user-files" class="md-nav__link">
+    User Files
+  </a>
   
 </li>
       
@@ -1114,7 +1156,11 @@
 
   <h1>Desktop Application</h1>
 
-<p>A folder of raw data files is loaded (top table). Selecting a file will display the raw data recording. Spike detection is then performed by specifying a threshold in either the derivative of the membrane potential (Detect dV/dt) or the membrane potential (Detect mV). Once spikes are detected, the analysis results are overlaid over the plots of the raw data. Finally, <a href="../plugins">plugins</a> can be used to inspect the analysis results.</p>
+<p>The SanPy deskop application is an easy to use and powerful GUI designed to satisfy all your analysis needs.</p>
+<h2 id="getting-started">Getting Started<a class="headerlink" href="#getting-started" title="Permanent link">¤</a></h2>
+<p>Load a folder of raw data with the <code>Load Folder</code> button, use the menu  <code>File - Load Folder ...</code> or drag and drop a folder from your hard-drive. Once a folder of raw data is loaded, each file in the folder will be shown in a list, one row per raw data file. Selecting a file will display the raw data recording.</p>
+<p>Spike detection is then performed by specifying a threshold in either the derivative of the membrane potential (Detect dV/dt) or the membrane potential (Detect mV).</p>
+<p>Once spikes are detected, the analysis results are overlaid over the plots of the raw data. Finally, <a href="../plugins">plugins</a> can be used to inspect the analysis results.</p>
 <p><IMG SRC="../img/sanpy-app.png" width=700></p>
 <h2 id="file-list-table">File List Table<a class="headerlink" href="#file-list-table" title="Permanent link">¤</a></h2>
 <p><IMG = SRC="../img/desktop-main-window/file-list.png" width=700></p>
@@ -1256,7 +1302,7 @@
 <p>A menu to open a SanPy <a href="../plugins">plugin</a>. Plugins opened with this menu will be displayed in their own window.</p>
 <p>To open a plugin within the main SanPy window, use the <code>View - Plugins</code> menu to show the plugins dock and then right-click to select a plugin to display.</p>
 <p>All open plugins can be saved and re-opened with the next run of SanPy by saving the SanPy preferences with the <code>File - Save Preferences</code> menu.</p>
-<!-- move byond the pervious image. My generation X comes through !!! -->
+<!-- move beyond the pervious image. My generation X comes through !!! -->
 <p style="clear: both;">
 </p>
 
@@ -1276,15 +1322,33 @@
 <h2 id="plugins">Plugins<a class="headerlink" href="#plugins" title="Permanent link">¤</a></h2>
 <p>There is a dedicated <a href="../plugins">plugin</a> documentaion page. Here we want to highlight a few key plugins.</p>
 <h3 id="plot-scatter"><a href="../plugins#plot-scatter">Plot Scatter</a><a class="headerlink" href="#plot-scatter" title="Permanent link">¤</a></h3>
+<p>The <code>plot scatter</code> plugin is designed to plot any <a href="../methods#analysis-results-full">analysis results</a>. Spike selections are bi-directional between the plot scatter widget and the main interface. The markers symbols and colors can be used to specify detailed results per spike. For example, coloring based on time or sweep, if the spike is marked bad, and if the spike has a specified user type. These types of things can be set in the main interface <code>Detection Panel - Set Spikes</code>.</p>
 <p><img src="../img/plugins/scatter-plot.png" width="600" align="right"></p>
-<p>The plot scatter plugin is designed to plot any <a href="../methods#analysis-results-full">analysis results</a>. Spike selections are bi-directional between the plot scatter widget and the main interface. The markers symbols and colors can be used to specify detailed results per spike. For example, coloring based on time or swep, if the spike is marked bad, and if the spike has a specified user type. These types of things can be set in the main interface <code>Detection Panel - Set Spikes</code>.</p>
 <!-- move byond the pervious image. My generation X comes through !!! -->
 <p style="clear: both;">
 </p>
 
-<h3 id="summary-error"><a href="../plugins#summary-error">Summary Error</a><a class="headerlink" href="#summary-error" title="Permanent link">¤</a></h3>
-<p><img src="../img/plugins/error-summary.png" width="600" align="right"></p>
-<p>The summary error shows any errors that occured during spike detection. Each row represents and error in an individual spikke. Selecting the error will select the spike in the main interface. This should be used in a curation fedback loop. Once spikes are detected, check for errors and adjust the detection parameters until the errors are acceptable.</p>
+<h3 id="plot-fi"><a href="../plugins#plot-fi">Plot FI</a><a class="headerlink" href="#plot-fi" title="Permanent link">¤</a></h3>
+<p>The <code>plot fi</code> plugin is designed to visualize the raw data and analysis of a current-clamp experiment where a range of hyperpolarizing and depolarizing current steps are delivered.</p>
+<p><img src="../img/plugins/plot-fi.png" width="600" align="right"></p>
+<!-- move byond the pervious image. My generation X comes through !!! -->
+<p style="clear: both;">
+</p>
+
+<h3 id="summarize-results"><a href="../plugins/#summarize-results">Summarize Results</a><a class="headerlink" href="#summarize-results" title="Permanent link">¤</a></h3>
+<p>The <code>summarize results</code> plugin shows a number of different tables to review the analysis results. Here, we focus on errors that occured during spike detection. Each row represents an error in an individual spike. Selecting the error will select the spike in the main interface. This should be used in a curation fedback loop. Once spikes are detected, check for errors and adjust the detection parameters until the errors are acceptable. Alternatively, you can set a tag in individual spikes to 'reject' them.</p>
+<p><img src="../img/plugins/detection-errors.png" width="600" align="right"></p>
+<!-- move byond the pervious image. My generation X comes through !!! -->
+<p style="clear: both;">
+</p>
+
+<h2 id="user-files">User Files<a class="headerlink" href="#user-files" title="Permanent link">¤</a></h2>
+<p>When the SanPy desktop application is first run, it creates a folder to contain user files in <code>&lt;username&gt;/Documents/SanPy-User-Files</code>. This is where you drop in your custom code to extend the capabilities of SanPy. This includes:</p>
+<ul>
+<li><a href="../api/writing-a-file-loader">Writing a file loader</a></li>
+<li><a href="../api/writing-new-analysis">Writing new analysis</a></li>
+<li><a href="../api/writing-a-plugin">Writing a plugin</a></li>
+</ul>
 
 
 

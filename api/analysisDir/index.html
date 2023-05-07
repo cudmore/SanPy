@@ -2538,7 +2538,12 @@
 <span class="normal">1542</span>
 <span class="normal">1543</span>
 <span class="normal">1544</span>
-<span class="normal">1545</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">analysisDir</span><span class="p">:</span>
+<span class="normal">1545</span>
+<span class="normal">1546</span>
+<span class="normal">1547</span>
+<span class="normal">1548</span>
+<span class="normal">1549</span>
+<span class="normal">1550</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">analysisDir</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Class to manage a list of files loaded from a folder.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -3519,16 +3524,21 @@
         <span class="c1"># remove the path to the folder we have loaded</span>
         <span class="n">relPath</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;xxx self.path: &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;xxx path: &quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;xxx relPath: &quot;</span><span class="si">{</span><span class="n">relPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+        <span class="c1"># logger.info(f&#39;xxx self.path: &quot;{self.path}&quot;&#39;)</span>
+        <span class="c1"># logger.info(f&#39;xxx path: &quot;{path}&quot;&#39;)</span>
+        <span class="c1"># logger.info(f&#39;xxx relPath: &quot;{relPath}&quot;&#39;)</span>
 
         <span class="k">if</span> <span class="n">relPath</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>
             <span class="c1"># so we can use os.path.join()</span>
             <span class="n">relPath</span> <span class="o">=</span> <span class="n">relPath</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="c1"># added 20230505 working with johnson in 1313 to fix windows bug ???</span>
+        <span class="k">if</span> <span class="n">relPath</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">):</span>
+            <span class="c1"># so we can use os.path.join()</span>
+            <span class="n">relPath</span> <span class="o">=</span> <span class="n">relPath</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
         <span class="n">rowDict</span><span class="p">[</span><span class="s2">&quot;relPath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">relPath</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;2) xxx relPath: &quot;</span><span class="si">{</span><span class="n">relPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+        <span class="c1">#logger.info(f&#39;2) xxx relPath: &quot;{relPath}&quot;&#39;)</span>
 
         <span class="k">return</span> <span class="n">ba</span><span class="p">,</span> <span class="n">rowDict</span>
 
@@ -4136,12 +4146,7 @@ Number of columns is based on self.columns</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1358</span>
-<span class="normal">1359</span>
-<span class="normal">1360</span>
-<span class="normal">1361</span>
-<span class="normal">1362</span>
-<span class="normal">1363</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1363</span>
 <span class="normal">1364</span>
 <span class="normal">1365</span>
 <span class="normal">1366</span>
@@ -4160,7 +4165,12 @@ Number of columns is based on self.columns</p>
 <span class="normal">1379</span>
 <span class="normal">1380</span>
 <span class="normal">1381</span>
-<span class="normal">1382</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">appendRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowDict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ba</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="normal">1382</span>
+<span class="normal">1383</span>
+<span class="normal">1384</span>
+<span class="normal">1385</span>
+<span class="normal">1386</span>
+<span class="normal">1387</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">appendRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowDict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ba</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Append an empty row.&quot;&quot;&quot;</span>
 
     <span class="c1"># logger.info(&#39;&#39;)</span>
@@ -4484,12 +4494,7 @@ Return:
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1273</span>
-<span class="normal">1274</span>
-<span class="normal">1275</span>
-<span class="normal">1276</span>
-<span class="normal">1277</span>
-<span class="normal">1278</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1278</span>
 <span class="normal">1279</span>
 <span class="normal">1280</span>
 <span class="normal">1281</span>
@@ -4549,7 +4554,12 @@ Return:
 <span class="normal">1335</span>
 <span class="normal">1336</span>
 <span class="normal">1337</span>
-<span class="normal">1338</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getFileList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<span class="normal">1338</span>
+<span class="normal">1339</span>
+<span class="normal">1340</span>
+<span class="normal">1341</span>
+<span class="normal">1342</span>
+<span class="normal">1343</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getFileList</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get file paths from path.</span>
 
 <span class="sd">    Uses self.theseFileTypes</span>
@@ -4746,7 +4756,12 @@ Return:
 <span class="normal">1268</span>
 <span class="normal">1269</span>
 <span class="normal">1270</span>
-<span class="normal">1271</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getFileRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">loadData</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="normal">1271</span>
+<span class="normal">1272</span>
+<span class="normal">1273</span>
+<span class="normal">1274</span>
+<span class="normal">1275</span>
+<span class="normal">1276</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getFileRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">loadData</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get dict representing one file (row in table). Loads bAnalysis to get headers.</span>
 
 <span class="sd">    On load error of proper file type (abf, csv), ba.loadError==True</span>
@@ -4834,16 +4849,21 @@ Return:
     <span class="c1"># remove the path to the folder we have loaded</span>
     <span class="n">relPath</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;xxx self.path: &quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;xxx path: &quot;</span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;xxx relPath: &quot;</span><span class="si">{</span><span class="n">relPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+    <span class="c1"># logger.info(f&#39;xxx self.path: &quot;{self.path}&quot;&#39;)</span>
+    <span class="c1"># logger.info(f&#39;xxx path: &quot;{path}&quot;&#39;)</span>
+    <span class="c1"># logger.info(f&#39;xxx relPath: &quot;{relPath}&quot;&#39;)</span>
 
     <span class="k">if</span> <span class="n">relPath</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">):</span>
         <span class="c1"># so we can use os.path.join()</span>
         <span class="n">relPath</span> <span class="o">=</span> <span class="n">relPath</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="c1"># added 20230505 working with johnson in 1313 to fix windows bug ???</span>
+    <span class="k">if</span> <span class="n">relPath</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">&quot;</span><span class="p">):</span>
+        <span class="c1"># so we can use os.path.join()</span>
+        <span class="n">relPath</span> <span class="o">=</span> <span class="n">relPath</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
     <span class="n">rowDict</span><span class="p">[</span><span class="s2">&quot;relPath&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">relPath</span>
 
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;2) xxx relPath: &quot;</span><span class="si">{</span><span class="n">relPath</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">)</span>
+    <span class="c1">#logger.info(f&#39;2) xxx relPath: &quot;{relPath}&quot;&#39;)</span>
 
     <span class="k">return</span> <span class="n">ba</span><span class="p">,</span> <span class="n">rowDict</span>
 </code></pre></div></td></tr></table></div>
@@ -4920,12 +4940,7 @@ Return:
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1340</span>
-<span class="normal">1341</span>
-<span class="normal">1342</span>
-<span class="normal">1343</span>
-<span class="normal">1344</span>
-<span class="normal">1345</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1345</span>
 <span class="normal">1346</span>
 <span class="normal">1347</span>
 <span class="normal">1348</span>
@@ -4936,7 +4951,12 @@ Return:
 <span class="normal">1353</span>
 <span class="normal">1354</span>
 <span class="normal">1355</span>
-<span class="normal">1356</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getRowDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
+<span class="normal">1356</span>
+<span class="normal">1357</span>
+<span class="normal">1358</span>
+<span class="normal">1359</span>
+<span class="normal">1360</span>
+<span class="normal">1361</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getRowDict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return a dict with selected row as dict (includes detection parameters).</span>
 
@@ -5465,12 +5485,7 @@ this is now handled by condiiton column.</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1412</span>
-<span class="normal">1413</span>
-<span class="normal">1414</span>
-<span class="normal">1415</span>
-<span class="normal">1416</span>
-<span class="normal">1417</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1417</span>
 <span class="normal">1418</span>
 <span class="normal">1419</span>
 <span class="normal">1420</span>
@@ -5500,7 +5515,12 @@ this is now handled by condiiton column.</p>
 <span class="normal">1444</span>
 <span class="normal">1445</span>
 <span class="normal">1446</span>
-<span class="normal">1447</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">old_duplicateRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
+<span class="normal">1447</span>
+<span class="normal">1448</span>
+<span class="normal">1449</span>
+<span class="normal">1450</span>
+<span class="normal">1451</span>
+<span class="normal">1452</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">old_duplicateRow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rowIdx</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Depreciated, Was used to have different ocnditions within a recording,</span>
 <span class="sd">    this is now handled by condiiton column.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -5699,12 +5719,7 @@ this is now handled by condiiton column.</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1497</span>
-<span class="normal">1498</span>
-<span class="normal">1499</span>
-<span class="normal">1500</span>
-<span class="normal">1501</span>
-<span class="normal">1502</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1502</span>
 <span class="normal">1503</span>
 <span class="normal">1504</span>
 <span class="normal">1505</span>
@@ -5724,7 +5739,12 @@ this is now handled by condiiton column.</p>
 <span class="normal">1519</span>
 <span class="normal">1520</span>
 <span class="normal">1521</span>
-<span class="normal">1522</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">pool_build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">1522</span>
+<span class="normal">1523</span>
+<span class="normal">1524</span>
+<span class="normal">1525</span>
+<span class="normal">1526</span>
+<span class="normal">1527</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">pool_build</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build one df with all analysis. Use this in plot tool plugin.&quot;&quot;&quot;</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="n">masterDf</span> <span class="o">=</span> <span class="kc">None</span>
@@ -5911,16 +5931,16 @@ this is now handled by condiiton column.</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1524</span>
-<span class="normal">1525</span>
-<span class="normal">1526</span>
-<span class="normal">1527</span>
-<span class="normal">1528</span>
-<span class="normal">1529</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1529</span>
 <span class="normal">1530</span>
 <span class="normal">1531</span>
 <span class="normal">1532</span>
-<span class="normal">1533</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">signalApp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<span class="normal">1533</span>
+<span class="normal">1534</span>
+<span class="normal">1535</span>
+<span class="normal">1536</span>
+<span class="normal">1537</span>
+<span class="normal">1538</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">signalApp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Update status bar of SanPy app.</span>
 
 <span class="sd">    TODO make this a signal and connect app to it.</span>
@@ -5952,12 +5972,7 @@ this is now handled by condiiton column.</p>
 
       <details class="quote">
         <summary>Source code in <code>/Users/cudmore/Sites/SanPy/sanpy/analysisDir.py</code></summary>
-        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1449</span>
-<span class="normal">1450</span>
-<span class="normal">1451</span>
-<span class="normal">1452</span>
-<span class="normal">1453</span>
-<span class="normal">1454</span>
+        <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1454</span>
 <span class="normal">1455</span>
 <span class="normal">1456</span>
 <span class="normal">1457</span>
@@ -5998,7 +6013,12 @@ this is now handled by condiiton column.</p>
 <span class="normal">1492</span>
 <span class="normal">1493</span>
 <span class="normal">1494</span>
-<span class="normal">1495</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">syncDfWithPath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">1495</span>
+<span class="normal">1496</span>
+<span class="normal">1497</span>
+<span class="normal">1498</span>
+<span class="normal">1499</span>
+<span class="normal">1500</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">syncDfWithPath</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Sync path with existing df. Used to detect new/removed files.&quot;&quot;&quot;</span>
 
     <span class="n">pathFileList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">getFileList</span><span class="p">()</span>  <span class="c1"># always full path</span>

@@ -7,5 +7,9 @@ div.doc-contents:not(.first) {
 }
 
 .md-button--myred {
-    background: rgb(154, 30, 30);
+    background: rgb(154, 30, 30, 1.0);
   }
+
+.md-button--myred:not([disabled]):hover {
+    background: rgba(154, 30, 30, 0.8);
+}
