@@ -1,8 +1,8 @@
-The SanPy deskop application is an easy to use and powerful GUI designed to satisfy all your analysis needs.
+The SanPy deskop application is an easy to use and powerful GUI designed to satisfy all your analysis needs. You can [download](../download) the desktop appication or [build from source](../install).
 
 ## Getting Started
 
-Load a folder of raw data with the `Load Folder` button, use the menu  `File - Load Folder ...` or drag and drop a folder from your hard-drive. Once a folder of raw data is loaded, each file in the folder will be shown in a list, one row per raw data file. Selecting a file will display the raw data recording.
+Load a folder of raw data files with the `Load Folder` button, or use the `File - Load Folder ...` menu, or drag and drop a folder from your hard-drive. Once a folder of raw data is loaded, each file in the folder will be shown in a list, one row per raw data file. Selecting a file will display the raw data recording.
 
 Spike detection is then performed by specifying a threshold in either the derivative of the membrane potential (Detect dV/dt) or the membrane potential (Detect mV).
 
@@ -14,22 +14,21 @@ Once spikes are detected, the analysis results are overlaid over the plots of th
 
 <IMG = SRC="../img/desktop-main-window/file-list.png" width=700>
 
-A list of files in a loaded folder, each row is a file and columns are information on the file including a subset of the [detection parameters](../methods/#detection-parameters) and [analysis results](../methods/#analysis-results-full). The file list table can be toggled on and off with the `View - File Panel` menu and keyboard `f`. 
+A list of files in a loaded folder, each row is a file and columns are information on the file including a subset of the [detection parameters](../methods/#detection-parameters) and [analysis results](../methods/#analysis-results-full). The file list table can be toggled on and off with the `View - File Panel` menu or keyboard `f`. 
 
- - **L** - Indicates if the file is loaded. Use right-click `Unload Data` to unload a loaded file. This can save memory.
+ - **L** - Indicates if the file is loaded. Use the right-click menu `Unload Data` to unload a loaded file. This can save memory.
  - **A** - Indicates if the file has been analyzed.
  - **S** - Indicates if the analysis has been saved.
  - **N** - Once analyzed, indicates the number of spikes detected.
- - **I** - Depreciated. This is not used.
  - **File** - The name of the raw data file.
- - **Dur(s)** - The duration of the total recording (across all sweeps).
+ - **Dur(s)** - The duration of the recording (this is the duration of each sweep).
  - **Sweeps** - The number of sweeps.
  - **Epochs** - The number of epochs per sweep. Epochs correspond to different current clamp steps/amplitudes within each sweep.
  - **KHz** - The sampling rate of the recording.
- - **Mode** - The mode of the recording, either V-Clamp or I-Clamp.
+ - **Mode** - The mode of the recording, either V-Clamp or I-Clamp. Currently, SanPy will only analyze I-Clamp.
  - **Start(s)** - Once analyzed, indicates the start second of the analysis.
  - **Stop(s)** - Once analyzed, indicates the stop second of the analysis.
- - **dvdtTheshold** - Once analyzed, indicates the dvdt used for detection.
+ - **dvdtTheshold** - Once analyzed, indicates the dV/dt used for detection.
  - **mvThreshold** - Once analyzed, indicates the mV used for detection.
  
 <IMG = SRC="../img/desktop-main-window/file-menu-right-click.png" width=125 align="left">
@@ -45,7 +44,7 @@ Right-click in the file list table for a popup menu.
 
 <IMG = SRC="../img/desktop-main-window/detection-panel.png" width=250 align="left">
 
-The detection panel has subcategories to detect spikes and to control the display of the raw data and analysis results. The detection panel can be toggled on and off using the `View - Detection Panel` menu and with keyboard `d`.
+The detection panel has subcategories to detect spikes and to control the display of the raw data and analysis results. The detection panel can be toggled on and off using the `View - Detection Panel` menu or with keyboard `d`.
 
 ### Detection
 
@@ -54,8 +53,12 @@ Set detection parameters, finer control of all detection parameters is provided 
 - **Presets** - A popup to set a pre-defined set of detection parameters.
 - **Detect dV/dt** - Detect spikes with the specified value in the first derivative (dV/dt). The first derivative can be plotted with menu `View - Derivative`.
 - **Detect mV** - Detect spikes with the specified value in mV.
-- **From(s) To(s)** - Displays the current x-axis zoom and allows it to be set. Use Click+drag with the mouse to visually zoom in on the recording. Use keyboard 'enter' or 'return' to set a recording to full zoom.
+
+<!--
+- **From(s) To(s)** - **depreciated** Displays the current x-axis zoom and allows it to be set. Use Click+drag with the mouse to visually zoom in on the recording. Use keyboard 'enter' or 'return' to set a recording to full zoom.
 - **Spikes/Freq/Errors** - Once analyzed, displays the number of detected spikes, the mean instantaneous frequency between spikes, and the number of errors encountered during spike detection. View all spike analysis results with the [Summary Spikes](../plugins/#summary-spikes) plugin and all errors with the [Summary Error](../plugins/#summary-error) plugins.
+-->
+
 - **Export Spike Report** - Export all analysis for the selected file to a CSV file. This file includes all [detection parameters](../methods/#detection-parameters) and [analysis results](../methods/#analysis-results-full).
 
 ### Display
@@ -63,12 +66,17 @@ Set detection parameters, finer control of all detection parameters is provided 
 Control the display of SanPy.
 
 - **Sweep** - Set the displayed sweep. This includes a popup menu to select a sweep and controls to go to the previous `<` and next `>` sweep.
+
+<!--
 - **Crosshair** - Checkbox to toggle a crosshair to track the mouse position and display the current position in seconds (x) and mV (y).
-- **Select spikes** - Select individual spikes by spike number and scroll to the previous `<<` and next `>>` spike.
-- **[]** - A button to set the plots to full scale/zoom. This can also be done with keyboard `enter` or `return`.
+-->
+
+- **Spike** - Select individual spikes by spike number and scroll to the previous `<<` and next `>>` spike.
+
+- **[]** - A button to set the raw data plots to full scale/zoom. This can also be done with keyboard `enter` or `return`.
 
 ### Set Spikes
- - Set parameters for the currently selected spike(s) like: Condition, User Type, and reject.
+ - Set parameters for the currently selected spike(s) like: Condition, User Type, and include.
 
 ### Plot Options
  - Control the analysis results that are overlayed over the raw data. See [below](#raw-data-overlayed-with-analysis-results) for a detailed description.
@@ -122,6 +130,21 @@ A number of analysis results can be overlaid using the [Plot Options](#plot-opti
 <p style="clear: both;">
 </p>
 
+## Mouse and Keyboard
+
+### Mouse
+
+ - Mouse click - Select individual spikes.
+ - Mouse wheel - Zoom in and out on x-axis (time).
+ - Mouse click+drag - Pan the x-axis (time).
+ - Mouse option+click+drag to zoom into the recording (y-axis).
+
+### Keyboard
+
+ - "return" or "enter" - Set plot of recordings to full scale.
+ - "esc" - Canel spike selection.
+ - [coming soon] "b" - Toggle selected spike(s) bad.
+
 ## Menus
 
 ### File menu
@@ -174,20 +197,6 @@ All open plugins can be saved and re-opened with the next run of SanPy by saving
 <p style="clear: both;">
 </p>
 
-## Mouse and Keyboard
-
-### Mouse
-
- - Mouse click - Select individual spikes.
- - Mouse click+drag - Zoom into the recording (x-axis, time).
- - Mouse option+click+drag to zoom into the recording (y-axis).
-
-### Keyboard
-
- - "esc" - Canel spike selection
- - "b" - Toggle selected spike(s) bad.
- - "return" or "enter" - Set plot of recordings to full scale.
-
 ## Plugins
 
 There is a dedicated [plugin](../plugins) documentaion page. Here we want to highlight a few key plugins.
@@ -214,7 +223,7 @@ The `plot fi` plugin is designed to visualize the raw data and analysis of a cur
 
 ### [Summarize Results](../plugins/#summarize-results)
 
-The `summarize results` plugin shows a number of different tables to review the analysis results. Here, we focus on errors that occured during spike detection. Each row represents an error in an individual spike. Selecting the error will select the spike in the main interface. This should be used in a curation fedback loop. Once spikes are detected, check for errors and adjust the detection parameters until the errors are acceptable. Alternatively, you can set a tag in individual spikes to 'reject' them.
+The `summarize results` plugin shows a number of different tables to review the analysis results. Here, we focus on errors that occured during spike detection. Each row represents an error in an individual spike. Selecting the error will select the spike in the main interface. This should be used in a curation feedback loop. Once spikes are detected, check for errors and adjust the detection parameters until the errors are acceptable. Alternatively, you can set a tag in individual spikes to 'reject' them.
 
 <img src="../img/plugins/detection-errors.png" width="600" align="right">
 

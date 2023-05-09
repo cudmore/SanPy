@@ -12,13 +12,17 @@ SanPy is designed to analyze action potentials and extract a number of parameter
 
 SanPy is optimized for a wide range of whole-cell current-clamp recordings including cardiac myocytes and neurons.
 
-### Please see our [documentation website](https://cudmore.github.io/SanPy/).
+Please see the [SanPy documentation](https://cudmore.github.io/SanPy/).
+
+### SanPy preprint on bioRxiv
+
+Guarina L, Johnson TL, Griffith T, Santana LF, Cudmore RH (2023) SanPy: A whole-cell electrophysiology analysis pipeline. bioRxiv 2023.05.06.539660; doi: [https://doi.org/10.1101/2023.05.06.539660](https://doi.org/10.1101/2023.05.06.539660)]
 
 ### Desktop Application
 
 We provide desktop applications for macOS and Windows users. Go to the [download page](https://cudmore.github.io/SanPy/download/) to get started. No command line, no complicated installation, just an easy to use point and click GUI!
 
-**Footnote:** We are waiting to get a Microsoft software certificate so we can ship the Windows exe version. Please check back in a bit. In the meantime, the SanPy desktop application can always be [installed from source]((https://cudmore.github.io/SanPy/install/))
+**Footnote:** We are waiting to get a Microsoft software certificate so we can ship the Windows exe version. Please check back in a bit. In the meantime, the SanPy desktop application can always be [installed from source](https://cudmore.github.io/SanPy/install/)
 
 <IMG SRC="docs/docs/img/sanpy-app.png" width=600>
 

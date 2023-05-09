@@ -2,9 +2,9 @@
 
 ```
 # make a tag
-tag v0.1.10 
+tag v0.1.11
 # push the tag
-push origin v0.1.10
+git push origin v0.1.11
 ```
 
 ## Lock down a version to accompany SanPy manuscript

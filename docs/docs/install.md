@@ -2,9 +2,7 @@ SanPy is designed to run on: macOS, Microsoft Windows, and Linux.
 
 ## Download the SanPy app.
 
-We are building SanPy desktop applications so users can download a single file and get working with just a double-click. This does not require anything special on our users end. **No programming, no installing Python, and no command line**.
-
-See our [Download](download) page.
+We are building SanPy desktop applications so users can download a single file and get working with just a double-click. This does not require anything special on our users end. **No programming, no installing Python, and no command line**. See our [download](../download) page.
 
 ## Install from PyPi
 
@@ -25,6 +23,8 @@ pip install "sanpy-ephys[gui]"
 ### Install the SanPy backend
 
 This is designed to work as an engine to allow interoperability with other Python packages and to run in the cloud.
+
+**Note** - The backend install is currently being rewritten and is not currently working. You can always install from source.
 
 ```
 pip install sanpy-ephys

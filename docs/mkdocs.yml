@@ -64,9 +64,9 @@ nav:
     - Desktop Application: desktop-application.md
     - Plugins: plugins.md
     - Install: install.md
-    - Using the API: scripting.ipynb
     - API:
         - Overview: api/overview.md
+        - Getting Started: scripting.ipynb
         - Writing A File Loader: api/writing-a-file-loader.md
         - Writing A Plugin: api/writing-a-plugin.md
         - Writing New Analysis: api/writing-new-analysis.md
@@ -88,6 +88,6 @@ nav:
             - plugins:
                 - sanpyPlugin: api/interface/plugins/sanpyPlugin.md
     - Methods: methods.md
-    - Web Application: web-application.md
-    - Open Source: open-source.md
+    #- Web Application: web-application.md
+    #- Open Source: open-source.md
     - About SanPy: about.md

@@ -1,7 +1,7 @@
 
 ## Detection Parameters
 
-To detect action potentials, SanPy uses a number of parameters. These can all be configured using the default setting using [sanpy/detectionParams](../api/bDetection).
+To detect action potentials, SanPy uses a number of parameters. These can all be configured using the [detection parameter plugin](../plugins/#detection-parameters) or programmatically with the API [sanpy/detectionParams](../api/bDetection).
 
 Note: To update this table use sanpy/bDetection.py
 

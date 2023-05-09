@@ -40,11 +40,8 @@ pip install --upgrade pip
 x86
 
 ```
-conda create -y -n sanpy-pyinstaller-i386-3-11 python=3.11
-conda activate sanpy-pyinstaller-i386-3-11
-
-conda create -y -n sanpy-pyinstaller-i386-3-9 python=3.9
-conda activate sanpy-pyinstaller-i386-3-9
+conda create -y -n sanpy-pyinstaller-i386 python=3.9
+conda activate sanpy-pyinstaller-i386
 
 #conda env config vars set CONDA_SUBDIR=osx-arm64
 
@@ -121,11 +118,9 @@ pip install -e ~/Sites/pyinstaller/.
 python macos_build.py
 ```
 
-# New Errors
+# New Errors, April 28, 2023
 
-April 28, 2023
-
-This error does not occur in Python 3.9
+Fixed: This error does not occur in Python 3.9
 
 Johnson found this solution
 
@@ -141,7 +136,6 @@ https://www.l3harrisgeospatial.com/Support/Self-Help-Tools/Help-Articles/Help-Ar
 From this stackoverflow question
 
 https://stackoverflow.com/questions/72343334/intel-mkl-fatal-error-cannot-load-libmkl-intel-thread-1-dylib
-
 
 
 Cudmore was trying to fix
