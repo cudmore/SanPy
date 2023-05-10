@@ -1,4 +1,4 @@
-name: Test with flake8 and pytest
+name: Test with flake8 and pytest xxx
 
 on:
   pull_request:

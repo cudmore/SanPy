@@ -1,7 +1,7 @@
 # my twine key is in
 #         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
 
-name: Publish Python Package to PyPi
+name: Publish Python Package to PyPi xxx
 
 # on:
 #   workflow_run:
@@ -58,12 +58,17 @@ jobs:
   #       twine upload dist/*manylinux*.whl --verbose
   #     continue-on-error: true
 
+  # may 9, 2023
+  # ERROR: Could not build wheels for scikit-image, mplcursors,
+  # which is required to install pyproject.toml-based projects
+  # removing 3.11
+
   publish-windows:
     runs-on: windows-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10"]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
@@ -91,7 +96,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10"]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
