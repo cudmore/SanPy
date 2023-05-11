@@ -10,7 +10,7 @@ VERSION = "0.1.13"
 
 # load the readme
 _thisPath = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.abspath(_thisPath+"/readme.md")) as f:
+with open(os.path.abspath(_thisPath+"/README.md")) as f:
     long_description = f.read()
 
 """
