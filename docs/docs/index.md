@@ -1,6 +1,6 @@
 SanPy is software to perform analysis of whole-cell curent clamp recordings. It is designed to work on a range of excitable cells including cardiac myocytes and neurons. Historically, it was originally designed for spontaneous [cardiac action potentials][cardiac action potential] from [whole-cell current-clamp][patch-clamp] recordings of [cardiac myocytes].
 
-This is a work-in-progress and under heavy development. If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.
+If you find the code in this repository interesting, please email Robert Cudmore at UC Davis (rhcudmore@ucdavis.edu) and we can get you started. We are looking for users and collaborators.
 
 ## Key features:
 
@@ -13,6 +13,10 @@ This is a work-in-progress and under heavy development. If you find the code in 
 4) SanPy has a [file loader](api/writing-a-file-loader.md) architecture so any type of raw data can be opened. We provide file loaders for Molecular Devices (Axon Instruments) abf and atf file formats (using pyAbf), as well as general purpose comma-seperated-value files (csv).
 
 5) SanPY implements a rich range of [analysis results](methods/#analysis-results) such as spike threshold detection, interval statistics, and spike shape analysis. Like the plugin and file loading architecures, SanPy also provide a software architecute to add [new analysis](api/writing-new-analysis.md) measurements.
+
+### SanPy preprint on bioRxiv
+
+Guarina L, Johnson TL, Griffith T, Santana LF, Cudmore RH (2023) SanPy: A whole-cell electrophysiology analysis pipeline. bioRxiv 2023.05.06.539660; doi: [https://doi.org/10.1101/2023.05.06.539660](https://doi.org/10.1101/2023.05.06.539660)]
 
 ## [Desktop Application](desktop-application)
 

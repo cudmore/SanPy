@@ -18,7 +18,7 @@ Requires (need to make local copies of (pandas model, checkbox delegate)
     PyQt5
     matplotlib
     seaborn
-    mplcursors
+    #mplcursors
     openpyxl # to load xlsx
 """
 
@@ -36,7 +36,7 @@ from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt  # abb 202012 added to set theme
 import seaborn as sns
-import mplcursors  # popup on hover
+# import mplcursors  # popup on hover
 
 # originally, I wanted this to not rely on sanpy
 import sanpy
@@ -532,7 +532,7 @@ class myMplCanvas(QtWidgets.QFrame):
         self.stateDict = None
         self.plotDf = None
         self.whatWeArePlotting = None
-        self.mplCursorHover = None
+        # self.mplCursorHover = None
 
         # needed to show canvas in widget
         self.layout = QtWidgets.QVBoxLayout()  # any will do
@@ -722,10 +722,10 @@ class myMplCanvas(QtWidgets.QFrame):
             self.scatterPlotSelection.set_data([], [])
         # self.draw()
         # cancel mplCursorHover hover selection
-        if self.mplCursorHover is not None:
-            selections = self.mplCursorHover.selections
-            if len(selections) == 1:
-                self.mplCursorHover.remove_selection(selections[0])
+        # if self.mplCursorHover is not None:
+        #     selections = self.mplCursorHover.selections
+        #     if len(selections) == 1:
+        #         self.mplCursorHover.remove_selection(selections[0])
 
         # never cancel red square, we always wan't one
         # self.slotSelectSquare(None)
@@ -754,31 +754,30 @@ class myMplCanvas(QtWidgets.QFrame):
         else:
             self.mplToolbar.hide()
 
-        if stateDict["doHover"] and self.whatWeArePlotting is not None:
-            self.mplCursorHover = mplcursors.cursor(self.whatWeArePlotting, hover=True)
+        # if stateDict["doHover"] and self.whatWeArePlotting is not None:
+        #     self.mplCursorHover = mplcursors.cursor(self.whatWeArePlotting, hover=True)
 
-            @self.mplCursorHover.connect("add")
-            def _(sel):
-                # sel.annotation.get_bbox_patch().set(fc="white")
-                sel.annotation.arrow_patch.set(
-                    arrowstyle="simple", fc="white", alpha=0.5
-                )
-                # row in df is from sel.target.index
-                # print('sel.target.index:', sel.target.index)
-                ind = sel.target.index
-                annotationDict = self.getAnnotation(ind)
-                myText = ""
-                for k, v in annotationDict.items():
-                    myText += f"{k}: {v}\n"
-                sel.annotation.set_text(myText)
+        #     @self.mplCursorHover.connect("add")
+        #     def _(sel):
+        #         # sel.annotation.get_bbox_patch().set(fc="white")
+        #         sel.annotation.arrow_patch.set(
+        #             arrowstyle="simple", fc="white", alpha=0.5
+        #         )
+        #         # row in df is from sel.target.index
+        #         # print('sel.target.index:', sel.target.index)
+        #         ind = sel.target.index
+        #         annotationDict = self.getAnnotation(ind)
+        #         myText = ""
+        #         for k, v in annotationDict.items():
+        #             myText += f"{k}: {v}\n"
+        #         sel.annotation.set_text(myText)
 
-        elif not stateDict["doHover"]:
-            # cancel mplCursorHover hover selection
-            if self.mplCursorHover is not None:
-                selections = self.mplCursorHover.selections
-                if len(selections) == 1:
-                    self.mplCursorHover.remove_selection(selections[0])
-        # self.mplCursorHover = None
+        # elif not stateDict["doHover"]:
+        #     # cancel mplCursorHover hover selection
+        #     if self.mplCursorHover is not None:
+        #         selections = self.mplCursorHover.selections
+        #         if len(selections) == 1:
+        #             self.mplCursorHover.remove_selection(selections[0])
 
         #
         # self.draw() # to update hover
@@ -1056,24 +1055,24 @@ class myMplCanvas(QtWidgets.QFrame):
         # update
         self.canvas.axes.figure.canvas.mpl_connect("pick_event", self.onPick)
 
-        self.mplCursorHover = None
-        if stateDict["doHover"] and self.whatWeArePlotting is not None:
-            self.mplCursorHover = mplcursors.cursor(self.whatWeArePlotting, hover=True)
+        # self.mplCursorHover = None
+        # if stateDict["doHover"] and self.whatWeArePlotting is not None:
+        #     self.mplCursorHover = mplcursors.cursor(self.whatWeArePlotting, hover=True)
 
-            @self.mplCursorHover.connect("add")
-            def _(sel):
-                # sel.annotation.get_bbox_patch().set(fc="white")
-                sel.annotation.arrow_patch.set(
-                    arrowstyle="simple", fc="white", alpha=0.5
-                )
-                # row in df is from sel.target.index
-                # print('sel.target.index:', sel.target.index)
-                ind = sel.target.index
-                annotationDict = self.getAnnotation(ind)
-                myText = ""
-                for k, v in annotationDict.items():
-                    myText += f"{k}: {v}\n"
-                sel.annotation.set_text(myText)
+        #     @self.mplCursorHover.connect("add")
+        #     def _(sel):
+        #         # sel.annotation.get_bbox_patch().set(fc="white")
+        #         sel.annotation.arrow_patch.set(
+        #             arrowstyle="simple", fc="white", alpha=0.5
+        #         )
+        #         # row in df is from sel.target.index
+        #         # print('sel.target.index:', sel.target.index)
+        #         ind = sel.target.index
+        #         annotationDict = self.getAnnotation(ind)
+        #         myText = ""
+        #         for k, v in annotationDict.items():
+        #             myText += f"{k}: {v}\n"
+        #         sel.annotation.set_text(myText)
 
         #
         # self.mySetStatusBar(warningStr)
@@ -1159,7 +1158,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.statusBar = QtWidgets.QStatusBar()
         self.setStatusBar(self.statusBar)
 
-        self.mplCursorHover = None
+        # self.mplCursorHover = None
 
         self.buildMenus()
 
@@ -1249,7 +1248,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.doKDE = False  # fits on histogram plots
         self.showMplToolbar = False  # fits on histogram plots
 
-        self.doHover = False
+        # self.doHover = False
 
         self.plotSizeList = ["paper", "talk", "poster"]
         self.plotSize = "paper"
@@ -1464,9 +1463,9 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         mplToolbar.setChecked(self.showMplToolbar)
         mplToolbar.stateChanged.connect(self.setMplToolbar)
 
-        hoverCheckbox = QtWidgets.QCheckBox("Hover Info")
-        hoverCheckbox.setChecked(self.doHover)
-        hoverCheckbox.stateChanged.connect(self.setHover)
+        # hoverCheckbox = QtWidgets.QCheckBox("Hover Info")
+        # hoverCheckbox.setChecked(self.doHover)
+        # hoverCheckbox.stateChanged.connect(self.setHover)
 
         # work fine
         """
@@ -1562,7 +1561,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # self.layout.addWidget(darkThemeCheckBox, 2, 3)
         self.layout.addWidget(swapSortButton, 2, col + 1)
         self.layout.addWidget(mplToolbar, 3, col)
-        self.layout.addWidget(hoverCheckbox, 3, col + 1)
+        # self.layout.addWidget(hoverCheckbox, 3, col + 1)
 
         # works fine
         # self.layout.addWidget(QtWidgets.QLabel("Plot Size"), 4, 2)
@@ -1828,7 +1827,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
         stateDict["darkTheme"] = self.darkTheme
         stateDict["showLegend"] = self.showLegend
-        stateDict["doHover"] = self.doHover
+        # stateDict["'doHover'"] = self.doHover
         stateDict["showMplToolbar"] = self.showMplToolbar
 
         if self.dataType == "All Spikes":
@@ -2023,11 +2022,11 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.showMplToolbar = state
         self.updateGlobal()
 
-    def setHover(self, state):
-        # used in scatterplots and point plots
-        self.doHover = state
-        # self.signalStateChange.emit(self.getState())
-        self.updateGlobal()
+    # def setHover(self, state):
+    #     # used in scatterplots and point plots
+    #     self.doHover = state
+    #     # self.signalStateChange.emit(self.getState())
+    #     self.updateGlobal()
 
     def setTheme(self, state):
         print("setTheme() state:", state)

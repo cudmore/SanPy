@@ -76,7 +76,7 @@ conda install -y -c anaconda pytables
 # in python 3.9
 conda install -y pytables
 
-conda install -y -c conda-forge mplcursors
+#conda install -y -c conda-forge mplcursors
 
 pip install pyabf
 pip install pyqtdarktheme

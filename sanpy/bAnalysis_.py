@@ -13,6 +13,7 @@ from typing import Union, Dict, List, Tuple, Optional
 
 import numpy as np
 import pandas as pd
+import scipy
 import scipy.signal
 import scipy.stats
 
