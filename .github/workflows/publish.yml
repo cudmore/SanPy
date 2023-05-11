@@ -24,13 +24,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          #pip install -e '.[gui]'
-          pip install -U setuptools setuptools_scm wheel twine build
+          pip install -e '.[gui]'
+          pip install -U setuptools wheel twine build
       - name: Build and publish
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           git tag
-          python -m build .[gui]
+          python -m build .
           twine upload dist/*
