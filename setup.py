@@ -47,7 +47,7 @@ setup(
     classifiers=[
         'Programming Language :: Python :: 3',
         'Natural Language :: English',
-        License :: OSI Approved :: GNU General Public License v3 (GPLv3),
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         #'License :: OSI Approved :: GNU General Public License, Version 3',
         'Operating System :: MacOS',
         'Operating System :: Microsoft :: Windows',
