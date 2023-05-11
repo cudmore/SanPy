@@ -40,7 +40,7 @@ setup(
     version=VERSION,
     description='Whole cell current-clamp analysis.',
     long_description=long_description,
-    long_description_content_type = text/markdown,
+    long_description_content_type = 'text/markdown',
     url='http://github.com/cudmore/SanPy',
     author='Robert H Cudmore',
     author_email='robert.cudmore@gmail.com',
