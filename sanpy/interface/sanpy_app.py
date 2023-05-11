@@ -1,7 +1,7 @@
 # Author: Robert H Cudmore
 # Date: 20190719
 
-from curses.panel import bottom_panel
+#from curses.panel import bottom_panel
 import os, sys
 
 # import traceback # to print call stack
