@@ -38,8 +38,9 @@ with open(os.path.abspath(_thisPath+"/README.md")) as f:
 setup(
     name='sanpy-ephys',  # the package name (on PyPi), still use 'import sanpy'
     version=VERSION,
-    description='Whole cell current clamp analysis.',
+    description='Whole cell current-clamp analysis.',
     long_description=long_description,
+    long_description_content_type = text/markdown,
     url='http://github.com/cudmore/SanPy',
     author='Robert H Cudmore',
     author_email='robert.cudmore@gmail.com',
