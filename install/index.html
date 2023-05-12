@@ -19,7 +19,7 @@
         <link rel="next" href="../api/overview/">
       
       <link rel="icon" href="../img/sanpy-transparent.png">
-      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.1.8">
+      <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.11">
     
     
       
@@ -27,7 +27,7 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.ded33207.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.85bb2934.min.css">
       
       
 
@@ -309,23 +309,37 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#install-from-the-command-line" class="md-nav__link">
+    Install from the command line
+  </a>
+  
+    <nav class="md-nav" aria-label="Install from the command line">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#either-create-a-conda-environment" class="md-nav__link">
+    Either create a conda environment
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#or-create-a-venv-environment" class="md-nav__link">
+    Or create a venv environment
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#install-from-pypi" class="md-nav__link">
     Install from PyPi
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#install-the-front-end-gui" class="md-nav__link">
-    Install the front-end GUI
-  </a>
-  
-    <nav class="md-nav" aria-label="Install the front-end GUI">
-      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#install-the-sanpy-backend" class="md-nav__link">
-    Install the SanPy backend
+  <a href="#run-the-gui" class="md-nav__link">
+    Run the GUI
   </a>
   
 </li>
@@ -815,23 +829,37 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#install-from-the-command-line" class="md-nav__link">
+    Install from the command line
+  </a>
+  
+    <nav class="md-nav" aria-label="Install from the command line">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#either-create-a-conda-environment" class="md-nav__link">
+    Either create a conda environment
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#or-create-a-venv-environment" class="md-nav__link">
+    Or create a venv environment
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#install-from-pypi" class="md-nav__link">
     Install from PyPi
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#install-the-front-end-gui" class="md-nav__link">
-    Install the front-end GUI
-  </a>
-  
-    <nav class="md-nav" aria-label="Install the front-end GUI">
-      <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#install-the-sanpy-backend" class="md-nav__link">
-    Install the SanPy backend
+  <a href="#run-the-gui" class="md-nav__link">
+    Run the GUI
   </a>
   
 </li>
@@ -868,21 +896,34 @@
 <p>SanPy is designed to run on: macOS, Microsoft Windows, and Linux.</p>
 <h2 id="download-the-sanpy-app">Download the SanPy app.<a class="headerlink" href="#download-the-sanpy-app" title="Permanent link">¤</a></h2>
 <p>We are building SanPy desktop applications so users can download a single file and get working with just a double-click. This does not require anything special on our users end. <strong>No programming, no installing Python, and no command line</strong>. See our <a href="../download">download</a> page.</p>
-<h2 id="install-from-pypi">Install from PyPi<a class="headerlink" href="#install-from-pypi" title="Permanent link">¤</a></h2>
-<p>Both the SanPy backend and front-end GUI can be installed from PyPi.</p>
-<h2 id="install-the-front-end-gui">Install the front-end GUI<a class="headerlink" href="#install-the-front-end-gui" title="Permanent link">¤</a></h2>
-<div class="highlight"><pre><span></span><code>pip install sanpy-ephys[gui]
-</code></pre></div>
-<p>On newer macOS machines or from a zsh shell in general, you need some quotes</p>
-<div class="highlight"><pre><span></span><code>pip install &quot;sanpy-ephys[gui]&quot;
-</code></pre></div>
-<h3 id="install-the-sanpy-backend">Install the SanPy backend<a class="headerlink" href="#install-the-sanpy-backend" title="Permanent link">¤</a></h3>
-<p>This is designed to work as an engine to allow interoperability with other Python packages and to run in the cloud.</p>
-<p><strong>Note</strong> - The backend install is currently being rewritten and is not currently working. You can always install from source.</p>
-<div class="highlight"><pre><span></span><code>pip install sanpy-ephys
-</code></pre></div>
+<h2 id="install-from-the-command-line">Install from the command line<a class="headerlink" href="#install-from-the-command-line" title="Permanent link">¤</a></h2>
+<p>Create and activate a virtual environment with either <code>conda</code> or <code>venv</code>.</p>
+<div class="admonition important">
+<p class="admonition-title">Important</p>
+<p>M1/2 Mac users need to use a <a href="https://docs.conda.io/en/latest/miniconda.html">Conda</a> environment as the arm64 versions of a number of Python packages are not available on PyPi.</p>
+</div>
+<h3 id="either-create-a-conda-environment">Either create a <code>conda</code> environment<a class="headerlink" href="#either-create-a-conda-environment" title="Permanent link">¤</a></h3>
+<pre><code>conda create -y -n sanpy-env python=3.9
+conda activate sanpy-env
+</code></pre>
+<h3 id="or-create-a-venv-environment">Or create a <code>venv</code> environment<a class="headerlink" href="#or-create-a-venv-environment" title="Permanent link">¤</a></h3>
+<pre><code>python -m venv sanpy-env
+
+# macOS activate the environment
+source sanpy-env/bin/activate
+
+# Windows activate the environment
+sanpy-env\Scripts\activate
+</code></pre>
+<h3 id="install-from-pypi">Install from PyPi<a class="headerlink" href="#install-from-pypi" title="Permanent link">¤</a></h3>
+<pre><code>pip install 'sanpy-ephys[gui]'
+</code></pre>
+<h3 id="run-the-gui">Run the GUI<a class="headerlink" href="#run-the-gui" title="Permanent link">¤</a></h3>
+<pre><code>sanpy
+</code></pre>
 <h2 id="install-from-a-local-source">Install from a local source<a class="headerlink" href="#install-from-a-local-source" title="Permanent link">¤</a></h2>
 <p>For users interested in modifying the source code, you can clone the GitHub repository and install from local source.</p>
+<p>Be sure to create and activate a virtual environment (See above).</p>
 <p>Assuming you have the following</p>
 <ul>
 <li><a href="https://www.python.org/downloads/">Python &gt; 3.8</a></li>
@@ -890,27 +931,15 @@
 <li><a href="https://git-scm.com/book/en/v2/Getting-Started-Installing-Git">git</a></li>
 </ul>
 <p>1) Clone the repository</p>
-<div class="highlight"><pre><span></span><code>git clone git@github.com:cudmore/SanPy.git
+<pre><code>git clone git@github.com:cudmore/SanPy.git
 cd SanPy
-</code></pre></div>
-<p>2) Create and activate a virtual environment with either <code>conda</code> or <code>venv</code></p>
-<p>2.1) With <code>conda</code></p>
-<div class="highlight"><pre><span></span><code>conda create -y -n sanpy-env python=3.9
-conda activate sanpy-env
-</code></pre></div>
-<p>2.2) With <code>venv</code></p>
-<div class="highlight"><pre><span></span><code>python -m venv sanpy-env
-source sanpy-env/bin/activate
-</code></pre></div>
-<p>3) Install SanPy including the desktop GUI</p>
-<div class="highlight"><pre><span></span><code>pip install -e .[gui]
-</code></pre></div>
-<p>Note, on newer macOS machines or if using the zsh shell in general, you need some extra quotes</p>
-<div class="highlight"><pre><span></span><code>pip install -e &quot;.[gui]&quot;
-</code></pre></div>
+</code></pre>
+<p>2) Install SanPy including the desktop GUI</p>
+<pre><code>pip install -e '.[gui]'
+</code></pre>
 <p>4) Run <code>sanpy</code></p>
-<div class="highlight"><pre><span></span><code>sanpy
-</code></pre></div>
+<pre><code>sanpy
+</code></pre>
 <p>5) Have fun</p>
 
 
@@ -936,7 +965,7 @@ source sanpy-env/bin/activate
     <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant"], "search": "../assets/javascripts/workers/search.208ed371.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.51198bba.min.js"></script>
+      <script src="../assets/javascripts/bundle.fac441b0.min.js"></script>
       
     
   </body>
