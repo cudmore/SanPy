@@ -5,7 +5,16 @@
 import sanpy
 VERSION = sanpy.__version__
 
+import platform
+_platform = platform.machine()
+
+# arm64
 binaries = None
+
+# x86, used with 'tables'
+if _platform == 'x86_64':
+    binaries = [('/Users/cudmore/opt/miniconda3/envs/sanpy-pyinstaller-i386/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
+
 hiddenimports=['pkg_resources']
 block_cipher = None
 

@@ -762,12 +762,17 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def _getVersionInfo(self) -> dict:
         retDict = {}
 
+        #import platform
+        _platform = platform.machine()
+        # arm64
+        # x86_64
+
         # from sanpy.version import __version__
 
         # retDict['SanPy version'] = __version__
         retDict['SanPy version'] = sanpy.__version__
         retDict['Python version'] = platform.python_version()
-        retDict['Python platform'] = platform.platform()
+        retDict['Python platform'] = _platform  # platform.platform()
         retDict['PyQt version'] = QtCore.__version__  # when using import qtpy
         # retDict['Bundle folder'] = sanpy._util.getBundledDir()
         # retDict['Log file'] = sanpy.sanpyLogger.getLoggerFile()

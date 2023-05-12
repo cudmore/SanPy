@@ -283,6 +283,8 @@ def _codesign_app_resources(entitlements: str,
     app_path = os.path.join(output_dir, f"{app_name}.app")
     logger.info(f'=== _codesign_app_resources {app_path} ...')
 
+    # on arm64 build, this is where all the dylib files are
+    # on x86 thereare almost none (see skimage below)
     _resourcesPath = os.path.join(app_path, 'Contents', 'Resources', '*.dylib')
     logger.info(f'  _resourcesPath: {_resourcesPath}')
 
@@ -291,8 +293,32 @@ def _codesign_app_resources(entitlements: str,
 
     # dist_arm/SanPy.app/Contents/Resources/*.dylib
     files = glob.glob(_resourcesPath)
-    logger.info(f'  running codesign on {len(files)} .dylib files ...')
+    logger.info(f'=== running codesign on {len(files)} .dylib files ...')
     for file in files:
+        subprocess.run(
+            [
+                "codesign",
+                "--force",
+                "--timestamp",
+                #"--deep",
+                #"--verbose",
+                "--options",
+                "runtime",
+                "--entitlements",
+                entitlements,
+                "--sign",
+                app_certificate,
+                file,
+            ],
+        )
+
+    # on x86 when using pip install for all packages, we get some more *.dylib files
+    # /SanPy.app/Contents/Resources/skimage/.dylibs/libomp.dylib
+    _resourcesPath_x86_skimage = os.path.join(app_path, 'Contents', 'Resources', 'skimage', '.dylibs', '*.dylib')
+    logger.info(f'=== _resourcesPath_x86_skimage: {_resourcesPath_x86_skimage}')
+    files2 = glob.glob(_resourcesPath_x86_skimage)
+    logger.info(f'  running codesign on {len(files2)} .dylib files ...')
+    for file in files2:
         subprocess.run(
             [
                 "codesign",

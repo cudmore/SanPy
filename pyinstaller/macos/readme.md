@@ -29,37 +29,37 @@ dist_x86/SanPy.app: satisfies its Designated Requirement
 
 ### Arm
 
-```
-CONDA_SUBDIR=osx-arm64 conda create -y -n sanpy-pyinstaller-arm python=3.9
-conda activate sanpy-pyinstaller-arm
-conda env config vars set CONDA_SUBDIR=osx-arm64
+    CONDA_SUBDIR=osx-arm64 conda create -y -n sanpy-pyinstaller-arm python=3.9
+    conda activate sanpy-pyinstaller-arm
+    conda env config vars set CONDA_SUBDIR=osx-arm64
 
-# NEED TO REACTIVATE ENV !!!
-conda deactivate
-conda activate sanpy-pyinstaller-arm
+    # NEED TO REACTIVATE ENV !!!
+    conda deactivate
+    conda activate sanpy-pyinstaller-arm
 
-pip install --upgrade pip
-```
+    pip install --upgrade pip
 
 ### x86
 
-```
-conda create -y -n sanpy-pyinstaller-i386 python=3.9
-conda activate sanpy-pyinstaller-i386
+    # v1
+    conda create -y -n sanpy-pyinstaller-i386 python=3.9
+    conda activate sanpy-pyinstaller-i386
 
-CONDA_SUBDIR=osx-64 conda create -y -n sanpy-pyinstaller-i386 python=3.9
-conda activate sanpy-pyinstaller-i386
-conda env config vars set CONDA_SUBDIR=osx-64
+    # v2
+    CONDA_SUBDIR=osx-64 conda create -y -n sanpy-pyinstaller-i386 python=3.9
+    conda activate sanpy-pyinstaller-i386
+    conda env config vars set CONDA_SUBDIR=osx-64
 
-# NEED TO REACTIVATE ENV !!!
+    conda deactivate
+    conda activate sanpy-pyinstaller-i386
 
-pip install --upgrade pip
-```
+    pip install --upgrade pip
 
 ## 2. Conda install everything manually
 
+Note: May 12, I am now using pip install for all x86 packages.
 
-This is all for SanPy
+This is all for SanPy on arm64
 
 conda install -y numpy pandas==1.5.3 scipy scikit-image==0.19.3 tifffile h5py requests matplotlib seaborn pyqt qtpy pyqtgraph pytables
 
@@ -102,19 +102,24 @@ but the pip install (from PyPi) does????
 This is all very confusing!
 
 ```
-# May 11, do not do this
-pip install -e "../../."
-```
+### arm
 
-```
-# May 11, do this
-pip install 'sanpy-ephys[gui]'
+pip install -e '../../.'
+
+### x86
+
+pip install -e '../../.[gui]'
 ```
 
 # Check which arch the python kernel is running in
 
 python -c 'import platform; print(platform.platform())'
 python -c 'import sanpy; print(sanpy.__version__)'
+
+import platform
+_platform = platform.machine()
+# arm64
+# x86_64
 
 ```
 # arm
@@ -208,23 +213,17 @@ The bundle-id seems to have rules? No '_' and no numbers?
 
 x86
 
-```
-xcrun altool --verbose --notarize-app -t osx -f dist_x86/SanPy-intel.zip \
-    --primary-bundle-id "intel" -u "robert.cudmore@gmail.com" --password "bisd-xacv-hsiv-okrd"
-```
+    xcrun altool --verbose --notarize-app -t osx -f dist_x86/SanPy-intel.zip \
+        --primary-bundle-id "intel" -u "robert.cudmore@gmail.com" --password "bisd-xacv-hsiv-okrd"
 
 arm
 
-```
-xcrun altool --verbose --notarize-app -t osx -f dist_arm/SanPy-arm.zip \
-    --primary-bundle-id "arm" -u "robert.cudmore@gmail.com" --password "bisd-xacv-hsiv-okrd"
-```
+    xcrun altool --verbose --notarize-app -t osx -f dist_arm/SanPy-arm.zip \
+        --primary-bundle-id "arm" -u "robert.cudmore@gmail.com" --password "bisd-xacv-hsiv-okrd"
 
 Check progress, all my notarize requested organized by RequestUUID
 
-```
-xcrun altool --notarization-history 0 -u "robert.cudmore@gmail.com" -p "bisd-xacv-hsiv-okrd"
-```
+    xcrun altool --notarization-history 0 -u "robert.cudmore@gmail.com" -p "bisd-xacv-hsiv-okrd"
 
 ```
 Date                      RequestUUID                          Status        Status Code Status Message   
@@ -236,9 +235,7 @@ Date                      RequestUUID                          Status        Sta
 
 This will return a url with json list of errors
 
-```
-xcrun altool --notarization-info 940392b3-6ff8-490f-a3ec-a0ae1137f566 -u "robert.cudmore@gmail.com" -p "bisd-xacv-hsiv-okrd"
-```
+    xcrun altool --notarization-info 153f1da8-3ca4-409c-a57f-f10e53deca24 -u "robert.cudmore@gmail.com" -p "bisd-xacv-hsiv-okrd"
 
 That url tells me that none of the Contents/Resources binaries are signed or timestamp(ed). See `Manually codesigning` below.
 
@@ -292,6 +289,10 @@ origin=Developer ID Application: Robert Cudmore (794C773KDS)
 ```
 
 ## need to start using notarytool
+
+See here for a good overview and the start of a github workflow
+
+https://federicoterzi.com/blog/automatic-code-signing-and-notarization-for-macos-apps-using-github-actions/
 
 ```
 xcrun notarytool submit OvernightTextEditor_11.6.8.zip

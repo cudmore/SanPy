@@ -1,5 +1,9 @@
 ## Pushing tags to github
 
+get the current tag
+
+    git describe --tags
+
 ```
 # make a tag
 git tag v0.1.14

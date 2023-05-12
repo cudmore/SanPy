@@ -10,7 +10,7 @@ Create and activate a virtual environment with either `conda` or `venv`.
 
 !!! Important
 
-    M1/2 Mac users need to use a [Conda][mini-conda] environment as the arm64 versions of a number of Python packages are not available on PyPi.
+    M1/2 Mac users need to use a [Conda][mini-conda] environment as the arm64 versions of a number of Python packages are not available on PyPi (e.g. with pip install).
 
 [mini-conda]: https://docs.conda.io/en/latest/miniconda.html
 
@@ -29,9 +29,15 @@ Create and activate a virtual environment with either `conda` or `venv`.
     # Windows activate the environment
     sanpy-env\Scripts\activate
 
-### Install from PyPi
+### Install SanPy from [PyPi](https://pypi.org/project/sanpy-ephys/)
 
-    pip install 'sanpy-ephys[gui]'
+!!! Important
+
+    The SanPy package is named `sanpy-ephys`.
+
+```
+pip install "sanpy-ephys[gui]"
+```
 
 ### Run the GUI
 
@@ -58,9 +64,9 @@ Assuming you have the following
     git clone git@github.com:cudmore/SanPy.git
     cd SanPy
 
-2) Install SanPy including the desktop GUI
+2) Install SanPy
 
-    pip install -e '.[gui]'
+    pip install -e ".[gui]"
 
 4) Run `sanpy`
 

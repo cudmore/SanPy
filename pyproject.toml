@@ -10,4 +10,4 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 write_to = "sanpy/_version.py"
-version_scheme = "post-release"
+#version_scheme = "post-release"
