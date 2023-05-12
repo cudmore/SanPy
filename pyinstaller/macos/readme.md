@@ -34,6 +34,8 @@ CONDA_SUBDIR=osx-arm64 conda create -y -n sanpy-pyinstaller-arm python=3.9
 conda activate sanpy-pyinstaller-arm
 conda env config vars set CONDA_SUBDIR=osx-arm64
 
+# NEED TO REACTIVATE ENV !!!
+
 pip install --upgrade pip
 ```
 
@@ -43,7 +45,11 @@ x86
 conda create -y -n sanpy-pyinstaller-i386 python=3.9
 conda activate sanpy-pyinstaller-i386
 
-#conda env config vars set CONDA_SUBDIR=osx-arm64
+CONDA_SUBDIR=osx-64 conda create -y -n sanpy-pyinstaller-i386 python=3.9
+conda activate sanpy-pyinstaller-i386
+conda env config vars set CONDA_SUBDIR=osx-64
+
+# NEED TO REACTIVATE ENV !!!
 
 pip install --upgrade pip
 ```
@@ -53,7 +59,7 @@ pip install --upgrade pip
 
 This is all for SanPy
 
-conda install -y numpy pandas==1.5.3 scipy scikit-image==0.19.3 tifffile h5py requests matplotlib seaborn pyqt qtpy pyqtgraph
+conda install -y numpy pandas==1.5.3 scipy scikit-image==0.19.3 tifffile h5py requests matplotlib seaborn pyqt qtpy pyqtgraph pytables
 
 ```
 conda install -y numpy
@@ -72,9 +78,9 @@ conda install -y qtpy
 conda install -y pyqtgraph
 
 # in python 3.11
-conda install -y -c anaconda pytables
+#conda install -y -c anaconda pytables
 # in python 3.9
-conda install -y pytables
+#conda install -y pytables
 
 #conda install -y -c conda-forge mplcursors
 
@@ -88,13 +94,25 @@ I modified SanPy/setup.py to install no dependencies. For normal install we have
 
 Use this to not install dependencies (we installed above with conda)
 
+May 11, after starting to use setuptools_scm. We now need to pip install from the PyPi archive!
+The local version does not pick up the correct version via a tag
+but the pip install (from PyPi) does????
+This is all very confusing!
+
 ```
+# May 11, do not do this
 pip install -e "../../."
+```
+
+```
+# May 11, do this
+pip install 'sanpy-ephys[gui]'
 ```
 
 # Check which arch the python kernel is running in
 
 python -c 'import platform; print(platform.platform())'
+python -c 'import sanpy; print(sanpy.__version__)'
 
 ```
 # arm
@@ -110,6 +128,12 @@ This branch removes DS_Store so codesign and notarize work
 
 ```
 pip install -e ~/Sites/pyinstaller/.
+```
+
+Results in:
+
+```
+Successfully installed altgraph-0.17.3 macholib-1.16.2 pyinstaller-5.9.0 pyinstaller-hooks-contrib-2023.3
 ```
 
 # Run pyinstaller script

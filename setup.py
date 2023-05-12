@@ -94,7 +94,7 @@ setup(
             'pyqtdarktheme',  # switched to this mar 2023
             'PyQt5',  # only install x86 version, need to use conda install pyqt
 
-            'setuptools_scm',
+            #'setuptools_scm',
         ],
         'dev': [
             'mkdocs',

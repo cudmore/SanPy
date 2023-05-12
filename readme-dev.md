@@ -2,13 +2,13 @@
 
 ```
 # make a tag
-git tag v0.1.13
+git tag v0.1.14
 # push the tag
-git push origin v0.1.13
+git push origin v0.1.14
 
 # delete a tag
-git tag -d v0.1.13
-git push --delete origin v0.1.13
+git tag -d v0.1.14
+git push --delete origin v0.1.14
 ``` 
 
 ## Lock down a version to accompany SanPy manuscript

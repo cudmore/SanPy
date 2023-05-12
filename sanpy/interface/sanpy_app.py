@@ -762,9 +762,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def _getVersionInfo(self) -> dict:
         retDict = {}
 
-        from sanpy.version import __version__
+        # from sanpy.version import __version__
 
-        retDict['SanPy version'] = __version__
+        # retDict['SanPy version'] = __version__
+        retDict['SanPy version'] = sanpy.__version__
         retDict['Python version'] = platform.python_version()
         retDict['Python platform'] = platform.platform()
         retDict['PyQt version'] = QtCore.__version__  # when using import qtpy
@@ -1454,33 +1455,6 @@ def testFFT(sanpyWindow):
     ba = sanpyWindow.get_bAnalysis()
     pluginName = "FFT"
     fftPlugin = sanpyWindow.myPlugins.runPlugin(pluginName, ba)
-
-def _old__getVersionInfo() -> dict:
-    retDict = {}
-
-    from sanpy.version import __version__
-
-    retDict['SanPy version'] = __version__
-    retDict['Python version'] = platform.python_version()
-    retDict['Python platform'] = platform.platform()
-    retDict['PyQt version'] = QtCore.__version__  # when using import qtpy
-    retDict['Bundle folder'] = sanpy._util.getBundledDir()
-    retDict['Log file'] = sanpy.sanpyLogger.getLoggerFile()
-    return retDict
-
-    logger.info(f'    Python version is {platform.python_version()}')
-    logger.info(f'    Python platform is {platform.platform()}')
-
-    # when using import PyQt5
-    #logger.info(f"    PyQt version is {QtCore.QT_VERSION_STR}")
-    # when using import qtpy
-    logger.info(f"    PyQt version is {QtCore.__version__}")
-
-    bundle_dir = sanpy._util.getBundledDir()
-    logger.info(f'    bundle_dir is "{bundle_dir}"')
-
-    _logFilePath = sanpy.sanpyLogger.getLoggerFile()
-    logger.info(f"    logging to file {_logFilePath}")
 
 def getAppIconPath():
     bundle_dir = sanpy._util.getBundledDir()
