@@ -27,7 +27,7 @@ dist_x86/SanPy.app: satisfies its Designated Requirement
 
 ## 1. Make a platform specific conda environment
 
-Arm
+### Arm
 
 ```
 CONDA_SUBDIR=osx-arm64 conda create -y -n sanpy-pyinstaller-arm python=3.9
@@ -35,11 +35,13 @@ conda activate sanpy-pyinstaller-arm
 conda env config vars set CONDA_SUBDIR=osx-arm64
 
 # NEED TO REACTIVATE ENV !!!
+conda deactivate
+conda activate sanpy-pyinstaller-arm
 
 pip install --upgrade pip
 ```
 
-x86
+### x86
 
 ```
 conda create -y -n sanpy-pyinstaller-i386 python=3.9
