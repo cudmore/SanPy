@@ -3,7 +3,7 @@ import sys
 from setuptools import setup, find_packages
 
 # manually keep in sync with sanpy/version.py
-VERSION = "0.1.11"
+#VERSION = "0.1.11"
 
 # with open(os.path.join('sanpy', 'VERSION')) as version_file:
 #     VERSION = version_file.read().strip()
@@ -37,19 +37,18 @@ with open(os.path.abspath(_thisPath+"/README.md")) as f:
 
 setup(
     name='sanpy-ephys',  # the package name (on PyPi), still use 'import sanpy'
-    version=VERSION,
+    #version=VERSION,
     description='Whole cell current-clamp analysis.',
     long_description=long_description,
     long_description_content_type = 'text/markdown',
     url='http://github.com/cudmore/SanPy',
     author='Robert H Cudmore',
-    author_email='robert.cudmore@gmail.com',
+    author_email='rhcudmore@ucdavis.edu',
     license='GNU General Public License, Version 3',
     classifiers=[
         'Programming Language :: Python :: 3',
         'Natural Language :: English',
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-        #'License :: OSI Approved :: GNU General Public License, Version 3',
         'Operating System :: MacOS',
         'Operating System :: Microsoft :: Windows',
         'Intended Audience :: Developers',
@@ -66,8 +65,11 @@ setup(
     # this is CRITICAL to import submodule like sanpy.userAnalysis
     packages=find_packages(include=['sanpy', 'sanpy.*', 'sanpy.interface', 'sanpy.fileloaders']),
     
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
+
     # for conda based pyinstaller, we had to remove all installs
-    # please install with "pip install -e .[gui]"
+    # please install with pip install -e '.[gui]'
     install_requires=[],
 
     extras_require={
@@ -91,6 +93,8 @@ setup(
             'pyqtgraph',
             'pyqtdarktheme',  # switched to this mar 2023
             'PyQt5',  # only install x86 version, need to use conda install pyqt
+
+            'setuptools_scm',
         ],
         'dev': [
             'mkdocs',

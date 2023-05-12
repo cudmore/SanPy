@@ -5,7 +5,11 @@
 git tag v0.1.13
 # push the tag
 git push origin v0.1.13
-```
+
+# delete a tag
+git tag -d v0.1.13
+git push --delete origin v0.1.13
+``` 
 
 ## Lock down a version to accompany SanPy manuscript
 
