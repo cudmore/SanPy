@@ -16,7 +16,7 @@ jobs:
     # github secrets (see readme for details)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout xxx
+      - name: Checkout source xxx
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0  # needed so setuptools_scm can get tags

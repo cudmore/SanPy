@@ -7,12 +7,12 @@ get the current tag
 ```
 # make a tag
 # push the tag
-git tag v0.1.18
-git push origin v0.1.18
+git tag v0.1.19
+git push origin v0.1.19
 
 # delete a tag 
-git tag -d v0.1.18
-git push --delete origin v0.1.18
+git tag -d v0.1.19
+git push --delete origin v0.1.19
 ``` 
 
 ## Lock down a version to accompany SanPy manuscript
