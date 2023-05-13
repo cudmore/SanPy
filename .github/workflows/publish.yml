@@ -16,11 +16,13 @@ jobs:
     # github secrets (see readme for details)
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout xxx
       - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
         with:
           fetch-depth: 0  # needed so setuptools_scm can get tags
+      - name: Set up Python xxx
+        uses: actions/setup-python@v2
+        with:
           python-version: "3.x"
       - name: Install dependencies
         run: |
@@ -33,5 +35,6 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           git tag
+          #python setup.py --version
           python -m build .
           twine upload dist/*
