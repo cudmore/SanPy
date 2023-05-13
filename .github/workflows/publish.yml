@@ -20,6 +20,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
+          fetch-depth: 0  # needed so setuptools_scm can get tags
           python-version: "3.x"
       - name: Install dependencies
         run: |
