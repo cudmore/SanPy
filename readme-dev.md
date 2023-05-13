@@ -5,14 +5,13 @@ get the current tag
     git describe --tags
 
 ```
-# make a tag
-# push the tag
-git tag v0.1.24
-git push origin v0.1.24
+# make a tag and push the tag
+git tag v0.1.25
+git push origin v0.1.25
 
 # delete a tag 
-git tag -d v0.1.24
-git push --delete origin v0.1.24
+git tag -d v0.1.25
+git push --delete origin v0.1.25
 ``` 
 
 ## Lock down a version to accompany SanPy manuscript

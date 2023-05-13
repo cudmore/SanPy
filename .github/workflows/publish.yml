@@ -1,11 +1,11 @@
 # my twine key is in
 #         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
 
-name: Publish sanpy-ephys to PyPi xxx
+name: Publish sanpy-ephys to PyPi (cudmore)
 
 on:
   workflow_run:
-    workflows: ["Release"]
+    workflows: ["Release (cudmore)"]
     types: [completed]
     #branches: [master]
 
