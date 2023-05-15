@@ -801,8 +801,53 @@
 
 <h2 id="how-to-extend-the-analysis-of-sanpy-with-user-specified-analysis">How to extend the analysis of SanPy with user specified analysis<a class="headerlink" href="#how-to-extend-the-analysis-of-sanpy-with-user-specified-analysis" title="Permanent link">¤</a></h2>
 <p>The core analysis algorithm of SanPy can be easily extended by the user.</p>
-<p>1) Derive a class from <a href="../userAnalysis/baseUserAnalysis/">sanpy.user_analysis.baseUserAnalysis</a></p>
-<p>To Be continued, stand by !!!</p>
+<ul>
+<li>Derive a class from <a href="../userAnalysis/baseUserAnalysis/">sanpy.user_analysis.baseUserAnalysis</a></li>
+<li>In the member function <code>defineUserStats()</code>, define the name of your new analysis with addUserStat()</li>
+<li>In the member function <code>run()</code>, for each spike in the analysis,
+    calculate your new stat and set the value with <code>setSpikeValue()</code>.</li>
+</ul>
+<p>Here is a simple example to get you started.</p>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">exampleUserAnalysis</span><span class="p">(</span><span class="n">baseUserAnalysis</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An example user defined analysis.</span>
+
+<span class="sd">    We will add &#39;User Time To Peak (ms)&#39;, defines as:</span>
+<span class="sd">        For each AP, the time interval between spike threshold and peak</span>
+
+<span class="sd">    We need to define the behavior of two inherited functions</span>
+
+<span class="sd">    1) defineUserStats()</span>
+<span class="sd">        add any numner of user stats with</span>
+<span class="sd">            addUserStat(human_name, internal_name)</span>
+
+<span class="sd">    2) run()</span>
+<span class="sd">        Run the analysis you want to compute.</span>
+<span class="sd">        Add the value for each spike with</span>
+<span class="sd">            setSpikeValue(spike_index, internal_name, new_value)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">defineUserStats</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add your user stats here.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">addUserStat</span><span class="p">(</span><span class="s2">&quot;User Time To Peak (ms)&quot;</span><span class="p">,</span> <span class="s2">&quot;user_timeToPeak_ms&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This is the user code to create and then fill in</span>
+<span class="sd">            a new name/value for each spike.&quot;&quot;&quot;</span>
+
+        <span class="c1"># get filtered vm for the entire trace</span>
+        <span class="c1"># filteredVm = self.getFilteredVm()</span>
+
+        <span class="k">for</span> <span class="n">spikeIdx</span><span class="p">,</span> <span class="n">spikeDict</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ba</span><span class="o">.</span><span class="n">spikeDict</span><span class="p">):</span>
+
+            <span class="c1"># add time to peak</span>
+            <span class="n">thresholdSec</span> <span class="o">=</span> <span class="n">spikeDict</span><span class="p">[</span><span class="s2">&quot;thresholdSec&quot;</span><span class="p">]</span>
+            <span class="n">peakSecond</span> <span class="o">=</span> <span class="n">spikeDict</span><span class="p">[</span><span class="s2">&quot;peakSec&quot;</span><span class="p">]</span>
+            <span class="n">timeToPeak_ms</span> <span class="o">=</span> <span class="p">(</span><span class="n">peakSecond</span> <span class="o">-</span> <span class="n">thresholdSec</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1000</span>
+
+            <span class="c1"># assign to underlying bAnalysis</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setSpikeValue</span><span class="p">(</span><span class="n">spikeIdx</span><span class="p">,</span> <span class="s2">&quot;user_timeToPeak_ms&quot;</span><span class="p">,</span> <span class="n">timeToPeak_ms</span><span class="p">)</span>
+</code></pre></div>
 
 
 
