@@ -61,11 +61,11 @@ Assuming you have the following
 
 1) Clone the repository
 
-    git clone git@github.com:cudmore/SanPy.git
-    cd SanPy
+    git clone https://github.com/cudmore/SanPy.git
 
 2) Install SanPy
 
+    cd SanPy
     pip install -e ".[gui]"
 
 4) Run `sanpy`

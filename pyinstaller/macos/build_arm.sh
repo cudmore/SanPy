@@ -2,11 +2,9 @@
 # Build an arm64 environment
 
 # create and activate a conda environment
-
 CONDA_SUBDIR=osx-arm64 conda create -y -n sanpy-pyinstaller-arm python=3.9
-#conda create -y -n sanpy-pyinstaller-arm python=3.9
 
-# to get rid of
+# (re)activate environment to get rid of
 # "To make your changes take effect please reactivate your environment"
 source /Users/cudmore/opt/miniconda3/etc/profile.d/conda.sh
 conda activate sanpy-pyinstaller-arm
@@ -46,3 +44,4 @@ pip install -e ~/Sites/pyinstaller/.
 # build the app with pyinstaller
 python macos_build.py
 
+python notarizeSanpy.py dist_arm

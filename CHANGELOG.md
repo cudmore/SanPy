@@ -1,4 +1,2 @@
-20230404
 
- - v1
- 
+SanPy Documentation is available at [https://cudmore.github.io/SanPy/](https://cudmore.github.io/SanPy/)

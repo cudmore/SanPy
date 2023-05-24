@@ -21,3 +21,5 @@ pip install -e '../../.[gui]'
 pip install -e ~/Sites/pyinstaller/.
 
 python macos_build.py
+
+python notarizeSanpy.py dist_x86

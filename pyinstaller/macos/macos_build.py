@@ -130,7 +130,7 @@ def _codesign_app_deep(entitlements: str,
 
     # remove all .DS_Store
     #find dist/SanPy.app -name .DS_Store -delete
-    logger.info('  removing all .Ds_Store')
+    logger.info('  removing all .DS_Store')
     subprocess.run(
         [
             'find',
@@ -141,24 +141,6 @@ def _codesign_app_deep(entitlements: str,
     )
 
     logger.info(f'  subprocess.run codesign ...')
-
-    """
-    codesign --force \
-        --verbose --deep --timestamp \
-        --options runtime \
-        --entitlements entitlements.plist \
-        --sign "Developer ID Application: Robert Cudmore (794C773KDS)" \
-        dist_x86/SanPy.app/Contents/Resources/*.dylib
-    """
-
-    """
-    codesign --force \
-        --verbose --deep --timestamp \
-        --options runtime \
-        --entitlements entitlements.plist \
-        --sign "Developer ID Application: Robert Cudmore (794C773KDS)" \
-        dist_x86/SanPy.app/Contents/MacOS/SanPy
-    """
     
     subprocess.run(
         [
@@ -187,7 +169,7 @@ def _codesign_app_binary(entitlements: str,
         --verbose --deep --timestamp \
         --options runtime \
         --entitlements entitlements.plist \
-        --sign "Developer ID Application: Robert Cudmore (794C773KDS)" \
+        --sign "Developer ID Application: Robert Cudmore ([team id]])" \
         dist_x86/SanPy.app/Contents/MacOS/SanPy
     """
     app_path = os.path.join(output_dir, f"{app_name}.app")
@@ -276,7 +258,7 @@ def _codesign_app_resources(entitlements: str,
     --verbose --deep --timestamp \
     --options runtime \
     --entitlements entitlements.plist \
-    --sign "Developer ID Application: Robert Cudmore (794C773KDS)" \
+    --sign "Developer ID Application: first_name last_name (team_id)" \
     dist_x86/SanPy.app/Contents/Resources/*.dylib
 `   """
 
@@ -408,7 +390,7 @@ def run_signing_commands(provisioning_profile,
     entitlements : str
         'entitlements.plist'
     app_certificate : str
-        "Developer ID Application: Robert Cudmore (794C773KDS)"
+        "Developer ID Application: first_name last_name (team_id)"
     shortPlatformStr : str
         in ['intel', 'arm']
     """
@@ -481,27 +463,17 @@ def run():
     buildWithPyInstaller(output_dir)
     
     # sign the app
+    entitlements = 'entitlements.plist'  # standard    
+    from _secrets import app_certificate
     # this was tricky to create, I do not have good notes on how I did this :(
-    provisioning_profile = '/Users/cudmore/apple-dev-keys-do-not-remove/mac_app.cer'
-    entitlements = 'entitlements.plist'  # standard
-    app_certificate = "Developer ID Application: Robert Cudmore (794C773KDS)"
+    # provisioning_profile = '/Users/cudmore/apple-dev-keys-do-not-remove/mac_app.cer'
+    from _secrets import provisioning_profile
     
     run_signing_commands(provisioning_profile, output_dir, app_name, entitlements, app_certificate, shortPlatformStr)
 
     # run signing individually
     #_codesign_app_resources(entitlements, app_certificate, output_dir, app_name)
 
-    # build a pkg installer (optional)
-    doPkg = False
-    if doPkg:
-        installer_certificate = "Developer ID Installer: Robert Cudmore (794C773KDS)"
-        import sanpy
-        version = sanpy.__version__
-        productbuild(output_dir=output_dir,
-                    app_name=app_name,
-                    installer_certificate=installer_certificate,
-                    version=version)
-    
     # make a zip of the app, this is what we distribute
     zipPath = makeZip(appPath, shortPlatformStr)
     
