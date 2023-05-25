@@ -242,7 +242,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         if self.ba is not None:
             _numEpochs = self.ba.fileLoader.numEpochs  # can be None
             _showTop = self.ba.fileLoader.numSweeps>1
-            _showTop = _showTop | _numEpochs is not None and _numEpochs>2
+            _showTop = _showTop | (_numEpochs is not None) and _numEpochs>2
         self.toggleTopToobar(_showTop)  # initially hidden
         
         self._updateTopToolbar()
