@@ -6,4 +6,6 @@ from .fileLoader_base import fileLoader_base
 from .fileLoader_base import recordingModes
 from .fileLoader_base import getFileLoaders
 
+from .fileLoader_heka import fileLoader_heka
+
 from .epochTable import epochTable

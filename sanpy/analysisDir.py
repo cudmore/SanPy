@@ -285,7 +285,7 @@ class analysisDir:
     """Dict of dict of column names and bookkeeping info.
     """
 
-    theseFileTypes = [".abf", ".atf", ".csv", ".tif"]
+    theseFileTypes = [".abf", ".atf", ".csv", ".dat", ".tif"]
     """File types to load.
     """
 
