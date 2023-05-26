@@ -100,7 +100,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         if firstTimeRunning:
             logger.info("  We created <user>/Documents/Sanpy and need to restart")
 
-        self._fileLoaderDict = sanpy.fileloaders.getFileLoaders()
+        self._fileLoaderDict = sanpy.fileloaders.getFileLoaders(verbose=True)
+        
         self._detectionClass = sanpy.bDetection()
 
         # create an empty model for file list

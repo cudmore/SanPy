@@ -6,19 +6,55 @@ import pandas as pd
 import pyabf
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
 
 
-class epochTable:
+class epochTable():
     """Load epoch/stimulation from abf file using 'sweepEpochs'.
 
     Values in epoch table are per sweep!
+
+    sweepNumber  index  type  startPoint  stopPoint  startSec  stopSec  durSec  level  pulseWidth  pulsePeriod  digitalState
+    0           13      0  Step           0         25    0.0000   0.0025  0.0025   -0.1           0            0             0
+    1           13      1  Step          25        275    0.0025   0.0275  0.0250   -0.1           0            0             0
+    2           13      2  Step         275       1275    0.0275   0.1275  0.1000    0.7           0            0             0
+    3           13      3  Step        1275       1525    0.1275   0.1525  0.0250   -0.1           0            0             0
+    4           13      4  Step        1525       1600    0.1525   0.1600  0.0075   -0.1           0            0             0
+
     """
 
-    def __init__(self, abf: pyabf.ABF):
+    def __init__(self, abf: pyabf.ABF = None):
         self._epochList = []
 
+        if abf is not None:
+            self._builFromAbf(abf)
+    
+    def addEpoch(self, sweepNumber, startSec, stopSec, dataPointsPerMs : int, level, type : str = 'Step'):
+        newEpochIdx = self.numEpochs()
+        
+        p1 = (startSec * 1000) * dataPointsPerMs
+        #p1 = round(p1)
+        
+        p2 = (stopSec * 1000) * dataPointsPerMs
+        #p2 = round(p1)
+        
+        epochDict = {
+            "sweepNumber": sweepNumber,
+            "index": newEpochIdx,
+            "type": type,
+            "startPoint": p1,  # point the epoch starts
+            "stopPoint": p2,  # point the epoch ends
+            "startSec": startSec,
+            "stopSec": stopSec,
+            "durSec": stopSec - startSec,
+            "level": level,
+            # "pulseWidth": pulseWidth,
+            # "pulsePeriod": pulsePeriod,
+            # "digitalState": digitalState,  # list of 0/1 for 8x digital states
+        }
+        self._epochList.append(epochDict)
+
+    def _builFromAbf(self, abf: pyabf.ABF):
         dataPointsPerMs = abf.dataPointsPerMs
         """To convert point to seconds"""
 
@@ -129,7 +165,7 @@ if __name__ == "__main__":
 
     sweep = 13
 
-    et = ba.getEpochTable(sweep)
+    et = ba.fileLoader.getEpochTable(sweep)
     df = et.getEpochList(asDataFrame=True)
     pprint(df)
 

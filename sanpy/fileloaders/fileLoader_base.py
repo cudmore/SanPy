@@ -20,7 +20,6 @@ def getFileLoaders(verbose: bool = False) -> dict:
     """Load file loaders from both
 
     1) Module sanpy.fileloaders
-
     2) Folder <user>/Documents/SanPy/File Loaders
 
     Each file loader is a class derived from [fileLoader_base](../../api/fileloader/fileLoader_base.md)
@@ -34,7 +33,7 @@ def getFileLoaders(verbose: bool = False) -> dict:
     """
     retDict = {}
 
-    ignoreModuleList = ["fileLoader_base", "recordingModes"]
+    ignoreModuleList = ["fileLoader_base", "recordingModes", "epochTable", "hekaUtils"]
 
     #
     # system file loaders from sanpy.fileloaders
