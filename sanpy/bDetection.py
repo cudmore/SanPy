@@ -976,11 +976,10 @@ class bDetection(object):
             # theDict['halfWidthWindow_ms'] = 200 #was 20
         elif detectionPreset == self._detectionEnum.cakymograph:
             theDict["detectionName"] = "Ca Kymograph"
-            theDict["detectionType"] = sanpy.bDetection.detectionTypes["mv"].value
-            theDict[
-                "dvdtThreshold"
-            ] = 1.2  # rosie, was math.nan #if None then detect only using mvThreshold
-            theDict["mvThreshold"] = 1.2
+            theDict["detectionType"] = sanpy.bDetection.detectionTypes["dvdt"].value
+            # rosie, was math.nan #if None then detect only using mvThreshold
+            theDict["dvdtThreshold"] = 0.05
+            theDict["mvThreshold"] = 0.5
             theDict["peakWindow_ms"] = 400  # rosie, was 700
             theDict["halfWidthWindow_ms"] = 400  # rosie, was 800
             theDict["refractory_ms"] = 500

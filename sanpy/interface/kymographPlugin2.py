@@ -13,7 +13,7 @@ from qtpy import QtGui, QtSql, QtCore, QtWidgets
 
 import pyqtgraph as pg
 
-# import qdarkstyle
+import qdarktheme
 
 # turn off qdarkstyle logging
 # import logging
@@ -31,25 +31,28 @@ from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
 
-class kymographPlugin2(QtWidgets.QWidget):
+# class kymographPlugin2(QtWidgets.QWidget):
+class kymographPlugin2(QtWidgets.QMainWindow):
+    """Interface for kymograph analysis.
+    
+        20230526, Re-activating this for 'shortening' experiments.
+    """
     def __init__(self, ba: sanpy.bAnalysis, parent=None):
+        exportDiameter()
+        
         logger.info("")
 
         super().__init__(parent)
 
-        # switching to hold actual bAnalysis
-        # self._ba = sanpy.bAnalysis(path)
         self._ba = None
         if ba is not None and ba.fileLoader.isKymograph():
             self._ba = ba
 
-        # self._kymographAnalysis = sanpy.kymographAnalysis(path)
-        # dec 2022
         self._kymographAnalysis = None  # will be created in slotSwitchFile()
         if self._ba is not None:
-            self._kymographAnalysis = sanpy.kymAnalysis(ba.getFilePath())
+            self._kymographAnalysis = ba.kymAnalysis
 
-        self._imageMedianKernel = 0
+        self._imageMedianKernel = 5
         self._lineMedianKernel = 5
 
         self._currentLineNumber = 0
@@ -59,6 +62,8 @@ class kymographPlugin2(QtWidgets.QWidget):
 
         self._kymWidgetMain = None  # sanpy.interface.kymographWidget(self._ba)
         self._initGui()
+
+        self.slotSwitchFile(self._ba)
 
         self._on_slider_changed(0)
 
@@ -106,11 +111,13 @@ class kymographPlugin2(QtWidgets.QWidget):
             QtCore.QCoreApplication.processEvents()
 
             # left_idx, right_idx = self._kymographAnalysis.getLineProfileWidth()
-            imageMedianKernel = self._imageMedianKernel
-            lineMedianKernel = self._lineMedianKernel
-            self._kymographAnalysis.analyze(
-                imageMedianKernel=imageMedianKernel, lineMedianKernel=lineMedianKernel
-            )
+            # imageMedianKernel = self._imageMedianKernel
+            # lineMedianKernel = self._lineMedianKernel
+
+            self._kymographAnalysis.analyzeDiameter()
+            #     imageMedianKernel=imageMedianKernel,
+            #     lineMedianKernel=lineMedianKernel
+            # )
 
             # self.refreshSumLinePlot()
             self.refreshDiameterPlot()
@@ -121,13 +128,15 @@ class kymographPlugin2(QtWidgets.QWidget):
             QtCore.QCoreApplication.processEvents()
 
         elif name == "Save":
-            saveFilePath = self._kymographAnalysis.getAnalysisFile()
-            # get file name to save
-            # name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
-            savefile, tmp = QtWidgets.QFileDialog.getSaveFileName(
-                self, "Save File", saveFilePath
-            )
-            self._kymographAnalysis.save(savefile)
+            # # get file name to save
+            # saveFilePath = self._kymographAnalysis.getAnalysisFile()
+            # # name = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
+            # savefile, tmp = QtWidgets.QFileDialog.getSaveFileName(
+            #     self, "Save File", saveFilePath
+            # )
+            # if savefile:
+            #     self._kymographAnalysis.saveAnalysis(savefile)
+            self._kymographAnalysis.saveAnalysis()
 
         elif name == "Rot -90":
             newImage = self._kymographAnalysis.rotateImage()
@@ -139,12 +148,15 @@ class kymographPlugin2(QtWidgets.QWidget):
     def setLineWidth(self, value: int):
         logger.info(value)
         if self._kymographAnalysis is not None:
-            self._kymographAnalysis.setLineWidth(value)
+            self._kymographAnalysis.setAnalysisParam('lineWidht', value)
 
     def setPercentMax(self, value: float):
         logger.info(f"value:{value}")
         if self._kymographAnalysis is not None:
-            self._kymographAnalysis.setPercentOfMax(value)
+            self._kymographAnalysis.setAnalysisParam('percentOfMax', value)
+
+        # refresh the line profile plot
+        self._on_slider_changed(value=None)
 
     def slotSwitchFile(self, ba: sanpy.bAnalysis):
         if ba is not None and not ba.fileLoader.isKymograph():
@@ -154,8 +166,7 @@ class kymographPlugin2(QtWidgets.QWidget):
 
         self._kymWidgetMain.slot_switchFile(ba=self._ba)
 
-        path = self._ba.getFilePath()
-        self._kymographAnalysis = sanpy.kymAnalysis(path)
+        self._kymographAnalysis = ba.kymAnalysis
 
         self.refreshSumLinePlot()
         self.refreshDiameterPlot()
@@ -169,50 +180,25 @@ class kymographPlugin2(QtWidgets.QWidget):
         Args:
             newRect: [l,t,r,b]
         """
-        lNew = newRect[0]
-        tNew = newRect[1]
-        rNew = newRect[2]
-        bNew = newRect[3]
 
-        widthNew = rNew - lNew
-        heightNew = tNew - bNew  # swapped
-
-        _pos = (lNew, bNew)
-        _size = (widthNew, heightNew)
-
-        # pos = self._rectRoi.pos()
-        # size = self._rectRoi.size()
-
-        logger.info(f"pos:{_pos} size:{_size}")
-
-        self._kymographAnalysis.setPosRoi(_pos)
-        self._kymographAnalysis.setSizeRoi(_size)
-
-        # update line profile plot
-        # _lineScanValue = self.profileSlider.value()
-        # self._on_slider_changed(_lineScanValue)
+        # replot line profile
+        self._on_slider_changed()
 
         # replot sum
         self.refreshSumLinePlot()
 
-    def old_slot_roi_changed(self):
-        pos = self._rectRoi.pos()
-        size = self._rectRoi.size()
-
-        logger.info(f"pos:{pos} size:{size}")
-
-        self._kymographAnalysis.setPosRoi(pos)
-        self._kymographAnalysis.setSizeRoi(size)
-
-        # update line profile plot
-        _lineScanValue = self.profileSlider.value()
-        self._on_slider_changed(_lineScanValue)
-
     def setImageMedianKernel(self, value):
         self._imageMedianKernel = value
 
+        self._kymographAnalysis.setAnalysisParam('ximageFilterKenelxx', value)
+
+        # refresh the line profile plot
+        self._on_slider_changed(value=None)
+
     def setLineMedianKernel(self, value):
         self._lineMedianKernel = value
+
+        self._kymographAnalysis.setAnalysisParam('lineFilterKernel', value)
 
         # refresh the line profile plot
         self._on_slider_changed(value=None)
@@ -231,9 +217,9 @@ class kymographPlugin2(QtWidgets.QWidget):
         else:
             self._currentLineNumber = value
 
-        logger.info(f"value:{value}")
+        # logger.info(f"value:{value}")
 
-        xScale = self._ba._abf.tifHeader["secondsPerLine"]
+        xScale = self._ba.fileLoader.tifHeader["secondsPerLine"]
 
         # secondsValue = value * self._kymographAnalysis._secondsPerLine
         secondsValue = value * xScale
@@ -243,20 +229,9 @@ class kymographPlugin2(QtWidgets.QWidget):
             line.setValue(secondsValue)
 
         # update one line profile plot
-        lineProfile, left_pnt, right_pnt = self._kymographAnalysis._getFitLineProfile(
-            value, self._lineMedianKernel
-        )
-        # print('    left:', left, 'right:', right)
-
-        # logger.info(f'  len(lineProfile):{len(lineProfile)} \
-        #             left_pnt:{left_pnt} \
-        #             right_pnt:{right_pnt}')
-
-        # +1 because np.arange() does NOT include the last point
-        # xData = np.arange(0, self._kymographAnalysis.pointsPerLineScan()+1)
+        lineProfile, left_pnt, right_pnt = self._kymographAnalysis._getFitLineProfile(value)
         pointsPerLineScan = self._kymographAnalysis.pointsPerLineScan()
-        umPerPixel = self._kymographAnalysis._umPerPixel
-        logger.info(f"pointsPerLineScan:{pointsPerLineScan} umPerPixel:{umPerPixel}")
+        umPerPixel = self._kymographAnalysis.umPerPixel
 
         xData = np.arange(0, pointsPerLineScan)
         xData = np.multiply(xData, umPerPixel)
@@ -282,29 +257,45 @@ class kymographPlugin2(QtWidgets.QWidget):
 
         self._sliceLinesList = []
 
-        vBoxLayout = QtWidgets.QVBoxLayout()
+        # vBoxLayout = QtWidgets.QVBoxLayout()
 
-        # new oct 5 rosie
-        #
+        # typical wrapper for PyQt, we can't use setLayout(), we need to use setCentralWidget()
+        _mainWidget = QtWidgets.QWidget()
+        vBoxLayout = QtWidgets.QVBoxLayout()
+        _mainWidget.setLayout(vBoxLayout)
+        self.setCentralWidget(_mainWidget)
+
         # kymograph widget from main interface
-        self._kymWidgetMain = sanpy.interface.kymographWidget(
-            self._ba
-        )  # will handle na is None
+        # self._kymWidgetMain = sanpy.interface.kymographWidget(self._ba)  # will handle na is None
+        self._kymWidgetMain = sanpy.interface.kymographWidget(None)  # will handle na is None
         self._kymWidgetMain.signalKymographRoiChanged.connect(self._slot_roi_changed2)
         self._kymWidgetMain.signalLineSliderChanged.connect(self._on_slider_changed)
-        vBoxLayout.addWidget(self._kymWidgetMain)
+        
+        # v1 in layout
+        # vBoxLayout.addWidget(self._kymWidgetMain)
+
+        # v2 in a dock
+        self.fileDock = QtWidgets.QDockWidget('Files',self)
+        self.fileDock.setWidget(self._kymWidgetMain)
+        self.fileDock.setFeatures(QtWidgets.QDockWidget.NoDockWidgetFeatures | \
+                                  QtWidgets.QDockWidget.DockWidgetVerticalTitleBar)
+        self.fileDock.setFloating(False)
+        self.fileDock.setTitleBarWidget(QtWidgets.QWidget())
+        self.addDockWidget(QtCore.Qt.TopDockWidgetArea, self.fileDock)
 
         #
         # control bar
         hBoxLayoutControls = QtWidgets.QHBoxLayout()
 
         lineWidthLabel = QtWidgets.QLabel("Line Width (pixels)")
+        lineWidthLabel.setEnabled(False)
         hBoxLayoutControls.addWidget(lineWidthLabel)
 
         lineWidthSpinbox = QtWidgets.QSpinBox()
         lineWidthSpinbox.setMinimum(1)
+        lineWidthSpinbox.setEnabled(False)
         if self._kymographAnalysis is not None:
-            lineWidthSpinbox.setValue(self._kymographAnalysis.getLineWidth())
+            lineWidthSpinbox.setValue(self._kymographAnalysis.getAnalysisParam('lineWidth'))
         else:
             lineWidthSpinbox.setValue(1)
         lineWidthSpinbox.valueChanged.connect(
@@ -320,7 +311,7 @@ class kymographPlugin2(QtWidgets.QWidget):
         percentMaxSpinbox.setSingleStep(0.1)
         percentMaxSpinbox.setMinimum(0.001)
         if self._kymographAnalysis is not None:
-            percentMaxSpinbox.setValue(self._kymographAnalysis.getPercentOfMax())
+            percentMaxSpinbox.setValue(self._kymographAnalysis.getAnalysisParam('percentOfMax'))
         else:
             percentMaxSpinbox.setValue(10)
         percentMaxSpinbox.valueChanged.connect(
@@ -485,16 +476,18 @@ class kymographPlugin2(QtWidgets.QWidget):
         #
         # plot of just one line intensity
         self.lineIntensityPlotItem = pg.PlotWidget()
-        self.lineIntensityPlotItem.setLabel("left", "Intensity", units="")
-        self.lineIntensityPlotItem.setLabel("bottom", "Points", units="")
+        self.lineIntensityPlotItem.setLabel("left", 'Intensity', units="")
+        self.lineIntensityPlotItem.setLabel("bottom", 'um', units="")
         self.lineIntensityPlot = self.lineIntensityPlotItem.plot(
             name="lineIntensityPlot"
         )
         if self._kymographAnalysis is not None:
-            xPlot = np.arange(0, self._kymographAnalysis.pointsPerLineScan())
+            xPlot = np.arange(0, self._kymographAnalysis.numLineScans())
         else:
             xPlot = np.arange(0, 0)
         yPlot = xPlot * np.nan
+        xPlot = []
+        yPlot = []
         self.lineIntensityPlot.setData(xPlot, yPlot, connect="finite")  # fill with nan
         # single point of left/right
         self.leftRightPlot = self.lineIntensityPlotItem.plot(name="leftRightPlot")
@@ -511,6 +504,8 @@ class kymographPlugin2(QtWidgets.QWidget):
         else:
             xPlot = np.arange(0, 0)
         yPlot = xPlot * np.nan
+        xPlot = []
+        yPlot = []
         self.diameterPlot.setData(xPlot, yPlot, connect="finite")  # fill with nan
         # link x-axis with kymograph PlotWidget
         # self.diameterPlotItem.setXLink(self.kymographWindow)
@@ -532,15 +527,16 @@ class kymographPlugin2(QtWidgets.QWidget):
         self.sumIntensityPlot = self.sumIntensityPlotItem.plot(name="sumIntensityPlot")
         # TODO: fix
         if self._ba is not None:
-            _recordingDur = self._ba.recordingDur
+            _recordingDur = self._ba.fileLoader.recordingDur
         else:
             _recordingDur = 0
         # xPlot = np.arange(0, self._kymographAnalysis.numLineScans())
-        xPlot = np.arange(0, _recordingDur)
-        yPlot = xPlot * np.nan
+        xPlot = []  # np.arange(0, _recordingDur)
+        yPlot = []  # xPlot * np.nan
         self.sumIntensityPlot.setData(xPlot, yPlot, connect="finite")  # fill with nan
         # link x-axis with kymograph PlotWidget
         # self.sumIntensityPlotItem.setXLink(self.kymographWindow)
+        # Link this view’s X axis to another view. (see LinkView)
         # link to kymographWidget plot of the image
         self.sumIntensityPlotItem.setXLink(self._kymWidgetMain.kymographPlot)
 
@@ -553,57 +549,12 @@ class kymographPlugin2(QtWidgets.QWidget):
 
         vBoxLayout.addWidget(self.sumIntensityPlotItem)
 
-        # finalize
-        self.setLayout(vBoxLayout)
-
-    def old_replot(self, path):
-        logger.info("")
-
-        self._kymographAnalysis = sanpy.kymAnalysis(path)
-
-        if 0:
-            # clear the image from the panel
-            # self.kymographWindow.clear()
-
-            self.kymographImage = pg.ImageItem(self._kymographAnalysis.getImage())
-            # setRect(x, y, w, h)
-            imageRect = self._kymographAnalysis.getImageRect()  # (x,y,w,h)
-            self.kymographImage.setRect(
-                imageRect[0], imageRect[1], imageRect[2], imageRect[3]
-            )
-            self.kymographWindow.addItem(self.kymographImage)
-
-            # update roi
-            _imageRect = self._kymographAnalysis.getImageRect()  # (x,y,w,h)
-            maxBounds = QtCore.QRectF(
-                _imageRect[0], _imageRect[1], _imageRect[2], _imageRect[3]
-            )
-            self._rectRoi.maxBounds = maxBounds
-            pos = self._kymographAnalysis.getPosRoi()
-            size = self._kymographAnalysis.getSizeRoi()
-            print(f"  pos:{pos}, size:{size}")
-            self._rectRoi.setPos(pos)
-            self._rectRoi.setSize(size)
-            self._rectRoi.stateChanged()
-
-        # update slider
-        # self.profileSlider.setMaximum(self._kymographAnalysis.numLineScans())
-
-        #
-        # self._on_slider_changed(0)
-
-        self.refreshSumLinePlot()
-        self.refreshDiameterPlot()
+        # finalize (only for QWidget)
+        # self.setLayout(vBoxLayout)
 
     def refreshSumLinePlot(self):
-        logger.info("")
         if self._ba is None:
             return
-        numLineScans = self._kymographAnalysis.numLineScans()
-        # xPlot = self._kymographAnalysis.getResults('time_ms')
-
-        # xPlot = self._kymographAnalysis.getTimeArray()  # always the same
-        # yPlot = self._kymographAnalysis.getResults('sumintensity')
 
         xPlot = self._ba.fileLoader.sweepX
         yPlot = self._ba.fileLoader.sweepY
@@ -611,15 +562,12 @@ class kymographPlugin2(QtWidgets.QWidget):
         self.sumIntensityPlot.setData(xPlot, yPlot, connect="finite")
 
     def refreshDiameterPlot(self):
-        logger.info("")
         if self._ba is None:
             return
-        # numLineScans = self._kymographAnalysis.numLineScans()
-        # xPlot = self._kymographAnalysis.getResults('time_ms')
-        # xPlot = self._kymographAnalysis.getTimeArray()  # always the same
+
         xPlot = self._ba.fileLoader.sweepX
         yDiam_um = self._kymographAnalysis.getResults("diameter_um")
-
+        
         self.diameterPlot.setData(xPlot, yDiam_um, connect="finite")
 
         # show start/stop of fit in main kymograph
@@ -629,22 +577,72 @@ class kymographPlugin2(QtWidgets.QWidget):
             left_pnt, right_pnt, visible=self._fitIsVivible
         )
 
+def exportDiameter():
+    import sanpy.interface.bExportWidget
+    
+    logger.info('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+
+    path = '/Users/cudmore/Dropbox/data/cell-shortening/cell 05.tif'
+    ba = sanpy.bAnalysis(path)
+
+    ba.kymAnalysis.analyzeDiameter()
+
+    x = ba.kymAnalysis.getResults('time_sec')
+    y = ba.kymAnalysis.getResults('diameter_um')
+
+    x = np.array(x)
+    y = np.array(y)
+
+    logger.info(x[0:20])
+    logger.info(y[0:20])
+    
+    xyUnits = ("Time (sec)", "DImaeter (um)")
+
+    xMin = 0
+    xMax = 10
+    xMargin = 0
+
+    type = 'vm'
+
+    exportWidget = sanpy.interface.bExportWidget(
+        x,
+        y,
+        xyUnits=xyUnits,
+        path=path,
+        xMin=xMin,
+        xMax=xMax,
+        xMargin=xMargin,
+        type=type,
+        darkTheme=True,
+    )
+
+    exportWidget.show()
+
+    return exportWidget
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
 
-    # app.setStyleSheet(qdarkstyle.load_stylesheet(qt_api=os.environ['PYQTGRAPH_QT_LIB']))
-    # app.setStyleSheet(qdarkstyle.load_stylesheet())
+    qdarktheme.setup_theme()
 
     path = "/Users/cudmore/data/kym-example/control 2.5_0012.tif.frames/control 2.5_0012.tif"
     # path = '/Users/cudmore/data/sa-node-ca-video/HighK-aligned-8bit_ch1.tif'
 
     path = "/Users/cudmore/data/rosie/Raw data for contraction analysis/Female Old/filter median 1 C2-0-255 Cell 2 CTRL  2_5_21 female wt old.tif"
 
+    path = 'data/kymograph/rosie-kymograph.tif'
+
+    #path = '/Users/cudmore/Dropbox/data/cell-shortening/cell 03.tif'
+    path = '/Users/cudmore/Dropbox/data/cell-shortening/cell 05.tif'
+    #path = '/Users/cudmore/Dropbox/data/cell-shortening/Cell 04_C002T001.tif'
+    
+
     ba = sanpy.bAnalysis(path)
 
     kw = kymographPlugin2(ba)
     kw.show()
+
+    # ed = exportDiameter()
 
     # print(kw._kymographAnalysis._getHeader())
 

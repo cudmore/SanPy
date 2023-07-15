@@ -196,7 +196,7 @@ def _loadLineScanHeader(path):
     txtFile = os.path.splitext(path)[0] + ".txt"
 
     if not os.path.isfile(txtFile):
-        logger.error(f"did not find file:{txtFile}")
+        # logger.error(f"did not find file:{txtFile}")
         return None
 
     theRet = {"tif": path}

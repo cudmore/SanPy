@@ -712,6 +712,8 @@ class bExportWidget(QtWidgets.QWidget):
 
         self.show()
 
+        # logger.info('DONE')
+
     def _changeTheme(self):
         """
         to change the theme, we need to redraw everything

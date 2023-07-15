@@ -4,6 +4,7 @@ import importlib
 # import inspect
 import os
 import traceback  # to print call stack on exception
+import inspect
 from typing import List, Union
 
 import sanpy
@@ -44,11 +45,9 @@ def _getObjectList(verbose=False) -> List[dict]:
     list of dict
     """
 
-    verbose = False
-
     if verbose:
         logger.info("")
-
+  
     #
     # user plugins from files in folder <user>/SanPy/analysis
     userAnalysisFolder = sanpy._util._getUserAnalysisFolder()
@@ -59,6 +58,9 @@ def _getObjectList(verbose=False) -> List[dict]:
 
     for file in files:
         if file.endswith("__init__.py"):
+            continue
+
+        if file == 'baseUserAnalysis.py':
             continue
 
         moduleName = os.path.split(file)[1]
@@ -103,10 +105,36 @@ def _getObjectList(verbose=False) -> List[dict]:
         }
 
         if verbose:
-            logger.info(f'loading user analysis from file: "{file}"')
+            logger.info(f'  loading user analysis from file: "{file}"')
 
         loadedModuleList.append(pluginDict)
 
+    # new, june 2023, get from user_analysis folder as well
+    logger.info('fetching user analysis from course code folder sanpy.user_analysis')
+    for moduleName, obj in inspect.getmembers(sanpy.user_analysis):
+        if inspect.isclass(obj):
+            # print('moduleName:', moduleName, 'obj:', obj)
+            # moduleName: kymUserAnalysis obj: <class 'sanpy.user_analysis.userKymDiamAnalysis.kymUserAnalysis'>
+            fullModuleName = "sanpy.user_analysis." + moduleName
+
+            # instantiate the object and it will create a dictionary of new stats
+            _tmpObj = obj(ba=None)
+            _statStatDict = _tmpObj._getUserStatDict()
+
+            pluginDict = {
+                "pluginClass": moduleName,
+                "type": "user_analysis",
+                "module": fullModuleName,
+                "path": 'not_used',
+                "constructor": obj,
+                "staticStatDict": _statStatDict,
+            }
+
+            if verbose:
+                logger.info(f' loading user analysis from user_analysis: "{moduleName}"')
+
+            loadedModuleList.append(pluginDict)
+          
     # print out the entire list
     # logger.info('')
     # for loadedModuleDict in loadedModuleList:
@@ -310,5 +338,6 @@ class baseUserAnalysis:
 
 if __name__ == "__main__":
     # test1()
-    # _getObjectList()
-    findUserAnalysisStats()
+    _getObjectList(verbose=True)
+    
+    #findUserAnalysisStats()

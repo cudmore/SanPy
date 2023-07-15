@@ -29,9 +29,7 @@ from .stimGen import stimGen
 from .detectionParams import detectionParams
 
 # remove for publication
-# from .kymographPlugin import kymographPlugin
-
-# from .kymographPlugin2 import kymographPlugin2
+from .kymographPlugin import kymographPlugin
 
 from .setSpikeStat import SetSpikeStat
 

@@ -9,24 +9,24 @@ This will replace code on bAnalysis (abfText)
 """
 
 import os
-from pprint import pprint
-
-# from re import T
+import math
 import time
+
+from multiprocessing import Pool
+
+from typing import List, Union, Optional
+
 import numpy as np
 import pandas as pd
 from skimage.measure import profile
+import scipy.signal
 import scipy
 import tifffile
 
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
-
-from sanpy._util import _loadLineScanHeader
-
 
 class kymRect:
     """Class to represent a rectangle as [l, t, r, b]"""
@@ -65,25 +65,86 @@ class kymRect:
         """Get matplotlib extend for imshow in (l,r,b,t)"""
         return (self._l, self._r, self._b, self._t)
 
+    def getPosAndSize(self):
+        """For PyQtGraph rect ROI.
+        """
+        left = self.getLeft()  # kymographRect[0]
+        bottom = self.getBottom()  # kymographRect[3]
+        top = self.getTop()  # kymographRect[1]
+        right = self.getRight()  # kymographRect[2]
+        widthRoi = right - left
+        # heightRoi = bottom - yRoiPos + 1
+        heightRoi = top - bottom
+
+        pos = (left, bottom)
+        size = (widthRoi, heightRoi)
+
+        return pos, size
+    
     def __str__(self):
         return f"l:{self._l} t:{self._t} r:{self._r} b:{self._b}"
 
 
 class kymAnalysis:
-    def __init__(self, path: str, autoLoad: bool = True):
+    def getDefaultAnalysisParams() -> dict:
+        return {
+            'version': '0.0.3',
+            
+            'reduceFraction': 0,    #0.05,
+                                    # percentage to reduce t/b of full rect roi to make best guess
+                                    # not used in analysis
+                                    # used to set initial rect roi
+
+            'imageFilterKenel': 5,
+            'lineFilterKernel': 5,
+
+            'lineWidth': 1,  # Number of lines scans to use in calculating line profile
+            'percentOfMax': 0.5,  # Percent of max to use in calculation of diameter
+
+            # all fields need a default so we can infer the type() when loading from json
+            
+            # used to save/load
+            'lRoi': 0,
+            'tRoi': 0,
+            'rRoi': 0,
+            'bRoi': 0,
+
+            # used to save/load
+            'umPerPixel': 0.1,
+            'secondsPerLine': 0.001,
+            'bitDepth': 8,
+            'dtype': np.uint8,
+            
+        }
+    
+    def __init__(self,
+                 path : str,
+                 tifData : np.ndarray = None,
+                 tifHeader : dict = None,
+                 autoLoad: bool = True):
         """
 
-        Args:
-            path: full path to .tif file
-            autoLoad: auto load analysis
+        Parameters
+        ----------
+            path : str
+                full path to .tif file
+            tifData : np.ndarray
+                if None then load from path, o.w. use tifData
+            tifHeader : dict
+                To specify (umPerPixel, secondsPerLine, bitDepth)
+            autoLoad : bool
+                auto load analysis
         """
-        self._version = "0.0.2"
 
         self._path = path
         # path to tif file
 
         # (line scan, pixels)
-        self._kymImage: np.ndarray = tifffile.imread(path)
+        if tifData is not None:
+            self._kymImage = tifData
+        else:
+            # load
+            self._kymImage: np.ndarray = tifffile.imread(path)
 
         self._kymImageFiltered = None
         # create this as needed, see self._kymImageFilterKernel
@@ -95,7 +156,7 @@ class kymAnalysis:
 
         # image must be shape[0] is time/big, shape[1] is space/small
         if self._kymImage.shape[0] < self._kymImage.shape[1]:
-            logger.info(f"rotating image with shape: {self._kymImage.shape}")
+            # logger.info(f"rot90 image with shape: {self._kymImage.shape}")
             self._kymImage = np.rot90(
                 self._kymImage, 3
             )  # ROSIE, so lines are not backward
@@ -104,50 +165,73 @@ class kymAnalysis:
         # we create filtered version at start of detect()
         self._filteredImage: np.ndarray = self._kymImage
 
-        logger.info(f"final image shape is: {self._kymImage.shape}")
+        # logger.info(f"final image shape is: {self._kymImage.shape}")
 
         # load the header from Olympus exported .txt file
 
-        self._umPerPixel = 1
-        # default for pixels is unity of 1 pixel
+        # TODO: put this in tif fileLoader
+        if tifHeader is None:
+            if self._kymImage.dtype == np.uint8:
+                _bitDepth = 8
+            elif self._kymImage.dtype == np.uint16:
+                _bitDepth = 16
+            else:
+                logger.warning(f'Did not undertand dtype {self._tif.dtype} defaulting to bit depth 16')
+                _bitDepth = 16
+            self._header = {
+                'umPerPixel': 1,
+                'secondsPerLine': 0.001,  # 0.001  #0.001  # make ms per bin = 1
+                'bitDepth': _bitDepth,
+            }
+        else:
+            self._header = tifHeader
 
-        self._secondsPerLine = 0.001  # 0.001  #0.001  # make ms per bin = 1
-        # default for time (lines) is 1 ms = 0.001 s
+        self._analysisParams = kymAnalysis.getDefaultAnalysisParams()
 
-        _olympusHeader = _loadLineScanHeader(path)
-        if _olympusHeader is not None:
-            self._umPerPixel = _olympusHeader["umPerPixel"]
-            self._secondsPerLine = _olympusHeader["secondsPerLine"]
-
-        self._reduceFraction = 0.15
+        # self._reduceFraction = 0.2
         # percentage to reduce t/b of full rect roi to make best guess
 
-        self._roiRect: kymRect = self.getBestGuessRectRoi()
+        self._roiRect : kymRect = self.getBestGuessRectRoi()
         # rectangular roi [l, t, r, b']
 
-        # analysis parameters
-        self._lineWidth = 1
-        # Actual line width to extract a line profile.
         # If >1 will get 10x-100x slower
         # TODO: write multiprocessing code
 
-        self._percentOfMax = 0.2
+        # self._percentOfMax = 0.5
         # to find start/stop of diameter fit along one line profile
 
-        self._kymImageFilterKernel = 0
+        # self._kymImageFilterKernel = 0
         # on analysis, pre-filter image with median kernel
 
-        self._lineFilterKernel = 0
+        # self._lineFilterKernel = 0
         # on analysis, pre-filter each line with median kernel
 
         # analysis results
-        _numLineScans = self.numLineScans()
-        self._results = self.getDefaultResultsDict()
+        # _numLineScans = self.numLineScans()
+        self._diamResults = self.getDefaultResultsDict()
+        self._diamAnalyzed = False
 
         # load saved analysis if it exists
         if autoLoad:
             self.loadAnalysis()
 
+    def hasDiamAnalysis(self):
+        return self._diamAnalyzed
+
+    def getAnalysisParam(self, name):
+        return self._analysisParams[name]
+    
+    def setAnalysisParam(self, name, value):
+        self._analysisParams[name] = value
+
+    @property
+    def umPerPixel(self):
+        return self._header['umPerPixel']
+    
+    @property
+    def secondsPerLine(self):
+        return self._header['secondsPerLine']
+    
     def getDefaultResultsDict(self):
         _numLineScans = self.numLineScans()
         theDict = {
@@ -199,29 +283,45 @@ class kymAnalysis:
             "file": fileName,
             "numLines": self.numLineScans(),
             "numPixels": self.numPixels(),
-            "secondsPerLine": self._secondsPerLine,
-            "umPerPixel": self._umPerPixel,
-            "dur_sec": self.numLineScans() * self._secondsPerLine,
-            "dist_um": self.numPixels() * self._umPerPixel,
+            "secondsPerLine": self.secondsPerLine,
+            "umPerPixel": self.umPerPixel,
+            "dur_sec": self.numLineScans() * self.secondsPerLine,
+            "dist_um": self.numPixels() * self.umPerPixel,
             "tifMin": np.nanmin(self._kymImage),  # TODO: make this for ROI rect
             "tifMax": np.nanmax(self._kymImage),
             #
-            "minDiam": self._results["minDiam"],
-            "maxDiam": self._results["maxDiam"],
-            "diamChange": self._results["diamChange"],
+            "minDiam": self._diamResults["minDiam"],
+            "maxDiam": self._diamResults["maxDiam"],
+            "diamChange": self._diamResults["diamChange"],
             #
-            "minSum": self._results["minSum"],
-            "maxSum": self._results["maxSum"],
-            "sumChange": self._results["sumChange"],
+            "minSum": self._diamResults["minSum"],
+            "maxSum": self._diamResults["maxSum"],
+            "sumChange": self._diamResults["sumChange"],
         }
         return theDict
 
     def pnt2um(self, point):
-        return point * self._umPerPixel
+        return point * self.umPerPixel
 
     def getResults(self, key) -> list:
-        return self._results[key]
+        """Get analysis result.
+        
+        Parameters
+        ----------
+        key : str
+            Key in results dictionary
+        """
+        try:
+            ret = self._diamResults[key]
+            return ret
+        except (KeyError) as e:
+            logger.error(f'Did not find results key "{key}"')
+            logger.error(f'Available keys are {self._diamResults.keys()}')
 
+    def getResultsAsDataFrame(self):
+        df = pd.DataFrame(self._diamResults)
+        return df
+    
     @property
     def sweepX(self):
         """Get full time array across all line scans
@@ -230,39 +330,81 @@ class kymAnalysis:
         """
 
         ret = np.arange(0, self.numLineScans(), 1)
-        ret = np.multiply(ret, self._secondsPerLine)
+        ret = np.multiply(ret, self.secondsPerLine)
 
         return ret
 
-    def getImageRect(self):
+    def getImageRect_no_scale(self, asList=False):
         l = 0
-        t = self.pointsPerLineScan() * self._umPerPixel
-        r = self.numLineScans() * self._secondsPerLine
+        t = self.pointsPerLineScan() # * self.umPerPixel
+        t = math.floor(t)
+
+        r = self.numLineScans() # * self.secondsPerLine
+        r = math.floor(r)
+        
         b = 0
-        return kymRect(l, t, r, b)
+
+        w = r - l
+        h = t - b
+
+        if asList:
+            return [l, b, w, h]  # x, y, w, h
+        else:
+            return kymRect(l, t, r, b)
+    
+    def getImageRect(self, asList=False):
+        l = 0
+        t = self.pointsPerLineScan() * self.umPerPixel
+        t = math.floor(t)
+
+        r = self.numLineScans() * self.secondsPerLine
+        r = math.floor(r)
+        
+        b = 0
+
+        w = r - l
+        h = t - b
+
+        if asList:
+            return [l, b, w, h]  # x, y, w, h
+        else:
+            return kymRect(l, t, r, b)
+
+    def resetKymRect(self):
+        """reset to default.
+        """
+        self._roiRect: kymRect = self.getBestGuessRectRoi()
 
     def getBestGuessRectRoi(self):
         """Get a best guess of a rectangular roi.
 
-        Args:
-            asRect: If True, return [l,t,r,b] else return (pos, size)
+        Info
+        ----
+            theRect2:[0, 383, 5000, 17]
         """
 
-        _rect: kymRect = self.getImageRect()  # [left, top, r, b]
+        _rect : kymRect = self.getImageRect_no_scale()  # [left, top, r, b]
+        # _rect : kymRect = self.getImageRect()  # [left, top, r, b]
 
-        logger.info(f"before reduction _rect:{_rect}")
+        # logger.info(f'  getImageRect_no_scale: {_rect}')
+
+        reduceFraction = self.getAnalysisParam('reduceFraction')
+
+        # logger.info(f'  reduceFraction: {reduceFraction}')
+
         # reduce top/bottom (space) by 0.15 percent
-        percentReduction = _rect.getHeight() * self._reduceFraction
+        percentReduction = _rect.getHeight() * reduceFraction
 
         newTop = _rect.getTop() - 2 * percentReduction
         newBottom = _rect.getBottom() + percentReduction
+        
+        newTop = math.floor(newTop)
+        newBottom = math.floor(newBottom)
+        
         _rect.setTop(newTop)
         _rect.setBottom(newBottom)
 
-        logger.info(f"after reduction _rect:{_rect}")
-
-        # self._pos = (_rect[0], _rect[1])  # (0,0)
-        # self._size = (_rect[2], _rect[3])  #(self.getImageShape()[0], self.getImageShape()[1])
+        # logger.info(f"  after reduction _rect:{_rect}")
 
         return _rect
 
@@ -270,39 +412,27 @@ class kymAnalysis:
         """Get the current roi rectangle."""
         return self._roiRect
 
-    def setRectRoi(self, newRect):
+    def setRoiRect(self, newRect):
         """
         Args:
             newRect is [l, t, r, b]
         """
+        # logger.info(newRect)
+
         l = newRect[0]
         t = newRect[1]
         r = newRect[2]
         b = newRect[3]
+
+        # logger.info(f'')
+
         self._roiRect = kymRect(l, t, r, b)
-
-    def setPercentOfMax(self, percent):
-        """Set the percent of max used in analyze()."""
-        self._percentOfMax = percent
-
-    def getPercentOfMax(self):
-        return self._percentOfMax
-
-    def getLineWidth(self) -> int:
-        return self._lineWidth
-
-    def setLineWidth(self, width: int):
-        self._lineWidth = width
-
-    def old_rotateImage(self):
-        self._kymImage = np.rot90(self._kymImage)
-        return self._kymImage
 
     def getImage(self):
         return self._kymImage
 
     def getImageContrasted(self, theMin, theMax, rot90=False):
-        bitDepth = 8
+        bitDepth = self._header['bitDepth']
         lut = np.arange(2**bitDepth, dtype="uint8")
         lut = self._getContrastedImage(lut, theMin, theMax)  # get a copy of the image
         theRet = np.take(lut, self._kymImage)
@@ -318,7 +448,7 @@ class kymAnalysis:
         # Here I set copy=True in order to ensure the original image is not
         # modified. If you don't mind modifying the original image, you can
         # set copy=False or skip this step.
-        bitDepth = 8
+        bitDepth = self._header['bitDepth']
 
         image = np.array(image, dtype=np.uint8, copy=True)
         image.clip(display_min, display_max, out=image)
@@ -345,46 +475,53 @@ class kymAnalysis:
         """Number of points in each line scan."""
         return self.getImageShape()[1]
 
+    def _getAnalysisFolder(self):
+        savePath, saveFile = os.path.split(self._path)
+        analysisFolder = os.path.join(savePath, 'kymAnalysis')
+        return analysisFolder
+    
     def getAnalysisFile(self):
         """Get full path to analysis file we save/load."""
         savePath, saveFile = os.path.split(self._path)
         saveFileBase, ext = os.path.splitext(saveFile)
-        saveFile = saveFileBase + "-kymanalysis.csv"
-        savePath = os.path.join(savePath, saveFile)
+        # was this
+        # saveFile = saveFileBase + "-kymanalysis.csv"
+        saveFile = saveFileBase + "-kymDiameter.csv"
+        #saveFile = saveFileBase + "-analysis2.csv"
+
+        _analysisFolder = self._getAnalysisFolder()
+
+        savePath = os.path.join(_analysisFolder, saveFile)
         return savePath
 
     def _getFileHeader(self):
         """Get one line header to save with analysis."""
-        header = ""
+        
+        headerStr = ""
 
-        lineWidth = self.getLineWidth()
-        percentOfMax = self.getPercentOfMax()
+        # insert image header into save dictionary
+        for k,v in self._header.items():
+            #headerStr += f'{k}={v};'
+            self._analysisParams[k] = v
+
+        # insert current roi into save dictionary
         roiRect = self.getRoiRect()
+        self._analysisParams['lRoi'] = roiRect.getLeft()
+        self._analysisParams['tRoi'] = roiRect.getTop()
+        self._analysisParams['rRoi'] = roiRect.getRight()
+        self._analysisParams['bRoi'] = roiRect.getBottom()
 
-        header += f"version={self._version};"
+        for k,v in self._analysisParams.items():
+            headerStr += f'{k}={v};'
 
-        filePath, fileName = os.path.split(self._path)
-        header += f"file={fileName};"
-
-        header += f"linewidth={lineWidth};"
-        header += f"percentofmax={percentOfMax};"
-
-        # don't put tuple in header, expand
-        # header += f'roiRect={roiRect};'
-        header += f"lrectroi={roiRect.getLeft()};"
-        header += f"trectroi={roiRect.getTop()};"
-        header += f"rrectroi={roiRect.getRight()};"
-        header += f"brectroi={roiRect.getBottom()};"
-
-        # TODO: ad other params like (image median kernel, line median kernel, ...)
-
-        return header
+        return headerStr
 
     def _parseFileHeader(self, header):
-        """Parse one line header into member variables.
+        """Parse one line header into an analysis parameter dictionary.
 
         This is parsing header we save with analysis.
         """
+
         kvList = header.split(";")
         for kv in kvList:
             if not kv:
@@ -392,32 +529,31 @@ class kymAnalysis:
                 continue
             k, v = kv.split("=")
             # print('    k:', k, 'v:', v)
-            if k == "lrectroi":
-                left = float(v)
-            elif k == "trectroi":
-                top = float(v)
-            elif k == "rrectroi":
-                right = float(v)
-            elif k == "brectroi":
-                bottom = float(v)
+            
+            try:
+                # we need to cast to the currect type
+                _type = type(self._analysisParams[k])
+                self._analysisParams[k] = _type(v)
+            
+            except (KeyError) as e:
+                logger.error(f'Did not understand key:{k} with value:{v}')
+        
+        # set tif header
+        self._header['umPerPixel'] = self.getAnalysisParam('umPerPixel')
+        self._header['secondsPerLine'] = self.getAnalysisParam('secondsPerLine')
+        self._header['bitDepth'] = self.getAnalysisParam('bitDepth')
 
-            elif k == "linewidth":
-                self._lineWidth = int(v)
-            elif k == "percentofmax":
-                self._percentOfMax = float(v)
+        # build the roi
+        l = self.getAnalysisParam('lRoi')
+        t = self.getAnalysisParam('tRoi')
+        r = self.getAnalysisParam('rRoi')
+        b = self.getAnalysisParam('bRoi')
+        
+        self.setRoiRect([l,t,r,b])
 
-        width = right - left  # + 1
-        height = top - bottom  # + 1
-
-        self._pos = (left, bottom)
-        self._size = (width, height)
-
-        # print('left:', left)
-        # print('top:', top)
-        # print('right:', right)
-        # print('bottom:', bottom)
-        logger.info(f"  _pos: {self._pos}")
-        logger.info(f"  _size: {self._size}")
+        # logger.info('Loaded _analysisParams')
+        # for k,v in self._analysisParams.items():
+        #     print(f'  {k}: {v}')
 
     def saveAnalysis(self, path: str = None):
         """Save kymograph analysis.
@@ -434,13 +570,18 @@ class kymAnalysis:
         else:
             savePath = path
 
+        _analysisFolder = self._getAnalysisFolder()
+        if not os.path.isdir(_analysisFolder):
+            logger.info(f'making folder:{_analysisFolder}')
+            os.mkdir(_analysisFolder)
+
         header = self._getFileHeader()
 
         with open(savePath, "w") as f:
             f.write(header)
             f.write("\n")
 
-        df = pd.DataFrame(self._results)
+        df = pd.DataFrame(self._diamResults)
 
         logger.info(f"saving {len(df)} lines to {savePath}")
 
@@ -453,40 +594,25 @@ class kymAnalysis:
         """
         savePath = self.getAnalysisFile()
         if not os.path.isfile(savePath):
-            logger.info(f"did not find file: {savePath}")
+            # logger.info(f"did not find file: {savePath}")
             return
 
-        logger.info(f"loading analysis from: {savePath}")
+        # logger.info(f"loading analysis from: {savePath}")
 
         with open(savePath) as f:
-            header = f.readline().rstrip()
-
-        self._parseFileHeader(header)  # parse header of saved analysis
+            headerStr = f.readline().rstrip()
+        self._parseFileHeader(headerStr)  # parse header of saved analysis
 
         df = pd.read_csv(savePath, header=1)
 
-        # parse df into self._results dictionary
-        """
-        self._results = {
-            'time_ms': [],
-            'sumintensity': [],
-            'diameter': [],
-            'leftpnt': [],
-            'rightpnt': [],
-        }
-        """
-        try:
-            self._results["time_ms"] = df["time_ms"].values
-            self._results["sumintensity"] = df["sumintensity"].values
-            self._results["diameter_pnts"] = df["diameter_pnts"].values
-            self._results["diameter_um"] = df["diameter_um"].values
-            self._results["left_pnt"] = df["left_pnt"].values
-            self._results["right_pnt"] = df["right_pnt"].values
-            self._results["diameter_pixels"] = df["diameter_pixels"].values
-        except KeyError as e:
-            # if we did not find a scale in rosie rosetta
-            logger.error(f"DID NOT FIND KEY {e}")
-            # self._results = None
+        # parse df into self._diamResults dictionary
+        for k in self._diamResults.keys():
+            try:
+                self._diamResults[k] = df[k].values
+            except KeyError as e:
+                logger.error(f"Did not find key {k} in loaded file columns")
+        
+        self._diamAnalyzed = True
 
     def loadPeaks(self):
         """
@@ -509,15 +635,15 @@ class kymAnalysis:
         return _fpAnalysis
 
     def pnt2um(self, point):
-        return point * self._umPerPixel
+        return point * self.umPerPixel
 
     def seconds2pnt(self, seconds):
-        return int(seconds / self._secondsPerLine)
+        return int(seconds / self.secondsPerLine)
 
     def um2pnt(self, um):
-        return int(um / self._umPerPixel)
+        return int(um / self.umPerPixel)
 
-    def analyze(self, imageMedianKernel=None, lineMedianKernel=None):
+    def analyzeDiameter(self):
         """Analyze the diameter of each line scan.
 
         Args:
@@ -530,105 +656,117 @@ class kymAnalysis:
         """
         startSeconds = time.time()
 
-        if imageMedianKernel is None:
-            imageMedianKernel = self._kymImageFilterKernel
-        else:
-            self._kymImageFilterKernel = imageMedianKernel
+        # if imageMedianKernel is None:
+        #     imageMedianKernel = self._kymImageFilterKernel
+        # else:
+        #     self._kymImageFilterKernel = imageMedianKernel
 
-        if lineMedianKernel is None:
-            lineMedianKernel = self._lineFilterKernel
-        else:
-            self._lineFilterKernel = lineMedianKernel
+        # if lineMedianKernel is None:
+        #     lineMedianKernel = self._lineFilterKernel
+        # else:
+        #     self._lineFilterKernel = lineMedianKernel
 
         logger.info("")
-        logger.info(f"  filtering entire image with median kernel {imageMedianKernel}")
-        logger.info(f"  filtering each line with median kernel {lineMedianKernel}")
 
-        if imageMedianKernel > 0:
-            self._filteredImage = scipy.signal.medfilt(
-                self._kymImage, imageMedianKernel
-            )
+        imageFilterKenel = self.getAnalysisParam('imageFilterKenel')
+        lineFilterKernel = self.getAnalysisParam('lineFilterKernel')
+
+        if imageFilterKenel > 0:
+            self._filteredImage = scipy.signal.medfilt(self._kymImage, imageFilterKenel)
         else:
             self._filteredImage = self._kymImage
 
         theRect = self.getRoiRect()
 
-        logger.info(f"  (l,t,r,b) is {theRect}")
-        leftRect_sec = theRect.getLeft()
-        rightRect_sec = theRect.getRight()
+        logger.info(f"  filtering entire image with median kernel {imageFilterKenel}")
+        logger.info(f"  filtering each line with median kernel {lineFilterKernel}")
+
+        logger.info(f"  getRoiRect (l,t,r,b) is {theRect}")
+        # leftRect_sec = theRect.getLeft()
+        # rightRect_sec = theRect.getRight()
+        leftRect_line = theRect.getLeft()
+        rightRect_line = theRect.getRight()
 
         # convert left/right of rect in seconds to line scan inex
-        leftRect_line = int(leftRect_sec / self._secondsPerLine)
-        rightRect_line = int(rightRect_sec / self._secondsPerLine)
+        # leftRect_line = int(leftRect_sec / self.secondsPerLine)
+        # rightRect_line = int(rightRect_sec / self.secondsPerLine)
 
         logger.info(f"  leftRect_line:{leftRect_line} rightRect_line:{rightRect_line}")
-        logger.info(f"  self.numLineScans():{self.numLineScans()}")
-        logger.info(f"  self._umPerPixel:{self._umPerPixel}")
-        logger.info(f"  self._percentOfMax:{self._percentOfMax}")
+        logger.info(f"  numLineScans():{self.numLineScans()}")
+        logger.info(f"  umPerPixel:{self.umPerPixel}")
+        logger.info(f"  secondsPerLine:{self.secondsPerLine}")
+        logger.info(f"  percentOfMax:{self.getAnalysisParam('percentOfMax')}")
 
         sumIntensity = [np.nan] * self.numLineScans()
         left_idx_list = [np.nan] * self.numLineScans()
         right_idx_list = [np.nan] * self.numLineScans()
         diameter_idx_list = [np.nan] * self.numLineScans()
 
+        _maxSumIntensity = 0
+
         lineRange = np.arange(leftRect_line, rightRect_line)
         for line in lineRange:
             # get line profile using line width
             # outside roi rect will be nan
-            intensityProfile, left_idx, right_idx = self._getFitLineProfile(
-                line, lineMedianKernel
-            )
+            intensityProfile, left_idx, right_idx = self._getFitLineProfile(line)
 
             # logger.info(f'  len(intensityProfile):{len(intensityProfile)} \
             #             left_idx:{left_idx} \
             #             right_idx:{right_idx}')
 
-            # normalize to number of points in line scan
-            sumIntensity[line] = np.nansum(intensityProfile)
-            sumIntensity[line] /= self._kymImage.shape[1]
+            _sumIntensity = np.nansum(intensityProfile)
+            sumIntensity[line] = _sumIntensity
+            #sumIntensity[line] /= self._kymImage.shape[1]  # normalize to number of points in line scan
+            if _sumIntensity > _maxSumIntensity:
+                _maxSumIntensity = _sumIntensity
 
             left_idx_list[line] = left_idx
             right_idx_list[line] = right_idx
             diameter_idx_list[line] = right_idx - left_idx + 1
 
-        self._results["time_sec"] = self.sweepX.tolist()
-        self._results["sumintensity"] = sumIntensity
+        self._diamResults["time_sec"] = self.sweepX.tolist()
+        
+        # normalize sum to max
+        sumIntensity = [_x/_maxSumIntensity for _x in sumIntensity]
+        self._diamResults["sumintensity"] = sumIntensity
 
         # filter
-        diameter_um = np.multiply(diameter_idx_list, self._umPerPixel)
+        diameter_um = np.multiply(diameter_idx_list, self.umPerPixel)
         # kernelSize = 5
         # diameter_um = scipy.signal.medfilt(diameter_um, kernelSize)
-        self._results["diameter_pnts"] = diameter_idx_list
-        self._results["diameter_um"] = diameter_um
+        self._diamResults["diameter_pnts"] = diameter_idx_list
+        self._diamResults["diameter_um"] = diameter_um
 
-        self._results["left_pnt"] = left_idx_list
-        self._results["right_pnt"] = right_idx_list
+        self._diamResults["left_pnt"] = left_idx_list
+        self._diamResults["right_pnt"] = right_idx_list
 
         # smooth
         # kernelSize = 3
         # logger.info(f'put kernel size at user option, kernelSize: {kernelSize}')
-        # diameter_um = self._results['diameter_um']
+        # diameter_um = self._diamResults['diameter_um']
         # diameter_um_f = scipy.signal.medfilt(diameter_um, kernelSize)
 
-        sumintensity = self._results["sumintensity"]
+        sumintensity = self._diamResults["sumintensity"]
         # sumintensity_f = scipy.signal.medfilt(sumintensity, kernelSize)
 
         #
-        self._results["minDiam"] = np.nanmin(diameter_um)
-        self._results["maxDiam"] = np.nanmax(diameter_um)
-        self._results["diamChange"] = (
-            self._results["maxDiam"] - self._results["minDiam"]
+        self._diamResults["minDiam"] = np.nanmin(diameter_um)
+        self._diamResults["maxDiam"] = np.nanmax(diameter_um)
+        self._diamResults["diamChange"] = (
+            self._diamResults["maxDiam"] - self._diamResults["minDiam"]
         )
         #
-        self._results["minSum"] = np.nanmin(sumintensity)
-        self._results["maxSum"] = np.nanmax(sumintensity)
-        self._results["sumChange"] = self._results["maxSum"] - self._results["minSum"]
+        self._diamResults["minSum"] = np.nanmin(sumintensity)
+        self._diamResults["maxSum"] = np.nanmax(sumintensity)
+        self._diamResults["sumChange"] = self._diamResults["maxSum"] - self._diamResults["minSum"]
+
+        self._diamAnalyzed = True
 
         stopSeconds = time.time()
         durSeconds = round(stopSeconds - startSeconds, 2)
         logger.info(f"  analyzed {len(lineRange)} line scans in {durSeconds} seconds")
 
-    def _getFitLineProfile(self, lineScanNumber: int, medianKernel: int):
+    def _getFitLineProfile(self, lineScanNumber : int, lineFilterKernel : int = None):
         """Get one line profile.
 
         - Returns points
@@ -638,15 +776,24 @@ class kymAnalysis:
             medianKernel: Use 0 for no filtering
         """
 
-        # TODO: want to get based on rect roi
+        lineWidth = self.getAnalysisParam('lineWidth')
+        _percentOfMax = self.getAnalysisParam('percentOfMax')
+        if lineFilterKernel is None:
+            lineFilterKernel = self.getAnalysisParam('lineFilterKernel')
 
         # we know the scan line, determine start/stop based on roi
         roiRect = self.getRoiRect()  # (l, t, r, b) in um and seconds (float)
-        src_pnt_space = self.um2pnt(roiRect.getBottom())
-        dst_pnt_space = self.um2pnt(roiRect.getTop())
 
+        # src_pnt_space = self.um2pnt(roiRect.getBottom())
+        # dst_pnt_space = self.um2pnt(roiRect.getTop())
+
+        src_pnt_space = roiRect.getBottom()
+        dst_pnt_space = roiRect.getTop()
+
+        # logger.info(f'src_pnt_space:{src_pnt_space} dst_pnt_space:{dst_pnt_space}')
+        
         # intensityProfile will always have len() of number of pixels in line scane
-        if self._lineWidth == 1:
+        if lineWidth == 1:
             intensityProfile = self._filteredImage[lineScanNumber, :]
 
             # oct-7-2022
@@ -655,20 +802,20 @@ class kymAnalysis:
             # intensityProfile = intensityProfile.astype(float)  # we need nan
 
         else:
+            numPixels = self._filteredImage.shape[1]
+            
             # FLIPPED
-            src = (lineScanNumber, self.numPixels() - 1)
-            dst = (
-                lineScanNumber,
-                0,
-            )  # -1 because profile_line uses last pnt (unlike numpy)
+            # -1 because profile_line uses last pnt (unlike numpy)
+            src = (lineScanNumber, numPixels - 1)
+            dst = (lineScanNumber,0)  
 
             intensityProfile = profile.profile_line(
-                self._filteredImage, src, dst, linewidth=self._lineWidth
+                self._filteredImage, src, dst, linewidth=lineWidth
             )
 
         # median filter line profile
-        if medianKernel > 0:
-            intensityProfile = scipy.signal.medfilt(intensityProfile, medianKernel)
+        if lineFilterKernel > 0:
+            intensityProfile = scipy.signal.medfilt(intensityProfile, lineFilterKernel)
 
         x = np.arange(0, len(intensityProfile) + 1)
 
@@ -681,7 +828,7 @@ class kymAnalysis:
 
         # FWHM
         _intMax = np.nanmax(intensityProfile)
-        half_max = _intMax * self._percentOfMax  # 0.2
+        half_max = _intMax * _percentOfMax  # 0.2
         whr = np.asarray(intensityProfile > half_max).nonzero()
         if len(whr[0]) > 2:
             # whr is (array,), only interested in whr[0]
@@ -709,34 +856,120 @@ class kymAnalysis:
 
         return intensityProfile, left_idx, right_idx
 
-    def old_FWHM(self, X, Y):
-        """
-        see: https://stackoverflow.com/questions/10582795/finding-the-full-width-half-maximum-of-a-peak
-        """
-        # logger.info(f'_percentOfMax:{self._percentOfMax}')
+def lineProfileWorker(imgData, _percentOfMax, lineFilterKernel=0, src_pnt_space=None, dst_pnt_space=None):
+    """
+    Parameters
+    ==========
+    imgData : np.ndarry
+        Image data to extract line profile from
+        Assuming shape (line scans, pixels per line)
+        line scans must be odd
+    """
+    lineWidth = imgData.shape[0]
+    numPixels = imgData.shape[1]
 
-        # Y = scipy.signal.medfilt(Y, 3)
+    if lineWidth == 1:
+        intensityProfile = imgData[0,:]
+    else:
+        middleLine = math.floor(lineWidth/2)
+        # intensityProfile will always have len() of number of pixels in line scane
+        # -1 because profile_line uses last pnt (unlike numpy)
+        src = (middleLine, numPixels - 1)
+        dst = (middleLine, 0)  # -1 because profile_line uses last pnt (unlike numpy)
+        intensityProfile = profile.profile_line(
+            imgData, src, dst, linewidth=lineWidth
+        )
 
-        # half_max = max(Y) / 2.
-        # half_max = max(Y) * 0.7
-        half_max = np.nanmax(Y) * self._percentOfMax  # 0.2
+    # logger.info(f'intensityProfile:{intensityProfile.shape}')  # 379,
+    # sys.exit(1)
 
-        # for explanation of this wierd syntax
-        # see: https://docs.scipy.org/doc/numpy/reference/generated/numpy.where.html
-        # whr = np.where(Y > half_max)
-        # print('   half_max:', half_max)
-        whr = np.asarray(Y > half_max).nonzero()
-        if len(whr[0]) > 2:
-            # whr is (array,), only interested in whr[0]
-            left_idx = whr[0][0]
-            right_idx = whr[0][-1]
-            fwhm = X[right_idx] - X[left_idx]
-        else:
-            left_idx = np.nan
-            right_idx = np.nan
-            fwhm = np.nan
-        return fwhm, left_idx, right_idx  # return the difference (full width)
+    # median filter line profile
+    if lineFilterKernel > 0:
+        intensityProfile = scipy.signal.medfilt(intensityProfile, lineFilterKernel)
 
+    # x = np.arange(0, len(intensityProfile) + 1)
+
+    # Nan out before/after roi
+    intensityProfile = intensityProfile.astype(float)  # we need nan
+    if src_pnt_space is not None:
+        intensityProfile[0:src_pnt_space] = np.nan
+    if dst_pnt_space is not None:
+        intensityProfile[dst_pnt_space:] = np.nan
+
+    # fwhm, left_idx, right_idx = self.FWHM(x, intensityProfile)
+
+    # FWHM
+    _intMax = np.nanmax(intensityProfile)
+    half_max = _intMax * _percentOfMax  # 0.2
+    whr = np.asarray(intensityProfile > half_max).nonzero()
+    if len(whr[0]) > 2:
+        # whr is (array,), only interested in whr[0]
+        left_idx = whr[0][0]
+        right_idx = whr[0][-1]
+        # fwhm = X[right_idx] - X[left_idx]
+    else:
+        left_idx = np.nan
+        right_idx = np.nan
+        # fwhm = np.nan
+
+    return intensityProfile, left_idx, right_idx
+    # intensityProfile, left_idx, right_idx = self._getFitLineProfile(line)
+
+def lineProfilePool(imgData, lineWidth, roiRect, _percentOfMax):
+    """
+    Parameters
+    ==========
+    tifData : np.ndarry
+        tif data slice to analyze
+    lineWidth : int
+        Must be odd
+    """
+    startTime = time.time()
+
+    # we know the scan line, determine start/stop based on roi
+    # roiRect = self.getRoiRect()  # (l, t, r, b) in um and seconds (float)
+
+    # src_pnt_space = self.um2pnt(roiRect.getBottom())
+    # dst_pnt_space = self.um2pnt(roiRect.getTop())
+
+    src_pnt_space = roiRect.getBottom()
+    dst_pnt_space = roiRect.getTop()
+
+    logger.info(f'imgData:{imgData.shape}')  # tifData:(10000, 519)
+    numLines = imgData.shape[0]
+    result_objs = []
+    with Pool(processes=os.cpu_count() - 1) as pool:
+        for line in range(numLines):
+            startLine = line - math.floor(lineWidth/2)
+            if startLine < 0:
+                startLine = 0
+            # numpy uses (] indexing
+            stopLine = line + math.floor(lineWidth/2) + 1
+            if stopLine > numLines:
+                stopLine = numLines
+
+            imageSlice = imgData[startLine:stopLine,:]
+            
+            # logger.info(f'startLine:{startLine} stopLine:{stopLine} imageSlice:{imageSlice.shape}')
+            
+            workerParams = (imageSlice, _percentOfMax, lineFilterKernel, src_pnt_space, dst_pnt_space)
+            
+            result = pool.apply_async(lineProfileWorker, workerParams)
+            result_objs.append(result)
+
+        # run the workers
+        logger.info(f'getting results from {len(result_objs)} workers')
+        results = [result.get() for result in result_objs]
+
+        # fetch the results (fast as everything is done)
+        for k, result in enumerate(results):
+            # results is a tuple
+            resultDict = result
+        
+        print(results[0])
+
+    stopTime = time.time()
+    logger.info(f'  took {round(stopTime-startTime,3)} seconds')
 
 def plotKym(ka: kymAnalysis):
     """Plot a kym image using matplotlib."""
@@ -754,25 +987,43 @@ def plotKym(ka: kymAnalysis):
     axs[0].imshow(tifDataCopy)
 
     sweepX = ka.sweepX
-    print("sweepX:", type(sweepX), sweepX.shape)
+    print("  sweepX:", type(sweepX), sweepX.shape)
 
     sumIntensity = ka.getResults("sumintensity")
-    print("sumIntensity", type(sumIntensity), len(sumIntensity))
+    print("  sumIntensity", type(sumIntensity), len(sumIntensity))
     axs[1].plot(ka.sweepX, sumIntensity)
 
     # TODO: Add filtering of diameter per line scan
-    diameter_pnts = ka.getResults("diameter_pnts")
-    axs[2].plot(ka.sweepX, diameter_pnts)
+    diameter_um = ka.getResults("diameter_um")
+    axs[2].plot(ka.sweepX, diameter_um)
 
     plt.show()
 
 
 if __name__ == "__main__":
-    path = "/Users/cudmore/data/rosie/Raw data for contraction analysis/Female Old/filter median 1 C2-0-255 Cell 2 CTRL  2_5_21 female wt old.tif"
+    # path = "/Users/cudmore/data/rosie/Raw data for contraction analysis/Female Old/filter median 1 C2-0-255 Cell 2 CTRL  2_5_21 female wt old.tif"
+    path = '/Users/cudmore/Dropbox/data/cell-shortening/cell 03.tif'
+    
     ka = kymAnalysis(path)
-    ka.analyze()
+    
+    # linewidth 1 takes 5 seconds
+    # linewidth 3 takes 120 seconds for 10000 line scans (for 5000 scans takes 44 sec)
+    # ka.analyzeDiameter()
 
     # ka.saveAnalysis()
+
+    # linewidth of 1 takes 16 seconds (need to use simplified version if linewidth is 1 !!!)
+    # linewidth of 3 takes 16 seconds for 10000 line scans, 7.3 sec for 5000 scans
+    # linewidth of 5 takes 17 seconds
+    # linewidth of 7 takes 17 seconds
+    roiRect = ka.getRoiRect()  # (l, t, r, b) in um and seconds (float)
+    ka.setAnalysisParam('lineWidth', 1)
+    lineWidth = ka.getAnalysisParam('lineWidth')
+    lineFilterKernel = ka.getAnalysisParam('lineFilterKernel')
+    _percentOfMax = ka.getAnalysisParam('percentOfMax')
+
+    # todo: put this in kymAnalysis class
+    lineProfilePool(ka.getImage(), lineWidth, roiRect, _percentOfMax)
 
     # plotKym(ka)
     # plotKym_plotly(ka)

@@ -8,7 +8,6 @@ import pyabf
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-
 class epochTable():
     """Load epoch/stimulation from abf file using 'sweepEpochs'.
 
@@ -29,14 +28,17 @@ class epochTable():
         if abf is not None:
             self._builFromAbf(abf)
     
+    def __str__(self):
+        return self.getEpochList(asDataFrame=True).to_string()
+
     def addEpoch(self, sweepNumber, startSec, stopSec, dataPointsPerMs : int, level, type : str = 'Step'):
         newEpochIdx = self.numEpochs()
         
         p1 = (startSec * 1000) * dataPointsPerMs
-        #p1 = round(p1)
+        p1 = int(p1)
         
         p2 = (stopSec * 1000) * dataPointsPerMs
-        #p2 = round(p1)
+        p2 = int(p2)
         
         epochDict = {
             "sweepNumber": sweepNumber,
@@ -53,6 +55,9 @@ class epochTable():
             # "digitalState": digitalState,  # list of 0/1 for 8x digital states
         }
         self._epochList.append(epochDict)
+
+    def getSweepEpoch(self, sweep):
+        return self._epochList[sweep]
 
     def _builFromAbf(self, abf: pyabf.ABF):
         dataPointsPerMs = abf.dataPointsPerMs

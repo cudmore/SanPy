@@ -27,7 +27,7 @@ from .bPlugins import *
 
 # from .breeze_resources import *
 
-from .bKymographWidget import kymographWidget
-from .kymographPlugin2 import kymographPlugin2
+from .bKymographWidget import kymographWidget  # show an image
+from .kymographPlugin2 import kymographPlugin2  # analyze cell length
 
 from .preferences import preferences

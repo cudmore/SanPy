@@ -187,3 +187,4 @@ def getHalfWidthLines(t, v, spikeDictList):
     """
     #
     return x, y
+

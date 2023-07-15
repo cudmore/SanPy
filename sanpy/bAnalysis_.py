@@ -154,6 +154,14 @@ class bAnalysis:
             except KeyError as e:
                 logger.error(f'did not find a file loader for extension "{_ext}"')
                 self.loadError = True
+            
+            self._kymAnalysis = None
+            if self.fileLoader.recordingMode == recordingModes.kymograph:
+                # logger.info('creating kymAnalysis')
+                self._kymAnalysis = sanpy.kymAnalysis(self.fileLoader.filepath,
+                                                      self.fileLoader.tifData,
+                                                      self.fileLoader.tifHeader)
+
 
         """
         if byteStream is not None:
@@ -184,6 +192,12 @@ class bAnalysis:
         self.setSweep()
         """
 
+    @property
+    def kymAnalysis(self):
+        """Get the kymAnalysis object (if it exists).
+        """
+        return self._kymAnalysis
+    
     @property
     def fileLoader(self):
         """ """
@@ -254,18 +268,55 @@ class bAnalysis:
 
         return True
 
-    def _loadHdf_pytables(self, hdfPath, uuid):
+    def _findUuid(self, hdfPath):
+        """Find this analysis uuid in an h5 file. If analysis is not saved, it will not exists.
+        """
+
+        # load the database
+        detectionDictKey = 'sanpy_recording_db'
+        dfDetection = pd.read_hdf(hdfPath, key=detectionDictKey)
+        
+        fileList = dfDetection['File'].to_list()
+        
+        filename = self.fileLoader.filename
+        try:
+            idx = fileList.index(filename)
+        except (ValueError) as e:
+            #logger.warning(f'did not find file {filename} in file list {fileList}')
+            return
+        
+        uuid = dfDetection['uuid'].to_list()[idx]
+
+        return uuid
+    
+    def _loadHdf_pytables(self, hdfPath, uuid = None):
         """Load analysis from an h5 file using key 'uuid'.
+
+        Parameters
+        ----------
+        hdfPath : str
+            path to h5 file
+        uuid : uuid
+            Unique uuid for the file, if None then will try and find the file in hdfPath
 
         Notes
         -----
-            df.to_dict() requires into=OrderedDIct, o.w. column order is sorted
-            Error report needs to be generated (is not in h5 file)
-                use getErrorReport()
+        If uuid is None, this only work for 'flat' directories,
+        the ba has to be in same folder as h5 file
         """
+
+        # df.to_dict() requires into=OrderedDict, o.w. column order is sorted
+        # Error report needs to be generated (is not in h5 file) use getErrorReport()
 
         # cant use pd.HDFStore(<path>) as read_hdf does not understand file pointer
 
+        if uuid is None:
+            uuid = self._findUuid(hdfPath)
+            if uuid is None:
+                logger.warning(f'did not find a uuid for {self.fileLoader.filename} in h5 file {hdfPath}')
+                logger.warning(f'this usually happens when the analysis was not saved')
+                return
+            
         logger.info(f"loading {uuid} from {hdfPath}")
 
         # load pandas dataframe(s) from h5 file
@@ -476,7 +527,7 @@ class bAnalysis:
         logger.info(f'Given {len(spikeList)} and set {count}')
         """
 
-    def getSweepStats(
+    def _old_getSweepStats(
         self, statName: str, decimals=3, asDataFrame=False, df: pd.DataFrame = None
     ):
         """
@@ -1889,6 +1940,14 @@ class bAnalysis:
 
         ## done
 
+    def regenerateAnalysisDataFrame(self):
+        if self.numSpikes > 0:
+            # exportObject = sanpy.bExport(self)
+            # self.dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
+            self._dfReportForScatter = self.spikeDict.asDataFrame()
+        else:
+            self.dfReportForScatter = None
+
     def _getFeet(self, thresholdPnts: List[int], prePnts: int) -> List[int]:
         """
 
@@ -2303,7 +2362,7 @@ class bAnalysis:
         be = sanpy.bExport(self)
         be.saveReport(savefile, saveExcel=saveExcel, alsoSaveTxt=alsoSaveTxt)
 
-    def _normalizeData(self, data):
+    def _old__normalizeData(self, data):
         """Calculate normalized data for detection from Kymograph. Is NOT for df/d0."""
         return (data - np.min(data)) / (np.max(data) - np.min(data))
 

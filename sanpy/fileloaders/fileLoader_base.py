@@ -421,6 +421,8 @@ class fileLoader_base(ABC):
         # logger.info(f'  _filteredY:{self._filteredY.shape}')
         # logger.info(f'  2- _filteredDeriv:{self._filteredDeriv.shape}')
 
+        return self._filteredDeriv
+    
     @property
     def sweepY_filtered(self) -> np.ndarray:
         """Get a filtered version of sweepY."""
@@ -553,7 +555,10 @@ class fileLoader_base(ABC):
         dtSeconds = float(dtSeconds)
         dtMilliseconds = dtSeconds * 1000
         _dataPointsPerMs = int(1 / dtMilliseconds)
-        # logger.info(f'dtSeconds:{dtSeconds} dtMilliseconds:{dtMilliseconds} _dataPointsPerMs:{_dataPointsPerMs}')
+        
+        if _dataPointsPerMs == 0:
+            logger.error(f'_dataPointsPerMs is zero!')
+
         self._dataPointsPerMs: int = _dataPointsPerMs
 
         self._recordingMode: recordingModes = recordingMode

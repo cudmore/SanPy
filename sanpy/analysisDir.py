@@ -1001,25 +1001,24 @@ class analysisDir:
                 # print(f'    self._df.loc[rowIdx, "relPath"] is "{self._df.loc[rowIdx, "relPath"]}"')
 
             # kymograph interface
-            # if ba is not None and ba.isKymograph():
-            # if ba is not None and isinstance(ba, sanpy.fileloaders.fileLoader_tif):
-            if ba is not None and ba.fileLoader.isKymograph():
-                kRect = ba.fileLoader.getKymographRect()
+            # 20230602, don't show rect in interface
+            # if ba is not None and ba.fileLoader.isKymograph():
+            #     kRect = ba.fileLoader.getKymographRect()
 
-                # print(kRect)
-                # sys.exit(1)
+            #     # print(kRect)
+            #     # sys.exit(1)
 
-                if kRect is None:
-                    logger.error(f"Got None kymograph rect")
-                else:
-                    self._df.loc[rowIdx, "kLeft"] = kRect[0]
-                    self._df.loc[rowIdx, "kTop"] = kRect[1]
-                    self._df.loc[rowIdx, "kRight"] = kRect[2]
-                    self._df.loc[rowIdx, "kBottom"] = kRect[3]
-                #
-                # TODO: remove start of ba._path that corresponds to our current folder path
-                # will allow our save db to be modular
-                # self._df.loc[rowIdx, 'path'] = ba._path
+            #     if kRect is None:
+            #         logger.error(f"Got None kymograph rect")
+            #     else:
+            #         self._df.loc[rowIdx, "kLeft"] = kRect[0]
+            #         self._df.loc[rowIdx, "kTop"] = kRect[1]
+            #         self._df.loc[rowIdx, "kRight"] = kRect[2]
+            #         self._df.loc[rowIdx, "kBottom"] = kRect[3]
+            #
+            # TODO: remove start of ba._path that corresponds to our current folder path
+            # will allow our save db to be modular
+            # self._df.loc[rowIdx, 'path'] = ba._path
 
     """
     def setCellValue(self, rowIdx, colStr, value):
@@ -1115,22 +1114,20 @@ class analysisDir:
                         logger.error(f"  Existing {uuid}")
 
                 # kymograph, set ba rect from table
-                # if ba.isKymograph():
-                # if ba is not None and isinstance(ba, sanpy.fileloaders.fileLoader_tif):
-                if ba is not None and ba.fileLoader.isKymograph():
-                    left = self._df.loc[rowIdx, "kLeft"]
-                    top = self._df.loc[rowIdx, "kTop"]
-                    right = self._df.loc[rowIdx, "kRight"]
-                    bottom = self._df.loc[rowIdx, "kBottom"]
+                # if ba is not None and ba.fileLoader.isKymograph():
+                #     left = self._df.loc[rowIdx, "kLeft"]
+                #     top = self._df.loc[rowIdx, "kTop"]
+                #     right = self._df.loc[rowIdx, "kRight"]
+                #     bottom = self._df.loc[rowIdx, "kBottom"]
 
-                    # on first load, these will be empty
-                    # grab rect from ba (in _updateLoadedAnalyzed())
-                    if left == "" or top == "" or right == "" or bottom == "":
-                        pass
-                    else:
-                        theRect = [left, top, right, bottom]
-                        logger.info(f"  theRect:{theRect}")
-                        ba.fileLoader._updateTifRoi(theRect)
+                #     # on first load, these will be empty
+                #     # grab rect from ba (in _updateLoadedAnalyzed())
+                #     if left == "" or top == "" or right == "" or bottom == "":
+                #         pass
+                #     else:
+                #         theRect = [left, top, right, bottom]
+                #         logger.info(f"  theRect:{theRect}")
+                #         ba.fileLoader._updateTifRoi(theRect)
 
                 #
                 # update stats of table load/analyzed columns

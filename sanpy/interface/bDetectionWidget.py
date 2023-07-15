@@ -191,7 +191,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             # },
 
         ]
-
+        
         # for kymograph
         # self.myImageItem = None  # kymographImage
         # self.myLineRoi = None
@@ -422,6 +422,7 @@ class bDetectionWidget(QtWidgets.QWidget):
     def _setAxis(self, start, stop, set_xyBoth="xAxis", whichPlot="vm"):
         """Shared by (setAxisFull, setAxis)."""
         # make sure start/stop are in correct order and swap if necc.
+        logger.info('')
         if start is not None and stop is not None:
             if stop < start:
                 tmp = start
@@ -436,6 +437,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 start = 0
                 stop = self.ba.fileLoader.recordingDur
 
+            logger.info('!!!! SETING X !!!')
             # self.derivPlot.setXRange(start, stop, padding=padding) # linked to Vm
             self.vmPlot.setXRange(start, stop, padding=padding)  # linked to Vm
 
@@ -519,11 +521,15 @@ class bDetectionWidget(QtWidgets.QWidget):
         if self.ba is None:
             return
 
+        logger.info('')
+
         # 20220115
         # self.vmPlot.autoRange(items=[self.vmLinesFiltered])
         # self.vmPlot.enableAutoRange()
-        self.vmPlot.autoRange()  # 20221003
-
+        
+        logger.info('!!!!! setting vmPlot auto range !!!')
+        self.vmPlot.autoRange(items=[self.vmPlot_])  # 20221003
+    
         # these are linked to vmPlot
         # self.derivPlot.autoRange()
         # self.dacPlot.autoRange()
@@ -539,6 +545,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         # kymograph
         # self.myKymWidget.kymographPlot.setXRange(start, stop, padding=padding)  # row major is different
         #self.myKymWidget.kymographPlot.autoRange()  # row major is different
+        if self.ba.fileLoader.isKymograph():
+            self.myKymWidget.kymographPlot.autoRange()
 
         #
         # update detection toolbar
@@ -749,6 +757,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         oneIndex : int
             If specified then replot just one overlay from self.myPlots
         """
+    
         if self.ba is None:
             return
 
@@ -1393,91 +1402,60 @@ class bDetectionWidget(QtWidgets.QWidget):
         # _hSplitter.addWidget(self.detectToolbarWidget)
         # self.myHBoxLayout_detect.addWidget(_hSplitter)
 
-        # kymograph, we need a vboxlayout to hollder (kym widget, self.view)
+        # kymograph, we need a vboxlayout to hold (kym widget, self.view)
         vBoxLayoutForPlot = QtWidgets.QVBoxLayout(self)
 
         # for publication, don't do kymographs
         # make a branch and get this working
-        if 0:
+        if 1:
             self.myKymWidget = sanpy.interface.kymographWidget()
             self.myKymWidget.signalKymographRoiChanged.connect(self.slot_kymographChanged)
             self.myKymWidget.setVisible(False)
+            self.myKymWidget.showSliceLine(False)
             self.myKymWidget.showLineSlider(False)
             vBoxLayoutForPlot.addWidget(self.myKymWidget)
 
-        # was this
-        self.view = pg.GraphicsLayoutWidget()
-        self.view.show()
-
-        row = 0
-        colSpan = 1
-
-        # Kymograph, always build (hidden) and show/hide in replot based on self.ba.isKymograph
-        """
-        rowSpan = 1
-        self.kymographPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
-        self.kymographPlot.enableAutoRange()
-        # turn off x/y dragging of deriv and vm
-        self.kymographPlot.setMouseEnabled(x=False, y=False)
-        # hide the little 'A' button to rescale axis
-        self.kymographPlot.hideButtons()
-        # turn off right-click menu
-        self.kymographPlot.setMenuEnabled(False)
-        # hide by default
-        self.kymographPlot.hide()  # show in _replot() if self.ba.isKymograph()
-
-        #if self.ba.isKymograph():
-        #    myTif = self.ba.tifData
-        #    self.myImageItem = kymographImage(myTif, axisOrder='row-major',
-        #                        rect=[0,0, self.ba.recordingDur, self.ba.tifData.shape[0]])
-
-        row += rowSpan
-        """
+        xPlotEmpty = []  # np.arange(0, _recordingDur)
+        yPlotEmpty = []  # xPlot * np.nan
 
         # addPlot return a plotItem
-        rowSpan = 1
-        self.vmPlotGlobal = self.view.addPlot(
-            row=row, col=0, rowSpan=rowSpan, colSpan=colSpan
-        )
-
+        self.vmPlotGlobal = pg.PlotWidget()
+        self.vmPlotGlobal_ = self.vmPlotGlobal.plot(name="vmPlotGlobal")
+        self.vmPlotGlobal_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
+        vBoxLayoutForPlot.addWidget(self.vmPlotGlobal)
         self.vmPlotGlobal.enableAutoRange()
-        row += rowSpan
-        rowSpan = 1
-        self.derivPlot = self.view.addPlot(
-            row=row, col=0, rowSpan=rowSpan, colSpan=colSpan
-        )
 
+        self.derivPlot = pg.PlotWidget()
+        self.derivPlot_ = self.derivPlot.plot(name="derivPlot")
+        self.derivPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
+        vBoxLayoutForPlot.addWidget(self.derivPlot)
         self.derivPlot.enableAutoRange()
-        row += rowSpan
-        rowSpan = 1
-        self.dacPlot = self.view.addPlot(
-            row=row, col=0, rowSpan=rowSpan, colSpan=colSpan
-        )
+
+        self.dacPlot = pg.PlotWidget()
+        self.dacPlot_ = self.dacPlot.plot(name="dacPlot")
+        self.dacPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
+        vBoxLayoutForPlot.addWidget(self.dacPlot)
         self.dacPlot.enableAutoRange()
 
-        row += rowSpan
-        rowSpan = 2  # make Vm plot taller than others
-        self.vmPlot = self.view.addPlot(
-            row=row, col=0, rowSpan=rowSpan, colSpan=colSpan
-        )
+        self.vmPlot = pg.PlotWidget()
+        # vmPlot_ is pyqtgraph.graphicsItems.PlotDataItem.PlotDataItem
+        self.vmPlot_ = self.vmPlot.plot(name="vmPlot")
+        self.vmPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
+        vBoxLayoutForPlot.addWidget(self.vmPlot)
         self.vmPlot.enableAutoRange()
 
         # show hover text when showing crosshairs
         self._displayHoverText= pg.TextItem(text='xxx hover', color=(200,200,200), anchor=(1,1))
         self._displayHoverText.hide()
-        self.vmPlot.addItem(self._displayHoverText)
+        self.vmPlot.addItem(self._displayHoverText, ignorBounds=True)
 
         self._displayHoverText_deriv = pg.TextItem(text='xxx hover', color=(200,200,200), anchor=(1,1))
         self._displayHoverText_deriv.hide()
-        self.derivPlot.addItem(self._displayHoverText_deriv)
-
-        # row += rowSpan
-        # rowSpan = 1
-        # self.clipPlot = self.view.addPlot(row=row, col=0, rowSpan=rowSpan, colSpan=colSpan)
+        self.derivPlot.addItem(self._displayHoverText_deriv, ignorBounds=True)
 
         # link x-axis
-        # self.derivPlot.setXLink(self.vmPlot)
-        # self.dacPlot.setXLink(self.vmPlot)
+        self.derivPlot.setXLink(self.vmPlot)
+        self.dacPlot.setXLink(self.vmPlot)
         # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
 
         #
@@ -1548,9 +1526,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.dacPlot.setMenuEnabled(False)
         self.vmPlot.setMenuEnabled(False)
 
-        # 20221003 just link everything to vmPlot
-        self.derivPlot.setXLink(self.vmPlot)
-        self.dacPlot.setXLink(self.vmPlot)
+        # # 20221003 just link everything to vmPlot
+        # self.derivPlot.setXLink(self.vmPlot)
+        # self.dacPlot.setXLink(self.vmPlot)
+        
+        # #self.vmPlot.setXLink(self.myKymWidget.kymographPlot)
+        # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different    
+        # # self.myKymWidget.myImageItem.setXLink(self.vmPlot)
 
         # turn off x/y dragging of deriv and vm
         self.vmPlotGlobal.setMouseEnabled(x=True, y=False)
@@ -1575,7 +1557,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.mySpikeListScatterPlot = pg.ScatterPlotItem(
             pen=pg.mkPen(width=2, color=color), symbol=symbol, size=size
         )
-        self.vmPlot.addItem(self.mySpikeListScatterPlot)
+        self.vmPlot.addItem(self.mySpikeListScatterPlot, ignorBounds=True)
 
         # TODO: add this to application options
         _defaultScatterCircleSize = 8  # 6
@@ -1621,15 +1603,16 @@ class bDetectionWidget(QtWidgets.QWidget):
 
             # add plot to pyqtgraph
             if plot["plotOn"] == "vm":
-                self.vmPlot.addItem(myScatterPlot)
+                self.vmPlot.addItem(myScatterPlot, ignorBounds=True)
             elif plot["plotOn"] == "vmGlobal":
-                self.vmPlotGlobal.addItem(myScatterPlot)
+                self.vmPlotGlobal.addItem(myScatterPlot, ignorBounds=True)
             elif plot["plotOn"] == "dvdt":
-                self.derivPlot.addItem(myScatterPlot)
+                self.derivPlot.addItem(myScatterPlot, ignorBounds=True)
 
         self.replotOverlays()
 
-        vBoxLayoutForPlot.addWidget(self.view)
+        # was this june 4
+        # vBoxLayoutForPlot.addWidget(self.view)
 
         # v1
         self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot)
@@ -1902,7 +1885,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         Returns: True/False
         """
-        logger.info(f"tableRowDict:{tableRowDict}")
+        # logger.info(f"tableRowDict:{tableRowDict}")
         logger.info(f"ba:{ba}")
 
         # bAnalysis object
@@ -1936,15 +1919,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         # self.selectSpikeList(self._selectedSpikeList)
 
         # set sweep to 0
-        self.selectSweep(0, startSec, stopSec, doEmit=False, doReplot=False)
-
-        # set full axis
-        # abb 20220615
-        # self.setAxisFull()
+        # self.selectSweep(0, startSec, stopSec, doEmit=False, doReplot=False)
+        self.selectSweep(0, doEmit=False, doReplot=False)
 
         # abb implement sweep, move to function()
         # abb 20220615
-        self._replot(startSec, stopSec)
+        # self._replot(startSec, stopSec)
+        self._replot()
 
         # self.refreshClips(startSec, stopSec)
 
@@ -1957,10 +1938,30 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot.getAxis("left").setLabel(yLabel)
         self.vmPlot.getAxis("bottom").setLabel("Seconds")
 
-        #self.myKymWidget.slot_switchFile(ba, startSec, stopSec)
+        if self.ba.fileLoader.isKymograph():
+            self.myKymWidget.setVisible(True)
+            # self.myKymWidget.slot_switchFile(ba, startSec, stopSec)
+            self.vmPlot.setXLink(self.myKymWidget.kymographPlot)
+            # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
+            self.myKymWidget.slot_switchFile(ba)
+        else:
+            self.myKymWidget.setVisible(False)
+            # self.myKymWidget.kymographPlot.setXLink(None)  # row major is different
+            self.vmPlot.setXLink(None)
 
-        # reconnect relink x-axis
-        # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
+        #self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different    
+
+        # set full axis
+        # abb 20220615
+        # self.setAxisFull()
+        
+        # 20221003 just link everything to vmPlot
+        # self.derivPlot.setXLink(self.vmPlot)
+        # self.dacPlot.setXLink(self.vmPlot)
+        
+        # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different    
+        # self.myKymWidget.myImageItem.setXLink(self.vmPlot)
+        # self.myKymWidget.setXLink(self.vmPlot)
 
         return True
 
@@ -2021,16 +2022,17 @@ class bDetectionWidget(QtWidgets.QWidget):
         # remove vm/dvdt/clip items (even when abf file is corrupt)
         # if self.dvdtLines is not None:
         #    self.derivPlot.removeItem(self.dvdtLines)
-        if self.dvdtLinesFiltered is not None:
-            self.derivPlot.removeItem(self.dvdtLinesFiltered)
-        if self.dacLines is not None:
-            self.dacPlot.removeItem(self.dacLines)
-        if self.vmLinesFiltered is not None:
-            self.vmPlot.removeItem(self.vmLinesFiltered)
-        if self.vmLinesFiltered2 is not None:
-            self.vmPlotGlobal.removeItem(self.vmLinesFiltered2)
-        if self.linearRegionItem2 is not None:
-            self.vmPlotGlobal.removeItem(self.linearRegionItem2)
+        # if self.dvdtLinesFiltered is not None:
+        #     self.derivPlot.removeItem(self.dvdtLinesFiltered)
+        # if self.dacLines is not None:
+        #     self.dacPlot.removeItem(self.dacLines)
+        # was this june 4
+        # if self.vmLinesFiltered is not None:
+        #     self.vmPlot.removeItem(self.vmLinesFiltered)
+        # if self.vmLinesFiltered2 is not None:
+        #     self.vmPlotGlobal.removeItem(self.vmLinesFiltered2)
+        # if self.linearRegionItem2 is not None:
+        #     self.vmPlotGlobal.removeItem(self.linearRegionItem2)
         # if self.clipLines is not None:
         #    self.clipPlot.removeItem(self.clipLines)
 
@@ -2050,43 +2052,51 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         #
         if sweepX.shape != filteredDeriv.shape:
-            logger.error(f"shapes do not match")
+            logger.error(f"filteredDeriv shapes do not match")
 
-        self.dvdtLinesFiltered = MultiLine(
-            sweepX,
-            filteredDeriv,
-            self,
-            forcePenColor=None,
-            type="dvdtFiltered",
-            columnOrder=True,
-        )
-        # self.derivPlot.addItem(self.dvdtLines)
-        self.derivPlot.addItem(self.dvdtLinesFiltered)
+        self.derivPlot_.setData(sweepX, filteredDeriv, connect="finite")
+        # self.dvdtLinesFiltered = MultiLine(
+        #     sweepX,
+        #     filteredDeriv,
+        #     self,
+        #     forcePenColor=None,
+        #     type="dvdtFiltered",
+        #     columnOrder=True,
+        # )
+        # # self.derivPlot.addItem(self.dvdtLines)
+        # self.derivPlot.addItem(self.dvdtLinesFiltered)
 
-        self.dacLines = MultiLine(
-            sweepX, sweepC, self, forcePenColor=None, type="dac", columnOrder=True
-        )
-        self.dacPlot.addItem(self.dacLines)
+        self.dacPlot_.setData(sweepX, sweepC, connect="finite")
+        # self.dacLines = MultiLine(
+        #     sweepX, sweepC, self, forcePenColor=None, type="dac", columnOrder=True
+        # )
+        # self.dacPlot.addItem(self.dacLines)
 
-        self.vmLinesFiltered = MultiLine(
-            sweepX,
-            sweepY,
-            self,
-            forcePenColor=None,
-            type="vmFiltered",
-            allowXAxisDrag=True,  #default is True
-            columnOrder=True,
-        )
-        self.vmPlot.addItem(self.vmLinesFiltered)
+        # self.vmLinesFiltered = MultiLine(
+        #     sweepX,
+        #     sweepY,
+        #     self,
+        #     forcePenColor=None,
+        #     type="vmFiltered",
+        #     allowXAxisDrag=True,  #default is True
+        #     columnOrder=True,
+        # )
+        # self.vmPlot.addItem(self.vmLinesFiltered)
+        self.vmPlot_.setData(sweepX, sweepY, connect="finite")
+
+        # vmPlot_ is PlotDataItem
+        logger.info(f'vmPlot.viewRange {self.vmPlot.viewRange()}')
 
         # april 30, 2023
-        self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
+        # was this jun 4
+        # self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
 
         # can't add a multi line to 2 different plots???
-        self.vmLinesFiltered2 = MultiLine(
-            sweepX, sweepY, self, forcePenColor="b", type="vmFiltered", columnOrder=True
-        )
-        self.vmPlotGlobal.addItem(self.vmLinesFiltered2)
+        # self.vmLinesFiltered2 = MultiLine(
+        #     sweepX, sweepY, self, forcePenColor="b", type="vmFiltered", columnOrder=True
+        # )
+        # self.vmPlotGlobal.addItem(self.vmLinesFiltered2)
+        self.vmPlotGlobal_.setData(sweepX, sweepY, connect="finite", pen='b')
         self.linearRegionItem2 = pg.LinearRegionItem(
             values=(0, self.ba.fileLoader.recordingDur),
             orientation=pg.LinearRegionItem.Vertical,
@@ -2094,7 +2104,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             pen=pg.mkPen(None),
         )
         self.linearRegionItem2.setMovable(False)
-        self.vmPlotGlobal.addItem(self.linearRegionItem2)
+        self.vmPlotGlobal.addItem(self.linearRegionItem2, ignorBounds=True)
 
         # Kymograph
         # isKymograph = self.ba.fileLoader.isKymograph()
@@ -2113,13 +2123,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 
             if plot["plotOn"] == "vm":
                 self.vmPlot.removeItem(plotItem)
-                self.vmPlot.addItem(plotItem)
+                self.vmPlot.addItem(plotItem, ignorBounds=True)
             elif plot["plotOn"] == "vmGlobal":
                 self.vmPlotGlobal.removeItem(plotItem)
-                self.vmPlotGlobal.addItem(plotItem)
+                self.vmPlotGlobal.addItem(plotItem, ignorBounds=True)
             elif plot["plotOn"] == "dvdt":
                 self.derivPlot.removeItem(plotItem)
-                self.derivPlot.addItem(plotItem)
+                self.derivPlot.addItem(plotItem, ignorBounds=True)
 
         # single spike selection
         """
@@ -2134,9 +2144,14 @@ class bDetectionWidget(QtWidgets.QWidget):
         # self.setAxisFull()
         # 20221003 was this
         # self.setAxis_OnFileChange(startSec, stopSec)
-        self.setAxisFull()
+        
+        # was this june 4
+        # self.setAxisFull()
+        
         # self.detectToolbarWidget.on_start_stop()
-        self._setAxis(start=startSec, stop=stopSec)
+        
+        # was this june 4
+        # self._setAxis(start=startSec, stop=stopSec)
 
         #
         # critical, replot() is inherited
@@ -2560,7 +2575,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         Fill in preset dv/dt and mV.
         Use this detection preset when user hits detect
         """
-        logger.info("")
+        logger.info(f'{detectionTypeStr}')
 
         # grab default (dv/dt, mv) from preset
         # detectionPreset = sanpy.bDetection.detectionPresets(detectionTypeStr)

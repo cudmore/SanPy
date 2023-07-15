@@ -1,8 +1,8 @@
 {
     "detectionName": "Ca Kymograph",
-    "detectionType": "mv",
-    "dvdtThreshold": NaN,
-    "mvThreshold": 1.2,
+    "detectionType": "dvdt",
+    "dvdtThreshold": 0.03,
+    "mvThreshold": 0.6,
     "startSeconds": null,
     "stopSeconds": null,
     "cellType": "",
