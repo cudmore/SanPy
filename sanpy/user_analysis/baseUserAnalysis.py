@@ -35,7 +35,7 @@ def _module_from_file(module_name, file_path):
     return module
 
 
-def _getObjectList(verbose=False) -> List[dict]:
+def _getObjectList(verbose=True) -> List[dict]:
     """Return a list of classes defined in sanpy.userAnalysis.
 
     Each of these is an object we can (i) construct or (ii) interrogate statis class members

@@ -23,6 +23,175 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 
+class sanpyCursors(QtCore.QObject):
+    signalCursorDragged = QtCore.pyqtSignal(str)  # dx
+    signalSetDetectionParam = QtCore.pyqtSignal(str, float)
+
+    def __init__(self, plotWidget : pg.PlotWidget):
+        """Add cursors to a PlotWidget. Normally vmPlot.
+        """
+        super().__init__(None)
+        
+        self._showCursors = False
+        self._delx : float = float('nan')
+        self._cCursorVal : float = float('nan')
+
+        self._showCursorsY = False
+        self._delx : float = float('nan')
+
+        labelOpts = {'position':0.95}
+        self._cursorA = pg.InfiniteLine(pos=0, angle=90, label='A', labelOpts=labelOpts, movable=True)
+        self._cursorA.sigDragged.connect(partial(self._cursorDragged, 'cursorA'))
+        self._cursorA.setVisible(self._showCursors)
+        self._cursorB = pg.InfiniteLine(pos=10, angle=90, label='B', labelOpts=labelOpts, movable=True)
+        self._cursorB.sigDragged.connect(partial(self._cursorDragged, 'cursorB'))
+        self._cursorB.setVisible(self._showCursors)
+
+        yLabelOpts = {'position':0.05}
+        self._cursorC = pg.InfiniteLine(pos=0, angle=0, label='C', labelOpts=yLabelOpts, movable=True)
+        self._cursorC.sigDragged.connect(partial(self._cursorDragged, 'cursorA'))
+        self._cursorC.setVisible(self._showCursors)
+        # self._cursorD = pg.InfiniteLine(pos=10, angle=0, label='D', labelOpts=yLabelOpts, movable=True)
+        # self._cursorD.sigDragged.connect(partial(self._cursorDragged, 'cursorB'))
+        # self._cursorD.setVisible(self._showCursors)
+
+        self._plotWidget = plotWidget
+        
+        self._plotWidget.addItem(self._cursorA)
+        self._plotWidget.addItem(self._cursorB)
+        self._plotWidget.addItem(self._cursorC)
+        # self._plotWidget.addItem(self._cursorD)
+
+        # logger.info(self._getName())
+        self._showInView()
+
+    def _getName(self):
+        return self._plotWidget.getViewBox().name
+    
+    def toggleCursors(self, visible):
+        self._showCursors = visible
+        self._cursorA.setVisible(visible)
+        self._cursorB.setVisible(visible)
+        
+        self._cursorC.setVisible(visible)
+        # self._cursorD.setVisible(visible)
+
+        if visible:
+            # set position to start/stop of current view
+            self._showInView()
+
+    def getMenuActions(self, contextMenu):
+        """Add cursor actions to a ocntext menu.
+        """
+
+        contextMenu.addSeparator()
+        
+        showCursorAction = contextMenu.addAction(f"Cursors")
+        showCursorAction.setCheckable(True)
+        showCursorAction.setChecked(self._showCursors)
+        
+        aAction = contextMenu.addAction(f'Show In View')
+        aAction.setEnabled(self._showCursors)
+
+        if self._getName() == 'vmPlot':
+            _delx_ms = int(self._delx*1000)
+            
+            # mvThreshold
+            aAction = contextMenu.addAction(f'Set Threshold (mV) {self._cCursorVal}')
+            aAction.setEnabled(self._showCursors)
+
+            # refractory_ms, APs with interval (with respect to previous AP) less than this will be removed
+            aAction = contextMenu.addAction(f'Set Refactory Period (ms) {_delx_ms}')
+            aAction.setEnabled(self._showCursors)
+    
+            # halfWidthWindow_ms, Window (ms) after TOP to look for AP Durations
+            aAction = contextMenu.addAction(f'Set Half Width Window (ms) {_delx_ms}')
+            aAction.setEnabled(self._showCursors)
+        elif self._getName() == 'derivPlot':
+            # dvdtThreshold
+            aAction = contextMenu.addAction(f'Set dVdt Threshold {self._cCursorVal}')
+            aAction.setEnabled(self._showCursors)
+        else:
+            logger.error(f'did not understand plot name "{self._getName()}"')
+
+    def handleMenu(self, actionText : str, isChecked):
+        _handled = True
+        _name = self._getName()
+        if actionText == 'Cursors':
+            logger.info(f'{actionText} {isChecked}')
+            self.toggleCursors(isChecked)
+        elif actionText == 'Show In View':
+            self._showInView()
+
+        elif _name=='vmPlot' and actionText.startswith('Set Threshold (mV)'):
+            self.signalSetDetectionParam.emit('mvThreshold', self._cCursorVal)
+        elif _name=='vmPlot' and actionText.startswith('Set Refactory Period (ms)'):
+            self.signalSetDetectionParam.emit('refractory_ms', self._delx*1000)
+        elif _name=='vmPlot' and actionText.startswith('Set Half Width Window (ms)'):
+            self.signalSetDetectionParam.emit('halfWidthWindow_ms', self._delx*1000)
+
+        elif _name=='derivPlot' and actionText.startswith('Set dVdt Threshold'):
+            self.signalSetDetectionParam.emit('dvdtThreshold', self._cCursorVal)
+        else:
+            _handled = False
+        return _handled
+
+    def _showInView(self):
+        """Make cursors visible within current zoom.
+        """
+        rect = self._plotWidget.viewRect()  # get xaxis
+
+        percentOfView = rect.width() * 0.05
+        left = rect.left() + percentOfView
+        right = rect.right() - percentOfView
+
+        yPercentOfView = rect.height() * 0.1
+        bottom = rect.top() + yPercentOfView  # y is flipped
+        top = rect.bottom() - yPercentOfView
+
+        logger.info(f'left:{left} right:{right} bottom:{bottom} top:{top}')
+
+
+        self._cursorA.setValue(left)
+        self._cursorB.setValue(right)
+
+        self._cursorC.setValue(bottom)
+        # self._cursorD.setValue(top)
+
+        self._cursorDragged('cursorA', self._cursorA)
+
+    def _cursorDragged(self, name, infLine):
+        # logger.info(f'{name} {infLine.pos()}')
+        xCursorA = self._cursorA.pos().x()
+        xCursorB = self._cursorB.pos().x()
+        delx = xCursorB - xCursorA
+        delx = round(delx, 4)
+        
+        # logger.info(f'delx:{delx}')
+
+        self._delx = delx
+
+        xCursorA = round(xCursorA,4)
+        xCursorB = round(xCursorB,4)
+
+        yCursorC = self._cursorC.pos().y()
+        # yCursorD = self._cursorD.pos().y()
+        # dely = yCursorD - yCursorC
+        # dely = round(dely, 4)
+
+        self._cCursorVal = round(yCursorC,2)
+
+        yCursorC = round(yCursorC,4)
+        # yCursorD = round(yCursorD,4)
+
+        # self._cursorB.label.setFormat(f'B\ndelx={delx}')
+        delStr = f'A:{xCursorA} B:{xCursorB} Delta:{delx}'
+        delStr += f' | C:{yCursorC}'
+        # delStr += f' | C:{yCursorC} D:{yCursorD} Delta:{dely}'
+        
+        self.signalCursorDragged.emit(delStr)
+        #self.updateStatusBar(delStr)
+        
 class bDetectionWidget(QtWidgets.QWidget):
     signalSelectSpike = QtCore.pyqtSignal(object)  # spike number, doZoom
     signalSelectSpikeList = QtCore.pyqtSignal(object)  # spike number, doZoom
@@ -57,11 +226,11 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.dvdtLinesFiltered = None
         self.dacLines = None
         self.vmLines = None
-        self.vmLinesFiltered = None
-        self.vmLinesFiltered2 = None
+        # self.vmLinesFiltered = None
+        # self.vmLinesFiltered2 = None
         self.linearRegionItem2 = None  # rectangle over global Vm
-        self.clipLines = None
-        self.meanClipLine = None
+        # self.clipLines = None
+        # self.meanClipLine = None
 
         self._showCrosshair = False
 
@@ -226,6 +395,126 @@ class bDetectionWidget(QtWidgets.QWidget):
             showPlotOption = windowOptions["detectionPanels"]["Set Spikes"]
             self.toggleInterface("Set Spikes", showPlotOption)
 
+    def slot_contextMenu(self, plotName : str, plot, pos):
+        """Some plot widgets (vmPlot, derivPlot) have their context menu set to here.
+        
+        This is necc. as we need to know which plot it is coming from (as compared to the entire detectionWidget.
+        """
+        # logger.info(f'{plotName}')
+        pos = plot.mapToGlobal(pos)
+        self._myContextMenuEvent(plotName, pos)
+
+    # july 2023, moved from multi line
+    def _myContextMenuEvent(self, plotName, pos):
+        """Show popup context menu in response to right(command)+click.
+        
+        This is inherited from QWidget.
+        """
+
+        contextMenu = QtWidgets.QMenu()
+
+        showCrosshairAction = contextMenu.addAction(f"Crosshair")
+        showCrosshairAction.setCheckable(True)
+        showCrosshairAction.setChecked(self._showCrosshair)
+        
+        inVmPlot = plotName == 'vmPlot'  #self.vmPlot.sceneBoundingRect().contains(event.pos())
+        inDerivPlot = plotName == 'derivPlot'  #self.derivPlot.sceneBoundingRect().contains(event.pos())
+
+        if inVmPlot:
+            _cursorAction = self._sanpyCursors.getMenuActions(contextMenu)
+        if inDerivPlot:
+            _cursorAction2 = self._sanpyCursors_dvdt.getMenuActions(contextMenu)
+        
+        contextMenu.addSeparator()
+
+        # exportTraceAction = contextMenu.addAction(f"Export Trace {myType}")
+        # contextMenu.addSeparator()
+
+        resetAllAxisAction = contextMenu.addAction(f"Reset All Axis")
+        resetYAxisAction = contextMenu.addAction(f"Reset Y-Axis")
+        # openAct = contextMenu.addAction("Open")
+        # quitAct = contextMenu.addAction("Quit")
+        # action = contextMenu.exec_(self.mapToGlobal(event.pos()))
+
+        # show menu
+        action = contextMenu.exec_(pos)
+        if action is None:
+            return
+        
+        actionText = action.text()
+        # if actionText == f"Export Trace {myType}":
+        #     #
+        #     # See: plugins/exportTrace.py
+        #     #
+
+        #     # print('Opening Export Trace Window')
+
+        #     # todo: pass xMin,xMax to constructor
+        #     if self.myType == "vmFiltered":
+        #         xyUnits = ("Time (sec)", "Vm (mV)")
+        #     elif self.myType == "dvdtFiltered":
+        #         xyUnits = ("Time (sec)", "dV/dt (mV/ms)")
+        #     elif self.myType == "meanclip":
+        #         xyUnits = ("Time (ms)", "Vm (mV)")
+        #     else:
+        #         logger.error(f'Unknown myType: "{self.myType}"')
+        #         xyUnits = ("error time", "error y")
+
+        #     path = self.detectionWidget.ba.fileLoader.filepath
+
+        #     xMin, xMax = self.detectionWidget.getXRange()
+
+        #     if self.myType in ["vm", "dvdt"]:
+        #         xMargin = 2  # seconds
+        #     else:
+        #         xMargin = 2
+
+        #     exportWidget = sanpy.interface.bExportWidget(
+        #         self.x,
+        #         self.y,
+        #         xyUnits=xyUnits,
+        #         path=path,
+        #         xMin=xMin,
+        #         xMax=xMax,
+        #         xMargin=xMargin,
+        #         type=self.myType,
+        #         darkTheme=self.detectionWidget.useDarkStyle,
+        #     )
+
+        #     exportWidget.myCloseSignal.connect(self.slot_closeChildWindow)
+        #     exportWidget.show()
+
+        #     self.exportWidgetList.append(exportWidget)
+
+        if actionText == "Reset All Axis":
+            # print('Reset Y-Axis', self.myType)
+            self.setAxisFull()
+
+        elif actionText == "Reset Y-Axis":
+            # print('Reset Y-Axis', self.myType)
+            self.setAxisFull_y(self.myType)
+
+        elif actionText == 'Crosshair':
+            isChecked = action.isChecked()
+            #isChecked = not isChecked
+            logger.info(f'{actionText} {isChecked}')
+            self.toggleCrosshair(isChecked)
+            
+        elif actionText == 'Cursors':
+            isChecked = action.isChecked()
+            logger.info(f'{actionText} {isChecked}')
+            self._sanpyCursors.toggleCursors(isChecked)
+            self._sanpyCursors_dvdt.toggleCursors(isChecked)
+        else:
+            isChecked = action.isChecked()
+            if inVmPlot:
+                _handled = self._sanpyCursors.handleMenu(actionText, isChecked)
+            if inDerivPlot:
+                _handled = self._sanpyCursors_dvdt.handleMenu(actionText, isChecked)
+
+            if not _handled:
+                logger.warning(f"action not taken: {action}")
+
     @property
     def sweepNumber(self):
         """Get the current sweep number (from bAnalysis)."""
@@ -354,7 +643,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
     def getMainWindowDetectionClass(self):
         """The detection class loads a number of json files.
-        When running SanPy app do this one.
+        When running SanPy app do this once.
         """
         theRet = None
         if self.myMainWindow is not None:
@@ -534,7 +823,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # self.derivPlot.autoRange()
         # self.dacPlot.autoRange()
 
-        self.vmPlotGlobal.autoRange(items=[self.vmLinesFiltered2])  # we never zoom this
+        self.vmPlotGlobal.autoRange(items=[self.vmPlotGlobal_])  # we never zoom this
 
         # self.refreshClips(None, None)
         # self.clipPlot.autoRange()
@@ -765,6 +1054,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         # if _spikeNumbers is None then no spikes
         _spikeNumbers = self.ba.getStat('spikeNumber', sweepNumber=self.sweepNumber)
         
+        logger.info(f'self.sweepNumber:{self.sweepNumber} _spikeNumbers:{_spikeNumbers}')
+
         _n = None
         if _spikeNumbers is not None:
             _n = len(_spikeNumbers)
@@ -1425,11 +1716,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         vBoxLayoutForPlot.addWidget(self.vmPlotGlobal)
         self.vmPlotGlobal.enableAutoRange()
 
-        self.derivPlot = pg.PlotWidget()
+        self.derivPlot = pg.PlotWidget(name='derivPlot')
         self.derivPlot_ = self.derivPlot.plot(name="derivPlot")
         self.derivPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
         vBoxLayoutForPlot.addWidget(self.derivPlot)
         self.derivPlot.enableAutoRange()
+        self.derivPlot.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.derivPlot.customContextMenuRequested.connect(partial(self.slot_contextMenu,'derivPlot', self.derivPlot))
 
         self.dacPlot = pg.PlotWidget()
         self.dacPlot_ = self.dacPlot.plot(name="dacPlot")
@@ -1437,12 +1730,15 @@ class bDetectionWidget(QtWidgets.QWidget):
         vBoxLayoutForPlot.addWidget(self.dacPlot)
         self.dacPlot.enableAutoRange()
 
-        self.vmPlot = pg.PlotWidget()
+        self.vmPlot = pg.PlotWidget(name='vmPlot')
         # vmPlot_ is pyqtgraph.graphicsItems.PlotDataItem.PlotDataItem
         self.vmPlot_ = self.vmPlot.plot(name="vmPlot")
         self.vmPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
         vBoxLayoutForPlot.addWidget(self.vmPlot)
         self.vmPlot.enableAutoRange()
+        # see: https://wiki.python.org/moin/PyQt/Handling%20context%20menus
+        self.vmPlot.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
+        self.vmPlot.customContextMenuRequested.connect(partial(self.slot_contextMenu,'vmPlot', self.vmPlot))
 
         # show hover text when showing crosshairs
         self._displayHoverText= pg.TextItem(text='xxx hover', color=(200,200,200), anchor=(1,1))
@@ -1458,6 +1754,16 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.dacPlot.setXLink(self.vmPlot)
         # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
 
+        # July 15, 2023
+        # cursors, start by adding to vmPlot
+        self._sanpyCursors = sanpyCursors(self.vmPlot)
+        self._sanpyCursors.signalCursorDragged.connect(self.updateStatusBar)
+        self._sanpyCursors.signalSetDetectionParam.connect(self._setDetectionParam)
+
+        self._sanpyCursors_dvdt = sanpyCursors(self.derivPlot)
+        self._sanpyCursors_dvdt.signalCursorDragged.connect(self.updateStatusBar)
+        self._sanpyCursors_dvdt.signalSetDetectionParam.connect(self._setDetectionParam)
+        
         #
         # mouse crosshair
         # crosshairPlots = ['derivPlot', 'dacPlot', 'vmPlot', 'clipPlot']
@@ -1505,10 +1811,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         # we don't know the number of epochs until we have a ba?
 
         # trying to implement mouse moved events
-        self.myProxy = pg.SignalProxy(
-            self.vmPlot.scene().sigMouseMoved, rateLimit=60, slot=self._myMouseMoved
-        )
-        # self.vmPlot.scene().sigMouseMoved.connect(self._myMouseMoved)
+        # self.myProxy = pg.SignalProxy(
+        #     self.vmPlot.scene().sigMouseMoved, rateLimit=60, slot=self._myMouseMoved
+        # )
+        self.vmPlotGlobal.scene().sigMouseMoved.connect(partial(self._myMouseMoved, 'vmPlotGlobal'))
+        self.derivPlot.scene().sigMouseMoved.connect(partial(self._myMouseMoved, 'derivPlot'))
+        self.dacPlot.scene().sigMouseMoved.connect(partial(self._myMouseMoved, 'dacPlot'))
+        self.vmPlot.scene().sigMouseMoved.connect(partial(self._myMouseMoved, 'vmPlot'))
 
         # does not have setStyleSheet
         # self.derivPlot.setStyleSheet(qdarkstyle.load_stylesheet(qt_api='pyqt5'))
@@ -1621,6 +1930,45 @@ class bDetectionWidget(QtWidgets.QWidget):
         # _tmpSplitterWidget.setLayout(vBoxLayoutForPlot)
         # _hSplitter.addWidget(_tmpSplitterWidget)
 
+    # def _cursorDragged(self, name, infLine):
+    #     # logger.info(f'{name} {infLine.pos()}')
+    #     xCursorA = self._cursorA.pos().x()
+    #     xCursorB = self._cursorB.pos().x()
+    #     delx = xCursorB - xCursorA
+    #     delx = round(delx, 4)
+    #     logger.info(f'delx:{delx}')
+
+    #     self._cursorB.label.setFormat(f'B\ndelx={delx}')
+    #     delStr = f'Cursor Delta X = {delx}'
+    #     self.updateStatusBar(delStr)
+
+    # def toggleCursors(self, visible : bool):
+    #     self._showCursors = visible
+    #     self._cursorA.setVisible(visible)
+    #     self._cursorB.setVisible(visible)
+        
+    #     if visible:
+    #         # set position to start/stop of current view
+    #         pass
+
+    def _setDetectionParam(self, detectionParam : str, value : float):
+        """Set a detection param.
+        
+        This is in response to sanpyCursors context menu.
+        """
+        # human name of detection type ('SA Node'', "Fast NEuron", etc)
+        selectedDetection = self.detectToolbarWidget._selectedDetection  # str
+
+        logger.info(f'selectedDetection{selectedDetection} detectionParam:{detectionParam} value:{value}')
+
+        _detectionClass = self.getMainWindowDetectionClass()
+        detectionKey = _detectionClass.getDetectionKey(selectedDetection)
+
+        _detectionClass.setValue(detectionKey, detectionParam, value)
+
+        # update the interface
+        self.detectToolbarWidget.on_detection_preset_change(selectedDetection)
+
     def toggleCrosshair(self, onOff):
         """Toggle mouse crosshair on and off.
         """
@@ -1636,7 +1984,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.crosshairDict[plotName]["h"].setVisible(onOff)
             self.crosshairDict[plotName]["v"].setVisible(onOff)
 
-    def _myMouseMoved(self, event):
+    def _myMouseMoved(self, inPlot, event):
         """Respond to mouse moves.
 
             Update cursor position
@@ -1648,22 +1996,32 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # looking directly at checkbox in myDetectionToolbarWidget2
         # _crossHairIsOn = self.detectToolbarWidget.crossHairCheckBox.isChecked()
-       #if not self.detectToolbarWidget.crossHairCheckBox.isChecked():
+        #if not self.detectToolbarWidget.crossHairCheckBox.isChecked():
         if not self._showCrosshair:
             return
 
-        pos = event[0]  ## using signal proxy turns original arguments into a tuple
+        # logger.info(f'"{inPlot}" {event}')
+
+        # pos = event[0]  ## using signal proxy turns original arguments into a tuple
+        pos = event
+
+        # logger.info(pos)
 
         x = None
         y = None
         mousePoint = None
-        inPlot = None
-        if self.derivPlot.sceneBoundingRect().contains(pos):
+        # inPlot = None
+        # if 0 and self.derivPlot.sceneBoundingRect().contains(pos):
+        if inPlot == 'derivPlot':
+            # logger.info('move in deriv')
             # deriv
-            inPlot = "derivPlot"
+            # inPlot = "derivPlot"
             self.crosshairDict[inPlot]["h"].show()
             self.crosshairDict[inPlot]["v"].show()
-            mousePoint = self.derivPlot.vb.mapSceneToView(pos)
+            # mousePoint = self.derivPlot.vb.mapSceneToView(pos)
+            #mousePoint = self.derivPlot.mapSceneToView(pos)
+            # mousePoint = self.derivPlot.scene().mapSceneToView()
+            mousePoint = self.derivPlot.getPlotItem().getViewBox().mapSceneToView(pos)
             # hide the horizontal in dacPlot
             self.crosshairDict["dacPlot"]["v"].show()
             self.crosshairDict["dacPlot"]["h"].hide()
@@ -1682,12 +2040,15 @@ class bDetectionWidget(QtWidgets.QWidget):
                 self._displayHoverText_deriv.setText(_hoverText)
                 self._displayHoverText_deriv.setPos(x, y)
 
-        elif self.dacPlot.sceneBoundingRect().contains(pos):
+        # elif 0 and self.dacPlot.sceneBoundingRect().contains(pos):
+        elif inPlot == 'dacPlot':
+            # logger.info('move in dac')
             # dac
-            inPlot = "dacPlot"
+            # inPlot = "dacPlot"
             self.crosshairDict[inPlot]["h"].show()
             self.crosshairDict[inPlot]["v"].show()
-            mousePoint = self.dacPlot.vb.mapSceneToView(pos)
+            # mousePoint = self.dacPlot.vb.mapSceneToView(pos)
+            mousePoint = self.dacPlot.getPlotItem().getViewBox().mapSceneToView(pos)
             # hide the horizontal in derivPlot
             self.crosshairDict["derivPlot"]["v"].show()
             self.crosshairDict["derivPlot"]["h"].hide()
@@ -1695,12 +2056,15 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.crosshairDict["vmPlot"]["v"].show()
             self.crosshairDict["vmPlot"]["h"].hide()
 
-        elif self.vmPlot.sceneBoundingRect().contains(pos):
+        # elif self.vmPlot.sceneBoundingRect().contains(pos):
+        elif inPlot == 'vmPlot':
+            # logger.info('move in vm')
             # vm
-            inPlot = "vmPlot"
+            # inPlot = "vmPlot"
             self.crosshairDict[inPlot]["h"].show()
             self.crosshairDict[inPlot]["v"].show()
-            mousePoint = self.vmPlot.vb.mapSceneToView(pos)
+            # mousePoint = self.vmPlot.vb.mapSceneToView(pos)
+            mousePoint = self.vmPlot.getPlotItem().getViewBox().mapSceneToView(pos)
             # hide the horizontal in dacPlot
             self.crosshairDict["dacPlot"]["v"].show()
             self.crosshairDict["dacPlot"]["h"].hide()
@@ -1915,19 +2279,14 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # cancel spike selection
         self.selectSpikeList([])
-        # self.selectSpike(None)
-        # self.selectSpikeList(self._selectedSpikeList)
 
         # set sweep to 0
-        # self.selectSweep(0, startSec, stopSec, doEmit=False, doReplot=False)
         self.selectSweep(0, doEmit=False, doReplot=False)
 
         # abb implement sweep, move to function()
         # abb 20220615
-        # self._replot(startSec, stopSec)
-        self._replot()
-
-        # self.refreshClips(startSec, stopSec)
+        self._replot(startSec, stopSec)
+        # self._replot()
 
         # update x/y axis labels
         yLabel = self.ba.fileLoader._sweepLabelY
@@ -2085,7 +2444,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot_.setData(sweepX, sweepY, connect="finite")
 
         # vmPlot_ is PlotDataItem
-        logger.info(f'vmPlot.viewRange {self.vmPlot.viewRange()}')
+        # logger.info(f'vmPlot.viewRange {self.vmPlot.viewRange()}')
 
         # april 30, 2023
         # was this jun 4
@@ -2146,7 +2505,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # self.setAxis_OnFileChange(startSec, stopSec)
         
         # was this june 4
-        # self.setAxisFull()
+        self.setAxisFull()
         
         # self.detectToolbarWidget.on_start_stop()
         
@@ -2204,7 +2563,7 @@ class myImageExporter(ImageExporter):
 
 
 # class MultiLine(pg.QtGui.QGraphicsPathItem):
-class MultiLine(QtWidgets.QGraphicsPathItem):
+class _old_MultiLine(QtWidgets.QGraphicsPathItem):
     def __init__(
         self,
         x,
@@ -2517,8 +2876,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         self._buildUI()
 
     def fillInDetectionParameters(self, tableRowDict):
-        """
-        Set detection widget interface (mostly QSpinBox) to match values from table
+        """Set detection widget interface (mostly QSpinBox) to match values from table
         """
 
         """
@@ -2648,7 +3006,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         logger.info("TODO: update plots with plot every.")
 
     def _on_button_click(self, name):
-        """User clicked a button."""
+        """User clicked a button.
+        """
         logger.info(f'User clicked button "{name}"')
 
         modifiers = QtWidgets.QApplication.keyboardModifiers()
@@ -2658,10 +3017,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             detectionPreset = self.detectionPresets.currentText()
 
             dvdtThreshold = self.dvdtThreshold.value()
-            # print(f'  dvdtThreshold:', dvdtThreshold, type(dvdtThreshold))
             mvThreshold = self.mvThreshold.value()
-            # print('    dvdtThreshold:', dvdtThreshold)
-            # print('    mvThreshold:', mvThreshold)
+
             if dvdtThreshold == 0:
                 # 0 is special value shown as 'None'
                 str = "Please set a threshold greater than 0"

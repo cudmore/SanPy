@@ -102,7 +102,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         self._fileLoaderDict = sanpy.fileloaders.getFileLoaders(verbose=True)
         
-        self._detectionClass = sanpy.bDetection()
+        self._detectionClass : sanpy.bDetection = sanpy.bDetection()
 
         # create an empty model for file list
         dfEmpty = pd.DataFrame(columns=sanpy.analysisDir.sanpyColumns.keys())
@@ -131,7 +131,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self._rowHeight = 11
 
         # path to loaded folder (using bAnalysisDir)
-        self.configDict: sanpy.interface.preferences = sanpy.interface.preferences(self)
+        self.configDict : sanpy.interface.preferences = sanpy.interface.preferences(self)
         self.myAnalysisDir = None
         lastPath = self.configDict.getMostRecentFolder()
         logger.info(f'  preferences lastPath is "{lastPath}"')
@@ -173,7 +173,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.slot_updateStatus("Ready")
         logger.info("SanPy started")
 
-    def getDetectionClass(self):
+    def getDetectionClass(self) -> sanpy.bDetection:
         return self._detectionClass
 
     def getFileLoaderDict(self):

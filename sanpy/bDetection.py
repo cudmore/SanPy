@@ -615,7 +615,7 @@ class bDetection(object):
                     )
 
     def getDetectionPresetList(self):
-        """ "Get list of names of detection type.
+        """Get list of names of detection type.
 
         Used to make a list in popup in interface/ and interface/plugins
         """
@@ -623,6 +623,15 @@ class bDetection(object):
         for detectionPreset in self._detectionEnum:
             detectionList.append(detectionPreset.value)
         return detectionList
+
+    def getDetectionKey(self, humanName):
+        """Map human readable name like 'SA Node' back to key 'sanode'
+        """
+        for detectionPreset in self._detectionEnum:
+            if detectionPreset.value == humanName:
+                return detectionPreset.name
+        logger.error(f'did not find human name {humanNAme} in detection presets?')
+        logger.error(f'  possible names are {self.getDetectionPresetList()}')
 
     def _getPresetsDict(self):
         """Load detection presets from json files in 2 different folder:
@@ -800,7 +809,10 @@ class bDetection(object):
             # TODO: define default when not found ???
             return None
 
-    def setValue(self, detectionType: str, key: str, value):
+    def setValue(self,
+                    detectionType: str,
+                    key: str,
+                    value):
         """
         Set current value for key. Valid keys are defined in getDefaultDetection.
 
@@ -871,6 +883,7 @@ class bDetection(object):
             logger.warning(
                 f'Did not find detectionType:{detectionType}, key:"{key}" to set current value to "{value}"'
             )
+            logger.warning(f'  available detectionType are: {self._detectionPreset.keys()}')
             return False
 
     def old_save(self, saveBase):

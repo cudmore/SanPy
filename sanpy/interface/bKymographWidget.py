@@ -15,6 +15,10 @@ logger = get_logger(__name__)
 
 
 class myScaleDialog(QtWidgets.QDialog):
+    """Dialog to set x/y kymograph scale.
+    
+    If set, analysis has to be redone
+    """
     def __init__(self, secondsPerLine :float, umPerPixel : float, parent=None):
         logger.info(f'secondsPerLine:{secondsPerLine} umPerPixel:{umPerPixel}')
         
@@ -119,6 +123,7 @@ class kymographWidget(QtWidgets.QWidget):
     )  # (boolean, kd, caConc)
     signalScaleChanged = QtCore.pyqtSignal(object)  # dict with x/y scale
     signalLineSliderChanged = QtCore.pyqtSignal(object)  # int, new line selected
+    signalResetZoom = QtCore.pyqtSignal()  # int, new line selected
 
     def __init__(self, ba = None, parent = None):
         """
@@ -189,6 +194,8 @@ class kymographWidget(QtWidgets.QWidget):
         padding = None
         self.kymographPlot.setRange(imageBoundingRect, padding=padding)
     
+        self.signalResetZoom.emit()
+        
     def _setScaleDialog(self):
         """Show a set scale dialog.
         """
@@ -600,8 +607,17 @@ class kymographWidget(QtWidgets.QWidget):
         """Get contrast enhanced image."""
         # return self.ba.fileLoader.tifData
     
-        bitDepth = self.ba.fileLoader.tifHeader['bitDepth']
-        dType = self.ba.fileLoader.tifHeader['dtype']
+        try:
+            bitDepth = self.ba.fileLoader.tifHeader['bitDepth']
+        except (KeyError) as e:
+            logger.error('did not find bitdepth, defaulting to 8 bit.')
+            bitDepth = 8
+        
+        try:
+            dType = self.ba.fileLoader.tifHeader['dtype']
+        except (KeyError) as e:
+            logger.error('did not find dtype, defaulting to np.uint8.')
+            dType = np.uint8
 
         if theMin is None:
             theMin = self._minContrast

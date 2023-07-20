@@ -38,7 +38,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         20230526, Re-activating this for 'shortening' experiments.
     """
     def __init__(self, ba: sanpy.bAnalysis, parent=None):
-        exportDiameter()
+        # exportDiameter()
         
         logger.info("")
 
@@ -48,7 +48,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         if ba is not None and ba.fileLoader.isKymograph():
             self._ba = ba
 
-        self._kymographAnalysis = None  # will be created in slotSwitchFile()
+        # this is class sanpy.kymAnalysis
+        self._kymographAnalysis : sanpy.kymAnalysis = None  # will be created in slotSwitchFile()
         if self._ba is not None:
             self._kymographAnalysis = ba.kymAnalysis
 
@@ -74,22 +75,27 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         logger.info(f"state:{state} name:{name}")
         if name == "Line Profile":
             self.showLineProfile(state)
+            self._on_slider_changed()
         elif name == "Diameter":
             self.diameterPlotItem.setVisible(state)
+        elif name =='Foot/Peak':
+            self._diamFootPlotItem.setVisible(state)
+            self._diamPeakPlotItem.setVisible(state)
         elif name == "Sum Line":
             self.sumIntensityPlotItem.setVisible(state)
-        elif name == "Fit On Image":
+        elif name == "Fit On Kym":
             self._fitIsVivible = state
             self.refreshDiameterPlot()
 
     def showLineProfile(self, state: bool):
-        """Toggle interface for "Line Profile" """
+        """Toggle interface for Line Profile.
+        """
         # self.profileSlider.setVisible(state)
 
         self.lineIntensityPlotItem.setVisible(state)
 
-        for line in self._sliceLinesList:
-            line.setVisible(state)
+        # for line in self._sliceLinesList:
+        #     line.setVisible(state)
 
     def _buttonCallback(self, name):
         logger.info(f"name:{name}")
@@ -159,6 +165,9 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self._on_slider_changed(value=None)
 
     def slotSwitchFile(self, ba: sanpy.bAnalysis):
+        if ba is None:
+            return
+            
         if ba is not None and not ba.fileLoader.isKymograph():
             return
 
@@ -170,6 +179,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         self.refreshSumLinePlot()
         self.refreshDiameterPlot()
+
+        self._resetZoom()
 
     def _slot_roi_changed2(self, newRect):
         """User modified ROI.
@@ -229,6 +240,9 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             line.setValue(secondsValue)
 
         # update one line profile plot
+        if self._kymographAnalysis is None:
+            return
+
         lineProfile, left_pnt, right_pnt = self._kymographAnalysis._getFitLineProfile(value)
         pointsPerLineScan = self._kymographAnalysis.pointsPerLineScan()
         umPerPixel = self._kymographAnalysis.umPerPixel
@@ -270,7 +284,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self._kymWidgetMain = sanpy.interface.kymographWidget(None)  # will handle na is None
         self._kymWidgetMain.signalKymographRoiChanged.connect(self._slot_roi_changed2)
         self._kymWidgetMain.signalLineSliderChanged.connect(self._on_slider_changed)
-        
+        self._kymWidgetMain.signalResetZoom.connect(self._resetZoom)
+
         # v1 in layout
         # vBoxLayout.addWidget(self._kymWidgetMain)
 
@@ -375,13 +390,21 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         checkboxName = "Line Profile"
         aCheckBox = QtWidgets.QCheckBox(checkboxName)
-        aCheckBox.setChecked(True)
+        aCheckBox.setChecked(False)
         aCheckBox.stateChanged.connect(
             lambda state, name=checkboxName: self._checkboxCallback(state, name)
         )
         hBoxLayoutControls2.addWidget(aCheckBox)
 
         checkboxName = "Diameter"
+        aCheckBox = QtWidgets.QCheckBox(checkboxName)
+        aCheckBox.setChecked(True)
+        aCheckBox.stateChanged.connect(
+            lambda state, name=checkboxName: self._checkboxCallback(state, name)
+        )
+        hBoxLayoutControls2.addWidget(aCheckBox)
+
+        checkboxName = "Foot/Peak"
         aCheckBox = QtWidgets.QCheckBox(checkboxName)
         aCheckBox.setChecked(True)
         aCheckBox.stateChanged.connect(
@@ -397,7 +420,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         )
         hBoxLayoutControls2.addWidget(aCheckBox)
 
-        checkboxName = "Fit On Image"
+        checkboxName = "Fit On Kym"
         aCheckBox = QtWidgets.QCheckBox(checkboxName)
         aCheckBox.setChecked(self._fitIsVivible)
         aCheckBox.stateChanged.connect(
@@ -478,6 +501,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self.lineIntensityPlotItem = pg.PlotWidget()
         self.lineIntensityPlotItem.setLabel("left", 'Intensity', units="")
         self.lineIntensityPlotItem.setLabel("bottom", 'um', units="")
+        self.lineIntensityPlotItem.setVisible(False)
         self.lineIntensityPlot = self.lineIntensityPlotItem.plot(
             name="lineIntensityPlot"
         )
@@ -490,7 +514,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         yPlot = []
         self.lineIntensityPlot.setData(xPlot, yPlot, connect="finite")  # fill with nan
         # single point of left/right
-        self.leftRightPlot = self.lineIntensityPlotItem.plot(name="leftRightPlot")
+        self.leftRightPlot = self.lineIntensityPlotItem.plot(name="leftRightPlot", pen='c')
 
         vBoxLayout.addWidget(self.lineIntensityPlotItem)
 
@@ -518,6 +542,21 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             sliceLine
         )  # keep a list of vertical slice lines so we can update all at once
         self.diameterPlotItem.addItem(sliceLine)
+
+        # overlay scatter of foot and peak
+        self._diamFootPlotItem = pg.PlotDataItem(pen=None, symbol='o',
+                                        symbolBrush='r',
+                                        fillOutline=False,
+                                        markeredgewidth=0.0,
+                                        connect="finite")
+        self.diameterPlotItem.addItem(self._diamFootPlotItem, ignorBounds=True)
+        
+        self._diamPeakPlotItem = pg.PlotDataItem(pen=None, symbol='o',
+                                        symbolBrush='b',
+                                        fillOutline=False,
+                                        markeredgewidth=0.0,
+                                        connect="finite")
+        self.diameterPlotItem.addItem(self._diamPeakPlotItem, ignorBounds=True)
 
         vBoxLayout.addWidget(self.diameterPlotItem)
 
@@ -552,6 +591,13 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         # finalize (only for QWidget)
         # self.setLayout(vBoxLayout)
 
+    def _resetZoom(self):
+        """Set all pyqtgraph plots to full zoom
+        """
+        # self.vmPlot.autoRange(items=[self.vmPlot_])  # 20221003
+        self.diameterPlotItem.autoRange()
+        self.sumIntensityPlotItem.autoRange()
+
     def refreshSumLinePlot(self):
         if self._ba is None:
             return
@@ -569,6 +615,36 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         yDiam_um = self._kymographAnalysis.getResults("diameter_um")
         
         self.diameterPlot.setData(xPlot, yDiam_um, connect="finite")
+
+        # update the scatter of foot and peak
+        xFoot = []
+        yFoot = []
+        xPeak = []
+        yPeak = []
+        if self._ba is not None:
+            xFoot = self._ba.getStat('k_diam_foot_sec')
+            yFoot = self._ba.getStat('k_diam_foot')
+            xPeak = self._ba.getStat('k_diam_peak_sec')
+            yPeak = self._ba.getStat('k_diam_peak')
+
+        # logger.info(f'xFoot:{xFoot}')
+        # logger.info(f'xFoot:{yFoot}')
+        
+        # logger.info('')
+        # print('yFoot:', yFoot)
+        # print('yPeak:', yPeak)
+        # print('xFoot:', yFoot)
+        # print('xPeak:', yPeak)
+        
+        self._diamFootPlotItem.setData(xFoot, yFoot,
+                                        #symbolBrush='r',
+                                        # pen=None,
+                                        # symbol='o'
+                                        )
+        self._diamPeakPlotItem.setData(xPeak, yPeak,
+                                        # pen=None,
+                                        # symbol='o'
+                                        )
 
         # show start/stop of fit in main kymograph
         left_pnt = self._kymographAnalysis.getResults("left_pnt")

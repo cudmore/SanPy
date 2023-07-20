@@ -554,10 +554,15 @@ class fileLoader_base(ABC):
         dtSeconds = self._sweepX[1, 0] - self._sweepX[0, 0]  # seconds per sample
         dtSeconds = float(dtSeconds)
         dtMilliseconds = dtSeconds * 1000
-        _dataPointsPerMs = int(1 / dtMilliseconds)
+        # july 2023 paula
+        # _dataPointsPerMs = int(1 / dtMilliseconds)
+        _dataPointsPerMs = 1 / dtMilliseconds
         
         if _dataPointsPerMs == 0:
             logger.error(f'_dataPointsPerMs is zero!')
+            logger.error(f'  dtSeconds:{dtSeconds}')
+            logger.error(f'  dtMilliseconds:{dtMilliseconds}')
+            logger.error(f'  _dataPointsPerMs = int(1 / dtMilliseconds)')
 
         self._dataPointsPerMs: int = _dataPointsPerMs
 

@@ -38,6 +38,7 @@ watch:
   - ../sanpy
 
 plugins:
+  - with-pdf
   - mkdocs-jupyter
   - search
   - autorefs

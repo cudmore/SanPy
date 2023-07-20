@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.signal
 
 from sanpy.user_analysis.baseUserAnalysis import baseUserAnalysis
 
@@ -14,14 +15,20 @@ class kymUserAnalysis(baseUserAnalysis):
     """
     def defineUserStats(self):
         """Add your user stats here."""
-        if self.ba is None or not self.ba.fileLoader.isKymograph:
-            return
-        self.addUserStat("Diameter Foot (um)", "diam_foot")
-        self.addUserStat("Diameter Peak (um)", "diam_peak")
-        self.addUserStat("Diameter Peak Pnt", "diam_peak_pnt")
-        self.addUserStat("Diameter Peak Time (s)", "diam_peak_sec")
-        self.addUserStat("Diameter Time To Peak (s)", "diam_time_to_peak_sec")
-        self.addUserStat("Diameter Amp (um)", "diam_amp")
+        # if self.ba is None or not self.ba.fileLoader.isKymograph:
+        #     return
+        
+        # foot
+        self.addUserStat("Diameter Foot (um)", "k_diam_foot")
+        self.addUserStat("Diameter Foot Pnt", "k_diam_foot_pnt")
+        self.addUserStat("Diameter Foot Time (s)", "k_diam_foot_sec")
+        # peak
+        self.addUserStat("Diameter Peak (um)", "k_diam_peak")
+        self.addUserStat("Diameter Peak Pnt", "k_diam_peak_pnt")
+        self.addUserStat("Diameter Peak Time (s)", "k_diam_peak_sec")
+        # summary
+        self.addUserStat("Diameter Time To Peak (s)", "k_diam_time_to_peak_sec")
+        self.addUserStat("Diameter Amp (um)", "k_diam_amp")
 
     def run(self):
         if not self.ba.fileLoader.isKymograph:
@@ -31,6 +38,8 @@ class kymUserAnalysis(baseUserAnalysis):
         if not self.ba.kymAnalysis.hasDiamAnalysis:
             return
 
+        logger.info('RUNNING userKyDiamAnalysis')
+        
         # get filtered vm for the entire trace
         # filteredVm = self.getFilteredVm()
 
@@ -42,36 +51,57 @@ class kymUserAnalysis(baseUserAnalysis):
         lastIdx = self.ba.numSpikes - 1
 
         for spikeIdx, spikeDict in enumerate(self.ba.spikeDict):
-            if spikeIdx == lastIdx:
-                continue
+            k_diam_foot = float('nan')
+            k_diam_foot_pnt = float('nan')
+            k_diam_foot_sec = float('nan')
+
+            k_diam_peak = float('nan')
+            k_diam_peak_pnt = float('nan')
+            k_diam_peak_sec = float('nan')
+
+            k_diam_time_to_peak_sec = float('nan')
+            k_diam_amp = float('nan')
+
+            if spikeIdx != lastIdx:
             
-            nextThresholdPnt = self.ba.spikeDict[spikeIdx+1]['thresholdPnt']
-            thresholdPnt = spikeDict['thresholdPnt']
-        
-            # baseline of diam before Ca spike
-            footStartPnt = thresholdPnt - 12
-            if footStartPnt < 0:
-                continue
-            footStopPnt = thresholdPnt - 2
-            footMean = np.mean(diameter_um[footStartPnt:footStopPnt])
-
-            # peak of diam before next Ca spike
-            diamClip = diameter_um[thresholdPnt:nextThresholdPnt]
+                nextThresholdPnt = self.ba.spikeDict[spikeIdx+1]['thresholdPnt']
+                thresholdPnt = spikeDict['thresholdPnt']
             
-            nextThresholdPnt
-            diam_peak = np.min(diamClip)
-            diam_amp = diam_peak - footMean
+                # baseline of diam before Ca spike
+                footStartPnt = thresholdPnt - 12
+                if footStartPnt < 0:
+                    continue
+                footStopPnt = thresholdPnt - 2
+                footMean = np.mean(diameter_um[footStartPnt:footStopPnt])
 
-            _maxPnt = np.argmin(diamClip)
-            diam_peak_pnt = _maxPnt + thresholdPnt
-            diam_peak_sec = self.ba.fileLoader.pnt2Sec_(diam_peak_pnt)
+                k_diam_foot = footMean
+                k_diam_foot_pnt = thresholdPnt - 6
+                k_diam_foot_sec = self.ba.fileLoader.pnt2Sec_(k_diam_foot_pnt)
 
-            diam_time_to_peak_sec = diam_peak_sec - self.ba.fileLoader.pnt2Sec_(thresholdPnt)
+                # peak of diam before next Ca spike
+                diamClip = diameter_um[thresholdPnt:nextThresholdPnt]
+                
+                k_diam_peak = np.min(diamClip)
+                k_diam_amp = k_diam_peak - k_diam_foot
+
+                _maxPnt = np.argmin(diamClip)
+                k_diam_peak_pnt = _maxPnt + thresholdPnt
+                k_diam_peak_sec = self.ba.fileLoader.pnt2Sec_(k_diam_peak_pnt)
+
+                k_diam_time_to_peak_sec = k_diam_peak_sec - self.ba.fileLoader.pnt2Sec_(thresholdPnt)
+
+                logger.info(f'  {spikeIdx} {k_diam_foot} {k_diam_foot_pnt}')
 
             # assign to underlying bAnalysis
-            self.setSpikeValue(spikeIdx, "diam_foot", footMean)
-            self.setSpikeValue(spikeIdx, "diam_peak", diam_peak)
-            self.setSpikeValue(spikeIdx, "diam_peak_pnt", diam_peak_pnt)
-            self.setSpikeValue(spikeIdx, "diam_peak_sec", diam_peak_sec)
-            self.setSpikeValue(spikeIdx, "diam_time_to_peak_sec", diam_time_to_peak_sec)
-            self.setSpikeValue(spikeIdx, "diam_amp", diam_amp)
+            
+            # foot
+            self.setSpikeValue(spikeIdx, "k_diam_foot", k_diam_foot)
+            self.setSpikeValue(spikeIdx, "k_diam_foot_pnt", k_diam_foot_pnt)
+            self.setSpikeValue(spikeIdx, "k_diam_foot_sec", k_diam_foot_sec)
+            # peak
+            self.setSpikeValue(spikeIdx, "k_diam_peak", k_diam_peak)
+            self.setSpikeValue(spikeIdx, "k_diam_peak_pnt", k_diam_peak_pnt)
+            self.setSpikeValue(spikeIdx, "k_diam_peak_sec", k_diam_peak_sec)
+            # summary
+            self.setSpikeValue(spikeIdx, "k_diam_time_to_peak_sec", k_diam_time_to_peak_sec)
+            self.setSpikeValue(spikeIdx, "k_diam_amp", k_diam_amp)

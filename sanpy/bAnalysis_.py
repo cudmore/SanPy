@@ -155,9 +155,12 @@ class bAnalysis:
                 logger.error(f'did not find a file loader for extension "{_ext}"')
                 self.loadError = True
             
-            self._kymAnalysis = None
+            self._kymAnalysis : sanpy.kymAnalysis = None
             if self.fileLoader.recordingMode == recordingModes.kymograph:
-                # logger.info('creating kymAnalysis')
+                logger.info('creating kymAnalysis')
+                logger.info(f'    self.fileLoader.filepath:{self.fileLoader.filepath}')
+                logger.info(f'    self.fileLoader.filepath:{self.fileLoader.tifData.shape}')
+                logger.info(f'    self.fileLoader.filepath:{self.fileLoader.tifHeader}')
                 self._kymAnalysis = sanpy.kymAnalysis(self.fileLoader.filepath,
                                                       self.fileLoader.tifData,
                                                       self.fileLoader.tifHeader)
@@ -681,13 +684,20 @@ class bAnalysis:
             else:
                 # only current sweep and epoch
                 # (1) was this
+                # was causing errors with kym diam analysis
                 x = [
                     clean(spike[statName1])
                     for spike in self.spikeDict
                     if (sweepNumber == "All" or spike["sweep"] == sweepNumber)
                     and (epochNumber == "All" or spike["epoch"] == epochNumber)
                 ]
-
+                # for _idx, spike in enumerate(self.spikeDict):
+                #     if (sweepNumber == "All" or spike["sweep"] == sweepNumber) and (epochNumber == "All" or spike["epoch"] == epochNumber):
+                #         try:
+                #             val = spike[statName1]
+                #         except (KeyError) as e:
+                #             logger.error(f'did not find key "{statName1}" at spike {_idx}')
+                #         clean(val)
 
             if statName2 is not None:
                 # original

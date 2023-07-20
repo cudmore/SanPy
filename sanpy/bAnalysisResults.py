@@ -667,6 +667,7 @@ class analysisResultList:
             return self._myList[key]
         except IndexError as e:
             logger.error(f"{e}")
+            # logger.error(f'possible keys are: {self._myList.keys()}')
 
     def __len__(self):
         """Allow len() with len(this)"""
@@ -771,7 +772,8 @@ class analysisResult:
             # return self._dDict[key]['currentValue']
             ret = self._rDict[key]
         except KeyError as e:
-            logger.error(f'Error getting key "{key}" exception:{e}')
+            logger.error(f'Error getting key "{key}"')
+            logger.error(f'possible keys are: {self._rDict.keys()}')
             raise
         #
         return ret

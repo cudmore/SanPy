@@ -48,8 +48,15 @@ class fileLoader_tif(fileLoader_base):
         # load olympus txt file if it exists
         _olympusHeader = _loadLineScanHeader(self.filepath)
         if _olympusHeader is not None:
-            self._header['umPerPixel'] = _olympusHeader["umPerPixel"]
-            self._header['secondsPerLine'] = _olympusHeader["secondsPerLine"]
+            logger.info('loaded olympus header for {self.filepath}')
+            for k,v in _olympusHeader.items():
+                logger.info(f'  {k}: {v}')
+            self._tifHeader['umPerPixel'] = _olympusHeader["umPerPixel"]
+            self._tifHeader['secondsPerLine'] = _olympusHeader["secondsPerLine"]
+
+        # logger.info('loaded header for {self.filepath}')
+        # for k,v in self._tifHeader.items():
+        #     logger.info(f'  {k}: {v}')
 
         # using 'reshape(-1,1)' to convert shape from (n,) to (n,1)
         sweepX = np.arange(0, self._tif.shape[1]).reshape(-1, 1)
@@ -83,10 +90,13 @@ class fileLoader_tif(fileLoader_base):
         """
         logger.info(f'secondsPerLine:{secondsPerLine} umPerPixel:{umPerPixel}')
         
-        self._tifHeader = {
-            'secondsPerLine': secondsPerLine,
-            'umPerPixel': umPerPixel,
-        }
+        self._tifHeader['secondsPerLine'] = secondsPerLine
+        self._tifHeader['umPerPixel'] = umPerPixel
+        # self._tifHeader = {
+        #     'secondsPerLine': secondsPerLine,
+        #     'umPerPixel': umPerPixel,
+        # }
+
         sweepX = np.arange(0, self._tif.shape[1]).reshape(-1, 1)
         sweepX = sweepX.astype(np.float64)
         sweepX *= self._tifHeader['secondsPerLine']
