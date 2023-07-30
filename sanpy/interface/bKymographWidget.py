@@ -112,7 +112,9 @@ class kymographImage(pg.ImageItem):
 class kymographWidget(QtWidgets.QWidget):
     """Display a kymograph image
     
-     - contrast controls.
+     - a top toobar with
+       - image size in pixels and um
+       - contrast controls.
      - a draggable rect roi
      - allow user to set scale (right-click)
      """
@@ -160,16 +162,16 @@ class kymographWidget(QtWidgets.QWidget):
         """
         contextMenu = QtWidgets.QMenu(self)
         
-        resetZoom = contextMenu.addAction("Reset Zoom")
-        resetRoi = contextMenu.addAction("Reset ROI")
-        setScale = contextMenu.addAction("Set Scale")
-        
         _visible = self._topToolbar.isVisible()
         toggleToolbar = QtWidgets.QAction("Top Toolbar", self, checkable=True)
         toggleToolbar.setChecked(_visible)
         toggleToolbar.triggered.connect(partial(self.showTopToolbar, not _visible))
         contextMenu.addAction(toggleToolbar)
 
+        resetZoom = contextMenu.addAction("Reset Zoom")
+        resetRoi = contextMenu.addAction("Reset ROI")
+        setScale = contextMenu.addAction("Set Scale")
+        
         action = contextMenu.exec_(self.mapToGlobal(event.pos()))
         if action == resetZoom:
             self._resetZoom()
@@ -178,7 +180,7 @@ class kymographWidget(QtWidgets.QWidget):
         elif action == setScale:
             self._setScaleDialog()
 
-    def _resetZoom(self):
+    def _resetZoom(self, doEmit=True):
         imageBoundingRect = self.myImageItem.boundingRect()  # QtCore.QRectF
         
         _rect = self.ba.kymAnalysis.getImageRect()
@@ -194,7 +196,8 @@ class kymographWidget(QtWidgets.QWidget):
         padding = None
         self.kymographPlot.setRange(imageBoundingRect, padding=padding)
     
-        self.signalResetZoom.emit()
+        if doEmit:
+            self.signalResetZoom.emit()
         
     def _setScaleDialog(self):
         """Show a set scale dialog.
@@ -283,6 +286,41 @@ class kymographWidget(QtWidgets.QWidget):
 
         return molarLayout
 
+    def _refreshControlBarWidget(self):
+        tifData = self.ba.fileLoader.tifData
+
+       # x and y pixels
+        _xPixels = str(tifData.shape[1])
+        self.xPixelLabel.setText(_xPixels)
+        _yPixels = str(tifData.shape[0])
+        self.yPixelLabel.setText(_yPixels)
+
+        # x and y scale
+        secondsPerLine = str(self.ba.fileLoader.tifHeader['secondsPerLine'])
+        self.xScaleLabel.setText(secondsPerLine)
+        umPerPixel = str(self.ba.fileLoader.tifHeader['umPerPixel'])
+        self.yScaleLabel.setText(umPerPixel)
+
+        # update min/max labels
+        tifData = self.ba.fileLoader.tifData
+        minTif = np.nanmin(tifData)
+        maxTif = np.nanmax(tifData)
+        # print(type(dtype), dtype)  # <class 'numpy.dtype[uint16]'> uint16
+        self.tifMinLabel.setText(f"Min:{minTif}")
+        self.tifMaxLabel.setText(f"Max:{maxTif}")
+
+        # update contrast slider controls
+        bitDepth = self.ba.fileLoader.tifHeader['bitDepth']
+        self.minContrastSpinBox.setMaximum(2**bitDepth)
+        self.minContrastSlider.setMaximum(2**bitDepth)
+        self.maxContrastSpinBox.setMaximum(2**bitDepth)
+        self.maxContrastSlider.setMaximum(2**bitDepth)
+
+        self.minContrastSpinBox.setValue(self._minContrast)
+        self.minContrastSlider.setValue(self._minContrast)
+        self.maxContrastSpinBox.setValue(self._maxContrast)
+        self.maxContrastSlider.setValue(self._maxContrast)
+
     def _buildControlBarWidget(self) -> QtWidgets.QWidget:
         """Build a top control bar.
         """
@@ -307,37 +345,40 @@ class kymographWidget(QtWidgets.QWidget):
         _VBoxLayout.addLayout(controlBarLayout)
 
         self._fileNameLabel = QtWidgets.QLabel(f"{_fileName}")
-        controlBarLayout.addWidget(self._fileNameLabel)
+        controlBarLayout.addWidget(self._fileNameLabel, alignment=QtCore.Qt.AlignLeft)
 
         # pixels
         aLabel = QtWidgets.QLabel(f"Pixels X:")
-        controlBarLayout.addWidget(aLabel)
+        controlBarLayout.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
 
         self.xPixelLabel = QtWidgets.QLabel(f"{xPixels}")
-        controlBarLayout.addWidget(self.xPixelLabel)
+        controlBarLayout.addWidget(self.xPixelLabel, alignment=QtCore.Qt.AlignLeft)
 
         aLabel = QtWidgets.QLabel(f"Y:")
-        controlBarLayout.addWidget(aLabel)
+        controlBarLayout.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
 
         self.yPixelLabel = QtWidgets.QLabel(f"{yPixels}")
-        controlBarLayout.addWidget(self.yPixelLabel)
+        controlBarLayout.addWidget(self.yPixelLabel, alignment=QtCore.Qt.AlignLeft)
 
         # scale
         aLabel = QtWidgets.QLabel(f"Scale X:")
-        controlBarLayout.addWidget(aLabel)
+        controlBarLayout.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
 
         self.xScaleLabel = QtWidgets.QLabel(f"{xScale}")
-        controlBarLayout.addWidget(self.xScaleLabel)
+        controlBarLayout.addWidget(self.xScaleLabel, alignment=QtCore.Qt.AlignLeft)
 
         aLabel = QtWidgets.QLabel(f"Y:")
-        controlBarLayout.addWidget(aLabel)
+        controlBarLayout.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
 
         self.yScaleLabel = QtWidgets.QLabel(f"{yScale}")
-        controlBarLayout.addWidget(self.yScaleLabel)
+        controlBarLayout.addWidget(self.yScaleLabel, alignment=QtCore.Qt.AlignLeft)
 
         # cursor
         self.tifCursorLabel = QtWidgets.QLabel("Cursor:")
-        controlBarLayout.addWidget(self.tifCursorLabel)
+        controlBarLayout.addWidget(self.tifCursorLabel, alignment=QtCore.Qt.AlignLeft)
+
+        # align left
+        controlBarLayout.addStretch()
 
         #
         # contrast sliders
@@ -485,7 +526,7 @@ class kymographWidget(QtWidgets.QWidget):
 
         # TODO: add show/hide, we do not want this in the main interface
         # vertical line to show selected line scan (adjusted/changed with slider)
-        self._sliceLine = pg.InfiniteLine(pos=0, angle=90)
+        self._sliceLine = pg.InfiniteLine(pos=0, angle=90, pen=pg.mkPen('y', width=2),)
         self.kymographPlot.addItem(self._sliceLine, ignorBounds=True)
 
         # plot of diameter detection left/right
@@ -548,6 +589,22 @@ class kymographWidget(QtWidgets.QWidget):
 
     def showSliceLine(self, visible : bool):
         self._sliceLine.setVisible(visible)
+
+    def incDecLineSlider(self, incDec : int):
+        """Increment or decriment the line slider.
+        
+        Used by main widget for keyboard left/right
+        """
+        _numLineScans = len(self.ba.fileLoader.sweepX)
+        
+        value = self._lineProfileSlider.value()
+        value += incDec
+        if value < 0:
+            value = 0
+        elif value > _numLineScans-1:
+            value = _numLineScans - 1
+        self._lineProfileSlider.setValue(value)
+        self._on_line_slider_changed(value)
 
     def _on_line_slider_changed(self, lineNumber: int):
         """Respond to user dragging the line slider.
@@ -670,6 +727,7 @@ class kymographWidget(QtWidgets.QWidget):
             return
 
         myTif = self.getContrastEnhance()
+
         logger.info(
             f"    startSec:{startSec} stopSec:{stopSec} myTif.shape:{myTif.shape}"
         )  # like (519, 10000)
@@ -739,7 +797,8 @@ class kymographWidget(QtWidgets.QWidget):
         #kymographRect = self.ba.kymAnalysis.getImageRect_no_scale()
         logger.info(f'    getRoiRect() kymographRect is {kymographRect}')
         pos, size = kymographRect.getPosAndSize()
-        logger.info(f'    myLineRoi pos:{pos} size:{size}')
+        
+        # logger.info(f'    myLineRoi pos:{pos} size:{size}')
         #size = (5000, 250)
         # size = (myTif.shape[1], myTif.shape[0])
 
@@ -970,29 +1029,15 @@ class kymographWidget(QtWidgets.QWidget):
 
             self._replot(startSec=startSec, stopSec=stopSec)
 
+            self._resetZoom()
+
             # update line scan slider
             _numLineScans = len(self.ba.fileLoader.sweepX) - 1
+            self._lineProfileSlider.setValue(0)
             self._lineProfileSlider.setMaximum(_numLineScans)
 
-            # update min/max labels
-            tifData = self.ba.fileLoader.tifData
-            minTif = np.nanmin(tifData)
-            maxTif = np.nanmax(tifData)
-            # print(type(dtype), dtype)  # <class 'numpy.dtype[uint16]'> uint16
-            self.tifMinLabel.setText(f"Min:{minTif}")
-            self.tifMaxLabel.setText(f"Max:{maxTif}")
-
-            # update contrast slider controls
-            bitDepth = self.ba.fileLoader.tifHeader['bitDepth']
-            self.minContrastSpinBox.setMaximum(2**bitDepth)
-            self.minContrastSlider.setMaximum(2**bitDepth)
-            self.maxContrastSpinBox.setMaximum(2**bitDepth)
-            self.maxContrastSlider.setMaximum(2**bitDepth)
-
-            self.minContrastSpinBox.setValue(self._minContrast)
-            self.minContrastSlider.setValue(self._minContrast)
-            self.maxContrastSpinBox.setValue(self._maxContrast)
-            self.maxContrastSlider.setValue(self._maxContrast)
+            # update top control bar
+            self._refreshControlBarWidget()
 
             theRect = self.ba.kymAnalysis.getRoiRect()
             logger.info(f'-->> emit signalKymographRoiChanged theRect:{theRect}')
@@ -1002,6 +1047,9 @@ class kymographWidget(QtWidgets.QWidget):
         if event.isExit():
             return
 
+        if self.ba is None:
+            return
+        
         xPos = event.pos().x()
         yPos = event.pos().y()
 

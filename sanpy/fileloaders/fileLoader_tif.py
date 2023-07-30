@@ -20,6 +20,10 @@ class fileLoader_tif(fileLoader_base):
 
         # logger.info(f'loaded tif: {self._tif.shape}')
 
+        # check if 3d, assume (z,y,x)
+        if len(self._tif.shape) > 2:
+            self._tif = self._tif[0,:,:]
+            
         # image must be shape[0] is time/big, shape[1] is space/small
         if self._tif.shape[1] < self._tif.shape[0]:
             # logger.info(f"rot90 image with shape: {self._tif.shape}")
@@ -48,9 +52,9 @@ class fileLoader_tif(fileLoader_base):
         # load olympus txt file if it exists
         _olympusHeader = _loadLineScanHeader(self.filepath)
         if _olympusHeader is not None:
-            logger.info('loaded olympus header for {self.filepath}')
-            for k,v in _olympusHeader.items():
-                logger.info(f'  {k}: {v}')
+            # logger.info('loaded olympus header for {self.filepath}')
+            # for k,v in _olympusHeader.items():
+            #     logger.info(f'  {k}: {v}')
             self._tifHeader['umPerPixel'] = _olympusHeader["umPerPixel"]
             self._tifHeader['secondsPerLine'] = _olympusHeader["secondsPerLine"]
 
@@ -63,7 +67,9 @@ class fileLoader_tif(fileLoader_base):
         sweepX = sweepX.astype(np.float64)
         sweepX *= self._tifHeader['secondsPerLine']
 
-        logger.info(f'sweepX dt:{sweepX[1]-sweepX[0]}')
+        # logger.info(f'  sweepX shape:{sweepX.shape}')
+        # logger.info(f'  sweepX max:{np.nanmax(sweepX)}')
+        # logger.info(f'  sweepX dt:{sweepX[1]-sweepX[0]}')
 
         sweepY = np.sum(self._tif, axis=0).reshape(-1, 1)
         sweepY = np.divide(sweepY, np.max(sweepY))
@@ -77,7 +83,7 @@ class fileLoader_tif(fileLoader_base):
             recordingMode=recordingModes.kymograph
         )
 
-        logger.info(f'dataPointsPerMs:{self.dataPointsPerMs}')
+        # logger.info(f'dataPointsPerMs:{self.dataPointsPerMs}')
 
         #self.setScale(secondsPerLine, umPerPixel)
 

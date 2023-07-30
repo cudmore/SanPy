@@ -1,3 +1,17 @@
+## 20230726
+
+- file loaders
+
+[ ] errors in loading atf. Added try/except for when pyAbf load atf fails
+
+
+[x] Added member variable declaration (to None) in base file loader __init__() such that when we get load error, we do not get no variable found
+
+[x] Bug: On clicking next/prev sweep, we are incrementing by two. PRoblem was we did not finish modifying code when we removed first combobox entry 'All'.
+
+[ ] TODO: add file loader errors like we have spike errors. Each file loader will have a _errorList list
+
+
 ## Pushing tags to github
 
 get the current tag

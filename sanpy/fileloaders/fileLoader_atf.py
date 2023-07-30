@@ -12,15 +12,32 @@ logger = get_logger(__name__)
 class fileLoader_atf(fileLoader_base):
     loadFileType = "atf"
 
-    def __init__(self, path):
-        super().__init__(path)
+    # def __init__(self, path):
+    #     super().__init__(path)
+    #     # self._loadAtf()
+
+    def loadFile(self):
         self._loadAtf()
 
-    def _loadAtf(self, loadData):
+    def _loadAtf(self):
         # We cant't get dataPointsPerMs without loading the data
         loadData = True
 
-        self._abf = pyabf.ATF(self.filepath)  # , loadData=loadData)
+        try:
+            self._abf = pyabf.ATF(self.filepath)  # , loadData=loadData)
+        except (ValueError) as e:
+            logger.error(f"    did not load atf file: {self.filepath}")
+            logger.error(f"      ValueError exception was: {e}")
+            self.setLoadError(True)
+            self._abf = None
+            return
+        except (Exception) as e:
+            logger.error(f"    did not load atf file: {self.filepath}")
+            logger.error(f"      ValueError exception was: {e}")
+            self.setLoadError(True)
+            self._abf = None
+            return
+
         print("  self._abf:", self._abf.sweepList)
         # try:
         if 1:

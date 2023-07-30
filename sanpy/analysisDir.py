@@ -132,6 +132,20 @@ _sanpyColumns = {
         "type": str,
         "isEditable": True,
     },
+
+    "parent1": {
+        "type": str,
+        "isEditable": False,
+    },
+    "parent2": {
+        "type": str,
+        "isEditable": False,
+    },
+    "parent3": {
+        "type": str,
+        "isEditable": False,
+    },
+
     # kymograph interface
     "kLeft": {
         "type": int,
@@ -276,6 +290,127 @@ class bAnalysisDirWeb:
         print(ba.numSpikes)
 
 
+import os
+from glob import glob
+
+def _old_santana_file_finder(files):
+    """
+    
+    Parameters
+    ----------
+    files: List[str]
+        List of full file path.
+    
+    cell 05_C001T001.tif
+    cell 05_C002T001.tif
+    cell 05.txt
+
+    cell 08_0002_C001T001.tif
+    cell 08_0002_C002T001.tif
+    cell 08_0002.txt
+
+    Text file name is prefix up to _C0
+    """
+    #path = '/Users/cudmore/Dropbox/data/cell-shortening/fig1'
+
+
+    retDict = {}
+    
+    # list of full path to tif files in all subfolders
+    # files = [y for x in os.walk(path) for y in glob(os.path.join(x[0], '*.tif'))]
+    #files = sanpy._util.getFileList(path)
+
+    for file in files:
+        if not file.endswith('.tif'):
+            continue
+        
+        # we only want to load channel 2 (Ca++)
+        if file.find('_C002') == -1:
+            continue
+        
+        filePath, fileName = os.path.split(file)
+
+        otherFileName = fileName.replace('_C002', '_C001')
+        otherFilePath = os.path.join(filePath, otherFileName)
+        if not os.path.isfile(otherFilePath):
+            print(f'Did not find other file "{otherFileName}" for {file}')
+            otherFilePath = ''
+
+        _idx = fileName.find('_C')
+        filePrefix = fileName[0:_idx]
+    
+        txtFileName = filePrefix + '.txt'
+        txtFilePath = os.path.join(filePath, txtFileName)
+        if not os.path.isfile(txtFilePath):
+            print(f'Did not find txt file for {file}')
+            txtFilePath = ''
+
+        retDict[file] = {
+            'otherFilePath': otherFilePath,
+            'txtFilePath': txtFilePath,
+        }
+
+    #print('n=', len(files))
+    return retDict
+
+def _listdir(path):
+    """
+    recursively walk directory to specified depth
+    :param path: (str) path to list files from
+    :yields: (str) filename, including path
+    """
+    for filename in os.listdir(path, theseFileTypes):
+        _filebase, _ext = os.path.splitext(filename)
+        if filename.startswith('.'):
+            continue
+        if not _ext in theseFileTypes:
+            continue
+        yield os.path.join(path, filename)
+
+
+def _walk(path, theseFileTypes, depth=None):
+    """
+    recursively walk directory to specified depth
+    :param path: (str) the base path to start walking from
+    :param depth: (None or int) max. recursive depth, None = no limit
+    :yields: (str) filename, including path
+    """
+    if depth and depth == 1:
+        for filename in _listdir(path, theseFileTypes):
+            yield filename
+    else:
+        top_pathlen = len(path) + len(os.path.sep)
+        for dirpath, dirnames, filenames in os.walk(path):
+            dirlevel = dirpath[top_pathlen:].count(os.path.sep)
+            if depth and dirlevel >= depth:
+                dirnames[:] = []
+            else:
+                for filename in filenames:
+                    _filebase, _ext = os.path.splitext(filename)
+                    if filename.startswith('.'):
+                        continue
+                    if not _ext in theseFileTypes:
+                        continue
+                    yield os.path.join(dirpath, filename)
+                    
+def getFileList(path, theseFileTypes, depth=1):
+    fileList = [filePath for filePath in _walk(path, theseFileTypes, depth)]
+    return fileList
+
+def stripSantanaTif(fileList : List[str]) -> List[str]:
+    """Given a list of files, if tif, only return _C002
+    """
+    retList = []
+    for file in fileList:
+        _filePath, _filename = os.path.split(file)
+        if not _filename.endswith('.tif'):
+            retList.append(file)
+            continue
+        elif _filename.find('_C002') != -1:
+            retList.append(file)
+
+    return retList
+
 class analysisDir:
     """
     Class to manage a list of files loaded from a folder.
@@ -355,8 +490,10 @@ class analysisDir:
 
     def __iter__(self):
         self._iterIdx = 0
-        return self
-
+        print(self._df)
+        x = self._df.loc[self._iterIdx]["_ba"]
+        return x
+    
     def __next__(self):
         if self._iterIdx < self.numFiles:
             x = self._df.loc[self._iterIdx]["_ba"]
@@ -666,14 +803,13 @@ class analysisDir:
         sanpy.h5Util._repackHdf(hdfFilePath)
 
         # list the keys in the file
-        sanpy.h5Util.listKeys(hdfFilePath)
+        # sanpy.h5Util.listKeys(hdfFilePath)
 
         stop = time.time()
         logger.info(f"Saving took {round(stop-start,2)} seconds")
 
     def loadHdf(self, path=None):
-        """
-        Load the database key from an h5 file.
+        """Load the database key from an h5 file.
 
         We do not load analy anlysis until user clicks on row, see loadOneAnalysis()
         """
@@ -687,8 +823,8 @@ class analysisDir:
         if not hdfPath.is_file():
             return
 
-        logger.info(f"Loading existing folder h5 file {hdfPath}")
-        sanpy.h5Util.listKeys(hdfPath)
+        # logger.info(f"Loading existing folder h5 file {hdfPath}")
+        # sanpy.h5Util.listKeys(hdfPath)
 
         _start = time.time()
         dbKey = os.path.splitext(self.dbFile)[0]
@@ -704,16 +840,16 @@ class analysisDir:
             df["_ba"] = None
 
             logger.info("    loaded db df")
-            logger.info(f"{df[['File', 'uuid']]}")
+            # logger.info(f"{df[['File', 'uuid']]}")
 
             # do not load anything until user clicks rows, see loadOneAnalysis()
 
             _stop = time.time()
-            logger.info(f"Loading took {round(_stop-_start,2)} seconds")
+            # logger.info(f"Loading took {round(_stop-_start,2)} seconds")
         #
         return df
 
-    def loadOneAnalysis(self, path, uuid=None, allowAutoLoad=True, verbose=True):
+    def loadOneAnalysis(self, path, uuid=None, allowAutoLoad=True, verbose=False):
         """Load one bAnalysis either from original file path or uuid of h5 file.
 
         If from h5, we still need to reload sweeps !!!
@@ -856,6 +992,10 @@ class analysisDir:
                     logger.warning(f'error loading file {fullFilePath}')
                     continue
                 
+                # print('XXX')
+                # print('rowDict')
+                # print(rowDict)
+
                 # TODO: calculating time, remove this
                 # This is 2x faster than loading from pandas gzip ???
                 # dDict = sanpy.bAnalysis.getDefaultDetection()
@@ -904,13 +1044,16 @@ class analysisDir:
         """
         if self._df is None:
             return
+        
+        verbose = False
         loadedColumns = self._df.columns
         for col in loadedColumns:
             if not col in self.sanpyColumns.keys():
                 # loaded has unexpected column, leave it
-                logger.info(
-                    f'did not find loaded col: "{col}" in sanpyColumns.keys() ... ignore it'
-                )
+                if verbose:
+                    logger.info(
+                        f'did not find loaded col: "{col}" in sanpyColumns.keys() ... ignore it'
+                    )
         for col in self.sanpyColumns.keys():
             if not col in loadedColumns:
                 # loaded is missing expected, add it
@@ -955,7 +1098,7 @@ class analysisDir:
                 _numErrors = ba.numErrors
                 if _numErrors is None:
                     _numErrors = ''
-                logger.warning(f'setting E to _numErrors {_numErrors}')
+                # logger.warning(f'setting E to _numErrors {_numErrors}')
                 self._df.loc[rowIdx, "E"] = _numErrors
             # elif uuid:
             #    #theChar = '\u25CB'
@@ -1063,7 +1206,7 @@ class analysisDir:
         uuid = self._df.at[rowIdx, "uuid"]
         return len(uuid) > 0
 
-    def getAnalysis(self, rowIdx, allowAutoLoad=True, verbose=True) -> sanpy.bAnalysis:
+    def getAnalysis(self, rowIdx, allowAutoLoad=True, verbose=False) -> sanpy.bAnalysis:
         """Get bAnalysis object, will load if necc.
 
         Args:
@@ -1251,6 +1394,15 @@ class analysisDir:
             rowDict["Start(s)"] = dDict.getValue("startSeconds")
             rowDict["Stop(s)"] = dDict.getValue("stopSeconds")
 
+        # add parent1, parent2, parent3
+        _path, _file = os.path.split(path)
+        _path, _parent1 = os.path.split(_path)
+        _path, _parent2 = os.path.split(_path)
+        _path, _parent3 = os.path.split(_path)
+        rowDict['parent1'] = _parent1
+        rowDict['parent2'] = _parent2
+        rowDict['parent3'] = _parent3
+        
         # remove the path to the folder we have loaded
         relPath = path.replace(self.path, "")
         
@@ -1272,7 +1424,7 @@ class analysisDir:
 
         return ba, rowDict
 
-    def getFileList(self, path: str = None) -> List[str]:
+    def getFileList(self, path: str = None, santanaTif=True) -> List[str]:
         """Get file paths from path.
 
         Uses self.theseFileTypes
@@ -1280,6 +1432,11 @@ class analysisDir:
         if path is None:
             path = self.path
 
+        fileList = getFileList(path, self.theseFileTypes, self.folderDepth)
+        if santanaTif:
+            fileList = stripSantanaTif(fileList)
+        return fileList
+    
         logger.warning("Remember: MODIFIED TO LOAD TIF FILES IN SUBFOLDERS")
         count = 1
         tmpFileList = []
@@ -1288,8 +1445,10 @@ class analysisDir:
         for root, subdirs, files in os.walk(path):
             subdirs[:] = [d for d in subdirs if d not in excludeFolders]
 
-            # print('folderDepth:', folderDepth)
-            # print('  root:', root, 'subdirs:', subdirs, 'files:', files)
+            print(f'count:{count} folderDepth:{folderDepth}')
+            print('  root:', root)
+            print('  subdirs:', subdirs)
+            print('  files:', files)
 
             # strip out folders that start with __
             # _parentFolder = os.path.split(root)[1]
@@ -1475,7 +1634,7 @@ class analysisDir:
                     # listOfDict.append(rowDict)
 
                     # TODO: get this into getFileROw()
-                    logger.warning("20220718, not sure we need this ???")
+                    logger.warning("bug 20220718, not sure we need this ???")
                     # rowDict['relPath'] = pathFile
                     rowDict["_ba"] = None
 
@@ -1550,7 +1709,6 @@ class analysisDir:
 def _printDict(d):
     for k, v in d.items():
         print("  ", k, ":", v)
-
 
 def test3():
     path = "/home/cudmore/Sites/SanPy/data"
@@ -1666,9 +1824,21 @@ def testCloud():
 if __name__ == "__main__":
     # test3()
     # test_hd5()
-    test_hd5_2()
+    
+    # was this
+    # test_hd5_2()
+    
     # test_pool()
     # testCloud()
 
     # test_timing()
     # plotTiming()
+
+    # july 2023 for kym, file structure is really complex
+    path = '/Users/cudmore/Dropbox/data/cell-shortening/fig1'
+    theseFileTypes = [".abf", ".atf", ".csv", ".dat", ".tif"]
+    fileList = _walk(path, theseFileTypes, depth=4)
+    fileList = stripSantanaTif(fileList)
+    for file in fileList:
+        print(file)
+    

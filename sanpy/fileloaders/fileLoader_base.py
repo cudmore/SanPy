@@ -204,6 +204,17 @@ class fileLoader_base(ABC):
 
         self._epochTableList: List[sanpy.fileloaders.epochTable] = None
 
+        self._sweepX = None
+        self._sweepY = None
+        self._sweepC = None
+        self._numSweeps = None
+        self._sweepList = None
+        self._sweepLengthSec = None
+        self._dataPointsPerMs = None
+        self._recordingMode = recordingModes.unknown
+        self._sweepLabelX = None
+        self._sweepLabelY = None
+
         # load file from inherited class
         self.loadFile()
 
@@ -214,6 +225,12 @@ class fileLoader_base(ABC):
         """Get a short string representing this file."""
         txt = f"file: {self.filename} sweeps: {self.numSweeps} dur (Sec):{self.recordingDur}"
         return txt
+
+    def getLoadError(self) -> bool:
+        return self._loadError
+    
+    def setLoadError(self, value : bool):
+        self._loadError = value
 
     def isKymograph(self) -> bool:
         return isinstance(self, sanpy.fileloaders.fileLoader_tif)

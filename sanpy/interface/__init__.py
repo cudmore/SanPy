@@ -31,3 +31,5 @@ from .bKymographWidget import kymographWidget  # show an image
 from .kymographPlugin2 import kymographPlugin2  # analyze cell length
 
 from .preferences import preferences
+
+from .util import sanpyCursors

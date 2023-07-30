@@ -879,7 +879,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         if not self._getResponseOption(self.responseTypes.setSweep):
             return
 
-        logger.info(f"{self._myClassName()}")
+        logger.info(f"{self._myClassName()} sweepNumber:{sweepNumber}")
 
         if ba is None:
             return

@@ -157,10 +157,11 @@ class bAnalysis:
             
             self._kymAnalysis : sanpy.kymAnalysis = None
             if self.fileLoader.recordingMode == recordingModes.kymograph:
-                logger.info('creating kymAnalysis')
-                logger.info(f'    self.fileLoader.filepath:{self.fileLoader.filepath}')
-                logger.info(f'    self.fileLoader.filepath:{self.fileLoader.tifData.shape}')
-                logger.info(f'    self.fileLoader.filepath:{self.fileLoader.tifHeader}')
+                if verbose:
+                    logger.info('creating kymAnalysis')
+                    logger.info(f'    self.fileLoader.filepath:{self.fileLoader.filepath}')
+                    logger.info(f'    self.fileLoader.filepath:{self.fileLoader.tifData.shape}')
+                    logger.info(f'    self.fileLoader.filepath:{self.fileLoader.tifHeader}')
                 self._kymAnalysis = sanpy.kymAnalysis(self.fileLoader.filepath,
                                                       self.fileLoader.tifData,
                                                       self.fileLoader.tifHeader)
@@ -320,7 +321,7 @@ class bAnalysis:
                 logger.warning(f'this usually happens when the analysis was not saved')
                 return
             
-        logger.info(f"loading {uuid} from {hdfPath}")
+        # logger.info(f"loading {uuid} from {hdfPath}")
 
         # load pandas dataframe(s) from h5 file
         didLoad = True
@@ -330,6 +331,7 @@ class bAnalysis:
         except KeyError as e:
             logger.error(e)
             didLoad = False
+            
         try:
             analysisListKey = uuid + "/" + "analysisList"
             dfAnalysis = pd.read_hdf(hdfPath, analysisListKey)
@@ -365,9 +367,9 @@ class bAnalysis:
             # dec 2022
             self._isAnalyzed = True
 
-            logger.info(
-                f"    loaded {len(detectionDict.keys())} detection keys and {len(self.spikeDict)} spikes"
-            )
+            # logger.info(
+            #     f"    loaded {len(detectionDict.keys())} detection keys and {len(self.spikeDict)} spikes"
+            # )
         else:
             logger.error(f"    LOAD FAILED")
 
@@ -2319,7 +2321,7 @@ class bAnalysis:
         # numError = 0
         # errorList = []
 
-        logger.info(f'Generating error report for {len(self.spikeDict)} spikes')
+        # logger.info(f'Generating error report for {len(self.spikeDict)} spikes')
 
         #  20230422 spikeDict is not working as an iterable
         # use it as a list instead

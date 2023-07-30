@@ -29,6 +29,7 @@ class kymUserAnalysis(baseUserAnalysis):
         # summary
         self.addUserStat("Diameter Time To Peak (s)", "k_diam_time_to_peak_sec")
         self.addUserStat("Diameter Amp (um)", "k_diam_amp")
+        self.addUserStat("Diameter Percent Change (%)", "k_diam_percent")
 
     def run(self):
         if not self.ba.fileLoader.isKymograph:
@@ -105,3 +106,7 @@ class kymUserAnalysis(baseUserAnalysis):
             # summary
             self.setSpikeValue(spikeIdx, "k_diam_time_to_peak_sec", k_diam_time_to_peak_sec)
             self.setSpikeValue(spikeIdx, "k_diam_amp", k_diam_amp)
+
+            # percent change in diameter from foot to peak
+            k_diam_percent = round( k_diam_peak / k_diam_foot * 100, 3)
+            self.setSpikeValue(spikeIdx, "k_diam_percent", k_diam_percent)

@@ -1,6 +1,12 @@
 """
 Widget to act as the interface for kymographPlugin
 
+This widget shows 4 plots in a vertical layout
+ - kym image
+ - line intensity profile
+ - diameter
+ - sum line scan
+
 I am keeping it seperate because it can be used standalone.
 """
 
@@ -28,7 +34,6 @@ import sanpy.interface
 # from sanpy import kymographAnalysis
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
 
 # class kymographPlugin2(QtWidgets.QWidget):
@@ -53,8 +58,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         if self._ba is not None:
             self._kymographAnalysis = ba.kymAnalysis
 
-        self._imageMedianKernel = 5
-        self._lineMedianKernel = 5
+        # self._imageMedianKernel = 5
+        # self._lineMedianKernel = 5
 
         self._currentLineNumber = 0
 
@@ -71,6 +76,68 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self.refreshSumLinePlot()
         self.refreshDiameterPlot()
 
+    def _cursor_setDetectionParam(self, detectionParam : str, value : float):
+        """Used by sanpyCursor.
+        """
+        logger.info(f'detectionParam:{detectionParam} value:{value}')
+
+    def _cursor_updateStatusBar(self, text):
+        """Used by sanpyCursor.
+        """
+        logger.info('not implemented')
+        logger.info(f'  {text}')
+        # if self.myMainWindow is not None:
+        #     self.myMainWindow.slot_updateStatus(text)
+        # else:
+        #     logger.info(text)
+
+    # july 2023, moved from multi line
+    def _add_in_contextMenuEvent(self, event):
+        """Show popup context menu in response to right(command)+click.
+        
+        Toggle crosshair on line profile
+        Toggle plots on/off
+
+
+        Parameters
+        ----------
+        event : QContextMenuEvent
+        """
+
+        logger.info('kymographPlugin2')
+        
+        contextMenu = QtWidgets.QMenu()
+
+        self._showCrosshair = True
+        
+        showCrosshairAction = contextMenu.addAction(f"Crosshair")
+        showCrosshairAction.setCheckable(True)
+        showCrosshairAction.setChecked(self._showCrosshair)
+
+        # show menu
+        pos = QtCore.QPoint(event.x(), event.y())
+        pos = self.mapToGlobal(event.pos())
+        action = contextMenu.exec_(pos)
+        if action is None:
+            return
+        
+        actionText = action.text()
+        if actionText == 'Crosshair':
+            print('toggle line profile crosshar')
+    
+    def keyPressEvent(self, event):
+        logger.info('')
+        key = event.key()
+        if key in [QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return]:
+            self._resetZoom()
+        
+        elif key == QtCore.Qt.Key_Right:
+            print('move slider right')
+            self._kymWidgetMain.incDecLineSlider(+1)
+        elif key == QtCore.Qt.Key_Left:
+            print('move slider left')
+            self._kymWidgetMain.incDecLineSlider(-1)
+
     def _checkboxCallback(self, state: bool, name: str):
         logger.info(f"state:{state} name:{name}")
         if name == "Line Profile":
@@ -78,6 +145,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             self._on_slider_changed()
         elif name == "Diameter":
             self.diameterPlotItem.setVisible(state)
+            self.footPeakCheckBox.setEnabled(state)  # foot/peak checkbox follows diameter plot
         elif name =='Foot/Peak':
             self._diamFootPlotItem.setVisible(state)
             self._diamPeakPlotItem.setVisible(state)
@@ -111,6 +179,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             # self.kymographWindow.setXRange(0, shape[0])
 
         elif name == "Analyze":
+            # during analysis button is red
             self._analyzeButton.setStyleSheet("background-color : #AA2222")
             self._analyzeButton.repaint()
             self._analyzeButton.update()
@@ -120,7 +189,10 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             # imageMedianKernel = self._imageMedianKernel
             # lineMedianKernel = self._lineMedianKernel
 
+            # 20230728, was this
             self._kymographAnalysis.analyzeDiameter()
+            #self._kymographAnalysis.analyzeDiameter_mp()
+
             #     imageMedianKernel=imageMedianKernel,
             #     lineMedianKernel=lineMedianKernel
             # )
@@ -128,6 +200,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             # self.refreshSumLinePlot()
             self.refreshDiameterPlot()
 
+            # after analysis, button is green
             self._analyzeButton.setStyleSheet("background-color : #22AA22")
             self._analyzeButton.repaint()
             self._analyzeButton.update()
@@ -154,12 +227,15 @@ class kymographPlugin2(QtWidgets.QMainWindow):
     def setLineWidth(self, value: int):
         logger.info(value)
         if self._kymographAnalysis is not None:
-            self._kymographAnalysis.setAnalysisParam('lineWidht', value)
+            self._kymographAnalysis.setAnalysisParam('lineWidth', value)
 
-    def setPercentMax(self, value: float):
+    def setPercentMax(self, value: float, doSet = False):
         logger.info(f"value:{value}")
         if self._kymographAnalysis is not None:
             self._kymographAnalysis.setAnalysisParam('percentOfMax', value)
+
+        if doSet:
+            self.percentMaxSpinbox.setValue(value)
 
         # refresh the line profile plot
         self._on_slider_changed(value=None)
@@ -173,10 +249,17 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         self._ba = ba
 
+        # update image widget
         self._kymWidgetMain.slot_switchFile(ba=self._ba)
 
         self._kymographAnalysis = ba.kymAnalysis
 
+        # refresh detection controls
+        self._refreshGui()
+
+        # self._on_slider_changed(0)
+        self._kymWidgetMain._on_line_slider_changed(0)
+        
         self.refreshSumLinePlot()
         self.refreshDiameterPlot()
 
@@ -198,23 +281,40 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         # replot sum
         self.refreshSumLinePlot()
 
-    def setImageMedianKernel(self, value):
-        self._imageMedianKernel = value
+    def _on_detect_polarity(self, posNegStr : str, doSet = False):
+        logger.info(f'vale:{posNegStr}')
 
-        self._kymographAnalysis.setAnalysisParam('ximageFilterKenelxx', value)
+        if self._kymographAnalysis is not None:
+            self._kymographAnalysis.setAnalysisParam('detectPosNeg', posNegStr)
+
+        if posNegStr == 'pos':
+            posNegIdx = 0
+        elif posNegStr == 'neg':
+            posNegIdx = 1
+        else:
+            logger.error(f'Did not understand posNegStr: "{posNegStr}"')
+            posNegIdx = 0
+
+        if doSet:
+            self._detectPosNeg.setCurrentIndex(posNegIdx)
+
+    def setImageMedianKernel(self, value):
+        # self._imageMedianKernel = value
+
+        self._kymographAnalysis.setAnalysisParam('imageFilterKenel', value)
 
         # refresh the line profile plot
         self._on_slider_changed(value=None)
 
     def setLineMedianKernel(self, value):
-        self._lineMedianKernel = value
+        # self._lineMedianKernel = value
 
         self._kymographAnalysis.setAnalysisParam('lineFilterKernel', value)
 
         # refresh the line profile plot
         self._on_slider_changed(value=None)
 
-    def _on_slider_changed(self, value: int = None):
+    def _on_slider_changed(self, value : int = None):
         """Respond to user changing the "Line Scan" slider.
 
         Args:
@@ -235,12 +335,13 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         # secondsValue = value * self._kymographAnalysis._secondsPerLine
         secondsValue = value * xScale
 
-        # update verical lines on top of plots
+        # update vertical lines on top of plots
         for line in self._sliceLinesList:
             line.setValue(secondsValue)
 
         # update one line profile plot
         if self._kymographAnalysis is None:
+            logger.warning('did not find _kymographAnalysis -> return None')
             return
 
         lineProfile, left_pnt, right_pnt = self._kymographAnalysis._getFitLineProfile(value)
@@ -265,6 +366,35 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             # print(xLeftRightData)
             yLeftRightData = [lineProfile[left_pnt], lineProfile[right_pnt]]
         self.leftRightPlot.setData(xLeftRightData, yLeftRightData)
+
+    def _refreshGui(self):
+        """On file change set detection params.
+        """
+        # _posNegIdx = 0
+        # _percentMax = 0.5
+        # if self._kymographAnalysis is not None:
+        # kym analysis have defaults when instantiated
+        if 1:
+            _lineWidth = self._kymographAnalysis.getAnalysisParam('lineWidth')
+            
+            _posNegStr = self._kymographAnalysis.getAnalysisParam('detectPosNeg')
+            if _posNegStr == 'pos':
+                _posNegIdx = 0
+            elif _posNegStr == 'neg':
+                _posNegIdx = 1
+            else:
+                logger.error(f'Did not understand posNegStr: "{_posNegStr}"')
+                _posNegIdx = 0
+
+            _percentMax = self._kymographAnalysis.getAnalysisParam('percentOfMax')
+            _imageFilterKenel = self._kymographAnalysis.getAnalysisParam('imageFilterKenel')
+            _lineFilterKernel = self._kymographAnalysis.getAnalysisParam('lineFilterKernel')
+
+        self._lineWidthSpinbox.setValue(_lineWidth)
+        self._percentMaxSpinbox.setValue(_percentMax)
+        self._detectPosNeg.setCurrentIndex(_posNegIdx)
+        self._imageMedianKernelSpinbox.setValue(_imageFilterKenel)
+        self._lineMedianKernelSpinbox.setValue(_lineFilterKernel)
 
     def _initGui(self):
         self.setWindowTitle("Kymograph Analysis")
@@ -306,56 +436,76 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         lineWidthLabel.setEnabled(False)
         hBoxLayoutControls.addWidget(lineWidthLabel)
 
-        lineWidthSpinbox = QtWidgets.QSpinBox()
-        lineWidthSpinbox.setMinimum(1)
-        lineWidthSpinbox.setEnabled(False)
+        self._lineWidthSpinbox = QtWidgets.QSpinBox()
+        self._lineWidthSpinbox.setMinimum(1)
+        self._lineWidthSpinbox.setEnabled(False)
         if self._kymographAnalysis is not None:
-            lineWidthSpinbox.setValue(self._kymographAnalysis.getAnalysisParam('lineWidth'))
+            self._lineWidthSpinbox.setValue(self._kymographAnalysis.getAnalysisParam('lineWidth'))
         else:
-            lineWidthSpinbox.setValue(1)
-        lineWidthSpinbox.valueChanged.connect(
+            self._lineWidthSpinbox.setValue(1)
+        self._lineWidthSpinbox.valueChanged.connect(
             self.setLineWidth
         )  # triggers as user types e.g. (22)
-        hBoxLayoutControls.addWidget(lineWidthSpinbox)
+        hBoxLayoutControls.addWidget(self._lineWidthSpinbox)
+
+        # detect pos or neg intensity (polartity)
+        self._detectPosNeg = QtWidgets.QComboBox()
+        self._detectPosNeg.addItem('pos')
+        self._detectPosNeg.addItem('neg')
+        self._detectPosNeg.currentTextChanged.connect(
+            self._on_detect_polarity
+        )
+        if self._kymographAnalysis is not None:
+            posNegStr = self._kymographAnalysis.getAnalysisParam('detectPosNeg')
+        else:
+            posNegStr = 'pos'
+        #self._detectPosNeg.setCurrentIndex(posNegIdx)
+        self._on_detect_polarity(posNegStr, doSet=True)
+
+        hBoxLayoutControls.addWidget(self._detectPosNeg)
 
         # percent of max in line profile (for analysis)
         percentMaxLabel = QtWidgets.QLabel("Percent Of Max")
         hBoxLayoutControls.addWidget(percentMaxLabel)
 
-        percentMaxSpinbox = QtWidgets.QDoubleSpinBox()
-        percentMaxSpinbox.setSingleStep(0.1)
-        percentMaxSpinbox.setMinimum(0.001)
+        self._percentMaxSpinbox = QtWidgets.QDoubleSpinBox()
+        self._percentMaxSpinbox.setSingleStep(0.1)
+        self._percentMaxSpinbox.setMinimum(0.001)
+        _percentMax = 0.5
         if self._kymographAnalysis is not None:
-            percentMaxSpinbox.setValue(self._kymographAnalysis.getAnalysisParam('percentOfMax'))
-        else:
-            percentMaxSpinbox.setValue(10)
-        percentMaxSpinbox.valueChanged.connect(
+            _percentMax = self._kymographAnalysis.getAnalysisParam('percentOfMax')
+            # percentMaxSpinbox.setValue(self._kymographAnalysis.getAnalysisParam('percentOfMax'))
+        # else:
+        #     percentMaxSpinbox.setValue(10)
+        self._percentMaxSpinbox.valueChanged.connect(
             self.setPercentMax
         )  # triggers as user types e.g. (22)
-        hBoxLayoutControls.addWidget(percentMaxSpinbox)
+        #self.setPercentMax(_percentMax, doSet=True)
+
+        hBoxLayoutControls.addWidget(self._percentMaxSpinbox)
 
         # median kernels for image and line profile
         medianLabel = QtWidgets.QLabel("Median Image")
         hBoxLayoutControls.addWidget(medianLabel)
 
-        imageMedianKernelSpinbox = QtWidgets.QSpinBox()
-        imageMedianKernelSpinbox.setMinimum(0)
-        imageMedianKernelSpinbox.setValue(self._imageMedianKernel)
-        imageMedianKernelSpinbox.valueChanged.connect(
+        self._imageMedianKernelSpinbox = QtWidgets.QSpinBox()
+        self._imageMedianKernelSpinbox.setMinimum(0)
+        #self.imageMedianKernelSpinbox.setValue(self._imageMedianKernel)
+        self._imageMedianKernelSpinbox.valueChanged.connect(
             self.setImageMedianKernel
         )  # triggers as user types e.g. (22)
-        hBoxLayoutControls.addWidget(imageMedianKernelSpinbox)
+        hBoxLayoutControls.addWidget(self._imageMedianKernelSpinbox)
 
         medianLabel2 = QtWidgets.QLabel("Line")
         hBoxLayoutControls.addWidget(medianLabel2)
 
-        aSpinbox = QtWidgets.QSpinBox()
-        aSpinbox.setMinimum(0)
-        aSpinbox.setValue(self._lineMedianKernel)
-        aSpinbox.valueChanged.connect(
+        self._lineMedianKernelSpinbox = QtWidgets.QSpinBox()
+        self._lineMedianKernelSpinbox.setMinimum(0)
+        #self._lineMedianKernelSpinbox.setValue(self._lineMedianKernel)
+        self._lineMedianKernelSpinbox.valueChanged.connect(
             self.setLineMedianKernel
         )  # triggers as user types e.g. (22)
-        hBoxLayoutControls.addWidget(aSpinbox)
+        hBoxLayoutControls.addWidget(self._lineMedianKernelSpinbox)
 
         # buttons
         # buttonName = 'Reset ROI'
@@ -370,7 +520,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         # hBoxLayoutControls.addWidget(aButton)
 
         # keep reference to button so we can change color during analysis
-        buttonName = "Analyze"
+        buttonName = 'Analyze'
         self._analyzeButton = QtWidgets.QPushButton(buttonName)
         self._analyzeButton.setStyleSheet("background-color : #22AA22")
         self._analyzeButton.clicked.connect(
@@ -405,12 +555,12 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         hBoxLayoutControls2.addWidget(aCheckBox)
 
         checkboxName = "Foot/Peak"
-        aCheckBox = QtWidgets.QCheckBox(checkboxName)
-        aCheckBox.setChecked(True)
-        aCheckBox.stateChanged.connect(
+        self.footPeakCheckBox = QtWidgets.QCheckBox(checkboxName)
+        self.footPeakCheckBox.setChecked(True)
+        self.footPeakCheckBox.stateChanged.connect(
             lambda state, name=checkboxName: self._checkboxCallback(state, name)
         )
-        hBoxLayoutControls2.addWidget(aCheckBox)
+        hBoxLayoutControls2.addWidget(self.footPeakCheckBox)
 
         checkboxName = "Sum Line"
         aCheckBox = QtWidgets.QCheckBox(checkboxName)
@@ -459,7 +609,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             self.kymographWindow.addItem(self.kymographImage)
 
             # vertical line to show "Line Profile"
-            sliceLine = pg.InfiniteLine(pos=0, angle=90)
+            sliceLine = pg.InfiniteLine(pos=0, angle=90, pen=pg.mkPen('y', width=2),)
             self._sliceLinesList.append(
                 sliceLine
             )  # keep a list of vertical slice lines so we can update all at once
@@ -498,7 +648,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         #
         # plot of just one line intensity
-        self.lineIntensityPlotItem = pg.PlotWidget()
+        self.lineIntensityPlotItem = pg.PlotWidget(name='lineProfile')
         self.lineIntensityPlotItem.setLabel("left", 'Intensity', units="")
         self.lineIntensityPlotItem.setLabel("bottom", 'um', units="")
         self.lineIntensityPlotItem.setVisible(False)
@@ -512,9 +662,15 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         yPlot = xPlot * np.nan
         xPlot = []
         yPlot = []
-        self.lineIntensityPlot.setData(xPlot, yPlot, connect="finite")  # fill with nan
+        self.lineIntensityPlot.setData(xPlot, yPlot,
+                                        pen=pg.mkPen('y', width=2),
+                                       connect="finite")  # fill with nan
         # single point of left/right
         self.leftRightPlot = self.lineIntensityPlotItem.plot(name="leftRightPlot", pen='c')
+
+        # self._sanpyCursors = sanpy.interface.sanpyCursors(self.lineIntensityPlotItem, showInView=True)
+        # self._sanpyCursors.signalCursorDragged.connect(self.updateStatusBar)
+        # self._sanpyCursors.signalSetDetectionParam.connect(self._setDetectionParam)
 
         vBoxLayout.addWidget(self.lineIntensityPlotItem)
 
@@ -522,7 +678,10 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         # 3) dimaeter of each line scan
         self.diameterPlotItem = pg.PlotWidget()
         self.diameterPlotItem.setLabel("left", "Diameter", units="")
-        self.diameterPlot = self.diameterPlotItem.plot(name="diameterPlot")
+        self.diameterPlot = self.diameterPlotItem.plot(
+                                name="diameterPlot",
+                                pen=pg.mkPen('c', width=1)
+                                )
         if self._kymographAnalysis is not None:
             xPlot = np.arange(0, self._kymographAnalysis.numLineScans())
         else:
@@ -537,7 +696,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self.diameterPlotItem.setXLink(self._kymWidgetMain.kymographPlot)
 
         # vertical line to show "Line Profile"
-        sliceLine = pg.InfiniteLine(pos=0, angle=90)
+        sliceLine = pg.InfiniteLine(pos=0, angle=90, pen=pg.mkPen('y', width=2),)
         self._sliceLinesList.append(
             sliceLine
         )  # keep a list of vertical slice lines so we can update all at once
@@ -580,7 +739,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self.sumIntensityPlotItem.setXLink(self._kymWidgetMain.kymographPlot)
 
         # vertical line to show "Line Profile"
-        sliceLine = pg.InfiniteLine(pos=0, angle=90)
+        sliceLine = pg.InfiniteLine(pos=0, angle=90, pen=pg.mkPen('y', width=2),)
         self._sliceLinesList.append(
             sliceLine
         )  # keep a list of vertical slice lines so we can update all at once
@@ -594,6 +753,9 @@ class kymographPlugin2(QtWidgets.QMainWindow):
     def _resetZoom(self):
         """Set all pyqtgraph plots to full zoom
         """
+        
+        self._kymWidgetMain._resetZoom(doEmit=False)
+        
         # self.vmPlot.autoRange(items=[self.vmPlot_])  # 20221003
         self.diameterPlotItem.autoRange()
         self.sumIntensityPlotItem.autoRange()
@@ -613,6 +775,10 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         xPlot = self._ba.fileLoader.sweepX
         yDiam_um = self._kymographAnalysis.getResults("diameter_um")
+        
+        # print('self._ba.fileLoader.sweepX:', self._ba.fileLoader.sweepX.shape)
+        # print('xPlot:', xPlot)
+        # print('yDiam_um:', yDiam_um)
         
         self.diameterPlot.setData(xPlot, yDiam_um, connect="finite")
 

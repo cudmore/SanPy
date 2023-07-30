@@ -175,10 +175,13 @@ def _makeSanPyFolders():
     return madeUserFolder
 
 def _loadLineScanHeader(path):
-    """
-    path: full path to tif
+    """Find corresponding txt file with Olympus tif header.
+    L
+    oad and parse coresponding .txt file
 
-    we will load and parse coresponding .txt file
+    Parameters
+    ----------
+    path: full path to tif
 
     returns dict:
         numPixels:
@@ -197,8 +200,17 @@ def _loadLineScanHeader(path):
 
     if not os.path.isfile(txtFile):
         # logger.error(f"did not find file:{txtFile}")
-        return None
 
+        _filePath, _fileName = os.path.split(path)
+        _idx = _fileName.find('_C')
+        filePrefix = _fileName[0:_idx]
+    
+        txtFileName = filePrefix + '.txt'
+        txtFilePath = os.path.join(_filePath, txtFileName)
+        if not os.path.isfile(txtFilePath):
+            return None
+        txtFile = txtFilePath
+        
     theRet = {"tif": path}
 
     # tif shape is (lines, pixels)
@@ -276,3 +288,47 @@ def _loadLineScanHeader(path):
     theRet["linesPerSecond"] = 1 / theRet["secondsPerLine"]
     #
     return theRet
+
+def _listdir(path):
+    """
+    recursively walk directory to specified depth
+    :param path: (str) path to list files from
+    :yields: (str) filename, including path
+    """
+    for filename in os.listdir(path):
+        if filename.startswith('.'):
+            continue
+        yield os.path.join(path, filename)
+
+
+def _walk(path='.', depth=None):
+    """
+    recursively walk directory to specified depth
+    :param path: (str) the base path to start walking from
+    :param depth: (None or int) max. recursive depth, None = no limit
+    :yields: (str) filename, including path
+    """
+    if depth and depth == 1:
+        for filename in _listdir(path):
+            yield filename
+    else:
+        top_pathlen = len(path) + len(os.path.sep)
+        for dirpath, dirnames, filenames in os.walk(path):
+            dirlevel = dirpath[top_pathlen:].count(os.path.sep)
+            if depth and dirlevel >= depth:
+                dirnames[:] = []
+            else:
+                for filename in filenames:
+                    yield os.path.join(dirpath, filename)
+                    
+def getFileList(path, depth=1):
+    fileList = [filePath for filePath in _walk(path, depth)]
+    return fileList
+
+if __name__ == '__main__':
+    path = '/Users/cudmore/Dropbox/data/cell-shortening/fig1'
+    fileList = getFileList(path, 4)
+    for file in fileList:
+        print(file)
+
+
