@@ -223,6 +223,9 @@ class bDetectionWidget(QtWidgets.QWidget):
             showPlotOption = windowOptions["detectionPanels"]["Set Spikes"]
             self.toggleInterface("Set Spikes", showPlotOption)
 
+            showPlotOption = windowOptions["detectionPanels"]["Set Meta Data"]
+            self.toggleInterface("Set Meta Data", showPlotOption)
+
     def slot_contextMenu(self, plotName : str, plot, pos):
         """Some plot widgets (vmPlot, derivPlot) have their context menu set to here.
         
@@ -1432,6 +1435,8 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.detectToolbarWidget.toggleInterface(item, on)
         elif item == "Set Spikes":
             self.detectToolbarWidget.toggleInterface(item, on)
+        elif item == "Set Meta Data":
+            self.detectToolbarWidget.toggleInterface(item, on)
 
         else:
             # Toggle overlay of stats like (TOP, spike peak, half-width, ...)
@@ -2003,6 +2008,12 @@ class bDetectionWidget(QtWidgets.QWidget):
                 self._pgPointSize = 0
             logger.info(f'_pgPointSize:{self._pgPointSize}')
             self._replot()
+
+        elif key == QtCore.Qt.Key.Key_N:
+            # set metadata (note) of file loader
+            if self.ba is not None:
+                pass
+                # setMetaData
 
         # elif key == QtCore.Qt.Key_C:
         #     logger.warning("what was this for ??? responding to keyboard C ???")
@@ -2971,6 +2982,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
                 self.setSpikeGroupBox.show()
             else:
                 self.setSpikeGroupBox.hide()
+        elif panelName == "Set Meta Data":
+            if onoff:
+                self.setMetaDataGroupBox.show()
+            else:
+                self.setMetaDataGroupBox.hide()
         elif panelName == "Plot Options":
             if onoff:
                 self.plotGroupBox.show()
@@ -3286,6 +3302,29 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         self.setSpikeGroupBox.setLayout(setSpikeLayout)
         self.mainLayout.addWidget(self.setSpikeGroupBox)
+
+        #
+        # SetMetaData group
+        self.setMetaDataGroupBox = QtWidgets.QGroupBox("Set Meta Data")
+        self.setContentsMargins(0,0,0,0)
+        setMetaDataLayout = QtWidgets.QHBoxLayout()
+        setMetaDataLayout.setContentsMargins(0,0,0,0)
+
+        # mar 11, created a setMetaData stat plugin
+        setMetaDataWidget = sanpy.interface.plugins.SetMetaData(
+            ba=self.detectionWidget.ba,
+            bPlugin=self.detectionWidget.myMainWindow.myPlugins,
+        )
+
+        # signalsetMetaData is now in sanpyPlugin base class
+        # setMetaDataWidget.signalsetMetaData.connect(
+        #     self.detectionWidget.slot_setMetaData
+        # )
+
+        setMetaDataLayout.addWidget(setMetaDataWidget)
+
+        self.setMetaDataGroupBox.setLayout(setMetaDataLayout)
+        self.mainLayout.addWidget(self.setMetaDataGroupBox)
 
         #
         # plots  group

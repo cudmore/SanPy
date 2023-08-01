@@ -868,6 +868,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
         action.setEnabled(checkedMainPanel)
         self.viewMenu.addAction(action)
 
+        name = "Set Meta Data"
+        checked = self.configDict["detectionPanels"][name]
+        action = QtWidgets.QAction(name, self, checkable=True)
+        action.setChecked(checked)
+        action.triggered.connect(partial(self._viewMenuAction, key1, name))
+        action.setEnabled(checkedMainPanel)
+        self.viewMenu.addAction(action)
+
         name = "Plot Options"
         checked = self.configDict["detectionPanels"][name]
         action = QtWidgets.QAction(name, self, checkable=True)

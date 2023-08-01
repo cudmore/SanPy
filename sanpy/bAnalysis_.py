@@ -57,6 +57,20 @@ class bAnalysis:
     # def getNewUuid():
     #     return 't' + str(uuid.uuid4()).replace('-', '_')
 
+    @staticmethod
+    def getMetaDataDict():
+        _metaData = {
+            'Include': 'yes',
+            'Condition1': '',
+            'Condition2': '',
+            'ID': '',
+            'Age': '',
+            'Sex': 'unknown',
+            'Genotype': '',
+            'Note': '',
+        }
+        return _metaData.copy()
+    
     def __init__(
         self,
         filepath: str = None,
@@ -84,6 +98,9 @@ class bAnalysis:
         """str: File path."""
 
         self._detectionDict: dict = None  # corresponds to an item in sanpy.bDetection
+
+        # fileloader holds meta data
+        self._metaData = self.getMetaDataDict()
 
         self._isAnalyzed: bool = False
 
@@ -197,6 +214,24 @@ class bAnalysis:
         """
 
     @property
+    def metaData(self):
+        return self._metaData
+    
+    def getMetaData(self, key):
+        if not key in self._metaData.keys():
+            logger.error(f'did not find "{key}" in metadata')
+            return
+        return self._metaData[key]
+    
+    def setMetaData(self, key, value):
+        if not key in self._metaData.keys():
+            logger.error(f'did not find "{key}" in metadata')
+            return
+        self._metaData[key] = value
+
+        self._detectionDirty = True
+
+    @property
     def kymAnalysis(self):
         """Get the kymAnalysis object (if it exists).
         """
@@ -246,13 +281,17 @@ class bAnalysis:
 
         # when making df from dict, need to pass it a list
         # o.w. key values that are lists get expanded into rows
-        dfDetection = pd.DataFrame([self._detectionDict])
+        if self._detectionDict is not None:
+            dfDetection = pd.DataFrame([self._detectionDict])
+
+        dfMetaData = pd.DataFrame([self._metaData])
 
         # convert spikeList (list of dict) to json
         # spikeList = self.spikeDict.asList()
         # dataJson = json.dumps(spikeList, cls=NumpyEncoder)  # list of dict
         # dfAnalysis = pd.DataFrame(spikeList)
-        dfAnalysis = self.spikeDict.asDataFrame()
+        if len(self.spikeDict) > 0:
+            dfAnalysis = self.spikeDict.asDataFrame()
 
         uuid = self.uuid
 
@@ -261,11 +300,20 @@ class bAnalysis:
         )
 
         with pd.HDFStore(hdfPath) as hdfStore:
-            key = uuid + "/" + "detectionDict"
-            dfDetection.to_hdf(hdfStore, key)  # default mode='a'
+            if self._detectionDict is not None:
+                key = uuid + "/" + "detectionDict"
+                dfDetection.to_hdf(hdfStore, key)  # default mode='a'
 
-            key = uuid + "/" + "analysisList"
-            dfAnalysis.to_hdf(hdfStore, key)
+            # always save meta data
+            key = uuid + "/" + "metaDataDict"
+            dfMetaData.to_hdf(hdfStore, key)  # default mode='a'
+            
+            # logger.warning('=== saving dfMetaData')
+            # print(dfMetaData)
+
+            if len(self.spikeDict) > 0:
+                key = uuid + "/" + "analysisList"
+                dfAnalysis.to_hdf(hdfStore, key)
 
         # we saved, detection is not dirty
         self._detectionDirty = False
@@ -324,48 +372,83 @@ class bAnalysis:
         # logger.info(f"loading {uuid} from {hdfPath}")
 
         # load pandas dataframe(s) from h5 file
-        didLoad = True
+        loadedDetection = False
+        loadedMetaData = False
+        loadedAnalysis = False
         try:
             detectionDictKey = uuid + "/" + "detectionDict"  # group
             dfDetection = pd.read_hdf(hdfPath, detectionDictKey)
+            loadedDetection = True
         except KeyError as e:
-            logger.error(e)
-            didLoad = False
+            logger.error(f'detectionDict: {e}')
+            # didLoad = False
             
+        try:
+            metaDataDictKey = uuid + "/" + "metaDataDict"  # group
+            dfMetaData = pd.read_hdf(hdfPath, metaDataDictKey)
+            loadedMetaData = True
+        except KeyError as e:
+            logger.error(f'metaDataDict: {e}')
+            # didLoad = False
+
         try:
             analysisListKey = uuid + "/" + "analysisList"
             dfAnalysis = pd.read_hdf(hdfPath, analysisListKey)
+            loadedAnalysis = True
         except KeyError as e:
-            logger.error(e)
-            didLoad = False
+            logger.error(f'analysisList: {e}')
+            # didLoad = False
 
-        if didLoad:
+        # if didLoad:
+        if 1:
             # we take on the uuid we were loaded from
             self.uuid = uuid
 
             # convert to a dict
-            detectionDict = dfDetection.to_dict("records", into=OrderedDict)[
-                0
-            ]  # one dict
+            if loadedDetection:
+                detectionDict = dfDetection.to_dict("records", into=OrderedDict)[
+                    0
+                ]  # one dict
+                self._detectionDict = detectionDict
 
-            self._detectionDict = detectionDict
-            # pprint(detectionDict)
+            if loadedMetaData:
+                metaDataDict = self.getMetaDataDict()
+                loadedMetaDataDict = dfMetaData.to_dict("records", into=OrderedDict)[
+                    0
+                ]  # one dict
+                # we need to load current meta data dict with all current keys
+                # saved file may be out of date
+
+                # bug during implementing meta data code
+                # if loadedMetaDataDict['sex'] == '':
+                #     loadedMetaDataDict['sex'] = 'unknown'
+
+                # logger.info('loadedMetaDataDict')
+                # logger.info(loadedMetaDataDict)
+
+                for k,v in loadedMetaDataDict.items():
+                    if not k in metaDataDict.keys():
+                        logger.error(f'did not find loaded meta data key "{k}" in meta data keys {metaDataDict.keys()}')
+                        continue
+                    metaDataDict[k] = v
+                self._metaData = metaDataDict
 
             # convert to a list of dict
-            analysisList = dfAnalysis.to_dict(
-                "records", into=OrderedDict
-            )  # list of dict
-            self.spikeDict.setFromListDict(analysisList)
-            # pprint(analysisList[0])
+            if loadedAnalysis:
+                analysisList = dfAnalysis.to_dict(
+                    "records", into=OrderedDict
+                )  # list of dict
+                self.spikeDict.setFromListDict(analysisList)
+                # pprint(analysisList[0])
 
-            # recreate spike analysis dataframe
-            self._dfReportForScatter = dfAnalysis
+                # recreate spike analysis dataframe
+                self._dfReportForScatter = dfAnalysis
 
-            # regenerate error report
-            self.dfError = self.getErrorReport()
+                # regenerate error report
+                self.dfError = self.getErrorReport()
 
-            # dec 2022
-            self._isAnalyzed = True
+                # dec 2022
+                self._isAnalyzed = True
 
             # logger.info(
             #     f"    loaded {len(detectionDict.keys())} detection keys and {len(self.spikeDict)} spikes"

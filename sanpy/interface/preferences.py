@@ -27,6 +27,7 @@ class preferences:
         self._version = 1.3  # added set spike
         self._version = 1.4  # converted plugins from list[str] to dict to include externalWindow option
         self._version = 1.5  # adding keys to plugins (l, t, w, h)
+        self._version = 1.6  # adding SetMetaData
 
         self._maxRecent = 7  # a lucky number
         self._configDict = self.load()
@@ -185,6 +186,7 @@ class preferences:
         configDict["detectionPanels"]["Display"] = True
         configDict["detectionPanels"]["Plot Options"] = False
         configDict["detectionPanels"]["Set Spikes"] = False
+        configDict["detectionPanels"]["Set Meta Data"] = False
 
         # plugins to show at startup
         # 20230325 convert from List[str] to dict

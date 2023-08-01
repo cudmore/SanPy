@@ -32,6 +32,8 @@ from .detectionParams import detectionParams
 from .kymographPlugin import kymographPlugin
 
 from .setSpikeStat import SetSpikeStat
+from .setMetaData import SetMetaData
+
 
 # eventually move this out of plotScatter
 from .plotScatter import myStatListWidget
@@ -39,5 +41,5 @@ from .plotScatter import getPlotMarkersAndColors
 
 from .plotFi import plotFi
 
-# TODO: make this just one line, so user can drop a bplugin inn and restart
+# TODO: make this just one line, so user can drop a bplugin in and restart
 from . import *

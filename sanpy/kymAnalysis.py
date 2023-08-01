@@ -880,6 +880,10 @@ class kymAnalysis:
         right_idx_list = [np.nan] * self.numLineScans()
         diameter_idx_list = [np.nan] * self.numLineScans()
 
+        min_list = [np.nan] * self.numLineScans()
+        max_list = [np.nan] * self.numLineScans()
+        range_list = [np.nan] * self.numLineScans()
+
         _maxSumIntensity = 0
 
         lineRange = np.arange(leftRect_line, rightRect_line)
@@ -913,6 +917,13 @@ class kymAnalysis:
                 right_idx_list[line] = right_idx
                 diameter_idx_list[line] = _diamPixels
 
+            _min = np.nanmin(intensityProfile)
+            _max = np.nanmin(intensityProfile)
+            _range = _max - _min
+            min_list[line] = _min
+            max_list[line] = _max
+            range_list[line] = _range
+            
         self._diamResults["time_sec"] = self.sweepX.tolist()
         
         self._diamResults["sumintensity_raw"] = sumIntensity
@@ -936,6 +947,10 @@ class kymAnalysis:
 
         self._diamResults["left_pnt"] = left_idx_list
         self._diamResults["right_pnt"] = right_idx_list
+
+        self._diamResults["minInt"] = min_list
+        self._diamResults["maxInt"] = max_list
+        self._diamResults["rangeInt"] = range_list
 
         # smooth
         # kernelSize = 3

@@ -128,7 +128,47 @@ _sanpyColumns = {
         "type": str,
         "isEditable": True,
     },
-    "Notes": {
+
+    # # bAnalysis metadata
+    # metaDataDict = sanpy.bAnalysis.getMetaDataDict()
+    # for k,v in metaDataDict.items()
+        # _metaData = {
+        #     'include': 'yes',
+        #     'condition1': '',
+        #     'condition2': '',
+        #     'ID': '',
+        #     'age': '',
+        #     'sex': 'unknown',
+        #     'age': '',
+        #     'genotype': '',
+        #     'note': '',
+        # }
+
+    "Include": {
+        "type": str,
+        "isEditable": True,
+    },
+    "Condition1": {
+        "type": str,
+        "isEditable": True,
+    },
+    "Condition2": {
+        "type": str,
+        "isEditable": True,
+    },
+    "ID": {
+        "type": str,
+        "isEditable": True,
+    },
+    "Age": {
+        "type": str,
+        "isEditable": True,
+    },
+    "Genotype": {
+        "type": str,
+        "isEditable": True,
+    },
+    "Note": {
         "type": str,
         "isEditable": True,
     },
@@ -147,22 +187,23 @@ _sanpyColumns = {
     },
 
     # kymograph interface
-    "kLeft": {
-        "type": int,
-        "isEditable": False,
-    },
-    "kTop": {
-        "type": int,
-        "isEditable": False,
-    },
-    "kRight": {
-        "type": int,
-        "isEditable": False,
-    },
-    "kBottom": {
-        "type": int,
-        "isEditable": False,
-    },
+    # "kLeft": {
+    #     "type": int,
+    #     "isEditable": False,
+    # },
+    # "kTop": {
+    #     "type": int,
+    #     "isEditable": False,
+    # },
+    # "kRight": {
+    #     "type": int,
+    #     "isEditable": False,
+    # },
+    # "kBottom": {
+    #     "type": int,
+    #     "isEditable": False,
+    # },
+
     "relPath": {
         "type": str,
         "isEditable": False,
@@ -353,13 +394,13 @@ def _old_santana_file_finder(files):
     #print('n=', len(files))
     return retDict
 
-def _listdir(path):
+def _listdir(path, theseFileTypes):
     """
     recursively walk directory to specified depth
     :param path: (str) path to list files from
     :yields: (str) filename, including path
     """
-    for filename in os.listdir(path, theseFileTypes):
+    for filename in os.listdir(path):
         _filebase, _ext = os.path.splitext(filename)
         if filename.startswith('.'):
             continue
@@ -752,8 +793,7 @@ class analysisDir:
         return fullFilePath
 
     def saveHdf(self):
-        """
-        Save file table and any number of loaded and analyzed bAnalysis.
+        """Save file table and any number of loaded and analyzed bAnalysis.
 
         Set file table 'uuid' column when we actually save a bAnalysis
 
@@ -1143,6 +1183,11 @@ class analysisDir:
                 # logger.info('maybe put back in')
                 # print(f'    self._df.loc[rowIdx, "relPath"] is "{self._df.loc[rowIdx, "relPath"]}"')
 
+            # aug 2023, update meta data columns
+            if ba is not None:
+                for k,v in ba.metaData.items():
+                    self._df.loc[rowIdx, k] = v
+
             # kymograph interface
             # 20230602, don't show rect in interface
             # if ba is not None and ba.fileLoader.isKymograph():
@@ -1403,6 +1448,10 @@ class analysisDir:
         rowDict['parent2'] = _parent2
         rowDict['parent3'] = _parent3
         
+        # aug 2023,  adding bAnalysis metadata columns
+        for k,v in ba.metaData.items():
+            rowDict[k] = v
+
         # remove the path to the folder we have loaded
         relPath = path.replace(self.path, "")
         
@@ -1421,6 +1470,8 @@ class analysisDir:
         rowDict["relPath"] = relPath
 
         #logger.info(f'2) xxx relPath: "{relPath}"')
+        logger.info('qqq')
+        print(rowDict)
 
         return ba, rowDict
 
