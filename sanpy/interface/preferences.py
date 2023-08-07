@@ -201,8 +201,8 @@ class preferences:
         # display options within detectionWidget -> myDetectionToolbar
         configDict["rawDataPanels"] = {}
         configDict["rawDataPanels"]["plotEveryPoint"] = 10  # not used?
-        configDict["rawDataPanels"]["Full Recording"] = True  #
-        configDict["rawDataPanels"]["Derivative"] = False  #
+        configDict["rawDataPanels"]["Full Recording"] = False  #
+        configDict["rawDataPanels"]["Derivative"] = True  #
         configDict["rawDataPanels"]["DAC"] = False  #
 
         configDict['fileList'] = {}

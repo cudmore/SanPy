@@ -300,15 +300,16 @@ class bTableView(QtWidgets.QTableView):
 
         # hide some columns, needed each time we set the model
         hiddenColumns = [
-            "kLeft",
-            "kTop",
-            "kRight",
-            "kBottom",
-            "Channels",
+            # "kLeft",
+            # "kTop",
+            # "kRight",
+            # "kBottom",
+            # "Channels",
+            "Species",
             "Cell Type",
-            "Sex",
-            "Condition",
-            "Notes",
+            # "Sex",
+            # "Condition",
+            # "Notes",
             "relPath",
             "uuid",
             "badColumn",
@@ -319,7 +320,7 @@ class bTableView(QtWidgets.QTableView):
                 # print('xxx hiding column', hiddenColumn, columnIdx)
                 self.setColumnHidden(columnIdx, True)
             except ValueError as e:
-                logger.error(f"Did not find column {hiddenColumn}")
+                logger.error(f"Called setColumnHidden() but did not find column {hiddenColumn}")
 
         """
         self.frozenTableView.setModel(self.model())

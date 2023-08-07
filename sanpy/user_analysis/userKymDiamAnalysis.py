@@ -96,6 +96,7 @@ class kymUserAnalysis(baseUserAnalysis):
             # assign to underlying bAnalysis
             
             # foot
+            logger.info(f'spikeIdx:{spikeIdx} k_diam_foot:{k_diam_foot}')
             self.setSpikeValue(spikeIdx, "k_diam_foot", k_diam_foot)
             self.setSpikeValue(spikeIdx, "k_diam_foot_pnt", k_diam_foot_pnt)
             self.setSpikeValue(spikeIdx, "k_diam_foot_sec", k_diam_foot_sec)

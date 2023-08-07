@@ -445,8 +445,7 @@ class pandasModel(QtCore.QAbstractTableModel):
         self.layoutChanged.emit()
 
     def myCopyTable(self):
-        """
-        Copy model data to clipboard.
+        """Copy model data to clipboard.
         """
         dfCopy = self._data.copy()
         dfCopy.to_clipboard(sep="\t", index=False)

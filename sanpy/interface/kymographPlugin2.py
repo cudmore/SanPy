@@ -316,6 +316,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         if doSet:
             self._detectPosNeg.setCurrentIndex(posNegIdx)
+        
+        self._on_slider_changed()  # refresh line scan
 
     def setImageMedianKernel(self, value):
         # self._imageMedianKernel = value
@@ -567,7 +569,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         checkboxName = "Line Profile"
         aCheckBox = QtWidgets.QCheckBox(checkboxName)
-        # aCheckBox.setChecked(True)
+        aCheckBox.setChecked(True)
         aCheckBox.stateChanged.connect(
             lambda state, name=checkboxName: self._checkboxCallback(state, name)
         )

@@ -78,6 +78,9 @@ class SetMetaData(sanpyPlugin):
         logger.info(f'{aWidget} {paramName}')
         value = aWidget.text()
 
+        if ';' in value:
+            logger.warning(f'Semicolon (;) is not allowed -->> replacing with comma (,)')
+            value = value.replace(';', ',')
         """
         TODO:
         # eventDict = setSpikeStatEvent
@@ -105,7 +108,7 @@ class SetMetaData(sanpyPlugin):
             else:
                 logger.error(f'did not understand control "{paramName}" value "{value}"')
                 return
-            self.ba.setMetaData(paramName, value)
+            self.ba.metaData.setMetaData(paramName, value)
 
         elif paramName == 'Sex':
             if value == 'unknown':
@@ -120,7 +123,7 @@ class SetMetaData(sanpyPlugin):
             self.ba.metaData.setMetaData(paramName, value)
 
         else:
-            logger.error(f'did not understand control"{paramName}"')
+            logger.error(f'did not understand param name"{paramName}"')
 
     def _buildUI(self):
         self._widgetDict = {}

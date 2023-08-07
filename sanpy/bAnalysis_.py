@@ -37,12 +37,14 @@ class MetaData(dict):
     def getMetaDataDict():
         _metaData = {
             'Include': 'yes',
-            'Condition1': '',
-            'Condition2': '',
+            'Species': '',
+            'Cell Type': '',
             'ID': '',
             'Age': '',
             'Sex': 'unknown',
             'Genotype': '',
+            'Condition1': '',
+            'Condition2': '',
             'Note': '',
         }
         return _metaData.copy()
@@ -99,7 +101,7 @@ class MetaData(dict):
         self[key] = value
         
         if triggerDirty and self._ba is not None:
-            logger.warning(f'SETTING METADATA {key} from "{oldValue}" to new value "{value}"')
+            # logger.warning(f'SETTING METADATA {key} from "{oldValue}" to new value "{value}"')
             self._ba._detectionDirty = True
 
 class bAnalysis:
@@ -2594,9 +2596,12 @@ class bAnalysis:
             f.write("\n")
 
         df = self.asDataFrame()  # pd.DataFrame(self.spikeDict)
-        # df = pd.DataFrame(self._diamResults)
-
-        df.to_csv(path, mode="a")
+        if df is not None:
+            df.to_csv(path, mode="a")
+        # else:
+            # happens when user sets metaDat but does not do analysis
+            # logger.warning(f'asDataFrame() returned None')
+            # logger.warning(f'  did not save: {self}')
 
     def saveAnalysis(self, forceSave=False):
         """Not used.

@@ -565,8 +565,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 if selectingAgain:
                     pass
                 else:
+                    fileNote = ba.metaData.getMetaData('Note')
+                    if fileNote:
+                        fileNote = 'Note:' + fileNote
+                    else:
+                        fileNote = ''
                     self.slot_updateStatus(
-                        f'Loaded file "{ba.fileLoader.filename}"'
+                        f'Loaded file {ba.fileLoader.filename} {fileNote}'
                     )  # this will load ba if necc
 
     def _buildMenus(self):

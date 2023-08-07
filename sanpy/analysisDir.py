@@ -119,14 +119,15 @@ _sanpyColumns = {
         "type": str,
         "isEditable": True,
     },
-    "Sex": {
-        "type": str,
-        "isEditable": True,
-    },
-    "Condition": {
-        "type": str,
-        "isEditable": True,
-    },
+    # "Sex": {
+    #     "type": str,
+    #     "isEditable": True,
+    # },
+
+    # "Condition": {
+    #     "type": str,
+    #     "isEditable": True,
+    # },
 
     # # bAnalysis metadata
     # metaDataDict = sanpy.bAnalysis.getMetaDataDict()
@@ -700,7 +701,7 @@ class analysisDir:
             myPath = pathlib.Path(__file__).parent.absolute()
         return myPath
 
-    def old_rebuildHdf(self):
+    def _old_rebuildHdf(self):
         #
         # rebuild the file to remove old changes and reduce size
         tmpHdfFile = os.path.splitext(self.dbFile)[0] + "_tmp.h5"
@@ -753,7 +754,7 @@ class analysisDir:
                 # save analysis to csv
                 ba.saveAnalysis_tocsv()
 
-    def old_getTmpHdfFile(self):
+    def _old_getTmpHdfFile(self):
         """Get temporary h5 file to write to.
 
         We will always then compress with _rebuildHdf.
@@ -781,7 +782,10 @@ class analysisDir:
         return tmpHdfPath
 
     def getPathFromRelPath(self, relPath):
-        """Get full path to file (usually an abf file."""
+        """Get full path to file from relPath.
+        
+        Uses analysisDir folder path.
+        """
         if relPath.startswith("/"):
             relPath = relPath[1:]
 
@@ -883,7 +887,7 @@ class analysisDir:
             df["_ba"] = None
 
             # fix bug during dev of ba metadata
-            df['Sex'] = 'unknown'
+            # df['Sex'] = 'unknown'
             
             if verbose:
                 logger.info("    loaded db df")
