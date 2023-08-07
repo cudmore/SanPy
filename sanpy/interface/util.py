@@ -10,7 +10,7 @@ class sanpyCursors(QtCore.QObject):
     signalCursorDragged = QtCore.pyqtSignal(str)  # dx
     signalSetDetectionParam = QtCore.pyqtSignal(str, float)
 
-    def __init__(self, plotWidget : pg.PlotWidget, showInView=False):
+    def __init__(self, plotWidget : pg.PlotWidget, showInView=True):
         """Add cursors to a PlotWidget. Normally vmPlot.
         """
         super().__init__(None)

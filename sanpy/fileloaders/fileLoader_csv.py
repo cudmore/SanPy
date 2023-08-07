@@ -8,8 +8,8 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 
-class fileLoader_csv(fileLoader_base):
-    loadFileType = "csv"
+class fileLoader_text(fileLoader_base):
+    loadFileType = "sanpy"
 
     # @property
     # def loadFileType(self):

@@ -24,12 +24,83 @@ import sanpy.bDetection
 import sanpy.user_analysis.baseUserAnalysis  # to stop circular imports
 import sanpy.h5Util
 import sanpy.fileloaders
+import sanpy.bAnalysisResults
+import sanpy._util
+
 from sanpy.fileloaders import recordingModes
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
 
+class MetaData(dict):
+    @staticmethod
+    def getMetaDataDict():
+        _metaData = {
+            'Include': 'yes',
+            'Condition1': '',
+            'Condition2': '',
+            'ID': '',
+            'Age': '',
+            'Sex': 'unknown',
+            'Genotype': '',
+            'Note': '',
+        }
+        return _metaData.copy()
+    
+    def __init__(self, ba : "sanpy.bAnalysis" = None):
+        super().__init__()
+        self._ba = ba
+        
+        d = self.getMetaDataDict()
+        for k,v in d.items():
+            self[k] = v
+
+    def fromDict(self, d : dict, triggerDirty=True):
+        """Assign metadata from a dictionary.
+        
+        Used when load/save to hdf5.
+
+        PArameters
+        ----------
+        triggerDirty : bool
+            If False then don't dirty the bAnalysis (used when loading)
+        """
+        for k,v in d.items():
+            self.setMetaData(k, v, triggerDirty)
+
+    def getHeader(self) -> str:
+        """Get key value pairs for a text header.
+        
+        Saved into one line header for csv export.
+        """
+        headerStr = ''
+        for k,v in self.items():
+            headerStr += f'{k}={v};'
+        return headerStr
+    
+    def getMetaData(self, key):
+        if not key in self.keys():
+            logger.error(f'did not find "{key}" in metadata')
+            return
+        return self[key]
+    
+    def setMetaData(self, key, value, triggerDirty=True):
+        if not key in self.keys():
+            logger.error(f'did not find "{key}" in metadata')
+            logger.info(f'   available keys are: {self.keys()}')
+            return
+        
+        if self[key] == value:
+            # no change
+            return
+        
+        oldValue = self[key]
+
+        self[key] = value
+        
+        if triggerDirty and self._ba is not None:
+            logger.warning(f'SETTING METADATA {key} from "{oldValue}" to new value "{value}"')
+            self._ba._detectionDirty = True
 
 class bAnalysis:
     """
@@ -58,7 +129,7 @@ class bAnalysis:
     #     return 't' + str(uuid.uuid4()).replace('-', '_')
 
     @staticmethod
-    def getMetaDataDict():
+    def _old_getMetaDataDict():
         _metaData = {
             'Include': 'yes',
             'Condition1': '',
@@ -100,7 +171,7 @@ class bAnalysis:
         self._detectionDict: dict = None  # corresponds to an item in sanpy.bDetection
 
         # fileloader holds meta data
-        self._metaData = self.getMetaDataDict()
+        self._metaData = MetaData(self)  #self.getMetaDataDict()
 
         self._isAnalyzed: bool = False
 
@@ -216,20 +287,6 @@ class bAnalysis:
     @property
     def metaData(self):
         return self._metaData
-    
-    def getMetaData(self, key):
-        if not key in self._metaData.keys():
-            logger.error(f'did not find "{key}" in metadata')
-            return
-        return self._metaData[key]
-    
-    def setMetaData(self, key, value):
-        if not key in self._metaData.keys():
-            logger.error(f'did not find "{key}" in metadata')
-            return
-        self._metaData[key] = value
-
-        self._detectionDirty = True
 
     @property
     def kymAnalysis(self):
@@ -273,18 +330,29 @@ class bAnalysis:
         return txt
 
     def _saveHdf_pytables(self, hdfPath):
-        """Save detection parameters and analysis into an hdf5 file."""
+        """Save detection parameters and analysis into an hdf5 file.
+        """
+
+        # save kym diameter analysis
+        if self._kymAnalysis is not None:
+            if self._kymAnalysis.hasDiamAnalysis() and self._kymAnalysis._analysisDirty:
+                self._kymAnalysis.saveAnalysis()
+
+
         if not self.detectionDirty:
             # Do not save it detection has not changed
             logger.info(f"NOT SAVING, is not dirty {self}")
             return False
+
+        # always save as csv
+        self.saveAnalysis_tocsv()
 
         # when making df from dict, need to pass it a list
         # o.w. key values that are lists get expanded into rows
         if self._detectionDict is not None:
             dfDetection = pd.DataFrame([self._detectionDict])
 
-        dfMetaData = pd.DataFrame([self._metaData])
+        dfMetaData = pd.DataFrame([self.metaData])
 
         # convert spikeList (list of dict) to json
         # spikeList = self.spikeDict.asList()
@@ -412,7 +480,7 @@ class bAnalysis:
                 self._detectionDict = detectionDict
 
             if loadedMetaData:
-                metaDataDict = self.getMetaDataDict()
+                metaDataDict = self.metaData.getMetaDataDict()  # default
                 loadedMetaDataDict = dfMetaData.to_dict("records", into=OrderedDict)[
                     0
                 ]  # one dict
@@ -431,7 +499,10 @@ class bAnalysis:
                         logger.error(f'did not find loaded meta data key "{k}" in meta data keys {metaDataDict.keys()}')
                         continue
                     metaDataDict[k] = v
-                self._metaData = metaDataDict
+                self.metaData.fromDict(metaDataDict, triggerDirty=False)
+
+                # logger.warning(f'LOADED META DATA:')
+                # print('self.metaData:', self.metaData)
 
             # convert to a list of dict
             if loadedAnalysis:
@@ -1842,7 +1913,7 @@ class bAnalysis:
                         if verbose:
                             print(f"  spike:{iIdx} error:{eDict}")
 
-                except TypeError as e:
+                except (TypeError, RuntimeWarning) as e:
                     # catching exception:  expected non-empty vector for x
                     # xFit/yFit turn up empty when mdp and TOP points are within 1 point
                     spikeDict[iIdx]["earlyDiastolicDurationRate"] = defaultVal
@@ -2493,21 +2564,39 @@ class bAnalysis:
         self._detectionDirty = False
         self._isAnalyzed = True
 
-    def saveAnalysis_tocsv(self):
-        """Save analysis to csv."""
+    def saveAnalysis_tocsv(self, path : str = None, verbose=False):
+        """Save analysis to csv.
+        
+        CSV starts with one 
+        Parameters
+        ----------
+        path : str
+            Full path of file to save, if None will save as default.
+        """
+
+        if path is None:
+            saveFolder = self._getSaveFolder()
+            if not os.path.isdir(saveFolder):
+                if verbose:
+                    logger.info(f"making folder: {saveFolder}")
+                os.mkdir(saveFolder)
+
+            saveBase = self._getSaveBase()
+            path = saveBase + "-analysis.csv"
+
+        if verbose:
+            logger.info(f'saving to: {path}')
+
+        metaDataHeader = self.metaData.getHeader()
+
+        with open(path, "w") as f:
+            f.write(metaDataHeader)
+            f.write("\n")
+
         df = self.asDataFrame()  # pd.DataFrame(self.spikeDict)
+        # df = pd.DataFrame(self._diamResults)
 
-        saveFolder = self._getSaveFolder()
-        if not os.path.isdir(saveFolder):
-            logger.info(f"making folder: {saveFolder}")
-            os.mkdir(saveFolder)
-
-        saveBase = self._getSaveBase()
-        savePath = saveBase + "-analysis.csv"
-
-        logger.info(savePath)
-
-        df.to_csv(savePath)
+        df.to_csv(path, mode="a")
 
     def saveAnalysis(self, forceSave=False):
         """Not used.
@@ -2550,13 +2639,13 @@ class bAnalysis:
         """
         All analysis will be saved in folder 'sanpy_analysis'
         """
-        parentPath, fileName = os.path.split(self._path)
+        filepath = self.fileLoader.filepath
+        parentPath, fileName = os.path.split(filepath)
         saveFolder = os.path.join(parentPath, "sanpy_analysis")
         return saveFolder
 
     def _getSaveBase(self):
-        """
-        Return basename to append to to save
+        """Get basename to append to to save
 
         This will always be in a subfolder named 'sanpy_analysis'
 
@@ -2564,7 +2653,8 @@ class bAnalysis:
         """
         saveFolder = self._getSaveFolder()
 
-        parentPath, fileName = os.path.split(self._path)
+        filepath = self.fileLoader.filepath
+        parentPath, fileName = os.path.split(filepath)
         baseName = os.path.splitext(fileName)[0]
         savePath = os.path.join(saveFolder, baseName)
 

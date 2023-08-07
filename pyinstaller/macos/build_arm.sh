@@ -18,7 +18,13 @@ conda activate sanpy-pyinstaller-arm
 pip install --upgrade pip
 
 # install required packages
-conda install -y numpy \
+# numpy 1.24 breaks PYQtGraph with numpy.float error
+
+# pytable==5.11.0 is not available on conda
+# 20230805, failures in build, was workin in May 2023
+# rolled back pytables from 3.8.0 to 3.7.0 and now builds!
+
+conda install -y numpy==1.23.4 \
                   pandas==1.5.3 \
                   scipy \
                   scikit-image==0.19.3 \
@@ -30,7 +36,7 @@ conda install -y numpy \
                   pyqt \
                   qtpy \
                   pyqtgraph \
-                  pytables
+                  pytables==3.7.0
 
 pip install pyabf
 pip install pyqtdarktheme

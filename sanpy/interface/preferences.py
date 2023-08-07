@@ -22,12 +22,13 @@ class preferences:
         super().__init__()
         self._sanpyApp = sanpyApp
 
-        # bump this when we change, sanpy app will rebuild if loaded preerences are out of date
+        # bump this when we change, sanpy app will rebuild if loaded preferences are out of date
         # self._version = 1.2  # increment when we change preferences
-        self._version = 1.3  # added set spike
-        self._version = 1.4  # converted plugins from list[str] to dict to include externalWindow option
-        self._version = 1.5  # adding keys to plugins (l, t, w, h)
-        self._version = 1.6  # adding SetMetaData
+        # self._version = 1.3  # added set spike
+        # self._version = 1.4  # converted plugins from list[str] to dict to include externalWindow option
+        # self._version = 1.5  # adding keys to plugins (l, t, w, h)
+        # self._version = 1.6  # adding SetMetaData
+        self._version = 1.7  # 20230804, adding folder depth
 
         self._maxRecent = 7  # a lucky number
         self._configDict = self.load()
@@ -203,6 +204,9 @@ class preferences:
         configDict["rawDataPanels"]["Full Recording"] = True  #
         configDict["rawDataPanels"]["Derivative"] = False  #
         configDict["rawDataPanels"]["DAC"] = False  #
+
+        configDict['fileList'] = {}
+        configDict['fileList']['Folder Depth'] = 1
 
         return configDict
 

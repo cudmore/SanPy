@@ -91,7 +91,7 @@ class SetMetaData(sanpyPlugin):
         self.signalUpdateAnalysis.emit(setSpikeStatEvent)
         """
 
-        self.ba.setMetaData(paramName, value)
+        self.ba.metaData.setMetaData(paramName, value)
 
     def _on_combo_box(self, paramName : str, value : str):
         if self.ba is None:
@@ -117,7 +117,7 @@ class SetMetaData(sanpyPlugin):
             else:
                 logger.error(f'did not understand control "{paramName}" value "{value}"')
                 return
-            self.ba.setMetaData(paramName, value)
+            self.ba.metaData.setMetaData(paramName, value)
 
         else:
             logger.error(f'did not understand control"{paramName}"')
@@ -128,7 +128,9 @@ class SetMetaData(sanpyPlugin):
         vBoxLayout = self.getVBoxLayout()
         vBoxLayout.setAlignment(QtCore.Qt.AlignTop)
 
-        _metaData = sanpy.bAnalysis.getMetaDataDict()
+        # current default of metadata, getMetaDataDict is static
+        _metaData = sanpy.MetaData.getMetaDataDict()
+        
         for paramName, paramValue in _metaData.items():
             logger.info(f'paramName:{paramName}')
 

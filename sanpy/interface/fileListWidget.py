@@ -22,21 +22,24 @@ class fileListWidget(QtWidgets.QWidget):
     """
 
     signalLoadFolder = QtCore.pyqtSignal(object, object)  # path, depth
+    signalSetFolderDepth = QtCore.pyqtSignal(int)
 
     # signalSelectRow = QtCore.pyqtSignal(object, object, object)  # (row, rowDict, selectingAgain)
     # signalUpdateStatus = QtCore.pyqtSignal(object)
-    """Update status in main SanPy app."""
+    """Update statu s in main SanPy app."""
     # signalSetDefaultDetection = QtCore.pyqtSignal(object, object)  # selected row, detection type
 
-    def __init__(self, myModel: pandasModel, parent=None):
+    def __init__(self, myModel: pandasModel, folderDepth:int=1,parent=None):
         """
-        Args:
-            myModel: sanpy.interface.bFileTable.pandasModel
+        Parameters
+        ----------
+        myModel: sanpy.interface.bFileTable.pandasModel
+        folderDepth : int
         """
         super().__init__(parent)
         self._myModel: pandasModel = myModel
         # self.setAcceptDrops(True)
-        self._folderDepth = 1
+        self._folderDepth = folderDepth
         self._buildUI()
 
     # def dragEnterEvent(self, event):
@@ -73,8 +76,8 @@ class fileListWidget(QtWidgets.QWidget):
 
         aSpinBox = QtWidgets.QSpinBox()
         aSpinBox.setMinimum(1)
-        aSpinBox.setMaximum(5)
-        aSpinBox.setValue(1)
+        aSpinBox.setMaximum(10)
+        aSpinBox.setValue(self._folderDepth)
         aSpinBox.valueChanged.connect(self.on_depth_spin_box)
         self._hToolbarLayout.addWidget(aSpinBox, alignment=QtCore.Qt.AlignLeft)
 
@@ -91,6 +94,7 @@ class fileListWidget(QtWidgets.QWidget):
 
     def on_depth_spin_box(self, value):
         self._folderDepth = value
+        self.signalSetFolderDepth.emit(value)
 
     def on_button_click(self, name):
         logger.info(f"{name}")

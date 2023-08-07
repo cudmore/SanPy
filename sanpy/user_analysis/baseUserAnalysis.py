@@ -244,7 +244,7 @@ class baseUserAnalysis:
         }
         """
         if humanName in self._userStatDict.keys():
-            logger.error(f'User stat with human name "{humanName}" already exists')
+            # logger.error(f'User stat with human name "{humanName}" already exists')
             return
         statDict = {
             "name": internalName,

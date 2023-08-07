@@ -91,7 +91,7 @@ class kymUserAnalysis(baseUserAnalysis):
 
                 k_diam_time_to_peak_sec = k_diam_peak_sec - self.ba.fileLoader.pnt2Sec_(thresholdPnt)
 
-                logger.info(f'  {spikeIdx} {k_diam_foot} {k_diam_foot_pnt}')
+                # logger.info(f'  {spikeIdx} {k_diam_foot} {k_diam_foot_pnt}')
 
             # assign to underlying bAnalysis
             

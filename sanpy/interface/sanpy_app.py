@@ -317,6 +317,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
             # self.configDict.save()
 
+    def slot_folderDepth(self, folderDepth : int):
+        self.configDict['fileList']['Folder Depth'] = folderDepth
+        
     def slot_loadFolder(self, path="", folderDepth=None):
         """Load a folder of raw data files.
 
@@ -1055,9 +1058,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         #
         # list of files (in a dock)
-        self._fileListWidget = sanpy.interface.fileListWidget(self.myModel)
+        folderDepth = self.configDict["fileList"]["Folder Depth"]
+        self._fileListWidget = sanpy.interface.fileListWidget(self.myModel, folderDepth=folderDepth)
         # self._fileListWidget.signalUpdateStatus.connect(self.slot_updateStatus)  # never used
         self._fileListWidget.signalLoadFolder.connect(self.slot_loadFolder)
+        self._fileListWidget.signalSetFolderDepth.connect(self.slot_folderDepth)
         self._fileListWidget.getTableView().signalSelectRow.connect(
             self.slot_fileTableClicked
         )

@@ -194,13 +194,16 @@ def _codesign_app_binary(entitlements: str,
         ],
     )
 
-def _codesign_app_arm(entitlements: str,
+def _old_codesign_app_arm(entitlements: str,
                        app_certificate: str,
                        output_dir: str,
                        app_name: str) -> None:
     """Codesign all *.dylib *.so in app bundle
 
     This is for arm
+
+    May 2023, not used
+
     """
     logger.info('===')
     
@@ -420,7 +423,7 @@ def run_signing_commands(provisioning_profile,
     # turned off for good arm build?
     if 0 and shortPlatformStr == 'arm':
         _codesign_app_resources(entitlements, app_certificate, output_dir, app_name)
-        #_codesign_app_arm(entitlements, app_certificate, output_dir, app_name)
+        #_old__codesign_app_arm(entitlements, app_certificate, output_dir, app_name)
         _codesign_app_binary(entitlements, app_certificate, output_dir, app_name)
 
     _codesign_verify(output_dir, app_name)  # verify the app we just signed

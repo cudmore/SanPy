@@ -30,8 +30,7 @@ import qdarktheme
 
 import sanpy
 import sanpy.interface
-
-# from sanpy import kymographAnalysis
+import sanpy.user_analysis
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -123,7 +122,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         
         actionText = action.text()
         if actionText == 'Crosshair':
-            print('toggle line profile crosshar')
+            print('toggle line profile crosshair')
     
     def keyPressEvent(self, event):
         logger.info('')
@@ -149,8 +148,9 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         elif name =='Foot/Peak':
             self._diamFootPlotItem.setVisible(state)
             self._diamPeakPlotItem.setVisible(state)
-        elif name == "Sum Line":
+        elif name == "Line Intensity":
             self.sumIntensityPlotItem.setVisible(state)
+            self._linePlotCombo.setEnabled(state)
         elif name == "Fit On Kym":
             self._fitIsVivible = state
             self.refreshDiameterPlot()
@@ -197,8 +197,15 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             #     lineMedianKernel=lineMedianKernel
             # )
 
+            if self._ba.isAnalyzed():
+                _kymUserAnalysis = sanpy.user_analysis.kymUserAnalysis(self._ba)
+                _kymUserAnalysis.defineUserStats()
+                _kymUserAnalysis.run()
+                self._ba._detectionDirty = True
+
             # self.refreshSumLinePlot()
             self.refreshDiameterPlot()
+            self.refreshSumLinePlot()
 
             # after analysis, button is green
             self._analyzeButton.setStyleSheet("background-color : #22AA22")
@@ -279,6 +286,18 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self._on_slider_changed()
 
         # replot sum
+        self.refreshSumLinePlot()
+
+    def _on_line_intensity_popup(self, value : str):
+        """Set the type of line  intensity plot.
+        
+        Either sum or range.
+        """
+
+        # self._plotSumType = 'Intensity Sum'
+        # self._plotSumType = 'Intensity Range'
+
+        self._plotSumType = value
         self.refreshSumLinePlot()
 
     def _on_detect_polarity(self, posNegStr : str, doSet = False):
@@ -390,7 +409,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             _imageFilterKenel = self._kymographAnalysis.getAnalysisParam('imageFilterKenel')
             _lineFilterKernel = self._kymographAnalysis.getAnalysisParam('lineFilterKernel')
 
-        self._lineWidthSpinbox.setValue(_lineWidth)
+        # self._lineWidthSpinbox.setValue(_lineWidth)
         self._percentMaxSpinbox.setValue(_percentMax)
         self._detectPosNeg.setCurrentIndex(_posNegIdx)
         self._imageMedianKernelSpinbox.setValue(_imageFilterKenel)
@@ -398,6 +417,9 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
     def _initGui(self):
         self.setWindowTitle("Kymograph Analysis")
+
+        self._plotSumType = 'Intensity Sum'
+        # self._plotSumType = 'Intensity Range'
 
         self._sliceLinesList = []
 
@@ -432,23 +454,27 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         # control bar
         hBoxLayoutControls = QtWidgets.QHBoxLayout()
 
-        lineWidthLabel = QtWidgets.QLabel("Line Width (pixels)")
-        lineWidthLabel.setEnabled(False)
-        hBoxLayoutControls.addWidget(lineWidthLabel)
+        # TODO: put line width back in once I implement MP for kymAnalysis
+        # lineWidthLabel = QtWidgets.QLabel("Line Width (pixels)")
+        # lineWidthLabel.setEnabled(False)
+        # hBoxLayoutControls.addWidget(lineWidthLabel)
 
-        self._lineWidthSpinbox = QtWidgets.QSpinBox()
-        self._lineWidthSpinbox.setMinimum(1)
-        self._lineWidthSpinbox.setEnabled(False)
-        if self._kymographAnalysis is not None:
-            self._lineWidthSpinbox.setValue(self._kymographAnalysis.getAnalysisParam('lineWidth'))
-        else:
-            self._lineWidthSpinbox.setValue(1)
-        self._lineWidthSpinbox.valueChanged.connect(
-            self.setLineWidth
-        )  # triggers as user types e.g. (22)
-        hBoxLayoutControls.addWidget(self._lineWidthSpinbox)
+        # self._lineWidthSpinbox = QtWidgets.QSpinBox()
+        # self._lineWidthSpinbox.setMinimum(1)
+        # self._lineWidthSpinbox.setEnabled(False)
+        # if self._kymographAnalysis is not None:
+        #     self._lineWidthSpinbox.setValue(self._kymographAnalysis.getAnalysisParam('lineWidth'))
+        # else:
+        #     self._lineWidthSpinbox.setValue(1)
+        # self._lineWidthSpinbox.valueChanged.connect(
+        #     self.setLineWidth
+        # )  # triggers as user types e.g. (22)
+        # hBoxLayoutControls.addWidget(self._lineWidthSpinbox)
 
         # detect pos or neg intensity (polartity)
+        aLabel = QtWidgets.QLabel("Polarity")
+        hBoxLayoutControls.addWidget(aLabel)
+
         self._detectPosNeg = QtWidgets.QComboBox()
         self._detectPosNeg.addItem('pos')
         self._detectPosNeg.addItem('neg')
@@ -465,13 +491,14 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         hBoxLayoutControls.addWidget(self._detectPosNeg)
 
         # percent of max in line profile (for analysis)
-        percentMaxLabel = QtWidgets.QLabel("Percent Of Max")
+        percentMaxLabel = QtWidgets.QLabel("STD Threshold")
         hBoxLayoutControls.addWidget(percentMaxLabel)
 
         self._percentMaxSpinbox = QtWidgets.QDoubleSpinBox()
         self._percentMaxSpinbox.setSingleStep(0.1)
         self._percentMaxSpinbox.setMinimum(0.001)
-        _percentMax = 0.5
+        self._percentMaxSpinbox.setDecimals(3)
+        _percentMax = 0.03
         if self._kymographAnalysis is not None:
             _percentMax = self._kymographAnalysis.getAnalysisParam('percentOfMax')
             # percentMaxSpinbox.setValue(self._kymographAnalysis.getAnalysisParam('percentOfMax'))
@@ -540,7 +567,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         checkboxName = "Line Profile"
         aCheckBox = QtWidgets.QCheckBox(checkboxName)
-        aCheckBox.setChecked(False)
+        # aCheckBox.setChecked(True)
         aCheckBox.stateChanged.connect(
             lambda state, name=checkboxName: self._checkboxCallback(state, name)
         )
@@ -562,13 +589,22 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         )
         hBoxLayoutControls2.addWidget(self.footPeakCheckBox)
 
-        checkboxName = "Sum Line"
+        checkboxName = "Line Intensity"
         aCheckBox = QtWidgets.QCheckBox(checkboxName)
         aCheckBox.setChecked(True)
         aCheckBox.stateChanged.connect(
             lambda state, name=checkboxName: self._checkboxCallback(state, name)
         )
         hBoxLayoutControls2.addWidget(aCheckBox)
+
+        # popup to select 'sum intensity' or 'range intensity'
+        self._linePlotCombo = QtWidgets.QComboBox()
+        self._linePlotCombo.addItem('Intensity Sum')
+        self._linePlotCombo.addItem('Intensity Range')
+        self._linePlotCombo.currentTextChanged.connect(
+            self._on_line_intensity_popup
+        )
+        hBoxLayoutControls2.addWidget(self._linePlotCombo)
 
         checkboxName = "Fit On Kym"
         aCheckBox = QtWidgets.QCheckBox(checkboxName)
@@ -651,7 +687,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self.lineIntensityPlotItem = pg.PlotWidget(name='lineProfile')
         self.lineIntensityPlotItem.setLabel("left", 'Intensity', units="")
         self.lineIntensityPlotItem.setLabel("bottom", 'um', units="")
-        self.lineIntensityPlotItem.setVisible(False)
+        # self.lineIntensityPlotItem.setVisible(True)
         self.lineIntensityPlot = self.lineIntensityPlotItem.plot(
             name="lineIntensityPlot"
         )
@@ -682,11 +718,11 @@ class kymographPlugin2(QtWidgets.QMainWindow):
                                 name="diameterPlot",
                                 pen=pg.mkPen('c', width=1)
                                 )
-        if self._kymographAnalysis is not None:
-            xPlot = np.arange(0, self._kymographAnalysis.numLineScans())
-        else:
-            xPlot = np.arange(0, 0)
-        yPlot = xPlot * np.nan
+        # if self._kymographAnalysis is not None:
+        #     xPlot = np.arange(0, self._kymographAnalysis.numLineScans())
+        # else:
+        #     xPlot = np.arange(0, 0)
+        # yPlot = xPlot * np.nan
         xPlot = []
         yPlot = []
         self.diameterPlot.setData(xPlot, yPlot, connect="finite")  # fill with nan
@@ -703,18 +739,44 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self.diameterPlotItem.addItem(sliceLine)
 
         # overlay scatter of foot and peak
-        self._diamFootPlotItem = pg.PlotDataItem(pen=None, symbol='o',
-                                        symbolBrush='r',
-                                        fillOutline=False,
-                                        markeredgewidth=0.0,
-                                        connect="finite")
+        _footPeakSize = 6
+        # self._diamFootPlotItem = pg.ScatterPlotItem(
+        #     size=_footPeakSize, brush=pg.mkBrush('r')
+        # )
+        self._diamFootPlotItem = pg.PlotDataItem(
+            pen=None,
+            symbol='o',
+            symbolSize=_footPeakSize,
+            symbolPen=None,
+            symbolBrush='r',
+        )
+        # self._diamFootPlotItem = pg.PlotDataItem(pen=None,
+        #                                   symbol='o',
+        #                                 symbolBrush='r',
+        #                                 fillOutline=False,
+        #                                 markeredgewidth=0.0,
+        #                                 size=_footPeakSize,
+        #                                 connect="finite")
         self.diameterPlotItem.addItem(self._diamFootPlotItem, ignorBounds=True)
         
-        self._diamPeakPlotItem = pg.PlotDataItem(pen=None, symbol='o',
-                                        symbolBrush='b',
-                                        fillOutline=False,
-                                        markeredgewidth=0.0,
-                                        connect="finite")
+        # _footPeakSize = 5
+        # self._diamPeakPlotItem = pg.ScatterPlotItem(
+        #     size=_footPeakSize, brush=pg.mkBrush('r')
+        # )
+        self._diamPeakPlotItem = pg.PlotDataItem(
+            pen=None,
+            symbol='o',
+            symbolSize=_footPeakSize,
+            symbolPen=None,
+            symbolBrush='b',
+        )
+        # self._diamPeakPlotItem = pg.PlotDataItem(pen=None,
+        #                                   symbol='o',
+        #                                 symbolBrush='b',
+        #                                 fillOutline=False,
+        #                                 markeredgewidth=0.0,
+        #                                 size=_footPeakSize,
+        #                                 connect="finite")
         self.diameterPlotItem.addItem(self._diamPeakPlotItem, ignorBounds=True)
 
         vBoxLayout.addWidget(self.diameterPlotItem)
@@ -765,9 +827,22 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             return
 
         xPlot = self._ba.fileLoader.sweepX
-        yPlot = self._ba.fileLoader.sweepY
+        yPlot = np.zeros(len(xPlot)
+                         )
+        if self._plotSumType == 'Intensity Sum':
+            leftLabel = 'Intensity Sum'
+            yPlot = self._ba.fileLoader.sweepY
+        else:
+            # plot the intensity range of each line scan
+            leftLabel = 'Intensity Range'
+            if self._kymographAnalysis.hasDiamAnalysis():
+                yPlot = self._kymographAnalysis.getResults('rangeInt')
 
-        self.sumIntensityPlot.setData(xPlot, yPlot, connect="finite")
+        if yPlot is not None:
+            self.sumIntensityPlot.setData(xPlot, yPlot, connect="finite")
+
+        self.sumIntensityPlotItem.setLabel("left", leftLabel, units="")
+        self.sumIntensityPlotItem.autoRange()
 
     def refreshDiameterPlot(self):
         if self._ba is None:
@@ -818,6 +893,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self._kymWidgetMain.updateLeftRightFit(
             left_pnt, right_pnt, visible=self._fitIsVivible
         )
+
+        self.diameterPlotItem.autoRange()
 
 def exportDiameter():
     import sanpy.interface.bExportWidget

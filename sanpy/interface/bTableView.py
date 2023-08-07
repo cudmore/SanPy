@@ -246,13 +246,14 @@ class bTableView(QtWidgets.QTableView):
 
         logger.info(f"=== User click row:{realRow} relPath:{rowDict['relPath']}")
 
-        # always emit on clip, keep track if row was already selected
+        # always emit on click, keep track if row was already selected
         # if self.lastSeletedRow is None or self.lastSeletedRow != realRow:
         if 1:
             selectedAgain = self.lastSeletedRow == realRow
             # new row selection
             # print('  new row selection')
             # logger.info(f'realRow:{realRow} rowDict:{rowDict}')
+            logger.info(f'-->> emit signalSelectRow')
             self.signalSelectRow.emit(realRow, rowDict, selectedAgain)
         else:
             # print('  handle another click on already selected row')

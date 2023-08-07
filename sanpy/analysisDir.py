@@ -23,7 +23,6 @@ import sanpy
 import sanpy.h5Util
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
 
 # Turn off pandas save h5 performance warnnig
@@ -161,6 +160,10 @@ _sanpyColumns = {
         "isEditable": True,
     },
     "Age": {
+        "type": str,
+        "isEditable": True,
+    },
+    "Sex": {
         "type": str,
         "isEditable": True,
     },
@@ -468,7 +471,7 @@ class analysisDir:
     def __init__(
         self,
         path: str = None,
-        myApp=None,
+        myApp : "sanpy.interface.sanpy_app" = None,
         autoLoad: bool = False,
         folderDepth: Optional[int] = None,
     ):
@@ -497,7 +500,7 @@ class analysisDir:
 
         self._isDirty = False
 
-        self._poolDf = None
+        # self._poolDf = None
         """See pool_ functions"""
 
         # keys are full path to file, if from cloud, key is 'cloud/<filename>'
@@ -848,7 +851,7 @@ class analysisDir:
         stop = time.time()
         logger.info(f"Saving took {round(stop-start,2)} seconds")
 
-    def loadHdf(self, path=None):
+    def loadHdf(self, path=None, verbose=False):
         """Load the database key from an h5 file.
 
         We do not load analy anlysis until user clicks on row, see loadOneAnalysis()
@@ -879,10 +882,11 @@ class analysisDir:
             # _ba is for runtime, assign after loading from either (abf or h5)
             df["_ba"] = None
 
-            logger.info("    loaded db df")
-            # logger.info(f"{df[['File', 'uuid']]}")
-
-            # do not load anything until user clicks rows, see loadOneAnalysis()
+            # fix bug during dev of ba metadata
+            df['Sex'] = 'unknown'
+            
+            if verbose:
+                logger.info("    loaded db df")
 
             _stop = time.time()
             # logger.info(f"Loading took {round(_stop-_start,2)} seconds")
@@ -1085,7 +1089,7 @@ class analysisDir:
         if self._df is None:
             return
         
-        verbose = False
+        verbose = True
         loadedColumns = self._df.columns
         for col in loadedColumns:
             if not col in self.sanpyColumns.keys():
@@ -1706,34 +1710,56 @@ class analysisDir:
 
         self._updateLoadedAnalyzed()
 
-    def pool_build(self):
+    def pool_build(self, uniqueColumn=None, verbose=False):
         """Build one df with all analysis. Use this in plot tool plugin."""
-        logger.info("")
+        if verbose:
+            logger.info("")
+        
         masterDf = None
-        for row in range(self.numFiles):
-            if not self.isAnalyzed(row):
-                logger.info(f"  row:{row} not analyzed")
+        
+        # for row in range(self.numFiles):
+        for rowIdx, rowDict in self._df.iterrows():
+            if rowDict['Include'] == 'no':
+                if verbose:
+                    logger.info(f'  rowIdx:{rowIdx} Include is "no"')
                 continue
-            ba = self.getAnalysis(row)
+
+            ba = self.getAnalysis(rowIdx)
+
+            if not ba.isAnalyzed():
+                if verbose:
+                    logger.info(f"  rowIdx:{rowIdx} not analyzed")
+                continue
+                
             oneDf = ba.asDataFrame()
             if oneDf is not None:
-                self.signalApp(f'  adding "{ba.fileLoader.filename}"')
-                oneDf["File Number"] = int(row)
+                self.signalApp(f'  adding "{ba.fileLoader.filename}"', verbose=verbose)
+                
+                oneDf["File Number"] = int(rowIdx)
+                
+                uniqueName = os.path.splitext(ba.fileLoader.filename)[0]
+                if uniqueColumn is not None:
+                    uniqueName = rowDict[uniqueColumn] + '-' + uniqueName
+                oneDf["Unique Name"] = uniqueName
+                
                 if masterDf is None:
                     masterDf = oneDf
                 else:
-                    masterDf = pd.concat([masterDf, oneDf])
+                    masterDf = pd.concat([masterDf, oneDf], ignore_index=True)
         #
         if masterDf is None:
-            logger.error("Did not find any analysis.")
+            if verbose:
+                logger.error("Did not find any analysis.")
         else:
-            logger.info(f"final num spikes {len(masterDf)}")
+            if verbose:
+                logger.info(f"final num spikes {len(masterDf)}")
+        
         # print(masterDf.head())
-        self._poolDf = masterDf
+        #self._poolDf = masterDf
 
-        return self._poolDf
+        return masterDf
 
-    def signalApp(self, str):
+    def signalApp(self, str, verbose=True):
         """Update status bar of SanPy app.
 
         TODO make this a signal and connect app to it.
@@ -1741,7 +1767,7 @@ class analysisDir:
         """
         if self.myApp is not None:
             self.myApp.slot_updateStatus(str)
-        else:
+        elif verbose:
             logger.info(str)
 
     def api_getFileHeaders(self):

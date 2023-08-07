@@ -4,6 +4,7 @@ from ._util import *
 from .analysisUtil import *
 
 from .bAnalysis_ import bAnalysis
+from .bAnalysis_ import MetaData  # Aug 2023
 from .analysisDir import *
 from .analysisPlot import *
 from .bAnalysisUtil import *

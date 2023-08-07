@@ -128,7 +128,7 @@ class kymAnalysis:
             'lineWidth': 1,  # Number of lines scans to use in calculating line profile
 
             'detectPosNeg': 'pos',  # for each line, detect positive or negative intensity
-            'percentOfMax': 0.5,  # Percent of max to use in calculation of diameter
+            'percentOfMax': 0.3,  # Percent of max to use in calculation of diameter
 
             # all fields need a default so we can infer the type() when loading from json
             
@@ -239,6 +239,7 @@ class kymAnalysis:
         # _numLineScans = self.numLineScans()
         self._diamResults = self.getDefaultResultsDict()
         self._diamAnalyzed = False
+        self._analysisDirty = False
 
         # load saved analysis if it exists
         if autoLoad:
@@ -274,6 +275,10 @@ class kymAnalysis:
             "diameter_um_filt": [np.nan] * _numLineScans,
             "left_pnt": [np.nan] * _numLineScans,
             "right_pnt": [np.nan] * _numLineScans,
+            # each line has intensity (min, max, range)
+            "minInt": [np.nan] * _numLineScans,
+            "maxInt": [np.nan] * _numLineScans,
+            "rangeInt": [np.nan] * _numLineScans,
         }
         return theDict
 
@@ -600,7 +605,7 @@ class kymAnalysis:
         # for k,v in self._analysisParams.items():
         #     print(f'  {k}: {v}')
 
-    def saveAnalysis(self, path: str = None):
+    def saveAnalysis(self, path: str = None, verbose=False):
         """Save kymograph analysis.
 
         This includes:
@@ -610,15 +615,18 @@ class kymAnalysis:
             ...
         """
 
+        if not self.hasDiamAnalysis():
+            return
+        
         if path is None:
             savePath = self.getAnalysisFile()
+            _analysisFolder = self._getAnalysisFolder()
+            if not os.path.isdir(_analysisFolder):
+                if verbose:
+                    logger.info(f'making folder:{_analysisFolder}')
+                os.mkdir(_analysisFolder)
         else:
             savePath = path
-
-        _analysisFolder = self._getAnalysisFolder()
-        if not os.path.isdir(_analysisFolder):
-            logger.info(f'making folder:{_analysisFolder}')
-            os.mkdir(_analysisFolder)
 
         header = self._getFileHeader()
 
@@ -628,9 +636,13 @@ class kymAnalysis:
 
         df = pd.DataFrame(self._diamResults)
 
-        logger.info(f"saving {len(df)} lines to {savePath}")
-
         df.to_csv(savePath, mode="a")
+
+        if verbose:
+            logger.info(f"saving analysis with {len(df)} lines to file")
+            logger.info(f'   {savePath}')
+
+        self._analysisDirty = False
 
     def loadAnalysis(self):
         """Load <file>-kymanalysis.csv
@@ -658,6 +670,7 @@ class kymAnalysis:
                 logger.error(f"Did not find key {k} in loaded file columns")
         
         self._diamAnalyzed = True
+        self._analysisDirty = False
 
     def loadPeaks(self):
         """
@@ -829,7 +842,7 @@ class kymAnalysis:
 
         return intensityProfile, left_idx, right_idx
 
-    def analyzeDiameter(self):
+    def analyzeDiameter(self, verbose=False):
         """Analyze the diameter of each line scan.
 
         Args:
@@ -842,7 +855,8 @@ class kymAnalysis:
         """
         startSeconds = time.time()
 
-        logger.info('Start')
+        if verbose:
+            logger.info('Start')
 
         imageFilterKenel = self.getAnalysisParam('imageFilterKenel')
         lineFilterKernel = self.getAnalysisParam('lineFilterKernel')
@@ -855,10 +869,11 @@ class kymAnalysis:
         _pointsPerLineScan = self.pointsPerLineScan()
         theRect = self.getRoiRect()
 
-        logger.info(f"  filtering entire image with median kernel {imageFilterKenel}")
-        logger.info(f"  filtering each line with median kernel {lineFilterKernel}")
-
-        logger.info(f"  getRoiRect (l,t,r,b) is {theRect}")
+        if verbose:
+            logger.info(f"  filtering entire image with median kernel {imageFilterKenel}")
+            logger.info(f"  filtering each line with median kernel {lineFilterKernel}")
+            logger.info(f"  getRoiRect (l,t,r,b) is {theRect}")
+        
         # leftRect_sec = theRect.getLeft()
         # rightRect_sec = theRect.getRight()
         leftRect_line = theRect.getLeft()
@@ -868,12 +883,13 @@ class kymAnalysis:
         # leftRect_line = int(leftRect_sec / self.secondsPerLine)
         # rightRect_line = int(rightRect_sec / self.secondsPerLine)
 
-        logger.info(f"  leftRect_line:{leftRect_line} rightRect_line:{rightRect_line}")
-        logger.info(f"  numLineScans():{self.numLineScans()}")
-        logger.info(f"  _pointsPerLineScan():{_pointsPerLineScan}")
-        logger.info(f"  umPerPixel:{self.umPerPixel}")
-        logger.info(f"  secondsPerLine:{self.secondsPerLine}")
-        logger.info(f"  percentOfMax:{self.getAnalysisParam('percentOfMax')}")
+        if verbose:
+            logger.info(f"  leftRect_line:{leftRect_line} rightRect_line:{rightRect_line}")
+            logger.info(f"  numLineScans():{self.numLineScans()}")
+            logger.info(f"  _pointsPerLineScan():{_pointsPerLineScan}")
+            logger.info(f"  umPerPixel:{self.umPerPixel}")
+            logger.info(f"  secondsPerLine:{self.secondsPerLine}")
+            logger.info(f"  percentOfMax:{self.getAnalysisParam('percentOfMax')}")
 
         sumIntensity = [np.nan] * self.numLineScans()
         left_idx_list = [np.nan] * self.numLineScans()
@@ -918,8 +934,9 @@ class kymAnalysis:
                 diameter_idx_list[line] = _diamPixels
 
             _min = np.nanmin(intensityProfile)
-            _max = np.nanmin(intensityProfile)
+            _max = np.nanmax(intensityProfile)
             _range = _max - _min
+            # logger.info(f'{_min} {_max} {_range}')
             min_list[line] = _min
             max_list[line] = _max
             range_list[line] = _range
@@ -974,10 +991,12 @@ class kymAnalysis:
         # self._diamResults["sumChange"] = self._diamResults["maxSum"] - self._diamResults["minSum"]
 
         self._diamAnalyzed = True
+        self._analysisDirty = True
 
-        stopSeconds = time.time()
-        durSeconds = round(stopSeconds - startSeconds, 2)
-        logger.info(f"  analyzed {len(lineRange)} line scans in {durSeconds} seconds")
+        if verbose:
+            stopSeconds = time.time()
+            durSeconds = round(stopSeconds - startSeconds, 2)
+            logger.info(f"  analyzed {len(lineRange)} line scans in {durSeconds} seconds")
 
     def analyzeDiameter_mp(self):
 

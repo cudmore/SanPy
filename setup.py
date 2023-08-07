@@ -74,7 +74,7 @@ setup(
 
     extras_require={
         'gui': [
-            'numpy',
+            'numpy==1.23.4',  # 1.24 breaks PyQtGraph with numpy.float error
             'pandas==1.5',  # version 2.0 removes dataframe append
             'scipy',
             'pyabf',
