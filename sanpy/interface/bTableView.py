@@ -361,8 +361,10 @@ class bTableView(QtWidgets.QTableView):
         # contextMenu.addSeparator()
         findNewFiles = contextMenu.addAction("Sync With Folder")
         contextMenu.addSeparator()
-        saveAllAnalysis = contextMenu.addAction("Save All Analysis")
-        contextMenu.addSeparator()
+
+        # saveAllAnalysis = contextMenu.addAction("Save All Analysis")
+        # contextMenu.addSeparator()
+
         copyTable = contextMenu.addAction("Copy Table")
 
         # contextMenu.addSeparator()
@@ -404,12 +406,15 @@ class bTableView(QtWidgets.QTableView):
         elif action == copyTable:
             # self.signalCopyTable.emit()
             self.model().myCopyTable()
+            self.signalUpdateStatus.emit(f'File list copied to clipboard, can be pasted into a spreadsheet')
+
         elif action == findNewFiles:
             # self.signalFindNewFiles.emit()
             self.model().mySyncDfWithPath()
-        elif action == saveAllAnalysis:
-            # self.signalSaveFileTable.emit()
-            self.model().mySave()
+
+        # elif action == saveAllAnalysis:
+        #     # self.signalSaveFileTable.emit()
+        #     self.model().mySave()
 
         # not sure what this was supposed to do
         # elif action in [saNodeParams, ventricularParams, neuronParams, subthresholdParams]:

@@ -885,12 +885,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         # if _spikeNumbers is None then no spikes
         _spikeNumbers = self.ba.getStat('spikeNumber', sweepNumber=self.sweepNumber)
         
-        logger.info(f'self.sweepNumber:{self.sweepNumber} _spikeNumbers:{_spikeNumbers}')
+        # logger.info(f'self.sweepNumber:{self.sweepNumber} _spikeNumbers:{_spikeNumbers}')
 
         _n = None
         if _spikeNumbers is not None:
             _n = len(_spikeNumbers)
-        logger.info(f'fetching {_n} markers and colors -- WILL  BE SLOW')
+        # logger.info(f'fetching {_n} markers and colors -- WILL  BE SLOW')
         
         _plotMarkerDict = sanpy.interface.plugins.getPlotMarkersAndColors(self.ba, _spikeNumbers)
         markerList_pg = _plotMarkerDict['markerList_pg']

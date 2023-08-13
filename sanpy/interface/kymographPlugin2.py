@@ -316,8 +316,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         if doSet:
             self._detectPosNeg.setCurrentIndex(posNegIdx)
-        
-        self._on_slider_changed()  # refresh line scan
+        else:
+            self._on_slider_changed()  # refresh line scan
 
     def setImageMedianKernel(self, value):
         # self._imageMedianKernel = value
@@ -480,15 +480,15 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self._detectPosNeg = QtWidgets.QComboBox()
         self._detectPosNeg.addItem('pos')
         self._detectPosNeg.addItem('neg')
-        self._detectPosNeg.currentTextChanged.connect(
-            self._on_detect_polarity
-        )
         if self._kymographAnalysis is not None:
             posNegStr = self._kymographAnalysis.getAnalysisParam('detectPosNeg')
         else:
             posNegStr = 'pos'
         #self._detectPosNeg.setCurrentIndex(posNegIdx)
         self._on_detect_polarity(posNegStr, doSet=True)
+        self._detectPosNeg.currentTextChanged.connect(
+            self._on_detect_polarity
+        )
 
         hBoxLayoutControls.addWidget(self._detectPosNeg)
 

@@ -451,9 +451,13 @@ def stripSantanaTif(fileList : List[str]) -> List[str]:
         if not _filename.endswith('.tif'):
             retList.append(file)
             continue
-        elif _filename.find('_C002') != -1:
+        # elif _filename.find('_C002') != -1:
+        #     retList.append(file)
+        elif _filename.find('_C001') != -1:
+            continue
+        else:
             retList.append(file)
-
+        
     return retList
 
 class analysisDir:
@@ -465,7 +469,7 @@ class analysisDir:
     """Dict of dict of column names and bookkeeping info.
     """
 
-    theseFileTypes = [".abf", ".atf", ".csv", ".dat", ".tif"]
+    theseFileTypes = [".abf", ".atf", ".sanpy", ".dat", ".tif"]
     """File types to load.
     """
 
@@ -1270,9 +1274,7 @@ class analysisDir:
         """
         file = self._df.loc[rowIdx, "File"]
         ba = self._df.loc[rowIdx, "_ba"]
-        uuid = self._df.loc[
-            rowIdx, "uuid"
-        ]  # if we have a uuid bAnalysis is saved in h5f
+        uuid = self._df.loc[rowIdx, "uuid"]  # if we have a uuid bAnalysis is saved in h5f
         # filePath = os.path.join(self.path, file)
         # logger.info(f'Found _ba in file db with ba:"{ba}" {type(ba)}')
         # logger.info(f'rowIdx: {rowIdx} ba:{ba}')

@@ -27,7 +27,10 @@ class kymUserAnalysis(baseUserAnalysis):
         self.addUserStat("Diameter Peak Pnt", "k_diam_peak_pnt")
         self.addUserStat("Diameter Peak Time (s)", "k_diam_peak_sec")
         # summary
-        self.addUserStat("Diameter Time To Peak (s)", "k_diam_time_to_peak_sec")
+
+        # do both time to peak with in
+        self.addUserStat("Diameter Time To Peak wrt peak in the Ca sppike(s)", "k_diam_time_to_peak_sec")
+
         self.addUserStat("Diameter Amp (um)", "k_diam_amp")
         self.addUserStat("Diameter Percent Change (%)", "k_diam_percent")
 

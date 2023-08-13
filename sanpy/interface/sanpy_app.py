@@ -1065,7 +1065,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # list of files (in a dock)
         folderDepth = self.configDict["fileList"]["Folder Depth"]
         self._fileListWidget = sanpy.interface.fileListWidget(self.myModel, folderDepth=folderDepth)
-        # self._fileListWidget.signalUpdateStatus.connect(self.slot_updateStatus)  # never used
+        self._fileListWidget._tableView.signalUpdateStatus.connect(self.slot_updateStatus)  # 
         self._fileListWidget.signalLoadFolder.connect(self.slot_loadFolder)
         self._fileListWidget.signalSetFolderDepth.connect(self.slot_folderDepth)
         self._fileListWidget.getTableView().signalSelectRow.connect(
