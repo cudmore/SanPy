@@ -12,7 +12,7 @@ logger = get_logger(__name__)
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
-from sanpy.bAnalysisUtil import statList
+# from sanpy.bAnalysisUtil import statList
 
 
 class basePlotTool(sanpyPlugin):
@@ -51,33 +51,34 @@ class basePlotTool(sanpyPlugin):
         #    return
 
         # analysisName = 'analysisname'
-        analysisName = "file"
-        statListDict = statList  # maps human readable to comments
-        categoricalList = [
-            "include",
-            "condition",
-            "cellType",
-            "sex",
-            "file",
-            "File Number",
-        ]  # , 'File Name']
-        hueTypes = [
-            "cellType",
-            "sex",
-            "condition",
-            "file",
-            "File Number",
-        ]  # , 'File Name'] #, 'None']
-        sortOrder = ["cellType", "sex", "condition", "File Number"]
+        analysisName = "Unique Name"
+        # statListDict = statList  # maps human readable to comments
+        statListDict = sanpy.bAnalysisUtil.getStatList()  # maps human readable to comments
+        
+        metaDataKeys = [key for key in sanpy.MetaData.getMetaDataDict().keys()]
+
+        categoricalList = metaDataKeys
+        categoricalList.append('File Number')
+        categoricalList.append('Unique Name')
+
+        hueTypes = categoricalList
+        # hueTypes = metaDataKeys
+        # hueTypes.append('File Number')
+        # hueTypes.append('Unique Name')
+
+
+        sortOrder = ["Sex", "Condition1", "Condition2", "Unique Name"]
 
         limitToCol = ["epoch"]
 
-        interfaceDefaults = {
-            "Y Statistic": "Spike Frequency (Hz)",
-            "X Statistic": "Spike Frequency (Hz)",
-            "Hue": "cellType",
-            "Group By": "file",
-        }
+        # interfaceDefaults = {
+        #     "X Statistic": "Spike Time (s)",
+        #     "Y Statistic": "Spike Frequency (Hz)",
+        #     "Hue": "Unique Name",
+        #     "Style": "None",
+        #     "Group By": "Unique Name",
+        # }
+        interfaceDefaults = None
 
         # analysisName, masterDf = analysisName, df0 = ba.getReportDf(theMin, theMax, savefile)
 
@@ -95,13 +96,13 @@ class basePlotTool(sanpyPlugin):
         self.mainWidget2 = sanpy.interface.bScatterPlotMainWindow(
             path,
             categoricalList,
-            hueTypes,
-            analysisName,
+            # hueTypes,
+            # analysisName,  # used for group by
             sortOrder,
             statListDict=statListDict,
             masterDf=self.masterDf,
             limitToCol=limitToCol,
-            interfaceDefaults=interfaceDefaults,
+            # interfaceDefaults=interfaceDefaults,
         )
         # rewire existing widget into plugin architecture
         # self.mainWidget.closeEvent = self.onClose

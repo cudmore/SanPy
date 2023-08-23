@@ -45,6 +45,8 @@ import seaborn as sns
 # import sanpy
 # import bUtil # from sanpy folder, for pandas model
 
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 def old_loadDatabase(path):
     """
@@ -1967,7 +1969,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         for i, analysisname in enumerate(fileNameList):
             tmpDf = self.masterDf[self.masterDf[self.groupByColumnName] == analysisname]
             if len(tmpDf) == 0:
-                print("  ERROR: got 0 length for analysisname:", analysisname)
+                logger.error(f'got 0 length for analysisname: {analysisname}')
                 continue
             # need to limit this to pre-defined catecorical columns
             for catName in self.masterCatColumns:
@@ -1996,9 +1998,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                         self.yDf.loc[theseRows, catName] = catValue
                     # print('catName:', catName, 'catValue:', type(catValue), catValue)
                 else:
-                    print(
-                        "warning catName:", catName, "has", numUnique, "unique values"
-                    )
+                    logger.warning(f"catName: {catName} has {numUnique} unique values")
                     pass
                     # print(f'not adding {catName} to table, numUnique: {numUnique}')
         #

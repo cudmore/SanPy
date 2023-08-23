@@ -308,7 +308,7 @@ class bAnalysis:
         """Return analysis as a Pandas DataFrame.
 
         Important:
-            This returns a COPY !!!
+            This is a df copy of our self.spikeDict
             Do not modify and expect changes to stick
         """
         return self._dfReportForScatter
@@ -515,7 +515,8 @@ class bAnalysis:
                 # pprint(analysisList[0])
 
                 # recreate spike analysis dataframe
-                self._dfReportForScatter = dfAnalysis
+                # self._dfReportForScatter = dfAnalysis
+                self.regenerateAnalysisDataFrame()
 
                 # regenerate error report
                 self.dfError = self.getErrorReport()
@@ -2093,12 +2094,13 @@ class bAnalysis:
         # generate a df holding stats (used by scatterplotwidget)
         # startSeconds = dDict['startSeconds']
         # stopSeconds = dDict['stopSeconds']
-        if self.numSpikes > 0:
-            # exportObject = sanpy.bExport(self)
-            # self.dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
-            self._dfReportForScatter = self.spikeDict.asDataFrame()
-        else:
-            self.dfReportForScatter = None
+        # if self.numSpikes > 0:
+        #     # exportObject = sanpy.bExport(self)
+        #     # self.dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
+        #     self._dfReportForScatter = self.spikeDict.asDataFrame()
+        # else:
+        #     self.dfReportForScatter = None
+        self.regenerateAnalysisDataFrame()
 
         # generate error report
         self.dfError = self.getErrorReport()
@@ -2113,6 +2115,21 @@ class bAnalysis:
             # exportObject = sanpy.bExport(self)
             # self.dfReportForScatter = exportObject.report(startSeconds, stopSeconds)
             self._dfReportForScatter = self.spikeDict.asDataFrame()
+
+            # get rid of analysis results columns, we get these from file metadata
+            #  - include
+            #  - cellType
+            #  - sex
+            #  - condition
+            self._dfReportForScatter = self._dfReportForScatter.drop('include', axis=1)
+            self._dfReportForScatter = self._dfReportForScatter.drop('cellType', axis=1)
+            self._dfReportForScatter = self._dfReportForScatter.drop('sex', axis=1)
+            self._dfReportForScatter = self._dfReportForScatter.drop('condition', axis=1)
+
+            # add all file meta data to df
+            for k,v in self.metaData.items():
+                self._dfReportForScatter[k] = v
+
         else:
             self.dfReportForScatter = None
 

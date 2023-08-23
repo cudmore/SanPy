@@ -566,7 +566,7 @@ class kymAnalysis:
 
         return headerStr
 
-    def _parseFileHeader(self, header):
+    def _parseFileHeader(self, savePath, header):
         """Parse one line header into an analysis parameter dictionary.
 
         This is parsing header we save with analysis.
@@ -577,7 +577,13 @@ class kymAnalysis:
             if not kv:
                 # handle trailing ';'
                 continue
-            k, v = kv.split("=")
+            
+            try:
+                k, v = kv.split("=")
+            except (ValueError) as e:
+                logger.error(f'did not parse kym file header for "{kv}"')
+                continue
+            
             # print('    k:', k, 'v:', v)
             
             try:
@@ -658,7 +664,7 @@ class kymAnalysis:
 
         with open(savePath) as f:
             headerStr = f.readline().rstrip()
-        self._parseFileHeader(headerStr)  # parse header of saved analysis
+        self._parseFileHeader(savePath, headerStr)  # parse header of saved analysis
 
         df = pd.read_csv(savePath, header=1)
 

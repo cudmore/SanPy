@@ -3,6 +3,7 @@
 # Date: 20210603
 
 import os, time, sys
+import random
 import copy  # For copy.deepcopy() of bAnalysis
 import uuid  # to generate unique key on bAnalysis spike detect
 import pathlib  # ned to use this (introduced in Python 3.4) to maname paths on Windows, stop using os.path
@@ -1716,8 +1717,17 @@ class analysisDir:
 
         self._updateLoadedAnalyzed()
 
-    def pool_build(self, uniqueColumn=None, verbose=False):
-        """Build one df with all analysis. Use this in plot tool plugin."""
+    def pool_build(self, uniqueColumn=None, includeNo=True, verbose=False):
+        """Build one df with all analysis. Use this in plot tool plugin.
+        
+        Parameters
+        ----------
+        uniqueColumn : str
+            Name of column to prepend to File column to make a unique name.
+            Use 'parant2' for Kymograph tif files exported from Olympus.
+        includeNo : boolean
+            if True then include files with metadata 'Include' of no.
+        """
         if verbose:
             logger.info("")
         
@@ -1725,7 +1735,7 @@ class analysisDir:
         
         # for row in range(self.numFiles):
         for rowIdx, rowDict in self._df.iterrows():
-            if rowDict['Include'] == 'no':
+            if (not includeNo) and (rowDict['Include'] == 'no'):
                 if verbose:
                     logger.info(f'  rowIdx:{rowIdx} Include is "no"')
                 continue
@@ -1747,6 +1757,13 @@ class analysisDir:
                 if uniqueColumn is not None:
                     uniqueName = rowDict[uniqueColumn] + '-' + uniqueName
                 oneDf["Unique Name"] = uniqueName
+
+                logger.warning('TEMPORARY WHILE WORKING ON KYM POOLING !!!!!!!!!!!!!!!!!!!!!!!!!')
+                logger.warning('randomly assigning sex to male, female, unknown')
+                sexList = ['male', 'female', 'unknown']
+                oneDf['Sex'] = random.choice(sexList)
+
+                # drop some redundant analysis results (no in file metadata)
                 
                 if masterDf is None:
                     masterDf = oneDf
@@ -1757,6 +1774,8 @@ class analysisDir:
             if verbose:
                 logger.error("Did not find any analysis.")
         else:
+            # add an index column (for plotting)
+            masterDf['index'] = [x for x in range(len(masterDf))]
             if verbose:
                 logger.info(f"final num spikes {len(masterDf)}")
         

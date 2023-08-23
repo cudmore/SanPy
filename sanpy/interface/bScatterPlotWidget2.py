@@ -23,9 +23,12 @@ Requires (need to make local copies of (pandas model, checkbox delegate)
 """
 
 import os, sys, io, csv
+import copy
 from functools import partial
 from collections import OrderedDict
 import traceback
+from typing import List, Union, Optional
+
 import pandas as pd
 import numpy as np
 
@@ -36,13 +39,12 @@ from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt  # abb 202012 added to set theme
 import seaborn as sns
-# import mplcursors  # popup on hover
+import mplcursors  # popup on hover
 
 # originally, I wanted this to not rely on sanpy
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
 
 
@@ -92,7 +94,7 @@ def printDict(d, withType=False):
 
 
 class myPandasModel(QtCore.QAbstractTableModel):
-    def __init__(self, data):
+    def __init__(self, data : pd.DataFrame):
         """
         data: pandas dataframe
         """
@@ -297,18 +299,6 @@ class myCheckBoxDelegate(QtWidgets.QItemDelegate):
         newValue = 1 if int(index.data()) == 0 else 0
         model.setData(index, newValue, QtCore.Qt.EditRole)
 
-
-# class MainWindow(QtWidgets.QWidget):
-myInterfaceDefaults = OrderedDict(
-    {
-        "X Statistic": None,
-        "Y Statistic": None,
-        "Hue": None,
-        "Group By": None,
-    }
-)
-
-
 class myTableView(QtWidgets.QTableView):
     def __init__(self, dataType, parent=None):
         """
@@ -336,13 +326,12 @@ class myTableView(QtWidgets.QTableView):
         self.setPalette(p)
 
     def slotSelectRow(self, selectDict):
+        """only select if selectDict['Data Type'] matches what we are showing
         """
-        only selecct if selectDict['dataType'] matches what we are showing
-        """
-        if self.dataType != selectDict["dataType"]:
+        if self.dataType != selectDict["Data Type"]:
             return
 
-        print("slotSelectRow() selectDict:", selectDict)
+        logger.info(f'slotSelectRow() selectDict:{selectDict}')
         ind = selectDict["index"]
         """
         plotDf = selectDict['plotDf']
@@ -356,8 +345,7 @@ class myTableView(QtWidgets.QTableView):
         self.setCurrentIndex(modelIndex)
 
     def slotSwitchTableDf(self, newDf):
-        """
-        set model from df
+        """set model from df
         """
         if newDf is None:
             model = None
@@ -392,11 +380,13 @@ class myTableView(QtWidgets.QTableView):
 
 
 class myStatListWidget(QtWidgets.QWidget):
-    """
-    Widget to display a table with selectable stats.
+    """Widget to display a table with selectable stats.
 
     Gets list of stats from: sanpy.bAnalysisUtil.getStatList()
     """
+
+    signalStatSelection = QtCore.pyqtSignal(object, object)  # str: header str
+                                                            #str: human deadable stat name
 
     def __init__(self, myParent, statList=None, headerStr="Stat", parent=None):
         """
@@ -417,6 +407,8 @@ class myStatListWidget(QtWidgets.QWidget):
             # from main sanpy
             # for pooling we have some addition columns like 'file number'
             self.statList = sanpy.bAnalysisUtil.getStatList()
+
+        self._headerStr = headerStr
 
         self._rowHeight = 9
 
@@ -465,6 +457,22 @@ class myStatListWidget(QtWidgets.QWidget):
         # select a default stat
         self.myTableWidget.selectRow(0)  # hard coding 'Spike Frequency (Hz)'
 
+    def setCurrentRow(self, str):
+        """Select row based on row item string.
+        
+        Ussually a analysis parameter like 'Spike Frequency (Hz)'
+        """
+        # find index in dict
+        try:
+            idx = list(self.statList.keys()).index(str)
+        except (KeyError) as e:
+            logger.error(f'did not find key {str}')
+            return
+
+        # select row index
+        if idx >= 0:
+            self.myTableWidget.selectRow(idx)
+
     def getCurrentRow(self):
         return self.myTableWidget.currentRow()
 
@@ -493,7 +501,10 @@ class myStatListWidget(QtWidgets.QWidget):
         if row == -1 or row is None:
             return
         yStat = self.myTableWidget.item(row, 0).text()
+        logger.info(f'{yStat}')
         self.myParent.replot()
+
+        self.signalStatSelection.emit(self._headerStr, yStat)
 
     """
     @QtCore.pyqtSlot()
@@ -504,17 +515,15 @@ class myStatListWidget(QtWidgets.QWidget):
 
 # class myMplCanvas(FigureCanvas):
 class myMplCanvas(QtWidgets.QFrame):
-    """
-    hold an fig/plot canvas, in scatter plot we can have 1-4 of these
+    """Hold an fig/plot canvas, in scatter plot we can have 1-4 of these
     """
 
     signalSelectFromPlot = QtCore.Signal(object)
-    signalSelectSquare = QtCore.Signal(object, object)
+    signalSelectSquare = QtCore.Signal(object, object)  # plot number, state dict
+    signalSetStatusBar = QtCore.Signal(str)
 
-    def __init__(self, plotNumber=None, parent=None):
+    def __init__(self, plotState : "plotState", parent=None):
         super().__init__(parent)  # FigureCanvas
-
-        # self.plotType = None
 
         # self.setFrameWidth(5)
         # self.setStyleSheet("background-color: rgb(0, 255, 0)")
@@ -528,20 +537,23 @@ class myMplCanvas(QtWidgets.QFrame):
         self.setPalette(pal)
 
         #
-        self.plotNumber = plotNumber
-        self.stateDict = None
+        self.stateDict = plotState
+        #self.plotNumber = plotState['Plot Number']
         self.plotDf = None
         self.whatWeArePlotting = None
-        # self.mplCursorHover = None
+
+        self.mplCursorHover = None
+        # self.mplCursorHover = mplcursors.cursor(self.whatWeArePlotting,
+        #                                         highlight=True,
+        #                                         hover=mplcursors.HoverMode.Transient)
 
         # needed to show canvas in widget
         self.layout = QtWidgets.QVBoxLayout()  # any will do
 
         self.fig = Figure(constrained_layout=True)
-
         self.canvas = FigureCanvas(self.fig)
-
         self.canvas.axes = self.fig.add_subplot(111)  # was this
+
         # self.canvas.axes = self.fig.add_axes([0.1, 0.1, 0.9, 0.9]) # [x, y, w, h]
         # gs1 = gridspec.GridSpec(1, 1)
         # gs1.tight_layout(self.fig, rect=[0.5, 0, 1, 1], h_pad=0.5)
@@ -549,7 +561,8 @@ class myMplCanvas(QtWidgets.QFrame):
 
         # user clicks on plot point
         self.cid2 = self.canvas.mpl_connect("pick_event", self.on_pick_event)
-        # user clicks in the figure
+        
+        # user clicks in the figure, used to highlight the widget with red square
         self.cid3 = self.canvas.mpl_connect("button_press_event", self.on_pick_event2)
 
         self.scatterPlotSelection = None
@@ -581,8 +594,9 @@ class myMplCanvas(QtWidgets.QFrame):
         self.layout.addWidget(self.canvas)
         self.setLayout(self.layout)
 
-    def buildUI(self):
-        pass
+    #@property
+    def getPlotNumber(self):
+        return self.stateDict['Plot Index']
 
     def mousePressEvent(self, event):
         logger.info("===")
@@ -590,7 +604,7 @@ class myMplCanvas(QtWidgets.QFrame):
             "  todo: set all controls to match the plot just clicked on using self.stateDict!!!"
         )
         # print('  stateDict:', self.stateDict)
-        self.signalSelectSquare.emit(self.plotNumber, self.stateDict)
+        self.signalSelectSquare.emit(self.getPlotNumber(), self.stateDict)
 
     def contextMenuEvent(self, event):
         print("myMplCanvas.contextMenuEvent()")
@@ -602,8 +616,79 @@ class myMplCanvas(QtWidgets.QFrame):
             self.fig.savefig("", dpi=600)
 
     def on_pick_event(self, event):
+        """
+        event : matplotlib.backend_bases.PickEvent
+        """
+
+        logger.info('===')
+
+        ax = self.whatWeArePlotting
+        # print('  axes has num lines:', len(ax.get_lines()))
+
+        legend_label = event.artist.get_label()   
+        # print('  event.artist:', event.artist)
+        # event.artist: Line2D(_child63)
+        # print('  event legend_label:', legend_label)
+
+        # Seaborn uses 2 labels for 1 line, we only want to use the second label
+        half_label_length = int(len(ax.get_lines())/2)
         try:
-            logger.info(f'=== event: "{event.ind}"')
+            _labelList = [_line.get_label() for _line in ax.get_lines()]
+            
+            # for _labelIdx, _label in enumerate(_labelList):
+            #     print(f'  _labelIdx:{_labelIdx} has _label:{_label}')
+            
+            # realIdx = ax.get_lines().index(legend_label)
+            actualIndex = _labelList.index(legend_label)
+            # sometimes we get labels like 'sex', 'unique name' and sometimes not ???
+            labelOffset = 0  # = -2
+            realIdx = actualIndex + half_label_length + labelOffset
+            # realLabel = ax.get_lines()[realIdx].getLabel()
+            realLabel = _labelList[realIdx]
+
+            logger.info(f'realLabel:{realLabel}')
+            self.signalSetStatusBar.emit(realLabel)
+
+            # logger.info(f'  legend_label:{legend_label}')
+            # logger.info(f'  at actual index:{actualIndex}')
+            # logger.info(f'  has realIdx:{realIdx}')
+            # logger.info(f'  realLabel:{realLabel}')
+
+        except (ValueError) as e:
+            logger.error(f'ValueError of: {e}')
+
+        return
+
+        # Seaborn uses 2 labels for 1 line, we only want to use the second label
+        label_length = int(len(ax.get_lines())/2)
+        label_length = int(len(ax.get_lines()))
+        for x in range(label_length):
+            currLabel = ax.get_lines()[x+label_length].get_label()
+            print('  currLabel:', currLabel)
+
+            if legend_label == currLabel:
+                if ax.get_lines()[x].get_visible():
+                    ax.get_lines()[x].set_visible(False)
+                else:
+                    ax.get_lines()[x].set_visible(True)
+                #fig.canvas.draw()
+        return
+
+        try:
+            # logger.info(f'  {type(event)}')
+            # logger.info(f'  {event}')
+            logger.info(f'=== event.ind: "{event.ind}"')
+
+            # line = event.artist  # like Line2D(_child63)
+            # print('line:', line)
+
+            # axisIndex = self.canvas.axes.lines.index(event.artist)
+            
+            # <Axes.ArtistList of 1 lines>
+            print('  self.whatWeArePlotting.lines:', self.whatWeArePlotting.lines)
+            
+            axisIndex = self.whatWeArePlotting.lines.index(event.artist)
+            print('  axisIndex:', axisIndex)
 
             if len(event.ind) < 1:
                 return
@@ -613,36 +698,45 @@ class myMplCanvas(QtWidgets.QFrame):
             # propagate a signal to parent
             # self.myMainWindow.mySignal('select spike', data=spikeNumber)
             # self.selectSpike(spikeNumber)
+
         except AttributeError as e:
             pass
 
     def on_pick_event2(self, event):
-        logger.info("===")
-
-        # print(self.stateDict)
-        for k, v in self.stateDict.items():
-            if k == "masterDf":
-                print(f"  {k}: length is {len(v)}")
-            else:
-                print(f"  {k}: {v}")
-        #
-        self.signalSelectSquare.emit(self.plotNumber, self.stateDict)
-
-    def onPick(self, event):
+        """Pick event to select a square.
         """
-        when user clicks on a point in the graph
+        #logger.info("===")
+
+        # for k, v in self.stateDict.items():
+        #     if k == "masterDf":
+        #         print(f"  {k}: length is {len(v)}")
+        #     else:
+        #         print(f"  {k}: {v}")
+
+        self.signalSelectSquare.emit(self.getPlotNumber(), self.stateDict)
+
+    def on_pick(self, event):
+        """when user clicks on a point in the graph
 
         todo: this makes perfect sense for scatter but maybe not other plots???
         """
-        print("=== myMplCanvas.onPick()")  #' event:', type(event), event)
-        line = event.artist
+        logger.info('=== myMplCanvas')  #' event:', type(event), event)
+        
+        # only allow pick in Scatter Plot
+        if not self.stateDict['Plot Type'] in ['Scatter Plot', 'Scatter + Raw + Mean']:
+            logger.warning('picking only allowed in scatter plots')
+            # self.signalSetStatusBar.emit('Selection only allowed in scatter plots')
+            return
+
+        # line = event.artist
 
         # filter out clicks on 'Annotation' used by mplcursors
-        try:
-            # when Scatter, line is 'PathCollection', a list of (x,y)
-            offsets = line.get_offsets()
-        except AttributeError as e:
-            return
+        # try:
+        #     # when Scatter, line is 'PathCollection', a list of (x,y)
+        #     offsets = line.get_offsets()
+        # except AttributeError as e:
+        #     logger.info(f'get_offsets() triggered AttributeError, not a scatter plot.')
+        #     return
 
         ind = event.ind  # ind is a list []
         if len(ind) == 0:
@@ -651,69 +745,98 @@ class myMplCanvas(QtWidgets.QFrame):
 
         # ind is the ith element in (x,y) list of offsets
         # ind 10 (0 based) is index 11 (1 based) in table list
-        print(f"  selected from plot ind:{ind}, offsets values are {offsets[ind]}")
+        # logger.info(f"  user selected ind:{ind}, offsets: {offsets[ind]}")
+        logger.info(f"  user selected ind:{ind}")
+        
         selectDict = self.getAnnotation(ind)
 
+        if selectDict is None:
+            return
+        
         # to do, just put copy of state dict ???
-        selectDict["plotType"] = self.stateDict["plotType"]
-        selectDict["dataType"] = self.stateDict["dataType"]
+        selectDict["Plot Type"] = self.stateDict["Plot Type"]
+        selectDict["Data Type"] = self.stateDict["Data Type"]
         #
         # emit
-        logger.info(f"  myMplCanvas.signalSelectFromPlot.emit() {selectDict}")
+        logger.info(f"  myMplCanvas.signalSelectFromPlot.emit(selectDict)")
+        for k,v in selectDict.items():
+            print('  k:', k, 'v:', v)
+
         self.signalSelectFromPlot.emit(selectDict)
+        
+        _selStr = selectDict['Unique Name']
+        self.signalSetStatusBar.emit(_selStr)
 
     def _selectInd(self, ind):
+        """visually select a point in scatter plot
         """
-        visually select a point in scatter plot
-        """
-        print("myMplCanvas._selectInd() ind:", ind)
+        if self.plotDf is None:
+            # no plot yet
+            return
+        logger.info(f'myMplCanvas._selectInd() ind:{ind}')
         if ind > len(self.plotDf) - 1:
             return
         xVal = self.plotDf.at[ind, self.stateDict["xStat"]]
         yVal = self.plotDf.at[ind, self.stateDict["yStat"]]
         if self.scatterPlotSelection is not None:
-            print("  scatterPlotSelection x:", xVal, "y:", yVal)
+            logger.info(f'  scatterPlotSelection x:{xVal} y:{yVal}')
             self.scatterPlotSelection.set_data(xVal, yVal)
         self.fig.canvas.draw()
 
-    def getAnnotation(self, ind):
+    def getAnnotation(self, ind : int):
+        """Get info on an annotation index.
+        
+        Lots of plots do not give an integer index and just ignore them.
+        """
         if not np.issubdtype(ind, np.integer):
-            print("myMplCanvas.getAnnotation() got bad ind:", ind, type(ind))
+            #logger.error(f'myMplCanvas.getAnnotation() got bad ind:{ind} {type(ind)}')
             return
 
         xStat = self.stateDict["xStat"]
         yStat = self.stateDict["yStat"]
-        groupByColumnName = self.stateDict["groupByColumnName"]
+        # groupByColumnName = self.stateDict["Group By (Stats)"]
 
-        analysisName = self.plotDf.at[ind, groupByColumnName]
-        index = self.plotDf.at[ind, "index"]
+        # analysisName = self.plotDf.at[ind, groupByColumnName]
+        index = None
+        if not 'index' in self.plotDf.columns:
+            logger.error(f'did not find "index" column. Available columns are')
+            logger.error(f'{self.plotDf.columns}')
+        else:
+            index = self.plotDf.at[ind, "index"]
+
         try:
-            region = self.plotDf.at[ind, "Region"]  # not all will have this
+            uniqueName = self.plotDf.at[ind, "Unique Name"]  # not all will have this
         except KeyError as e:
-            region = "n/a"
+            uniqueName = "n/a"
+
+        # for v in self.plotDf.loc[ind]:
+        #     print(v)
+
         xVal = self.plotDf.at[ind, xStat]
         yVal = self.plotDf.at[ind, yStat]
 
         returnDict = {
+            "Unique Name": uniqueName,
             "ind": ind,
             "index": index,
-            "analysisName": analysisName,
-            "region": region,
+            # "analysisName": analysisName,
+            # "region": region,
             "xVal": xVal,
             "yVal": yVal,
             #'plotDf': self.plotDf, # potentially very big
         }
         return returnDict
 
-    def slotSelectSquare(self, plotNumber, stateDict):
+    def slot_selectSquare(self, plotNumber, stateDict):
         # print('myMplCanvas.slotSelectSquare()', plotNumber, 'self.plotNumber:', self.plotNumber)
-        if plotNumber == self.plotNumber:
+        if plotNumber == self.getPlotNumber():
             self.setLineWidth(1)
         else:
             self.setLineWidth(0)
 
-    def slotSelectInd(self, selectDict):
-        if self.stateDict["plotType"] == selectDict["plotType"]:
+    def slot_selectInd(self, selectDict):
+        logger.info(f'selectDict:{selectDict}')
+        if self.stateDict["Plot Type"] == selectDict["Plot Type"]:
             # only select if same plot type, o/w selections are out of synch
             self._selectInd(selectDict["ind"])
 
@@ -735,119 +858,243 @@ class myMplCanvas(QtWidgets.QFrame):
         self.fig.canvas.draw()
 
     def updateTheme(self):
+        """redraw using stored self.state
         """
-        redraw using stored self.state
-        """
-        self.myUpdate(stateDict=None)
+        self.myUpdate()
 
     def myUpdateGlobal(self, stateDict):
-        """
-        update globals but do not plot
+        """Update globals but do not plot.
 
-        globals are things shared across all plots like mpl toolbar and legend (???)
+        globals are things shared across all plots like mpl toolbar and legend.
         """
-        self.canvas.axes.legend().set_visible(stateDict["showLegend"])
-        # self.myLegend.set_visible(stateDict['showLegend'])
+        # self.canvas.axes.legend().set_visible(stateDict["Legend"])
+        _legend = self.canvas.axes.get_legend()
+        if _legend is not None:
+            _legend.set_visible(stateDict["Legend"])
 
-        if stateDict["showMplToolbar"]:
+        if stateDict["Toolbar"]:
             self.mplToolbar.show()
         else:
             self.mplToolbar.hide()
 
-        # if stateDict["doHover"] and self.whatWeArePlotting is not None:
-        #     self.mplCursorHover = mplcursors.cursor(self.whatWeArePlotting, hover=True)
+        #print('stateDict:', stateDict.keys())
+        
+        if stateDict["Hover Info"] and self.whatWeArePlotting is not None:
+            
+            # self.doHover = True
+            if self.mplCursorHover is not None:
+                # Remove all Selections, disconnect all callbacks,
+                # and allow the cursor to be garbage collected.
+                self.mplCursorHover.remove()
+                self.mplCursorHover = None
 
-        #     @self.mplCursorHover.connect("add")
-        #     def _(sel):
-        #         # sel.annotation.get_bbox_patch().set(fc="white")
-        #         sel.annotation.arrow_patch.set(
-        #             arrowstyle="simple", fc="white", alpha=0.5
-        #         )
-        #         # row in df is from sel.target.index
-        #         # print('sel.target.index:', sel.target.index)
-        #         ind = sel.target.index
-        #         annotationDict = self.getAnnotation(ind)
-        #         myText = ""
-        #         for k, v in annotationDict.items():
-        #             myText += f"{k}: {v}\n"
-        #         sel.annotation.set_text(myText)
+            self.mplCursorHover = mplcursors.cursor(self.whatWeArePlotting,
+                                                    highlight=False,
+                                                    hover=mplcursors.HoverMode.Transient)
+            self.mplCursorHover.connect('add', self._mplCursorCallback)
 
-        # elif not stateDict["doHover"]:
-        #     # cancel mplCursorHover hover selection
-        #     if self.mplCursorHover is not None:
-        #         selections = self.mplCursorHover.selections
-        #         if len(selections) == 1:
-        #             self.mplCursorHover.remove_selection(selections[0])
+            # @self.mplCursorHover.connect("add")
+            # def _(sel):
+            #     #sel: mplcursors._pick_info.Selection
+            #     logger.info(f'sel:{type(sel)}')
+            #     # sel.annotation.get_bbox_patch().set(fc="white")
+            #     sel.annotation.arrow_patch.set(
+            #         arrowstyle="simple", fc="white", alpha=0.5
+            #     )
+            #     # row in df is from sel.target.index
+            #     # print('sel.target.index:', sel.target.index)
+            #     # ind = sel.target.index
+            #     ind = sel.index
+            #     annotationDict = self.getAnnotation(ind)
+            #     myText = ""
+            #     if annotationDict is not None:
+            #         for k, v in annotationDict.items():
+            #             myText += f"{k}: {v}\n"
+            #     sel.annotation.set_text(myText)
 
-        #
+        elif not stateDict["Hover Info"]:
+            # self.mplCursorHover = mplcursors.cursor(self.whatWeArePlotting,
+            #                                         highlight=False,
+            #                                         hover=mplcursors.HoverMode.NoHover)
+            if self.mplCursorHover is not None:
+                self.mplCursorHover.remove()
+                self.mplCursorHover = None
+
+            # self.doHover = False
+            # if self.mplCursorHover is not None:
+            #     # self.mplCursorHover.HoverMode(mplcursors.HoverMode.NoHover)
+            #     try:
+            #         self.mplCursorHover.disconnect("add", self._mplCursorCallback)
+            #     except (ValueError) as e:
+            #         pass
+            # cancel mplCursorHover hover selection
+            # if self.mplCursorHover is not None:
+            #     selections = self.mplCursorHover.selections
+            #     if len(selections) == 1:
+            #         self.mplCursorHover.remove_selection(selections[0])
+
+        
         # self.draw() # to update hover
         self.fig.canvas.draw()
 
-    def myUpdate(self, stateDict=None):
+    def _mplCursorCallback(self, sel):
+        logger.info(sel)
+        # logger.info(self.stateDict['doHover'])
+
+        # if not self.stateDict['doHover']:
+        #     return
+
+        #sel: mplcursors._pick_info.Selection
+        # logger.info(f'sel:{type(sel)}')
+        # sel.annotation.get_bbox_patch().set(fc="white")
+        sel.annotation.arrow_patch.set(
+            arrowstyle="simple", fc="white", alpha=0.5
+        )
+        # row in df is from sel.target.index
+        # print('sel.target.index:', sel.target.index)
+        # ind = sel.target.index
+        ind = sel.index
+        annotationDict = self.getAnnotation(ind)
+        myText = ""
+        if annotationDict is not None:
+            for k, v in annotationDict.items():
+                myText += f"{k}: {v}\n"
+        sel.annotation.set_text(myText)
+
+    def _stateIsMyState(self, state : "plotState") -> bool:
+        """Return true if state matches self.stateDict.
+        
+        Do this by comparing 'Plot Index'
         """
-        update plot based on control interface
+        
+        # logger.info(f"state plot index is {state['Plot Index']} and self.stateDict is {self.stateDict['Plot Index']}")
+
+        return state['Plot Index'] == self.stateDict['Plot Index']
+
+    def myUpdate(self, state : "plotState" = None, forceDeepCopy=False):
+        """update plot based on control interface
         """
 
-        # store stateDict so we can replot on changing dark theme
-        if stateDict is None and self.stateDict is not None:
-            # re-use our stateDict
-            stateDict = self.stateDict
+        if state is not None and not self._stateIsMyState(state):
+            # DeepCopy the state and claim ownership
+            logger.info(f'!!! DeepCopy to new state !!!')
+            myPlotIndex = self.getPlotNumber()
+            self.stateDict = copy.deepcopy(state)
+            self.stateDict.setState('Plot Index', myPlotIndex)
+
+        state = self.stateDict
+
+        plotType = state["Plot Type"]
+        dataType = state["Data Type"]
+        
+        hue = state["Hue"]
+        if hue == 'None':
+            hue = None
+        
+        style = state["Style"]
+        if style == 'None':
+            style = None
+        
+        groupByColumnName = state["Group By (Stats)"]
+
+        markerSize = state['Marker Size']
+
+        xStatHuman = state["X Statistic"]
+        yStatHuman = state["Y Statistic"]
+
+        logger.info(f'myMplCanvas plotting {self.getPlotNumber()}')
+        logger.info(f'  plotType:{plotType}')
+        logger.info(f'  dataType:{dataType}')
+        logger.info(f'  xStatHuman:{xStatHuman}')
+        logger.info(f'  yStatHuman:{yStatHuman}')
+
+        xStat = state["xStat"]
+        yStat = state["yStat"]
+
+        xIsCategorical = state["xIsCategorical"]
+        yIsCategorical = state["yIsCategorical"]
+
+        masterDf = state["masterDf"]
+        meanDf = state["meanDf"]
+
+        if masterDf is None:
+            logger.error(f"masterDf is None for plot {state['Plot Index']} -->> not plotting")
+            return
+        if meanDf is None:
+            logger.error(f"meanDf is None for plot {state['Plot Index']} -->> not plotting")
+            return
+        
+        includeNo = state['Include No']
+        if includeNo:
+            thisMasterDf = masterDf
         else:
-            self.stateDict = stateDict.copy()
+            thisMasterDf = masterDf[masterDf['Include']=='yes']
+            thisMasterDf = thisMasterDf.reset_index()
 
-        dataType = stateDict["dataType"]
-        hue = stateDict["hue"]
-        groupByColumnName = stateDict["groupByColumnName"]
+        if dataType == 'All Spikes':
+            self.plotDf = thisMasterDf
+        else:
+            self.plotDf = meanDf
 
-        plotType = stateDict["plotType"]
-        # self.plotType = plotType
-
-        xStatHuman = stateDict["xStatHuman"]
-        yStatHuman = stateDict["yStatHuman"]
-
-        xStat = stateDict["xStat"]
-        yStat = stateDict["yStat"]
-
-        """
-        print('=== myMplCanvas.myUpdate()')
-        print('  ', plotType)
-        print('  ', 'xStatHuman:', xStatHuman, 'yStatHuman:', yStatHuman)
-        print('  ', 'xStat:', xStat, 'yStat:', yStat)
-        """
-
-        xIsCategorical = stateDict["xIsCategorical"]
-        yIsCategorical = stateDict["yIsCategorical"]
-
-        masterDf = stateDict["masterDf"]
-        meanDf = stateDict["meanDf"]
-
-        self.plotDf = meanDf
-
+        warningStr = ''  # fill in and will emit to staus bar
+        
         self.canvas.axes.clear()
 
         picker = 5
-        if plotType in ["Scatter Plot", "Scatter + Raw + Mean"]:
+        if plotType in ["Scatter Plot", "Scatter + Raw + Mean", 'Line Plot', 'Line + Markers']:
             # scatter plot user selection
             (self.scatterPlotSelection,) = self.canvas.axes.plot(
-                [], [], "oy", markersize=12, fillstyle="none"
+                [], [], "oy", markersize=markerSize,
+                # fillstyle="none"
             )
 
             # main scatter
             try:
-                self.whatWeArePlotting = sns.scatterplot(
-                    x=xStat,
-                    y=yStat,
-                    hue=hue,
-                    data=meanDf,
-                    ax=self.canvas.axes,
-                    picker=picker,
-                    zorder=0,
-                )
+                if plotType in ['Line Plot', 'Line + Markers']:
+                    if plotType == 'Line + Markers':
+                        doMarkerSize = markerSize
+                        doMarker = 'o'
+                    else:
+                        doMarker = ''
+                        doMarkerSize = None
+                    self.whatWeArePlotting = sns.lineplot(
+                        x=xStat,
+                        y=yStat,
+                        hue=hue,
+                        style=style,
+                        data=thisMasterDf,
+                        ax=self.canvas.axes,
+                        picker=picker,
+                        marker=doMarker,
+                        markersize=doMarkerSize,  # default is 6
+                        zorder=0,
+                    )
+                else:
+                    # logger.info(f'markerSize:{markerSize}')
+                    
+                    __idx = 273
+                    print(f'xxx thisMasterDf __idx', __idx, 'has x/y for x:', xStat, 'y:', yStat)
+                    print('  ', thisMasterDf.loc[__idx]['index'])
+                    print('  ', thisMasterDf.loc[__idx][xStat])
+                    print('  ', thisMasterDf.loc[__idx][yStat])
+                    
+                    self.whatWeArePlotting = sns.scatterplot(
+                        x=xStat,
+                        y=yStat,
+                        hue=hue,
+                        style=style,
+                        data=thisMasterDf,
+                        ax=self.canvas.axes,
+                        picker=picker,
+                        zorder=0,
+                        size=markerSize,  # default is 6
+                    )
             except ValueError as e:
                 self.fig.canvas.draw()
-                print('  EXCEPTION: in myUpdate() "Scatter Plot", exception is:')
-                print("  ", e)
-                print("  ", "hue:", hue)
+                logger.error('  EXCEPTION: in "Scatter/Line Plot", exception is:')
+                logger.error(f'  {e}')
+                logger.error(f'  hue:{hue}')
+                logger.error(f'  meanDf columns are {meanDf.columns}')
 
             # sem in both x and y, pulling from masterDf
             if dataType == "File Mean" or plotType == "Scatter + Raw + Mean":
@@ -860,16 +1107,16 @@ class myMplCanvas(QtWidgets.QFrame):
                         f"  grabbing mean +- sem for self.groupByColumnName: {groupByColumnName}"
                     )
                     color = "k"
-                    xd = masterDf.groupby(groupByColumnName).mean(numeric_only=True)[
+                    xd = thisMasterDf.groupby(groupByColumnName).mean(numeric_only=True)[
                         xStat
                     ]
-                    xerrd = masterDf.groupby(groupByColumnName).sem(numeric_only=True)[
+                    xerrd = thisMasterDf.groupby(groupByColumnName).sem(numeric_only=True)[
                         xStat
                     ]
-                    yd = masterDf.groupby(groupByColumnName).mean(numeric_only=True)[
+                    yd = thisMasterDf.groupby(groupByColumnName).mean(numeric_only=True)[
                         yStat
                     ]
-                    yerrd = masterDf.groupby(groupByColumnName).sem(numeric_only=True)[
+                    yerrd = thisMasterDf.groupby(groupByColumnName).sem(numeric_only=True)[
                         yStat
                     ]
                     self.canvas.axes.errorbar(
@@ -898,7 +1145,7 @@ class myMplCanvas(QtWidgets.QFrame):
                 )
             except ValueError as e:
                 self.fig.canvas.draw()
-                print("EXCEPTIONin Histogram:", e)
+                logger.error(f'Histogram:{e}')
 
         elif plotType == "Cumulative Histogram":
             yStatHuman = "Probability"
@@ -995,15 +1242,18 @@ class myMplCanvas(QtWidgets.QFrame):
                     self.canvas.axes.legend().remove()
 
                     # logger.error('!!!!!!!!!!!! grabbing get_legend_handles_labels()')
-                    print("\n\n\nREMAKING LEGEND\n\n\n")
-                    handles, labels = self.canvas.axes.get_legend_handles_labels()
-                    l = self.canvas.axes.legend(
-                        handles[0:2],
-                        labels[0:2],
-                        bbox_to_anchor=(1.05, 1),
-                        loc=2,
-                        borderaxespad=0.0,
-                    )
+                    
+                    # removed 20230816
+                    # print("\n\n\nREMAKING LEGEND\n\n\n")
+                    # handles, labels = self.canvas.axes.get_legend_handles_labels()
+                    # l = self.canvas.axes.legend(
+                    #     handles[0:2],
+                    #     labels[0:2],
+                    #     bbox_to_anchor=(1.05, 1),
+                    #     loc=2,
+                    #     borderaxespad=0.0,
+                    # )
+                    
                     # self.myLegend = self.canvas.axes.Legend(handles[0:2], labels[0:2], bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
 
                     """
@@ -1049,15 +1299,15 @@ class myMplCanvas(QtWidgets.QFrame):
                     # print('regplot oneHue:', oneHue, 'len(tmpDf)', len(tmpDf))
                     sns.regplot(x=xStat, y=yStat, data=tmpDf, ax=self.canvas.axes)
         else:
-            print("  did not understand plot type:", plotType)
+            logger.error(f'did not understand plot type: {plotType}')
 
         #
         # update
-        self.canvas.axes.figure.canvas.mpl_connect("pick_event", self.onPick)
+        self.canvas.axes.figure.canvas.mpl_connect("pick_event", self.on_pick)
 
         # self.mplCursorHover = None
         # if stateDict["doHover"] and self.whatWeArePlotting is not None:
-        #     self.mplCursorHover = mplcursors.cursor(self.whatWeArePlotting, hover=True)
+        #     self.mplCursorHover = mplcursors.cursor(self.whatWeArePlotting, hover=mplcursors.HoverMode.Transient)
 
         #     @self.mplCursorHover.connect("add")
         #     def _(sel):
@@ -1075,18 +1325,19 @@ class myMplCanvas(QtWidgets.QFrame):
         #         sel.annotation.set_text(myText)
 
         #
-        # self.mySetStatusBar(warningStr)
+        # self.slot_setStatusBar(warningStr)
 
         self.canvas.axes.spines["right"].set_visible(False)
         self.canvas.axes.spines["top"].set_visible(False)
 
-        if not stateDict["showLegend"]:
+        # if not state["Legend"]:
             # print('self.canvas.axes.legend():', self.canvas.axes.legend())
             # print('self.canvas.axes.legend:', self.canvas.axes.legend)
             # if self.canvas.axes.legend() is not None:
-            if 1:
-                # logger.error('!!!!!!!!!!!! grabbing get_legend_handles_labels()')
-                self.canvas.axes.legend().remove()
+            # logger.error('!!!!!!!!!!!! grabbing get_legend_handles_labels()')
+            #logger.info('  removing legend')
+            # self.canvas.axes.legend().remove()
+            #self.canvas.axes.get_legend().remove()
 
         # print('myUpdate() self.plotSize:', self.plotSize)
         self.canvas.axes.set_xlabel(xStatHuman)
@@ -1101,17 +1352,95 @@ class myMplCanvas(QtWidgets.QFrame):
             self.canvas.axes[0].set_ylabel(yStatHuman)
         """
 
+        # emit warnings
+        self.signalSetStatusBar.emit(warningStr)
+
         # subplots_adjust
         # self.fig.canvas.draw_idle()
         self.fig.canvas.draw()
 
+class plotState:
+    def __init__(self, plotIndex : int):
+        self._dict = {
+            'Plot Index': plotIndex,  # will be set to 1,2,3,... on mpl canvas creation
+            "X Statistic": 'Spike Time (s)',
+            "Y Statistic": 'Spike Frequency (Hz)',
+            'xStat': 'thresholdSec',
+            'yStat': 'spikeFreq_hz',
+
+            'Plot Type': 'Scatter Plot',
+            'Data Type': 'All Spikes',  # ['All Spikes', 'File Mean']
+            'Include No': False,
+            "Hue": 'Unique Name',
+            "Style": 'None',
+            "Group By (Stats)": 'Unique Name',
+
+            'Legend': False,
+            'Toolbar': False,  # mpl toolbar
+            'Hover Info': False,
+            # 'Dark Theme': False,
+
+            'masterDf': None,
+            'meanDf': None,  # for plotting
+            'xDf': None,
+            'yDf': None,
+
+            'Marker Size': 6,  # mpl default is 6
+            'Plot Size': 'paper',
+
+            'xIsCategorical': False,
+            'yIsCategorical': False,
+            
+            'selectionIndex': None,
+
+        }
+
+    def __getitem__(self, key):
+        try:
+            return self._dict[key]
+        except (KeyError) as e:
+            logger.error(f'did not find key "{key}", available keys are {self._dict.keys()}')
+
+    def getState(self, key):
+        try:
+            return self._dict[key]
+        except (KeyError) as e:
+            logger.error(f'did not find key "{key}", available keys are {self._dict.keys()}')
+
+    def setState(self, key, value):
+        try:
+            self._dict[key] = value
+        except (KeyError) as e:
+            logger.error(f'did not find key "{key}", available keys are {self._dict.keys()}')
+
+    def incInt(self, key):
+        """Increment an integer key value.
+        """
+        try:
+            self._dict[key] += 1
+        except (KeyError) as e:
+            logger.error(f'did not find key "{key}", available keys are {self._dict.keys()}')
+            return
+        return self._dict[key]
+
+    def decInt(self, key):
+        """Decrement an integer key value.
+        """
+        try:
+            self._dict[key] -= 1
+            if self._dict[key] < 1:
+                self._dict[key] = 0
+        except (KeyError) as e:
+            logger.error(f'did not find key "{key}", available keys are {self._dict.keys()}')
+            return
+        return self._dict[key]
 
 class bScatterPlotMainWindow(QtWidgets.QMainWindow):
     # send_fig = QtCore.pyqtSignal(str)
     signalStateChange = QtCore.Signal(object)
     signalSelectFromPlot = QtCore.Signal(object)
     signalCancelSelection = QtCore.Signal()
-    signalMeanModelChange = QtCore.Signal(object)
+    # signalMeanModelChange = QtCore.Signal(object)
     signal_xModelChange = QtCore.Signal(object)
     signal_yModelChange = QtCore.Signal(object)
 
@@ -1119,11 +1448,11 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self,
         path,
         categoricalList,
-        hueTypes,
-        analysisName,
+        # hueTypes,
+        # analysisName,
         sortOrder=None,
         statListDict=None,
-        interfaceDefaults=None,
+        #interfaceDefaults=None,
         masterDf=None,
         limitToCol=None,  # col like 'epoch' to create popup to limit to one value (like 0)
         parent=None,
@@ -1132,12 +1461,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         path: full path to .csv file generated with reanalyze
         categoricalList: specify columns that are categorical
             would just like to use 'if column is string' but sometimes number like 1/2/3 need to be categorical
-        hueTypes:
-        analysisName: column used for group by
+        # hueTypes:
+        # analysisName: column used for group by
         sortOrder:
         statListDict: dict where keys are human readable stat names
                     that map onto 'yStat' to specify column in csv
-        interfaceDefaults: specify key/value in dict to set state of interface popups/etc
+        #interfaceDefaults: specify key/value in dict to set state of interface popups/etc
         masterDf: if not none then use it (rather than loading csv path)
                     used by main sanpy interface
         parent: not used, parent sanpy app
@@ -1148,13 +1477,16 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         """
         super().__init__(parent)
 
-        # self.keepCheckBoxDelegate = myCheckBoxDelegate(None)
+        self._blockSlots = False
+        self._darkTheme = False
 
-        if interfaceDefaults is None:
-            interfaceDefaults = myInterfaceDefaults
+        # is assigned when we select a plot
+        self._plotState = None  #plotState()
+        
         self.shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+w"), self)
         self.shortcut.activated.connect(self.myCloseAction)
 
+        # bottom status bar
         self.statusBar = QtWidgets.QStatusBar()
         self.setStatusBar(self.statusBar)
 
@@ -1178,13 +1510,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
             if categoricalList is not None:
                 for categorical in categoricalList:
                     self.statListDict[categorical] = {"yStat": categorical}
-                    self.statListDict[categorical] = {
-                        "name": categorical
-                    }  # we need both yStat and name !!!
+                    self.statListDict[categorical] = {"name": categorical}
+                    # we need both yStat and name !!!
 
         # statListDict now has categorical like 'File Number'
-        for k, v in self.statListDict.items():
-            print("    ", k, v)
+        # for k, v in self.statListDict.items():
+        #     print("    ", k, v)
 
         """
         if statListDict is None:
@@ -1196,88 +1527,81 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
             self.statListDict = statListDict
         """
 
-        # categoricalList = ['Condition', 'Sex', 'Region', 'File Number', 'File Name']
-        # 20210305 done in load path
-        """
-        for categorical in categoricalList:
-            self.statListDict[categorical] = {'yStat': categorical}
-        # this was originally in self.load() ???
-        self.masterCatColumns = categoricalList
-        """
-
-        """
-        self.stateDict = {}
-        self.stateDict['groupByColumnName'] = analysisName
-        self.stateDict['sortOrder'] = sortOrder
-        self.stateDict['hue'] = hue
-        self.stateDict['darkTheme'] = True
-        self.stateDict['doKDE'] = False
-        self.stateDict['doHover'] = False
-        self.stateDict['plotSize'] = 'paper'
-        self.stateDict['showLegend'] = True
-        self.stateDict['plotType'] = 'Scatter Plot'
-        self.stateDict['dataType'] = 'File Mean'
-        """
-
         # unique identifyer to group by
         # for sanpy this is 'analysisName', for bImPy this is xxx
-        self.groupByColumnName = analysisName
         self.sortOrder = sortOrder
 
-        # 20210112 moved up
-        # self.loadPath(path)
-
-        self.whatWeArePlotting = None  # return from sns scatter plot (all plots)
+        self.whatWeArePlotting = None  # return from sns plot (all plots)
         self.scatterPlotSelection = None
         self.xDf = None  #
         self.yDf = None  #
-        self.plotDF = None  # df we are plotting (can be same as mean yDf)
-        # use this to get row on self.onPick
-        self.plotStatx = None
-        self.plotStaty = None
+        # self.plotDF = None  # df we are plotting (can be same as mean yDf)
 
-        # self.main_widget = QtWidgets.QWidget(self)
+        self.hueList = ["None"] + self.hueTypes  # prepend 'None'
+        self.styleList = ["None"] + self.hueTypes  # prepend 'None'
+        # self.groupByList = ['None'] + self.hueTypes  # we force a group by,
+        self.groupByList = self.hueTypes  # we force a group by,
+            # we always provide a raw tab which is group by None
 
-        # this is causing tons of problems/crashes
-        if interfaceDefaults["Hue"] is not None:
-            self.hue = interfaceDefaults["Hue"]
-        else:
-            self.hue = "None"  # self.hueTypes[0]
+        self.plotTypeList = [
+                "Scatter Plot",
+                "Scatter + Raw + Mean",
+                "Regression Plot",
+                "Line Plot",
+                "Line + Markers",
+                "Violin Plot",
+                "Box Plot",
+                "Raw + Mean Plot",
+                "Histogram",
+                "Cumulative Histogram",
+            ]
+        self.dataTypes = ["All Spikes", "File Mean"]
 
-        self.darkTheme = False
         self.doKDE = False  # fits on histogram plots
-        self.showMplToolbar = False  # fits on histogram plots
-
-        # self.doHover = False
 
         self.plotSizeList = ["paper", "talk", "poster"]
-        self.plotSize = "paper"
-        self.plotLayoutList = ["1x", "1x2", "2x1", "2x2"]
-        self.plotLayoutType = "2x2"
+        # self.plotSize = "paper"
+
+        self.plotLayoutList = ['1x1', '1x2', '2x1', '2x2']
+        self.plotLayoutType = "1x2"
+        self.numPlots = 2
+        self.plotUpdateList = [str(x+1) for x in range(self.numPlots)]
+
         self.updatePlot = None  # which plot to update 1,2,3,4
 
-        self.showLegend = False
-        self.plotType = "Scatter Plot"
+        self.buildUI()
 
-        self.dataTypes = ["All Spikes", "File Mean"]
-        self.dataType = "File Mean"  # (Raw, File Mean)
+        # ???
+        self.updatePlotLayoutGrid()
 
-        self.buildUI(interfaceDefaults=interfaceDefaults)
+        # cludge
+        #self.myPlotCanvasList[0].signalSelectSquare.emit(0, None)  # slot_selectSquare(0)
+        _plotNumber = 0
+        _state = self.myPlotCanvasList[0].stateDict
+        self.slot_selectSquare(_plotNumber, _state)
+
+        # refresh interface based on state
+        # called in slot_selectSquare()
+        # self.refreshInterface()
 
         # bar = self.menuBar()
         # file = bar.addMenu("Load")
 
-        # abb removed 20210828
-        # self.show()
-
         # self.updatePlotSize() # calls update2()
         self.update2()
+
+    def getBackendStat(self, humanStat : str) -> str:
+        # convert from human readbale to backend
+        try:
+            return self.statListDict[humanStat]["name"]
+        except KeyError as e:
+            logger.error(f'Did not find human stat name:"{humanStat}"')
 
     def _mySetWindowTitle(self, windowTitle):
         """Required to interact with sanpyPlugin."""
         self.setWindowTitle(windowTitle)
 
-    def _buildPlotOptionsLayout(self):
+    def _old__buildPlotOptionsLayout(self):
         hBoxLayout = QtWidgets.QHBoxLayout()
 
         hueList = ["None"] + self.hueTypes  # prepend 'None'
@@ -1289,14 +1613,78 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         #     defaultIdx = 0
         defaultIdx = 0
         hueDropdown.setCurrentIndex(defaultIdx)  # 1 because we pre-pended 'None'
-        hueDropdown.currentIndexChanged.connect(self.updateHue)
+        hueDropdown.currentTextChanged.connect(self.updateHue)
 
         hBoxLayout.addWidget(hueDropdown)
         return hBoxLayout
 
-    def buildUI(self, interfaceDefaults):
-        if self.darkTheme:
-            plt.style.use("dark_background")
+    def _defaultDropdownIdx(self, keyList, name):
+        # if name not in keyList, return 0
+        theRet = 0
+        try:
+            theRet = keyList.index(name)
+        except ValueError as e:
+            logger.error(f'did not find "{name}"" in keyList: {keyList}')
+            theRet = 0
+        return theRet
+
+    def refreshInterface(self):
+        """Refresh based on state.
+
+        We never own state, we get a pointer to state from myMplCanvas.
+        """
+
+        self._blockSlots = True
+
+        defaultIdx = self._defaultDropdownIdx(self.hueList, self._plotState.getState("Hue"))
+        self.hueDropdown.setCurrentIndex(defaultIdx)  # 1 because we pre-pended 'None'
+
+        defaultIdx = self._defaultDropdownIdx(self.plotTypeList, self._plotState.getState("Plot Type"))
+        self.typeDropdown.setCurrentIndex(defaultIdx)
+
+        defaultIdx = self._defaultDropdownIdx(self.dataTypes, self._plotState.getState("Data Type"))
+        self.dataTypeDropdown.setCurrentIndex(defaultIdx)
+
+        self.includeNoCheckBox.setChecked(self._plotState['Include No'])
+
+
+        defaultIdx = self._defaultDropdownIdx(self.hueList, self._plotState.getState("Style"))
+        self.styleDropdown.setCurrentIndex(defaultIdx)  # 1 because we pre-pended 'None'
+
+        defaultIdx = self._defaultDropdownIdx(self.groupByList, self._plotState.getState("Group By (Stats)"))
+        self.groupByDropdown.setCurrentIndex(defaultIdx)  # 1 because we pre-pended 'None'
+
+        #
+        self.showLegendCheckBox.setChecked(self._plotState['Legend'])
+        self.mplToolbar.setChecked(self._plotState['Toolbar'])
+        self.hoverCheckbox.setChecked(self._plotState['Hover Info'])
+
+        
+        defaultIdx = self._defaultDropdownIdx(self.plotSizeList, self._plotState.getState("Plot Size"))
+        self.plotSizeDropdown.setCurrentIndex(0) # paper
+
+        # self.darkThemeCheckBox.setChecked(self._plotState['Dark Theme'])
+        self.darkThemeCheckBox.setChecked(self._darkTheme)
+
+        # table views of x/y stats
+        xStatistic = self._plotState.getState("X Statistic")
+        self.xStatTableView.setCurrentRow(xStatistic)
+
+        yStatistic = self._plotState.getState("Y Statistic")
+        self.yStatTableView.setCurrentRow(yStatistic)
+
+        # table view of (xDf, yDf) in tabs
+        xDf = self._plotState['xDf']
+        self.xTableView.slotSwitchTableDf(xDf)
+        yDf = self._plotState['yDf']
+        self.yTableView.slotSwitchTableDf(yDf)
+        
+        self._blockSlots = False
+
+    def buildUI(self):
+        # if self._plotState['Dark Theme']:
+        if self._darkTheme:
+                plt.style.use("dark_background")
 
         # HBox for control and plot grid
         self.hBoxLayout = QtWidgets.QHBoxLayout(self)
@@ -1308,260 +1696,198 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         centralWidget.setLayout(self.hBoxLayout)
         self.setCentralWidget(centralWidget)
 
-        # switch to 2x2
-        """
-        # allow 1-4 plots
-        tmpNumRow = 1
-        tmpNumCol = 1
-        numPlot = tmpNumRow * tmpNumCol
-
-        self.fig = Figure()
-        self.fig.tight_layout()
-        # don't use subplot, each plot will be its own widget using myMplCanvas
-        self.axes = [self.fig.add_subplot(tmpNumRow, tmpNumCol, i+1) for i in range(numPlot)]
-        self.canvas = FigureCanvas(self.fig) # what is added to pyqt interface
-        self.cid = self.canvas.mpl_connect('pick_event', self.on_pick_event)
-        # maybe use
-        #self.toolbar = NavigationToolbar(self.canvas, self)
-        self.mplToolbar = NavigationToolbar2QT(self.canvas, self.canvas) # params are (canvas, parent)
-
-        self.canvas.setSizePolicy(QtWidgets.QSizePolicy.Expanding,
-                                  QtWidgets.QSizePolicy.Expanding)
-        self.canvas.updateGeometry()
-        """
-
-        # to hold popups
+        # to hold popups, x/y stats list, and mean tables (tabs)
+        self.leftVertLayout = QtWidgets.QVBoxLayout()
+        
         self.layout = QtWidgets.QGridLayout()
-        self.hBoxLayout.addLayout(self.layout)
-
-        def _defaultDropdownIdx(keyList, name):
-            # if name not in keys, return 0
-            theRet = 0
-            try:
-                theRet = keyList.index(name)
-            except ValueError as e:
-                print(
-                    f'WARNING: _defaultDropdownIdx() did not find "{name}"" in keyList: {keyList}'
-                )
-                theRet = 0
-            return theRet
-
-        # removed 20210828
-        """
-        keys = list(self.statListDict.keys())
-        #keys += self.hueTypes
-        self.xDropdown = QtWidgets.QComboBox()
-        self.xDropdown.addItems(keys)
-        if interfaceDefaults['X Statistic'] is not None:
-            defaultIdx = _defaultDropdownIdx(keys, interfaceDefaults['X Statistic'])
-        else:
-            defaultIdx = 0
-        self.xDropdown.setCurrentIndex(defaultIdx)
-        self.xDropdown.currentIndexChanged.connect(self.update2)
-
-        self.yDropdown = QtWidgets.QComboBox()
-        self.yDropdown.addItems(keys)
-        if interfaceDefaults['Y Statistic'] is not None:
-            defaultIdx = _defaultDropdownIdx(keys, interfaceDefaults['Y Statistic'])
-        else:
-            defaultIdx = 0
-        self.yDropdown.setCurrentIndex(defaultIdx)
-        self.yDropdown.currentIndexChanged.connect(self.update2)
-        """
+        self.leftVertLayout.addLayout(self.layout)
+        
+        # self.hBoxLayout.addLayout(self.layout)
+        self.hBoxLayout.addLayout(self.leftVertLayout)
 
         #
         # hue, to control colors in plot
-        hueList = ["None"] + self.hueTypes  # prepend 'None'
+        # hueList = ["None"] + self.hueTypes  # prepend 'None'
         self.hueDropdown = QtWidgets.QComboBox()
-        self.hueDropdown.addItems(hueList)
-        if interfaceDefaults["Hue"] is not None:
-            defaultIdx = _defaultDropdownIdx(hueList, interfaceDefaults["Hue"])
-        else:
-            defaultIdx = 0
-        self.hueDropdown.setCurrentIndex(defaultIdx)  # 1 because we pre-pended 'None'
-        self.hueDropdown.currentIndexChanged.connect(self.updateHue)
+        self.hueDropdown.addItems(self.hueList)
+        # defaultIdx = self._defaultDropdownIdx(hueList, self._plotState.getState("Hue"))
+        # self.hueDropdown.setCurrentIndex(defaultIdx)  # 1 because we pre-pended 'None'
+        self.hueDropdown.currentTextChanged.connect(self.updateHue)
+
+        #
+        # style, to control marker/lines in plot
+        # styleList = ["None"] + self.hueTypes  # prepend 'None'
+        self.styleDropdown = QtWidgets.QComboBox()
+        self.styleDropdown.addItems(self.styleList)
+        # defaultIdx = self._defaultDropdownIdx(hueList, self._plotState.getState("Style"))
+        # self.styleDropdown.setCurrentIndex(defaultIdx)  # 1 because we pre-pended 'None'
+        # style defaults to None
+        # self.styleDropdown.setCurrentIndex(0)  # 1 because we pre-pended 'None'
+        self.styleDropdown.currentTextChanged.connect(self.updateStyle)
 
         #
         # group by, to control grouping in table
         # todo: get 'None' implemented
         # groupByList = ['None'] + self.hueTypes # prepend 'None'
-        groupByList = self.hueTypes
         self.groupByDropdown = QtWidgets.QComboBox()
-        self.groupByDropdown.addItems(groupByList)
-        if interfaceDefaults["Group By"] is not None:
-            defaultIdx = _defaultDropdownIdx(groupByList, interfaceDefaults["Group By"])
-        else:
-            defaultIdx = 0
-        self.groupByDropdown.setCurrentIndex(
-            defaultIdx
-        )  # 1 because we pre-pended 'None'
-        self.groupByDropdown.currentIndexChanged.connect(self.updateGroupBy)
+        self.groupByDropdown.addItems(self.groupByList)
+        # defaultIdx = self._defaultDropdownIdx(groupByList, self._plotState.getState("Group By (Stats)"))
+        # self.groupByDropdown.setCurrentIndex(defaultIdx)  # 1 because we pre-pended 'None'
+        self.groupByDropdown.currentTextChanged.connect(self.updateGroupBy)
 
-        # color
-        # colorTypes = ['Region', 'Sex', 'Condition', 'File Number'] #, 'File Name'] #, 'None']
-        # self.color = 'Region'
-        """
-        self.color = self.colorTypes[0]
-        self.colorDropdown = QtWidgets.QComboBox()
-        self.colorDropdown.addItems(self.colorTypes)
-        self.colorDropdown.setCurrentIndex(0)
-        self.colorDropdown.currentIndexChanged.connect(self.updateColor)
-        """
-
+        #
+        # plot type
         self.typeDropdown = QtWidgets.QComboBox()
-        self.typeDropdown.addItems(
-            [
-                "Scatter Plot",
-                "Scatter + Raw + Mean",
-                "Regression Plot",
-                "Violin Plot",
-                "Box Plot",
-                "Raw + Mean Plot",
-                "Histogram",
-                "Cumulative Histogram",
-            ]
-        )
-        self.typeDropdown.setCurrentIndex(0)
-        self.typeDropdown.currentIndexChanged.connect(self.updatePlotType)
+        self.typeDropdown.addItems(self.plotTypeList)
+        # self.typeDropdown.setCurrentIndex(0)
+        self.typeDropdown.currentTextChanged.connect(self.updatePlotType)
 
+        #
+        # data type to display (raw or mean)
         self.dataTypeDropdown = QtWidgets.QComboBox()
         self.dataTypeDropdown.setToolTip(
-            "All Spikes is all spikes \n File Mean is the mean within each analysis file"
+            "All Spikes is all spikes \n File Mean is the mean within each Hue"
         )
         self.dataTypeDropdown.addItems(self.dataTypes)
-        self.dataTypeDropdown.setCurrentIndex(1)
-        self.dataTypeDropdown.currentIndexChanged.connect(self.updateDataType)
+        # self.dataTypeDropdown.setCurrentIndex(0)
+        self.dataTypeDropdown.currentTextChanged.connect(self.updateDataType)
 
-        # self.xDropdown.currentIndexChanged.connect(self.update2)
-        # self.yDropdown.currentIndexChanged.connect(self.update2)
-        # self.typeDropdown.currentIndexChanged.connect(self.updatePlotType)
-        # self.dataTypeDropdown.currentIndexChanged.connect(self.updateDataType)
-
-        showLegendCheckBox = QtWidgets.QCheckBox("Legend")
-        showLegendCheckBox.setChecked(self.showLegend)
-        showLegendCheckBox.stateChanged.connect(self.setShowLegend)
+        self.showLegendCheckBox = QtWidgets.QCheckBox("Legend")
+        # self.showLegendCheckBox.setChecked(self._plotState['Legend'])
+        self.showLegendCheckBox.stateChanged.connect(self.setShowLegend)
 
         # swap the sort order
         aName = "Swap Sort Order"
         swapSortButton = QtWidgets.QPushButton(aName)
         swapSortButton.clicked.connect(partial(self.on_button_click, aName))
-        # works fine
-        """
-        darkThemeCheckBox = QtWidgets.QCheckBox('Dark Theme')
-        darkThemeCheckBox.setChecked(self.darkTheme)
-        darkThemeCheckBox.stateChanged.connect(self.setTheme)
-        darkThemeCheckBox.setDisabled(True)
-        darkThemeCheckBox.setEnabled(False)
-        """
 
         """
         kdeCheckBox = QtWidgets.QCheckBox('kde (hist)')
         kdeCheckBox.setChecked(self.doKDE)
         kdeCheckBox.stateChanged.connect(self.setKDE)
         """
-        mplToolbar = QtWidgets.QCheckBox("Toolbar")
-        mplToolbar.setChecked(self.showMplToolbar)
-        mplToolbar.stateChanged.connect(self.setMplToolbar)
 
-        # hoverCheckbox = QtWidgets.QCheckBox("Hover Info")
-        # hoverCheckbox.setChecked(self.doHover)
-        # hoverCheckbox.stateChanged.connect(self.setHover)
+        self.mplToolbar = QtWidgets.QCheckBox("Toolbar")
+        # self.mplToolbar.setChecked(self._plotState['Toolbar'])
+        self.mplToolbar.stateChanged.connect(self.setMplToolbar)
+
+        self.hoverCheckbox = QtWidgets.QCheckBox("Hover Info")
+        # hoverCheckbox.setChecked(self._plotState['Hover Info'])
+        self.hoverCheckbox.stateChanged.connect(self.setHover)
 
         # work fine
-        """
         self.plotSizeDropdown = QtWidgets.QComboBox()
         self.plotSizeDropdown.setToolTip('Set size of fonts for paper, talk, or poster')
         self.plotSizeDropdown.addItems(self.plotSizeList)
-        self.plotSizeDropdown.setCurrentIndex(0) # paper
-        self.plotSizeDropdown.currentIndexChanged.connect(self.updatePlotSize)
-        self.plotSizeDropdown.setDisabled(True)
-        """
+        # self.plotSizeDropdown.setCurrentIndex(0) # paper
+        self.plotSizeDropdown.currentTextChanged.connect(self.updatePlotSize)
+        # self.plotSizeDropdown.setDisabled(True)
 
         # works fine
-        """
+        self.darkThemeCheckBox = QtWidgets.QCheckBox('Dark Theme')
+        # self.darkThemeCheckBox.setChecked(self._plotState['Dark Theme'])
+        self.darkThemeCheckBox.stateChanged.connect(self.setTheme)
+        # darkThemeCheckBox.setDisabled(True)
+        # darkThemeCheckBox.setEnabled(False)
+
+        # works fine
         self.plotLayoutDropdown = QtWidgets.QComboBox()
         self.plotLayoutDropdown.setToolTip('1, 2, or 4 plots')
         self.plotLayoutDropdown.addItems(self.plotLayoutList)
         self.plotLayoutDropdown.setCurrentIndex(3) #
-        self.plotLayoutDropdown.currentIndexChanged.connect(self.updatePlotLayout)
-        self.plotLayoutDropdown.setDisabled(True)
-        """
+        self.plotLayoutDropdown.currentTextChanged.connect(self.updatePlotLayout)
 
-        # not needed beccause we now clik plot to show red square
-        """
-        self.plotUpdateList = ['1', '2', '3', '4']
-        self.plotUpdateDropdown = QtWidgets.QComboBox()
-        self.plotUpdateDropdown.setToolTip('Which plot to update')
-        self.plotUpdateDropdown.addItems(self.plotUpdateList)
-        self.plotUpdateDropdown.setCurrentIndex(0) # paper
-        self.plotUpdateDropdown.currentIndexChanged.connect(self.updatePlotUpdate)
-        """
+        _vLayoutOfControls = QtWidgets.QVBoxLayout()
+        self.leftVertLayout.addLayout(_vLayoutOfControls)
 
-        # 20210828
-        # table view of x stat
-        row = 4
-        col = 0
-        rowSpan = 1
-        colSpan = 2
-        self.xStatTableView = myStatListWidget(
-            myParent=self, headerStr="X-Stat", statList=self.statListDict
-        )
-        self.layout.addWidget(self.xStatTableView, row, col, rowSpan, colSpan)
-        # table view of y stat
-        row = 4
-        col = 2
-        rowSpan = 1
-        colSpan = 2
-        self.yStatTableView = myStatListWidget(
-            myParent=self, headerStr="Y-Stat", statList=self.statListDict
-        )
-        self.layout.addWidget(self.yStatTableView, row, col, rowSpan, colSpan)
-
-        col = 0
-        # removed 20210828
-        """
-        self.layout.addWidget(QtWidgets.QLabel("X Statistic"), 0, col)
-        self.layout.addWidget(self.xDropdown, 0, col+1)
-        self.layout.addWidget(QtWidgets.QLabel("Y Statistic"), 1, col)
-        self.layout.addWidget(self.yDropdown, 1, col+1)
-        """
+        #
+        _rowOne = QtWidgets.QHBoxLayout()
+        _vLayoutOfControls.addLayout(_rowOne)
 
         aName = "Replot"
         aButton = QtWidgets.QPushButton(aName)
         aButton.clicked.connect(partial(self.on_button_click, aName))
-        self.layout.addWidget(aButton, 1, 0)
+        # self.layout.addWidget(aButton, 1, 0)
+        _rowOne.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
 
-        self.layout.addWidget(QtWidgets.QLabel("Hue (Plot)"), 2, col)
-        self.layout.addWidget(self.hueDropdown, 2, col + 1)
+        # not needed beccause we now clik plot to show red square
+        # add back in so user can click a plot (like 1), select plot 2 and then plot with state of plot 1
+        # self.plotUpdateList = ['1', '2', '3', '4']
+        self.plotUpdateDropdown = QtWidgets.QComboBox()
+        self.plotUpdateDropdown.setToolTip('Which plot to update')
+        self.plotUpdateDropdown.addItems(self.plotUpdateList)
+        self.plotUpdateDropdown.setCurrentIndex(0) #
+        self.plotUpdateDropdown.currentIndexChanged.connect(self.updatePlotUpdate)
 
-        self.layout.addWidget(QtWidgets.QLabel("Group By (Stats)"), 3, col)
-        self.layout.addWidget(self.groupByDropdown, 3, col + 1)
+        _rowOne.addWidget(self.plotUpdateDropdown, alignment=QtCore.Qt.AlignLeft)
+        _rowOne.addStretch()
+
+        #
+        _rowTwo0 = QtWidgets.QHBoxLayout()
+        _vLayoutOfControls.addLayout(_rowTwo0)
+
+        _rowTwo0.addWidget(QtWidgets.QLabel("Plot Type"), alignment=QtCore.Qt.AlignLeft)
+        _rowTwo0.addWidget(self.typeDropdown, alignment=QtCore.Qt.AlignLeft)
+        _rowTwo0.addWidget(QtWidgets.QLabel("Data Type"), alignment=QtCore.Qt.AlignLeft)
+        _rowTwo0.addWidget(self.dataTypeDropdown, alignment=QtCore.Qt.AlignLeft)
+
+        self.includeNoCheckBox = QtWidgets.QCheckBox("Include No")
+        self.includeNoCheckBox.setToolTip('If checked, all plots and analysis will contain files flagged as include no.')
+        self.includeNoCheckBox.stateChanged.connect(self.setIncludeNo)
+        _rowTwo0.addWidget(self.includeNoCheckBox, alignment=QtCore.Qt.AlignLeft)
+
+        _rowTwo0.addStretch()
+
+        #
+        _rowTwo = QtWidgets.QHBoxLayout()
+        _vLayoutOfControls.addLayout(_rowTwo)
+
+        # self.layout.addWidget(QtWidgets.QLabel("Hue"), 2, col)
+        # self.layout.addWidget(self.hueDropdown, 2, col + 1)
+        _rowTwo.addWidget(QtWidgets.QLabel("Hue"))
+        _rowTwo.addWidget(self.hueDropdown)
+
+        # self.layout.addWidget(QtWidgets.QLabel("Style"), 3, col)
+        # self.layout.addWidget(self.styleDropdown, 3, col + 1)
+        _rowTwo.addWidget(QtWidgets.QLabel("Style"))
+        _rowTwo.addWidget(self.styleDropdown)
+
+        # self.layout.addWidget(QtWidgets.QLabel("Group By (Stats)"), 4, col)
+        # self.layout.addWidget(self.groupByDropdown, 4, col + 1)
+        _rowTwo.addWidget(QtWidgets.QLabel("Group By (Stats)"))
+        _rowTwo.addWidget(self.groupByDropdown)
+
+        #
+        _rowThree = QtWidgets.QHBoxLayout()
+        _vLayoutOfControls.addLayout(_rowThree)
+
+        _rowThree.addWidget(self.showLegendCheckBox)
+        _rowThree.addWidget(self.mplToolbar)
+        _rowThree.addWidget(self.hoverCheckbox)
+        _rowThree.addWidget(swapSortButton)
+        _rowThree.addWidget(self.plotSizeDropdown)
+        _rowThree.addWidget(self.darkThemeCheckBox)
+
+        _rowThree.addStretch()
+
         # self.layout.addWidget(QtWidgets.QLabel("Color"), 3, 0)
         # self.layout.addWidget(self.colorDropdown, 3, 1)
 
-        # dec2022
-        # print(self._limitToCol)
-        # self.limitToDropdown = QtWidgets.QComboBox()
-        # if self._limitToCol is not None:
-        #     self.limitToDropdown.addItem('None')
-        #     for _x in self._limitToCol:
-        #         self.limitToDropdown.addItem(_x)
-        # self.limitToDropdown.setCurrentIndex(0)
-        # self.limitToDropdown.currentIndexChanged.connect(self.updateLimitTo)
-        # self.layout.addWidget(self.limitToDropdown, 3, col+1)
-
         #
-        col += 2
-        self.layout.addWidget(QtWidgets.QLabel("Plot Type"), 0, col)
-        self.layout.addWidget(self.typeDropdown, 0, col + 1)
-        self.layout.addWidget(QtWidgets.QLabel("Data Type"), 1, col)
-        self.layout.addWidget(self.dataTypeDropdown, 1, col + 1)
-        self.layout.addWidget(showLegendCheckBox, 2, col)
-        # works fine
-        # self.layout.addWidget(darkThemeCheckBox, 2, 3)
-        self.layout.addWidget(swapSortButton, 2, col + 1)
-        self.layout.addWidget(mplToolbar, 3, col)
-        # self.layout.addWidget(hoverCheckbox, 3, col + 1)
+        _rowFour = QtWidgets.QHBoxLayout()
+        _vLayoutOfControls.addLayout(_rowFour)
+
+        # markerSizeLayout = QtWidgets.QHBoxLayout()
+        markerLabel = QtWidgets.QLabel('Marker Size')
+        smallerMarkerButton = QtWidgets.QPushButton('-')
+        smallerMarkerButton.clicked.connect(partial(self.on_button_click, 'smallerMarkerButton'))
+        largerMarkerButton = QtWidgets.QPushButton('+')
+        largerMarkerButton.clicked.connect(partial(self.on_button_click, 'largerMarkerButton'))
+
+        _rowFour.addWidget(markerLabel)
+        _rowFour.addWidget(smallerMarkerButton)
+        _rowFour.addWidget(largerMarkerButton)
+        _rowFour.addStretch()
 
         # works fine
         # self.layout.addWidget(QtWidgets.QLabel("Plot Size"), 4, 2)
@@ -1573,24 +1899,11 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # self.layout.addWidget(QtWidgets.QLabel("Update Plot"), 5, 0) # out of order
         # self.layout.addWidget(self.plotUpdateDropdown, 5, 1)
 
-        nextRow = 5  # for text table
-        rowSpan = 1
-        colSpan = 5
+        # nextRow = 6  # for text table
+        # rowSpan = 1
+        # colSpan = 5
         # self.layout.addWidget(self.canvas, 3, 0, rowSpan, colSpan)
 
-        #
-        # grid of plots (myMplCanvas)
-        self.plotLayout = QtWidgets.QGridLayout()
-        self.plotLayout.setContentsMargins(0, 0, 0, 0)
-        self.plotLayout.setHorizontalSpacing(0)
-        self.plotLayout.setVerticalSpacing(0)
-
-        self.myPlotCanvasList = [None] * 4
-
-        self.updatePlotLayoutGrid()
-
-        # append
-        self.hBoxLayout.addLayout(self.plotLayout)
 
         """
         self.myToolbar = QtWidgets.QToolBar()
@@ -1599,6 +1912,28 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.tmpToolbarAction = self.myToolbar.addWidget(self.canvas)
         self.addToolBar(QtCore.Qt.RightToolBarArea, self.myToolbar)
         """
+
+        #
+        # table view of x stat
+        _horzLayout = QtWidgets.QHBoxLayout()
+        self.leftVertLayout.addLayout(_horzLayout)
+
+        self.xStatTableView = myStatListWidget(
+            myParent=self, headerStr="X-Stat", statList=self.statListDict
+        )
+        self.xStatTableView.signalStatSelection.connect(self.slot_setStatName)
+        # xStatistic = self._plotState.getState("X Statistic")
+        # self.xStatTableView.setCurrentRow(xStatistic)
+        _horzLayout.addWidget(self.xStatTableView)
+
+        # table view of y stat
+        self.yStatTableView = myStatListWidget(
+            myParent=self, headerStr="Y-Stat", statList=self.statListDict
+        )
+        self.yStatTableView.signalStatSelection.connect(self.slot_setStatName)
+        # yStatistic = self._plotState.getState("Y Statistic")
+        # self.yStatTableView.setCurrentRow(yStatistic)
+        _horzLayout.addWidget(self.yStatTableView)
 
         #
         # tabs to show (raw, x, y) stat tables
@@ -1622,7 +1957,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.signalSelectFromPlot.connect(self.xTableView.slotSelectRow)
         # never switch rawTableView model, dust update column 'include'
         # self.signalMeanModelChange.connect(self.rawTableView.slotSwitchTableModel)
-        self.xTableView.slotSwitchTableDf(self.xDf)
+        #self.xTableView.slotSwitchTableDf(self.xDf)
 
         # self.yDf
         self.yTableView = myTableView("File Mean")
@@ -1632,17 +1967,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.signalSelectFromPlot.connect(self.yTableView.slotSelectRow)
         # never switch rawTableView model, dust update column 'include'
         # self.signalMeanModelChange.connect(self.rawTableView.slotSwitchTableModel)
-        self.yTableView.slotSwitchTableDf(self.yDf)
-
-        # todo: make this mean across yDf with stat test
-        # mean table with pandas dataframe
-        """
-        self.tableView = myTableView('Not Sure')
-        self.tableView.clicked.connect(self.slotTableViewClicked)
-        self.signalCancelSelection.connect(self.tableView.clearSelection)
-        self.signalSelectFromPlot.connect(self.tableView.slotSelectRow)
-        self.signalMeanModelChange.connect(self.tableView.slotSwitchTableModel)
-        """
+        #self.yTableView.slotSwitchTableDf(self.yDf)
 
         #
         # self.layout.addWidget(self.tableView, nextRow, 0, rowSpan, colSpan)
@@ -1650,23 +1975,70 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         tabwidget.addTab(self.yTableView, "Y-Stats")
         tabwidget.addTab(self.rawTableView, "Raw")
         # tabwidget.addTab(self.tableView, "Mean")
-        rowSpan = 1
-        colSpan = 5
-        self.layout.addWidget(
-            tabwidget, nextRow, 0, rowSpan, colSpan
-        )  # add widget takes ownership
+        # rowSpan = 1
+        # colSpan = 5
+        # self.layout.addWidget(
+        #     tabwidget, nextRow, 0, rowSpan, colSpan
+        # )  # add widget takes ownership
+        self.leftVertLayout.addWidget(tabwidget)
 
-        # 20210828
-        # self.setLayout(self.layout)
+        #
+        # grid of plots (myMplCanvas)
+        self.plotLayout = QtWidgets.QGridLayout()
+        self.plotLayout.setContentsMargins(0, 0, 0, 0)
+        self.plotLayout.setHorizontalSpacing(0)
+        self.plotLayout.setVerticalSpacing(0)
+
+        self.myPlotCanvasList : List[myMplCanvas] = [None] * 4
+
+        # # ???
+        # self.updatePlotLayoutGrid()
+
+        # append
+        self.hBoxLayout.addLayout(self.plotLayout)
+
+    def slot_setStatName(self, headerStr, statName):
+        """User clicked on a new stat in one of (X-Stat, Y-Stat).
+        """
+        logger.info(f'headerStr:{headerStr} statName:{statName}')
+        backendStat = self.getBackendStat(statName)
+        if headerStr == 'X-Stat':
+            self._plotState.setState('X Statistic', statName)
+            self._plotState.setState('xStat', backendStat)
+            xIsCategorical = pd.api.types.is_string_dtype(self.masterDf[backendStat].dtype)
+            self._plotState.setState("xIsCategorical", xIsCategorical)
+        elif headerStr == 'Y-Stat':
+            self._plotState.setState('Y Statistic', statName)
+            self._plotState.setState('yStat', backendStat)
+            yIsCategorical = pd.api.types.is_string_dtype(self.masterDf[backendStat].dtype)
+            self._plotState.setState("yIsCategorical", yIsCategorical)
+        else:
+            logger.error(f'did not understand headerStr:{headerStr}')
+            return
+        
+        self.update2()
+
+    def updatePlotUpdate(self, plotNumber : int):
+        """Respond to user selecting plot number combo box.
+        
+        Parameters
+        ----------
+        plotNumber : int
+            The zero-based plot number.
+        """
+        logger.info(f'plotNumber:{plotNumber} {type(plotNumber)}')
+        self.updatePlot = plotNumber
 
     def updatePlotLayoutGrid(self):
-        """
-        use this to switch between (1x, 1x2, 2x1, 2x2)
+        """use this to switch between (1x, 1x2, 2x1, 2x2)
         """
 
-        print("updatePlotLayoutGrid()")
         plotLayoutType = self.plotLayoutType  # 1x, 1x2, 2x1, 2x2
-        if plotLayoutType == "1x":
+
+        logger.info(f'plotLayoutType:{plotLayoutType}')
+
+
+        if plotLayoutType == "1x1":
             numPlots = 1
         elif plotLayoutType == "1x2":
             numPlots = 2
@@ -1675,19 +2047,24 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         elif plotLayoutType == "2x2":
             numPlots = 4
 
+        self.plotUpdateList = [str(x+1) for x in range(numPlots)]
+
         # remove all widgets from self.plotLayout
         n = self.plotLayout.count()
         for i in range(n):
             item = self.plotLayout.itemAt(i)
             if item is None:
-                print("  warning: updatePlotLayoutGrid() got None item at step", i)
+                logger.error('got None item at step {i}')
                 continue
             widget = item.widget()
-            print("  updatePlotLayoutGrid() removing i:", i, "item:", type(item))
+            logger.info(f'  updatePlotLayoutGrid() removing i:{i} item:{type(item)}')
             self.plotLayout.removeWidget(widget)
             # self.plotLayout.removeItem(item)
 
-        state = self.getState()
+        # make df
+        # state = self.getState()
+        # state = self._plotState
+
         for i in range(numPlots):
             if i == 0:
                 row = 0
@@ -1709,8 +2086,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                 row = 1
                 col = 1
             #
-            oneCanvas = myMplCanvas(plotNumber=i)
-            oneCanvas.myUpdate(state)  # initial plot
+            _plotState = plotState(plotIndex=i)
+            _plotState.setState('masterDf', self.masterDf)
+            oneCanvas = myMplCanvas(plotState=_plotState)
+            oneCanvas.signalSetStatusBar.connect(self.slot_setStatusBar)
+            #oneCanvas.myUpdate(self._plotState)  # initial plot
+            
             self.signalCancelSelection.connect(oneCanvas.slotCancelSelection)
             self.myPlotCanvasList[i] = oneCanvas
 
@@ -1720,18 +2101,19 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # connect each canvas to all other canvas
         for i in range(numPlots):
             iCanvas = self.myPlotCanvasList[i]
-            iCanvas.signalSelectSquare.connect(self.slotSelectSquare)
+            iCanvas.signalSelectSquare.connect(self.slot_selectSquare)
             iCanvas.signalSelectFromPlot.connect(self.slotSelectFromPlot)
             for j in range(numPlots):
                 # if i==j:
                 #    continue
                 jCanvas = self.myPlotCanvasList[j]
-                iCanvas.signalSelectFromPlot.connect(jCanvas.slotSelectInd)
-                iCanvas.signalSelectSquare.connect(jCanvas.slotSelectSquare)
+                iCanvas.signalSelectFromPlot.connect(jCanvas.slot_selectInd)
+                iCanvas.signalSelectSquare.connect(jCanvas.slot_selectSquare)
 
         #
-        # select the firsr plot
-        self.myPlotCanvasList[0].signalSelectSquare.emit(0, None)  # slotSelectSquare(0)
+        # select the first plot
+        _plotState = self.myPlotCanvasList[0].stateDict
+        self.myPlotCanvasList[0].signalSelectSquare.emit(0, _plotState)  # slot_selectSquare(0)
 
     def keyPressEvent(self, event):
         logger.info("keyPressEvent()")
@@ -1745,26 +2127,34 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         event.accept()
 
     def copySelection2(self):
+        """Copy xDf and yDf to clipboard.
+        """
         dfCopy = None
         if self.xDf is not None:
             dfCopy = self.xDf.copy()
             # self.xDf.to_clipboard(sep='\t', index=False)
             # print('Copied to clipboard')
             # print(self.xDf)
+
         if self.yDf is not None:
             if dfCopy is None:
                 dfCopy = self.yDf.copy()
             else:
+                logger.info(f'y len:{len(self.yDf)}')
                 # append row then yDf
-                dfCopy.append(pd.Series(), ignore_index=True)
-                dfCopy.append(self.yDf, ignore_index=True)
+                _emptyDf = pd.DataFrame([[' '] * dfCopy.shape[1]], columns=dfCopy.columns)
+                dfCopy = pd.concat([dfCopy, _emptyDf, self.yDf])
+
             # self.yDf.to_clipboard(sep='\t', index=False)
             # print('Copied to clipboard')
             # print(self.yDf)
         #
         if dfCopy is not None:
             dfCopy.to_clipboard(sep="\t", index=False)
-            print(dfCopy)
+            # print(dfCopy.head())
+            # print(dfCopy.tail())
+
+        self.slot_setStatusBar('Table of x-Stats and Y-Stats copied to the clipboard')
 
     """
     def eventFilter(self, source, event):
@@ -1777,17 +2167,33 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
     def cancelSelection(self):
         self.signalCancelSelection.emit()
+        # clear status bar
+        self.slot_setStatusBar('')
 
-    def _switchTableModel(self, newModel):
-        """
-        switch model for mean table (Self.xxx)
+    def _old_switchTableModel(self, newModel):
+        """switch model for mean table (Self.xxx)
         """
         # print('bScatterPlotMainWindow._switchTableModel()')
         self.signalMeanModelChange.emit(newModel)
 
     def getState(self):
+        """Refresh the mean DataFrame in the state.
+        
+        Call this when X/Y stat changes.
         """
-        query all controls and create dict with state
+
+        # xStat = self._plotState['xStat']
+        # yStat = self._plotState['yStat']
+
+        xDf, yDf, meanDf = self.getMeanDf()
+
+        #self._plotState.setState("masterDf", self.masterDf)  # never changes
+        self._plotState.setState("xDf", xDf)  # never changes
+        self._plotState.setState("yDf", yDf)  # never changes
+        self._plotState.setState("meanDf", meanDf)  # never changes
+
+    def __old_getState(self):
+        """Query all controls and create dict with state
 
         used by myMplCanvas.update()
         """
@@ -1799,9 +2205,6 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         plotType = self.plotType
         stateDict["plotType"] = plotType
 
-        # was this, replacing dropdown with listview
-        # xStatHuman = self.xDropdown.currentText()
-        # yStatHuman = self.yDropdown.currentText()
         xStatHuman, xStat = self.xStatTableView.getCurrentStat()
         yStatHuman, yStat = self.yStatTableView.getCurrentStat()
 
@@ -1825,27 +2228,21 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
             hue = self.hue
         stateDict["hue"] = hue
 
+        stateDict['markerSize'] = self._markerSize
+
+        if self.style == "None":
+            # special case, we do not want None in self.statNameMap
+            style = None
+        else:
+            style = self.style
+        stateDict["style"] = style
+
         stateDict["darkTheme"] = self.darkTheme
         stateDict["showLegend"] = self.showLegend
-        # stateDict["'doHover'"] = self.doHover
+        stateDict["doHover"] = self.doHover
         stateDict["showMplToolbar"] = self.showMplToolbar
 
-        if self.dataType == "All Spikes":
-            meanDf = self.masterDf
-            if self.sortOrder is not None:
-                # need to sort so onPick works
-                print("  ", "(1) sorting by self.sortOrder:", self.sortOrder)
-                meanDf = meanDf.sort_values(self.sortOrder)
-
-            # remove rows that have nan in our x or y stat
-            meanDf = meanDf[~meanDf[xStat].isnull()]
-            meanDf = meanDf[~meanDf[yStat].isnull()]
-            meanDf = meanDf.reset_index()
-
-        elif self.dataType == "File Mean":
-            meanDf = self.getMeanDf(xStat, yStat)
-        else:
-            print("error in self.dataType:", self.dataType)
+        meanDf = self.getMeanDf(xStat, yStat)
 
         stateDict["masterDf"] = self.masterDf
         stateDict["meanDf"] = meanDf
@@ -1854,7 +2251,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
     def myCloseAction(self):
         print("myCloseAction()")
 
-    def mySetStatusBar(self, text):
+    def slot_setStatusBar(self, text : str):
         self.statusBar.showMessage(text)  # ,2000)
 
     """
@@ -1891,6 +2288,8 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
     """
 
     def buildMenus(self):
+        return
+        
         loadAction = QtWidgets.QAction("Load database.xlsx", self)
         loadAction.triggered.connect(self.loadPathMenuAction)
 
@@ -1995,20 +2394,24 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         logger.info(f"=== {name}")
 
         if name == "Replot":
-            self.update2()
+            self.replot()
+
         elif name == "Swap Sort Order":
             # rotate the sort key to be able to sort by different keys, like 'sex' versus 'region'
             # print('  sortOrder was:', self.sortOrder)
             self.sortOrder = self.sortOrder[1:] + self.sortOrder[:1]
             # print('  sortOrder now:', self.sortOrder)
-            self.mySetStatusBar(f"Sort order is now: {self.sortOrder}")
+            self.slot_setStatusBar(f"Sort order is now: {self.sortOrder}")
+
+        elif name == 'smallerMarkerButton':
+            self._plotState.incInt('Marker Size')
+            self.update2()
+        elif name == 'largerMarkerButton':
+            self._plotState.decInt('Marker Size')
+            self.update2()
+
         else:
             logger.warning(f'Did not understand button: "{name}"')
-
-    def setShowLegend(self, state):
-        logger.info(f"setShowLegend() state: {state}")
-        self.showLegend = state
-        self.updateGlobal()
 
     """
     def setKDE(self, state):
@@ -2017,22 +2420,29 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.updateGlobal()
     """
 
-    def setMplToolbar(self, state):
-        # only used in histograms
-        self.showMplToolbar = state
+    def setShowLegend(self, state):
+        state = state > 0
+        logger.info(f"setShowLegend() state: {state}")
+        self._plotState.setState('Legend', state)
         self.updateGlobal()
 
-    # def setHover(self, state):
-    #     # used in scatterplots and point plots
-    #     self.doHover = state
-    #     # self.signalStateChange.emit(self.getState())
-    #     self.updateGlobal()
+    def setMplToolbar(self, state):
+        # only used in histograms
+        state = state > 0
+        self._plotState.setState('Toolbar', state)
+        self.updateGlobal()
+
+    def setHover(self, state):
+        # used in scatterplots and point plots
+        state = state > 0
+        self._plotState.setState('Hover Info', state)
+        self.updateGlobal()
 
     def setTheme(self, state):
-        print("setTheme() state:", state)
+        state = state > 0
+        self._plotState.setState('Toolbar', state)
 
-        self.darkTheme = state
-        if self.darkTheme:
+        if state:
             plt.style.use("dark_background")
             # sns.set_context('talk')
 
@@ -2089,37 +2499,58 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # original plot
         self.update2()
 
-    def updatePlotLayout(self):
+    def updatePlotLayout(self, value : str):
+        """Set number of plots [1x, 1x2, 2x1, 2x2]
         """
-        set number of plots [1x, 1x2, 2x1, 2x2]
-        """
-        self.plotLayoutType = (
-            self.plotLayoutDropdown.currentText()
-        )  # ['paper', 'poster', 'talk']
+        self.plotLayoutType = value
 
         self.updatePlotLayoutGrid()
 
         self.update2()
 
-    def updatePlotSize(self):
-        self.plotSize = (
-            self.plotSizeDropdown.currentText()
-        )  # ['paper', 'poster', 'talk']
-        sns.set_context(self.plotSize)  # , font_scale=1.4)
-        self.updateGlobal()
-
-    def updateHue(self):
-        hue = self.hueDropdown.currentText()
-        self.hue = hue
-        # self.signalStateChange.emit(self.getState())
+    def updatePlotSize(self, text):
+        self._plotState.setState('Plot Size', text)
+        sns.set_context(text)  # , font_scale=1.4)
         self.update2()
 
-    def updateGroupBy(self):
-        self.groupByColumnName = self.groupByDropdown.currentText()
+    def updatePlotType(self, text):
+        if self._blockSlots:
+            return
+        self._plotState.setState('Plot Type', text)
+        self.update2()
+
+    def updateDataType(self, text):
+        if self._blockSlots:
+            return
+        self._plotState.setState('Data Type', text)
+        self.update2()
+
+    def setIncludeNo(self, state):
+        # only used in histograms
+        state = state > 0
+        self._plotState.setState('Include No', state)
+        self.update2()
+
+    def updateHue(self, text):
+        if self._blockSlots:
+            return
+        self._plotState.setState('Hue', text)
+        self.update2()
+
+    def updateStyle(self, text):
+        if self._blockSlots:
+            return
+        self._plotState.setState('Style', text)
+        self.update2()
+
+    def updateGroupBy(self, text):
+        if self._blockSlots:
+            return
+        self._plotState.setState('Group By (Stats)', text)
         self.update2()  # todo: don't update plot, update table
 
     def updateLimitTo(self):
-        logger.info("")
+        logger.info("not implemented")
 
     """
     def updateColor(self):
@@ -2127,16 +2558,6 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.color = color
         self.update2()
     """
-
-    def updatePlotType(self):
-        plotType = self.typeDropdown.currentText()
-        self.plotType = plotType
-        self.update2()
-
-    def updateDataType(self):
-        dataType = self.dataTypeDropdown.currentText()
-        self.dataType = dataType
-        self.update2()
 
     """
     def old_on_pick_event(self, event):
@@ -2156,44 +2577,60 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
             pass
     """
 
-    def getMeanDf(self, xStat, yStat, verbose=False):
+    def getMeanDf(self, verbose=False):
         # need to get all categorical columns from orig df
         # these do not change per file (sex, condition, region)
-        print("=== getMeanDf() xStat:", xStat, "yStat:", yStat)
-        print("  self.groupByColumnName:", self.groupByColumnName)
+
+        includeNo = self._plotState['Include No']
+
+        xStat = self._plotState['xStat']
+        yStat = self._plotState['yStat']
+        groupByColumnName = self._plotState['Group By (Stats)']
+        
+        logger.info(f'=== xStat:{xStat} yStat:{yStat} groupByColumnName:{groupByColumnName}')
 
         xIsCategorical = pd.api.types.is_string_dtype(self.masterDf[xStat].dtype)
         yIsCategorical = pd.api.types.is_string_dtype(self.masterDf[yStat].dtype)
 
-        groupByNone = self.groupByColumnName == "None"
+        groupByNone = groupByColumnName == "None"
 
         aggList = ["count", "mean", "std", "sem", "median"]
+        
+        if includeNo:
+            thisDf = self.masterDf
+        else:
+            thisDf = self.masterDf[self.masterDf['Include']=='yes']
+
+        # xDf for table
         if xIsCategorical or groupByNone:
             self.xDf = None
         else:
-            self.xDf = self.masterDf.groupby(self.groupByColumnName, as_index=False)[
+            self.xDf = thisDf.groupby(groupByColumnName, as_index=False)[
                 xStat
             ].agg(aggList)
             self.xDf = self.xDf.reset_index()
             self.xDf.insert(1, "stat", xStat)  # column 1, in place
 
+        # yDf for table
         if yIsCategorical or groupByNone:
             self.yDf = None
         else:
-            self.yDf = self.masterDf.groupby(self.groupByColumnName, as_index=False)[
+            self.yDf = thisDf.groupby(groupByColumnName, as_index=False)[
                 yStat
             ].agg(aggList)
             self.yDf = self.yDf.reset_index()
             self.yDf.insert(1, "stat", yStat)  # column 1, in place
 
+        # meanDf for plotState (mpl canvas)
         if xStat == yStat:
             groupList = [xStat]
         else:
             groupList = [xStat, yStat]
+
         if groupByNone:
             meanDf = None
         else:
-            meanDf = self.masterDf.groupby(self.groupByColumnName, as_index=False)[
+            meanDf = thisDf.groupby(groupByColumnName, as_index=False)[
                 groupList
             ].mean()
             meanDf = meanDf.reset_index()
@@ -2201,12 +2638,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         #
         # 20210211 get median/std/sem/n
         # try and add median/std/sem/sem/n
-        if 0:
-            tmpDf = self.masterDf.groupby(self.groupByColumnName, as_index=False)[
-                groupList
-            ].median()
-            # print('tmpDf:', tmpDf)
-            meanDf["median"] = tmpDf[self.groupByColumnName]
+        # if 0:
+        #     tmpDf = self.masterDf.groupby(groupByColumnName, as_index=False)[
+        #         groupList
+        #     ].median()
+        #     # print('tmpDf:', tmpDf)
+        #     meanDf["median"] = tmpDf[groupByColumnName]
 
         """
         for catName in self.masterCatColumns:
@@ -2218,20 +2655,20 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         """
 
         # for each row, update all categorical columns using self.masterCatColumns
-        fileNameList = meanDf[self.groupByColumnName].unique()
+        fileNameList = meanDf[groupByColumnName].unique()
         # print('  getMeanDf() updating all categorical columns for rows in fileNameList:')#, fileNameList)
         # print('    categorical columns are self.masterCatColumns:', self.masterCatColumns)
         for i, analysisname in enumerate(fileNameList):
-            tmpDf = self.masterDf[self.masterDf[self.groupByColumnName] == analysisname]
+            tmpDf = thisDf[self.masterDf[groupByColumnName] == analysisname]
             if len(tmpDf) == 0:
-                print("  ERROR: got 0 length for analysisname:", analysisname)
+                logger.error(f'  got 0 length for analysisname:{analysisname}')
                 continue
             # need to limit this to pre-defined catecorical columns
             for catName in self.masterCatColumns:
                 # if i==0:
                 #    print('analysisname:', analysisname, 'catName:', catName)
 
-                # if catName == self.groupByColumnName:
+                # if catName == groupByColumnName:
                 #    # this is column we grouped by, already in meanDf
                 #    continue
 
@@ -2243,9 +2680,9 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                     catValue = tmpDf[catName].iloc[0]
 
                     theseRows = (
-                        meanDf[self.groupByColumnName] == analysisname
+                        meanDf[groupByColumnName] == analysisname
                     ).tolist()
-                    # if catName == self.groupByColumnName:
+                    # if catName == groupByColumnName:
                     meanDf.loc[theseRows, catName] = catValue
                     if self.xDf is not None:
                         self.xDf.loc[theseRows, catName] = catValue
@@ -2253,16 +2690,14 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                         self.yDf.loc[theseRows, catName] = catValue
                     # print('catName:', catName, 'catValue:', type(catValue), catValue)
                 else:
-                    print(
-                        "warning catName:", catName, "has", numUnique, "unique values"
-                    )
+                    logger.warning(f"catName: {catName} has {numUnique} unique values")
                     pass
                     # print(f'not adding {catName} to table, numUnique: {numUnique}')
         #
         # sort
         # meanDf = meanDf.sort_values(['Region', 'Sex', 'Condition'])
         if self.sortOrder is not None:
-            print("  ", "sorting by self.sortOrder:", self.sortOrder)
+            logger.info(f'sorting by sortOrder:{self.sortOrder}')
             try:
                 meanDf = meanDf.sort_values(self.sortOrder)
                 if self.xDf is not None:
@@ -2270,10 +2705,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                 if self.yDf is not None:
                     self.yDf = self.yDf.sort_values(self.sortOrder)
             except KeyError as e:
-                print("    ", "sorting (2) failed with:", e)
+                logger.warning(f'sorting (2) failed with: {e}')
         #
         meanDf["index"] = [x + 1 for x in range(len(meanDf))]
         meanDf = meanDf.reset_index()
+
+        # what was I using index for?
         if self.xDf is not None:
             self.xDf["index"] = [x + 1 for x in range(len(self.xDf))]
             self.xDf = self.xDf.reset_index()
@@ -2289,20 +2726,22 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
             self.yDf = self.yDf.drop(["level_0"], axis=1)
         # we need to round for the table, but NOT the plot !!!!!
         # meanDf = meanDf.round(3)
-
+        
         #
         if verbose:
             print("getMeanDf():")
             print(meanDf)
         #
-        return meanDf
+        return self.xDf, self.yDf, meanDf
 
     def updateGlobal(self):
+        """Update all plot globals like legend, toolbar, and hover.
+        
+        Do not replot
         """
-        update all plots
-        do not replot
-        """
-        state = self.getState()
+        # state = self.getState()
+        state = self._plotState
+        
         n = len(self.myPlotCanvasList)
         for i in range(n):
             if self.myPlotCanvasList[i] is not None:
@@ -2311,38 +2750,53 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
     def replot(self):
         self.update2()
 
+        logger.info(f'selecting square:{self.updatePlot}')
+        _plotState = self.myPlotCanvasList[self.updatePlot].stateDict
+        self.myPlotCanvasList[self.updatePlot].signalSelectSquare.emit(self.updatePlot, _plotState)  # slot_selectSquare(0)
+
+        # mpl canvas might have made a deep copy
+        self._plotState = self.myPlotCanvasList[self.updatePlot].stateDict
+
+        self.slot_setStatusBar('')
+
     def update2(self):
-        # self.updatePlot is the plot to update 1,2,3,4
-        logger.info("")
-        updateIndex = self.updatePlot
-        if updateIndex is None:
-            logger.info(
-                f"Found no plots to update with self.updatePlot: {self.updatePlot}"
-            )
-            self.mySetStatusBar("Please select a plot to update")
+        """Update meanDf for a state.
+        """
+        if self.updatePlot is None:
+            logger.error(f"Found no plots to update with self.updatePlot: {self.updatePlot}")
+            self.slot_setStatusBar("Please select a plot to update")
             return
 
-        state = self.getState()
+        logger.info(f'  plot: {self.updatePlot}')
+        
+        # this refreshes meanDF and determines if x/y stat is categorical
+        self.getState()
+        
+        # state = self._plotState
 
         # update table model
-        meanDf = state["meanDf"]
+        # meanDf = state.getState("meanDf")
+        
         # modelMeanDf = meanDf.drop(['level_0'], axis=1)
         # self.myModel = myPandasModel(meanDf) # todo: don't need self.myModel
-        myModel = myPandasModel(meanDf)  # todo: don't need self.myModel
-        # print('calling _switchTableModel from update2() updateIndex:', updateIndex)
-        self._switchTableModel(myModel)
+
+        # if meanDf is None:
+        #     logger.error(f'got None meanDf')
+        # else:
+        #     myModel = myPandasModel(meanDf)  # todo: don't need self.myModel
+        #     # print('calling _switchTableModel from update2() updateIndex:', updateIndex)
+        #     self._switchTableModel(myModel)
 
         self.xTableView.slotSwitchTableDf(self.xDf)
         self.yTableView.slotSwitchTableDf(self.yDf)
 
-        # update plots
-        n = len(self.myPlotCanvasList)
-        for i in range(n):
-            if i == updateIndex:
-                if self.myPlotCanvasList[i] is not None:
-                    self.myPlotCanvasList[i].myUpdate(state)
+        # update one plot corresponding to updateIndex
+        self.myPlotCanvasList[self.updatePlot].myUpdate(self._plotState)
 
-    def old_getAnnotation(self, ind):
+        # update all mpl canvas with globalstate (toolbar, hover, legend, etc)
+        self.updateGlobal()
+
+    def _old_getAnnotation(self, ind):
         # todo: replace with _getStatFromPlot
 
         if not np.issubdtype(ind, np.integer):
@@ -2408,15 +2862,31 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         """
         print("bScatterPlotMainWindow.slotSelectFromPlot() ", selectDict)
 
-    def slotSelectSquare(self, plotNumber, stateDict):
-        logger.info(f"plotNumber:{plotNumber}")
-        # print('  stateDict:', stateDict)
-        print("  todo: fill in all interface using stateDict")
+    def slot_selectSquare(self, plotNumber, stateDict):
+        """Respond to user clicking a mpl plot widget.
+        """
+        if plotNumber == self.updatePlot:
+            # already selected
+            logger.warning(f'already showing plotNumber:{plotNumber}')
+            return
+        
+        logger.info(f'plotNumber:{plotNumber}')
+        
         self.updatePlot = plotNumber
+        self._plotState = stateDict
+
+        self.plotUpdateDropdown.setCurrentIndex(plotNumber)
+
+        print('   Y-State is:', stateDict['Y Statistic'])
+
+        # refresh interface based on new state
+        self.refreshInterface()
 
     def slotTableViewClicked(self, clickedIndex):
-        """
-        Respond to signal self.tableView.clicked
+        """Respond to signal self.tableView.clicked
+        
+        Parameters
+        ----------
         clickedIndex: PyQt5.QtCore.QModelIndex
         """
         row = clickedIndex.row()

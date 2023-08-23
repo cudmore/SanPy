@@ -80,7 +80,7 @@ setup(
             'pyabf',
             'tifffile',
             'matplotlib',
-            #'mplcursors',
+            'mplcursors',
             'seaborn',
             'requests', #  to load from the cloud (for now github)
             'tables',  # aka pytable for hdf5. Conflicts with conda install
