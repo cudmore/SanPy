@@ -616,7 +616,10 @@ class myMplCanvas(QtWidgets.QFrame):
             self.fig.savefig("", dpi=600)
 
     def on_pick_event(self, event):
-        """
+        """On pick for Line Plot.
+
+        Parameters
+        ----------
         event : matplotlib.backend_bases.PickEvent
         """
 
@@ -716,7 +719,7 @@ class myMplCanvas(QtWidgets.QFrame):
         self.signalSelectSquare.emit(self.getPlotNumber(), self.stateDict)
 
     def on_pick(self, event):
-        """when user clicks on a point in the graph
+        """Handle user click in scatter
 
         todo: this makes perfect sense for scatter but maybe not other plots???
         """
@@ -728,7 +731,16 @@ class myMplCanvas(QtWidgets.QFrame):
             # self.signalSetStatusBar.emit('Selection only allowed in scatter plots')
             return
 
-        # line = event.artist
+        # if what we are plotting has different length from df
+        # means there were nan value in df, picking is not possible
+        line = event.artist
+        offsets = line.get_offsets()
+        if len(offsets) != len(self.plotDf):
+            logger.error('Plot and DataFrame length do not match')
+            logger.error('  this occurs when there were nan values in dataframe and they do not get plotted')
+            _warningStr = 'Plot and DataFrame length do not match. This happens when we plot something like "Spike Frequency", the first spike does not have a value.'
+            self.signalSetStatusBar.emit(_warningStr)
+            return
 
         # filter out clicks on 'Annotation' used by mplcursors
         # try:
@@ -1007,6 +1019,7 @@ class myMplCanvas(QtWidgets.QFrame):
         logger.info(f'  dataType:{dataType}')
         logger.info(f'  xStatHuman:{xStatHuman}')
         logger.info(f'  yStatHuman:{yStatHuman}')
+        logger.info(f'  markerSize:{markerSize}')
 
         xStat = state["xStat"]
         yStat = state["yStat"]
@@ -1072,11 +1085,12 @@ class myMplCanvas(QtWidgets.QFrame):
                 else:
                     # logger.info(f'markerSize:{markerSize}')
                     
-                    __idx = 273
-                    print(f'xxx thisMasterDf __idx', __idx, 'has x/y for x:', xStat, 'y:', yStat)
-                    print('  ', thisMasterDf.loc[__idx]['index'])
-                    print('  ', thisMasterDf.loc[__idx][xStat])
-                    print('  ', thisMasterDf.loc[__idx][yStat])
+                    # while debugging fact that plotting with nan yileds a plot without nan index
+                    # __idx = 273
+                    # print(f'xxx thisMasterDf __idx', __idx, 'has x/y for x:', xStat, 'y:', yStat)
+                    # print('  ', thisMasterDf.loc[__idx]['index'])
+                    # print('  ', thisMasterDf.loc[__idx][xStat])
+                    # print('  ', thisMasterDf.loc[__idx][yStat])
                     
                     self.whatWeArePlotting = sns.scatterplot(
                         x=xStat,
@@ -2154,7 +2168,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
             # print(dfCopy.head())
             # print(dfCopy.tail())
 
-        self.slot_setStatusBar('Table of x-Stats and Y-Stats copied to the clipboard')
+        self.slot_setStatusBar('Table of X-Stats and Y-Stats copied to the clipboard')
 
     """
     def eventFilter(self, source, event):
@@ -2404,10 +2418,10 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
             self.slot_setStatusBar(f"Sort order is now: {self.sortOrder}")
 
         elif name == 'smallerMarkerButton':
-            self._plotState.incInt('Marker Size')
+            self._plotState.decInt('Marker Size')
             self.update2()
         elif name == 'largerMarkerButton':
-            self._plotState.decInt('Marker Size')
+            self._plotState.incInt('Marker Size')
             self.update2()
 
         else:
