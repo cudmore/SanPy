@@ -86,7 +86,8 @@ def test_app(sanpyAppObject):
     sanpyAppObject.myDetectionWidget.detectToolbarWidget._on_button_click('Detect dV/dt')
 
     _scatterPlugin.close()
-    
+    _scatterPlugin = None
+
 # def _slot_selectRow(rowIdx : int, rowDict : dict, selectAgain : bool):
 #     logger.info(f'{rowIdx} {rowDict}')
 #     assert rowIdx == _selectedRow
