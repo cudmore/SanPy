@@ -1,10 +1,13 @@
+# using this to turn off for publication, used in detection widget and loading bAnalysis
+DO_KYMOGRAPH_ANALYSIS = True
+
 from .sanpyLogger import *
 
 from ._util import *
 from .analysisUtil import *
 
 from .bAnalysis_ import bAnalysis
-from .bAnalysis_ import MetaData  # Aug 2023
+# from .bAnalysis_ import MetaData  # Aug 2023
 from .analysisDir import *
 from .analysisPlot import *
 from .bAnalysisUtil import *
@@ -25,3 +28,5 @@ from .kymAnalysis import kymAnalysis
 from ._util import _loadLineScanHeader
 
 from .fileloaders import *
+
+from .metaData import MetaData

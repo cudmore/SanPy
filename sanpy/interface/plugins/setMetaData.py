@@ -30,11 +30,11 @@ class SetMetaData(sanpyPlugin):
             # todo deactivate all controls
             return
         
-        metaDataDict = self.ba._metaData
+        metaDataDict = self.ba.metaData
 
         logger.info(metaDataDict)
 
-        for k,v in self.ba._metaData.items():
+        for k,v in self.ba.metaData.items():
             if not k in self._widgetDict.keys():
                 k = k.capitalize()
 

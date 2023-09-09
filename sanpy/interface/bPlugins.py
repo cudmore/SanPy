@@ -217,8 +217,13 @@ class bPlugins:
                             _pluginDict["h"],
                         )
                     newPlugin.getWidget().show()
+                    newPlugin.getWidget().setVisible(True)
                     # newPlugin.getWidget().raise_()  # bring to front, raise is a python keyword
                     # newPlugin.getWidget().activateWindow()  # bring to front
+
+                else:
+                    newPlugin.getWidget().hide()
+                    newPlugin.getWidget().setVisible(False)
 
                 # add the plugin to open next time we run
 

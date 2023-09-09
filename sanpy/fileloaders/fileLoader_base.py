@@ -11,8 +11,9 @@ import scipy.signal
 
 import sanpy.fileloaders
 
-from sanpy.sanpyLogger import get_logger
+import sanpy.metaData
 
+from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 
@@ -35,6 +36,8 @@ def getFileLoaders(verbose: bool = False) -> dict:
 
     ignoreModuleList = ["fileLoader_base", "recordingModes", "epochTable", "hekaUtils"]
 
+    if not sanpy.DO_KYMOGRAPH_ANALYSIS:
+        ignoreModuleList.append('fileLoader_tif')
     #
     # system file loaders from sanpy.fileloaders
     loadedList = []
@@ -43,6 +46,8 @@ def getFileLoaders(verbose: bool = False) -> dict:
             if verbose:
                 logger.info(f"moduleName:{moduleName}")
             if moduleName in ignoreModuleList:
+                if verbose:
+                    logger.info(f'IGNORING {moduleName}')
                 continue
             loadedList.append(moduleName)
             fullModuleName = "sanpy.fileloaders." + moduleName
@@ -198,6 +203,8 @@ class fileLoader_base(ABC):
 
         self._path = filepath
 
+        self._metaData = sanpy.metaData.MetaData()  # per file metadata
+
         self._filteredY : np.ndarray = None  # set in _getDerivative
         self._filteredDeriv : np.ndarray = None
         self._currentSweep: int = 0
@@ -225,6 +232,16 @@ class fileLoader_base(ABC):
         """Get a short string representing this file."""
         txt = f"file: {self.filename} sweeps: {self.numSweeps} dur (Sec):{self.recordingDur}"
         return txt
+
+    @property
+    def metadata(self):
+        return self._metaData
+    
+    def setAcqDate(self, value):
+        self.metadata.setMetaData('Acq Date', value, triggerDirty=False)
+
+    def setAcqTime(self, value):
+        self.metadata.setMetaData('Acq Time', value, triggerDirty=False)
 
     def getLoadError(self) -> bool:
         return self._loadError

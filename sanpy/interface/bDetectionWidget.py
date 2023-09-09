@@ -665,8 +665,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         # kymograph
         # self.myKymWidget.kymographPlot.setXRange(start, stop, padding=padding)  # row major is different
         #self.myKymWidget.kymographPlot.autoRange()  # row major is different
-        if self.ba.fileLoader.isKymograph():
-            self.myKymWidget.kymographPlot.autoRange()
+        if sanpy.DO_KYMOGRAPH_ANALYSIS:
+            if self.ba.fileLoader.isKymograph():
+                self.myKymWidget.kymographPlot.autoRange()
 
         #
         # update detection toolbar
@@ -1534,7 +1535,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # for publication, don't do kymographs
         # make a branch and get this working
-        if 1:
+        if sanpy.DO_KYMOGRAPH_ANALYSIS:
             self.myKymWidget = sanpy.interface.kymographWidget()
             self.myKymWidget.signalKymographRoiChanged.connect(self.slot_kymographChanged)
             self.myKymWidget.setVisible(False)
@@ -2139,16 +2140,17 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot.getAxis("left").setLabel(yLabel)
         self.vmPlot.getAxis("bottom").setLabel("Seconds")
 
-        if self.ba.fileLoader.isKymograph():
-            self.myKymWidget.setVisible(True)
-            # self.myKymWidget.slot_switchFile(ba, startSec, stopSec)
-            self.vmPlot.setXLink(self.myKymWidget.kymographPlot)
-            # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
-            self.myKymWidget.slot_switchFile(ba)
-        else:
-            self.myKymWidget.setVisible(False)
-            # self.myKymWidget.kymographPlot.setXLink(None)  # row major is different
-            self.vmPlot.setXLink(None)
+        if sanpy.DO_KYMOGRAPH_ANALYSIS:
+            if self.ba.fileLoader.isKymograph():
+                self.myKymWidget.setVisible(True)
+                # self.myKymWidget.slot_switchFile(ba, startSec, stopSec)
+                self.vmPlot.setXLink(self.myKymWidget.kymographPlot)
+                # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
+                self.myKymWidget.slot_switchFile(ba)
+            else:
+                self.myKymWidget.setVisible(False)
+                # self.myKymWidget.kymographPlot.setXLink(None)  # row major is different
+                self.vmPlot.setXLink(None)
 
         #self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different    
 

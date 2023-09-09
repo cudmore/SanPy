@@ -29,80 +29,10 @@ import sanpy._util
 
 from sanpy.fileloaders import recordingModes
 
+# from metaData import MetaData
+
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
-
-class MetaData(dict):
-    @staticmethod
-    def getMetaDataDict():
-        _metaData = {
-            'Include': 'yes',
-            'Species': '',
-            'Cell Type': '',
-            'ID': '',
-            'Age': '',
-            'Sex': 'unknown',
-            'Genotype': '',
-            'Condition1': '',
-            'Condition2': '',
-            'Note': '',
-        }
-        return _metaData.copy()
-    
-    def __init__(self, ba : "sanpy.bAnalysis" = None):
-        super().__init__()
-        self._ba = ba
-        
-        d = self.getMetaDataDict()
-        for k,v in d.items():
-            self[k] = v
-
-    def fromDict(self, d : dict, triggerDirty=True):
-        """Assign metadata from a dictionary.
-        
-        Used when load/save to hdf5.
-
-        PArameters
-        ----------
-        triggerDirty : bool
-            If False then don't dirty the bAnalysis (used when loading)
-        """
-        for k,v in d.items():
-            self.setMetaData(k, v, triggerDirty)
-
-    def getHeader(self) -> str:
-        """Get key value pairs for a text header.
-        
-        Saved into one line header for csv export.
-        """
-        headerStr = ''
-        for k,v in self.items():
-            headerStr += f'{k}={v};'
-        return headerStr
-    
-    def getMetaData(self, key):
-        if not key in self.keys():
-            logger.error(f'did not find "{key}" in metadata')
-            return
-        return self[key]
-    
-    def setMetaData(self, key, value, triggerDirty=True):
-        if not key in self.keys():
-            logger.error(f'did not find "{key}" in metadata')
-            logger.info(f'   available keys are: {self.keys()}')
-            return
-        
-        if self[key] == value:
-            # no change
-            return
-        
-        oldValue = self[key]
-
-        self[key] = value
-        
-        if triggerDirty and self._ba is not None:
-            # logger.warning(f'SETTING METADATA {key} from "{oldValue}" to new value "{value}"')
-            self._ba._detectionDirty = True
 
 class bAnalysis:
     """
@@ -130,20 +60,6 @@ class bAnalysis:
     # def getNewUuid():
     #     return 't' + str(uuid.uuid4()).replace('-', '_')
 
-    @staticmethod
-    def _old_getMetaDataDict():
-        _metaData = {
-            'Include': 'yes',
-            'Condition1': '',
-            'Condition2': '',
-            'ID': '',
-            'Age': '',
-            'Sex': 'unknown',
-            'Genotype': '',
-            'Note': '',
-        }
-        return _metaData.copy()
-    
     def __init__(
         self,
         filepath: str = None,
@@ -172,8 +88,9 @@ class bAnalysis:
 
         self._detectionDict: dict = None  # corresponds to an item in sanpy.bDetection
 
+        # sept 9, moving this to file loader
         # fileloader holds meta data
-        self._metaData = MetaData(self)  #self.getMetaDataDict()
+        #self._metaData = MetaData(self)  #self.getMetaDataDict()
 
         self._isAnalyzed: bool = False
 
@@ -246,7 +163,7 @@ class bAnalysis:
                 self.loadError = True
             
             self._kymAnalysis : sanpy.kymAnalysis = None
-            if self.fileLoader.recordingMode == recordingModes.kymograph:
+            if (self.fileLoader is not None) and (self.fileLoader.recordingMode == recordingModes.kymograph):
                 if verbose:
                     logger.info('creating kymAnalysis')
                     logger.info(f'    self.fileLoader.filepath:{self.fileLoader.filepath}')
@@ -255,6 +172,10 @@ class bAnalysis:
                 self._kymAnalysis = sanpy.kymAnalysis(self.fileLoader.filepath,
                                                       self.fileLoader.tifData,
                                                       self.fileLoader.tifHeader)
+
+            if self._fileLoader is not None:
+                # we need to so file loader meta data can set ba (Self) dirty when changed
+                self.fileLoader.metadata._ba = self
 
 
         """
@@ -288,8 +209,10 @@ class bAnalysis:
 
     @property
     def metaData(self):
-        return self._metaData
-
+        # sept 9, moved to file loader
+        # return self._metaData
+        return self.fileLoader.metadata
+    
     @property
     def kymAnalysis(self):
         """Get the kymAnalysis object (if it exists).

@@ -1214,6 +1214,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 _runningPlugin.getHumanName(), externalWindow=True, ltwhTuple=ltwhTuple
             )
 
+        return _runningPlugin
+    
     def slot_updateAnalysis(self, sDict : dict):
         """Respond to both detect and user setting columns in ba.
         

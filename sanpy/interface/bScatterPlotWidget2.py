@@ -1385,9 +1385,9 @@ class plotState:
             'Plot Type': 'Scatter Plot',
             'Data Type': 'All Spikes',  # ['All Spikes', 'File Mean']
             'Include No': False,
-            "Hue": 'Unique Name',
+            "Hue": 'File  Number',  #'Unique Name',
             "Style": 'None',
-            "Group By (Stats)": 'Unique Name',
+            "Group By (Stats)": 'File Number',  #'Unique Name',
 
             'Legend': False,
             'Toolbar': False,  # mpl toolbar
@@ -2380,12 +2380,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
             categoricalList = []
             for colStr, dtype in self.masterDf.dtypes.items():
                 if dtype == object:
-                    print("colStr:", colStr, "is", dtype)
+                    logger.info(f'adding to categoricalList colStr:{colStr} with type {dtype}')
                     categoricalList.append(colStr)
                 elif dtype == np.int64:
                     unique = self.masterDf[colStr].unique()
                     numUnique = len(unique)
-                    print("colStr:", colStr, "is", dtype, "numUnique:", numUnique)
+                    logger.info(f'adding to categoricalList colStr:{colStr} with type {dtype} numUnique:{numUnique}')
                     categoricalList.append(colStr)
 
         self.masterCatColumns = categoricalList
@@ -2701,7 +2701,11 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
                 # find value of catName column from 1st instance in masterDf
                 # if more than one unique value, don't put into table
-                numUnique = len(tmpDf[catName].unique())
+                try:
+                    numUnique = len(tmpDf[catName].unique())
+                except (KeyError) as e:
+                    logger.warning(f'did not find catName key "{catName}"')
+                    continue
                 if numUnique == 1:
                     # print('    updating categorical colum with catName:', catName)
                     catValue = tmpDf[catName].iloc[0]

@@ -10,8 +10,8 @@ def test_dir():
 	ad = sanpy.analysisDir(path=path, autoLoad=autoLoad, folderDepth=1)
 
 	assert ad is not None
-	logger.info(f'loaded analysis dir')
-	print(ad)
+	# logger.info(f'loaded analysis dir')
+	# print(ad)
 
 	for rowIdx,a in enumerate(ad):
 		ba = ad.getAnalysis(rowIdx)
