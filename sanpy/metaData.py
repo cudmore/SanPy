@@ -1,3 +1,5 @@
+import sanpy
+
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
@@ -20,7 +22,7 @@ class MetaData(dict):
         }
         return _metaData.copy()
     
-    def __init__(self, ba : "sanpy.bAnalysis" = None):
+    def __init__(self, ba : "sanpy.bAnalysis_" = None):
         super().__init__()
         self._ba = ba
         

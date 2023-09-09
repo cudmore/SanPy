@@ -1311,57 +1311,57 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.signalSelectSpikeList.emit(eDict)
             self._blockSlots = False
 
-    def _old_refreshClips(self, xMin=None, xMax=None):
-        if not self.clipPlot.isVisible():
-            # clips are not being displayed
-            # logger.info('Clips not visible --- RETURNING')
-            return
+    # def _old_refreshClips(self, xMin=None, xMax=None):
+    #     if not self.clipPlot.isVisible():
+    #         # clips are not being displayed
+    #         # logger.info('Clips not visible --- RETURNING')
+    #         return
 
-        logger.info("")
+    #     logger.info("")
 
-        # always remove existing
-        # if there are no clips and we bail we will at least clear display
-        self.clipPlot.clear()
+    #     # always remove existing
+    #     # if there are no clips and we bail we will at least clear display
+    #     self.clipPlot.clear()
 
-        # if self.clipLines is not None:
-        #    self.clipPlot.removeItem(self.clipLines)
-        # if self.meanClipLine is not None:
-        #    self.clipPlot.removeItem(self.meanClipLine)
+    #     # if self.clipLines is not None:
+    #     #    self.clipPlot.removeItem(self.clipLines)
+    #     # if self.meanClipLine is not None:
+    #     #    self.clipPlot.removeItem(self.meanClipLine)
 
-        if self.ba is None:
-            return
+    #     if self.ba is None:
+    #         return
 
-        if self.ba.numSpikes == 0:
-            return
+    #     if self.ba.numSpikes == 0:
+    #         return
 
-        # this returns x-axis in ms
-        theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(
-            xMin, xMax, sweepNumber=self.sweepNumber
-        )
+    #     # this returns x-axis in ms
+    #     theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(
+    #         xMin, xMax, sweepNumber=self.sweepNumber
+    #     )
 
-        # convert clips to 2d ndarray ???
-        xTmp = np.array(theseClips_x)
-        # xTmp /= self.ba.dataPointsPerMs # pnt to ms
-        xTmp /= self.ba.fileLoader.dataPointsPerMs * 1000  # pnt to seconds
-        yTmp = np.array(theseClips)
+    #     # convert clips to 2d ndarray ???
+    #     xTmp = np.array(theseClips_x)
+    #     # xTmp /= self.ba.dataPointsPerMs # pnt to ms
+    #     xTmp /= self.ba.fileLoader.dataPointsPerMs * 1000  # pnt to seconds
+    #     yTmp = np.array(theseClips)
 
-        # print('refreshClips() xTmp:', xTmp.shape)
-        # print('refreshClips() yTmp:', yTmp.shape)
+    #     # print('refreshClips() xTmp:', xTmp.shape)
+    #     # print('refreshClips() yTmp:', yTmp.shape)
 
-        self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type="clip")
-        self.clipPlot.addItem(self.clipLines)
+    #     self.clipLines = MultiLine(xTmp, yTmp, self, allowXAxisDrag=False, type="clip")
+    #     self.clipPlot.addItem(self.clipLines)
 
-        # print(xTmp.shape) # (num spikes, time)
-        self.xMeanClip = xTmp
-        if len(self.xMeanClip) > 0:
-            self.xMeanClip = np.nanmean(xTmp, axis=0)  # xTmp is in ms
-        self.yMeanClip = yTmp
-        if len(self.yMeanClip) > 0:
-            self.yMeanClip = np.nanmean(yTmp, axis=0)
-        self.meanClipLine = MultiLine(
-            self.xMeanClip, self.yMeanClip, self, allowXAxisDrag=False, type="meanclip"
-        )
-        self.clipPlot.addItem(self.meanClipLine)
+    #     # print(xTmp.shape) # (num spikes, time)
+    #     self.xMeanClip = xTmp
+    #     if len(self.xMeanClip) > 0:
+    #         self.xMeanClip = np.nanmean(xTmp, axis=0)  # xTmp is in ms
+    #     self.yMeanClip = yTmp
+    #     if len(self.yMeanClip) > 0:
+    #         self.yMeanClip = np.nanmean(yTmp, axis=0)
+    #     self.meanClipLine = MultiLine(
+    #         self.xMeanClip, self.yMeanClip, self, allowXAxisDrag=False, type="meanclip"
+    #     )
+    #     self.clipPlot.addItem(self.meanClipLine)
 
     def toggleInterface(self, item, on):
         """Visually toggle different portions of interface"""

@@ -630,7 +630,7 @@ class bDetection(object):
         for detectionPreset in self._detectionEnum:
             if detectionPreset.value == humanName:
                 return detectionPreset.name
-        logger.error(f'did not find human name {humanNAme} in detection presets?')
+        logger.error(f'did not find human name {humanName} in detection presets?')
         logger.error(f'  possible names are {self.getDetectionPresetList()}')
 
     def _getPresetsDict(self):

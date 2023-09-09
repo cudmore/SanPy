@@ -1025,21 +1025,21 @@ class kymAnalysis:
 
         #
         # # file results
-        self._diamResults["time_sec"] = self.sweepX.tolist()
+        # self._diamResults["time_sec"] = self.sweepX.tolist()
 
-        self._diamResults["left_pnt"] = left_idx_list
-        self._diamResults["right_pnt"] = right_idx_list
+        # self._diamResults["left_pnt"] = left_idx_list
+        # self._diamResults["right_pnt"] = right_idx_list
 
         
-        self._diamResults["sumintensity_raw"] = sumIntensity
+        # self._diamResults["sumintensity_raw"] = sumIntensity
 
-        # normalize sum to max
-        sumIntensity = [_x/_maxSumIntensity for _x in sumIntensity]
-        self._diamResults["sumintensity"] = sumIntensity
+        # # normalize sum to max
+        # sumIntensity = [_x/_maxSumIntensity for _x in sumIntensity]
+        # self._diamResults["sumintensity"] = sumIntensity
 
-        diameter_um = np.multiply(diameter_idx_list, self.umPerPixel)
-        self._diamResults["diameter_pnts"] = diameter_idx_list
-        self._diamResults["diameter_um"] = diameter_um
+        # diameter_um = np.multiply(diameter_idx_list, self.umPerPixel)
+        # self._diamResults["diameter_pnts"] = diameter_idx_list
+        # self._diamResults["diameter_um"] = diameter_um
 
 
 # def lineProfileWorker(imgData, _percentOfMax, lineFilterKernel=0, src_pnt_space=None, dst_pnt_space=None):
