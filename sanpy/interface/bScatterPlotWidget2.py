@@ -2619,21 +2619,29 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         if xIsCategorical or groupByNone:
             self.xDf = None
         else:
-            self.xDf = thisDf.groupby(groupByColumnName, as_index=False)[
-                xStat
-            ].agg(aggList)
-            self.xDf = self.xDf.reset_index()
-            self.xDf.insert(1, "stat", xStat)  # column 1, in place
+            try:
+                self.xDf = thisDf.groupby(groupByColumnName, as_index=False)[
+                    xStat
+                ].agg(aggList)
+                self.xDf = self.xDf.reset_index()
+                self.xDf.insert(1, "stat", xStat)  # column 1, in place
+            except (KeyError) as e:
+                logger.error(f'did not find "{groupByColumnName}" in columns -->> setting xDf to None')
+                self.xDf = None
 
         # yDf for table
         if yIsCategorical or groupByNone:
             self.yDf = None
         else:
-            self.yDf = thisDf.groupby(groupByColumnName, as_index=False)[
-                yStat
-            ].agg(aggList)
-            self.yDf = self.yDf.reset_index()
-            self.yDf.insert(1, "stat", yStat)  # column 1, in place
+            try:
+                self.yDf = thisDf.groupby(groupByColumnName, as_index=False)[
+                    yStat
+                ].agg(aggList)
+                self.yDf = self.yDf.reset_index()
+                self.yDf.insert(1, "stat", yStat)  # column 1, in place
+            except (KeyError) as e:
+                logger.error(f'did not find "{groupByColumnName}" in columns -->> setting yDf to None')
+                self.yDf = None
 
         # meanDf for plotState (mpl canvas)
         if xStat == yStat:
@@ -2644,10 +2652,15 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         if groupByNone:
             meanDf = None
         else:
-            meanDf = thisDf.groupby(groupByColumnName, as_index=False)[
-                groupList
-            ].mean()
-            meanDf = meanDf.reset_index()
+            try:
+                meanDf = thisDf.groupby(groupByColumnName, as_index=False)[
+                    groupList
+                ].mean()
+                meanDf = meanDf.reset_index()
+            except (KeyError) as e:
+                logger.error(f'did not find "{groupByColumnName}" in columns -->> setting meanDf to None')
+                meanDf = None
+                return self.xDf, self.yDf, meanDf
 
         #
         # 20210211 get median/std/sem/n

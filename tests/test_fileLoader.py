@@ -5,7 +5,7 @@ import sanpy
 # from sanpy.analysisPlot import bAnalysisPlot
 
 from sanpy.fileloaders.fileLoader_abf import fileLoader_abf
-from sanpy.fileloaders.fileLoader_csv import fileLoader_csv
+# from sanpy.fileloaders.fileLoader_csv import fileLoader_csv
 from sanpy.fileloaders.fileLoader_tif import fileLoader_tif
 
 import logging
@@ -27,7 +27,7 @@ def test_fileLoader_tif():
     # import matplotlib.pyplot as plt
     # plt.show()
 
-def test_fileLoader_csv():
+def _old_test_fileLoader_csv():
     # path = 'data/19114001.csv'
     # path = 'data/2021_07_20_0010.csv'
     path = os.path.join('data', '2021_07_20_0010.csv')
@@ -109,13 +109,14 @@ def test_fileLoader_abf():
 def test_new_b_analysis():
     # test new version of bAnalysis using fileLoader
     # path = 'data/19114001.abf'
-    path = os.path.join('data', '19114001.abf')
+    path = os.path.join('..', 'data', '19114001.abf')
     ba = sanpy.bAnalysis(path)
 
     # path = 'data/19114001.csv'
-    path = os.path.join('data', '19114001.csv')
+    path = os.path.join('..', 'data', '19114001.csv')
     ba = sanpy.bAnalysis(path)
 
 if __name__ == '__main__':
     #test_fileLoader_abf()
-    test_fileLoader_csv()
+    # test_fileLoader_csv()
+    pass

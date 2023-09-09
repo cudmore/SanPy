@@ -539,18 +539,29 @@ class analysisDir:
         """
 
     def __iter__(self):
-        self._iterIdx = 0
-        print(self._df)
-        x = self._df.loc[self._iterIdx]["_ba"]
-        return x
+        self._iterIdx = -1
+        return self
+        
+        # self._iterIdx = 0
+        # logger.info(f'making iter for bAnalysisDir')
+        # print(self._df)
+        # x = self._df.loc[self._iterIdx]["_ba"]
+        # return x
     
     def __next__(self):
-        if self._iterIdx < self.numFiles:
-            x = self._df.loc[self._iterIdx]["_ba"]
-            self._iterIdx += 1
-            return x
-        else:
+        self._iterIdx += 1
+        if self._iterIdx >= self.numFiles:
+            self._iterIdx = -1  # reset to initial value
             raise StopIteration
+        else:
+            return self._df.loc[self._iterIdx]["_ba"]
+
+        # if self._iterIdx < self.numFiles:
+        #     x = self._df.loc[self._iterIdx]["_ba"]
+        #     self._iterIdx += 1
+        #     return x
+        # else:
+        #     raise StopIteration
 
     def __str__(self):
         totalDurSec = self._df["Dur(s)"].sum()

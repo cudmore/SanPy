@@ -2,9 +2,7 @@ import sanpy
 from sanpy.interface.plugins import basePlotTool
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
-
 
 class plotToolPool(basePlotTool):
     """Plot tool pooled across all open analysis"""
@@ -20,8 +18,13 @@ class plotToolPool(basePlotTool):
         self.masterDf = None
         if self.getSanPyApp() is not None:
             uniqueColumn = 'parent2'  # corresponds to 'date' folder of kymographs
-            self.masterDf = self.getSanPyApp().myAnalysisDir.pool_build(uniqueColumn=uniqueColumn)
-            logger.info(self.masterDf)
+            _analysisDir = self.getSanPyApp().myAnalysisDir
+            if _analysisDir is not None:
+                self.masterDf = self.getSanPyApp().myAnalysisDir.pool_build(uniqueColumn=uniqueColumn)
+                logger.info(self.masterDf)
+            else:
+                logger.error('main SanPY app does not have an analysis dir')
+
             # self.masterDf.to_csv("/Users/cudmore/Desktop/tmpDf-20221231.csv")
         elif tmpMasterDf is not None:
             logger.info("Using tmpMasterDf")
