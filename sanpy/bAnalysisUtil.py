@@ -104,10 +104,14 @@ statList["Epoch DAC"] = {
 # added 20230320
 # the spike number within the epoch
 # not implemented
+# 20230914 BUG in bAnalysisResults we define 'epoch', not 'epochSpikeNumber'
+# WE need to sync these two interface !!!!
 statList["Epoch Spike Number"] = {
-    "name": "epochSpikeNumber",
+    # "name": "epochSpikeNumber",
+    "name": "epoch",
     "units": "",
-    "yStat": "epochSpikeNumber",
+    # "yStat": "epochSpikeNumber",
+    "yStat": "epoch",
     "yStatUnits": "",
     "xStat": "",
     "xStatUnits": "",

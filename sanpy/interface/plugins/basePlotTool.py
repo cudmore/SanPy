@@ -51,7 +51,7 @@ class basePlotTool(sanpyPlugin):
         #    return
 
         # analysisName = 'analysisname'
-        analysisName = "Unique Name"
+        # analysisName = "Unique Name"
         # statListDict = statList  # maps human readable to comments
         statListDict = sanpy.bAnalysisUtil.getStatList()  # maps human readable to comments
         
@@ -61,7 +61,7 @@ class basePlotTool(sanpyPlugin):
         categoricalList.append('File Number')
         categoricalList.append('Unique Name')
 
-        hueTypes = categoricalList
+        # hueTypes = categoricalList
         # hueTypes = metaDataKeys
         # hueTypes.append('File Number')
         # hueTypes.append('Unique Name')

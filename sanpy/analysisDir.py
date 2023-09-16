@@ -1769,12 +1769,22 @@ class analysisDir:
                     uniqueName = rowDict[uniqueColumn] + '-' + uniqueName
                 oneDf["Unique Name"] = uniqueName
 
-                logger.warning('TEMPORARY WHILE WORKING ON KYM POOLING !!!!!!!!!!!!!!!!!!!!!!!!!')
-                logger.warning('randomly assigning sex to male, female, unknown')
-                sexList = ['male', 'female', 'unknown']
-                oneDf['Sex'] = random.choice(sexList)
+                # logger.warning('TEMPORARY WHILE WORKING ON KYM POOLING !!!!!!!!!!!!!!!!!!!!!!!!!')
+                # logger.warning('randomly assigning sex to male, female, unknown')
+                # sexList = ['male', 'female', 'unknown']
+                # oneDf['Sex'] = random.choice(sexList)
+                oneDf_thresholdVal = oneDf['thresholdVal'].to_numpy()  # take off potential
+                oneDf_thresholdVal_mean = np.nanmean(oneDf_thresholdVal)
+                if oneDf_thresholdVal_mean > 0.5685522031727147:  # mean of all thresholdVal
+                    # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} male')
+                    oneDf['Sex'] ='male'  # pandas dataframe columns are Capitalized !!!!!
+                else:
+                    oneDf['Sex'] = 'female'
+                    # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} female')
 
-                # drop some redundant analysis results (no in file metadata)
+                # print('FINAL SEX IS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+                # print(oneDf['sex'])
+                # drop some redundant analysis results (not in file metadata)
                 
                 if masterDf is None:
                     masterDf = oneDf
@@ -1790,6 +1800,20 @@ class analysisDir:
             if verbose:
                 logger.info(f"final num spikes {len(masterDf)}")
         
+            # # randomly assign sex based on mena +/- STD of take of potential
+            # _thresholdVal = masterDf['thresholdVal'].to_numpy()  # take off potential
+            # _thresholdVal_mean = np.nanmean(_thresholdVal)
+            # # _thresholdVal_mean: 0.5685522031727147
+            # logger.error(f'  remember, setting rows based on takeoff potential _thresholdVal_mean: {_thresholdVal_mean}')
+            # for _idx, _row in masterDf.iterrows():
+            #     logger.error(f' _idx:{_idx} thresholdVal:{_row["thresholdVal"]}')
+            #     if _row['thresholdVal'] > _thresholdVal_mean:
+            #         print('  -->> male')
+            #         masterDf.at[_idx, 'sex'] = 'male'
+            #     else:
+            #         masterDf.at[_idx, 'sex'] = 'female'
+            #         print('  -->> male')
+
         # print(masterDf.head())
         #self._poolDf = masterDf
 

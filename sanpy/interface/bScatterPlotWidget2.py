@@ -1028,7 +1028,7 @@ class myMplCanvas(QtWidgets.QFrame):
         yIsCategorical = state["yIsCategorical"]
 
         masterDf = state["masterDf"]
-        meanDf = state["meanDf"]
+        meanDf = state["meanDf"]  # after group by (stats)
 
         if masterDf is None:
             logger.error(f"masterDf is None for plot {state['Plot Index']} -->> not plotting")
@@ -1203,6 +1203,8 @@ class myMplCanvas(QtWidgets.QFrame):
             if not xIsCategorical:
                 warningStr = "Violin plot requires a categorical x statistic"
             else:
+                logger.info(f'violinplot xStat:{xStat} yStat:{yStat} hue:{hue}')
+                logger.info(f'  meanDf columns are : {meanDf.columns}')
                 g = sns.violinplot(
                     x=xStat, y=yStat, hue=hue, data=meanDf, ax=self.canvas.axes
                 )
@@ -1385,7 +1387,7 @@ class plotState:
             'Plot Type': 'Scatter Plot',
             'Data Type': 'All Spikes',  # ['All Spikes', 'File Mean']
             'Include No': False,
-            "Hue": 'File  Number',  #'Unique Name',
+            "Hue": 'File Number',  #'Unique Name',
             "Style": 'None',
             "Group By (Stats)": 'File Number',  #'Unique Name',
 
@@ -1492,7 +1494,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         super().__init__(parent)
 
         self._blockSlots = False
-        self._darkTheme = False
+        self._darkTheme = True
 
         # is assigned when we select a plot
         self._plotState = None  #plotState()
@@ -1698,7 +1700,11 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
     def buildUI(self):
         # if self._plotState['Dark Theme']:
         if self._darkTheme:
-                plt.style.use("dark_background")
+            # updated 20230914
+            plt.style.use("dark_background")
+            # plt.style.use("dark")
+            #plt.style.use("seaborn-v0_8-dark")
+
 
         # HBox for control and plot grid
         self.hBoxLayout = QtWidgets.QHBoxLayout(self)
@@ -2014,8 +2020,8 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
     def slot_setStatName(self, headerStr, statName):
         """User clicked on a new stat in one of (X-Stat, Y-Stat).
         """
-        logger.info(f'headerStr:{headerStr} statName:{statName}')
         backendStat = self.getBackendStat(statName)
+        logger.info(f'headerStr:{headerStr} statName:{statName} backendStat:{backendStat}')
         if headerStr == 'X-Stat':
             self._plotState.setState('X Statistic', statName)
             self._plotState.setState('xStat', backendStat)
@@ -2457,7 +2463,13 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self._plotState.setState('Toolbar', state)
 
         if state:
+            # print(plt.style.available)
+            # ['Solarize_Light2', '_classic_test_patch', '_mpl-gallery', '_mpl-gallery-nogrid', 'bmh', 'classic', 'dark_background', 'fast', 'fivethirtyeight', 'ggplot', 'grayscale', 'seaborn-v0_8', 'seaborn-v0_8-bright', 'seaborn-v0_8-colorblind', 'seaborn-v0_8-dark', 'seaborn-v0_8-dark-palette', 'seaborn-v0_8-darkgrid', 'seaborn-v0_8-deep', 'seaborn-v0_8-muted', 'seaborn-v0_8-notebook', 'seaborn-v0_8-paper', 'seaborn-v0_8-pastel', 'seaborn-v0_8-poster', 'seaborn-v0_8-talk', 'seaborn-v0_8-ticks', 'seaborn-v0_8-white', 'seaborn-v0_8-whitegrid', 'tableau-colorblind10']
+
+            # updated 20230914
             plt.style.use("dark_background")
+            #plt.style.use("seaborn-v0_8-dark")
+
             # sns.set_context('talk')
 
         else:
@@ -2603,6 +2615,15 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         
         logger.info(f'=== xStat:{xStat} yStat:{yStat} groupByColumnName:{groupByColumnName}')
 
+        if not xStat in self.masterDf.columns:
+            logger.error(f'did not find x stat key {xStat} in masterDf? Available columns are')
+            logger.error(self.masterDf.columns)
+            return None, None, None
+        if not yStat in self.masterDf.columns:
+            logger.error(f'did not find y stat key {yStat} in masterDf? Available columns are')
+            logger.error(self.masterDf.columns)
+            return None, None, None
+        
         xIsCategorical = pd.api.types.is_string_dtype(self.masterDf[xStat].dtype)
         yIsCategorical = pd.api.types.is_string_dtype(self.masterDf[yStat].dtype)
 

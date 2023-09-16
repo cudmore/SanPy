@@ -405,7 +405,14 @@ class bAnalysis:
                 self._detectionDict = detectionDict
 
             if loadedMetaData:
-                metaDataDict = self.metaData.getMetaDataDict()  # default
+                # create a child MEtaData object
+                #logger.info('creating child MetaData')
+                #self.metaData = sanpy.MetaData(self)
+                #self.fileLoader.metadata = sanpy.MetaData()
+
+                #metaDataDict = self.metaData.getMetaDataDict()  # default
+                metaDataDict = sanpy.MetaData.getMetaDataDict()
+                
                 loadedMetaDataDict = dfMetaData.to_dict("records", into=OrderedDict)[
                     0
                 ]  # one dict
@@ -421,7 +428,7 @@ class bAnalysis:
 
                 for k,v in loadedMetaDataDict.items():
                     if not k in metaDataDict.keys():
-                        logger.error(f'did not find loaded meta data key "{k}" in meta data keys {metaDataDict.keys()}')
+                        logger.error(f'  did not find loaded meta data key "{k}" in meta data keys {metaDataDict.keys()}')
                         continue
                     metaDataDict[k] = v
                 self.metaData.fromDict(metaDataDict, triggerDirty=False)
