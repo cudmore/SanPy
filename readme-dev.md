@@ -18,6 +18,8 @@ get the current tag
 
     git describe --tags
 
+`git push origin v0.1.25` will trigger github workflows to push to PyPi!!!
+
 ```
 # make a tag and push the tag
 git tag v0.1.25

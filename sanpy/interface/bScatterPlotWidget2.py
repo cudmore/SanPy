@@ -465,8 +465,11 @@ class myStatListWidget(QtWidgets.QWidget):
         # find index in dict
         try:
             idx = list(self.statList.keys()).index(str)
+        except (ValueError) as e:
+            logger.error(f'ValueError: did not find key {str}')
+            return
         except (KeyError) as e:
-            logger.error(f'did not find key {str}')
+            logger.error(f'KeyError: did not find key {str}')
             return
 
         # select row index
@@ -1015,11 +1018,12 @@ class myMplCanvas(QtWidgets.QFrame):
         yStatHuman = state["Y Statistic"]
 
         logger.info(f'myMplCanvas plotting {self.getPlotNumber()}')
-        logger.info(f'  plotType:{plotType}')
-        logger.info(f'  dataType:{dataType}')
-        logger.info(f'  xStatHuman:{xStatHuman}')
-        logger.info(f'  yStatHuman:{yStatHuman}')
-        logger.info(f'  markerSize:{markerSize}')
+        logger.info(f'{state}')
+        # logger.info(f'  plotType:{plotType}')
+        # logger.info(f'  dataType:{dataType}')
+        # logger.info(f'  xStatHuman:{xStatHuman}')
+        # logger.info(f'  yStatHuman:{yStatHuman}')
+        # logger.info(f'  markerSize:{markerSize}')
 
         xStat = state["xStat"]
         yStat = state["yStat"]
@@ -1049,8 +1053,13 @@ class myMplCanvas(QtWidgets.QFrame):
         else:
             self.plotDf = meanDf
 
+        # print('meanDf:')
+        # print(meanDf)
+
         warningStr = ''  # fill in and will emit to staus bar
         
+        logger.info(f'  plotting plotDf with {len(self.plotDf)} rows')
+
         self.canvas.axes.clear()
 
         picker = 5
@@ -1377,8 +1386,11 @@ class myMplCanvas(QtWidgets.QFrame):
 
 class plotState:
     def __init__(self, plotIndex : int):
+                    
         self._dict = {
             'Plot Index': plotIndex,  # will be set to 1,2,3,... on mpl canvas creation
+            
+            # we only want to set these if they are in stat dict
             "X Statistic": 'Spike Time (s)',
             "Y Statistic": 'Spike Frequency (Hz)',
             'xStat': 'thresholdSec',
@@ -1411,6 +1423,14 @@ class plotState:
 
         }
 
+    def __str__(self):
+        retStr = '\n'
+        for k,v in self._dict.items():
+            if k in ['masterDf', 'meanDf', 'xDf', 'yDf']:
+                continue
+            retStr += f'  {k}: {v}\n'
+        return retStr
+    
     def __getitem__(self, key):
         try:
             return self._dict[key]
@@ -1468,7 +1488,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # analysisName,
         sortOrder=None,
         statListDict=None,
-        #interfaceDefaults=None,
+        interfaceDefaults=None,
         masterDf=None,
         limitToCol=None,  # col like 'epoch' to create popup to limit to one value (like 0)
         parent=None,
@@ -1482,7 +1502,13 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         sortOrder:
         statListDict: dict where keys are human readable stat names
                     that map onto 'yStat' to specify column in csv
-        #interfaceDefaults: specify key/value in dict to set state of interface popups/etc
+        interfaceDefaults: specify key/value in dict to set state of interface popups/etc
+            interfaceDefaults = {
+                "Y Statistic": "Spike Frequency (Hz)",
+                "X Statistic": "region",
+                "Hue": "region",
+                "Group By": "File Number",
+            }
         masterDf: if not none then use it (rather than loading csv path)
                     used by main sanpy interface
         parent: not used, parent sanpy app
@@ -1495,6 +1521,8 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
         self._blockSlots = False
         self._darkTheme = True
+
+        self._interfaceDefaults = interfaceDefaults
 
         # is assigned when we select a plot
         self._plotState = None  #plotState()
@@ -1610,6 +1638,9 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # convert from human readbale to backend
         try:
             return self.statListDict[humanStat]["name"]
+        except TypeError as e:
+            logger.error(f'TypeError for name human stat name:"{humanStat}"')
+            logger.error(f'{self.statListDict}')
         except KeyError as e:
             logger.error(f'Did not find human stat name:"{humanStat}"')
 
@@ -2107,6 +2138,22 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                 col = 1
             #
             _plotState = plotState(plotIndex=i)
+
+            if self._interfaceDefaults is not None:
+                _humanX = self._interfaceDefaults['X Statistic']
+                _xStat = self.getBackendStat(_humanX)
+                _humanY = self._interfaceDefaults['Y Statistic']
+                _yStat = self.getBackendStat(_humanY)
+                logger.info(f'X Statistic is "{_humanX}" and "{_xStat}"')
+                _plotState.setState('X Statistic', _humanX)
+                _plotState.setState('Y Statistic', _humanY)
+                _plotState.setState('xStat', _xStat)
+                _plotState.setState('xStat', _xStat)
+                _plotState.setState('yStat', _yStat)
+
+            print(f'plot {i} xxx plot state is:')
+            print(_plotState)
+
             _plotState.setState('masterDf', self.masterDf)
             oneCanvas = myMplCanvas(plotState=_plotState)
             oneCanvas.signalSetStatusBar.connect(self.slot_setStatusBar)
@@ -2558,6 +2605,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.update2()
 
     def updateHue(self, text):
+        logger.info(f'text:{text} blockSLots:{self._blockSlots}')
         if self._blockSlots:
             return
         self._plotState.setState('Hue', text)

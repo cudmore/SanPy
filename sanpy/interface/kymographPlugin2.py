@@ -718,7 +718,10 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self.diameterPlotItem.setLabel("left", "Diameter", units="")
         self.diameterPlot = self.diameterPlotItem.plot(
                                 name="diameterPlot",
-                                pen=pg.mkPen('c', width=1)
+                                pen=pg.mkPen('c', width=1),
+                                # 20230919 paula
+                                symbol='o',
+                                symbolPen='c'
                                 )
         # if self._kymographAnalysis is not None:
         #     xPlot = np.arange(0, self._kymographAnalysis.numLineScans())

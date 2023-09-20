@@ -248,6 +248,10 @@ class kymAnalysis:
     def hasDiamAnalysis(self):
         return self._diamAnalyzed
 
+    def printAnlysisParam(self):
+        for k,v in self._analysisParams.items():
+            print(f'  {k}: {v}')
+
     def getAnalysisParam(self, name):
         return self._analysisParams[name]
     
@@ -657,7 +661,7 @@ class kymAnalysis:
         """
         savePath = self.getAnalysisFile()
         if not os.path.isfile(savePath):
-            # logger.info(f"did not find file: {savePath}")
+            #logger.warning(f"did not find file: {savePath}")
             return
 
         # logger.info(f"loading analysis from: {savePath}")
@@ -862,7 +866,9 @@ class kymAnalysis:
         startSeconds = time.time()
 
         if verbose:
-            logger.info('Start')
+            logger.info('Start ... analysis parameter are:')
+
+            self.printAnlysisParam()
 
         imageFilterKenel = self.getAnalysisParam('imageFilterKenel')
         lineFilterKernel = self.getAnalysisParam('lineFilterKernel')

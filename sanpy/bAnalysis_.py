@@ -167,8 +167,8 @@ class bAnalysis:
                 if verbose:
                     logger.info('creating kymAnalysis')
                     logger.info(f'    self.fileLoader.filepath:{self.fileLoader.filepath}')
-                    logger.info(f'    self.fileLoader.filepath:{self.fileLoader.tifData.shape}')
-                    logger.info(f'    self.fileLoader.filepath:{self.fileLoader.tifHeader}')
+                    logger.info(f'    self.fileLoader.tifData:{self.fileLoader.tifData.shape}')
+                    logger.info(f'    self.fileLoader.tifHeader:{self.fileLoader.tifHeader}')
                 self._kymAnalysis = sanpy.kymAnalysis(self.fileLoader.filepath,
                                                       self.fileLoader.tifData,
                                                       self.fileLoader.tifHeader)
