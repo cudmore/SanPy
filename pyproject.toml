@@ -11,3 +11,8 @@ write_to = "sanpy/_version.py"
 version_scheme = "post-release"
 #local_scheme = "dirty-tag"
 local_scheme = "no-local-version"
+
+[tool.ruff]
+ignore = [
+    "E501",  # Supress line-too-long warnings: trust black's judgement on this one.
+]

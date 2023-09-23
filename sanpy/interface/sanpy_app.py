@@ -173,7 +173,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.slot_updateStatus("Ready")
         logger.info("SanPy started")
 
-    def getDetectionClass(self) -> sanpy.bDetection:
+    def getDetectionClass(self) -> "sanpy.bDetection":
         return self._detectionClass
 
     def getFileLoaderDict(self):

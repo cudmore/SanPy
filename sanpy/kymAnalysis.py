@@ -113,19 +113,18 @@ class kymRect:
 class kymAnalysis:
     def getDefaultAnalysisParams() -> dict:
         return {
-            'version': '0.0.4',
+            'version': '0.0.6',
             
             'reduceFraction': 0,    #0.05,
                                     # percentage to reduce t/b of full rect roi to make best guess
                                     # not used in analysis
                                     # used to set initial rect roi
 
-            'lineWidth': 1,  # number of lines to analyze for each 'line' (slow)
+            'imageFilterKenel': 0,  # depreciated
+            'lineFilterKernel': 0,  # depreciated
 
-            'imageFilterKenel': 5,
-            'lineFilterKernel': 5,
-
-            'lineWidth': 1,  # Number of lines scans to use in calculating line profile
+            'lineWidth': 2,  # Number of lines scans to use in calculating line profile
+                            # if > 1 then slow
 
             'detectPosNeg': 'pos',  # for each line, detect positive or negative intensity
             'percentOfMax': 0.3,  # Percent of max to use in calculation of diameter
@@ -144,6 +143,12 @@ class kymAnalysis:
             'bitDepth': 8,
             'dtype': np.uint8,
             
+            # adding interpolation for each line profile, e.g. overSample
+            # should improve pixelation
+            'interpMult': 4,  # if 0 then no interpolation
+
+            # final median filter to save in file
+            'finalDiamFilterKernel': 3
         }
     
     def __init__(self,
@@ -256,6 +261,8 @@ class kymAnalysis:
         return self._analysisParams[name]
     
     def setAnalysisParam(self, name, value):
+        if not name in self._analysisParams.keys():
+            logger.error(f'did not find key: {name}')
         self._analysisParams[name] = value
 
     @property
@@ -590,6 +597,14 @@ class kymAnalysis:
             
             # print('    k:', k, 'v:', v)
             
+            # 20230921, depreciated median filter
+            # if k == 'imageFilterKenel':
+            #     logger.warning('imageFilterKenel has been depreciated, setting to 0')
+            #     v = 0
+            # if k == 'lineFilterKernel':
+            #     logger.warning('lineFilterKernel has been depreciated, setting to 0')
+            #     v = 0
+
             try:
                 # we need to cast to the currect type
                 _type = type(self._analysisParams[k])
@@ -712,23 +727,21 @@ class kymAnalysis:
         return int(um / self.umPerPixel)
 
     def _getFitLineProfile(self, lineScanNumber : int,
-                           lineFilterKernel : int = None,
                            verbose=False):
         """Get one line profile.
 
-        - Returns points
         - Get the full line, do not look at rect roi
 
-        Args:
-            medianKernel: Use 0 for no filtering
+        Returns
+        -------
+        Intensity profile, left threshold, right threshold
         """
 
         detectPosNeg = self.getAnalysisParam('detectPosNeg')
 
         lineWidth = self.getAnalysisParam('lineWidth')
         percentOfMax = self.getAnalysisParam('percentOfMax')
-        if lineFilterKernel is None:
-            lineFilterKernel = self.getAnalysisParam('lineFilterKernel')
+        lineFilterKernel = self.getAnalysisParam('lineFilterKernel')
 
         # we know the scan line, determine start/stop based on roi
         roiRect = self.getRoiRect()  # (l, t, r, b) in um and seconds (float)
@@ -740,23 +753,33 @@ class kymAnalysis:
         # intensityProfile will always have len() of number of pixels in line scane
         if lineWidth == 1:
             intensityProfile = self._filteredImage[lineScanNumber, :]
-
-            # oct-7-2022
             intensityProfile = np.flip(intensityProfile)  # FLIPPED
-
-            # intensityProfile = intensityProfile.astype(float)  # we need nan
 
         else:
             numPixels = self._filteredImage.shape[1]
+            _numLines = self._filteredImage.shape[0]
             
             # FLIPPED
             # -1 because profile_line uses last pnt (unlike numpy)
-            src = (lineScanNumber, numPixels - 1)
-            dst = (lineScanNumber,0)  
+            # src = (lineScanNumber, numPixels - 1)
+            # dst = (lineScanNumber,0)  
+            # intensityProfile = profile.profile_line(
+            #     self._filteredImage, src, dst, linewidth=lineWidth
+            # )
 
-            intensityProfile = profile.profile_line(
-                self._filteredImage, src, dst, linewidth=lineWidth
-            )
+            _startLine = lineScanNumber - lineWidth
+            if _startLine < 0:
+                _startLine = 0
+            _stopLine = lineScanNumber + lineWidth
+            if _stopLine >= _numLines:
+                _stopLine = _numLines - 1
+            
+            _slice = self._filteredImage[_startLine:_stopLine, :]
+            # print('_slice:', _slice.shape)
+            intensityProfile = np.mean(_slice, axis=0)
+            # print('intensityProfile:', intensityProfile.shape, intensityProfile)
+
+            intensityProfile = np.flip(intensityProfile)  # FLIPPED
 
         # median filter line profile
         if lineFilterKernel > 0:
@@ -793,7 +816,7 @@ class kymAnalysis:
             half_max = _intMean - (stdMult * _intStd)
 
         # 3) determine pos/neg by comparing first/middle/last
-        if 1:
+        if 0:
             _linesInEpoch = 10  # must be even
             _halfLinesInEpoch = _linesInEpoch  # int(_linesInEpoch * 2 / 2)  # twice as many point in the middle
             _middle_pnt_space = src_pnt_space + int( (dst_pnt_space - src_pnt_space) / 2 )
@@ -821,34 +844,49 @@ class kymAnalysis:
             logger.info(f'  _intMax:{_intMax} half_max:{half_max}')
             logger.info(f'  _firstEpochMean:{_firstEpochMean} _middleEpochMean:{_middleEpochMean} _lastEpochMean:{_lastEpochMean}')
 
-        if _doMax:
-            whr = np.asarray(intensityProfile > half_max).nonzero()
+        interpMult = self.getAnalysisParam('interpMult')
+        if interpMult==0:
+
+            if _doMax:
+                whr = np.asarray(intensityProfile > half_max).nonzero()
+            else:
+                whr = np.asarray(intensityProfile < half_max).nonzero()
+
+            if len(whr[0]) > 2:
+                # whr is (array,), only interested in whr[0]
+                # left_idx = whr[0][0]
+                # right_idx = whr[0][-1]
+                left_idx = whr[0][1]
+                right_idx = whr[0][-1]
+                # fwhm = X[right_idx] - X[left_idx]
+            else:
+                left_idx = np.nan
+                right_idx = np.nan
+                # fwhm = np.nan
+
         else:
-            whr = np.asarray(intensityProfile < half_max).nonzero()
+            # interpolate
+            _nIntensityProfile = len(intensityProfile)
+            _xOld = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile)
+            _xNew = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile*interpMult)
+            # logger.info(f'_xOld:{len(_xOld)} _xNew{len(_xNew)} intensityProfile:{len(intensityProfile)}')
+            _yNew = np.interp(_xNew, _xOld, intensityProfile)
+            if _doMax:
+                _newWhere = np.asarray(_yNew > half_max).nonzero()
+            else:
+                _newWhere = np.asarray(_yNew < half_max).nonzero()
+            if len(_newWhere[0]) > 2:
+                # left_idx = _xNew[_newWhere[0][0]]
+                # right_idx = _xNew[_newWhere[0][-1]]
+                left_idx = _xNew[_newWhere[0][1]]
+                right_idx = _xNew[_newWhere[0][-1]]
+            else:
+                left_idx = np.nan
+                right_idx = np.nan
+            
+            # logger.info(f'  left_idx:{left_idx} right_idx:{right_idx}')
+            # logger.info(f'  _newLeft:{_newLeft} _newRight:{_newRight}')
 
-        if len(whr[0]) > 2:
-            # whr is (array,), only interested in whr[0]
-            left_idx = whr[0][0]
-            right_idx = whr[0][-1]
-            # fwhm = X[right_idx] - X[left_idx]
-        else:
-            left_idx = np.nan
-            right_idx = np.nan
-            # fwhm = np.nan
-
-        """
-        if lineScanNumber < 5:
-            logger.info(f'  line:{lineScanNumber} src_pnt_space:{src_pnt_space} dst_pnt_space:{dst_pnt_space}')
-            logger.info(f'    intensityProfile:{len(intensityProfile)}')
-            logger.info(f'    left_idx:{left_idx}')
-            logger.info(f'    right_idx:{right_idx}')
-            logger.info(f'    _intMax:{_intMax}')
-            logger.info(f'    half_max:{half_max}')
-
-            # import matplotlib.pyplot as plt
-            # plt.plot(intensityProfile)
-            # plt.show()
-        """
 
         return intensityProfile, left_idx, right_idx
 
@@ -870,8 +908,13 @@ class kymAnalysis:
 
             self.printAnlysisParam()
 
+        #depreciate this
         imageFilterKenel = self.getAnalysisParam('imageFilterKenel')
+        
         lineFilterKernel = self.getAnalysisParam('lineFilterKernel')
+        
+        # to save in csv
+        finalDiamFilterKernel = self.getAnalysisParam('finalDiamFilterKernel')
 
         if imageFilterKenel > 0:
             self._filteredImage = scipy.signal.medfilt(self._kymImage, imageFilterKenel)
@@ -931,7 +974,9 @@ class kymAnalysis:
             if _sumIntensity > _maxSumIntensity:
                 _maxSumIntensity = _sumIntensity
 
-            _diamPixels = right_idx - left_idx + 1
+            # 20230920 removed -1
+            # _diamPixels = right_idx - left_idx + 1
+            _diamPixels = right_idx - left_idx
 
             # 20230727, blank out if diam is really small
             # if _diamPixels < (_pointsPerLineScan * 0.5):
@@ -954,11 +999,10 @@ class kymAnalysis:
             range_list[line] = _range
             
         self._diamResults["time_sec"] = self.sweepX.tolist()
-        
         self._diamResults["sumintensity_raw"] = sumIntensity
         
-        kernelSize = 3
-        sumintensity_filt = scipy.signal.medfilt(sumIntensity, kernelSize)
+        # kernelSize = 3
+        sumintensity_filt = scipy.signal.medfilt(sumIntensity, finalDiamFilterKernel)
         self._diamResults["sumintensity_filt"] = sumintensity_filt
 
         # normalize sum to max
@@ -970,9 +1014,14 @@ class kymAnalysis:
         self._diamResults["diameter_pnts"] = diameter_idx_list
         self._diamResults["diameter_um"] = diameter_um
 
-        kernelSize = 5
-        diameter_um_filt = scipy.signal.medfilt(diameter_um, kernelSize)
+        # using finalDiamFilterKernel
+        diameter_um_filt = scipy.signal.medfilt(diameter_um, finalDiamFilterKernel)
         self._diamResults["diameter_um_filt"] = diameter_um_filt
+
+        _left_diam = np.multiply(left_idx_list, self.umPerPixel)
+        _right_diam = np.multiply(right_idx_list, self.umPerPixel)
+        self._diamResults["left_um"] = _left_diam
+        self._diamResults["right_um"] = _right_diam
 
         self._diamResults["left_pnt"] = left_idx_list
         self._diamResults["right_pnt"] = right_idx_list

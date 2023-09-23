@@ -29,7 +29,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
     def __init__(
         self,
-        ba: sanpy.bAnalysis = None,
+        ba: "sanpy.bAnalysis" = None,
         mainWindow: "sanpy.interface.SanPyWindow" = None,
         parent=None,
     ):
@@ -357,7 +357,7 @@ class bDetectionWidget(QtWidgets.QWidget):
     def detect(
         self,
         detectionPresetStr: str,
-        detectionType: sanpy.bDetection.detectionTypes,
+        detectionType: "sanpy.bDetection.detectionTypes",
         dvdtThreshold: float,
         mvThreshold: float,
         startSec: float = None,

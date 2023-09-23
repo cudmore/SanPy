@@ -4,7 +4,7 @@ import math
 import numpy as np
 from functools import partial
 
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets
 import pyqtgraph as pg
 
 import sanpy
@@ -86,19 +86,21 @@ class kymographImage(pg.ImageItem):
     """
 
     def mouseClickEvent(self, event):
+        return
+    
         # print("Click", event.pos())
-        x = event.pos().x()
-        y = event.pos().y()
+        # x = event.pos().x()
+        # y = event.pos().y()
 
     def mouseDragEvent(self, event):
         return
 
-        if event.isStart():
-            print("Start drag", event.pos())
-        elif event.isFinish():
-            print("Stop drag", event.pos())
-        else:
-            print("Drag", event.pos())
+        # if event.isStart():
+        #     print("Start drag", event.pos())
+        # elif event.isFinish():
+        #     print("Stop drag", event.pos())
+        # else:
+        #     print("Drag", event.pos())
 
     def old_hoverEvent(self, event):
         logger.info("")
@@ -500,12 +502,12 @@ class kymographWidget(QtWidgets.QWidget):
         # # rect of the image uses x/y scale
         # rect = [0, 0, self.ba.fileLoader.recordingDur, umLength]  # x, y, w, h
         
-        imageRect = None  #self.ba.kymAnalysis.getImageRect(asList=True)
-        imageRect = QtCore.QRectF(QtCore.QPointF(0,0), QtCore.QPointF(0,0))
+        # imageRect = None  #self.ba.kymAnalysis.getImageRect(asList=True)
+        # imageRect = QtCore.QRectF(QtCore.QPointF(0,0), QtCore.QPointF(0,0))
         # logger.info(f'  setting myImageItem with [x, y, w, h] rect:{imageRect}')
 
         # now using transpose .T
-        axisOrder = "row-major"
+        # axisOrder = "row-major"
         self.myImageItem = kymographImage(_fakeTif.T,
                                             #axisOrder=axisOrder,
                                             #rect=imageRect
@@ -531,7 +533,9 @@ class kymographWidget(QtWidgets.QWidget):
 
         # plot of diameter detection left/right
         self._leftFitScatter = pg.ScatterPlotItem(
-            size=3, brush=pg.mkBrush(50, 255, 50, 120)
+            pen=None,
+            size=4,
+            brush=pg.mkBrush(100, 255, 100, 220)
         )
         _xFake = []  # self.ba.sweepX
         _yFake = []  # [200 for x in self.ba.sweepX]
@@ -539,7 +543,9 @@ class kymographWidget(QtWidgets.QWidget):
         self.kymographPlot.addItem(self._leftFitScatter, ignorBounds=True)
 
         self._rightFitScatter = pg.ScatterPlotItem(
-            size=3, brush=pg.mkBrush(255, 50, 50, 120)
+            pen=None,
+            size=4,
+            brush=pg.mkBrush(255, 100, 100, 220)
         )
         _xFake = []  # self.ba.sweepX
         _yFake = []  # [350 for x in self.ba.sweepX]
@@ -759,13 +765,13 @@ class kymographWidget(QtWidgets.QWidget):
             )  # row major is different
 
         # color bar with contrast !!!
-        if myTif.dtype == np.dtype("uint8"):
-            bitDepth = 8
-        elif myTif.dtype == np.dtype("uint16"):
-            bitDepth = 16
-        else:
-            bitDepth = 16
-            logger.error(f"Did not recognize tif dtype: {myTif.dtype}")
+        # if myTif.dtype == np.dtype("uint8"):
+        #     bitDepth = 8
+        # elif myTif.dtype == np.dtype("uint16"):
+        #     bitDepth = 16
+        # else:
+        #     bitDepth = 16
+        #     logger.error(f"Did not recognize tif dtype: {myTif.dtype}")
 
         # cm = pg.colormap.get(
         #     "Greens_r", source="matplotlib"
@@ -826,7 +832,7 @@ class kymographWidget(QtWidgets.QWidget):
                 yRoiPos = backgroundRect[3]
                 top = backgroundRect[1]
                 right = backgroundRect[2]
-                bottom = backgroundRect[3]
+                # bottom = backgroundRect[3]
                 widthRoi = right - xRoiPos + 1
                 # heightRoi = bottom - yRoiPos + 1
                 heightRoi = top - yRoiPos + 1
@@ -882,19 +888,19 @@ class kymographWidget(QtWidgets.QWidget):
         logger.warning(f"Need to add interface for user to adjust background roi")
         return
 
-        if backgroundRect is None:
-            backgroundRect = self.ba.fileLoader.getKymographBackgroundRect()
+        # if backgroundRect is None:
+        #     backgroundRect = self.ba.fileLoader.getKymographBackgroundRect()
 
-        left = backgroundRect[0]
-        top = backgroundRect[1]
-        right = backgroundRect[2]
-        bottom = backgroundRect[3]
+        # left = backgroundRect[0]
+        # top = backgroundRect[1]
+        # right = backgroundRect[2]
+        # bottom = backgroundRect[3]
 
-        myTif = self.ba.tifData
-        tifClip = myTif[bottom:top, left:right]
+        # myTif = self.ba.tifData
+        # tifClip = myTif[bottom:top, left:right]
 
-        roiMin = np.nanmin(tifClip)
-        roiMax = np.nanmax(tifClip)
+        # roiMin = np.nanmin(tifClip)
+        # roiMax = np.nanmax(tifClip)
 
         # self.backgroundRoiMinLabel.setText(f'Background Min:{roiMin}')
         # self.backgroundRoiMaxLabel.setText(f'Background Max:{roiMax}')
