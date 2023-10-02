@@ -298,9 +298,9 @@ class baseUserAnalysis:
         """
         try:
             self.ba.spikeDict[spikeIdx][theKey] = theVal
-        except KeyError as e:
+        except (KeyError) as e:
             logger.error(f'User internal stat does not exist "{theKey}"')
-        except IndexError as e:
+        except (IndexError) as e:
             logger.error(
                 f"spikeIdx {spikeIdx} is out of range, max value is {self.ba.numSpikes}"
             )

@@ -1799,9 +1799,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         logger.info(f'selectedDetection{selectedDetection} detectionParam:{detectionParam} value:{value}')
 
         _detectionClass = self.getMainWindowDetectionClass()
-        detectionKey = _detectionClass.getDetectionKey(selectedDetection)
-
-        _detectionClass.setValue(detectionKey, detectionParam, value)
+        # detectionKey = _detectionClass.getDetectionKey(selectedDetection)
+        _detectionClass.setValue(selectedDetection, detectionParam, value)
 
         # update the interface
         self.detectToolbarWidget.on_detection_preset_change(selectedDetection)
@@ -2779,13 +2778,14 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         Fill in preset dv/dt and mV.
         Use this detection preset when user hits detect
         """
-        logger.info(f'{detectionTypeStr}')
+        logger.info(f'"{detectionTypeStr}"')
 
         # grab default (dv/dt, mv) from preset
         # detectionPreset = sanpy.bDetection.detectionPresets(detectionTypeStr)
         # detectionClass = sanpy.bDetection(detectionPreset=detectionPreset)
 
         self._selectedDetection = detectionTypeStr
+        
         detectionDict = (
             self.detectionWidget.getMainWindowDetectionClass().getDetectionDict(
                 self._selectedDetection

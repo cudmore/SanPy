@@ -45,6 +45,7 @@ class exampleUserAnalysis(baseUserAnalysis):
 
             # assign to underlying bAnalysis
             # print(f'  exampleUserAnalysis() {spikeIdx} user_timeToPeak_ms {timeToPeak_ms}')
+            
             self.setSpikeValue(spikeIdx, "user_timeToPeak_ms", timeToPeak_ms)
 
 def test1():

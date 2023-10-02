@@ -591,40 +591,45 @@ class bDetection(object):
 
         # list of preset names including <user>SanPy/detection json files
         # use item=e[key] or item=e(value) then use item.name or item.value
-        _theDict, _userPresetsDict = self._getPresetsDict()
-        self._detectionEnum = Enum("self.detectionEnum", _theDict)
+        # _theDict, _userPresetsDict = self._getPresetsDict()
+        self._detectionPreset = self._getPresetsDict()
+        # self._detectionEnum = Enum("self.detectionEnum", self._detectionPreset)
 
         # dictionary of presets, each key is like 'sanode' and then value is a dict of
         #   detection param keys and their values
-        self._detectionPreset = {}
-        for item in self._detectionEnum:
+        # self._detectionPreset = {}
+        # for item in self._detectionEnum:
             # item is like self.detectionEnum.sanode
             # logger.info(f'  loaded {item}, {item.name}, "{item.value}"')
-            presetValues = self._getPresetValues(item)
-            if presetValues:
-                # got value of built in preset
-                self._detectionPreset[item.name] = presetValues
-            else:
-                # find in user loaded presets
-                _userKey = item.name
-                try:
-                    self._detectionPreset[item.name] = _userPresetsDict[_userKey]
-                except:
-                    logger.erro(
-                        f"did not find item.name:{item.name} in _detectionPreset {self._detectionPreset.keys()}"
-                    )
+            # was this
+            # presetValues = self._getPresetValues(item)
+            # if presetValues:
+            #     # got value of built in preset
+            #     self._detectionPreset[item.name] = presetValues
+            # else:
+            #     # find in user loaded presets
+            #     _userKey = item.name
+            #     try:
+            #         self._detectionPreset[item.name] = _userPresetsDict[_userKey]
+            #     except:
+            #         logger.error(
+            #             f"did not find item.name:{item.name} in _detectionPreset {self._detectionPreset.keys()}"
+            #         )
 
     def getDetectionPresetList(self):
         """Get list of names of detection type.
 
         Used to make a list in popup in interface/ and interface/plugins
         """
-        detectionList = []
-        for detectionPreset in self._detectionEnum:
-            detectionList.append(detectionPreset.value)
-        return detectionList
+        return list(self._detectionPreset.keys())
+    
+        # detectionList = []
+        # for detectionPreset in self._detectionEnum:
+        #     # detectionList.append(detectionPreset.value['detectionName'])
+        #     detectionList.append(detectionPreset.name)
+        # return detectionList
 
-    def getDetectionKey(self, humanName):
+    def _old_getDetectionKey(self, humanName):
         """Map human readable name like 'SA Node' back to key 'sanode'
         """
         for detectionPreset in self._detectionEnum:
@@ -633,7 +638,7 @@ class bDetection(object):
         logger.error(f'did not find human name {humanName} in detection presets?')
         logger.error(f'  possible names are {self.getDetectionPresetList()}')
 
-    def _getPresetsDict(self):
+    def _getPresetsDict(self) -> dict:
         """Load detection presets from json files in 2 different folder:
             1) sanpy/detection-presets
             2) <user>/Documents/Sanpy/detection/
@@ -654,50 +659,54 @@ class bDetection(object):
             fileNameKey = os.path.split(filePath)[1]
             fileNameKey = os.path.splitext(fileNameKey)[0]
             # reduce preset json filename to (lower case, no spaces, no dash)
-            fileNameKey = fileNameKey.lower()
-            fileNameKey = fileNameKey.replace(" ", "")
-            fileNameKey = fileNameKey.replace(
-                "-", ""
-            )  # in case user specifies a '-' in file name
+            # fileNameKey = fileNameKey.lower()
+            # fileNameKey = fileNameKey.replace(" ", "")
+            # fileNameKey = fileNameKey.replace(
+            #     "-", ""
+            # )  # in case user specifies a '-' in file name
             return fileName, fileNameKey
 
         theDict = {}
-        userPresets = {}
+        # userPresets = {}
 
         #
         # get files in our 'detection-presets' folder
-        """
         presetsPath = pathlib.Path(sanpy._util.getBundledDir()) / 'detection-presets' / '*.json'
         files = glob.glob(str(presetsPath))
         for filePath in files:
             fileName, fileNameKey = fileNameToKey(filePath)
+            # logger.info(f'detection-presets json fileNameKey:{fileNameKey} fileName:{fileName}')
             #
-            theDict[fileNameKey] = fileName
-        """
-        theDict["sanode"] = "SA Node"
-        theDict["ventricular"] = "Ventricular"
-        theDict["neuron"] = "Neuron"
-        theDict["fastneuron"] = "Fast Neuron"
-        theDict["subthreshold"] = "Sub Threshold"
-        theDict["caspikes"] = "Ca Spikes"
-        theDict["cakymograph"] = "Ca Kymograph"
+            # theDict[fileNameKey] = fileName
+
+            # load user preset json and grab (param keys and values)
+            with open(filePath, "r") as f:
+                userPresetsDict = json.load(f)
+                theDict[fileNameKey] = userPresetsDict
+
+        # theDict["sanode"] = "SA Node"
+        # theDict["ventricular"] = "Ventricular"
+        # theDict["neuron"] = "Neuron"
+        # theDict["fastneuron"] = "Fast Neuron"
+        # theDict["subthreshold"] = "Sub Threshold"
+        # theDict["caspikes"] = "Ca Spikes"
+        # theDict["cakymograph"] = "Ca Kymograph"
 
         #
         # get files in <users>/Documents/SanPy/detection/ folder
         # userDetectionPath = pathlib.Path(sanpy._util._getUserDetectionFolder()) / '*.json'
         # files = glob.glob(str(userDetectionPath))
         files = self._getUserFiles()
-        # print('user files:', files)
         for filePath in files:
             fileName, fileNameKey = fileNameToKey(filePath)
-            theDict[fileNameKey] = fileName
+            # theDict[fileNameKey] = fileName
 
             # load user preset json and grab (param keys and values)
             with open(filePath, "r") as f:
                 userPresetsDict = json.load(f)
-                userPresets[fileNameKey] = userPresetsDict
+                theDict[fileNameKey] = userPresetsDict
 
-        return theDict, userPresets
+        return theDict  #, userPresets
 
     def _getUserFiles(self):
         """Get the full path to all user file presets .json"""
@@ -758,8 +767,10 @@ class bDetection(object):
 
         retDict = copy.deepcopy(self._dDict)
 
-        detectionTypeKey = self._detectionEnum(detectionType).name
-        oneType = self._detectionPreset[detectionTypeKey]
+        # detectionTypeKey = self._detectionEnum(detectionType).name
+        # oneType = self._detectionPreset[detectionTypeKey]
+
+        oneType = self.getDetectionDict(detectionType)
         for k, v in oneType.items():
             retDict[k]["currentValue"] = v
 
@@ -774,6 +785,8 @@ class bDetection(object):
         Args:
             detectionType : detection type key, like 'SA Node'
         """
+        return self._detectionPreset[detectionType]
+    
         try:
             if allParameter:
                 dDict = {}
@@ -813,13 +826,17 @@ class bDetection(object):
                     detectionType: str,
                     key: str,
                     value):
-        """
-        Set current value for key. Valid keys are defined in getDefaultDetection.
+        """Set current value for key. Valid keys are defined in getDefaultDetection.
 
         For float values that need to take on none, value comes in as -1e9
 
         Args:
-            detectionType : short name (not value)
+            detectionType : str
+                Name of detection type (corresonds to json file)
+            key: str
+                Detection parameter name
+            value:
+                the value to set
         """
         try:
             valueType = type(value)
@@ -901,7 +918,7 @@ class bDetection(object):
         with open(savePath, "w") as f:
             json.dump(self._dDict, f, indent=4)
 
-    def old_load(self, loadBase):
+    def _old_load(self, loadBase):
         """
         Load detection from json file.
 
@@ -919,8 +936,10 @@ class bDetection(object):
 
         # convert
 
-    def _getPresetValues(self, detectionPreset):
-        """
+    def _old_getPresetValues(self, detectionPreset):
+        """Depreciated, now loaded from json
+
+
         detectionName : corresponds to key in enum self._detectionEnum
         """
 

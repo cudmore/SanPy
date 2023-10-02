@@ -655,6 +655,8 @@ class kymAnalysis:
 
         header = self._getFileHeader()
 
+        logger.info(f'saving: {savePath}')
+        
         with open(savePath, "w") as f:
             f.write(header)
             f.write("\n")
@@ -998,7 +1000,7 @@ class kymAnalysis:
             max_list[line] = _max
             range_list[line] = _range
             
-        self._diamResults["time_sec"] = self.sweepX.tolist()
+        self._diamResults["time_sec"] = self.sweepX  #.tolist()
         self._diamResults["sumintensity_raw"] = sumIntensity
         
         # kernelSize = 3
@@ -1018,6 +1020,34 @@ class kymAnalysis:
         diameter_um_filt = scipy.signal.medfilt(diameter_um, finalDiamFilterKernel)
         self._diamResults["diameter_um_filt"] = diameter_um_filt
 
+        # 20231001 filter with savgol_filter
+        SavitzkyGolay_pnts = 5
+        SavitzkyGolay_poly = 2
+        filteredDiamGolay = scipy.signal.savgol_filter(
+            diameter_um_filt,
+            SavitzkyGolay_pnts,
+            SavitzkyGolay_poly,
+            axis=0,
+            mode="nearest",
+        )
+        self._diamResults["diameter_um_golay"] = filteredDiamGolay
+
+        # 20231001 get first deriv
+        filteredDeriv = np.diff(filteredDiamGolay, axis=0)
+        filteredDeriv = np.append(filteredDeriv, 0)  # append a points oit is same length as filteredDiam
+
+        # filter derivative
+        SavitzkyGolay_pnts = 5
+        SavitzkyGolay_poly = 2
+        filteredDeriv = scipy.signal.savgol_filter(
+            filteredDeriv,
+            SavitzkyGolay_pnts,
+            SavitzkyGolay_poly,
+            axis=0,
+            mode="nearest",
+        )
+        self._diamResults["diameter_dvdt"] = filteredDeriv
+   
         _left_diam = np.multiply(left_idx_list, self.umPerPixel)
         _right_diam = np.multiply(right_idx_list, self.umPerPixel)
         self._diamResults["left_um"] = _left_diam

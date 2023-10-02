@@ -678,6 +678,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self._lineWidthSpinbox.addItems(['1', '2', '3', '4', '5', '6'])
         if self._kymographAnalysis is not None:
             lineWidth = self._kymographAnalysis.getAnalysisParam('lineWidth')
+            lineWidth = str(lineWidth)
         else:
             lineWidth = '1'
         self._on_lineWidth(lineWidth, doSet=True)
@@ -692,6 +693,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self._overSample.addItems(['Off', '2', '3', '4'])
         if self._kymographAnalysis is not None:
             interpMult = self._kymographAnalysis.getAnalysisParam('interpMult')
+            interpMult = str(interpMult)
         else:
             interpMult = 'Off'
         self._on_overSample(interpMult, doSet=True)
@@ -889,8 +891,9 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         # percentMaxLabel = QtWidgets.QLabel('x: sec/line')
         # hBoxLayoutControls3.addWidget(percentMaxLabel)
 
-        _leftControlBar = self.leftControlBar()
-        vBoxLayout.addLayout(_leftControlBar)
+        # todo: add this in
+        # _leftControlBar = self.leftControlBar()
+        # vBoxLayout.addLayout(_leftControlBar)
 
         # add 2 rows of controls
         vBoxLayout.addLayout(hBoxLayoutControls)
@@ -1243,7 +1246,7 @@ if __name__ == "__main__":
     path = 'data/kymograph/rosie-kymograph.tif'
 
     #path = '/Users/cudmore/Dropbox/data/cell-shortening/cell 03.tif'
-    path = '/Users/cudmore/Dropbox/data/cell-shortening/cell 05.tif'
+    # path = '/Users/cudmore/Dropbox/data/cell-shortening/cell 05.tif'
     #path = '/Users/cudmore/Dropbox/data/cell-shortening/Cell 04_C002T001.tif'
     
 

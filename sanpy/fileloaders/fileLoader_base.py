@@ -516,7 +516,7 @@ class fileLoader_base(ABC):
             The point in the recording corresponding to ms
         """
         theRet = ms * self.dataPointsPerMs
-        theRet = round(theRet)
+        theRet = int(round(theRet))
         return theRet
 
     def getEpochTable(self, sweep: int):
