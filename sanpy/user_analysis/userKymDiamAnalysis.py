@@ -33,14 +33,82 @@ class kymUserAnalysis(baseUserAnalysis):
         # summary
 
         # do both time to peak with in
-        self.addUserStat("Diameter Time To Peak wrt peak in the Ca spike", "k_diam_time_to_peak_sec")
+        self.addUserStat("Diameter Time To Peak", "k_diam_time_to_peak_sec")
 
         self.addUserStat("Diameter Amp (um)", "k_diam_amp")
         self.addUserStat("Diameter Percent Change (%)", "k_diam_percent")
 
         # 20230924
-        self.addUserStat("Single exponetial fit of decay from peak (70%)", "k_diam_decay")
-        self.addUserStat("Half-width of peak", "k_half_width")
+        self.addUserStat("fit peak", "k_fit_m")
+        self.addUserStat("fit tau (pnts)", "k_fit_tau")
+        self.addUserStat("fit tau m", "k_fit_b")
+        self.addUserStat("Exponential fit (s) of decay from peak", "k_diam_tau_sec")
+        self.addUserStat("R squared quality of fit", "k_diam_fit_r2")
+        # self.addUserStat("Half-width of peak", "k_half_width")
+
+    def run2_new(self):
+
+        from sanpy.kymAnalysis import detectDiam
+        ddDict, dResultDict = detectDiam(self.ba)
+
+        filteredDiam = self.ba.kymAnalysis.getResults('diameter_um_golay')
+
+        pairedSpikeList = dResultDict['pairedSpikeList']
+
+        # for spikeIdx, spikeDict in enumerate(self.ba.spikeDict):
+        #     if not spikeIdx in pairedSpikeList:
+        #         logger.warning(f'ba spike {spikeIdx} is not in pairedSpikeList:{pairedSpikeList}')
+        #         continue
+        
+        for _tmpIdx, spikeIdx in enumerate(pairedSpikeList):
+            # spikeIdx is index into ba spike dict
+
+            diamSpikeIdx = _tmpIdx
+            
+            k_diam_foot_pnt = dResultDict['diamSpikeTimes'][diamSpikeIdx]
+            k_diam_foot_sec = self.ba.fileLoader.pnt2Sec_(k_diam_foot_pnt)
+            k_diam_foot = filteredDiam[k_diam_foot_pnt]
+
+            k_diam_peak_pnt = dResultDict['diamPeakPnts'][diamSpikeIdx]
+            k_diam_peak_sec = self.ba.fileLoader.pnt2Sec_(k_diam_peak_pnt)
+            k_diam_peak = filteredDiam[k_diam_peak_pnt]
+
+            k_diam_time_to_peak_sec = k_diam_peak_sec - k_diam_foot_sec
+            k_diam_amp = k_diam_peak - k_diam_foot  # may be reversed +/-
+
+            k_fit_m = dResultDict['fit_tau_sec'][diamSpikeIdx]
+            k_fit_tau = dResultDict['fit_tau_sec'][diamSpikeIdx]
+            k_fit_b = dResultDict['fit_tau_sec'][diamSpikeIdx]
+
+            k_diam_tau_sec = dResultDict['fit_tau_sec'][diamSpikeIdx]
+            k_diam_fit_r2 = dResultDict['fit_r2'][diamSpikeIdx]
+
+            # logger.info(f'ba spike {spikeIdx} k_diam_foot_sec:{k_diam_foot_sec} k_diam_foot:{k_diam_foot}')
+            # logger.info(f'    k_diam_peak_sec:{k_diam_peak_sec} k_diam_peak:{k_diam_peak}')
+            
+            # set values in main ba
+            self.setSpikeValue(spikeIdx, "k_diam_foot", k_diam_foot)
+            self.setSpikeValue(spikeIdx, "k_diam_foot_pnt", k_diam_foot_pnt)
+            self.setSpikeValue(spikeIdx, "k_diam_foot_sec", k_diam_foot_sec)
+            # peak
+            self.setSpikeValue(spikeIdx, "k_diam_peak", k_diam_peak)
+            # logger.info(f'                                                           spikeIdx:{spikeIdx} k_diam_peak_pnt:{k_diam_peak_pnt}')
+            self.setSpikeValue(spikeIdx, "k_diam_peak_pnt", k_diam_peak_pnt)
+            self.setSpikeValue(spikeIdx, "k_diam_peak_sec", k_diam_peak_sec)
+            # summary
+            self.setSpikeValue(spikeIdx, "k_diam_time_to_peak_sec", k_diam_time_to_peak_sec)
+            self.setSpikeValue(spikeIdx, "k_diam_amp", k_diam_amp)
+
+            # percent change in diameter from foot to peak
+            k_diam_percent = round( k_diam_peak / k_diam_foot * 100, 3)
+            self.setSpikeValue(spikeIdx, "k_diam_percent", k_diam_percent)
+
+            self.setSpikeValue(spikeIdx, "k_fit_m", k_fit_m)
+            self.setSpikeValue(spikeIdx, "k_fit_tau", k_fit_tau)
+            self.setSpikeValue(spikeIdx, "k_fit_b", k_fit_b)
+
+            self.setSpikeValue(spikeIdx, "k_diam_tau_sec", k_diam_tau_sec)
+            self.setSpikeValue(spikeIdx, "k_diam_fit_r2", k_diam_fit_r2)
 
     def run(self):
         if not self.ba.fileLoader.isKymograph:
@@ -55,6 +123,11 @@ class kymUserAnalysis(baseUserAnalysis):
 
         logger.info('RUNNING userKyDiamAnalysis')
         
+        # oct 2, 2023
+        # rewrote analysis
+        self.run2_new()
+        return
+    
         # get filtered vm for the entire trace
         # filteredVm = self.getFilteredVm()
         _dDict = self.ba.getDetectionDict()

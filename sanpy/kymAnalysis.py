@@ -48,11 +48,315 @@ import scipy.signal
 import scipy
 import tifffile
 
+import matplotlib.pyplot as plt
+
+import warnings
+
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
+def guessDvDtThreshold(ba : sanpy.bAnalysis) -> float:
+	"""Guess the dvdt threshold as mean+std of dvdt.
+
+	Works well for normalized [0,1] Ca++ kymograph sum.
+	"""
+	filteredDeriv = ba.fileLoader.filteredDeriv
+	_mean = np.mean(filteredDeriv)
+	_std = np.std(filteredDeriv)
+	return _mean + _std
+
+def myMonoExp(x, m, t, b):
+	"""
+	M: a_0
+	t: tau_0
+	b: 
+	"""
+	# this triggers
+	# "RuntimeWarning: overflow encountered in exp" during search for parameters, just ignor it
+	ret = m * np.exp(-t * x) + b
+	return ret
+
+def detectDiam(ba : sanpy.bAnalysis):
+    """Detect diameter changes using first derivative dvdt.
+    
+        - pair core spike analysis with each diameter threshold.
+    """
+    
+    # reanalyze diameter from raw kymograph image
+    ba.kymAnalysis.analyzeDiameter(verbose=False)
+    
+    warnings.filterwarnings('ignore')
+
+    secondsPerLine = ba.kymAnalysis.secondsPerLine
+    sampleRate = 1/secondsPerLine # Hz
+    polarity = 'neg'
+
+    logger.info(ba)
+    logger.info(f'  secondsPerLine: {secondsPerLine} sampleRate: {sampleRate} Hz')
+
+    filteredDiam = ba.kymAnalysis.getResults('diameter_um_golay')
+    filteredDeriv = ba.kymAnalysis.getResults('diameter_dvdt')
+    
+
+    # # filtered by finalDiamFilterKernel
+    # diameter_um_filt = ba.kymAnalysis.getResults('diameter_um_filt')
+
+    # # filter diam again
+    # SavitzkyGolay_pnts = 5
+    # SavitzkyGolay_poly = 2
+    # filteredDiam = scipy.signal.savgol_filter(
+    #     diameter_um_filt,
+    #     SavitzkyGolay_pnts,
+    #     SavitzkyGolay_poly,
+    #     axis=0,
+    #     mode="nearest",
+    # )
+
+    # # get the first derivative
+    # filteredDeriv = np.diff(filteredDiam, axis=0)
+    # filteredDeriv = np.append(filteredDeriv, 0)  # append a points oit is same length as filteredDiam
+
+    # # filter derivative
+    # SavitzkyGolay_pnts = 5
+    # SavitzkyGolay_poly = 2
+    # filteredDeriv0 = filteredDeriv  # unfiltered deriv
+    # filteredDeriv = scipy.signal.savgol_filter(
+    #     filteredDeriv,
+    #     SavitzkyGolay_pnts,
+    #     SavitzkyGolay_poly,
+    #     axis=0,
+    #     mode="nearest",
+    # )
+    
+    # parameters to autodetect diameter 'spikes' using dvdt
+    _mean = np.mean(filteredDeriv)
+    if polarity == 'pos':
+        _std = _mean + np.std(filteredDeriv)
+        _two_std = _mean + (2 * np.std(filteredDeriv))
+    else:
+        _std = _mean - np.std(filteredDeriv)
+        _two_std = _mean - (2 * np.std(filteredDeriv))
+
+    # diameter detection dictionary of detection parameters
+    ddDict = {
+        'polarity': polarity,
+        'dvdThresh': _two_std,
+        'refactoryPnts': 20,  # specifies the fastest diameter spikes
+        'peakWinPnt': 20,  # to find the peak after threshold
+        'peakWidthPnts': 40  #20  #60,  # to find decay after peak (exponential decay)
+    }
+
+    # detect diam using dvdt
+    dvdThresh = ddDict['dvdThresh']
+    if polarity == 'pos':
+        Is = np.where(filteredDeriv > dvdThresh)[0]  # use > to search for increase in diam
+    else:
+        Is = np.where(filteredDeriv < dvdThresh)[0]  # use < to search for decreases in diam
+    Is = np.concatenate(([0], Is))
+    Ds = Is[:-1] - Is[1:] + 1
+    spikeTimes0 = Is[np.where(Ds)[0] + 1]
+    # backup one pnt
+    spikeTimes0 -= 1
+
+    if len(spikeTimes0) == 0:
+        logger.warning('ERROR: did not find and peaks in diameter')
+
+    # throw out fast spikes
+    refactoryPnts = ddDict['refactoryPnts']
+    lastGood = 0  # first spike [0] will always be good, there is no spike [i-1]
+    for i in range(len(spikeTimes0)):
+        if i == 0:
+            # first spike is always good
+            continue
+        dPoints = spikeTimes0[i] - spikeTimes0[lastGood]
+        if dPoints < refactoryPnts:
+            # remove spike time [i]
+            # print('  throwing out spike', i, 'at pnt', spikeTimes0[i])
+            spikeTimes0[i] = 0
+        else:
+            # spike time [i] was good
+            lastGood = i
+    spikeTimes0 = [spikeTime for spikeTime in spikeTimes0 if spikeTime]
+    
+    # reduce spike times using main ba dvdtThreshold
+    # basically, for each spike in ba, look for a dvdt spike in diameter
+    spikeTimesSec = ba.getStat('thresholdSec')
+    _finalSpikeTimes = []
+    pairedSpikeList = []  # keep a lis of spikes we are paired with
+    for spikeIdx, spikeTimeSec in enumerate(spikeTimesSec):
+        # find a spike diameter threshold within a window after each spike
+        dvdtThresholdPnt = ba.fileLoader.ms2Pnt_(spikeTimeSec*1000)
+        dvdtThresholdPnt -= 2  # back up a little bit, sometime diam change is almost instananeous
+        # print('spikeIdx:', spikeIdx, 'dvdtThreshold:', spikeTimeSec, 'dvdtThresholdPnt:', dvdtThresholdPnt)
+        try:
+            _idx = next(x[0] for x in enumerate(spikeTimes0) if x[1] >= dvdtThresholdPnt)
+            _useThisIndex = spikeTimes0[_idx]  # pnt where diam dvdt crosses threshold
+            _finalSpikeTimes.append(_useThisIndex)
+            pairedSpikeList.append(spikeIdx)
+            logger.info(f'  pairing ba spikeIdx {spikeIdx} with diam dvdt {_idx}')
+        except (StopIteration) as e:
+            # diameter threshold not found
+            logger.warning(f'  did not find diameter change for ba thresholdSec index {spikeIdx}')
+            _idx = np.nan
+        #print('spikeIdx:', spikeIdx, 'dvdtThresholdPnt:', 'is peak _idx:', _idx)
+
+    logger.info(f'  before pairing:{spikeTimes0}')
+    logger.info(f'  after pairing:{_finalSpikeTimes}')
+    spikeTimes0 = _finalSpikeTimes
+
+    # find peaks
+    peakWinPnt = ddDict['peakWinPnt']
+    diamPeakPnts = [np.nan] * len(spikeTimes0)
+    for idx, spikeTime in enumerate(spikeTimes0):
+        stopPnt = min(spikeTime + peakWinPnt, len(filteredDiam)-1)
+        _clip = filteredDiam[spikeTime:stopPnt]
+        if polarity == 'pos':
+            minPnt = spikeTime + np.argmax(_clip)
+        else:
+            minPnt = spikeTime + np.argmin(_clip)
+        diamPeakPnts[idx] = minPnt
+
+    # fit decay from peak
+    # fitParamsList = []
+    # fit_xRangeList = []
+    fit_m_list = [None] * len(spikeTimes0)
+    fit_tau_list = [None] * len(spikeTimes0)
+    fit_b_list = [None] * len(spikeTimes0)
+    fit_r2_list = [None] * len(spikeTimes0)
+    fit_tau_sec_list = [None] * len(spikeTimes0)
+    
+    peakWidthPnts = ddDict['peakWidthPnts']
+    for idx, spikeTime in enumerate(spikeTimes0):
+        peakPnt = diamPeakPnts[idx]
+        _end = min(peakPnt+peakWidthPnts, len(filteredDiam)-1)
+        yRange = filteredDiam[peakPnt:_end]
+        xRange = np.arange(len(yRange))  # + peakPnt
+        
+        try:
+            _params, _cov = scipy.optimize.curve_fit(myMonoExp, xRange, yRange)
+        except (RuntimeError, TypeError) as e:
+            print(f'  {idx} peakPnt:{peakPnt} my ERROR: {e}')
+            # fitParamsList.append((np.nan, np.nan, np.nan))
+            # fit_xRangeList.append(xRange)
+            # fit_m_list[idx] = np.nan
+            # fit_tau_list[idx] = np.nan
+            # fit_b_list[idx] = np.nan
+            # fit_r2_list[idx] = np.nan
+        else:
+            m, t, b = _params
+            tauSec = (1 / t) / sampleRate
+            # fitParamsList.append(_params)
+            # fit_xRangeList.append(xRange)
+
+            fit_m_list[idx] = m
+            fit_tau_list[idx] = t
+            fit_b_list[idx] = b
+
+            fit_tau_sec_list[idx] = tauSec
+
+            # determine quality of the fit
+            squaredDiffs = np.square(yRange - myMonoExp(xRange, m, t, b))
+            squaredDiffsFromMean = np.square(yRange - np.mean(yRange))
+            rSquared = 1 - np.sum(squaredDiffs) / np.sum(squaredDiffsFromMean)
+            #print(f"  {idx} peakPnt:{peakPnt} m:{m} t:{t} b:{b} tauSec:{tauSec} R² = {rSquared}")
+
+            fit_r2_list[idx] = rSquared
+
+    # collect everything into a results dict
+    dResultsDict = {
+        'pairedSpikeList': pairedSpikeList,  # list of ba spikes we are paired with
+        'diamSpikeTimes': spikeTimes0,  # threshold time for each peak (points)
+        'diamPeakPnts': diamPeakPnts,  # peak point
+        'fit_m': fit_m_list,
+        'fit_tau': fit_tau_list,
+        'fit_b': fit_b_list,
+        'fit_tau_sec': fit_tau_sec_list,
+        'fit_r2': fit_r2_list,
+    }
+
+    # plotDiamFit(ba, ddDict, dResultsDict)
+    
+    return ddDict, dResultsDict
+
+def plotDiamFit(ba, ddDict, dResultsDict):
+
+    # get diameter and derivative from main kym analysis
+    filteredDiam = ba.kymAnalysis.getResults('diameter_um_golay')
+    filteredDeriv = ba.kymAnalysis.getResults('diameter_dvdt')
+
+    # these will all eventually be part of main ba spike detection
+    spikeTimes0 = dResultsDict['diamSpikeTimes']
+    diamPeakPnts = dResultsDict['diamPeakPnts']
+    fit_m = dResultsDict['fit_m']
+    fit_tau = dResultsDict['fit_tau']  # we also have fit_tau_sec
+    fit_b = dResultsDict['fit_b']
+
+    # params used for diameter fit
+    polarity = ddDict['polarity']
+    peakWidthPnts = ddDict['peakWidthPnts']
+
+    _mean = np.mean(filteredDeriv)
+    if polarity == 'pos':
+        _std = _mean + np.std(filteredDeriv)
+        _two_std = _mean + (2 * np.std(filteredDeriv))
+    else:
+        _std = _mean - np.std(filteredDeriv)
+        _two_std = _mean - (2 * np.std(filteredDeriv))
+
+    fig, axs = plt.subplots(3, 1, sharex=True)
+    # rightAxes = axs[0].twinx()
+
+    # axs[0].plot(diameter_um, 'k')
+    axs[0].plot(filteredDiam, 'r-', label='filtered diam')
+    axs[0].plot(spikeTimes0, filteredDiam[spikeTimes0], 'og', label='threshold time')
+    axs[0].plot(diamPeakPnts, filteredDiam[diamPeakPnts], 'ob', label='peak time')
+
+    # axs[0].set(xlabel='Line Scan Number')
+    axs[0].set(ylabel='Diameter (um)')
+    
+    # plot exp decay from peak
+    for idx, peakPnt in enumerate(diamPeakPnts):
+        _fitParam = (fit_m[idx], fit_tau[idx], fit_b[idx])
+        # peakPnt = diamPeakPnts[idx]
+        # xRange = fit_xRangeList[idx]
+        xRange = np.arange(peakWidthPnts)
+        _yFit = myMonoExp(xRange, *_fitParam)
+        # print('plot fit idx:', idx, 'with fitParam:', fitParam)
+        # print('_yFit:', _yFit)
+        axs[0].plot(xRange+peakPnt, _yFit, 'y')
+
+    # rightAxes.plot(filteredDeriv, '-', label='filtered derivative')
+
+    # Put a legend to the right of the current axis
+    axs[0].legend(bbox_to_anchor=(1.02, 1))
+    # rightAxes.legend(bbox_to_anchor=(1.02, 1))
+
+    # axs[1].plot(filteredDeriv0, 'k', label='filtered deriv meadian')  # before 2nd filter
+    axs[1].plot(filteredDeriv, '.-r', label='filtered deriv golay')  # after
+    axs[1].axhline(y=_mean, color='r', linestyle='--', label='')
+    axs[1].axhline(y=_std, color='r', linestyle='--', label='')
+    axs[1].axhline(y=_two_std, color='r', linestyle='--', label='')
+
+    axs[1].legend(bbox_to_anchor=(1.02, 1))
+
+    axs[1].set(ylabel='first deriv of diameter')
+    axs[1].set(xlabel='Line Scan Number')
+
+    thresholdSec = ba.getStat('thresholdSec')
+    thresholdPnt = [ba.fileLoader.ms2Pnt_(x*1000) for x in thresholdSec]
+    print('thresholdPnt:', thresholdPnt)
+    yThreshold = [ba.fileLoader.sweepY[x] for x in thresholdPnt]
+    print('ba.fileLoader.sweepY:', type(ba.fileLoader.sweepY), ba.fileLoader.sweepY.shape)
+    axs[2].plot(ba.fileLoader.sweepY, 'k-')
+    axs[2].plot(thresholdPnt, yThreshold, 'ko')
+    axs[2].set(ylabel='Sum Intensity')
+    rightAxes2 = axs[2].twinx()
+    rightAxes2.plot(filteredDeriv, 'r-')
+
+    plt.show()
+     
 class kymRect:
     """Class to represent a rectangle as [l, t, r, b]"""
 
@@ -121,13 +425,13 @@ class kymAnalysis:
                                     # used to set initial rect roi
 
             'imageFilterKenel': 0,  # depreciated
-            'lineFilterKernel': 0,  # depreciated
+            'lineFilterKernel': 3,  # depreciated
 
             'lineWidth': 2,  # Number of lines scans to use in calculating line profile
                             # if > 1 then slow
 
             'detectPosNeg': 'pos',  # for each line, detect positive or negative intensity
-            'percentOfMax': 0.3,  # Percent of max to use in calculation of diameter
+            'percentOfMax': 0.03,  # Percent of max to use in calculation of diameter
 
             # all fields need a default so we can infer the type() when loading from json
             
@@ -283,6 +587,7 @@ class kymAnalysis:
             "sumintensity": [np.nan] * _numLineScans,  # normalized to max
             "diameter_pnts": [np.nan] * _numLineScans,
             "diameter_um": [np.nan] * _numLineScans,
+            "diameter_um_golay": [np.nan] * _numLineScans,
             "diameter_um_filt": [np.nan] * _numLineScans,
             "left_pnt": [np.nan] * _numLineScans,
             "right_pnt": [np.nan] * _numLineScans,
@@ -1388,5 +1693,27 @@ def plotKym(ka: kymAnalysis):
 
     plt.show()
 
+def testNewDiamAnalysis():
+    path = '/media/cudmore/data/Dropbox/data/cell-shortening/Low resolution files_kymographs analysis/cell02_0002.tif.frames/cell02_0002_C002T001.tif'
+    ba = sanpy.bAnalysis(path)    
+    _threshold = guessDvDtThreshold(ba)
+    print('_threshold:', _threshold)
+
+    # set detection parameters and detect
+    dDict = sanpy.bDetection().getDetectionDict('Ca Kymograph')
+    dDict['dvdtThreshold'] = _threshold  #0.007
+    dDict['verbose'] = False
+    # spike detect will also detect diameter params 'diam_*'
+    ba.spikeDetect(dDict)
+
+    # analyze diameter
+    ba.kymAnalysis.setAnalysisParam('imageFilterKenel', 0)
+    ba.kymAnalysis.setAnalysisParam('lineWidth', 2)
+    ba.kymAnalysis.analyzeDiameter(verbose=False)
+
+    ddDict, dResultDict = detectDiam(ba)
+    plotDiamFit(ba, ddDict, dResultsDict)
+
 if __name__ == "__main__":
-    testLineProfilePool()
+    # testLineProfilePool()
+    testNewDiamAnalysis()

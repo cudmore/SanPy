@@ -350,7 +350,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             self._kymographAnalysis.setAnalysisParam('lineFilterKernel', int(mediaLineStr))
 
         if doSet:
-            self._medianImage.setCurrentText(mediaLineStr)
+            self._medianLine.setCurrentText(mediaLineStr)
         else:
             self._on_slider_changed()  # refresh line scan
 
@@ -455,7 +455,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         # if self._kymographAnalysis is not None:
         # kym analysis have defaults when instantiated
         if 1:
-            _lineWidth = self._kymographAnalysis.getAnalysisParam('lineWidth')
+            # _lineWidth = self._kymographAnalysis.getAnalysisParam('lineWidth')
             
             _posNegStr = self._kymographAnalysis.getAnalysisParam('detectPosNeg')
             if _posNegStr == 'pos':
@@ -487,6 +487,12 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         else:
             interpMult = str(interpMult)
         self._overSample.setCurrentText(str(interpMult))
+
+        imageFilterKenel = self._kymographAnalysis.getAnalysisParam('imageFilterKenel')
+        self._medianImage.setCurrentText(str(imageFilterKenel))
+
+        lineFilterKernel = self._kymographAnalysis.getAnalysisParam('lineFilterKernel')
+        self._medianLine.setCurrentText(str(lineFilterKernel))
 
     def leftControlBar(self):
         hBoxLayoutControls = QtWidgets.QVBoxLayout()
@@ -570,7 +576,9 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         if self._kymographAnalysis is not None:
             imageFilterKenel = self._kymographAnalysis.getAnalysisParam('imageFilterKenel')
             imageFilterKenelStr = str(imageFilterKenel)
+            logger.info(f' _kymographAnalysis loaded imageFilterKenelStr is "{imageFilterKenelStr}"')
         else:
+            logger.info('no _kymographANalysis, defaulting to "Off"')
             imageFilterKenelStr = 'Off'
         self._on_median_image(imageFilterKenelStr, doSet=True)
         self._medianImage.currentTextChanged.connect(
@@ -751,8 +759,10 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         if self._kymographAnalysis is not None:
             imageFilterKenel = self._kymographAnalysis.getAnalysisParam('imageFilterKenel')
             imageFilterKenelStr = str(imageFilterKenel)
+            logger.info(f' _kymographAnalysis loaded imageFilterKenelStr is "{imageFilterKenelStr}"')
         else:
             imageFilterKenelStr = 'Off'
+            logger.info(f' _kymographAnalysis NOT loaded imageFilterKenelStr is "{imageFilterKenelStr}"')
         self._on_median_image(imageFilterKenelStr, doSet=True)
         self._medianImage.currentTextChanged.connect(
             self._on_median_image
@@ -1135,7 +1145,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             yDiamPlot = self._kymographAnalysis.getResults("diameter_um")
         elif self._plotDiamType == 'Diameter Filtered (um)':
             leftLabel = 'Diameter Filtered (um)'
-            yDiamPlot = self._kymographAnalysis.getResults("diameter_um_filt")
+            # yDiamPlot = self._kymographAnalysis.getResults("diameter_um_filt")
+            yDiamPlot = self._kymographAnalysis.getResults("diameter_um_golay")
         elif self._plotDiamType == 'Start (um)':
             leftLabel = 'Start (um)'
             yDiamPlot = self._kymographAnalysis.getResults("left_um")

@@ -344,6 +344,7 @@ def detectDiam(ba : sanpy.bAnalysis):
 
 	# diameter detection dictionary of detection parameters
 	ddDict = {
+		'polarity': polarity,
 		'dvdThresh': _two_std,
 		'refactoryPnts': 20,  # specifies the fastest diameter spikes
 		'peakWinPnt': 20,  # to find the peak after threshold
@@ -415,6 +416,7 @@ def detectDiam(ba : sanpy.bAnalysis):
 	fit_tau_list = [None] * len(spikeTimes0)
 	fit_b_list = [None] * len(spikeTimes0)
 	fit_r2_list = [None] * len(spikeTimes0)
+	fit_tau_sec_list = [None] * len(spikeTimes0)
 	
 	peakWidthPnts = ddDict['peakWidthPnts']
 	for idx, spikeTime in enumerate(spikeTimes0):
@@ -440,7 +442,8 @@ def detectDiam(ba : sanpy.bAnalysis):
 			fit_xRangeList.append(xRange)
 
 			fit_m_list[idx] = m
-			fit_tau_list[idx] = tauSec
+			fit_tau_list[idx] = t
+			fit_tau_sec_list[idx] = tauSec
 			fit_b_list[idx] = b
 			
 			# determine quality of the fit
@@ -453,17 +456,46 @@ def detectDiam(ba : sanpy.bAnalysis):
 
 	# collect everything into a results dict
 	dResultsDict = {
-		'filteredDiam': filteredDiam,
-		'filteredDeriv': filteredDeriv,
-		'spikeTimes': spikeTimes0,  # threshold time for each peak (points)
+		# 'filteredDiam': filteredDiam,
+		# 'filteredDeriv': filteredDeriv,
+		'diamSpikeTimes': spikeTimes0,  # threshold time for each peak (points)
 		'diamPeakPnts': diamPeakPnts,  # peak point
 		'fit_m': fit_m_list,
 		'fit_tau': fit_tau_list,
+		'fit_tau_sec': fit_tau_sec_list,
 		'fit_b': fit_b_list,
 		'fit_r2': fit_r2_list,
 	}
 
-	# plot
+	plotDiamFit(ba, ddDict, dResultsDict)
+	
+	return ddDict, dResultsDict
+
+def plotDiamFit(ba, ddDict, dResultsDict):
+
+	# get diameter and derivative from main kym analysis
+	filteredDiam = ba.kymAnalysis.getResults('diameter_um_golay')
+	filteredDeriv = ba.kymAnalysis.getResults('diameter_dvdt')
+
+	# these will all eventually be part of main ba spike detection
+	spikeTimes0 = dResultsDict['diamSpikeTimes']
+	diamPeakPnts = dResultsDict['diamPeakPnts']
+	fit_m = dResultsDict['fit_m']
+	fit_tau = dResultsDict['fit_tau']  # we also have fit_tau_sec
+	fit_b = dResultsDict['fit_b']
+
+	# params used for diameter fit
+	polarity = ddDict['polarity']
+	peakWidthPnts = ddDict['peakWidthPnts']
+
+	_mean = np.mean(filteredDeriv)
+	if polarity == 'pos':
+		_std = _mean + np.std(filteredDeriv)
+		_two_std = _mean + (2 * np.std(filteredDeriv))
+	else:
+		_std = _mean - np.std(filteredDeriv)
+		_two_std = _mean - (2 * np.std(filteredDeriv))
+
 	fig, axs = plt.subplots(3, 1, sharex=True)
 	# rightAxes = axs[0].twinx()
 
@@ -476,10 +508,12 @@ def detectDiam(ba : sanpy.bAnalysis):
 	axs[0].set(ylabel='Diameter (um)')
 	
 	# plot exp decay from peak
-	for idx, fitParam in enumerate(fitParamsList):
-		peakPnt = diamPeakPnts[idx]
-		xRange = fit_xRangeList[idx]
-		_yFit = myMonoExp(xRange, *fitParam)
+	for idx, peakPnt in enumerate(diamPeakPnts):
+		_fitParam = (fit_m[idx], fit_tau[idx], fit_b[idx])
+		# peakPnt = diamPeakPnts[idx]
+		# xRange = fit_xRangeList[idx]
+		xRange = np.arange(peakWidthPnts)
+		_yFit = myMonoExp(xRange, *_fitParam)
 		# print('plot fit idx:', idx, 'with fitParam:', fitParam)
 		# print('_yFit:', _yFit)
 		axs[0].plot(xRange+peakPnt, _yFit, 'y')
