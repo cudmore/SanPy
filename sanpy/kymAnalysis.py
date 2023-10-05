@@ -57,26 +57,109 @@ import sanpy
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def guessDvDtThreshold(ba : sanpy.bAnalysis) -> float:
-	"""Guess the dvdt threshold as mean+std of dvdt.
+def startStopFromDeriv(lineProfile, doPlot=False, verbose=False):
+    """Given a line profile, return start/stop pnt using first derivative.
+    """
 
-	Works well for normalized [0,1] Ca++ kymograph sum.
-	"""
-	filteredDeriv = ba.fileLoader.filteredDeriv
-	_mean = np.mean(filteredDeriv)
-	_std = np.std(filteredDeriv)
-	return _mean + _std
+    # filter line profile again
+    SavitzkyGolay_pnts = 5
+    SavitzkyGolay_poly = 2
+    lineProfile = scipy.signal.savgol_filter(
+        lineProfile,
+        SavitzkyGolay_pnts,
+        SavitzkyGolay_poly,
+        axis=0,
+        mode="nearest",
+    )
+
+    # get the first derivative
+    lineDeriv = np.diff(lineProfile, axis=0)
+    lineDeriv = np.append(lineDeriv, 0)  # append a point so it is same length as filteredDiam
+
+    midPoint = int(lineProfile.shape[0]/2)
+    # print('midPoint:', midPoint)
+
+    leftDeriv = lineDeriv[0:midPoint]
+    rightDeriv = lineDeriv[midPoint:-1]
+
+    leftMean = np.nanmean(leftDeriv)
+    leftStd = np.nanstd(leftDeriv)
+
+    rightMean = np.nanmean(rightDeriv)
+    rightStd = np.nanstd(rightDeriv)
+
+    # positive deflection in deriv
+    leftThreshold = leftMean + 2 * leftStd
+    
+    # negative deflection in deriv
+    rightThreshold = rightMean - 2 * rightStd
+
+    whereLeft = np.asarray(leftDeriv > leftThreshold).nonzero()[0]
+    # logger.info(f'whereLeft: {whereLeft} leftThreshold:{leftThreshold}')
+    if len(whereLeft) > 0:
+        leftPnt = whereLeft[0]
+    else:
+        logger.error(f'leftPnt searching for > leftThreshold:{leftThreshold}')
+        leftPnt = np.nan
+
+    whereRight = np.asarray(rightDeriv < rightThreshold).nonzero()[0]
+    # print('whereRight:', whereRight)
+    if len(whereRight) > 0:
+        rightPnt = whereRight[-1] + midPoint
+    else:
+        logger.error(f'rightPnt searching for < rightThreshold:{rightThreshold}')
+        rightPnt = np.nan
+
+    # plot
+    if doPlot:
+        numSubplots = 1
+        fig, axs = plt.subplots(numSubplots, 1, sharex=True)
+        if numSubplots == 1:
+            axs = [axs]
+        rightAxes = axs[0].twinx()
+
+        axs[0].plot(lineProfile, 'k')
+
+        try:
+            axs[0].plot(leftPnt, lineProfile[leftPnt], 'oc')
+            axs[0].plot(rightPnt, lineProfile[rightPnt], 'oc')
+        except(IndexError) as e:
+            pass
+
+        rightAxes.plot(lineDeriv, 'r')
+
+        rightAxes.axhline(y=leftMean, xmin=0, xmax=0.5, color='r', linestyle='--')
+        rightAxes.axhline(y=leftMean+leftStd, xmin=0, xmax=0.5, color='r', linestyle='--')
+        rightAxes.axhline(y=leftMean+2*leftStd, xmin=0, xmax=0.5, color='r', linestyle='--')
+
+        rightAxes.axhline(y=rightMean, xmin=0.5, xmax=1, color='b', linestyle='--')
+        rightAxes.axhline(y=rightMean-rightStd, xmin=0.5, xmax=1, color='b', linestyle='--')
+        rightAxes.axhline(y=rightMean-2*rightStd, xmin=0.5, xmax=1, color='b', linestyle='--')
+
+        plt.show()
+
+    return leftPnt, rightPnt
+
+def guessDvDtThreshold(ba : sanpy.bAnalysis) -> float:
+    """Guess the dvdt threshold as mean+std of dvdt.
+
+    Works well for normalized [0,1] Ca++ kymograph sum.
+    """
+    filteredDeriv = ba.fileLoader.filteredDeriv
+    _mean = np.mean(filteredDeriv)
+    _std = np.std(filteredDeriv)
+    return _mean + _std
 
 def myMonoExp(x, m, t, b):
-	"""
-	M: a_0
-	t: tau_0
-	b: 
-	"""
-	# this triggers
-	# "RuntimeWarning: overflow encountered in exp" during search for parameters, just ignor it
-	ret = m * np.exp(-t * x) + b
-	return ret
+    """
+    M: a_0
+    t: tau_0
+    b: 
+    """
+    # this triggers
+    # "RuntimeWarning: overflow encountered in exp" during search for parameters, just ignor it
+    ret = m * np.exp(-t * x) + b
+    return ret
 
 def detectDiam(ba : sanpy.bAnalysis):
     """Detect diameter changes using first derivative dvdt.
@@ -427,7 +510,7 @@ class kymAnalysis:
             'imageFilterKenel': 0,  # depreciated
             'lineFilterKernel': 3,  # depreciated
 
-            'lineWidth': 2,  # Number of lines scans to use in calculating line profile
+            'lineWidth': 3,  # Number of lines scans to use in calculating line profile
                             # if > 1 then slow
 
             'detectPosNeg': 'pos',  # for each line, detect positive or negative intensity
@@ -1046,7 +1129,9 @@ class kymAnalysis:
 
         detectPosNeg = self.getAnalysisParam('detectPosNeg')
 
+        # from [1, 3, 5, 7, 9,11]
         lineWidth = self.getAnalysisParam('lineWidth')
+        
         percentOfMax = self.getAnalysisParam('percentOfMax')
         lineFilterKernel = self.getAnalysisParam('lineFilterKernel')
 
@@ -1063,7 +1148,7 @@ class kymAnalysis:
             intensityProfile = np.flip(intensityProfile)  # FLIPPED
 
         else:
-            numPixels = self._filteredImage.shape[1]
+            # numPixels = self._filteredImage.shape[1]
             _numLines = self._filteredImage.shape[0]
             
             # FLIPPED
@@ -1074,10 +1159,14 @@ class kymAnalysis:
             #     self._filteredImage, src, dst, linewidth=lineWidth
             # )
 
-            _startLine = lineScanNumber - lineWidth
+            halfLineWidth = (lineWidth-1) / 2
+            halfLineWidth = int(halfLineWidth)
+            # logger.info(f'halfLineWidth:{halfLineWidth}')
+
+            _startLine = lineScanNumber - halfLineWidth
             if _startLine < 0:
                 _startLine = 0
-            _stopLine = lineScanNumber + lineWidth
+            _stopLine = lineScanNumber + halfLineWidth
             if _stopLine >= _numLines:
                 _stopLine = _numLines - 1
             
@@ -1115,12 +1204,25 @@ class kymAnalysis:
 
         # 2) STD
         stdMult = percentOfMax
-        _intMean = np.nanmean(intensityProfile)
+        _intMean = np.nanmean(intensityProfile)  # like (345,)
         _intStd = np.nanstd(intensityProfile)
+        
+        # logger.info(f'intensityProfile: {intensityProfile.shape}')
+        _mHalfIntProfile = int(intensityProfile.shape[0] / 2)
+        leftProfile = intensityProfile[0:_mHalfIntProfile]
+        rightProfile = intensityProfile[_mHalfIntProfile:-1]
+        leftMean = np.nanmean(intensityProfile[0:_mHalfIntProfile])
+        leftStd = np.nanstd(intensityProfile[0:_mHalfIntProfile])
+        rightMean = np.nanmean(intensityProfile[_mHalfIntProfile:-1])
+        rightStd = np.nanstd(intensityProfile[_mHalfIntProfile:-1])
         if _doMax:
             half_max = _intMean + (stdMult * _intStd)
+            leftHalf_max = leftMean + (stdMult * leftStd)
+            rightHalf_max = rightMean + (stdMult * rightStd)
         else:
             half_max = _intMean - (stdMult * _intStd)
+            leftHalf_max = leftMean - (stdMult * leftStd)
+            rightHalf_max = rightMean - (stdMult * rightStd)
 
         # 3) determine pos/neg by comparing first/middle/last
         if 0:
@@ -1153,11 +1255,14 @@ class kymAnalysis:
 
         interpMult = self.getAnalysisParam('interpMult')
         if interpMult==0:
-
             if _doMax:
                 whr = np.asarray(intensityProfile > half_max).nonzero()
+                leftMax = np.asarray(leftProfile > leftHalf_max).nonzero()
+                rightMax = np.asarray(rightProfile > rightHalf_max).nonzero()
             else:
                 whr = np.asarray(intensityProfile < half_max).nonzero()
+                leftMax = np.asarray(leftProfile < leftHalf_max).nonzero()
+                rightMax = np.asarray(rightProfile < rightHalf_max).nonzero()
 
             if len(whr[0]) > 2:
                 # whr is (array,), only interested in whr[0]
@@ -1171,25 +1276,59 @@ class kymAnalysis:
                 right_idx = np.nan
                 # fwhm = np.nan
 
+            # oct 2023, splitting into left/right half
+            print('  leftMean:', leftMean, 'leftStd:', leftStd, 'leftHalf_max:', leftHalf_max)
+            print('  rightMean:', rightMean, 'rightStd:', rightStd, 'rightHalf_max:', rightHalf_max)
+            print('  leftMax:', leftMax)
+            print('  rightMax:', rightMax)
+            if len(leftMax[0]) > 1:
+                left_idx = leftMax[0][1]
+            else:
+                left_idx = np.nan
+            if len(rightMax[0]) > 1:
+                right_idx = rightMax[0][-1] + _mHalfIntProfile
+            else:
+                right_idx = np.nan
+                
         else:
             # interpolate
             _nIntensityProfile = len(intensityProfile)
             _xOld = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile)
             _xNew = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile*interpMult)
             # logger.info(f'_xOld:{len(_xOld)} _xNew{len(_xNew)} intensityProfile:{len(intensityProfile)}')
+            
             _yNew = np.interp(_xNew, _xOld, intensityProfile)
-            if _doMax:
-                _newWhere = np.asarray(_yNew > half_max).nonzero()
+            # _interpFunction = scipy.interpolate.interp1d(_xNew, _xOld, kind='linear'
+                                       
+            _oct4_leftPnt, _oct4_rightPnt = startStopFromDeriv(_yNew, doPlot=False)
+            
+            # logger.info(f'len intensityProfile:{len(intensityProfile)} len _yNew:{len(_yNew)}')
+            # print('lineScanNumber:', lineScanNumber, '_oct4_leftPnt:', _oct4_leftPnt, '_oct4_rightPnt:', _oct4_rightPnt)
+
+            if not np.isnan(_oct4_leftPnt):
+                left_idx = _xNew[_oct4_leftPnt]
             else:
-                _newWhere = np.asarray(_yNew < half_max).nonzero()
-            if len(_newWhere[0]) > 2:
-                # left_idx = _xNew[_newWhere[0][0]]
-                # right_idx = _xNew[_newWhere[0][-1]]
-                left_idx = _xNew[_newWhere[0][1]]
-                right_idx = _xNew[_newWhere[0][-1]]
-            else:
+                logger.error(f'lineScanNumber:{lineScanNumber} got nan left !!!')
                 left_idx = np.nan
+            if not np.isnan(_oct4_leftPnt):
+                right_idx = _xNew[_oct4_rightPnt]
+            else:
+                logger.error(f'lineScanNumber:{lineScanNumber} got nan right !!!')
                 right_idx = np.nan
+
+            # oct 4, was this
+            # if _doMax:
+            #     _newWhere = np.asarray(_yNew > half_max).nonzero()
+            # else:
+            #     _newWhere = np.asarray(_yNew < half_max).nonzero()
+            # if len(_newWhere[0]) > 2:
+            #     # left_idx = _xNew[_newWhere[0][0]]
+            #     # right_idx = _xNew[_newWhere[0][-1]]
+            #     left_idx = _xNew[_newWhere[0][1]]
+            #     right_idx = _xNew[_newWhere[0][-1]]
+            # else:
+            #     left_idx = np.nan
+            #     right_idx = np.nan
             
             # logger.info(f'  left_idx:{left_idx} right_idx:{right_idx}')
             # logger.info(f'  _newLeft:{_newLeft} _newRight:{_newRight}')

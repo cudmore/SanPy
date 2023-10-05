@@ -502,7 +502,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self._lineWidthSpinbox = QtWidgets.QComboBox()
         self._lineWidthSpinbox.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self._lineWidthSpinbox.setToolTip('Number of line scans to pool per line analysis.')
-        self._lineWidthSpinbox.addItems(['1', '2', '3', '4', '5', '6'])
+        self._lineWidthSpinbox.addItems(['1', '3', '5', '7', '9', '11'])
         if self._kymographAnalysis is not None:
             lineWidth = self._kymographAnalysis.getAnalysisParam('lineWidth')
         else:
@@ -698,7 +698,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         hBoxLayoutControls.addWidget(aLabel)
         self._overSample = QtWidgets.QComboBox()
         self._overSample.setToolTip('Factor to oversample each line scan by.')
-        self._overSample.addItems(['Off', '2', '3', '4'])
+        self._overSample.addItems(['Off', '1', '2', '3', '4', '5', '6'])
         if self._kymographAnalysis is not None:
             interpMult = self._kymographAnalysis.getAnalysisParam('interpMult')
             interpMult = str(interpMult)

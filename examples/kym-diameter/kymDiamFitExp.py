@@ -80,7 +80,7 @@ def run():
 
 	# analyze diameter
 	ba.kymAnalysis.setAnalysisParam('imageFilterKenel', 0)
-	ba.kymAnalysis.setAnalysisParam('lineWidth', 2)
+	ba.kymAnalysis.setAnalysisParam('lineWidth', 3)
 	ba.kymAnalysis.analyzeDiameter(verbose=False)
 
 	detectDiam(ba)
