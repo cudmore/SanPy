@@ -31,6 +31,7 @@ a = Analysis(
     binaries=binaries,
     datas=[
             ('../../sanpy/_userFiles', '_userFiles'),
+            ('../../sanpy/detection-presets', 'detection-presets'),
         ],
     hiddenimports=hiddenimports,
     hookspath=[],

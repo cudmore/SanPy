@@ -80,7 +80,7 @@ def run(dist : str):
         logger.error(f'Did not find zip file to send to notarize: {zipPath}')
         return
     
-    # xcrun notarytool store-credentials "my-notarytool-profile" --apple-id "$PROD_MACOS_NOTARIZATION_APPLE_ID" --team-id "$PROD_MACOS_NOTARIZATION_TEAM_ID" --password "$PROD_MACOS_NOTARIZATION_PWD"
+    # xcrun notarytool store-credentials "my-notarytool-profile-oct2023" --apple-id "$PROD_MACOS_NOTARIZATION_APPLE_ID" --team-id "$PROD_MACOS_NOTARIZATION_TEAM_ID" --password "$PROD_MACOS_NOTARIZATION_PWD"
     
     #
     # running this manually from the command line worked
@@ -99,7 +99,7 @@ def run(dist : str):
     # subprocess.run(
     #     [
     #         "xcrun", "notarytool",
-    #         "store-credentials", "my-notarytool-profile"
+    #         "store-credentials", "my-notarytool-profile-oct2023"
     #         "--apple-id", PROD_MACOS_NOTARIZATION_APPLE_ID,
     #         "--team-id", PROD_MACOS_NOTARIZATION_TEAM_ID,
     #         "--password", PROD_MACOS_NOTARIZATION_PWD,  # app specific password
@@ -109,13 +109,13 @@ def run(dist : str):
     # xcrun notarytool submit "dist_x86/SanPy-pre-notarize.zip" --keychain-profile "my-notarytool-profile" --wait
     logger.info(f'submit to xcrun notarytool and wait for output of pass/fail ... need to wait ... like 10 minutes')
     logger.info(f'  zipPath:{zipPath}')
-    logger.info(f'  --keychain-profile "my-notarytool-profile"')
+    logger.info(f'  --keychain-profile "my-notarytool-profile-oct2023"')
 
     _result = subprocess.run(
         [
             "xcrun", "notarytool",
             "submit", zipPath,  # like "dist_x86/SanPy-pre-notarize.zip"
-            "--keychain-profile", "my-notarytool-profile",
+            "--keychain-profile", "my-notarytool-profile-oct2023",
             "--wait"
         ],
         capture_output=True, text=True
@@ -212,6 +212,28 @@ def makeZip(appPath : str, shortPlatformStr : str):
 
     return zipPath
 
+def _store_credentials():
+    """
+    This does not work, need to copy and paste to command line.
+    Every value has to be copied/pasted to command line with ""
+
+    Like this
+    xcrun notarytool store-credentials "my-notarytool-profile-oct2023" --apple-id "my-email" --team-id "my-team-id" --password "my-app-password"
+    """
+    logger.info(f'Storing credentials in my-notarytool-profile')
+    print('  PROD_MACOS_NOTARIZATION_APPLE_ID:', PROD_MACOS_NOTARIZATION_APPLE_ID)
+    print('  PROD_MACOS_NOTARIZATION_TEAM_ID:', PROD_MACOS_NOTARIZATION_TEAM_ID)
+    print('  PROD_MACOS_NOTARIZATION_PWD:', PROD_MACOS_NOTARIZATION_PWD)
+    subprocess.run(
+        [
+            "xcrun", "notarytool",
+            "store-credentials", "my-notarytool-profile-oct2023"
+            "--apple-id", "robert.cudmore@gmail.com",
+            "--team-id", PROD_MACOS_NOTARIZATION_TEAM_ID,
+            "--password", PROD_MACOS_NOTARIZATION_PWD,  # app specific password
+        ],
+    )
+
 if __name__ == '__main__':
     [myFile, dist] = sys.argv
     
@@ -223,3 +245,4 @@ if __name__ == '__main__':
         logger.error(f'invalid dist folder. Expecting dist_arm or dist_x86')
     else:
         run(dist)
+        # _store_credentials()

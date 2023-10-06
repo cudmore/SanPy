@@ -88,15 +88,21 @@ def startStopFromDeriv(lineProfile, doPlot=False, verbose=False):
     rightMean = np.nanmean(rightDeriv)
     rightStd = np.nanstd(rightDeriv)
 
+    stdMult = 2  # 2.5  # 2
+    
     # positive deflection in deriv
-    leftThreshold = leftMean + 2 * leftStd
+    leftThreshold = leftMean + (stdMult * leftStd)
     
     # negative deflection in deriv
-    rightThreshold = rightMean - 2 * rightStd
+    rightThreshold = rightMean - (stdMult * rightStd)
 
     whereLeft = np.asarray(leftDeriv > leftThreshold).nonzero()[0]
     # logger.info(f'whereLeft: {whereLeft} leftThreshold:{leftThreshold}')
     if len(whereLeft) > 0:
+        # if len(whereLeft) == 1:
+        #     leftPnt = whereLeft[0]
+        # else:
+        #     leftPnt = whereLeft[1]
         leftPnt = whereLeft[0]
     else:
         logger.error(f'leftPnt searching for > leftThreshold:{leftThreshold}')
@@ -105,6 +111,10 @@ def startStopFromDeriv(lineProfile, doPlot=False, verbose=False):
     whereRight = np.asarray(rightDeriv < rightThreshold).nonzero()[0]
     # print('whereRight:', whereRight)
     if len(whereRight) > 0:
+        # if len(whereRight) == 1:
+        #     rightPnt = whereRight[-1] + midPoint
+        # else:
+        #     rightPnt = whereRight[-2] + midPoint
         rightPnt = whereRight[-1] + midPoint
     else:
         logger.error(f'rightPnt searching for < rightThreshold:{rightThreshold}')
@@ -1306,11 +1316,13 @@ class kymAnalysis:
             # print('lineScanNumber:', lineScanNumber, '_oct4_leftPnt:', _oct4_leftPnt, '_oct4_rightPnt:', _oct4_rightPnt)
 
             if not np.isnan(_oct4_leftPnt):
+                _oct4_leftPnt + 2 * interpMult
                 left_idx = _xNew[_oct4_leftPnt]
             else:
                 logger.error(f'lineScanNumber:{lineScanNumber} got nan left !!!')
                 left_idx = np.nan
             if not np.isnan(_oct4_leftPnt):
+                _oct4_rightPnt - 2 * interpMult
                 right_idx = _xNew[_oct4_rightPnt]
             else:
                 logger.error(f'lineScanNumber:{lineScanNumber} got nan right !!!')
