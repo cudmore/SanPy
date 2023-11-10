@@ -57,7 +57,60 @@ import sanpy
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def startStopFromDeriv(lineProfile, doPlot=False, verbose=False):
+class myMplPlot():
+    def __init__(self, x, y):
+        self.fig = plt.figure()
+        self.ax = self.fig.add_subplot(111)
+
+        self.line1, = self.ax.plot([], [], 'r-') # Returns a tuple of line objects, thus the comma
+
+        self.rightAxes = self.ax.twinx()
+        self.rightLine, = self.rightAxes.plot([], [], 'g-') # Returns a tuple of line objects, thus the comma
+
+        self.replot(x, y)
+
+    def replot (self, xData=None, yData=None, yRight=None):
+        logger.info(f'x:{xData} y:{yData}')
+        if xData is not None:
+            self.line1.set_xdata(xData)
+            self.rightLine.set_xdata(xData)
+        
+        if yData is not None:
+            self.line1.set_ydata(yData)
+
+        if yRight is not None:
+            self.rightLine.set_ydata(yRight)
+
+        # Rescale axes limits
+        self.ax.relim()
+        self.ax.autoscale()
+        
+        self.rightAxes.relim()
+        self.rightAxes.autoscale()
+
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+
+def test_mplPlot():
+    plt.ion()
+
+    x = None  #np.arange(10)
+    y = None  #np.random.random(10)
+    mmplPlot = myMplPlot(x=x, y=y)
+
+    # plt.show()
+
+    x = list(range(10))
+    # y = np.random.random(10)
+    for i in range(30):
+        # time.sleep(.01)
+        y = np.random.random(10)
+        yRight = np.random.random(10)
+        # y += 0.1
+        mmplPlot.replot(xData=x, yData=y, yRight=yRight)
+        time.sleep(0.1)
+
+def startStopFromDeriv(lineProfile, stdMult, doPlot=False, verbose=False):
     """Given a line profile, return start/stop pnt using first derivative.
     """
 
@@ -76,6 +129,10 @@ def startStopFromDeriv(lineProfile, doPlot=False, verbose=False):
     lineDeriv = np.diff(lineProfile, axis=0)
     lineDeriv = np.append(lineDeriv, 0)  # append a point so it is same length as filteredDiam
 
+    # oct 5
+    lineDeriv = scipy.signal.medfilt(lineDeriv, 3)
+    lineDeriv = scipy.signal.medfilt(lineDeriv, 3)
+
     midPoint = int(lineProfile.shape[0]/2)
     # print('midPoint:', midPoint)
 
@@ -88,7 +145,8 @@ def startStopFromDeriv(lineProfile, doPlot=False, verbose=False):
     rightMean = np.nanmean(rightDeriv)
     rightStd = np.nanstd(rightDeriv)
 
-    stdMult = 2  # 2.5  # 2
+    # threshold for std
+    #stdMult = 2 # 2.2  # 2  # 2.5  # 2
     
     # positive deflection in deriv
     leftThreshold = leftMean + (stdMult * leftStd)
@@ -105,7 +163,7 @@ def startStopFromDeriv(lineProfile, doPlot=False, verbose=False):
         #     leftPnt = whereLeft[1]
         leftPnt = whereLeft[0]
     else:
-        logger.error(f'leftPnt searching for > leftThreshold:{leftThreshold}')
+        logger.error(f'no leftPnt searching for > leftThreshold:{leftThreshold}')
         leftPnt = np.nan
 
     whereRight = np.asarray(rightDeriv < rightThreshold).nonzero()[0]
@@ -117,7 +175,7 @@ def startStopFromDeriv(lineProfile, doPlot=False, verbose=False):
         #     rightPnt = whereRight[-2] + midPoint
         rightPnt = whereRight[-1] + midPoint
     else:
-        logger.error(f'rightPnt searching for < rightThreshold:{rightThreshold}')
+        logger.error(f'no rightPnt searching for < rightThreshold:{rightThreshold}')
         rightPnt = np.nan
 
     # plot
@@ -517,11 +575,10 @@ class kymAnalysis:
                                     # not used in analysis
                                     # used to set initial rect roi
 
-            'imageFilterKenel': 0,  # depreciated
+            # 'imageFilterKenel': 0,  # depreciated
             'lineFilterKernel': 3,  # depreciated
 
             'lineWidth': 3,  # Number of lines scans to use in calculating line profile
-                            # if > 1 then slow
 
             'detectPosNeg': 'pos',  # for each line, detect positive or negative intensity
             'percentOfMax': 0.03,  # Percent of max to use in calculation of diameter
@@ -1127,7 +1184,81 @@ class kymAnalysis:
         return int(um / self.umPerPixel)
 
     def _getFitLineProfile(self, lineScanNumber : int,
-                           verbose=False):
+                           verbose=False, doMplPlot=False):
+        """Get one line profile.
+        """
+        detectPosNeg = self.getAnalysisParam('detectPosNeg')
+        lineWidth = self.getAnalysisParam('lineWidth')
+        percentOfMax = self.getAnalysisParam('percentOfMax')
+        lineFilterKernel = self.getAnalysisParam('lineFilterKernel')
+        interpMult = self.getAnalysisParam('interpMult')
+
+        _doMax = detectPosNeg == 'pos'
+
+        # we know the scan line, determine start/stop based on roi
+        roiRect = self.getRoiRect()  # (l, t, r, b) in um and seconds (float)
+        src_pnt_space = roiRect.getBottom()
+        dst_pnt_space = roiRect.getTop()
+
+        if lineWidth == 1:
+            intensityProfile = self._filteredImage[lineScanNumber, :]
+            intensityProfile = np.flip(intensityProfile)  # FLIPPED
+
+        else:
+            # numPixels = self._filteredImage.shape[1]
+            _numLines = self._filteredImage.shape[0]
+            
+            halfLineWidth = (lineWidth-1) / 2  # assuming lineWidth is odd
+            halfLineWidth = int(halfLineWidth)
+
+            _startLine = lineScanNumber - halfLineWidth
+            if _startLine < 0:
+                _startLine = 0
+            _stopLine = lineScanNumber + halfLineWidth
+            if _stopLine >= _numLines:
+                _stopLine = _numLines - 1
+            
+            _slice = self._filteredImage[_startLine:_stopLine, :]
+            intensityProfile = np.mean(_slice, axis=0)
+
+            intensityProfile = np.flip(intensityProfile)  # FLIPPED
+
+        # median filter line profile
+        if lineFilterKernel > 0:
+            intensityProfile = scipy.signal.medfilt(intensityProfile, lineFilterKernel)
+
+        # Nan out before/after roi
+        intensityProfile = intensityProfile.astype(float)  # we need nan
+        intensityProfile[0:src_pnt_space] = np.nan
+        intensityProfile[dst_pnt_space:] = np.nan
+
+        # interpolate
+        _nIntensityProfile = len(intensityProfile)
+        _xOld = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile)
+        _xNew = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile*interpMult)
+        
+        _yNew = np.interp(_xNew, _xOld, intensityProfile)
+        # _interpFunction = scipy.interpolate.interp1d(_xNew, _xOld, kind='linear'
+                      
+        _oct4_leftPnt, _oct4_rightPnt = startStopFromDeriv(_yNew, percentOfMax, doPlot=doMplPlot)
+
+        if not np.isnan(_oct4_leftPnt):
+            _oct4_leftPnt + 2 * interpMult  # advance 2 pnts
+            left_idx = _xNew[_oct4_leftPnt]
+        else:
+            logger.error(f'lineScanNumber:{lineScanNumber} got nan left !!!')
+            left_idx = np.nan
+        if not np.isnan(_oct4_rightPnt):
+            _oct4_rightPnt - 2 * interpMult  # back up 2 pnts
+            right_idx = _xNew[_oct4_rightPnt]
+        else:
+            logger.error(f'lineScanNumber:{lineScanNumber} got nan right !!!')
+            right_idx = np.nan
+
+        return intensityProfile, left_idx, right_idx
+
+    def _old_getFitLineProfile(self, lineScanNumber : int,
+                           verbose=False, doMplPlot=False):
         """Get one line profile.
 
         - Get the full line, do not look at rect roi
@@ -1169,7 +1300,7 @@ class kymAnalysis:
             #     self._filteredImage, src, dst, linewidth=lineWidth
             # )
 
-            halfLineWidth = (lineWidth-1) / 2
+            halfLineWidth = (lineWidth-1) / 2  # assuming lineWidth is odd
             halfLineWidth = int(halfLineWidth)
             # logger.info(f'halfLineWidth:{halfLineWidth}')
 
@@ -1191,7 +1322,7 @@ class kymAnalysis:
         if lineFilterKernel > 0:
             intensityProfile = scipy.signal.medfilt(intensityProfile, lineFilterKernel)
 
-        x = np.arange(0, len(intensityProfile) + 1)
+        # x = np.arange(0, len(intensityProfile) + 1)
 
         # Nan out before/after roi
         intensityProfile = intensityProfile.astype(float)  # we need nan
@@ -1310,7 +1441,11 @@ class kymAnalysis:
             _yNew = np.interp(_xNew, _xOld, intensityProfile)
             # _interpFunction = scipy.interpolate.interp1d(_xNew, _xOld, kind='linear'
                                        
-            _oct4_leftPnt, _oct4_rightPnt = startStopFromDeriv(_yNew, doPlot=False)
+            # debug
+            # doPlot = False
+            # if lineScanNumber == 333:
+            #     doPlot = True
+            _oct4_leftPnt, _oct4_rightPnt = startStopFromDeriv(_yNew, percentOfMax, doPlot=doMplPlot)
             
             # logger.info(f'len intensityProfile:{len(intensityProfile)} len _yNew:{len(_yNew)}')
             # print('lineScanNumber:', lineScanNumber, '_oct4_leftPnt:', _oct4_leftPnt, '_oct4_rightPnt:', _oct4_rightPnt)
@@ -1367,23 +1502,23 @@ class kymAnalysis:
             self.printAnlysisParam()
 
         #depreciate this
-        imageFilterKenel = self.getAnalysisParam('imageFilterKenel')
+        # imageFilterKenel = self.getAnalysisParam('imageFilterKenel')
         
         lineFilterKernel = self.getAnalysisParam('lineFilterKernel')
         
         # to save in csv
         finalDiamFilterKernel = self.getAnalysisParam('finalDiamFilterKernel')
 
-        if imageFilterKenel > 0:
-            self._filteredImage = scipy.signal.medfilt(self._kymImage, imageFilterKenel)
-        else:
-            self._filteredImage = self._kymImage
+        # if imageFilterKenel > 0:
+        #     self._filteredImage = scipy.signal.medfilt(self._kymImage, imageFilterKenel)
+        # else:
+        #     self._filteredImage = self._kymImage
 
         _pointsPerLineScan = self.pointsPerLineScan()
         theRect = self.getRoiRect()
 
         if verbose:
-            logger.info(f"  filtering entire image with median kernel {imageFilterKenel}")
+            # logger.info(f"  filtering entire image with median kernel {imageFilterKenel}")
             logger.info(f"  filtering each line with median kernel {lineFilterKernel}")
             logger.info(f"  getRoiRect (l,t,r,b) is {theRect}")
         
@@ -1858,7 +1993,7 @@ def testNewDiamAnalysis():
     ba.spikeDetect(dDict)
 
     # analyze diameter
-    ba.kymAnalysis.setAnalysisParam('imageFilterKenel', 0)
+    # ba.kymAnalysis.setAnalysisParam('imageFilterKenel', 0)
     ba.kymAnalysis.setAnalysisParam('lineWidth', 2)
     ba.kymAnalysis.analyzeDiameter(verbose=False)
 
@@ -1867,4 +2002,6 @@ def testNewDiamAnalysis():
 
 if __name__ == "__main__":
     # testLineProfilePool()
-    testNewDiamAnalysis()
+    # testNewDiamAnalysis()
+
+    test_mplPlot()

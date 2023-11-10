@@ -1225,9 +1225,15 @@ class bAnalysis:
         goodSpikeTimes = []
         sweepY = self.fileLoader.sweepY
         for spikeTime in spikeTimes0:
-            peakVal = np.max(sweepY[spikeTime : spikeTime + peakWindow_pnts])
-            if peakVal > dDict["mvThreshold"]:
-                goodSpikeTimes.append(spikeTime)
+            # wu-lab-stanford data
+            try:
+                peakVal = np.max(sweepY[spikeTime : spikeTime + peakWindow_pnts])
+                if peakVal > dDict["mvThreshold"]:
+                    goodSpikeTimes.append(spikeTime)
+            except (ValueError) as e:
+                logger.error(e)
+                logger.error(f'   spikeTime:{spikeTime} peakWindow_pnts:{peakWindow_pnts}')
+                logger.error(f'   _dataPointsPerMs: {self.fileLoader._dataPointsPerMs}')
         spikeTimes0 = goodSpikeTimes
 
         #

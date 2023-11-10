@@ -470,7 +470,7 @@ class analysisDir:
     """Dict of dict of column names and bookkeeping info.
     """
 
-    theseFileTypes = [".abf", ".atf", ".sanpy", ".dat", ".tif"]
+    theseFileTypes = [".abf", ".atf", ".sanpy", ".dat", ".tif", ".czi"]
     """File types to load.
     """
 
@@ -1497,7 +1497,7 @@ class analysisDir:
 
         return ba, rowDict
 
-    def getFileList(self, path: str = None, santanaTif=True) -> List[str]:
+    def getFileList(self, path: str = None, santanaTif=False) -> List[str]:
         """Get file paths from path.
 
         Uses self.theseFileTypes

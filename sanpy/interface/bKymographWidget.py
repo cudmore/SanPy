@@ -149,13 +149,17 @@ class kymographWidget(QtWidgets.QWidget):
         self.myLineRoi = None
         self.myLineRoiBackground = None
         # self.myColorBarItem = None
-
+        
         # self.guessContrastEnhance()
 
         self._buildUI()
 
         self.slot_switchFile(ba)  # trigger self._replot()
 
+    def getDisplayedLineNumber(self):
+        value = self._lineProfileSlider.value()
+        return value
+    
     def contextMenuEvent(self, event):
         """
         Parameters
@@ -183,6 +187,9 @@ class kymographWidget(QtWidgets.QWidget):
             self._setScaleDialog()
 
     def _resetZoom(self, doEmit=True):
+        if self.ba is None:
+            return
+        
         imageBoundingRect = self.myImageItem.boundingRect()  # QtCore.QRectF
         
         _rect = self.ba.kymAnalysis.getImageRect()

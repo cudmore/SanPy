@@ -195,7 +195,11 @@ class detectionParams(sanpyPlugin):
         for k, v in dDict.items():
             col = 0
 
-            currentValue = self._detectionDict[k]
+            try:
+                currentValue = self._detectionDict[k]
+            except (KeyError) as e:
+                logger.error('did not find key "{k}"')
+                continue
 
             # k is the name in spike dictionary
             paramName = k

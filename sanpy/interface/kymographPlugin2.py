@@ -128,6 +128,11 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             print('move slider left')
             self._kymWidgetMain.incDecLineSlider(-1)
 
+        elif key == QtCore.Qt.Key_D:
+            # detect line and show mpl plot
+            lineScanNumber = self._kymWidgetMain.getDisplayedLineNumber()
+            self._kymographAnalysis._getFitLineProfile(lineScanNumber, doMplPlot=True)
+
     def _checkboxCallback(self, state: bool, name: str):
         logger.info(f"state:{state} name:{name}")
         if name == "Line Profile":
@@ -173,6 +178,9 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             self._resetZoom()
         
         elif name == "Analyze":
+            if self._kymographAnalysis is None:
+                return
+            
             # during analysis button is red
             self._analyzeButton.setStyleSheet("background-color : #AA2222")
             self._analyzeButton.repaint()
@@ -326,19 +334,19 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             self._on_slider_changed()  # refresh line scan
 
 
-    def _on_median_image(self, medianImageStr : str, doSet = False):
-        logger.info(f'medianImageStr:{medianImageStr}')
+    # def _on_median_image(self, medianImageStr : str, doSet = False):
+    #     logger.info(f'medianImageStr:{medianImageStr}')
 
-        if medianImageStr == 'Off':
-            medianImageStr = '0'
+    #     if medianImageStr == 'Off':
+    #         medianImageStr = '0'
 
-        if self._kymographAnalysis is not None:
-            self._kymographAnalysis.setAnalysisParam('imageFilterKenel', int(medianImageStr))
+    #     if self._kymographAnalysis is not None:
+    #         self._kymographAnalysis.setAnalysisParam('imageFilterKenel', int(medianImageStr))
 
-        if doSet:
-            self._medianImage.setCurrentText(medianImageStr)
-        else:
-            self._on_slider_changed()  # refresh line scan
+    #     if doSet:
+    #         self._medianImage.setCurrentText(medianImageStr)
+    #     else:
+    #         self._on_slider_changed()  # refresh line scan
 
     def _on_median_line(self, mediaLineStr : str, doSet = False):
         logger.info(f'medianImageStr:{mediaLineStr}')
@@ -374,6 +382,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             self._on_slider_changed()  # refresh line scan
 
     def setImageMedianKernel(self, value):
+        """TODO: dpreciate this.
+        """
         # self._imageMedianKernel = value
 
         self._kymographAnalysis.setAnalysisParam('imageFilterKenel', value)
@@ -403,7 +413,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         else:
             self._currentLineNumber = value
 
-        # logger.info(f"value:{value}")
+        logger.info(f"value:{value}")
 
         xScale = self._ba.fileLoader.tifHeader["secondsPerLine"]
 
@@ -494,151 +504,6 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         lineFilterKernel = self._kymographAnalysis.getAnalysisParam('lineFilterKernel')
         self._medianLine.setCurrentText(str(lineFilterKernel))
 
-    def leftControlBar(self):
-        hBoxLayoutControls = QtWidgets.QVBoxLayout()
-
-        aLabel = QtWidgets.QLabel("Line Width")
-        hBoxLayoutControls.addWidget(aLabel)
-        self._lineWidthSpinbox = QtWidgets.QComboBox()
-        self._lineWidthSpinbox.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToMinimumContentsLengthWithIcon)
-        self._lineWidthSpinbox.setToolTip('Number of line scans to pool per line analysis.')
-        self._lineWidthSpinbox.addItems(['1', '3', '5', '7', '9', '11'])
-        if self._kymographAnalysis is not None:
-            lineWidth = self._kymographAnalysis.getAnalysisParam('lineWidth')
-        else:
-            lineWidth = '1'
-        self._on_lineWidth(lineWidth, doSet=True)
-        self._lineWidthSpinbox.currentTextChanged.connect(self._on_lineWidth)
-        hBoxLayoutControls.addWidget(self._lineWidthSpinbox)
-
-        # oversample factor (using interp)
-        aLabel = QtWidgets.QLabel("Over Sample")
-        hBoxLayoutControls.addWidget(aLabel)
-        self._overSample = QtWidgets.QComboBox()
-        self._overSample.setToolTip('Factor to oversample each line scan by.')
-        self._overSample.addItems(['Off', '2', '3', '4'])
-        if self._kymographAnalysis is not None:
-            interpMult = self._kymographAnalysis.getAnalysisParam('interpMult')
-        else:
-            interpMult = 'Off'
-        self._on_overSample(interpMult, doSet=True)
-        self._overSample.currentTextChanged.connect(
-            self._on_overSample
-        )
-        hBoxLayoutControls.addWidget(self._overSample)
-
-        # detect pos or neg intensity (polartity)
-        aLabel = QtWidgets.QLabel("Polarity")
-        hBoxLayoutControls.addWidget(aLabel)
-        self._detectPosNeg = QtWidgets.QComboBox()
-        self._detectPosNeg.setToolTip('Detect positive or negative peaks.')
-        self._detectPosNeg.addItem('pos')
-        self._detectPosNeg.addItem('neg')
-        if self._kymographAnalysis is not None:
-            posNegStr = self._kymographAnalysis.getAnalysisParam('detectPosNeg')
-        else:
-            posNegStr = 'pos'
-        self._on_detect_polarity(posNegStr, doSet=True)
-        self._detectPosNeg.currentTextChanged.connect(
-            self._on_detect_polarity
-        )
-        hBoxLayoutControls.addWidget(self._detectPosNeg)
-
-        # percent of max in line profile (for analysis)
-        percentMaxLabel = QtWidgets.QLabel("STD Threshold")
-        hBoxLayoutControls.addWidget(percentMaxLabel)
-        self._percentMaxSpinbox = QtWidgets.QDoubleSpinBox()
-        self._percentMaxSpinbox.setToolTip('Threshold for diameter as fraction of standard deviation (STD).')
-        self._percentMaxSpinbox.setSingleStep(0.01)
-        self._percentMaxSpinbox.setMinimum(0.001)
-        self._percentMaxSpinbox.setDecimals(4)
-        if self._kymographAnalysis is not None:
-            _percentMax = self._kymographAnalysis.getAnalysisParam('percentOfMax')
-            # percentMaxSpinbox.setValue(self._kymographAnalysis.getAnalysisParam('percentOfMax'))
-        # else:
-        #     percentMaxSpinbox.setValue(10)
-        self._percentMaxSpinbox.valueChanged.connect(
-            self.setPercentMax
-        )  # triggers as user types e.g. (22)
-        #self.setPercentMax(_percentMax, doSet=True)
-        hBoxLayoutControls.addWidget(self._percentMaxSpinbox)
-
-        # hBoxLayoutControls.addStretch()
-
-        # line 1
-        # hBoxLayoutControls1 = QtWidgets.QHBoxLayout()
-
-        aLabel = QtWidgets.QLabel("Median Image")
-        hBoxLayoutControls.addWidget(aLabel)
-        self._medianImage = QtWidgets.QComboBox()
-        self._medianImage.setToolTip('Median filter image size (pixels).')
-        self._medianImage.addItems(['Off', '3', '5'])
-        if self._kymographAnalysis is not None:
-            imageFilterKenel = self._kymographAnalysis.getAnalysisParam('imageFilterKenel')
-            imageFilterKenelStr = str(imageFilterKenel)
-            logger.info(f' _kymographAnalysis loaded imageFilterKenelStr is "{imageFilterKenelStr}"')
-        else:
-            logger.info('no _kymographANalysis, defaulting to "Off"')
-            imageFilterKenelStr = 'Off'
-        self._on_median_image(imageFilterKenelStr, doSet=True)
-        self._medianImage.currentTextChanged.connect(
-            self._on_median_image
-        )
-        hBoxLayoutControls.addWidget(self._medianImage)
-
-        aLabel = QtWidgets.QLabel("Line")
-        hBoxLayoutControls.addWidget(aLabel)
-        self._medianLine = QtWidgets.QComboBox()
-        self._medianLine.setToolTip('Median filter each line scan (pixels).')
-        self._medianLine.addItems(['Off', '3', '5'])
-        if self._kymographAnalysis is not None:
-            imageFilterKenel = self._kymographAnalysis.getAnalysisParam('lineFilterKernel')
-            imageFilterKenelStr = str(imageFilterKenel)
-        else:
-            imageFilterKenelStr = 'Off'
-        self._on_median_line(imageFilterKenelStr, doSet=True)
-        self._medianLine.currentTextChanged.connect(
-            self._on_median_line
-        )
-        hBoxLayoutControls.addWidget(self._medianLine)
-
-        # hBoxLayoutControls1.addStretch()
-
-        # buttons
-        buttonName = 'Reset Zoom'
-        aButton = QtWidgets.QPushButton(buttonName)
-        aButton.clicked.connect(lambda state, name=buttonName: self._buttonCallback(name))
-        hBoxLayoutControls.addWidget(aButton)
-
-        # buttonName = 'Reset ROI'
-        # aButton = QtWidgets.QPushButton(buttonName)
-        # aButton.clicked.connect(lambda state, name=buttonName: self._buttonCallback(name))
-        # hBoxLayoutControls.addWidget(aButton)
-
-        # buttonName = 'Rot -90'
-        # aButton = QtWidgets.QPushButton(buttonName)
-        # aButton.setEnabled(False)
-        # aButton.clicked.connect(lambda state, name=buttonName: self._buttonCallback(name))
-        # hBoxLayoutControls.addWidget(aButton)
-
-        # keep reference to button so we can change color during analysis
-        buttonName = 'Analyze'
-        self._analyzeButton = QtWidgets.QPushButton(buttonName)
-        self._analyzeButton.setStyleSheet("background-color : #22AA22")
-        self._analyzeButton.clicked.connect(
-            lambda state, name=buttonName: self._buttonCallback(name)
-        )
-        hBoxLayoutControls.addWidget(self._analyzeButton)
-
-        buttonName = "Save"
-        aButton = QtWidgets.QPushButton(buttonName)
-        aButton.clicked.connect(
-            lambda state, name=buttonName: self._buttonCallback(name)
-        )
-        hBoxLayoutControls.addWidget(aButton)
-
-        return hBoxLayoutControls
-    
     def _initGui(self):
         self.setWindowTitle("Kymograph Analysis")
 
@@ -683,7 +548,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self._lineWidthSpinbox = QtWidgets.QComboBox()
         self._lineWidthSpinbox.setSizeAdjustPolicy(QtWidgets.QComboBox.AdjustToMinimumContentsLengthWithIcon)
         self._lineWidthSpinbox.setToolTip('Number of line scans to pool per line analysis.')
-        self._lineWidthSpinbox.addItems(['1', '2', '3', '4', '5', '6'])
+        self._lineWidthSpinbox.addItems(['1', '3', '5', '7', '9', '11'])
         if self._kymographAnalysis is not None:
             lineWidth = self._kymographAnalysis.getAnalysisParam('lineWidth')
             lineWidth = str(lineWidth)
@@ -692,23 +557,6 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self._on_lineWidth(lineWidth, doSet=True)
         self._lineWidthSpinbox.currentTextChanged.connect(self._on_lineWidth)
         hBoxLayoutControls.addWidget(self._lineWidthSpinbox)
-
-        # oversample factor (using interp)
-        aLabel = QtWidgets.QLabel("Over Sample")
-        hBoxLayoutControls.addWidget(aLabel)
-        self._overSample = QtWidgets.QComboBox()
-        self._overSample.setToolTip('Factor to oversample each line scan by.')
-        self._overSample.addItems(['Off', '1', '2', '3', '4', '5', '6'])
-        if self._kymographAnalysis is not None:
-            interpMult = self._kymographAnalysis.getAnalysisParam('interpMult')
-            interpMult = str(interpMult)
-        else:
-            interpMult = 'Off'
-        self._on_overSample(interpMult, doSet=True)
-        self._overSample.currentTextChanged.connect(
-            self._on_overSample
-        )
-        hBoxLayoutControls.addWidget(self._overSample)
 
         # detect pos or neg intensity (polartity)
         aLabel = QtWidgets.QLabel("Polarity")
@@ -732,9 +580,9 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         hBoxLayoutControls.addWidget(percentMaxLabel)
         self._percentMaxSpinbox = QtWidgets.QDoubleSpinBox()
         self._percentMaxSpinbox.setToolTip('Threshold for diameter as fraction of standard deviation (STD).')
-        self._percentMaxSpinbox.setSingleStep(0.01)
-        self._percentMaxSpinbox.setMinimum(0.001)
-        self._percentMaxSpinbox.setDecimals(4)
+        self._percentMaxSpinbox.setSingleStep(0.1)
+        self._percentMaxSpinbox.setMinimum(0.1)
+        self._percentMaxSpinbox.setDecimals(2)
         if self._kymographAnalysis is not None:
             _percentMax = self._kymographAnalysis.getAnalysisParam('percentOfMax')
             # percentMaxSpinbox.setValue(self._kymographAnalysis.getAnalysisParam('percentOfMax'))
@@ -751,28 +599,45 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         # line 1
         hBoxLayoutControls1 = QtWidgets.QHBoxLayout()
 
-        aLabel = QtWidgets.QLabel("Median Image")
-        hBoxLayoutControls1.addWidget(aLabel)
-        self._medianImage = QtWidgets.QComboBox()
-        self._medianImage.setToolTip('Median filter image size (pixels).')
-        self._medianImage.addItems(['Off', '3', '5'])
-        if self._kymographAnalysis is not None:
-            imageFilterKenel = self._kymographAnalysis.getAnalysisParam('imageFilterKenel')
-            imageFilterKenelStr = str(imageFilterKenel)
-            logger.info(f' _kymographAnalysis loaded imageFilterKenelStr is "{imageFilterKenelStr}"')
-        else:
-            imageFilterKenelStr = 'Off'
-            logger.info(f' _kymographAnalysis NOT loaded imageFilterKenelStr is "{imageFilterKenelStr}"')
-        self._on_median_image(imageFilterKenelStr, doSet=True)
-        self._medianImage.currentTextChanged.connect(
-            self._on_median_image
-        )
-        hBoxLayoutControls1.addWidget(self._medianImage)
+        # aLabel = QtWidgets.QLabel("Median Image")
+        # hBoxLayoutControls1.addWidget(aLabel)
+        # self._medianImage = QtWidgets.QComboBox()
+        # self._medianImage.setToolTip('Median filter image size (pixels).')
+        # self._medianImage.addItems(['Off', '3', '5'])
+        # if self._kymographAnalysis is not None:
+        #     imageFilterKenel = self._kymographAnalysis.getAnalysisParam('imageFilterKenel')
+        #     imageFilterKenelStr = str(imageFilterKenel)
+        #     logger.info(f' _kymographAnalysis loaded imageFilterKenelStr is "{imageFilterKenelStr}"')
+        # else:
+        #     imageFilterKenelStr = 'Off'
+        #     logger.info(f' _kymographAnalysis NOT loaded imageFilterKenelStr is "{imageFilterKenelStr}"')
+        # self._on_median_image(imageFilterKenelStr, doSet=True)
+        # self._medianImage.currentTextChanged.connect(
+        #     self._on_median_image
+        # )
+        # hBoxLayoutControls1.addWidget(self._medianImage)
 
-        aLabel = QtWidgets.QLabel("Line")
+        # oversample factor (using interp)
+        aLabel = QtWidgets.QLabel("Line profile: Over Sample")
+        hBoxLayoutControls1.addWidget(aLabel)
+        self._overSample = QtWidgets.QComboBox()
+        self._overSample.setToolTip('Factor to oversample line profile.')
+        self._overSample.addItems(['Off', '1', '2', '3', '4', '5', '6'])
+        if self._kymographAnalysis is not None:
+            interpMult = self._kymographAnalysis.getAnalysisParam('interpMult')
+            interpMult = str(interpMult)
+        else:
+            interpMult = 'Off'
+        self._on_overSample(interpMult, doSet=True)
+        self._overSample.currentTextChanged.connect(
+            self._on_overSample
+        )
+        hBoxLayoutControls1.addWidget(self._overSample)
+
+        aLabel = QtWidgets.QLabel("median filter")
         hBoxLayoutControls1.addWidget(aLabel)
         self._medianLine = QtWidgets.QComboBox()
-        self._medianLine.setToolTip('Median filter each line scan (pixels).')
+        self._medianLine.setToolTip('Median filter line profile (pixels).')
         self._medianLine.addItems(['Off', '3', '5'])
         if self._kymographAnalysis is not None:
             imageFilterKenel = self._kymographAnalysis.getAnalysisParam('lineFilterKernel')
@@ -822,6 +687,9 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         # 3nd row of controls
         hBoxLayoutControls2 = QtWidgets.QHBoxLayout()
+
+        aLabel = QtWidgets.QLabel("Display:")
+        hBoxLayoutControls2.addWidget(aLabel)
 
         checkboxName = "Line Profile"
         aCheckBox = QtWidgets.QCheckBox(checkboxName)
