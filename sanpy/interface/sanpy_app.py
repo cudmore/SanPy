@@ -1,6 +1,9 @@
 # Author: Robert H Cudmore
 # Date: 20190719
 
+from multiprocessing import freeze_support
+freeze_support()
+
 #from curses.panel import bottom_panel
 import os, sys
 
@@ -1499,6 +1502,9 @@ def main():
 
     Configured in setup.py
     """
+    # logger.info('calling freeze support')
+    # freeze_support()
+
     logger.info(f"Starting sanpy_app.py in main()")
     # date_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # logger.info(f'    {date_time_str}')

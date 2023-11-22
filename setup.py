@@ -28,7 +28,11 @@ guiRequirements = [
     'scipy',
     'pyabf',
     'tifffile',
+    
+    # on 20231122 with newer 3.8.2 pyInstaller macOS app was hanging with 'building font cache'
+    #'matplotlib==3.8.0',
     'matplotlib',
+    
     'mplcursors',
     'seaborn',
     'requests', #  to load from the cloud (for now github)

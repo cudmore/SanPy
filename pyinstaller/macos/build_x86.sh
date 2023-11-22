@@ -16,9 +16,13 @@ conda activate sanpy-pyinstaller-i386
 
 pip install --upgrade pip
 
-pip install -e '../../.[gui]'
+pip install  '../../.[gui]'
+# pip install -e '../../.[gui]'
 
-pip install -e ~/Sites/pyinstaller/.
+# 20231122, switched back to most recent pyinstaller
+# pip install -e ~/Sites/pyinstaller/.
+#pip install --upgrade pyinstaller
+pip install ../../pyinstaller_20231122/pyinstaller/.
 
 python macos_build.py
 

@@ -1,1 +1,2 @@
 recursive-include sanpy/_userFiles ['.py', 'abf']
+recursive-include sanpy/detection-presets ['.json']

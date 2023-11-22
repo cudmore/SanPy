@@ -64,7 +64,11 @@ exe = EXE(
     argv_emulation=False,
     # TODO: replace this with --target-arch
     #target_arch='x86_64',  # x86_64, arm64, universal2
+    
+    # 20231122, app is failing security check
+    # tring to fix by turning this off
     codesign_identity="Developer ID Application: Robert Cudmore (794C773KDS)",
+    
     entitlements_file="entitlements.plist",
     icon='sanpy_transparent.icns',
 )
