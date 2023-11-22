@@ -14,7 +14,7 @@ class kymographPlugin(sanpyPlugin):
     myHumanName = "Kymograph Length"
 
     # def __init__(self, myAnalysisDir=None, **kwargs):
-    def __init__(self, plotRawAxis=False, ba=None, **kwargs):
+    def __init__(self, ba=None, **kwargs):
         """
         Args:
             ba (bAnalysis): Not required

@@ -68,6 +68,9 @@ class bPlugins:
             "myStatListWidget",
         ]
 
+        if not sanpy.DO_KYMOGRAPH_ANALYSIS:
+            ignoreModuleList.append('kymographPlugin')
+
         #
         # system plugins from sanpy.interface.plugins
         # print('loadPlugins sanpy.interface.plugins:', sanpy.interface.plugins)

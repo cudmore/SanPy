@@ -157,3 +157,8 @@ class fileLoader_abf(fileLoader_base):
         # base sanpy does not keep the abf around
         # logger.warning('[[[TURNED BACK ON]]] I turned off assigning self._abf=None for stoch-res stim file load')
         self._abf = None
+
+if __name__ == '__main__':
+    path = '/Users/cudmore/Dropbox/data/wu-lab-stanford/tang/R1_S1_IC_AP_Family.abf'
+    
+    abf = pyabf.ABF(path)

@@ -1,5 +1,16 @@
+"""
+nov sfn 2023, need to add aicsimageio for czi reading
+
+pip install aicsimageio
+pip install aicspylibczi
+
+does not work on macos m1
+conda install does not work!!!
+"""
+
 import os
-import sys
+import glob
+# import sys
 from setuptools import setup, find_packages
 
 # manually keep in sync with sanpy/version.py
@@ -65,6 +76,8 @@ setup(
     # this is CRITICAL to import submodule like sanpy.userAnalysis
     packages=find_packages(include=['sanpy', 'sanpy.*', 'sanpy.interface', 'sanpy.fileloaders']),
     
+    include_package_data=True,
+
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
 
@@ -111,7 +124,7 @@ setup(
             'pytest-qt',
             'flake8',
             'jupyter',
-            'pooch'  # what is this for?
+            # 'pooch'  # what is this for?
         ],
         'test': [
             'pytest',

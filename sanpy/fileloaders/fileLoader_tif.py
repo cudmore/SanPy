@@ -14,8 +14,11 @@ from sanpy._util import _loadLineScanHeader
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-from aicsimageio import AICSImage
-from aicspylibczi import CziFile
+try:
+    from aicsimageio import AICSImage
+    from aicspylibczi import CziFile
+except (ModuleNotFoundError):
+    pass
 
 def loadCziHeader(cziPath : str) -> dict:
     """Load header from a czi file.
@@ -27,6 +30,9 @@ def loadCziHeader(cziPath : str) -> dict:
 
         Whister czi files also have one too many decimals in fractional seconds
     """
+    
+    if CziFile is None:
+        return
     
     with open(cziPath) as f:
         czi = CziFile(f)
@@ -109,6 +115,9 @@ def loadCziHeader(cziPath : str) -> dict:
         return _header
 
 def test_czi():
+    if AICSImage:
+        return
+    
     import matplotlib.pyplot as plt
 
     path = '/media/cudmore/data/Dropbox/data/wu-lab-stanford/test_lu.czi'
@@ -168,6 +177,9 @@ class fileLoader_czi(fileLoader_base):
     loadFileType = "czi"
 
     def loadFile(self):
+        if AICSImage is None:
+            return
+        
         logger.info('')
 
         # <AICSImage [Reader: CziReader, Image-is-in-Memory: True]>

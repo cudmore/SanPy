@@ -12,24 +12,15 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt  # abb 202012 added to set theme
 import matplotlib.ticker as ticker
 
-# import qdarkstyle
-
-# abb 20200718
-# needed to import from SanPy which is one folder up
-# sys.path.append("..")
-
 # from SanPy import bAnalysis
 # from SanPy import bAnalysisPlot
 # import bAnalysis
 # import bAnalysisPlot
+import sanpy
 from sanpy import bAnalysis
-
-# import sanpy.bAnalysis
-
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
-
 
 class CustomStyle(QtWidgets.QProxyStyle):
     def styleHint(self, hint, option=None, widget=None, returnData=None):
