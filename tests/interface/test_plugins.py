@@ -142,10 +142,10 @@ def test_init(pluginsObject, qtbot):
         assert _newPlugin is not None
         assert _newPlugin.getInitError() == False
         # removed sept 9
-        # qtbot.addWidget(_newPlugin)
+        qtbot.addWidget(_newPlugin)
         # try to close and garbage collect
-        _newPlugin.close()
-        _newPlugin = None
+        # _newPlugin.close()
+        # _newPlugin = None
 
     for _pluginName in _pluginList:
         logger.info(f'====== running plugin _pluginName: {_pluginName}')
@@ -153,9 +153,9 @@ def test_init(pluginsObject, qtbot):
         assert _newPlugin is not None
         assert _newPlugin.getInitError() == False
         # removed sept 9
-        #qtbot.addWidget(_newPlugin)
+        qtbot.addWidget(_newPlugin)
 
-        # select an empy list
+        # select an empty list
         _selectSpikesDict = {'ba': ba, 'spikeList':[]}
         _newPlugin.slot_selectSpikeList(_selectSpikesDict)
 
@@ -176,5 +176,5 @@ def test_init(pluginsObject, qtbot):
         # TODO: test set sweep
 
         # try to close and garbage collect
-        _newPlugin.close()
-        _newPlugin = None
+        # _newPlugin.close()
+        # _newPlugin = None

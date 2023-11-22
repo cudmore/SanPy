@@ -683,7 +683,7 @@ class analysisDir:
             self.getDataFrame().to_clipboard(sep="\t", index=False)
             logger.info("Copied to clipboard")
 
-    def old_saveDatabase(self):
+    def _old_saveDatabase(self):
         """save dbFile .csv and hdf .gzip"""
         dbPath = os.path.join(self.path, self.dbFile)
         if self.getDataFrame() is not None:
@@ -707,7 +707,7 @@ class analysisDir:
             logger.info(f'Saving took {round(stop-start,2)} seconds')
             """
 
-    def old_getFrozenPath(self):
+    def _old_getFrozenPath(self):
         if getattr(sys, "frozen", False):
             # running in a bundle (frozen)
             myPath = sys._MEIPASS
@@ -1605,7 +1605,9 @@ class analysisDir:
         newRowIdx = len(self._df)
         df = self._df
         logger.warning(f"need to replace append with concat")
-        df = df.append(rowSeries, ignore_index=True)
+        #df = df.append(rowSeries, ignore_index=True)
+        df = pd.concat([df, rowSeries])
+
         # df = pd.concat([df,rowSeries], ignore_index=True, axis=1)
         df = df.reset_index(drop=True)
 
@@ -1643,7 +1645,7 @@ class analysisDir:
 
         self._updateLoadedAnalyzed()
 
-    def old_duplicateRow(self, rowIdx):
+    def _old_duplicateRow(self, rowIdx):
         """Depreciated, Was used to have different ocnditions within a recording,
         this is now handled by condiiton column.
         """

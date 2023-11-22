@@ -9,8 +9,6 @@ conda install does not work!!!
 """
 
 import os
-import glob
-# import sys
 from setuptools import setup, find_packages
 
 # manually keep in sync with sanpy/version.py
@@ -24,27 +22,46 @@ _thisPath = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.abspath(_thisPath+"/README.md")) as f:
     long_description = f.read()
 
-"""
-    install_requires=[
-        'numpy',
-        'pandas==1.5',
-        'scipy',
-        'pyabf',
-        'tifffile',
-        #'XlsxWriter',
-        #'xlrd', #  for loading excel files in examples/reanalyze.py
-        #'openpyxl',
-        'matplotlib',
-        #'mplcursors',
-        'seaborn',
-        'requests', #  to load from the cloud (for now github)
-        'tables',  # aka pytables for hdf5.
-        # used for line profile in kym analysis
-        # 0.20.0 introduces pyinstaller bug because of lazy import
-        'scikit-image==0.19.3', 
-        'h5py',
-    ],
-"""
+guiRequirements = [
+    'numpy',  # ==1.23.4',  # 1.24 breaks PyQtGraph with numpy.float error
+    'pandas',  #==1.5',  # version 2.0 removes dataframe append
+    'scipy',
+    'pyabf',
+    'tifffile',
+    'matplotlib',
+    'mplcursors',
+    'seaborn',
+    'requests', #  to load from the cloud (for now github)
+    'tables',  # aka pytable for hdf5. Conflicts with conda install
+    # used for line profile in kym analysis
+    # 0.20.0 introduces pyinstaller bug because of lazy import
+    # scikit-image 0.20.0 requires pyInstaller-hooks-contrib >= 2023.2.
+    # and 0.22.0 requires >= 2023.10
+    'scikit-image',  #==0.19.3', 
+    'h5py',  # conflicts with conda install
+
+    'qtpy',
+    'pyqtgraph',
+    'pyqtdarktheme',  # switched to this mar 2023
+    'PyQt5',  # only install x86 version, need to use conda install pyqt
+]
+
+devRequirements = guiRequirements + [
+    'mkdocs',
+    'mkdocs-material',
+    'mkdocs-jupyter',
+    'mkdocstrings',
+    'mkdocstrings-python', # resolve error as of April 30, 2023
+    'tornado', # needed for pyinstaller
+    'pyinstaller',
+    'ipython',
+    'tox',
+    'pytest',
+    'pytest-cov',
+    'pytest-qt',
+    'flake8',
+    'jupyter',
+]
 
 setup(
     name='sanpy-ephys',  # the package name (on PyPi), still use 'import sanpy'
@@ -74,9 +91,13 @@ setup(
     ],
 
     # this is CRITICAL to import submodule like sanpy.userAnalysis
-    packages=find_packages(include=['sanpy', 'sanpy.*', 'sanpy.interface', 'sanpy.fileloaders']),
+    packages=find_packages(include=['sanpy',
+                                    'sanpy.*',
+                                    'sanpy.interface',
+                                    'sanpy.fileloaders'
+                                    ]),
     
-    include_package_data=True,
+    include_package_data=True,  # uses manifest.in
 
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
@@ -86,53 +107,10 @@ setup(
     install_requires=[],
 
     extras_require={
-        'gui': [
-            'numpy==1.23.4',  # 1.24 breaks PyQtGraph with numpy.float error
-            'pandas==1.5',  # version 2.0 removes dataframe append
-            'scipy',
-            'pyabf',
-            'tifffile',
-            'matplotlib',
-            'mplcursors',
-            'seaborn',
-            'requests', #  to load from the cloud (for now github)
-            'tables',  # aka pytable for hdf5. Conflicts with conda install
-            # used for line profile in kym analysis
-            # 0.20.0 introduces pyinstaller bug because of lazy import
-            'scikit-image==0.19.3', 
-            'h5py',  # conflicts with conda install
-
-            'qtpy',
-            'pyqtgraph',
-            'pyqtdarktheme',  # switched to this mar 2023
-            'PyQt5',  # only install x86 version, need to use conda install pyqt
-
-            #'setuptools_scm',
-        ],
-        'dev': [
-            'mkdocs',
-            'mkdocs-material',
-            'mkdocs-jupyter',
-            'mkdocstrings',
-            'mkdocstrings-python', # resolve erro as of April 30, 2023
-            'tornado', # needed for pyinstaller
-            'pyinstaller',
-            'ipython',
-            'tox',
-            'pytest',
-            'pytest-cov',
-            'pytest-qt',
-            'flake8',
-            'jupyter',
-            # 'pooch'  # what is this for?
-        ],
-        'test': [
-            'pytest',
-            'pytest-cov',
-            #'pytest-qt',
-            'flake8',
-        ]
+        'gui': guiRequirements,
+        'dev': devRequirements,
     },
+
     python_requires=">=3.8",
     entry_points={
         'console_scripts': [

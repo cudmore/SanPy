@@ -398,6 +398,7 @@ class plotScatter(sanpyPlugin):
             )
 
         self.static_canvas.figure.clear()
+        
         if self.plotHistograms:
             self.axScatter = self.static_canvas.figure.add_subplot(self.gs[1, 0])
 

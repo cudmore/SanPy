@@ -480,11 +480,15 @@ class pandasModel(QtCore.QAbstractTableModel):
         self.beginInsertRows(QtCore.QModelIndex(), newRowIdx, newRowIdx)
 
         if self.isAnalysisDir:
-            # if using analysis dir, azll actions are in-place
+            # if using analysis dir, all actions are in-place
             self._data.appendRow()
         else:
             df = self._data
-            df = df.append(pd.Series(), ignore_index=True)
+
+            logger.warning(f"need to replace append with concat")
+            # df = df.append(pd.Series(), ignore_index=True)
+            df = pd.concat([df, pd.Series()])
+
             df = df.reset_index(drop=True)
             self._data = df
 

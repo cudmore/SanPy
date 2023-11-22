@@ -1514,8 +1514,13 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                 dfCopy = self.yDf.copy()
             else:
                 # append row then yDf
-                dfCopy.append(pd.Series(), ignore_index=True)
-                dfCopy.append(self.yDf, ignore_index=True)
+                logger.warning(f"need to replace append with concat")
+                # dfCopy.append(pd.Series(), ignore_index=True)
+                # dfCopy.append(self.yDf, ignore_index=True)
+    
+                dfCopy = pd.concat([dfCopy, pd.Series()])  # blank line
+                dfCopy = pd.concat([dfCopy, self.yDf])
+
             # self.yDf.to_clipboard(sep='\t', index=False)
             # print('Copied to clipboard')
             # print(self.yDf)

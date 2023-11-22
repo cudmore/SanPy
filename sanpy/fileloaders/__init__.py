@@ -3,8 +3,8 @@ from .fileLoader_atf import fileLoader_atf
 
 from .fileLoader_csv import fileLoader_text
 
-import sanpy  # this seems like bad form ???
-if sanpy.DO_KYMOGRAPH_ANALYSIS:
+from sanpy import DO_KYMOGRAPH_ANALYSIS  # this seems like bad form ???
+if DO_KYMOGRAPH_ANALYSIS:
     from .fileLoader_tif import fileLoader_tif
     from .fileLoader_tif import fileLoader_czi
 
