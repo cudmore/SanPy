@@ -55,12 +55,20 @@ devRequirements = guiRequirements + [
     'tornado', # needed for pyinstaller
     'pyinstaller',
     'ipython',
+    'jupyter',
     'tox',
     'pytest',
     'pytest-cov',
     'pytest-qt',
     'flake8',
-    'jupyter',
+]
+
+testRequirements = guiRequirements + [
+    'tox',
+    'pytest',
+    'pytest-cov',
+    'pytest-qt',
+    'flake8',
 ]
 
 setup(
@@ -109,6 +117,7 @@ setup(
     extras_require={
         'gui': guiRequirements,
         'dev': devRequirements,
+        'test': testRequirements,
     },
 
     python_requires=">=3.8",
