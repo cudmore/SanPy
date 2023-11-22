@@ -1998,7 +1998,7 @@ def testNewDiamAnalysis():
     ba.kymAnalysis.analyzeDiameter(verbose=False)
 
     ddDict, dResultDict = detectDiam(ba)
-    plotDiamFit(ba, ddDict, dResultsDict)
+    plotDiamFit(ba, ddDict, dResultDict)
 
 if __name__ == "__main__":
     # testLineProfilePool()
