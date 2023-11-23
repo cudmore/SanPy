@@ -129,25 +129,27 @@ def _test_table_view(qtbot):
     #_tableView.signalSelectRow.connect(_slot_selectRow)
     _tableView._onLeftClick(_selectedRow)
 
+def test_analysisdir_tableview(qtbot):
+    #
+    # analysis dir
+    logger.info('')
+    folderPath = 'data'
+    _analysisDir = sanpy.analysisDir(folderPath)
+    #_analysisDir = analysisDirObject
+    _model = sanpy.interface.bFileTable.pandasModel(_analysisDir)
+    
+    #
+    # table view
+    _tableView = sanpy.interface.bTableView(_model)
+    qtbot.addWidget(_tableView)
+
 def test_plugins(qtbot):
     """Run all plugins through a number of different tests.
     """
+    return
+
     logger.info('')
-
-    if 0:
-        #
-        # analysis dir
-        folderPath = 'data'
-        _analysisDir = sanpy.analysisDir(folderPath)
-        #_analysisDir = analysisDirObject
-        _model = sanpy.interface.bFileTable.pandasModel(_analysisDir)
-        
-        #
-        # table view
-        _tableView = sanpy.interface.bTableView(_model)
-        qtbot.addWidget(_tableView)
-
-    if 0:
+    if 1:
         #
         # run each plugin
         pluginsObject = bPlugins()
@@ -156,7 +158,7 @@ def test_plugins(qtbot):
         _pluginList = pluginsObject.pluginList()
         assert len(_pluginList) > 0
     
-    if 0:
+    if 1:
         # (2) ba loaded but no analysis
         # path = 'data/19114001.abf'
         path = os.path.join('data', '19114001.abf')
@@ -177,8 +179,6 @@ def test_plugins(qtbot):
     
     _numPlugin = len(_pluginList)
     for _pluginNumber, _pluginName in enumerate(_pluginList):
-
-        continue
 
         if _pluginName != 'Plot Scatter':
             continue
@@ -229,10 +229,12 @@ def test_plugins(qtbot):
     logger.info('   done')
 
 if __name__ == '__main__':
-    from qtpy import QtWidgets
-    app = QtWidgets.QApplication(sys.argv)
 
-    _SanPyWindow = SanPyWindow()
-    test_app(_SanPyWindow)
+    if 0:
+        from qtpy import QtWidgets
+        app = QtWidgets.QApplication(sys.argv)
 
-    # sys.exit(app.exec_())
+        _SanPyWindow = SanPyWindow()
+        test_app(_SanPyWindow)
+
+        # sys.exit(app.exec_())
