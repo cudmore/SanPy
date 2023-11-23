@@ -14,8 +14,8 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        # platform: [ubuntu-latest, windows-latest, macos-latest]
-        platform: [windows-latest, macos-latest]
+        platform: [ubuntu-latest, windows-latest, macos-latest]
+        # platform: [windows-latest, macos-latest]
         python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     # env:
@@ -33,8 +33,8 @@ jobs:
         # cache-dependency-path: setup.py
 
     # these libraries enable testing on Qt on linux
-    # - name: Install Linux dependencies
-    #   uses: tlambert03/setup-qt-libs@v1
+    - name: Install Linux dependencies
+      uses: tlambert03/setup-qt-libs@v1
 
     # workaround for testing Qt on linux
     # - name: Workaround for testing Qt on linux
