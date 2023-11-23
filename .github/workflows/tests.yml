@@ -17,25 +17,26 @@ jobs:
         platform: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
-    - uses: actions/checkout@v3
+    - name: get sanpyrepo
+      uses: actions/checkout@v3
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-        cache: pip
-        cache-dependency-path: setup.py
+        # cache: pip
+        # cache-dependency-path: setup.py
 
     # these libraries enable testing on Qt on linux
     - name: Install Linux dependencies
       uses: tlambert03/setup-qt-libs@v1
 
     # workaround for testing Qt on linux
-    - name: Workaround for testing Qt on linux
-      if: runner.os == 'Linux'
-      run: |
-        sudo mkdir /usr/bin/platforms
-        sudo ln -s /our/local/libqxcb.so /usr/bin/platforms/libqxcb.so
+    # - name: Workaround for testing Qt on linux
+    #   if: runner.os == 'Linux'
+    #   run: |
+    #     sudo mkdir /usr/bin/platforms
+    #     sudo ln -s /our/local/libqxcb.so /usr/bin/platforms/libqxcb.so
 
     - name: Install dependencies
       run: |
@@ -49,8 +50,8 @@ jobs:
     - name: Test and generate coverage report
       run: |
         # ignore /interface tests, they are running out of memory on github?
-        pytest --cov=./tests --cov-report=xml --ignore=./tests/interface ./tests
-        pytest -s --cov=./tests --cov-report=xml ./tests/interface
+        # pytest --cov=./tests --cov-report=xml --ignore=./tests/interface ./tests
+        pytest -s --cov=./tests --cov-report=xml ./tests
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
