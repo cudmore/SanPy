@@ -153,9 +153,6 @@ def test_analysisdir_tableview(qtbot):
 def test_plugins(qtbot):
     """Run all plugins through a number of different tests.
     """
-
-    return
-
     logger.info('')
     if 1:
         #
