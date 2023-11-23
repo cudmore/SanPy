@@ -175,8 +175,8 @@ def test_plugins(qtbot):
     _numPlugin = len(_pluginList)
     for _pluginNumber, _pluginName in enumerate(_pluginList):
 
-        # if _pluginName != 'Plot Scatter':
-        #     continue
+        if _pluginName != 'Plot Scatter':
+            continue
         
         logger.info(f'2.0xxx) {_pluginNumber}/{_numPlugin}====== running plugin: {_pluginName}')
         logger.info(f'  baNoAnalysis:{baNoAnalysis}')
@@ -218,7 +218,7 @@ def test_plugins(qtbot):
         # TODO: test set sweep
 
         # try to close and garbage collect
-        _newPlugin.close()
+        # _newPlugin.close()
         # _newPlugin = None
 
     logger.info('   done')
