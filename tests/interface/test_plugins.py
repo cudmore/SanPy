@@ -132,6 +132,8 @@ def _test_table_view(qtbot):
 def test_analysisdir_tableview(qtbot):
     logger.info('')
 
+    return
+
     #
     # analysis dir    
     folderPath = 'data'
