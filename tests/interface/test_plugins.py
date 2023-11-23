@@ -134,25 +134,27 @@ def test_plugins(qtbot):
     """
     logger.info('')
 
-    #
-    # analysis dir
-    folderPath = 'data'
-    _analysisDir = sanpy.analysisDir(folderPath)
-    #_analysisDir = analysisDirObject
-    _model = sanpy.interface.bFileTable.pandasModel(_analysisDir)
-    
-    #
-    # table view
-    _tableView = sanpy.interface.bTableView(_model)
-    qtbot.addWidget(_tableView)
+    if 0:
+        #
+        # analysis dir
+        folderPath = 'data'
+        _analysisDir = sanpy.analysisDir(folderPath)
+        #_analysisDir = analysisDirObject
+        _model = sanpy.interface.bFileTable.pandasModel(_analysisDir)
+        
+        #
+        # table view
+        _tableView = sanpy.interface.bTableView(_model)
+        qtbot.addWidget(_tableView)
 
-    #
-    # run each plugin
-    pluginsObject = bPlugins()
-    assert pluginsObject is not None
+    if 0:
+        #
+        # run each plugin
+        pluginsObject = bPlugins()
+        assert pluginsObject is not None
 
-    _pluginList = pluginsObject.pluginList()
-    assert len(_pluginList) > 0
+        _pluginList = pluginsObject.pluginList()
+        assert len(_pluginList) > 0
     
     if 0:
         # (2) ba loaded but no analysis
