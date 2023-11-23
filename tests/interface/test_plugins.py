@@ -43,6 +43,8 @@ logger = get_logger(__name__)
 _selectedRow = 1
 
 def _test_app(qtbot):
+    return
+
     sanpyAppObject = SanPyWindow()
     
     logger.info('')
@@ -97,6 +99,9 @@ def _test_app(qtbot):
 def _test_plugin_ba_none(qtbot):
     """Test all plugins with no file selection (ba is None)
     """
+    
+    return
+
     pluginsObject = bPlugins()
 
     _pluginList = pluginsObject.pluginList()
@@ -115,6 +120,8 @@ def _test_plugin_ba_none(qtbot):
         # _newPlugin = None
 
 def _test_table_view(qtbot):
+    return
+
     logger.info('')
     # analysis dir
     folderPath = 'data'
