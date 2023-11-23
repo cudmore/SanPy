@@ -130,12 +130,12 @@ def _test_table_view(qtbot):
     _tableView._onLeftClick(_selectedRow)
 
 def test_analysisdir_tableview(qtbot):
-    #
-    # analysis dir
     logger.info('')
+
+    #
+    # analysis dir    
     folderPath = 'data'
     _analysisDir = sanpy.analysisDir(folderPath)
-    #_analysisDir = analysisDirObject
     _model = sanpy.interface.bFileTable.pandasModel(_analysisDir)
     
     #
@@ -146,6 +146,7 @@ def test_analysisdir_tableview(qtbot):
 def test_plugins(qtbot):
     """Run all plugins through a number of different tests.
     """
+
     return
 
     logger.info('')
