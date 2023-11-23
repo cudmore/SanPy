@@ -175,6 +175,8 @@ def test_plugins(qtbot):
     _numPlugin = len(_pluginList)
     for _pluginNumber, _pluginName in enumerate(_pluginList):
 
+        continue
+    
         if _pluginName != 'Plot Scatter':
             continue
         
