@@ -40,9 +40,8 @@ logger = get_logger(__name__)
 #     _analysisDir = sanpy.analysisDir(folderPath)
 #     return _analysisDir
 
-_selectedRow = 1
-
 def _test_app(qtbot):
+
     return
 
     sanpyAppObject = SanPyWindow()
@@ -92,50 +91,6 @@ def _test_app(qtbot):
     # _scatterPlugin.close()
     # _scatterPlugin = None
 
-# def _slot_selectRow(rowIdx : int, rowDict : dict, selectAgain : bool):
-#     logger.info(f'{rowIdx} {rowDict}')
-#     assert rowIdx == _selectedRow
-
-def _test_plugin_ba_none(qtbot):
-    """Test all plugins with no file selection (ba is None)
-    """
-    
-    return
-
-    pluginsObject = bPlugins()
-
-    _pluginList = pluginsObject.pluginList()
-    logger.info(_pluginList)
-    baNone = None
-    for _pluginName in _pluginList:
-        # first run the plugin with ba=None
-        logger.info(f'1.0xxx) ====== running plugin: {_pluginName} with baNone')
-        _newPlugin = pluginsObject.runPlugin(_pluginName, baNone, show=False)
-        assert _newPlugin is not None
-        assert _newPlugin.getInitError() == False
-        # removed sept 9
-        qtbot.addWidget(_newPlugin)
-        # try to close and garbage collect
-        _newPlugin.close()
-        # _newPlugin = None
-
-def _test_table_view(qtbot):
-    return
-
-    logger.info('')
-    # analysis dir
-    folderPath = 'data'
-    _analysisDir = sanpy.analysisDir(folderPath)
-    #_analysisDir = analysisDirObject
-    _model = sanpy.interface.bFileTable.pandasModel(_analysisDir)
-    
-    # table view
-    _tableView = sanpy.interface.bTableView(_model)
-    qtbot.addWidget(_tableView)
-
-    #_tableView.signalSelectRow.connect(_slot_selectRow)
-    _tableView._onLeftClick(_selectedRow)
-
 def test_analysisdir_tableview(qtbot):
     logger.info('')
 
@@ -149,6 +104,9 @@ def test_analysisdir_tableview(qtbot):
     # table view
     _tableView = sanpy.interface.bTableView(_model)
     qtbot.addWidget(_tableView)
+
+    _selectedRow = 1
+    _tableView._onLeftClick(_selectedRow)
 
 def test_plugins(qtbot):
     """Run all plugins through a number of different tests.
@@ -185,8 +143,8 @@ def test_plugins(qtbot):
     _numPlugin = len(_pluginList)
     for _pluginNumber, _pluginName in enumerate(_pluginList):
 
-        if _pluginName != 'Plot Scatter':
-            continue
+        # if _pluginName != 'Plot Scatter':
+        #     continue
         
         logger.info(f'2.0xxx) {_pluginNumber}/{_numPlugin}====== running plugin: {_pluginName}')
         logger.info(f'  baNoAnalysis:{baNoAnalysis}')
