@@ -154,21 +154,22 @@ def test_plugins(qtbot):
     _pluginList = pluginsObject.pluginList()
     assert len(_pluginList) > 0
     
-    # (2) ba loaded but no analysis
-    # path = 'data/19114001.abf'
-    path = os.path.join('data', '19114001.abf')
-    baNoAnalysis = sanpy.bAnalysis(path)
+    if 0:
+        # (2) ba loaded but no analysis
+        # path = 'data/19114001.abf'
+        path = os.path.join('data', '19114001.abf')
+        baNoAnalysis = sanpy.bAnalysis(path)
 
-    # (3) ba loaded and with analysis
-    baWithAnalysis = sanpy.bAnalysis(path)
-    bd = sanpy.bDetection()  # gets default
-    dDict = bd.getDetectionDict('SA Node')
-    baWithAnalysis.spikeDetect(dDict)
+        # (3) ba loaded and with analysis
+        baWithAnalysis = sanpy.bAnalysis(path)
+        bd = sanpy.bDetection()  # gets default
+        dDict = bd.getDetectionDict('SA Node')
+        baWithAnalysis.spikeDetect(dDict)
 
-    pathSweeps = os.path.join('data', '2021_07_20_0010.abf')
-    baSweeps = sanpy.bAnalysis(pathSweeps)
-    dDict = bd.getDetectionDict('Fast Neuron')
-    baSweeps.spikeDetect(dDict)
+        pathSweeps = os.path.join('data', '2021_07_20_0010.abf')
+        baSweeps = sanpy.bAnalysis(pathSweeps)
+        dDict = bd.getDetectionDict('Fast Neuron')
+        baSweeps.spikeDetect(dDict)
 
     # github workflow is running out of memory
     
@@ -176,7 +177,7 @@ def test_plugins(qtbot):
     for _pluginNumber, _pluginName in enumerate(_pluginList):
 
         continue
-    
+
         if _pluginName != 'Plot Scatter':
             continue
         

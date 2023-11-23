@@ -1,6 +1,7 @@
 # Author: Robert H Cudmore
 # Date: 20190719
 
+# see: https://stackoverflow.com/questions/63871662/python-multiprocessing-freeze-support-error
 from multiprocessing import freeze_support
 freeze_support()
 
