@@ -283,7 +283,8 @@ class plotScatter(sanpyPlugin):
 
         # this is dangerous, collides with self.mplWindow()
         self.fig = mpl.figure.Figure()
-        self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
+        # self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
+        self.static_canvas = backend_qt5agg.FigureCanvasQTAgg(self.fig)
         self.static_canvas.setFocusPolicy(
             QtCore.Qt.ClickFocus
         )  # this is really tricky and annoying
@@ -597,6 +598,9 @@ class plotScatter(sanpyPlugin):
 
         #
         # TODO: use ba.getStat() option for this.)
+        # logger.info(f'converting to np xData:{xData}')
+        # logger.info(f'converting to np yData:{yData}')
+        
         xData = np.array(xData)
         yData = np.array(yData)
 
@@ -639,9 +643,13 @@ class plotScatter(sanpyPlugin):
 
         # data
         data = np.stack([xData, yData], axis=1)
+        
+        # logger.info('   setting self.lines.set_offsets data:')
+        
         self.lines.set_offsets(data)  # (N, 2)
         
         _sizes = [self._markerSize] * len(xData)
+        # logger.info('   setting self.lines.set_sizes _sizes:')
         self.lines.set_sizes(_sizes)
 
         # AttributeError: 'Line2D' object has no attribute 'set_sizes'
@@ -657,11 +665,13 @@ class plotScatter(sanpyPlugin):
         faceColors = _tmpDict['faceColors']
         pathList = _tmpDict['pathList']
 
+        # logger.info('   setting lots of xxx')
         self.lines.set_array(colorMapArray)  # set_array is for a color map
         self.lines.set_cmap(cMap)  # mpl.pyplot.cm.coolwarm
         self.lines.set_color(faceColors)
         self.lines.set_color(faceColors)  # sets the outline
         self.lines.set_paths(pathList)
+        # logger.info('      done setting lots of xxx')
 
         #
         # color
@@ -790,14 +800,16 @@ class plotScatter(sanpyPlugin):
         self.scatter_hist(xData, yData, self.axHistX, self.axHistY)
 
         # redraw
+        logger.info('calliing self.static_canvas.draw()')
         self.static_canvas.draw()
+        logger.info('   done')
+        
         # was this
         # self.repaint() # update the widget
 
     # def scatter_hist(self, x, y, ax, ax_histx, ax_histy):
     def scatter_hist(self, x, y, ax_histx, ax_histy):
-        """
-        plot a scatter with x/y histograms in margin
+        """Plot a scatter with x/y histograms in margin.
 
         Args:
             x (date):
@@ -806,9 +818,18 @@ class plotScatter(sanpyPlugin):
             ax_histy (axes) Histogram Axes
         """
 
+        logger.info(f'x:{x}')
+        logger.info(f'y:{y}')
+        
+        if len(x)==0 or len(y)==0:
+            ax_histx.clear()
+            ax_histy.clear()
+            return
+        
         xBins = "auto"
         yBins = "auto"
 
+        # logger.info('   making x bins')
         xTmp = np.array(x)  # y[~np.isnan(y)]
         xTmp = xTmp[~np.isnan(xTmp)]
         xTmpBins = np.histogram_bin_edges(xTmp, "auto")
@@ -817,6 +838,7 @@ class plotScatter(sanpyPlugin):
             xNumBins *= 2
         xBins = xNumBins
 
+        # logger.info('   making y bins')
         yTmp = np.array(y)  # y[~np.isnan(y)]
         yTmp = yTmp[~np.isnan(yTmp)]
         yTmpBins = np.histogram_bin_edges(yTmp, "auto")
@@ -828,8 +850,12 @@ class plotScatter(sanpyPlugin):
         # x
         if ax_histx is not None:
             ax_histx.clear()
+            # logger.info('   calling x hist()')
             nHistX, binsHistX, patchesHistX = ax_histx.hist(
-                x, bins=xBins, facecolor="silver", edgecolor="gray"
+                x,
+                bins=xBins, 
+                facecolor="silver",
+                edgecolor="gray"
             )
             ax_histx.tick_params(axis="x", labelbottom=False)  # no labels
             # ax_histx.spines['right'].set_visible(False)
@@ -840,6 +866,7 @@ class plotScatter(sanpyPlugin):
         # y
         if ax_histy is not None:
             ax_histy.clear()
+            # logger.info('   calling y hist()')
             nHistY, binsHistY, patchesHistY = ax_histy.hist(
                 y,
                 bins=yBins,
@@ -852,6 +879,8 @@ class plotScatter(sanpyPlugin):
             # ax_histy.xaxis.set_ticks_position('bottom')
             # print('  binsHistY:', len(binsHistY))
 
+        # logger.info('   done')
+
     def selectSpikeList(self):
         """Use getSelectedSpikes() to select spikes.
         
@@ -862,7 +891,7 @@ class plotScatter(sanpyPlugin):
         """
         spikeList = self.getSelectedSpikes()
 
-        logger.info(f"{self._myClassName()} spikeList:{len(spikeList)} {self}")
+        logger.info(f'{self._myClassName()} spikeList:{spikeList}')
 
         if self.xStatName is None or self.yStatName is None:
             return
@@ -885,12 +914,12 @@ class plotScatter(sanpyPlugin):
 
             # xData = [self.xData[spikeList]]
             # yData = [self.yData[spikeList]]
-            xData = [self.xData[_plotSpikeIndexList]]
-            yData = [self.yData[_plotSpikeIndexList]]
+            # xData = [self.xData[_plotSpikeIndexList]]
+            # yData = [self.yData[_plotSpikeIndexList]]
 
-        else:
-            xData = []
-            yData = []
+        # else:
+        #     xData = []
+        #     yData = []
 
         # logger.info(f'!!! SET DATA {xData} {yData}')
         #self.spikeListSel.set_data(xData, yData)

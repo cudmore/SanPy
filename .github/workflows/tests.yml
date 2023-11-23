@@ -49,8 +49,8 @@ jobs:
     - name: Test and generate coverage report
       run: |
         # ignore /interface tests, they are running out of memory on github?
-        pytest --cov=./tests --cov-report=xml --ignore=./tests/interface ./tests
-        #pytest --cov=./tests --cov-report=xml ./tests
+        #pytest --cov=./tests --cov-report=xml --ignore=./tests/interface ./tests
+        pytest --cov=./tests --cov-report=xml ./tests
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3

@@ -1,4 +1,4 @@
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtWidgets
 
 from sanpy.sanpyLogger import get_logger
 
@@ -7,12 +7,8 @@ logger = get_logger(__name__)
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
-
 class sanpyLog(sanpyPlugin):
-    """
-    Plugin to display sanpy.log
-
-    Good example of PyQt plugin
+    """Plugin to display sanpy.log
     """
 
     myHumanName = "SanPy Log"
@@ -33,6 +29,7 @@ class sanpyLog(sanpyPlugin):
 
         # load sanpy.log
         logFilePath = sanpy.sanpyLogger.getLoggerFile()
+        logger.info(f'opening log file {logFilePath}')
         with open(logFilePath, "r") as f:
             lines = f.readlines()
         text = ""
@@ -42,7 +39,7 @@ class sanpyLog(sanpyPlugin):
         # add text to widget
         widget.document().setPlainText(text)
 
-        logger.info(f"logFilePath: {logFilePath}")
+        # logger.info(f"logFilePath: {logFilePath}")
 
         self._mySetWindowTitle()
 

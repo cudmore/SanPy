@@ -1,7 +1,7 @@
 #
 # build an x86 app
 
-CONDA_SUBDIR=osx-64 conda create -y -n sanpy-pyinstaller-i386 python=3.9
+CONDA_SUBDIR=osx-64 conda create -y -n sanpy-pyinstaller-i386 python=3.11
 #conda create -y -n sanpy-pyinstaller-i386 python=3.9
 
 # to get rid of
@@ -21,8 +21,8 @@ pip install  '../../.[gui]'
 
 # 20231122, switched back to most recent pyinstaller
 # pip install -e ~/Sites/pyinstaller/.
-#pip install --upgrade pyinstaller
-pip install ../../pyinstaller_20231122/pyinstaller/.
+pip install --upgrade pyinstaller
+#pip install ../../pyinstaller_20231122/pyinstaller/.
 
 python macos_build.py
 

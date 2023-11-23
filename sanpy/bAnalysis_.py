@@ -1778,7 +1778,7 @@ class bAnalysis:
                 if avgWindow_pnts < 1:
                     # error
                     errorType = "mdp error"
-                    errorStr = f"avgWindow_pnts"
+                    errorStr = "avgWindow_pnts"
                     eDict = self._getErrorDict(
                         i, spikeTimes[i], errorType, errorStr
                     )  # spikeTime is in pnts
@@ -1792,7 +1792,7 @@ class bAnalysis:
                     avgRange = filteredVm[
                         preMinPnt - avgWindow_pnts : preMinPnt + avgWindow_pnts
                     ]
-                    print('  avgRange is:' , avgRange)
+                    # print('  avgRange is:' , avgRange)
                     preMinVal = np.average(avgRange)
 
                     # search backward from spike to find when vm reaches preMinVal (avg)
