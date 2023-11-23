@@ -6,17 +6,21 @@ on:
   push:
     branches: [master]
 
-permissions:
-  contents: read
+# permissions:
+#   contents: read
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
         # platform: [ubuntu-latest, windows-latest, macos-latest]
         platform: [windows-latest, macos-latest]
         python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    # env:
+    #     DISPLAY: ':99.0'
+
     steps:
     - name: get sanpyrepo
       uses: actions/checkout@v3

@@ -245,6 +245,6 @@ if __name__ == '__main__':
         app = QtWidgets.QApplication(sys.argv)
 
         _SanPyWindow = SanPyWindow()
-        test_app(_SanPyWindow)
+        # test_app(_SanPyWindow)
 
         # sys.exit(app.exec_())
