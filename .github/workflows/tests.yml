@@ -16,6 +16,7 @@ jobs:
       matrix:
         # platform: [ubuntu-latest, windows-latest, macos-latest]
         platform: [windows-latest, macos-latest]
+        # 20231125, python 3.8 is now borken. What the heck!!!!!!!!!!!!!!!
         # python-version: ["3.8", "3.9", "3.10", "3.11"]
         python-version: ["3.9", "3.10", "3.11"]
 

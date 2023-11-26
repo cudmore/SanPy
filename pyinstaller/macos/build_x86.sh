@@ -1,7 +1,7 @@
 #
 # build an x86 app
 
-CONDA_SUBDIR=osx-64 conda create -y -n sanpy-pyinstaller-i386 python=3.9
+CONDA_SUBDIR=osx-64 conda create -y -n sanpy-pyinstaller-i386 python=3.11
 #conda create -y -n sanpy-pyinstaller-i386 python=3.9
 
 # to get rid of
