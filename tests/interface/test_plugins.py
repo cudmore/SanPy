@@ -41,9 +41,8 @@ logger = get_logger(__name__)
 #     return _analysisDir
 
 def _test_app(qtbot):
-
-    return
-
+    """Triggers segmentation fault.
+    """
     sanpyAppObject = SanPyWindow()
     
     logger.info('')
@@ -112,10 +111,13 @@ def test_plugins(qtbot):
     """Run all plugins through a number of different tests.
     """
     logger.info('')
+
+    sanpyAppObject = SanPyWindow()
+
     if 1:
         #
         # run each plugin
-        pluginsObject = bPlugins()
+        pluginsObject = bPlugins(sanpyAppObject)
         assert pluginsObject is not None
 
         _pluginList = pluginsObject.pluginList()
@@ -137,8 +139,6 @@ def test_plugins(qtbot):
         baSweeps = sanpy.bAnalysis(pathSweeps)
         dDict = bd.getDetectionDict('Fast Neuron')
         baSweeps.spikeDetect(dDict)
-
-    # github workflow is running out of memory
     
     _numPlugin = len(_pluginList)
     for _pluginNumber, _pluginName in enumerate(_pluginList):

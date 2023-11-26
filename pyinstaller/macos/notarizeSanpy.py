@@ -196,7 +196,7 @@ def makeZip(appPath : str, shortPlatformStr : str):
     """
     zipPath, _ = os.path.splitext(appPath)
     zipPath += '-' + shortPlatformStr + '.zip'
-    logger.info(f'ditto is compressing {appPath} to {zipPath} ...')
+    logger.info(f'=== ditto is compressing {appPath} to {zipPath} ...')
 
     # ditto -c -k --keepParent "dist/SanPy-Monterey-arm.app" dist/SanPy-Monterey-arm.zip
     subprocess.run(

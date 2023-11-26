@@ -641,13 +641,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         if self.ba is None:
             return
 
-        logger.info('')
+        # logger.info('')
 
         # 20220115
         # self.vmPlot.autoRange(items=[self.vmLinesFiltered])
         # self.vmPlot.enableAutoRange()
         
-        logger.info('!!!!! setting vmPlot auto range !!!')
+        logger.info('!!!!! setting vmPlot_ auto range !!!!!')
         self.vmPlot.autoRange(items=[self.vmPlot_])  # 20221003
     
         # these are linked to vmPlot
@@ -1102,8 +1102,8 @@ class bDetectionWidget(QtWidgets.QWidget):
             doZoom:
             doEmit: If True then emit signalSelectSpike signal
         """
-        logger.info(f"spikeNumber:{spikeNumber} doZoom:{doZoom} doEmit:{doEmit}")
-        logger.warning(f"  converting to spike list selection")
+        # logger.info(f"spikeNumber:{spikeNumber} doZoom:{doZoom} doEmit:{doEmit}")
+        # logger.warning(f"  converting to spike list selection")
 
         # # march 11, 2023
 
@@ -1130,8 +1130,8 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         spikeList = [spikeNumber]
 
-        x = None
-        y = None
+        # x = None
+        # y = None
 
         # potentially move on to a new sweep (while implementing Thian data)
         if spikeNumber is not None:
@@ -1178,7 +1178,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "thresholdSec", sweepNumber=self.sweepNumber
             )
             if sweepSpikeNumber < len(thresholdSeconds):
-                logger.info("    !!!! REMOVE HARD CODED ZOOM")
+                # logger.info("    !!!! REMOVE HARD CODED ZOOM")
                 # thresholdSecond = thresholdSeconds[spikeNumber]
                 thresholdSecond = thresholdSeconds[sweepSpikeNumber]
                 thresholdSecond = round(thresholdSecond, 3)
@@ -1206,7 +1206,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 stopSec = thresholdSecond + postSpikeClipWidth_sec
                 #stopSec = round(stopSec, 2)
                 # print('  spikeNumber:', spikeNumber, 'thresholdSecond:', thresholdSecond, 'startSec:', startSec, 'stopSec:', stopSec)
-                start = self.setAxis(startSec, stopSec)
+                self.setAxis(startSec, stopSec)
 
         if doEmit:
             eDict = {
@@ -2047,7 +2047,11 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.detectToolbarWidget.slot_selectSweep(sweep)
 
     def slot_selectSpike(self, sDict):
-        logger.info(f"detection widget {sDict}")
+        _str = '\n'
+        for k,v in sDict.items():
+            _str += f'          {k}:{v}\n'
+        _str = _str[:-1]
+        logger.info(_str)
 
         spikeNumber = sDict["spikeNumber"]
         doZoom = sDict["doZoom"]

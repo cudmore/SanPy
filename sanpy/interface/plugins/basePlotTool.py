@@ -53,7 +53,7 @@ class basePlotTool(sanpyPlugin):
         # analysisName = 'analysisname'
         # analysisName = "Unique Name"
         # statListDict = statList  # maps human readable to comments
-        statListDict = sanpy.bAnalysisUtil.getStatList()  # maps human readable to comments
+        statListDict = self.getStatList()  # maps human readable to comments
         
         metaDataKeys = [key for key in sanpy.MetaData.getMetaDataDict().keys()]
 

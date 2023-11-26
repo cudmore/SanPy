@@ -24,10 +24,24 @@ pip install --upgrade pip
 # 20230805, failures in build, was workin in May 2023
 # rolled back pytables from 3.8.0 to 3.7.0 and now builds!
 
-conda install -y numpy==1.23.4 \
-                  pandas==1.5.3 \
+# conda install -y numpy==1.23.4 \
+#                   pandas==1.5.3 \
+#                   scipy \
+#                   scikit-image==0.19.3 \
+#                   tifffile \
+#                   h5py \
+#                   requests \
+#                   matplotlib \
+#                   seaborn \
+#                   pyqt \
+#                   qtpy \
+#                   pyqtgraph \
+#                   pytables==3.7.0
+
+conda install -y numpy \
+                  pandas \
                   scipy \
-                  scikit-image==0.19.3 \
+                  scikit-imag \
                   tifffile \
                   h5py \
                   requests \
@@ -36,7 +50,7 @@ conda install -y numpy==1.23.4 \
                   pyqt \
                   qtpy \
                   pyqtgraph \
-                  pytables==3.7.0
+                  pytables
 
 pip install pyabf
 pip install pyqtdarktheme
@@ -45,7 +59,8 @@ pip install pyqtdarktheme
 pip install -e '../../.'
 
 # install modified version of pyinstaller (removes .DS_Store)
-pip install -e ~/Sites/pyinstaller/.
+# pip install -e ~/Sites/pyinstaller/.
+pip install pyinstaller
 
 # build the app with pyinstaller
 python macos_build.py

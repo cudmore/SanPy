@@ -9,6 +9,7 @@ from collections import OrderedDict
 from typing import List
 
 import sanpy
+from sanpy import DO_KYMOGRAPH_ANALYSIS
 
 from sanpy.sanpyLogger import get_logger
 
@@ -37,305 +38,6 @@ statStr = getStatFromHuman('Spike Time (s)')
 def _defaultStatDict():
     return
 """
-
-statList = OrderedDict()
-statList["Spike Time (s)"] = {
-    "name": "thresholdSec",
-    "units": "s",
-    "yStat": "thresholdVal",
-    "yStatUnits": "mV",
-    "xStat": "thresholdSec",
-    "xStatUnits": "s",
-}
-statList["Spike Number"] = {
-    "name": "spikeNumber",
-    "units": "",
-    "yStat": "",
-    "yStatUnits": "",
-    "xStat": "spikeNumber",
-    "xStatUnits": "",
-}
-statList["Sweep Spike Number"] = {
-    "name": "sweepSpikeNumber",
-    "units": "",
-    "yStat": "",
-    "yStatUnits": "",
-    "xStat": "sweepSpikeNumber",
-    "xStatUnits": "",
-}
-statList["Sweep Number"] = {
-    "name": "sweep",
-    "units": "",
-    "yStat": "sweep",
-    "yStatUnits": "",
-    "xStat": "",
-    "xStatUnits": "",
-}
-# removed 20230320
-# statList['DAC Command'] = {
-# 'name': 'dacCommand',
-# 'units': '',
-# 'yStat': 'dacCommand',
-# 'yStatUnits': '',
-# 'xStat': '',
-# 'xStatUnits': ''
-# }
-
-# added 20230320
-# stimulus epoch number a spike is within
-statList["Epoch"] = {
-    "name": "epoch",
-    "units": "",
-    "yStat": "epoch",
-    "yStatUnits": "",
-    "xStat": "",
-    "xStatUnits": "",
-}
-# added 20230320
-# the epoch level (for I-Clamp, corresponds to DAC command)
-statList["Epoch DAC"] = {
-    "name": "epochLevel",
-    "units": "",
-    "yStat": "epochLevel",
-    "yStatUnits": "",
-    "xStat": "",
-    "xStatUnits": "",
-}
-# added 20230320
-# the spike number within the epoch
-# not implemented
-# 20230914 BUG in bAnalysisResults we define 'epoch', not 'epochSpikeNumber'
-# WE need to sync these two interface !!!!
-statList["Epoch Spike Number"] = {
-    # "name": "epochSpikeNumber",
-    "name": "epoch",
-    "units": "",
-    # "yStat": "epochSpikeNumber",
-    "yStat": "epoch",
-    "yStatUnits": "",
-    "xStat": "",
-    "xStatUnits": "",
-}
-
-statList["Take Off Potential (mV)"] = {
-    "name": "thresholdVal",
-    "units": "mV",
-    "yStat": "thresholdVal",
-    "yStatUnits": "mV",
-    "xStat": "thresholdPnt",
-    "xStatUnits": "Points",
-}
-statList["Spike Frequency (Hz)"] = {
-    "name": "spikeFreq_hz",
-    "units": "Hz",
-    "yStat": "spikeFreq_hz",
-    "yStatUnits": "Hz",
-    "xStat": "thresholdPnt",
-    "xStatUnits": "Points",
-}
-statList["Inter-Spike-Interval (ms)"] = {
-    "name": "isi_ms",
-    "units": "ms",
-    "yStat": "isi_ms",
-    "yStatUnits": "ms",
-    "xStat": "thresholdPnt",
-    "xStatUnits": "Points",
-}
-statList["Cycle Length (ms)"] = {
-    "name": "cycleLength_ms",
-    "units": "ms",
-    "yStat": "cycleLength_ms",
-    "yStatUnits": "ms",
-    "xStat": "thresholdPnt",
-    "xStatUnits": "Points",
-}
-statList["AP Peak (mV)"] = {
-    "name": "peakVal",
-    "units": "mV",
-    "yStat": "peakVal",
-    "yStatUnits": "mV",
-    "xStat": "peakPnt",
-    "xStatUnits": "Points",
-}
-# spikeDict['peakVal'] - spikeDict['thresholdVal']
-statList["AP Height (mV)"] = {
-    "name": "peakHeight",
-    "units": "mV",
-    "yStat": "peakHeight",
-    "yStatUnits": "mV",
-    "xStat": "peakPnt",
-    "xStatUnits": "Points",
-}
-# new 20220122
-statList["Time To Peak (ms)"] = {
-    "name": "timeToPeak_ms",
-    "units": "ms",
-    "yStat": "peakVal",
-    "yStatUnits": "mV",
-    "xStat": "peakPnt",
-    "xStatUnits": "Points",
-}
-statList["Pre AP Min (mV)"] = {
-    "name": "preMinVal",
-    "units": "mV",
-    "yStat": "preMinVal",
-    "yStatUnits": "mV",
-    "xStat": "preMinPnt",
-    "xStatUnits": "Points",
-}
-statList["Post AP Min (mV)"] = {
-    "name": "postMinVal",
-    "units": "mV",
-    "yStat": "postMinVal",
-    "yStatUnits": "mV",
-    "xStat": "postMinPnt",
-    "xStatUnits": "Points",
-}
-# todo: fix this
-statList["Early Diastolic Depol Rate (dV/s)"] = {
-    "name": "earlyDiastolicDurationRate",
-    "units": "dV/s",
-    "yStat": "earlyDiastolicDurationRate",
-    "yStatUnits": "dV/s",
-    "xStat": "",
-    "xStatUnits": "",
-}
-# todo: fix this
-statList["Early Diastolic Duration (ms)"] = {
-    "name": "earlyDiastolicDuration_ms",
-    "units": "ms",
-    "yStat": "earlyDiastolicDuration_ms",
-    "yStatUnits": "dV/s",
-    "xStat": "thresholdPnt",
-    "xStatUnits": "Points",
-}
-
-statList["Diastolic Duration (ms)"] = {
-    "name": "diastolicDuration_ms",
-    "units": "ms",
-    "yStat": "diastolicDuration_ms",
-    "yStatUnits": "dV/s",
-    "xStat": "thresholdPnt",
-    "xStatUnits": "Points",
-}
-statList["Max AP Upstroke (mV)"] = {
-    "name": "preSpike_dvdt_max_val",
-    "units": "mV",
-    "yStat": "preSpike_dvdt_max_val",
-    "yStatUnits": "dV/s",
-    "xStat": "preSpike_dvdt_max_pnt",
-    "xStatUnits": "Points",
-}
-statList["Max AP Upstroke (dV/dt)"] = {
-    "name": "preSpike_dvdt_max_val2",
-    "units": "dV/dt",
-    "yStat": "preSpike_dvdt_max_val2",
-    "yStatUnits": "dV/dt",
-    "xStat": "preSpike_dvdt_max_pnt",
-    "xStatUnits": "Points",
-}
-statList["Max AP Repolarization (mV)"] = {
-    "name": "postSpike_dvdt_min_val",
-    "units": "mV",
-    "yStat": "postSpike_dvdt_min_val",
-    "yStatUnits": "mV",
-    "xStat": "postSpike_dvdt_min_pnt",
-    "xStatUnits": "Points",
-}
-# todo: fix this
-statList["AP Duration (ms)"] = {
-    "name": "apDuration_ms",
-    "units": "ms",
-    "yStat": "apDuration_ms",
-    "yStatUnits": "ms",
-    "xStat": "thresholdPnt",
-    "xStatUnits": "Points",
-}
-
-# new 20210211
-statList["Half Width 10 (ms)"] = {
-    "name": "widths_10",
-    "yStat": "widths_10",
-    "yStatUnits": "ms",
-    "xStat": "",
-    "xStatUnits": "",
-}
-statList["Half Width 20 (ms)"] = {
-    "name": "widths_20",
-    "yStat": "widths_20",
-    "yStatUnits": "ms",
-    "xStat": "",
-    "xStatUnits": "",
-}
-statList["Half Width 50 (ms)"] = {
-    "name": "widths_50",
-    "yStat": "widths_50",
-    "yStatUnits": "ms",
-    "xStat": "",
-    "xStatUnits": "",
-}
-statList["Half Width 80 (ms)"] = {
-    "name": "widths_80",
-    "yStat": "widths_80",
-    "yStatUnits": "ms",
-    "xStat": "",
-    "xStatUnits": "",
-}
-statList["Half Width 90 (ms)"] = {
-    "name": "widths_90",
-    "yStat": "widths_90",
-    "yStatUnits": "ms",
-    "xStat": "",
-    "xStatUnits": "",
-}
-# sa node specific
-"""
-statList['Region'] = {
-    'yStat': 'Region',
-    'yStatUnits': '',
-    'xStat': '',
-    'xStatUnits': ''
-    }
-"""
-# kymograph analysis
-statList["Ca++ Delay (s)"] = {
-    "yStat": "caDelay_sec",
-    "yStatUnits": "s",
-    "xStat": "",
-    "xStatUnits": "",
-}
-statList["Ca++ Width (ms)"] = {
-    "yStat": "caWidth_ms",
-    "yStatUnits": "ms",
-    "xStat": "",
-    "xStatUnits": "",
-}
-
-
-def getHumanFromStat(statName):
-    """Get human readable stat name from backend stat name."""
-    ret = ""
-    for k, v in statList.items():
-        name = v["name"]
-        if name == statName:
-            ret = k
-            break
-    if ret == "":
-        logger.warning(f'Did not find "{statName}"')
-    #
-    return ret
-
-
-def getStatFromHuman(humanStat):
-    """Get backend stat name from human readable stat."""
-    ret = ""
-    try:
-        ret = statList[humanStat]["name"]
-    except KeyError as e:
-        logger.warning(f'Bad key "{humanStat}"')
-    #
-    return ret
-
 
 def _print():
     """
@@ -367,6 +69,11 @@ def _print():
 
 class bAnalysisUtil:
     def __init__(self):
+        
+        # built in analysis results
+        self._statList = self._builStatList()
+        self._buildUserStatList()
+
         self.configDict = self.configDefault()
 
         # load preferences
@@ -382,8 +89,34 @@ class bAnalysisUtil:
 
         # self.top = None  # used by tkinter interface
 
+    def getStatList(self):
+        return self._statList
+    
+    def getHumanFromStat(self, statName):
+        """Get human readable stat name from backend stat name."""
+        ret = ""
+        for k, v in self._statList.items():
+            name = v["name"]
+            if name == statName:
+                ret = k
+                break
+        if ret == "":
+            logger.warning(f'Did not find "{statName}"')
+        #
+        return ret
+
+    def getStatFromHuman(self, humanStat):
+        """Get backend stat name from human readable stat."""
+        ret = ""
+        try:
+            ret = self._statList[humanStat]["name"]
+        except KeyError as e:
+            logger.warning(f'Bad key "{humanStat}"')
+        #
+        return ret
+
     @staticmethod
-    def getStatList():
+    def _old_getStatList():
         """20210929 working on extending stat list with sanpy.userAnalysis
 
         We first define stat list in this function as statList
@@ -448,6 +181,303 @@ class bAnalysisUtil:
         return ''
     """
 
+    def _buildUserStatList(self):
+        """Append user stats to self._statList
+        """
+        userStatList: List[
+            dict
+        ] = sanpy.user_analysis.baseUserAnalysis.findUserAnalysisStats()
+        for userStatDict in userStatList:
+            for k, v in userStatDict.items():
+                if k in self._statList.keys():
+                    logger.error(
+                        f'user analysis key "{k}" already exists in core stat List'
+                    )
+                else:
+                    # name = v['name']
+                    # coreStatList[k] = {}
+                    # coreStatList[k][name] = name
+                    self._statList[k] = v
+
+        # return coreStatList
+    
+    def _builStatList(self) -> dict:
+        statList = OrderedDict()
+        statList["Spike Time (s)"] = {
+            "name": "thresholdSec",
+            "units": "s",
+            "yStat": "thresholdVal",
+            "yStatUnits": "mV",
+            "xStat": "thresholdSec",
+            "xStatUnits": "s",
+        }
+        statList["Spike Number"] = {
+            "name": "spikeNumber",
+            "units": "",
+            "yStat": "",
+            "yStatUnits": "",
+            "xStat": "spikeNumber",
+            "xStatUnits": "",
+        }
+        statList["Sweep Spike Number"] = {
+            "name": "sweepSpikeNumber",
+            "units": "",
+            "yStat": "",
+            "yStatUnits": "",
+            "xStat": "sweepSpikeNumber",
+            "xStatUnits": "",
+        }
+        statList["Sweep Number"] = {
+            "name": "sweep",
+            "units": "",
+            "yStat": "sweep",
+            "yStatUnits": "",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+        # removed 20230320
+        # statList['DAC Command'] = {
+        # 'name': 'dacCommand',
+        # 'units': '',
+        # 'yStat': 'dacCommand',
+        # 'yStatUnits': '',
+        # 'xStat': '',
+        # 'xStatUnits': ''
+        # }
+
+        # added 20230320
+        # stimulus epoch number a spike is within
+        statList["Epoch"] = {
+            "name": "epoch",
+            "units": "",
+            "yStat": "epoch",
+            "yStatUnits": "",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+        # added 20230320
+        # the epoch level (for I-Clamp, corresponds to DAC command)
+        statList["Epoch DAC"] = {
+            "name": "epochLevel",
+            "units": "",
+            "yStat": "epochLevel",
+            "yStatUnits": "",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+        # added 20230320
+        # the spike number within the epoch
+        # not implemented
+        # 20230914 BUG in bAnalysisResults we define 'epoch', not 'epochSpikeNumber'
+        # WE need to sync these two interface !!!!
+        statList["Epoch Spike Number"] = {
+            # "name": "epochSpikeNumber",
+            "name": "epoch",
+            "units": "",
+            # "yStat": "epochSpikeNumber",
+            "yStat": "epoch",
+            "yStatUnits": "",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+
+        statList["Take Off Potential (mV)"] = {
+            "name": "thresholdVal",
+            "units": "mV",
+            "yStat": "thresholdVal",
+            "yStatUnits": "mV",
+            "xStat": "thresholdPnt",
+            "xStatUnits": "Points",
+        }
+        statList["Spike Frequency (Hz)"] = {
+            "name": "spikeFreq_hz",
+            "units": "Hz",
+            "yStat": "spikeFreq_hz",
+            "yStatUnits": "Hz",
+            "xStat": "thresholdPnt",
+            "xStatUnits": "Points",
+        }
+        statList["Inter-Spike-Interval (ms)"] = {
+            "name": "isi_ms",
+            "units": "ms",
+            "yStat": "isi_ms",
+            "yStatUnits": "ms",
+            "xStat": "thresholdPnt",
+            "xStatUnits": "Points",
+        }
+        statList["Cycle Length (ms)"] = {
+            "name": "cycleLength_ms",
+            "units": "ms",
+            "yStat": "cycleLength_ms",
+            "yStatUnits": "ms",
+            "xStat": "thresholdPnt",
+            "xStatUnits": "Points",
+        }
+        statList["AP Peak (mV)"] = {
+            "name": "peakVal",
+            "units": "mV",
+            "yStat": "peakVal",
+            "yStatUnits": "mV",
+            "xStat": "peakPnt",
+            "xStatUnits": "Points",
+        }
+        # spikeDict['peakVal'] - spikeDict['thresholdVal']
+        statList["AP Height (mV)"] = {
+            "name": "peakHeight",
+            "units": "mV",
+            "yStat": "peakHeight",
+            "yStatUnits": "mV",
+            "xStat": "peakPnt",
+            "xStatUnits": "Points",
+        }
+        # new 20220122
+        statList["Time To Peak (ms)"] = {
+            "name": "timeToPeak_ms",
+            "units": "ms",
+            "yStat": "peakVal",
+            "yStatUnits": "mV",
+            "xStat": "peakPnt",
+            "xStatUnits": "Points",
+        }
+        statList["Pre AP Min (mV)"] = {
+            "name": "preMinVal",
+            "units": "mV",
+            "yStat": "preMinVal",
+            "yStatUnits": "mV",
+            "xStat": "preMinPnt",
+            "xStatUnits": "Points",
+        }
+        statList["Post AP Min (mV)"] = {
+            "name": "postMinVal",
+            "units": "mV",
+            "yStat": "postMinVal",
+            "yStatUnits": "mV",
+            "xStat": "postMinPnt",
+            "xStatUnits": "Points",
+        }
+        # todo: fix this
+        statList["Early Diastolic Depol Rate (dV/s)"] = {
+            "name": "earlyDiastolicDurationRate",
+            "units": "dV/s",
+            "yStat": "earlyDiastolicDurationRate",
+            "yStatUnits": "dV/s",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+        # todo: fix this
+        statList["Early Diastolic Duration (ms)"] = {
+            "name": "earlyDiastolicDuration_ms",
+            "units": "ms",
+            "yStat": "earlyDiastolicDuration_ms",
+            "yStatUnits": "dV/s",
+            "xStat": "thresholdPnt",
+            "xStatUnits": "Points",
+        }
+
+        statList["Diastolic Duration (ms)"] = {
+            "name": "diastolicDuration_ms",
+            "units": "ms",
+            "yStat": "diastolicDuration_ms",
+            "yStatUnits": "dV/s",
+            "xStat": "thresholdPnt",
+            "xStatUnits": "Points",
+        }
+        statList["Max AP Upstroke (mV)"] = {
+            "name": "preSpike_dvdt_max_val",
+            "units": "mV",
+            "yStat": "preSpike_dvdt_max_val",
+            "yStatUnits": "dV/s",
+            "xStat": "preSpike_dvdt_max_pnt",
+            "xStatUnits": "Points",
+        }
+        statList["Max AP Upstroke (dV/dt)"] = {
+            "name": "preSpike_dvdt_max_val2",
+            "units": "dV/dt",
+            "yStat": "preSpike_dvdt_max_val2",
+            "yStatUnits": "dV/dt",
+            "xStat": "preSpike_dvdt_max_pnt",
+            "xStatUnits": "Points",
+        }
+        statList["Max AP Repolarization (mV)"] = {
+            "name": "postSpike_dvdt_min_val",
+            "units": "mV",
+            "yStat": "postSpike_dvdt_min_val",
+            "yStatUnits": "mV",
+            "xStat": "postSpike_dvdt_min_pnt",
+            "xStatUnits": "Points",
+        }
+        # todo: fix this
+        statList["AP Duration (ms)"] = {
+            "name": "apDuration_ms",
+            "units": "ms",
+            "yStat": "apDuration_ms",
+            "yStatUnits": "ms",
+            "xStat": "thresholdPnt",
+            "xStatUnits": "Points",
+        }
+
+        # new 20210211
+        statList["Half Width 10 (ms)"] = {
+            "name": "widths_10",
+            "yStat": "widths_10",
+            "yStatUnits": "ms",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+        statList["Half Width 20 (ms)"] = {
+            "name": "widths_20",
+            "yStat": "widths_20",
+            "yStatUnits": "ms",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+        statList["Half Width 50 (ms)"] = {
+            "name": "widths_50",
+            "yStat": "widths_50",
+            "yStatUnits": "ms",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+        statList["Half Width 80 (ms)"] = {
+            "name": "widths_80",
+            "yStat": "widths_80",
+            "yStatUnits": "ms",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+        statList["Half Width 90 (ms)"] = {
+            "name": "widths_90",
+            "yStat": "widths_90",
+            "yStatUnits": "ms",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+        # sa node specific
+        """
+        statList['Region'] = {
+            'yStat': 'Region',
+            'yStatUnits': '',
+            'xStat': '',
+            'xStatUnits': ''
+            }
+        """
+        # kymograph analysis
+        if DO_KYMOGRAPH_ANALYSIS:
+            statList["Ca++ Delay (s)"] = {
+                "yStat": "caDelay_sec",
+                "yStatUnits": "s",
+                "xStat": "",
+                "xStatUnits": "",
+            }
+            statList["Ca++ Width (ms)"] = {
+                "yStat": "caWidth_ms",
+                "yStatUnits": "ms",
+                "xStat": "",
+                "xStatUnits": "",
+            }
+
+        return statList
+    
     def prettyPrint(self):
         print(json.dumps(self.configDict, indent=4, sort_keys=True))
 

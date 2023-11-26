@@ -262,10 +262,16 @@ class plotScatter(sanpyPlugin):
 
         # x and y stat lists
         hLayout3 = QtWidgets.QHBoxLayout()
-        self.xPlotWidget = myStatListWidget(self, headerStr="X Stat")
+        self.xPlotWidget = myStatListWidget(self,
+                                            headerStr="X Stat",
+                                            statList=self.getStatList())
         self.xPlotWidget.myTableWidget.selectRow(0)
-        self.yPlotWidget = myStatListWidget(self, headerStr="Y Stat")
+
+        self.yPlotWidget = myStatListWidget(self,
+                                            headerStr="Y Stat",
+                                            statList=self.getStatList())
         self.yPlotWidget.myTableWidget.selectRow(7)
+
         hLayout3.addWidget(self.xPlotWidget)
         hLayout3.addWidget(self.yPlotWidget)
         vLayout.addLayout(hLayout3)
@@ -577,7 +583,13 @@ class plotScatter(sanpyPlugin):
 
         # get from stat lists
         xHumanStat, xStat = self.xPlotWidget.getCurrentStat()
+        if xHumanStat is None or xStat is None:
+            # happens during pytest with no sanpyapp
+            return
         yHumanStat, yStat = self.yPlotWidget.getCurrentStat()
+        if yHumanStat is None or yStat is None:
+            # happens during pytest with no sanpyapp
+            return
 
         # logger.info(f'x:"{xHumanStat}" y:"{yHumanStat}"')
         # logger.info(f'x:"{xStat}" y:"{yStat}"')
@@ -1179,7 +1191,7 @@ class myStatListWidget(QtWidgets.QWidget):
     Gets list of stats from: sanpy.bAnalysisUtil.getStatList()
     """
 
-    def __init__(self, myParent, statList=None, headerStr="Stat", parent=None):
+    def __init__(self, myParent, statList, headerStr="Stat", parent=None):
         """
         Parameters
         ----------
@@ -1188,10 +1200,7 @@ class myStatListWidget(QtWidgets.QWidget):
         super().__init__(parent)
 
         self.myParent = myParent
-        if statList is not None:
-            self.statList = statList
-        else:
-            self.statList = sanpy.bAnalysisUtil.getStatList()
+        self.statList = statList
         self._rowHeight = 9
 
         self.myQVBoxLayout = QtWidgets.QVBoxLayout(self)
@@ -1245,8 +1254,15 @@ class myStatListWidget(QtWidgets.QWidget):
     def getCurrentStat(self):
         # assuming single selection
         row = self.getCurrentRow()
+        
         humanStat = self.myTableWidget.item(row, 0).text()
-
+        
+        # try:
+        #     humanStat = self.myTableWidget.item(row, 0).text()    
+        # except (AttributeError) as e:
+        #     logger.error(e)
+        #     return None, None
+        
         # convert from human readbale to backend
         try:
             stat = self.statList[humanStat]["name"]

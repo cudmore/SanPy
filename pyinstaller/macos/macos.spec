@@ -15,11 +15,11 @@ binaries = None
 # rename this as /Users/cudmore/opt/miniconda3/envs/sanpy-pyinstaller-arm/lib/libblosc2.dylib
 # /Users/cudmore/opt/miniconda3/envs/sanpy-pyinstaller-arm/lib/libblosc2.2.8.0.dylib
 #if _platform == 'arm64':
-#    binaries = [('/Users/cudmore/opt/miniconda3/envs/sanpy-pyinstaller-i386/lib/python3.11/site-packages/tables/libblosc2.dylib', 'tables')]
+#    binaries = [('/Users/cudmore/opt/miniconda3/envs/sanpy-pyinstaller-i386/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
 
 # x86, used with 'tables'
 if _platform == 'x86_64':
-    binaries = [('/Users/cudmore/opt/miniconda3/envs/sanpy-pyinstaller-i386/lib/python3.11/site-packages/tables/libblosc2.dylib', 'tables')]
+    binaries = [('/Users/cudmore/opt/miniconda3/envs/sanpy-pyinstaller-i386/lib/python3.9/site-packages/tables/libblosc2.dylib', 'tables')]
 
 hiddenimports=['pkg_resources']
 block_cipher = None
@@ -48,6 +48,8 @@ pyz = PYZ(
     a.pure,
     a.zipped_data,
     cipher=block_cipher)
+
+# 20231124, debug=True and upx=False
 
 exe = EXE(
     pyz,

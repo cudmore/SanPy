@@ -1,4 +1,4 @@
-# using this to turn off for publication, used in detection widget and loading bAnalysis
+# using this to turn off for 1st sanpy publication
 DO_KYMOGRAPH_ANALYSIS = False
 
 from .sanpyLogger import *

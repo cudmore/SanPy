@@ -1,7 +1,7 @@
 import numpy as np
-import scipy.signal
+# import scipy.signal
 
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtWidgets
 
 import matplotlib.pyplot as plt
 
@@ -12,11 +12,11 @@ logger = get_logger(__name__)
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
-from sanpy.bAnalysisUtil import statList
-
+# from sanpy.bAnalysisUtil import statList
 
 class exportTrace(sanpyPlugin):
-    """ """
+    """ 
+    """
 
     myHumanName = "Export Trace"
 

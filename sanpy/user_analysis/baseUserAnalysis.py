@@ -8,6 +8,7 @@ import inspect
 from typing import List, Union
 
 import sanpy
+from sanpy import DO_KYMOGRAPH_ANALYSIS
 
 from sanpy.sanpyLogger import get_logger
 
@@ -71,10 +72,10 @@ def _getObjectList(verbose=True) -> List[dict]:
 
         if verbose:
             logger.info("")
-            logger.info(f"    file: {file}")
-            logger.info(f"    fullModuleName: {fullModuleName}")
-            logger.info(f"    moduleName: {moduleName}")
-            logger.info(f"    loadedModule: {loadedModule}")
+            logger.info(f"   file: {file}")
+            logger.info(f"   fullModuleName: {fullModuleName}")
+            logger.info(f"   moduleName: {moduleName}")
+            logger.info(f"   loadedModule: {loadedModule}")
 
         # class based user analysis
         oneConstructor = None
@@ -87,7 +88,7 @@ def _getObjectList(verbose=True) -> List[dict]:
                 logger.info(f"    type(oneConstructor): {type(oneConstructor)}")
         except AttributeError as e:
             logger.error(
-                f'Make sure filename and class name are the same,  file name is "{moduleName}"'
+                f'Make sure filename and class name are the same, file name is "{moduleName}"'
             )
 
         # instantiate the object and it will create a dictionary of new stats
@@ -110,8 +111,13 @@ def _getObjectList(verbose=True) -> List[dict]:
         loadedModuleList.append(pluginDict)
 
     # new, june 2023, get from user_analysis folder as well
-    logger.info('fetching user analysis from course code folder sanpy.user_analysis')
+    logger.info('fetching user analysis from core code folder sanpy.user_analysis')
+    _ignoreModuleList = []
+    if not DO_KYMOGRAPH_ANALYSIS:
+        _ignoreModuleList.append('kymUserAnalysis')
     for moduleName, obj in inspect.getmembers(sanpy.user_analysis):
+        if moduleName in _ignoreModuleList:
+            continue
         if inspect.isclass(obj):
             # print('moduleName:', moduleName, 'obj:', obj)
             # moduleName: kymUserAnalysis obj: <class 'sanpy.user_analysis.userKymDiamAnalysis.kymUserAnalysis'>
@@ -131,7 +137,7 @@ def _getObjectList(verbose=True) -> List[dict]:
             }
 
             if verbose:
-                logger.info(f' loading user analysis from user_analysis: "{moduleName}"')
+                logger.info(f' loading core user analysis from user_analysis: "{moduleName}"')
 
             loadedModuleList.append(pluginDict)
           
@@ -145,7 +151,10 @@ def _getObjectList(verbose=True) -> List[dict]:
 
 
 def findUserAnalysisStats() -> List[dict]:
-    """Get the stat names of all user defined analysis."""
+    """Get the stat names of all user defined analysis.
+    
+    This is determined once at runtime. If files change, sanpy must be restarted.
+    """
     userStatList: List[dict] = []
     objList = _getObjectList()  # list of dict
     for obj in objList:
@@ -162,7 +171,6 @@ def findUserAnalysisStats() -> List[dict]:
             userStatList.append(oneUserStatDict)
 
     return userStatList
-
 
 def runAllUserAnalysis(ba, verbose=False):
     """Run all user defined analysis.

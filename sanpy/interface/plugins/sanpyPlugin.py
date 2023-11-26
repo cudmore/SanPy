@@ -249,6 +249,11 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._updateTopToolbar()
         self._vBoxLayout.addWidget(self._topToolbarWidget)
 
+    def getStatList(self) -> dict:
+        """Get all analysis results.
+        """
+        return self._bPlugins.getStatList()
+
     def _myClassName(self):
         return self.__class__.__name__
 

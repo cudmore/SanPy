@@ -388,7 +388,7 @@ class myStatListWidget(QtWidgets.QWidget):
     signalStatSelection = QtCore.pyqtSignal(object, object)  # str: header str
                                                             #str: human deadable stat name
 
-    def __init__(self, myParent, statList=None, headerStr="Stat", parent=None):
+    def __init__(self, myParent, statList, headerStr="Stat", parent=None):
         """
         Parameters
         ----------
@@ -401,12 +401,8 @@ class myStatListWidget(QtWidgets.QWidget):
         super().__init__(parent)
 
         self.myParent = myParent
-        if statList is not None:
-            self.statList = statList
-        else:
-            # from main sanpy
-            # for pooling we have some addition columns like 'file number'
-            self.statList = sanpy.bAnalysisUtil.getStatList()
+
+        self.statList = statList
 
         self._headerStr = headerStr
 
@@ -1970,7 +1966,9 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.leftVertLayout.addLayout(_horzLayout)
 
         self.xStatTableView = myStatListWidget(
-            myParent=self, headerStr="X-Stat", statList=self.statListDict
+            myParent=self,
+            headerStr="X-Stat",
+            statList=self.statListDict
         )
         self.xStatTableView.signalStatSelection.connect(self.slot_setStatName)
         # xStatistic = self._plotState.getState("X Statistic")
@@ -1979,7 +1977,9 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
         # table view of y stat
         self.yStatTableView = myStatListWidget(
-            myParent=self, headerStr="Y-Stat", statList=self.statListDict
+            myParent=self,
+            headerStr="Y-Stat",
+            statList=self.statListDict
         )
         self.yStatTableView.signalStatSelection.connect(self.slot_setStatName)
         # yStatistic = self._plotState.getState("Y Statistic")
@@ -3140,7 +3140,7 @@ def test():
         categoricalList = ["file", "File Number"]
         hueTypes = ["file", "File Number"]
         analysisName = "file"
-        from sanpy.bAnalysisUtil import statList as statListDict
+        # from sanpy.bAnalysisUtil import statList as statListDict
 
         sortOrder = ["file", "File Number"]
         interfaceDefaults = {

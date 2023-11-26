@@ -108,6 +108,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         
         self._detectionClass : sanpy.bDetection = sanpy.bDetection()
 
+        self._analysisUtil = sanpy.bAnalysisUtil()
+
         # create an empty model for file list
         dfEmpty = pd.DataFrame(columns=sanpy.analysisDir.sanpyColumns.keys())
         self.myModel = sanpy.interface.bFileTable.pandasModel(dfEmpty)
@@ -177,6 +179,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.slot_updateStatus("Ready")
         logger.info("SanPy started")
 
+    def getStatList(self):
+        return self._analysisUtil.getStatList()
+    
     def getDetectionClass(self) -> "sanpy.bDetection":
         return self._detectionClass
 
@@ -462,6 +467,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             else:
                 self.stopSec = None
             logger.info(f'"-->> emit signalSetXAxis set full x axis" {self.startSec} {self.stopSec}')
+            # plugins are connected to this
             self.signalSetXAxis.emit(
                 [self.startSec, self.stopSec]
             )  # emits to scatter plot ONLY

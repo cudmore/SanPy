@@ -6,18 +6,15 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 import matplotlib.pyplot as plt
 
-from sanpy.sanpyLogger import get_logger
-
-logger = get_logger(__name__)
-
 import sanpy
 from sanpy import bAnalysis
 from sanpy.interface.plugins import sanpyPlugin
-from sanpy.bAnalysisUtil import statList
 from sanpy.interface.plugins import (
     ResponseType,
 )  # to toggle response to set sweeps, etc
 
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 class plotRecording(sanpyPlugin):
     """

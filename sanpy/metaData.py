@@ -54,13 +54,13 @@ class MetaData(dict):
         return headerStr
     
     def getMetaData(self, key):
-        if not key in self.keys():
+        if key not in self.keys():
             logger.error(f'did not find "{key}" in metadata')
             return
         return self[key]
     
     def setMetaData(self, key, value, triggerDirty=True):
-        if not key in self.keys():
+        if key not in self.keys():
             logger.error(f'did not find "{key}" in metadata')
             logger.info(f'   available keys are: {self.keys()}')
             return
@@ -69,7 +69,7 @@ class MetaData(dict):
             # no change
             return
         
-        oldValue = self[key]
+        # oldValue = self[key]
 
         self[key] = value
         

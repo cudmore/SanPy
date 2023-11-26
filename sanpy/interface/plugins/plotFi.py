@@ -144,6 +144,7 @@ class plotFi(sanpyPlugin):
         self.setDefaultPlot()
 
         self.df_fi = None
+        
         self._buildUI()
 
         self._refreshPlotOptionsLayout()
@@ -355,6 +356,10 @@ class plotFi(sanpyPlugin):
         # get from stat lists
         yHumanStat, yStat = self._yStatListWidget.getCurrentStat()
 
+        # if yHumanStat is None or yStat is None:
+        #     # happens during pytest with no sanpyapp
+        #     return
+
         # always clear the axis
         self.axs.clear()
 
@@ -484,29 +489,22 @@ class plotFi(sanpyPlugin):
 
         main_hLayout = QtWidgets.QHBoxLayout()
 
-        # add list of y stats
-        # has statList, a copy of sanpy.bAnalysisUtil.getStatList()
-        # looks like
-        #   statList['Spike Time (s)'] = {
-        #       'name': 'thresholdSec',
-
         # trim down stat list
-        _statList = sanpy.bAnalysisUtil.getStatList()
-        # for k in _statList.keys():
-        #     print(k)
-        _hideTheseKeys = [
-            "Spike Number",
-            "Sweep Spike Number",
-            "Sweep Number",
-            "Epoch",
-            "Epoch DAC",
-            "Epoch Spike Number",
-        ]
         _statListShort = {}
-        for k, v in _statList.items():
-            if k not in _hideTheseKeys:
-                _statListShort[k] = v
-        # _statListShort = None
+        _statList = self.getStatList()
+        if _statList is not None:
+            _hideTheseKeys = [
+                "Spike Number",
+                "Sweep Spike Number",
+                "Sweep Number",
+                "Epoch",
+                "Epoch DAC",
+                "Epoch Spike Number",
+            ]
+            for k, v in _statList.items():
+                if k not in _hideTheseKeys:
+                    _statListShort[k] = v
+
         self._yStatListWidget = myStatListWidget(
             self, statList=_statListShort, headerStr="Y-Stat"
         )

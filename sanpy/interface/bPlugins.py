@@ -48,6 +48,11 @@ class bPlugins:
         """Get the underlying SanPy app."""
         return self._sanpyApp
 
+    def getStatList(self):
+        if self._sanpyApp is None:
+            return
+        return self._sanpyApp.getStatList()
+    
     def loadPlugins(self):
         """Load plugins from both:
          - Package: sanpy.interface.plugins
@@ -103,9 +108,9 @@ class bPlugins:
                     self.pluginDict[humanName] = pluginDict
 
         # print the loaded plugins
-        logger.info(f"Loaded plugins:")
+        logger.info('Loaded plugins:')
         for loaded in loadedList:
-            logger.info(f"    {loaded}")
+            logger.info(f'    {loaded}')
         # sort
         self.pluginDict = dict(sorted(self.pluginDict.items()))
 

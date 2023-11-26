@@ -32,13 +32,13 @@ class SetMetaData(sanpyPlugin):
         
         metaDataDict = self.ba.metaData
 
-        logger.info(metaDataDict)
+        # logger.info(metaDataDict)
 
         for k,v in self.ba.metaData.items():
-            if not k in self._widgetDict.keys():
+            if k not in self._widgetDict.keys():
                 k = k.capitalize()
 
-                if not k in self._widgetDict.keys():
+                if k not in self._widgetDict.keys():
                     logger.error(f'key "{k}" is not in metadata keys {self._widgetDict.keys()}')
                     continue
 

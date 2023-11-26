@@ -54,7 +54,7 @@ def buildWithPyInstaller(output_dir : str,
 
 
     logger.info(f'  pyinstaller is getting paths[] site_packages from site.getsitepackages() ')
-    paths = site.getsitepackages()  # returns a list of path to the current python interpreter
+    # paths = site.getsitepackages()  # returns a list of path to the current python interpreter
     logger.info(f'    {site.getsitepackages()}')
 
     subprocess.run(
@@ -329,7 +329,7 @@ def _codesign_verify(output_dir: str, app_name: str) -> None:
     """
     # codesign --verify --verbose dist_x86/SanPy.app
     app_path = os.path.join(output_dir, f"{app_name}.app")
-    logger.info(f'=== codesign verify {app_path} ...')
+    logger.info(f'=== calling codesign verify {app_path} ...')
     subprocess.run(
         ["codesign", "--verify", "--verbose", app_path],
     )
@@ -406,10 +406,14 @@ def run_signing_commands(provisioning_profile,
         _codesign_app_deep(entitlements, app_certificate, output_dir, app_name)
 
     # codesign each .dylib in Resources/ (does not do --deep)
-    _codesign_app_resources(entitlements, app_certificate, output_dir, app_name)
+    # removed 20231123
+    if 1:
+        _codesign_app_resources(entitlements, app_certificate, output_dir, app_name)
     
     # resign one file (does not do deep)
-    _codesign_app_binary(entitlements, app_certificate, output_dir, app_name)
+    # removed 20231123
+    if 1:
+        _codesign_app_binary(entitlements, app_certificate, output_dir, app_name)
 
     if 0 and shortPlatformStr == 'intel':
         # this works for x86, might break arm64 ?
