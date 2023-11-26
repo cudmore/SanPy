@@ -115,65 +115,65 @@ class bAnalysisUtil:
         #
         return ret
 
-    @staticmethod
-    def _old_getStatList():
-        """20210929 working on extending stat list with sanpy.userAnalysis
+    # @staticmethod
+    # def _old_getStatList():
+    #     """20210929 working on extending stat list with sanpy.userAnalysis
 
-        We first define stat list in this function as statList
-        We then ask for user defined stat functions static members xxx
-        """
-        coreStatList = statList  # from global withing function
+    #     We first define stat list in this function as statList
+    #     We then ask for user defined stat functions static members xxx
+    #     """
+    #     coreStatList = statList  # from global withing function
 
-        # userStatList = sanpy.userAnalysis.findUserAnalysis()
-        # userStatList = sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis()
-        # userStatList = findUserAnalysis()
+    #     # userStatList = sanpy.userAnalysis.findUserAnalysis()
+    #     # userStatList = sanpy.userAnalysis.baseUserAnalysis.findUserAnalysis()
+    #     # userStatList = findUserAnalysis()
 
-        #logger.warning(f"need to reactivate getting user stats")
+    #     #logger.warning(f"need to reactivate getting user stats")
 
-        """
-        Each entry in statList looks like:
+    #     """
+    #     Each entry in statList looks like:
         
-        statList['Spike Time (s)'] = {
-            'name': 'thresholdSec',
-            'units': 's',
-            'yStat': 'thresholdVal',
-            'yStatUnits': 'mV',
-            'xStat': 'thresholdSec',
-            'xStatUnits': 's'
-            }
-        """
-        userStatList: List[
-            dict
-        ] = sanpy.user_analysis.baseUserAnalysis.findUserAnalysisStats()
-        for userStatDict in userStatList:
-            for k, v in userStatDict.items():
-                if k in coreStatList.keys():
-                    logger.error(
-                        f'user analysis key "{k}" already exists in core stat List'
-                    )
-                else:
-                    # name = v['name']
-                    # coreStatList[k] = {}
-                    # coreStatList[k][name] = name
-                    coreStatList[k] = v
+    #     statList['Spike Time (s)'] = {
+    #         'name': 'thresholdSec',
+    #         'units': 's',
+    #         'yStat': 'thresholdVal',
+    #         'yStatUnits': 'mV',
+    #         'xStat': 'thresholdSec',
+    #         'xStatUnits': 's'
+    #         }
+    #     """
+    #     userStatList: List[
+    #         dict
+    #     ] = sanpy.user_analysis.baseUserAnalysis.findUserAnalysisStats()
+    #     for userStatDict in userStatList:
+    #         for k, v in userStatDict.items():
+    #             if k in coreStatList.keys():
+    #                 logger.error(
+    #                     f'user analysis key "{k}" already exists in core stat List'
+    #                 )
+    #             else:
+    #                 # name = v['name']
+    #                 # coreStatList[k] = {}
+    #                 # coreStatList[k][name] = name
+    #                 coreStatList[k] = v
 
-        return coreStatList
+    #     return coreStatList
 
-        # 20220630, was this
-        userStatList = sanpy.user_analysis.baseUserAnalysis.findUserAnalysis()
+    #     # 20220630, was this
+    #     userStatList = sanpy.user_analysis.baseUserAnalysis.findUserAnalysis()
 
-        for k, v in userStatList.items():
-            # check if key exists !!!
-            if k in coreStatList.keys():
-                logger.error(
-                    f'user analysis key {"k"} already exists in core stat List'
-                )
-            else:
-                name = v["name"]
-                coreStatList[k] = {}
-                coreStatList[k][name] = name
+    #     for k, v in userStatList.items():
+    #         # check if key exists !!!
+    #         if k in coreStatList.keys():
+    #             logger.error(
+    #                 f'user analysis key {"k"} already exists in core stat List'
+    #             )
+    #         else:
+    #             name = v["name"]
+    #             coreStatList[k] = {}
+    #             coreStatList[k][name] = name
 
-        return coreStatList
+    #     return coreStatList
 
     """
     @staticmethod
