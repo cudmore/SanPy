@@ -39,34 +39,6 @@ def _defaultStatDict():
     return
 """
 
-def _print():
-    """
-    Print out human readable detection parameters and convert to markdown table
-
-    Requires:
-        pip install tabulate
-    """
-    import pandas as pd
-
-    # statList is a dict with keys, one key per stat
-    d = statList
-
-    dictList = []
-    for k, v in d.items():
-        stat = k
-        oneDict = {
-            "Stat": stat,
-        }
-        for k2, v2 in v.items():
-            oneDict[k2] = v2
-
-        dictList.append(oneDict)
-    #
-    df = pd.DataFrame(dictList)
-    str = df.to_markdown()
-    print(str)
-
-
 class bAnalysisUtil:
     def __init__(self):
         
@@ -562,6 +534,35 @@ class bAnalysisUtil:
 
         return theRet
 
+    def _print(self):
+        """
+        Print out human readable detection parameters and convert to markdown table
+
+        Requires:
+            pip install tabulate
+        """
+        return
+
+        import pandas as pd
+
+        # statList is a dict with keys, one key per stat
+        d = self._statList
+
+        dictList = []
+        for k, v in d.items():
+            stat = k
+            oneDict = {
+                "Stat": stat,
+            }
+            for k2, v2 in v.items():
+                oneDict[k2] = v2
+
+            dictList.append(oneDict)
+        #
+        df = pd.DataFrame(dictList)
+        str = df.to_markdown()
+        print(str)
+
 
 if __name__ == "__main__":
     if 0:
@@ -579,7 +580,8 @@ if __name__ == "__main__":
 
         bau.prettyPrint()
 
-    _print()
+    # if 0:
+    #     _print()
 
     # abb removed 20201109, not using this, write a PyQt preferences panel
     """
