@@ -1492,8 +1492,8 @@ class analysisDir:
         rowDict["relPath"] = relPath
 
         #logger.info(f'2) xxx relPath: "{relPath}"')
-        logger.info('qqq')
-        print(rowDict)
+        # logger.info('qqq')
+        # print(rowDict)
 
         return ba, rowDict
 

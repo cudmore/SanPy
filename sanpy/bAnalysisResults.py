@@ -293,6 +293,29 @@ analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "ms"  # voltage-clamp'
 analysisResultDict[key]["description"] = "Time to peak (ms) after TOP."
 
+# new 20231201
+key = "fastAhpPnt"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = "int"
+analysisResultDict[key]["default"] = defaultVal
+analysisResultDict[key]["units"] = "point"
+analysisResultDict[key]["depends on detection"] = "fastAhpWindow_ms"
+analysisResultDict[key]["description"] = "fast AHP point."
+
+key = "fastAhpSec"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = "float"
+analysisResultDict[key]["default"] = defaultVal
+analysisResultDict[key]["units"] = "sec"
+analysisResultDict[key]["description"] = "fast AHP seconds."
+
+key = "fastAhpValue"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["type"] = "float"
+analysisResultDict[key]["default"] = defaultVal
+analysisResultDict[key]["units"] = "mV"  # voltage-clamp'
+analysisResultDict[key]["description"] = "Value of Vm at fast AHP point."
+
 key = "preMinPnt"
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]["type"] = "int"
@@ -492,8 +515,7 @@ for i in [10, 20, 50, 80, 90]:
 
 
 def printDocs():
-    """
-    Print out human readable detection parameters and convert to markdown table.
+    """Print out human readable detection parameters and convert to markdown table.
 
     Requires:
         pip install tabulate

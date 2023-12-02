@@ -812,9 +812,9 @@ class plotScatter(sanpyPlugin):
         self.scatter_hist(xData, yData, self.axHistX, self.axHistY)
 
         # redraw
-        logger.info('calliing self.static_canvas.draw()')
+        # logger.info('calliing self.static_canvas.draw()')
         self.static_canvas.draw()
-        logger.info('   done')
+        # logger.info('   done')
         
         # was this
         # self.repaint() # update the widget
@@ -830,8 +830,8 @@ class plotScatter(sanpyPlugin):
             ax_histy (axes) Histogram Axes
         """
 
-        logger.info(f'x:{x}')
-        logger.info(f'y:{y}')
+        # logger.info(f'x:{x}')
+        # logger.info(f'y:{y}')
         
         if len(x)==0 or len(y)==0:
             ax_histx.clear()
@@ -903,7 +903,7 @@ class plotScatter(sanpyPlugin):
         """
         spikeList = self.getSelectedSpikes()
 
-        logger.info(f'{self._myClassName()} spikeList:{spikeList}')
+        # logger.info(f'{self._myClassName()} spikeList:{spikeList}')
 
         if self.xStatName is None or self.yStatName is None:
             return

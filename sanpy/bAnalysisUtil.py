@@ -327,6 +327,17 @@ class bAnalysisUtil:
             "xStat": "postMinPnt",
             "xStatUnits": "Points",
         }
+
+        # new 20231201
+        statList["Fast AHP (mV)"] = {
+            "name": "fastAhpValue",
+            "units": "mV",
+            "yStat": "fastAhpValue",
+            "yStatUnits": "mV",
+            "xStat": "fastAhpPnt",
+            "xStatUnits": "Points",
+        }
+
         # todo: fix this
         statList["Early Diastolic Depol Rate (dV/s)"] = {
             "name": "earlyDiastolicDurationRate",
@@ -535,13 +546,15 @@ class bAnalysisUtil:
         return theRet
 
     def _print(self):
-        """
-        Print out human readable detection parameters and convert to markdown table
+        """Print out human readable detection parameters and convert to markdown table
 
+        This is then pasted as a markdown table into the SanPy docs methods section
+
+        TODO: Add a generation date to the resulting markdown.
+        
         Requires:
             pip install tabulate
         """
-        return
 
         import pandas as pd
 
@@ -566,7 +579,8 @@ class bAnalysisUtil:
 
 if __name__ == "__main__":
     if 0:
-        _fullStatList = sanpy.bAnalysisUtil.getStatList()
+        bau = sanpy.bAnalysisUtil()
+        _fullStatList = bau.getStatList()
         for oneStat in _fullStatList:
             sanpy._util.pprint(oneStat)
 
@@ -580,8 +594,9 @@ if __name__ == "__main__":
 
         bau.prettyPrint()
 
-    # if 0:
-    #     _print()
+    if 1:
+        bau = sanpy.bAnalysisUtil()
+        bau._print()
 
     # abb removed 20201109, not using this, write a PyQt preferences panel
     """

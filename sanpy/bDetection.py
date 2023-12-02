@@ -64,7 +64,7 @@ class detectionTypes_(Enum):
 # allow user to save to detection presets
 
 
-def getDefaultDetection():
+def getDefaultDetection() -> dict:
     """Get detection parameters
 
     This includes a mapping from backend variable names to
@@ -373,6 +373,17 @@ def getDefaultDetection():
     theDict[key]["humanName"] = "Post AP Clip Width (ms)"
     theDict[key]["errors"] = ""
     theDict[key]["description"] = "The post duration of generated AP clips (After AP)"
+
+    # new 20231201, for mich lab
+    key = "fastAhpWindow_ms"
+    theDict[key] = {}
+    theDict[key]["defaultValue"] = 8
+    theDict[key]["type"] = "float"
+    theDict[key]["allowNone"] = False
+    theDict[key]["units"] = "ms"
+    theDict[key]["humanName"] = "Fast AHP Window (ms)"
+    theDict[key]["errors"] = ""
+    theDict[key]["description"] = "Window (ms) after peak to look for a fast AHP"
 
     key = "medianFilter"
     theDict[key] = {}
@@ -705,6 +716,13 @@ class bDetection(object):
             with open(filePath, "r") as f:
                 userPresetsDict = json.load(f)
                 theDict[fileNameKey] = userPresetsDict
+
+        # make sure what we loaded has all the needed keys
+        _defaultDetection = getDefaultDetection()
+        for _fileNameKey, _loadedDetectionDict in theDict.items():
+            for _key, _defaultDict in _defaultDetection.items():
+                if _key not in _loadedDetectionDict.keys():
+                    _loadedDetectionDict[_key] = _defaultDetection[_key]['defaultValue']
 
         return theDict  #, userPresets
 

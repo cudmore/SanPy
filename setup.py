@@ -56,6 +56,7 @@ devRequirements = guiRequirements + [
     'mkdocs-jupyter',
     'mkdocstrings',
     'mkdocstrings-python', # resolve error as of April 30, 2023
+    #'mkdocs-with-pdf',
     'tornado', # needed for pyinstaller
     'pyinstaller',
     'ipython',

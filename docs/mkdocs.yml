@@ -38,7 +38,7 @@ watch:
   - ../sanpy
 
 plugins:
-  - with-pdf
+  #- with-pdf
   - mkdocs-jupyter
   - search
   - autorefs
@@ -71,6 +71,7 @@ nav:
         - Writing A File Loader: api/writing-a-file-loader.md
         - Writing A Plugin: api/writing-a-plugin.md
         - Writing New Analysis: api/writing-new-analysis.md
+        - Adding To Core Analysis: api/adding-to-core-analysis.md
         - bAnalysis: api/bAnalysis.md
         - bAnalysisResults: api/bAnalysisResults.md
         - epochTable: api/epochTable.md

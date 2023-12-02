@@ -5,24 +5,38 @@ To detect action potentials, SanPy uses a number of parameters. These can all be
 
 Note: To update this table use sanpy/bDetection.py
 
-|    | Parameter          | Default Value        | Units   | Human Readable                          | Description                                                                                            |
-|---:|:-------------------|:---------------------|:--------|:----------------------------------------|:-------------------------------------------------------------------------------------------------------|
-|  0 | dvdtThreshold      | 100                  | dVdt    | dV/dt Threshold                         | dV/dt threshold for a spike, will be backed up to dvdt_percentOfMax and have xxx error when this fails |
-|  1 | mvThreshold        | -20                  | mV      | mV Threshold                            | mV threshold for spike AND minimum spike mV when detecting with dV/dt                                  |
-|  2 | dvdt_percentOfMax  | 0.1                  | Percent | dV/dt Percent of max                    | For dV/dt detection, the final TOP is when dV/dt drops to this percent from dV/dt AP peak              |
-|  3 | onlyPeaksAbove_mV  |                      | mV      | Accept Peaks Above (mV)                 | For dV/dt detection, only accept APs above this value (mV)                                             |
-|  4 | doBackupSpikeVm    | True                 | Boolean | Backup Vm Spikes                        | If true, APs detected with just mV will be backed up until Vm falls to xxx                             |
-|  5 | refractory_ms      | 170                  | ms      | Minimum AP interval (ms)                | APs with interval (with respect to previous AP) less than this will be removed                         |
-|  6 | peakWindow_ms      | 100                  | ms      | Peak Window (ms)                        | Window after TOP (ms) to seach for AP peak (mV)                                                        |
-|  7 | dvdtPreWindow_ms   | 10                   | ms      | dV/dt Pre Window (ms)                   | Window (ms) to search before each TOP for real threshold crossing                                      |
-|  8 | mdp_ms             | 250                  | ms      | Pre AP MDP window (ms)                  | Window (ms) before an AP to look for MDP                                                               |
-|  9 | avgWindow_ms       | 5                    | ms      |                                         | Window (ms) to calculate MDP (mV) as a mean rather than mV at single point for MDP                     |
-| 10 | halfHeights        | [10, 20, 50, 80, 90] |         | AP Durations (%)                        | AP Durations as percent of AP height (AP Peak (mV) - TOP (mV))                                         |
-| 11 | halfWidthWindow_ms | 200                  | ms      | Half Width Window (ms)                  | Window (ms) after TOP to look for AP Durations                                                         |
-| 12 | medianFilter       | 0                    | points  | Median Filter Points                    | Number of points in median filter, must be odd, 0 for no filter                                        |
-| 13 | SavitzkyGolay_pnts | 5                    | points  | SavitzkyGolay Filter Points             | Number of points in SavitzkyGolay filter, must be odd, 0 for no filter                                 |
-| 14 | SavitzkyGolay_poly | 2                    |         | Savitzky-Golay Filter Polynomial Degree | The degree of the polynomial for Savitzky-Golay filter                                                 |
-| 15 | spikeClipWidth_ms  | 500                  | ms      | AP Clip Width (ms)                      | The width/duration of generated AP clips                                                               |
+| Parameter             | Default Value          | Units     | Human Readable            | Description                                                                                              |
+|-----------------------|------------------------|-----------|---------------------------|----------------------------------------------------------------------------------------------------------|
+| detectionName         | default                |           | Detection Preset Name     | The name of detection preset                                                                             |
+| userSaveName          |                        |           | Saved Detection Params    | The name of saved user detection params                                                                  |
+| detectionType         | dvdt                   |           | Detection Type            | Detect using derivative (dvdt) or membrane potential (mV)                                                |
+| dvdtThreshold         | 20                     | dVdt      | dV/dt Threshold           | "dV/dt threshold for a spike, will be backed up to dvdt_percentOfMax and have xxx error when this fails" |
+| mvThreshold           | -20                    | mV        | mV Threshold              | mV threshold for spike AND minimum spike mV when detecting with dV/dt                                    |
+| startSeconds          |                        | s         | Start(s)                  | Start seconds of analysis                                                                                |
+| stopSeconds           |                        | s         | Stop(s)                   | Stop seconds of analysis                                                                                 |
+| cellType              |                        |           | Cell Type                 | Cell Type                                                                                                |
+| sex                   |                        |           | Sex                       | Sex                                                                                                      |
+| condition             |                        |           | Condition                 | Condition                                                                                                |
+| dvdt_percentOfMax     | 0.1                    | Percent   | dV/dt Percent of max      | "For dV/dt detection, the final TOP is when dV/dt drops to this percent from dV/dt AP peak"              |
+| onlyPeaksAbove_mV     |                        | mV        | Accept Peaks Above (mV)   | Only accept APs with peaks above this value (mV)                                                         |
+| onlyPeaksBelow_mV     |                        | mV        | Accept Peaks Below (mV)   | Only accept APs below this value (mV)                                                                    |
+| doBackupSpikeVm       | False                  | Boolean   | Backup Vm Spikes          | "If true, APs detected with just mV will be backed up until Vm falls to xxx"                             |
+| refractory_ms         | 170                    | ms        | Minimum AP interval (ms)  | APs with interval (wrt previous AP) less than this will be removed                                       |
+| peakWindow_ms         | 100                    | ms        | Peak Window (ms)          | Window after TOP (ms) to seach for AP peak (mV)                                                          |
+| dvdtPreWindow_ms      | 10                     | ms        | dV/dt Pre Window (ms)     | Window (ms) to search before each TOP for real threshold crossing                                        |
+| dvdtPostWindow_ms     | 20                     | ms        | dV/dt Post Window (ms)    | Window (ms) to search after each AP peak for minimum in dv/dt                                            |
+| mdp_ms                | 250                    | ms        | Pre AP MDP window (ms)    | Window (ms) before an AP to look for MDP                                                                 |
+| avgWindow_ms          | 5                      | ms        | MDP averaging window (ms) | Window (ms) to calculate MDP (mV) as a mean rather than mV at single point for MDP                       |
+| lowEddRate_warning    | 8                      | EDD slope | EDD slope warning         | Generate warning when EED slope is lower than this value.                                                |
+| halfHeights           | "[10, 20, 50, 80, 90]" |           | AP Durations (%)          | AP Durations as percent of AP height (AP Peak (mV) - TOP (mV))                                           |
+| halfWidthWindow_ms    | 200                    | ms        | Half Width Window (ms)    | Window (ms) after TOP to look for AP Durations                                                           |
+| preSpikeClipWidth_ms  | 200                    | ms        | Pre AP Clip Width (ms)    | The pre duration of generated AP clips (Before AP)                                                       |
+| postSpikeClipWidth_ms | 500                    | ms        | Post AP Clip Width (ms)   | The post duration of generated AP clips (After AP)                                                       |
+| fastAhpWindow_ms      | 8                      | ms        | Fast AHP Window (ms)      | Window (ms) after peak to look for a fast AHP                                                            |
+| medianFilter          | 0                      | points    | Median Filter Points      | "Number of points in median filter, must be odd, 0 for no filter"                                        |
+| SavitzkyGolay_pnts    | 5                      | points    | SavitzkyGolay Points      | "Number of points in SavitzkyGolay filter, must be odd, 0 for no filter"                                 |
+| SavitzkyGolay_poly    | 2                      |           | SavitzkyGolay Poly Deg    | The degree of the polynomial for Savitzky-Golay filter                                                   |
+| verbose               | False                  | Boolean   | Verbose                   | Verbose Detection Reporting                                                                              |
 
 ## Detection Errors
 
@@ -38,40 +52,48 @@ When SanPy encounters errors during spike detection, they are stored for each sp
 
 # Analysis results
 
-Once spike are detected, SanPy has the following analysis results.
+Once spikes are detected, SanPy has the following analysis results. The `Stat` column is a human readable version. The `name` column is the variable name used in the code and is saved as a column when analysis results are saved to a csv file. 
+
+Note: To generate this use bAnalysisUtil._print()
 
 |    | Stat                              | name                       | units   | yStat                      | yStatUnits   | xStat                  | xStatUnits   |
 |---:|:----------------------------------|:---------------------------|:--------|:---------------------------|:-------------|:-----------------------|:-------------|
-|  0 | Take Off Potential (s)            | thresholdSec               | s       | thresholdVal               | mV           | thresholdSec           | s            |
-|  1 | Take Off Potential (mV)           | thresholdVal               | mV      | thresholdVal               | mV           | thresholdPnt           | Points       |
-|  2 | Spike Frequency (Hz)              | spikeFreq_hz               | Hz      | spikeFreq_hz               | Hz           | thresholdPnt           | Points       |
-|  3 | Cycle Length (ms)                 | cycleLength_ms             | ms      | cycleLength_ms             | ms           | thresholdPnt           | Points       |
-|  4 | AP Peak (mV)                      | peakVal                    | mV      | peakVal                    | mV           | peakPnt                | Points       |
-|  5 | AP Height (mV)                    | peakHeight                 | mV      | peakHeight                 | mV           | peakPnt                | Points       |
-|  6 | Pre AP Min (mV)                   | preMinVal                  | mV      | preMinVal                  | mV           | preMinPnt              | Points       |
-|  7 | Post AP Min (mV)                  | postMinVal                 | mV      | postMinVal                 | mV           | postMinPnt             | Points       |
-|  8 | Early Diastolic Depol Rate (dV/s) | earlyDiastolicDurationRate | dV/s    | earlyDiastolicDurationRate | dV/s         |                        |              |
-|  9 | Early Diastolic Duration (ms)     | earlyDiastolicDuration_ms  | ms      | earlyDiastolicDuration_ms  | dV/s         | thresholdPnt           | Points       |
-| 10 | Diastolic Duration (ms)           | diastolicDuration_ms       | ms      | diastolicDuration_ms       | dV/s         | thresholdPnt           | Points       |
-| 11 | Max AP Upstroke (mV)              | preSpike_dvdt_max_val      | mV      | preSpike_dvdt_max_val      | dV/s         | preSpike_dvdt_max_pnt  | Points       |
-| 12 | Max AP Upstroke (dV/dt)           | preSpike_dvdt_max_val2     | dV/dt   | preSpike_dvdt_max_val2     | dV/dt        | preSpike_dvdt_max_pnt  | Points       |
-| 13 | Max AP Repolarization (mV)        | postSpike_dvdt_min_val     | mV      | postSpike_dvdt_min_val     | mV           | postSpike_dvdt_min_pnt | Points       |
-| 14 | AP Duration (ms)                  | apDuration_ms              | ms      | apDuration_ms              | ms           | thresholdPnt           | Points       |
-| 15 | Half Width 10 (ms)                | nan                        | nan     | widths_10                  | ms           |                        |              |
-| 16 | Half Width 20 (ms)                | nan                        | nan     | widths_20                  | ms           |                        |              |
-| 17 | Half Width 50 (ms)                | nan                        | nan     | widths_50                  | ms           |                        |              |
-| 18 | Half Width 80 (ms)                | nan                        | nan     | widths_80                  | ms           |                        |              |
-| 19 | Half Width 90 (ms)                | nan                        | nan     | widths_90                  | ms           |                        |              |
-| 20 | Ca++ Delay (s)                    | nan                        | nan     | caDelay_sec                | s            |                        |              |
-| 21 | Ca++ Width (ms)                   | nan                        | nan     | caWidth_ms                 | ms           |                        |              |
+|  0 | Spike Time (s)                    | thresholdSec               | s       | thresholdVal               | mV           | thresholdSec           | s            |
+|  1 | Spike Number                      | spikeNumber                |         |                            |              | spikeNumber            |              |
+|  2 | Sweep Spike Number                | sweepSpikeNumber           |         |                            |              | sweepSpikeNumber       |              |
+|  3 | Sweep Number                      | sweep                      |         | sweep                      |              |                        |              |
+|  4 | Epoch                             | epoch                      |         | epoch                      |              |                        |              |
+|  5 | Epoch DAC                         | epochLevel                 |         | epochLevel                 |              |                        |              |
+|  6 | Epoch Spike Number                | epoch                      |         | epoch                      |              |                        |              |
+|  7 | Take Off Potential (mV)           | thresholdVal               | mV      | thresholdVal               | mV           | thresholdPnt           | Points       |
+|  8 | Spike Frequency (Hz)              | spikeFreq_hz               | Hz      | spikeFreq_hz               | Hz           | thresholdPnt           | Points       |
+|  9 | Inter-Spike-Interval (ms)         | isi_ms                     | ms      | isi_ms                     | ms           | thresholdPnt           | Points       |
+| 10 | Cycle Length (ms)                 | cycleLength_ms             | ms      | cycleLength_ms             | ms           | thresholdPnt           | Points       |
+| 11 | AP Peak (mV)                      | peakVal                    | mV      | peakVal                    | mV           | peakPnt                | Points       |
+| 12 | AP Height (mV)                    | peakHeight                 | mV      | peakHeight                 | mV           | peakPnt                | Points       |
+| 13 | Time To Peak (ms)                 | timeToPeak_ms              | ms      | peakVal                    | mV           | peakPnt                | Points       |
+| 14 | Pre AP Min (mV)                   | preMinVal                  | mV      | preMinVal                  | mV           | preMinPnt              | Points       |
+| 15 | Post AP Min (mV)                  | postMinVal                 | mV      | postMinVal                 | mV           | postMinPnt             | Points       |
+| 16 | Fast AHP (mV)                     | fastAhpValue               | mV      | fastAhpValue               | mV           | fastAhpPnt             | Points       |
+| 17 | Early Diastolic Depol Rate (dV/s) | earlyDiastolicDurationRate | dV/s    | earlyDiastolicDurationRate | dV/s         |                        |              |
+| 18 | Early Diastolic Duration (ms)     | earlyDiastolicDuration_ms  | ms      | earlyDiastolicDuration_ms  | dV/s         | thresholdPnt           | Points       |
+| 19 | Diastolic Duration (ms)           | diastolicDuration_ms       | ms      | diastolicDuration_ms       | dV/s         | thresholdPnt           | Points       |
+| 20 | Max AP Upstroke (mV)              | preSpike_dvdt_max_val      | mV      | preSpike_dvdt_max_val      | dV/s         | preSpike_dvdt_max_pnt  | Points       |
+| 21 | Max AP Upstroke (dV/dt)           | preSpike_dvdt_max_val2     | dV/dt   | preSpike_dvdt_max_val2     | dV/dt        | preSpike_dvdt_max_pnt  | Points       |
+| 22 | Max AP Repolarization (mV)        | postSpike_dvdt_min_val     | mV      | postSpike_dvdt_min_val     | mV           | postSpike_dvdt_min_pnt | Points       |
+| 23 | AP Duration (ms)                  | apDuration_ms              | ms      | apDuration_ms              | ms           | thresholdPnt           | Points       |
+| 24 | Half Width 10 (ms)                | widths_10                  | nan     | widths_10                  | ms           |                        |              |
+| 25 | Half Width 20 (ms)                | widths_20                  | nan     | widths_20                  | ms           |                        |              |
+| 26 | Half Width 50 (ms)                | widths_50                  | nan     | widths_50                  | ms           |                        |              |
+| 27 | Half Width 80 (ms)                | widths_80                  | nan     | widths_80                  | ms           |                        |              |
+| 28 | Half Width 90 (ms)                | widths_90                  | nan     | widths_90                  | ms           |                        |              |
+| 29 | User Time To Peak (ms)            | user_timeToPeak_ms         |         |                            |              |                        |              |
 
 # Analysis results (full)
 
 <!-- <iframe src="../static/analysis-output-full.html" width="800" height="800" style="border: 0" seamless></iframe> -->
 
-Generated 2023-03-24 with sanpy.analysisVersion 20230324a
-
-Note: To update this table use sanpy/bAnalysisResults.py
+Note: To update this table, use sanpy/bAnalysisResults.py
 
 <table border="1" class="dataframe" style="width:600">
   <thead>
@@ -89,156 +111,6 @@ Note: To update this table use sanpy/bAnalysisResults.py
   <tbody>
     <tr>
       <th>0</th>
-      <td>analysisDate</td>
-      <td>str</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Date of analysis in yyyymmdd format.</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>analysisTime</td>
-      <td>str</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Time of analysis in hh:mm:ss 24 hours format.</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>modDate</td>
-      <td>str</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Modification date if AP is modified after detection.</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>modTime</td>
-      <td>str</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Modification time if AP is modified after detection.</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>analysisVersion</td>
-      <td>str</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Analysis version when analysis was run. See sanpy.analysisVersion</td>
-    </tr>
-    <tr>
-      <th>5</th>
-      <td>interfaceVersion</td>
-      <td>str</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Interface version string when analysis was run. See sanpy.interfaceVersion</td>
-    </tr>
-    <tr>
-      <th>6</th>
-      <td>file</td>
-      <td>str</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Name of raw data file analyzed</td>
-    </tr>
-    <tr>
-      <th>7</th>
-      <td>detectionType</td>
-      <td></td>
-      <td>None</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Type of detection, either vm or dvdt. See enum sanpy.bDetection.detectionTypes</td>
-    </tr>
-    <tr>
-      <th>8</th>
-      <td>cellType</td>
-      <td>str</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>User specified cell type</td>
-    </tr>
-    <tr>
-      <th>9</th>
-      <td>sex</td>
-      <td>str</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>User specified sex</td>
-    </tr>
-    <tr>
-      <th>10</th>
-      <td>condition</td>
-      <td>str</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>User specified condition</td>
-    </tr>
-    <tr>
-      <th>11</th>
-      <td>sweep</td>
-      <td>int</td>
-      <td>0</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Sweep number of analyzed sweep. Zero based.</td>
-    </tr>
-    <tr>
-      <th>12</th>
-      <td>epoch</td>
-      <td>int</td>
-      <td>NaN</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Stimulus epoch number the spike occured in. Zero based.</td>
-    </tr>
-    <tr>
-      <th>13</th>
-      <td>epochLevel</td>
-      <td>float</td>
-      <td>NaN</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Epoch level (DAC) stimulus during the spike.</td>
-    </tr>
-    <tr>
-      <th>14</th>
-      <td>sweepSpikeNumber</td>
-      <td>int</td>
-      <td>None</td>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td>Spike number within the sweep. Zero based.</td>
-    </tr>
-    <tr>
-      <th>15</th>
       <td>spikeNumber</td>
       <td>int</td>
       <td>None</td>
@@ -248,7 +120,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Spike number across all sweeps. Zero based.</td>
     </tr>
     <tr>
-      <th>16</th>
+      <th>1</th>
       <td>include</td>
       <td>bool</td>
       <td>True</td>
@@ -258,7 +130,57 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Boolean indication include or not. Can be set by user/programmatically  after analysis.</td>
     </tr>
     <tr>
-      <th>17</th>
+      <th>2</th>
+      <td>detectionType</td>
+      <td></td>
+      <td>None</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Type of detection, either vm or dvdt. See enum sanpy.bDetection.detectionTypes</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>sweep</td>
+      <td>int</td>
+      <td>0</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Sweep number of analyzed sweep. Zero based.</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>epoch</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Stimulus epoch number the spike occured in. Zero based.</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>epochLevel</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Epoch level (DAC) stimulus during the spike.</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>sweepSpikeNumber</td>
+      <td>int</td>
+      <td>None</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Spike number within the sweep. Zero based.</td>
+    </tr>
+    <tr>
+      <th>7</th>
       <td>userType</td>
       <td>int</td>
       <td>0</td>
@@ -268,7 +190,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Integer indication user type. Can be set by user/programmatically  after analysis.</td>
     </tr>
     <tr>
-      <th>18</th>
+      <th>8</th>
       <td>errors</td>
       <td>list</td>
       <td>[]</td>
@@ -276,6 +198,106 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td></td>
       <td></td>
       <td>List of dictionary to hold detection errors for this spike</td>
+    </tr>
+    <tr>
+      <th>9</th>
+      <td>analysisDate</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Date of analysis in yyyymmdd format.</td>
+    </tr>
+    <tr>
+      <th>10</th>
+      <td>analysisTime</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Time of analysis in hh:mm:ss 24 hours format.</td>
+    </tr>
+    <tr>
+      <th>11</th>
+      <td>modDate</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Modification date if AP is modified after detection.</td>
+    </tr>
+    <tr>
+      <th>12</th>
+      <td>modTime</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Modification time if AP is modified after detection.</td>
+    </tr>
+    <tr>
+      <th>13</th>
+      <td>analysisVersion</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Analysis version when analysis was run. See sanpy.analysisVersion</td>
+    </tr>
+    <tr>
+      <th>14</th>
+      <td>interfaceVersion</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Interface version string when analysis was run. See sanpy.interfaceVersion</td>
+    </tr>
+    <tr>
+      <th>15</th>
+      <td>file</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>Name of raw data file analyzed</td>
+    </tr>
+    <tr>
+      <th>16</th>
+      <td>cellType</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>User specified cell type</td>
+    </tr>
+    <tr>
+      <th>17</th>
+      <td>sex</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>User specified sex</td>
+    </tr>
+    <tr>
+      <th>18</th>
+      <td>condition</td>
+      <td>str</td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td></td>
+      <td>User specified condition</td>
     </tr>
     <tr>
       <th>19</th>
@@ -419,6 +441,36 @@ Note: To update this table use sanpy/bAnalysisResults.py
     </tr>
     <tr>
       <th>33</th>
+      <td>fastAhpPnt</td>
+      <td>int</td>
+      <td>NaN</td>
+      <td>point</td>
+      <td>fastAhpWindow_ms</td>
+      <td></td>
+      <td>fast AHP point.</td>
+    </tr>
+    <tr>
+      <th>34</th>
+      <td>fastAhpSec</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>sec</td>
+      <td></td>
+      <td></td>
+      <td>fast AHP seconds.</td>
+    </tr>
+    <tr>
+      <th>35</th>
+      <td>fastAhpValue</td>
+      <td>float</td>
+      <td>NaN</td>
+      <td>mV</td>
+      <td></td>
+      <td></td>
+      <td>Value of Vm at fast AHP point.</td>
+    </tr>
+    <tr>
+      <th>36</th>
       <td>preMinPnt</td>
       <td>int</td>
       <td>NaN</td>
@@ -428,7 +480,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Minimum before an AP taken from predefined window.</td>
     </tr>
     <tr>
-      <th>34</th>
+      <th>37</th>
       <td>preMinVal</td>
       <td>float</td>
       <td>NaN</td>
@@ -438,7 +490,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Minimum before an AP taken from predefined window.</td>
     </tr>
     <tr>
-      <th>35</th>
+      <th>38</th>
       <td>preLinearFitPnt0</td>
       <td>int</td>
       <td>NaN</td>
@@ -448,7 +500,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Point where pre linear fit starts. Used for EDD Rate</td>
     </tr>
     <tr>
-      <th>36</th>
+      <th>39</th>
       <td>preLinearFitPnt1</td>
       <td>int</td>
       <td>NaN</td>
@@ -458,7 +510,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Point where pre linear fit stops. Used for EDD Rate</td>
     </tr>
     <tr>
-      <th>37</th>
+      <th>40</th>
       <td>earlyDiastolicDuration_ms</td>
       <td>float</td>
       <td>NaN</td>
@@ -468,7 +520,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Time (ms) between start/stop of EDD.</td>
     </tr>
     <tr>
-      <th>38</th>
+      <th>41</th>
       <td>preLinearFitVal0</td>
       <td>float</td>
       <td>NaN</td>
@@ -478,7 +530,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td></td>
     </tr>
     <tr>
-      <th>39</th>
+      <th>42</th>
       <td>preLinearFitVal1</td>
       <td>float</td>
       <td>NaN</td>
@@ -488,7 +540,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td></td>
     </tr>
     <tr>
-      <th>40</th>
+      <th>43</th>
       <td>earlyDiastolicDurationRate</td>
       <td>float</td>
       <td>NaN</td>
@@ -498,7 +550,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Early diastolic duration rate, the slope of the linear fit between start/stop of EDD.</td>
     </tr>
     <tr>
-      <th>41</th>
+      <th>44</th>
       <td>lateDiastolicDuration</td>
       <td>float</td>
       <td>NaN</td>
@@ -508,7 +560,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Depreciated</td>
     </tr>
     <tr>
-      <th>42</th>
+      <th>45</th>
       <td>preSpike_dvdt_max_pnt</td>
       <td>int</td>
       <td>NaN</td>
@@ -518,7 +570,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Point corresponding to peak in dv/dt before an AP.</td>
     </tr>
     <tr>
-      <th>43</th>
+      <th>46</th>
       <td>preSpike_dvdt_max_val</td>
       <td>float</td>
       <td>NaN</td>
@@ -528,7 +580,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Value of Vm at peak of dv/dt before an AP.</td>
     </tr>
     <tr>
-      <th>44</th>
+      <th>47</th>
       <td>preSpike_dvdt_max_val2</td>
       <td>float</td>
       <td>NaN</td>
@@ -538,7 +590,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Value of dv/dt at peak of dv/dt before an AP.</td>
     </tr>
     <tr>
-      <th>45</th>
+      <th>48</th>
       <td>postSpike_dvdt_min_pnt</td>
       <td>int</td>
       <td>NaN</td>
@@ -548,7 +600,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Point corresponding to min in dv/dt after an AP.</td>
     </tr>
     <tr>
-      <th>46</th>
+      <th>49</th>
       <td>postSpike_dvdt_min_val</td>
       <td>float</td>
       <td>NaN</td>
@@ -558,7 +610,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Value of Vm at minimum of dv/dt after an AP.</td>
     </tr>
     <tr>
-      <th>47</th>
+      <th>50</th>
       <td>postSpike_dvdt_min_val2</td>
       <td>float</td>
       <td>NaN</td>
@@ -568,7 +620,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Value of dv/dt at minimum of dv/dt after an AP.</td>
     </tr>
     <tr>
-      <th>48</th>
+      <th>51</th>
       <td>isi_pnts</td>
       <td>int</td>
       <td>NaN</td>
@@ -578,7 +630,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Inter-Spike-Interval (points) with respect to previous AP.</td>
     </tr>
     <tr>
-      <th>49</th>
+      <th>52</th>
       <td>isi_ms</td>
       <td>float</td>
       <td>NaN</td>
@@ -588,7 +640,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Inter-Spike-Interval (ms) with respect to previous AP.</td>
     </tr>
     <tr>
-      <th>50</th>
+      <th>53</th>
       <td>spikeFreq_hz</td>
       <td>float</td>
       <td>NaN</td>
@@ -598,7 +650,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>AP frequency with respect to previous AP.</td>
     </tr>
     <tr>
-      <th>51</th>
+      <th>54</th>
       <td>cycleLength_pnts</td>
       <td>int</td>
       <td>NaN</td>
@@ -608,7 +660,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Points between APs with respect to previous AP.</td>
     </tr>
     <tr>
-      <th>52</th>
+      <th>55</th>
       <td>cycleLength_ms</td>
       <td>int</td>
       <td>NaN</td>
@@ -618,7 +670,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Time (ms) between APs with respect to previous AP.</td>
     </tr>
     <tr>
-      <th>53</th>
+      <th>56</th>
       <td>diastolicDuration_ms</td>
       <td>float</td>
       <td>NaN</td>
@@ -628,7 +680,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Time (ms) between minimum before AP (preMinPnt) and AP time (thresholdPnt).</td>
     </tr>
     <tr>
-      <th>54</th>
+      <th>57</th>
       <td>widths</td>
       <td>list</td>
       <td>[]</td>
@@ -638,7 +690,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>A list of dict to hold half-height information for each half-height in detection halfHeights.</td>
     </tr>
     <tr>
-      <th>55</th>
+      <th>58</th>
       <td>widths_10</td>
       <td>int</td>
       <td>NaN</td>
@@ -648,7 +700,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Width (ms) at half-height 10 %.</td>
     </tr>
     <tr>
-      <th>56</th>
+      <th>59</th>
       <td>widths_20</td>
       <td>int</td>
       <td>NaN</td>
@@ -658,7 +710,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Width (ms) at half-height 20 %.</td>
     </tr>
     <tr>
-      <th>57</th>
+      <th>60</th>
       <td>widths_50</td>
       <td>int</td>
       <td>NaN</td>
@@ -668,7 +720,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Width (ms) at half-height 50 %.</td>
     </tr>
     <tr>
-      <th>58</th>
+      <th>61</th>
       <td>widths_80</td>
       <td>int</td>
       <td>NaN</td>
@@ -678,7 +730,7 @@ Note: To update this table use sanpy/bAnalysisResults.py
       <td>Width (ms) at half-height 80 %.</td>
     </tr>
     <tr>
-      <th>59</th>
+      <th>62</th>
       <td>widths_90</td>
       <td>int</td>
       <td>NaN</td>

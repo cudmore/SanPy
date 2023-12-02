@@ -581,7 +581,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
                     else:
                         fileNote = ''
                     self.slot_updateStatus(
-                        f'Loaded file {ba.fileLoader.filename} {fileNote}'
+                        f'Loaded file {rowDict["parent1"]}/{ba.fileLoader.filename} {fileNote}'
                     )  # this will load ba if necc
 
     def _buildMenus(self):

@@ -52,7 +52,8 @@ class fileLoader_abf(fileLoader_base):
             self._loadError = True
             self._abf = None
 
-        if loadData:
+        self._epochTableList = None
+        if not self._loadError and loadData:            
             try:
                 _tmp = self._abf.sweepEpochs.p1s
             except AttributeError as e:

@@ -2,7 +2,7 @@
 # Build an arm64 environment
 
 # create and activate a conda environment
-CONDA_SUBDIR=osx-arm64 conda create -y -n sanpy-pyinstaller-arm python=3.9
+CONDA_SUBDIR=osx-arm64 conda create -y -n sanpy-pyinstaller-arm python=3.11
 
 # (re)activate environment to get rid of
 # "To make your changes take effect please reactivate your environment"
@@ -38,10 +38,18 @@ pip install --upgrade pip
 #                   pyqtgraph \
 #                   pytables==3.7.0
 
+# remember the tables package has different names
+# conda install pytables
+# pip install tables
+
+# different package names for pyqt5
+# conda install pyqt
+# pip install PyQt5
+
 conda install -y numpy \
                   pandas \
                   scipy \
-                  scikit-imag \
+                  scikit-image \
                   tifffile \
                   h5py \
                   requests \
@@ -50,7 +58,10 @@ conda install -y numpy \
                   pyqt \
                   qtpy \
                   pyqtgraph \
-                  pytables
+                  pytables==3.7.0
+
+# pip install mplcursors
+conda install -y -c conda-forge mplcursors
 
 pip install pyabf
 pip install pyqtdarktheme

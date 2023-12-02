@@ -1542,7 +1542,7 @@ class bAnalysis:
         sweepX = self.fileLoader.sweepX  # sweepNumber is not optional
         filteredVm = self.fileLoader.sweepY_filtered  # sweepNumber is not optional
         filteredDeriv = self.fileLoader.filteredDeriv
-        sweepC = self.fileLoader.sweepC
+        # sweepC = self.fileLoader.sweepC
 
         #
         now = datetime.datetime.now()
@@ -1554,6 +1554,10 @@ class bAnalysis:
         # look in a window after each threshold crossing to get AP peak
         peakWindow_pnts = self.fileLoader.ms2Pnt_(dDict["peakWindow_ms"])
 
+        #
+        # look in a window after each peak to get 'fast ahp'
+        fastAhpWindow_pnts = self.fileLoader.ms2Pnt_(dDict["fastAhpWindow_ms"])
+        
         #
         # throw out spikes that have peak BELOW onlyPeaksAbove_mV
         # throw out spikes that have peak ABOVE onlyPeaksBelow_mV
@@ -1675,6 +1679,30 @@ class bAnalysis:
             # iIdx = len(self.spikeDict) - 1
 
             iIdx = i
+
+            # fast ahp, fastAhpWindow_pnts
+            if peakPnt+fastAhpWindow_pnts < len(sweepX):
+                fastAhpClip = filteredVm[peakPnt : peakPnt+fastAhpWindow_pnts]
+                fastAhpPnt = np.argmin(fastAhpClip)
+                
+                fastAhpError = fastAhpPnt == len(fastAhpClip)-1
+                
+                fastAhpPnt += peakPnt
+                fastAhpSec = self.fileLoader.pnt2Sec_(fastAhpPnt)
+                fastAhpValue = filteredVm[fastAhpPnt]
+
+                spikeDict[i]["fastAhpPnt"] = fastAhpPnt
+                spikeDict[i]["fastAhpSec"] = fastAhpSec
+                spikeDict[i]["fastAhpValue"] = fastAhpValue
+
+                # log error
+                if fastAhpError:
+                    errorType = "Fast AHP was detected at end of fast AHP window"
+                    errorStr = "Consider increasing the fast AHP window with fastAhpWindow_ms"
+                    eDict = self._getErrorDict(
+                        i, spikeTimes[i], errorType, errorStr
+                    )  # spikeTime is in pnts
+                    spikeDict[iIdx]["errors"].append(eDict)
 
             # todo: get rid of this
             defaultVal = float("nan")

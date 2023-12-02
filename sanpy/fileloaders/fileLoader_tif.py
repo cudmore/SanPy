@@ -114,7 +114,9 @@ def loadCziHeader(cziPath : str) -> dict:
 
         return _header
 
-def test_czi():
+def _test_czi():
+    return
+
     if AICSImage:
         return
     
@@ -336,4 +338,4 @@ if __name__ == '__main__':
     # path = 'data/kymograph/rosie-kymograph.tif'
     # tlt = fileLoader_tif(path)
 
-    test_czi()
+    _test_czi()

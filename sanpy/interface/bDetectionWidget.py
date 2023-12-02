@@ -114,6 +114,19 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "plotOn": "vm",
                 "plotIsOn": True,
             },
+
+            {
+                "humanName": "Fast AHP (mV)",
+                "x": "fastAhpSec",
+                "y": "fastAhpValue",
+                "convertx_tosec": False,
+                "color": "y",
+                "styleColor": "color: yellow",
+                "symbol": "o",
+                "plotOn": "vm",
+                "plotIsOn": True,
+            },
+
             {
                 "humanName": "Half-Widths",
                 "x": None,

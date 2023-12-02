@@ -712,10 +712,13 @@ class kymAnalysis:
             print(f'  {k}: {v}')
 
     def getAnalysisParam(self, name):
+        if name not in self._analysisParams.keys():
+            logger.error(f'did not find key: {name}')
+            return
         return self._analysisParams[name]
     
     def setAnalysisParam(self, name, value):
-        if not name in self._analysisParams.keys():
+        if name not in self._analysisParams.keys():
             logger.error(f'did not find key: {name}')
         self._analysisParams[name] = value
 
