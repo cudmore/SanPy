@@ -386,6 +386,14 @@ class kymographWidget(QtWidgets.QWidget):
         self.tifCursorLabel = QtWidgets.QLabel("Cursor:")
         controlBarLayout.addWidget(self.tifCursorLabel, alignment=QtCore.Qt.AlignLeft)
 
+        # channel
+        self.tifChannelCombobox = QtWidgets.QComboBox()
+        self.tifChannelCombobox.addItems(['1', '2', '3'])
+        self.tifChannelCombobox.currentTextChanged.connect(
+            self.on_select_channel
+        )
+        controlBarLayout.addWidget(self.tifChannelCombobox, alignment=QtCore.Qt.AlignLeft)
+
         # align left
         controlBarLayout.addStretch()
 
@@ -461,6 +469,9 @@ class kymographWidget(QtWidgets.QWidget):
 
         #return controlBarLayout
         return _aWidget
+
+    def on_select_channel(self, text):
+        logger.info(text)
 
     def showTopToolbar(self, visible : bool = True):
         self._topToolbar.setVisible(visible)

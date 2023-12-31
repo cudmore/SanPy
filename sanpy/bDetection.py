@@ -207,6 +207,16 @@ def getDefaultDetection() -> dict:
     theDict[key]["errors"] = ""
     theDict[key]["description"] = "Condition"
 
+    key = "userType"
+    theDict[key] = {}
+    theDict[key]["defaultValue"] = "0"
+    theDict[key]["type"] = "int"
+    theDict[key]["allowNone"] = False
+    theDict[key]["units"] = ""
+    theDict[key]["humanName"] = "User Type"
+    theDict[key]["errors"] = ""
+    theDict[key]["description"] = "User Type"
+
     key = "dvdt_percentOfMax"
     theDict[key] = {}
     theDict[key]["defaultValue"] = 0.1

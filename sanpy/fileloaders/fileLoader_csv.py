@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 
 
 class fileLoader_text(fileLoader_base):
-    loadFileType = "sanpy"
+    loadFileType = ".sanpy"
 
     # @property
     # def loadFileType(self):

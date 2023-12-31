@@ -2,29 +2,18 @@
 # Author: Robert H Cudmore
 # Date: 20210603
 
-import os, time, sys
-import random
+import os
+import time
+import sys
 import copy  # For copy.deepcopy() of bAnalysis
-import uuid  # to generate unique key on bAnalysis spike detect
+# import uuid  # to generate unique key on bAnalysis spike detect
 import pathlib  # ned to use this (introduced in Python 3.4) to maname paths on Windows, stop using os.path
 
-from typing import List, Union, Optional
+from typing import List, Optional
 
 import numpy as np
+
 import pandas as pd
-import requests, io  # too load from the web
-
-# for old code that was compressing hdf5 files
-# from subprocess import call # to call ptrepack (might fail on windows???)
-# from pprint import pprint
-# import tables.scripts.ptrepack  # to save compressed .h5 file
-# import shutil
-
-import sanpy
-import sanpy.h5Util
-
-from sanpy.sanpyLogger import get_logger
-logger = get_logger(__name__)
 
 # Turn off pandas save h5 performance warnnig
 # see: https://github.com/pandas-dev/pandas/issues/3622
@@ -32,8 +21,16 @@ logger = get_logger(__name__)
 # your performance may suffer as PyTables will pickle object types that it cannot
 # map directly to c-types [inferred_type->mixed-integer,key->block0_values] [items->Index(['detectionClass', '_isAnalyzed', '_dataPointsPerMs', '_sweepList',
 import warnings
-
 warnings.filterwarnings("ignore", category=pd.io.pytables.PerformanceWarning)
+
+import requests
+import io  # too load from the web
+
+import sanpy
+import sanpy.h5Util
+
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 _sanpyColumns = {
     #'Idx': {
@@ -226,7 +223,6 @@ We require type so we can edit with QAbstractTableModel.
 Critical for qt interface to allow easy editing of values while preserving type
 """
 
-
 def _fixRelPath(folderPath, dfTable: pd.DataFrame, fileList: List[str]):
     """
     Was not assigning relPath on initial load (no hd5 file).
@@ -335,10 +331,6 @@ class bAnalysisDirWeb:
         ba.spikeDetect()
         print(ba.numSpikes)
 
-
-import os
-from glob import glob
-
 def _old_santana_file_finder(files):
     """
     
@@ -400,8 +392,10 @@ def _old_santana_file_finder(files):
     return retDict
 
 def _listdir(path, theseFileTypes):
-    """
-    recursively walk directory to specified depth
+    """Recursively walk directory to specified depth
+    
+    Parameters
+    ----------
     :param path: (str) path to list files from
     :yields: (str) filename, including path
     """
@@ -435,7 +429,7 @@ def _walk(path, theseFileTypes, depth=None):
                     _filebase, _ext = os.path.splitext(filename)
                     if filename.startswith('.'):
                         continue
-                    if not _ext in theseFileTypes:
+                    if _ext not in theseFileTypes:
                         continue
                     yield os.path.join(dirpath, filename)
                     
@@ -462,22 +456,22 @@ def stripSantanaTif(fileList : List[str]) -> List[str]:
     return retList
 
 class analysisDir:
-    """
-    Class to manage a list of files loaded from a folder.
+    """Class to manage a list of files loaded from a folder.
     """
 
     sanpyColumns = _sanpyColumns
-    """Dict of dict of column names and bookkeeping info.
-    """
+    # Dict of dict of column names and bookkeeping info.
 
-    theseFileTypes = [".abf", ".atf", ".sanpy", ".dat", ".tif", ".czi"]
-    """File types to load.
-    """
+    # 20231230, get this from sanpyapp fileloader keys
+    # theseFileTypes = [".abf", ".atf", ".sanpy", ".tif"]  # .dat .czi
+    # File types to load.
 
     def __init__(
         self,
         path: str = None,
-        myApp : "sanpy.interface.sanpy_app" = None,
+        filePath : str = None,
+        sanPyWindow : "sanpy.interface.SanPyWindow" = None,
+        fileLoaderDict : dict = None,
         autoLoad: bool = False,
         folderDepth: Optional[int] = None,
     ):
@@ -487,24 +481,50 @@ class analysisDir:
 
         TODO: extend to link to folder in cloud (start with box and/or github)
 
-        Args:
-            path (str): Path to folder
-            myApp (sanpy.interface.sanpy_app): Optional
-            autoLoad (bool):
-            folderDepth (int):
-            #cloudDict (dict): To load from cloud, for now  just github
+        Parameters
+        ----------
+        path (str):
+            Path to folder
+        filePath (str):
+            Path to one file
+        sanPyWindow (sanpy.interface.SanPyWindow)
+            PyQt, used to signal progress on loading
+        fileLoaderDict (dict):
+            Dict with file extension keys (no dot)
+        autoLoad (bool):
+            If True then 
+        folderDepth (int):
+            Folder depth to recurse if loading folder path.
 
-        Notes:
-            - Some functions are so self can mimic a pandas dataframe used by pandasModel.
-                (shape, loc, loc_setter, iloc, iLoc_setter, columns, append, drop, sort_values, copy)
+        Notes
+        -----
+        - Some functions are so self can mimic a pandas dataframe used by pandasModel.
+            (shape, loc, loc_setter, iloc, iLoc_setter, columns, append, drop, sort_values, copy)
+        - 202312 adding filepath to load just one file
         """
-        self.path: str = path
-        self.myApp = myApp  # used to signal on building initial db
-        self.autoLoad = autoLoad  # not used
 
-        self.folderDepth = folderDepth  # specify int
+        self._filePath = filePath
+        if filePath is not None and os.path.isfile(filePath):
+            self._filePath = filePath
+            path = os.path.split(filePath)[0]
+
+        logger.info(f'{path} self._filePath:{self._filePath}')
+
+        self.path: str = path
+        
+        self._sanPyWindow = sanPyWindow
+        # used to signal on building initial db
+
+        self._fileLoaderDict = fileLoaderDict
+        # dist with file extension keys
+
+        self.autoLoad = autoLoad
+        # not used
+
+        self.folderDepth = folderDepth
 
         self._isDirty = False
+        # keep track if analysis was changed and prompt on quit
 
         # self._poolDf = None
         """See pool_ functions"""
@@ -518,13 +538,20 @@ class analysisDir:
         # name of database file created/loaded from folder path
         self.dbFile = "sanpy_recording_db.csv"
 
-        self._df = None
-        # if autoLoad:
-        if 1:
-            self._df = self.loadHdf()
-            if self._df is None:
-                self._df = self.loadFolder(loadData=autoLoad)  # only used if no h5 file
-                self._updateLoadedAnalyzed()
+        self._df = self.loadHdf()
+        if self._df is None:
+            # did not load h5 file
+            self._df = self.loadFolder(loadData=autoLoad)
+            self._updateLoadedAnalyzed()
+        elif self._fileLoaderDict is not None:
+            logger.info(f'sync existing df with filePath: {self._filePath}')
+            self.syncDfWithPath()
+
+        # if we have a filePath and not in df then add it
+        if self._filePath is not None:
+
+            logger.info('self._df')
+            print(self._df)
 
         # self._df = self.loadFolder(loadData=autoLoad)
 
@@ -532,11 +559,10 @@ class analysisDir:
         self._checkColumns()
         self._updateLoadedAnalyzed()
 
-        """
-        logger.warning('remember: temporary fix with _fixRelPath()\n')
-        tmpFileList = self.getFileList()
-        _fixRelPath(self.path, self._df, tmpFileList)
-        """
+    @property
+    def theseFileTypes(self):
+        if self._fileLoaderDict is not None:
+            return list(self._fileLoaderDict.keys())
 
     def __iter__(self):
         self._iterIdx = -1
@@ -683,120 +709,6 @@ class analysisDir:
             self.getDataFrame().to_clipboard(sep="\t", index=False)
             logger.info("Copied to clipboard")
 
-    def _old_saveDatabase(self):
-        """save dbFile .csv and hdf .gzip"""
-        dbPath = os.path.join(self.path, self.dbFile)
-        if self.getDataFrame() is not None:
-            #
-            logger.info(f'Saving "{dbPath}"')
-            self.getDataFrame().to_csv(dbPath, index=False)
-            self._isDirty = False
-
-            #
-            """
-            hdfFile = os.path.splitext(self.dbFile)[0] + '.h5'
-            hdfPath = os.path.join(self.path, hdfFile)
-            logger.info(f'Saving "{hdfPath}"')
-            #hdfStore = pd.HDFStore(hdfPath)
-            start = time.time()
-            complevel = 9
-            complib = 'blosc:blosclz'
-            with pd.HDFStore(hdfPath, mode='w', complevel=complevel, complib=complib) as hdfStore:
-                hdfStore['df'] = self.getDataFrame()  # save it
-            stop = time.time()
-            logger.info(f'Saving took {round(stop-start,2)} seconds')
-            """
-
-    def _old_getFrozenPath(self):
-        if getattr(sys, "frozen", False):
-            # running in a bundle (frozen)
-            myPath = sys._MEIPASS
-        else:
-            # running in a normal Python environment
-            # myPath = os.path.dirname(os.path.abspath(__file__))
-            myPath = pathlib.Path(__file__).parent.absolute()
-        return myPath
-
-    def _old_rebuildHdf(self):
-        #
-        # rebuild the file to remove old changes and reduce size
-        tmpHdfFile = os.path.splitext(self.dbFile)[0] + "_tmp.h5"
-        # tmpHdfPath = os.path.join(self.path, tmpHdfFile)
-        tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
-
-        hdfFile = os.path.splitext(self.dbFile)[0] + ".h5"
-        # hdfPath = os.path.join(self.path, hdfFile)
-        hdfPath = pathlib.Path(self.path) / hdfFile
-        logger.info(f"Rebuilding h5 to {hdfPath}")
-
-        # can't pass sys.argv a 'PosixPath' from pathlib.Path, needs to be a string
-        tmpHdfPath = str(tmpHdfPath)
-        hdfPath = str(hdfPath)
-
-        # when calling ptrepack, we need trailing ':' on each src/dst path
-        # without this Windows fails to find the file
-        _tmpHdfPath = tmpHdfPath + ":"
-        _hdfPath = hdfPath + ":"
-
-        # The first item is normally the command line command name (not used)
-        sys.argv = ["", "--overwrite", "--chunkshape=auto", _tmpHdfPath, _hdfPath]
-
-        logger.info("running tables.scripts.ptrepack.main()")
-        logger.info(f"sys.argv: {sys.argv}")
-        try:
-            tables.scripts.ptrepack.main()  # noqa
-
-            # delete the temporary (large file)
-            logger.info(f"Deleting tmp file: {tmpHdfPath}")
-            os.remove(tmpHdfPath)
-
-            self.signalApp(
-                f"Saved compressed folder analysis with tables.scripts.ptrepack.main()"
-            )
-
-        except FileNotFoundError as e:
-            logger.error("tables.scripts.ptrepack.main() failed ... file was not saved")
-            logger.error(e)
-            self.signalApp(f"ERROR in tables.scripts.ptrepack.main(): {e}")
-
-    def _not_used_save(self):
-        """Save all analysis as csv."""
-        logger.info("")
-        for ba in self:
-            if ba is not None:
-                # save detection and analysis to json
-                # ba.saveAnalysis(forceSave=True)
-
-                # save analysis to csv
-                ba.saveAnalysis_tocsv()
-
-    def _old_getTmpHdfFile(self):
-        """Get temporary h5 file to write to.
-
-        We will always then compress with _rebuildHdf.
-        """
-        logger.info("")
-
-        tmpHdfFile = os.path.splitext(self.dbFile)[0] + "_tmp.h5"
-        tmpHdfPath = pathlib.Path(self.path) / tmpHdfFile
-
-        # the compressed version from the last save
-        hdfFile = os.path.splitext(self.dbFile)[0] + ".h5"
-        hdfFilePath = pathlib.Path(self.path) / hdfFile
-
-        # hdfMode = 'w'
-        if os.path.isfile(hdfFilePath):
-            logger.info(f"    copying existing hdf file to tmp ")
-            logger.info(f"    hdfFilePath {hdfFilePath}")
-            logger.info(f"    tmpHdfPath {tmpHdfPath}")
-            shutil.copyfile(hdfFilePath, tmpHdfPath)  # noqa
-        else:
-            pass
-            # compressed file does not exist, just use tmp path
-            # print('   does not exist:', hdfFilePath)
-
-        return tmpHdfPath
-
     def getPathFromRelPath(self, relPath):
         """Get full path to file from relPath.
         
@@ -821,8 +733,8 @@ class analysisDir:
         Set file table 'uuid' column when we actually save a bAnalysis
 
         Important: Order matters
-                (1) Save bAnalysis first, it updates uuid in file table.
-                (2) Save file table with updated uuid
+            (1) Save bAnalysis first, it updates uuid in file table.
+            (2) Save file table with updated uuid
         """
         start = time.time()
 
@@ -910,7 +822,9 @@ class analysisDir:
 
             _stop = time.time()
             # logger.info(f"Loading took {round(_stop-_start,2)} seconds")
-        #
+            
+            # if we are one file then make sure file is in df
+
         return df
 
     def loadOneAnalysis(self, path, uuid=None, allowAutoLoad=True, verbose=False):
@@ -926,10 +840,10 @@ class analysisDir:
 
         # grab the fileLoaderDict from our app
         # if it is None then bAnalysis will load this (from disk)
-        if self.myApp is not None:
-            _fileLoaderDict = self.myApp.getFileLoaderDict()
-        else:
-            _fileLoaderDict = None
+        # if self.mySanPyWindow is not None:
+        #     _fileLoaderDict = self.mySanPyWindow.getSanPyApp().getFileLoaderDict()
+        # else:
+        #     _fileLoaderDict = None
 
         ba = None
         if uuid is not None and uuid:
@@ -938,14 +852,14 @@ class analysisDir:
                 logger.info(f"    Retreiving uuid from hdf file {uuid}")
 
             # load from abf
-            ba = sanpy.bAnalysis(path, fileLoaderDict=_fileLoaderDict, verbose=verbose)
+            ba = sanpy.bAnalysis(path, fileLoaderDict=self._fileLoaderDict, verbose=verbose)
 
             # load analysis from h5 file, will fail if uuid is not in file
             ba._loadHdf_pytables(hdfPath, uuid)
 
         if allowAutoLoad and ba is None:
             # load from path
-            ba = sanpy.bAnalysis(path, fileLoaderDict=_fileLoaderDict, verbose=verbose)
+            ba = sanpy.bAnalysis(path, fileLoaderDict=self._fileLoaderDict, verbose=verbose)
             if verbose:
                 logger.info(f"    Loaded ba from path {path} and now ba:{ba}")
         #
@@ -985,122 +899,64 @@ class analysisDir:
             self._updateLoadedAnalyzed()
             self._isDirty = True  # if true, prompt to save on quit
 
-    def loadFolder(self, path=None, loadData=False):
-        """
-        Parse a folder and load all (abf, csv, ...). Only called if no h5 file.
+    def loadFolder(self, path=None, loadData=False) -> pd.DataFrame:
+        """Parse a folder and load all (abf, csv, ...).
+        
+        Only called if no h5 file.
 
         TODO: get rid of loading database from .csv (it is replaced by .h5 file)
         TODO: extend the logic to load from cloud (after we were instantiated)
         """
-        logger.info("Loading folder from scratch (no hdf file)")
+        logger.info("Loading folder from scratch (no h5 file)")
 
         start = time.time()
         if path is None:
             path = self.path
         self.path = path
 
-        loadedDatabase = False
+        df = pd.DataFrame(columns=self.sanpyColumns.keys())
+        df = self._setColumnType(df)
 
-        # load an existing folder db or create a new one
-        # abb 20220612 turned off loading from self.dbFile .csv file
-        dbPath = os.path.join(path, self.dbFile)
-        if 0 and os.path.isfile(dbPath):
-            # load from .csv
-            logger.info(f"Loading existing folder db: {dbPath}")
-            df = pd.read_csv(dbPath, header=0, index_col=False)
-            # df["Idx"] = pd.to_numeric(df["Idx"])
-            df = self._setColumnType(df)
-            loadedDatabase = True
-            # logger.info(f'  shape is {df.shape}')
-        else:
-            # logger.info(f'No existing db file, making {dbPath}')
-            logger.info(f"No existing db file, making default dataframe")
-            df = pd.DataFrame(columns=self.sanpyColumns.keys())
-            df = self._setColumnType(df)
+        # get list of all abf/csv/tif files
+        fileList = self.getFileList(path)
+        _numFilesToLoad = len(fileList)
+        start = time.time()
+        # build new db dataframe
+        listOfDict = []
+        for rowIdx, fullFilePath in enumerate(fileList):
+            
+            self.signalWindow(
+                f'Loading file {rowIdx+1} of {_numFilesToLoad} "{fullFilePath}"'
+            )
 
-        if loadedDatabase:
-            # check columns with sanpyColumns
-            loadedColumns = df.columns
-            for col in loadedColumns:
-                if not col in self.sanpyColumns.keys():
-                    logger.error(
-                        f'error: bAnalysisDir did not find loaded col: "{col}" in sanpyColumns.keys()'
-                    )
-            for col in self.sanpyColumns.keys():
-                if not col in loadedColumns:
-                    logger.error(
-                        f'error: bAnalysisDir did not find sanpyColumns.keys() col: "{col}" in loadedColumns'
-                    )
+            # rowDict is what we are showing in the file table
+            # abb debug vue, set loadData=True
+            # loads bAnalysis
+            ba, rowDict = self.getFileRow(fullFilePath, loadData=loadData)
 
-        if loadedDatabase:
-            # seach existing db for missing abf files
-            pass
-        else:
-            # get list of all abf/csv/tif files
-            fileList = self.getFileList(path)
-            _numFilesToLoad = len(fileList)
-            start = time.time()
-            # build new db dataframe
-            listOfDict = []
-            for rowIdx, fullFilePath in enumerate(fileList):
-                self.signalApp(
-                    f'Loading file {rowIdx+1} of {_numFilesToLoad} "{fullFilePath}"'
-                )
+            if rowDict is None:
+                logger.warning(f'error loading file {fullFilePath}')
+                continue
+            
+            # as we parse the folder, don't load ALL files (will run out of memory)
+            if loadData:
+                rowDict["_ba"] = ba
+            else:
+                rowDict["_ba"] = None  # ba
 
-                # rowDict is what we are showing in the file table
-                # abb debug vue, set loadData=True
-                # loads bAnalysis
-                ba, rowDict = self.getFileRow(fullFilePath, loadData=loadData)
+            # do not assign uuid until bAnalysis is saved in h5 file
+            # rowDict['uuid'] = ''
 
-                if rowDict is None:
-                    logger.warning(f'error loading file {fullFilePath}')
-                    continue
-                
-                # print('XXX')
-                # print('rowDict')
-                # print(rowDict)
+            # logger.info(f'    row:{rowIdx} relPath:{relPath} fullFilePath:{fullFilePath}')
 
-                # TODO: calculating time, remove this
-                # This is 2x faster than loading from pandas gzip ???
-                # dDict = sanpy.bAnalysis.getDefaultDetection()
-                # dDict['dvdtThreshold'] = 2
-                # ba.spikeDetect(dDict)
-
-                # as we parse the folder, don't load ALL files (will run out of memory)
-                if loadData:
-                    rowDict["_ba"] = ba
-                else:
-                    rowDict["_ba"] = None  # ba
-
-                # do not assign uuid until bAnalysis is saved in h5 file
-                # rowDict['uuid'] = ''
-
-                # 20230313 moved into getFileRow()
-                # relPath = fullFilePath.replace(path, '')
-                # if relPath.startswith('/'):
-                #     # so we can use os.path.join()
-                #     relPath = relPath[1:]
-                # rowDict['relPath'] = relPath
-
-                # logger.info(f'    row:{rowIdx} relPath:{relPath} fullFilePath:{fullFilePath}')
-
-                listOfDict.append(rowDict)
-
-            stop = time.time()
-            logger.info(f"Load took {round(stop-start,3)} seconds.")
-
-            #
-            df = pd.DataFrame(listOfDict)
-            # print('=== built new db df:')
-            # print(df)
-            df = self._setColumnType(df)
-        #
-
-        # expand each to into self.fileList
-        # df['_ba'] = None
+            listOfDict.append(rowDict)
 
         stop = time.time()
-        logger.info(f"Load took {round(stop-start,2)} seconds.")
+        logger.info(f"Loading {len(listOfDict)} files took {round(stop-start,3)} seconds.")
+
+        df = pd.DataFrame(listOfDict)
+        df = self._setColumnType(df)
+        
         return df
 
     def _checkColumns(self):
@@ -1112,7 +968,7 @@ class analysisDir:
         verbose = True
         loadedColumns = self._df.columns
         for col in loadedColumns:
-            if not col in self.sanpyColumns.keys():
+            if col not in self.sanpyColumns.keys():
                 # loaded has unexpected column, leave it
                 if verbose:
                     logger.info(
@@ -1250,7 +1106,13 @@ class analysisDir:
         # sanpy.bAnalysis_.bAnalysis
         # if isinstance(ba, sanpy.bAnalysis):
         if ba is not None:
-            isAnalyzed = ba.isAnalyzed()
+            try:
+                isAnalyzed = ba.isAnalyzed()
+            except(AttributeError) as e:
+                logger.error(f'rowIdx {rowIdx} ba is "{ba}" but expecting bAnalysis_')
+                logger.error('self._df:')
+                print(self._df)
+                return False
         return isAnalyzed
 
     def analysisIsDirty(self, rowIdx):
@@ -1396,21 +1258,25 @@ class analysisDir:
             logger.warning(f'Did not find file "{path}"')
             return None, None
         fileType = os.path.splitext(path)[1]
-        if fileType not in self.theseFileTypes:
+        # if fileType:
+        #     fileType = fileType[1:]  # [1:] to strip period
+        if fileType not in self.theseFileTypes:  
             logger.warning(f'Did not load file type "{fileType}"')
             return None, None
 
         # grab the fileLoaderDict from our app
         # if it is None then bAnalysis will load this (from disk)
-        if self.myApp is not None:
-            _fileLoaderDict = self.myApp.getFileLoaderDict()
-        else:
-            _fileLoaderDict = None
+        # if self.mySanPyWindow is not None:
+        #     _fileLoaderDict = self.mySanPyWindow.getSanPyApp().getFileLoaderDict()
+        # else:
+        #     _fileLoaderDict = None
 
         # load bAnalysis
         # logger.info(f'Loading bAnalysis "{path}"')
         # loadData is false, load header
-        ba = sanpy.bAnalysis(path, loadData=loadData, fileLoaderDict=_fileLoaderDict)
+        ba = sanpy.bAnalysis(path,
+                             loadData=loadData,
+                             fileLoaderDict=self._fileLoaderDict)
 
         if ba.loadError:
             logger.error(f'Error loading bAnalysis file "{path}"')
@@ -1497,11 +1363,25 @@ class analysisDir:
 
         return ba, rowDict
 
-    def getFileList(self, path: str = None, santanaTif=False) -> List[str]:
+    def getFileList(self,
+                    path: str = None,
+                    santanaTif=False
+                    ) -> List[str]:
         """Get file paths from path.
 
         Uses self.theseFileTypes
+
         """
+        
+        # to open just one file
+        # if forceFolder:
+        #     # we are forcing reload of an entire folder
+        #     self._filePath = None
+
+        if self._filePath is not None:
+            logger.info(f'returning one file {self._filePath}')
+            return [self._filePath]
+        
         if path is None:
             path = self.path
 
@@ -1598,15 +1478,24 @@ class analysisDir:
 
         rowSeries = pd.Series()
         if rowDict is not None:
-            rowSeries = pd.Series(rowDict)
+            # rowSeries = pd.Series(rowDict)
+            rowSeries = pd.DataFrame([rowDict])
+
             # self._data.iloc[row] = rowSeries
             # self._data = self._data.reset_index(drop=True)
 
-        newRowIdx = len(self._df)
+        newRowIdx = len(self._df)  # append this row
+
         df = self._df
-        logger.warning(f"need to replace append with concat")
+        # logger.warning(f"need to replace append with concat")
         #df = df.append(rowSeries, ignore_index=True)
-        df = pd.concat([df, rowSeries])
+
+        logger.info(f'concat this rowSeries')
+        print(rowSeries)
+        print('to this df')
+        print(df)
+
+        df = pd.concat([df, rowSeries], axis=0, ignore_index=True)
 
         # df = pd.concat([df,rowSeries], ignore_index=True, axis=1)
         df = df.reset_index(drop=True)
@@ -1614,6 +1503,10 @@ class analysisDir:
         if ba is not None:
             df.loc[newRowIdx, "_ba"] = ba
 
+        print('')
+        logger.info('=== after concat')
+        print(df)
+                    
         #
         self._df = df
 
@@ -1646,7 +1539,7 @@ class analysisDir:
         self._updateLoadedAnalyzed()
 
     def _old_duplicateRow(self, rowIdx):
-        """Depreciated, Was used to have different ocnditions within a recording,
+        """Depreciated, Was used to have different conditions within a recording,
         this is now handled by condiiton column.
         """
         # duplicate rowIdx
@@ -1683,12 +1576,21 @@ class analysisDir:
         self._updateLoadedAnalyzed()
 
     def syncDfWithPath(self):
-        """Sync path with existing df. Used to detect new/removed files."""
+        """Sync path with existing df. Used to detect new/removed files.
+        
+        If we currently have just one file (self._filePath) we will trash it and load a folder
+        
+        Notes
+        -----
+        20231230, trying to use this to open a one file window with an exiting h5 file.
+        """
 
-        pathFileList = self.getFileList()  # always full path
+        pathFileList = self.getFileList()
+
+        # our currently loaded files
         dfFileList = self._df["File"].tolist()
 
-        logger.info("")
+        logger.info(f'dfFileList: {dfFileList}')
         # print('    === pathFileList (on drive):')
         # print('    ', pathFileList)
         # print('    === dfFileList (in table):')
@@ -1700,16 +1602,20 @@ class analysisDir:
         for pathFile in pathFileList:
             fileName = os.path.split(pathFile)[1]
             if fileName not in dfFileList:
-                logger.info(f'Found file in path "{fileName}" not in df')
+                logger.info(f'   Found file in path "{fileName}" not in df')
+
                 # load bAnalysis and get df column values
                 addedToDf = True
-                # fullPathFile = os.path.join(self.path, pathFile)
+
                 ba, rowDict = self.getFileRow(pathFile)  # loads bAnalysis
+
                 if rowDict is not None:
                     # listOfDict.append(rowDict)
 
                     # TODO: get this into getFileROw()
-                    logger.warning("bug 20220718, not sure we need this ???")
+                    # logger.warning("bug 20220718, not sure we need this ???")
+                    # print(rowDict)
+
                     # rowDict['relPath'] = pathFile
                     rowDict["_ba"] = None
 
@@ -1762,7 +1668,8 @@ class analysisDir:
                 
             oneDf = ba.asDataFrame()
             if oneDf is not None:
-                self.signalApp(f'  adding "{ba.fileLoader.filename}"', verbose=verbose)
+
+                self.signalWindow(f'Adding "{ba.fileLoader.filename}"', verbose=verbose)
                 
                 oneDf["File Number"] = int(rowIdx)
                 
@@ -1821,14 +1728,14 @@ class analysisDir:
 
         return masterDf
 
-    def signalApp(self, str, verbose=True):
-        """Update status bar of SanPy app.
+    def signalWindow(self, str, verbose=True):
+        """Update status bar of SanPy window.
 
         TODO make this a signal and connect app to it.
             Will not be able to do this, we need to run outside Qt
         """
-        if self.myApp is not None:
-            self.myApp.slot_updateStatus(str)
+        if self._sanPyWindow is not None:
+            self._sanPyWindow.slot_updateStatus(str)
         elif verbose:
             logger.info(str)
 

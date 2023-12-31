@@ -39,7 +39,7 @@ def _module_from_file(module_name, file_path):
 def _getObjectList(verbose=True) -> List[dict]:
     """Return a list of classes defined in sanpy.userAnalysis.
 
-    Each of these is an object we can (i) construct or (ii) interrogate statis class members
+    Each of these is an object we can (i) construct or (ii) interrogate static class members
 
     Returns
     -------
@@ -47,7 +47,7 @@ def _getObjectList(verbose=True) -> List[dict]:
     """
 
     if verbose:
-        logger.info("")
+        logger.info("Loading user analysis plugins")
   
     #
     # user plugins from files in folder <user>/SanPy/analysis
@@ -72,7 +72,8 @@ def _getObjectList(verbose=True) -> List[dict]:
 
         if verbose:
             logger.info("")
-            logger.info(f"   file: {file}")
+            logger.info("   file:")
+            logger.info(f"   {file}")
             logger.info(f"   fullModuleName: {fullModuleName}")
             logger.info(f"   moduleName: {moduleName}")
             logger.info(f"   loadedModule: {loadedModule}")
@@ -111,7 +112,7 @@ def _getObjectList(verbose=True) -> List[dict]:
         loadedModuleList.append(pluginDict)
 
     # new, june 2023, get from user_analysis folder as well
-    logger.info('fetching user analysis from core code folder sanpy.user_analysis')
+    logger.info('Loading core analysis plugins from sanpy.user_analysis')
     _ignoreModuleList = []
     if not DO_KYMOGRAPH_ANALYSIS:
         _ignoreModuleList.append('kymUserAnalysis')
@@ -137,7 +138,7 @@ def _getObjectList(verbose=True) -> List[dict]:
             }
 
             if verbose:
-                logger.info(f' loading core user analysis from user_analysis: "{moduleName}"')
+                logger.info(f' loaded user_analysis: "{moduleName}"')
 
             loadedModuleList.append(pluginDict)
           

@@ -17,5 +17,13 @@ def test_dir():
 		ba = ad.getAnalysis(rowIdx)
 		print(ba)
 
+def test_file():
+	filePath = os.path.join('data', '2021_07_20_0010.abf')
+	autoLoad = False
+	ad = sanpy.analysisDir(filePath=filePath, autoLoad=autoLoad, folderDepth=1)
+
+	assert ad is not None
+	
 if __name__ == '__main__':
 	test_dir()
+	test_file()

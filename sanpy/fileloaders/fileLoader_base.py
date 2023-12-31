@@ -20,8 +20,8 @@ logger = get_logger(__name__)
 def getFileLoaders(verbose: bool = False) -> dict:
     """Load file loaders from both
 
-    1) Module sanpy.fileloaders
-    2) Folder <user>/Documents/SanPy/File Loaders
+        1) Module sanpy.fileloaders
+        2) Folder <user>/Documents/SanPy/File Loaders
 
     Each file loader is a class derived from [fileLoader_base](../../api/fileloader/fileLoader_base.md)
 
@@ -43,11 +43,11 @@ def getFileLoaders(verbose: bool = False) -> dict:
     loadedList = []
     for moduleName, obj in inspect.getmembers(sanpy.fileloaders):
         if inspect.isclass(obj):
-            if verbose:
-                logger.info(f"moduleName:{moduleName}")
+            # if verbose:
+            #     logger.info(f"moduleName:{moduleName}")
             if moduleName in ignoreModuleList:
-                if verbose:
-                    logger.info(f'IGNORING {moduleName}')
+                # if verbose:
+                #     logger.info(f'IGNORING {moduleName}')
                 continue
             loadedList.append(moduleName)
             fullModuleName = "sanpy.fileloaders." + moduleName
@@ -81,7 +81,7 @@ def getFileLoaders(verbose: bool = False) -> dict:
     #
     # user plugins from files in folder "<user>/SanPy/file loaders"
     fileLoaderFolder = sanpy._util._getUserFileLoaderFolder()
-    loadedModuleList = []
+    # loadedModuleList = []
     if os.path.isdir(fileLoaderFolder):
         files = glob.glob(os.path.join(fileLoaderFolder, "*.py"))
     else:

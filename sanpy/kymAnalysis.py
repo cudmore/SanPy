@@ -570,6 +570,8 @@ class kymAnalysis:
         return {
             'version': '0.0.6',
             
+            'channel': 1,  # channel to show/analyze
+            
             'reduceFraction': 0,    #0.05,
                                     # percentage to reduce t/b of full rect roi to make best guess
                                     # not used in analysis
@@ -1243,16 +1245,17 @@ class kymAnalysis:
         _yNew = np.interp(_xNew, _xOld, intensityProfile)
         # _interpFunction = scipy.interpolate.interp1d(_xNew, _xOld, kind='linear'
                       
+        # percentOfMax is actually std * percentOfMax
         _oct4_leftPnt, _oct4_rightPnt = startStopFromDeriv(_yNew, percentOfMax, doPlot=doMplPlot)
 
         if not np.isnan(_oct4_leftPnt):
-            _oct4_leftPnt + 2 * interpMult  # advance 2 pnts
+            _oct4_leftPnt + (2 * interpMult)  # advance 2 pnts
             left_idx = _xNew[_oct4_leftPnt]
         else:
             logger.error(f'lineScanNumber:{lineScanNumber} got nan left !!!')
             left_idx = np.nan
         if not np.isnan(_oct4_rightPnt):
-            _oct4_rightPnt - 2 * interpMult  # back up 2 pnts
+            _oct4_rightPnt - (2 * interpMult)  # back up 2 pnts
             right_idx = _xNew[_oct4_rightPnt]
         else:
             logger.error(f'lineScanNumber:{lineScanNumber} got nan right !!!')

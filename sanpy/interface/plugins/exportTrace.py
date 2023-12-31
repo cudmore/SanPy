@@ -83,6 +83,10 @@ class exportTrace(sanpyPlugin):
 
         tmpLayout = QtWidgets.QVBoxLayout()
 
+        darkTheme = True
+        if self.getSanPyApp() is not None:
+            darkTheme = self.getSanPyApp().useDarkStyle
+        
         self.mainWidget = sanpy.interface.bExportWidget(
             x,
             y,
@@ -92,7 +96,7 @@ class exportTrace(sanpyPlugin):
             xMax=xMax,
             xMargin=xMargin,
             type=self.myType,
-            darkTheme=True,
+            darkTheme=darkTheme,
         )
         # darkTheme=self.detectionWidget.useDarkStyle)
 

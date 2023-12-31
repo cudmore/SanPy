@@ -10,7 +10,7 @@ logger = get_logger(__name__)
 
 
 class fileLoader_atf(fileLoader_base):
-    loadFileType = "atf"
+    loadFileType = ".atf"
 
     # def __init__(self, path):
     #     super().__init__(path)

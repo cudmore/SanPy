@@ -3,11 +3,16 @@ import sys
 import pytest
 
 import sanpy
-from sanpy.interface.sanpy_app import SanPyWindow
-from sanpy.interface import bPlugins
+from sanpy.interface.sanpy_app import SanPyApp
+from sanpy.interface.sanpy_window import SanPyWindow
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
+
+# this makes qapp be our SanPyApp, it is derived from QApplication
+@pytest.fixture(scope="session")
+def qapp_cls():
+    return SanPyApp
 
 # @pytest.fixture
 # def sanpyAppObject(qtbot):
@@ -40,18 +45,21 @@ logger = get_logger(__name__)
 #     _analysisDir = sanpy.analysisDir(folderPath)
 #     return _analysisDir
 
-def _test_app(qtbot):
+def _test_app(qtbot, qapp):
     """Triggers segmentation fault.
     """
-    sanpyAppObject = SanPyWindow()
+    logger.info(sys.argv)
+
+    # sanpyAppObject = SanPyApp(sys.argv)
+    # assert sanpyAppObject is not None
     
-    logger.info('')
-    assert sanpyAppObject is not None
+    sanpyWindowObject = SanPyWindow(qapp)
+    assert sanpyWindowObject is not None    
 
     _rowOne = 1
     
     # simulate a left click in the file list
-    _tableView = sanpyAppObject._fileListWidget.getTableView()
+    _tableView = sanpyWindowObject._fileListWidget.getTableView()
     
     # simulate user click using QTableView.selectRow()
     _tableView.selectRow(_rowOne)
@@ -60,11 +68,11 @@ def _test_app(qtbot):
     _dict = _tableView.getSelectedRowDict()
     #assert _dict['File'] == '20191009_0006.abf'
 
-    _dict2 = sanpyAppObject.getSelectedFileDict()
+    _dict2 = sanpyWindowObject.getSelectedFileDict()
     #assert _dict2['File'] == '20191009_0006.abf'
 
     # run a few plugin
-    _pluginList = sanpyAppObject.myPlugins.pluginList()
+    _pluginList = qapp.getPlugins().pluginList()
     _onePlugin = _pluginList[0]
 
     # _scatterPlugin = sanpyAppObject.sanpyPlugin_action('Plot Scatter')
@@ -80,17 +88,17 @@ def _test_app(qtbot):
     # if _dict is not None:
     #     assert _dict['File'] == '19114000.abf'
 
-    _dict2 = sanpyAppObject.getSelectedFileDict()
+    _dict2 = qapp.getSelectedFileDict()
     #assert _dict2['File'] == '19114000.abf'
 
     # simulate detect dv/dt
     # print('qqqq dv/dt')
-    sanpyAppObject.myDetectionWidget.detectToolbarWidget._on_button_click('Detect dV/dt')
+    sanpyWindowObject.myDetectionWidget.detectToolbarWidget._on_button_click('Detect dV/dt')
 
     # _scatterPlugin.close()
     # _scatterPlugin = None
 
-def test_analysisdir_tableview(qtbot):
+def test_analysisdir_tableview(qtbot, qapp):
     logger.info('')
 
     #
@@ -107,17 +115,19 @@ def test_analysisdir_tableview(qtbot):
     _selectedRow = 1
     _tableView._onLeftClick(_selectedRow)
 
-def test_plugins(qtbot):
+def test_plugins(qtbot, qapp):
     """Run all plugins through a number of different tests.
     """
     logger.info('')
 
-    sanpyAppObject = SanPyWindow()
+    # sanpyAppObject = SanPyApp(sys.argv)
+    
+    sanpyWindowObject = SanPyWindow(qapp)
 
     if 1:
         #
         # run each plugin
-        pluginsObject = bPlugins(sanpyAppObject)
+        pluginsObject = qapp.getPlugins()
         assert pluginsObject is not None
 
         _pluginList = pluginsObject.pluginList()
@@ -151,7 +161,7 @@ def test_plugins(qtbot):
 
         # run with ba with no analysis
         baNone = None
-        _newPlugin = pluginsObject.runPlugin(_pluginName, baNone, show=False)
+        _newPlugin = sanpyWindowObject.runPlugin(_pluginName, baNone, show=False)
         assert _newPlugin is not None
         assert _newPlugin.getInitError() == False
         

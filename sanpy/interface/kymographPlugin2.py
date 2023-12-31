@@ -149,7 +149,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             self._linePlotCombo.setEnabled(state)
         elif name == "Fit On Kym":
             self._fitIsVivible = state
-            self.refreshDiameterPlot()
+            self.refreshDiameterPlot(autoRange='none')
 
     def showLineProfile(self, state: bool):
         """Toggle interface for Line Profile.
@@ -191,10 +191,10 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             # imageMedianKernel = self._imageMedianKernel
             # lineMedianKernel = self._lineMedianKernel
 
-            self._kymographAnalysis.printAnlysisParam()
+            # self._kymographAnalysis.printAnlysisParam()
 
             # 20230728, was this
-            self._kymographAnalysis.analyzeDiameter()
+            self._kymographAnalysis.analyzeDiameter(verbose=True)
             #self._kymographAnalysis.analyzeDiameter_mp()
 
             #     imageMedianKernel=imageMedianKernel,
@@ -208,8 +208,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
                 self._ba._detectionDirty = True
 
             # self.refreshSumLinePlot()
-            self.refreshDiameterPlot(autoRange=False)
-            self.refreshSumLinePlot(autoRange=False)
+            self.refreshDiameterPlot(autoRange='y')
+            self.refreshSumLinePlot(autoRange='y')
 
             # after analysis, button is green
             self._analyzeButton.setStyleSheet("background-color : #22AA22")
@@ -296,7 +296,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         """Set the type of diam plot.
         """
         self._plotDiamType = value
-        self.refreshDiameterPlot()
+        self.refreshDiameterPlot(autoRange='y')
         
     def _on_line_intensity_popup(self, value : str):
         """Set the type of line  intensity plot.
@@ -413,7 +413,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         else:
             self._currentLineNumber = value
 
-        logger.info(f"value:{value}")
+        # logger.info(f"value:{value}")
 
         xScale = self._ba.fileLoader.tifHeader["secondsPerLine"]
 
@@ -453,9 +453,14 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             left_pnt_rnd = int(round(left_pnt))
             right_pnt_rnd = int(round(right_pnt))
             # yLeftRightData = [lineProfile[left_pnt_rnd], lineProfile[right_pnt]]
-            yLeftRightData = [lineProfile[left_pnt_rnd], lineProfile[right_pnt_rnd]]
-
-        self.leftRightPlot.setData(xLeftRightData, yLeftRightData)
+            
+            # 20231202
+            try:
+                yLeftRightData = [lineProfile[left_pnt_rnd], lineProfile[right_pnt_rnd]]
+            except (IndexError):
+                self.leftRightPlot.setData([], [])
+            else:
+                self.leftRightPlot.setData(xLeftRightData, yLeftRightData)
 
     def _refreshGui(self):
         """On file change set detection params.
@@ -498,8 +503,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             interpMult = str(interpMult)
         self._overSample.setCurrentText(str(interpMult))
 
-        imageFilterKenel = self._kymographAnalysis.getAnalysisParam('imageFilterKenel')
-        self._medianImage.setCurrentText(str(imageFilterKenel))
+        # imageFilterKenel = self._kymographAnalysis.getAnalysisParam('imageFilterKenel')
+        # self._medianImage.setCurrentText(str(imageFilterKenel))
 
         lineFilterKernel = self._kymographAnalysis.getAnalysisParam('lineFilterKernel')
         self._medianLine.setCurrentText(str(lineFilterKernel))
@@ -976,7 +981,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self.diameterPlotItem.autoRange()
         self.sumIntensityPlotItem.autoRange()
 
-    def refreshSumLinePlot(self, autoRange=True):
+    def refreshSumLinePlot(self, autoRange='all'):
         if self._ba is None:
             return
 
@@ -997,10 +1002,21 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         self.sumIntensityPlotItem.setLabel("left", leftLabel, units="")
         
-        if autoRange:
-            self.sumIntensityPlotItem.autoRange()
+        # if autoRange:
+        #     self.sumIntensityPlotItem.autoRange()
 
-    def refreshDiameterPlot(self, autoRange=True):
+        if autoRange == 'all':
+            self.sumIntensityPlotItem.autoRange()
+        elif autoRange == 'y':
+            if yPlot is not None:
+                self.sumIntensityPlotItem.setRange(yRange=[min(yPlot), max(yPlot)])
+        elif autoRange == 'x':
+            self.sumIntensityPlotItem.setRange(xRange=[min(xPlot), max(xPlot)])
+
+    def refreshDiameterPlot(self, autoRange='all'):
+        """
+        autoRange in ['none', 'x', 'y', 'none']
+        """
         if self._ba is None:
             return
 
@@ -1066,8 +1082,12 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             left_pnt, right_pnt, visible=self._fitIsVivible
         )
 
-        if autoRange:
+        if autoRange == 'all':
             self.diameterPlotItem.autoRange()
+        elif autoRange == 'y':
+            self.diameterPlotItem.setRange(yRange=[min(yDiamPlot), max(yDiamPlot)])
+        elif autoRange == 'x':
+            self.diameterPlotItem.setRange(xRange=[min(xPlot), max(xPlot)])
 
 def exportDiameter():
     import sanpy.interface.bExportWidget

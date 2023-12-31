@@ -468,14 +468,15 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.updateStatusBar(updateStr)
 
     def mySetTheme(self, doReplot=True):
-        if self.myMainWindow is not None and self.myMainWindow.useDarkStyle:
-            # pg.setConfigOption('background', 'k')
-            # pg.setConfigOption('foreground', 'w')
-            self.useDarkStyle = True
-        else:
-            # pg.setConfigOption('background', 'w')
-            # pg.setConfigOption('foreground', 'k')
-            self.useDarkStyle = False
+        # 20231229 not used with multiple windows
+        # if self.myMainWindow is not None and self.myMainWindow.useDarkStyle:
+        #     # pg.setConfigOption('background', 'k')
+        #     # pg.setConfigOption('foreground', 'w')
+        #     self.useDarkStyle = True
+        # else:
+        #     # pg.setConfigOption('background', 'w')
+        #     # pg.setConfigOption('foreground', 'k')
+        #     self.useDarkStyle = False
         if doReplot:
             self._replot(startSec=None, stopSec=None)
 
@@ -3021,7 +3022,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         -----
         Using setFixedWidth()
         """
-        myPath = os.path.dirname(os.path.abspath(__file__))
+        
+        # myPath = os.path.dirname(os.path.abspath(__file__))
 
         windowOptions = self.detectionWidget.getMainWindowOptions()
         detectDvDt = 20
@@ -3309,7 +3311,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # mar 11, created a setSpikestat plugin
         setSpikeStatWidget = sanpy.interface.plugins.SetSpikeStat(
             ba=self.detectionWidget.ba,
-            bPlugin=self.detectionWidget.myMainWindow.myPlugins,
+            # bPlugin=self.detectionWidget.myMainWindow.myPlugins,
+            #bPlugin=self.detectionWidget.myMainWindow.getPlugins(),
+            sanPyWindow=self.detectionWidget.myMainWindow,
         )
 
         # signalSetSpikeStat is now in sanpyPlugin base class
@@ -3332,7 +3336,9 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # mar 11, created a setMetaData stat plugin
         setMetaDataWidget = sanpy.interface.plugins.SetMetaData(
             ba=self.detectionWidget.ba,
-            bPlugin=self.detectionWidget.myMainWindow.myPlugins,
+            # bPlugin=self.detectionWidget.myMainWindow.myPlugins,
+            #bPlugin=self.detectionWidget.myMainWindow.getPlugins(),
+            sanPyWindow=self.detectionWidget.myMainWindow
         )
 
         # signalsetMetaData is now in sanpyPlugin base class

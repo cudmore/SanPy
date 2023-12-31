@@ -18,10 +18,10 @@ class plotToolPool(basePlotTool):
         self.masterDf = None
         if self.getSanPyApp() is not None:
             uniqueColumn = 'parent2'  # corresponds to 'date' folder of kymographs
-            _analysisDir = self.getSanPyApp().myAnalysisDir
+            _analysisDir = self.getSanPyWindow().myAnalysisDir
             if _analysisDir is not None:
                 logger.info(f'using sanpy app analysis dir')
-                self.masterDf = self.getSanPyApp().myAnalysisDir.pool_build(uniqueColumn=uniqueColumn)
+                self.masterDf = _analysisDir.pool_build(uniqueColumn=uniqueColumn)
                 logger.info(f'\n{self.masterDf}')
             else:
                 logger.error('main SanPY app does not have an analysis dir')
@@ -32,7 +32,6 @@ class plotToolPool(basePlotTool):
             self.masterDf = tmpMasterDf
 
         self.plot()
-
 
 if __name__ == "__main__":
     import sys

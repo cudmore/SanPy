@@ -260,9 +260,12 @@ class detectionParams(sanpyPlugin):
                 aWidget.setSpecialValueText(
                     "None"
                 )  # displayed when widget is set to minimum
-                if currentValue is None or math.isnan(currentValue):
+                if currentValue is None:
                     aWidget.setValue(0)
+                # elif math.isnan(currentValue):
+                #     pass
                 else:
+                    currentValue = int(currentValue)
                     aWidget.setValue(currentValue)
                 aWidget.setKeyboardTracking(False)  # don't trigger signal as user edits
                 aWidget.valueChanged.connect(partial(self.on_spin_box, paramName))

@@ -135,6 +135,7 @@ statList["Half Width 90 (ms)"] = {
     "xStat": "",
     "xStatUnits": "",
 }
+
 # sa node specific
 """
 statList['Region'] = {
@@ -144,6 +145,14 @@ statList['Region'] = {
 	'xStatUnits': ''
 	}
 """
+
+statList["User Type"] = {
+    "yStat": "userTypeha",
+    "yStatUnits": "",
+    "xStat": "",
+    "xStatUnits": "",
+}
+
 # kymograph analysis
 statList["Ca++ Delay (s)"] = {
     "yStat": "caDelay_sec",

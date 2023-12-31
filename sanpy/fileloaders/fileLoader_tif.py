@@ -115,35 +115,43 @@ def loadCziHeader(cziPath : str) -> dict:
         return _header
 
 def _test_czi():
-    return
 
-    if AICSImage:
+    if not AICSImage:
         return
     
     import matplotlib.pyplot as plt
 
-    path = '/media/cudmore/data/Dropbox/data/wu-lab-stanford/test_lu.czi'
+    # path = '/media/cudmore/data/Dropbox/data/wu-lab-stanford/test_lu.czi'
+    path = '/Users/cudmore/Dropbox/data/sanpy-users/kym-users/plesnila/linescansForVelocityMeasurement/CO2.czi'
 
     # header = loadCziHeader(path)
     # print(header)
 
-    # return
 
+    logger.info('')
     img = AICSImage(path)
+
+    print(img.ome_metadata)
+    
+    # fiji reports XYCZT
+    _tmp = img.get_image_data()  # default is TCZYX
+    _tmp = img.get_image_data("ZYX", T=0, C=0)
+
+    print('   _tmp:', _tmp.shape)
+
     _tif = img.data
 
     # csv has 4071 line scans
 
-    print('img:', img)
-    print('img.shape:', img.shape)
-    print('img.dims:', img.dims)
-    print('img.dims.order:', img.dims.order)  # TCZYX
+    print('   img:', img)
+    print('   img.shape:', img.shape)
+    print('   img.dims:', img.dims)
+    print('   img.dims.order:', img.dims.order)  # TCZYX
 
-    print('_tif.shape:', _tif.shape)
+    print('   _tif.shape:', _tif.shape)
     # _img: <AICSImage [Reader: CziReader, Image-is-in-Memory: True]>
     # kymograph is shape
     # (169, 1, 1, 1, 1024)
-
 
     # image must be shape[0] is time/big, shape[1] is space/small
     _tif = _tif[:,0,0,0,:]
@@ -162,14 +170,14 @@ def _test_czi():
     yVoxel = img.physical_pixel_sizes.Y
     zVoxel = img.physical_pixel_sizes.Z
 
-    print('voxels:', xVoxel, yVoxel, zVoxel)
+    print('   voxels:', xVoxel, yVoxel, zVoxel)
 
     #print(os.path.split(path)[1], xVoxel, type(xVoxel))
 
     xPixels = img.dims.X
     yPixels = img.dims.Y
     zPixels = img.dims.Z
-    print('pixels:', xPixels, yPixels, zPixels)
+    print('   pixels:', xPixels, yPixels, zPixels)
 
 class fileLoader_czi(fileLoader_base):
     """
@@ -194,42 +202,68 @@ class fileLoader_czi(fileLoader_base):
         # kymograph is shape
         # (169, 1, 1, 1, 1024)
 
+        _tmp = _img.get_image_data('XYCZT')
+
 class fileLoader_tif(fileLoader_base):
-    loadFileType = "tif"
+    loadFileType = ".tif"
 
     def loadFile(self):
         # assuming pixels x line scan like (519, 10000)
-        self._tif = tifffile.imread(self.filepath)
+        self._tif = []
+        
+        loadedTif = tifffile.imread(self.filepath)
 
+        self._useThisChannel = 1
+        
         # logger.info(f'loaded tif: {self._tif.shape}')
 
-        # check if 3d, assume (z,y,x)
-        if len(self._tif.shape) > 2:
-            self._tif = self._tif[0,:,:]
-            
-        # image must be shape[0] is time/big, shape[1] is space/small
-        if self._tif.shape[1] < self._tif.shape[0]:
-            # logger.info(f"rot90 image with shape: {self._tif.shape}")
-            self._tif = np.rot90(
-                self._tif, 1
-            )  # ROSIE, so lines are not backward
+        # 202312 load czi tif (exported from Fiji bFolder2MapMAnager)
+        numLoadedDims = len(loadedTif.shape)
+        if numLoadedDims == 2:
+            # one channel
+            # already just a 2d image
+            self._numChannels = 1
+            self._tif.append(loadedTif)
 
-        if self._tif.dtype == np.uint8:
+        elif numLoadedDims == 3:
+            # one channel
+            # czi line scan with frames (frames, height, width)
+            self._numChannels = 1
+            self._tif.append(loadedTif[:, 0, :])
+        elif numLoadedDims == 4:
+            # multi channel czi line scan with frames (frames, channels, height, width)
+            _channelDimension = 1
+            self._numChannels = loadedTif.shape[_channelDimension]
+            
+            for _channel in range(self._numChannels):
+                self._tif.append(loadedTif[:, _channel, 0, :])
+        else:
+            logger.error(f'did not understand image with sahpe {loadedTif.shape}')
+            self._loadError = True
+            return
+        
+        # image must be shape[0] is time/big, shape[1] is space/small
+        for _channel, img in enumerate(self._tif):
+            if img.shape[1] < img.shape[0]:
+                logger.info(f"rot90 image with shape: {img.shape}")
+                self._tif[_channel] = np.rot90(
+                    img, 1
+                )  # ROSIE, so lines are not backward
+
+        if self._tif[0].dtype == np.uint8:
             _bitDepth = 8
-        elif self._tif.dtype == np.uint16:
+        elif self._tif[0].dtype == np.uint16:
             _bitDepth = 16
         else:
-            logger.warning(f'Did not undertand dtype {self._tif.dtype} defaulting to bit depth 16')
+            logger.warning(f'Did not undertand dtype {self._tif[0].dtype} defaulting to bit depth 16')
             _bitDepth = 16
-
-        # print('_bitDepth:', _bitDepth)
         
         # we need a header to mimic one in original bAnalysis
         self._tifHeader = {
             'secondsPerLine': 0.001,  # 1 ms
             'umPerPixel': 0.3,
             'bitDepth': _bitDepth,
-            'dtype': self._tif.dtype,
+            'dtype': self._tif[0].dtype,
         }
 
         # load olympus txt file if it exists
@@ -238,27 +272,28 @@ class fileLoader_tif(fileLoader_base):
             # logger.info('loaded olympus header for {self.filepath}')
             # for k,v in _olympusHeader.items():
             #     logger.info(f'  {k}: {v}')
-            self._tifHeader['umPerPixel'] = _olympusHeader["umPerPixel"]
-            self._tifHeader['secondsPerLine'] = _olympusHeader["secondsPerLine"]
+            try:
+                self._tifHeader['umPerPixel'] = _olympusHeader["umPerPixel"]
+                self._tifHeader['secondsPerLine'] = _olympusHeader["secondsPerLine"]
+            except (KeyError) as e:
+                pass
 
-        # logger.info('loaded header for {self.filepath}')
-        # for k,v in self._tifHeader.items():
-        #     logger.info(f'  {k}: {v}')
+        self._setLoadedData()
+
+    #
+    # need to pull/merge code from xxx
+    # bAbfText._abfFromLineScanTif()
+
+    def _setLoadedData(self, channel=1):
+        channelIdx = channel - 1
 
         # using 'reshape(-1,1)' to convert shape from (n,) to (n,1)
-        sweepX = np.arange(0, self._tif.shape[1]).reshape(-1, 1)
+        sweepX = np.arange(0, self._tif[channelIdx].shape[1]).reshape(-1, 1)
         sweepX = sweepX.astype(np.float64)
         sweepX *= self._tifHeader['secondsPerLine']
 
-        # logger.info(f'  sweepX shape:{sweepX.shape}')
-        # logger.info(f'  sweepX max:{np.nanmax(sweepX)}')
-        # logger.info(f'  sweepX dt:{sweepX[1]-sweepX[0]}')
-
-        sweepY = np.sum(self._tif, axis=0).reshape(-1, 1)
+        sweepY = np.sum(self._tif[channelIdx], axis=0).reshape(-1, 1)
         sweepY = np.divide(sweepY, np.max(sweepY))
-
-        # logger.info(f'sweepX:{sweepX.shape}')
-        # logger.info(f'sweepY:{sweepY.shape}')
 
         self.setLoadedData(
             sweepX=sweepX,
@@ -266,19 +301,13 @@ class fileLoader_tif(fileLoader_base):
             recordingMode=recordingModes.kymograph
         )
 
-        # logger.info(f'dataPointsPerMs:{self.dataPointsPerMs}')
-
-        #self.setScale(secondsPerLine, umPerPixel)
-
-    #
-    # need to pull/merge code from xxx
-    # bAbfText._abfFromLineScanTif()
-
-    def setScale(self, secondsPerLine, umPerPixel):
+    def setScale(self, secondsPerLine, umPerPixel, channel=1):
         """Redraw when x/y scale is changed.
         """
-        logger.info(f'secondsPerLine:{secondsPerLine} umPerPixel:{umPerPixel}')
+        logger.info(f'secondsPerLine:{secondsPerLine} umPerPixel:{umPerPixel} channel:{channel}')
         
+        channelIdx = channel - 1
+
         self._tifHeader['secondsPerLine'] = secondsPerLine
         self._tifHeader['umPerPixel'] = umPerPixel
         # self._tifHeader = {
@@ -286,12 +315,12 @@ class fileLoader_tif(fileLoader_base):
         #     'umPerPixel': umPerPixel,
         # }
 
-        sweepX = np.arange(0, self._tif.shape[1]).reshape(-1, 1)
+        sweepX = np.arange(0, self._tif[channelIdx].shape[1]).reshape(-1, 1)
         sweepX = sweepX.astype(np.float64)
         sweepX *= self._tifHeader['secondsPerLine']
 
         # todo: need to use rect roi
-        sweepY = np.sum(self._tif, axis=0).reshape(-1, 1)
+        sweepY = np.sum(self._tif[channelIdx], axis=0).reshape(-1, 1)
 
         self.setLoadedData(
             sweepX=sweepX,
@@ -300,8 +329,9 @@ class fileLoader_tif(fileLoader_base):
         )
 
     @property
-    def tifData(self) -> np.ndarray:
-        return self._tif
+    def tifData(self, channel=1) -> np.ndarray:
+        channelIdx = channel - 1
+        return self._tif[channelIdx]
     
     @property
     def tifHeader(self) -> dict:

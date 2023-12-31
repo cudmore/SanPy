@@ -142,13 +142,19 @@ class bAnalysis:
             logger.error(f'File does not exist: "{filepath}"')
             self.loadError = True
         else:
+
             if fileLoaderDict is None:
                 fileLoaderDict = (
                     sanpy.fileloaders.getFileLoaders()
                 )  # EXPENSIVE, to do, pass in from app
+            # print('2 fileLoaderDict:', fileLoaderDict)
+
+            # print('1 fileLoaderDict:')
+            # for _k,_v in fileLoaderDict.items():
+            #     print(_k,_v)
 
             _ext = os.path.splitext(filepath)[1]
-            _ext = _ext[1:]
+            # _ext = _ext[1:]
             try:
                 if verbose:
                     logger.info(f"Loading file with extension: {_ext}")
@@ -160,7 +166,7 @@ class bAnalysis:
                     self.loadError = True
 
             except KeyError as e:
-                logger.error(f'did not find a file loader for extension "{_ext}"')
+                logger.error(f'did not find a file loader for extension "{_ext}", available loaders are: {fileLoaderDict.keys()}')
                 self.loadError = True
             
             self._kymAnalysis : sanpy.kymAnalysis = None

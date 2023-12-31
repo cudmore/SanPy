@@ -126,7 +126,8 @@ class sanpyCursors(QtCore.QObject):
         """
         rect = self._plotWidget.viewRect()  # get xaxis
 
-        percentOfView = rect.width() * 0.05
+        percentOfView = rect.width() * 0.02
+        # percentOfView = 0
         left = rect.left() + percentOfView
         right = rect.right() - percentOfView
 
@@ -135,7 +136,6 @@ class sanpyCursors(QtCore.QObject):
         top = rect.bottom() - yPercentOfView
 
         logger.info(f'left:{left} right:{right} bottom:{bottom} top:{top}')
-
 
         self._cursorA.setValue(left)
         self._cursorB.setValue(right)

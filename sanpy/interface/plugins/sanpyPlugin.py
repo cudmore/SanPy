@@ -1,4 +1,5 @@
-import math, enum
+import math
+import enum
 
 # Error if we use 'from functools import partial'
 # Error shows up in sanpy.bPlugin when it tries to grab <plugin>.myHumanName ???
@@ -14,15 +15,12 @@ import matplotlib.pyplot as plt
 from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
 
-# import qdarkstyle
-
 import sanpy
 import sanpy.interface
 
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
-
 
 class ResponseType(enum.Enum):
     """Enum representing the types of events a Plugin will respond to."""
@@ -135,7 +133,8 @@ class sanpyPlugin(QtWidgets.QWidget):
     def __init__(
         self,
         ba: Optional[sanpy.bAnalysis] = None,
-        bPlugin: Optional["sanpy.interface.bPlugin"] = None,
+        # bPlugin: Optional["sanpy.interface.bPlugin"] = None,
+        sanPyWindow: Optional["sanpy.interface.SanPyWindow"] = None,
         startStop: Optional[List[float]] = None,
         options=None,
         parent=None,
@@ -173,7 +172,8 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._sweepNumber: Union[int, str] = "All"
         self._epochNumber: Union[int, str] = "All"
 
-        self._bPlugins: "sanpy.interface.bPlugin" = bPlugin
+        self._sanPyWindow = sanPyWindow
+        # self._bPlugins: "sanpy.interface.bPlugin" = bPlugin
         # pointer to object, send signal back on close
 
         self.darkTheme = True
@@ -252,7 +252,7 @@ class sanpyPlugin(QtWidgets.QWidget):
     def getStatList(self) -> dict:
         """Get all analysis results.
         """
-        return self._bPlugins.getStatList()
+        return self._sanPyWindow.getStatList()
 
     def _myClassName(self):
         return self.__class__.__name__
@@ -387,7 +387,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         """
         return self._ba
 
-    def get_bPlugins(self) -> "sanpy.interface.bPlugins":
+    def _old_get_bPlugins(self) -> "sanpy.interface.bPlugins":
         """Get the SanPy app bPlugin object.
 
         Returns
@@ -396,7 +396,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         """
         return self._bPlugins
 
-    def getSanPyApp(self) -> "sanpy.interface.sanpy_app":
+    def getSanPyApp(self) -> "sanpy.interface.SanPyApp":
         """Return underlying SanPy app.
 
         Only exists if running in SanPy Qt Gui
@@ -405,15 +405,18 @@ class sanpyPlugin(QtWidgets.QWidget):
         -------
         sanpy.interface.sanpy_app
         """
-        if self._bPlugins is not None:
-            return self._bPlugins.getSanPyApp()
+        if self._sanPyWindow is not None:
+            return self._sanPyWindow.getSanPyApp()
 
+    def getSanPyWindow(self):
+        return self._sanPyWindow
+    
     def _installSignalSlot(self):
         """Set up PyQt signals/slots.
 
         Be sure to call _disconnectSignalSlot() on plugin destruction.
         """
-        app = self.getSanPyApp()
+        app = self.getSanPyWindow()
         if app is not None:
             # receive spike selection
             app.signalSelectSpikeList.connect(self.slot_selectSpikeList)
@@ -435,8 +438,8 @@ class sanpyPlugin(QtWidgets.QWidget):
 
             self.signalSelectSpikeList.connect(app.slot_selectSpikeList)
             
-        bPlugins = self.get_bPlugins()
-        if bPlugins is not None:
+        sanPyWindow = self.getSanPyWindow()
+        if sanPyWindow is not None:
             # emit spike selection
             # self.signalSelectSpike.connect(bPlugins.slot_selectSpike)
             
@@ -444,7 +447,7 @@ class sanpyPlugin(QtWidgets.QWidget):
             #self.signalSelectSpikeList.connect(bPlugins.slot_selectSpikeList)
             
             # emit on close window
-            self.signalCloseWindow.connect(bPlugins.slot_closeWindow)
+            self.signalCloseWindow.connect(sanPyWindow.slot_closeWindow)
 
         # connect to self
         # self.signalSelectSpike.connect(self.slot_selectSpike)
@@ -452,7 +455,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def _disconnectSignalSlot(self):
         """Disconnect PyQt signal/slot on destruction."""
-        app = self.getSanPyApp()
+        app = self.getSanPyWindow()
         if app is not None:
             # receive spike selection
             # app.signalSelectSpike.disconnect(self.slot_selectSpike)
@@ -495,7 +498,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         """Derived class adds code to replot."""
         pass
 
-    def old_selectSpike(self, sDict=None):
+    def _old_selectSpike(self, sDict=None):
         """Derived class adds code to select spike from sDict."""
         pass
 
@@ -953,7 +956,7 @@ class sanpyPlugin(QtWidgets.QWidget):
             return
 
         # don't set axis if we are showing different ba
-        app = self.getSanPyApp()
+        app = self.getSanPyWindow()
         if app is not None:
             ba = app.get_bAnalysis()
             if self._ba != ba:

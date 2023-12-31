@@ -435,6 +435,15 @@ class bAnalysisUtil:
             "xStat": "",
             "xStatUnits": "",
         }
+
+        statList["User Type"] = {
+            "name": "userType",
+            "yStat": "userType",
+            "yStatUnits": "",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+
         # sa node specific
         """
         statList['Region'] = {

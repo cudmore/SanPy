@@ -485,7 +485,7 @@ class pandasModel(QtCore.QAbstractTableModel):
         else:
             df = self._data
 
-            logger.warning(f"need to replace append with concat")
+            # logger.warning(f"need to replace append with concat")
             # df = df.append(pd.Series(), ignore_index=True)
             df = pd.concat([df, pd.Series()])
 

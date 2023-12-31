@@ -6,6 +6,8 @@ import shutil
 from typing import List, Union
 import uuid
 
+import numpy as np
+
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
@@ -50,7 +52,7 @@ def addUserPath():
         True: If we made the folder (first time SanPy is running)
     """
 
-    logger.info("")
+    # logger.info("")
 
     madeUserFolder = _makeSanPyFolders()  # make <user>/Documents/SanPy if necc
 
@@ -176,8 +178,8 @@ def _makeSanPyFolders():
 
 def _loadLineScanHeader(path):
     """Find corresponding txt file with Olympus tif header.
-    L
-    oad and parse coresponding .txt file
+    
+    Load and parse coresponding .txt file
 
     Parameters
     ----------
@@ -217,6 +219,7 @@ def _loadLineScanHeader(path):
     # theRet['numLines'] = self.tif.shape[1]
     # theRet['numLines'] = tifData.shape[0]
 
+    gotNumPixels = False
     gotImageSize = False
 
     with open(txtFile, "r") as fp:
@@ -236,6 +239,7 @@ def _loadLineScanHeader(path):
                     if idx == 2:
                         numPixels = int(split)
                         theRet["numPixels"] = numPixels
+                        gotNumPixels = True
                     elif idx == 5:
                         umLength = float(split)
                         theRet["umLength"] = umLength
@@ -280,12 +284,23 @@ def _loadLineScanHeader(path):
             # 	print('loadLineScanHeader:', line)
 
     # tif shape is (lines, pixels)
-    shape = (theRet["numLines"], theRet["numPixels"])
+    if gotNumPixels and gotImageSize:
+        shape = (theRet["numLines"], theRet["numPixels"])
+    else:
+        shape = (np.nan, np.nan)
     # theRet['shape'] = self.tif.shape
     # theRet['shape'] = tifData.shape
     theRet["shape"] = shape
-    theRet["secondsPerLine"] = theRet["totalSeconds"] / theRet["shape"][0]
-    theRet["linesPerSecond"] = 1 / theRet["secondsPerLine"]
+    
+    try:
+        theRet["secondsPerLine"] = theRet["totalSeconds"] / theRet["shape"][0]
+    except (KeyError) as e:
+        logger.warning(f'did not find key {e}')
+    try:
+        theRet["linesPerSecond"] = 1 / theRet["secondsPerLine"]
+    except (KeyError) as e:
+        logger.warning(f'did not find key {e}')
+
     #
     return theRet
 

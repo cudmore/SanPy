@@ -28,7 +28,7 @@ class bPlugins:
         - folder, <user>/sanpy_plugins
     """
 
-    def __init__(self, sanpyApp: Optional["sanpy.interface.SanPyWindow"] = None):
+    def __init__(self, sanpyApp: Optional["sanpy.interface.SanPyApp"] = None):
         self._sanpyApp = sanpyApp
 
         self.userPluginFolder: str = sanpy._util._getUserPluginFolder()
@@ -163,7 +163,9 @@ class bPlugins:
         for loaded in loadedModuleList:
             logger.info(f"    {loaded}")
 
-    def runPlugin(self, pluginName: str, ba: sanpy.bAnalysis, show: bool = True):
+    # 20231229 moving this to new SanPyWindow
+    # the main window opens plugins, the app does not
+    def _old_runPlugin(self, pluginName: str, ba: sanpy.bAnalysis, show: bool = True):
         """Run one plugin with given a bAnalysis.
 
         Args:
@@ -184,12 +186,16 @@ class bPlugins:
             app = self.getSanPyApp()
             _pluginDict = None
             if app is not None:
-                startSec = app.startSec
-                stopSec = app.stopSec
-                if startSec is None and stopSec is None:
-                    startStop = None
-                else:
-                    startStop = [startSec, stopSec]
+                
+                # 20231229 refactor for bp
+                # startSec = app.startSec
+                # stopSec = app.stopSec
+                # if startSec is None and stopSec is None:
+                #     startStop = None
+                # else:
+                #     startStop = [startSec, stopSec]
+
+                startStop = None
 
                 # has keys for (l, t, w, h)
                 _pluginDict = app.getOptions().preferencesGet("pluginPanels", humanName)
@@ -213,7 +219,10 @@ class bPlugins:
             if 1:
                 # print(1)
                 newPlugin = self.pluginDict[pluginName]["constructor"](
-                    ba=ba, bPlugin=self, startStop=startStop
+                    ba=ba,
+                    bPlugin=self,
+                    # sanPyWindow=self.getS
+                    startStop=startStop
                 )
                 # print(2)
                 if not newPlugin.getInitError() and show:
@@ -307,8 +316,8 @@ class bPlugins:
             self._openSet.remove(pluginObj)
 
             # remove from preferences
-            if pluginObj is not None and self.getSanPyApp() is not None:
-                self.getSanPyApp().configDict.removePlugin(pluginObj.getHumanName())
+            # if pluginObj is not None and self.getSanPyApp() is not None:
+            #     self.getSanPyApp().configDict.removePlugin(pluginObj.getHumanName())
 
         except KeyError as e:
             logger.exception(e)

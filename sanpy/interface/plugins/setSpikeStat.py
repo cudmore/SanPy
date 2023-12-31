@@ -41,7 +41,9 @@ class ComboBox(QtWidgets.QComboBox):
 
 
 class SetSpikeStat(sanpyPlugin):
-    """Plugin to provide an interface to set spike stats like condition, userType, include, etc.
+    """Plugin to provide an interface to set spike stats.
+    
+    E.g. condition, userType, include, etc.
 
     Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
     """

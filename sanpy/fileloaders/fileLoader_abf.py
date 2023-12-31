@@ -11,7 +11,7 @@ logger = get_logger(__name__)
 
 
 class fileLoader_abf(fileLoader_base):
-    loadFileType = "abf"
+    loadFileType = ".abf"
 
     # @property
     # def loadFileType(self):

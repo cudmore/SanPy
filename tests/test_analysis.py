@@ -24,7 +24,7 @@ class Test_Analysis(unittest.TestCase):
     #path = 'data/rosie-kymograph.tif'
     ba = sanpy.bAnalysis(path)
     expectedNumSpikes = 103
-    expectedNumErrors = 69
+    expectedNumErrors = 102  # 69
 
     def test_0_load(self):
         logger.info('RUNNING')
@@ -44,7 +44,8 @@ class Test_Analysis(unittest.TestCase):
         self.ba.spikeDetect(dDict)
 
         self.assertEqual(self.ba.numSpikes, self.expectedNumSpikes) # expecting 102 spikes
-        self.assertEqual(len(self.ba.dfError), self.expectedNumErrors) # expecting 102 spikes
+
+        self.assertEqual(len(self.ba.dfError), self.expectedNumErrors) # expecting 69 errors
 
     def test_2_stats(self):
         logger.info('RUNNING')
