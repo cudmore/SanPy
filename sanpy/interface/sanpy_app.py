@@ -29,7 +29,9 @@ import sanpy
 import sanpy._util
 import sanpy.interface
 import sanpy.interface.preferences
-import sanpy.interface.SanPyWindow
+
+from sanpy.interface.sanpy_window import SanPyWindow
+# import sanpy.interface.SanPyWindow
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -210,7 +212,7 @@ class SanPyApp(QtWidgets.QApplication):
         # open new window
         if foundWindow is None:
             logger.info('   opening new window')
-            foundWindow = sanpy.interface.SanPyWindow(self, path)
+            foundWindow = SanPyWindow(self, path)
             foundWindow.show()
             foundWindow.raise_()  # bring to front, raise is a python keyword
             foundWindow.activateWindow()  # bring to front
