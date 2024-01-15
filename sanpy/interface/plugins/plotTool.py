@@ -7,8 +7,7 @@ logger = get_logger(__name__)
 
 
 class plotTool(basePlotTool):
-    """
-    Plot tool for one bAnalysis
+    """Plot tool for one bAnalysis.
     """
 
     myHumanName = "Plot Tool"
@@ -19,4 +18,6 @@ class plotTool(basePlotTool):
         if self.ba is not None and self.ba.isAnalyzed():
             self.masterDf = self.ba.asDataFrame()
             self.masterDf["File Number"] = 0
+            self.masterDf["File Path"] = self.ba.fileLoader.filepath
+            self.masterDf["Unique Name"] = self.ba.fileLoader.filename
         self.plot()

@@ -17,6 +17,9 @@ class sanpyCursors(QtCore.QObject):
         
         self._showCursors = False
         self._delx : float = float('nan')
+
+        self._aCursorVal : float = float('nan')
+        self._bCursorVal : float = float('nan')
         self._cCursorVal : float = float('nan')
 
         self._showCursorsY = False
@@ -53,6 +56,9 @@ class sanpyCursors(QtCore.QObject):
     def _getName(self):
         return self._plotWidget.getViewBox().name
     
+    def cursorsAreShowing(self):
+        return self._showCursors
+    
     def toggleCursors(self, visible):
         self._showCursors = visible
         self._cursorA.setVisible(visible)
@@ -71,11 +77,11 @@ class sanpyCursors(QtCore.QObject):
 
         contextMenu.addSeparator()
         
-        showCursorAction = contextMenu.addAction(f"Cursors")
+        showCursorAction = contextMenu.addAction("Cursors")
         showCursorAction.setCheckable(True)
         showCursorAction.setChecked(self._showCursors)
         
-        aAction = contextMenu.addAction(f'Show In View')
+        aAction = contextMenu.addAction('Show In View')
         aAction.setEnabled(self._showCursors)
 
         if self._getName() == 'vmPlot':
@@ -154,16 +160,15 @@ class sanpyCursors(QtCore.QObject):
         
         # logger.info(f'delx:{delx}')
 
+        self._aCursorVal = xCursorA
+        self._bCursorVal = xCursorB
+
         self._delx = delx
 
         xCursorA = round(xCursorA,4)
         xCursorB = round(xCursorB,4)
 
         yCursorC = self._cursorC.pos().y()
-        # yCursorD = self._cursorD.pos().y()
-        # dely = yCursorD - yCursorC
-        # dely = round(dely, 4)
-
         self._cCursorVal = round(yCursorC,3)
 
         yCursorC = round(yCursorC,4)

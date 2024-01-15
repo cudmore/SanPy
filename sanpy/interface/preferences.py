@@ -46,13 +46,13 @@ class preferences:
         return self._configDict
 
     def addPath(self, path : str):
-        logger.info(f'{path}')
+        logger.info(f'adding path {path}')
         if os.path.isfile(path):
             self._addFile(path)
         elif os.path.isdir(path):
             self._addFolder(path)
         else:
-            logger.warning(f'path is neither a file or a dir/folder {path}')
+            logger.warning(f'path is neither a file or a dir: {path}')
 
     def _addFile(self, filePath : str):
         """Add a file to preferences.
@@ -67,8 +67,10 @@ class preferences:
                 -self._maxRecent :
             ]
 
-        # always set as the most recent folder
+        # always set as the most recent file
         self.configDict["mostRecentFile"] = filePath
+
+        self.save()
 
     def _addFolder(self, path: str):
         """Add a folder to preferences.
@@ -86,6 +88,8 @@ class preferences:
         # always set as the most recent folder
         self.configDict["mostRecentFolder"] = path
 
+        self.save()
+        
     def _old_addPlugin(self, pluginName: str, externalWindow: bool, ltwhTuple: tuple):
         """Add plugin to preferences."""
         # was this as list

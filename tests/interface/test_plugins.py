@@ -45,16 +45,26 @@ def qapp_cls():
 #     _analysisDir = sanpy.analysisDir(folderPath)
 #     return _analysisDir
 
+def _test_app_one_file(qtbot, qapp):
+    filePath = os.path.join('data', '19114001.abf')
+
+    sanpyWindowObject = SanPyWindow(qapp, path=filePath)
+    assert sanpyWindowObject is not None    
+
 def _test_app(qtbot, qapp):
     """Triggers segmentation fault.
     """
-    logger.info(sys.argv)
+    # logger.info(sys.argv)
 
     # sanpyAppObject = SanPyApp(sys.argv)
     # assert sanpyAppObject is not None
     
-    sanpyWindowObject = SanPyWindow(qapp)
+    folderPath = 'data'
+
+    sanpyWindowObject = SanPyWindow(qapp, path=folderPath)
     assert sanpyWindowObject is not None    
+
+    return
 
     _rowOne = 1
     

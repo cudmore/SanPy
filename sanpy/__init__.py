@@ -1,5 +1,5 @@
 # using this to turn off for 1st sanpy publication
-DO_KYMOGRAPH_ANALYSIS = True
+DO_KYMOGRAPH_ANALYSIS = False
 
 from .sanpyLogger import *
 

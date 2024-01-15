@@ -66,7 +66,7 @@ def test_fileLoader_abf():
 
     # logger.info(f'abfFile: {abfFile}')
 
-    assert abfFile.loadFileType == 'abf'
+    assert abfFile.loadFileType == '.abf'
 
     assert abfFile.sweepLabelX == 'sec'
 

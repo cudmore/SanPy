@@ -23,7 +23,7 @@ from .summarizeResults import SummarizeResults
 
 from .exportTrace import exportTrace
 
-from .fftPlugin import fftPlugin
+# from .fftPlugin import fftPlugin
 
 from .stimGen import stimGen
 

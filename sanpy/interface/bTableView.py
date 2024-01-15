@@ -241,6 +241,16 @@ class bTableView(QtWidgets.QTableView):
         # logger.info(f'User clicked row:{row} realRow:{realRow}')
         self._onLeftClick(realRow)
 
+    def selectRowByFile(self, filename : str):
+        # fileList = self.model()._data['File'].tolist()
+        df = self.model()._data._df
+        fileIndexList = df.index[df['File'] == filename].tolist()
+        if fileIndexList:
+            rowIdx = fileIndexList[0]
+            self._onLeftClick(rowIdx)
+        else:
+            logger.warning(f"Did not find file {filename} in {df['File'].tolist()}")
+
     def _onLeftClick(self, realRow):
         rowDict = self.model().myGetRowDict(realRow)
 
@@ -253,7 +263,7 @@ class bTableView(QtWidgets.QTableView):
             # new row selection
             # print('  new row selection')
             # logger.info(f'realRow:{realRow} rowDict:{rowDict}')
-            logger.info(f'-->> emit signalSelectRow')
+            logger.info('-->> emit signalSelectRow')
             self.signalSelectRow.emit(realRow, rowDict, selectedAgain)
         else:
             # print('  handle another click on already selected row')

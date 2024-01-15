@@ -56,7 +56,10 @@ class SetSpikeStat(sanpyPlugin):
         super().__init__(**kwargs)
 
         self.trueFalseItems = ["True", "False"]
-        self.userTypeItems = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        
+        # for now, only allow a few user types, we run out of plot markers
+        self.userTypeItems = ["0", "1", "2", "3"]
+        
         self._buildUI()
 
         self._setState()

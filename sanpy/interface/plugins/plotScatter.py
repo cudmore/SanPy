@@ -80,6 +80,7 @@ def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
             "userType3": mmarkers.MarkerStyle("<"),  # triangle_left
         }
 
+        # only display symbols/markers for a few user types
         _marker_dict_pg = {
             "noUserType": 'o',
             "userType1": 'star',

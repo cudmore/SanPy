@@ -561,8 +561,19 @@ class analysisDir:
 
     @property
     def theseFileTypes(self):
+        """Get list of file extensions we will load.
+        """
         if self._fileLoaderDict is not None:
             return list(self._fileLoaderDict.keys())
+
+    def findFileRow(self, filename):
+        # filename = os.path.split(filePath)[1]
+        fileIndexList = self._df.index[self._df['File'] == filename].tolist()
+        if fileIndexList:
+            rowIdx = fileIndexList[0]
+            return rowIdx
+        else:
+            logger.warning(f"Did not find file {filename} in {self._df['File'].tolist()}")
 
     def __iter__(self):
         self._iterIdx = -1
@@ -1490,7 +1501,7 @@ class analysisDir:
         # logger.warning(f"need to replace append with concat")
         #df = df.append(rowSeries, ignore_index=True)
 
-        logger.info(f'concat this rowSeries')
+        logger.info('concat this rowSeries')
         print(rowSeries)
         print('to this df')
         print(df)
@@ -1673,6 +1684,9 @@ class analysisDir:
                 
                 oneDf["File Number"] = int(rowIdx)
                 
+                # 20240114
+                oneDf['File Path'] = ba.fileLoader.filepath
+
                 uniqueName = os.path.splitext(ba.fileLoader.filename)[0]
                 if uniqueColumn is not None:
                     uniqueName = rowDict[uniqueColumn] + '-' + uniqueName

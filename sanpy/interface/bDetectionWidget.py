@@ -5,7 +5,7 @@ import time
 
 # import inspect # to print call stack
 from functools import partial
-from typing import Union, Dict, List, Tuple, Optional
+from typing import List, Optional
 
 import numpy as np
 
@@ -143,7 +143,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "x": None,
                 "y": None,
                 "convertx_tosec": True,
-                "color": "gray",
+                "color": "y",
                 "styleColor": "color: gray",
                 "symbol": "o",
                 "plotOn": "vm",
@@ -257,7 +257,15 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         contextMenu = QtWidgets.QMenu()
 
-        showCrosshairAction = contextMenu.addAction(f"Crosshair")
+        #202401
+        contextMenu.addAction('Select visible spikes')
+        
+        cursorSelectAction = contextMenu.addAction('Select spikes between cursors A/B')
+        cursorSelectAction.setEnabled(self._sanpyCursors.cursorsAreShowing())
+
+        contextMenu.addSeparator()
+
+        showCrosshairAction = contextMenu.addAction("Crosshair")
         showCrosshairAction.setCheckable(True)
         showCrosshairAction.setChecked(self._showCrosshair)
         
@@ -286,6 +294,8 @@ class bDetectionWidget(QtWidgets.QWidget):
             return
         
         actionText = action.text()
+        logger.info(f'actionText is "{actionText}"')
+        
         # if actionText == f"Export Trace {myType}":
         #     #
         #     # See: plugins/exportTrace.py
@@ -330,7 +340,13 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         #     self.exportWidgetList.append(exportWidget)
 
-        if actionText == "Reset All Axis":
+        #202401
+        if actionText == 'Select visible spikes':
+            self._selectSpikes('visible')
+        elif actionText == 'Select spikes between cursors A/B':
+            self._selectSpikes('between cursor A/B')
+        
+        elif actionText == "Reset All Axis":
             # print('Reset Y-Axis', self.myType)
             self.setAxisFull()
 
@@ -421,7 +437,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             logger.info("Grabbing detection parameters from main window table")
 
             # problem is these k/v have v that are mixture of str/float/int ... hard to parse
-            myDetectionDict = self.myMainWindow.getSelectedFileDict()
+            # myDetectionDict = self.myMainWindow.getSelectedFileDict()
 
             #
             # fill in detectionDict from *this interface
@@ -941,6 +957,8 @@ class bDetectionWidget(QtWidgets.QWidget):
                 # vertical lines showing epoch within a sweep
                 _epochTable = self.ba.fileLoader.getEpochTable(self.sweepNumber)
                 if _epochTable is not None:
+                    print('_epochTable:')
+                    print(_epochTable)
                     # happens when file is tif kymograph
                     sweepY = self.ba.fileLoader.sweepY
                     # filteredVm = self.ba.filteredVm
@@ -1245,6 +1263,37 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         self._blockSlots = False
 
+    #202401
+    def _selectSpikes(self, which):
+        """Select spikes in view or between cursors.
+        
+        Parameters
+        ----------
+        which : str
+            From ('visible', 'between cursor A/B')
+        """
+        if which == 'visible':
+            xMin, xMax = self.getXRange()
+        elif which =='between cursor A/B':
+            xMin = self._sanpyCursors._aCursorVal
+            xMax = self._sanpyCursors._bCursorVal
+
+        logger.info(f'which:{which} xMin:{xMin} xMax:{xMax}')
+
+        # get the spikes to select
+        
+        # times of spikes within a sweep
+        thresholdSecList = self.ba.getStat("thresholdSec", sweepNumber=self.sweepNumber)
+    
+        spikeList = []
+        for idx, thresholdSec in enumerate(thresholdSecList):
+            if thresholdSec >= xMin and thresholdSec <=xMax:
+                spikeList.append(idx)
+
+        logger.info(f'   {spikeList}')
+
+        self.selectSpikeList(spikeList, doEmit=True)
+
     def selectSpikeList(self,
                         spikeList: List[int],
                         doZoom: bool = False,
@@ -1533,6 +1582,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # detection widget toolbar
         self.detectToolbarWidget = myDetectToolbarWidget2(self.myPlots, self)
+        self.signalSelectSweep.connect(self.detectToolbarWidget.slot_selectSweep)
         self.signalSelectSpike.connect(self.detectToolbarWidget.slot_selectSpike)
         self.signalSelectSpikeList.connect(
             self.detectToolbarWidget.slot_selectSpikeList
@@ -1700,6 +1750,11 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.dacPlot.setMouseEnabled(x=True, y=False)
         self.vmPlot.setMouseEnabled(x=True, y=False)
 
+        # 202401
+        # ViewBox.PanMode or ViewBox.RectMode
+        # self.vmPlot_.getViewBox().setMouseMode(pg.ViewBox.RectMode)
+        #self.vmPlot_.getViewBox().setMouseMode(pg.ViewBox.PanMode)
+        #setMouseMode(pg.ViewBox.PanMode)
 
         # single spike selection
         # removed mar 11 2023
@@ -2625,7 +2680,7 @@ class _old_MultiLine(QtWidgets.QGraphicsPathItem):
 
         contextMenu = QtWidgets.QMenu()
 
-        showCrosshairAction = contextMenu.addAction(f"Crosshair")
+        showCrosshairAction = contextMenu.addAction("Crosshair")
         showCrosshairAction.setCheckable(True)
         showCrosshairAction.setChecked(self.detectionWidget._showCrosshair)
         

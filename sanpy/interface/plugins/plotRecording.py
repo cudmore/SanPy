@@ -1,6 +1,6 @@
-# 20210609
+from functools import partial
+
 import numpy as np
-import scipy.signal
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
@@ -16,9 +16,154 @@ from sanpy.interface.plugins import (
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
+# taken from
+# https://www.pythonguis.com/widgets/qcolorbutton-a-color-selector-tool-for-pyqt/
+class ColorButton(QtWidgets.QPushButton):
+    '''
+    Custom Qt Widget to show a chosen color.
+
+    Left-clicking the button shows the color-chooser, while
+    right-clicking resets the color to None (no-color).
+    '''
+
+    colorChanged = QtCore.pyqtSignal(object)
+
+    def __init__(self, *args, color=None, **kwargs):
+        super(ColorButton, self).__init__(*args, **kwargs)
+
+        self._color = None
+        self._default = color
+        self.pressed.connect(self.onColorPicker)
+
+        # Set the initial/default state.
+        self.setColor(self._default)
+
+    def setColor(self, color):
+        if color != self._color:
+            self._color = color
+            # logger.info(f'emit color: {color}')
+            self.colorChanged.emit(color)
+
+        if self._color:
+            self.setStyleSheet("background-color: %s;" % self._color)
+        else:
+            self.setStyleSheet("")
+
+    def color(self):
+        return self._color
+
+    def onColorPicker(self):
+        '''
+        Show color-picker dialog to select color.
+
+        Qt will use the native dialog by default.
+
+        '''
+        dlg = QtWidgets.QColorDialog(self)
+        if self._color:
+            dlg.setCurrentColor(QtGui.QColor(self._color))
+
+        if dlg.exec_():
+            self.setColor(dlg.currentColor().name())
+
+    def mousePressEvent(self, e):
+        if e.button() == QtCore.Qt.RightButton:
+            self.setColor(self._default)
+
+        return super(ColorButton, self).mousePressEvent(e)
+
+# TODO: switch this to a dict with keys of 'humanName'
+def getPlotOptionsDict():
+     theRet = {
+           "Threshold (mV)": {
+                # "humanName": "Threshold (mV)",
+                "x": "thresholdSec",
+                "y": "thresholdVal",
+                "convertx_tosec": False,  # some stats are in points, we need to convert to seconds
+                "color": "red",
+                "styleColor": "color: red",
+                "symbol": ".",
+                "showLines": '.',  # . will not show lines, - will
+                "markerSize": 4,
+                "plotOn": "vm",  # which plot to overlay (vm, dvdt)
+                "plotIsOn": True,
+            },
+
+           "AP Peak (mV)":
+            {
+                # "humanName": "AP Peak (mV)",
+                "x": "peakSec",
+                "y": "peakVal",
+                "convertx_tosec": False,
+                "color": "blue",
+                "styleColor": "color: green",
+                "symbol": "o",
+                "showLines": '.',  # . will not show lines, - will
+                "markerSize": 4,
+                "plotOn": "vm",
+                "plotIsOn": True,
+            },
+
+           "Fast AHP (mV)":
+            {
+                # "humanName": "Fast AHP (mV)",
+                "x": "fastAhpSec",
+                "y": "fastAhpValue",
+                "convertx_tosec": False,
+                "color": "cyan",
+                "styleColor": "color: yellow",
+                "symbol": "o",
+                "showLines": '.',  # . will not show lines, - will
+                "markerSize": 4,
+                "plotOn": "vm",
+                "plotIsOn": False,
+            },
+
+           "Half-Widths":
+            {
+                # "humanName": "Half-Widths",
+                "x": None,
+                "y": None,
+                "convertx_tosec": True,
+                "color": "yellow",
+                "styleColor": "color: yellow",
+                "symbol": None,
+                "showLines": '-',  # . will not show lines, - will
+                "markerSize": 4,
+                "plotOn": "vm",
+                "plotIsOn": False,
+            },
+           "EDD Rate":
+            {
+                # "humanName": "EDD Rate",
+                "x": None,
+                "y": None,
+                "convertx_tosec": False,
+                "color": "magenta",
+                "styleColor": "color: megenta",
+                "symbol": None,
+                "showLines": '-',  # . will not show lines, - will
+                "markerSize": 4,
+                "plotOn": "vm",
+                "plotIsOn": False,
+            },
+            # "Epoch Lines":
+            # {
+            #     "humanName": "Epoch Lines",
+            #     "x": None,
+            #     "y": None,
+            #     "convertx_tosec": True,
+            #     "color": "y",
+            #     "styleColor": "color: gray",
+            #     "symbol": "o",
+            #     "plotOn": "vm",
+            #     "plotIsOn": True,
+            # },
+     }
+     return theRet
+
 class plotRecording(sanpyPlugin):
-    """
-    Example of matplotlib plugin.
+    """Example of matplotlib plugin.
     """
 
     myHumanName = "Plot Recording"
@@ -43,59 +188,194 @@ class plotRecording(sanpyPlugin):
         setAxis = self.responseTypes.setAxis
         self.toggleResponseOptions(setAxis, newValue=False)
 
-        self.rawLine = None
-        self.thresholdLine = None
+        self._plotOptionsDict = getPlotOptionsDict()
+        # a list of dict telling us how to plot each item (like threshold, peak etc)
 
-        self.plot()
+        self.rawLine = None
+        self.rawLineWidth = 0.5
+        # raw data
+        
+        self._plotList = {}
+
+        # a list of self.axs.plot that we actually plot using _plotDictList
+
+        self.xOffset = 0.01
+        self.yOffset = 50
+
+        self._buildGui()
+        self.replot(firstPlot=True)
+
+    def toggleOffsetSpinBox(self, visible : bool):
+        self.xOffsetSpinBox.setVisible(visible)
+        self.yOffsetSpinBox.setVisible(visible)
+
+    def _buildControlLayout(self):
+        _vLayoutControls = QtWidgets.QVBoxLayout()
+        _vLayoutControls.setAlignment(QtCore.Qt.AlignTop)
+
+        # raw line width
+        _hLayoutRawLineWidth = QtWidgets.QHBoxLayout()
+        _hLayoutRawLineWidth.setAlignment(QtCore.Qt.AlignLeft)
+        aLabel = QtWidgets.QLabel('Raw Line Width')
+        _hLayoutRawLineWidth.addWidget(aLabel)
+        rawLineWidthSpinBox = QtWidgets.QDoubleSpinBox()
+        rawLineWidthSpinBox.setValue(self.rawLineWidth)
+        rawLineWidthSpinBox.valueChanged.connect(self._on_raw_line_width)
+        _hLayoutRawLineWidth.addWidget(rawLineWidthSpinBox)
+
+        _vLayoutControls.addLayout(_hLayoutRawLineWidth)
+
+        # x/y offset per sweep
+        _hLayoutOffset = QtWidgets.QHBoxLayout()
+        _hLayoutOffset.setAlignment(QtCore.Qt.AlignLeft)
+        aLabel = QtWidgets.QLabel('Sweep Offsets (x/y)')
+        _hLayoutOffset.addWidget(aLabel)
+        # x offset
+        self.xOffsetSpinBox = QtWidgets.QDoubleSpinBox()
+        self.xOffsetSpinBox.setValue(self.xOffset)
+        self.xOffsetSpinBox.valueChanged.connect(partial(self._on_offset_spinbox, 'xOffset'))
+        _hLayoutOffset.addWidget(self.xOffsetSpinBox)
+        # y offset
+        self.yOffsetSpinBox = QtWidgets.QDoubleSpinBox()
+        self.yOffsetSpinBox.setValue(self.yOffset)
+        self.yOffsetSpinBox.valueChanged.connect(partial(self._on_offset_spinbox, 'yOffset'))
+        _hLayoutOffset.addWidget(self.yOffsetSpinBox)
+
+        _vLayoutControls.addLayout(_hLayoutOffset)
+
+        for humanName, optionsDict in self._plotOptionsDict.items():
+            _rowHLayout = QtWidgets.QHBoxLayout()
+            _rowHLayout.setAlignment(QtCore.Qt.AlignLeft)
+
+            # humanName = statDict['humanName']
+            color = optionsDict['color']
+            markersize = optionsDict['markerSize']
+            showLines = optionsDict['showLines']
+            plotIsOn = optionsDict['plotIsOn']
+
+            aCheckbox = QtWidgets.QCheckBox(humanName)
+            aCheckbox.setChecked(plotIsOn)
+            aCheckbox.stateChanged.connect(partial(self._on_check_click, aCheckbox, humanName))
+            _rowHLayout.addWidget(aCheckbox)
+
+            # color button
+            aColorButton = ColorButton()
+            aColorButton.setColor(color)
+            # aColorButton.resize(100, 100)
+            aColorButton.setFixedSize(QtCore.QSize(20, 20))
+            aColorButton.colorChanged.connect(partial(self._on_color_click, humanName))
+            _rowHLayout.addWidget(aColorButton)
+
+            # marker size, if showLines is '-' then we are not showing markers
+            if showLines == '.':
+                aSpinBox = QtWidgets.QSpinBox()
+                aSpinBox.setValue(markersize)
+                aSpinBox.valueChanged.connect(partial(self._on_size_spinbox, humanName))
+                _rowHLayout.addWidget(aSpinBox)
+
+            _vLayoutControls.addLayout(_rowHLayout)
+
+        
+        resetZoom = QtWidgets.QPushButton('Reset Zoom')
+        resetZoom.clicked.connect(self.setFullZoom)
+        _vLayoutControls.addWidget(resetZoom)
+        
+        return _vLayoutControls
+    
+    def _on_raw_line_width(self, value : float):
+        self.rawLineWidth = value
+        self.replot()
+        
+    def _on_offset_spinbox(self, xyName : str, value : float):
+        # logger.info(f'{xyName} {value}')
+        if xyName == 'xOffset':
+            self.xOffset = value
+        elif xyName == 'yOffset':
+            self.yOffset = value
+        
         self.replot()
 
-    def plot(self):
+    def _on_check_click(self, checkbox, humanName : str):
+        isChecked = checkbox.isChecked()
+        # logger.info(f'{humanName} {isChecked}')
+        self._plotOptionsDict[humanName]['plotIsOn'] = isChecked
+
+        self.replot()
+
+    def _on_color_click(self, humanName, color : str):
+        # logger.info(f'{humanName} {color}')
+        self._plotOptionsDict[humanName]['color'] = color
+
+        self.replot()
+
+    def _on_size_spinbox(self, humanName, markerSize):
+        # logger.info(f'{humanName} {markerSize}')
+        self._plotOptionsDict[humanName]['markerSize'] = markerSize
+
+        self.replot()
+
+    def _buildGui(self):
         # if self.ba is None:
         #     return
+        
+        _vlayout = self.getVBoxLayout()
+        
+        # hold controls and plot
+        _hLayout = QtWidgets.QHBoxLayout()
+        _vlayout.addLayout(_hLayout)
 
-        self.mplWindow2()  # assigns (self.fig, self.axs)
+        # controls
+        _vLayoutControls = self._buildControlLayout()
+        _hLayout.addLayout(_vLayoutControls)
 
-        return
+        # plot
+        _vLayoutPlot = QtWidgets.QVBoxLayout()
+        static_canvas, mplToolbar = self.mplWindow2(addToLayout=False)  # assigns (self.fig, self.axs)
+        _vLayoutPlot.addWidget(static_canvas)
+        _vLayoutPlot.addWidget(mplToolbar)
+        _hLayout.addLayout(_vLayoutPlot)
 
-    def replot(self):
+    def replot(self, firstPlot=False):
         """bAnalysis has been updated, replot"""
         logger.info(f"{self.ba}")
 
         if self.ba is None:
             return
 
-        self.xOffset = 0.01
-        self.yOffset = 50
+        self.toggleOffsetSpinBox(self.ba.fileLoader.numSweeps > 1)
 
         xCurrentOffset = 0
         yCurrentOffset = 0
 
-        currentSweep = self.ba.fileLoader.currentSweep
-        numSweeps = self.ba.fileLoader.numSweeps
+        # currentSweep = self.ba.fileLoader.currentSweep
+        #numSweeps = self.ba.fileLoader.numSweeps
+        sweepNumber = self.sweepNumber  # can be 'All'
+        logger.info(f'sweepNumber:{sweepNumber}')
+        if sweepNumber == 'All':
+            theseSweeps = list(range(self.ba.fileLoader.numSweeps))
+        else:
+            theseSweeps = [sweepNumber]
+        numSweeps = len(theseSweeps)
+
+        if not firstPlot:
+            _xLimOrig = self.axs.get_xlim()
+            # logger.info(f'_xLimOrig: {_xLimOrig}')
+            _yLimOrig = self.axs.get_ylim()
+            # logger.info(f'_yLimOrig: {_yLimOrig}')
 
         self.fig.clear(True)
         self.axs = self.fig.add_subplot(1, 1, 1)
 
-        """
-        if self.rawLine is not None:
-            for line in self.rawLine:
-                line.clear()
         self.rawLine = [None] * numSweeps
-        
-        if self.thresholdLine is not None:
-            for line in self.thresholdLine:
-                line.clear()
-        self.thresholdLine = [None] * numSweeps
-        """
-        self.rawLine = [None] * numSweeps
-        self.thresholdLine = [None] * numSweeps
 
         _penColor = self.getPenColor()
 
-        for sweepIdx in range(numSweeps):
-            self.ba.fileLoader.setSweep(sweepIdx)
+        # each plot has to have a [] for sweeps
+        for humanName in self._plotOptionsDict.keys():
+            self._plotList[humanName] = [None] * numSweeps
 
-            # self.axs[_idx].self.fig.add_subplot(numSweeps, 1, _idx)
+        for plotIdx, sweepIdx in enumerate(theseSweeps):
+            self.ba.fileLoader.setSweep(sweepIdx)
 
             sweepX = self.getSweep("x")
             sweepY = self.getSweep("y")
@@ -103,22 +383,68 @@ class plotRecording(sanpyPlugin):
             self.sweepX = sweepX
             self.sweepY = sweepY
 
-            (self.rawLine[sweepIdx],) = self.axs.plot(
+            (self.rawLine[plotIdx],) = self.axs.plot(
                 sweepX + xCurrentOffset,
                 sweepY + yCurrentOffset,
                 "-",
                 color=_penColor,
-                linewidth=0.5,
+                linewidth=self.rawLineWidth,
             )
 
-            thresholdSec = self.ba.getStat("thresholdSec", sweepNumber=sweepIdx)
-            thresholdSec = [x + xCurrentOffset for x in thresholdSec]
-            thresholdVal = self.ba.getStat("thresholdVal", sweepNumber=sweepIdx)
-            thresholdVal = [x + yCurrentOffset for x in thresholdVal]
-            markersize = 4
-            self.thresholdLine[sweepIdx] = self.axs.plot(
-                thresholdSec, thresholdVal, "r.", markersize=markersize
-            )
+            self.axs.spines['right'].set_visible(False)
+            self.axs.spines['top'].set_visible(False)
+
+            for humanName, onePlotDict in self._plotOptionsDict.items():
+                xStat = onePlotDict['x']
+                yStat = onePlotDict['y']
+                
+                # humanName = onePlotDict['humanName']
+                color = onePlotDict['color']
+                symbol = onePlotDict['symbol']
+                markerSize = onePlotDict['markerSize']
+                showLines = onePlotDict['showLines']
+                plotIsOn = onePlotDict['plotIsOn']
+                if not plotIsOn:
+                    continue
+
+                if humanName == 'Half-Widths':
+                    spikeDictionaries = self.ba.getSpikeDictionaries(
+                        sweepNumber=sweepIdx
+                    )
+                
+                    xValue, yValue = sanpy.analysisUtil.getHalfWidthLines(
+                        sweepX, sweepY, spikeDictionaries)
+                
+                elif humanName == 'EDD Rate':
+                    xValue, yValue = sanpy.analysisUtil.getEddLines(self.ba)
+                
+                elif xStat is None:
+                    continue
+
+                else:
+                    xValue = self.ba.getStat(xStat, sweepNumber=sweepIdx)
+                    yValue = self.ba.getStat(yStat, sweepNumber=sweepIdx)
+
+                xValue = [x + xCurrentOffset for x in xValue]
+                yValue = [y + yCurrentOffset for y in yValue]
+
+                self._plotList[humanName][plotIdx] = self.axs.plot(
+                    xValue, yValue,
+                    showLines,  # '-' to show, '.' to not
+                    color=color,
+                    marker=symbol,
+                    markersize=markerSize,
+                )
+
+            # thresholdSec = self.ba.getStat("thresholdSec", sweepNumber=sweepIdx)
+            # thresholdSec = [x + xCurrentOffset for x in thresholdSec]
+            # thresholdVal = self.ba.getStat("thresholdVal", sweepNumber=sweepIdx)
+            # thresholdVal = [x + yCurrentOffset for x in thresholdVal]
+            # markersize = 4
+            # self.thresholdLine[sweepIdx] = self.axs.plot(
+            #     thresholdSec, thresholdVal, "r.", markersize=markersize
+            # )
+
             """
             if thresholdSec is None or thresholdVal is None:
                 self.thresholdLine[sweepIdx].set_data([], [])
@@ -137,103 +463,25 @@ class plotRecording(sanpyPlugin):
         self.axs.relim()
         self.axs.autoscale_view(True, True, True)
 
-        self.ba.fileLoader.setSweep(currentSweep)
+        if not firstPlot:
+            self.axs.set_xlim(_xLimOrig)
+            self.axs.set_ylim(_yLimOrig)
+
+        # self.ba.fileLoader.setSweep(currentSweep)
         self.static_canvas.draw_idle()
         plt.draw()
 
-    def old_getEddLines(self):
-        preLinearFitPnt0 = self.ba.getStat("preLinearFitPnt0")
-        preLinearFitSec0 = [self.ba.fileLoader.pnt2Sec_(x) for x in preLinearFitPnt0]
-        preLinearFitVal0 = self.ba.fileLoader.getStat("preLinearFitVal0")
+    def setFullZoom(self):
+        xMin = 0
+        xMax = self.ba.fileLoader.sweepX[-1]
+        yMin = np.min(self.ba.fileLoader.sweepY)
+        yMax = np.max(self.ba.fileLoader.sweepY)
 
-        preLinearFitPnt1 = self.ba.getStat("preLinearFitPnt1")
-        preLinearFitSec1 = [self.ba.fileLoader.pnt2Sec_(x) for x in preLinearFitPnt1]
-        preLinearFitVal1 = self.ba.getStat("preLinearFitVal1")
+        self.axs.set_xlim([xMin, xMax])
+        self.axs.set_ylim([yMin, yMax])
 
-        x = []
-        y = []
-        for idx in range(self.ba.numSpikes):
-            try:
-                dx = preLinearFitSec1[idx] - preLinearFitSec0[idx]
-                dy = preLinearFitVal1[idx] - preLinearFitVal0[idx]
-            except IndexError as e:
-                logger.error(
-                    f"spike {idx} preLinearFitSec1:{len(preLinearFitSec1)} preLinearFitSec0:{len(preLinearFitSec0)}"
-                )
-                logger.error(
-                    f"spike {idx} preLinearFitPnt1:{len(preLinearFitPnt1)} preLinearFitPnt0:{len(preLinearFitPnt0)}"
-                )
-
-            lineLength = 4  # TODO: make this a function of spike frequency?
-
-            try:
-                x.append(preLinearFitSec0[idx])
-                x.append(preLinearFitSec1[idx] + lineLength * dx)
-                x.append(np.nan)
-
-                y.append(preLinearFitVal0[idx])
-                y.append(preLinearFitVal1[idx] + lineLength * dy)
-                y.append(np.nan)
-            except IndexError as e:
-                logger.error(
-                    f"preLinearFitSec0:{len(preLinearFitSec0)} preLinearFitSec1:{len(preLinearFitSec1)}"
-                )
-                logger.error(e)
-
-        return x, y
-
-    def getHalfWidths(self):
-        """Get x/y pair for plotting all half widths.
-
-        DOes not work with new version because of sweeps.
-        """
-        # defer until we know how many half-widths 20/50/80
-        x = []
-        y = []
-        numPerSpike = 3  # rise/fall/nan
-        numSpikes = self.ba.numSpikes
-        xyIdx = 0
-        for idx, spike in enumerate(self.ba.spikeDict):
-            if idx == 0:
-                # make x/y from first spike using halfHeights = [20,50,80]
-                halfHeights = spike[
-                    "halfHeights"
-                ]  # will be same for all spike, like [20, 50, 80]
-                numHalfHeights = len(halfHeights)
-                # *numHalfHeights to account for rise/fall + padding nan
-                x = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
-                y = [np.nan] * (numSpikes * numHalfHeights * numPerSpike)
-                # print('  len(x):', len(x), 'numHalfHeights:', numHalfHeights, 'numSpikes:', numSpikes, 'halfHeights:', halfHeights)
-
-            for idx2, width in enumerate(spike["widths"]):
-                halfHeight = width["halfHeight"]  # [20,50,80]
-                risingPnt = width["risingPnt"]
-                # risingVal = width['risingVal']
-                risingVal = self.sweepY[risingPnt]
-                fallingPnt = width["fallingPnt"]
-                # fallingVal = width['fallingVal']
-                fallingVal = self.sweepY[fallingPnt]
-
-                if risingPnt is None or fallingPnt is None:
-                    # half-height was not detected
-                    continue
-
-                risingSec = self.ba.fileLoader.pnt2Sec_(risingPnt)
-                fallingSec = self.ba.fileLoader.pnt2Sec_(fallingPnt)
-
-                x[xyIdx] = risingSec
-                x[xyIdx + 1] = fallingSec
-                x[xyIdx + 2] = np.nan
-                # y
-                y[xyIdx] = fallingVal  # risingVal, to make line horizontal
-                y[xyIdx + 1] = fallingVal
-                y[xyIdx + 2] = np.nan
-
-                # each spike has 3x pnts: rise/fall/nan
-                xyIdx += numPerSpike  # accounts for rising/falling/nan
-            # end for width
-        # end for spike
-        return x, y
+        self.static_canvas.draw_idle()
+        plt.draw()
 
     def selectSpikeList(self):
         """Only respond to single spike selection."""
@@ -257,28 +505,6 @@ class plotRecording(sanpyPlugin):
 
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
-
-    def old_slot_selectSpike(self, eDict):
-        logger.info(eDict)
-        spikeNumber = eDict["spikeNumber"]
-        # doZoom = eDict['doZoom']
-
-        if spikeNumber is None:
-            return
-
-        if self.ba is None:
-            return
-
-        thresholdSec = self.ba.getStat("thresholdSec")
-        spikeTime = thresholdSec[spikeNumber]
-        xMin = spikeTime - 0.5
-        xMax = spikeTime + 0.5
-
-        self.axs.set_xlim(xMin, xMax)
-
-        self.fig.canvas.draw()
-        self.fig.canvas.flush_events()
-
 
 def testPlot():
     import os
@@ -327,8 +553,30 @@ def testLoad():
             continue
         print(file)
 
+def debugManuscript():
+    """Open folder, select a file, run Plot Recording plugin.
+    """
+    import sys
+    import sanpy.interface
+    app = sanpy.interface.SanPyApp([])
+    
+    path = '/Users/cudmore/Sites/SanPy/data'
+    w = app.openSanPyWindow(path)
+
+    # select first file
+    # todo: add sanpy window selectFileRow(), only if showing a folder path
+    rowIdx = 0
+    # w._fileListWidget.getTableView()._onLeftClick(rowIdx)
+    w.selectFileListRow(rowIdx)
+
+    # w.selectSpikeList([10000])
+
+    w.sanpyPlugin_action('Plot Recording')
+
+    sys.exit(app.exec_())
 
 if __name__ == "__main__":
     # testPlot()
     # testLoad()
-    main()
+    #main()
+    debugManuscript()

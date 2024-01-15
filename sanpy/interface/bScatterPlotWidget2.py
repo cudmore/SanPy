@@ -719,27 +719,44 @@ class myMplCanvas(QtWidgets.QFrame):
 
     def on_pick(self, event):
         """Handle user click in scatter
+       
+        Parameters
+        ----------
+        event: matplotlib.backend_bases.PickEvent
 
+        Notes
+        -----
         todo: this makes perfect sense for scatter but maybe not other plots???
         """
         logger.info('=== myMplCanvas')  #' event:', type(event), event)
         
         # only allow pick in Scatter Plot
-        if not self.stateDict['Plot Type'] in ['Scatter Plot', 'Scatter + Raw + Mean']:
+        if self.stateDict['Plot Type'] not in ['Scatter Plot', 'Scatter + Raw + Mean']:
             logger.warning('picking only allowed in scatter plots')
             # self.signalSetStatusBar.emit('Selection only allowed in scatter plots')
             return
 
+        # mouseevent : matplotlib.backend_bases.MouseEvent
+        # use mousevent.dblclick in emit
+        dblclick = event.mouseevent.dblclick
+        # print('mouseevent:', type(mouseevent))
+        # print(mouseevent)
+
+        # print(f'   event.ind:{event.ind}')
+
         # if what we are plotting has different length from df
         # means there were nan value in df, picking is not possible
-        line = event.artist
-        offsets = line.get_offsets()
-        if len(offsets) != len(self.plotDf):
-            logger.error('Plot and DataFrame length do not match')
-            logger.error('  this occurs when there were nan values in dataframe and they do not get plotted')
-            _warningStr = 'Plot and DataFrame length do not match. This happens when we plot something like "Spike Frequency", the first spike does not have a value.'
-            self.signalSetStatusBar.emit(_warningStr)
-            return
+        # 202401 trying to relax this
+        # line = event.artist
+        # offsets = line.get_offsets()
+        # if len(offsets) != len(self.plotDf):
+        #     logger.error('Plot and DataFrame length do not match')
+        #     logger.error('  this occurs when there were nan values in dataframe and they do not get plotted')
+        #     logger.info(f'offsets:{len(offsets)} plotDf:{len(self.plotDf)}')
+
+        #     _warningStr = 'Plot and DataFrame length do not match. This happens when we plot something like "Spike Frequency", the first spike does not have a value.'
+        #     self.signalSetStatusBar.emit(_warningStr)
+        #     return
 
         # filter out clicks on 'Annotation' used by mplcursors
         # try:
@@ -749,6 +766,9 @@ class myMplCanvas(QtWidgets.QFrame):
         #     logger.info(f'get_offsets() triggered AttributeError, not a scatter plot.')
         #     return
 
+        # this is wrong for any plot with nan
+        # matplotlib just removes the nans
+        # when we plot we need to keep track of rows in df (after removing nan values)
         ind = event.ind  # ind is a list []
         if len(ind) == 0:
             return
@@ -759,23 +779,38 @@ class myMplCanvas(QtWidgets.QFrame):
         # logger.info(f"  user selected ind:{ind}, offsets: {offsets[ind]}")
         logger.info(f"  user selected ind:{ind}")
         
-        selectDict = self.getAnnotation(ind)
+        # we need to get the real row after nan was removed by seaborn
+        realRowIntoDf = self._noNanPlotDf.iloc[ind].name
 
+        logger.info(f'   realRowIntoDf is: {realRowIntoDf} {type(realRowIntoDf)}')
+
+        # selectDict = self.getAnnotation(ind)
+        selectDict = self.getAnnotation(realRowIntoDf)
+# 
         if selectDict is None:
             return
         
         # to do, just put copy of state dict ???
         selectDict["Plot Type"] = self.stateDict["Plot Type"]
         selectDict["Data Type"] = self.stateDict["Data Type"]
+        
+        selectDict['Double Click'] = dblclick
+                   
+        modifiers = QtWidgets.QApplication.keyboardModifiers()
+        isShift = modifiers == QtCore.Qt.ShiftModifier
+        selectDict['isShift'] = isShift
+
         #
         # emit
-        logger.info(f"  myMplCanvas.signalSelectFromPlot.emit(selectDict)")
+        logger.info("  myMplCanvas.signalSelectFromPlot.emit(selectDict)")
         for k,v in selectDict.items():
-            print('  k:', k, 'v:', v)
+            logger.info(f'      "{k}": {v}')
 
         self.signalSelectFromPlot.emit(selectDict)
         
         _selStr = selectDict['Unique Name']
+        _selStr += ' sweep ' + str(selectDict['sweep'])
+        _selStr += ' spike ' + str(selectDict['ind'])
         self.signalSetStatusBar.emit(_selStr)
 
     def _selectInd(self, ind):
@@ -799,9 +834,10 @@ class myMplCanvas(QtWidgets.QFrame):
         
         Lots of plots do not give an integer index and just ignore them.
         """
-        if not np.issubdtype(ind, np.integer):
-            #logger.error(f'myMplCanvas.getAnnotation() got bad ind:{ind} {type(ind)}')
-            return
+
+        # if not np.issubdtype(ind, np.integer):
+        #     logger.error(f'myMplCanvas.getAnnotation() got bad ind:{ind} {type(ind)}')
+        #     return
 
         xStat = self.stateDict["xStat"]
         yStat = self.stateDict["yStat"]
@@ -809,8 +845,8 @@ class myMplCanvas(QtWidgets.QFrame):
 
         # analysisName = self.plotDf.at[ind, groupByColumnName]
         index = None
-        if not 'index' in self.plotDf.columns:
-            logger.error(f'did not find "index" column. Available columns are')
+        if 'index' not in self.plotDf.columns:
+            logger.error('did not find "index" column. Available columns are')
             logger.error(f'{self.plotDf.columns}')
         else:
             index = self.plotDf.at[ind, "index"]
@@ -823,11 +859,16 @@ class myMplCanvas(QtWidgets.QFrame):
         # for v in self.plotDf.loc[ind]:
         #     print(v)
 
+        #202401
+        filePath = self.plotDf.at[ind, 'File Path']
+        sweep = self.plotDf.at[ind, 'sweep']
+
         xVal = self.plotDf.at[ind, xStat]
         yVal = self.plotDf.at[ind, yStat]
 
         returnDict = {
             "Unique Name": uniqueName,
+            "sweep": sweep,
             "ind": ind,
             "index": index,
             # "analysisName": analysisName,
@@ -835,6 +876,7 @@ class myMplCanvas(QtWidgets.QFrame):
             "xVal": xVal,
             "yVal": yVal,
             #'plotDf': self.plotDf, # potentially very big
+            'File Path': filePath
         }
         return returnDict
 
@@ -949,7 +991,12 @@ class myMplCanvas(QtWidgets.QFrame):
         self.fig.canvas.draw()
 
     def _mplCursorCallback(self, sel):
-        logger.info(sel)
+        """Respond to user hovering the mouse.
+
+        sel: mplcursors._pick_info.Selection
+        """
+        # logger.info(type(sel))
+        
         # logger.info(self.stateDict['doHover'])
 
         # if not self.stateDict['doHover']:
@@ -1014,7 +1061,8 @@ class myMplCanvas(QtWidgets.QFrame):
         yStatHuman = state["Y Statistic"]
 
         logger.info(f'myMplCanvas plotting {self.getPlotNumber()}')
-        logger.info(f'{state}')
+        # logger.info(f'{state}')
+        
         # logger.info(f'  plotType:{plotType}')
         # logger.info(f'  dataType:{dataType}')
         # logger.info(f'  xStatHuman:{xStatHuman}')
@@ -1096,6 +1144,14 @@ class myMplCanvas(QtWidgets.QFrame):
                     # print('  ', thisMasterDf.loc[__idx]['index'])
                     # print('  ', thisMasterDf.loc[__idx][xStat])
                     # print('  ', thisMasterDf.loc[__idx][yStat])
+                    
+                    # plot scatter plot
+                    
+                    # 202401 keep track of missing rows that have nan
+                    # seaborn drops them and breaks matplotlib pick ind
+                    # when we get a pick event, the df 'index' in the row of this dataframe
+                    # is the real row into thisMAsterDf
+                    self._noNanPlotDf = thisMasterDf.dropna(subset=[xStat, yStat])
                     
                     self.whatWeArePlotting = sns.scatterplot(
                         x=xStat,
@@ -2169,7 +2225,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         for i in range(numPlots):
             iCanvas = self.myPlotCanvasList[i]
             iCanvas.signalSelectSquare.connect(self.slot_selectSquare)
-            iCanvas.signalSelectFromPlot.connect(self.slotSelectFromPlot)
+            iCanvas.signalSelectFromPlot.connect(self.slot_selectFromPlot)
             for j in range(numPlots):
                 # if i==j:
                 #    continue
@@ -2661,7 +2717,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         yStat = self._plotState['yStat']
         groupByColumnName = self._plotState['Group By (Stats)']
         
-        logger.info(f'=== xStat:{xStat} yStat:{yStat} groupByColumnName:{groupByColumnName}')
+        logger.info(f'   xStat:{xStat} yStat:{yStat} groupByColumnName:{groupByColumnName}')
 
         if not xStat in self.masterDf.columns:
             logger.error(f'did not find x stat key {xStat} in masterDf? Available columns are')
@@ -2955,12 +3011,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         print(f'index:{index}, analysisName:{analysisName}, region:{region}, {self.plotStatx}:{xVal}, {self.plotStaty}:{yVal}')
     '''
 
-    def slotSelectFromPlot(self, selectDict):
+    def slot_selectFromPlot(self, selectDict):
+        """A point in one of plots was selected pass this to parent app
         """
-        A point in one of plots was selected
-        pass this to parent app
-        """
-        print("bScatterPlotMainWindow.slotSelectFromPlot() ", selectDict)
+        # filePath = selectDict['File Path']
+        logger.info('bScatterPlotMainWindow')
+        self.signalSelectFromPlot.emit(selectDict)
 
     def slot_selectSquare(self, plotNumber, stateDict):
         """Respond to user clicking a mpl plot widget.

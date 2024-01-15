@@ -1,8 +1,5 @@
 from functools import partial
 
-import numpy as np
-import pandas as pd
-
 from PyQt5 import QtWidgets, QtCore
 
 import sanpy

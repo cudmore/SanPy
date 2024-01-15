@@ -4,7 +4,7 @@ from functools import partial
 import json
 from typing import Union, Dict, List, Tuple, Optional, Optional
 
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
@@ -30,7 +30,7 @@ class SetMetaData(sanpyPlugin):
             # todo deactivate all controls
             return
         
-        metaDataDict = self.ba.metaData
+        # metaDataDict = self.ba.metaData
 
         # logger.info(metaDataDict)
 
@@ -125,7 +125,19 @@ class SetMetaData(sanpyPlugin):
         else:
             logger.error(f'did not understand param name"{paramName}"')
 
+    def _setFontSize(self, aWidget):
+        fontSize = 12
+        
+        _font = aWidget.font()
+        _font.setPointSize(fontSize)
+        aWidget.setFont(_font)
+
+        # aWidget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum)
+
+        aWidget.setMinimumSize(5,fontSize + int(fontSize/2))
+
     def _buildUI(self):
+
         self._widgetDict = {}
         
         vBoxLayout = self.getVBoxLayout()
@@ -135,11 +147,12 @@ class SetMetaData(sanpyPlugin):
         _metaData = sanpy.MetaData.getMetaDataDict()
         
         for paramName, paramValue in _metaData.items():
-            logger.info(f'paramName:{paramName}')
+            # logger.info(f'paramName:{paramName}')
 
             hBoxLayout = QtWidgets.QHBoxLayout()
 
             aLabel = QtWidgets.QLabel(paramName)
+            self._setFontSize(aLabel)
             hBoxLayout.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
 
             if paramName == 'Include':
@@ -171,7 +184,10 @@ class SetMetaData(sanpyPlugin):
                 self._widgetDict[paramName] = aLineEdit
                 hBoxLayout.addWidget(aLineEdit, alignment=QtCore.Qt.AlignLeft)
             
-            vBoxLayout.addLayout(hBoxLayout)
+            vBoxLayout.addLayout(hBoxLayout)  # , alignment=QtCore.Qt.AlignTop)
 
-
+        vBoxLayout.addStretch()
         
+        # set all font sizes
+        for aKey, aWidget in self._widgetDict.items():
+            self._setFontSize(aWidget)

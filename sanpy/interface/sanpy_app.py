@@ -81,8 +81,17 @@ class SanPyApp(QtWidgets.QApplication):
             logger.info("  We created <user>/Documents/Sanpy and need to restart")
 
         self._fileLoaderDict = sanpy.fileloaders.getFileLoaders(verbose=True)
+        
         self._detectionClass : sanpy.bDetection = sanpy.bDetection()
+
         self._configDict : sanpy.interface.preferences = sanpy.interface.preferences(self)
+        self._currentWindowGeometry = {
+            'x': self._configDict['windowGeometry']['x'],
+            'y': self._configDict['windowGeometry']['y'],
+            'width': self._configDict['windowGeometry']['width'],
+            'height': self._configDict['windowGeometry']['height']
+        }
+
         self._plugins = sanpy.interface.bPlugins(sanpyApp=self)
         self._analysisUtil = sanpy.bAnalysisUtil()
 
@@ -173,28 +182,80 @@ class SanPyApp(QtWidgets.QApplication):
     def getOptions(self):
         return self._configDict
     
-    def openSanPyWindow(self, path=None):
+    def newWindowGeometry(self) -> dict:
+        """Get geometry for a new window.
+        """
+        xyOffset = 20
+        newWindowGeometry = {
+            'x': self._currentWindowGeometry['x'] + xyOffset,
+            'y': self._currentWindowGeometry['y'] + xyOffset,
+            'width': self._currentWindowGeometry['width'],
+            'height': self._currentWindowGeometry['height']
+        }
+
+        self._currentWindowGeometry = newWindowGeometry
+
+        return newWindowGeometry
+
+    def openSanPyWindow(self, path=None, sweep=None, spikeNumber=None):
         """Open a new SanPyWindow from a path.
         
         Can be either a file or a folder.
+        
+        Parameters
+        ----------
+        sweep : int
+            Only works for file path
         """
-        w = SanPyWindow(self, path)
-        w.show()
-        w.raise_()  # bring to front, raise is a python keyword
-        w.activateWindow()  # bring to front
+        
+        logger.info(f'path:{path}')
+        logger.info(f'   sweep:{sweep}')
+        logger.info(f'   spikeNumber:{spikeNumber}')
 
-        self._windowList.append(w)
+        # check if it is open
+        foundWindow = None
+        for aWindow in self._windowList:
+            if aWindow.path == path:
+                logger.info('   raising existing window')
+                aWindow.raise_()  # bring to front, raise is a python keyword
+                aWindow.activateWindow()  # bring to front
+                foundWindow = aWindow
+            
+        # open new window
+        if foundWindow is None:
+            logger.info('   opening new window')
+            foundWindow = SanPyWindow(self, path)
+            foundWindow.show()
+            foundWindow.raise_()  # bring to front, raise is a python keyword
+            foundWindow.activateWindow()  # bring to front
+            self._windowList.append(foundWindow)
+
+        # only set sweep and select spike if
+        # we opened a file path
+        if os.path.isfile(path):
+            if sweep is not None:
+                # _ba = foundWindow.get_bAnalysis()
+                # foundWindow.slot_selectSweep(_ba, sweep)
+                foundWindow.selectSweep_external(sweep)
+
+            if spikeNumber is not None:
+                # foundWindow.slot_selectSpike(sDict)
+                foundWindow.selectSpike(spikeNumber, doZoom=False)
 
         # add to recent opened windows
         if path is not None:
             self.getOptions().addPath(path)
 
+        return foundWindow
+    
     def closeSanPyWindow(self, theWindow : SanPyWindow):
         """Remove theWindow from self._windowList.
         """
         logger.info('todo: implement this')
         logger.info('  remove sanpy window from app list of windows')
-        #_removedValue = self._windowList.pop(theWindow)
+        for idx, aWindow in enumerate(self._windowList):
+            if aWindow == theWindow:
+                _removedValue = self._windowList.pop(idx)
 
     def _onHelpMenuAction(self, name: str):
         if name == "SanPy Help (Opens In Browser)":

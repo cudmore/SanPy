@@ -24,11 +24,12 @@ class basePlotTool(sanpyPlugin):
         super(basePlotTool, self).__init__(**kwargs)
 
         self.masterDf = None
+
         # one
         # self.masterDf = self.ba.dfReportForScatter
         # pool of bAnalysis
         # self.masterDf = self._bPlugins._sanpyApp.myAnalysisDir.pool_build()
-
+        
         self.mainWidget2 = None
 
         # turn off all signal/slot
@@ -88,8 +89,10 @@ class basePlotTool(sanpyPlugin):
         # masterDf = self.ba.dfReportForScatter
 
         if self.masterDf is None:
-            logger.error("Did not get analysis df, be sure to run detectioon")
+            logger.error("Did not get analysis data frame, be sure to run detection")
+            self.getSanPyWindow().slot_updateStatus('Did not get analysis data frame, be sure to run detection')
             return
+
         # bScatterPlotMainWindow
         # self.scatterWindow = sanpy.scatterwidget.bScatterPlotMainWindow(
         path = ""
@@ -104,6 +107,9 @@ class basePlotTool(sanpyPlugin):
             limitToCol=limitToCol,
             # interfaceDefaults=interfaceDefaults,
         )
+
+        self.mainWidget2.signalSelectFromPlot.connect(self.slot_selectFromPlot)
+
         # rewire existing widget into plugin architecture
         # self.mainWidget.closeEvent = self.onClose
         self._mySetWindowTitle()
@@ -116,3 +122,14 @@ class basePlotTool(sanpyPlugin):
         #
         # self.setLayout(tmpLayout)
         self.getVBoxLayout().addLayout(tmpLayout)
+
+    # 202401
+    def slot_selectFromPlot(self, dDict):
+        """User selected a point in plot, open the raw data.
+        """
+        isShift = dDict['isShift']
+        if isShift:
+            filePath = dDict['File Path']
+            ind = dDict['ind']
+            sweep = dDict['sweep']
+            self.getSanPyApp().openSanPyWindow(path=filePath, sweep=sweep, spikeNumber=ind)
