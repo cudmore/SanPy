@@ -232,15 +232,16 @@ class SanPyApp(QtWidgets.QApplication):
 
         # only set sweep and select spike if
         # we opened a file path
-        if os.path.isfile(path):
-            if sweep is not None:
-                # _ba = foundWindow.get_bAnalysis()
-                # foundWindow.slot_selectSweep(_ba, sweep)
-                foundWindow.selectSweep_external(sweep)
+        if path is not None:
+            if os.path.isfile(path):
+                if sweep is not None:
+                    # _ba = foundWindow.get_bAnalysis()
+                    # foundWindow.slot_selectSweep(_ba, sweep)
+                    foundWindow.selectSweep_external(sweep)
 
-            if spikeNumber is not None:
-                # foundWindow.slot_selectSpike(sDict)
-                foundWindow.selectSpike(spikeNumber, doZoom=False)
+                if spikeNumber is not None:
+                    # foundWindow.slot_selectSpike(sDict)
+                    foundWindow.selectSpike(spikeNumber, doZoom=False)
 
         # add to recent opened windows
         if path is not None:
