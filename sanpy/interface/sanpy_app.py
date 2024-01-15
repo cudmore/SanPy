@@ -10,9 +10,6 @@ import os
 import sys
 import webbrowser  # to open online help
 
-# import traceback # to print call stack
-# from functools import partial
-# from collections import OrderedDict
 import platform
 import pathlib
 from datetime import datetime
@@ -23,40 +20,29 @@ import pandas as pd
 
 import pyqtgraph as pg
 
-# v1
-# import qdarkstyle  # the one we originally used
-
-# v2
 import qdarktheme
-
-# Enable HiDPI.
 qdarktheme.enable_hi_dpi()
-
-# import webbrowser  # to open online help
 
 from qtpy import QtCore, QtWidgets, QtGui
 
+import sanpy
 import sanpy._util
 import sanpy.interface
 import sanpy.interface.preferences
-from sanpy.interface.sanpy_window import SanPyWindow
+import sanpy.interface.SanPyWindow
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 # This causes mkdocs to infinite recurse when running locally as 'mkdocs serve'
 # logger.info('SanPy app.py is starting up')
 
-# turn off qdarkstyle logging
 import logging
 
+# turn off qdarkstyle logging
 # logging.getLogger('qdarkstyle').setLevel(logging.WARNING)
 
 # turn off numexpr 'INFO' logging
 logging.getLogger("numexpr").setLevel(logging.WARNING)
-
-# basedir = os.path.dirname(__file__)
-# print('sanpy_app basedir:', basedir)
-
 
 def getAppIconPath():
     bundle_dir = sanpy._util.getBundledDir()
@@ -224,7 +210,7 @@ class SanPyApp(QtWidgets.QApplication):
         # open new window
         if foundWindow is None:
             logger.info('   opening new window')
-            foundWindow = SanPyWindow(self, path)
+            foundWindow = sanpy.interface.SanPyWindow(self, path)
             foundWindow.show()
             foundWindow.raise_()  # bring to front, raise is a python keyword
             foundWindow.activateWindow()  # bring to front

@@ -5,7 +5,7 @@ from json.decoder import JSONDecodeError
 
 import sanpy
 import sanpy.interface
-import sanpy.interface.sanpy_app as sanpy_app
+# import sanpy.interface.sanpy_app as sanpy_app
 
 from sanpy.sanpyLogger import get_logger
 

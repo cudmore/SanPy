@@ -3,8 +3,9 @@
 
 # from . import *
 
-from .sanpy_app import SanPyApp
 from .sanpy_window import SanPyWindow
+from .sanpy_app import SanPyApp
+from .sanpy_app import main
 
 from .bDetectionWidget import bDetectionWidget
 from .bScatterPlotWidget2 import bScatterPlotMainWindow
