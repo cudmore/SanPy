@@ -13,10 +13,10 @@
       
       
       
-        <link rel="prev" href="../../scripting/">
+        <link rel="prev" href="../writing-new-analysis/">
       
       
-        <link rel="next" href="../writing-a-plugin/">
+        <link rel="next" href="../bAnalysis/">
       
       
       <link rel="icon" href="../../img/sanpy-transparent.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>Writing A File Loader - SanPy Documentation</title>
+        <title>Adding To Core Analysis - SanPy Documentation</title>
       
     
     
@@ -73,7 +73,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-to-write-a-custom-sanpy-file-loader" class="md-skip">
+        <a href="#how-to-add-to-the-core-analysis" class="md-skip">
           Skip to content
         </a>
       
@@ -108,7 +108,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Writing A File Loader
+              Adding To Core Analysis
             
           </span>
         </div>
@@ -419,28 +419,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Writing A File Loader
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../writing-a-file-loader/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -449,33 +431,6 @@
   
 
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#how-to-write-a-custom-sanpy-file-loader" class="md-nav__link">
-    <span class="md-ellipsis">
-      How to write a custom SanPy file loader.
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -527,10 +482,30 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../adding-to-core-analysis/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Adding To Core Analysis
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -539,6 +514,80 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#add-to-detection-presetsfast-neuronjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to detection-presets/Fast Neuron.json
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-to-bdetectionpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to bDetection.py
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-to-banalysisresults" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to bAnalysisResults
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-to-banalysisutil_buildstatlist" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to bAnalysisUtil._buildStatList()
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-to-banalysis__spikedetect2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to bAnalysis_._spikeDetect2()
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-to-bdetectionwidget__init" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to bDetectionWidget.__init()
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1037,6 +1086,8 @@
   
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1045,9 +1096,54 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#how-to-write-a-custom-sanpy-file-loader" class="md-nav__link">
+  <a href="#add-to-detection-presetsfast-neuronjson" class="md-nav__link">
     <span class="md-ellipsis">
-      How to write a custom SanPy file loader.
+      Add to detection-presets/Fast Neuron.json
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-to-bdetectionpy" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to bDetection.py
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-to-banalysisresults" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to bAnalysisResults
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-to-banalysisutil_buildstatlist" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to bAnalysisUtil._buildStatList()
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-to-banalysis__spikedetect2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to bAnalysis_._spikeDetect2()
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#add-to-bdetectionwidget__init" class="md-nav__link">
+    <span class="md-ellipsis">
+      Add to bDetectionWidget.__init()
     </span>
   </a>
   
@@ -1068,53 +1164,99 @@
                   
 
 
-  <h1>Writing A File Loader</h1>
-
-<h2 id="how-to-write-a-custom-sanpy-file-loader">How to write a custom SanPy file loader.<a class="headerlink" href="#how-to-write-a-custom-sanpy-file-loader" title="Permanent link">¤</a></h2>
-<p>1) Derive a new class from <a href="../fileloader/fileLoader_base/">sanpy.fileloaders.fileLoader_base</a>.</p>
-<p>2) Specify the file extension you want to load with <code>loadFileType = 'your_file_extension'</code></p>
-<p>3) In a <code>loadFile()</code> member function, load your raw data file</p>
-<p>4) Call <code>self.setLoadedData(...)</code> with the results. </p>
-<p>5) Place your file loader py file in the <code>&lt;User&gt;/Documents/SanPy/file loaders</code> folder.</p>
-<p>6) Run SanPy and make sure it works!</p>
-<p><strong>Coming Soon.</strong> We will provide unit testing for user file loaders.</p>
-<p>Here is some sample code to get started, this is taken from the SanPy CSV file loader <a href="../fileloader/fileLoader_csv/">fileLoader_csv</a>.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">sanpy.fileloaders.fileLoader_base</span> <span class="k">as</span> <span class="nn">fileLoader_base</span>
-
-<span class="k">class</span> <span class="nc">fileLoader_csv</span><span class="p">(</span><span class="n">fileLoader_base</span><span class="p">):</span>
-    <span class="n">loadFileType</span> <span class="o">=</span> <span class="s1">&#39;csv&#39;</span>
-
-    <span class="k">def</span> <span class="nf">loadFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Load file and call setLoadedData().</span>
-
-<span class="sd">        Use self.filepath for the file path to load</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<h1 id="how-to-add-to-the-core-analysis">How to add to the core analysis<a class="headerlink" href="#how-to-add-to-the-core-analysis" title="Permanent link">¤</a></h1>
+<p>Here we will add a <code>fast AHP</code> measurement to the core analysis. This requires the addition of a new detection parameter <code>fastAhpWindow_ms</code>. If a new detection parameters is not needed, the core analysis can be extended with a new <a href="../writing-new-analysis/">analysis plugin</a>.</p>
+<h3 id="add-to-detection-presetsfast-neuronjson">Add to <code>detection-presets/Fast Neuron.json</code><a class="headerlink" href="#add-to-detection-presetsfast-neuronjson" title="Permanent link">¤</a></h3>
+<pre><code>"fastAhpWindow_ms": 5,
+</code></pre>
+<h3 id="add-to-bdetectionpy">Add to <code>bDetection.py</code><a class="headerlink" href="#add-to-bdetectionpy" title="Permanent link">¤</a></h3>
+<p>This defines a new detection parameter <code>fastAhpWindow_ms</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;fastAhpWindow_ms&quot;</span>
+<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;defaultValue&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;float&quot;</span>
+<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;allowNone&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ms&quot;</span>
+<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;humanName&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Fast AHP Window (ms)&quot;</span>
+<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;errors&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="n">theDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Window (ms) after peak to look for a fast AHP&quot;</span>
 </code></pre></div>
-<p>The function signature for <code>setLoadedData</code> is as follows. There are only two required parameters and a number of optional parameters.</p>
-<div class="highlight"><pre><span></span><code>    <span class="k">def</span> <span class="nf">setLoadedData</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-        <span class="n">sweepX</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">sweepY</span> <span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
-        <span class="n">sweepC</span> <span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">recordingMode</span> <span class="p">:</span> <span class="n">recordingModes</span> <span class="o">=</span> <span class="n">recordingModes</span><span class="o">.</span><span class="n">iclamp</span><span class="p">,</span>
-        <span class="n">xLabel</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">,</span>
-        <span class="n">yLabel</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+<h3 id="add-to-banalysisresults">Add to <code>bAnalysisResults</code><a class="headerlink" href="#add-to-banalysisresults" title="Permanent link">¤</a></h3>
+<p>This defines 3 new analysis results to keep track of the point, seconds, and value of the fast AHP.</p>
+<div class="highlight"><pre><span></span><code><span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;fastAhpPnt&quot;</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">getDefaultDict</span><span class="p">()</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;int&quot;</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultVal</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;point&quot;</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;depends on detection&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;fastAhpWindow_ms&quot;</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;fast AHP point.&quot;</span>
 
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        sweepX : np.ndarray</span>
-<span class="sd">            Time values</span>
-<span class="sd">        sweepY : np.ndarray</span>
-<span class="sd">            Recording values, mV or pA</span>
-<span class="sd">        sweepC : np.ndarray</span>
-<span class="sd">            (optional) DAC stimulus, pA or mV</span>
-<span class="sd">        recordingMode : recordingModes</span>
-<span class="sd">            (optional) Defaults to recordingModes.iclamp)</span>
-<span class="sd">        xLabel : str</span>
-<span class="sd">            (optional) str for x-axis label</span>
-<span class="sd">        yLabel : str</span>
-<span class="sd">            (optional) str for y-axis label</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;fastAhpSec&quot;</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">getDefaultDict</span><span class="p">()</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;float&quot;</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultVal</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sec&quot;</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;fast AHP seconds.&quot;</span>
+
+<span class="n">key</span> <span class="o">=</span> <span class="s2">&quot;fastAhpValue&quot;</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">getDefaultDict</span><span class="p">()</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;float&quot;</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;default&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">defaultVal</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;units&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;mV&quot;</span>  <span class="c1"># voltage-clamp&#39;</span>
+<span class="n">analysisResultDict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s2">&quot;description&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;Value of Vm at fast AHP point.&quot;</span>
+</code></pre></div>
+<h3 id="add-to-banalysisutil_buildstatlist">Add to <code>bAnalysisUtil._buildStatList()</code><a class="headerlink" href="#add-to-banalysisutil_buildstatlist" title="Permanent link">¤</a></h3>
+<p>This defines a human readable <code>Fast AHP (mv)</code> and is used in the gui. For an example of how it is used, see the scatter plot plugin.</p>
+<div class="highlight"><pre><span></span><code><span class="n">statList</span><span class="p">[</span><span class="s2">&quot;Fast AHP (mV)&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;fastAhpValue&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;units&quot;</span><span class="p">:</span> <span class="s2">&quot;mV&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;yStat&quot;</span><span class="p">:</span> <span class="s2">&quot;fastAhpValue&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;yStatUnits&quot;</span><span class="p">:</span> <span class="s2">&quot;mV&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;xStat&quot;</span><span class="p">:</span> <span class="s2">&quot;fastAhpPnt&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;xStatUnits&quot;</span><span class="p">:</span> <span class="s2">&quot;Points&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+</code></pre></div>
+<h3 id="add-to-banalysis__spikedetect2">Add to <code>bAnalysis_._spikeDetect2()</code><a class="headerlink" href="#add-to-banalysis__spikedetect2" title="Permanent link">¤</a></h3>
+<p>This is the code that does the actual analysis. For each spike, we look in a window after the peak for the minimum membrane potential. We also log an error when the fast AHP is in the last bin using <code>fastAhpWindow_pnts</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># look in a window after each peak to get &#39;fast ahp&#39;</span>
+<span class="n">fastAhpWindow_pnts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fileLoader</span><span class="o">.</span><span class="n">ms2Pnt_</span><span class="p">(</span><span class="n">dDict</span><span class="p">[</span><span class="s2">&quot;fastAhpWindow_ms&quot;</span><span class="p">])</span>
+</code></pre></div>
+<div class="highlight"><pre><span></span><code><span class="k">if</span> <span class="n">peakPnt</span><span class="o">+</span><span class="n">fastAhpWindow_pnts</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">sweepX</span><span class="p">):</span>
+    <span class="n">fastAhpClip</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">peakPnt</span> <span class="p">:</span> <span class="n">peakPnt</span><span class="o">+</span><span class="n">fastAhpWindow_pnts</span><span class="p">]</span>
+    <span class="n">fastAhpPnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">fastAhpClip</span><span class="p">)</span>
+
+    <span class="n">fastAhpError</span> <span class="o">=</span> <span class="n">fastAhpPnt</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">fastAhpClip</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">fastAhpPnt</span> <span class="o">+=</span> <span class="n">peakPnt</span>
+    <span class="n">fastAhpSec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fileLoader</span><span class="o">.</span><span class="n">pnt2Sec_</span><span class="p">(</span><span class="n">fastAhpPnt</span><span class="p">)</span>
+    <span class="n">fastAhpValue</span> <span class="o">=</span> <span class="n">filteredVm</span><span class="p">[</span><span class="n">fastAhpPnt</span><span class="p">]</span>
+
+    <span class="n">spikeDict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;fastAhpPnt&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fastAhpPnt</span>
+    <span class="n">spikeDict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;fastAhpSec&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fastAhpSec</span>
+    <span class="n">spikeDict</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;fastAhpValue&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">fastAhpValue</span>
+
+    <span class="c1"># log error</span>
+    <span class="k">if</span> <span class="n">fastAhpError</span><span class="p">:</span>
+        <span class="n">errorType</span> <span class="o">=</span> <span class="s2">&quot;Fast AHP was detected at end of fast AHP window&quot;</span>
+        <span class="n">errorStr</span> <span class="o">=</span> <span class="s2">&quot;Consider increasing the fast AHP window with fastAhpWindow_ms&quot;</span>
+        <span class="n">eDict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_getErrorDict</span><span class="p">(</span>
+            <span class="n">i</span><span class="p">,</span> <span class="n">spikeTimes</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">errorType</span><span class="p">,</span> <span class="n">errorStr</span>
+        <span class="p">)</span>  <span class="c1"># spikeTime is in pnts</span>
+        <span class="n">spikeDict</span><span class="p">[</span><span class="n">iIdx</span><span class="p">][</span><span class="s2">&quot;errors&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">eDict</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="add-to-bdetectionwidget__init">Add to <code>bDetectionWidget.__init()</code><a class="headerlink" href="#add-to-bdetectionwidget__init" title="Permanent link">¤</a></h3>
+<p>This adds fast ahp to the main interface.</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+    <span class="s2">&quot;humanName&quot;</span><span class="p">:</span> <span class="s2">&quot;Fast AHP (mV)&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="s2">&quot;fastAhpSec&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="s2">&quot;fastAhpValue&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;convertx_tosec&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="s2">&quot;color&quot;</span><span class="p">:</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;styleColor&quot;</span><span class="p">:</span> <span class="s2">&quot;color: yellow&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;symbol&quot;</span><span class="p">:</span> <span class="s2">&quot;o&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plotOn&quot;</span><span class="p">:</span> <span class="s2">&quot;vm&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;plotIsOn&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">},</span>
 </code></pre></div>
 
 
