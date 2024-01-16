@@ -63,8 +63,9 @@ nav:
     - Introducing SanPy: index.md
     - Download: download.md
     - Desktop Application: desktop-application.md
+    - Getting Started With The GUI: getting-started-gui.md
     - Plugins: plugins.md
-    - Install: install.md
+    - Install From Command Line: install.md
     - API:
         - Overview: api/overview.md
         - Getting Started: scripting.ipynb

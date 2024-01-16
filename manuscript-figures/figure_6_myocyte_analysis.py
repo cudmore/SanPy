@@ -15,12 +15,10 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 def run():
-    # load from '/media/cudmore/data/laura-iso'
-
-    # list of files to analyze
+    # dictionary of files to analyze
     aDict = {
         '19503001': {
-            'path': 'laura-iso-manuscript/19503001.abf',
+            'path': 'data/19503001.abf',
             'detectionType': 'dvdt',
             'dvdtThreshold': 20,  # chosen by visual inspection
             'controlSec': [4, 106],
@@ -45,7 +43,9 @@ def run():
         # },
     }
 
+    # keep track of loaded raw data and analysis
     baList = []
+    
     for file, params in aDict.items():
 
         filePath = params['path']
@@ -54,7 +54,7 @@ def run():
         controlSec = params['controlSec']
         isoSec = params['isoSec']
 
-        # load
+        # load raw data
         ba = sanpy.bAnalysis(filePath)
 
         # analyze spikes
@@ -82,7 +82,7 @@ def run():
         
         baList.append(ba)
 
-        # grab results as a pandas dataframe
+        # grab analysis results as a pandas dataframe
         df = ba.asDataFrame()
 
         # all analysis result columns
@@ -99,7 +99,8 @@ def run():
         controlMask = (thresholdSec>controlSec[0]) & (thresholdSec<controlSec[1])
         isoMask = (thresholdSec>isoSec[0]) & (thresholdSec<isoSec[1])
 
-        # add a new column for this example
+        # add a new myCondition column for this example
+        # set myCondition based on condition masks
         df['myCondition'] = 'None'
         df['myCondition'] = np.where(controlMask, 'Control', df['myCondition'])
         df['myCondition'] = np.where(isoMask, 'Iso', df['myCondition'])
@@ -200,12 +201,12 @@ def run():
                             hue='myCondition', palette=rawPalette,
                             data=dfPlot, zorder=1, ax=oneAxs)
         sns.pointplot(x='myCondition', y=statName,
-                            palette=meanPalette, data=dfPlot,
-                            errorbar=('ci', 68), ax=oneAxs)
-
-        # remove the legend
-        #g._legend.remove()
-        g.legend_.remove()
+                            palette=meanPalette,
+                            # hue=meanPalette,
+                            data=dfPlot,
+                            errorbar=('ci', 68),
+                            ax=oneAxs,
+                            legend=False)
 
     # adjust visual display
     fig2.set_tight_layout(True)  # remove overlap between y-axis labels
@@ -220,12 +221,16 @@ def run():
         
         print(f'{statName}: Control vs Iso {_stat}')
         _mean = np.mean(x1)
+        _mean = round(_mean,3)
         _std = np.std(x1)
+        _std = round(_std,3)
         _n = len(x1)
         print(f'  Control mean:{_mean}  std:{_std} n:{_n}')
 
         _mean = np.mean(x2)
+        _mean = round(_mean,3)
         _std = np.std(x2)
+        _std = round(_std,3)
         _n = len(x2)
         print(f'   Iso    mean:{_mean}  std:{_std} n:{_n}')
 

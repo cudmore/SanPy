@@ -1,8 +1,6 @@
-SanPy is designed to run on: macOS, Microsoft Windows, and Linux.
+This page describes how to install SanPy from the command-line.
 
-## Download the SanPy app.
-
-We are building SanPy desktop applications so users can download a single file and get working with just a double-click. This does not require anything special on our users end. **No programming, no installing Python, and no command line**. See our [download](../download) page.
+If you want to download and run SanPy as a pre-built desktop application, please see our easy to follow [download sanpy](../download) page.
 
 ## Install from the command line
 

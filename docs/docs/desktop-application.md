@@ -1,8 +1,10 @@
 The SanPy deskop application is an easy to use and powerful GUI designed to satisfy all your analysis needs. You can [download](../download) the desktop appication or [build from source](../install).
 
-## Getting Started
+## Opening a file or folder of raw data
 
-Load a folder of raw data files with the `Load Folder` button, or use the `File - Load Folder ...` menu, or drag and drop a folder from your hard-drive. Once a folder of raw data is loaded, each file in the folder will be shown in a list, one row per raw data file. Selecting a file will display the raw data recording.
+**New!** Open a raw data file with the `File - Open...` menu.
+
+Alternatively, open an entire folder of raw data files with the `File - Open Folder..` menu. Once a folder of raw data is loaded, each file in the folder will be shown in a list, one row per raw data file. Selecting a file will display the raw data recording.
 
 Spike detection is then performed by specifying a threshold in either the derivative of the membrane potential (Detect dV/dt) or the membrane potential (Detect mV).
 

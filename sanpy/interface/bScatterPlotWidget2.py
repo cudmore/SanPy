@@ -1035,7 +1035,7 @@ class myMplCanvas(QtWidgets.QFrame):
 
         if state is not None and not self._stateIsMyState(state):
             # DeepCopy the state and claim ownership
-            logger.info(f'!!! DeepCopy to new state !!!')
+            logger.info('!!! DeepCopy to new state !!!')
             myPlotIndex = self.getPlotNumber()
             self.stateDict = copy.deepcopy(state)
             self.stateDict.setState('Plot Index', myPlotIndex)
@@ -1102,7 +1102,7 @@ class myMplCanvas(QtWidgets.QFrame):
 
         warningStr = ''  # fill in and will emit to staus bar
         
-        logger.info(f'  plotting plotDf with {len(self.plotDf)} rows')
+        logger.info(f'  plotting plotType {plotType} plotDf with {len(self.plotDf)} rows')
 
         self.canvas.axes.clear()
 
@@ -1263,11 +1263,13 @@ class myMplCanvas(QtWidgets.QFrame):
         elif plotType == "Violin Plot":
             if not xIsCategorical:
                 warningStr = "Violin plot requires a categorical x statistic"
+                logger.warning(warningStr)
+
             else:
                 logger.info(f'violinplot xStat:{xStat} yStat:{yStat} hue:{hue}')
                 logger.info(f'  meanDf columns are : {meanDf.columns}')
                 g = sns.violinplot(
-                    x=xStat, y=yStat, hue=hue, data=meanDf, ax=self.canvas.axes
+                    x=xStat, y=yStat, hue=hue, data=thisMasterDf, ax=self.canvas.axes
                 )
 
         elif plotType == "Box Plot":

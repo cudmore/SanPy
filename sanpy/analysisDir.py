@@ -1647,7 +1647,7 @@ class analysisDir:
 
         self._updateLoadedAnalyzed()
 
-    def pool_build(self, uniqueColumn=None, includeNo=True, verbose=False):
+    def pool_build(self, uniqueColumn=None, allowAutoLoad=False, includeNo=True, verbose=False):
         """Build one df with all analysis. Use this in plot tool plugin.
         
         Parameters
@@ -1670,14 +1670,17 @@ class analysisDir:
                     logger.info(f'  rowIdx:{rowIdx} Include is "no"')
                 continue
 
-            ba = self.getAnalysis(rowIdx)
-
+            ba = self.getAnalysis(rowIdx, allowAutoLoad=allowAutoLoad)
+            if ba is None:
+                continue
+            
             if not ba.isAnalyzed():
                 if verbose:
                     logger.info(f"  rowIdx:{rowIdx} not analyzed")
                 continue
                 
-            oneDf = ba.asDataFrame()
+            oneDf = ba.asDataFrame(regenerateAnalysisDataFrame=True)
+            
             if oneDf is not None:
 
                 self.signalWindow(f'Adding "{ba.fileLoader.filename}"', verbose=verbose)

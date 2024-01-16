@@ -21,7 +21,7 @@ class plotToolPool(basePlotTool):
             _analysisDir = self.getSanPyWindow().myAnalysisDir
             if _analysisDir is not None:
                 logger.info('using sanpy app analysis dir')
-                self.masterDf = _analysisDir.pool_build(uniqueColumn=uniqueColumn)
+                self.masterDf = _analysisDir.pool_build(uniqueColumn=uniqueColumn, allowAutoLoad=False)
                 logger.info('masterDf is')
                 logger.info(f'\n{self.masterDf}')
             else:

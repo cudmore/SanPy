@@ -234,13 +234,18 @@ class bAnalysis:
     def getFileName(self):
         return self.fileLoader.filename
 
-    def asDataFrame(self):
+    def asDataFrame(self, regenerateAnalysisDataFrame=False):
         """Return analysis as a Pandas DataFrame.
 
         Important:
             This is a df copy of our self.spikeDict
             Do not modify and expect changes to stick
         """
+
+        # re-add file metadata, it may have changed
+        if regenerateAnalysisDataFrame:
+            self.regenerateAnalysisDataFrame()
+
         return self._dfReportForScatter
         # return self.spikeDict.asDataFrame()
 
@@ -2115,6 +2120,7 @@ class bAnalysis:
 
             # add all file meta data to df
             for k,v in self.metaData.items():
+                # logger.info(f'   adding metadata {k} {v}')
                 self._dfReportForScatter[k] = v
 
         else:
