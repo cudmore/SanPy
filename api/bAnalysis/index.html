@@ -4384,7 +4384,8 @@ Spike detection, Error checking, Plotting, and Saving.</p>
 <span class="normal">2760</span>
 <span class="normal">2761</span>
 <span class="normal">2762</span>
-<span class="normal">2763</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">bAnalysis</span><span class="p">:</span>
+<span class="normal">2763</span>
+<span class="normal">2764</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">bAnalysis</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The bAnalysis class represents a whole-cell recording and provides functions for analysis.</span>
 
@@ -6465,7 +6466,8 @@ Spike detection, Error checking, Plotting, and Saving.</p>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dfReportForScatter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dfReportForScatter</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;include&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dfReportForScatter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dfReportForScatter</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;cellType&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_dfReportForScatter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dfReportForScatter</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;sex&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_dfReportForScatter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dfReportForScatter</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="s1">&#39;condition&#39;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># 202401 removed</span>
+            <span class="c1"># self._dfReportForScatter = self._dfReportForScatter.drop(&#39;condition&#39;, axis=1)</span>
 
             <span class="c1"># add all file meta data to df</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metaData</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -7742,8 +7744,7 @@ Spike detection, Error checking, Plotting, and Saving.</p>
 
           <details class="quote">
             <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2476</span>
-<span class="normal">2477</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2477</span>
 <span class="normal">2478</span>
 <span class="normal">2479</span>
 <span class="normal">2480</span>
@@ -7796,7 +7797,8 @@ Spike detection, Error checking, Plotting, and Saving.</p>
 <span class="normal">2527</span>
 <span class="normal">2528</span>
 <span class="normal">2529</span>
-<span class="normal">2530</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getErrorReport</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">2530</span>
+<span class="normal">2531</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getErrorReport</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate an error report, one row per error.</span>
 
 <span class="sd">    Spikes can have more than one error.</span>
@@ -7924,8 +7926,7 @@ Spike detection, Error checking, Plotting, and Saving.</p>
 
           <details class="quote">
             <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2382</span>
-<span class="normal">2383</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2383</span>
 <span class="normal">2384</span>
 <span class="normal">2385</span>
 <span class="normal">2386</span>
@@ -8010,7 +8011,8 @@ Spike detection, Error checking, Plotting, and Saving.</p>
 <span class="normal">2465</span>
 <span class="normal">2466</span>
 <span class="normal">2467</span>
-<span class="normal">2468</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSpikeClips</span><span class="p">(</span>
+<span class="normal">2468</span>
+<span class="normal">2469</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getSpikeClips</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">theMin</span><span class="p">,</span>
     <span class="n">theMax</span><span class="p">,</span>
@@ -8890,8 +8892,7 @@ Returns a np.array is asArray is True</p>
 
           <details class="quote">
             <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2242</span>
-<span class="normal">2243</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2243</span>
 <span class="normal">2244</span>
 <span class="normal">2245</span>
 <span class="normal">2246</span>
@@ -8907,7 +8908,8 @@ Returns a np.array is asArray is True</p>
 <span class="normal">2256</span>
 <span class="normal">2257</span>
 <span class="normal">2258</span>
-<span class="normal">2259</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">printSpike</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
+<span class="normal">2259</span>
+<span class="normal">2260</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">printSpike</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">idx</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Print values in one spike analysis using self.spikeDict (sanpy.bAnalysisResults).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -8950,8 +8952,7 @@ Returns a np.array is asArray is True</p>
 
           <details class="quote">
             <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2616</span>
-<span class="normal">2617</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2617</span>
 <span class="normal">2618</span>
 <span class="normal">2619</span>
 <span class="normal">2620</span>
@@ -8985,7 +8986,8 @@ Returns a np.array is asArray is True</p>
 <span class="normal">2648</span>
 <span class="normal">2649</span>
 <span class="normal">2650</span>
-<span class="normal">2651</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">saveAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forceSave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="normal">2651</span>
+<span class="normal">2652</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">saveAnalysis</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">forceSave</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Not used.</span>
 
 <span class="sd">    Save detection parameters and analysis results as json.</span>
@@ -9076,8 +9078,7 @@ Returns a np.array is asArray is True</p>
 
           <details class="quote">
             <summary>Source code in <code>sanpy/bAnalysis_.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2579</span>
-<span class="normal">2580</span>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">2580</span>
 <span class="normal">2581</span>
 <span class="normal">2582</span>
 <span class="normal">2583</span>
@@ -9107,7 +9108,8 @@ Returns a np.array is asArray is True</p>
 <span class="normal">2607</span>
 <span class="normal">2608</span>
 <span class="normal">2609</span>
-<span class="normal">2610</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">saveAnalysis_tocsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="normal">2610</span>
+<span class="normal">2611</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">saveAnalysis_tocsv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span> <span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Save analysis to csv.</span>
 
 <span class="sd">    CSV starts with one </span>
