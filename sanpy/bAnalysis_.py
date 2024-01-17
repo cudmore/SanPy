@@ -2116,7 +2116,8 @@ class bAnalysis:
             self._dfReportForScatter = self._dfReportForScatter.drop('include', axis=1)
             self._dfReportForScatter = self._dfReportForScatter.drop('cellType', axis=1)
             self._dfReportForScatter = self._dfReportForScatter.drop('sex', axis=1)
-            self._dfReportForScatter = self._dfReportForScatter.drop('condition', axis=1)
+            # 202401 removed
+            # self._dfReportForScatter = self._dfReportForScatter.drop('condition', axis=1)
 
             # add all file meta data to df
             for k,v in self.metaData.items():

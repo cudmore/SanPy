@@ -957,8 +957,10 @@ class bDetectionWidget(QtWidgets.QWidget):
                 # vertical lines showing epoch within a sweep
                 _epochTable = self.ba.fileLoader.getEpochTable(self.sweepNumber)
                 if _epochTable is not None:
-                    print('_epochTable:')
-                    print(_epochTable)
+
+                    # print('_epochTable:')
+                    # print(_epochTable)
+
                     # happens when file is tif kymograph
                     sweepY = self.ba.fileLoader.sweepY
                     # filteredVm = self.ba.filteredVm

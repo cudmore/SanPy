@@ -444,6 +444,14 @@ class bAnalysisUtil:
             "xStatUnits": "",
         }
 
+        statList["Condition"] = {
+            "name": "condition",
+            "yStat": "condition",
+            "yStatUnits": "",
+            "xStat": "",
+            "xStatUnits": "",
+        }
+
         # sa node specific
         """
         statList['Region'] = {

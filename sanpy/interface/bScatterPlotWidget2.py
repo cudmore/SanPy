@@ -611,8 +611,13 @@ class myMplCanvas(QtWidgets.QFrame):
         saveAsAction = contextMenu.addAction("Save As...")
         action = contextMenu.exec_(self.mapToGlobal(event.pos()))
         if action == saveAsAction:
-            print("todo: save as")
-            self.fig.savefig("", dpi=600)
+            
+            csvFileName = 'myPlot.png'
+            savefile, tmp = QtWidgets.QFileDialog.getSaveFileName(
+                self, "Save CSV File", csvFileName
+            )
+            logger.info(f'savefile:{savefile}')
+            self.fig.savefig(savefile, dpi=600)  #, format='png')
 
     def on_pick_event(self, event):
         """On pick for Line Plot.
@@ -1128,7 +1133,7 @@ class myMplCanvas(QtWidgets.QFrame):
                         y=yStat,
                         hue=hue,
                         style=style,
-                        data=thisMasterDf,
+                        data=self.plotDf,
                         ax=self.canvas.axes,
                         picker=picker,
                         marker=doMarker,
@@ -1151,14 +1156,14 @@ class myMplCanvas(QtWidgets.QFrame):
                     # seaborn drops them and breaks matplotlib pick ind
                     # when we get a pick event, the df 'index' in the row of this dataframe
                     # is the real row into thisMAsterDf
-                    self._noNanPlotDf = thisMasterDf.dropna(subset=[xStat, yStat])
+                    self._noNanPlotDf = self.plotDf.dropna(subset=[xStat, yStat])
                     
                     self.whatWeArePlotting = sns.scatterplot(
                         x=xStat,
                         y=yStat,
                         hue=hue,
                         style=style,
-                        data=thisMasterDf,
+                        data=self.plotDf,
                         ax=self.canvas.axes,
                         picker=picker,
                         zorder=0,
@@ -1181,17 +1186,17 @@ class myMplCanvas(QtWidgets.QFrame):
                     logger.info(
                         f"  grabbing mean +- sem for self.groupByColumnName: {groupByColumnName}"
                     )
-                    color = "k"
-                    xd = thisMasterDf.groupby(groupByColumnName).mean(numeric_only=True)[
+                    color = "r"
+                    xd = meanDf.groupby(groupByColumnName).mean(numeric_only=True)[
                         xStat
                     ]
-                    xerrd = thisMasterDf.groupby(groupByColumnName).sem(numeric_only=True)[
+                    xerrd = meanDf.groupby(groupByColumnName).sem(numeric_only=True)[
                         xStat
                     ]
-                    yd = thisMasterDf.groupby(groupByColumnName).mean(numeric_only=True)[
+                    yd = meanDf.groupby(groupByColumnName).mean(numeric_only=True)[
                         yStat
                     ]
-                    yerrd = thisMasterDf.groupby(groupByColumnName).sem(numeric_only=True)[
+                    yerrd = meanDf.groupby(groupByColumnName).sem(numeric_only=True)[
                         yStat
                     ]
                     self.canvas.axes.errorbar(
@@ -1214,7 +1219,7 @@ class myMplCanvas(QtWidgets.QFrame):
                     x=xStat,
                     hue=hue,
                     kde=doKde,
-                    data=meanDf,
+                    data=self.plotDf,
                     ax=self.canvas.axes,
                     picker=picker,
                 )
@@ -1233,7 +1238,7 @@ class myMplCanvas(QtWidgets.QFrame):
                     element="step",
                     fill=False,
                     common_norm=False,
-                    data=meanDf,
+                    data=self.plotDf,
                     ax=self.canvas.axes,
                     picker=picker,
                 )
@@ -1252,7 +1257,7 @@ class myMplCanvas(QtWidgets.QFrame):
                     element="step",
                     fill=False,
                     common_norm=False,
-                    data=meanDf,
+                    data=self.plotDf,
                     ax=self.canvas.axes,
                     picker=picker,
                 )
@@ -1269,7 +1274,11 @@ class myMplCanvas(QtWidgets.QFrame):
                 logger.info(f'violinplot xStat:{xStat} yStat:{yStat} hue:{hue}')
                 logger.info(f'  meanDf columns are : {meanDf.columns}')
                 g = sns.violinplot(
-                    x=xStat, y=yStat, hue=hue, data=thisMasterDf, ax=self.canvas.axes
+                    x=xStat,
+                    y=yStat,
+                    hue=hue,
+                    data=self.plotDf,
+                    ax=self.canvas.axes
                 )
 
         elif plotType == "Box Plot":
@@ -1277,7 +1286,11 @@ class myMplCanvas(QtWidgets.QFrame):
                 warningStr = "Box plot requires a categorical x statistic"
             else:
                 g = sns.boxplot(
-                    x=xStat, y=yStat, hue=hue, data=meanDf, ax=self.canvas.axes
+                    x=xStat,
+                    y=yStat,
+                    hue=hue,
+                    data=self.plotDf,
+                    ax=self.canvas.axes
                 )
 
         elif plotType == "Raw + Mean Plot":
@@ -1302,13 +1315,13 @@ class myMplCanvas(QtWidgets.QFrame):
                     # palette = ['r', 'g', 'b']
 
                     # stripplot
-                    # g = sns.swarmplot(x=xStat, y=yStat,
-                    g = sns.stripplot(
+                    # g = sns.stripplot(
+                    g = sns.swarmplot(
                         x=xStat,
                         y=yStat,
                         hue=hue,
                         palette=palette,
-                        data=meanDf,
+                        data=self.plotDf,
                         ax=self.canvas.axes,
                         # color = color,
                         dodge=True,
@@ -1349,7 +1362,7 @@ class myMplCanvas(QtWidgets.QFrame):
                         y=yStat,
                         hue=hue,
                         # palette=palette,
-                        data=meanDf,
+                        data=self.plotDf,
                         estimator=np.nanmean,
                         ci=68,
                         capsize=0.1,
@@ -1359,7 +1372,7 @@ class myMplCanvas(QtWidgets.QFrame):
                         # zorder=10)
                     )
                 except ValueError as e:
-                    print('EXCEPTION in "Raw + Mean Plot":', e)
+                    logger.error(f'EXCEPTION in "Raw + Mean Plot is {e}')
                     traceback.print_exc()
 
         elif plotType == "Regression Plot":
@@ -1370,13 +1383,16 @@ class myMplCanvas(QtWidgets.QFrame):
                 # todo: loop and make a regplot
                 # for each unique() name in
                 # hue (like Region, Sex, Condition)
-                hueList = masterDf[hue].unique()
+                hueList = self.plotDf[hue].unique()
                 for oneHue in hueList:
                     if oneHue == "None":
                         continue
-                    tmpDf = meanDf[meanDf[hue] == oneHue]
+                    tmpDf = self.plotDf[self.plotDf[hue] == oneHue]
                     # print('regplot oneHue:', oneHue, 'len(tmpDf)', len(tmpDf))
-                    sns.regplot(x=xStat, y=yStat, data=tmpDf, ax=self.canvas.axes)
+                    sns.regplot(x=xStat,
+                                y=yStat,
+                                data=tmpDf,
+                                ax=self.canvas.axes)
         else:
             logger.error(f'did not understand plot type: {plotType}')
 
@@ -3235,7 +3251,28 @@ def testDec2022():
     ptp.show()
     sys.exit(app.exec_())
 
+def debugManuscript():
+    """Open folder, select a file, run Plot Recording plugin.
+    """
+    import sys
+    import sanpy.interface
+    app = sanpy.interface.SanPyApp([])
+    
+    path = '/Users/cudmore/Sites/SanPy/data'
+    w = app.openSanPyWindow(path)
+
+    # select first file
+    # todo: add sanpy window selectFileRow(), only if showing a folder path
+    # rowIdx = 0
+    # w.selectFileListRow(rowIdx)
+
+    # w.selectSpikeList([10000])
+
+    w.sanpyPlugin_action('Plot Tool (pool)')
+
+    sys.exit(app.exec_())
 
 if __name__ == "__main__":
     # test()
-    testDec2022()
+    # testDec2022()
+    debugManuscript()

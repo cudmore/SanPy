@@ -62,6 +62,10 @@ class basePlotTool(sanpyPlugin):
         categoricalList.append('File Number')
         categoricalList.append('Unique Name')
 
+        # per spike
+        categoricalList.append('condition')
+        categoricalList.append('userType')
+
         # hueTypes = categoricalList
         # hueTypes = metaDataKeys
         # hueTypes.append('File Number')
@@ -79,7 +83,8 @@ class basePlotTool(sanpyPlugin):
         #     "Style": "None",
         #     "Group By": "Unique Name",
         # }
-        interfaceDefaults = None
+        
+        # interfaceDefaults = None
 
         # analysisName, masterDf = analysisName, df0 = ba.getReportDf(theMin, theMax, savefile)
 

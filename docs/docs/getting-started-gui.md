@@ -65,4 +65,13 @@ Likewise, a scatter plot is easily created by selecting Plot Type `Scatter Plot`
 
 <IMG SRC="../img/figure-4/scatter-spike-freq.png" width=200>
 
+# Load a file, detect spikes, set spike conditions and plot with Plot Tool plugin
+
+**Recipe** for remaking the SanPy manuscript Figure 6 from the GUI.
+
+Please note, this will not be the same exact data but the plots will be similar.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/jaiFOsq3kGM?si=3DyejqH8C2wieaNp" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+
+We are working on a recipe, check back soon!
 
