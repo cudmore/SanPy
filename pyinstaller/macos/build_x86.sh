@@ -26,7 +26,11 @@ pip install -e '../../.[gui]'
 # pip install --upgrade pyinstaller
 #pip install ../../pyinstaller_20231122/pyinstaller/.
 
-pip install https://github.com/pyinstaller/pyinstaller/archive/develop.zip
+# 20240117, this dev version of pyinstaller seems to do nothing???
+# pip install https://github.com/pyinstaller/pyinstaller/archive/develop.zip
+
+# 20240117, reverting to this
+pip install pyinstaller
 
 python macos_build.py
 
