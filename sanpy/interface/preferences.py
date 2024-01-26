@@ -46,7 +46,7 @@ class preferences:
         return self._configDict
 
     def addPath(self, path : str):
-        logger.info(f'adding path {path}')
+        # logger.info(f'adding path {path}')
         if os.path.isfile(path):
             self._addFile(path)
         elif os.path.isdir(path):
@@ -57,7 +57,7 @@ class preferences:
     def _addFile(self, filePath : str):
         """Add a file to preferences.
         """
-        logger.info(f"{filePath}")
+        # logger.info(f"{filePath}")
 
         # add if not in recentFolders
         if filePath not in self.configDict["recentFiles"]:
@@ -75,7 +75,7 @@ class preferences:
     def _addFolder(self, path: str):
         """Add a folder to preferences.
         """
-        logger.info(f"{path}")
+        # logger.info(f"{path}")
 
         # add if not in recentFolders
         if path not in self.configDict["recentFolders"]:
@@ -249,7 +249,9 @@ class preferences:
         configDict["rawDataPanels"]["DAC"] = False  #
 
         configDict['fileList'] = {}
-        configDict['fileList']['Folder Depth'] = 1
+        
+        # 20240124 changed from 1 to 3 (don't use for load file !!!)
+        configDict['fileList']['Folder Depth'] = 3
 
         return configDict
 

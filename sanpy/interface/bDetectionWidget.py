@@ -24,7 +24,7 @@ class bDetectionWidget(QtWidgets.QWidget):
     signalSelectSpike = QtCore.pyqtSignal(object)  # spike number, doZoom
     signalSelectSpikeList = QtCore.pyqtSignal(object)  # spike number, doZoom
     signalDetect = QtCore.pyqtSignal(object)  # ba
-    signalSelectSweep = QtCore.pyqtSignal(object, object)  # (bAnalysis, sweepNumber)
+    signalSelectSweep = QtCore.pyqtSignal(object)  # sweepNumber
     # signalUpdateKymographROI = QtCore.pyqtSignal([])  # list of [left, top, right, bottom] in image pixels
 
     def __init__(
@@ -239,6 +239,9 @@ class bDetectionWidget(QtWidgets.QWidget):
             showPlotOption = windowOptions["detectionPanels"]["Set Meta Data"]
             self.toggleInterface("Set Meta Data", showPlotOption)
 
+        # 202401
+        self.setAxisFull()
+
     def slot_contextMenu(self, plotName : str, plot, pos):
         """Some plot widgets (vmPlot, derivPlot) have their context menu set to here.
         
@@ -283,7 +286,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         # contextMenu.addSeparator()
 
         resetAllAxisAction = contextMenu.addAction(f"Reset All Axis")
-        resetYAxisAction = contextMenu.addAction(f"Reset Y-Axis")
+        # resetYAxisAction = contextMenu.addAction(f"Reset Y-Axis")
+
         # openAct = contextMenu.addAction("Open")
         # quitAct = contextMenu.addAction("Quit")
         # action = contextMenu.exec_(self.mapToGlobal(event.pos()))
@@ -350,9 +354,9 @@ class bDetectionWidget(QtWidgets.QWidget):
             # print('Reset Y-Axis', self.myType)
             self.setAxisFull()
 
-        elif actionText == "Reset Y-Axis":
-            # print('Reset Y-Axis', self.myType)
-            self.setAxisFull_y(self.myType)
+        # elif actionText == "Reset Y-Axis":
+        #     # print('Reset Y-Axis', self.myType)
+        #     self.setAxisFull_y(self.myType)
 
         elif actionText == 'Crosshair':
             isChecked = action.isChecked()
@@ -679,7 +683,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         
         logger.info('!!!!! setting vmPlot_ auto range !!!!!')
         self.vmPlot.autoRange(items=[self.vmPlot_])  # 20221003
-    
+
         # these are linked to vmPlot
         # self.derivPlot.autoRange()
         # self.dacPlot.autoRange()
@@ -1081,6 +1085,11 @@ class bDetectionWidget(QtWidgets.QWidget):
         doReplot : bool
             If True then call _replot()
         """
+
+        # 202401, always retain x start/stop
+        startSec = self.detectToolbarWidget._startSec
+        stopSec = self.detectToolbarWidget._stopSec
+
         if sweepNumber == "":
             logger.error(f'got unexpected swep number "{sweepNumber}" {type(sweepNumber)}')
             return
@@ -1096,7 +1105,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             return
 
         logger.info(
-            f'sweepNumber:"{sweepNumber}" {type(sweepNumber)} doEmit:{doEmit} startSec:"{startSec}" stopSec:"{stopSec}"'
+            f'sweepNumber:"{sweepNumber}" {type(sweepNumber)} doReplot:{doReplot} doEmit:{doEmit} startSec:"{startSec}" stopSec:"{stopSec}"'
         )
 
         # if self._sweepNumber == sweepNumber:
@@ -1116,7 +1125,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         if doEmit:
             logger.info(f' -->> emit signalSelectSweep {sweepNumber}')
-            self.signalSelectSweep.emit(self.ba, sweepNumber)
+            self.signalSelectSweep.emit(sweepNumber)
 
     def setSpikeStat(self, stat: str = "condition", value: str = "xxx"):
         """Set the selected spikes."""
@@ -1274,6 +1283,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         which : str
             From ('visible', 'between cursor A/B')
         """
+        if self.ba is None:
+            return
+    
         if which == 'visible':
             xMin, xMax = self.getXRange()
         elif which =='between cursor A/B':
@@ -1639,9 +1651,15 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
         vBoxLayoutForPlot.addWidget(self.vmPlot)
         self.vmPlot.enableAutoRange()
+        # 202401
+        #self.vmPlot.setAutoVisible(y=True)
         # see: https://wiki.python.org/moin/PyQt/Handling%20context%20menus
         self.vmPlot.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.vmPlot.customContextMenuRequested.connect(partial(self.slot_contextMenu,'vmPlot', self.vmPlot))
+
+        # 202401 trying to implement shift+wheel for zooming y
+        # self._original_keyPressEvent = self.vmPlot.keyPressEvent
+        # self.vmPlot.keyPressEvent = self._new_keyPressEvent
 
         # show hover text when showing crosshairs
         self._displayHoverText= pg.TextItem(text='xxx hover', color=(200,200,200), anchor=(1,1))
@@ -1746,11 +1764,15 @@ class bDetectionWidget(QtWidgets.QWidget):
         # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different    
         # # self.myKymWidget.myImageItem.setXLink(self.vmPlot)
 
+        # 20240118, trying to reactivate click drag to select region
+        # current click drag will pan and mouse wheel will zoom x
         # turn off x/y dragging of deriv and vm
-        self.vmPlotGlobal.setMouseEnabled(x=True, y=False)
-        self.derivPlot.setMouseEnabled(x=True, y=False)
-        self.dacPlot.setMouseEnabled(x=True, y=False)
-        self.vmPlot.setMouseEnabled(x=True, y=False)
+        xMouseEnabled = True  # if True, then click+drag is pan, mouse wheel is zoom-x
+        self.vmPlotGlobal.setMouseEnabled(x=xMouseEnabled, y=False)
+        self.derivPlot.setMouseEnabled(x=xMouseEnabled, y=False)
+        self.dacPlot.setMouseEnabled(x=xMouseEnabled, y=False)
+
+        self.vmPlot.setMouseEnabled(x=xMouseEnabled, y=False)
 
         # 202401
         # ViewBox.PanMode or ViewBox.RectMode
@@ -1858,6 +1880,11 @@ class bDetectionWidget(QtWidgets.QWidget):
     #     if visible:
     #         # set position to start/stop of current view
     #         pass
+
+    def _new_keyPressEvent(self, event):
+        logger.info(event)
+
+        self._original_keyPressEvent(event)
 
     def _setDetectionParam(self, detectionParam : str, value : float):
         """Set a detection param.
@@ -2086,9 +2113,33 @@ class bDetectionWidget(QtWidgets.QWidget):
                 pass
                 # setMetaData
 
+        elif key == QtCore.Qt.Key.Key_Shift:
+            # set mouse pan/zoom to only y-axis
+            xMouseEnabled = False
+            yMouseEnabled = True
+            self.vmPlotGlobal.setMouseEnabled(x=xMouseEnabled, y=yMouseEnabled)
+            self.derivPlot.setMouseEnabled(x=xMouseEnabled, y=yMouseEnabled)
+            self.dacPlot.setMouseEnabled(x=xMouseEnabled, y=yMouseEnabled)
+
+            self.vmPlot.setMouseEnabled(x=xMouseEnabled, y=yMouseEnabled)
         # elif key == QtCore.Qt.Key_C:
         #     logger.warning("what was this for ??? responding to keyboard C ???")
         #     # self.setSpikeStat()
+
+    def keyReleaseEvent(self, event):
+        key = event.key()
+        text = event.text()
+        logger.info(f"bDetectionWidget key:{key} text:{text}")
+
+        if key == QtCore.Qt.Key.Key_Shift:
+            # return mouse pan/zoom to only x-axis
+            xMouseEnabled = True
+            yMouseEnabled = False
+            self.vmPlotGlobal.setMouseEnabled(x=xMouseEnabled, y=yMouseEnabled)
+            self.derivPlot.setMouseEnabled(x=xMouseEnabled, y=yMouseEnabled)
+            self.dacPlot.setMouseEnabled(x=xMouseEnabled, y=yMouseEnabled)
+
+            self.vmPlot.setMouseEnabled(x=xMouseEnabled, y=yMouseEnabled)
 
     def slot_setSpikeStat(self, setSpikeStatEvent: dict):
         """Respond to changes from setSpikeStack plugin.
@@ -2205,6 +2256,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._replot(startSec, stopSec)
         # self._replot()
 
+        # 202401
+        self.setAxisFull()
+
+        # 202401 update cursor position
+        self._sanpyCursors._showInView()
+        self._sanpyCursors_dvdt._showInView()
+
         # update x/y axis labels
         yLabel = self.ba.fileLoader._sweepLabelY
         self.dacPlot.getAxis("left").setLabel("DAC")
@@ -2254,11 +2312,18 @@ class bDetectionWidget(QtWidgets.QWidget):
         # this is needed to refresh the symbols of the selection
         self.selectSpikeList(self._selectedSpikeList)
 
-    def _slot_x_range_changed(self, viewbox, range_):
+    def _slot_y_range_changed(self, viewBox):
+        logger.info('')
+        print('   viewBox.viewRange():', viewBox.viewRange())
+
+    def _slot_x_range_changed(self, viewBox):
         """Respond to changes in x-axis
 
         Parameters
         ----------
+        viewBox : pyqtgraph.graphicsItems.ViewBox.ViewBox.ViewBox
+            Viewbox of a plot like self.vmPlot
+
         viewbox : pyqtgraph.graphicsItems.ViewBox.ViewBox.ViewBox
         range_ : (float, float)
             The current x-axis range
@@ -2269,15 +2334,36 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
 
         """
+        logger.info('')
+        print('   viewBox.viewRange():', viewBox.viewRange())
+        
+        viewRange = viewBox.viewRange()
+        xMin = viewRange[0][0]
+        xMax = viewRange[0][1]
+        self.setAxis(xMin, xMax)
+
+        # 20240120 removed enableAutoRange x 3
+
+        # self.vmPlotGlobal.enableAutoRange(axis='y')
+        # # self.vmPlotGlobal.setAutoVisible(y=True)
+
+        # self.vmPlot.enableAutoRange(axis='y')
+        # # self.vmPlot.setAutoVisible(y=True)
+
+        # self.derivPlot.enableAutoRange(axis='y')
+        # # self.derivPlot.setAutoVisible(y=True)
+
+        return
+
         # logger.info(event)
         # logger.info(f'v:{v}')
         #logger.info(f'range_:{range_}')
         
         # set glbal vm to this range
         # update rectangle in vmPlotGlobal
-        start = range_[0]
-        stop = range_[1]
-        self.linearRegionItem2.setRegion([start, stop])
+        # start = range_[0]
+        # stop = range_[1]
+        # self.linearRegionItem2.setRegion([start, stop])
 
     def _replot(self, startSec : Optional[float] = None,
                 stopSec : Optional[float] = None,
@@ -2329,7 +2415,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         #
         if sweepX.shape != filteredDeriv.shape:
-            logger.error(f"filteredDeriv shapes do not match")
+            logger.error("filteredDeriv shapes do not match")
 
         self.derivPlot_.setData(sweepX, filteredDeriv, connect="finite")
         # self.dvdtLinesFiltered = MultiLine(
@@ -2361,12 +2447,20 @@ class bDetectionWidget(QtWidgets.QWidget):
         # self.vmPlot.addItem(self.vmLinesFiltered)
         self.vmPlot_.setData(sweepX, sweepY, connect="finite")
 
+        # self.vmPlot.autoRange()
+        # self.vmPlot.enableAutoRange(axis='y')
+        # self.vmPlot.setAutoVisible(y=True)
+
         # vmPlot_ is PlotDataItem
         # logger.info(f'vmPlot.viewRange {self.vmPlot.viewRange()}')
 
         # april 30, 2023
         # was this jun 4
-        # self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
+        # 20240118
+        self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
+        self.vmPlot.sigYRangeChanged.connect(self._slot_y_range_changed)
+
+        # pg.setConfigOption('leftButtonPan', False)
 
         # can't add a multi line to 2 different plots???
         # self.vmLinesFiltered2 = MultiLine(
@@ -2374,14 +2468,19 @@ class bDetectionWidget(QtWidgets.QWidget):
         # )
         # self.vmPlotGlobal.addItem(self.vmLinesFiltered2)
         self.vmPlotGlobal_.setData(sweepX, sweepY, connect="finite", pen='b')
-        self.linearRegionItem2 = pg.LinearRegionItem(
-            values=(0, self.ba.fileLoader.recordingDur),
-            orientation=pg.LinearRegionItem.Vertical,
-            brush=pg.mkBrush(150, 150, 150, 100),
-            pen=pg.mkPen(None),
-        )
-        self.linearRegionItem2.setMovable(False)
-        self.vmPlotGlobal.addItem(self.linearRegionItem2, ignorBounds=True)
+        if self.linearRegionItem2 is None:
+            self.linearRegionItem2 = pg.LinearRegionItem(
+                    values=(0, self.ba.fileLoader.recordingDur),
+                    orientation=pg.LinearRegionItem.Vertical,
+                    brush=pg.mkBrush(150, 150, 150, 100),
+                    pen=pg.mkPen(None),
+                    )
+            self.linearRegionItem2.setMovable(False)
+            self.vmPlotGlobal.addItem(self.linearRegionItem2, ignorBounds=True)
+        else:
+            self.linearRegionItem2.setBounds((0, self.ba.fileLoader.recordingDur))
+
+
 
         # Kymograph
         # isKymograph = self.ba.fileLoader.isKymograph()
@@ -2423,7 +2522,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         # self.setAxis_OnFileChange(startSec, stopSec)
         
         # was this june 4
-        self.setAxisFull()
+        # 20240118 removed
+        # self.setAxisFull()
         
         # self.detectToolbarWidget.on_start_stop()
         
@@ -2481,7 +2581,7 @@ class myImageExporter(ImageExporter):
 
 
 # class MultiLine(pg.QtGui.QGraphicsPathItem):
-class _old_MultiLine(QtWidgets.QGraphicsPathItem):
+class MultiLine(QtWidgets.QGraphicsPathItem):
     def __init__(
         self,
         x,
@@ -2688,11 +2788,12 @@ class _old_MultiLine(QtWidgets.QGraphicsPathItem):
         
         contextMenu.addSeparator()
 
-        exportTraceAction = contextMenu.addAction(f"Export Trace {myType}")
+        contextMenu.addAction(f"Export Trace {myType}")
         contextMenu.addSeparator()
 
-        resetAllAxisAction = contextMenu.addAction(f"Reset All Axis")
-        resetYAxisAction = contextMenu.addAction(f"Reset Y-Axis")
+        contextMenu.addAction(f"Reset All Axis")
+        # resetYAxisAction = contextMenu.addAction(f"Reset Y-Axis")
+
         # openAct = contextMenu.addAction("Open")
         # quitAct = contextMenu.addAction("Quit")
         # action = contextMenu.exec_(self.mapToGlobal(event.pos()))
@@ -2752,9 +2853,9 @@ class _old_MultiLine(QtWidgets.QGraphicsPathItem):
             # print('Reset Y-Axis', self.myType)
             self.detectionWidget.setAxisFull()
 
-        elif actionText == "Reset Y-Axis":
-            # print('Reset Y-Axis', self.myType)
-            self.detectionWidget.setAxisFull_y(self.myType)
+        # elif actionText == "Reset Y-Axis":
+        #     # print('Reset Y-Axis', self.myType)
+        #     self.detectionWidget.setAxisFull_y(self.myType)
 
         elif actionText == 'Crosshair':
             isChecked = action.isChecked()

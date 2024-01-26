@@ -9,6 +9,8 @@ conda install does not work!!!
 """
 
 import os
+from datetime import datetime
+
 from setuptools import setup, find_packages
 
 # manually keep in sync with sanpy/version.py
@@ -21,6 +23,14 @@ from setuptools import setup, find_packages
 _thisPath = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.abspath(_thisPath+"/README.md")) as f:
     long_description = f.read()
+
+# update _buildDateTime.py
+_buildDate = datetime.today().strftime('%Y-%m-%d')
+_buildTime = datetime.today().strftime('%H:%M:%S')
+with open('sanpy/_buildDateTime.py', 'w') as f:
+    f.write('# Auto generated in setup.py\n')
+    f.write(f'BUILD_DATE="{_buildDate}"\n')
+    f.write(f'BUILD_TIME="{_buildTime}"\n')
 
 guiRequirements = [
     'numpy',  # ==1.23.4',  # 1.24 breaks PyQtGraph with numpy.float error

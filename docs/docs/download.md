@@ -10,8 +10,8 @@ If you have an older Mac with an Intel/x86 chip then download the **`x86`** vers
 
 If your not sure which type of Mac you have, then download the **`x86`** version.
 
-[Download macOS x86 zip](https://github.com/cudmore/SanPy/releases/download/v0.2.3/SanPy-macOS-x86.zip){ .md-button .md-button--primary}
-[Download macOS arm zip](https://github.com/cudmore/SanPy/releases/download/v0.2.3/SanPy-macOS-arm.zip){ .md-button .md-button--primary}
+[Download macOS x86 zip](https://github.com/cudmore/SanPy/releases/download/v0.2.4/SanPy-macOS-x86.zip){ .md-button .md-button--primary}
+[Download macOS arm zip](https://github.com/cudmore/SanPy/releases/download/v0.2.4/SanPy-macOS-arm.zip){ .md-button .md-button--primary}
 
 ### Mac download and run recipe
 
@@ -24,20 +24,20 @@ If your not sure which type of Mac you have, then download the **`x86`** version
 
 ## Windows download
 
-[Download Windows exe](https://github.com/cudmore/SanPy/releases/download/v0.2.3/SanPy.exe
-){ .md-button .md-button--primary}
+[Download Windows exe](https://github.com/cudmore/SanPy/releases/download/v0.2.4/SanPyWindowsExe.zip){ .md-button .md-button--primary}
 
 ### Windows download and run recipe
 
- - Download the `exe` file
+ - Download the `zip` file
+ - Uncompress the zip file to `SanPy.exe`
  - Once downloaded, double-click on `SanPy.exe` to run SanPy
 
 **Troubleshooting:** If you run into security issues, please see [Security on Windows](#security-on-windows).
 
-<!--
+
 ## Current Version
- - Version 0.1.25, Released on May 12, 2023
--->
+ - Version v0.2.4, Released on Jan 17, 2024
+
 
 ## Current and previous releases (on GitHub)
 

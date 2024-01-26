@@ -25,23 +25,32 @@ class sanpyCursors(QtCore.QObject):
         self._showCursorsY = False
         self._delx : float = float('nan')
 
+        self._plotWidget = plotWidget
+
+        _rect = self._plotWidget.viewRect()  # get xaxis
+        logger.info(f'_rect:{_rect}')
+        _left = _rect.left()
+        _top = _rect.top()
+        _right = _rect.right()
+        # _bottom = _rect.bottom()
+
         labelOpts = {'position':0.95}
-        self._cursorA = pg.InfiniteLine(pos=0, angle=90, label='A', labelOpts=labelOpts, movable=True)
+        self._cursorA = pg.InfiniteLine(pos=_left, angle=90, label='A', labelOpts=labelOpts, movable=True)
         self._cursorA.sigDragged.connect(partial(self._cursorDragged, 'cursorA'))
         self._cursorA.setVisible(self._showCursors)
-        self._cursorB = pg.InfiniteLine(pos=10, angle=90, label='B', labelOpts=labelOpts, movable=True)
+        
+        self._cursorB = pg.InfiniteLine(pos=_right, angle=90, label='B', labelOpts=labelOpts, movable=True)
         self._cursorB.sigDragged.connect(partial(self._cursorDragged, 'cursorB'))
         self._cursorB.setVisible(self._showCursors)
 
         yLabelOpts = {'position':0.05}
-        self._cursorC = pg.InfiniteLine(pos=0, angle=0, label='C', labelOpts=yLabelOpts, movable=True)
+        self._cursorC = pg.InfiniteLine(pos=_top, angle=0, label='C', labelOpts=yLabelOpts, movable=True)
         self._cursorC.sigDragged.connect(partial(self._cursorDragged, 'cursorA'))
         self._cursorC.setVisible(self._showCursors)
         # self._cursorD = pg.InfiniteLine(pos=10, angle=0, label='D', labelOpts=yLabelOpts, movable=True)
         # self._cursorD.sigDragged.connect(partial(self._cursorDragged, 'cursorB'))
         # self._cursorD.setVisible(self._showCursors)
 
-        self._plotWidget = plotWidget
         
         self._plotWidget.addItem(self._cursorA)
         self._plotWidget.addItem(self._cursorB)

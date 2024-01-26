@@ -20,7 +20,7 @@ def test_dir():
 def test_file():
 	filePath = os.path.join('data', '2021_07_20_0010.abf')
 	autoLoad = False
-	ad = sanpy.analysisDir(filePath=filePath, autoLoad=autoLoad, folderDepth=1)
+	ad = sanpy.analysisDir(path=filePath, autoLoad=autoLoad, folderDepth=1)
 
 	assert ad is not None
 	

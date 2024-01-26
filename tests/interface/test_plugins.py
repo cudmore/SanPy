@@ -132,7 +132,8 @@ def test_plugins(qtbot, qapp):
 
     # sanpyAppObject = SanPyApp(sys.argv)
     
-    sanpyWindowObject = SanPyWindow(qapp)
+    path = os.path.join('data', '19114001.abf')
+    sanpyWindowObject = SanPyWindow(qapp, path=path)
 
     if 1:
         #

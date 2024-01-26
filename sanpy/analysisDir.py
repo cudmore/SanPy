@@ -4,7 +4,6 @@
 
 import os
 import time
-import sys
 import copy  # For copy.deepcopy() of bAnalysis
 # import uuid  # to generate unique key on bAnalysis spike detect
 import pathlib  # ned to use this (introduced in Python 3.4) to maname paths on Windows, stop using os.path
@@ -468,8 +467,7 @@ class analysisDir:
 
     def __init__(
         self,
-        path: str = None,
-        filePath : str = None,
+        path : str = None,
         sanPyWindow : "sanpy.interface.SanPyWindow" = None,
         fileLoaderDict : dict = None,
         autoLoad: bool = False,
@@ -484,9 +482,7 @@ class analysisDir:
         Parameters
         ----------
         path (str):
-            Path to folder
-        filePath (str):
-            Path to one file
+            Path to file or folder
         sanPyWindow (sanpy.interface.SanPyWindow)
             PyQt, used to signal progress on loading
         fileLoaderDict (dict):
@@ -503,14 +499,16 @@ class analysisDir:
         - 202312 adding filepath to load just one file
         """
 
-        self._filePath = filePath
-        if filePath is not None and os.path.isfile(filePath):
-            self._filePath = filePath
-            path = os.path.split(filePath)[0]
+        self._filePath = None
+        if os.path.isfile(path):
+            self._filePath = path
+            folderPath = os.path.split(path)[0]
+        else:
+            folderPath = path
 
-        logger.info(f'{path} self._filePath:{self._filePath}')
+        logger.info(f'{path}')
 
-        self.path: str = path
+        self.path: str = folderPath  # path to folder
         
         self._sanPyWindow = sanPyWindow
         # used to signal on building initial db
@@ -548,10 +546,10 @@ class analysisDir:
             self.syncDfWithPath()
 
         # if we have a filePath and not in df then add it
-        if self._filePath is not None:
+        # if self._filePath is not None:
 
-            logger.info('self._df')
-            print(self._df)
+        #     logger.info('self._df')
+        #     print(self._df)
 
         # self._df = self.loadFolder(loadData=autoLoad)
 
@@ -970,13 +968,13 @@ class analysisDir:
         
         return df
 
-    def _checkColumns(self):
+    def _checkColumns(self, verbose = False):
         """Check columns in loaded vs sanpyColumns (and vica versa).
         """
         if self._df is None:
             return
         
-        verbose = True
+        # verbose = True
         loadedColumns = self._df.columns
         for col in loadedColumns:
             if col not in self.sanpyColumns.keys():
@@ -986,11 +984,12 @@ class analysisDir:
                         f'did not find loaded col: "{col}" in sanpyColumns.keys() ... ignore it'
                     )
         for col in self.sanpyColumns.keys():
-            if not col in loadedColumns:
+            if col not in loadedColumns:
                 # loaded is missing expected, add it
-                logger.info(
-                    f'did not find sanpyColumns.keys() col: "{col}" in loadedColumns ... adding col'
-                )
+                if verbose:
+                    logger.info(
+                        f'did not find sanpyColumns.keys() col: "{col}" in loadedColumns ... adding col'
+                    )
                 self._df[col] = ""
 
     def _updateLoadedAnalyzed(self, theRowIdx=None):
@@ -1225,8 +1224,8 @@ class analysisDir:
         # print('columns are:', df.columns)
         for col in df.columns:
             # when loading from csv, 'col' may not be in sanpyColumns
-            if not col in self.sanpyColumns:
-                logger.warning(f'Column "{col}" is not in sanpyColumns -->> ignoring')
+            if col not in self.sanpyColumns:
+                # logger.warning(f'Column "{col}" is not in sanpyColumns -->> ignoring')
                 continue
             colType = self.sanpyColumns[col]["type"]
             # print(f'  _setColumnType() for "{col}" is type "{colType}"')
@@ -1501,10 +1500,10 @@ class analysisDir:
         # logger.warning(f"need to replace append with concat")
         #df = df.append(rowSeries, ignore_index=True)
 
-        logger.info('concat this rowSeries')
-        print(rowSeries)
-        print('to this df')
-        print(df)
+        # logger.info('concat this rowSeries')
+        # print(rowSeries)
+        # print('to this df')
+        # print(df)
 
         df = pd.concat([df, rowSeries], axis=0, ignore_index=True)
 
@@ -1514,9 +1513,9 @@ class analysisDir:
         if ba is not None:
             df.loc[newRowIdx, "_ba"] = ba
 
-        print('')
-        logger.info('=== after concat')
-        print(df)
+        # print('')
+        # logger.info('=== after concat')
+        # print(df)
                     
         #
         self._df = df

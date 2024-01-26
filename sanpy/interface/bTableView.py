@@ -540,7 +540,7 @@ def test():
     path = "data"  # assuming we are run from SanPy repo
     ad = sanpy.analysisDir(path)
 
-    df = ad.getDataFrame()
+    # df = ad.getDataFrame()
     model = sanpy.interface.bFileTable.pandasModel(ad)
 
     # why was I doing this?

@@ -59,28 +59,32 @@ class fileListWidget(QtWidgets.QWidget):
     def _buildUI(self):
         self._vLayout = QtWidgets.QVBoxLayout()
 
-        self._hToolbarLayout = QtWidgets.QHBoxLayout()
+        # 20240124 removing top row of controls
+        # getting rid of this as we switch to multiple windows
+        # hard coding folder depth of 3
+        # add folder depth to main sanpy app preferences
+        
+        # self._hToolbarLayout = QtWidgets.QHBoxLayout()
 
-        buttonName = "Load Folder"
-        button = QtWidgets.QPushButton(buttonName)
-        # button.setToolTip('Save Detected Spikes to Excel file')
-        button.clicked.connect(partial(self.on_button_click, buttonName))
-        self._hToolbarLayout.addWidget(button, alignment=QtCore.Qt.AlignLeft)
+        # buttonName = "Load Folder"
+        # button = QtWidgets.QPushButton(buttonName)
+        # button.clicked.connect(partial(self.on_button_click, buttonName))
+        # self._hToolbarLayout.addWidget(button, alignment=QtCore.Qt.AlignLeft)
 
-        labelName = "Depth"
-        aLabel = QtWidgets.QLabel(labelName)
-        self._hToolbarLayout.addWidget(aLabel)
+        # labelName = "Depth"
+        # aLabel = QtWidgets.QLabel(labelName)
+        # self._hToolbarLayout.addWidget(aLabel)
 
-        aSpinBox = QtWidgets.QSpinBox()
-        aSpinBox.setMinimum(1)
-        aSpinBox.setMaximum(10)
-        aSpinBox.setValue(self._folderDepth)
-        aSpinBox.valueChanged.connect(self.on_depth_spin_box)
-        self._hToolbarLayout.addWidget(aSpinBox, alignment=QtCore.Qt.AlignLeft)
+        # aSpinBox = QtWidgets.QSpinBox()
+        # aSpinBox.setMinimum(1)
+        # aSpinBox.setMaximum(10)
+        # aSpinBox.setValue(self._folderDepth)
+        # aSpinBox.valueChanged.connect(self.on_depth_spin_box)
+        # self._hToolbarLayout.addWidget(aSpinBox, alignment=QtCore.Qt.AlignLeft)
 
-        self._hToolbarLayout.addStretch()
+        # self._hToolbarLayout.addStretch()
 
-        self._vLayout.addLayout(self._hToolbarLayout)
+        # self._vLayout.addLayout(self._hToolbarLayout)
 
         #
         # actual list of file

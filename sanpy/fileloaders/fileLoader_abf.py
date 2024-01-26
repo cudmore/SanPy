@@ -77,6 +77,15 @@ class fileLoader_abf(fileLoader_base):
 
             # on load, sweep is 0
             if loadData:
+                
+                # owl
+                #<bound method ABF.sweepD of ABF (v2.9) with 1 channel (pA), sampled at 10.0 kHz, containing 18 sweeps, having no tags, with a total length of 6.33 minutes, recorded with protocol "PPR_v-clamp_owl". path=/Users/cudmore/Dropbox/data/sanpy-users/porter/2022_08_15_0022.abf>
+                # print('self._abf.sweepD')
+                # for _i in range(8):
+                #     print(_i)
+                #     print(self._abf.sweepD(_i))
+
+                
                 _numRows = self._abf.sweepX.shape[0]
                 numSweeps = len(self._sweepList)
                 self._sweepX = np.zeros((_numRows, 1))
@@ -118,8 +127,10 @@ class fileLoader_abf(fileLoader_base):
             
             acqDate = abfDateTime.strftime("%Y-%m-%d")
             acqTime = abfDateTime.strftime("%H:%M:%S")
-            logger.info(f'acqDate:"{acqDate}')
-            logger.info(f'acqTime:"{acqTime}')
+
+            # logger.info(f'acqDate:"{acqDate}')
+            # logger.info(f'acqTime:"{acqTime}')
+
             # self._acqDate = abfDateTime.strftime("%Y-%m-%d")
             # self._acqTime = abfDateTime.strftime("%H:%M:%S")
 
@@ -143,15 +154,20 @@ class fileLoader_abf(fileLoader_base):
 
             # self._sweepLabelX = self._abf.sweepLabelX
             # self._sweepLabelY = self._abf.sweepLabelY
-            if self._sweepLabelY in ["pA", "nA"]:
+            if self._sweepLabelY in ["A", "pA", "nA", "uA"]:
                 self._recordingMode = recordingModes.vclamp  # 'V-Clamp'
                 # self._sweepY_label = self._abf.sweepUnitsY
-            elif self._sweepLabelY in ["mV"]:
+            elif self._sweepLabelY in ["mV", "uv", "V"]:
                 self._recordingMode = recordingModes.iclamp  #'I-Clamp'
                 # self._sweepY_label = self._abf.sweepUnitsY
             else:
                 logger.warning(f'did not understand adcUnit "{adcUnits}"')
 
+            # 20240125 ownanalysis
+            self._userList = self._abf.userList
+            if self._userList is not None:
+                logger.info(f'_userList:{self._userList}')
+                
         #
         self.myFileType = "abf"
 

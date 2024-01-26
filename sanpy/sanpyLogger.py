@@ -1,5 +1,6 @@
 # 20210525
-import os, sys
+import os
+import sys
 import logging
 from logging.handlers import RotatingFileHandler
 import pathlib
@@ -88,7 +89,7 @@ def get_logger(name, level=logging.DEBUG):
 
         # Create handlers
         c_handler = logging.StreamHandler()
-        f_handler = RotatingFileHandler(logPath, maxBytes=500, backupCount=0)
+        f_handler = RotatingFileHandler(logPath, maxBytes=2e6, backupCount=1)
         # f_handler = logging.FileHandler(logPath)
 
         c_handler.setLevel(level)

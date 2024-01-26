@@ -855,17 +855,20 @@ class bAnalysis:
             logger.warning("not getting derivative ... sweepX was none?")
             return
 
-        if (
-            self.fileLoader.recordingMode == recordingModes.iclamp
-            or self.fileLoader.recordingMode == recordingModes.kymograph
-        ):
-            self.fileLoader._getDerivative()
-        elif self.fileLoader.recordingMode == recordingModes.vclamp:
-            self.fileLoader._getDerivative()
-        else:
-            logger.warning(
-                f'Did not take derivative, unknown recording mode "{self.fileLoader.recordingMode}"'
-            )
+        self.fileLoader._getDerivative()
+        
+        # if (
+        #     self.fileLoader.recordingMode == recordingModes.iclamp
+        #     or self.fileLoader.recordingMode == recordingModes.kymograph
+        # ):
+        #     self.fileLoader._getDerivative()
+        # elif self.fileLoader.recordingMode == recordingModes.vclamp:
+        #     self.fileLoader._getDerivative()
+        # else:
+        #     logger.warning(
+        #         f'Did not take derivative, unknown recording mode "{self.fileLoader.recordingMode}"'
+        #     )
+        #     self.fileLoader._getDerivative()
 
     def _getFilteredRecording(self):
         """

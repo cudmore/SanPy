@@ -643,7 +643,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         logger.info(f"Saving to: {fileName}")
         exporter.export(fileName)
 
-    def bringToFront(self):
+    def _old_bringToFront(self):
         """Bring the widget to the front."""
         if not self._showSelf:
             return
@@ -653,10 +653,10 @@ class sanpyPlugin(QtWidgets.QWidget):
         self.getWidget().activateWindow()
 
         # Matplotlib
-        if self.fig is not None:
-            FigureManagerQT = self.fig.canvas.manager
-            FigureManagerQT.window.activateWindow()
-            FigureManagerQT.window.raise_()
+        # if self.fig is not None:
+        #     FigureManagerQT = self.fig.canvas.manager
+        #     FigureManagerQT.window.activateWindow()
+        #     FigureManagerQT.window.raise_()
 
     def makeVLayout(self):
         """Make a PyQt QVBoxLayout."""
@@ -799,8 +799,10 @@ class sanpyPlugin(QtWidgets.QWidget):
         logger.info(f"  -->> emit signalCloseWindow(self)")
         self.signalCloseWindow.emit(self)
 
-    def slot_switchFile(
-        self, ba: sanpy.bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
+    def slot_switchFile(self,
+                        ba: sanpy.bAnalysis,
+                        rowDict: Optional[dict] = None,
+                        replot: bool = True
     ):
         """Respond to switch file.
 
@@ -881,7 +883,9 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         self.replot()
 
-    def slot_setSweep(self, ba: sanpy.bAnalysis, sweepNumber: int):
+    # 20240118, removing ba
+    # def slot_setSweep(self, ba: sanpy.bAnalysis, sweepNumber: int):
+    def slot_setSweep(self, sweepNumber: int):
         """Respond to user selecting a sweep."""
 
         if not self._getResponseOption(self.responseTypes.setSweep):
@@ -889,12 +893,12 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         logger.info(f"{self._myClassName()} sweepNumber:{sweepNumber}")
 
-        if ba is None:
-            return
+        # if ba is None:
+        #     return
 
         # don't respond if we are showing different ba
-        if self._ba != ba:
-            return
+        # if self._ba != ba:
+        #     return
 
         self._sweepNumber = sweepNumber
 

@@ -22,7 +22,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
     signalSwitchFile = QtCore.Signal(object, object)
     """Emit on switch file."""
 
-    signalSelectSweep = QtCore.Signal(object, object)  # (ba, sweepNumber)
+    signalSelectSweep = QtCore.Signal(object)  # (ba, sweepNumber)
     """Emit set sweep."""
 
     signalUpdateAnalysis = QtCore.Signal(object)
@@ -34,7 +34,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
     signalSelectSpikeList = QtCore.Signal(object)
     """Emit spike list selection."""
 
-    def __init__(self, sanPyApp : "sanpy.interface.SanPyApp", path=None, parent=None):
+    def __init__(self, sanPyApp : "sanpy.interface.SanPyApp", path, parent=None):
         """Main SanPy window to show one file or a file of files.
 
         Parameters
@@ -64,18 +64,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         self.setAcceptDrops(True)
 
-        # TODO: if first time run (no <user>/Documents/SanPy) then warn user to quit and restart
-
-        # create directories in <user>/Documents and add to python path
-        # firstTimeRunning = sanpy._util.addUserPath()
-        # if firstTimeRunning:
-        #     logger.info("  We created <user>/Documents/Sanpy and need to restart")
-
-        # move to app
-        # self._fileLoaderDict = sanpy.fileloaders.getFileLoaders(verbose=True)
-        # self._detectionClass : sanpy.bDetection = sanpy.bDetection()
-        # self._analysisUtil = sanpy.bAnalysisUtil()
-
         # create an empty model for file list
         dfEmpty = pd.DataFrame(columns=sanpy.analysisDir.sanpyColumns.keys())
         self.myModel = sanpy.interface.bFileTable.pandasModel(dfEmpty)
@@ -85,19 +73,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.startSec = None
         self.stopSec = None
 
-        # TODO: put font size in options file
-        # removed mar 26 2023
-        """
-        myFontSize = 10
-        myFont = self.font();
-        myFont.setPointSize(myFontSize)
-        self.setFont(myFont)
-        """
-
-        if path is not None and os.path.isdir(path):
-            windowTitle = f"SanPy {path}"
-        else:
-            windowTitle = "SanPy"
+        windowTitle = f"SanPy {path}"
         self.setWindowTitle(windowTitle)
 
         self._rowHeight = 11
@@ -119,7 +95,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # else:
         #     self.path = None
 
-        self.path = None
+        self.pluginDock1 = None
+
+        self.path = path
         
         # moved to app
         # self.useDarkStyle = self.configDict["useDarkStyle"]
@@ -141,6 +119,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         # order matter, _buildMenus uses objects created in _buildUI
         self._buildUI()
+        
         self._buildMenus()
 
         # 20231229 removed
@@ -149,17 +128,21 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # if self.path is not None and len(self.path) > 0:
         #     self.slot_loadFolder(self.path)
 
-        if path is not None:
-            if os.path.isfile(path):
-                self.slot_loadFile(path)
-            elif os.path.isdir(path):
-                self.slot_loadFolder(path)
+        self._load()
+        
+        # 20240119 removed
+        # we will always have a path
+        # if path is not None:
+        #     if os.path.isfile(path):
+        #         self.slot_loadFile(path)
+        #     elif os.path.isdir(path):
+        #         self.slot_loadFolder(path)
 
         # self.raise_()  # bring to front, raise is a python keyword
         # self.activateWindow()  # bring to front
 
-        self.slot_updateStatus("Ready")
-        logger.info("-->> SanPyWindow done initializing")
+        self.slot_updateStatus(f"Loaded {self.path}")
+        logger.info(f"-->> SanPyWindow done initializing with {self.path}")
 
     def isFileList(self) -> bool:
         return self._fileListWidget is not None
@@ -286,26 +269,29 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
     def dropEvent(self, event):
         #logger.info("")
-        folders = [u.toLocalFile() for u in event.mimeData().urls()]
-        if len(folders) > 1:
+        path = [u.toLocalFile() for u in event.mimeData().urls()]
+        if len(path) > 1:
             # logger.warning('Please drop a folder of files')
-            self.slot_updateStatus('Please drop a folder of files or just one file')
+            self.slot_updateStatus('Please drop one file or folder, got multiple')
             return
-        oneItem = folders[0]
+        oneItem = path[0]
         logger.info(oneItem)
-        if os.path.isdir(oneItem):
-            self.slot_loadFolder(path=oneItem)
-        elif os.path.isfile(oneItem):
-            #_acceptedTypes = sanpy.analysisDir.theseFileTypes
-            # _acceptedTypes are not prefixed by '.'
-            _acceptedTypes = list(self.getSanPyApp().getFileLoaderDict().keys())
-            oneItemExtension = os.path.splitext(oneItem)[1]
-            # if oneItemExtension:
-            #     oneItemExtension = oneItemExtension[1:]
-            if oneItemExtension in _acceptedTypes:
-                self.slot_loadFile(oneItem)
-            else:
-                self.slot_updateStatus(f'Accepted file types are: {_acceptedTypes}')
+
+        self.getSanPyApp().openSanPyWindow(path)
+
+        # if os.path.isdir(oneItem):
+        #     self.slot_loadFolder(path=oneItem)
+        # elif os.path.isfile(oneItem):
+        #     #_acceptedTypes = sanpy.analysisDir.theseFileTypes
+        #     # _acceptedTypes are not prefixed by '.'
+        #     _acceptedTypes = list(self.getSanPyApp().getFileLoaderDict().keys())
+        #     oneItemExtension = os.path.splitext(oneItem)[1]
+        #     # if oneItemExtension:
+        #     #     oneItemExtension = oneItemExtension[1:]
+        #     if oneItemExtension in _acceptedTypes:
+        #         self.slot_loadFile(oneItem)
+        #     else:
+        #         self.slot_updateStatus(f'Accepted file types are: {_acceptedTypes}')
 
     def _promptIfDirty(self) -> bool:
         """Prompt user if there is unsaved analysis.
@@ -441,7 +427,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             # old
             # self.myScatterPlotWidget.selectXRange(data[0], data[1])
             # new
-            logger.info(f'"-->> emit signalSetXAxis set full x axis" {data[0]} {data[1]}')
+            logger.info(f'"-->> emit signalSetXAxis set x axis" {data[0]} {data[1]}')
             self.signalSetXAxis.emit([data[0], data[1]])  # emits to scatter plot ONLY
 
         elif this == "set full x axis":
@@ -463,7 +449,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         else:
             logger.warning(f'Did not understand this: "{this}"')
 
-    def old_keyPressEvent(self, event):
+    def _old_keyPressEvent(self, event):
         """Respond to key press
 
         TODO: does not seem to work?
@@ -570,22 +556,22 @@ class SanPyWindow(QtWidgets.QMainWindow):
                     )  # this will load ba if necc
 
     def _buildMenus(self):
+        
         mainMenu = self.menuBar()
-
-        #self.aboutAction = QtWidgets.QAction("&About", self)
+        _helpAction = self.getSanPyApp()._buildMenus(mainMenu)
 
         # load
-        loadFileAction = QtWidgets.QAction("Open...", self)
-        loadFileAction.setShortcut("Ctrl+O")
-        loadFileAction.triggered.connect(self.slot_loadFile)
+        # loadFileAction = QtWidgets.QAction("Open...", self)
+        # loadFileAction.setShortcut("Ctrl+O")
+        # loadFileAction.triggered.connect(self.slot_loadFile)
 
-        loadFolderAction = QtWidgets.QAction("Open Folder...", self)
-        # loadFolderAction.setShortcut("Ctrl+O")
-        loadFolderAction.triggered.connect(self.slot_loadFolder)
+        # loadFolderAction = QtWidgets.QAction("Open Folder...", self)
+        # # loadFolderAction.setShortcut("Ctrl+O")
+        # loadFolderAction.triggered.connect(self.slot_loadFolder)
 
-        # open recent (submenu) will show two lists, one for files and then one for folders
-        self.openRecentMenu = QtWidgets.QMenu("Open Recent ...")
-        self.openRecentMenu.aboutToShow.connect(self._refreshOpenRecent)
+        # # open recent (submenu) will show two lists, one for files and then one for folders
+        # self.openRecentMenu = QtWidgets.QMenu("Open Recent ...")
+        # self.openRecentMenu.aboutToShow.connect(self._refreshOpenRecent)
 
         saveDatabaseAction = QtWidgets.QAction("Save Folder Analysis", self)
         saveDatabaseAction.setShortcut("Ctrl+S")
@@ -594,43 +580,102 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # buildDatabaseAction = QtWidgets.QAction('Build Big Database ...', self)
         # buildDatabaseAction.triggered.connect(self.buildDatabase)
 
-        savePreferencesAction = QtWidgets.QAction("Save Preferences", self)
-        savePreferencesAction.triggered.connect(self.configDict.save)
+        # savePreferencesAction = QtWidgets.QAction("Save Preferences", self)
+        # savePreferencesAction.triggered.connect(self.configDict.save)
 
         # showLogAction = QtWidgets.QAction("Show Log", self)
         # showLogAction.triggered.connect(self.openLog)
 
-        fileMenu = mainMenu.addMenu("&File")
+        # fileMenu = mainMenu.addMenu("&File")
 
-        fileMenu.addAction(loadFileAction)
+        # fileMenu.addAction(loadFileAction)
         
-        fileMenu.addAction(loadFolderAction)
-        fileMenu.addMenu(self.openRecentMenu)
+        # fileMenu.addAction(loadFolderAction)
+        # fileMenu.addMenu(self.openRecentMenu)
 
-        fileMenu.addSeparator()
-        fileMenu.addAction(saveDatabaseAction)
-
-        fileMenu.addSeparator()
-        # fileMenu.addAction(buildDatabaseAction)
         # fileMenu.addSeparator()
-        fileMenu.addAction(savePreferencesAction)
+        # fileMenu.addAction(saveDatabaseAction)
+
+        # fileMenu.addSeparator()
+        # # fileMenu.addAction(buildDatabaseAction)
+        # # fileMenu.addSeparator()
+        # fileMenu.addAction(savePreferencesAction)
 
         # fileMenu.addSeparator()
         # fileMenu.addAction(showLogAction)
 
         # view menu to toggle widgets on/off
-        self.viewMenu = mainMenu.addMenu("&View")
+        # self.viewMenu = mainMenu.addMenu("&View")
+        self.viewMenu = QtWidgets.QMenu('&View')
         self.viewMenu.aboutToShow.connect(self._refreshViewMenu)
+        mainMenu.insertMenu(_helpAction, self.viewMenu)
+        # self.viewMenu.aboutToShow.connect(self._refreshViewMenu)
         self._refreshViewMenu()
         # self._populateViewMenu()
 
-        self.windowsMenu = mainMenu.addMenu('&Window')
-        self.windowsMenu.aboutToShow.connect(self._refreshWindowsMenu)
-        self._refreshWindowsMenu()
-
         #
-        # plugins menu
-        pluginsMenu = mainMenu.addMenu("&Plugins")
+        # plugins menu, all possible plugins
+        # pluginsMenu = mainMenu.addMenu("&Plugins")
+        self.pluginsMenu = self._buildPluginsMenu()
+        mainMenu.insertMenu(_helpAction, self.pluginsMenu)
+        # pluginsMenu = mainMenu.insertMenu(_helpAction, "&Plugins")
+        # _helpMenu = self.getSanPyApp().helpMenu
+        # pluginsMenu = mainMenu.insertMenu(_helpMenu, '&Plugins')
+
+
+        """
+        pluginDir = os.path.join(self._getBundledDir(), 'plugins', '*.txt')
+        pluginList = glob.glob(pluginDir)
+        logger.info(f'pluginList: {pluginList}')
+        pluginsMenu = mainMenu.addMenu('&Plugins')
+        oneAction = 'plotRecording'
+        sanpyPluginAction = QtWidgets.QAction(oneAction, self)
+        #sanpyPluginAction.triggered.connect(self.sanpyPlugin_action)
+        sanpyPluginAction.triggered.connect(lambda checked, oneAction=oneAction: self.sanpyPlugin_action(oneAction))
+        pluginsMenu.addAction(sanpyPluginAction)
+        """
+
+        
+        # logger.info('TODO: append open plugins to main app &Windows menu')
+        # a dynamic menu to show open plugins
+        # self.windowsMenu = mainMenu.addMenu('&Windows')
+        # self.windowsMenu.aboutToShow.connect(self._populateOpenPlugins)
+
+        self.windowsMenu = self._buildWindowMenu()  # open SanPyWindow(s)
+        self.windowsMenu.aboutToShow.connect(self._refreshWindowsMenu)
+        mainMenu.insertMenu(_helpAction, self.windowsMenu)
+        # self._refreshWindowsMenu()
+
+        """
+        # windows menu to toggle scatter plot widget
+        windowsMenu = mainMenu.addMenu('&Windows')
+        mainWindowAction = QtWidgets.QAction('Main', self)
+        #
+        openScatterAction = QtWidgets.QAction('Scatter Plot', self)
+        openScatterAction.triggered.connect(self.openScatterWindow)
+        #mainWindowAction.triggered.connect(self.toggleStyleSheet)
+        mainWindowAction.setCheckable(True)
+        mainWindowAction.setChecked(True)
+        windowsMenu.addAction(mainWindowAction)
+        windowsMenu.addAction(openScatterAction)
+        """
+
+    def _buildWindowMenu(self):
+        
+        windowsMenu = QtWidgets.QMenu('&Windows')
+
+        self.getSanPyApp().getWindowsMenu(windowsMenu)
+
+        windowsMenu.aboutToShow.connect(self._refreshWindowsMenu)
+
+        # append open plugins
+
+        return windowsMenu
+    
+    def _buildPluginsMenu(self):
+
+        pluginsMenu = QtWidgets.QMenu('&Plugins')
+
         # list of plugin names
         # pluginList = self.myPlugins.pluginList()
         # each key is the name of theplugin
@@ -675,102 +720,24 @@ class SanPyWindow(QtWidgets.QMainWindow):
             )
             pluginsMenu.addAction(sanpyPluginAction)
 
-        """
-        pluginDir = os.path.join(self._getBundledDir(), 'plugins', '*.txt')
-        pluginList = glob.glob(pluginDir)
-        logger.info(f'pluginList: {pluginList}')
-        pluginsMenu = mainMenu.addMenu('&Plugins')
-        oneAction = 'plotRecording'
-        sanpyPluginAction = QtWidgets.QAction(oneAction, self)
-        #sanpyPluginAction.triggered.connect(self.sanpyPlugin_action)
-        sanpyPluginAction.triggered.connect(lambda checked, oneAction=oneAction: self.sanpyPlugin_action(oneAction))
-        pluginsMenu.addAction(sanpyPluginAction)
-        """
-
-        
-        # a dynamic menu to show open plugins
-        self.windowsMenu = mainMenu.addMenu('&Windows')
-        self.windowsMenu.aboutToShow.connect(self._populateOpenPlugins)
-
-        """
-        # windows menu to toggle scatter plot widget
-        windowsMenu = mainMenu.addMenu('&Windows')
-        mainWindowAction = QtWidgets.QAction('Main', self)
-        #
-        openScatterAction = QtWidgets.QAction('Scatter Plot', self)
-        openScatterAction.triggered.connect(self.openScatterWindow)
-        #mainWindowAction.triggered.connect(self.toggleStyleSheet)
-        mainWindowAction.setCheckable(True)
-        mainWindowAction.setChecked(True)
-        windowsMenu.addAction(mainWindowAction)
-        windowsMenu.addAction(openScatterAction)
-        """
-
-        # help menu
-        helpMenu = mainMenu.addMenu("&Help")
-
-        name = "SanPy Help (Opens In Browser)"
-        action = QtWidgets.QAction(name, self)
-        action.triggered.connect(partial(self._onHelpMenuAction, name))
-        helpMenu.addAction(action)
-
-        # this actually does not show up in the help menu!
-        # On macOS PyQt reroutes it to the main python/SanPy menu
-        name = "About SanPy"
-        action = QtWidgets.QAction(name, self)
-        action.triggered.connect(self._onAboutMenuAction)
-        helpMenu.addAction(action)
-
-        # like the help menu, this gets rerouted to the main python/sanp menu
-        name = "Preferences ..."
-        action = QtWidgets.QAction(name, self)
-        action.triggered.connect(self._onPreferencesMenuAction)
-        helpMenu.addAction(action)
+        return pluginsMenu
     
-    def _refreshOpenRecent(self):
-        """Dynamically generate the open recent file/folder menu.
-        
-        This is a list of files and then a list of folders"""
-        self.openRecentMenu.clear()
-
-        # add files
-        for recentFile in self.configDict.getRecentFiles():
-            loadFileAction = QtWidgets.QAction(recentFile, self)
-            loadFileAction.triggered.connect(
-                partial(self.slot_loadFile, recentFile)
-            )
-
-            self.openRecentMenu.addAction(loadFileAction)
-        
-        self.openRecentMenu.addSeparator()
-
-        # add folders
-        for recentFolder in self.configDict.getRecentFolder():
-            loadFolderAction = QtWidgets.QAction(recentFolder, self)
-            loadFolderAction.triggered.connect(
-                partial(self.slot_loadFolder, recentFolder)
-            )
-
-            self.openRecentMenu.addAction(loadFolderAction)
-
     def _refreshWindowsMenu(self):
+        # return
+    
         self.windowsMenu.clear()
 
-        #20231229 removed when switching to multiple window model
-        # name = "SanPy Window"
-        # action = QtWidgets.QAction(name, self, checkable=True)
-        # action.setChecked(self.isActiveWindow())
-        # action.triggered.connect(partial(self._windowsMenuAction, self, name))
-        # self.windowsMenu.addAction(action)
+        self.getSanPyApp().getWindowsMenu(self.windowsMenu)
 
-        for _widget in QtWidgets.QApplication.topLevelWidgets():
-            if 'sanpy.interface.plugins' in str(type(_widget)):
-                myHumanName = _widget.myHumanName
-                print(f'{myHumanName} {_widget}')
-                action = QtWidgets.QAction(myHumanName, self, checkable=True)
-                action.setChecked(_widget.isActiveWindow())
-                action.triggered.connect(partial(self._windowsMenuAction, _widget, myHumanName))
-                self.windowsMenu.addAction(action)
+        # self.windowsMenu.aboutToShow.connect(self._refreshWindowsMenu)
+
+        self.windowsMenu.addSeparator()
+
+        # add open plugins
+        self._populateOpenPlugins()
+
+        # action = QtWidgets.QAction('xxx', self, checkable=True)
+        # self.windowsMenu.addAction(action)
 
     def _refreshViewMenu(self):
         """Dynamically create the main 'View' menu each time it is selected."""
@@ -904,23 +871,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         action.triggered.connect(partial(self._viewMenuAction, "Dark Theme", name))
         self.viewMenu.addAction(action)
 
-    def _windowsMenuAction(self, widget, name, isChecked):
-        """
-        Parameters
-        ----------
-        widget : QtWidgets.QWidget
-            Either self or an open plugin widget
-        name : str
-            Name of the window
-        """
-        
-        # don't toggle visibility
-        # widget.setVisible(not widget.isVisible())
-
-        QtWidgets.QApplication.setActiveWindow(widget)
-        widget.activateWindow()
-        widget.raise_()
-
     def _viewMenuAction(self, key1, name, isChecked):
         """Respond to user selection in view menu."""
         logger.info(f"{key1}, {name}, {isChecked}")
@@ -978,32 +928,31 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 self.pluginDock2.hide()
 
     def _populateOpenPlugins(self):
-        """A dynamic menu to show open plugins."""
-        self.windowsMenu.clear()
-        actions = []
-        for plugin in self.myPlugins._openPluginSet:
+        """Add open plugins to the Windows menu.
+        """
+        for plugin in self._openPluginSet:
             name = plugin.myHumanName
-            windowTitle = plugin.windowTitle
-            action = QtWidgets.QAction(windowTitle, self)
-            action.triggered.connect(
-                partial(self.old_showOpenPlugin, name, plugin, windowTitle)
+            #windowTitle = plugin.windowTitle
+            aAction = QtWidgets.QAction(name, self)
+            aAction.triggered.connect(
+                partial(self._showOpenPlugin, name, plugin)
             )
-            actions.append(action)
-        self.windowsMenu.addActions(actions)
+            self.windowsMenu.addAction(aAction)
 
-    def _old_showOpenPlugin(self, name, plugin, windowTitle, selected):
-        logger.info(name)
-        logger.info(plugin)
-        logger.info(windowTitle)
-        logger.info(selected)
-        plugin.bringToFront()
+    def _showOpenPlugin(self, name, plugin, selected):
+        logger.info(f'name:{name} selected:{selected}')
+        plugin.activateWindow()
+        plugin.raise_()
 
     def _buildFileListWidget(self):
 
         folderDepth = self.configDict["fileList"]["Folder Depth"]
         self._fileListWidget = sanpy.interface.fileListWidget(self.myModel, folderDepth=folderDepth)
         self._fileListWidget._tableView.signalUpdateStatus.connect(self.slot_updateStatus)  # 
-        self._fileListWidget.signalLoadFolder.connect(self.slot_loadFolder)
+
+        # just use main 'File - Load Folder' menu
+        # self._fileListWidget.signalLoadFolder.connect(self.slot_loadFolder)
+
         self._fileListWidget.signalSetFolderDepth.connect(self.slot_folderDepth)
         self._fileListWidget.getTableView().signalSelectRow.connect(
             self.slot_fileTableClicked
@@ -1035,6 +984,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
         """
         # self.toggleStyleSheet(buildingInterface=True)
 
+        # if self.path is None:
+        #     # build a file loder widget
+        #     return
+        
         self.statusBar = QtWidgets.QStatusBar()
         self.setStatusBar(self.statusBar)
 
@@ -1046,7 +999,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         #
         # list of files (in a dock)
-        # moved
+        if os.path.isdir(self.path):
+            self._buildFileListWidget()
 
         #
         # Detection widget
@@ -1181,7 +1135,51 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def slot_folderDepth(self, folderDepth : int):
         self.configDict['fileList']['Folder Depth'] = folderDepth
         
-    def slot_loadFile(self, filePath : str):
+    def _load(self):
+        """Load either a single file or a folder.
+        """
+        path = self.path
+
+        # will create/load hd5 file for folder
+        if os.path.isfile(path):
+            folderDepth = 1
+        elif os.path.isdir(path):
+            folderDepth = self.configDict["fileList"]["Folder Depth"]
+        else:
+            logger.error(f'did not load path:{path}')
+            return
+        
+        fileLoaderDict = self.getSanPyApp().getFileLoaderDict()
+        self.myAnalysisDir = sanpy.analysisDir(
+            path,
+            folderDepth=folderDepth,
+            fileLoaderDict=fileLoaderDict
+        )
+
+        # file
+        if os.path.isfile(path):
+            filename = os.path.split(path)[1]
+            rowIdx = self.myAnalysisDir.findFileRow(filename)
+
+            _ba, rowDict = self.myAnalysisDir.getFileRow(path)
+            logger.info('_ba rowDict')
+            logger.info(rowDict)
+            self.slot_fileTableClicked(rowIdx, rowDict, selectingAgain=False)
+
+        # folder
+        elif os.path.isdir(path):
+            # set myAnalysisDir to file list model
+            self.myModel = sanpy.interface.bFileTable.pandasModel(self.myAnalysisDir)
+
+            self._fileListWidget.mySetModel(self.myModel)
+            self.myModel.signalMyDataChanged.connect(
+                self.myDetectionWidget.slot_dataChanged
+            )
+
+        # add to recent opened windows
+        self.getSanPyApp().getOptions().addPath(path)
+
+    def _old_slot_loadFile(self, filePath : str):
         """Load one file rather than a folder.
         
         This will open a new window
@@ -1195,7 +1193,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         # ask user for file
         if filePath is None or isinstance(filePath, bool) or len(filePath) == 0:
-            filePath, _filter = QtWidgets.QFileDialog.getOpenFileName(self, "Select a raw data file")
+            filePath, _filter = QtWidgets.QFileDialog.getOpenFileName(self, caption="Select a raw data file")
             if len(filePath) == 0:
                 return
             # filePath is a tuple like ('/Users/cudmore/Sites/SanPy/data/19114000.abf', 'All Files (*)')
@@ -1216,7 +1214,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
             self.getSanPyApp().openSanPyWindow(filePath)
             return
 
+        # otherwise replace current contents of the window
         self.path = filePath
+
+        # self._buildUI()
 
         # will create/load hd5 file for folder
         fileLoaderDict = self.getSanPyApp().getFileLoaderDict()
@@ -1262,7 +1263,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # BAD: add to recent opened windows
         self.getSanPyApp().getOptions().addPath(filePath)
 
-    def slot_loadFolder(self, path="", folderDepth=None):
+    def _old_slot_loadFolder(self, path="", folderDepth=None):
         """Load a folder of raw data files.
 
         Parameters
@@ -1271,7 +1272,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         folderDepth : int or None
         """
 
-        self._buildFileListWidget()
+        # self._buildFileListWidget()
         
         if folderDepth is None:
             # get the depth from file list widget
@@ -1424,7 +1425,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # self.myDetectionWidget.selectSweep(sweep)
         self.myDetectionWidget.slot_selectSweep(sweep)
 
-    def slot_selectSweep(self, ba, sweepNumber):
+    def slot_selectSweep(self, sweepNumber : int):
         """Set view to new sweep.
 
         Parameters
@@ -1433,10 +1434,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
         sweepNumber : int
         """
 
-        if ba is None:
-            ba = self.self.get_bAnalysis()
+        # if ba is None:
+        #     ba = self.self.get_bAnalysis()
 
-        self.signalSelectSweep.emit(ba, sweepNumber)
+        self.signalSelectSweep.emit(sweepNumber)
 
     def saveFilesTable(self):
         """Save the folder hdf5 file."""
@@ -1636,63 +1637,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def _onPreferencesMenuAction(self):
         logger.info('')
 
-    def _onAboutMenuAction(self):
-        """Show a dialog with help.
-        """
-        print(self._getVersionInfo())
-
-        dlg = QtWidgets.QDialog(self)
-        dlg.setWindowTitle('About SanPy')
-
-        vLayout = QtWidgets.QVBoxLayout()
-
-        _versionInfo = self._getVersionInfo()
-        for k,v in _versionInfo.items():
-            aText = k + ' ' + str(v)
-            aLabel = QtWidgets.QLabel(aText)
-
-            if 'https' in v:
-                aLabel.setText(f'{k} <a href="{v}">{v}</a>')
-                aLabel.setTextFormat(QtCore.Qt.RichText)
-                aLabel.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
-                aLabel.setOpenExternalLinks(True)
-
-            if k == 'email':
-                # <a href = "mailto: abc@example.com">Send Email</a>
-                aLabel.setText(f'{k} <a href="mailto:{v}">{v}</a>')
-                aLabel.setTextFormat(QtCore.Qt.RichText)
-                aLabel.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
-                aLabel.setOpenExternalLinks(True)
-            
-            vLayout.addWidget(aLabel)
-
-        dlg.setLayout(vLayout)
-
-        dlg.exec()
-  
-    def _getVersionInfo(self) -> dict:
-        retDict = {}
-
-        #import platform
-        _platform = platform.machine()
-        # arm64
-        # x86_64
-
-        # from sanpy.version import __version__
-
-        # retDict['SanPy version'] = __version__
-        retDict['SanPy version'] = sanpy.__version__
-        retDict['Python version'] = platform.python_version()
-        retDict['Python platform'] = _platform  # platform.platform()
-        retDict['PyQt version'] = QtCore.__version__  # when using import qtpy
-        # retDict['Bundle folder'] = sanpy._util.getBundledDir()
-        # retDict['Log file'] = sanpy.sanpyLogger.getLoggerFile()
-        retDict['GitHub'] = 'https://github.com/cudmore/sanpy'
-        retDict['Documentation'] = 'https://cudmore.github.io/SanPy/'
-        retDict['email'] = 'rhcudmore@ucdavis.edu'
-
-        return retDict
-
 def runFft(sanpyWindow):
     logger.info("")
     sanpyWindow._fileListWidget._onLeftClick(0)
@@ -1725,3 +1669,5 @@ def testFFT(sanpyWindow):
     ba = sanpyWindow.get_bAnalysis()
     pluginName = "FFT"
     fftPlugin = sanpyWindow.myPlugins.runPlugin(pluginName, ba)
+
+

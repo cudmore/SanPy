@@ -221,6 +221,7 @@ class fileLoader_base(ABC):
         self._sweepLengthSec = None
         self._dataPointsPerMs = None
         self._recordingMode = recordingModes.unknown
+        self._userList = None  # 20240123 owlanalysis
         self._sweepLabelX = None
         self._sweepLabelY = None
 
@@ -552,6 +553,7 @@ class fileLoader_base(ABC):
         sweepY: np.ndarray,
         sweepC: Optional[np.ndarray] = None,
         recordingMode: recordingModes = recordingModes.iclamp,
+        userList = None,  # owl analysis
         xLabel: str = "",
         yLabel: str = "",
     ):
@@ -567,6 +569,8 @@ class fileLoader_base(ABC):
             (optional) DAC stimulus, pA or mV
         recordingMode : recordingModes
             (optional) Defaults to recordingModes.iclamp)
+        userList : [int]
+            (optional) List of times to increment an epoch (length is same as sweeps)
         xLabel : str
             (optional) str for x-axis label
         yLabel : str
@@ -581,6 +585,8 @@ class fileLoader_base(ABC):
         self._sweepX = sweepX
         self._sweepY = sweepY
         self._sweepC = sweepC
+
+        self._userList = userList
 
         self._numSweeps: int = self._sweepY.shape[1]
         self._sweepList: List[int] = list(range(self._numSweeps))

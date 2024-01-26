@@ -232,11 +232,13 @@ class plotRecording(sanpyPlugin):
         _hLayoutOffset.addWidget(aLabel)
         # x offset
         self.xOffsetSpinBox = QtWidgets.QDoubleSpinBox()
+        self.xOffsetSpinBox.setMaximum(2**16)
         self.xOffsetSpinBox.setValue(self.xOffset)
         self.xOffsetSpinBox.valueChanged.connect(partial(self._on_offset_spinbox, 'xOffset'))
         _hLayoutOffset.addWidget(self.xOffsetSpinBox)
         # y offset
         self.yOffsetSpinBox = QtWidgets.QDoubleSpinBox()
+        self.yOffsetSpinBox.setMaximum(2**16)
         self.yOffsetSpinBox.setValue(self.yOffset)
         self.yOffsetSpinBox.valueChanged.connect(partial(self._on_offset_spinbox, 'yOffset'))
         _hLayoutOffset.addWidget(self.yOffsetSpinBox)

@@ -60,7 +60,7 @@ class epochTable():
         return self._epochList[sweep]
 
     def _builFromAbf(self, abf: pyabf.ABF):
-        dataPointsPerMs = abf.dataPointsPerMs
+        # dataPointsPerMs = abf.dataPointsPerMs
         """To convert point to seconds"""
 
         try:
@@ -69,6 +69,13 @@ class epochTable():
             logger.error(e)
             return
 
+        # abf.sweepEpoch is
+        # pyabf.waveform.EpochSweepWaveform
+        # logger.info(f'   abf.sweepEpochs is {type(abf.sweepEpochs)}')
+        # print(abf.sweepEpochs)
+
+        # print(pyabf.waveform.epochTable())
+
         # sweepEpochs is type "pyabf.waveform.EpochSweepWaveform"
         for epochIdx, p1 in enumerate(abf.sweepEpochs.p1s):
             p2 = abf.sweepEpochs.p2s[epochIdx]  # stop point of each pulse
@@ -76,11 +83,16 @@ class epochTable():
             epochType = abf.sweepEpochs.types[epochIdx]
             pulseWidth = abf.sweepEpochs.pulseWidths[epochIdx]
             pulsePeriod = abf.sweepEpochs.pulsePeriods[epochIdx]
-            digitalState = abf.sweepEpochs.pulsePeriods[epochIdx]
+            digitalState = abf.sweepEpochs.digitalStates[epochIdx]  # 20240117 owl-analysis
             ##print(f"epoch index {epochIdx}: at point {p1} there is a {epochType} to level {epochLevel}")
 
-            p1_sec = p1 / abf.dataPointsPerMs / 1000
-            p2_sec = p2 / abf.dataPointsPerMs / 1000
+            try:
+                p1_sec = p1 / abf.dataPointsPerMs / 1000
+                p2_sec = p2 / abf.dataPointsPerMs / 1000
+            except (ZeroDivisionError) as e:
+                logger.error(f'ZeroDivisionError: {e}')
+                p1_sec = float('nan')
+                p2_sec = float('nan')
 
             epochDict = {
                 "sweepNumber": abf.sweepNumber,
@@ -160,19 +172,39 @@ class epochTable():
 
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
     import sanpy
 
     # path = '/Users/cudmore/Sites/SanPy/data/19114000.abf'
     path = "/Users/cudmore/data/theanne-griffith/07.28.21/2021_07_28_0001.abf"
 
+    path = '/Users/cudmore/Dropbox/data/sanpy-users/porter/data/2022_08_15_0022.abf'
+
     ba = sanpy.bAnalysis(path)
     print(ba)
 
-    sweep = 13
+    _abf = pyabf.ABF(path)
+    # _epochTable = pyabf.waveform.EpochTable(_abf, 1)
+    # print('   _epochTable')
+    # print(_epochTable)
 
-    et = ba.fileLoader.getEpochTable(sweep)
-    df = et.getEpochList(asDataFrame=True)
-    pprint(df)
+    sweeps = [9, 10, 11]
+    for sweep in sweeps:
+        ba.setSweep(sweep)
+        et = ba.fileLoader.getEpochTable(sweep)
+        df = et.getEpochList(asDataFrame=True)
+        print(f'   sweep:{sweep}')
+        pprint(df)
+
+        # owl
+        #<bound method ABF.sweepD of ABF (v2.9) with 1 channel (pA), sampled at 10.0 kHz, containing 18 sweeps, having no tags, with a total length of 6.33 minutes, recorded with protocol "PPR_v-clamp_owl". path=/Users/cudmore/Dropbox/data/sanpy-users/porter/2022_08_15_0022.abf>
+        # print('self._abf.sweepD')
+        # for _i in range(8):
+        #     print(_i)
+        #     print(self._abf.sweepD(_i))
+        _abf.setSweep(sweep)
+        for _i in range(8):
+            _sweepD = _abf.sweepD(_i)
 
     testPnt = 1280
     epochIndex = et.findEpoch(testPnt)
