@@ -210,9 +210,9 @@ class StimSegment:
             increasing_or_decreasing = "increasing"
 
         elif self.voltage_increment_mode in ["ModeDec"]:
-            raise Expection("Test Negative")
+            raise Exception("Test Negative")
         else:
-            raise Expection("voltage increment mode not recognised")
+            raise Exception("voltage increment mode not recognised")
 
         return increasing_or_decreasing
 
@@ -234,10 +234,10 @@ class StimSegment:
         - the first sample is not 0 but 0 + one step along the ramp. see test_load_heka.py TestSeries() for details
         """
         if self.delta_v_increment != 0:
-            raise Expection("increment with ramp has not been tested")
+            raise Exception("increment with ramp has not been tested")
 
         if self.voltage_idx == 1:  # if ramp is used but Voltage mode is holding it will be flat
-            raise Expection("ramp with voltage idx 1 has not been tested")
+            raise Exception("ramp with voltage idx 1 has not been tested")
             self.voltage = 0
             return self.block(0)
 
@@ -255,7 +255,7 @@ class StimSegment:
 
     def run_checks(self):
         if self.type not in ["SegmentConstant", "SegmentRamp", "SegmentContinuous"] or self.voltage_increment_mode != "ModeInc":
-            raise Expection("Stimulation Type {0} Not Supported".format(self.type))
+            raise Exception("Stimulation Type {0} Not Supported".format(self.type))
 
         assert self.voltage_idx in [0, 1], "Only Voltage number and Holding are supported "
 
