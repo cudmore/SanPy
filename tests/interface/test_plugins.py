@@ -209,6 +209,7 @@ def test_plugins(qtbot, qapp):
         # try to close and garbage collect
         # _newPlugin.close()
         # _newPlugin = None
+        _newPlugin.closeEvent()
 
     logger.info('   done')
 

@@ -217,8 +217,22 @@ class fileLoader_tif(fileLoader_base):
         
         # logger.info(f'loaded tif: {self._tif.shape}')
 
+        #if _olympusHeader not None then loaded from olympus txt file
+        _olympusHeader = _loadLineScanHeader(self.filepath)
+
+        if _olympusHeader is not None:
+            date = _olympusHeader['date']
+            _time = _olympusHeader['time']
+            
+            self.metadata.setMetaData('Acq Date', date)
+            self.metadata.setMetaData('Acq Time', _time)
+
         # 202312 load czi tif (exported from Fiji bFolder2MapMAnager)
         numLoadedDims = len(loadedTif.shape)
+        
+        # sometimes Olympus export is 3-channel rgb like (1000, 1023, 3)
+        # logger.warning(f'loadedTif.shape:{loadedTif.shape} {self.filepath}')
+
         if numLoadedDims == 2:
             # one channel
             # already just a 2d image
@@ -229,7 +243,13 @@ class fileLoader_tif(fileLoader_base):
             # one channel
             # czi line scan with frames (frames, height, width)
             self._numChannels = 1
-            self._tif.append(loadedTif[:, 0, :])
+            # abb 20240917 implementing kym roi
+            if _olympusHeader is not None:
+                _img = loadedTif[:, :, 1]
+                # logger.info(f'{loadedTif.shape} -> {_img.shape}')
+                self._tif.append(_img)  # olympus like (1000, 1023, 3)
+            else:
+                self._tif.append(loadedTif[:, 0, :])  # czi
         elif numLoadedDims == 4:
             # multi channel czi line scan with frames (frames, channels, height, width)
             _channelDimension = 1
@@ -238,21 +258,33 @@ class fileLoader_tif(fileLoader_base):
             for _channel in range(self._numChannels):
                 self._tif.append(loadedTif[:, _channel, 0, :])
         else:
-            logger.error(f'did not understand image with sahpe {loadedTif.shape}')
+            logger.error(f'did not understand image with shape {loadedTif.shape}')
             self._loadError = True
             return
         
         # image must be shape[0] is time/big, shape[1] is space/small
+        # logger.info('abb 20240917 kym roi -> removed rotation')
         for _channel, img in enumerate(self._tif):
-            if img.shape[1] < img.shape[0]:
-                logger.info(f"rot90 image with shape: {img.shape}")
-                self._tif[_channel] = np.rot90(
-                    img, 1
-                )  # ROSIE, so lines are not backward
+            # logger.info('3 removed np.rot90()')
+            # if 1 or img.shape[1] < img.shape[0]:
+            #     logger.info(f"rot90 image with shape: {img.shape}")
+            if _olympusHeader is not None:
+                img = np.rot90(img)  # ROSIE, so lines are not backward
+                # img = np.flip(img)
+            
+                # img = img.astype(np.int8)  # to all pos and negative
+                if img.dtype == np.uint16:
+                    img = img.astype(np.int16)  # to all pos and negative
+                    logger.warning(f'converting {img.dtype} to np.int16')
+                elif img.dtype == np.uint8:
+                    logger.warning(f'converting {img.dtype} to np.int16')
+                    img = img.astype(np.int8)  # to all pos and negative
 
-        if self._tif[0].dtype == np.uint8:
+            self._tif[_channel] = img
+
+        if self._tif[0].dtype in [np.uint8, np.int8]:
             _bitDepth = 8
-        elif self._tif[0].dtype == np.uint16:
+        elif self._tif[0].dtype in [np.uint16, np.int16]:
             _bitDepth = 16
         else:
             logger.warning(f'Did not undertand dtype {self._tif[0].dtype} defaulting to bit depth 16')
@@ -267,11 +299,12 @@ class fileLoader_tif(fileLoader_base):
         }
 
         # load olympus txt file if it exists
-        _olympusHeader = _loadLineScanHeader(self.filepath)
+        # _olympusHeader = _loadLineScanHeader(self.filepath)
         if _olympusHeader is not None:
             # logger.info('loaded olympus header for {self.filepath}')
             # for k,v in _olympusHeader.items():
             #     logger.info(f'  {k}: {v}')
+
             try:
                 self._tifHeader['umPerPixel'] = _olympusHeader["umPerPixel"]
                 self._tifHeader['secondsPerLine'] = _olympusHeader["secondsPerLine"]
@@ -287,13 +320,27 @@ class fileLoader_tif(fileLoader_base):
     def _setLoadedData(self, channel=1):
         channelIdx = channel - 1
 
+        logger.warning(f'20241001 constructing sweepX/sweepY from tif channel:{channel}')
+
+        # 20241001 was this
         # using 'reshape(-1,1)' to convert shape from (n,) to (n,1)
-        sweepX = np.arange(0, self._tif[channelIdx].shape[1]).reshape(-1, 1)
+        # sweepX = np.arange(0, self._tif[channelIdx].shape[1]).reshape(-1, 1)
+        # sweepX = sweepX.astype(np.float64)
+        # sweepX *= self._tifHeader['secondsPerLine']
+
+        # sweepY = np.sum(self._tif[channelIdx], axis=0).reshape(-1, 1)
+        # sweepY = np.divide(sweepY, np.max(sweepY))
+
+        _timeDim = 1
+        _spaceDim = 0
+        sweepX = np.arange(0, self._tif[channelIdx].shape[_timeDim]).reshape(-1, 1)
         sweepX = sweepX.astype(np.float64)
         sweepX *= self._tifHeader['secondsPerLine']
 
-        sweepY = np.sum(self._tif[channelIdx], axis=0).reshape(-1, 1)
+        sweepY = np.sum(self._tif[channelIdx], axis=_spaceDim).reshape(-1, 1)
         sweepY = np.divide(sweepY, np.max(sweepY))
+
+        logger.info(f'   loaded _tif.shape:{self._tif[channelIdx].shape} sweepX:{sweepX.shape} sweepY:{sweepY.shape}')
 
         self.setLoadedData(
             sweepX=sweepX,

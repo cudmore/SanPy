@@ -295,11 +295,12 @@ class bAbfText:
 
         # we want our tiffs to be short and wide
         # shape[0] is space, shape[1] is time
-        if tif.shape[0] < tif.shape[1]:
-            # correct shape
-            pass
-        else:
-            tif = np.rot90(tif)  # rotates 90 degrees counter-clockwise
+        logger.warning('2 removed np.rot90()')
+        # if tif.shape[0] < tif.shape[1]:
+        #     # correct shape
+        #     pass
+        # else:
+        #     tif = np.rot90(tif)  # rotates 90 degrees counter-clockwise
 
         f0 = tif.mean()
         tifNorm = (tif - f0) / f0

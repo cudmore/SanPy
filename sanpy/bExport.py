@@ -1,7 +1,7 @@
 import os
+import math
 from collections import OrderedDict
-from pprint import pprint
-from typing import Union, Dict, List, Tuple, Optional
+from typing import List, Optional
 
 import numpy as np
 import pandas as pd
@@ -99,6 +99,89 @@ class bExport:
 
         return df
 
+    # abb 03/2024
+    def report4(self,
+                sweep = 'All',
+                epoch = 'All',
+                minMaxList : List[float] = None,
+                ) -> pd.DataFrame:
+        """Generate a report for a number of time intervals
+        
+        Parameters
+        ----------
+        minMaxList : List[float]
+            List of time to make bins, read each pair as start/stop
+
+        Notes
+        -----
+        Implemented 03/2024 for xxx(yyy lab, UCD)
+        """
+
+        theseColumns = ['thresholdVal',
+                        'thresholdVal_dvdt',
+                        'peakVal',
+                        'peakHeight',
+                        'timeToPeak_ms',
+                        'fastAhpSec',
+                        'fastAhpValue',
+                        'preSpike_dvdt_max_val',
+                        'preSpike_dvdt_max_val2',
+                        'postSpike_dvdt_min_val',
+                        'postSpike_dvdt_min_val2',
+                        'isi_ms',
+                        'spikeFreq_hz',
+                        'widths_20',
+                        'widths_50',
+                        'widths_80'
+                        ]
+        
+        listOfDict = []
+
+        # step through parwise from ... to
+        for theMin,theMax in zip(minMaxList, minMaxList[1:]):
+            # print(theMin, theMax)
+            df = self.report3(sweep=sweep, epoch=epoch,
+                              theMin=theMin,
+                              theMax=theMax)
+            
+            n = len(df)
+            # print(theMin, theMax, n)
+
+            if n == 0:
+                # logger.warning(f'did not get spikes in interval {theMin}:{theMax}')
+                continue
+
+            # now for a subset of columns, calculate stats (count, mean, std, se)
+            oneDict = {
+                    'start (sec)': theMin,
+                    'stop (sec)': theMax,
+            }
+
+            # aggList = ["count", "mean", "std", "sem", "median"]
+
+            for colStat in theseColumns:
+                _count = n  # number of spikes
+                _mean = np.nanmean(df[colStat])
+                _std = np.nanstd(df[colStat])
+                _se = _std / math.sqrt(_count)
+                _min = np.nanmin(df[colStat])
+                _max = np.nanmax(df[colStat])
+                
+                oneDict[colStat+'_count'] = _count
+                oneDict[colStat+'_mean'] = _mean
+                oneDict[colStat+'_std'] = _std
+                oneDict[colStat+'_se'] = _se
+                oneDict[colStat+'_min'] = _min
+                oneDict[colStat+'_max'] = _max
+
+            listOfDict.append(oneDict)
+
+        # make a dataframe from our list of dict
+        dfFinal = pd.DataFrame(listOfDict)
+        
+        # print(dfFinal.head())
+        return dfFinal
+    
     def report3(self, sweep='All',
                 epoch='All',
                 theMin : Optional[float] = None,
@@ -110,7 +193,7 @@ class bExport:
         """
 
         if self.ba.numSpikes == 0:
-            logger.warning(f"did not find and spikes for summary")
+            logger.warning("did not find and spikes for summary")
             return None
 
         df = self.ba.asDataFrame()  # full df with all spikes
@@ -122,7 +205,7 @@ class bExport:
 
         if theMin is not None and theMax is not None:
             df = df[ (df['thresholdSec']>=theMin) & (df['thresholdSec']<theMax)]
-        
+
         return df
     
     def report2(self, sweep='All',
@@ -272,12 +355,21 @@ class bExport:
         # headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
         headerDict["Sweep Number"] = ["Default 0"]  # [self.ba.currentSweep]
         headerDict["Number of Sweeps"] = [self.ba.fileLoader.numSweeps]
-        headerDict["Export Start (sec)"] = [
-            float("%.2f" % (theMin))
-        ]  # on export, x-axis of raw plot will be ouput
-        headerDict["Export Stop (sec)"] = [
-            float("%.2f" % (theMax))
-        ]  # on export, x-axis of raw plot will be ouput
+        
+        # abb 03/2024
+        if theMin is not None:
+            headerDict["Export Start (sec)"] = [
+                float("%.2f" % (theMin))
+            ]  # on export, x-axis of raw plot will be ouput
+        else:
+            headerDict["Export Start (sec)"] = ['']
+
+        if theMax is not None:
+            headerDict["Export Stop (sec)"] = [
+                float("%.2f" % (theMax))
+            ]  # on export, x-axis of raw plot will be ouput
+        else:
+            headerDict["Export Stop (sec)"] = ['']
 
         # 'stats' has xxx columns (name, mean, sd, se, n)
         headerDict["stats"] = []
@@ -292,10 +384,10 @@ class bExport:
         # mean
         theMean = cardiac_df.mean(numeric_only=True)  # skipna default is True
 
-        logger.info('cardiac_df:')
-        print(cardiac_df)
-        logger.info('theMean:')
-        print(theMean)
+        # logger.info('cardiac_df:')
+        # print(cardiac_df)
+        # logger.info('theMean:')
+        # print(theMean)
 
         theMean["errors"] = ""
                 
@@ -708,6 +800,22 @@ class bExport:
         return analysisName, df
 
 
+def testPairiwse():
+    path = '/Users/cudmore/Dropbox/data/sanpy-users/mayra/data/2023_12_11_Cell3_0007.abf'
+    ba = sanpy.bAnalysis(path)
+
+    bd = sanpy.bDetection()  # gets default
+    dDict = bd.getDetectionDict("Neuron")
+    ba.spikeDetect(dDict)
+
+    minMaxList = [0, 2, 4, 6, 8, 10, 12, 14, 20, 22, 24, 26]
+
+    be = bExport(ba)
+    df = be.report4(minMaxList=minMaxList)
+
+    logger.info("")
+    print(df)
+
 def test():
     path = "data/19114001.abf"
     ba = sanpy.bAnalysis(path)
@@ -723,4 +831,5 @@ def test():
 
 
 if __name__ == "__main__":
-    test()
+    # test()
+    testPairiwse()

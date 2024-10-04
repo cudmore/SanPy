@@ -10,9 +10,7 @@ import pyqtgraph as pg
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
-
 
 class myScaleDialog(QtWidgets.QDialog):
     """Dialog to set x/y kymograph scale.
@@ -190,6 +188,13 @@ class kymographWidget(QtWidgets.QWidget):
         if self.ba is None:
             return
         
+        self.kymographPlot.autoRange(item=self.myImageItem)
+
+        if doEmit:
+            self.signalResetZoom.emit()
+
+        return
+    
         imageBoundingRect = self.myImageItem.boundingRect()  # QtCore.QRectF
         
         _rect = self.ba.kymAnalysis.getImageRect()
@@ -318,12 +323,14 @@ class kymographWidget(QtWidgets.QWidget):
         self.tifMinLabel.setText(f"Min:{minTif}")
         self.tifMaxLabel.setText(f"Max:{maxTif}")
 
+        # 20241002 don't use 2**bitDepth for max, isumage image max * 2
         # update contrast slider controls
-        bitDepth = self.ba.fileLoader.tifHeader['bitDepth']
-        self.minContrastSpinBox.setMaximum(2**bitDepth)
-        self.minContrastSlider.setMaximum(2**bitDepth)
-        self.maxContrastSpinBox.setMaximum(2**bitDepth)
-        self.maxContrastSlider.setMaximum(2**bitDepth)
+        # bitDepth = self.ba.fileLoader.tifHeader['bitDepth']
+        _maxImg = np.max(tifData) * 2
+        self.minContrastSpinBox.setMaximum(_maxImg)
+        self.minContrastSlider.setMaximum(_maxImg)
+        self.maxContrastSpinBox.setMaximum(_maxImg)
+        self.maxContrastSlider.setMaximum(_maxImg)
 
         self.minContrastSpinBox.setValue(self._minContrast)
         self.minContrastSlider.setValue(self._minContrast)
@@ -393,6 +400,20 @@ class kymographWidget(QtWidgets.QWidget):
             self.on_select_channel
         )
         controlBarLayout.addWidget(self.tifChannelCombobox, alignment=QtCore.Qt.AlignLeft)
+
+        # color
+        colorList = ['Greens', 'Reds', 'Blues', 'Greys', 'viridis', 'plasma', 'inferno']
+        self.colorComboBox = QtWidgets.QComboBox()
+        self.colorComboBox.addItems(colorList)
+        self.colorComboBox.currentTextChanged.connect(
+            self.on_select_color
+        )
+        controlBarLayout.addWidget(self.colorComboBox, alignment=QtCore.Qt.AlignLeft)
+        
+        showRoiCheckbox = QtWidgets.QCheckBox('Show ROI')
+        showRoiCheckbox.setChecked(True)
+        showRoiCheckbox.stateChanged.connect(self.on_show_roi)
+        controlBarLayout.addWidget(showRoiCheckbox, alignment=QtCore.Qt.AlignLeft)
 
         # align left
         controlBarLayout.addStretch()
@@ -470,6 +491,23 @@ class kymographWidget(QtWidgets.QWidget):
         #return controlBarLayout
         return _aWidget
 
+    def on_show_roi(self, value):
+        """Toggle ROI on/off.
+        
+        Added 20241002
+        """
+        if value > 0 :
+            value = 1
+        self.myLineRoi.setVisible(value)
+
+    def on_select_color(self, text):
+        """Set color lut.
+
+        Added 20241002
+        """
+        self.aColorBar.setColorMap(pg.colormap.getFromMatplotlib(text))
+        self._replot()
+
     def on_select_channel(self, text):
         logger.info(text)
 
@@ -479,8 +517,9 @@ class kymographWidget(QtWidgets.QWidget):
     
     def _buildUI(self):
 
-        self.myVBoxLayout = QtWidgets.QVBoxLayout(self)
-        # self.myVBoxLayout.setAlignment(QtCore.Qt.AlignTop)
+        self.myVBoxLayout = QtWidgets.QVBoxLayout()
+        self.myVBoxLayout.setAlignment(QtCore.Qt.AlignTop)
+        self.setLayout(self.myVBoxLayout)
 
         if 0:
             molarLayout = self._buildMolarLayout()
@@ -501,6 +540,7 @@ class kymographWidget(QtWidgets.QWidget):
             row=row, col=0, rowSpan=rowSpan, colSpan=colSpan
         )
 
+        self.kymographPlot.setDefaultPadding()
         self.kymographPlot.enableAutoRange()
 
         # turn off x/y dragging of deriv and vm
@@ -526,11 +566,20 @@ class kymographWidget(QtWidgets.QWidget):
 
         # now using transpose .T
         # axisOrder = "row-major"
-        self.myImageItem = kymographImage(_fakeTif.T,
-                                            #axisOrder=axisOrder,
-                                            #rect=imageRect
-                                            )
-                
+        # self.myImageItem = kymographImage(_fakeTif.T,
+        #                                     #axisOrder=axisOrder,
+        #                                     #rect=imageRect
+        #                                     )
+
+        self.myImageItem = pg.ImageItem(_fakeTif, axisOrder = "row-major")  # need transpose for row-major
+
+        logger.warning('--->>> tryin ColorBarItem')
+        # self.aColorBar = pg.ColorBarItem(colorMap='inferno')
+        # self.aColorBar = pg.ColorBarItem(colorMap=pg.colormap.getFromMatplotlib('Greens'))
+        self.aColorBar = pg.ColorBarItem()
+        self.aColorBar.setColorMap(pg.colormap.getFromMatplotlib('inferno'))
+        self.aColorBar.setImageItem(self.myImageItem)
+
         # redirect hover to self (to display intensity
         self.myImageItem.hoverEvent = self.hoverEvent
 
@@ -732,7 +781,7 @@ class kymographWidget(QtWidgets.QWidget):
         else:
             image = np.array(image, dtype=np.uint16, copy=True)
         image.clip(display_min, display_max, out=image)
-        image -= display_min
+        image = image - display_min
         np.floor_divide(
             image,
             (display_max - display_min + 1) / (2**bitDepth),
@@ -750,6 +799,7 @@ class kymographWidget(QtWidgets.QWidget):
         if self.ba is None:
             return
 
+        # myTif = self.ba.fileLoader.tifData
         myTif = self.getContrastEnhance()
 
         logger.info(
@@ -757,7 +807,6 @@ class kymographWidget(QtWidgets.QWidget):
         )  # like (519, 10000)
 
         imageRect = self.ba.kymAnalysis.getImageRect(asList=True)
-        # imageRect[2] = myTif.shape[1]
         logger.info(f'    imageRect:{imageRect}')  # [0,0,5,113]
 
         axisOrder = "row-major"
@@ -776,45 +825,14 @@ class kymographWidget(QtWidgets.QWidget):
         # # tr.translate(0,0)
         # self.myImageItem.setTransform(tr)
 
-        if startSec is not None and stopSec is not None:
-            padding = 0
-            self.kymographPlot.setXRange(
-                startSec, stopSec, padding=padding
-            )  # row major is different
-
-        # color bar with contrast !!!
-        # if myTif.dtype == np.dtype("uint8"):
-        #     bitDepth = 8
-        # elif myTif.dtype == np.dtype("uint16"):
-        #     bitDepth = 16
-        # else:
-        #     bitDepth = 16
-        #     logger.error(f"Did not recognize tif dtype: {myTif.dtype}")
-
-        # cm = pg.colormap.get(
-        #     "Greens_r", source="matplotlib"
-        # )  # prepare a linear color map
-        # # values = (0, 2**bitDepth)
-        # # values = (0, maxTif)
-        # values = (0, 2**12)
-        # limits = (0, 2**12)
-        # # logger.info(f'color bar bit depth is {bitDepth} with values in {values}')
-        # doColorBar = False
-        # if doColorBar:
-        #     if self.myColorBarItem == None:
-        #         self.myColorBarItem = pg.ColorBarItem(
-        #             values=values,
-        #             limits=limits,
-        #             interactive=True,
-        #             label="",
-        #             cmap=cm,
-        #             orientation="horizontal",
-        #         )
-        #     # Have ColorBarItem control colors of img and appear in 'plot':
-        #     self.myColorBarItem.setImageItem(
-        #         self.myImageItem, insert_in=self.kymographPlot
-        #     )
-        #     self.myColorBarItem.setLevels(values=values)
+        #
+        # removed 20241003
+        #
+        # if startSec is not None and stopSec is not None:
+        #     padding = 0
+        #     self.kymographPlot.setXRange(
+        #         startSec, stopSec, padding=padding
+        #     )  # row major is different
 
         # kymographRect is in scaled units, we need plot units
         kymographRect = self.ba.kymAnalysis.getRoiRect()
@@ -1053,7 +1071,7 @@ class kymographWidget(QtWidgets.QWidget):
 
             self._replot(startSec=startSec, stopSec=stopSec)
 
-            self._resetZoom()
+            self._resetZoom(doEmit=False)
 
             # update line scan slider
             _numLineScans = len(self.ba.fileLoader.sweepX) - 1

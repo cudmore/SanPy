@@ -1,6 +1,6 @@
 # 20210619
 
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtWidgets
 
 from sanpy.sanpyLogger import get_logger
 
@@ -65,6 +65,14 @@ class SummarizeResults(sanpyPlugin):
         radio3 = QtWidgets.QRadioButton("Sweep Summary")
         radio3.toggled.connect(lambda:self._on_radio_clicked(radio3))
 
+        self._binTimeSpineBox = QtWidgets.QSpinBox()
+        self._binTimeSpineBox.setValue(2)
+        self._binTimeSpineBox.setMinimum(1)
+        self._binTimeSpineBox.setMaximum(2**16)
+
+        radio3_1 = QtWidgets.QRadioButton("Bin Time (s)")
+        radio3_1.toggled.connect(lambda:self._on_radio_clicked(radio3_1))
+
         radio4 = QtWidgets.QRadioButton("Detection Errors")
         radio4.toggled.connect(lambda:self._on_radio_clicked(radio4))
 
@@ -73,6 +81,8 @@ class SummarizeResults(sanpyPlugin):
         controlsLayout.addWidget(radio1)
         controlsLayout.addWidget(radio2)
         controlsLayout.addWidget(radio3)
+        controlsLayout.addWidget(radio3_1)
+        controlsLayout.addWidget(self._binTimeSpineBox)
         controlsLayout.addWidget(radio4)
 
         # the number of spikes in the report
@@ -163,6 +173,16 @@ class SummarizeResults(sanpyPlugin):
                 epoch=self.epochNumber,
                 theMin=startSec,
                 theMax=stopSec)
+
+        elif self._reportType == 'Bin Time (s)':
+            stepSec = self._binTimeSpineBox.value()
+            minMaxList = range(0, int(self.ba.fileLoader.recordingDur), stepSec)
+            logger.info(f'minMaxList:{minMaxList}')
+            self.cardiacDf = exportObject.report4(
+                sweep = self.sweepNumber,
+                epoch = self.epochNumber,
+                minMaxList = minMaxList
+            )  # report2 is more 'cardiac'
 
         elif self._reportType == 'Detection Errors':
             self.cardiacDf = self.ba.dfError

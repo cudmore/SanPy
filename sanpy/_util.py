@@ -201,6 +201,16 @@ def _loadLineScanHeader(path):
     txtFile = os.path.splitext(path)[0] + ".txt"
 
     if not os.path.isfile(txtFile):
+        logger.info('   looking for Olympus Metadata.txt file')
+        # find "ISAN Linescan 6 Metadata.txt"
+        _folder, _file = os.path.split(path)
+        _file, _ = os.path.splitext(_file)
+        _file += ' Metadata.txt'
+        txtFile = os.path.join(_folder, _file)
+        if not os.path.isfile(txtFile):
+            logger.warning(f'DID NOT FIND OLYMPUS FILE: {txtFile}')
+
+    if not os.path.isfile(txtFile):
         # logger.error(f"did not find file:{txtFile}")
 
         _filePath, _fileName = os.path.split(path)
@@ -282,6 +292,17 @@ def _loadLineScanHeader(path):
 
             # elif line.startswith('"Image Size(Unit Converted)"'):
             # 	print('loadLineScanHeader:', line)
+
+            elif line.startswith('"Date"'):
+                # "Date"	"09/12/2024 01:33:26.239 PM"
+                # logger.info(f'date line is: {line}')
+                _date, _datetime = line.split('\t')
+                _datetime = _datetime.replace('"', '')  # remove ""
+                _date, _time, _ampm = _datetime.split(' ')
+                # logger.info(f'   _date:{_date} _time:{_time} _ampm:{_ampm}')
+                
+                theRet ['date'] = _date
+                theRet ['time'] = _time + ' ' + _ampm
 
     # tif shape is (lines, pixels)
     if gotNumPixels and gotImageSize:

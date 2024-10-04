@@ -1,6 +1,6 @@
 # using this to turn off for 1st sanpy publication
-D_BJ_MANUSCRIPT = True
-DO_KYMOGRAPH_ANALYSIS = False
+D_BJ_MANUSCRIPT = False
+DO_KYMOGRAPH_ANALYSIS = True
 
 from .sanpyLogger import *
 

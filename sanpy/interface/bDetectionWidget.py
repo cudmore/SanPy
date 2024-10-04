@@ -124,7 +124,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "styleColor": "color: yellow",
                 "symbol": "o",
                 "plotOn": "vm",
-                "plotIsOn": True,
+                "plotIsOn": False,
             },
 
             {
@@ -209,7 +209,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._buildUI()
 
         windowOptions = self.getMainWindowOptions()
-        showDvDt = True
+        # showDvDt = True
         # showClips = False
         # showScatter = True
         if windowOptions is not None:
@@ -682,7 +682,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         # self.vmPlot.enableAutoRange()
         
         logger.info('!!!!! setting vmPlot_ auto range !!!!!')
-        self.vmPlot.autoRange(items=[self.vmPlot_])  # 20221003
+        self.vmPlot.autoRange()  # 20221003
+        # self.vmPlot.autoRange(items=[self.vmPlot_])  # 20221003
 
         # these are linked to vmPlot
         # self.derivPlot.autoRange()
@@ -699,7 +700,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # kymograph
         # self.myKymWidget.kymographPlot.setXRange(start, stop, padding=padding)  # row major is different
         #self.myKymWidget.kymographPlot.autoRange()  # row major is different
-        if sanpy.DO_KYMOGRAPH_ANALYSIS:
+        if 0 and sanpy.DO_KYMOGRAPH_ANALYSIS:
             if self.ba.fileLoader.isKymograph():
                 self.myKymWidget.kymographPlot.autoRange()
 
@@ -1584,11 +1585,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.signalDetect.emit(self.ba)  # underlying _abf has new rect
 
     def _buildUI(self):
-        self.mySetTheme(doReplot=False)
+        # self.mySetTheme(doReplot=False)
 
         # left is toolbar, right is PYQtGraph (self.view)
-        self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
-        self.myHBoxLayout_detect.setAlignment(QtCore.Qt.AlignTop)
+        self.myHBoxLayout_detect = QtWidgets.QHBoxLayout()
+        self.myHBoxLayout_detect.setAlignment(QtCore.Qt.AlignLeft)
+        self.setLayout(self.myHBoxLayout_detect)
 
         # hSplitter gets added to h layout
         # then we add left/right widgets to the splitter
@@ -1603,13 +1605,14 @@ class bDetectionWidget(QtWidgets.QWidget):
         )
 
         # v1
-        self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget)
+        self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget, alignment=QtCore.Qt.AlignLeft)
         # v2
         # _hSplitter.addWidget(self.detectToolbarWidget)
         # self.myHBoxLayout_detect.addWidget(_hSplitter)
 
         # kymograph, we need a vboxlayout to hold (kym widget, self.view)
-        vBoxLayoutForPlot = QtWidgets.QVBoxLayout(self)
+        vBoxLayoutForPlot = QtWidgets.QVBoxLayout()
+        self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot)
 
         # for publication, don't do kymographs
         # make a branch and get this working
@@ -1626,26 +1629,32 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # addPlot return a plotItem
         self.vmPlotGlobal = pg.PlotWidget()
+        self.vmPlotGlobal.setDefaultPadding()
+        self.vmPlotGlobal.enableAutoRange()
         self.vmPlotGlobal_ = self.vmPlotGlobal.plot(name="vmPlotGlobal")
         self.vmPlotGlobal_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
         vBoxLayoutForPlot.addWidget(self.vmPlotGlobal)
-        self.vmPlotGlobal.enableAutoRange()
 
         self.derivPlot = pg.PlotWidget(name='derivPlot')
+        self.derivPlot.setDefaultPadding()
+        self.derivPlot.enableAutoRange()
         self.derivPlot_ = self.derivPlot.plot(name="derivPlot")
         self.derivPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
         vBoxLayoutForPlot.addWidget(self.derivPlot)
-        self.derivPlot.enableAutoRange()
         self.derivPlot.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.derivPlot.customContextMenuRequested.connect(partial(self.slot_contextMenu,'derivPlot', self.derivPlot))
 
         self.dacPlot = pg.PlotWidget()
+        self.dacPlot.setDefaultPadding()
+        self.dacPlot.enableAutoRange()
         self.dacPlot_ = self.dacPlot.plot(name="dacPlot")
         self.dacPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
         vBoxLayoutForPlot.addWidget(self.dacPlot)
         self.dacPlot.enableAutoRange()
 
         self.vmPlot = pg.PlotWidget(name='vmPlot')
+        self.vmPlot.setDefaultPadding()
+        self.vmPlot.enableAutoRange()
         # vmPlot_ is pyqtgraph.graphicsItems.PlotDataItem.PlotDataItem
         self.vmPlot_ = self.vmPlot.plot(name="vmPlot")
         self.vmPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
@@ -1678,10 +1687,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         # July 15, 2023
         # cursors, start by adding to vmPlot
         self._sanpyCursors = sanpy.interface.sanpyCursors(self.vmPlot)
+        self._sanpyCursors.toggleCursors(False)
         self._sanpyCursors.signalCursorDragged.connect(self.updateStatusBar)
         self._sanpyCursors.signalSetDetectionParam.connect(self._setDetectionParam)
 
         self._sanpyCursors_dvdt = sanpy.interface.sanpyCursors(self.derivPlot)
+        self._sanpyCursors_dvdt.toggleCursors(False)
         self._sanpyCursors_dvdt.signalCursorDragged.connect(self.updateStatusBar)
         self._sanpyCursors_dvdt.signalSetDetectionParam.connect(self._setDetectionParam)
         
@@ -1854,7 +1865,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # vBoxLayoutForPlot.addWidget(self.view)
 
         # v1
-        self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot)
+        # self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot)
         # v2
         # _tmpSplitterWidget = QtWidgets.QWidget()
         # _tmpSplitterWidget.setLayout(vBoxLayoutForPlot)
@@ -2276,7 +2287,9 @@ class bDetectionWidget(QtWidgets.QWidget):
             if self.ba.fileLoader.isKymograph():
                 self.myKymWidget.setVisible(True)
                 # self.myKymWidget.slot_switchFile(ba, startSec, stopSec)
+                
                 self.vmPlot.setXLink(self.myKymWidget.kymographPlot)
+                
                 # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different
                 self.myKymWidget.slot_switchFile(ba)
             else:
@@ -2313,7 +2326,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.selectSpikeList(self._selectedSpikeList)
 
     def _slot_y_range_changed(self, viewBox):
-        logger.info('')
+        return
+        logger.info('DOES NOTING')
         print('   viewBox.viewRange():', viewBox.viewRange())
 
     def _slot_x_range_changed(self, viewBox):
@@ -2334,13 +2348,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
 
         """
-        logger.info('')
-        print('   viewBox.viewRange():', viewBox.viewRange())
-        
-        viewRange = viewBox.viewRange()
-        xMin = viewRange[0][0]
-        xMax = viewRange[0][1]
-        self.setAxis(xMin, xMax)
+
+        # logger.info(f'   viewBox.viewRange():{viewBox.viewRange()}')
+        # 20241003 removed
+        # viewRange = viewBox.viewRange()
+        # xMin = viewRange[0][0]
+        # xMax = viewRange[0][1]
+        # self.setAxis(xMin, xMax)
 
         # 20240120 removed enableAutoRange x 3
 
@@ -2454,11 +2468,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         # vmPlot_ is PlotDataItem
         # logger.info(f'vmPlot.viewRange {self.vmPlot.viewRange()}')
 
+        # 20240930 moved down
         # april 30, 2023
         # was this jun 4
         # 20240118
-        self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
-        self.vmPlot.sigYRangeChanged.connect(self._slot_y_range_changed)
+        # self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
+        # self.vmPlot.sigYRangeChanged.connect(self._slot_y_range_changed)
 
         # pg.setConfigOption('leftButtonPan', False)
 
@@ -2530,34 +2545,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         # was this june 4
         # self._setAxis(start=startSec, stop=stopSec)
 
+        # useful but were doing nothing
+        # self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
+        # self.vmPlot.sigYRangeChanged.connect(self._slot_y_range_changed)
+
         #
         # critical, replot() is inherited
         self.replotOverlays()
-
-
-class kymographImage(pg.ImageItem):
-    def mouseClickEvent(self, event):
-        # print("Click", event.pos())
-        x = event.pos().x()
-        y = event.pos().y()
-
-    def mouseDragEvent(self, event):
-        return
-
-        if event.isStart():
-            print("Start drag", event.pos())
-        elif event.isFinish():
-            print("Stop drag", event.pos())
-        else:
-            print("Drag", event.pos())
-
-    def hoverEvent(self, event):
-        if not event.isExit():
-            # the mouse is hovering over the image; make sure no other items
-            # will receive left click/drag events from here.
-            event.acceptDrags(pg.QtCore.Qt.LeftButton)
-            event.acceptClicks(pg.QtCore.Qt.LeftButton)
-
 
 class myImageExporter(ImageExporter):
     def __init__(self, item):
@@ -2882,7 +2876,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
     # signalSelectSpike = QtCore.Signal(object, object) # spike number, doZoom
 
     def __init__(self, myPlots, detectionWidget: bDetectionWidget, parent=None):
-        super(myDetectToolbarWidget2, self).__init__(parent)
+        super().__init__(None)
 
         self.myPlots = myPlots
         self.detectionWidget = detectionWidget  # parent detection widget
@@ -3186,26 +3180,26 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         windowOptions = self.detectionWidget.getMainWindowOptions()
         detectDvDt = 20
         detectMv = -20
-        showGlobalVm = True
-        showDvDt = True
-        showDAC = True
+        # showGlobalVm = True
+        # showDvDt = True
+        # showDAC = True
         if windowOptions is not None:
             detectDvDt = windowOptions["detect"]["detectDvDt"]
             detectMv = windowOptions["detect"]["detectMv"]
 
-            showDvDt = windowOptions["rawDataPanels"]["Derivative"]
-            showDAC = windowOptions["rawDataPanels"]["DAC"]
-            showGlobalVm = windowOptions["rawDataPanels"]["Full Recording"]
+            # showDvDt = windowOptions["rawDataPanels"]["Derivative"]
+            # showDAC = windowOptions["rawDataPanels"]["DAC"]
+            # showGlobalVm = windowOptions["rawDataPanels"]["Full Recording"]
 
         # April 15, 2023, removed when adding horizontal splitter
         #self.setFixedWidth(280)
-        self.setFixedWidth(280)
+        # self.setFixedWidth(280)
 
-        # why do I need self here?
         self.mainLayout = QtWidgets.QVBoxLayout()
         self.mainLayout.setAlignment(QtCore.Qt.AlignTop)
 
-        self.mainLayout.setContentsMargins(0,0,0,0)
+        # 20241004 removed
+        # self.mainLayout.setContentsMargins(0,0,0,0)
 
         # Show selected file
         # self.mySelectedFileLabel = QtWidgets.QLabel("None")

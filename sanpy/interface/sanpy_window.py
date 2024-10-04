@@ -541,6 +541,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         if self.myAnalysisDir is not None:
             ba = self.myAnalysisDir.getAnalysis(row)  # if None then problem loading
 
+            logger.info(f'got row:{row} rowDict:{rowDict} ba: {ba}')
+
             if ba is not None:
                 self.signalSwitchFile.emit(ba, rowDict)
                 if selectingAgain:

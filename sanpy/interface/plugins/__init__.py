@@ -31,6 +31,7 @@ from .detectionParams import detectionParams
 
 # remove for publication
 from .kymographPlugin import kymographPlugin
+from .kymographRoiPlugin import kymographRoiPlugin
 
 from .setSpikeStat import SetSpikeStat
 from .setMetaData import SetMetaData

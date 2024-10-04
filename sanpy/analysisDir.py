@@ -1156,7 +1156,7 @@ class analysisDir:
         Return:
             bAnalysis
         """
-        file = self._df.loc[rowIdx, "File"]
+        # file = self._df.loc[rowIdx, "File"]
         ba = self._df.loc[rowIdx, "_ba"]
         uuid = self._df.loc[rowIdx, "uuid"]  # if we have a uuid bAnalysis is saved in h5f
         # filePath = os.path.join(self.path, file)
@@ -1164,7 +1164,7 @@ class analysisDir:
         # logger.info(f'rowIdx: {rowIdx} ba:{ba}')
 
         if ba is None or ba == "":
-            # logger.info('did not find _ba ... loading from abf file ...')
+            logger.info('did not find _ba ... loading from abf file ...')
             # working on kymograph
             #                 relPath = self.getPathFromRelPath(ba._path)
             relPath = self._df.loc[rowIdx, "relPath"]

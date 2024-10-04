@@ -1,6 +1,19 @@
 
 SanPy Documentation is available at [https://cudmore.github.io/SanPy/](https://cudmore.github.io/SanPy/)
 
+## 202403
+
+### New features
+
+ - Re-added the File - Save menu. This will save the current analysis for one file or a folder.
+ - Added a "bin time" pooling option to summary plugin. Makes a table with stats (count, mean, std, se, median) in evenly spaced windows of time. For example pooles between [0,2) then [2,4) then [4,6), etc,  seconds.
+ - Added a colorbar to scatter plot plugin when selecting hue as "Time". This allows users to know where a point in the scatter occured in the recording time.
+
+### Bug fixes
+
+ - Fixed bug in plugin - summarize results - sweep summary
+ - Fixed bug in plugin - plot scatter when selecting hue of Time or Sweep
+
 ## 20240126
 
  - Added a file folder opening window. This is show at first run and allows users to open new and previous opened files and folder.

@@ -136,8 +136,12 @@ class SanPyApp(QtWidgets.QApplication):
         self.openRecentMenu.aboutToShow.connect(self._refreshOpenRecent)
         fileMenu.addMenu(self.openRecentMenu)
 
-        ## fileMenu.addSeparator()
-        # fileMenu.addAction(saveDatabaseAction)
+        fileMenu.addSeparator()
+
+        # save frontmost window
+        saveAction = QtWidgets.QAction("Save", self)
+        saveAction.triggered.connect(self.saveFrontmost)
+        fileMenu.addAction(saveAction)
 
         fileMenu.addSeparator()
         
@@ -300,6 +304,16 @@ class SanPyApp(QtWidgets.QApplication):
         # spawn a new window
         logger.info('   spawning new window')
         self.openSanPyWindow(filePath)
+
+    def saveFrontmost(self):
+        """Save analysis in frontmost window.
+        """
+        logger.info('')
+        # sanpy.interface.sanpy_window.SanPyWindow
+        activeWindow = self.activeWindow()
+        
+        if isinstance(activeWindow, sanpy.interface.sanpy_window.SanPyWindow):
+            activeWindow.saveFilesTable()
 
     def loadFolder(self, path : str = None, folderDepth=None):
         """Load a folder of raw data files.
