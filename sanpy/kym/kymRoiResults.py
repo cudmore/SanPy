@@ -9,6 +9,13 @@ def getAnalysisDict():
     """
     ret = {}
 
+    ret['Channel Number'] = {
+        'value': None,
+        'description': '',
+        'type': int,
+        'userdisplay': True,  # display to user
+    },
+
     ret['ROI Number'] = {
         'value': None,
         'description': '',
@@ -83,14 +90,14 @@ def getAnalysisDict():
         'value': None,
         'description': '',
         'type': float,
-        'userdisplay': False,  # display to user
+        'userdisplay': True,  # display to user
     },
 
     ret['Onset Int'] = {
         'value': None,
         'description': '',
         'type': float,
-        'userdisplay': False,  # display to user
+        'userdisplay': True,  # display to user
     },
 
     ret['Onset 10 Bin'] = {
@@ -391,6 +398,10 @@ def getUserAnalysisKeys():
     return keyList
 
 class KymRoiResults:
+    """Kym Roi peak detection results.
+    
+    Basically a pandas dataframe.
+    """
     analysisDict = getAnalysisDict()  # full
     userAnalysisKeys = getUserAnalysisKeys()  # abbreviated for userdisplay=True
     
@@ -436,6 +447,13 @@ class KymRoiResults:
         """
         # print('')
         # logger.info(f'adding error peakNumber:{peakNumber} err:{type(err)} "{err}"')
+        
+        if err.endswith(';'):
+            # strip trailing ;
+            err = err[-1]
+
+        if len(err) == 0:
+            return
         
         _currentError = self.df.loc[peakNumber]['Detection Errors']
         _newError = _currentError + err + ';'

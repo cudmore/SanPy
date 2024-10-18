@@ -22,14 +22,16 @@ import pyqtgraph as pg
 import sanpy
 from sanpy.interface import sanpyCursors
 
-from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, KymRoi  # v2
+from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, KymRoi, PeakDetectionTypes
 
 from sanpy.kym.kymRoiDetection import KymRoiDetection
 from sanpy.kym.kymRoiResults import KymRoiResults
+
+from sanpy.kym.interface.kymDetectionToolbar import KymDetectionGroupBox
 from sanpy.kym.interface.kymRoiScatter import SimpleRoiScatter
 from sanpy.kym.interface.kymRoiClipsWidget import KymRoiClipsWidget
 
-# from sanpy.kym.mpLineProfile import roiLineProfilePool
+from sanpy.kym.interface.kymPlotWidget import KymPlotWidget  # new 20241014
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -67,13 +69,20 @@ class RoiManager(QtWidgets.QWidget):
     def getAnalysisTrace(self, roi, name):
         return self.kymRoiList[roi].getTrace(name)
     
-    def getDetectionParams(self, roi):
-        return self.kymRoiList[roi].detectionParams
+    def getDetectionParams(self, roi, detectionType : PeakDetectionTypes):
+        # return self.kymRoiList[roi].detectionParams
+        return self.kymRoiList[roi].getDetectionParams(detectionType)
     
-    def getAnalysisResults(self, roi):
-        return self.kymRoiList[roi].analysisResults
+    def getAnalysisResults(self, roi, detectionType : PeakDetectionTypes):
+        return self.kymRoiList[roi].getAnalysisResults(detectionType)
     
-    def getImgData(self, roi):
+    # def getDetectionParamsDiameter(self, roi):
+    #     return self.kymRoiList[roi].detectionParamsDiameter
+    
+    # def getAnalysisResultsDiameter(self, roi):
+    #     return self.kymRoiList[roi].analysisResultsDiameter
+    
+    def _old_getImgData(self, roi):
         """Get imgData for an roi.
         """
         [left, t, r, b] = self._roiAsRect(roi)  # [left, top, right, bottom]
@@ -139,6 +148,8 @@ class RoiManager(QtWidgets.QWidget):
             
             self.selectedRoi = None
             
+            # self._selectRoi(None)
+
             return roi
         else:
             logger.info('no selected roi to remove')
@@ -275,6 +286,9 @@ class RoiManager(QtWidgets.QWidget):
         self._rectRoi.setPos(pos)
         self._rectRoi.setSize(size)
 
+    def getSelectedRoi(self):
+        return self.selectedRoi
+    
     def _on_roi_clicked(self, event):
         """
         Parameters
@@ -350,21 +364,15 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         self._minContrast = 0
         self._maxContrast = 50
 
-        # v2 refactor these, we will just have one for the selected roi
-        # self._roiIntensityPlot = {}  # keys are roi
-
         # this switches for each selected ROI
-        self._detectionParams = KymRoiDetection()
+        self._detectionParams : KymRoiDetection = KymRoiDetection()
+        
+        self._detectionParamsDiameter : KymRoiDetection = KymRoiDetection()
+        self._detectionParamsDiameter.setParam('Exponential Detrend', False)
 
         self._blockSlots = False
         
         self._buildUI()
-
-        # self._backgroundRoi = oneRoiRect(pos=(0,0), size=(100,100),
-        #                                  imageItem=self.myImageItem,
-        #                                  imgData=self._imgData,
-        #                                  label='Background')
-        # self._backgroundRoi.signalRoiChanged.connect(self._background_roi_changed)
 
         self.roiList = RoiManager(self.view, self.myImageItem, self.imgData)
         self.roiList.signalRoiChanged.connect(self._roi_changed)
@@ -385,9 +393,61 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         # important
         self.switchFile(self.imgData)
 
+        # self.font_change()
+
+    # def font_change(self):
+    #     font, ok = QtWidgets.QFontDialog.getFont()
+    #     if ok:
+    #         for name, obj in self.getmembers(self):
+    #             if isinstance(obj, QtWidgets.QLabel):
+    #                 obj.setFont(font)
+
+    def slot_detectionChanged(self, detectionType : str):
+        """Put this here so we can turn off detection when value changes.
+        """
+        logger.info(detectionType)
+        self.slot_doAnalysis(detectionType)
+
+    def slot_doAnalysis(self, detectionType : str):
+        """Perform analysis based on which detection gui emitted the signal.
+        
+        Either detect in f0 or detect in diam.
+        """
+        logger.info(f'detectionType: {detectionType}')
+
+        if detectionType == 'Detect Peaks (f/f_0)':
+            ok = self.analyzeRoi()  # analyze the selected ROI
+            if ok is not None:
+                self.updateRoiIntensityPlot(doAnalysis=False)
+        
+        elif detectionType == 'Detect Diameter':
+            # detect diameter from kym image
+            roi = self.roiList.selectedRoi
+            self.updateRoiDiameterPlot(roi, doAnalysis=True)
+        
+        elif detectionType == 'Detect Peaks (Diameter)':
+            # detect peaks in 'Diameter (um)'
+            ok = self.analyzeRoi(kymRoiDetection=self._detectionParamsDiameter)  # analyze the selected ROI
+            if ok is not None:
+                # update overlay of diameter plot (e.g. peak, threshold, etc)
+                roi = self.roiList.selectedRoi
+                self.updateRoiDiameterPlot2(roi)
+                
+                # if roi is None:
+                #     logger.warning('no roi selected')
+                #     return
+                # dfPlot = self.roiList.kymRoiList[roi].getAnalysisResults(PeakDetectionTypes.diameter).df
+                # self.diameterPlotItem.replotOverlays(dfPlot)
+
+                # #
+                # self.plotPeakClips(roi, doDiameter=True)
+
+        else:
+            logger.error(f'did not understand detectionType:{detectionType}')
+
     def isDirty(self):
         return self._kymRoiAnalysis._isDirty
-    
+
     def closeEvent(self, event):
         logger.info('veto close if peak analysis is dirty')
         acceptAndContinue = True
@@ -420,7 +480,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
     def loadAnalysis(self):
         """Load and add each roi in _kymRoiAnalysis
         """
-        logger.info(self._kymRoiAnalysis._roiDict.items())
+        # logger.info(self._kymRoiAnalysis._roiDict.items())
         for _idx, (label, kymRoi) in enumerate(self._kymRoiAnalysis._roiDict.items()):
             ltrb = kymRoi.getRect()
             logger.info(f'adding roi {label} with rect {ltrb}')
@@ -440,13 +500,17 @@ class KymRoiWidget(QtWidgets.QMainWindow):
     def imgData(self):
         return self._kymRoiAnalysis.imgData
     
-    @property
-    def _detectionDict(self):
-        """Current selected ROI detection params.
-        """
-        return self._detectionParams
+    # @property
+    # def _detectionDict(self):
+    #     """Current selected ROI detection params.
+
+    #     Used to detect peaks in int f0 (different from detecting peaks in diameter)
+    #     """
+    #     return self._detectionParams
     
     def mySetStatusbar(self, text):
+        """Update the status bar with some text.
+        """
         self.statusBar.showMessage(text)  # ,2000)
 
     @property
@@ -515,7 +579,6 @@ class KymRoiWidget(QtWidgets.QMainWindow):
     def _roi_changed(self, roi):
         self.updateRoiIntensityPlot(roi)
 
-    # SELECT AN ROI BY ITS LABEL !!!! SIMPLE !!!
     def selectRoiByLabel(self, label : str):
         """Select an roi by text label
             To select overlapping ROI
@@ -540,340 +603,22 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         #     return
         
         if roi is not None:
-            # don't update on cancel roi selection
-            try:
-                # self._detectionParams = self._analysisResults[roi]['detectionParams']
-                self._detectionParams = self.roiList.getDetectionParams(roi)
-                self._updateDetectionParamGui()
-            except (KeyError) as e:
-                logger.error(f'TODO: ok on load -->> {e}')
+            self._detectionParams = self.roiList.getDetectionParams(roi, PeakDetectionTypes.f_f0)
+            self._detectionParamsDiameter = self.roiList.getDetectionParams(roi, PeakDetectionTypes.diameter)
+
+            self._updateDetectionParamGui()
 
         self.updateRoiIntensityPlot(roi, doAnalysis=False, refreshScatter=False)
-
+        self.updateRoiDiameterPlot(roi, doAnalysis=False)
+        self.updateRoiDiameterPlot2(roi)
+        
     def _updateDetectionParamGui(self):
-        # {'ltrb': [0, 545, 2999, 383], 'medianfilter': True, 'medianfilterkernel': 3, 'filter': True, 'prominence': 3.9999999999999996, 'width': 6, 'distance': 100, 'thresh_rel_height': 0.75}
-        
-        # ['Median Filter', 'Savitzky-Golay', 'Prominence', 'Width', 'Distance']
-        # logger.info(self._detectionControls.keys())
-
-        self._blockSlots = True
-        
-        detectionParamDict = self._detectionParams
-        
-        # logger.info('')
-        # print(detectionParamDict.printValues())
-
-        # logger.warning(f"TODO: fix update of polarity detectionParamDict['polarity'] is {detectionParamDict['polarity']}")
-
-        if detectionParamDict['polarity'] == 'Pos':
-            self._detectionControls['Polarity'].setCurrentIndex(0)
-        elif detectionParamDict['polarity'] == 'Neg':
-            self._detectionControls['Polarity'].setCurrentIndex(1)
-        else:
-            logger.error(f"did not understand polarity {detectionParamDict['polarity']}")
-
-
-        self._detectionControls['Median Filter'].setChecked(detectionParamDict['medianfilter'])  # boolean
-        self._detectionControls['Median Filter Kernel'].setValue(detectionParamDict['medianfilterkernel'])  # must be odd
-        self._detectionControls['Savitzky-Golay'].setChecked(detectionParamDict['filter'])
-        self._detectionControls['Bin Lines'].setValue(detectionParamDict['binLineScans'])
-        self._detectionControls['Prominence'].setValue(detectionParamDict['prominence'])
-        self._detectionControls['Width (ms)'].setValue(detectionParamDict['width (ms)'])
-        self._detectionControls['Distance (ms)'].setValue(detectionParamDict['distance (ms)'])
-
-        # new colin retreat
-        self._detectionControls['f0 Percentile'].setValue(detectionParamDict['f0 Percentile'])
-
-        if detectionParamDict['f0ManualPercentile'] == 'Manual':
-            self._detectionControls['f0'].setCurrentIndex(0)
-            self._detectionControls['f0 Percentile'].setEnabled(False)
-        elif detectionParamDict['f0ManualPercentile'] == 'Percentile':
-            self._detectionControls['f0'].setCurrentIndex(1)
-            self._detectionControls['f0 Percentile'].setEnabled(True)
-        else:
-            logger.error(f"did not understand f0ManualPercentile {detectionParamDict['f0ManualPercentile']}")
-
-        backgroundSubtractTypes = KymRoiDetection.backgroundSubtractTypes
-        backgroundsubtract = detectionParamDict['backgroundsubtract']
-        _idx = backgroundSubtractTypes.index(backgroundsubtract)
-        self._detectionControls['Background Subtract'].setCurrentIndex(_idx)
-
-        self._detectionControls['Exp Detrend'].setChecked(detectionParamDict['doExpDetrend'])  # boolean
-
-        # self._detectionControls['thresh_rel_height'].setValue(detectionParamDict['thresh_rel_height'])  # boolean
-
-
-        self._blockSlots = False
-
-    def _builtDetectionToolbar(self) -> QtWidgets.QVBoxLayout:
-        vLayout = QtWidgets.QVBoxLayout()
-        vLayout.setAlignment(QtCore.Qt.AlignTop)
-
-        #
-        hLayout0 = QtWidgets.QHBoxLayout()
-        hLayout0.setAlignment(QtCore.Qt.AlignLeft)
-        vLayout.addLayout(hLayout0)
-
-        self._detectionControls = {}  # a dict of detection controls so we can update them on roi selection in _updateDetectionParamGui
-
-        #
-        aName = 'Polarity'
-        aLabel = QtWidgets.QLabel(aName)
-        hLayout0.addWidget(aLabel)
-        
-        aComboBox = QtWidgets.QComboBox()
-        aComboBox.setToolTip(self._detectionDict.getDescription('polarity'))
-        aComboBox.addItems(['Pos', 'Neg'])
-        aComboBox.currentTextChanged.connect(
-            partial(self._on_combobox, aName)
-        )
-        hLayout0.addWidget(aComboBox)
-        self._detectionControls[aName] = aComboBox
-
-        aCheckBoxName = 'Median Filter'
-        aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
-        aCheckBox.setToolTip(self._detectionDict.getDescription('medianfilter'))
-        aCheckBox.setChecked(self._detectionDict['medianfilter'])
-        aCheckBox.stateChanged.connect(
-            partial(self._on_checkbox_clicked, aCheckBoxName)
-        )
-        hLayout0.addWidget(aCheckBox)
-        self._detectionControls[aCheckBoxName] = aCheckBox
-
-        spinBoxName = 'Median Filter Kernel'
-        aSpinBox = QtWidgets.QSpinBox()
-        aSpinBox.setToolTip(self._detectionDict.getDescription('medianfilterkernel'))
-        aSpinBox.setRange(1,100)
-        aSpinBox.setSingleStep(2)
-        aSpinBox.setValue(self._detectionDict['medianfilterkernel'])
-        aSpinBox.setKeyboardTracking(False)
-        aSpinBox.valueChanged.connect(
-            partial(self._on_spin_box, spinBoxName)
-            )
-        hLayout0.addWidget(aSpinBox)
-        self._detectionControls[spinBoxName] = aSpinBox
-
-        #
-        aCheckBoxName = 'Savitzky-Golay'
-        aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
-        aCheckBox.setToolTip(self._detectionDict.getDescription('filter'))
-        aCheckBox.setChecked(self._detectionDict['filter'])
-        aCheckBox.stateChanged.connect(
-            partial(self._on_checkbox_clicked, aCheckBoxName)
-        )
-        hLayout0.addWidget(aCheckBox)
-        self._detectionControls[aCheckBoxName] = aCheckBox
-
-        #
-        spinBoxName = 'Bin Lines'
-        aLabel = QtWidgets.QLabel(spinBoxName)
-        hLayout0.addWidget(aLabel)
-
-        aSpinBox = QtWidgets.QSpinBox()
-        aSpinBox.setToolTip(self._detectionDict.getDescription('binLineScans'))
-        aSpinBox.setRange(1,100)
-        aSpinBox.setSingleStep(1)
-        aSpinBox.setValue(self._detectionDict['binLineScans'])
-        aSpinBox.setKeyboardTracking(False)
-        aSpinBox.valueChanged.connect(
-            partial(self._on_spin_box, spinBoxName)
-            )
-        hLayout0.addWidget(aSpinBox)
-        self._detectionControls[spinBoxName] = aSpinBox
-
-        buttonName = 'Reset'
-        aButton = QtWidgets.QPushButton(buttonName)
-        aButton.setToolTip('Reset detection parameters to default.')
-        aButton.clicked.connect(
-            partial(self._on_button_click, buttonName)
-        )
-        hLayout0.addWidget(aButton)
-
-        #
-        # second row
-        hLayout1 = QtWidgets.QHBoxLayout()
-        hLayout1.setAlignment(QtCore.Qt.AlignLeft)
-        vLayout.addLayout(hLayout1)
-
-        spinBoxName = 'Prominence'
-        aLabel = QtWidgets.QLabel(spinBoxName)
-        hLayout1.addWidget(aLabel)
-
-        aSpinBox = QtWidgets.QDoubleSpinBox()
-        aSpinBox.setToolTip(self._detectionDict.getDescription('prominence'))
-        aSpinBox.setRange(-100,100)
-        aSpinBox.setSingleStep(0.01)
-        aSpinBox.setValue(self._detectionDict['prominence'])
-        aSpinBox.setKeyboardTracking(False)
-        aSpinBox.valueChanged.connect(
-            partial(self._on_spin_box, spinBoxName)
-            )
-        hLayout1.addWidget(aSpinBox)
-        self._detectionControls[spinBoxName] = aSpinBox
-
-        # spinBoxName = 'thresh_rel_height'
-        # aLabel = QtWidgets.QLabel(spinBoxName)
-        # hLayout1.addWidget(aLabel)
-
-        # aSpinBox = QtWidgets.QDoubleSpinBox()
-        # aSpinBox.setToolTip(self._detectionDict.getDescription('thresh_rel_height'))
-        # aSpinBox.setRange(-100,100)
-        # aSpinBox.setSingleStep(0.01)
-        # aSpinBox.setValue(self._detectionDict['thresh_rel_height'])
-        # aSpinBox.setKeyboardTracking(False)
-        # aSpinBox.valueChanged.connect(
-        #     partial(self._on_spin_box, spinBoxName)
-        #     )
-        # hLayout1.addWidget(aSpinBox)
-        # self._detectionControls[spinBoxName] = aSpinBox
-
-        #
-        # hLayout = QtWidgets.QHBoxLayout()
-        # hLayout.setAlignment(QtCore.Qt.AlignLeft)
-        # vLayout.addLayout(hLayout)
-
-        spinBoxName = 'Width (ms)'
-        aLabel = QtWidgets.QLabel(spinBoxName)
-        hLayout1.addWidget(aLabel)
-
-        aSpinBox = QtWidgets.QDoubleSpinBox()
-        aSpinBox.setToolTip(self._detectionDict.getDescription('width (ms)'))
-        aSpinBox.setRange(0,1000)
-        aSpinBox.setSingleStep(1)
-        aSpinBox.setValue(self._detectionDict['width (ms)'])
-        aSpinBox.setKeyboardTracking(False)
-        aSpinBox.valueChanged.connect(
-            partial(self._on_spin_box, spinBoxName)
-            )
-        hLayout1.addWidget(aSpinBox)
-        self._detectionControls[spinBoxName] = aSpinBox
-
-        #
-        # hLayout = QtWidgets.QHBoxLayout()
-        # hLayout.setAlignment(QtCore.Qt.AlignLeft)
-        # vLayout.addLayout(hLayout)
-
-        spinBoxName = 'Distance (ms)'
-        aLabel = QtWidgets.QLabel(spinBoxName)
-        hLayout1.addWidget(aLabel)
-
-        aSpinBox = QtWidgets.QDoubleSpinBox()
-        aSpinBox.setToolTip(self._detectionDict.getDescription('distance (ms)'))
-        aSpinBox.setRange(0,10000)
-        aSpinBox.setSingleStep(1)
-        aSpinBox.setValue(self._detectionDict['distance (ms)'])
-        aSpinBox.setKeyboardTracking(False)
-        aSpinBox.valueChanged.connect(
-            partial(self._on_spin_box, spinBoxName)
-            )
-        hLayout1.addWidget(aSpinBox)
-        self._detectionControls[spinBoxName] = aSpinBox
-
-        spinBoxName = 'Decay (ms)'
-        aLabel = QtWidgets.QLabel(spinBoxName)
-        hLayout1.addWidget(aLabel)
-
-        aSpinBox = QtWidgets.QDoubleSpinBox()
-        aSpinBox.setToolTip(self._detectionDict.getDescription('decay (ms)'))
-        aSpinBox.setRange(0,1000)
-        aSpinBox.setSingleStep(1)
-        aSpinBox.setValue(self._detectionDict['decay (ms)'])
-        aSpinBox.setKeyboardTracking(False)
-        aSpinBox.valueChanged.connect(
-            partial(self._on_spin_box, spinBoxName)
-            )
-        hLayout1.addWidget(aSpinBox)
-        self._detectionControls[spinBoxName] = aSpinBox
-
-        #
-        # third row
-        hLayout2 = QtWidgets.QHBoxLayout()
-        hLayout2.setAlignment(QtCore.Qt.AlignLeft)
-        vLayout.addLayout(hLayout2)
-
-        #
-        aName = 'Background Subtract'
-        aLabel = QtWidgets.QLabel(aName)
-        hLayout2.addWidget(aLabel)
-        
-        aComboBox = QtWidgets.QComboBox()
-        aComboBox.setToolTip(self._detectionDict.getDescription('polarity'))
-        _items = KymRoiDetection.backgroundSubtractTypes  # ['Off', 'Rolling-Ball', 'Median', 'Mean']
-        aComboBox.addItems(_items)
-        aComboBox.currentTextChanged.connect(
-            partial(self._on_combobox, aName)
-        )
-        hLayout2.addWidget(aComboBox)
-        self._detectionControls[aName] = aComboBox
-
-        aCheckBoxName = 'Exp Detrend'
-        aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
-        aCheckBox.setToolTip(self._detectionDict.getDescription('doExpDetrend'))
-        aCheckBox.setChecked(self._detectionDict['doExpDetrend'])
-        aCheckBox.stateChanged.connect(
-            partial(self._on_checkbox_clicked, aCheckBoxName)
-        )
-        hLayout2.addWidget(aCheckBox)
-        self._detectionControls[aCheckBoxName] = aCheckBox
-
-        #
-        aName = 'f0'
-        aLabel = QtWidgets.QLabel(aName)
-        hLayout2.addWidget(aLabel)
-        
-        aComboBox = QtWidgets.QComboBox()
-        aComboBox.setToolTip(self._detectionDict.getDescription('f0ManualPercentile'))
-        aComboBox.addItems(['Manual', 'Percentile'])
-        aComboBox.currentTextChanged.connect(
-            partial(self._on_combobox, aName)
-        )
-        hLayout2.addWidget(aComboBox)
-        self._detectionControls[aName] = aComboBox
-
-        #
-        spinBoxName = 'f0 Percentile'
-        aLabel = QtWidgets.QLabel(spinBoxName)
-        hLayout2.addWidget(aLabel)
-
-        aSpinBox = QtWidgets.QDoubleSpinBox()
-        aSpinBox.setToolTip(self._detectionDict.getDescription('f0 Percentile'))
-        aSpinBox.setRange(0,1000)
-        aSpinBox.setSingleStep(1)
-        aSpinBox.setValue(self._detectionDict['f0 Percentile'])
-        aSpinBox.setKeyboardTracking(False)
-        aSpinBox.valueChanged.connect(
-            partial(self._on_spin_box, spinBoxName)
-            )
-        hLayout2.addWidget(aSpinBox)
-        self._detectionControls[spinBoxName] = aSpinBox
-
-        #
-        spinBoxName = 'newOnsetOffsetFraction'
-        aLabel = QtWidgets.QLabel(spinBoxName)
-        hLayout2.addWidget(aLabel)
-
-        aSpinBox = QtWidgets.QDoubleSpinBox()
-        aSpinBox.setToolTip(self._detectionDict.getDescription(spinBoxName))
-        aSpinBox.setRange(0,1000)
-        aSpinBox.setSingleStep(.1)
-        aSpinBox.setValue(self._detectionDict[spinBoxName])
-        aSpinBox.setKeyboardTracking(False)
-        aSpinBox.valueChanged.connect(
-            partial(self._on_spin_box, spinBoxName)
-            )
-        hLayout2.addWidget(aSpinBox)
-        self._detectionControls[spinBoxName] = aSpinBox
-
-        #
-        buttonName = 'Plot Quality'
-        aButton = QtWidgets.QPushButton(buttonName)
-        aButton.setToolTip('Matplotlib plot of steps in forming dF/F0.')
-        aButton.clicked.connect(
-            partial(self._on_button_click, buttonName)
-        )
-        hLayout2.addWidget(aButton)
-
-        return vLayout
+        """Update gui for KymDetectionToolbar.
+        """
+        logger.info('')
+        self._detectionToolbar.setDetectionDict(self._detectionParams)
+        self._diamDetectionToolbar.setDetectionDict(self._detectionParamsDiameter)
+        self._kymDiamDetectToolbar.setDetectionDict(self._detectionParamsDiameter)
 
     def _buildContrastSliders(self) -> QtWidgets.QWidget:
         
@@ -1006,13 +751,13 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         hLayout.setAlignment(QtCore.Qt.AlignLeft)
         vBoxLayout.addLayout(hLayout)
 
-        buttonName = 'ANALYZE'
-        aButton = QtWidgets.QPushButton(buttonName)
-        aButton.setToolTip('Perform the analysis')
-        aButton.clicked.connect(
-            partial(self._on_button_click, buttonName)
-        )
-        hLayout.addWidget(aButton)
+        # buttonName = 'ANALYZE'
+        # aButton = QtWidgets.QPushButton(buttonName)
+        # aButton.setToolTip('Perform the analysis')
+        # aButton.clicked.connect(
+        #     partial(self._on_button_click, buttonName, None)
+        # )
+        # hLayout.addWidget(aButton)
 
         buttonName = 'Save Analysis'
         aButton = QtWidgets.QPushButton(buttonName)
@@ -1047,11 +792,29 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         )
         hLayout.addWidget(aButton)
 
+        aCheckBoxName = 'ROI'
+        aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
+        aCheckBox.setToolTip('Toggle roi plot on/off')
+        aCheckBox.setChecked(True)  # show by default
+        aCheckBox.stateChanged.connect(
+            partial(self._on_checkbox_clicked, aCheckBoxName)
+        )
+        hLayout.addWidget(aCheckBox)
+
         # second row
         hLayout1 = QtWidgets.QHBoxLayout()
         hLayout1.setAlignment(QtCore.Qt.AlignLeft)
         vBoxLayout.addLayout(hLayout1)
 
+        aCheckBoxName = 'Detection'
+        aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
+        aCheckBox.setToolTip('Toggle detection panel on/off')
+        aCheckBox.setChecked(True)  # show by default
+        aCheckBox.stateChanged.connect(
+            partial(self._on_checkbox_clicked, aCheckBoxName)
+        )
+        hLayout1.addWidget(aCheckBox)
+                
         aCheckBoxName = 'Contrast'
         aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
         aCheckBox.setToolTip('Toggle contrast sliders')
@@ -1070,10 +833,19 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         )
         hLayout1.addWidget(aCheckBox)
 
+        aCheckBoxName = 'Diameter'
+        aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
+        aCheckBox.setToolTip('Toggle diameter plot')
+        aCheckBox.setChecked(False)  # show by default
+        aCheckBox.stateChanged.connect(
+            partial(self._on_checkbox_clicked, aCheckBoxName)
+        )
+        hLayout1.addWidget(aCheckBox)
+
         aCheckBoxName = 'Clips'
         aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
         aCheckBox.setToolTip('Toggle peak clips on/off')
-        aCheckBox.setChecked(True)  # show by default
+        aCheckBox.setChecked(False)  # show by default
         aCheckBox.stateChanged.connect(
             partial(self._on_checkbox_clicked, aCheckBoxName)
         )
@@ -1082,16 +854,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         aCheckBoxName = 'Scatter'
         aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
         aCheckBox.setToolTip('Toggle scatter plot on/off')
-        aCheckBox.setChecked(True)  # show by default
-        aCheckBox.stateChanged.connect(
-            partial(self._on_checkbox_clicked, aCheckBoxName)
-        )
-        hLayout1.addWidget(aCheckBox)
-
-        aCheckBoxName = 'ROI'
-        aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
-        aCheckBox.setToolTip('Toggle scatter plot on/off')
-        aCheckBox.setChecked(True)  # show by default
+        aCheckBox.setChecked(False)  # show by default
         aCheckBox.stateChanged.connect(
             partial(self._on_checkbox_clicked, aCheckBoxName)
         )
@@ -1099,106 +862,60 @@ class KymRoiWidget(QtWidgets.QMainWindow):
 
         # show intensity under cursor
         # TODO: put this somewhere better
-        self.hoverLabel = QtWidgets.QLabel(None)
-        hLayout1.addWidget(self.hoverLabel, alignment=QtCore.Qt.AlignRight)
+        # self.hoverLabel = QtWidgets.QLabel(None)
+        # hLayout1.addWidget(self.hoverLabel, alignment=QtCore.Qt.AlignRight)
 
         return vBoxLayout
     
-    def _on_spin_box(self, name, value):
+    def _on_combobox(self, name, value):
+        """
+        Parameters
+        ----------
+        detectionDict : dict
+            Switches between multiple detection group boxes like (detect int, detect diam)
+        """
         if self._blockSlots:
             # logger.warning(f'_blockSlots -->> no update for {name} {value}')
             return
         
-        logger.info(f'name:{name} value:{value}')
+        logger.info(f'"{name}" value:{value}')
         
-        if name == 'Median Filter Kernel':
-            self._detectionDict['medianfilterkernel'] = value
-            self.updateRoiIntensityPlot()  # update with selected
-        
-        elif name == 'Bin Lines':
-            self._detectionDict['binLineScans'] = value
-            self.updateRoiIntensityPlot()  # update with selected
-
-        elif name == 'Prominence':
-            self._detectionDict['prominence'] = value
-            self.updateRoiIntensityPlot()  # update with selected
-
-        # elif name == 'thresh_rel_height':
-        #     self._detectionDict['thresh_rel_height'] = value
+        # now handled in KymDetectionToolbar
+        # if name == 'Polarity':
+        #     detectionDict['polarity'] = value
         #     self.updateRoiIntensityPlot()  # update with selected
 
-        elif name == 'Width (ms)':
-            self._detectionDict['width (ms)'] = value
-            self.updateRoiIntensityPlot()  # update with selected
+        # elif name == 'Background Subtract':
+        #     # self._detectionDict['backgroundsubtract'] = value
+        #     detectionDict['backgroundsubtract'] = value
+        #     self.updateRoiIntensityPlot()  # update with selected
 
-        elif name == 'Distance (ms)':
-            self._detectionDict['distance (ms)'] = value
-            self.updateRoiIntensityPlot()  # update with selected
+        # elif name == 'f0':
+        #     # a popup of either manual or percentile
+        #     detectionDict['f0ManualPercentile'] = value
+        #     self.updateRoiIntensityPlot()  # update with selected
 
-        elif name == 'Decay (ms)':
-            self._detectionDict['decay (ms)'] = value
-            self.updateRoiIntensityPlot()  # update with selected
+        #     # if in manual mode, do not allow setting the percentile
+        #     # _showPercentile = value == 'Percentile'
+        #     # self._detectionControls['f0 Percentile'].setEnabled(_showPercentile)
 
-        elif name == 'f0 Percentile':
-            self._detectionDict[name] = value
-            self.updateRoiIntensityPlot()  # update with selected
-
-        elif name == 'newOnsetOffsetFraction':
-            self._detectionDict[name] = value
-            self.updateRoiIntensityPlot()  # update with selected
-
-        else:
-            logger.error(f'did not understand name:{name}')
-
-    def _on_combobox(self, name, value):
-        if self._blockSlots:
-            # logger.warning(f'_blockSlots -->> no update for {name} {value}')
-            return
-        
-        logger.info(f'{name} {value}')
-        if name == 'Polarity':
-            self._detectionDict['polarity'] = value
-            self.updateRoiIntensityPlot()  # update with selected
-
-        elif name == 'Background Subtract':
-            self._detectionDict['backgroundsubtract'] = value
-            self.updateRoiIntensityPlot()  # update with selected
-
-        elif name == 'f0':
-            self._detectionDict['f0ManualPercentile'] = value
-            self.updateRoiIntensityPlot()  # update with selected
-
-    def _on_checkbox_clicked(self, name, value):
+    def _on_checkbox_clicked(self, name, value = None):
         if self._blockSlots:
             # logger.warning(f'_blockSlots -->> no update for {name} {value}')
             return
 
-        if value > 1:
+        if value > 0:
             value = 1
         
-        # logger.info(f'name:{name} value:{value}')
-
-        # if name == 'ROIs':
-        #     logger.info('TODO: toggle image ROIs on/off')
-        #     pass
-
-        if name == 'Median Filter':
-            self._detectionDict['medianfilter'] = value == 1
-            self.updateRoiIntensityPlot()  # update with selected
-
-        elif name == 'Savitzky-Golay':
-            self._detectionDict['filter'] = value == 1
-            self.updateRoiIntensityPlot()  # update with selected
-
-        elif name == 'Exp Detrend':
-            self._detectionDict['doExpDetrend'] = value == 1
-            self.updateRoiIntensityPlot()  # update with selected
-
-        elif name == 'Contrast':
+        # show/hide widgets
+        if name == 'Contrast':
             self._contrastSliders.setVisible(value)
 
         elif name == 'Sum Intensity (f0)':
             self.rawIntensityPlotItem.setVisible(value)
+
+        elif name == 'Diameter':
+            self.diameterPlotItem.setVisible(value)
 
         elif name == 'Clips':
             self.peakClipsWidget.setVisible(value)
@@ -1210,12 +927,8 @@ class KymRoiWidget(QtWidgets.QMainWindow):
             # toggle all roi
             self.roiList._toggleROI(value)
 
-        # elif name == 'Tables':
-        #     self.peakClipPlotItem.setVisible(value)
-
-        # plot overlays
-        elif name in self._overlayPlotDict.keys():
-            self._overlayPlotDict[name].setVisible(value)
+        elif name == 'Detection':
+            self._mainDetectionWidget.setVisible(value)
 
         else:
             logger.info(f'did not understand name:"{name}"')
@@ -1223,20 +936,15 @@ class KymRoiWidget(QtWidgets.QMainWindow):
     def _on_button_click(self, name : str):
         logger.info(f'name:{name}')
         
-        if name == 'ANALYZE':
-            self.analyzeRoi()  # analyze the selected ROI
-            self.updateRoiIntensityPlot(doAnalysis=False)
+        # if name == 'ANALYZE':
+        #     self.analyzeRoi()  # analyze the selected ROI
+        #     self.updateRoiIntensityPlot(doAnalysis=False)
 
-        elif name == 'Add ROI':
+        if name == 'Add ROI':
             self.addRoi()
 
         elif name =='Delete ROI':
             self.removeSelectedRoi()
-
-        elif name == 'Reset':
-            # reset detection params to default
-            self._detectionParams.setDefaults()
-            self._updateDetectionParamGui()
 
         elif name == 'Auto':
             # auto contrast
@@ -1287,7 +995,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         height = top - bottom
 
         return left, bottom, width, height  # x, y, w, h
-        
+
     def _buildUI(self):
 
         self.myVBoxLayout = QtWidgets.QVBoxLayout()
@@ -1300,15 +1008,13 @@ class KymRoiWidget(QtWidgets.QMainWindow):
 
         mainHBox = QtWidgets.QHBoxLayout()  # left is detection, right is plots
         self.myVBoxLayout.addLayout(mainHBox)
-
+        
+        # vBoxPlot is buttons, then all the plots
         vBoxPlot = QtWidgets.QVBoxLayout()
         mainHBox.addLayout(vBoxPlot)
 
         self._topToolbar = self._buildTopToolbar()  # one row with file name, image params
         vBoxPlot.addLayout(self._topToolbar)
-
-        self._detectionToolbar = self._builtDetectionToolbar()
-        vBoxPlot.addLayout(self._detectionToolbar)
 
         self._contrastSliders = self._buildContrastSliders()
         self._contrastSliders.setVisible(False)
@@ -1338,7 +1044,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         self.myImageItem = pg.ImageItem(self.imgData, axisOrder = "row-major")  # need transpose for row-major
         self.setColorMap('Green')
 
-        logger.warning('--->>> tryin ColorBarItem')
+        # logger.warning('--->>> tryin ColorBarItem')
         self.aColorBar = pg.ColorBarItem(colorMap='inferno')
         self.aColorBar.setImageItem(self.myImageItem)
 
@@ -1346,6 +1052,23 @@ class KymRoiWidget(QtWidgets.QMainWindow):
 
         # redirect hover to self (to display intensity
         self.myImageItem.hoverEvent = self._hoverEvent
+
+        # left/right scatter on top of kymograph
+        self._overlayKymDict = {}
+        self._overlayKymDict['leftDiamOverlay'] = self.kymographPlot.plot(name="leftDiamOverlay",
+                                                  pen=None,
+                                                  symbol='o',
+                                                  symbolPen=None,
+                                                  symbolSize=5,
+                                                  symbolBrush=pg.mkBrush(0, 250, 0, 220)
+                                                  )
+        self._overlayKymDict['rightDiamOverlay'] = self.kymographPlot.plot(name="rightDiamOverlay",
+                                                  pen=None,
+                                                  symbol='o',
+                                                  symbolPen=None,
+                                                  symbolSize=5,
+                                                  symbolBrush=pg.mkBrush(250, 0, 0, 220)
+                                                  )
 
         vBoxPlot.addWidget(self.view)
     
@@ -1360,11 +1083,8 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         self.rawIntensityPlotItem.setLabel("left", 'Sum Intensity', units="")
         self.rawIntensityPlotItem.setLabel("bottom", 'Time (s)', units="")
         self.rawIntensityPlotItem.setXLink(self.kymographPlot)
-
         self.rawIntensityPlotItem.contextMenuEvent = self.myRawContextMenu  # rewire right-click to custom function
-
-        # initally hidden
-        self.rawIntensityPlotItem.setVisible(False)
+        self.rawIntensityPlotItem.setVisible(False)  # initally hidden
 
         self.rawIntensityPlot = self.rawIntensityPlotItem.plot(name="rawIntensityPlot",
                                                         # pen=pg.mkPen('c', width=5),
@@ -1372,7 +1092,6 @@ class KymRoiWidget(QtWidgets.QMainWindow):
                                                         #   brush=pg.mkBrush(100, 255, 100, 220),
                                                         )   
 
-        # f0Value = self._detectionParams['f0Value']
         self.rawIntensity_f0_line = pg.InfiniteLine(angle=0,
                                                     movable=False,
                                                     pen = pg.mkPen('c', width=2),
@@ -1380,8 +1099,6 @@ class KymRoiWidget(QtWidgets.QMainWindow):
                                                     label='f0={value}',
                                                     labelOpts={'position':0.05},
                                                     )
-        # f0Value = self._detectionParams['f0Value']
-        # self.rawIntensity_f0_line.setPos(f0Value)
         self.rawIntensityPlotItem.addItem(self.rawIntensity_f0_line)
 
         self._rawPlotCursors = sanpyCursors(self.rawIntensityPlotItem, showCursorD=False)
@@ -1394,46 +1111,71 @@ class KymRoiWidget(QtWidgets.QMainWindow):
 
         #
         # 4) sum intensity of each line scan (actually our int/f0 plot)
-        self.sumIntensityPlotItem = pg.PlotWidget()
-        self.sumIntensityPlotItem.setDefaultPadding()
-        self.sumIntensityPlotItem.enableAutoRange()
-        self.sumIntensityPlotItem.setMouseEnabled(x=True, y=False)
-        self.sumIntensityPlotItem.hideButtons()  # hide the little 'A' button to rescale axis
-
-        self.sumIntensityPlotItem.setLabel("left", 'Santana Intensity (f/f0)', units="")
-        self.sumIntensityPlotItem.setLabel("bottom", 'Time (s)', units="")
+        self.sumIntensityPlotItem = KymPlotWidget()
+        self.sumIntensityPlotItem.sumIntensityPlotItem.setLabel("left", 'Santana Intensity (f/f0)', units="")
         self.sumIntensityPlotItem.setXLink(self.kymographPlot)
-
-        self.sumIntensityPlot = self.sumIntensityPlotItem.plot(name="sumIntensityPlot",
-                                                        pen=pg.mkPen(width=3),
-                                                        #   symbol='o',
-                                                        #   brush=pg.mkBrush(100, 255, 100, 220),
-                                                        )   
-        
-        self._sanpyCursors = sanpyCursors(self.sumIntensityPlotItem, showCursorD=True)
-        self._sanpyCursors.toggleCursors(False)  # initially hidden
-        self._sanpyCursors.signalCursorDragged.connect(self.mySetStatusbar)
-
-        self._initSumPlotOverlays()
-        sumOverlayToolbar = self._buildPlotOverlayToolbar()
-
-        # order matters
-        vBoxPlot.addLayout(sumOverlayToolbar)
+        self.sumIntensityPlotItem.signalCursorMove.connect(self.mySetStatusbar)
         vBoxPlot.addWidget(self.sumIntensityPlotItem)
+
+        # diameter plot
+        self.diameterPlotItem = KymPlotWidget()
+        self.diameterPlotItem.sumIntensityPlotItem.setLabel("left", 'Dimaeter (um)', units="")
+        self.diameterPlotItem.setXLink(self.kymographPlot)
+        self.diameterPlotItem.signalCursorMove.connect(self.mySetStatusbar)
+        vBoxPlot.addWidget(self.diameterPlotItem)
+
+        vBoxDetectionLayout_left = QtWidgets.QVBoxLayout()
+        vBoxDetectionLayout_left.setAlignment(QtCore.Qt.AlignTop)
+        self._mainDetectionWidget = QtWidgets.QWidget()
+        self._mainDetectionWidget.setLayout(vBoxDetectionLayout_left)
+        mainHBox.addWidget(self._mainDetectionWidget)
+
+        # self._detectionToolbar = self._builtDetectionToolbar('Detect Peaks (f/f_0)', self._detectionParams)
+        groupName = 'Detect Peaks (f/f_0)'
+        detectionDict = self._detectionParams
+        self._detectionToolbar = KymDetectionGroupBox(detectionDict=detectionDict, groupName=groupName)
+        self._detectionToolbar.signalDetectionParamChanged.connect(self.slot_detectionChanged)
+        self._detectionToolbar.signalDetection.connect(self.slot_doAnalysis)
+        vBoxDetectionLayout_left.addWidget(self._detectionToolbar)
+
+        #
+        # a toolbar (group) to detect diameter from kym image
+        from sanpy.kym.interface.kymDiamToolbar import KymDiameterToolbar
+        groupName = 'Detect Diameter'
+        detectionDict = self._detectionParamsDiameter
+        self._kymDiamDetectToolbar = KymDiameterToolbar(detectionDict=detectionDict, groupName=groupName)
+        self._kymDiamDetectToolbar.signalDetectionParamChanged.connect(self.slot_detectionChanged)
+        self._kymDiamDetectToolbar.signalDetection.connect(self.slot_doAnalysis)
+        vBoxDetectionLayout_left.addWidget(self._kymDiamDetectToolbar)
+
+        groupName = 'Detect Peaks (Diameter)'
+        detectionDict = self._detectionParamsDiameter
+        # self._diamDetectionToolbar = self._builtDetectionToolbar('Detect Peaks (Diameter)', self._detectionParams)
+        self._diamDetectionToolbar = KymDetectionGroupBox(detectionDict=detectionDict, groupName=groupName)
+        self._diamDetectionToolbar.setWidgetEnabled('Exponential Detrend', False)
+        self._diamDetectionToolbar.setWidgetEnabled('f0 Type', False)
+        self._diamDetectionToolbar.setWidgetEnabled('f0 Percentile', False)
+        self._diamDetectionToolbar.signalDetectionParamChanged.connect(self.slot_detectionChanged)
+        self._diamDetectionToolbar.signalDetection.connect(self.slot_doAnalysis)
+        vBoxDetectionLayout_left.addWidget(self._diamDetectionToolbar)
+
+        _spacerItem = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
+        vBoxDetectionLayout_left.addItem(_spacerItem)
 
         #
         vBoxForClipsScatterTable = QtWidgets.QVBoxLayout()
-        # mainHBox.addLayout(vBoxForClipsScatterTable)
 
         _tmpWidget = QtWidgets.QWidget()
         _tmpWidget.setLayout(vBoxForClipsScatterTable)
 
         self.peakClipsWidget = KymRoiClipsWidget()
+        self.peakClipsWidget.setVisible(False)
         vBoxForClipsScatterTable.addWidget(self.peakClipsWidget)
 
         #
         # simple scatter plot
         self.simpleScatter = SimpleRoiScatter()
+        self.simpleScatter.setVisible(False)
         vBoxForClipsScatterTable.addWidget(self.simpleScatter)
 
         #
@@ -1445,7 +1187,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         self.fileDock.setFloating(False)
         self.fileDock.setTitleBarWidget(QtWidgets.QWidget())
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.fileDock)
-
+    
     def setColorMap(self, colorMap : str):
         """
         _colorList = ['Green', 'Red', 'Blue', 'Grey', 'Grey Invert', 'viridis', 'plasma', 'inferno']
@@ -1471,156 +1213,23 @@ class KymRoiWidget(QtWidgets.QMainWindow):
             logger.error(f'did not understand color map: {colorMap}')
             return
         
-        logger.info(f'{colorMap} cm:{cm}')
+        # logger.info(f'{colorMap} cm:{cm}')
 
         self.myImageItem.setColorMap(cm)
     
-    def _buildPlotOverlayToolbar(self):
-        """Dynamically build a number of check boxes from keys in _overlayPlotDict.
-        """
-        hBox = QtWidgets.QHBoxLayout()
-        hBox.setAlignment(QtCore.Qt.AlignLeft)
+    def analyzeRoiDiam(self, roi=None):
+        if roi is None:
+            roi = self.roiList.selectedRoi  # pyqtgraph ROI()
+        if roi is None:
+            logger.info('please select an roi to analyze')
+            return
 
-        for aCheckBoxName in self._overlayPlotDict.keys():
-            aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
-            aCheckBox.setChecked(self._overlayPlotDict[aCheckBoxName].isVisible())
-            aCheckBox.stateChanged.connect(
-                partial(self._on_checkbox_clicked, aCheckBoxName)
-            )
-            hBox.addWidget(aCheckBox)
-        
-        # lab to show selected roi
-        self._selectedRoiLabel = QtWidgets.QLabel('ROI: None')
-        hBox.addWidget(self._selectedRoiLabel)
+        logger.info('   === === === WIDGET PERFORMING ROI ANALYSIS === ===> diam')
 
-        return hBox
+        # this creates 3x traces (left, right, diameter)
+        self.roiList.kymRoiList[roi].detectDiam()
     
-    def _initSumPlotOverlays(self):
-        """"Initialize a number of overlay plots on top of self.sumIntensityPlotItem.
-        
-        e.g. (peak, threshold, half-width, etc)
-        """
-
-        self._overlayPlotDict = {}
-
-        self._overlayPlotDict['Threshold'] = self.sumIntensityPlotItem.plot(name="sumIntensityPeaksPlot",
-                                                  pen=None,
-                                                  symbol='o',
-                                                  symbolPen=None,
-                                                  symbolSize=10,
-                                                  symbolBrush=pg.mkBrush(255, 0, 0, 220)
-                                                  )
-
-        self._overlayPlotDict['Decay'] = self.sumIntensityPlotItem.plot(name="sumIntensityPeaksPlot",
-                                                  pen=None,
-                                                  symbol='t',
-                                                  symbolPen=None,
-                                                  symbolSize=10,
-                                                  symbolBrush=pg.mkBrush(255, 0, 255, 220)
-                                                  )
-
-        self._overlayPlotDict['Peak Int'] = self.sumIntensityPlotItem.plot(name="Peak Int",
-                                                  pen=None,
-                                                  symbol='o',
-                                                  symbolPen=None,
-                                                  symbolSize=10,
-                                                  symbolBrush=pg.mkBrush(0, 255, 0, 220)
-                                                  )
-
-        # Peak 90 Bin
-        self._overlayPlotDict['Onset 10'] = self.sumIntensityPlotItem.plot(name="Onset 10",
-                                                  pen=None,
-                                                  symbol='x',
-                                                  symbolPen=None,
-                                                  symbolSize=10,
-                                                  symbolBrush=pg.mkBrush(0, 255, 0, 220)
-                                                  )
-
-        # Decay 90 Bin
-        self._overlayPlotDict['Decay 10'] = self.sumIntensityPlotItem.plot(name="Decay 10",
-                                                  pen=None,
-                                                  symbol='x',
-                                                  symbolPen=None,
-                                                  symbolSize=10,
-                                                  symbolBrush=pg.mkBrush(0, 255, 0, 220)
-                                                  )
-
-        # Peak 90 Bin
-        # self._overlayPlotDict['Onset 90'] = self.sumIntensityPlotItem.plot(name="Onset 90",
-        #                                           pen=None,
-        #                                           symbol='x',
-        #                                           symbolPen=None,
-        #                                           symbolSize=10,
-        #                                           symbolBrush=pg.mkBrush(0, 255, 0, 220)
-        #                                           )
-
-        # Decay 90 Bin
-        # self._overlayPlotDict['Decay 90'] = self.sumIntensityPlotItem.plot(name="Decay 90",
-        #                                           pen=None,
-        #                                           symbol='x',
-        #                                           symbolPen=None,
-        #                                           symbolSize=10,
-        #                                           symbolBrush=pg.mkBrush(0, 255, 0, 220)
-        #                                           )
-
-        self._overlayPlotDict['Half-width'] = self.sumIntensityPlotItem.plot(name="sumIntensityPeaksPlot",
-                                                #   pen=None,
-                                                  symbol='o',
-                                                  symbolPen=None,
-                                                  symbolSize=10,
-                                                  symbolBrush=pg.mkBrush(0, 255, 255, 220)
-                                                  )
-
-        self._overlayPlotDict['Exp Decay'] = self.sumIntensityPlotItem.plot(name="sumIntensityPeaksPlot",
-                                                  pen=pg.mkPen(color='m', width=2),
-                                                #   symbol='o',
-                                                #   symbolPen=None,
-                                                #   symbolSize=10,
-                                                #   symbolBrush=pg.mkBrush(0, 255, 255, 220)
-                                                  )
-        self._overlayPlotDict['Exp Decay'].setVisible(False)
-
-        self._overlayPlotDict['Dbl Exp Decay'] = self.sumIntensityPlotItem.plot(name="dbl exp decay",
-                                                  pen=pg.mkPen(color='y', width=2),
-                                                #   symbol='o',
-                                                #   symbolPen=None,
-                                                #   symbolSize=10,
-                                                #   symbolBrush=pg.mkBrush(0, 255, 255, 220)
-                                                  )
-        self._overlayPlotDict['Dbl Exp Decay'].setVisible(False)
-
-        # newOnsetBins
-        # self._overlayPlotDict['newOnsetBins'] = self.sumIntensityPlotItem.plot(name="newOnsetBins",
-        #                                           pen=None,
-        #                                           symbol='o',
-        #                                           symbolPen=None,
-        #                                           symbolSize=15,
-        #                                           symbolBrush=pg.mkBrush(200, 255, 200, 220)
-        #                                           )
-        # self._overlayPlotDict['newOffsetBins'] = self.sumIntensityPlotItem.plot(name="newOffsetBins",
-        #                                           pen=None,
-        #                                           symbol='o',
-        #                                           symbolPen=None,
-        #                                           symbolSize=15,
-        #                                           symbolBrush=pg.mkBrush(200, 255, 200, 220)
-        #                                           )
-
-        # self._overlayPlotDict['newOnset10Bins'] = self.sumIntensityPlotItem.plot(name="newOnset10Bins",
-        #                                           pen=None,
-        #                                           symbol='star',
-        #                                           symbolPen=None,
-        #                                           symbolSize=10,
-        #                                           symbolBrush=pg.mkBrush(200, 255, 200, 220)
-        #                                           )
-        # self._overlayPlotDict['newOffset10Bins'] = self.sumIntensityPlotItem.plot(name="newOffset10Bins",
-        #                                           pen=None,
-        #                                           symbol='star',
-        #                                           symbolPen=None,
-        #                                           symbolSize=10,
-        #                                           symbolBrush=pg.mkBrush(200, 255, 200, 220)
-        #                                           )
-
-    def analyzeRoi(self, roi=None, doQuick=False):
+    def analyzeRoi(self, roi = None, kymRoiDetection : KymRoiDetection = None, doQuick=False):
         """Analyze one roi e.g. detect peaks.
         """
 
@@ -1631,16 +1240,16 @@ class KymRoiWidget(QtWidgets.QMainWindow):
             logger.info('please select an roi to analyze')
             return
 
-        logger.info('   === === === WIDGET PERFORMING ANALYSIS === === ===')
-        # print(self._detectionDict.printValues())
-        # print('')
+        logger.info('   === === === WIDGET PERFORMING ROI ANALYSIS === ===> f0')
 
-        self.roiList.kymRoiList[roi].peakDetect(verbose=True)
+        ok = self.roiList.kymRoiList[roi].peakDetect(kymRoiDetection=kymRoiDetection, verbose=False)
 
         # from sanpy.kym.kymRoiAnalysis import plotDetectionResults
         # kymRoi = self.roiList.kymRoiList[roi]
         # plotDetectionResults(kymRoi)
 
+        return ok
+    
     def _msToBin(self, msValue : float) -> int:
         """Convert ms to nearest bin using round.
         """
@@ -1649,18 +1258,17 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         # logger.info(f'msValue:{msValue} _retBin1:{_retBin1} _retBin2:{_retBin2}')
         return _retBin2
     
-    def getDataFrame(self, roi = None):
+    def getDataFrame(self, peakDetectionType : PeakDetectionTypes, roi = None):
         """Get results df for one roi or all roi (use roi=None).
         """
         if roi is not None:
             # return self._analysisDf[roi].df
-            return self.roiList.getAnalysisResults(roi).df
+            return self.roiList.getAnalysisResults(roi, peakDetectionType).df
         else:
             columns = list(KymRoiResults.analysisDict.keys())
             df = pd.DataFrame(columns=columns)  # empty df with proper columns
             for _roiIdx, oneRoi in enumerate(self.roiList.kymRoiList.keys()):
-                oneDf = self.roiList.getAnalysisResults(oneRoi).df
-                # logger.info(f'oneDf:{oneDf}')
+                oneDf = self.roiList.getAnalysisResults(oneRoi, peakDetectionType).df
                 if _roiIdx == 0:
                     df = oneDf
                 else:
@@ -1704,13 +1312,19 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         
         self.rawIntensityPlot.setData(timeSec, intDetrend)
 
-        f0Value = self._detectionParams['f0Value']
+        # logger.info(f'self._detectionParams {type(self._detectionParams)}')
+        self._detectionParams.printValues()
+
+        f0Value = self._detectionParams['f0 Value']
         self.rawIntensity_f0_line.setPos(round(f0Value,2))
 
         self._rawPlotCursors._showInView()
 
-    def updateRoiIntensityPlot(self, roi=None, doAnalysis=True, refreshScatter=True):
-        """Update intensity plot when user adjusts roi.
+    def updateRoiDiameterPlot(self, roi=None, doAnalysis=True):
+        """Analyze and then update diameter from kym image.
+        
+        This generates (left, right, and diam.
+        Diam is then peak detected.
         """
         if roi is None:
             roi = self.roiList.selectedRoi
@@ -1720,207 +1334,105 @@ class KymRoiWidget(QtWidgets.QMainWindow):
 
         # set selected roi label
         _roiLabelText = self.roiList.roiLabelList[roi].toPlainText()
-        self._selectedRoiLabel.setText(f'ROI: {_roiLabelText}')
+        # self._selectedRoiLabel.setText(f'ROI: {_roiLabelText}')
+        _txt = f'ROI: {_roiLabelText}'
+        self.diameterPlotItem.setRoiLabelText(_txt)
 
-        # clear all
-        # for oneRoi in self._roiIntensityPlot.keys():
-        #     self._roiIntensityPlot[oneRoi].setData([],[])
-        self.sumIntensityPlot.setData([], [])
+        #
+        # find left/right diam from kymograph
+        if doAnalysis:
+            self.analyzeRoiDiam(roi)
 
-        for k,v in self._overlayPlotDict.items():
-            v.setData([], [])
+        #
+        # update plots
+        timeSec = self.roiList.getAnalysisTrace(roi, 'timeSec')
+
+        leftDiameterUm = self.roiList.getAnalysisTrace(roi, 'Left Diameter (um)')
+        rightDiameterUm = self.roiList.getAnalysisTrace(roi, 'Right Diameter (um)')
+        diameterUm = self.roiList.getAnalysisTrace(roi, 'Diameter (um)')
+
+        # left/right on kym image
+        self._overlayKymDict['leftDiamOverlay'].setData([], [])
+        self._overlayKymDict['rightDiamOverlay'].setData([], [])
+        # diameter plot
+        self.diameterPlotItem.setData([], [])
+
+        if leftDiameterUm is None:
+            logger.info('no diameter to plot')
+            return
+        
+        # left/right on kym image
+        self._overlayKymDict['leftDiamOverlay'].setData(timeSec, leftDiameterUm)
+        self._overlayKymDict['rightDiamOverlay'].setData(timeSec, rightDiameterUm)
+        # diameter plot
+        self.diameterPlotItem.setData(timeSec, diameterUm)
+
+    def updateRoiDiameterPlot2(self, roi : KymRoi):
+        # update overlay of diameter plot (e.g. peak, threshold, etc)
+        # roi = self.roiList.selectedRoi
+        if roi is None:
+            logger.warning('no roi selected')
+            return
+        dfPlot = self.roiList.kymRoiList[roi].getAnalysisResults(PeakDetectionTypes.diameter).df
+        self.diameterPlotItem.replotOverlays(dfPlot)
+
+        #
+        self.plotPeakClips(roi, doDiameter=True)
+
+    def updateRoiIntensityPlot(self, roi=None, doAnalysis=True, refreshScatter=True):
+        """Update f/f0 intensity plot when user adjusts roi.
+        """
+        if roi is None:
+            roi = self.roiList.selectedRoi
+            if roi is None:
+                logger.warning('no roi selected')
+                return
+
+        self.sumIntensityPlotItem.clearPlot()
+
+        # set selected roi label
+        _roiLabelText = self.roiList.roiLabelList[roi].toPlainText()
+        _txt = f'ROI: {_roiLabelText}'
+        self.sumIntensityPlotItem.setRoiLabelText(_txt)
 
         # perform analysis
         logger.warning(f'turned off auto analysis - implementing "Analyze" button doAnalysis:{doAnalysis}')
         if doAnalysis:
-            # self._detectionDict['binLineScans']
-            self.analyzeRoi(roi, doQuick=True)
-
+            ok = self.analyzeRoi(roi, doQuick=True)
+            if ok is None:
+                logger.error('did not perform analysis')
+                return
+                             
         # v2
-        # logger.warning('PLOTTING V2')
         timeSec = self.roiList.getAnalysisTrace(roi, 'timeSec')
         # int_df_f0 = self.roiList.getAnalysisTrace(roi, 'int_df_f0')
-        int_f_f0 = self.roiList.getAnalysisTrace(roi, 'int_f_f0')
-
-        logger.warning('swapping my int_df_f0 for santana int_f_f0')
-        if int_f_f0 is None:
+        f_f0 = self.roiList.getAnalysisTrace(roi, 'f_f0')
+        if f_f0 is None:
+            logger.error('f_f0 is None -->> abort')
             return
-        int_df_f0 = int_f_f0
+        
+        df_f0 = f_f0
 
         if timeSec is None:
             logger.error('-->> NO ANALYSIS YET')
             return
 
-        # self._roiIntensityPlot[roi].setData(timeSec, int_df_f0, connect="finite")  # fill with nan
-        self.sumIntensityPlot.setData(timeSec, int_df_f0, connect="finite")  # fill with nan
-        
-        #
-        # analysis results
-        # dfPlot = self._analysisDf[roi].df
-        
-        # v2
-        logger.info(f'fetching v2 results')
-        dfPlot = self.roiList.kymRoiList[roi].analysisResults.df
-        
-        numPeaks = len(dfPlot)
+        # self.sumIntensityPlot.setData(timeSec, df_f0, )  # fill with nan
+        self.sumIntensityPlotItem.setData(timeSec, df_f0, )  # fill with nan
 
-        # newOnsetBins/newOffsetBins
-        # newOnsetBins = dfPlot['newOnsetBins']
-        # try:
-        #     # logger.error(f'newOnsetSeconds:{newOnsetSeconds}')
-        #     # logger.error(f'y_newOnsetBins:{y_newOnsetBins}')
-        #     newOnsetSeconds = timeSec[newOnsetBins]
-        #     newOnsetsValues = int_df_f0[newOnsetBins]
-            
-        #     self._overlayPlotDict['newOnsetBins'].setData(newOnsetSeconds, newOnsetsValues)
-        # except (KeyError) as e:
-        #     logger.error(f'did not get newOnsetBins -->> need to reanalyze')
-        
-        # newOffsetBins = dfPlot['newOffsetBins']
-        # try:
-        #     # logger.error(f'newOnsetSeconds:{newOnsetSeconds}')
-        #     # logger.error(f'y_newOnsetBins:{y_newOnsetBins}')
-        #     newOffsetSeconds = timeSec[newOffsetBins]
-        #     newOffsetValues = int_df_f0[newOffsetBins]
-            
-        #     self._overlayPlotDict['newOffsetBins'].setData(newOffsetSeconds, newOffsetValues)
-        # except (KeyError) as e:
-        #     logger.error(f'did not get newOffsetBins -->> need to reanalyze')
-
-        # onset/offset at 90%
-        onset10Bin = dfPlot['Onset 10 Bin']
-        # newOnset10Bins = newOnset10Bins[ ~np.isnan(newOnset10Bins) ]
-        # onset10Bin = onset10Bin.astype(int)
-        onset10Seconds = timeSec[onset10Bin]
-        onset10Value = int_df_f0[onset10Bin]
-        self._overlayPlotDict['Onset 10'].setData(onset10Seconds, onset10Value)
-
-        decay10Bin = dfPlot['Decay 10 Bin']
-        decay10BinSeconds = timeSec[decay10Bin]
-        decay10Value = int_df_f0[decay10Bin]            
-        self._overlayPlotDict['Decay 10'].setData(decay10BinSeconds, decay10Value)
-
-        # orig
-        peakSecond = dfPlot['Peak Second']
-        yPeak = dfPlot['Peak Int']
-        self._overlayPlotDict['Peak Int'].setData(peakSecond, yPeak)
-
-        thresholdSecond = dfPlot['Onset Second']
-        thresholdValue = dfPlot['Onset Int']
-        self._overlayPlotDict['Threshold'].setData(thresholdSecond, thresholdValue)
-
-        decaySecond = dfPlot['Decay Second']
-        decayValue = dfPlot['Decay Int']
-        self._overlayPlotDict['Decay'].setData(decaySecond, decayValue)
-
-        # Threshold 90 and Decay 90
-        # peak90Second = dfPlot['Onset 90 Second']
-        # peak90Value = dfPlot['Onset 90 Int']
-        # self._overlayPlotDict['Onset 90'].setData(peak90Second, peak90Value)
-
-        # decay90Second = dfPlot['Decay 90 Second']
-        # decay90Value = dfPlot['Decay 90 Int']
-        # self._overlayPlotDict['Decay 90'].setData(decay90Second, decay90Value)
-
-        # half width
-        xHalfwidth = []
-        yHalfwidth = []
-        for _peakIdx in range(numPeaks):
-            hwLeftBin = dfPlot['HW Left Bin'][_peakIdx]
-            hwLeftSec = timeSec[hwLeftBin]
-
-            hwRightBin = dfPlot['HW Right Bin'][_peakIdx]
-            hwRightSec = timeSec[hwRightBin]
-
-            xHalfwidth.append( hwLeftSec )
-            xHalfwidth.append( hwRightSec )
-            xHalfwidth.append( np.nan )
-
-            yHalfwidth.append( dfPlot['HW Height'][_peakIdx] )
-            yHalfwidth.append( dfPlot['HW Height'][_peakIdx] )
-            yHalfwidth.append( np.nan )
-
-        self._overlayPlotDict['Half-width'].setData(xHalfwidth, yHalfwidth)
-
-        
-        # (1) exp decay
-        from sanpy.kym.kymRoiAnalysis import myMonoExp
-        xDecay = []
-        yDecay = []
-        _peakBins = dfPlot['Peak Bin']
-        for _peakIdx, _peakBin in enumerate(_peakBins):
-            
-            # fix this constant bug !!!!
-            # [_left, _, _, _] = self.roiList._roiAsRect(roi)
-            # _peakBin = _peakBin - _left
-            
-            fit_m = dfPlot['fit_m'][_peakIdx]            
-            fit_tau = dfPlot['fit_tau'][_peakIdx]
-            fit_b = dfPlot['fit_b'][_peakIdx]
-
-            if np.isnan(fit_m):
-                logger.warning(f'no exp fit for peak {_peakIdx}')
-                continue
-
-            # decayFitBins = self._detectionDict['decay (ms)'] / 1000 / self.secondsPerLine
-            decayFitBins = self._msToBin(self._detectionDict['decay (ms)'])
-            # _xRange = xPlot[_peakBin:_peakBin+decayFitBins] - xPlot[_peakBin]
-            _xRange = np.arange(decayFitBins)
-            # get line showing our fit
-            fit_y = myMonoExp(_xRange, fit_m, fit_tau, fit_b)
-
-            xDecay.extend(_xRange + timeSec[_peakBin])
-            xDecay.append(np.nan)
-
-            yDecay.extend(fit_y)
-            yDecay.append(np.nan)
-
-        self._overlayPlotDict['Exp Decay'].setData(xDecay, yDecay)
+        dfPlot = self.roiList.kymRoiList[roi].getAnalysisResults(PeakDetectionTypes.f_f0).df
+        self.sumIntensityPlotItem.replotOverlays(dfPlot)
 
         #
-        # (2) double exp decay
-        # xDecay = []
-        # yDecay = []
-        # _peakBins = dfPlot['Peak Bin']
-        # for _peakIdx, _peakBin in enumerate(_peakBins):
-            
-        #     # fix this constant bug !!!!
-        #     [_left, _, _, _] = self.roiList._roiAsRect(roi)
-        #     _peakBin = _peakBin - _left
-            
-        #     fit_m1 = dfPlot['fit_m1'][_peakIdx]            
-        #     fit_tau1 = dfPlot['fit_tau1'][_peakIdx]
-        #     fit_m2 = dfPlot['fit_m2'][_peakIdx]            
-        #     fit_tau2 = dfPlot['fit_tau2'][_peakIdx]
-
-        #     if np.isnan(fit_m1):
-        #         # logger.warning(f'no fit for peak {_peakIdx}')
-        #         continue
-
-        #     # decayFitBins = self._detectionDict['decay (ms)'] / 1000 / self.secondsPerLine
-        #     decayFitBins = self._msToBin(self._detectionDict['decay (ms)'])
-        #     _xRange = xPlot[_peakBin:_peakBin+decayFitBins] - xPlot[_peakBin]
-            
-        #     # get line showing our fit
-        #     fit_y = myDoubleExp(_xRange, fit_m1, fit_tau1, fit_m2, fit_tau2)
-
-        #     xDecay.extend(_xRange+xPlot[_peakBin])
-        #     xDecay.append(np.nan)
-
-        #     yDecay.extend(fit_y)
-        #     yDecay.append(np.nan)
-
-        # self._overlayPlotDict['Dbl Exp Decay'].setData(xDecay, yDecay)
-
-        # refresh cursors
-        self._sanpyCursors._showInView()
-
+        # update other widgets
+        #
+        
         # raw intensity plot (to manually set f0)
         self.update_fo_plot(roi)
 
         #
         # peak clips
-        self.plotPeakClips(roi)
+        self.plotPeakClips(roi, doDiameter=False)
 
         #
         # refresh scatter plot
@@ -1932,37 +1444,47 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         """
         if roi is not None:
             # df = self._analysisDf[roi].df
-            df = self.roiList.getAnalysisResults(roi).df
+            df = self.roiList.getAnalysisResults(roi, PeakDetectionTypes.f_f0).df
         else:
-            df = self.getDataFrame()  # get full dataframe across all 'roi number'
+            df = self.getDataFrame(PeakDetectionTypes.f_f0)  # get full dataframe across all 'roi number'
         
         # logger.info('refresh with df')
         # print(df)
 
         self.simpleScatter.replot(df)
 
-    def plotPeakClips(self, roi):
+    def plotPeakClips(self, roi, doDiameter=False):
 
-        logger.warning('swapping my df_f0 with santana f_f0')
-        # yPlot = self.roiList.getAnalysisTrace(roi, 'int_df_f0')
-        yPlot = self.roiList.getAnalysisTrace(roi, 'int_f_f0')
-        if yPlot is None:
-            return
-        
-        # [_left, _, _, _] = self.roiList._roiAsRect(roi)
-        # logger.info(f'roi rect left:{left}')
+        if doDiameter:
+            yPlot = self.roiList.getAnalysisTrace(roi, 'Diameter (um)')
+            if yPlot is None:
+                logger.warning('plotting peak clips did not get "Diameter (um)" trace')
+                return
+            
+            # analysis results
+            dfPlot = self.roiList.getAnalysisResults(roi, PeakDetectionTypes.diameter).df
+            xPeaks = dfPlot['Peak Bin']
 
-        # analysis results
-        dfPlot = self.roiList.getAnalysisResults(roi).df
-        xPeaks = dfPlot['Peak Bin']
-        # xPeaks = xPeaks - _left
+            plusMinBins = self._msToBin(self._detectionParamsDiameter['Decay (ms)'])
+            # peak clips
+            self.peakClipsWidget.plotPeakClips(yPlot, xPeaks, self.secondsPerLine, plusMinBins, doDiameter=True)
 
-        plusMinBins = self._msToBin(self._detectionDict['decay (ms)'])
-        # peak clips
-        self.peakClipsWidget.plotPeakClips(yPlot, xPeaks, self.secondsPerLine, plusMinBins)
+        else:
+            yPlot = self.roiList.getAnalysisTrace(roi, 'f_f0')
+            if yPlot is None:
+                logger.warning('plotting peak clips did not get "f_f0" trace')
+                return
+            
+            # analysis results
+            dfPlot = self.roiList.getAnalysisResults(roi, PeakDetectionTypes.f_f0).df
+            xPeaks = dfPlot['Peak Bin']
+
+            plusMinBins = self._msToBin(self._detectionParams['Decay (ms)'])
+            # peak clips
+            self.peakClipsWidget.plotPeakClips(yPlot, xPeaks, self.secondsPerLine, plusMinBins)
 
     def _hoverEvent(self, event):
-        """Hover on image.
+        """Hover on image -> update status in QMainWindow
         """
         if event.isExit():
             return
@@ -1978,10 +1500,9 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         except (IndexError) as e:
             intensity = 'None'
         
-        # logger.info(f'x:{xPos} y:{yPos} intensity:{intensity}')
+        intensity = f'{xPos} {yPos} intensity:{intensity}'
 
-        self.hoverLabel.setText(f"Cursor:{intensity}")
-        self.hoverLabel.update()
+        self.mySetStatusbar(intensity)
 
     def _resetZoom(self, doEmit=True):
         
@@ -1989,6 +1510,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         # 
         self.sumIntensityPlotItem.autoRange()  # item=self._roiIntensityPlot[roi]
         self.rawIntensityPlotItem.autoRange()
+        self.diameterPlotItem.autoRange()
 
         self.kymographPlot.autoRange(item=self.myImageItem)
 
@@ -2002,6 +1524,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
             self.kymographPlot.setMouseEnabled(x=True, y=False)
             self.sumIntensityPlotItem.setMouseEnabled(x=True, y=False)
             self.rawIntensityPlotItem.setMouseEnabled(x=True, y=False)
+            self.diameterPlotItem.setMouseEnabled(x=True, y=False)
     
     def keyPressEvent(self, event):
         """Respond to user key press.
@@ -2026,6 +1549,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
             self.kymographPlot.setMouseEnabled(x=False, y=True)
             self.sumIntensityPlotItem.setMouseEnabled(x=False, y=True)
             self.rawIntensityPlotItem.setMouseEnabled(x=False, y=True)
+            self.diameterPlotItem.setMouseEnabled(x=False, y=True)
 
         if key in [QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return]:
             self._resetZoom()
@@ -2105,7 +1629,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         contextMenu.addSeparator()
 
         #
-        f0ManualPercentile = self._detectionParams['f0ManualPercentile']  # in (Manual, Percentile)
+        f0ManualPercentile = self._detectionParams['f0 Type']  # in (Manual, Percentile)
         f0Manual = f0ManualPercentile == 'Manual'
         
         f0Action = QtWidgets.QAction(f'Set f0 to {cCursorValue}')
@@ -2130,7 +1654,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
 
         elif action == f0Action:
             logger.info(f'TODO: set f0 to cCursorValue:{cCursorValue}')
-            self._detectionParams['f0Value'] = cCursorValue
+            self._detectionParams['f0 Value'] = cCursorValue
             self.updateRoiIntensityPlot(doAnalysis=True)
 
         self.mySetStatusbar(_ret)
@@ -2149,21 +1673,22 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         contextMenu.addAction('Full Zoom')
         contextMenu.addSeparator()
 
-        cursorAction = QtWidgets.QAction('Cursors')
-        cursorAction.setCheckable(True)
-        cursorAction.setChecked(self._sanpyCursors.cursorsAreShowing())
-        contextMenu.addAction(cursorAction)
-        contextMenu.addSeparator()
+        # logger.warning('PUT CURSOR MENU INTO NEW KymPlotWidget')
+        # cursorAction = QtWidgets.QAction('Cursors')
+        # cursorAction.setCheckable(True)
+        # cursorAction.setChecked(self._sanpyCursors.cursorsAreShowing())
+        # contextMenu.addAction(cursorAction)
+        # contextMenu.addSeparator()
 
-        contextMenu.addAction('Save Kym Image ...')
+        # contextMenu.addAction('Save Kym Image ...')
 
-        saveSumPlotAction = QtWidgets.QAction('Save Sum Plot ...')
-        saveSumPlotAction.setEnabled(selectedRoi is not None)
-        contextMenu.addAction(saveSumPlotAction)
+        # saveSumPlotAction = QtWidgets.QAction('Save Sum Plot ...')
+        # saveSumPlotAction.setEnabled(selectedRoi is not None)
+        # contextMenu.addAction(saveSumPlotAction)
 
-        saveClipsAction = QtWidgets.QAction('Save Clips ...')
-        saveClipsAction.setEnabled(selectedRoi is not None)
-        contextMenu.addAction(saveClipsAction)
+        # saveClipsAction = QtWidgets.QAction('Save Clips ...')
+        # saveClipsAction.setEnabled(selectedRoi is not None)
+        # contextMenu.addAction(saveClipsAction)
 
         # contextMenu.addSeparator()
         # contextMenu.addAction('Copy Stats Table ...')
@@ -2195,16 +1720,16 @@ class KymRoiWidget(QtWidgets.QMainWindow):
             self._sanpyCursors.toggleCursors(_checked)
             # self._rawPlotCursors.toggleCursors(_checked)
 
-        elif actionText == 'Save Kym Image ...':
-            _ret = self.savePlotItemAs(self.kymographPlot, 'kym-image')
+        # elif actionText == 'Save Kym Image ...':
+        #     _ret = self.savePlotItemAs(self.kymographPlot, 'kym-image')
 
-        elif actionText == 'Save Sum Plot ...':
-            roiLabelText = self.roiList.roiLabelList[selectedRoi].toPlainText()
-            _ret = self.savePlotItemAs(self.sumIntensityPlotItem.plotItem, f'sum-plot-roi-{roiLabelText}')
+        # elif actionText == 'Save Sum Plot ...':
+        #     roiLabelText = self.roiList.roiLabelList[selectedRoi].toPlainText()
+        #     _ret = self.savePlotItemAs(self.sumIntensityPlotItem.plotItem, f'sum-plot-roi-{roiLabelText}')
 
-        elif actionText == 'Save Clips ...':
-            roiLabelText = self.roiList.roiLabelList[selectedRoi].toPlainText()
-            _ret = self.savePlotItemAs(self.peakClipsWidget.peakClipPlotItem.plotItem, f'clip-plot-{roiLabelText}')
+        # elif actionText == 'Save Clips ...':
+        #     roiLabelText = self.roiList.roiLabelList[selectedRoi].toPlainText()
+        #     _ret = self.savePlotItemAs(self.peakClipsWidget.peakClipPlotItem.plotItem, f'clip-plot-{roiLabelText}')
 
         # elif actionText == 'Copy Stats Table ...':
         #     _ret = self.simpleScatter.copyTableToClipboard()

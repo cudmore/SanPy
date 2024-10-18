@@ -37,6 +37,8 @@ class simpleTableWidget(QtWidgets.QTableWidget):
                 self.setItem(row, col, item)
                  
 class SimpleRoiScatter(QtWidgets.QWidget):
+    """Plot a scatter plot from peak/diameter detection df.
+    """
     def __init__(self, df : pd.DataFrame = None):
         super().__init__(None)
         self._df = df
@@ -46,7 +48,7 @@ class SimpleRoiScatter(QtWidgets.QWidget):
 
         # ignore some bookkeeping columns
 
-        self._plotTypes = ['Scatter', 'Swarm', 'Swarm + Mean', 'Histogram', 'Cumulative Histogram']
+        self._plotTypes = ['Scatter', 'Swarm', 'Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM', 'Histogram', 'Cumulative Histogram']
         
         self._state = {
             'xStat': 'Peak Number',
@@ -146,13 +148,18 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         return _ret
     
     def _buildTopToobar(self):
+        vBoxLayout = QtWidgets.QVBoxLayout()
+        vBoxLayout.setAlignment(QtCore.Qt.AlignTop)
+
+        # row 1
         hBoxLayout = QtWidgets.QHBoxLayout()
         hBoxLayout.setAlignment(QtCore.Qt.AlignLeft)
+        vBoxLayout.addLayout(hBoxLayout)
 
         # plot type
         aName = 'Plot Type'
-        xLabel = QtWidgets.QLabel(aName)
-        hBoxLayout.addWidget(xLabel)
+        aLabel = QtWidgets.QLabel(aName)
+        hBoxLayout.addWidget(aLabel)
 
         self.plotTypeComboBox = QtWidgets.QComboBox()
         self.plotTypeComboBox.addItems(self._plotTypes)
@@ -162,34 +169,6 @@ class SimpleRoiScatter(QtWidgets.QWidget):
             partial(self._on_stat_combobox, aName)
         )
         hBoxLayout.addWidget(self.plotTypeComboBox)
-
-        #
-        xName = 'X-Stat'
-        xLabel = QtWidgets.QLabel(xName)
-        hBoxLayout.addWidget(xLabel)
-
-        self.xComboBox = QtWidgets.QComboBox()
-        self.xComboBox.addItems(self._columns)
-        _index = self._columns.index(self.state['xStat'])
-        self.xComboBox.setCurrentIndex(_index)
-        self.xComboBox.currentTextChanged.connect(
-            partial(self._on_stat_combobox, xName)
-        )
-        hBoxLayout.addWidget(self.xComboBox)
-
-        #
-        yName = 'Y-Stat'
-        yLabel = QtWidgets.QLabel(yName)
-        hBoxLayout.addWidget(yLabel)
-
-        self.yComboBox = QtWidgets.QComboBox()
-        self.yComboBox.addItems(self._columns)
-        _index = self._columns.index(self.state['yStat'])
-        self.yComboBox.setCurrentIndex(_index)
-        self.yComboBox.currentTextChanged.connect(
-            partial(self._on_stat_combobox, yName)
-        )
-        hBoxLayout.addWidget(self.yComboBox)
 
         #
         # hueName = 'Hue'
@@ -205,8 +184,41 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         # )
         # hBoxLayout.addWidget(self.hueComboBox)
 
+        # second row
+        hBoxLayout2 = QtWidgets.QHBoxLayout()
+        hBoxLayout2.setAlignment(QtCore.Qt.AlignLeft)
+        vBoxLayout.addLayout(hBoxLayout2)
+
         #
-        return hBoxLayout
+        xName = 'X-Stat'
+        xLabel = QtWidgets.QLabel(xName)
+        hBoxLayout2.addWidget(xLabel)
+
+        self.xComboBox = QtWidgets.QComboBox()
+        self.xComboBox.addItems(self._columns)
+        _index = self._columns.index(self.state['xStat'])
+        self.xComboBox.setCurrentIndex(_index)
+        self.xComboBox.currentTextChanged.connect(
+            partial(self._on_stat_combobox, xName)
+        )
+        hBoxLayout2.addWidget(self.xComboBox)
+
+        #
+        yName = 'Y-Stat'
+        yLabel = QtWidgets.QLabel(yName)
+        hBoxLayout2.addWidget(yLabel)
+
+        self.yComboBox = QtWidgets.QComboBox()
+        self.yComboBox.addItems(self._columns)
+        _index = self._columns.index(self.state['yStat'])
+        self.yComboBox.setCurrentIndex(_index)
+        self.yComboBox.currentTextChanged.connect(
+            partial(self._on_stat_combobox, yName)
+        )
+        hBoxLayout2.addWidget(self.yComboBox)
+
+        #
+        return vBoxLayout
     
     def _updateGuiOnPlotType(self, plotType):
         """Enable/disable giu on plot type.
@@ -263,15 +275,14 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         hue = self.state['hue']
         plotType = self.state['plotType']
 
+        # logger.info(f'plotType:{plotType}')
+
         dfGrouped = self.getGroupedDataframe(yStat)
         self._dfYStatSummary = dfGrouped
         
-        # print(dfGrouped)
-
         self.rawTableWidget.setDf(self._df)
         self.yStatSummaryTableWidget.setDf(dfGrouped)
 
-        # sns.set_palette()
         # sns.set_palette()
         numRoiNum = len(df['ROI Number'].unique())
         sns.set_palette("colorblind")
@@ -307,14 +318,23 @@ class SimpleRoiScatter(QtWidgets.QWidget):
                     # Using transform=self.axScatter.transAxes, the supplied x and y coordinates are interpreted as axes coordinates instead of data coordinates.
                     self.axScatter.plot([0, 1], [0, 1], '--', transform=self.axScatter.transAxes)
                 
-            elif plotType in ['Swarm', 'Swarm + Mean']:
+            elif plotType in ['Swarm', 'Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM']:
                 # picker does not work for stripplot
                 # fernando's favorite
                 
-                if plotType == 'Swarm + Mean':
+                # reduce the brightness of raw data
+                if plotType in ['Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM']:
                     alpha = 0.6
+                    # ['ci', 'pi', 'se', 'sd']
+                    if plotType == 'Swarm + Mean':
+                        errorBar = None
+                    elif plotType == 'Swarm + Mean + STD':
+                        errorBar = 'sd'
+                    elif plotType == 'Swarm + Mean + SEM':
+                        errorBar = 'se'
                 else:
                     alpha = 1
+                    errorBar = None
 
                 self.axScatter = sns.stripplot(data=df,
                                                x='ROI Number',
@@ -322,16 +342,16 @@ class SimpleRoiScatter(QtWidgets.QWidget):
                                                hue=hue,
                                                alpha=alpha,
                                                palette=palette,
+                                               legend=False,
                                                ax=self.axScatter)
-
-                if plotType == 'Swarm + Mean':
+                    
+                # if errorBar is not None:
+                if plotType in ['Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM']:
                     # overlay mean +- sem
-                    # capsize = 0
-                    errorbar = None
+                    errorbar = errorBar
                     markersize = 30
                     sns.pointplot(data=df, x='ROI Number', y=yStat, hue=hue,
                                 errorbar=errorbar,  # can be 'se', 'sem', etc
-                                # errorbar='se',
                                 # capsize=capsize,
                                 linestyle='none',  # do not connect (with line) between categorical x
                                 marker="_",

@@ -189,6 +189,7 @@ class kymographWidget(QtWidgets.QWidget):
             return
         
         self.kymographPlot.autoRange(item=self.myImageItem)
+        # self.kymographPlot.autoRange()
 
         if doEmit:
             self.signalResetZoom.emit()

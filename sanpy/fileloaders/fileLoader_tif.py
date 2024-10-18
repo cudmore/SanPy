@@ -242,12 +242,25 @@ class fileLoader_tif(fileLoader_base):
         elif numLoadedDims == 3:
             # one channel
             # czi line scan with frames (frames, height, width)
-            self._numChannels = 1
+            self._numChannels = 3
             # abb 20240917 implementing kym roi
             if _olympusHeader is not None:
-                _img = loadedTif[:, :, 1]
+                # logger.info(f'loaded multi channel tiff (olympus) {self.filepath}')
+                # for _i in range(loadedTif.shape[2]):
+                #     _tmpMean = np.mean(loadedTif[:, :, _i])
+                #     logger.info(f'ch {_i} mean:{_tmpMean}')
+
+                # _img = loadedTif[:, :, 1]
+                
                 # logger.info(f'{loadedTif.shape} -> {_img.shape}')
-                self._tif.append(_img)  # olympus like (1000, 1023, 3)
+                for _channelIdx in range(self._numChannels):
+                    _img = loadedTif[:, :, _channelIdx]
+                    self._tif.append(_img)  # olympus like (1000, 1023, 3)
+
+                logger.warning(f'for colin kym, swapping 2nd channel into 1s {self.filepath}')
+                self._tif[0] = self._tif[1]
+                self._tif[1] = np.flip(self._tif[1])
+
             else:
                 self._tif.append(loadedTif[:, 0, :])  # czi
         elif numLoadedDims == 4:
@@ -376,9 +389,16 @@ class fileLoader_tif(fileLoader_base):
         )
 
     @property
-    def tifData(self, channel=1) -> np.ndarray:
-        channelIdx = channel - 1
-        return self._tif[channelIdx]
+    def tifData(self) -> np.ndarray:
+        """Get the first tif color channel. NEEDS TO BE REFACTORED.
+        """
+        logger.warning('TODO: refactor tifData, need to handle multiple color channels.')
+        return self._tif[0]
+    
+    def getTifData(self, channel : int = 1):
+        """Get one color channel from tif, channel is 1 based.
+        """
+        return self._tif[channel-1]
     
     @property
     def tifHeader(self) -> dict:

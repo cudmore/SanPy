@@ -1605,7 +1605,10 @@ class bDetectionWidget(QtWidgets.QWidget):
         )
 
         # v1
-        self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget, alignment=QtCore.Qt.AlignLeft)
+        _tmpVLayout = QtWidgets.QVBoxLayout()
+        _tmpVLayout. addWidget(self.detectToolbarWidget)
+        # self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget, alignment=QtCore.Qt.AlignLeft)
+        self.myHBoxLayout_detect.addLayout(_tmpVLayout)
         # v2
         # _hSplitter.addWidget(self.detectToolbarWidget)
         # self.myHBoxLayout_detect.addWidget(_hSplitter)

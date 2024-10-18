@@ -628,7 +628,7 @@ class kymAnalysis:
                 auto load analysis
         """
 
-        self._timeDim = 1
+        self._timeDim = 1  # 20241004, add while working on kym roi
         self._spaceDim = 0
 
         self._path = path
@@ -639,7 +639,7 @@ class kymAnalysis:
             self._kymImage = tifData
         else:
             # load
-            logger.error('DO NOT LOAD TIF DIRECTLY -->> USE fileloader')
+            logger.error('DO NOT LOAD TIF DIRECTLY -->> USE fileloader_tiff')
             self._kymImage: np.ndarray = tifffile.imread(path)
 
         self._kymImageFiltered = None

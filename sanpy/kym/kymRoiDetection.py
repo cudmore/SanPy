@@ -38,15 +38,15 @@ def getAnalysisDict():
     ret['backgroundSubtractValue'] = {
         'defaultvalue': None,
         'value': None,
-        'description': 'Value subtracted from the background. For backgroundsubtract in (Median, Mean)',
+        'description': 'Value subtracted from the background - set on analysis.',
         'type': "dict",
         'userdisplay': True,  # display to user
     }
 
-    ret['f0Value'] = {
+    ret['f0 Value'] = {
         'defaultvalue': None,
         'value': None,
-        'description': 'Value of f0. Currently the median of roi image',
+        'description': 'Value of f0. Either manually set or the median of roi image',
         'type': "dict",
         'userdisplay': True,  # display to user
     }
@@ -54,14 +54,14 @@ def getAnalysisDict():
     #
     # actual detection params
     ret['detectThisTrace'] = {
-        'defaultvalue': 'int_f_f0',
+        'defaultvalue': 'f_f0',
         'value': None,
-        'description': 'Specify which trace to detect from (int_df_f0, int_f_f0)',
+        'description': 'Specify which trace to detect from (df_f0, f_f0, Diameter (um))',
         'type': "str",
         'userdisplay': True,  # display to user
     }
 
-    ret['binLineScans'] = {
+    ret['Bin Line Scans'] = {
         'defaultvalue': 1,
         'value': None,
         'description': 'Number of line scans to bin when calculating the sum intensity (f/f_0). Zero (0) is off',
@@ -69,7 +69,7 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    ret['doExpDetrend'] = {
+    ret['Exponential Detrend'] = {
         'defaultvalue': True,
         'value': None,
         'description': 'Detrend raw data by subtracting an exponential - fit params set in "expDetrendFit"',
@@ -77,7 +77,7 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    ret['backgroundsubtract'] = {
+    ret['Background Subtract'] = {
         'defaultvalue': "Off",
         'value': None,
         'description': 'Background subtract from (Off, Rolling-Ball, Median, Mean)',
@@ -85,7 +85,15 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    ret['polarity'] = {
+    ret['Rolling-Ball Radius'] = {
+        'defaultvalue': 50,
+        'value': None,
+        'description': 'Background subtract Rolling-Ball radius',
+        'type': "int",
+        'userdisplay': True,  # display to user
+    }
+
+    ret['Polarity'] = {
         'defaultvalue': 'Pos',
         'value': None,
         'description': 'Polarity of detection , "Pos" for positive peaks, "Neg" for negative peaks',
@@ -93,7 +101,7 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    ret['f0ManualPercentile'] = {
+    ret['f0 Type'] = {
         'defaultvalue': 'Percentile',
         'value': None,
         'description': 'Calculate f0 either (Manual, Percentile).',
@@ -109,7 +117,7 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    ret['medianfilter'] = {
+    ret['Median Filter'] = {
         'defaultvalue': False,
         'value': None,
         'description': 'If True then apply median filter (using medianfilterkernel)',
@@ -117,7 +125,7 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    ret['medianfilterkernel'] = {
+    ret['Median Filter Kernel'] = {
         'defaultvalue': 3,
         'value': None,
         'description': 'Kernel size (bins) for median filter. Must be odd.',
@@ -125,7 +133,7 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    ret['filter'] = {
+    ret['Savitzky-Golay'] = {
         'defaultvalue': False,
         'value': None,
         'description': 'If True then apply Savitzky-Golay filter.',
@@ -133,7 +141,7 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    ret['prominence'] = {
+    ret['Prominence'] = {
         'defaultvalue': 0.5,  #0.09,
         'value': None,
         'description': 'Detect peaks that rise this amount above surrounding.',
@@ -141,7 +149,7 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    ret['width (ms)'] = {
+    ret['Width (ms)'] = {
         'defaultvalue': 15.0,
         'value': None,
         'description': 'Detect peaks with width larger than this.',
@@ -149,8 +157,8 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    ret['distance (ms)'] = {
-        'defaultvalue': 500.0,
+    ret['Distance (ms)'] = {
+        'defaultvalue': 200.0,
         'value': None,
         'description': 'Minimum allowed interval (distance) between peaks.',
         'type': "float",
@@ -165,15 +173,16 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    ret['decay_rel_height'] = {
-        'defaultvalue': 0.85,
-        'value': None,
-        'description': 'find return to baseline as "width" at this fraction of height. 1 is base, 0 is peak.',
-        'type': "float",
-        'userdisplay': True,  # display to user
-    }
+    # was used by v0
+    # ret['decay_rel_height'] = {
+    #     'defaultvalue': 0.85,
+    #     'value': None,
+    #     'description': 'find return to baseline as "width" at this fraction of height. 1 is base, 0 is peak.',
+    #     'type': "float",
+    #     'userdisplay': True,  # display to user
+    # }
 
-    ret['decay (ms)'] = {
+    ret['Decay (ms)'] = {
         'defaultvalue': 50.0,
         'value': None,
         'description': 'Window to fit single and double exp decay from peak (also used in clip plot).',
@@ -189,12 +198,54 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
+    
+    #
+    # Detect diameters in kymograph
+    ret['do_background_subtract_diam'] = {
+        'defaultvalue': True,
+        'value': None,
+        'description': 'Background subtract kym roi image with mean (diameter).',
+        'type': "bool",
+        'userdisplay': True,  # display to user
+    }
+
+    ret['line_width_diam'] = {
+        'defaultvalue': 1,
+        'value': None,
+        'description': 'Number of line scans (chunks) to generate line intensity profile (diameter).',
+        'type': "int",
+        'userdisplay': True,  # display to user
+    }
+
+    ret['line_median_kernel_diam'] = {
+        'defaultvalue': 3,
+        'value': None,
+        'description': 'Kernel size to median filter each line scan (diameter).',
+        'type': "int",
+        'userdisplay': True,  # display to user
+    }
+    
+    ret['std_threshold_mult_diam'] = {
+        'defaultvalue': 1.2,
+        'value': None,
+        'description': 'Detect onset/offset using this * STD (value 2 is 2*STD) (diameter).',
+        'type': "float",
+        'userdisplay': True,  # display to user
+    }
+
+    ret['line_interp_mult_diam'] = {
+        'defaultvalue': 4,
+        'value': None,
+        'description': 'Factor to oversample each line scan to smooth diameter measurements (diameter).',
+        'type': "int",
+        'userdisplay': True,  # display to user
+    }
+
     return ret
 
 class KymRoiDetection:
     """Dictionary of detection parameters.
     """
-    # analysisDict = getAnalysisDict()  # full
 
     backgroundSubtractTypes = ['Off', 'Rolling-Ball', 'Median', 'Mean']
 
@@ -222,11 +273,20 @@ class KymRoiDetection:
         # logger.info('initialized detection as:')
         # print(self.getDataframe())
 
+    def keys(self):
+        return self._dict.keys()
+
     def getDescription(self, key) -> str:
         if key not in self._dict.keys():
             logger.error(f'Did not find key:{key}. Available keys are {self._dict.keys()}')
             return ''
         return self._dict[key]['description']
+
+    def getType(self, key) -> str:
+        if key not in self._dict.keys():
+            logger.error(f'Did not find key:{key}. Available keys are {self._dict.keys()}')
+            return ''
+        return self._dict[key]['type']
 
     def getParam(self, key):
         if key not in self._dict.keys():
@@ -242,10 +302,15 @@ class KymRoiDetection:
 
     def setDefaults(self):
         """Set default values.
+        
+        'diameter' detection needs to have some specific parameters off.
         """
         for k, v in self._dict.items():
             defaultValue = v['defaultvalue']
             self.setParam(k, defaultValue)
+
+        # if self._dict
+        # setParam
 
     # def getDict(self) -> dict:
     #     """Get underlying dictionary.

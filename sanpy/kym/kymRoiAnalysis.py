@@ -2,6 +2,7 @@ import json
 import os
 import sys
 from typing import List
+from enum import Enum
 
 import numpy as np
 import pandas as pd
@@ -147,7 +148,7 @@ def _expFit2(xPlot, yPlot, xPeakBins, decayFitBins :int):
         except (RuntimeError, TypeError) as e:
             if doDebug:
                 logger.error(f'  _peakIdx:{_peakIdx} _peakBin:{_peakBin} -->> {e}')
-            fit_error[_peakIdx] = str(f'_expFit2:{e}')
+            fit_error[_peakIdx] += f'peak {_peakIdx} _expFit2:{e}' + ';'
 
         if doDebug:
             plt.show()
@@ -212,9 +213,9 @@ def _expFit(xPlot, yPlot, xPeakBins, decayFitBins :int):
                 plt.plot(xRange+xPlot[_peakBin], fit_y, 'r-')
 
         except (RuntimeError, TypeError) as e:
-            if doDebug:
-                logger.error(f'  _peakIdx:{_peakIdx} _peakBin:{_peakBin} -->> {e}')
-            fit_error[_peakIdx] = str(f'_expFit:{e}')
+            _errStr = f'  _peakIdx:{_peakIdx} myMonoExp:{e}'
+            # logger.error(_errStr)
+            fit_error[_peakIdx] += _errStr + ';'
 
         if doDebug:
             plt.show()
@@ -228,15 +229,87 @@ def getSavitzkyGolay_Filter(y: np.ndarray, pnts: int = 5, poly: int = 2, verbose
     filtered = savgol_filter(y, pnts, poly, mode="nearest", axis=0)
     return filtered
 
+class PeakDetectionTypes(Enum):
+    f_f0 = 'f_fo'
+    diameter = 'Diameter (um)'
+    # diameter = 'diameter'
+
+class KymRoiTraces:
+    """Class to hold a number of raw traces for one Kym ROI.
+
+    Each instance of *this is for one channel
+    """
+    def __init__(self):
+        self._analysisTraceList = ['timeSec', 'intRaw', 'intDetrend', 'df_f0', 'f_f0',
+                                   'timeBins', 'leftThresholdBins', 'rightThresholdBins', 'diameterBins', 'Diameter (um)',
+                                   'Left Diameter (um)', 'Right Diameter (um)', 'Diameter (um)']
+
+        self._analysisTraces = {}
+        for trace in self._analysisTraceList:
+            self._analysisTraces[trace] = None
+
+    def getTrace(self, name):
+        """Get a trace name fomr analysis.
+        """
+        if name not in self._analysisTraces.keys():
+            logger.error(f'did not find trace name "{name}". Available names are {self._analysisTraces.keys()}')
+            return
+        return self._analysisTraces[name]
+
+    def loadTraces(self, roiNumber, loadedIntDf : pd.DataFrame):
+        roiTraceList = self._analysisTraceList
+        _numLoaded = 0
+        for roiTrace in roiTraceList:
+            colName = f'ROI{roiNumber}_{roiTrace}'
+            
+            if colName not in loadedIntDf.columns:
+                logger.error(f'   did not find trace name "{roiTrace}" column in file')
+                continue
+            
+            oneTrace = loadedIntDf[colName].to_numpy()  # added as_numpy() 20241012
+            
+            # TODO: refactor this
+            oneTrace = oneTrace[~np.isnan(oneTrace)]
+            
+            self._analysisTraces[roiTrace] = oneTrace
+
+            # logger.info(f'   loaded roiTrace:{roiTrace} with {len(oneTrace)} points')
+
+            _numLoaded += 1
+        
+        # logger.info(f'loaded {_numLoaded} traces for roiNumber:{roiNumber}')
+
+    def items(self):
+        return self._analysisTraces.items()
+    
+    def keys(self):
+        return self._analysisTraces.keys()
+    
+    def __getitem__(self, key):
+        # to mimic a dictionary
+        ret = None
+        try:
+            ret = self._analysisTraces[key]
+        except KeyError:
+            logger.error(f'Error getting trace key "{key}" available keys are {self._analysisTraces.keys()}')
+            raise
+        #
+        return ret
+
+    def __setitem__(self, key, value):
+        # to mimic a dictionary
+        try:
+            self._analysisTraces[key] = value
+        except KeyError as e:
+            logger.error(f"{e}")
+
 class KymRoi:
     """One rectangular ROI.
     """
     def __init__(self, label : str,
-                 kymRoiAnalysis : "KymRoiAnalysis",
                  imgData : np.ndarray,
                  header : dict,
                  ltrbRect : List[int] = None,
-                 kymRoiDetection : KymRoiDetection = KymRoiDetection(),
                  doAnalysis : bool = False,
                  ):
         """
@@ -250,50 +323,99 @@ class KymRoi:
             Requires two keys ('umPerPixel', 'secondsPerline')
         ltrbRect : List[l, t, r, b]
             Seed with this rect, if none than use getDefaultRect()
-        kymRoiDetection : KymRoiDetection
-            Seed with this detection, if None then use defaults
         """
         self._label = label
-        self._kymRoiAnalysis = kymRoiAnalysis  # just used to set _isDirty
-        self._imgData = imgData
+        
+        self._imgData : List[np.ndarray] = imgData
         
         if ltrbRect is None:
             ltrbRect = self.getDefaultRect()
-        self._ltrbRect = ltrbRect
-        
-        # store a copy
-        self._kymRoiDetection = KymRoiDetection(kymRoiDetection)  # detection used in peakDetect()
+        self._ltrbRect : List[int] = ltrbRect
         
         self._header = header
 
-        self._kymRoiResults = KymRoiResults()
+        self._isDirty = True
 
-        # self._analysisTraces['timeSec'] = xPlot
-        # self._analysisTraces['intRaw'] = yRaw  # raw sum intensity
-        # self._analysisTraces['intDetrend'] = yDetrend # after detrend with single exponential
-        # self._analysisTraces['int_df_f0'] = yDf_f0
+        _numChannels = self.header['numChannels']
+        self._detectioParams = [None] * _numChannels
+        self._analysisResults = [None] * _numChannels
+        self.kymRoiTraces = [None] * _numChannels
 
-        self._analysisTraceList = ['timeSec', 'intRaw', 'intDetrend', 'int_df_f0', 'int_f_f0']
-        self._analysisTraces = {}  # filled in in peakDetect()
+        for channelIdx in range(_numChannels):
+            self._detectioParams[channelIdx] = {}
+            self._analysisResults[channelIdx] = {}
+            
+            for item in PeakDetectionTypes:
+                
+                self._detectioParams[channelIdx][item.name] = KymRoiDetection()
+                
+                #
+                if item == PeakDetectionTypes.diameter:
+                    self._detectioParams[channelIdx][item.name].setParam('detectThisTrace', 'Diameter (um)')
+                    self._detectioParams[channelIdx][item.name].setParam('Prominence', 2)
+                    self._detectioParams[channelIdx][item.name].setParam('Polarity', 'Neg')
+                
+                #
+                self._analysisResults[channelIdx][item.name] = KymRoiResults()
+
+            self.kymRoiTraces[channelIdx] = KymRoiTraces()
+            # traces are basically a df with sum for each line scan, columns are things like (time, raw, norm, int_f0, df_f0)
+            # traces are one value per line scan (multiple columns) and shared between peak detection in f0 and diameter
 
         if doAnalysis:
             self.detectPeaks()
 
-    def getTrace(self, name):
-        """Get a trace name fomr analysis.
-        """
-        if name not in self._analysisTraces.keys():
-            logger.error(f'did not find trace name "{name}". Available names are {self._analysisTraces.keys()}')
-            print(self._analysisTraces.keys())
-            return
-        return self._analysisTraces[name]
+    def getDetectionParams(self, channel : int, detectionType : PeakDetectionTypes):
+        return self._detectioParams[channel][detectionType.name]
     
+    def getAnalysisResults(self, channel : int, detectionType : PeakDetectionTypes):
+        return self._analysisResults[channel][detectionType.name]
+    
+    def getTrace(self, channel, name):
+        return self.kymRoiTraces[channel][name]
+    
+    def setDetection(self, channel, detectionType : PeakDetectionTypes, kymRoiDetection : KymRoiDetection):
+        """Set detection params for a channel.
+        """
+        self._detectioParams[channel][detectionType.name] = kymRoiDetection
+        self._isDirty = True
+        # return kymRoiDetection
+    
+    def setResults(self, channel, detectionType : PeakDetectionTypes, kymRoiResults : KymRoiResults):
+        self._analysisResults[channel][detectionType.name] = kymRoiResults
+        self._isDirty = True
+        return kymRoiResults
+
+    def setTrace(self, channel, name, values : np.ndarray):
+        """Set a named trace in kym analysis.
+        
+        name is something like df_f0, diameter (um), etc.
+        
+        Traces are a df of rows (line scans) and columns (trace names).
+        """
+        self.kymRoiTraces[channel][name] = values
+
+    # @property
+    # def detectionParams(self, channel):
+    #     """Backwards compatible after adding PeakDetectionTypes.
+    #     """
+    #     return self.getDetectionParams(channel, PeakDetectionTypes.f_f0)
+
+    def getTrace(self, channel, name):
+        """Get a trace name from analysis.
+        """
+        return self.kymRoiTraces[channel].getTrace(name)
+
     def __str__(self):
-        ret = f'{self._label} {self._ltrbRect}'
+        ret = f"{self._label} {self._ltrbRect} {self.header['numChannels']}"
         return ret
     
     def getLabel(self):
         return self._label
+    
+    @property
+    def header(self):
+        return self._header
     
     @property
     def path(self):
@@ -308,10 +430,10 @@ class KymRoi:
         return self._header['secondsPerLine']
     
     def getDefaultRect(self):
-        h, w = self._imgData.shape
+        # h, w = self._imgData.shape
         left = 0
-        top = h
-        right = w
+        top = self.header['imageHeight']
+        right = self.header['imageWidth']
         bottom = 0
 
         return [left, top, right, bottom]
@@ -334,16 +456,9 @@ class KymRoi:
     def setRect(self, ltrb : List, doAnalysis : bool = False):
         """Set the roi rect [l, t, r, b]
         """
-                
         ltrbActual = self._getConstrainedRoi(ltrb)
-
-        logger.info(f'   proposed ltrb:{ltrb}')
-        logger.info(f'   contrain ltrb:{ltrbActual}')
-
-        self._ltrbRect = ltrbActual
-        
-        # if doAnalysis:
-        #     self.peakDetect()
+        self._ltrbRect = ltrbActual    
+        self._isDirty = True
 
     def setRectPosSize(self, pos, size):
         """Set ltrb rect using pos() and size()
@@ -365,10 +480,6 @@ class KymRoi:
         bottom = int(bottom)
         
         newRect = [left, top, right, bottom]
-        
-        logger.info(f'pos:{pos} size:{size}')
-        logger.info(f'newRect:{newRect}')
-        
         self.setRect(newRect)
 
         return newRect
@@ -382,8 +493,8 @@ class KymRoi:
         right = ltrb[2]
         bottom = ltrb[3]
 
-        heightMax = self._imgData.shape[0]
-        widthMax = self._imgData.shape[1]
+        heightMax = self.header['imageHeight']
+        widthMax = self.header['imageWidth']
 
         if left<0:
             left = 0
@@ -397,89 +508,80 @@ class KymRoi:
         newRect = [left, top, right, bottom]
         
         return newRect
- 
-    @property
-    def detectionParams(self):
-        return self._kymRoiDetection
     
-    @property
-    def analysisResults(self):
-        return self._kymRoiResults
-    
-    def getRoiImg(self):
+    def getRoiImg(self, channel) -> np.ndarray:
         """Get roi inside the rect.
+
+        Return a copy so when modified does not modify the original (e.g. background subtract).
         """
         left, top, right, bottom = self.getRect()
-        roiImg = self._imgData[bottom:top, left:right]
+        roiImg = self._imgData[channel][bottom:top, left:right]
         roiImg = np.copy(roiImg)
         return roiImg
     
-    def backgroundSubtract(self, roiImg):
+    def backgroundSubtract(self, channel, roiImg, peakDetectionTypes : PeakDetectionTypes):
         
-        backgroundsubtract = self.detectionParams['backgroundsubtract']
-
-        # _printImgStat(roiImg, f'before background subtract: "{backgroundsubtract}"')        
+        detectionParameters = self.getDetectionParams(channel, peakDetectionTypes)
+        
+        backgroundsubtract = detectionParameters['Background Subtract']
                 
         if backgroundsubtract == 'Off':
             pass
         
         elif backgroundsubtract == 'Rolling-Ball':
-            _rollingBallRadius = 50
-            logger.info(f'   _rollingBallRadius:{_rollingBallRadius}')
+            _rollingBallRadius = detectionParameters['Rolling-Ball Radius']
             rollingBackground = restoration.rolling_ball(roiImg, radius=_rollingBallRadius)
-            _printImgStat(rollingBackground, '   rollingBackground img')
             roiImg = roiImg - rollingBackground
         
         elif backgroundsubtract == 'Median':
-            # logger.warning('problem with median is "after" we get negative value and can not perform log transform !!!')
+            # problem with median is "after" we get negative value and
+            # can not perform log transform !!!'
             _subtactValue = np.median(roiImg).astype(np.int64)
             # logger.info(f'   _subtactValue: {type(_subtactValue)} {_subtactValue}')
             roiImg = roiImg - _subtactValue
             roiImg[roiImg<0] = 0
-            self.detectionParams['backgroundSubtractValue'] = int(_subtactValue)
+            detectionParameters['backgroundSubtractValue'] = int(_subtactValue)
 
         elif backgroundsubtract == 'Mean':
             _subtactValue = np.mean(roiImg).astype(np.int64)
-            # logger.info(f'   _subtactValue: {type(_subtactValue)} {_subtactValue}')
             roiImg = roiImg - _subtactValue
             roiImg[roiImg<0] = 0
-            self.detectionParams['backgroundSubtractValue'] = int(_subtactValue)
+            detectionParameters['backgroundSubtractValue'] = int(_subtactValue)
         
         else:
             logger.error(f'did not understand background subtract "{backgroundsubtract}" -->> no subtraction')
 
         # _printImgStat(roiImg, f'after background subtract: "{backgroundsubtract}"')        
 
+        self._isDirty = True
+
         return roiImg
     
-    def getSumIntensity(self):
+    def getSumIntensity(self, channel):
         """Get sum intensity for each line scan.
         
         Algorithm
         ---------
-            1) background subtract roi image
-            2) Bin line scans using mean for each pixel across a bin line scan width
-            3) sum intensity of each lnie scan
-            4) normalize each intensity line scan to number of pixels
+            - Background subtract roi image
+            - Bin line scans using mean for each pixel across a bin line scan width
+            - Sum intensity of each lnie scan
+            - Normalize each intensity line scan to number of pixels
 
         Returns
         -------
             Tuple of (x, y)
         """
-        roiImg = self.getRoiImg()  # get imgData within ROI
-        
+        detectionParams = self.getDetectionParams(channel, PeakDetectionTypes.f_f0)
+        roiImg = self.getRoiImg(channel)  # get imgData within ROI
         _left, _top, _right, _bottom = self.getRect()
         
         # xPlot = np.arange(roiImg.shape[1]) * self.secondsPerLine
         xPlot = np.arange(_left, _right, dtype=np.float32) * self.secondsPerLine
 
         # "background" subtract
-        # background subtract can not result in negative values
-        roiImg = self.backgroundSubtract(roiImg)
-        # _printImgStat(roiImg, f'after backgroundsubtract: with "{backgroundsubtract}"')
+        roiImg = self.backgroundSubtract(channel, roiImg, PeakDetectionTypes.f_f0)
 
-        binLineScans = self.detectionParams['binLineScans']
-        # logger.info(f'binLineScans:{binLineScans}')
+        binLineScans = detectionParams['Bin Line Scans']
         if binLineScans == 0:
             pass
         else:
@@ -492,13 +594,13 @@ class KymRoi:
 
         #
         # filter
-        if self.detectionParams['medianfilter']:
+        if detectionParams['Median Filter']:
             # 1) medfilt
-            medianfilterkernel = self.detectionParams['medianfilterkernel']
+            medianfilterkernel = detectionParams['Median Filter Kernel']
             # logger.info(f'   applying median filter with medianfilterkernel:{medianfilterkernel}')
             sumInt = medfilt(sumInt, kernel_size=medianfilterkernel)
 
-        if self.detectionParams['filter']:
+        if detectionParams['Savitzky-Golay']:
             # 2) SavitzkyGolay_Filter
             # logger.info(f'   applying Savitzky-Golay filter')
             sumInt = getSavitzkyGolay_Filter(sumInt)
@@ -510,98 +612,176 @@ class KymRoi:
         """
         _retBin1 = msValue / 1000 / self.secondsPerLine
         _retBin2 = int(round(_retBin1))
-        # logger.info(f'msValue:{msValue} _retBin1:{_retBin1} _retBin2:{_retBin2}')
         return _retBin2
     
-    def getAnalysisTraces(self):
-        return self._analysisTraces
+    def detectDiam(self, channel, verbose : bool = False):
+        """Detect diam from kym image.
+        
+        Uses detectKymRoiDiam()
+        """
+        self._isDirty = True
 
-    def peakDetect(self, verbose : bool = False):
+        roiImg = self.getRoiImg(channel)
+        
+        logger.info(f'==>> calling detectKymRoiDiam() with roi {self.getLabel()} {roiImg.shape}')
+        
+        from sanpy.kym.kymRoiDiameter import detectKymRoiDiam
+
+        detectionParams = self.getDetectionParams(channel, PeakDetectionTypes.diameter)
+
+        doBackgroundSubtract = detectionParams['do_background_subtract_diam']
+        lineWidth = detectionParams['line_width_diam']
+        lineMedianKernel = detectionParams['line_median_kernel_diam']
+        stdThreshold = detectionParams['std_threshold_mult_diam']
+        lineInterptMult = detectionParams['line_interp_mult_diam']  # interpolate each line scan by this multiplyer
+        lineScanFraction = 4 # 2 # percent of line scan to detect for onset/offset
+            # if 2 then half/half
+            # if 4 then first/last 25%
+
+        # logger.info(f'   doBackgroundSubtract:{doBackgroundSubtract}')
+
+        # need to shift bins to make roi _bottom
+        leftThresholdBins, rightThresholdBins, diameterBins, sumIntensity = \
+            detectKymRoiDiam(roiImg,
+                        doBackgroundSubtract=doBackgroundSubtract,
+                        lineWidth=lineWidth,
+                        lineMedianKernel=lineMedianKernel,
+                        lineInterptMult=lineInterptMult,
+                        stdThreshold=stdThreshold,
+        )
+    
+        _left, _top, _right, _bottom = self.getRect()
+        leftThresholdBins += _bottom
+        rightThresholdBins += _bottom
+        
+        self.setTrace(channel, 'leftThresholdBins', leftThresholdBins)
+        self.setTrace(channel, 'rightThresholdBins', rightThresholdBins)
+        self.setTrace(channel, 'diameterBins', diameterBins)
+
+        self.setTrace(channel, 'Left Diameter (um)', leftThresholdBins * self.umPerPixel)
+        self.setTrace(channel, 'Right Diameter (um)', rightThresholdBins * self.umPerPixel)
+        self.setTrace(channel, 'Diameter (um)', diameterBins * self.umPerPixel)
+
+        xBins = np.arange(_left, _right, dtype=np.int64)
+        self.setTrace(channel, 'timeBins', xBins)
+
+        # just to get 'timeSec'
+        xPlot, yRaw = self.getSumIntensity(channel)  # does background subtraction
+        self.setTrace(channel, 'timeSec', xPlot)
+
+    def peakDetect(self, channel,
+                   kymRoiDetection : KymRoiDetection = None,
+                   verbose : bool = False):
+        
+        if kymRoiDetection is not None:
+            # use this to detect in 'Diameter (um)'
+            detectionParams = kymRoiDetection
+        else:
+            # default is to detect in sum
+            detectionParams = self.getDetectionParams(channel, PeakDetectionTypes.f_f0)
+        
+        # REFACTOR TO SET
+        kymRoiTraces = self.kymRoiTraces[channel]
+
         # store the ltrb of rect we analysed
         roiRect = self.getRect()
-        self.detectionParams['ltrb'] = roiRect
+        detectionParams['ltrb'] = roiRect
         _left = roiRect[0]
 
-        logger.info(f'=== === peakDetect()   === === roi label:{self._label} with detectionParams === ===')
+        detectThisTrace = detectionParams['detectThisTrace']  # from (df_f0, f_f0, Diameter (um))
+
+        if detectThisTrace == 'Diameter (um)':
+            _tmpTrace = kymRoiTraces[detectThisTrace]
+            if _tmpTrace is None:
+                logger.error(f'did not find trace "{detectThisTrace}" -->> no detection performed')
+                return
+        
+        logger.info(f'=== === peakDetect()   === ===>> roi label:{self._label} with "{detectThisTrace}"')
         if verbose:
-            print(self.detectionParams.printValues())
+            print(detectionParams.printValues())
 
         # parameters
-        detectThisTrace = self.detectionParams['detectThisTrace']  # from (int_df_f0, int_f_f0)
-        polarity = self.detectionParams['polarity']
-        prominence = self.detectionParams['prominence']
-        width = self.detectionParams['width (ms)'] / 1000 / self.secondsPerLine
-        distance = self.detectionParams['distance (ms)'] / 1000 / self.secondsPerLine
+        polarity = detectionParams['Polarity']
+        prominence = detectionParams['Prominence']
+        width = detectionParams['Width (ms)'] / 1000 / self.secondsPerLine
+        distance = detectionParams['Distance (ms)'] / 1000 / self.secondsPerLine
 
         # if f0ManualPercentile=='Manual' then user need to directly set f0, we do not calulate it
-        f0ManualPercentile = self.detectionParams['f0ManualPercentile']  # in (Manual, Percentile)
-        f0Percentile = self.detectionParams['f0 Percentile']
+        f0ManualPercentile = detectionParams['f0 Type']  # in (Manual, Percentile)
+        f0Percentile = detectionParams['f0 Percentile']
         manual_f0 = f0ManualPercentile == 'Manual'
         percentile_f0 = f0ManualPercentile == 'Percentile'
-        if manual_f0 and self.detectionParams['f0Value'] is None:
+        if manual_f0 and detectionParams['f0 Value'] is None:
             logger.warning('f0ManualPercentile is set to "Manual" but f0Value is None --> user needs to set value')
             return
-        f0 = self.detectionParams['f0Value']
+        f0 = detectionParams['f0 Value']
 
-        xPlot, yRaw = self.getSumIntensity()  # does background subtraction
-       
-        # subtract single exponential to account for intensity decay (bleaking)
-        # yRaw can not have negative values (We are taking the log)
-        doExpDetrend = self.detectionParams['doExpDetrend']
-        if doExpDetrend:
-            logger.info(f'detrend')
-            logger.info(f'   xPlot:{xPlot}')
-            logger.info(f'   yRaw:{yRaw}')
-            
-            fitDict, yDetrend = myDetrend(xPlot, yRaw, doPlot=False)
-            
-            if fitDict is None:
-                logger.error('error calling myDetrend')
-                yDetrend = yRaw
+        self._isDirty = True
+
+        if detectThisTrace == 'Diameter (um)':
+            xPlot, _ = self.getSumIntensity(channel)  # does background subtraction
+        else:
+            xPlot, yRaw = self.getSumIntensity(channel)  # does background subtraction
+        
+            # subtract single exponential to account for intensity decay (bleaking)
+            # yRaw can not have negative values (We are taking the log)
+            doExpDetrend = detectionParams['Exponential Detrend']
+            if doExpDetrend:
+                # logger.info('performing Exponential Detrend')
+                
+                fitDict, yDetrend = myDetrend(xPlot, yRaw, doPlot=False)
+                
+                if fitDict is None:
+                    logger.error('error calling myDetrend !!!')
+                    yDetrend = yRaw
+
+                else:
+                    detectionParams['expDetrendFit'] = fitDict  # store the fit params
+
+                    # shift back to all positive
+                    yDetrend += abs(np.min(yDetrend))
 
             else:
-                self.detectionParams['expDetrendFit'] = fitDict  # store the fit params
+                yDetrend = yRaw
+                detectionParams['expDetrendFit'] = None  # when off -->> no fit
 
-                # shift back to all positive
-                yDetrend += abs(np.min(yDetrend))
-
-        else:
-            yDetrend = yRaw
-            self.detectionParams['expDetrendFit'] = None  # when off -->> no fit
-
-        # get df/f0 (f0 = median)
-        if percentile_f0:
             if polarity == 'Neg':
-                f0Percentile = 100 -f0Percentile
+                f0Percentile = 100 - f0Percentile
 
-            f0 = np.percentile(yDetrend, f0Percentile)
-            # logger.info(f'   TODO: what is f0? Using f0Percentile:{f0Percentile} gives f0:{f0}')
-            self.detectionParams['f0Value'] = float(f0)  # store the f0 value
+            if percentile_f0:
+                # f0 is a percentile of f_f0, 50 percentile is median
+                f0 = np.percentile(yDetrend, f0Percentile)
+                detectionParams['f0 Value'] = float(f0)  # store the f0 value
+            else:
+                logger.info(f'   -->> using user specified f0:{f0}')
+
+        kymRoiTraces['timeSec'] = xPlot
+        
+        if detectThisTrace == 'Diameter (um)':
+            kymRoiTraces['timeSec'] = xPlot
         else:
-            logger.info(f'colin symposium -->> using user specified f0:{f0}')
+            # proper dF/F0
+            yDf_f0 = (yDetrend - f0) / f0
+            # santana likes
+            f_f0 = yDetrend / f0
 
-        # proper dF/F0
-        yDf_f0 = (yDetrend - f0) / f0
-        # santana likes
-        f_f0 = yDetrend / f0
+            #
+            # store what we used for analysis
+            kymRoiTraces['timeSec'] = xPlot
+            kymRoiTraces['intRaw'] = yRaw  # raw sum intensity
+            kymRoiTraces['intDetrend'] = yDetrend # after detrend with single exponential
+            kymRoiTraces['df_f0'] = yDf_f0
+            kymRoiTraces['f_f0'] = f_f0
+
+
+        yDf_f0 = kymRoiTraces[detectThisTrace]
 
         #
         # add everything to a NEW results object
-        self._kymRoiResults = KymRoiResults()  # create a new one each time we run analysis
-        oneRoiResults = self._kymRoiResults  # to ractor from widget
-
-        # self._isDirty = True
-        self._kymRoiAnalysis._isDirty = True
-
-        #
-        # store what we used for analysis
-        self._analysisTraces['timeSec'] = xPlot
-        self._analysisTraces['intRaw'] = yRaw  # raw sum intensity
-        self._analysisTraces['intDetrend'] = yDetrend # after detrend with single exponential
-        self._analysisTraces['int_df_f0'] = yDf_f0
-        self._analysisTraces['int_f_f0'] = f_f0
-
-        yDf_f0 = self._analysisTraces[detectThisTrace]
+        if detectThisTrace == 'Diameter (um)':
+            oneRoiResults = self.setResults(channel, PeakDetectionTypes.diameter, KymRoiResults())
+        else:
+            oneRoiResults = self.setResults(channel, PeakDetectionTypes.f_f0, KymRoiResults())
 
         #
         if polarity == 'Pos':
@@ -610,7 +790,9 @@ class KymRoi:
             detectThisY = -yDf_f0
         else:
             logger.error(f'   did not understand polarity:"{polarity}"')
-                                                        
+
+        self._isDirty = True
+
         #
         # find peaks (this includes half-width)
         #
@@ -619,12 +801,12 @@ class KymRoi:
                                prominence=prominence,
                                distance=distance,
                                width=width,
-                            #    rel_height = thresh_rel_height,
+                               # rel_height = thresh_rel_height,
                                )
         peakBins = peakTuple[0]
         peakDict = peakTuple[1]
 
-        logger.info(f'   detected {len(peakBins)} peaks with peakBins:{peakBins}')
+        logger.info(f'   -->> detected {len(peakBins)} peaks')
 
         if polarity == 'Neg':
             peakDict['width_heights'] = -peakDict['width_heights']
@@ -637,6 +819,7 @@ class KymRoi:
         # GOT SOME PEAKS
         # IMPORTANT, do this first to seed proper number of rows
         oneRoiResults.setValues('Peak Number', range(1,numPeaks+1))  # +1 because range is [)
+        oneRoiResults.setValues('Channel Number', 1)
         oneRoiResults.setValues('ROI Number', self._label)
         oneRoiResults.setValues('Path', self.path)
         oneRoiResults.setValues('Accept', True)  # all peaks start as Accept=True
@@ -655,19 +838,21 @@ class KymRoi:
 
         #
         # get the onset and offset of the peak
-        thresh_rel_height = self.detectionParams['thresh_rel_height']  # using default of 0.85, 1 is foot, 0 is peak
+        thresh_rel_height = detectionParams['thresh_rel_height']  # using default of 0.85, 1 is foot, 0 is peak
+        logger.info(f'finding initial onset/offset thresholds using thresh_rel_height:{thresh_rel_height}')
         peak_10_tuple = peak_widths(detectThisY, peakBins, rel_height=thresh_rel_height)
-        peak10_widths = peak_10_tuple[0]
-        peak10_width_heights = peak_10_tuple[1]
+        # peak10_widths = peak_10_tuple[0]
+        # peak10_width_heights = peak_10_tuple[1]
         peak10_left_ips = peak_10_tuple[2]
         peak10_right_ips = peak_10_tuple[3]
+        
         # shift everything by the left pixel of our ROI
         # peak10_left_ips = peak10_left_ips + _left
         # peak10_right_ips = peak10_right_ips + _left
         
         # IMPORTANT: DO THIS AFTER ALL DETECTION IS DONE
         # peakBins = peakBins + _left
-
+                    
         thresholdBin = np.round(peak10_left_ips)
         thresholdBin = thresholdBin.astype(np.int64)  # use this as list index
         peakHeight = np.subtract(yPeaks, yDf_f0[thresholdBin])
@@ -716,8 +901,14 @@ class KymRoi:
         # CRITICAL: refine peak params using my findThreshold()
         # this requires the following to be filled in: (Peak Bin, Peak, Peak Height)
         ##
-        newOnsetOffsetFraction = self.detectionParams['newOnsetOffsetFraction']
-        newOnsetBins, newDecayBins, newOnset10Bins, newDecay10Bins, newHeight = findThreshold(self, newOnsetOffsetFraction=newOnsetOffsetFraction)
+        newOnsetOffsetFraction = detectionParams['newOnsetOffsetFraction']
+        logger.info(f'calling findThreshold() with newOnsetOffsetFraction:{newOnsetOffsetFraction}')
+        newOnsetBins, newDecayBins, newOnset10Bins, newDecay10Bins, _errorList = \
+            findThreshold(detectThisY,
+                          polarity,
+                          oneRoiResults,
+                          newOnsetOffsetFraction=newOnsetOffsetFraction,
+                          doMpl=False)
 
         newOnsetSeconds = [(_bin+_left)*self.secondsPerLine for _bin in newOnsetBins]
         newDecaySeconds = [(_bin+_left)*self.secondsPerLine for _bin in newDecayBins]
@@ -728,23 +919,39 @@ class KymRoi:
         # fill in with new/refined results
         oneRoiResults.setValues('Onset Bin', newOnsetBins)  
         oneRoiResults.setValues('Onset Second', newOnsetSeconds)
-        oneRoiResults.setValues('Onset Int', yDf_f0[newOnsetBins])  # yPlot is already reduced to roi (left)
+        # IMPORTANT: newOnsetBins can have nan values
+        _tmp_yDf_f0 = [yDf_f0[_newOnsetBin] if ~np.isnan(_newOnsetBin) else np.nan for _newOnsetBin in newOnsetBins]
+        # oneRoiResults.setValues('Onset Int', yDf_f0[newOnsetBins])  # yPlot is already reduced to roi (left)
+        oneRoiResults.setValues('Onset Int', _tmp_yDf_f0)  # yPlot is already reduced to roi (left)
         # peak height is wrt onset (not decay)
         peakHeight = np.subtract(oneRoiResults.getValues('Peak Int'), oneRoiResults.getValues('Onset Int'))
         oneRoiResults.setValues('Peak Height', peakHeight)
 
         oneRoiResults.setValues('Onset 10 Bin', newOnset10Bins)  
         oneRoiResults.setValues('Onset 10 Second', newOnset10Seconds)
-        oneRoiResults.setValues('Onset 10 Int', yDf_f0[newOnset10Bins])  # yPlot is already reduced to roi (left)
+        # IMPORTANT: newOnset10Bins can have nan values
+        _tmp_yDf_f0 = [yDf_f0[_newOnset10Bin] if ~np.isnan(_newOnset10Bin) else np.nan for _newOnset10Bin in newOnset10Bins]
+        # oneRoiResults.setValues('Onset 10 Int', yDf_f0[newOnset10Bins])  # yPlot is already reduced to roi (left)
+        oneRoiResults.setValues('Onset 10 Int', _tmp_yDf_f0)  # yPlot is already reduced to roi (left)
 
         oneRoiResults.setValues('Decay Bin', newDecayBins)  
         oneRoiResults.setValues('Decay Second', newDecaySeconds)
-        oneRoiResults.setValues('Decay Int', yDf_f0[newDecayBins]) # yPlot is already reduced to roi (left)
+        # IMPORTANT: newDecayBins can have nan values
+        _tmp_yDf_f0 = [yDf_f0[_newDecayBin] if ~np.isnan(_newDecayBin) else np.nan for _newDecayBin in newDecayBins]
+        # oneRoiResults.setValues('Decay Int', yDf_f0[newDecayBins]) # yPlot is already reduced to roi (left)
+        oneRoiResults.setValues('Decay Int', _tmp_yDf_f0) # yPlot is already reduced to roi (left)
 
         oneRoiResults.setValues('Decay 10 Bin', newDecay10Bins)  
         oneRoiResults.setValues('Decay 10 Second', newDecay10Seconds)
-        oneRoiResults.setValues('Decay 10 Int', yDf_f0[newDecay10Bins]) # yPlot is already reduced to roi (left)
+        # IMPORTANT: newDecay10Bins can have nan values
+        _tmp_yDf_f0 = [yDf_f0[_newDecay10Bin] if ~np.isnan(_newDecay10Bin) else np.nan for _newDecay10Bin in newDecay10Bins]
+        # oneRoiResults.setValues('Decay 10 Int', yDf_f0[newDecay10Bins]) # yPlot is already reduced to roi (left)
+        oneRoiResults.setValues('Decay 10 Int', _tmp_yDf_f0) # yPlot is already reduced to roi (left)
 
+        # logger.info(f'adding _errorList: {len(_errorList)} {_errorList}')
+        # print(oneRoiResults.df)
+        for _peakIdx, _err in enumerate(_errorList):
+            oneRoiResults.addError(_peakIdx, _err)
         ##
         # done refining with findThreshold()
         ##
@@ -752,10 +959,11 @@ class KymRoi:
         # 90% or rise and decay works with peak detect
         rel_height = 0.1  # 1 is base, 0 is peak
         peak_90_tuple = peak_widths(detectThisY, peakBins, rel_height=rel_height)
-        peak90_widths = peak_90_tuple[0]
-        peak90_width_heights = peak_90_tuple[1]
+        # peak90_widths = peak_90_tuple[0]
+        # peak90_width_heights = peak_90_tuple[1]
         peak90_left_ips = peak_90_tuple[2]
         peak90_right_ips = peak_90_tuple[3]
+
         # shift everything by the left pixel of our ROI
         # peak90_left_ips = peak90_left_ips + _left
         # peak90_right_ips = peak90_right_ips + _left
@@ -781,7 +989,6 @@ class KymRoi:
         fwMs = fwSeconds * 1000
         oneRoiResults.setValues('FW (ms)', fwMs)
 
-
         # colin, full with from rise 10 to decay 10
         fw10Seconds = (oneRoiResults.getValues('Decay 10 Second') - oneRoiResults.getValues('Onset 10 Second'))
         fw10Ms = fw10Seconds * 1000
@@ -791,28 +998,26 @@ class KymRoi:
 
         # rise and decay time (from onset to peak and peak to decay)
         riseTimeSeconds = oneRoiResults.getValues('Peak Second') - oneRoiResults.getValues('Onset Second')  # element wise subtract
-        riseTimeMs = riseTimeSeconds *1000
+        riseTimeMs = riseTimeSeconds * 1000
         oneRoiResults.setValues('Rise Time (ms)', riseTimeMs)
 
         decayTimeSeconds = oneRoiResults.getValues('Decay Second') - oneRoiResults.getValues('Peak Second')  # element wide subtraction
-        decayTimeMs = decayTimeSeconds *1000
+        decayTimeMs = decayTimeSeconds * 1000
         oneRoiResults.setValues('Decay Time (ms)', decayTimeMs)
 
-
-        # colin symposium
         riseTen90Seconds = oneRoiResults.getValues('Onset 90 Second') - oneRoiResults.getValues('Onset 10 Second')  # element wise subtract
-        rise1090Ms = riseTen90Seconds *1000
+        rise1090Ms = riseTen90Seconds * 1000
         oneRoiResults.setValues('10-90 Rise Time (ms)', rise1090Ms)
 
         decay1090Seconds = oneRoiResults.getValues('Decay 10 Second') - oneRoiResults.getValues('Decay 90 Second')  # element wise subtract
-        decay1090Ms = decay1090Seconds *1000
+        decay1090Ms = decay1090Seconds * 1000
         oneRoiResults.setValues('10-90 Decay Time (ms)', decay1090Ms)
 
         #
         # (1) exp fit of each peak
         # [_left, _, _, _] = self.roiList._roiAsRect(roi)
         # decayFitBins = self._detectionDict['decay (ms)'] / 1000 / self.secondsPerLine  # TODO: convert to sec or ms
-        decayFitBins = self._msToBin(self.detectionParams['decay (ms)'])
+        decayFitBins = self._msToBin(detectionParams['Decay (ms)'])
         # fit_m, fit_tau, fit_b, fit_r2, fit_error = _expFit(xPlot, yDf_f0, peakBins - _left, decayFitBins=decayFitBins)
         fit_m, fit_tau, fit_b, fit_r2, fit_error = _expFit(xPlot, yDf_f0, peakBins, decayFitBins=decayFitBins)
         oneRoiResults.setValues('fit_m', fit_m)
@@ -828,7 +1033,7 @@ class KymRoi:
         # (2) double exp fit of each peak
         # [_left, _, _, _] = self.roiList._roiAsRect(roi)
         # decayFitBins = self._detectionDict['decay (ms)'] / 1000 / self.secondsPerLine  # TODO: convert to sec or ms
-        decayFitBins = self._msToBin(self.detectionParams['decay (ms)'])
+        decayFitBins = self._msToBin(detectionParams['Decay (ms)'])
         # fit_m1, fit_tau1, fit_m2, fit_tau2, fit_r22, fit_error = _expFit2(xPlot, yDf_f0, peakBins - _left, decayFitBins=decayFitBins)
         fit_m1, fit_tau1, fit_m2, fit_tau2, fit_r22, fit_error = _expFit2(xPlot, yDf_f0, peakBins, decayFitBins=decayFitBins)
         oneRoiResults.setValues('fit_m1', fit_m1)
@@ -839,16 +1044,23 @@ class KymRoi:
         # logger.info(f'fit_error is:{fit_error}')
         for _peakErrorIdx, oneError in enumerate(fit_error):
             if oneError != '':
+                logger.warning(f'oneError:{oneError}')
                 oneRoiResults.addError(_peakErrorIdx, oneError)
 
+        return True
+    
 class KymRoiAnalysis:
     def __init__(self, path : str = None,
-                 imgData : np.ndarray = None):
+                 imgData : List[np.ndarray] = None):
         """
+        Holds a number of kymRoi for one image file (multiple channels).
+        
         Parameters
         ----------
         path : str
             Full path to .tif file
+        imgData : List[np.ndarray]
+            A list of equal sized tiff, one item per image channel.
         """
         self._path = path
         
@@ -856,44 +1068,39 @@ class KymRoiAnalysis:
         olympusHeader = _loadLineScanHeader(path)
 
         if imgData is not None:
-            self._imgData = imgData
-            logger.info(f'from imgData:{self._imgData.shape}')
-        elif path is not None:
-            self._imgData = tifffile.imread(path)
-            # self._imgData = self._imgData.astype(np.int64)  # to all pos and negative
-            if self._imgData.dtype == np.uint8:
-                logger.warning(f'converting self._imgData from: {self._imgData.dtype} to np.int8')
-                self._imgData = self._imgData.astype(np.int8)  # to all pos and negative
-            elif self._imgData.dtype == np.uint16:
-                logger.warning(f'converting self._imgData from: {self._imgData.dtype} to np.int16')
-                self._imgData = self._imgData.astype(np.int16)  # to all pos and negative
+            if not isinstance(imgData, List):
+                imgData = [imgData]
+            self._imgData : List[np.ndarray] = imgData
+            logger.info(f'from imgData channels:{len(self._imgData)} shape:{self._imgData[0].shape}')
+        # elif path is not None:
+        #     self._imgData = tifffile.imread(path)
+        #     # self._imgData = self._imgData.astype(np.int64)  # to all pos and negative
+        #     if self._imgData.dtype == np.uint8:
+        #         logger.warning(f'converting self._imgData from: {self._imgData.dtype} to np.int8')
+        #         self._imgData = self._imgData.astype(np.int8)  # to all pos and negative
+        #     elif self._imgData.dtype == np.uint16:
+        #         logger.warning(f'converting self._imgData from: {self._imgData.dtype} to np.int16')
+        #         self._imgData = self._imgData.astype(np.int16)  # to all pos and negative
 
-            if olympusHeader is not None:
-                self._imgData = np.rot90(self._imgData)
-                # self._imgData = np.flip(self._imgData)
+        #     if olympusHeader is not None:
+        #         self._imgData = np.rot90(self._imgData)
+        #         # self._imgData = np.flip(self._imgData)
 
-            logger.info(f'from path:{self._imgData.shape}')
-        else:
-            logger.error('please specify either a path or imgData')
-
-        self._defaultChannel = 1
-
-        _date = ''
-        _time = ''
-        secondsPerLine = 0.002
-        umPerPixel = 0.15
+        #     logger.info(f'from path:{self._imgData.shape}')
+        # else:
+        #     logger.error('please specify either a path or imgData')
         
         if olympusHeader is not None:
             _date = olympusHeader['date']
             _time = olympusHeader['time']
             secondsPerLine = olympusHeader['secondsPerLine']
             umPerPixel = olympusHeader['umPerPixel']
-
-            if len(self.imgData.shape) == 3:
-                self._imgData = self._imgData[:, :, self._defaultChannel]
-
-            # self._imgData = np.rot90(self._imgData)
-            # self._imgData = np.flip(self._imgData, axis=0)
+        else:
+            logger.warning('USING FAKE IMAGE SCALE !!')
+            _date = ''
+            _time = ''
+            secondsPerLine = 0.002
+            umPerPixel = 0.15
 
         self._headerDict = {
             'path' : path,
@@ -901,22 +1108,22 @@ class KymRoiAnalysis:
             'time': _time,
             'secondsPerLine' : secondsPerLine,
             'umPerPixel' : umPerPixel,
+            'numChannels' : len(self._imgData),
+            'imageHeight' : self._imgData[0].shape[0],
+            'imageWidth' : self._imgData[0].shape[1],
         }
 
         self._roiDict = {}  # keys are labels, values are KymRoi
-
         self._isDirty = False
 
-        logger.info(f'loaded self._imgData.shape:{self._imgData.shape}')
-        logger.info(f'   self._path:{self._path}')
+        logger.warning('TURN loadAnalysis() BACK ON')
+        # self.loadAnalysis()
 
-        self.loadAnalysis()
-
-    def peakDetectAllRoi(self):
+    def peakDetectAllRoi(self, channel):
         logger.info('=== detecting peaks for all roi')
         for roiLabel, kymRoiAnalysis in self._roiDict.items():
             logger.info(f'   -->> roiLabel:{roiLabel}')
-            kymRoiAnalysis.peakDetect()
+            kymRoiAnalysis.peakDetect(channel)
 
     @property
     def path(self):
@@ -925,7 +1132,13 @@ class KymRoiAnalysis:
     @property
     def imgData(self):
         return self._imgData
-    
+
+    def getImageChannel(self, channel):
+        if channel > len(self._imgData) - 1:
+            logger.error(f'bad image channel {channel}, max channel number is {len(self._imgData)-1}')
+            return
+        return self._imgData[channel]
+        
     @property
     def header(self):
         return self._headerDict
@@ -946,11 +1159,11 @@ class KymRoiAnalysis:
         return list(self._roiDict.keys())
 
     def _getNextRoiLabel(self) -> str:
+        """Get the next available roi label.
+        """
         if self.numRoi == 0:
             return '1'
         else:
-            # return str(self.numRoi + 1)
-            # logger.info(self._roiDict.keys())
             nextLabel = list(self._roiDict.keys())[self.numRoi - 1]
             nextLabel = int(nextLabel)
             nextLabel += 1
@@ -958,10 +1171,9 @@ class KymRoiAnalysis:
         
     def addROI(self,
                ltrbRect : List[int] = None,
-               kymRoiDetection : KymRoiDetection = KymRoiDetection(),
-               doAnalysis : bool = False
                ) -> KymRoi:
-        """
+        """Add a new roi.
+
         Parameters
         ----------
         ltrb : [l, t, r, b]
@@ -970,15 +1182,11 @@ class KymRoiAnalysis:
         roiLabel = self._getNextRoiLabel()
         logger.info(f'adding new roi label {roiLabel}')
         newRoi = KymRoi(roiLabel,
-                        self,  # parent used to just set _isDirty
                         self.imgData,
                         header=self.header,
                         ltrbRect=ltrbRect,
-                        kymRoiDetection=kymRoiDetection,
-                        doAnalysis=doAnalysis,
                         )
         self._roiDict[roiLabel] = newRoi
-        self._isDirty = True
 
         return newRoi
     
@@ -991,7 +1199,9 @@ class KymRoiAnalysis:
         
         return roi
     
-    def getRoi(self, roiLabel):
+    def getRoi(self, roiLabel) -> KymRoi:
+        """Get a KymRoi from a label str.
+        """
         return self._roiDict[roiLabel]
 
     def _getSaveFolder(self, createFolder=True):
@@ -1005,6 +1215,12 @@ class KymRoiAnalysis:
     
     def _getSaveFile(self, createFolder=True):
         """Get full path to file to save/load analysis.
+        
+        Returns
+        -------
+        peaks
+        diameter
+        traces
         """
         saveFolder = self._getSaveFolder(createFolder=createFolder)
 
@@ -1015,22 +1231,25 @@ class KymRoiAnalysis:
         saveFilePeaks = _saveFile + '-roiPeaks.csv'  # peaks
         saveFilePeaks = os.path.join(saveFolder, saveFilePeaks)
 
+        saveFileDiameter = _saveFile + '-roiPeaks.csv'  # peaks
+        saveFileDiameter = os.path.join(saveFolder, saveFileDiameter)
+
         saveFileInt = _saveFile + '-roiInt.csv'  # intensity
         saveFileIntPath = os.path.join(saveFolder, saveFileInt)
 
-        return saveFilePeaks, saveFileIntPath
+        return saveFilePeaks, saveFileDiameter, saveFileIntPath
 
-    def getDataFrame(self, roiLabel = None):
+    def getDataFrame(self, channel, peakDetectionType : PeakDetectionTypes, roiLabel = None):
         """Get results df for one roi or all roi (use roi=None).
         """
         if roiLabel is not None:
-            return self._roiDict[roiLabel].analysisResults.df
+            return self.getRoi(roiLabel).getAnalysisResults(channel, peakDetectionType)
         else:
             columns = list(KymRoiResults.analysisDict.keys())
             df = pd.DataFrame(columns=columns)  # empty df with proper columns
             for _roiIdx, roi in enumerate(self._roiDict.values()):
                 # logger.info(f'oneDf:{oneDf}')
-                oneDf = roi.analysisResults.df
+                oneDf = roi.getAnalysisResults(channel, peakDetectionType).df
                 if _roiIdx == 0:
                     df = oneDf
                 else:
@@ -1039,60 +1258,57 @@ class KymRoiAnalysis:
                 df = df.reset_index(drop=True)
             except (ValueError) as e:
                 logger.error(e)
-                # logger.error('df is:')
-                # print(df)
 
             return df
         
     def saveAnalysisResults(self):
-        """Save all roi time and intensity in one dataframe (csv).
+        """Save all roi traces in one dataframe (csv).
         """
-        peakPath, intPath = self._getSaveFile()
+        peakPath, diameterPath, intPath = self._getSaveFile()
 
         df = pd.DataFrame()
 
         # get the largest number of rows from all roi (e.g. right-left rect roi)
         maxNumRows = 0
         for roiLabel, kymRoi in self._roiDict.items():
-            resultDict = kymRoi.getAnalysisTraces()
-            _firstTrace = list(resultDict.keys())[0]
+            # resultDict = kymRoi.getAnalysisTraces()
+            traceDict = kymRoi.kymRoiTraces
+            _firstTrace = list(traceDict.keys())[0]
             
-            # logger.info(f'_firstTrace:{_firstTrace}')
-            # logger.info(resultDict[_firstTrace])
-            
-            rows = resultDict[_firstTrace].shape[0]
+            rows = traceDict[_firstTrace].shape[0]
             if rows > maxNumRows:
                 maxNumRows = rows
 
-        for roiLabel, roi in self._roiDict.items():
+        logger.info(f'   saving {maxNumRows} rows')
+        
+        for roiLabel, kymRoi in self._roiDict.items():
 
-            # timeCol = f'ROI{roiLabel}_time'
-            # intCol = f'ROI{roiLabel}_int'
-
-            # TODO: save all these
-            # self._analysisTraces['xPlot'] = xPlot
-            # self._analysisTraces['yRaw'] = yRaw  # raw sum intensity
-            # self._analysisTraces['yDetrend'] = yDetrend # after detrend with single exponential
-            # self._analysisTraces['yPlot'] = yDf_f0
-
-            resultDict = roi.getAnalysisTraces()
-            for traceKey,traceValues in resultDict.items():
+            # roi.kymRoiTraces.save
+            # resultDict = roi.getAnalysisTraces()
+            traceDict = kymRoi.kymRoiTraces
+            for traceKey,traceValues in traceDict.items():
                 colName = f'ROI{roiLabel}_{traceKey}'
                 df[colName] = [np.nan] * maxNumRows
+                logger.info(f'   roiLabel:{roiLabel} traceKey:{traceKey} colName:{colName} shape:{traceValues.shape}')
                 df.loc[0:traceValues.shape[0]-1, colName] = traceValues
-
-            # xPlot = resultDict['xPlot']
-            # yPlot = resultDict['yPlot']
-
-            # df[timeCol] = [np.nan] * maxNumRows
-            # df[intCol] = [np.nan] * maxNumRows
-            
-            # df.loc[0:xPlot.shape[0]-1, timeCol] = xPlot
-            # df.loc[0:yPlot.shape[0]-1, intCol] = yPlot
 
         logger.info(f'saving intensity to: {intPath}')
         df.to_csv(intPath, index=False)
 
+        self._isDirty = False
+        for roiLabel, kymRoi in self._roiDict.items():
+            kymRoi._isDirty = False
+
+    def isDirty(self):
+        """isDirty is true if we are dirty or any of the rois are dirty.
+        """
+        if self._isDirty:
+            return True
+        for roiLabel, kymRoi in self._roiDict.items():
+            if kymRoi._isDirty:
+                return True
+        return False
+    
     def saveAnalysis(self):
         """Save all peak analysis into one csv file.
 
@@ -1103,14 +1319,14 @@ class KymRoiAnalysis:
         
         # TODO: we also need to save the detection parameters for each roi
         
-        logger.info(f'self._isDirty:{self._isDirty} {type(self._isDirty)}')
-        if not self._isDirty:
+        if not self.isDirty:
             _noSaveStr = 'No changes to save.'
             logger.info(_noSaveStr)
             # self.mySetStatusbar(_noSaveStr)
             return False
         
         _fileHeaderDict = {}
+        _fileHeaderDictDiameter = {}
 
         # add backgroundRoi
         # _fileHeaderDict['backgroundRoi'] = self._backgroundRoi._roiAsRect()
@@ -1121,62 +1337,74 @@ class KymRoiAnalysis:
             # logger.info(f'roiLabel:{roiLabel} detection is: {roi.detectionParams.getValueDict()}')
 
             _fileHeaderDict[roiLabel] = roi.detectionParams.getValueDict()  # just key value pairs for detection parameters
+            _fileHeaderDictDiameter[roiLabel] = roi.detectionParamsDiameter.getValueDict()  # just key value pairs for detection parameters
 
         # one line json header with all roi and their detection params
         # logger.info(f'_fileHeaderDict:{_fileHeaderDict}')
         _fileHeaderJson = json.dumps(_fileHeaderDict)
+        _fileHeaderJsonDiameter = json.dumps(_fileHeaderDictDiameter)
         
         # print('_fileHeaderJson')
         # print(_fileHeaderJson)
 
-        savePath, intPath = self._getSaveFile()
-        logger.info(f'saving to: {savePath}')
-
-        dfToSave = self.getDataFrame()
+        peakPath, diameterPath, intPath = self._getSaveFile()
         
-        # logger.info('saving df')
-        # print(dfToSave)
-
-        with open(savePath, 'w') as f:
+        logger.info(f'saving to: {peakPath}')
+        dfToSave = self.getDataFrame(PeakDetectionTypes.f_f0)
+        with open(peakPath, 'w') as f:
             f.write(_fileHeaderJson)
             f.write('\n')
             f.write(dfToSave.to_csv(header=True, index=False, mode='a'))
 
+        logger.info(f'saving to: {diameterPath}')
+        dfToSaveDiameter = self.getDataFrame(PeakDetectionTypes.diameter)
+        with open(diameterPath, 'w') as f:
+            f.write(_fileHeaderDictDiameter)
+            f.write('\n')
+            f.write(dfToSaveDiameter.to_csv(header=True, index=False, mode='a'))
+
+        #
         self.saveAnalysisResults()
 
         self._isDirty = False
+        for roiLabel, roi in self._roiDict.items():
+            roi._isDirty = False
 
         return True
 
     def loadAnalysis(self):
         """
         """
-        savePath, intPath = self._getSaveFile(createFolder=False)
+        peakPath, diameterPath, intPath = self._getSaveFile(createFolder=False)
         if not os.path.isfile(savePath):
-            logger.info(f'did not find file to load:{savePath}')
+            logger.info(f'did not find file to load:{peakPath}')
             return
 
         # current version of analysis, mostly changes when modifying columns in kymRoiResults
         _currentVersion = getAnalysisDict()['version']['defaultvalue']
 
-        logger.info(f'=== loading analysis from: {savePath}')
+        logger.info(f'=== loading peak analysis from: {peakPath}')
 
         self._isDirty = False  # do this first, we re-analyze based on roi verion (making self dirty)
 
-        with open(savePath) as f:
+        with open(peakPath) as f:
             headerJson = f.readline()
             _headerDict = json.loads(headerJson)
 
-        dfLoadedFromFile = pd.read_csv(savePath, header=1)
+        dfLoadedFromFile = pd.read_csv(peakPath, header=1)
         
-        loadedIntDf = pd.read_csv(intPath)
+        # this has a number of columns for each numbered roi (like raw_1)
+        if os.path.isfile(intPath):
+            loadedIntDf = pd.read_csv(intPath)
+        else:
+            loadedIntDf = None
 
         # _headerDict is a dict with roi name keys, make a number of rois
         # self._detectionDict = _headerDict
         _firstRoi = None
         for _roiIndex, (roiNumber,detectionDict) in enumerate(_headerDict.items()):
             # roiNumber is str like '1', '2', '3',...
-            logger.info(f'{roiNumber}: {detectionDict}')
+            # logger.info(f'{roiNumber}: {detectionDict}')
             
             # if roiNumber == 'backgroundRoi':
             #     logger.warning(f'TODO: assign background roi to detectionDict:{detectionDict}')
@@ -1187,22 +1415,12 @@ class KymRoiAnalysis:
             kymRoiDetection = KymRoiDetection(fromDict=detectionDict)
 
             # add the roi
-            kymRoi = self.addROI(kymRoiDetection['ltrb'],
-                              kymRoiDetection=kymRoiDetection)
+            kymRoi = self.addROI(kymRoiDetection['ltrb'])
+            kymRoi.setDetection(PeakDetectionTypes.f_f0, kymRoiDetection)
 
-            # set xPlot and yPlot from int file
-            # ROI1_time,ROI1_int
-            roiTraceList = kymRoi._analysisTraceList
-            for roiTrace in roiTraceList:
-                colName = f'ROI{roiNumber}_{roiTrace}'
-                
-                if colName not in loadedIntDf.columns:
-                    logger.error(f'   did not find trace name "{roiTrace}" column in file {intPath}')
-                    continue
-                oneTrace = loadedIntDf[colName]
-                oneTrace = oneTrace[~np.isnan(oneTrace)]
-                
-                kymRoi._analysisTraces[roiTrace] = oneTrace
+            # set xPlot and yPlot from int file (traces)
+            if loadedIntDf is not None:
+                kymRoi.kymRoiTraces.loadTraces(roiNumber, loadedIntDf)
 
             #
             # fill in analysis results
@@ -1210,7 +1428,8 @@ class KymRoiAnalysis:
             dfRoi = dfLoadedFromFile[ dfLoadedFromFile['ROI Number']==int(roiNumber) ]
             dfRoi = dfRoi.reset_index(drop=True)  # Do not try to insert index into dataframe columns.
             oneRoiResults._swapInNewDf(dfRoi)
-            kymRoi._kymRoiResults = oneRoiResults
+            # kymRoi._kymRoiResults = oneRoiResults
+            kymRoi.setResults(PeakDetectionTypes.f_f0, oneRoiResults)
 
             try:
                 loadedVersion = detectionDict['version']
@@ -1269,7 +1488,11 @@ def BinLineScans(imgData, numLinesPerBin):
 
     return retImg
 
-def findThreshold(kymRoi : KymRoi, newOnsetOffsetFraction : float = 0.1, doMpl = False):
+def findThreshold(kymRoiTrace : np.ndarray,
+                  polarity : str,
+                  kymRoiResults : KymRoiResults,
+                  newOnsetOffsetFraction : float = 0.1,
+                  doMpl = False):
     """Refine all peak parameters.
         - Rise 10
         - [depreciated] Rise 90
@@ -1284,18 +1507,30 @@ def findThreshold(kymRoi : KymRoi, newOnsetOffsetFraction : float = 0.1, doMpl =
     Although scipy peak_detect is awesome for peaks, it is not great at onset/offset beyond half-height.
     Started 20240925 - colin symposium
     """
-
+    
     # _left, _, _, _ = kymRoi.getRect()
     # logger.info(f'_left:{_left}')
 
-    thisTrace = kymRoi.detectionParams['detectThisTrace']
-    int_df_f0 = kymRoi._analysisTraces[thisTrace]  # in (int_f_f0, int_df_f0)
-    # medianfilterkernel = 3
-    # int_df_f0 = medfilt(int_df_f0, kernel_size=medianfilterkernel)
+    # thisTrace = kymRoiDetection['detectThisTrace']
+    # int_df_f0 = kymRoiDetection[thisTrace]  # in (f_f0, df_f0, diameter)
 
-    peakBins = kymRoi.analysisResults.getValues('Peak Bin')
-    peakValues = kymRoi.analysisResults.getValues('Peak Int')  # y-value at peak
-    peakHeights = kymRoi.analysisResults.getValues('Peak Height')  # peak - threshold value
+    # analysisResults = kymRoi.getAnalysisResults(PeakDetectionTypes.f_f0)
+
+    # logger.info(f'polarity:{polarity}')
+
+    int_df_f0 = kymRoiTrace
+
+    peakBins = kymRoiResults.getValues('Peak Bin')
+    peakValues = kymRoiResults.getValues('Peak Int')  # y-value at peak
+    
+    # will be negative if we detected negative peaks
+    peakHeights = kymRoiResults.getValues('Peak Height')  # peak - threshold value
+    if polarity == 'Neg':
+        peakHeights = -peakHeights
+        peakValues = -peakValues
+    
+    # cludge, trying to remove all if pos/neg below
+    polarity = 'Pos'
 
     numPeaks = len(peakBins)
     
@@ -1319,54 +1554,100 @@ def findThreshold(kymRoi : KymRoi, newOnsetOffsetFraction : float = 0.1, doMpl =
 
         #
         # new rise and decay
-        threshold =  yPeak - (peakHeight * newOnsetOffsetFraction)  # 0.9 is 90% height
+        if polarity == 'Pos':
+            threshold =  yPeak - (peakHeight * newOnsetOffsetFraction)  # 0.9 is 90% height
+        elif polarity == 'Neg':
+            threshold =  yPeak + (peakHeight * newOnsetOffsetFraction)  # 0.9 is 90% height
+        else:
+            logger.error(f'did not understand polarity:{polarity}')
         # logger.info(f'  threshold 10:{threshold}')
 
         # threshold_crossings = np.diff(int_df_f0 > threshold, prepend=False)
-        threshold_crossings = np.diff(int_df_f0 > threshold, append=False)  # "False" is the value to append
+        if polarity == 'Pos':
+            threshold_crossings = np.diff(int_df_f0 > threshold, append=False)  # "False" is the value to append
+        elif polarity == 'Neg':
+            threshold_crossings = np.diff(int_df_f0 < threshold, append=False)  # "False" is the value to append
         thresholdBins = np.where(threshold_crossings[0:peakBin]==1)[0]
-        thresholdBin = thresholdBins[-1]  # first threshold before peak
-        # back it up by one bin ??? When onset is fast, actual threshold crossing is way too high
-        # this is achieved with apend=False
-        # thresholdBin = thresholdBin - 1
-        onsetBinList[_idx] = thresholdBin
+        if len(thresholdBins) == 0:
+            _errStr = f'peak {_idx} findThreshold() failed to find rise bin.'
+            peaksErrors[_idx] += _errStr + ';'
+            logger.error(_errStr)
+        else:
+            thresholdBin = thresholdBins[-1]  # first threshold before peak
+            # back it up by one bin ??? When onset is fast, actual threshold crossing is way too high
+            # this is achieved with apend=False
+            # thresholdBin = thresholdBin - 1
+            onsetBinList[_idx] = thresholdBin
 
-        threshold_crossings = np.diff(int_df_f0 > threshold, prepend=False)  # "False" is the value to append
+            # we have a new peak height
+            if polarity == 'Pos':
+                peakHeight2 = yPeak - int_df_f0[thresholdBin]
+            elif polarity == 'Neg':
+                peakHeight2 = yPeak + int_df_f0[thresholdBin]
+            newPeakHeightList[_idx] = peakHeight2
+
+            # 10% in rise
+            if polarity == 'Pos':
+                threshold2 =  yPeak - (peakHeight2 * 0.9)  # 0.9 is 90% height, eg rise 10
+            if polarity == 'Neg':
+                threshold2 =  yPeak + (peakHeight2 * 0.9)  # 0.9 is 90% height, eg rise 10
+
+            if polarity == 'Pos':
+                threshold_crossings2 = np.diff(int_df_f0 > threshold2, prepend=False)
+            elif polarity == 'Neg':
+                threshold_crossings2 = np.diff(int_df_f0 < threshold2, prepend=False)
+            threshold10Bins = np.where(threshold_crossings2[0:peakBin]==1)[0]
+            if len(threshold10Bins) == 0:
+                _errStr = f'peak {_idx} findThreshold() failed to find 10% rise bin'
+                logger.error(_errStr)
+                peaksErrors[_idx] += _errStr + ';'
+            else:
+                threshold10Bin = threshold10Bins[-1]  # first threshold before peak
+                onset10BinList[_idx] = threshold10Bin
+
+        if polarity == 'Pos':
+            threshold_crossings = np.diff(int_df_f0 > threshold, prepend=False)  # "False" is the value to append
+        elif polarity == 'Neg':
+            threshold_crossings = np.diff(int_df_f0 < threshold, prepend=False)  # "False" is the value to append
         decayBins = np.where(threshold_crossings[peakBin:-1]==1)[0]
-        decayBin = decayBins[0]  # first threshold after peak
-        decayBin += peakBin
-        offsetBinList[_idx] = decayBin
+        if len(decayBins) == 0:
+            _errStr = f'peak {_idx} findThreshold() failed to find falling bin'
+            peaksErrors[_idx] += _errStr + ';'
+            logger.error(_errStr)
+        else:
+            decayBin = decayBins[0]  # first threshold after peak
+            decayBin += peakBin
+            offsetBinList[_idx] = decayBin
 
-        # we have a new peak height
-        peakHeight2 = yPeak - int_df_f0[thresholdBin]
-        newPeakHeightList[_idx] = peakHeight2
+            # decay has different height
+            if polarity == 'Pos':
+                peakHeight3 = yPeak - int_df_f0[decayBin]
+                threshold3 =  yPeak - (peakHeight3 * 0.9)  # 0.9 is 90% height
+            elif polarity == 'Neg':
+                peakHeight3 = yPeak + int_df_f0[decayBin]
+                threshold3 =  yPeak + (peakHeight3 * 0.9)  # 0.9 is 90% height
+            # using append=False to backup bin by one
+            if polarity == 'Pos':
+                threshold_crossings3 = np.diff(int_df_f0 > threshold3, append=False)  # "False" is the value to append
+            elif polarity == 'Neg':
+                threshold_crossings3 = np.diff(int_df_f0 < threshold3, append=False)  # "False" is the value to append
+            decay10Bins = np.where(threshold_crossings3[peakBin:-1]==1)[0]
+            if len(decay10Bins) == 0:
+                _errStr = f'peak {_idx} findThreshold() failed to find 10% falling bin'
+                logger.error(_errStr)
+                peaksErrors[_idx] += _errStr + ';'
+            else:
+                decay10Bin = decay10Bins[0]  # first threshold after peak
+                decay10Bin += peakBin
+                offset10BinList[_idx] = decay10Bin
 
-        # 10% in rise
-        threshold2 =  yPeak - (peakHeight2 * 0.9)  # 0.9 is 90% height, eg rise 10
-
-        # threshold_crossings2 = np.diff(int_df_f0 > threshold2, append=False)  # "False" is the value to append
-        threshold_crossings2 = np.diff(int_df_f0 > threshold2, prepend=False)  # "False" is the value to append
-        threshold10Bins = np.where(threshold_crossings2[0:peakBin]==1)[0]
-        threshold10Bin = threshold10Bins[-1]  # first threshold before peak
-        onset10BinList[_idx] = threshold10Bin
-
-        # decay has different height
-        peakHeight3 = yPeak - int_df_f0[decayBin]
-        threshold3 =  yPeak - (peakHeight3 * 0.9)  # 0.9 is 90% height
-        # using append=False to backup bin by one
-        threshold_crossings3 = np.diff(int_df_f0 > threshold3, append=False)  # "False" is the value to append
-        decay10Bins = np.where(threshold_crossings3[peakBin:-1]==1)[0]
-        decay10Bin = decay10Bins[0]  # first threshold after peak
-        decay10Bin += peakBin
-        offset10BinList[_idx] = decay10Bin
-
-        if doMpl:
+        if doMpl and _idx in [1,2]:
             # make a new figure each time. I do not understand matplotlib !!!
             fig, axs = plt.subplots(1, 1, figsize=(18,10))
             axs = [axs]
 
             # raw int
-            axs[0].plot(int_df_f0, color='k', marker='', label='int')
+            axs[0].plot(int_df_f0, color='k', marker='', label='intensity')
             axs[0].set_xlim([peakBin-75, peakBin+75])
 
             # peak
@@ -1376,24 +1657,33 @@ def findThreshold(kymRoi : KymRoi, newOnsetOffsetFraction : float = 0.1, doMpl =
             axs[0].axhline(y=threshold)
 
             # new threshold
-            plt.plot(thresholdBin, int_df_f0[thresholdBin], color='c', marker='o', markersize=10, label='thresholdBin')
+            try:
+                plt.plot(thresholdBin, int_df_f0[thresholdBin], color='c', marker='o', markersize=10, label='thresholdBin')
+            except (UnboundLocalError) as e:
+                logger.error(e)
 
             # old threshold
             # plt.plot(thresholdBin_orig, int_df_f0[thresholdBin_orig], color='y', marker='s', markersize=10, label='thresholdBin_orig')
             # plt.plot(decayBin_orig, int_df_f0[decayBin_orig], color='y', marker='s', markersize=10, label='decayBin_orig')
 
             # decay
-            plt.plot(decayBin, int_df_f0[decayBin], color='m', marker='o', markersize=10, label='decayBin')
+            try:
+                plt.plot(decayBin, int_df_f0[decayBin], color='m', marker='o', markersize=10, label='decayBin')
+            except (UnboundLocalError) as e:
+                logger.error(e)
 
             # threshold crossings
-            axs[0].plot(threshold_crossings, color='r', marker='o', label='threshold_crossings')
+            try:
+                axs[0].plot(threshold_crossings, color='r', marker='o', label='threshold_crossings')
+            except (UnboundLocalError) as e:
+                logger.error(e)
             
             axs[0].legend()
             plt.show()
 
-    return onsetBinList, offsetBinList, onset10BinList, offset10BinList, newPeakHeightList
+    return onsetBinList, offsetBinList, onset10BinList, offset10BinList, peaksErrors
 
-def plotDetectionResults(kymRoi : KymRoi):
+def plotDetectionResults(kymRoi : KymRoi, channel):
     """Plot steps in analysis.
         - Raw sum
         - Detrended sum
@@ -1404,17 +1694,18 @@ def plotDetectionResults(kymRoi : KymRoi):
     kymRoi : KymROi
         Results for one ROI
     """
-    imgData = kymRoi.getRoiImg()
+    imgData = kymRoi.getRoiImg(channel=channel)
 
-    timeSec = kymRoi._analysisTraces['timeSec']  # seconds
-    intRaw = kymRoi._analysisTraces['intRaw']
-    intDetrend = kymRoi._analysisTraces['intDetrend']
-    # int_df_f0 = kymRoi._analysisTraces['int_df_f0']  # yDf_f0
+    timeSec = kymRoi.kymRoiTraces['timeSec']  # seconds
+    intRaw = kymRoi.kymRoiTraces['intRaw']
+    intDetrend = kymRoi.kymRoiTraces['intDetrend']
     logger.warning('swapping my df_d0 for santana f_f0')
-    int_df_f0 = kymRoi._analysisTraces['int_f_f0']  # yDf_f0
+    int_df_f0 = kymRoi.kymRoiTraces['f_f0']  # yDf_f0
 
-    peakSecond = kymRoi.analysisResults.getValues('Peak Second')
-    peakValue = kymRoi.analysisResults.getValues('Peak Int')
+    analysisResults = kymRoi.getAnalysisResults(channel, PeakDetectionTypes.f_f0)
+
+    peakSecond = analysisResults.getValues('Peak Second')
+    peakValue = analysisResults.getValues('Peak Int')
 
     #
     fig, axs = plt.subplots(4, 1, figsize=(6,6), sharex=True)
@@ -1474,7 +1765,7 @@ def plotDetectionResults(kymRoi : KymRoi):
 
     # final dF/F0
     axs[3].plot(timeSec, int_df_f0, 'k', label='int/f0')
-    axs[3].set_ylabel('int_f_f0')
+    axs[3].set_ylabel('f_f0')
     axs[3].plot(peakSecond, peakValue, 'go')
     axs[2].legend()
 
@@ -1491,7 +1782,7 @@ def plotDetectionResults(kymRoi : KymRoi):
 
     # fix this constant bug !!!!
     [_left, _, _, _] = kymRoi.getRect()
-    _peakBins = kymRoi.analysisResults.getValues('Peak Bin')
+    _peakBins = analysisResults.getValues('Peak Bin')
 
     xDecay = []
     yDecay = []
@@ -1499,9 +1790,9 @@ def plotDetectionResults(kymRoi : KymRoi):
         
         _peakBin = _peakBin - _left
         
-        fit_m = kymRoi.analysisResults.getValues('fit_m')[_peakIdx]            
-        fit_tau = kymRoi.analysisResults.getValues('fit_tau')[_peakIdx]
-        fit_b = kymRoi.analysisResults.getValues('fit_b')[_peakIdx]
+        fit_m = analysisResults.getValues('fit_m')[_peakIdx]            
+        fit_tau = analysisResults.getValues('fit_tau')[_peakIdx]
+        fit_b = analysisResults.getValues('fit_b')[_peakIdx]
 
         if np.isnan(fit_m):
             # logger.warning(f'no fit for peak {_peakIdx}')
@@ -1536,10 +1827,10 @@ def plotDetectionResults(kymRoi : KymRoi):
         # fix this constant bug !!!!
         _peakBin = _peakBin - _left
         
-        fit_m1 = kymRoi.analysisResults.getValues('fit_m1')[_peakIdx]            
-        fit_tau1 = kymRoi.analysisResults.getValues('fit_tau1')[_peakIdx]
-        fit_m2 = kymRoi.analysisResults.getValues('fit_m2')[_peakIdx]            
-        fit_tau2 = kymRoi.analysisResults.getValues('fit_tau2')[_peakIdx]
+        fit_m1 = analysisResults.getValues('fit_m1')[_peakIdx]            
+        fit_tau1 = analysisResults.getValues('fit_tau1')[_peakIdx]
+        fit_m2 = analysisResults.getValues('fit_m2')[_peakIdx]            
+        fit_tau2 = analysisResults.getValues('fit_tau2')[_peakIdx]
 
         if np.isnan(fit_m1):
             # logger.warning(f'no dbl exp fit for peak {_peakIdx}')
@@ -1565,99 +1856,5 @@ def plotDetectionResults(kymRoi : KymRoi):
 
     plt.show()
 
-def _testDetectionParams():
-    """Step through a number of detection params and compare the results.
-    """
-    # logger.setLevel(level='DEBUG')
-
-    doMpl = False
-
-    # path = '/Users/cudmore/Dropbox/data/colin/sanAtp/ISAN Linescan 3.tif'
-    
-    # working
-    path = '/Users/cudmore/Dropbox/data/colin/sanAtp/ISAN Linescan 3.tif'
-    _roiRect = [150, 954, 999, 852]
-
-    # works
-    # negative peaks
-    # path = '/Users/cudmore/Dropbox/data/colin/sanAtp/SSAN Linescan 8.tif'
-
-    kra = KymRoiAnalysis(path=path)
-
-    kymRoiDetection = KymRoiDetection()
-    kymRoiDetection['prominence'] = 1.5
-    kymRoiDetection['binLineScans'] = 0
-
-    # # 1
-    # oneRoi = kra.addROI(_roiRect, kymRoiDetection=kymRoiDetection)
-    # oneRoi.detectionParams['backgroundsubtract'] = "Off"
-    # oneRoi.peakDetect()
-
-    # # 2
-    # oneRoi = kra.addROI(_roiRect, kymRoiDetection=kymRoiDetection)
-    # oneRoi.detectionParams['backgroundsubtract'] = "Rolling-Ball"
-    # oneRoi.peakDetect()
-
-    # # 3
-    # oneRoi = kra.addROI(_roiRect, kymRoiDetection=kymRoiDetection)
-    # oneRoi.detectionParams['backgroundsubtract'] = "Median"
-    # oneRoi.peakDetect()
-
-    # # 4
-    # oneRoi = kra.addROI(_roiRect, kymRoiDetection=kymRoiDetection)
-    # oneRoi.detectionParams['backgroundsubtract'] = "Mean"
-    # oneRoi.peakDetect()
-
-    binLineScanList = [0, 1, 2, 3, 5, 10]
-    # _roiRect = None
-    for bin in binLineScanList:
-        oneRoi = kra.addROI(ltrbRect=_roiRect, kymRoiDetection=kymRoiDetection, doAnalysis=False)
-        oneRoi.detectionParams['backgroundsubtract'] = "Median"
-        oneRoi.detectionParams['binLineScans'] = bin
-        oneRoi.detectionParams['prominence'] = 1
-        # oneRoi.detectionParams['polarity'] = 'Neg'
-        oneRoi.peakDetect()
-        
-        # use matplotlib to plot results for one roi
-        plotDetectionResults(oneRoi)
-        # break
-
-    # save results and open in widget
-    # kra.saveAnalysis()
-
-    print(kra.getParamDataFrame())
-
-def _testThreshold():
-    # working
-    path = '/Users/cudmore/Desktop/retreat-sept-2024/ISAN Linescan 1.tif'
-    # path = '/Users/cudmore/Desktop/retreat-sept-2024/ISAN Linescan 9.tif'  # 3 roi
-    # path = '/Users/cudmore/Desktop/retreat-sept-2024/ISAN Linescan 10.tif'  # 3 roi
-    # path = '/Users/cudmore/Desktop/retreat-sept-2024/SSAN Linescan 1.tif'  # 1 roi
-
-    kra = KymRoiAnalysis(path)
-    logger.info(f'numRoi:{kra.numRoi}')
-    # oneRoi = kra.getRoi("1")
-    oneRoi = kra.getRoi("2")
-    # oneRoi = kra.getRoi("3")
-    findThreshold(oneRoi)
-
-def _testLoad():
-    """After saving in _testDetectionParams() try and load.
-    """
-    path = '/Users/cudmore/Dropbox/data/colin/sanAtp/ISAN Linescan 3.tif'
-    kra = KymRoiAnalysis(path=path)
-
-    kra.loadAnalysis()
-
-    for label in kra.getRoiLabels():
-        roi = kra.getRoi(label)
-        plotDetectionResults(roi)
-
-    logger.info(f'   num roi: {kra.numRoi}')
-
 if __name__ == '__main__':
-    # _testDetectionParams()
-
-    # _testLoad()
-
-    _testThreshold()
+    pass
