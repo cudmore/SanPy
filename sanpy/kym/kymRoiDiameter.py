@@ -14,6 +14,46 @@ def backgroundSubtract(imgData):
     retData = imgData - theMedian
     return retData
 
+def getLineProfile(imgData : np.ndarray,
+                   lineIdx : int,
+                   doBackgroundSubtract : bool,
+                   lineWidth : int,
+                   lineMedianKernel,
+                   lineInterptMult : int = 1) -> np.ndarray:
+    
+    # if doBackgroundSubtract:
+    #     imgData = backgroundSubtract(imgData)
+
+    m,n = imgData.shape
+    
+    if lineWidth == 0:
+        lineImg = imgData[:,lineIdx]
+
+    else:
+        startLine = lineIdx - lineWidth
+        if startLine < 0:
+            startLine = 0
+        endLine = lineIdx + lineWidth
+        if endLine > n:
+            endLine = n
+        
+        lineImg = imgData[:,startLine:endLine]
+        lineImg = np.mean(lineImg, axis=1)
+
+    if lineMedianKernel > 0:
+        lineImg = medfilt(lineImg, lineMedianKernel)
+
+    if lineInterptMult > 1:
+        # if lineIdx == 10:
+        #     logger.info(f'before lineIdx:{lineIdx} lineInterptMult:{lineInterptMult} lineImg:{len(lineImg)}')
+
+        _nIntensityProfile = len(lineImg)
+        _xOld = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile)
+        _xNew = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile*lineInterptMult)        
+        lineImg = np.interp(_xNew, _xOld, lineImg)
+
+    return lineImg
+
 def detectKymRoiDiam(imgData,
                      doBackgroundSubtract,
                      lineWidth,
@@ -37,11 +77,9 @@ def detectKymRoiDiam(imgData,
         This reduces pixelation in diameter.
     """
 
+    # background subtract the entire image
     if doBackgroundSubtract:
         imgData = backgroundSubtract(imgData)
-
-    if lineMedianKernel > 0:
-        imgData = medfilt(imgData, lineMedianKernel)
 
     # middle bin in the line scan
     mLine = imgData.shape[0]
@@ -74,6 +112,9 @@ def detectKymRoiDiam(imgData,
         lineImg = imgData[:,startLine:endLine]
         lineImg = np.mean(lineImg, axis=1)
 
+        if lineMedianKernel > 0:
+            lineImg = medfilt(lineImg, lineMedianKernel)
+            
         # interpolate each line scan (this screws up our firstQauarterBin ???)
         if lineInterptMult > 1:
             # if lineIdx == 10:

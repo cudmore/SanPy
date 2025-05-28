@@ -1,9 +1,12 @@
 from functools import partial
+from typing import Optional
 
 import numpy as np
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
+
+from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, PeakDetectionTypes
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -11,29 +14,39 @@ logger = get_logger(__name__)
 class KymRoiClipsWidget(QtWidgets.QWidget):
     """A widget to show peak clips.
     """
-    def __init__(self):
+    def __init__(self, kymRoiAnalysis : KymRoiAnalysis):
         super().__init__(None)
 
-        self._secondsPerLine = None  # shared between df/f0 and diameter
-
-        # peaks from df/d0
-        self.y_df_f0 = None  # df/f0 to clip
-        self.peakBins_df_f0 = None  # list of peaks (bins)
-        self.plusMinusBins_df_f0 = 50
+        self._kymRoiAnalysis : KymRoiAnalysis= kymRoiAnalysis
         
-        # peaks from diameter
-        self.y_diameter = None  # df/f0 to clip
-        self.peakBins_diameter = None  # list of peaks (bins)
-        self.plusMinusBins_diameter = 50
+        # so we can replot on gui change
+        self._channel = None
+        self._roiLabel = None
         
-        # gui
+        # gui state
+        self._plusMinusMs = 100
         self._plotRaw = True
         self._plotMean = True
         self._plotPercent = True
 
         self._buildUI()
 
-        # logger.info('')
+    def slot_selectRoi(self, channel : int, roiLabel : Optional[str]):
+        # logger.info(f'channel:{channel} roi:{roiLabel}')
+
+        self._clearClips()
+
+        # so we can _replot
+        self._channel = channel
+        self._roiLabel = roiLabel
+        
+        # plotPeakClips(self, yPlot, xPeakBins, secondsPerLine, plusMinusBins, doDiameter : bool = False)
+
+        if roiLabel is None:
+            self._clearClips()
+            return
+        
+        self.plotPeakClips(channel, roiLabel)
 
     def _buildUI(self):
         vBox = QtWidgets.QVBoxLayout()
@@ -69,12 +82,13 @@ class KymRoiClipsWidget(QtWidgets.QWidget):
                                                 #   brush=None,  #pg.mkBrush(100, 255, 100, 220)
                                                   )
 
-        self._tabwidget.addTab(self.peakClipPlotItem, "f/f0")
+        self._tabwidget.addTab(self.peakClipPlotItem, "Intensity")
         # vBox.addWidget(self.peakClipPlotItem)
 
         self._buildPeakDiamPlot()
         self._tabwidget.addTab(self.diameterClipPlotItem, "Diameter")
-        
+        self._tabwidget.setCurrentIndex(0)
+
         # TODO: ADD
         self._buildPhasePlot()
         self._tabwidget.addTab(self.phaseClipPlotItem, "Phase")
@@ -123,15 +137,16 @@ class KymRoiClipsWidget(QtWidgets.QWidget):
         self.phaseClipPlotItem.hideButtons()  # hide the little 'A' button to rescale axis
 
         # raw plot item to update
-        self.phaseClipPlot = self.peakClipPlotItem.plot(name="phaseClipPlot",
+        self.phaseClipPlot = self.phaseClipPlotItem.plot(name="phaseClipPlot",
                                                 pen=pg.mkPen('#AAAAAA', width=2),
                                                 #   symbol='o',
                                                 #   size=4,
                                                 #   brush=None,  #pg.mkBrush(100, 255, 100, 220)
                                                   )
+        self.phaseClipPlot.setData([10, 20, 5], [20, 40, 30])
         
         # plot mean
-        self.phaseMeanClipPlot = self.peakClipPlotItem.plot(name="phaseMeanClipPlot",
+        self.phaseMeanClipPlot = self.phaseClipPlotItem.plot(name="phaseMeanClipPlot",
                                                 pen=pg.mkPen('r', width=2),
                                                 #   symbol='o',
                                                 #   size=4,
@@ -168,12 +183,37 @@ class KymRoiClipsWidget(QtWidgets.QWidget):
         )
         hBox.addWidget(aCheckBox)
 
+        # spin box for clip width (ms)
+        spinBoxName = 'Clip (ms)'
+
+        aLabel = QtWidgets.QLabel(spinBoxName)
+        hBox.addWidget(aLabel)
+
+        aSpinBox = QtWidgets.QSpinBox()
+        aSpinBox.setToolTip('Length of the clip (ms)')
+        aSpinBox.setRange(1,2000)
+        aSpinBox.setSingleStep(5)
+        aSpinBox.setValue(self._plusMinusMs)
+        aSpinBox.setKeyboardTracking(False)
+        aSpinBox.valueChanged.connect(
+            partial(self._on_spin_box, spinBoxName)
+            )
+        hBox.addWidget(aSpinBox)
+
         return hBox
+
+    def _on_spin_box(self, name, value):
+        if name == 'Clip (ms)':
+            self._plusMinusMs = value
+            self._replot()
+
+        else:
+            logger.warning(f'did not understand name "{name}"')
 
     def _on_checkbox_clicked(self, name, value):
         if value>0:
             value = 1
-        logger.info(f'name:{name} value:{value}')
+        # logger.info(f'name:{name} value:{value}')
         
         if name == 'Raw':
             self._plotRaw = value
@@ -187,103 +227,124 @@ class KymRoiClipsWidget(QtWidgets.QWidget):
             self._replot()
             
     def _replot(self):
-        # f/f0
-        self.plotPeakClips(self.y_df_f0,
-                           self.peakBins_df_f0,
-                           self._secondsPerLine,
-                           self.plusMinusBins_df_f0,
-                           )
-        # f/f0
-        self.plotPeakClips(self.y_diameter,
-                           self.peakBins_diameter,
-                           self._secondsPerLine,
-                           self.plusMinusBins_diameter,
-                           doDiameter=True
-                           )
+        self.plotPeakClips(self._channel, self._roiLabel)
 
-    def plotPeakClips(self, yPlot, xPeakBins, secondsPerLine, plusMinusBins, doDiameter : bool = False):
+    def plotPeakClips(self, channel, roiLabel):
         """
-        Parameters
-        ----------
-        yPlot : np.ndarray
-        xPeakBins : np.ndarray
-            Needs to be adjusted by left of roi (parent does this)
         """
-        if xPeakBins is None:
-            logger.warning(f'no peaks to clip, diameter:{doDiameter}')
+        if roiLabel is None:
+            self._clearClips()
             return
         
-        self._secondsPerLine = secondsPerLine  # shared between df/f0 and diameter
+        # from sanpy.kym.interface.kymRoiWidget import getChannelColor
+        _color = self._kymRoiAnalysis.getChannelColor(self._channel)
 
-        if doDiameter:
-            self.y_diameter = yPlot
-            self.peakBins_diameter = xPeakBins
-            self.plusMinusBins_diameter = plusMinusBins
-            self.diameterClipPlot.setData([], [])
-        else:
-            self.y_df_f0 = yPlot
-            self.peakBins_df_f0 = xPeakBins
-            self.plusMinusBins_df_f0 = plusMinusBins
-            self.clipPlot.setData([], [])
-
-        numPeaks = len(xPeakBins)
-        numPntsInClip = plusMinusBins * 2
-
-        if numPeaks == 0:
-            # logger.warning('no peaks for clips.')
-            return
+        kymRoi = self._kymRoiAnalysis.getRoi(roiLabel)  # KymRoi
         
-        # all clips share same x
-        xOneClip = [(x-plusMinusBins)*secondsPerLine for x in range(numPntsInClip)]
+        clipDict = {}
+        numIntClips = None
+        numDiamClips = None
 
-        xPlotClips = np.empty((numPeaks*2, numPntsInClip))
-        xPlotClips[:] = np.nan
-        yPlotClips = np.empty((numPeaks*2, numPntsInClip))
-        yPlotClips[:] = np.nan
+        for peakDetectionType in PeakDetectionTypes:
 
-        for peakIdx, xPeak in enumerate(xPeakBins):
-            # logger.info(f'peakIdx:{peakIdx}')
-            
-            xStart = xPeak - plusMinusBins
-            if xStart < 0:
-                xStart = 0
-            
-            xStop = xPeak + plusMinusBins
-            if xStop > len(yPlot)-1:
-                xStop = len(yPlot)-1
+            xPlotClips, yPlotClips = kymRoi.getPeakClips(peakDetectionType,
+                                                         channel=channel,
+                                                         asPercent = self._plotPercent,
+                                                         plusMinusMs=self._plusMinusMs)
 
-            # logger.info(f'   xPeak:{xPeak} xStart:{xStart} xStop:{xStop} xStop-xStart+1:{xStop-xStart+1} left:{left} len(xPlot):{len(xPlot)} len(yPlot):{len(yPlot)}')
-            
-            yOneClip = yPlot[xStart:xStop]
-
-            # normalize to max -> percent
-            try:
-                if self._plotPercent:
-                    yOneClip = yOneClip / np.max(yOneClip) * 100
-
-            except (ValueError) as e:
-                logger.warning(f'   (1) not showing clip for peak: {peakIdx} --> {e}')
-                logger.error(f'      peakIdx:{peakIdx} xStart:{xStart} yStart:{xStart}')
+            if xPlotClips is None or yPlotClips is None:
+                # no clips to plot
+                # self._clearClips()
                 continue
-
-            xPlotClips[peakIdx*2, :] = xOneClip
             
-            try:
-                yPlotClips[peakIdx*2, :] = yOneClip
-            except (ValueError) as e:
-                logger.warning(f'   (2) not showing clip for peak: {peakIdx} --> {e}')
-
-        #
-        # update GUI
-        if doDiameter:
-            self.diameterClipPlot.setData(xPlotClips.flatten(), yPlotClips.flatten())
-            yMean = np.nanmean(yPlotClips, axis=0)
-            self.diameterMeanClipPlot.setData(xOneClip, yMean)
-            self.diameterClipPlotItem.autoRange()
+            # if xPlotClips is None or yPlotClips is None:
+            # logger.warning(f'xPlotClips is: {xPlotClips.shape}')
+            # logger.warning(f'xPlotClips is: {xPlotClips}')
+            if np.isnan(xPlotClips).all() or np.isnan(yPlotClips).all():
+                # no clips to plot
+                self._clearClips()
+                continue
             
-        # original, clips for peaks in f/f0
-        else:
-            self.clipPlot.setData(xPlotClips.flatten(), yPlotClips.flatten())
-            yMean = np.nanmean(yPlotClips, axis=0)
-            self.meanClipPlot.setData(xOneClip, yMean)
+            detectThisTrace = kymRoi.getDetectionParams(channel, peakDetectionType)['detectThisTrace']
+
+            if peakDetectionType == PeakDetectionTypes.intensity:
+                
+                _xFlatten = xPlotClips.flatten()
+                _xFlatten = _xFlatten[~np.isnan(_xFlatten)]
+
+                _yFlatten = yPlotClips.flatten()
+                _yFlatten = _yFlatten[~np.isnan(_yFlatten)]
+
+                if len(_yFlatten) != len(_xFlatten):
+                    logger.warning(f'   x and y are not the same length: {len(_xFlatten)} != {len(_yFlatten)}')
+                    # self.clipPlot.setData(xPlotClips.flatten(), yPlotClips.flatten(), pen=pg.mkPen(color=_color))
+
+                else:
+                    # self.clipPlot.setData(xPlotClips.flatten(), yPlotClips.flatten(), pen=pg.mkPen(color=_color))
+                    self.clipPlot.setData(_xFlatten, _yFlatten, pen=pg.mkPen(color=_color))
+                
+                yMean = np.nanmean(yPlotClips, axis=0)
+                self.meanClipPlot.setData(xPlotClips[0], yMean)  # assuming xPlotClips[0] is not NaN
+                self.peakClipPlotItem.autoRange()
+                self.peakClipPlotItem.setLabel("left", detectThisTrace, units="")
+                numIntClips = len(yPlotClips)
+
+            elif peakDetectionType == PeakDetectionTypes.diameter:
+                self.diameterClipPlot.setData(xPlotClips.flatten(), yPlotClips.flatten(), pen=pg.mkPen(color=_color))
+                yMean = np.nanmean(yPlotClips, axis=0)
+                self.diameterMeanClipPlot.setData(xPlotClips[0], yMean)
+                self.diameterClipPlotItem.setLabel("left", detectThisTrace, units="")
+                self.diameterClipPlotItem.autoRange()
+                numDiamClips = len(yPlotClips)
+
+            clipDict[peakDetectionType.value] = {
+                # 'xPlotClips' : xPlotClips,
+                'yPlotClips' : yPlotClips,
+            }
+        
+        if numIntClips is not None and numDiamClips is not None and (numIntClips == numDiamClips):
+            xPhase = clipDict[PeakDetectionTypes.intensity.value]['yPlotClips']
+            yPhase = clipDict[PeakDetectionTypes.diameter.value]['yPlotClips']
+            
+            # same number of points
+            if len(xPhase[0]) == len(yPhase[0]):
+                
+                logger.warning('   plotting phase clips -->> -->>')
+                print(xPhase.flatten())
+                print(yPhase.flatten())
+                
+                self.phaseClipPlot.setData(xPhase.flatten(), yPhase.flatten())
+            
+                detectThisTrace = kymRoi.getDetectionParams(channel, PeakDetectionTypes.intensity)['detectThisTrace']
+                self.phaseClipPlotItem.setLabel("bottom", detectThisTrace, units="")
+                detectThisTrace = kymRoi.getDetectionParams(channel, PeakDetectionTypes.diameter)['detectThisTrace']
+                self.phaseClipPlotItem.setLabel("left", detectThisTrace, units="")
+
+    def _clearClips(self):
+        # intensity
+        self.clipPlot.setData([], [])
+        self.meanClipPlot.setData([], [])
+
+        # diameter
+        self.diameterClipPlot.setData([], [])
+        self.diameterMeanClipPlot.setData([], [])
+
+        # phase plot
+        self.phaseClipPlot.setData([], [])
+        
+    def keyPressEvent(self, event):
+        key = event.key()
+
+        if key in [QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return]:
+            self._resetZoom()
+
+    def _resetZoom(self, doEmit=True):
+        # self._kymRoiImageWidget.kymographPlot.autoRange(item=self._kymRoiImageWidget.myImageItem)
+        _currentTabIndex = self._tabwidget.currentIndex()
+        if _currentTabIndex == 0:
             self.peakClipPlotItem.autoRange()
+        elif _currentTabIndex == 1:
+            self.diameterClipPlotItem.autoRange()
+        else:
+            logger.info(f'did not understand tab index {_currentTabIndex}')
+        

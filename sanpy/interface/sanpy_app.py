@@ -72,7 +72,7 @@ class SanPyApp(QtWidgets.QApplication):
         if firstTimeRunning:
             logger.info("  We created <user>/Documents/Sanpy and need to restart")
 
-        self._fileLoaderDict = sanpy.fileloaders.getFileLoaders(verbose=True)
+        self._fileLoaderDict = sanpy.fileloaders.getFileLoaders(verbose=False)
         
         self._detectionClass : sanpy.bDetection = sanpy.bDetection()
 
@@ -327,7 +327,8 @@ class SanPyApp(QtWidgets.QApplication):
         if folderDepth is None:
             # get the depth from file list widget
             #folderDepth = self._fileListWidget.getDepth()
-            folderDepth = 1
+            folderDepth = 4
+            logger.warning(f'balt april 2025, hard coding folderDepth to {folderDepth}')
 
         logger.info(f"Loading depth:{folderDepth} path: {path}")
 
@@ -501,10 +502,10 @@ class SanPyApp(QtWidgets.QApplication):
     def closeSanPyWindow(self, theWindow : SanPyWindow):
         """Remove theWindow from self._windowList.
         """
-        logger.info('todo: implement this')
-        logger.info('  remove sanpy window from app list of windows')
+
         for idx, aWindow in enumerate(self._windowList):
             if aWindow == theWindow:
+                logger.info(f'remove/pop sanpy window from app, idx:{idx}')
                 _removedValue = self._windowList.pop(idx)
 
     def _onHelpMenuAction(self, name: str):

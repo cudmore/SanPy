@@ -611,7 +611,7 @@ class kymAnalysis:
     
     def __init__(self,
                  path : str,
-                 tifData : np.ndarray = None,
+                 tifData : np.ndarray = None,  # can be multichannel
                  tifHeader : dict = None,
                  autoLoad: bool = True):
         """
@@ -651,7 +651,7 @@ class kymAnalysis:
             logger.error(f"image must be 2d but is {self._kymImage.shape}")
 
         # image must be shape[0] is time/big, shape[1] is space/small
-        logger.warning('1 removed np.rot90()')
+        # logger.warning('1 removed np.rot90()')
         # if self._kymImage.shape[0] < self._kymImage.shape[1]:
         #     # logger.info(f"rot90 image with shape: {self._kymImage.shape}")
         #     self._kymImage = np.rot90(
@@ -722,13 +722,13 @@ class kymAnalysis:
 
     def getAnalysisParam(self, name):
         if name not in self._analysisParams.keys():
-            logger.error(f'did not find key: {name}')
+            logger.error(f'did not find key: "{name}"')
             return
         return self._analysisParams[name]
     
     def setAnalysisParam(self, name, value):
         if name not in self._analysisParams.keys():
-            logger.error(f'did not find key: {name}')
+            logger.error(f'did not find key: "{name}"')
         self._analysisParams[name] = value
 
     @property

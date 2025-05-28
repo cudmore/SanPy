@@ -10,7 +10,11 @@ class sanpyCursors(QtCore.QObject):
     signalCursorDragged = QtCore.pyqtSignal(str)  # dx
     signalSetDetectionParam = QtCore.pyqtSignal(str, float)
 
-    def __init__(self, plotWidget : pg.PlotWidget, showInView=True, showCursorD=False):
+    def __init__(self,
+                 plotWidget : pg.PlotWidget,
+                 showInView=True,
+                 showCursorD=False,
+                 cursorC_label=''):
         """Add cursors to a PlotWidget. Normally vmPlot.
 
         Parameters
@@ -56,8 +60,14 @@ class sanpyCursors(QtCore.QObject):
         self._cursorB.sigDragged.connect(partial(self._cursorDragged, 'cursorB'))
         self._cursorB.setVisible(self._showCursors)
 
-        yLabelOpts = {'position':0.05}
-        self._cursorC = pg.InfiniteLine(pos=_top, angle=0, label='C', labelOpts=yLabelOpts, movable=True)
+        yLabelOpts = {'position':0.1}
+        # label='f0%:{value:.2f}'
+        self._cursorC = pg.InfiniteLine(pos=_top,
+                                        angle=0,
+                                        # label='C',
+                                        label=cursorC_label+'{value:.2f}',  # value is hidden, current pos of line
+                                        labelOpts=yLabelOpts,
+                                        movable=True)
         self._cursorC.sigDragged.connect(partial(self._cursorDragged, 'cursorC'))
         self._cursorC.setVisible(self._showCursors)
 
@@ -89,15 +99,23 @@ class sanpyCursors(QtCore.QObject):
         
         if self._showCursorA:
             self._cursorA.setVisible(visible)
-    
+        else:
+            self._cursorA.setVisible(False)
+
         if self._showCursorB:
             self._cursorB.setVisible(visible)
+        else:
+            self._cursorB.setVisible(False)
         
         if self._showCursorC:
             self._cursorC.setVisible(visible)
+        else:
+            self._cursorC.setVisible(False)
         
         if self._showCursorD:
             self._cursorD.setVisible(visible)
+        # else:
+        #     self._cursorD.setVisible(False)
 
         if visible:
             # set position to start/stop of current view

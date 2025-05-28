@@ -420,6 +420,14 @@ def _walk(path, theseFileTypes, depth=None):
     else:
         top_pathlen = len(path) + len(os.path.sep)
         for dirpath, dirnames, filenames in os.walk(path):
+            
+            # abb 202505 colin
+            # this does not work !!!
+            # logger.info(f'dirnames before sort: {dirnames}')
+            # dirnames.sort()
+            # logger.info(f'dirnames after sort: {dirnames}')
+            # filenames.sort()
+            
             dirlevel = dirpath[top_pathlen:].count(os.path.sep)
             if depth and dirlevel >= depth:
                 dirnames[:] = []
@@ -433,6 +441,10 @@ def _walk(path, theseFileTypes, depth=None):
                     yield os.path.join(dirpath, filename)
                     
 def getFileList(path, theseFileTypes, depth=1):
+    logger.info(f'{path}')
+    logger.info(f'  theseFileTypes:{theseFileTypes}')
+    logger.info(f'  depth:{depth}')
+
     fileList = [filePath for filePath in _walk(path, theseFileTypes, depth)]
     return fileList
 
@@ -462,7 +474,8 @@ class analysisDir:
     # Dict of dict of column names and bookkeeping info.
 
     # 20231230, get this from sanpyapp fileloader keys
-    # theseFileTypes = [".abf", ".atf", ".sanpy", ".tif"]  # .dat .czi
+    # baltimore april put back in ???
+    #theseFileTypes = [".abf", ".atf", ".sanpy", ".tif"]  # .dat .czi
     # File types to load.
 
     def __init__(
@@ -487,6 +500,7 @@ class analysisDir:
             PyQt, used to signal progress on loading
         fileLoaderDict (dict):
             Dict with file extension keys (no dot)
+            See: sanpy.fileloaders.getFileLoaders(verbose=True)
         autoLoad (bool):
             If True then 
         folderDepth (int):
@@ -506,7 +520,7 @@ class analysisDir:
         else:
             folderPath = path
 
-        logger.info(f'{path}')
+        logger.info(f'folderDepth:{folderDepth} {path}')
 
         self.path: str = folderPath  # path to folder
         
@@ -514,7 +528,7 @@ class analysisDir:
         # used to signal on building initial db
 
         self._fileLoaderDict = fileLoaderDict
-        # dist with file extension keys
+        # dict with file extension keys
 
         self.autoLoad = autoLoad
         # not used
@@ -545,15 +559,6 @@ class analysisDir:
             logger.info(f'sync existing df with filePath: {self._filePath}')
             self.syncDfWithPath()
 
-        # if we have a filePath and not in df then add it
-        # if self._filePath is not None:
-
-        #     logger.info('self._df')
-        #     print(self._df)
-
-        # self._df = self.loadFolder(loadData=autoLoad)
-
-        #
         self._checkColumns()
         self._updateLoadedAnalyzed()
 
@@ -611,7 +616,8 @@ class analysisDir:
         return len(self._df)
 
     @property
-    def numFiles(self):
+    def numFiles(self) -> int:
+        """Get the number of files. same as len()."""
         return len(self._df)
 
     @property
@@ -679,7 +685,8 @@ class analysisDir:
         return self._df.copy()
 
     def sort_values(self, Ncol, order):
-        logger.info(f"sorting by column {self.columns[Ncol]} with order:{order}")
+        logger.info(f'sorting by column "{self.columns[Ncol]}" with ascending order:{order}')
+        print(self.columns[Ncol])
         self._df = self._df.sort_values(self.columns[Ncol], ascending=not order)
         # print(self._df)
 
@@ -701,14 +708,9 @@ class analysisDir:
         # logger.info(f'{colName} {type(type)}, type:{type} {isBool}')
         return isBool
 
-    def getDataFrame(self):
+    def getDataFrame(self) -> pd.DataFrame:
         """Get the underlying pandas DataFrame."""
         return self._df
-
-    @property
-    def numFiles(self):
-        """Get the number of files. same as len()."""
-        return len(self._df)
 
     def copyToClipboard(self):
         """
@@ -1383,11 +1385,6 @@ class analysisDir:
 
         """
         
-        # to open just one file
-        # if forceFolder:
-        #     # we are forcing reload of an entire folder
-        #     self._filePath = None
-
         if self._filePath is not None:
             logger.info(f'returning one file {self._filePath}')
             return [self._filePath]
@@ -1400,67 +1397,6 @@ class analysisDir:
             fileList = stripSantanaTif(fileList)
         return fileList
     
-        logger.warning("Remember: MODIFIED TO LOAD TIF FILES IN SUBFOLDERS")
-        count = 1
-        tmpFileList = []
-        folderDepth = self.folderDepth  # if none then all depths
-        excludeFolders = ["analysis", "hide"]
-        for root, subdirs, files in os.walk(path):
-            subdirs[:] = [d for d in subdirs if d not in excludeFolders]
-
-            print(f'count:{count} folderDepth:{folderDepth}')
-            print('  root:', root)
-            print('  subdirs:', subdirs)
-            print('  files:', files)
-
-            # strip out folders that start with __
-            # _parentFolder = os.path.split(root)[1]
-            # print('root:', root)
-            # print('  parentFolder:', _parentFolder)
-            # if _parentFolder.startswith('__'):
-            if "__" in root:
-                logger.info(f"SKIPPING based on path root:{root}")
-                continue
-
-            if os.path.split(root)[1] == "analysis":
-                # don't load from analysis/ folder, we save analysis there
-                continue
-
-            # if os.path.split(root)[1] == 'hide':
-            #     # special case/convention, don't load from 'hide' folders
-            #     continue
-
-            for file in files:
-                # TODO (cudmore) parse all our fileLoader(s) for a list
-                _, _ext = os.path.splitext(file)
-                if _ext in self.theseFileTypes:
-                    oneFile = os.path.join(root, file)
-                    tmpFileList.append(oneFile)
-
-            count += 1
-            if folderDepth is not None and count > folderDepth:
-                break
-
-        fileList = []
-        for file in sorted(tmpFileList):
-            if file.startswith("."):
-                continue
-            # ignore our database file
-            if file == self.dbFile:
-                continue
-
-            # tmpExt is like .abf, .csv, etc
-            tmpFileName, tmpExt = os.path.splitext(file)
-            if tmpExt in self.theseFileTypes:
-                # if getFullPath:
-                #     #file = os.path.join(path, file)
-                #     file = pathlib.Path(path) / file
-                #     file = str(file)  # return List[str] NOT List[PosixPath]
-                fileList.append(file)
-        #
-        logger.info(f"found {len(fileList)} files ...")
-        return fileList
-
     def getRowDict(self, rowIdx):
         """
         Return a dict with selected row as dict (includes detection parameters).

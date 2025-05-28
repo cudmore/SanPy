@@ -160,8 +160,7 @@ class bAnalysisPlot:
         return fig, ax
 
     def plotRaw(self, plotStyle=None, ax=None):
-        """
-        Plot raw recording
+        """Plot sweepx vs sweepY of raw recording.
 
         Args:
             plotStye (float):
@@ -387,6 +386,7 @@ class bAnalysisPlot:
         """
 
         if self.ba.numSpikes == 0:
+            logger.warning('no spikes to plot !!!')
             return None, None
 
         if ax is None:
@@ -415,7 +415,11 @@ class bAnalysisPlot:
             sweepNumber=sweepNumber,
         )
         numClips = len(theseClips)
-
+        logger.warning(f'got num clips {numClips}')
+        if numClips == 0:
+            logger.error('did not find any clips -->> abort')
+            return
+        
         # convert clips to 2d ndarray ???
         xTmp = np.array(theseClips_x)
         # xTmp /= self.ba.dataPointsPerMs * 1000  # pnt to seconds
@@ -464,7 +468,7 @@ class bAnalysisPlot:
                 # ax.plot(xPlot, yPlot, '-g', linewidth=0.5, color='g')
                 ax.plot(xPlot, yPlot, "-", label=f"{i}", color=color, linewidth=0.5)
 
-            yLabel = self.ba._sweepLabelY
+            yLabel = self.ba.fileLoader._sweepLabelY
             ax.set_ylabel(yLabel)
             ax.set_xlabel("Time (sec)")
 

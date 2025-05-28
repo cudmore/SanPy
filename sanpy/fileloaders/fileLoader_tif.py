@@ -208,12 +208,22 @@ class fileLoader_tif(fileLoader_base):
     loadFileType = ".tif"
 
     def loadFile(self):
-        # assuming pixels x line scan like (519, 10000)
-        self._tif = []
+        """Assuming (pixels x line) scan like (519, 10000).
+        """
+
+        self._tif : List[np.ndarray] = []
+        """List of color channel images."""
+
+        if not os.path.isfile(self.filepath):
+            logger.error(f'did not find tif file:{self.filepath}')
+            return
         
+        self._fakeScale = False
+        """Set True if we do not load a scale and use fake scale."""
+
         loadedTif = tifffile.imread(self.filepath)
 
-        self._useThisChannel = 1
+        # self._useThisChannel = 1
         
         # logger.info(f'loaded tif: {self._tif.shape}')
 
@@ -233,11 +243,27 @@ class fileLoader_tif(fileLoader_base):
         # sometimes Olympus export is 3-channel rgb like (1000, 1023, 3)
         # logger.warning(f'loadedTif.shape:{loadedTif.shape} {self.filepath}')
 
+        # logger.info(f'   shape:{loadedTif.shape} numLoadedDims:{numLoadedDims}')
+
         if numLoadedDims == 2:
             # one channel
             # already just a 2d image
             self._numChannels = 1
             self._tif.append(loadedTif)
+
+            if _olympusHeader is not None:
+                _file = os.path.split(self.filepath)[1]
+                # paula tif export has 2 cases
+                if '_C001' in _file:
+                    file2 = _file.replace('_C001', '_C002')
+                    filePath2 = os.path.split(self.filepath)[0]
+                    filePath2 = os.path.join(filePath2, file2)
+                    if os.path.isfile(filePath2):
+                        loadedTif_2 = tifffile.imread(filePath2)
+                        logger.info(f'   appending tif shape:{loadedTif_2.shape} from file:{file2}')
+                        self._tif.append(loadedTif_2)
+                    else:
+                        logger.warning(f'  did not find corresponding ch2 file:{filePath2}')
 
         elif numLoadedDims == 3:
             # one channel
@@ -257,21 +283,24 @@ class fileLoader_tif(fileLoader_base):
                     _img = loadedTif[:, :, _channelIdx]
                     self._tif.append(_img)  # olympus like (1000, 1023, 3)
 
-                logger.warning(f'for colin kym, swapping 2nd channel into 1s {self.filepath}')
-                self._tif[0] = self._tif[1]
-                self._tif[1] = np.flip(self._tif[1])
+                # logger.warning(f'   for colin kym, swapping 2nd channel into 1s {self.filepath}')
+                # self._tif[0] = self._tif[1]
+                # self._tif[1] = np.flip(self._tif[1], axis=1)
 
             else:
                 self._tif.append(loadedTif[:, 0, :])  # czi
         elif numLoadedDims == 4:
+            # (3756, 2, 1, 1024)
             # multi channel czi line scan with frames (frames, channels, height, width)
             _channelDimension = 1
             self._numChannels = loadedTif.shape[_channelDimension]
             
             for _channel in range(self._numChannels):
-                self._tif.append(loadedTif[:, _channel, 0, :])
+                _appendThisImgData = loadedTif[:, _channel, 0, :]
+                logger.info(f'   _appendThisImgData:{_appendThisImgData.shape}')
+                self._tif.append(_appendThisImgData)
         else:
-            logger.error(f'did not understand image with shape {loadedTif.shape}')
+            logger.error(f'   did not understand image with shape {loadedTif.shape}')
             self._loadError = True
             return
         
@@ -281,26 +310,45 @@ class fileLoader_tif(fileLoader_base):
             # logger.info('3 removed np.rot90()')
             # if 1 or img.shape[1] < img.shape[0]:
             #     logger.info(f"rot90 image with shape: {img.shape}")
-            if _olympusHeader is not None:
-                img = np.rot90(img)  # ROSIE, so lines are not backward
-                # img = np.flip(img)
             
-                # img = img.astype(np.int8)  # to all pos and negative
-                if img.dtype == np.uint16:
-                    img = img.astype(np.int16)  # to all pos and negative
-                    logger.warning(f'converting {img.dtype} to np.int16')
-                elif img.dtype == np.uint8:
-                    logger.warning(f'converting {img.dtype} to np.int16')
-                    img = img.astype(np.int8)  # to all pos and negative
+            img = np.rot90(img)  # we want shape (pixels, lines)
+            
+            # img = np.rot90(img)  # ROSIE, so lines are not backward
+            # img = np.flip(img)
+        
+            # img = img.astype(np.int8)  # to all pos and negative
+            if img.dtype == np.uint16:
+                # logger.warning(f'   converting _channel:{_channel} {img.dtype} to np.int16')
+                # logger.info(f'   orig min:{np.min(img)} max:{np.max(img)}')
+                img = img.astype(np.int16)  # to all pos and negative
+                # logger.info(f'   orig min:{np.min(img)} max:{np.max(img)}')
+            elif img.dtype == np.uint8:
+                # logger.warning(f'   converting _channel:{_channel} {img.dtype} to np.int8')
+                # logger.info(f'   orig min:{np.min(img)} max:{np.max(img)}')
+                # img = img.astype(np.int8)  # 
+                img = img.astype(int)
+                img = img.astype(np.uint8)
+                # logger.info(f'   after min:{np.min(img)} max:{np.max(img)}')
 
+            # logger.info(f'tif _channel:{_channel} shape:{img.shape} mean:{np.mean(img)}')
+
+            # add image to our list of channels
             self._tif[_channel] = img
 
+            debugZeissTiffExport = False
+            if debugZeissTiffExport:
+                logger.warning(f'   debugZeissTiffExport:{debugZeissTiffExport}')
+                if _channel == 1:
+                    self._tif[0] = self._tif[1]
+                    self._tif[1] = np.flip(self._tif[0], axis=1)
+
+        # check the dtype of the first tif (all  are the same)
         if self._tif[0].dtype in [np.uint8, np.int8]:
             _bitDepth = 8
         elif self._tif[0].dtype in [np.uint16, np.int16]:
             _bitDepth = 16
         else:
-            logger.warning(f'Did not undertand dtype {self._tif[0].dtype} defaulting to bit depth 16')
+            logger.error(f'Did not understand dtype {self._tif[0].dtype} defaulting to bit depth 16')
             _bitDepth = 16
         
         # we need a header to mimic one in original bAnalysis
@@ -322,9 +370,17 @@ class fileLoader_tif(fileLoader_base):
                 self._tifHeader['umPerPixel'] = _olympusHeader["umPerPixel"]
                 self._tifHeader['secondsPerLine'] = _olympusHeader["secondsPerLine"]
             except (KeyError) as e:
-                pass
+                logger.error(f'did not understand olympus header "umPerPixel" or "secondsPerLine"')
 
-        self._setLoadedData()
+        _loadOlympusHeader = True
+        if _olympusHeader is None:
+            self._fakeScale
+            
+        for _channelIdx, _tif in enumerate(self._tif):
+            if np.sum(_tif) == 0:
+                logger.warning(f'   not adding _channelIdx:{_channelIdx} -->> sum is 0')
+                continue
+            self._setLoadedData(channel=_channelIdx+1)
 
     #
     # need to pull/merge code from xxx
@@ -333,7 +389,7 @@ class fileLoader_tif(fileLoader_base):
     def _setLoadedData(self, channel=1):
         channelIdx = channel - 1
 
-        logger.warning(f'20241001 constructing sweepX/sweepY from tif channel:{channel}')
+        # logger.warning(f'constructing sweepX/sweepY tif channelIdx:{channelIdx}')
 
         # 20241001 was this
         # using 'reshape(-1,1)' to convert shape from (n,) to (n,1)
@@ -351,9 +407,10 @@ class fileLoader_tif(fileLoader_base):
         sweepX *= self._tifHeader['secondsPerLine']
 
         sweepY = np.sum(self._tif[channelIdx], axis=_spaceDim).reshape(-1, 1)
+        # logger.info(f'  normalizing to max(sweepY):{np.max(sweepY)}')
         sweepY = np.divide(sweepY, np.max(sweepY))
 
-        logger.info(f'   loaded _tif.shape:{self._tif[channelIdx].shape} sweepX:{sweepX.shape} sweepY:{sweepY.shape}')
+        # logger.info(f'loaded tif:{self._tif[channelIdx].shape} sweepX:{sweepX.shape} sweepY:{sweepY.shape}')
 
         self.setLoadedData(
             sweepX=sweepX,
@@ -392,7 +449,7 @@ class fileLoader_tif(fileLoader_base):
     def tifData(self) -> np.ndarray:
         """Get the first tif color channel. NEEDS TO BE REFACTORED.
         """
-        logger.warning('TODO: refactor tifData, need to handle multiple color channels.')
+        # logger.warning('TODO: refactor tifData, need to handle multiple color channels.')
         return self._tif[0]
     
     def getTifData(self, channel : int = 1):

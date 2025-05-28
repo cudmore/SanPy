@@ -1162,7 +1162,8 @@ class sanpyPlugin(QtWidgets.QWidget):
             self._blockComboBox = False
         else:
             # no epochs defined
-            self._epochComboBox.setEnabled(False)
+            logger.warning('turned on 20250313 EPOCHS')
+            # self._epochComboBox.setEnabled(False)
 
         # filename = self.ba.getFileName()
         # self._fileLabel.setText(filename)

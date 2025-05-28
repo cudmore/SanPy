@@ -1,11 +1,11 @@
 
 import numpy as np
 
-from sanpy.sanpyLogger import get_logger
-logger = get_logger(__name__)
-
 from sanpy.kym.kymRoi import KymRoi
 from sanpy.kym.kymRoi import MplKym
+
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 def test_kym_roi():
     import tifffile

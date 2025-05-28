@@ -33,8 +33,8 @@ class bTableView(QtWidgets.QTableView):
     """
 
     signalSelectRow = QtCore.pyqtSignal(
-        object, object, object
-    )  # (row, rowDict, selectingAgain)
+        int, dict, bool, bool
+    )  # (row, rowDict, selectingAgain, isDoubleClick)
 
     signalUpdateStatus = QtCore.pyqtSignal(object)
     """Update status in main SanPy app."""
@@ -56,6 +56,7 @@ class bTableView(QtWidgets.QTableView):
 
         self.lastSeletedRow = None
         self.clicked.connect(self.onLeftClick)
+        self.doubleClicked.connect(self._onDoubleClick)
 
         self.mySetModel(model)
 
@@ -230,6 +231,22 @@ class bTableView(QtWidgets.QTableView):
         rowDict = self.model().myGetRowDict(selectedRow)
         return rowDict
 
+    def _onDoubleClick(self, item):
+        """Handle user double-click on a row.
+
+        This is used to open the file in the default application.
+        """
+        row = item.row()
+        realRow = self.model()._data.index[row]
+
+        rowDict = self.model().myGetRowDict(realRow)
+
+        # if tif/kym clicked, open kymRoiPlugin
+        logger.info('-->> emit signalSelectRow')
+        selectedAgain = False
+        doubleClick = True
+        self.signalSelectRow.emit(realRow, rowDict, selectedAgain, doubleClick)
+
     def onLeftClick(self, item):
         """Hanlde user left-click on a row.
 
@@ -264,7 +281,8 @@ class bTableView(QtWidgets.QTableView):
             # print('  new row selection')
             # logger.info(f'realRow:{realRow} rowDict:{rowDict}')
             logger.info('-->> emit signalSelectRow')
-            self.signalSelectRow.emit(realRow, rowDict, selectedAgain)
+            doubleClick = False
+            self.signalSelectRow.emit(realRow, rowDict, selectedAgain,doubleClick)
         else:
             # print('  handle another click on already selected row')
             pass

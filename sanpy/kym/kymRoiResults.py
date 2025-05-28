@@ -9,16 +9,23 @@ def getAnalysisDict():
     """
     ret = {}
 
+    ret['Detected Trace'] = {
+        'value': None,
+        'description': 'The trace that was detected. One of f/f0, df/f0, diameter, left diameter, right diameter.',
+        'type': int,
+        'userdisplay': True,  # display to user
+    },
+
     ret['Channel Number'] = {
         'value': None,
-        'description': '',
+        'description': 'Channel number of the detected trace',
         'type': int,
         'userdisplay': True,  # display to user
     },
 
     ret['ROI Number'] = {
         'value': None,
-        'description': '',
+        'description': 'ROI number of the detected trace',
         'type': int,
         'userdisplay': True,  # display to user
     },
@@ -37,6 +44,7 @@ def getAnalysisDict():
         'userdisplay': False,  # display to user
     },
 
+    # this is the only 'Bin' we need
     ret['Peak Bin'] = {
         'value': None,
         'description': '',
@@ -44,49 +52,52 @@ def getAnalysisDict():
         'userdisplay': False,  # display to user
     },
 
-    ret['Peak Second'] = {
+    ret['Peak (s)'] = {
         'value': None,
-        'description': '',
+        'description': 'Time of peak (s)',
         'type': float,
         'userdisplay': True,  # display to user
     },
 
     ret['Peak Int'] = {
         'value': None,
-        'description': '',
+        'description': 'Intensity of peak.',
         'type': int,
         'userdisplay': True,  # display to user
+        'displayoverlay' : True,
+        'marker' : 'o',
+        'color' : 'Red'
     },
 
     ret['Peak Height'] = {
         'value': None,
-        'description': 'The height of the peak avove threshold = (Peak) - (Threshold Value)',
+        'description': 'The height of the peak above threshold = (Peak Int) - (Onset Int)',
         'type': float,
         'userdisplay': True,  # display to user
     },
 
-    ret['Peak Interval (s)'] = {
+    ret['Peak Inst Interval (s)'] = {
         'value': None,
-        'description': 'Inter-peak-interval, first peak is nan',
+        'description': 'Inter-peak-interval in s, first peak is nan',
         'type': float,
         'userdisplay': True,  # display to user
     },
 
-    ret['Peak Freq (Hz)'] = {
+    ret['Peak Inst Freq (Hz)'] = {
         'value': None,
-        'description': 'Inter-peak-interval in Hz, first peak is nan',
+        'description': 'Inter-peak-frequency in Hz, first peak is nan',
         'type': float,
         'userdisplay': True,  # display to user
     },
 
-    ret['Onset Bin'] = {
-        'value': None,
-        'description': '',
-        'type': int,
-        'userdisplay': False,  # display to user
-    },
+    # ret['Onset Bin'] = {
+    #     'value': None,
+    #     'description': '',
+    #     'type': int,
+    #     'userdisplay': False,  # display to user
+    # },
 
-    ret['Onset Second'] = {
+    ret['Onset (s)'] = {
         'value': None,
         'description': '',
         'type': float,
@@ -95,19 +106,23 @@ def getAnalysisDict():
 
     ret['Onset Int'] = {
         'value': None,
-        'description': '',
+        'description': 'Intensity at onset',
         'type': float,
         'userdisplay': True,  # display to user
+        'displayoverlay' : True,
+        'marker' : 'o',
+        'color' : 'Green'
+
     },
 
-    ret['Onset 10 Bin'] = {
-        'value': None,
-        'description': '',
-        'type': int,
-        'userdisplay': False,  # display to user
-    },
+    # ret['Onset 10 Bin'] = {
+    #     'value': None,
+    #     'description': '',
+    #     'type': int,
+    #     'userdisplay': False,  # display to user
+    # },
 
-    ret['Onset 10 Second'] = {
+    ret['Onset 10 (s)'] = {
         'value': None,
         'description': '',
         'type': float,
@@ -119,16 +134,20 @@ def getAnalysisDict():
         'description': '',
         'type': float,
         'userdisplay': True,  # display to user
+        'displayoverlay' : True,
+        'marker' : 'x',
+        'color' : (255, 0, 255, 200)  # megenta
+
     },
     
-    ret['Onset 90 Bin'] = {
-        'value': None,
-        'description': '',
-        'type': int,
-        'userdisplay': False,  # display to user
-    },
+    # ret['Onset 90 Bin'] = {
+    #     'value': None,
+    #     'description': '',
+    #     'type': int,
+    #     'userdisplay': False,  # display to user
+    # },
 
-    ret['Onset 90 Second'] = {
+    ret['Onset 90 (s)'] = {
         'value': None,
         'description': '',
         'type': float,
@@ -140,16 +159,20 @@ def getAnalysisDict():
         'description': '',
         'type': float,
         'userdisplay': True,  # display to user
+        'displayoverlay' : True,
+        'marker' : 'x',
+        'color' : (255, 255, 0, 200)  # yellow
+
     },
     
-    ret['Decay Bin'] = {
-        'value': None,
-        'description': '',
-        'type': int,
-        'userdisplay': False,  # display to user
-    },
+    # ret['Decay Bin'] = {
+    #     'value': None,
+    #     'description': '',
+    #     'type': int,
+    #     'userdisplay': False,  # display to user
+    # },
 
-    ret['Decay Second'] = {
+    ret['Decay (s)'] = {
         'value': None,
         'description': '',
         'type': float,
@@ -161,16 +184,19 @@ def getAnalysisDict():
         'description': '',
         'type': float,
         'userdisplay': True,  # display to user
+        'displayoverlay' : True,
+        'marker' : 'o',
+        'color' : (255, 0, 255, 200)  # megenta
     },
 
-    ret['Decay 10 Bin'] = {
-        'value': None,
-        'description': '',
-        'type': int,
-        'userdisplay': False,  # display to user
-    },
+    # ret['Decay 10 Bin'] = {
+    #     'value': None,
+    #     'description': '',
+    #     'type': int,
+    #     'userdisplay': False,  # display to user
+    # },
 
-    ret['Decay 10 Second'] = {
+    ret['Decay 10 (s)'] = {
         'value': None,
         'description': '',
         'type': float,
@@ -182,16 +208,19 @@ def getAnalysisDict():
         'description': '',
         'type': float,
         'userdisplay': True,  # display to user
+        'displayoverlay' : True,
+        'marker' : 'x',
+        'color' : (255, 0, 255, 200)  # megenta
     },
     
-    ret['Decay 90 Bin'] = {
-        'value': None,
-        'description': '',
-        'type': int,
-        'userdisplay': False,  # display to user
-    },
+    # ret['Decay 90 Bin'] = {
+    #     'value': None,
+    #     'description': '',
+    #     'type': int,
+    #     'userdisplay': False,  # display to user
+    # },
 
-    ret['Decay 90 Second'] = {
+    ret['Decay 90 (s)'] = {
         'value': None,
         'description': '',
         'type': float,
@@ -203,6 +232,9 @@ def getAnalysisDict():
         'description': '',
         'type': float,
         'userdisplay': True,  # display to user
+        'displayoverlay' : True,
+        'marker' : 'x',
+        'color' : (255, 255, 0, 200)  # yellow
     },
 
     # half-width
@@ -213,14 +245,43 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     },
 
-    ret['HW Left Bin'] = {
+    # 20241031 switching from bin to second
+    # ret['HW Left Bin'] = {
+    #     'value': None,
+    #     'description': '',
+    #     'type': float,
+    #     'userdisplay': False,  # display to user
+    # },
+
+    # ret['HW Right Bin'] = {
+    #     'value': None,
+    #     'description': '',
+    #     'type': float,
+    #     'userdisplay': False,  # display to user
+    # },
+
+    ret['HW Left (s)'] = {
         'value': None,
         'description': '',
         'type': float,
         'userdisplay': False,  # display to user
     },
 
-    ret['HW Right Bin'] = {
+    ret['HW Right (s)'] = {
+        'value': None,
+        'description': '',
+        'type': float,
+        'userdisplay': False,  # display to user
+    },
+
+    ret['HW Left Int'] = {
+        'value': None,
+        'description': '',
+        'type': float,
+        'userdisplay': False,  # display to user
+    },
+
+    ret['HW Right Int'] = {
         'value': None,
         'description': '',
         'type': float,
@@ -351,6 +412,13 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     },
 
+    ret['Area Under Peak'] = {
+        'value': None,
+        'description': 'Area under peak',
+        'type': float,
+        'userdisplay': True,  # display to user
+    },
+    
     ret['Path'] = {
         'value': None,
         'description': 'Path to raw tiff file',
@@ -397,14 +465,54 @@ def getUserAnalysisKeys():
             keyList.append(k)
     return keyList
 
+def getOverlayKeys():
+    keyList = []
+    for k,v in getAnalysisDict().items():
+        v = v[0]  # wtf is going on?
+        # print(k,v)
+        try:
+            if v['displayoverlay']:
+                keyList.append(k)
+        except (KeyError):
+            continue
+    return keyList
+
 class KymRoiResults:
     """Kym Roi peak detection results.
     
     Basically a pandas dataframe.
     """
     analysisDict = getAnalysisDict()  # full
-    userAnalysisKeys = getUserAnalysisKeys()  # abbreviated for userdisplay=True
+    """Static analysis dict."""
     
+    userAnalysisKeys = getUserAnalysisKeys()  # abbreviated for userdisplay=True
+    """Static analysis keys to display in scatter"""
+
+    overlayKeys = getOverlayKeys()
+    """Static analysis keys to display in scatter plots."""
+
+    def getMarker(key):
+        """Got the marker to display in scatter.
+        """
+        if key not in getAnalysisDict().keys():
+            logger.error(f'did not find key column: {key}')
+            return False
+        try:
+             return getAnalysisDict()[key][0]['marker']
+        except (KeyError):
+            logger.info(f'results key "{key}" did not have a specified "marker"')
+
+    def getColor(key):
+        """Got the color to display in scatter.
+        """
+        if key not in getAnalysisDict().keys():
+            logger.error(f'did not find key column: {key}')
+            return False
+        try:
+             return getAnalysisDict()[key][0]['color']
+        except (KeyError):
+            logger.info(f'results key "{key}" did not have a specified "color"')
+
     def __init__(self):
         self._dict = getAnalysisDict()
         self._df = pd.DataFrame(columns=self.columns)
@@ -443,14 +551,15 @@ class KymRoiResults:
         
         Notes
         -----
-        I can never in the infinite time we have understand "A value is trying to be set on a copy of a slice from a DataFrame"
+        I can never in the infinite time we have understand
+        "A value is trying to be set on a copy of a slice from a DataFrame"
         """
         # print('')
         # logger.info(f'adding error peakNumber:{peakNumber} err:{type(err)} "{err}"')
         
         if err.endswith(';'):
             # strip trailing ;
-            err = err[-1]
+            err = err[:-1]
 
         if len(err) == 0:
             return
@@ -459,7 +568,8 @@ class KymRoiResults:
         _newError = _currentError + err + ';'
         self.df.at[peakNumber, 'Detection Errors'] = _newError
         
-        # print(f"   AFTER addError: {self.df.loc[peakNumber]['Detection Errors']}")
+        # logger.warning(f"   AFTER addError peakNumber:{peakNumber} Detection Errors is:")
+        # logger.warning(f"  {self.df.loc[peakNumber]['Detection Errors']}")
 
     # call this with 'num peaks' to initialize all rows
     def setValues(self, key : str, values):
@@ -476,6 +586,42 @@ class KymRoiResults:
             return False
         
         return self.df[key]
+
+    def _old_displayOverlay(self, key):
+        """Return true if we show results as an overlay.
+        
+        Basically, a scatter plot in kymPlotWidget.
+        """
+        if key not in self.columns:
+            logger.error(f'did not find key column: {key}')
+            return False
+        
+        try:
+            return self._dict[key]['displayoverlay']
+        except (KeyError):
+            return False
+
+    def _old_getMarker(self, key):
+        """Got the marker to display in scatter.
+        """
+        if key not in self.columns:
+            logger.error(f'did not find key column: {key}')
+            return False
+        try:
+             return self._dict[key]['marker']
+        except (KeyError):
+            logger.info(f'results key "{key}" did not have a specified "marker"')
+
+    def _old_getColor(self, key):
+        """Got the color to display in scatter.
+        """
+        if key not in self.columns:
+            logger.error(f'did not find key column: {key}')
+            return False
+        try:
+             return self._dict[key]['color']
+        except (KeyError):
+            logger.info(f'results key "{key}" did not have a specified "color"')
 
 if __name__ == '__main__':
     _makeMarkdownTable()

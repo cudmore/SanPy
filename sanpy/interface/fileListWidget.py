@@ -26,7 +26,7 @@ class fileListWidget(QtWidgets.QWidget):
     """Update statu s in main SanPy app."""
     # signalSetDefaultDetection = QtCore.pyqtSignal(object, object)  # selected row, detection type
 
-    def __init__(self, myModel: pandasModel, folderDepth:int=1,parent=None):
+    def __init__(self, myModel: pandasModel, folderDepth:int=2,parent=None):
         """
         Parameters
         ----------

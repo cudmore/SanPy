@@ -1,7 +1,19 @@
 import pandas as pd
 
+# from sanpy.kym.kymRoiAnalysis import PeakDetectionTypes
+
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
+
+# specify default for diameter detection
+def getDiameterDefault():
+    ret = {
+        'Background Subtract' : 'Off',
+        'Polarity' : 'Neg',
+        'Bin Line Scans' : 2,
+        'Prominence' : 4,
+    }
+    return ret
 
 def getAnalysisDict():
     """Returns a dict of dict, first key is "stat" name.
@@ -17,6 +29,16 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
+    #
+    # filled in during anlysis
+    ret['Detection Type'] = {
+        'defaultvalue': 'Intensity',  # constructor will switch it to 'Diameter'
+        'value': None,
+        'description': 'Detection type, either Intensity or Diameter',
+        'type': "str",
+        'userdisplay': True,  # display to user
+    }
+    
     #
     # filled in during anlysis
     ret['ltrb'] = {
@@ -39,30 +61,30 @@ def getAnalysisDict():
         'defaultvalue': None,
         'value': None,
         'description': 'Value subtracted from the background - set on analysis.',
-        'type': "dict",
-        'userdisplay': True,  # display to user
-    }
-
-    ret['f0 Value'] = {
-        'defaultvalue': None,
-        'value': None,
-        'description': 'Value of f0. Either manually set or the median of roi image',
-        'type': "dict",
+        'type': "int",
         'userdisplay': True,  # display to user
     }
 
     #
     # actual detection params
     ret['detectThisTrace'] = {
-        'defaultvalue': 'f_f0',
+        'defaultvalue': 'f/f0',
         'value': None,
-        'description': 'Specify which trace to detect from (df_f0, f_f0, Diameter (um))',
+        'description': 'Specify which trace to detect from.',
         'type': "str",
         'userdisplay': True,  # display to user
     }
 
+    ret['Auto'] = {
+        'defaultvalue': True,
+        'value': None,
+        'description': 'Auto detect on ROI parameter change.',
+        'type': "bool",
+        'userdisplay': True,  # display to user
+    }
+
     ret['Bin Line Scans'] = {
-        'defaultvalue': 1,
+        'defaultvalue': 3,
         'value': None,
         'description': 'Number of line scans to bin when calculating the sum intensity (f/f_0). Zero (0) is off',
         'type': "int",
@@ -78,7 +100,7 @@ def getAnalysisDict():
     }
 
     ret['Background Subtract'] = {
-        'defaultvalue': "Off",
+        'defaultvalue': "Median",
         'value': None,
         'description': 'Background subtract from (Off, Rolling-Ball, Median, Mean)',
         'type': "str",
@@ -110,9 +132,25 @@ def getAnalysisDict():
     }
 
     ret['f0 Percentile'] = {
-        'defaultvalue': 50,
+        'defaultvalue': 10,
         'value': None,
         'description': 'Calculate f0 as a percentile (50 is median). This is a percentage 0 to 100.',
+        'type': "int",
+        'userdisplay': True,  # display to user
+    }
+
+    ret['f0 Value Manual'] = {
+        'defaultvalue': 1,
+        'value': None,
+        'description': 'Value of f0. Manually set by the user.',
+        'type': "int",
+        'userdisplay': True,  # display to user
+    }
+
+    ret['f0 Value Percentile'] = {
+        'defaultvalue': 1,
+        'value': None,
+        'description': 'Value of f0. As a percentile of f/f0 df/f0 value.',
         'type': "int",
         'userdisplay': True,  # display to user
     }
@@ -142,7 +180,7 @@ def getAnalysisDict():
     }
 
     ret['Prominence'] = {
-        'defaultvalue': 0.5,  #0.09,
+        'defaultvalue': 1.0,  #0.5,  #0.09,
         'value': None,
         'description': 'Detect peaks that rise this amount above surrounding.',
         'type': "float",
@@ -183,9 +221,9 @@ def getAnalysisDict():
     # }
 
     ret['Decay (ms)'] = {
-        'defaultvalue': 50.0,
+        'defaultvalue': 200,
         'value': None,
-        'description': 'Window to fit single and double exp decay from peak (also used in clip plot).',
+        'description': 'Window to fit single and double exp decay from peak.',
         'type': "float",
         'userdisplay': True,  # display to user
     }
@@ -198,9 +236,14 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
-    
+    return ret
+
+def getDetectDiamDict():
     #
     # Detect diameters in kymograph
+
+    ret = {}
+
     ret['do_background_subtract_diam'] = {
         'defaultvalue': True,
         'value': None,
@@ -210,7 +253,7 @@ def getAnalysisDict():
     }
 
     ret['line_width_diam'] = {
-        'defaultvalue': 1,
+        'defaultvalue': 3,
         'value': None,
         'description': 'Number of line scans (chunks) to generate line intensity profile (diameter).',
         'type': "int",
@@ -233,6 +276,14 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
+    ret['line_scan_fraction_diam'] = {
+        'defaultvalue': 4,
+        'value': None,
+        'description': 'Fraction of line for lef/right, 4 is 25% and 2 is 50% (diameter).',
+        'type': "int",
+        'userdisplay': True,  # display to user
+    }
+
     ret['line_interp_mult_diam'] = {
         'defaultvalue': 4,
         'value': None,
@@ -249,7 +300,9 @@ class KymRoiDetection:
 
     backgroundSubtractTypes = ['Off', 'Rolling-Ball', 'Median', 'Mean']
 
-    def __init__(self, kymRoiDetection = None, fromDict : dict = None):
+    def __init__(self, peakDetectionType,
+                 kymRoiDetection = None,
+                 fromDict : dict = None):
         """
         Parameters
         ----------
@@ -258,7 +311,25 @@ class KymRoiDetection:
         fromDict : dict
             Set values from dict (used on load)
         """
+        from sanpy.kym.kymRoiAnalysis import PeakDetectionTypes
+        self._peakDetectionType : PeakDetectionTypes = peakDetectionType
+        
         self._dict = getAnalysisDict()
+
+        if peakDetectionType == PeakDetectionTypes.diameter:
+            self._dict['Detection Type']['defaultvalue'] = 'Diameter'
+            
+            # some additional keys inique to diameter detection
+            _diamDict = getDetectDiamDict()  
+            for k, v in _diamDict.items():
+                self._dict[k] = v
+            
+            # special default for diam detection
+            for k, v in getDiameterDefault().items():
+                try:
+                    self._dict[k]['defaultvalue'] = v
+                except (KeyError):
+                    logger.error(f'getDiameterDefault() contained bad key "{k}"')
 
         self.setDefaults()
         
@@ -278,34 +349,40 @@ class KymRoiDetection:
 
     def getDescription(self, key) -> str:
         if key not in self._dict.keys():
-            logger.error(f'Did not find key:{key}. Available keys are {self._dict.keys()}')
+            logger.error(f'Did not find key:"{key}"')
+            logger.error(f'  Available keys are {self._dict.keys()}')
             return ''
         return self._dict[key]['description']
 
     def getType(self, key) -> str:
         if key not in self._dict.keys():
-            logger.error(f'Did not find key:{key}. Available keys are {self._dict.keys()}')
+            logger.error(f'Did not find key:"{key}"')
+            logger.error(f'  Available keys are {self._dict.keys()}')
             return ''
         return self._dict[key]['type']
 
     def getParam(self, key):
         if key not in self._dict.keys():
-            logger.error(f'Did not find key:{key}. Available keys are {self._dict.keys()}')
+            logger.error(f'Did not find key:"{key}"')
+            logger.error(f'  Available keys are {self._dict.keys()}')
             return
         return self._dict[key]['value']
 
     def setParam(self, key, value):
         if key not in self._dict.keys():
-            logger.error(f'Did not find key:{key}. Available keys are {self._dict.keys()}')
+            logger.error(f'Did not find key:"{key}"')
+            logger.error(f'  Available keys are {self._dict.keys()}')
             return
         self._dict[key]['value'] = value
-
+        return True
+    
     def setDefaults(self):
         """Set default values.
         
         'diameter' detection needs to have some specific parameters off.
         """
         for k, v in self._dict.items():
+            # logger.info(f'k:{k} v:{v}')
             defaultValue = v['defaultvalue']
             self.setParam(k, defaultValue)
 
@@ -385,10 +462,11 @@ def _makeMarkdownTable():
     ========
         pip install tabulate
     """
-    krd = KymRoiDetection()
+    from kymRoiAnalysis import PeakDetectionTypes
+    krd = KymRoiDetection(PeakDetectionTypes.diameter)
     df = krd.getDataframe()
     md = df.to_markdown()
     print(md)
 
 if __name__ == '__main__':
-        _makeMarkdownTable()
+    _makeMarkdownTable()

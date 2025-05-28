@@ -20,3 +20,5 @@ from .epochTable import epochTable
 # errors on building kym app, put back in for Sack lab
 # from .hekaUtils import hekaLoad
 
+# 20250313, need to explicity add ???
+from .fileLoader_heka import fileLoader_heka

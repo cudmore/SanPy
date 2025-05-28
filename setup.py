@@ -58,6 +58,9 @@ guiRequirements = [
     'pyqtgraph',
     'pyqtdarktheme',  # switched to this mar 2023
     'PyQt5',  # only install x86 version, need to use conda install pyqt
+
+    'qtawesome',  # for icons 202505
+    'roifile', # for loading fiji roi manager files
 ]
 
 devRequirements = guiRequirements + [

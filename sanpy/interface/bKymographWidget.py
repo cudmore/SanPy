@@ -302,6 +302,7 @@ class kymographWidget(QtWidgets.QWidget):
         return molarLayout
 
     def _refreshControlBarWidget(self):
+        logger.warning('expand fileLoader.tifData to multiple channels')
         tifData = self.ba.fileLoader.tifData
 
        # x and y pixels
@@ -317,6 +318,7 @@ class kymographWidget(QtWidgets.QWidget):
         self.yScaleLabel.setText(umPerPixel)
 
         # update min/max labels
+        logger.warning('expand fileLoader.tifData to multiple channels')
         tifData = self.ba.fileLoader.tifData
         minTif = np.nanmin(tifData)
         maxTif = np.nanmax(tifData)
@@ -574,7 +576,7 @@ class kymographWidget(QtWidgets.QWidget):
 
         self.myImageItem = pg.ImageItem(_fakeTif, axisOrder = "row-major")  # need transpose for row-major
 
-        logger.warning('--->>> tryin ColorBarItem')
+        # logger.warning('--->>> tryin ColorBarItem')
         # self.aColorBar = pg.ColorBarItem(colorMap='inferno')
         # self.aColorBar = pg.ColorBarItem(colorMap=pg.colormap.getFromMatplotlib('Greens'))
         self.aColorBar = pg.ColorBarItem()

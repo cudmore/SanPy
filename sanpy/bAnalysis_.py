@@ -176,6 +176,7 @@ class bAnalysis:
                     logger.info(f'    self.fileLoader.filepath:{self.fileLoader.filepath}')
                     logger.info(f'    self.fileLoader.tifData:{self.fileLoader.tifData.shape}')
                     logger.info(f'    self.fileLoader.tifHeader:{self.fileLoader.tifHeader}')
+                # logger.warning('expand fileLoader.tifData to multiple channels')
                 self._kymAnalysis = sanpy.kymAnalysis(self.fileLoader.filepath,
                                                       self.fileLoader.tifData,
                                                       self.fileLoader.tifHeader)

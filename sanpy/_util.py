@@ -201,14 +201,21 @@ def _loadLineScanHeader(path):
     txtFile = os.path.splitext(path)[0] + ".txt"
 
     if not os.path.isfile(txtFile):
-        logger.info('   looking for Olympus Metadata.txt file')
         # find "ISAN Linescan 6 Metadata.txt"
         _folder, _file = os.path.split(path)
         _file, _ = os.path.splitext(_file)
         _file += ' Metadata.txt'
+        logger.info(f'   -->> looking for Olympus "{_file}"')
         txtFile = os.path.join(_folder, _file)
         if not os.path.isfile(txtFile):
-            logger.warning(f'DID NOT FIND OLYMPUS FILE: {txtFile}')
+            _folder, _file = os.path.split(path)
+            _file, _ = os.path.splitext(_file)
+            _file = _file.split('_')[0]  # may fail
+            _file += '.txt'
+            logger.info(f'     -->> looking for Olympus "{_file}"')
+            txtFile = os.path.join(_folder, _file)
+            if not os.path.isfile(txtFile):
+                logger.warning(f'DID NOT FIND CORRESPONDING OLYMPUS FILE: {os.path.split(path)[1]}')
 
     if not os.path.isfile(txtFile):
         # logger.error(f"did not find file:{txtFile}")

@@ -1,5 +1,8 @@
 import numpy as np
 
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
+
 # found 20240925 at
 # https://forum.image.sc/t/macro-for-image-adjust-brightness-contrast-auto-button/37157/5
 
@@ -73,9 +76,16 @@ def getAutoContrast(imgData : np.ndarray):
     found = False
     # going through all bins of the histogram in increasing order until you reach one where the count if more than
     # pixel_count/auto_threshold
-    while not found and i <= 255:
+    # while not found and i <= 255:
+    while not found and i < 255:
         i += 1
-        count = histogram[i]
+
+        try:
+            count = histogram[i]
+        except (IndexError) as e:
+            logger.error(f'histogram.shape:{histogram.shape} i:{i} threshold:{threshold} {e}')
+            logger.error(f'  hist_min:{hist_min} hist_max:{hist_max} threshold:{threshold} {e}')
+
         if count > limit:
             count = 0
         found = count > threshold

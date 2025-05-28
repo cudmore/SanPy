@@ -1,4 +1,4 @@
-from typing import Union, Dict, List, Tuple, Optional, Optional
+from typing import Union, Dict, List, Tuple, Optional
 
 from sanpy.sanpyLogger import get_logger
 
@@ -36,23 +36,7 @@ class kymographRoiPlugin(sanpyPlugin):
             return
         
         path = self.ba.fileLoader.filepath
-        tifData = self.ba.fileLoader.tifData
-        if 0:
-            secondsPerLine = self.ba.fileLoader.tifHeader['secondsPerLine']
-            umPerPixel = self.ba.fileLoader.tifHeader['umPerPixel']
-
-            imgData = self.ba.fileLoader.tifData
-
-            logger.info(f'imgData:{imgData.shape}')
-
-            headerDict = {
-                'secondsPerLine' : secondsPerLine,  #olympusHeader['secondsPerLine'],  #0.003,
-                'umPerPixel' : umPerPixel,  #olympusHeader['umPerPixel'],  #.166,
-                'path' : path,
-            }
-
-            logger.info(headerDict)
-
+        
         if self.darkTheme:
             # updated 20230914
             import matplotlib.pyplot as plt
@@ -61,8 +45,24 @@ class kymographRoiPlugin(sanpyPlugin):
             import matplotlib.pyplot as plt
             plt.rcParams.update(plt.rcParamsDefault)
 
+        import numpy as np
         from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
-        kra = KymRoiAnalysis(path=path, imgData=tifData)
+
+
+        imgData = self.ba.fileLoader._tif  # list of color channel images
+        
+        logger.warning(f'removing sum 0 color channels from imgData:{len(imgData)}')
+
+        finalImgData = []
+        for _imgData in imgData:
+            if np.sum(_imgData) == 0:
+                continue
+            else:
+                finalImgData.append(_imgData)
+        
+        logger.info(f'  final number of channels is {len(finalImgData)}')
+        #
+        kra = KymRoiAnalysis(path, imgData=finalImgData)
 
         from sanpy.kym.interface.kymRoiWidget import KymRoiWidget
         # self._kymWidget = KymRoiWidget(imgData=imgData, header=headerDict)

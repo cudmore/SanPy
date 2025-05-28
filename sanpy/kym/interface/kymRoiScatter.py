@@ -12,6 +12,7 @@ import seaborn as sns
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 
+from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, PeakDetectionTypes
 from sanpy.kym.kymRoiResults import KymRoiResults
 
 from sanpy.sanpyLogger import get_logger
@@ -39,9 +40,16 @@ class simpleTableWidget(QtWidgets.QTableWidget):
 class SimpleRoiScatter(QtWidgets.QWidget):
     """Plot a scatter plot from peak/diameter detection df.
     """
-    def __init__(self, df : pd.DataFrame = None):
+    def __init__(self, kymRoiAnalysis : KymRoiAnalysis):
         super().__init__(None)
-        self._df = df
+        
+        self._kymRoiAnalysis = kymRoiAnalysis
+        
+        # need two df for f/f0 and another for diameter
+        self._df = None  # set this to context of (df/f0 or diameter)
+        #
+        self._dfIntensity = None
+        self._dfDiameter = None
 
         # columns in analysis df
         self._columns = KymRoiResults.userAnalysisKeys  # reduces analysis keys, just for the user
@@ -55,6 +63,7 @@ class SimpleRoiScatter(QtWidgets.QWidget):
             'yStat': 'Peak Height',
             'hue': 'ROI Number',
             'plotType': 'Swarm + Mean',
+            'analysisType': 'Intensity',  # either f/f0 or diameter (um)
             'makeSquare': False,
         }
 
@@ -64,8 +73,38 @@ class SimpleRoiScatter(QtWidgets.QWidget):
 
         self._buildUI()
 
-        # anable/disable combobox(es) based on plot type
+        # enable/disable combobox(es) based on plot type
         self._updateGuiOnPlotType(self._state['plotType'])
+
+    def slot_analysisChanged(self, channel, roi):
+        logger.info(f'channel:{channel} roi:{roi}')
+        
+        # get 2x df, one for intensity and other for diameter
+        # we do not know that actual 'analyzethisTrace' within each, e.g. could be f/f0 or df/f0
+        self._dfIntensity = self._kymRoiAnalysis.getDataFrame(channel, PeakDetectionTypes.intensity)  # get full dataframe across all 'roi number'
+        self._dfDiameter = self._kymRoiAnalysis.getDataFrame(channel, PeakDetectionTypes.diameter)  # get full dataframe across all 'roi number'
+        
+        # df = self._kymRoiAnalysis.getCombindedDataFrame(channel)  # get full dataframe across all 'roi number'
+        
+        if self._state['analysisType'] == 'Intensity':
+            dfReplot = self._dfIntensity
+        elif self._state['analysisType'] == 'Diameter':
+            dfReplot = self._dfDiameter
+
+        self.replot(dfReplot)
+
+    def _refreshAnalysisType(self):
+        """Swap in correct df when user chooses an 'analysisType'.
+        """
+        if self._state['analysisType'] == 'Intensity':
+            self._df = self._dfIntensity
+        elif self._state['analysisType'] == 'Diameter':
+            self._df = self._dfDiameter
+        else:
+            logger.error(f'did not understand analysisType ???')
+
+        # logger.info('self._df is now:')
+        # print()
 
     def _buildUI(self):
 
@@ -161,14 +200,25 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         aLabel = QtWidgets.QLabel(aName)
         hBoxLayout.addWidget(aLabel)
 
-        self.plotTypeComboBox = QtWidgets.QComboBox()
-        self.plotTypeComboBox.addItems(self._plotTypes)
+        plotTypeComboBox = QtWidgets.QComboBox()
+        plotTypeComboBox.addItems(self._plotTypes)
         _index = self._plotTypes.index('Swarm')
-        self.plotTypeComboBox.setCurrentIndex(_index)
-        self.plotTypeComboBox.currentTextChanged.connect(
+        plotTypeComboBox.setCurrentIndex(_index)
+        plotTypeComboBox.currentTextChanged.connect(
             partial(self._on_stat_combobox, aName)
         )
-        hBoxLayout.addWidget(self.plotTypeComboBox)
+        hBoxLayout.addWidget(plotTypeComboBox)
+
+        # either f_f0 or diameter
+        aName = 'Analysis Type'
+        aComboBox = QtWidgets.QComboBox()
+        aComboBox.addItems(['Intensity', 'Diameter'])
+        _index = self._plotTypes.index('Swarm')
+        aComboBox.setCurrentIndex(0)  # default to f/f0
+        aComboBox.currentTextChanged.connect(
+            partial(self._on_stat_combobox, aName)
+        )
+        hBoxLayout.addWidget(aComboBox)
 
         #
         # hueName = 'Hue'
@@ -234,6 +284,10 @@ class SimpleRoiScatter(QtWidgets.QWidget):
             self.state['plotType'] = value
             self._updateGuiOnPlotType(self._state['plotType'])
 
+        elif name == 'Analysis Type':
+            self.state['analysisType'] = value
+            self._refreshAnalysisType()
+
         elif name == 'X-Stat':
             self.state['xStat'] = value
         
@@ -250,7 +304,7 @@ class SimpleRoiScatter(QtWidgets.QWidget):
 
         self.replot()
 
-    def onpick(self, event):
+    def _on_user_pick(self, event):
         """
         event : matplotlib.backend_bases.PickEvent
         """
@@ -274,8 +328,12 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         yStat = self.state['yStat']
         hue = self.state['hue']
         plotType = self.state['plotType']
+        # analysisType = self.state['analysisType']  # either f/f0 or diameter (um)
 
         # logger.info(f'plotType:{plotType}')
+
+        # reduce to just one analysis type
+        # df = df[ df['Analysis Type'] == analysisType]
 
         dfGrouped = self.getGroupedDataframe(yStat)
         self._dfYStatSummary = dfGrouped
@@ -381,6 +439,8 @@ class SimpleRoiScatter(QtWidgets.QWidget):
             else:
                 logger.warning(f'did not understand plot type: {plotType}')
 
+            self.axScatter.figure.canvas.mpl_connect("pick_event", self._on_user_pick)
+
             self.static_canvas.draw()
 
         # except (ValueError) as e:
@@ -432,17 +492,24 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         
         aggList = ["count", "mean", "std", "sem", variation, "median", "min", "max"]
 
+        if len(self._df)>0:
+            # get first row value
+            detectedTrace = self._df['Detected Trace'].iloc[0]
+        else:
+            detectedTrace = 'N/A'
+
         # aggDf = self._df.groupby(groupByColumn, as_index=False)[statColumn].agg(aggList)
         dfDropNan = self._df.dropna(subset=[statColumn])  # drop rows where statColumn is nan
-                
+            
         try:
             aggDf = dfDropNan.groupby(groupByColumn).agg({statColumn : aggList})
         except (TypeError) as e:
-            logger.error(f'groupByColumn "{groupByColumn}" failed')
+            logger.error(f'groupByColumn "{groupByColumn}" failed e:{e}')
             aggDf = dfDropNan
 
         aggDf.columns = aggDf.columns.droplevel(0)  # get rid of statColumn multiindex
-        aggDf.insert(0, "stat", statColumn)  # add column 0, in place
+        aggDf.insert(0, 'Stat', statColumn)  # add column 0, in place
+        aggDf.insert(0, 'Detected Trace', detectedTrace)  #
         aggDf = aggDf.reset_index()  # move groupByColum (e.g. 'ROI Number') from row index label to column
         
         # rename column 'variation' as 'CV'
