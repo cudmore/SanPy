@@ -305,7 +305,6 @@ class fileLoader_tif(fileLoader_base):
             return
         
         # image must be shape[0] is time/big, shape[1] is space/small
-        # logger.info('abb 20240917 kym roi -> removed rotation')
         for _channel, img in enumerate(self._tif):
             # logger.info('3 removed np.rot90()')
             # if 1 or img.shape[1] < img.shape[0]:
@@ -313,6 +312,9 @@ class fileLoader_tif(fileLoader_base):
             
             img = np.rot90(img)  # we want shape (pixels, lines)
             
+            # new 20250529
+            img = np.flip(img, axis=0)
+
             # img = np.rot90(img)  # ROSIE, so lines are not backward
             # img = np.flip(img)
         

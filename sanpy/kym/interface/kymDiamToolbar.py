@@ -170,6 +170,7 @@ class KymDiameterToolbar(QtWidgets.QGroupBox):
             return
         else:
             detectionDict[name] = value
+            logger.info(f'-->> emit signalDetectionParamChanged group:{self._groupName} + KymRoiDetection')
             self.signalDetectionParamChanged.emit(self._groupName, detectionDict)
 
     def _on_spin_box(self, name, value):
@@ -184,6 +185,7 @@ class KymDiameterToolbar(QtWidgets.QGroupBox):
             return
         else:
             detectionDict[name] = value
+            logger.info(f'-->> emit signalDetectionParamChanged group:{self._groupName} + KymRoiDetection')
             self.signalDetectionParamChanged.emit(self._groupName, detectionDict)
 
     def slot_selectRoi(self, channel : int, roiLabel : str):

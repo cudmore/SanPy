@@ -1,11 +1,12 @@
 import sys
 import os
-from pprint import pprint
 
 import numpy as np
 import pandas as pd
 
-import roifile
+import roifile  # to import Fiji roi manager zip files
+
+import matplotlib.pyplot as plt
 
 from sanpy.analysisDir import _walk
 from sanpy.bAnalysis_ import bAnalysis
@@ -15,10 +16,15 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 def _getRawTifDict():
-    myAnalysisFolder = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/renamed-20250521'
-    theseFileTypes = '.tif'
-    rawTifList = _walk(myAnalysisFolder, theseFileTypes=theseFileTypes, depth=5)
-    rawTifList = list(rawTifList)
+    # myAnalysisFolder = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/renamed-20250521'
+
+    from colin_global import getAllTifFilePaths
+    rawTifList = getAllTifFilePaths()
+
+    # theseFileTypes = '.tif'
+    # rawTifList = _walk(myAnalysisFolder, theseFileTypes=theseFileTypes, depth=5)
+    # rawTifList = list(rawTifList)
+
     rawTifFiles = [os.path.split(x)[1] for x in rawTifList]
     # make a dict of list, keys are tif file and list is list of roi rects
     masterDict = {}
@@ -47,14 +53,14 @@ def loadRoiFile(masterDict, oneZipFile) -> dict:
     logger.info('loading roi zip:')
     print(f'  {oneZipFile}')
 
-    roiList = roifile.roiread(oneZipFile)
-    print(f'  loaded {len(roiList)} rois')
+    fijiRoiList = roifile.roiread(oneZipFile)
+    print(f'  loaded {len(fijiRoiList)} Fiji rois')
     # read_roi_zip(oneZipFile)
 
     # logger.info(f'roi_dict is:')
     # pprint(roiDict, indent=2)
 
-    for roi in roiList:
+    for roi in fijiRoiList:
         # top/bottom correspond to line scans
         # left/right correspond to line scan points
 
@@ -74,14 +80,20 @@ def loadRoiFile(masterDict, oneZipFile) -> dict:
         right += half_stroke_width
 
         # our final roi rect [l, t, r, b]
-        roiRect = [left, top, right, bottom]
+        # roiRect = [left, top, right, bottom]
 
         # roi/kym image is rotated in Fiji versus SanPy
         # left->bottom, top->left, right->top, bottom->right
         # sanpyRect = [top, right, bottom, left]
         # top is bigger than bottom
         # sanpyRect = [top, left, bottom, right]
+        
+        # up till 20250530
+        # in sanpy, top has to be bigger than bottom !!!
         sanpyRect = [top, right, bottom, left]  # l/t/r/b
+        
+        # new 20250530
+        # sanpyRect = [top, left, bottom, right]  # l/t/r/b
 
         roiName = roi.name
         
@@ -159,7 +171,7 @@ def loadRoiFile(masterDict, oneZipFile) -> dict:
         
 def makeRoiDictFromZips():
     masterDict, rawTifList = _getRawTifDict()
-
+    
     # TODO: recurisvely walk folder and find .zip files
     rootPath = '/Users/cudmore/Dropbox/data/colin/2025/roi manager - 20250520'
 
@@ -189,6 +201,8 @@ def makeRoiDictFromZips():
 def insertRoiIntoSanPy():
     """Load all of Colins Fiji roi manager zip files and recreate SanPy analysis.
     
+    DOES PEAK DETECTION ON NEWLY INSERTED ROIs
+
     Important:
         When we load previous SanPy peaks and then detect no peaks -->> do we save no peaks ???
     """
@@ -203,7 +217,7 @@ def insertRoiIntoSanPy():
         # load tif as bAnalysis (does proper rotation)
         ba = bAnalysis(rawTifPath)
         imgData = ba.fileLoader._tif  # list of color channel images
-        logger.info(f'imgData:{imgData[0].shape} {np.min(imgData[0])} {np.max(imgData[0])} {np.mean(imgData[0])}')
+        # logger.info(f'imgData:{imgData[0].shape} {np.min(imgData[0])} {np.max(imgData[0])} {np.mean(imgData[0])}')
 
         # TODO: maybe just throw out all SanPy peak analysis in xxx
         # in files like 250225 ISAN R2 LS2 c2 Ivab-ch0-roiPeaks.csv
@@ -218,31 +232,40 @@ def insertRoiIntoSanPy():
         for roiLabel in roiLabels:
             existingRoiRect = ka.getRoi(roiLabel).getRect()
             # top is bigger than bottom, imgdata has (0,0) in bottom left
-            logger.info(f'existingRoiRect is:{existingRoiRect}')
+            logger.info(f'  DELETIING ROI {roiLabel} existingRoiRect is:{existingRoiRect}')
             ka.deleteRoi(roiLabel)
 
         # add all rois from fiji
         for idx, fijiRoi in enumerate(masterDict[tifFile]):
-            print(f'  adding roi {idx+1} tifFile: "{tifFile}" fijiRoi:{fijiRoi}')
+            print(f'  ADDING FIJI ROI roi {idx+1} tifFile: "{tifFile}" fijiRoi:{fijiRoi}')
             newRoi = ka.addROI(fijiRoi)
 
             # check the added roi rect
             # seems to be good, it is properly clipping based on Colins out of bounds rects
             addedRect = newRoi.getRect()
-            print(f'    added rect is:{addedRect}')
+            print(f'    added from FIJI rect is:{addedRect}')
         
         # peak detect each roi (each new roi from fiji)
-        for roiLabel in ka.getRoiLabels():
-            kymRoi = ka.getRoi(roiLabel)
-            
-            # set prominence in detection
-            kymRoiDetection = kymRoi.getDetectionParams(0, PeakDetectionTypes.intensity)
-            _ok = kymRoiDetection.setParam('Prominence', 1.2)
-            if _ok is None:
-                logger.error('')
-                sys.exit(1)
+        if 1:
+            for roiLabel in ka.getRoiLabels():
+                kymRoi = ka.getRoi(roiLabel)
+                
+                # set prominence in detection
+                kymRoiDetection = kymRoi.getDetectionParams(0, PeakDetectionTypes.intensity)
+                # _ok = kymRoiDetection.setParam('Prominence', 1.2)
+                # 20250529
+                _ok = kymRoiDetection.setParam('Prominence', 1.6)
+                if _ok is None:
+                    logger.error('Prominence')
+                    sys.exit(1)
 
-            kymRoi.peakDetect(channel=0, peakDetectionType=PeakDetectionTypes.intensity)
+                # 20250608 detect 'Divided'
+                _ok = kymRoiDetection.setParam('detectThisTrace', 'Divided')
+                if _ok is None:
+                    logger.error('detectThisTrace')
+                    sys.exit(1)
+
+                kymRoi.peakDetect(channel=0, peakDetectionType=PeakDetectionTypes.intensity)
 
         # print(f'ka.path:{ka.path}')
         # print(f'ka._path:{ka._path}')
@@ -271,8 +294,11 @@ def checkRoiPerCondition():
     We are getting different number of roi per (id, condition)
         -->> remake my master df by throwing out all previous sanpy csv analysis
     """
-    savePath = '/Users/cudmore/colin_peak_mean_20250521.csv'
-    df = pd.read_csv(savePath)
+    # savePath = '/Users/cudmore/colin_peak_mean_20250521.csv'
+    # df = pd.read_csv(savePath)
+    
+    from colin_global import loadMeanDfFile
+    df = loadMeanDfFile()
 
     cellIDs = df['Cell ID'].unique()
     for cellID in cellIDs:
@@ -297,10 +323,14 @@ if __name__ == '__main__':
         logger.info(f'masterDict has {len(masterDict)} tif files and {numRoi} rois')
 
     # load all Colin's fiji roi manager and recreate ALL sanpy analysis
-    insertRoiIntoSanPy()
+    if 1:
+        insertRoiIntoSanPy()
 
     # _throwOutAllSanPyAnalysis()
 
     # works
     # check that each (Cell ID, Condition) has the same number of ROI
-    checkRoiPerCondition()
+    if 0:
+        checkRoiPerCondition()
+
+    # test_load_roi()

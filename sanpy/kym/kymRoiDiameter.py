@@ -26,6 +26,8 @@ def getLineProfile(imgData : np.ndarray,
 
     m,n = imgData.shape
     
+    # logger.info(f'imgData.shape:{imgData.shape}')
+
     if lineWidth == 0:
         lineImg = imgData[:,lineIdx]
 
@@ -48,8 +50,11 @@ def getLineProfile(imgData : np.ndarray,
         #     logger.info(f'before lineIdx:{lineIdx} lineInterptMult:{lineInterptMult} lineImg:{len(lineImg)}')
 
         _nIntensityProfile = len(lineImg)
+        # logger.info(f'_nIntensityProfile:{_nIntensityProfile} lineInterptMult:{lineInterptMult}')
         _xOld = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile)
         _xNew = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile*lineInterptMult)        
+        
+        # ValueError: array of sample points is empty
         lineImg = np.interp(_xNew, _xOld, lineImg)
 
     return lineImg

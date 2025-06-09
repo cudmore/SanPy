@@ -262,7 +262,7 @@ class KymRoiTraces:
     def __init__(self, numLineScans : int, secondsPerLine : float):
         self._analysisTraceList = ['Time (s)',
                                    'intRaw', 'intDetrend',
-                                   'df/f0', 'f/f0',
+                                   'df/f0', 'f/f0', 'Divided',
                                    'Diameter (um)', 'Left Diameter (um)', 'Right Diameter (um)'
                                    ]
 
@@ -282,6 +282,8 @@ class KymRoiTraces:
     def setTrace2(self, traceName, bins : np.ndarray, values : np.ndarray):
         """bins tell us which line scans to set, this accounts for left/right of roi rect.
         """
+        if traceName not in self._analysisTraces.keys():
+            logger.error(f'traceName "{traceName}" not in keys, available keys are {self._analysisTraces.keys()}')
         self._analysisTraces[traceName][:] = np.nan
         self._analysisTraces[traceName][bins] = values
 
@@ -390,6 +392,8 @@ class KymRoi:
         if ltrbRect is None:
             ltrbRect = self.getDefaultRect()  # needs imgData
         
+        self._kymRoiAnalysis : KymRoiAnalysis = kymRoiAnalysis
+
         self.setRect(ltrbRect)  # will contrain
                 
         #self._isDirty = False
@@ -411,7 +415,12 @@ class KymRoi:
                     _reuseKymRoiDetection = kymRoiAnalysis.getDetectionParams(reuseRoiLabel, peakDetectionType, channel)
                     thisDetection = KymRoiDetection(peakDetectionType, kymRoiDetection=_reuseKymRoiDetection)
                 else:
+                    # uses current defaults set in code
                     thisDetection = KymRoiDetection(peakDetectionType)
+                    
+                    # abb 20250529 colin
+                    # rect will always exist, was created as default if not specified
+                    thisDetection.setParam('ltrb', self.getRect())
 
                 if peakDetectionType == PeakDetectionTypes.diameter:
                     thisDetection.setParam('detectThisTrace', 'Diameter (um)')
@@ -438,7 +447,8 @@ class KymRoi:
     
     def getTrace(self, channel, name,
                 #  stripNan=False
-                 ) -> KymRoiTraces:
+                #  ) -> KymRoiTraces:
+                 ) -> np.ndarray:
         # return self.kymRoiTraces[channel][name]
         return self.kymRoiTraces[channel].getTrace(name)
     
@@ -737,6 +747,44 @@ class KymRoi:
         # normalize to number of points in line scan
         sumInt = sumInt / roiImg.shape[0]
 
+        # divideLinescan = detectionParams['Divide linescan']
+        santanaLineScanNorm = self._kymRoiAnalysis.getKymDetectionParam('santanaLineScanNorm')
+        if santanaLineScanNorm is None:
+            logger.error('no divide normalization (santana), e.g. "santanaLineScanNorm"')
+            dividedInt = sumInt
+        else:
+            logger.warning(f'dividing by santanaLineScanNorm:{santanaLineScanNorm} roiImg:{roiImg.shape}')
+            column_to_divide_by = roiImg[:, santanaLineScanNorm]
+            reshaped_column = column_to_divide_by.reshape(-1, 1)
+            
+            try:
+                # Cannot cast ufunc 'divide' output from dtype('float64') to dtype('int16')
+                roiImgFloat = roiImg.astype('float64')
+                reshaped_column_float = reshaped_column.astype('float64')
+                ones_like = np.ones_like(roiImgFloat)
+                
+                # logger.warning(f'roiImg:{roiImg.dtype} reshaped_column:{reshaped_column.dtype} zeros_like:{zeros_like.dtype}')
+
+                dividedImg = np.divide(roiImgFloat, reshaped_column_float, out=ones_like, where=reshaped_column != 0)
+
+                # this col should be all 1
+                if not np.all(dividedImg[:,santanaLineScanNorm] == 1):
+                    logger.error(f'santanaLineScanNorm:{santanaLineScanNorm} column should be all 1')
+                    # print(dividedImg[:,santanaLineScanNorm])
+
+            except (RuntimeWarning) as e:
+                # RuntimeWarning: divide by zero encountered in divide
+                logger.error(e)
+
+            # logger.warning(f'  dividedImg:{dividedImg.shape} {dividedImg.dtype}')
+            
+            # sum intensities in each line scan
+            dividedInt = np.sum(dividedImg, axis=0)
+            # normalize to number of points in line scan
+            dividedInt = dividedInt / dividedImg.shape[0]
+            
+            # logger.warning(f'  dividedInt:{dividedInt.shape} {dividedInt.dtype}')
+
         #
         # filter
         if detectionParams['Median Filter']:
@@ -750,7 +798,18 @@ class KymRoi:
             # logger.info(f'   applying Savitzky-Golay filter')
             sumInt = getSavitzkyGolay_Filter(sumInt)
 
-        return xPlot, sumInt
+        # logger.warning(f'xPlot:{xPlot.shape} sumInt:{sumInt.shape} dividedInt:{dividedInt.shape}')
+        # logger.warning(f'xPlot:{xPlot.dtype} sumInt:{sumInt.dtype} dividedInt:{dividedInt.dtype}')
+
+        return xPlot, sumInt, dividedInt
+
+    def _lineToSecond(self, lineNumber) -> float:
+        """Convert a line scan to seconds.
+        """
+        _left, _top, _right, _bottom = self.getRect()
+        _lineNumber = lineNumber - _left
+        _seconds = _lineNumber * self.secondsPerLine
+        return _seconds
 
     def _msToBin(self, msValue : float) -> int:
         """Convert ms to nearest bin using round.
@@ -1035,6 +1094,11 @@ class KymRoi:
         width = detectionParams['Width (ms)'] / 1000 / self.secondsPerLine
         distance = detectionParams['Distance (ms)'] / 1000 / self.secondsPerLine
 
+        # abb 20250530
+        # linescan to divide kym image for normalization (Santana)
+        # 20250608, this is for kym, not individual roi
+        # divideLinescan = detectionParams['Divide linescan']
+
         # abb 202505 colin, use 2x f0 value, one for auto, another for manual
         # if f0ManualPercentile=='Manual' then user need to directly set f0, we do not calulate it
         f0ManualPercentile = detectionParams['f0 Type']  # in (Manual, Percentile)
@@ -1054,11 +1118,11 @@ class KymRoi:
 
         # if detectThisTrace in diameterTraces:
         if peakDetectionType == PeakDetectionTypes.diameter:
-            xPlot, _ = self.getSumIntensity(channel)  # does background subtraction
+            xPlot, _, _ = self.getSumIntensity(channel)  # does background subtraction
         else:
             # xPlot are line scan seconds within roi rect
             # yPlot is corresponding sum intensity within roi rect
-            xPlot, yRaw = self.getSumIntensity(channel)  # does background subtraction
+            xPlot, yRaw, dividedInt = self.getSumIntensity(channel)  # does background subtraction
         
             # subtract single exponential to account for intensity decay (bleaking)
             # yRaw can not have negative values (We are taking the log)
@@ -1113,6 +1177,7 @@ class KymRoi:
             self.setTrace2(channel, 'intDetrend', _timeBins, yDetrend)
             self.setTrace2(channel, 'df/f0', _timeBins, yDf_f0)
             self.setTrace2(channel, 'f/f0', _timeBins, f_f0)
+            self.setTrace2(channel, 'Divided', _timeBins, dividedInt)
 
         yDf_f0 = self.getTrace(channel, detectThisTrace)
         # clip to _left/_right
@@ -1479,6 +1544,12 @@ class KymRoiAnalysis:
         self._roiDict = {}
         """Keys are labels, values are KymRoi"""
 
+        # 202505 colin
+        # now our kym itself (not roi) has detection params
+        self._kymDetectionParams = {
+            'santanaLineScanNorm': 0,
+        }
+
         # ingest or load image data
         # self._imgData : List[np.ndarray] = []
         if imgData is not None:
@@ -1548,6 +1619,18 @@ class KymRoiAnalysis:
         """
 
         self.setDirty(False)
+
+    def setKymDetectionParam(self, key, value):
+        if key not in self._kymDetectionParams.keys():
+            logger.error(f'key:{key} not in self._kymDetectionParams.keys()')
+            return
+        self._kymDetectionParams[key] = value
+
+    def getKymDetectionParam(self, key):
+        if key not in self._kymDetectionParams.keys():
+            logger.error(f'key:{key} not in self._kymDetectionParams.keys()')
+            return
+        return self._kymDetectionParams[key]
 
     def getChannelColor(self, channel : int):
         colorConfig = {
@@ -1845,11 +1928,18 @@ class KymRoiAnalysis:
             self.mySetStatusBar(_noSaveStr)
             return False
         
+        # abb 202505 colin, our kymAnalysis not has params in _kymDetectionParams
+
         for channel in range(self.numChannels):
             
+            # each channel goes to its own file
             _fileHeaderDict = {}
             _fileHeaderDictDiameter = {}
 
+            # 202505 colin
+            logger.info(f'saving key "_kymDetectionParams":{self._kymDetectionParams}')
+            _fileHeaderDict['kymDetectionParams'] = self._kymDetectionParams
+            
             for roiLabel, kymRoi in self._roiDict.items():
                 # what was used for detection, including [l,t,r,b] of rect roi                
 
@@ -1863,29 +1953,30 @@ class KymRoiAnalysis:
             
             peakPath, diameterPath, _ = self._getSaveFile(channel)
             
-            _savedPeaks = False
+            # _savedPeaks = False
             
-            dfToSave = self.getDataFrame(channel, PeakDetectionTypes.intensity)
+            dfToSaveIntensity = self.getDataFrame(channel, PeakDetectionTypes.intensity)
 
-            # if len(dfToSave) == 0:
+            # if len(dfToSaveIntensity) == 0:
             #     pass
             #     # no intensity peaks to save
             # else:
             if 1:
                 logger.info(f'saving f/f0 peaks to: {peakPath}')
-                _savedPeaks = True
+                # _savedPeaks = True
                 with open(peakPath, 'w') as f:
                     f.write(_fileHeaderJson)
                     f.write('\n')
-                    f.write(dfToSave.to_csv(header=True, index=False, mode='a'))
+                    f.write(dfToSaveIntensity.to_csv(header=True, index=False, mode='a'))
 
             dfToSaveDiameter = self.getDataFrame(channel, PeakDetectionTypes.diameter)
+
             if len(dfToSaveDiameter) == 0:
                 # no diameter peaks to save
                 pass
             else:
                 logger.info(f'saving diameter to: {diameterPath}')
-                _savedPeaks = True
+                # _savedPeaks = True
                 with open(diameterPath, 'w') as f:
                     f.write(_fileHeaderJson_diameter)
                     f.write('\n')
@@ -1925,10 +2016,16 @@ class KymRoiAnalysis:
         # _headerDict is a dict with roi name keys, make a number of rois
         # self._detectionDict = _headerDict
         _firstRoi = None
-        for _roiIndex, (roiNumber,detectionDict) in enumerate(_headerDict.items()):
+        for roiNumber,detectionDict in _headerDict.items():
             # roiNumber is str like '1', '2', '3',...
             # logger.info(f'{roiNumber}: {detectionDict}')
             
+            if roiNumber == 'kymDetectionParams':
+                # abb 202505 colin, global detection params for kym
+                logger.info(f'loading kymDetectionParams detectionDict:{detectionDict}')
+                self._kymDetectionParams = detectionDict 
+                continue
+
             kymRoiDetection = KymRoiDetection(peakDetectionType, fromDict=detectionDict)
 
             # add the roi
@@ -1941,6 +2038,7 @@ class KymRoiAnalysis:
             # set detection
             kymRoi.setDetection(channel, PeakDetectionTypes.intensity, kymRoiDetection)
 
+            # ValueError: invalid literal for int() with base 10: 'kymDetectionParams'
             # fill in analysis results
             oneRoiResults = KymRoiResults()
             dfRoi = dfLoadedFromFile[ dfLoadedFromFile['ROI Number']==int(roiNumber) ]

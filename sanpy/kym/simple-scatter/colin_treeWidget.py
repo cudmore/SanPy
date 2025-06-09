@@ -222,7 +222,7 @@ def test_tree():
     import pandas as pd
     df = pd.read_csv('/Users/cudmore/colin_peak_summary_20250521.csv')
 
-    app     = QtWidgets.QApplication (sys.argv)
+    app = QtWidgets.QApplication (sys.argv)
     
     kymTreeWidget = KymTreeWidget(df)
     kymTreeWidget.show()

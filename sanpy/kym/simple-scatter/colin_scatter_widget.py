@@ -21,7 +21,7 @@ from statannotations.Annotator import Annotator
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 from colin_traces import ColinTraces
-from colin_treeWidget import KymTreeWidget
+from colin_tree_widget_2 import KymTreeWidget
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -367,10 +367,14 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # vBoxLayout.setAlignment(QtCore.Qt.AlignTop)
         vBoxLayout.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
 
+        # hLayout for ['Regions', 'Conditions']
+        regionConditionHBox = QtWidgets.QHBoxLayout()
+        vBoxLayout.addLayout(regionConditionHBox)
+
         #
         # conditions group box
         regionsGroupBox = QtWidgets.QGroupBox('Regions')
-        vBoxLayout.addWidget(regionsGroupBox)
+        regionConditionHBox.addWidget(regionsGroupBox)
 
         #
         # one checkbox for each Region
@@ -389,7 +393,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         #
         # conditions group box
         conditionsGroupBox = QtWidgets.QGroupBox('Conditions')
-        vBoxLayout.addWidget(conditionsGroupBox)
+        regionConditionHBox.addWidget(conditionsGroupBox)
 
         #
         # one checkbox for each Condition
@@ -423,61 +427,49 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # cellVLayout.addWidget(cellCheckBox)
         
         # one checkbox per cell id
-        kymTreeWidget = KymTreeWidget(self.getDf())
-        kymTreeWidget.signalAllCellsOnOff.connect(self.slot_toggle_all_cell_id)
-        kymTreeWidget.signalToggleCellID.connect(self.slot_toggle_cell_id)
-        kymTreeWidget.signalPlotCellIDRoi.connect(self.slot_plot_cell_id_roi)
+        # populate with mean df
+        _df = self._meanDf
+        kymTreeWidget = KymTreeWidget(_df)
+        kymTreeWidget.toggleAllToggled.connect(self.slot_toggle_all_cell_id)
+        kymTreeWidget.cellToggled.connect(self.slot_toggle_cell)
+        kymTreeWidget.roiToggled.connect(self.slot_toggle_roi)
+        kymTreeWidget.roiSelected.connect(self.slot_plot_cell_id_roi)
         cellVLayout.addWidget(kymTreeWidget)
 
         return vBoxLayout
     
-    def slot_toggle_all_cell_id(self, value):
-        # logger.info(f'value:{type(value)} value:{value}')
-
+    def slot_toggle_all_cell_id(self, value: bool):
+        """Handle toggle all checkbox."""
         self.getDf()['show_cell'] = value
         self.getDf()['show_roi'] = value
-        
         self.replot()
 
-    def slot_toggle_cell_id(self, event):
-        # roiItem = {
-        #     'type': 'ROI Label',
-        #     'cellID': cellID,
-        #     'roiLabel': roiLabel,
-        #     'checked': checked,
-        # }
+    def slot_toggle_cell(self, cell_id: str, checked: bool):
+        """Handle cell checkbox toggle."""
         df = self.getDf()
-
-        print(df['ROI Number'])
-
-        for item in event:
-            logger.info(item)
-            
-            eventType = item['type']
-            cellID = item['cellID']
-            roiLabel = item['roiLabel']
-            checked = item['checked']
-
-            # logger.info(f'checked:{type(checked)} "{checked}"')
-            # logger.info(f'roiLabel:{type(roiLabel)} "{roiLabel}"')
-
-            if eventType == 'Cell ID':
-                theseRows = (df['Cell ID']==cellID)
-                df.loc[theseRows, 'show_cell'] = checked
-
-            elif eventType == 'ROI Label':
-                roiLabel = int(roiLabel)
-                theseRows = (df['Cell ID']==cellID) & (df['ROI Number']==roiLabel)
-                df.loc[theseRows, 'show_roi'] = checked   
-
-            else:
-                logger.error(f'did not understand event eventType:{eventType}')
-
-        #
+        theseRows = (df['Cell ID']==cell_id)
+        df.loc[theseRows, 'show_cell'] = checked
         self.replot()
 
-    def slot_plot_cell_id_roi(self, cellID, roiLabelStr):
-        pass
+    def slot_toggle_roi(self, cell_id: str, roi_number: int, checked: bool):
+        """Handle ROI checkbox toggle."""
+        df = self.getDf()
+        theseRows = (df['Cell ID']==cell_id) & (df['ROI Number']==roi_number)
+        df.loc[theseRows, 'show_roi'] = checked
+        self.replot()
+
+    def slot_plot_cell_id_roi(self, cell_id: str, roi_number: int):
+        """Handle ROI selection for plotting."""
+        logger.info(f'cellID:"{cell_id}" roiLabelInt:{roi_number}')
+        
+        fig, ax = self._colinTraces.plotCellID(cell_id, roiLabelStr=roi_number)
+        if fig is None or ax is None:
+            return
+        
+        from colin_simple_figure import MainWindow
+        self._mainWindow = MainWindow(fig, ax)
+        self._mainWindow.setWindowTitle(f'cell ID:"{cell_id}" roi:{roi_number}')
+        self._mainWindow.show()
 
     def _buildTopToobar(self) -> QtWidgets.QVBoxLayout:
         vBoxLayout = QtWidgets.QVBoxLayout()
@@ -590,8 +582,9 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         # plot
         aPushButton = QtWidgets.QPushButton('Replot')
+        aPushButton.setCheckable(False)
         aPushButton.clicked.connect(
-            partial(self.replot, None)
+            partial(self.replot)
         )
         hBoxLayout.addWidget(aPushButton)
 
@@ -793,6 +786,13 @@ class ScatterWidget(QtWidgets.QMainWindow):
         print(dfClicked[colList])
         # print(dfClicked.columns)
 
+        # update status bar
+        cellID = dfClicked['Cell ID'].iloc[0]
+        condition = dfClicked['Condition'].iloc[0]
+        roiLabelStr = dfClicked['ROI Number'].iloc[0]
+        _str = f"Cell ID:'{cellID}' Condition:{condition} ROI Number: {roiLabelStr}"
+        self.setStatusBar(_str)
+
         modifiers = QtWidgets.QApplication.keyboardModifiers()
         isShift = modifiers == QtCore.Qt.ShiftModifier
 
@@ -800,10 +800,12 @@ class ScatterWidget(QtWidgets.QMainWindow):
         if isShift:
             clickedCellID = dfClicked['Cell ID'].iloc[0]
             roiLabelStr = dfClicked['ROI Number'].iloc[0]
-            logger.info(f'-->> plotting cell id:{clickedCellID}')
-            fig, ax = self._colinTraces.plotCellID(clickedCellID, roiLabelStr=roiLabelStr)
-            # logger.info(f'fig:{fig}')
-            # plt.show()
+            logger.info(f'-->> plotting cell id:"{clickedCellID}" roiLabelStr:{roiLabelStr}')
+            # fig, ax = self._colinTraces.plotCellID(clickedCellID, roiLabelStr=roiLabelStr)
+            from colin_traces import plotCellID
+            fig, ax = plotCellID(self._masterDf, self._meanDf, clickedCellID, roiLabelStr)
+            if fig is None or ax is None:
+                return
 
             from colin_simple_figure import MainWindow
             self._mainWindow = MainWindow(fig, ax)
@@ -1165,6 +1167,12 @@ class ScatterWidget(QtWidgets.QMainWindow):
                         annotator.apply_and_annotate()
                     except (ValueError) as e:
                         logger.error(f'annotator failed: {e}')
+                    # 20250708
+                    except( TypeError) as e:
+                        logger.error(f'annotator failed: {e}')
+                        logger.error(f'  pairs:{pairs}')
+                        logger.error(f'  hue:{hue}')
+
 
                 # overlay mean +- std or sem
                 # no overlay if hue is None
@@ -1263,13 +1271,13 @@ class ScatterWidget(QtWidgets.QMainWindow):
         elif actionText == 'Copy Stats Table ...':
             _ret = self.copyTableToClipboard()
 
-    def setStatusBar(self, msg:str, msecs:int=None):
+    def setStatusBar(self, msg:str, msecs:int=0):
         """Set the text of the status bar.
 
         Defaults to 4 seconds.
         """
-        if msecs is None:
-            msecs=4000
+        # if msecs is None:
+        #     msecs=4000
         self.status_bar.showMessage(msg, msecs=msecs)
 
     def getGroupedDataframe(self,
@@ -1323,20 +1331,16 @@ def run():
     
     # this is new colin analysis with multiple roi per kym
     # savePath = '/Users/cudmore/colin_peak_summary_20250521.csv'
-    savePath = '/Users/cudmore/colin_peak_summary_20250527.csv'
+    # savePath = '/Users/cudmore/colin_peak_summary_20250527.csv'
 
-    from colin_summary import getMasterDf
-    masterDf = getMasterDf(savePath)
+    # load csv analysis files as pd DataFrame
+    from colin_global import loadMasterDfFile, loadMeanDfFile, getMeanDfPath
+    masterDf = loadMasterDfFile()
+    meanDf = loadMeanDfFile()
 
-    meanSavePath = '/Users/cudmore/colin_peak_mean_20250521.csv'
-    meanDf = pd.read_csv(meanSavePath)
-
-    # print('=== columns')
-    # print(df.columns)
-
-    # from colin_summary import genStats2
-    # genStats2(df, 'Peak Inst Interval (s)')
-    # return
+    print(meanDf.columns)
+    # meanSavePath = '/Users/cudmore/colin_peak_mean_20250521.csv'
+    # meanDf = pd.read_csv(meanSavePath)
 
     hueList = ['File Number',
                'Cell ID',
@@ -1344,6 +1348,7 @@ def run():
             #    'Tif File',
                'Condition',
                'Region',
+               'Date',
                'ROI Number']
     
     # limit what we show user
@@ -1354,6 +1359,7 @@ def run():
         'Tif File',
         'Condition',
         'Region',
+        'Date',
         'ROI Number',
         # 'Onset (s)',
         # 'Decay (s)',
@@ -1364,6 +1370,7 @@ def run():
         'Rise Time (ms)',
         'Decay Time (ms)',
         'Area Under Peak',
+        'Area Under Peak (Sum)',
         'Number of Spikes',
         'Spike Frequency (Hz)',
         'fit_tau',
@@ -1389,7 +1396,7 @@ def run():
                           plotColumns=plotColumns,
                           )
     
-    myWin.setWindowTitle(meanSavePath)
+    myWin.setWindowTitle(getMeanDfPath())
 
     # plot all control traces for ssan and isan
     # myWin._colinTraces.plotOneCond('Control', 'SSAN')

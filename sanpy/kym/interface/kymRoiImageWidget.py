@@ -316,7 +316,7 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         # update the backend
         roiLabel = self.getRoiLabel(pgRoi)
         kymRoi = self._kymRoiAnalysis.getRoi(roiLabel)  # KymRoi
-        newRect = kymRoi.setRectPosSize(pos, size)
+        # newRect = kymRoi.setRectPosSize(pos, size)
 
         # get the actual constrained roi
         pos, size = kymRoi.getPosSize()

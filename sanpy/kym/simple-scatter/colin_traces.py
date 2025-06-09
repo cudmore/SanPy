@@ -1,4 +1,5 @@
 import os
+import sys
 import ast
 from typing import List, Optional
 
@@ -14,146 +15,127 @@ import mplcursors
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def _old_plotTraces(df):
-    ssan_control_cell_id = df
-    ssan_control_cell_id = ssan_control_cell_id[ssan_control_cell_id['Region']=='SSAN']
-    ssan_control_cell_id = ssan_control_cell_id[ssan_control_cell_id['Condition']=='Control']
-    ssanControlCellID = ssan_control_cell_id['Cell ID'].unique()
-    # print(ssan_control_cell_id[['Region', 'Condition', 'Cell ID']])
+def _getDfTraces(tifFile, condition) -> pd.DataFrame:
+    tifPath, tifName = os.path.split(tifFile)
+    # cell id
+    # 250318 SSAN R5 LS1
+    # trace file
+    # 250304 ISAN R3 LS1 c1-ch0-roiTraces.csv
+    # 250304 ISAN R3 LS1 c2 Ivab-ch0-roiTraces.csv
+    if condition == 'Control':
+        cPrefix = 'c1'
+        condStr = ''
+    elif condition == 'Ivab':
+        cPrefix = 'c2'
+        condStr = ' Ivab'
+    elif condition == 'Thap':
+        cPrefix = 'c3'
+        condStr = ' Thap'
 
-    ssanTraceList = loadTraces(df, region='SSAN', condition='Control')
-    isanTraceList = loadTraces(df, region='ISAN', condition='Control')
+    roiTracesFile = f'{cellID} {cPrefix}{condStr}-ch0-roiTraces.csv'
+    roiTracesPath = os.path.join(tifPath, 'sanpy-kym-roi-analysis', roiTracesFile)
 
-    ssan_ivab_TraceList = loadTraces(df, region='SSAN', condition='Ivab')
-    isan_ivab_TraceList = loadTraces(df, region='ISAN', condition='Ivab')
+    dfTraces = pd.read_csv(roiTracesPath, header=1)
 
-    ssan_thaps_TraceList = loadTraces(df, region='SSAN', condition='Thap')
-    isan_thaps_TraceList = loadTraces(df, region='ISAN', condition='Thap')
+    return dfTraces
+
+def plotOneKym(dfMaster, dfMean, cellID, condition):
+    """Plot all ROI in one kym image.
+    
+    This includes the kym image and one f/f0 plot per ROI.
+    """
+    dfMeanPlot = dfMean[dfMean['Cell ID'] == cellID]
+    dfMeanPlot = dfMeanPlot[dfMeanPlot['Condition'] == condition]
+
+    tifFile = dfMeanPlot.iloc[0]['Path']
+
+    dfTraces = _getDfTraces(tifFile, condition)
+
+    rois = dfMeanPlot['ROI Number'].unique()
+    numRois = len(rois)
+
+    fig, ax = plt.subplots(nrows=numRois+1,
+                            ncols=1,
+                            figsize=(8, 6),
+                        #    sharex=True,
+                        #    sharey=True,
+                            # sharey='row'
+                            )
+    fig.suptitle(f'{cellID} {condition}', fontsize=12)
 
     linewidth = 1
+    markersize = 5
 
-    #
-    # plot all ssan control traces
-    if 0:
-        numTraces = len(ssanTraceList)
-        fig, ax = plt.subplots(nrows=numTraces, ncols=1, figsize=(8, 6), sharey=True)
-        for idx, dfPlot in enumerate(ssanTraceList):
-            # TODO: check this is correct
-            # cellID = ssan_control_cell_id['Cell ID'].iloc[idx]
-            cellID = ssanControlCellID[idx]
-            
-            timeTrace = dfPlot['ROI 1 Time (s)']
-            f_f0Trace = dfPlot['ROI 1 f/f0']
-            ax[idx].plot(timeTrace, f_f0Trace, linewidth=linewidth, label=cellID)
-            ax[idx].title.set_text(f'SSAN Control {cellID}')
+    for roiIdx, roiLabelStr in enumerate(rois):
+        timeTrace = dfTraces[f'ROI {roiLabelStr} Time (s)']
+        f_f0Trace = dfTraces[f'ROI {roiLabelStr} f/f0']  # hard coding f/f0 -->> df/f0
+        ax[roiIdx+1].plot(timeTrace, f_f0Trace,
+                        'g',
+                        linewidth=linewidth,
+                        label=f'{cellID} {condition}')
 
-        mplcursors.cursor().connect(
-            "add", lambda sel: sel.annotation.set_text(sel.artist.get_label()))
+        theseRows = (dfMaster['Cell ID']==cellID) \
+                & (dfMaster['ROI Number']==roiLabelStr) \
+                & (dfMaster['Condition']==condition)
+        dfPeaks = dfMaster.loc[theseRows]
 
-        # plt.show()
+        # onset
+        xPlot = dfPeaks['Onset (s)']
+        yPlot = dfPeaks['Onset Int']
+        ax[roiIdx+1].plot(xPlot, yPlot, 'co', markersize=markersize)
 
-    fig, ax = plt.subplots(nrows=2, ncols=3, figsize=(8, 6), sharey=True)
+        # peak
+        xPlot = dfPeaks['Peak (s)']
+        yPlot = dfPeaks['Peak Int']
+        ax[roiIdx+1].plot(xPlot, yPlot, 'ro', markersize=markersize)
 
-    # SSAN
-    for idx, dfPlot in enumerate(ssanTraceList):
-        _cellID = ssanControlCellID[idx]
-        timeTrace = dfPlot['ROI 1 Time (s)']
-        f_f0Trace = dfPlot['ROI 1 f/f0']
-        ax[0][0].plot(timeTrace, f_f0Trace, linewidth=linewidth, label=_cellID)
-        ax[0][0].title.set_text('SSAN Control')
+        # onset
+        xPlot = dfPeaks['Decay (s)']
+        yPlot = dfPeaks['Decay Int']
+        ax[roiIdx+1].plot(xPlot, yPlot, 'mo', markersize=markersize)
 
-    for dfPlot in ssan_ivab_TraceList:
-        timeTrace = dfPlot['ROI 1 Time (s)']
-        f_f0Trace = dfPlot['ROI 1 f/f0']
-        ax[0][1].plot(timeTrace, f_f0Trace, linewidth=linewidth)
-        ax[0][1].title.set_text('SSAN Ivab')
+    return fig, ax
 
-    for dfPlot in ssan_thaps_TraceList:
-        timeTrace = dfPlot['ROI 1 Time (s)']
-        f_f0Trace = dfPlot['ROI 1 f/f0']
-        ax[0][2].plot(timeTrace, f_f0Trace, linewidth=linewidth)
-        ax[0][2].title.set_text('SSAN Thaps')
-
-    # ISAN
-    for dfPlot in isanTraceList:
-        timeTrace = dfPlot['ROI 1 Time (s)']
-        f_f0Trace = dfPlot['ROI 1 f/f0']
-        ax[1][0].plot(timeTrace, f_f0Trace, linewidth=linewidth)
-        ax[1][0].title.set_text('ISAN Control')
-
-    for dfPlot in isan_ivab_TraceList:
-        timeTrace = dfPlot['ROI 1 Time (s)']
-        f_f0Trace = dfPlot['ROI 1 f/f0']
-        ax[1][1].plot(timeTrace, f_f0Trace, linewidth=linewidth)
-        ax[1][1].title.set_text('ISAN Ivab')
-
-    for dfPlot in isan_thaps_TraceList:
-        timeTrace = dfPlot['ROI 1 Time (s)']
-        f_f0Trace = dfPlot['ROI 1 f/f0']
-        ax[1][2].plot(timeTrace, f_f0Trace, linewidth=linewidth)
-        ax[1][2].title.set_text('ISAN Thaps')
-
-    import mplcursors
-    mplcursors.cursor().connect(
-        "add", lambda sel: sel.annotation.set_text(sel.artist.get_label()))
-
-    # plt.show()
-
-def _old_loadTraces(df, region, condition, roiNumberStr:str="1") -> List[pd.DataFrame]:
-    """Load all traces for a region and condition.
-    """
-    # path is full path to raw tif file
-    # that folder has a folder "sanpy-kym-roi-analysis"
-    # with analysis traces
-    # 250225 ISAN R1 LS1 c2 Ivab-ch0-roiTraces.csv
-    # ROI 1 Time (s),
-    # ROI 1 intRaw,
-    # ROI 1 intDetrend,
-    # ROI 1 df/f0,
-    # ROI 1 f/f0,
-    # ROI 1 Diameter (um),
-    # ROI 1 Left Diameter (um),
-    # ROI 1 Right Diameter (um)
-
-    logger.info(f'region:{region} condition:{condition}')
-
-    dfPlot = df
-    dfPlot = dfPlot[dfPlot['Region']==region]
-    dfPlot = dfPlot[dfPlot['Condition']==condition]
-
-    # print(dfPlot[['Region', 'Cell ID', 'Condition', 'Tif File']])
+def plotStatSwarm(dfMaster, yStat, cellID, roiLabel, ax):
+    """plot a swarmplot for one kym, one roi
     
-    dfList = []
+    x-axis is cond, y-axis is stat
+    """
+    theseRows = (dfMaster['Cell ID']==cellID) \
+            & (dfMaster['ROI Number']==roiLabel)
+    dfSwarm = dfMaster.loc[theseRows]
+    
+    plotDict = {
+        'data': dfSwarm,  # df for one cell id
+        'x': 'Condition',
+        'y': yStat,
+        'hue': 'Condition',
+        'order': ['Control', 'Ivab', 'Thap']
+    }
+    sns.swarmplot(ax=ax, **plotDict)
 
-    for cellID in dfPlot['Cell ID'].unique():
-        oneCellDf = dfPlot[dfPlot['Cell ID'] == cellID]
-        # print(oneCellDf[['Region', 'Cell ID', 'Condition', 'Tif File']])
-        tifPath = oneCellDf['Path'].iloc[0]
-        _folder, _tifFile = os.path.split(tifPath)
-        kymAnalysisFolder = os.path.join(_folder, 'sanpy-kym-roi-analysis')
-        # my saved names are complicated, like:
-        #  250225 ISAN R1 LS1 c2 Ivab-ch0-roiTraces.csv
-        # they encode conditions and channels, assume there is ONE file
-        # ending in roiTraces.csv
-        # logger.info(f'kymAnalysisFolder:{kymAnalysisFolder}')
-        fileNames = os.listdir(kymAnalysisFolder)
-        thisFile = None
-        for fileName in fileNames:
-            if 'roiTraces.csv' in fileName:
-                thisFile = fileName
-                break
-        if thisFile is None:
-            logger.error(f'did not find roi trace path. Was analysis saved?')
-            continue
+    # overlay mean bar
+    markersize = 30
+    sns.pointplot(data=dfSwarm,
+                    x='Condition',
+                    y=yStat,
+                hue='Condition',
+                order=['Control', 'Ivab', 'Thap'],
+                errorbar=None,  # can be 'se', 'sem', etc
+                # capsize=capsize,
+                linestyle='none',  # do not connect (with line) between categorical x
+                marker="_",
+                markersize=markersize,
+                # markeredgewidth=3,
+                legend=False,
+                # palette=palette,
+                # dodge=0.5,  # separate the points by hue
+                # dodge=None if len(uniqueHue)==1 else 0.5,  # separate the points by hue
+                # dodge=True,  # 0.5 or true
+                ax=ax,
+                )
 
-        # finally, the roi trace file path is
-        roiTracePath = os.path.join(kymAnalysisFolder, thisFile)
-        dfRoiTrace = pd.read_csv(roiTracePath, header=1)
-        dfList.append(dfRoiTrace)
-
-    return dfList
-
-def plotCellID(dfMaster, dfMean, cellID, roiLabelStr:str=1):
+def plotCellID(dfMaster, dfMean, cellID, roiLabelStr:str):
     """Plot all cond for one cell id and one roi
 
     Including img kym
@@ -165,24 +147,33 @@ def plotCellID(dfMaster, dfMean, cellID, roiLabelStr:str=1):
     _region = dfMeanPlot.iloc[0]['Region']
 
     condKeys = dfMeanPlot['Condition'].unique()
-    numCond = len(condKeys)
-
-    logger.info(f'cellID:"{cellID}" _region:"{_region}" condKeys:{condKeys}')
 
     linewidth = 1
     markersize = 5
 
-    fig, ax = plt.subplots(nrows=2,
-                            ncols=numCond,
-                            figsize=(8, 6),
-                        #    sharex=True,
-                        #    sharey=True,
-                            sharey='row'
+    fig, ax = plt.subplots(nrows=3,
+                            # ncols=numCond,
+                            ncols=3,
+                            figsize=(10, 6),
+                            # sharey='row'
                             )
+    
+    # for the 3rd row, turn off sharey
+    # 0
+    ax[2][0]._shared_axes['y'].remove(ax[2][1])
+    ax[2][0]._shared_axes['y'].remove(ax[2][2])
+    # 1
+    ax[2][1]._shared_axes['y'].remove(ax[2][0])
+    ax[2][1]._shared_axes['y'].remove(ax[2][2])
+    # 2
+    ax[2][2]._shared_axes['y'].remove(ax[2][0])
+    ax[2][2]._shared_axes['y'].remove(ax[2][1])
+
     fig.suptitle(f'{cellID} {_region} ROI #{roiLabelStr}', fontsize=12)
     
     imgRow = 0
     peakRow = 1
+    plotRow = 2
 
     # despine top/right of each subplot
     for oneAx in ax.flatten():
@@ -239,7 +230,8 @@ def plotCellID(dfMaster, dfMean, cellID, roiLabelStr:str=1):
         roiRectStr = _dfMeanCond.iloc[0]['ROI Rect']
         roiRect = ast.literal_eval(roiRectStr)
         f0_value_percentile = _dfMeanCond.iloc[0]['f0_value_percentile']
-        plotTif(tifPath, ax=ax[imgRow][idx], f0=f0_value_percentile, roiRect=roiRect)
+        # logger.info(f'plotTif for cellID:"{cellID}" cond:{cond} roiLabelStr:{roiLabelStr}')
+        plotTif(tifPath, ax=ax[imgRow][idx], f0=f0_value_percentile, roiRect=roiRect, cond=cond, roi=roiLabelStr)
 
         ax[imgRow][idx].title.set_text(f'{cond} f0:{round(f0_value_percentile,1)}')
 
@@ -258,17 +250,43 @@ def plotCellID(dfMaster, dfMean, cellID, roiLabelStr:str=1):
         yPlot = dfPeaks['Decay Int']
         ax[peakRow][idx].plot(xPlot, yPlot, 'mo', markersize=markersize)
 
+    # plot numbe of spikes per cond (for this one roi)
+    theseRows = (dfMean['Cell ID']==cellID) \
+            & (dfMean['ROI Number']==roiLabelStr)
+    dfSwarm = dfMean.loc[theseRows]
+    # print(dfSwarm['Cell ID', 'ROI Number', 'Condition', 'Number of Spikes'])
+    plotStatSwarm(dfSwarm, 'Number of Spikes', cellID, roiLabelStr, ax[plotRow][0])
+
+    # make 2x swarm plot (height, mass)
+    plotStatSwarm(dfMaster, 'Peak Height', cellID, roiLabelStr, ax[plotRow][1])
+    plotStatSwarm(dfMaster, 'Area Under Peak', cellID, roiLabelStr, ax[plotRow][2])
+
     # mplcursors.cursor().connect(
     #     "add", lambda sel: sel.annotation.set_text(sel.artist.get_label()))
 
     return fig, ax
 
-def plotAllRoi(dfMean, cellID):
+def plotAllRoi(dfMean,
+               cellID,
+               justOneCond:str=None,
+               doSave:bool=False):
+    """Plot a tif with each roi overlaid as a rect.
+    
+    Use this to check our import from roimanager is working (colin).
+    """
     logger.info(f'=== cellID:{cellID}')
     
     dfPlot = dfMean[dfMean['Cell ID'] == cellID]
 
-    conds = dfPlot['Condition'].unique()
+    # to create date region folder on save
+    regionStr = dfPlot.iloc[0]['Region']
+    dateStr = dfPlot.iloc[0]['Date']
+    dateStr = str(dateStr)
+
+    if justOneCond:
+        conds = [justOneCond]
+    else:
+        conds = dfPlot['Condition'].unique()
     numCond = len(conds)
     fig, ax = plt.subplots(nrows=1,
                             ncols=numCond,
@@ -277,6 +295,8 @@ def plotAllRoi(dfMean, cellID):
                            sharey=True,
                             # sharey='row'
                             )
+    if numCond == 1:
+        ax = [ax]
 
     fig.suptitle(f'Cell ID:{cellID}')
 
@@ -285,9 +305,12 @@ def plotAllRoi(dfMean, cellID):
     for condIdx, cond in enumerate(conds):
         dfOnePlot = dfPlot[dfPlot['Condition'] == cond]  # one row per roi
         tifPath = dfOnePlot.iloc[0]['Path']  # all roi from same path
+        tifFile = os.path.split(tifPath)[1]
 
-        logger.info(f'condIdx:{condIdx}')
-
+        # logger.info(f'condIdx:{condIdx}')
+        # print(os.path.split(tifPath)[1])
+        # print(tifPath)
+        
         from sanpy.bAnalysis_ import bAnalysis
         ba = bAnalysis(tifPath, verbose=False)
         imgData = ba.fileLoader._tif  # list of color channel images
@@ -297,6 +320,8 @@ def plotAllRoi(dfMean, cellID):
 
         minval = np.percentile(imgData, 2)
         maxval = np.percentile(imgData, 98)
+        # minval = np.percentile(imgData, 20)
+        # maxval = np.percentile(imgData, 80)
         imgData = np.clip(imgData, minval, maxval)
         imgData = ((imgData - minval) / (maxval - minval)) * 255
 
@@ -312,6 +337,9 @@ def plotAllRoi(dfMean, cellID):
 
         # here, just show the image (f0 is for EACH ROI)
         # ax[condIdx].title.set_text(f'{cond} f0:{round(f0_value_percentile,1)}')
+        
+        # set title of subplot
+        ax[condIdx].title.set_text(f'tif:{tifFile}')
 
         rois = dfOnePlot['ROI Number'].unique()
         # the order of roi labels is 'out of order' from original fiji import
@@ -346,23 +374,47 @@ def plotAllRoi(dfMean, cellID):
             # label roi in image
             f0_value_percentile = round(f0_value_percentile,1)
             oneLabel = f'{roiLabel} f0:{f0_value_percentile}'
-            ax[condIdx].annotate(oneLabel, xy=(left, bottom), xytext=(left+5, bottom-20),
+            ax[condIdx].annotate(oneLabel, xy=(left, bottom),
+                                 xytext=(left+5, bottom-20),
                                  arrowprops=dict(arrowstyle='->'),
                                  fontsize=12,
                                  weight='bold',
                                  color=roiColor)
 
     # save
-    savePath = '/Users/cudmore/Desktop/AllKymRoi'
-    pdfPath = os.path.join(savePath, f'{cellID}.pdf')
-    print(f'saving pdfPath:{pdfPath}')
-    plt.savefig(pdfPath, format="pdf")
+    if not doSave:
+        pass
+        # plt.show()
+    else:
+        from colin_global import getRootAnalysisFolder
+        rootAnalysis = getRootAnalysisFolder()
+        # make an 'CheckKymRoi' folder
+        savePath = os.path.join(rootAnalysis, 'CheckKymRoi')
+        if not os.path.exists(savePath):
+            os.mkdir(savePath)
+        
+        # make date folders
+        savePath = os.path.join(savePath, dateStr)
+        if not os.path.exists(savePath):
+            os.mkdir(savePath)
+
+        # make region folders
+        savePath = os.path.join(savePath, regionStr)
+        if not os.path.exists(savePath):
+            os.mkdir(savePath)
+
+        pdfPath = os.path.join(savePath, f'{cellID}.pdf')
+        print(f'saving pdfPath:{pdfPath}')
+        plt.savefig(pdfPath, format="pdf")
 
 def plotTif(path:str,
             ax:Axes,
             channel=0,
             f0:float=1,
-            roiRect:List[int] = None):
+            roiRect:List[int] = None,
+            cond:str = None,  # debug
+            roi:str = None,  # debug
+            ):
     """Plot clipped roi for one ROI and its tif
     """
     from sanpy.bAnalysis_ import bAnalysis
@@ -371,7 +423,10 @@ def plotTif(path:str,
     imgData = imgData[channel]
     imgData = imgData / f0
 
-    logger.info(f'imgData:{imgData.shape} f0:{f0} roiRect:{roiRect}')
+    _debugStr = '' if cond is None else f'cond:{cond}'
+    _debugStr += '' if roi is None else f' roi:{roi}'
+
+    # logger.info(f'  imgData:{imgData.shape} f0:{f0} roiRect:{roiRect} {_debugStr}')
 
     left = roiRect[0]
     top = roiRect[1]
@@ -403,6 +458,10 @@ def plotTif(path:str,
               aspect='auto',
             #   extent=extent
               )
+
+    ax.spines['bottom'].set_visible(False)
+    ax.set_xticks([]) # Removes x-axis tick marks and labels
+    # ax.spines['left'].set_visible(False)
 
     ax.set_aspect('auto')
 
@@ -538,7 +597,7 @@ class ColinTraces:
 
         # plt.show()
 
-    def plotCellID(self, cellID, roiLabelStr:str=1):
+    def plotCellID(self, cellID, roiLabelStr:int=1):
         """Plot all cond for one cell id.
 
         Including img kym
@@ -594,10 +653,15 @@ class ColinTraces:
                     & (self._dfMean['ROI Number']==roiLabelStr) \
                     & (self._dfMean['Condition']==cond)
             dfMean = self._dfMean.loc[theseRows_mean]
+            if len(dfMean) == 0:
+                logger.error(f'did not get a mean df to plot???')
+                return None, None
+            
             tifPath = dfMean.iloc[0]['Path']
             roiRectStr = dfMean.iloc[0]['ROI Rect']
             roiRect = ast.literal_eval(roiRectStr)
             f0_value_percentile = dfMean.iloc[0]['f0_value_percentile']
+            logger.info(f'plotTif for cellID:"{cellID}" cond:{cond} roiLabelStr:{roiLabelStr}')
             plotTif(tifPath, ax=ax[imgRow][idx], f0=f0_value_percentile, roiRect=roiRect)
 
             ax[imgRow][idx].title.set_text(f'{cond} f0:{round(f0_value_percentile,1)}')
@@ -625,41 +689,103 @@ class ColinTraces:
         return fig, ax
     
 if __name__ == '__main__':
+
     if 0:
-        path = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/renamed-20250521/250225/ISAN/ISAN R1 LS3.tif.frames/250225 ISAN R1 LS3 c1.tif'
-        fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(8, 6))
-        f0 = 20
-        roiRect = [0, 134, 2000, 119]
-        plotTif(path, ax, f0=f0, roiRect=roiRect)
+        # plot one kym to check rois
+        from colin_global import loadMeanDfFile
+        dfMean = loadMeanDfFile()
+        cellID = '250225 ISAN R2 LS2'
+        plotAllRoi(dfMean, cellID, justOneCond='Control', doSave=False)
+        plotAllRoi(dfMean, cellID, justOneCond='Ivab', doSave=False)
+        plotAllRoi(dfMean, cellID, justOneCond='Thap', doSave=False)
         plt.show()
 
     if 0:
-        path = '/Users/cudmore/colin_peak_mean_20250521.csv'
-        dfMean = pd.read_csv(path)
+        # plot each cell id across conditions
+        # overlay all roi and label them
+        # this is used to check we have imported rois correctly
+        from colin_global import loadMeanDfFile
+        dfMean = loadMeanDfFile()
+        # dfMean = pd.read_csv(path)
         count = 0
         for cellID in dfMean['Cell ID'].unique():
-            plotAllRoi(dfMean, cellID)
+            plotAllRoi(dfMean, cellID, doSave=True)
             # if count>5:
             #     break
+            plt.close()
             count += 1
         print(f'{count} cell ids')
         # plt.show()
 
-    # plot each cell id in each cond (control, ivab, thap)
-    if 1:
-        path = '/Users/cudmore/colin_peak_summary_20250521.csv'
-        dfMaster = pd.read_csv(path)
+    # plot all rois f/f0 for one (cell id, condition)
+    # use this to look at f/f0 for each roi in a kym
+    if 0:
+        from colin_global import loadMasterDfFile, loadMeanDfFile
+        dfMaster = loadMasterDfFile()
+        dfMean = loadMeanDfFile()
 
-        path = '/Users/cudmore/colin_peak_mean_20250521.csv'
-        dfMean = pd.read_csv(path)
-
+        numCellID = 0
         for cellID in dfMean['Cell ID'].unique():
             dfCellID = dfMean[dfMean['Cell ID'] == cellID]
-            roiLabels = dfCellID['ROI Number'].unique()
-            for roiLabelStr in roiLabels:
-                plotCellID(dfMaster=dfMaster, dfMean=dfMean, cellID=cellID, roiLabelStr=roiLabelStr)
+            conditions = dfCellID['Condition'].unique()
+            for condition in conditions:
+                fig, ax = plotOneKym(dfMaster, dfMean, cellID=cellID, condition=condition)
                 break
-
             break
+        plt.show()
+
+    # plot each cell id in each cond (control, ivab, thap)
+    if 1:
+        from colin_global import loadMasterDfFile, loadMeanDfFile
+        dfMaster = loadMasterDfFile()
+        dfMean = loadMeanDfFile()
+
+        numCellID = 0
+        for cellID in dfMean['Cell ID'].unique():
+            dfCellID = dfMean[dfMean['Cell ID'] == cellID]
+            
+            regionStr = dfCellID.iloc[0]['Region']
+            dateStr = dfCellID.iloc[0]['Date']
+            # dateStr is coming in as np.int64 (makes sense)
+            dateStr = str(dateStr)
+
+            # logger.info(f'dateStr:"{dateStr}" {type(dateStr)}')
+            # sys.exit(1)
+
+            roiLabels = dfCellID['ROI Number'].unique()
+            logger.info(f'cellID:{cellID} roiLabels:{roiLabels}')
+
+            for roiLabelStr in roiLabels:
+                fig, ax = plotCellID(dfMaster=dfMaster, dfMean=dfMean, cellID=cellID, roiLabelStr=roiLabelStr)
+
+                # save
+                from colin_global import getRootAnalysisFolder
+                rootAnalysis = getRootAnalysisFolder()
+                # make an 'CheckKymRoi' folder
+                savePath = os.path.join(rootAnalysis, 'Per Cell Cond Plots')
+                if not os.path.exists(savePath):
+                    os.mkdir(savePath)
+                
+                # make date folders
+                savePath = os.path.join(savePath, dateStr)
+                if not os.path.exists(savePath):
+                    os.mkdir(savePath)
+
+                # make region folders
+                savePath = os.path.join(savePath, regionStr)
+                if not os.path.exists(savePath):
+                    os.mkdir(savePath)
+
+                pdfPath = os.path.join(savePath, f'{cellID} ROI {roiLabelStr}.pdf')
+                print(f'saving pdfPath:{pdfPath}')
+                plt.savefig(pdfPath, format="pdf")
+                
+                plt.close()
+
+                # break
+
+            numCellID += 1
+            # if numCellID > 0:
+            #     break
 
         plt.show()

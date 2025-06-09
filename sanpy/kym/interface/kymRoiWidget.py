@@ -451,7 +451,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         self._detectionToolbar = KymDetectionGroupBox_Intensity(self._kymRoiAnalysis,
                                                       self._detectionParams,
                                                       groupName=groupName,
-                                                      detectThisTraceList=['f/f0', 'df/f0']
+                                                      detectThisTraceList=['f/f0', 'df/f0', 'Divided']
                                                       )
         self._detectionToolbar.signalDetectionParamChanged.connect(self.slot_detectionChanged)
         self._detectionToolbar.signalDetection.connect(self.slot_doAnalysis)
@@ -819,6 +819,9 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         # copy rois to clipboad
         _copyRois = contextMenu.addAction('Copy ROIs to Clipboard')
 
+        # set santana norm lie scan
+        _setSantanaNormLine = contextMenu.addAction('Set Santana Norm Scan')
+
         # paste rois from clipboad
         # check that we have rois on the clipboard
         app = QtWidgets.QApplication.instance()
@@ -878,6 +881,12 @@ class KymRoiWidget(QtWidgets.QMainWindow):
             _, roiLabel = actionText.split(': ')
             logger.info(f'selecting roiLabel:{roiLabel}')
             self._kymRoiImageWidget.selectRoiFromLabel(roiLabel)
+
+        elif action == _setSantanaNormLine:
+            # grab the current line scan from the kym image widget slider
+            lineScanNumber = self._kymRoiImageWidget._lineScanSlider.value()
+            logger.info(f'setting santana norm line to lineScanNumber:{lineScanNumber}')
+            self._kymRoiAnalysis.setKymDetectionParam('santanaLineScanNorm', lineScanNumber)
 
         # copy rois to clipboard
         elif action == _copyRois:

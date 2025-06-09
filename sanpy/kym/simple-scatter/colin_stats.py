@@ -1,5 +1,6 @@
 
 import os
+import sys
 from pprint import pprint
 from typing import List, Optional
 import itertools
@@ -74,7 +75,8 @@ def getGroupedDataframe(df,
     # groupByColumns = ['Region', 'Condition']
 
     # aggList = ["count", "mean", "std", "sem", variation, "median", "min", "max"]
-    aggList = ["count", np.nanmean, np.nanstd, "sem"]
+    # aggList = ["count", np.nanmean, np.nanstd, "sem"]
+    aggList = ["count", np.nanmean, np.nanstd, "sem", "sum"]  # sum is for "Area Under Peak"
 
     # df = df.dropna(subset=[statColumn])  # drop rows where statColumn is nan
         
@@ -84,7 +86,8 @@ def getGroupedDataframe(df,
                                                 'Region': 'first',
                                                 # 'Condition': lambda x: x.iloc[0],  # mimic 'first'
                                                 statColumn : aggList,
-                                                'Path': 'last'
+                                                'Path': 'last',
+                                                'Date': lambda x: x.iloc[0],
                                                 })
     except (TypeError) as e:
         logger.error(f'groupByColumn "{groupByColumns}" failed e:{e}')
@@ -105,7 +108,7 @@ def getGroupedDataframe(df,
 
     # rename column 'first' as 'Region'
     aggDf = aggDf.rename(columns={'first': 'Region'}) 
-    # aggDf = aggDf.rename(columns={'<lambda>': 'Condition'}) 
+    aggDf = aggDf.rename(columns={'<lambda>': 'Date'})  # how do I use lambda and get a column other than <lambda>?
     aggDf = aggDf.rename(columns={'last': 'Path'}) 
 
     aggDf = aggDf.reset_index()  # move groupByColum (e.g. 'ROI Number') from row index label to column
@@ -134,11 +137,18 @@ def makeMeanDf():
     This is used to generate a table for the scatter widget.
     """
     # master df is made in collect_analysis()
-    from colin_summary import getMasterDf
+    # from colin_summary import getMasterDf
     # savePath = '/Users/cudmore/colin_peak_summary_20250517.csv'
     # savePath = '/Users/cudmore/colin_peak_summary_20250521.csv'
-    savePath = '/Users/cudmore/colin_peak_summary_20250527.csv'
-    df = getMasterDf(savePath)
+    # was this 20250528 before switch to colin_global
+    # savePath = '/Users/cudmore/colin_peak_summary_20250527.csv'
+    # df = getMasterDf(savePath)
+
+    from colin_global import loadMasterDfFile
+    df = loadMasterDfFile()
+
+    # load once
+    _kymRoiAnalysisDict = loadAllKymRoiAnalysis()
 
     statColumns = [
         # 'Peak Height',
@@ -197,11 +207,18 @@ def makeMeanDf():
         dfGrouped[stat+"_sem"] = oneDf['sem']
         dfGrouped[stat+"_cv"] = oneDf['cv']
 
+        if stat == 'Area Under Peak':
+            # add sum column for "Area Under Peak"
+            #dfGrouped[stat+"_sum"] = oneDf['sum']
+            dfGrouped[stat + " (Sum)"] = oneDf['sum']
+
     # 20250526 find (cell id, cond, roi) that have zero (0) peaks
     # append to mean df as 'Number of Spikes' == 0
     logger.info('finding roi with 0 peaks')
-    zeroSpikeDictList = findZeroPeaks()
+    zeroSpikeDictList = findZeroPeaks(_kymRoiAnalysisDict)
+    logger.info(f'  found {len(zeroSpikeDictList)} cell/cond/roi with zero peaks')
     for zeroSpike in zeroSpikeDictList:
+        # logger.info(f'  {zeroSpike}')
         cellID = zeroSpike['Cell ID']
         condition = zeroSpike['Condition']
         roiNumber = zeroSpike['ROI Number']
@@ -216,13 +233,18 @@ def makeMeanDf():
 
     dfGrouped = pd.concat([dfGrouped, dfZeroSpike], axis=0).reset_index(drop=True)
 
+    # print(dfGrouped.columns)
+    # print(dfGrouped['Date'])
+    # sys.exit(1)
+
     logger.info('appending roi rect ... slow')
     # for each row (cellid, cond, roi number), append (l,t,r,b) of roi
     dfGrouped['ROI Rect'] = ''
     for index, row in dfGrouped.iterrows():
         tifPath = row['Path']
         roiNumber = row['ROI Number']
-        ka = loadKymRoiAnalysis(tifPath)
+        #ka = loadKymRoiAnalysis(tifPath)
+        ka = _kymRoiAnalysisDict[tifPath]
         roiRect = fetchRoiRect(ka, roiNumber)
         # logger.info(f'index:{index} roiNumber:{roiNumber} roiRect:{roiRect}')
         dfGrouped.at[index, 'ROI Rect'] = roiRect
@@ -240,11 +262,22 @@ def makeMeanDf():
     dfGrouped['show_cell'] = True
     dfGrouped['show_roi'] = True
     
+    # flag control kym roi with less than or equal to 2 spikes
+    _removeOneSpikeControl(dfGrouped)
+
     # save as csv to load into scatter widget
-    savePath = '/Users/cudmore/colin_peak_mean_20250521.csv'
-    savePath = '/Users/cudmore/colin_peak_mean_20250527.csv'
-    logger.info(f'saving csv:{savePath}')
+    # was this 20250528 before switch to colin_global
+    # savePath = '/Users/cudmore/colin_peak_mean_20250521.csv'
+    # savePath = '/Users/cudmore/colin_peak_mean_20250527.csv'
+    
+    from colin_global import getMeanDfPath
+    savePath = getMeanDfPath()
+    logger.info(f'saving dfGrouped csv:{savePath}')
     dfGrouped.to_csv(savePath)
+
+    # print('final mean df is:')
+    # print(dfGrouped)
+    # print(dfGrouped.columns)
 
 def fetchRoiRect(ka, roiNumber):
     # ka = loadKymRoiAnalysis(tifPath)
@@ -252,30 +285,50 @@ def fetchRoiRect(ka, roiNumber):
     rect = roi.getRect()  # [l, t, r, b]
     return rect
 
-def loadKymRoiAnalysis(tifPath):
+def loadAllKymRoiAnalysis() -> dict:
+    """Load analysis for each tif and store in a dict.
+    
+    keys are tif path
+    values are KymRoiAnalysis
+    """
+    retDict = {}
+    from colin_global import getAllTifFilePaths
+    tifPaths = getAllTifFilePaths()
+    logger.info(f'loading all kym roi analysis from {len(tifPaths)} tif files')
+    for tifPath in tifPaths:
+        ka = _loadKymRoiAnalysis(tifPath)
+        retDict[tifPath] = ka
+    return retDict
+
+def _loadKymRoiAnalysis(tifPath):
+    """Load one kymRoiAnalysis..
+    """
     ba = bAnalysis(tifPath)
     imgData = ba.fileLoader._tif  # list of color channel images
     # logger.info(f'imgData:{imgData[0].shape} {np.min(imgData[0])} {np.max(imgData[0])} {np.mean(imgData[0])}')
     ka = KymRoiAnalysis(tifPath, imgData=imgData)
     return ka
 
-def findZeroPeaks():
+def findZeroPeaks(kymAnalysisDict):
     # 20250526, grab Path to tif and load kymAnalysis, look for missing (num peak =0) rois
 
+    # was this 20250528 before switch to colin_global
     # this is colins analysis with multiple roi per kym
-    path = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/renamed-20250521'
-    logger.error(f'REMOVE HARD CODED PATH: {path}')
+    # path = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/renamed-20250521'
+    # rawTifPaths = _walk(path=path, theseFileTypes='.tif', depth=5)
 
-    rawTifPaths = _walk(path=path, theseFileTypes='.tif', depth=5)
+    from colin_global import getAllTifFilePaths
+    rawTifPaths = getAllTifFilePaths()
 
     zeroSpikeDictList = []
     for rawTifPath in rawTifPaths:
         # load tif as bAnalysis (does proper rotation)
-        ba = bAnalysis(rawTifPath)
-        imgData = ba.fileLoader._tif  # list of color channel images
-        # logger.info(f'imgData:{imgData[0].shape} {np.min(imgData[0])} {np.max(imgData[0])} {np.mean(imgData[0])}')
+        # ba = bAnalysis(rawTifPath)
+        # imgData = ba.fileLoader._tif  # list of color channel images
+        # # logger.info(f'imgData:{imgData[0].shape} {np.min(imgData[0])} {np.max(imgData[0])} {np.mean(imgData[0])}')
+        # ka = KymRoiAnalysis(rawTifPath, imgData=imgData)
+        ka = kymAnalysisDict[rawTifPath]
 
-        ka = KymRoiAnalysis(rawTifPath, imgData=imgData)
         for roi in ka.getRoiLabels():
             roi = ka.getRoi(roi)
             roiLabel = roi.getLabel()
@@ -310,9 +363,13 @@ def findZeroPeaks():
                     logger.error(f'ERROR: did not find ISAN or SSAN in raw tif file ??? {tifFile}')
                     region = 'Unknown'
                 
+                # poor form, out date folder is not part of the tif file name (renamed by colin rename fn())
+                dateStr = tifFile.split(' ')[0]
+
                 oneDict = {
                     'Cell ID': cellID,
                     'Condition': condition,
+                    'Date': dateStr,
                     'ROI Number': roiLabel,
                     'Region': region,
                     'Number of Spikes': 0,
@@ -325,10 +382,61 @@ def findZeroPeaks():
 
     return zeroSpikeDictList
 
+def _removeOneSpikeControl(dfMean):
+    # remove cells that have 1 spike in control (remove control, ivab, thap)
+    # from colin_global import loadMeanDfFile, getMeanDfPath
+    # dfMean = loadMeanDfFile()
+
+    # flag by setting 'show_roi' 'le2_peaks'
+    removeLessThanEqual = 2
+    
+    dfMean['le2_peaks'] = False
+
+    columns = ['Cell ID', 'Region', 'Condition', 'ROI Number', 'Number of Spikes']
+
+    dfControl = dfMean[dfMean['Condition'] == 'Control']
+    dfOneSpike = dfControl[dfControl['Number of Spikes'] <= removeLessThanEqual]
+
+    numControlWithOneSpike = len(dfOneSpike['Cell ID'].unique())
+    logger.info(f'numm Cell Id Control with <= {removeLessThanEqual} is {numControlWithOneSpike}')
+
+    # print(f'before drop, df mean has {len(dfMean)} rows.')
+
+    # remove all rows that have (cell id, ROI Number)
+    for rowLabel, rowDict in dfOneSpike.iterrows():  # iterate our <=1 spike (cell id, roi number)
+        cellID = rowDict['Cell ID']
+        roiNumber = rowDict['ROI Number']
+        # logger.info(f'removing cellID:{cellID} roiNumber:{roiNumber}')
+        theseRows = (dfMean['Cell ID'] == cellID) & (dfMean['ROI Number'] == roiNumber)
+        # print(dfMean.loc[theseRows, columns])
+        
+        theseRows2 = dfMean.loc[theseRows]
+        # print(theseRows2.index)
+        # dfMean = dfMean.drop(theseRows2.index)
+        dfMean.loc[theseRows2.index, 'le2_peaks'] = True
+
+    # print(f'after drop, df mean has {len(dfMean)} rows.')
+
+    # 20250529
+    # before drop, df mean has 241 rows.
+    # after drop, df mean has 147 rows.
+
+    # then runnin again with <=2
+    # numm Cell Id Control with <= 2 is 7
+    # before drop, df mean has 147 rows.
+    # after drop, df mean has 123 rows.
+
+    # resave dfMean
+    # dfMeanPath = getMeanDfPath()
+    # logger.info(F'saving {dfMeanPath}')
+    # dfMean.to_csv(dfMeanPath)
+
 if __name__ == '__main__':
     
-    # works
+    # works, make the mean df from master, one row per (cell id, cond, roi)
     makeMeanDf()
+
+    # _removeOneSpikeControl()
 
     # find roi with 0 peaks and add to mean df
     # findZeroPeaks()

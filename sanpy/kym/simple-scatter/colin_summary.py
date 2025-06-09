@@ -1,4 +1,5 @@
 import os
+import sys
 import pathlib
 # import itertools
 
@@ -94,43 +95,41 @@ def rename_files():
         # os.rename(path, newPathName)
 
     print(f'found {len(paths)} files')
-
-def _throwOutAllSanPyAnalysis():
-    # 20250523 THROW OUT ALL (roiPeaks.csv and roiTraces.csv)
-    deletePath = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/renamed-20250521'
-    logger.info('deleting all sanypy analysis !!!')
-    print(deletePath)
-    sanpyCsvFiles = _walk(deletePath, '.csv', 5)
-    for sanpyCsvFile in sanpyCsvFiles:
-        print(sanpyCsvFile)
-
-        os.remove(sanpyCsvFile)
         
 def collect_analysis():
     """Walk through a path and collect csv files into one dataframe.
+    
+    This is our master df.
     """
     
     # this was my analysis with just 1 roi per kym
     # dataPath = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/renamed2'
 
     # this is colins analysis with multiple roi per kym
-    dataPath = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/renamed-20250521'
+    # dataPath = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/renamed-20250521'
+    
+    # 20250528 using colin_global.py
+    # from colin_global import G_MASTER_DATA_FOLDER
+    # dataPath = G_MASTER_DATA_FOLDER
 
-    print('=== loading all csv files from:')
-    print(dataPath)
+    # print('=== loading all csv files from:')
+    # print(dataPath)
     
-    thisExt = '.csv'
-    paths = _walk(dataPath, thisExt, 5)
-    paths = list(paths)
+    # thisExt = '.csv'
+    # paths = _walk(dataPath, thisExt, 5)
+    # paths = list(paths)
     
-    # only accept "roiPeaks.csv" files
-    paths = [p for p in paths if 'roiPeaks.csv' in p]
-    print(f'found {len(paths)} files')
+    # # only accept "roiPeaks.csv" files
+    # paths = [p for p in paths if 'roiPeaks.csv' in p]
+    # print(f'found {len(paths)} files')
+
+    from colin_global import getAllPeakAnalysisCsv
+    paths = getAllPeakAnalysisCsv()
 
     # collect all the dataframes
     dfMaster = pd.DataFrame()
     for idx, csvPath in enumerate(paths):
-        print(f'loading csvPath: {csvPath}')
+        print(f'loading peak anaysis csvPath: {csvPath}')
         _path, csvFile = os.path.split(csvPath)
         
         df = pd.read_csv(csvPath, header=1)  # first line is detection parameters
@@ -139,7 +138,13 @@ def collect_analysis():
         df.insert(0, 'File Number', idx)
         
         # get original filename from df['path']
-        rawTifPath = df.at[0, 'Path']  # capitol 'P'
+        try:
+            rawTifPath = df.at[0, 'Path']  # capitol 'P'
+        except (KeyError) as e:
+            # empty dataframe, no spikes (in any roi)
+            logger.error(f'  ERROR: did not find any spikes in {csvPath}')
+            continue
+
         _path, rawTifFile = os.path.split(rawTifPath)
         rawTifFile, _ext = os.path.splitext(rawTifFile)
         df.insert(0, 'Tif File', rawTifFile)
@@ -151,13 +156,15 @@ def collect_analysis():
         elif 'c3' in rawTifFile:
             df.insert(0, 'Condition', 'Thap')
         else:
-            print(f'ERROR: did not find c1 c2 c3 in raw tif file ???')
+            logger.error(f'ERROR: did not find c1 c2 c3 in raw tif file ???')
 
         # rawTiFile is like "250225 ISAN R1 LS1 c2 Ivab"
         # pull out a unique cell id (we can then group by cell id and condition)
         _rawTiFile = rawTifFile.split(' ')
         cellID = f'{_rawTiFile[0]} {_rawTiFile[1]} {_rawTiFile[2]} {_rawTiFile[3]}'
+        dateStr = _rawTiFile[0]
         # print(f'  unique cellID:"{cellID}"')
+        df.insert(0, 'Date', dateStr)
         df.insert(0, 'Cell ID', cellID)
 
         # get the region from the filename
@@ -173,61 +180,27 @@ def collect_analysis():
         # print(f'loaded {csvFile} {rawDataTif} with {len(df)} peak')
         dfMaster = pd.concat([dfMaster, df], ignore_index=True)
 
+    # for show/hide in scatter widget
+    dfMaster['show_region'] = True
+    dfMaster['show_condition'] = True
+    dfMaster['show_cell'] = True
+    dfMaster['show_roi'] = True
+
     print(dfMaster)
 
+    if len(dfMaster) == 0:
+        logger.error('dfMaster has 0 length!!!')
+        sys.exit(1)
     # save to csv
     # this was my analysis with 1 roi per kym
     # savePath = '/Users/cudmore/colin_peak_summary_20250517.csv'
     
     # this is colins analysis with multiple roi per kym
-    savePath = '/Users/cudmore/colin_peak_summary_20250527.csv'
-    
+    # savePath = '/Users/cudmore/colin_peak_summary_20250527.csv'
+    from colin_global import getMasterDfPath
+    savePath = getMasterDfPath()
     print(f'=== saving dfMaster to savePath:{savePath}')
-    
     dfMaster.to_csv(savePath, index=False)
-
-def getMasterDf(savePath):
-    """Build a df from a csv path.
-
-    This is tweaking output of xxx so colin_scatter can use it
-    """
-    df = pd.read_csv(savePath)
-
-    # this was just putting \n so cell id is readable (not usefull ???)
-    # cellIDs = df['Cell ID'].to_list()
-    # newList = []
-    # for cellID in cellIDs:
-    #     _split = cellID.split()
-    #     newID = f'{_split[0]}\n{_split[1]}\n{_split[2]} {_split[3]}'
-    #     newList.append(newID)
-    #     # print(f'newID: "{newID}"')
-    # df['Cell ID (plot)'] = newList
-    
-    df['show_region'] = True
-    df['show_condition'] = True
-    df['show_cell'] = True
-    df['show_roi'] = True
-
-    # add num spikes
-    # logger.info('todo: adding num spikes -->> handle this in "mean table"')
-    # df["Number of Spikes"] = np.nan
-    # df['Spike Frequency (Hz)'] = np.nan
-    # for cellID in df['Cell ID'].unique():
-    #     dfCellID = df[df['Cell ID']==cellID]
-    #     for cond in ['Control', 'Ivab', 'Thap']:
-    #         _df = dfCellID[dfCellID['Condition']==cond]
-    #         # print(_df.index[0])
-    #         # print(_df.iloc[0])
-    #         numSpikes = len(_df)
-    #         if numSpikes == 0:
-    #             logger.error(f'no peaks for cellID:"{cellID}" cond:"{cond}"')
-    #         else:
-    #             _firstIndex = _df.index[0]
-    #             # print(f'  _firstIndex:{_firstIndex} cellID:{cellID} cond:{cond} numSpikes:{numSpikes}')
-    #             df.at[_firstIndex, "Number of Spikes"] = numSpikes
-
-    return df
-
 
 if __name__ == "__main__":
     # run()
@@ -235,6 +208,5 @@ if __name__ == "__main__":
     
     # works
     # this appends all peak analysis into one saved df
-    collect_analysis()
-    
-    # _throwOutAllSanPyAnalysis()
+    if 1:
+        collect_analysis()

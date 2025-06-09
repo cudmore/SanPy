@@ -513,6 +513,7 @@ class KymDetectionGroupBox(QtWidgets.QGroupBox):
             return
         else:
             detectionDict[name] = value
+            logger.info(f'-->> emit signalDetectionParamChanged group:{self._groupName} + KymRoiDetection')
             self.signalDetectionParamChanged.emit(self._groupName, detectionDict)
 
     def _on_combobox(self, name, value):
@@ -535,6 +536,7 @@ class KymDetectionGroupBox(QtWidgets.QGroupBox):
             return
         else:
             detectionDict[name] = value
+            logger.info(f'-->> emit signalDetectionParamChanged group:{self._groupName} + KymRoiDetection')
             self.signalDetectionParamChanged.emit(self._groupName, detectionDict)
 
         return
@@ -556,6 +558,7 @@ class KymDetectionGroupBox(QtWidgets.QGroupBox):
             return
         else:
             detectionDict[name] = value
+            logger.info(f'-->> emit signalDetectionParamChanged group:{self._groupName} + KymRoiDetection')
             self.signalDetectionParamChanged.emit(self._groupName, detectionDict)
 
         return

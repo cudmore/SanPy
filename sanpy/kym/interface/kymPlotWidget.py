@@ -30,7 +30,8 @@ class KymPlotWidget(QtWidgets.QWidget):
 
         self.peakDetectionType = peakDetectionType
 
-        self._additionalKeys = ['Half-Width', 'Exp Decay']  # need to be defined in self._overlayPlotDict
+        self._additionalKeys = ['Half-Width', 'Exp Decay']
+        # need to be defined in self._overlayPlotDict
 
         # sloppy
         self._rightAxisPlot = None
@@ -50,6 +51,9 @@ class KymPlotWidget(QtWidgets.QWidget):
         """
         # logger.info(f'channelIdx:{channelIdx} roiLabel:{roiLabel} self.peakDetectionType:{self.peakDetectionType}')
 
+        if not self.isVisible():
+            return
+        
         if roiLabel is None:
             # clear all plots
             self.sumIntensityPlot.setData(np.array([]), np.array([]))

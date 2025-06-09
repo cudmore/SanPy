@@ -236,6 +236,15 @@ def getAnalysisDict():
         'userdisplay': True,  # display to user
     }
 
+    # we will always do the division and add a new trace "Line Divided"
+    ret['Divide linescan'] = {
+        'defaultvalue': None,
+        'value': None,
+        'description': 'Linescan to divide image by (new Santana normalization).',
+        'type': "int",
+        'userdisplay': True,  # display to user
+    }
+
     return ret
 
 def getDetectDiamDict():

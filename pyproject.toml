@@ -2,9 +2,66 @@
 requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2", "wheel"]
 build-backend = "setuptools.build_meta"
 
-#[project]
+[project]
+name = "sanpy"
 # version = "0.0.1"  # Remove any existing version parameter.
-#dynamic = ["version"]
+dynamic = ["version"]
+requires-python = ">=3.11"
+dependencies = []  # Base install has no requirements
+
+[project.optional-dependencies]
+gui = [
+    "h5py",
+    "matplotlib",
+    "mplcursors",
+    "numpy>=1.20.0",
+    "pandas>=2.0.0",
+    "pyabf",
+    "PyQt5>=5.15.0",
+    "pyqtdarktheme",
+    "pyqtgraph",
+    "qtawesome",
+    "qtpy",
+    "requests",
+    "roifile",  # For reading Fiji ROI files
+    "scikit-image",
+    "scipy>=1.8.0",
+    "seaborn",  # For statistical visualizations
+    "statannotations",  # For statistical annotations
+    "tables",
+    "tifffile"
+]
+
+dev = [
+    "flake8",
+    "ipython",
+    "jupyter",
+    "mkdocs",
+    "mkdocs-material", 
+    "mkdocs-jupyter",
+    "mkdocstrings",
+    "mkdocstrings-python",
+    "pyinstaller",
+    "pytest",
+    "pytest-cov",
+    "pytest-qt",
+    "tornado",
+    "tox"
+]
+
+test = [
+    "flake8",
+    "pytest",
+    "pytest-cov", 
+    "pytest-qt",
+    "tox"
+]
+
+[project.scripts]
+sanpy = "sanpy.interface.sanpy_app:main"
+
+[tool.setuptools]
+packages = ["sanpy"]
 
 [tool.setuptools_scm]
 write_to = "sanpy/_version.py"
