@@ -60,6 +60,8 @@ class bTableView(QtWidgets.QTableView):
 
         self.mySetModel(model)
 
+        self._lastClick = None
+
         # frozen table was my attempt to keep a few columns always on the left
         # this led to huge problems and is not worth it
 
@@ -166,6 +168,23 @@ class bTableView(QtWidgets.QTableView):
     # def dropEvent(self, event):
     #     logger.info('')
 
+    def mousePressEvent(self, event):
+        logger.info('')
+        super().mousePressEvent(event)
+        self._lastClick = "Click"
+
+    # def mouseReleaseEvent(self, event):
+    #     logger.info('')
+    #     super().mouseReleaseEvent(event)
+    #     if self.last == "Click":
+    #         QtCore.QTimer.singleShot(QtWidgets.QApplication.instance().doubleClickInterval(),
+    #                                  self._onLeftClick(event))
+
+    def mouseDoubleClickEvent(self, event):
+        logger.info('')
+        super().mouseDoubleClickEvent(event)
+        self._lastClick = "DoubleClick"
+
     #
     # frozen
     def _old_initFrozenColumn(self):
@@ -236,6 +255,8 @@ class bTableView(QtWidgets.QTableView):
 
         This is used to open the file in the default application.
         """
+        self._lastClick = "DoubleClick"
+
         row = item.row()
         realRow = self.model()._data.index[row]
 
@@ -253,10 +274,16 @@ class bTableView(QtWidgets.QTableView):
         Keep track of lastSelected row to differentiate between
         switch-file and click again.
         """
-        row = item.row()
-        realRow = self.model()._data.index[row]  # sort order
-        # logger.info(f'User clicked row:{row} realRow:{realRow}')
-        self._onLeftClick(realRow)
+        # self._lastClick = "Click"
+
+        if self.last == "Click":
+            row = item.row()
+            realRow = self.model()._data.index[row]  # sort order
+            # logger.info(f'User clicked row:{row} realRow:{realRow}')
+            # self._onLeftClick(realRow)
+            QtCore.QTimer.singleShot(QtWidgets.QApplication.instance().doubleClickInterval(),
+                            self._onLeftClick(realRow))
+
 
     def selectRowByFile(self, filename : str):
         # fileList = self.model()._data['File'].tolist()
@@ -269,6 +296,7 @@ class bTableView(QtWidgets.QTableView):
             logger.warning(f"Did not find file {filename} in {df['File'].tolist()}")
 
     def _onLeftClick(self, realRow):
+        
         rowDict = self.model().myGetRowDict(realRow)
 
         logger.info(f"=== User click row:{realRow} relPath:{rowDict['relPath']}")

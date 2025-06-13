@@ -78,10 +78,13 @@ class KymRoiImageWidget(QtWidgets.QWidget):
     signalRoiChanged = QtCore.pyqtSignal(object)  # (roi label)
     signalSetLineProfile = QtCore.pyqtSignal(object)  # (int), line scan index
 
-    def __init__(self, kymRoiAnalysis : KymRoiAnalysis, kymRoiWidget = None):
+    def __init__(self, kymRoiAnalysis : KymRoiAnalysis,
+                 detectThisTrace:str,
+                 kymRoiWidget = None):
         super().__init__(None)
 
         self._kymRoiAnalysis = kymRoiAnalysis
+        self._detectThisTrace = detectThisTrace
         self._kymRoiWidget = kymRoiWidget
 
         self._currentChannel = 0
@@ -98,15 +101,22 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         self.roiLabelList = {}
         """Keys are str label, value are QLabel."""
 
+        self.imgData = self._kymRoiAnalysis.getImageChannel(self._currentChannel)
+        # this display the entire kym image, there is no f0, each roi has an f0
+        # if self._detectThisTrace == 'f_f0':
+        #     self.imgData = self.imgData / self.imgData.mean()
+        # elif self._detectThisTrace == 'df_f0':
+        #     self.imgData = (self.imgData - self.imgData.mean()) / self.imgData.mean()
+
         self._buildUI()
 
         self.switchChannel(self._currentChannel + 1)
 
-    @property
-    def imgData(self) -> np.ndarray:
-        """Get image data for one image channel.
-        """
-        return self._kymRoiAnalysis.getImageChannel(self._currentChannel)
+    # @property
+    # def imgData(self) -> np.ndarray:
+    #     """Get image data for one image channel.
+    #     """
+    #     return self._kymRoiAnalysis.getImageChannel(self._currentChannel)
     
     def onUserAddRoi(self, ltrbRoi = None):
         """Add to backend with default ltrb
@@ -813,6 +823,20 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         self.myImageItem.setLevels(_levels, update=True)
         # self.aColorBar.setLevels(_levels)
 
+    def setLineScanSlider(self, lineScanNumber : int):
+        """Programatically set the selected line scan.
+        """
+        
+        # line scan plot
+        secondsValue = lineScanNumber * self._kymRoiAnalysis.secondsPerLine
+        self._kymLineScanLine.setPos(secondsValue)
+
+        # slider
+        self._lineScanSlider.setValue(lineScanNumber)
+
+        # line profile
+        # self.signalSetLineProfile.emit(lineScanNumber)
+
     def _on_line_scan_slider(self, name, lineScanIdx):
         # logger.info(f'{name} {lineScanIdx}')
 
@@ -821,6 +845,19 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         self._kymLineScanLine.setPos(secondsValue)
 
         self.signalSetLineProfile.emit(lineScanIdx)
+
+        # from sanpy.kym.kymRoiAnalysis import PeakDetectionTypes
+        _selectedRoi = self.getSelectedRoiLabel()
+        if _selectedRoi is None:
+            logger.warning('  -->> about')
+            return
+        logger.info(f'setting kymRoiAnalysis "Divide Line Scan": {lineScanIdx}')
+        # not the roi
+        # _detection = self._kymRoiAnalysis.getRoi(_selectedRoi).getDetectionParams(self._currentChannel, PeakDetectionTypes.intensity)
+        # _detection.setParam('Divide Line Scan', lineScanIdx)
+
+        # the kymAnalysis
+        self._kymRoiAnalysis.setKymDetectionParam('Divide Line Scan', lineScanIdx)
 
     def _on_combobox(self, name, value):
         """

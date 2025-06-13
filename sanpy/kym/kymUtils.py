@@ -122,4 +122,6 @@ def getAutoContrast(imgData : np.ndarray):
     min_ = int(min_)
     max_ = int(max_)
 
+    logger.info(f'min_:{min_} max_:{max_}')
+    
     return min_, max_

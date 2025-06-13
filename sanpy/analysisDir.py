@@ -354,9 +354,6 @@ def _old_santana_file_finder(files):
     retDict = {}
     
     # list of full path to tif files in all subfolders
-    # files = [y for x in os.walk(path) for y in glob(os.path.join(x[0], '*.tif'))]
-    #files = sanpy._util.getFileList(path)
-
     for file in files:
         if not file.endswith('.tif'):
             continue
@@ -446,6 +443,10 @@ def getFileList(path, theseFileTypes, depth=1):
     logger.info(f'  depth:{depth}')
 
     fileList = [filePath for filePath in _walk(path, theseFileTypes, depth)]
+    
+    # ignore path with folder 'kym-roi-img-clips'
+    fileList = [filePath for filePath in fileList if 'kym-roi-img-clips' not in filePath]
+    
     return fileList
 
 def stripSantanaTif(fileList : List[str]) -> List[str]:

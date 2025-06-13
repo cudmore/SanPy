@@ -369,9 +369,5 @@ def getFileList(path, depth=1):
     return fileList
 
 if __name__ == '__main__':
-    path = '/Users/cudmore/Dropbox/data/cell-shortening/fig1'
-    fileList = getFileList(path, 4)
-    for file in fileList:
-        print(file)
-
+    pass
 

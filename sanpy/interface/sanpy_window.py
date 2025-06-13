@@ -520,7 +520,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         return rowDict
         """
 
-    def slot_fileTableClicked(self, row, rowDict, selectingAgain, isDoubleClick):
+    def slot_fileTableClicked(self, row, rowDict,
+                              selectingAgain,
+                              isDoubleClick):
         """Respond to selections in file table.
 
         Parameters

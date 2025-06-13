@@ -1,3 +1,5 @@
+import os
+import sys
 import pandas as pd
 
 # from sanpy.kym.kymRoiAnalysis import PeakDetectionTypes
@@ -237,10 +239,19 @@ def getAnalysisDict():
     }
 
     # we will always do the division and add a new trace "Line Divided"
-    ret['Divide linescan'] = {
+    # santana divide line scan
+    ret['Divide Line Scan'] = {
         'defaultvalue': None,
         'value': None,
         'description': 'Linescan to divide image by (new Santana normalization).',
+        'type': "int",
+        'userdisplay': True,  # display to user
+    }
+
+    ret['Post Median Filter Kernel'] = {
+        'defaultvalue': 0,
+        'value': None,
+        'description': 'Kernel size (bins) for median filter on trace/sum. Must be odd.',
         'type': "int",
         'userdisplay': True,  # display to user
     }
@@ -381,6 +392,7 @@ class KymRoiDetection:
         if key not in self._dict.keys():
             logger.error(f'Did not find key:"{key}"')
             logger.error(f'  Available keys are {self._dict.keys()}')
+            sys.exit(1)
             return
         self._dict[key]['value'] = value
         return True

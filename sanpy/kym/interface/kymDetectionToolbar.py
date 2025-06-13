@@ -479,13 +479,9 @@ class KymDetectionGroupBox(QtWidgets.QGroupBox):
         # third row
         hLayout3 = QtWidgets.QHBoxLayout()
         hLayout3.setAlignment(QtCore.Qt.AlignLeft)
-        # hLayout3.setContentsMargins(self._contentMarginLeft, 0, 0, 0)
         mainLayout.addLayout(hLayout3)
         #
         spinBoxName = 'newOnsetOffsetFraction'
-        # aLabel = QtWidgets.QLabel(spinBoxName)
-        # hLayout3.addWidget(aLabel)
-
         aSpinBox = QtWidgets.QDoubleSpinBox()
         aSpinBox.setToolTip(detectionDict.getDescription(spinBoxName))
         aSpinBox.setRange(0,1000)
@@ -497,6 +493,26 @@ class KymDetectionGroupBox(QtWidgets.QGroupBox):
             partial(self._on_spin_box, spinBoxName)
             )
         hLayout3.addWidget(aSpinBox)
+        self._detectionControls[spinBoxName] = aSpinBox
+
+        #
+        # fourth row
+        hLayout4 = QtWidgets.QHBoxLayout()
+        hLayout4.setAlignment(QtCore.Qt.AlignLeft)
+        mainLayout.addLayout(hLayout4)
+
+        spinBoxName = 'Post Median Filter Kernel'
+        aSpinBox = QtWidgets.QSpinBox()
+        aSpinBox.setToolTip(detectionDict.getDescription(spinBoxName))
+        aSpinBox.setRange(0,51)
+        aSpinBox.setSingleStep(1)
+        aSpinBox.setValue(detectionDict[spinBoxName])
+        aSpinBox.setPrefix(f'{spinBoxName} ')
+        aSpinBox.setKeyboardTracking(False)
+        aSpinBox.valueChanged.connect(
+            partial(self._on_spin_box, spinBoxName)
+            )
+        hLayout4.addWidget(aSpinBox)
         self._detectionControls[spinBoxName] = aSpinBox
 
     def _on_spin_box(self, name, value):
@@ -639,6 +655,11 @@ class KymDetectionGroupBox(QtWidgets.QGroupBox):
         # abb 202505, need to refactor to auto fill in detection params
         self._detectionControls['thresh_rel_height'].setValue(detectionDict['thresh_rel_height'])
         self._detectionControls['newOnsetOffsetFraction'].setValue(detectionDict['newOnsetOffsetFraction'])
+
+        # set detectThisTrace combobox
+        detectThisTrace = detectionDict['detectThisTrace']
+        _idx = self._detectThisTraceList.index(detectThisTrace)
+        self._detectionControls['detectThisTrace'].setCurrentIndex(_idx)
 
         self._blockSlots = False
 

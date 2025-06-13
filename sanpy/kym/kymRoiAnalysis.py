@@ -1,11 +1,13 @@
 import json
 import os
-from typing import List, Optional
+import sys
+from typing import List, Optional, Dict
 from enum import Enum
 
 import numpy as np
 import pandas as pd
-import uuid
+# import uuid
+import tifffile
 
 import scipy.optimize
 from scipy.signal import peak_widths, medfilt, savgol_filter, detrend, find_peaks
@@ -21,6 +23,9 @@ from sanpy.kym.kymRoiMetaData import KymRoiMetaData
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
+def _printImgStats(imgData:np.ndarray, name:str=''):
+    logger.info(f'name:"{name}" imgStats: {imgData.shape} min:{np.min(imgData)} max:{np.max(imgData)}')
+
 def myDetrend(xPlot, yPlot, doPlot=False):
     # from scipy.signal import detrend
     
@@ -31,7 +36,7 @@ def myDetrend(xPlot, yPlot, doPlot=False):
         logger.error(f'got -inf in log (is the image empty?) {e} -->> No Detrend')
         return None, None
     
-    y_detrended = np.exp(y_log_detrended)
+    # y_detrended = np.exp(y_log_detrended)
 
     try:
         _params, _cov = scipy.optimize.curve_fit(myMonoExp, xPlot, yPlot)
@@ -77,7 +82,7 @@ def myDetrend(xPlot, yPlot, doPlot=False):
 
 def myMonoExp(x, m, t, b):
     """
-    M: a_0
+    m: a_0
     t: tau_0
     b: 
     """
@@ -261,9 +266,15 @@ class KymRoiTraces:
     """
     def __init__(self, numLineScans : int, secondsPerLine : float):
         self._analysisTraceList = ['Time (s)',
-                                   'intRaw', 'intDetrend',
-                                   'df/f0', 'f/f0', 'Divided',
-                                   'Diameter (um)', 'Left Diameter (um)', 'Right Diameter (um)'
+                                   'intRaw',
+                                   'intDetrend',
+                                   'df/f0',
+                                   'f/f0',
+                                   'Divided',
+                                   # diameter
+                                   'Diameter (um)',
+                                   'Left Diameter (um)',
+                                   'Right Diameter (um)'
                                    ]
 
         self._analysisTraces = {}
@@ -284,6 +295,8 @@ class KymRoiTraces:
         """
         if traceName not in self._analysisTraces.keys():
             logger.error(f'traceName "{traceName}" not in keys, available keys are {self._analysisTraces.keys()}')
+            return
+        
         self._analysisTraces[traceName][:] = np.nan
         self._analysisTraces[traceName][bins] = values
 
@@ -306,27 +319,16 @@ class KymRoiTraces:
         This is for one kymRoi.
         """
         roiTraceList = self._analysisTraceList
-        # _numLoaded = 0
         for roiTrace in roiTraceList:
             colName = f'ROI {roiNumber} {roiTrace}'
             
             if colName not in loadedIntDf.columns:
-                logger.error(f'   did not find trace name "{colName}" column in file')
-                logger.info(f'available columns from file are:{loadedIntDf.columns}')
+                # logger.error(f'   did not find trace name "{colName}" column in file')
+                # logger.info(f'available columns from file are:{loadedIntDf.columns}')
                 continue
             
             oneTrace = loadedIntDf[colName].to_numpy()  # added as_numpy() 20241012
-            
-            # TODO: refactor this
-            # oneTrace = oneTrace[~np.isnan(oneTrace)]
-            
             self._analysisTraces[roiTrace] = oneTrace
-
-            # logger.info(f'   loaded roiTrace:{roiTrace} with {len(oneTrace)} points')
-
-            # _numLoaded += 1
-        
-        # logger.info(f'loaded {_numLoaded} traces for roiNumber:{roiNumber}')
 
     def items(self):
         return self._analysisTraces.items()
@@ -366,6 +368,7 @@ class KymRoi:
                  ltrbRect : List[int] = None,
                  reuseRoiLabel : str = None,
                  kymRoiAnalysis = None,
+                #  mode : str = None
                  ):
         """
         Parameters
@@ -394,6 +397,8 @@ class KymRoi:
         
         self._kymRoiAnalysis : KymRoiAnalysis = kymRoiAnalysis
 
+        # self._mode : str = mode
+
         self.setRect(ltrbRect)  # will contrain
                 
         #self._isDirty = False
@@ -403,10 +408,13 @@ class KymRoi:
         self._detectioParams = [None] * _numChannels
         self._analysisResults = [None] * _numChannels
         self.kymRoiTraces = [None] * _numChannels
-
+        # self._mode = [None] * _numChannels
+        
         # each roi has detection, analysis, and traces for each image channel
         for channel in range(_numChannels):
             
+            # self._mode[channel] = mode
+
             self._detectioParams[channel] = {}
             self._analysisResults[channel] = {}
             
@@ -442,6 +450,12 @@ class KymRoi:
     def getDetectionParams(self, channel : int, detectionType : PeakDetectionTypes) -> KymRoiDetection:
         return self._detectioParams[channel][detectionType.name]
     
+    def setDetection(self, channel, detectionType : PeakDetectionTypes, kymRoiDetection : KymRoiDetection):
+        """Set detection params for a channel.
+        """
+        self._detectioParams[channel][detectionType.name] = kymRoiDetection
+        self.setDirty(True)
+
     def getAnalysisResults(self, channel : int, detectionType : PeakDetectionTypes) -> KymRoiResults:
         return self._analysisResults[channel][detectionType.name]
     
@@ -451,15 +465,7 @@ class KymRoi:
                  ) -> np.ndarray:
         # return self.kymRoiTraces[channel][name]
         return self.kymRoiTraces[channel].getTrace(name)
-    
-    def setDetection(self, channel, detectionType : PeakDetectionTypes, kymRoiDetection : KymRoiDetection):
-        """Set detection params for a channel.
-        """
-        # logger.info('')
-        self._detectioParams[channel][detectionType.name] = kymRoiDetection
-        self.setDirty(True)
-        # return kymRoiDetection
-    
+        
     def setResults(self, channel, detectionType : PeakDetectionTypes, kymRoiResults : KymRoiResults) -> KymRoiResults:
         # logger.info(f'channel:{channel} detectionType:{detectionType}')
         self._analysisResults[channel][detectionType.name] = kymRoiResults
@@ -667,7 +673,7 @@ class KymRoi:
         detectionParameters = self.getDetectionParams(channel, peakDetectionTypes)
         
         backgroundsubtract = detectionParameters['Background Subtract']
-        logger.info(f'performing backgroundsubtract:"{backgroundsubtract}"')
+        # logger.info(f'performing backgroundsubtract:"{backgroundsubtract}"')
 
         if backgroundsubtract == 'Off':
             pass
@@ -706,6 +712,77 @@ class KymRoi:
         xPlot = np.arange(_left, _right, dtype=np.int32)
         return xPlot
     
+    def getRoiImgClips(self, channel) -> Dict:
+        """Get roi img data inside the roi rect.
+
+        Return a copy so when modified does not modify the original (e.g. background subtract).
+        
+        Returns
+        -------
+        Dict with keys:
+            - raw
+            - bs
+            - binned
+            - divided
+        """
+        
+        detectionParams = self.getDetectionParams(channel, PeakDetectionTypes.intensity)
+
+        f0Value = detectionParams['f0 Value Percentile']
+
+        roiImg_raw = self.getRoiImg(channel)
+        
+        roiImg_f_f0 = roiImg_raw / f0Value
+        roiImg_df_f0 = (roiImg_raw - f0Value) / f0Value
+
+        # "background" subtract
+        roiImg_bs = self.backgroundSubtract(channel, roiImg_raw, PeakDetectionTypes.intensity)
+
+        binLineScans = detectionParams['Bin Line Scans']
+        if binLineScans == 0:
+            pass
+        else:
+            roiImg_binned = BinLineScans(roiImg_bs, binLineScans)
+
+        # divided
+        # divideLinescan = detectionParams['Divide Line Scan']
+        santanaLineScanNorm = self._kymRoiAnalysis.getKymDetectionParam('Divide Line Scan')
+        # logger.info(f'  santanaLineScanNorm:{santanaLineScanNorm}')
+        if santanaLineScanNorm is None:
+            # logger.warning('no santana division')
+            roiImg_divided = roiImg_raw.astype('float64')  # copy
+
+        else:
+            column_to_divide_by = roiImg_raw[:, santanaLineScanNorm]
+            reshaped_column = column_to_divide_by.reshape(-1, 1)
+            
+            try:
+                # Cannot cast ufunc 'divide' output from dtype('float64') to dtype('int16')
+                roiImgFloat = roiImg_raw.astype('float64')  # copy
+                reshaped_column_float = reshaped_column.astype('float64')
+                ones_like = np.ones_like(roiImgFloat)
+                roiImg_divided = np.divide(roiImgFloat, reshaped_column_float, out=ones_like, where=reshaped_column != 0)
+
+                # this col should be all 1
+                if not np.all(roiImg_divided[:,santanaLineScanNorm] == 1):
+                    logger.error(f'santanaLineScanNorm:{santanaLineScanNorm} column should be all 1')
+                    # print(dividedImg[:,santanaLineScanNorm])
+
+            except (RuntimeWarning) as e:
+                # RuntimeWarning: divide by zero encountered in divide
+                logger.error(e)
+
+        retDict = {
+            'raw': roiImg_raw,
+            'f_f0': roiImg_f_f0,
+            'df_f0': roiImg_df_f0,
+            #
+            'bs': roiImg_bs,
+            'binned': roiImg_binned,
+            'divided': roiImg_divided
+        }
+        return retDict
+
     def getSumIntensity(self, channel):
         """Get sum intensity for each line scan.
         
@@ -726,34 +803,49 @@ class KymRoi:
             Sum of each line scan (after clipping to left/right and top/bottom of roiRect)
 
         """
+        _debug = False
+
         detectionParams = self.getDetectionParams(channel, PeakDetectionTypes.intensity)
         roiImg = self.getRoiImg(channel)  # get imgData within ROI
-        _left, _top, _right, _bottom = self.getRect()
+        _left, _, _right, _ = self.getRect()
         
-        # xPlot = np.arange(roiImg.shape[1]) * self.secondsPerLine
         xPlot = np.arange(_left, _right, dtype=np.float32) * self.secondsPerLine
 
         # "background" subtract
         roiImg = self.backgroundSubtract(channel, roiImg, PeakDetectionTypes.intensity)
+        if _debug:
+            _printImgStats(roiImg, 'after background subtract')
 
         binLineScans = detectionParams['Bin Line Scans']
         if binLineScans == 0:
             pass
         else:
             roiImg = BinLineScans(roiImg, binLineScans)
+            if _debug:
+                _printImgStats(roiImg, 'after bin line scans')
 
         # sum intensities in each line scan
         sumInt = np.sum(roiImg, axis=0)
+        if _debug:
+            _printImgStats(sumInt, 'after sum intensities')
         # normalize to number of points in line scan
         sumInt = sumInt / roiImg.shape[0]
+        if _debug:
+            _printImgStats(sumInt, 'after normalize')
 
-        # divideLinescan = detectionParams['Divide linescan']
-        santanaLineScanNorm = self._kymRoiAnalysis.getKymDetectionParam('santanaLineScanNorm')
+        # divideLinescan = detectionParams['Divide Line Scan']
+        santanaLineScanNorm = self._kymRoiAnalysis.getKymDetectionParam('Divide Line Scan')
+        # set in roi, can be None
+        detectionParams.setParam('Divide Line Scan', santanaLineScanNorm)
+        
+        logger.info(f'  santanaLineScanNorm:{santanaLineScanNorm}')
         if santanaLineScanNorm is None:
-            logger.error('no divide normalization (santana), e.g. "santanaLineScanNorm"')
-            dividedInt = sumInt
+            # logger.error(f'no divide normalization (santana), e.g. "Divide Line Scan"')
+            dividedInt = sumInt.copy()
+            dividedInt[:] = np.nan
+
         else:
-            logger.warning(f'dividing by santanaLineScanNorm:{santanaLineScanNorm} roiImg:{roiImg.shape}')
+            # logger.warning(f'dividing by santanaLineScanNorm:{santanaLineScanNorm} roiImg:{roiImg.shape}')
             column_to_divide_by = roiImg[:, santanaLineScanNorm]
             reshaped_column = column_to_divide_by.reshape(-1, 1)
             
@@ -786,20 +878,36 @@ class KymRoi:
             # logger.warning(f'  dividedInt:{dividedInt.shape} {dividedInt.dtype}')
 
         #
-        # filter
+        # filter - before detection
         if detectionParams['Median Filter']:
             # 1) medfilt
             medianfilterkernel = detectionParams['Median Filter Kernel']
-            # logger.info(f'   applying median filter with medianfilterkernel:{medianfilterkernel}')
+            logger.info(f'   applying median filter with medianfilterkernel:{medianfilterkernel}')
             sumInt = medfilt(sumInt, kernel_size=medianfilterkernel)
+            if _debug:
+                _printImgStats(sumInt, 'after median filter')
 
         if detectionParams['Savitzky-Golay']:
             # 2) SavitzkyGolay_Filter
-            # logger.info(f'   applying Savitzky-Golay filter')
+            logger.info('   applying Savitzky-Golay filter')
             sumInt = getSavitzkyGolay_Filter(sumInt)
 
         # logger.warning(f'xPlot:{xPlot.shape} sumInt:{sumInt.shape} dividedInt:{dividedInt.shape}')
         # logger.warning(f'xPlot:{xPlot.dtype} sumInt:{sumInt.dtype} dividedInt:{dividedInt.dtype}')
+
+        # check if sumInt is all nan
+        if np.isnan(sumInt).all():
+            logger.error('sumInt is all nan -->> ABORTING')
+            sys.exit(1)
+
+        postMedianFilterKernel = detectionParams['Post Median Filter Kernel']
+        if postMedianFilterKernel > 0:
+            # if postMedianFilterKernel is even, make it odd
+            if postMedianFilterKernel % 2 == 0:
+                logger.warning(f'forcing odd postMedianFilterKernel:{postMedianFilterKernel}')
+                postMedianFilterKernel += 1
+            sumInt = medfilt(sumInt, kernel_size=postMedianFilterKernel)
+            dividedInt = medfilt(dividedInt, kernel_size=postMedianFilterKernel)
 
         return xPlot, sumInt, dividedInt
 
@@ -1083,7 +1191,7 @@ class KymRoi:
                 logger.error(f'trace "{detectThisTrace}" has no value, did you perform "detect diameter"?-->> no detection performed')
                 return
         
-        logger.info(f'=== KymRoi.peakDetect() ==>>')
+        logger.info(f'<<=== KymRoi.peakDetect() ==>>')
         logger.info(f'  roi label:{self._label} with trace:"{detectThisTrace}"')
         if verbose:
             print(detectionParams.printValues())
@@ -1097,7 +1205,7 @@ class KymRoi:
         # abb 20250530
         # linescan to divide kym image for normalization (Santana)
         # 20250608, this is for kym, not individual roi
-        # divideLinescan = detectionParams['Divide linescan']
+        # divideLinescan = detectionParams['Divide Line Scan']
 
         # abb 202505 colin, use 2x f0 value, one for auto, another for manual
         # if f0ManualPercentile=='Manual' then user need to directly set f0, we do not calulate it
@@ -1124,16 +1232,23 @@ class KymRoi:
             # yPlot is corresponding sum intensity within roi rect
             xPlot, yRaw, dividedInt = self.getSumIntensity(channel)  # does background subtraction
         
+            # check if yRaw is all nan
+            if np.isnan(yRaw).all():
+                logger.error('  yRaw is all nan -->> using yRaw')
+                # sys.exit(1)
+                # yRaw = dividedInt
+
             # subtract single exponential to account for intensity decay (bleaking)
             # yRaw can not have negative values (We are taking the log)
             doExpDetrend = detectionParams['Exponential Detrend']
+            logger.info(f'   -->> Exponential Detrend:{doExpDetrend}')
             if doExpDetrend:
-                logger.info('performing Exponential Detrend')
+                # logger.info('performing Exponential Detrend')
                 
                 fitDict, yDetrend = myDetrend(xPlot, yRaw, doPlot=False)
                 
                 if fitDict is None:
-                    logger.error('error calling myDetrend -->> abb colin what is the file name???')
+                    logger.error('  error calling myDetrend -->> using yRaw')
                     yDetrend = yRaw
 
                 else:
@@ -1143,7 +1258,7 @@ class KymRoi:
                     yDetrend += abs(np.min(yDetrend))
 
             else:
-                logger.info('skipping Exponential Detrend')
+                # logger.info('skipping Exponential Detrend')
                 yDetrend = yRaw
                 detectionParams['expDetrendFit'] = None  # when off -->> no fit
 
@@ -1154,7 +1269,7 @@ class KymRoi:
                 # f0 is a percentile of f_f0, 50 percentile is median
                 f0 = np.percentile(yDetrend, f0Percentile)
                 detectionParams['f0 Value Percentile'] = float(f0)  # store the f0 value
-            logger.info(f'   -->> using f0 Type: "{f0ManualPercentile}" f0 is :{f0}')
+            logger.info(f'   -->> using f0 Type: "{f0ManualPercentile}" f0Percentile:{f0Percentile} f0 is :{f0}')
 
         # the time bins (line scans) within the roi rect
         _timeBins = self.getTimeBins()
@@ -1258,7 +1373,7 @@ class KymRoi:
         # get the onset and offset of the peak
         #
         thresh_rel_height = detectionParams['thresh_rel_height']  # using default of 0.85, 1 is foot, 0 is peak
-        logger.info(f'finding initial onset/offset thresholds using thresh_rel_height:{thresh_rel_height}')
+        # logger.info(f'finding initial onset/offset thresholds using thresh_rel_height:{thresh_rel_height}')
         peak_10_tuple = peak_widths(detectThisY, peakBins, rel_height=thresh_rel_height)
         # peak10_widths = peak_10_tuple[0]
         # peak10_width_heights = peak_10_tuple[1]
@@ -1312,7 +1427,7 @@ class KymRoi:
         # this requires the following to be filled in: (Peak Bin, Peak, Peak Height)
         ##
         newOnsetOffsetFraction = detectionParams['newOnsetOffsetFraction']
-        logger.info(f'calling findThreshold() with newOnsetOffsetFraction:{newOnsetOffsetFraction} polarity:{polarity}')
+        # logger.info(f'calling findThreshold() with newOnsetOffsetFraction:{newOnsetOffsetFraction} polarity:{polarity}')
         if polarity == 'Neg':
             doMpl = False
         else:
@@ -1547,7 +1662,7 @@ class KymRoiAnalysis:
         # 202505 colin
         # now our kym itself (not roi) has detection params
         self._kymDetectionParams = {
-            'santanaLineScanNorm': 0,
+            'Divide Line Scan': None,
         }
 
         # ingest or load image data
@@ -1719,6 +1834,7 @@ class KymRoiAnalysis:
     def addROI(self,
                ltrbRect : List[int] = None,
                reuseRoiLabel : str = None,
+               mode : str = None
                ) -> KymRoi:
         """Add a new roi.
 
@@ -1741,9 +1857,7 @@ class KymRoiAnalysis:
                         kymRoiAnalysis=self,  # so roi can use reuseRoiLabel
                         )
         self._roiDict[roiLabel] = newRoi
-
         self.setDirty(True)
-
         return newRoi
     
     def deleteRoi(self, roiLabel : str) -> bool:
@@ -1775,15 +1889,17 @@ class KymRoiAnalysis:
         return _retBin2
     
     # TODO: refactor, only used by _getSaveFile
-    def _getSaveFolder(self, createFolder=True):
+    def _getSaveFolder(self, enclosingFolder=False, createFolder=True):
         _folder, _ = os.path.split(self.path)  # folder the raw tif is in
         
-        _folder = os.path.join(_folder, 'sanpy-kym-roi-analysis')
+        if not enclosingFolder:
+            # folder we save csv into
+            _folder = os.path.join(_folder, 'sanpy-kym-roi-analysis')
         if createFolder and not os.path.isdir(_folder):
             os.mkdir(_folder)
         
         return _folder
-    
+
     def _getSaveFile(self, channel, createFolder=True):
         """Get full path to file to save/load analysis.
         
@@ -1877,39 +1993,75 @@ class KymRoiAnalysis:
 
         df = pd.DataFrame()
 
-        # numLineScans = self.numLineScans
-
         for roiLabel, kymRoi in self._roiDict.items():
 
+            kymRoi:KymRoi = kymRoi
+            
             kymRoiTraces = kymRoi.kymRoiTraces[channel]
             # if kymRoiTraces.isEmpty():
             #     continue
             for traceKey, traceValues in kymRoiTraces.items():
+                # don't save if all nan
+                if np.all(np.isnan(traceValues)):
+                    # logger.warning(f'  not saving trace:{traceKey} -->> all nan')
+                    continue
+                
                 colName = f'ROI {roiLabel} {traceKey}'
                 # df[colName] = [np.nan] * numLineScans
                 # logger.info(f'   roiLabel:{roiLabel} traceKey:{traceKey} colName:{colName} len:{len(traceValues)}')
                 df[colName] = traceValues  # might be nan
 
         # logger.warning('todo: save a one line header with um/pixel and seconds/line')
-        # fileHeaderDict = {
-        #     'secondsPerLine' : self.secondsPerLine,
-        #     'umPerPixel' : self.umPerPixel,
-        #     'acq date' : self.header['acq date'],
-        #     'acq time' : self.header['acq time'],
-        # }
-        # _fileHeaderJson = json.dumps(fileHeaderDict)
         _fileHeaderJson = self._kymRoiMetaData.toJson()
         
-        if len(df) == 0:
-            # nothing to save
-            pass
-        else:
-            logger.info(f'saving intensity to: {tracePath}')
+        # logger.warning('saving traces even if 0 peaks')
+        # if len(df) == 0:
+        #     # nothing to save
+        #     pass
+        # else:
+        if 1:
+            logger.info(f'saving intensity traces to: {tracePath}')
             # df.to_csv(intPath, index=False)
             with open(tracePath, 'w') as f:
                 f.write(_fileHeaderJson)
                 f.write('\n')
                 f.write(df.to_csv(header=True, index=False, mode='a'))
+
+    def saveImageClips(self):
+        """Save image clips for each roi.
+
+        Each ROI will have 4x files (* color channel)
+            - raw
+            - background subtracted
+            - binned
+            - divided
+        """
+        # cell id from tif file
+        _folder, _name = os.path.split(self.path)
+        cellID = os.path.splitext(_name)[0]
+
+        # WARNING: we need to ignore folder 'roi-img-clips' when building tif list !!!
+        tifFolder = os.path.join(self._getSaveFolder(), 'kym-roi-img-clips')
+        # logger.info(f'saving to tifFolder:{tifFolder}')
+
+        for channel in range(self.numChannels):
+            for roiLabel, kymRoi in self._roiDict.items():
+                kymRoi:KymRoi = kymRoi
+                # roiImg_raw, roiImg_bs, roiImg_binned, roiImg_divided = \
+                
+                # get a number of image clips (raw, f/f0 df/f0, divided)
+                roiImgClipsDict = kymRoi.getRoiImgClips(channel)
+                
+                for clipKey, clipImgData in roiImgClipsDict.items():
+                    if not os.path.isdir(tifFolder):
+                        os.makedirs(tifFolder)
+                    tifFileName = f'{cellID}-ch{channel}-roi{roiLabel}-{clipKey}.tif'
+                    savePath = os.path.join(tifFolder, tifFileName)
+                    # logger.info(f'  roiLabel:{roiLabel} clipKey:{clipKey}')
+                    # logger.info(f'    tifFileName:{tifFileName}')
+                    # logger.info(f'  savePath:{savePath}')
+                    tifffile.imwrite(savePath, clipImgData)
+
 
     def saveAnalysis(self):
         """Save all analysis into a number of csv files.
@@ -1922,13 +2074,14 @@ class KymRoiAnalysis:
             - traces (raw data that was analyzed, for both f/f0 peaks and diameter peaks)
         """
 
+        logger.info('')
         if not self.isDirty:
             _noSaveStr = 'No changes to save.'
             logger.info(_noSaveStr)
             self.mySetStatusBar(_noSaveStr)
             return False
         
-        # abb 202505 colin, our kymAnalysis not has params in _kymDetectionParams
+        self.saveImageClips()
 
         for channel in range(self.numChannels):
             
@@ -2022,7 +2175,8 @@ class KymRoiAnalysis:
             
             if roiNumber == 'kymDetectionParams':
                 # abb 202505 colin, global detection params for kym
-                logger.info(f'loading kymDetectionParams detectionDict:{detectionDict}')
+                # logger.info(f'loading kymDetectionParams detectionDict:{detectionDict}')
+                # print(filePath)
                 self._kymDetectionParams = detectionDict 
                 continue
 

@@ -1,6 +1,7 @@
 import os
 from functools import partial
 import json
+import subprocess
 
 import numpy as np
 
@@ -132,7 +133,8 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         # self.selectRoi(roi = None)
 
     def isDirty(self):
-        return self._kymRoiAnalysis._isDirty
+        # return self._kymRoiAnalysis._isDirty
+        return self._kymRoiAnalysis.isDirty()
 
     def closeEvent(self, event):
         logger.info('veto close if peak analysis is dirty')
@@ -199,7 +201,16 @@ class KymRoiWidget(QtWidgets.QMainWindow):
 
         If roi is None then deselect all.
         """
-        logger.info(f'DOES NOTHING roi:"{roiLabel}"')
+        logger.info(f'channel:{channel} roi:"{roiLabel}"')
+
+        # 20250609 set image line scan slider
+        # roi = self._kymRoiAnalysis.getRoi(roiLabel)
+        # _detectParams = roi.getDetectionParams(channel, PeakDetectionTypes.intensity)
+        # _divideLinesScan = _detectParams['Divide Line Scan']
+        _divideLinesScan = self._kymRoiAnalysis.getKymDetectionParam('Divide Line Scan')    
+        logger.info(f'  _divideLinesScan:{_divideLinesScan}')
+        if _divideLinesScan is not None:
+            self._kymRoiImageWidget.setLineScanSlider(_divideLinesScan)
 
         # if roiLabel is not None:
         #     # set our detection params to the selected roi
@@ -673,7 +684,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         """
 
         # perform analysis
-        logger.warning(f'turned off auto analysis - implementing "Analyze" button doAnalysis:{doAnalysis}')
+        # logger.warning(f'turned off auto analysis - implementing "Analyze" button doAnalysis:{doAnalysis}')
         if doAnalysis:
             ok = self.analyzeRoi(roiLabelStr, PeakDetectionTypes.intensity)
             if ok is None:
@@ -816,11 +827,13 @@ class KymRoiWidget(QtWidgets.QMainWindow):
             roiLabelText = kymRoi.getLabel()
             contextMenu.addAction(f'Select ROI: {roiLabelText}')
 
-        # copy rois to clipboad
-        _copyRois = contextMenu.addAction('Copy ROIs to Clipboard')
-
-        # set santana norm lie scan
+        # set santana norm line scan
+        contextMenu.addSeparator()
         _setSantanaNormLine = contextMenu.addAction('Set Santana Norm Scan')
+
+        # show analysis folder
+        contextMenu.addSeparator()
+        _showAnalysisFolder = contextMenu.addAction('Show Analysis Folder')
 
         # paste rois from clipboad
         # check that we have rois on the clipboard
@@ -831,6 +844,9 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         except(json.decoder.JSONDecodeError) as e:
             # logger.error(f'clipboard does not contain roi json:\n{_json}')
             _dict = {}
+        contextMenu.addSeparator()
+        # copy rois to clipboad
+        _copyRois = contextMenu.addAction('Copy ROIs to Clipboard')
         _pasteRois = contextMenu.addAction('Paste ROIs from Clipboard')
         _pasteRois.setEnabled(len(_dict) > 0)
 
@@ -886,7 +902,13 @@ class KymRoiWidget(QtWidgets.QMainWindow):
             # grab the current line scan from the kym image widget slider
             lineScanNumber = self._kymRoiImageWidget._lineScanSlider.value()
             logger.info(f'setting santana norm line to lineScanNumber:{lineScanNumber}')
-            self._kymRoiAnalysis.setKymDetectionParam('santanaLineScanNorm', lineScanNumber)
+            self._kymRoiAnalysis.setKymDetectionParam('Divide Line Scan', lineScanNumber)
+
+        elif _showAnalysisFolder:
+            saveFolder = self._kymRoiAnalysis._getSaveFolder(enclosingFolder=True, createFolder=False)
+            logger.info(f'showing analysis folder:\n{saveFolder}')
+            # open in finder
+            subprocess.run(['open', saveFolder] )
 
         # copy rois to clipboard
         elif action == _copyRois:

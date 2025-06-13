@@ -37,7 +37,7 @@ class SetF0Widget(QtWidgets.QWidget):
         self._buildUI()
 
     def slot_selectRoi(self, channelIdx : int, roiLabel : Optional[str]):
-        logger.info(f'channelIdx:{channelIdx} roiLabel:{roiLabel}')
+        # logger.info(f'channelIdx:{channelIdx} roiLabel:{roiLabel}')
 
         if roiLabel is None:
             # clear the plot

@@ -41,7 +41,7 @@ def test_sum():
     traces = ['f/f0', 'Divided']
 
     # for now we have one norm for kymAnalysis (across all roi)
-    santanaLineScanNorm = kymRoiAnalysis.getKymDetectionParam('santanaLineScanNorm')
+    santanaLineScanNorm = kymRoiAnalysis.getKymDetectionParam('Divide Line Scan')
     for roiIdx, roi in enumerate(kymRoiAnalysis):
         print(f'{type(roi)} roi:{roi}')
         xPlot, yRaw, dividedInt = roi.getSumIntensity(channel)  # does background subtraction
