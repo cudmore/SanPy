@@ -202,6 +202,9 @@ def _loadLineScanHeader(path):
 
     if not os.path.isfile(txtFile):
         # find "ISAN Linescan 6 Metadata.txt"
+        logger.info(f'did not find {txtFile}')
+        logger.info('  -->> searching ...')
+        
         _folder, _file = os.path.split(path)
         _file, _ = os.path.splitext(_file)
         _file += ' Metadata.txt'

@@ -445,7 +445,11 @@ def getFileList(path, theseFileTypes, depth=1):
     fileList = [filePath for filePath in _walk(path, theseFileTypes, depth)]
     
     # ignore path with folder 'kym-roi-img-clips'
-    fileList = [filePath for filePath in fileList if 'kym-roi-img-clips' not in filePath]
+    fileList = [filePath for filePath in fileList \
+                if 'kym-roi-img-clips' not in filePath
+                and 'sanpy-kym-roi-analysis' not in filePath
+                and 'sanpy-reports-pdf' not in filePath  # all pdf reports AND roi tif clips
+                ]
     
     return fileList
 

@@ -11,7 +11,8 @@ from scipy.stats import variation, mannwhitneyu
 
 from sanpy.bAnalysis_ import bAnalysis
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, PeakDetectionTypes
-from sanpy.analysisDir import _walk
+
+from sanpy.kym.simple_scatter.colin_global import loadMasterDfFile, loadAllKymRoiAnalysis
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -91,7 +92,7 @@ def getGroupedDataframe(df,
                                                 statColumn : aggList,
                                                 'Path': 'last',
                                                 'Date': lambda x: x.iloc[0],
-                                                'Epoch': lambda x: x.iloc[0],
+                                                # 'Epoch': lambda x: x.iloc[0],
                                                 })
     except (TypeError) as e:
         logger.error(f'groupByColumn "{groupByColumns}" failed e:{e}')
@@ -111,8 +112,8 @@ def getGroupedDataframe(df,
     # logger.info(f'aggDf.columns:{_columns}')
     firstLambda = _columns.index('<lambda>')
     _columns[firstLambda] = 'Date'
-    secondLambda = _columns.index('<lambda>')
-    _columns[secondLambda] = 'Epoch'
+    # secondLambda = _columns.index('<lambda>')
+    # _columns[secondLambda] = 'Epoch'
     aggDf.columns = _columns
     # print(aggDf)
     # sys.exit(1)
@@ -141,10 +142,6 @@ def getGroupedDataframe(df,
         except (KeyError) as e:
             logger.error(f'did not find agg column:{agg} possible keys are {aggDf.columns}')
     
-    # logger.info(f'final aggDf:')
-    # print(aggDf)
-    # sys.exit(1)
-
     return aggDf
 
 def makeMeanDf():
@@ -153,11 +150,10 @@ def makeMeanDf():
     This is used to generate a table for the scatter widget.
     """
 
-    from sanpy.kym.simple_scatter.colin_global import loadMasterDfFile
     df = loadMasterDfFile()
 
-    # load once
-    _kymRoiAnalysisDict = loadAllKymRoiAnalysis()
+    # load all kym roi analysis once
+    _kymRoiAnalysisDict = loadAllKymRoiAnalysis(loadImgData=True)
 
     statColumns = [
         # 'Peak Height',
@@ -178,7 +174,7 @@ def makeMeanDf():
     # seed with peak height (gives us number or rows)
     logger.info('seeding df with peak height')
     stat = 'Peak Height'
-    groupByColumns = ['Cell ID', 'Condition', 'ROI Number']
+    groupByColumns = ['Cell ID', 'Condition', 'Epoch', 'ROI Number']
     dfGrouped = getGroupedDataframe(df, stat, groupByColumns=groupByColumns)
     # dfGrouped has 'Path' to tif file
     
@@ -243,8 +239,11 @@ def makeMeanDf():
 
     dfGrouped = pd.concat([dfGrouped, dfZeroSpike], axis=0).reset_index(drop=True)
 
+    # for each row (kym) make a 'Tif File' column from 'Path'
+    dfGrouped['Tif File'] = dfGrouped['Path'].apply(lambda x: os.path.basename(x))
+
     # print(dfGrouped.columns)
-    # print(dfGrouped['Date'])
+    # print(dfGrouped['Tif File'])
     # sys.exit(1)
 
     logger.info('appending roi rect to df ...')
@@ -281,14 +280,24 @@ def makeMeanDf():
     # print(dfGrouped.columns)
     # print(dfGrouped)
 
+    # for each row, udate the 'Epoch' column based on the name of 'Tif File'
+    dfGrouped['Epoch'] = dfGrouped['Tif File'].apply(lambda x: 
+                                                     FileInfo.from_path(x).epoch)
+
     dfGrouped['show_region'] = True
     dfGrouped['show_condition'] = True
     dfGrouped['show_cell'] = True
     dfGrouped['show_roi'] = True
     dfGrouped['show_polarity'] = True
+    dfGrouped['show_epoch'] = True
     
     # flag control kym roi with less than or equal to 2 spikes
     _removeOneSpikeControl(dfGrouped)
+
+    dfGrouped['Condition Epoch'] = \
+        (dfGrouped['Condition'].fillna('') + ' ' + dfGrouped['Epoch'].astype(str).fillna('')).str.strip()
+    dfGrouped['Condition Epoch'] = \
+        dfGrouped['Condition Epoch'].astype('category')
 
     # save as csv to load into scatter widget
     # was this 20250528 before switch to colin_global
@@ -297,42 +306,14 @@ def makeMeanDf():
     
     from sanpy.kym.simple_scatter.colin_global import getMeanDfPath
     savePath = getMeanDfPath()
-    logger.info(f'saving dfGrouped csv:{savePath}')
+    logger.info('saving dfGrouped csv:')
+    print(savePath)
+
     dfGrouped.to_csv(savePath)
 
-    # print('final mean df is:')
-    # print(dfGrouped)
+    print('final mean df is:')
+    print(dfGrouped)
     # print(dfGrouped.columns)
-
-# def fetchRoiRect(ka, roiNumber):
-#     # ka = loadKymRoiAnalysis(tifPath)
-#     roi = ka.getRoi(roiLabel=roiNumber)
-#     rect = roi.getRect()  # [l, t, r, b]
-#     return rect
-
-def loadAllKymRoiAnalysis() -> dict:
-    """Load analysis for each tif and store in a dict.
-    
-    keys are tif path
-    values are KymRoiAnalysis
-    """
-    retDict = {}
-    from sanpy.kym.simple_scatter.colin_global import getAllTifFilePaths
-    tifPaths = getAllTifFilePaths()
-    logger.info(f'loading all kym roi analysis from {len(tifPaths)} tif files')
-    for tifPath in tifPaths:
-        ka = _loadKymRoiAnalysis(tifPath)
-        retDict[tifPath] = ka
-    return retDict
-
-def _loadKymRoiAnalysis(tifPath):
-    """Load one kymRoiAnalysis..
-    """
-    ba = bAnalysis(tifPath)
-    imgData = ba.fileLoader._tif  # list of color channel images
-    # logger.info(f'imgData:{imgData[0].shape} {np.min(imgData[0])} {np.max(imgData[0])} {np.mean(imgData[0])}')
-    ka = KymRoiAnalysis(tifPath, imgData=imgData)
-    return ka
 
 def findZeroPeaks(kymAnalysisDict):
     """Find rois with 0 peaks and add to mean df.

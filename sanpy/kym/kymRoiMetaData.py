@@ -9,7 +9,7 @@ logger = get_logger(__name__)
 
 class KymRoiMetaData():
     def __init__(self, path : str,
-                 imgData : List[np.ndarray]) -> None:
+                 imgData : List[np.ndarray] = None) -> None:
         
         folder, filename = os.path.split(path)
 
@@ -36,9 +36,9 @@ class KymRoiMetaData():
             'Acq Time': '',
             'secondsPerLine' : None,
             'umPerPixel' : None,
-            'numChannels' : len(imgData),
-            'imageHeight' : imgData[0].shape[0],  # number of pixels in each line scan
-            'imageWidth' : imgData[0].shape[1],  # number of line scans
+            'numChannels' : 0 if imgData is None else len(imgData),
+            'imageHeight' : 0 if imgData is None else imgData[0].shape[0],  # number of pixels in each line scan
+            'imageWidth' : 0 if imgData is None else imgData[0].shape[1],  # number of line scans
         }
     
         self._allowEdit = ['Animal ID', 'Region', 'Cell Type', 'Condition 1', 'Condition 2']
@@ -83,10 +83,31 @@ class KymRoiMetaData():
         for k,v in _dict.items():
             self.setParam(k, v)
 
-    def fromDict(self,_dict):
-        # _dict = json.loads(jsonStr)
-        for k,v in _dict.items():
-            self.setParam(k, v)
+    @classmethod
+    def fromDict(cls, _dict):
+        """Create a KymRoiMetaData instance from a dictionary.
+        
+        Parameters
+        ----------
+        _dict : dict
+            Dictionary containing metadata values
+            
+        Returns
+        -------
+        KymRoiMetaData
+            New instance with values from the dictionary
+        """
+        # Extract required parameters for __init__
+        path = _dict.get('path', '')
+        
+        # Create the instance with optional imgData (None is now allowed)
+        instance = cls(path, imgData=None)
+        
+        # Set all the dictionary values
+        for k, v in _dict.items():
+            instance.setParam(k, v)
+            
+        return instance
 
     def __setitem__(self, key, value) -> bool:
         return self.setParam(key, value)

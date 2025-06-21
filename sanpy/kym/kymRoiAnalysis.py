@@ -15,6 +15,7 @@ from skimage import restoration
 
 import matplotlib.pyplot as plt
 
+from sanpy.bAnalysis_ import bAnalysis
 from sanpy._util import _loadLineScanHeader
 from sanpy.kym.kymRoiDetection import KymRoiDetection, getAnalysisDict
 from sanpy.kym.kymRoiResults import KymRoiResults
@@ -92,7 +93,9 @@ def myMonoExp(x, m, t, b):
     try:
         ret = m * np.exp(-t * x) + b
     except (RuntimeWarning) as e:
+        # RuntimeWarning: overflow encountered in exp
         logger.error(e)
+        logger.error(f'x:{x} m:{m} t:{t} b:{b}')
     return ret
 
 def myDoubleExp(x, m1, t1, m2, t2):
@@ -459,9 +462,8 @@ class KymRoi:
     def getAnalysisResults(self, channel : int, detectionType : PeakDetectionTypes) -> KymRoiResults:
         return self._analysisResults[channel][detectionType.name]
     
-    def getTrace(self, channel, name,
-                #  stripNan=False
-                #  ) -> KymRoiTraces:
+    def getTrace(self, channel : int,
+                 name : str,
                  ) -> np.ndarray:
         # return self.kymRoiTraces[channel][name]
         return self.kymRoiTraces[channel].getTrace(name)
@@ -838,7 +840,8 @@ class KymRoi:
         # set in roi, can be None
         detectionParams.setParam('Divide Line Scan', santanaLineScanNorm)
         
-        logger.info(f'  santanaLineScanNorm:{santanaLineScanNorm}')
+        if _debug:
+            logger.info(f'  santanaLineScanNorm:{santanaLineScanNorm}')
         if santanaLineScanNorm is None:
             # logger.error(f'no divide normalization (santana), e.g. "Divide Line Scan"')
             dividedInt = sumInt.copy()
@@ -1173,7 +1176,8 @@ class KymRoi:
         # either intensity or diameter
         detectionParams = self.getDetectionParams(channel, detectionType=peakDetectionType)
         
-        logger.info(f'-->> peakDetectionType:{peakDetectionType}')
+        if verbose:
+            logger.info(f'-->> peakDetectionType:{peakDetectionType}')
         # print(detectionParams.printValues())
 
         # store the ltrb of rect we analysed
@@ -1191,9 +1195,9 @@ class KymRoi:
                 logger.error(f'trace "{detectThisTrace}" has no value, did you perform "detect diameter"?-->> no detection performed')
                 return
         
-        logger.info(f'<<=== KymRoi.peakDetect() ==>>')
-        logger.info(f'  roi label:{self._label} with trace:"{detectThisTrace}"')
         if verbose:
+            logger.info(f'<<=== KymRoi.peakDetect() ==>>')
+            logger.info(f'  roi label:{self._label} with trace:"{detectThisTrace}"')
             print(detectionParams.printValues())
 
         # parameters
@@ -1241,7 +1245,7 @@ class KymRoi:
             # subtract single exponential to account for intensity decay (bleaking)
             # yRaw can not have negative values (We are taking the log)
             doExpDetrend = detectionParams['Exponential Detrend']
-            logger.info(f'   -->> Exponential Detrend:{doExpDetrend}')
+            # logger.info(f'   -->> Exponential Detrend:{doExpDetrend}')
             if doExpDetrend:
                 # logger.info('performing Exponential Detrend')
                 
@@ -1269,7 +1273,8 @@ class KymRoi:
                 # f0 is a percentile of f_f0, 50 percentile is median
                 f0 = np.percentile(yDetrend, f0Percentile)
                 detectionParams['f0 Value Percentile'] = float(f0)  # store the f0 value
-            logger.info(f'   -->> using f0 Type: "{f0ManualPercentile}" f0Percentile:{f0Percentile} f0 is :{f0}')
+            if verbose:
+                logger.info(f'   -->> using f0 Type: "{f0ManualPercentile}" f0Percentile:{f0Percentile} f0 is :{f0}')
 
         # the time bins (line scans) within the roi rect
         _timeBins = self.getTimeBins()
@@ -1330,7 +1335,8 @@ class KymRoi:
         peakBins = peakTuple[0]
         peakDict = peakTuple[1]
 
-        logger.info(f'   -->> detected {len(peakBins)} peaks')
+        logger.info(f'  -->> detected {len(peakBins)} peaks')
+        logger.info(f'    roi label:{self._label} {os.path.split(self.path)[1]}')
 
         if polarity == 'Neg':
             peakDict['width_heights'] = -peakDict['width_heights']
@@ -1639,7 +1645,8 @@ class KymRoiAnalysis:
     def __init__(self, path : str = None,
                  imgData : List[np.ndarray] = None,
                  kymRoiWidget = None,
-                 loadAnalysis : bool = False):
+                 loadAnalysis : bool = False,
+                 loadImgData:bool = True):
         """
         Holds a number of kymRoi for one image file (multiple channels).
         
@@ -1665,8 +1672,20 @@ class KymRoiAnalysis:
             'Divide Line Scan': None,
         }
 
+        self._imgData : List[np.ndarray] = imgData
+        """List of single channel images."""
+
+        self._kymRoiMetaData:KymRoiMetaData = KymRoiMetaData(path, imgData)
+        """KymRoiMetaData object."""
+
+        # load image data
+        if loadImgData:
+            ba = bAnalysis(path)
+            self._imgData = ba.fileLoader._tif  # list of color channel images
+
+            if not isinstance(self._imgData, List):
+                self._imgData = [imgData]
         # ingest or load image data
-        # self._imgData : List[np.ndarray] = []
         if imgData is not None:
             if not isinstance(imgData, List):
                 imgData = [imgData]
@@ -1675,32 +1694,15 @@ class KymRoiAnalysis:
                 self._loadError = True
                 return
             
-            self._imgData : List[np.ndarray] = imgData
+            self._imgData = imgData
             """List of single channel images."""
-            
-            # logger.info(f'from imgData channels:{len(self._imgData)} shape:{self._imgData[0].shape}')
 
-        # elif path is not None:
-        #     self._imgData = tifffile.imread(path)
-        #     # self._imgData = self._imgData.astype(np.int64)  # to all pos and negative
-        #     if self._imgData.dtype == np.uint8:
-        #         logger.warning(f'converting self._imgData from: {self._imgData.dtype} to np.int8')
-        #         self._imgData = self._imgData.astype(np.int8)  # to all pos and negative
-        #     elif self._imgData.dtype == np.uint16:
-        #         logger.warning(f'converting self._imgData from: {self._imgData.dtype} to np.int16')
-        #         self._imgData = self._imgData.astype(np.int16)  # to all pos and negative
+            self._kymRoiMetaData = KymRoiMetaData(path, self._imgData)
 
-        #     if olympusHeader is not None:
-        #         self._imgData = np.rot90(self._imgData)
-        #         # self._imgData = np.flip(self._imgData)
-
-        #     logger.info(f'from path:{self._imgData.shape}')
-        # else:
-        #     logger.error('please specify either a path or imgData')
+        # logger.info(f'from imgData channels:{len(self._imgData)} shape:{self._imgData[0].shape}')
 
         self._fakeScale = False
-        
-        self._kymRoiMetaData = KymRoiMetaData(path, self._imgData)
+        self._isDirty = False
 
         # 1) try and load from saved files
         loadedHeaderDict = self.loadAnalysis()
@@ -1798,6 +1800,12 @@ class KymRoiAnalysis:
     @property
     def numLineScans(self) -> float:
         return self.header['imageWidth']
+    
+    @property
+    def numPixelsPerLine(self) -> float:
+        """Number of pixels in each line scan.
+        """
+        return self.header['imageHeight']
     
     @property
     def numRoi(self) -> int:
@@ -1945,7 +1953,11 @@ class KymRoiAnalysis:
                 if _roiIdx == 0:
                     df = oneDf
                 else:
-                    df = pd.concat([df, oneDf], axis=0)
+                    # abb 20250621
+                    # fixes
+                    # FutureWarning: The behavior of DataFrame concatenation with empty or all-NA entries is deprecated
+                    if len(oneDf) > 0:
+                        df = pd.concat([df, oneDf], axis=0)
             try:
                 df = df.reset_index(drop=True)
             except (ValueError) as e:
@@ -2020,7 +2032,7 @@ class KymRoiAnalysis:
         #     pass
         # else:
         if 1:
-            logger.info(f'saving intensity traces to: {tracePath}')
+            # logger.info(f'saving intensity traces to: {tracePath}')
             # df.to_csv(intPath, index=False)
             with open(tracePath, 'w') as f:
                 f.write(_fileHeaderJson)
@@ -2074,14 +2086,14 @@ class KymRoiAnalysis:
             - traces (raw data that was analyzed, for both f/f0 peaks and diameter peaks)
         """
 
-        logger.info('')
+        # logger.info('')
         if not self.isDirty:
             _noSaveStr = 'No changes to save.'
             logger.info(_noSaveStr)
             self.mySetStatusBar(_noSaveStr)
             return False
         
-        self.saveImageClips()
+        # self.saveImageClips()
 
         for channel in range(self.numChannels):
             
@@ -2090,7 +2102,7 @@ class KymRoiAnalysis:
             _fileHeaderDictDiameter = {}
 
             # 202505 colin
-            logger.info(f'saving key "_kymDetectionParams":{self._kymDetectionParams}')
+            # logger.info(f'saving key "_kymDetectionParams":{self._kymDetectionParams}')
             _fileHeaderDict['kymDetectionParams'] = self._kymDetectionParams
             
             for roiLabel, kymRoi in self._roiDict.items():
@@ -2115,7 +2127,7 @@ class KymRoiAnalysis:
             #     # no intensity peaks to save
             # else:
             if 1:
-                logger.info(f'saving f/f0 peaks to: {peakPath}')
+                # logger.info(f'saving f/f0 peaks to: {peakPath}')
                 # _savedPeaks = True
                 with open(peakPath, 'w') as f:
                     f.write(_fileHeaderJson)
@@ -2128,7 +2140,7 @@ class KymRoiAnalysis:
                 # no diameter peaks to save
                 pass
             else:
-                logger.info(f'saving diameter to: {diameterPath}')
+                # logger.info(f'saving diameter to: {diameterPath}')
                 # _savedPeaks = True
                 with open(diameterPath, 'w') as f:
                     f.write(_fileHeaderJson_diameter)
@@ -2203,26 +2215,27 @@ class KymRoiAnalysis:
         return True
     
     def loadAnalysis(self):
+        _maxChannels = 3
         _loadedHeaderDict = None
         addRois = True
-        for channel in range(self.numChannels):
+        for channel in range(_maxChannels):
             peakPath, diameterPath, tracePath = self._getSaveFile(channel, createFolder=False)
 
             # load header (metadata) from trace file
             if not os.path.isfile(tracePath):
                 continue
-            else:
-                # trace header has path to tif, if use moves entire folder, this is broken
 
-                with open(tracePath) as f:
-                    headerJson = f.readline()
-                    _loadedHeaderDict = json.loads(headerJson)
-                    # print(f'self.path is: {self.path}')
-                    # print(f"_loadedHeaderDict.path is: {_loadedHeaderDict['path']}")
-                    _loadedHeaderDict['path'] = self.path
-                    # logger.info(f'trace header is:{_loadedHeaderDict}')
-                    # self._kymRoiMetaData.fromJson(headerJson)
-                    self._kymRoiMetaData.fromDict(_loadedHeaderDict)
+            # trace header has path to tif, if use moves entire folder, this is broken
+
+            with open(tracePath) as f:
+                headerJson = f.readline()
+                _loadedHeaderDict = json.loads(headerJson)
+                # print(f'self.path is: {self.path}')
+                # print(f"_loadedHeaderDict.path is: {_loadedHeaderDict['path']}")
+                _loadedHeaderDict['path'] = self.path
+                # logger.info(f'trace header is:{_loadedHeaderDict}')
+                # self._kymRoiMetaData.fromJson(headerJson)
+                self._kymRoiMetaData = KymRoiMetaData.fromDict(_loadedHeaderDict)
 
             loaded_f_f0 = self._loadThisFile(peakPath, channel, PeakDetectionTypes.intensity, addRois=addRois)
             if loaded_f_f0:

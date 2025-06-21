@@ -7,6 +7,8 @@ import pandas as pd
 import shutil
 
 from sanpy.analysisDir import _walk
+# from sanpy.bAnalysis_ import bAnalysis
+from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -96,6 +98,9 @@ class FileInfo:
 conditionOrder = ['Control', 'Ivab', 'Thap']
 # List of all possible conditions
 
+# abb 20250621
+conditionEpochOrder = ['Control 0', 'Control 1', 'Ivab 0', 'Thap 0']
+
 fijiConditions = ['Control', 'Ivabradine', 'Thapsigargin']
 
 regionOrder = ['SSAN', 'ISAN']
@@ -133,6 +138,8 @@ _ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/new-20250613/202
 _ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250618-rhc'
 
 _ROOT_SANPY_REPORT_FOLDER = 'sanpy-reports-pdf'
+
+# _IGOR_THESE_FOLDERS = [_ROOT_ANALYSIS_FOLDER]
 
 def getRootAnalysisFolder() -> str:
     return _ROOT_ANALYSIS_FOLDER
@@ -187,7 +194,7 @@ def getAllTifFilePaths() -> List[str]:
     paths = list(paths)
 
     # only accept tif files not in folder 'roi-img-clips
-    paths = [p for p in paths if 'roi-img-clips' not in p]
+    paths = [p for p in paths if 'roi-img-clips' not in p and 'sanpy-reports-pdf' not in p]
 
     return paths
 
@@ -196,10 +203,8 @@ def getAllSanPyAnalysisCsv() -> List[str]:
     paths = _walk(_ROOT_ANALYSIS_FOLDER, thisExt, 5)
     paths = list(paths)
 
-    # only accept "roiPeaks.csv" files
-    # roiDiameter.csv
-    # roiTraces.csv
-    paths = [p for p in paths if ('roiPeaks.csv' in p) or ('roiDiameter.csv' in p) or ('roiTraces.csv' in p)]
+    # only accept paths that have 'sanpy-kym-roi-analysis' folder
+    paths = [p for p in paths if 'sanpy-kym-roi-analysis' in p]
 
     return paths
 
@@ -213,7 +218,7 @@ def getAllPeakAnalysisCsv() -> List[str]:
     paths = list(paths)
 
     # only accept "roiPeaks.csv" files
-    paths = [p for p in paths if 'roiPeaks.csv' in p]
+    paths = [p for p in paths if 'roiPeaks.csv' in p and 'sanpy-kym-roi-analysis' in p]
 
     return paths
 
@@ -256,7 +261,7 @@ def getCellIdPdfFolder(pdfOutputType: str,
 
     return reportPath
 
-def iterate_unique_cell_rows(df: pd.DataFrame, cellID: str):
+def iterate_unique_cell_rows(df: pd.DataFrame, cellID: str, roiNumber: int = None):
     """Iterator function that returns unique rows from DataFrame for a given cellID.
     
     Args:
@@ -268,13 +273,42 @@ def iterate_unique_cell_rows(df: pd.DataFrame, cellID: str):
     """
     # Filter DataFrame for the given cellID
     cell_df = df[df['Cell ID'] == cellID]
-    
-    # Get unique combinations of (Cell ID, Condition, Epoch)
-    unique_rows = cell_df.drop_duplicates(subset=['Cell ID', 'Condition', 'Epoch'])
-    
+
+    if roiNumber is not None:
+        roiNumber = int(roiNumber)
+        cell_df = cell_df[cell_df['ROI Number'] == roiNumber]
+
     # Yield each unique row
-    for _, row in unique_rows.iterrows():
+    # for _, row in unique_rows.iterrows():
+    for _, row in cell_df.iterrows():
         yield row
+
+def loadAllKymRoiAnalysis(loadImgData=True) -> dict:
+    """Load analysis for each tif and store in a dict.
+    
+    keys are tif path
+    values are KymRoiAnalysis
+    """
+    retDict = {}
+    # from sanpy.kym.simple_scatter.colin_global import getAllTifFilePaths
+    tifPaths = getAllTifFilePaths()
+    logger.info(f'loading all kym roi analysis from {len(tifPaths)} tif files, loadImgData:{loadImgData}')
+    for tifPath in tifPaths:
+        # print(tifPath)
+        ka = _loadKymRoiAnalysis(tifPath, loadImgData=loadImgData)
+        retDict[tifPath] = ka
+    return retDict
+
+def _loadKymRoiAnalysis(tifPath, loadImgData=True):
+    """Load one kymRoiAnalysis..
+    """
+    # ba = bAnalysis(tifPath)
+    # imgData = ba.fileLoader._tif  # list of color channel images
+    # logger.info(f'imgData:{imgData[0].shape} {np.min(imgData[0])} {np.max(imgData[0])} {np.mean(imgData[0])}')
+    ka = KymRoiAnalysis(tifPath,
+                        # imgData=imgData,
+                        loadImgData=loadImgData)
+    return ka
 
 if __name__ == '__main__':
     print('')
@@ -305,6 +339,7 @@ if __name__ == '__main__':
 
         # delete folder with all pdf
         pdfPath = getSanpyReportsPdfPath()
+        logger.warning('=== DELETING ALL SANPY output pdf')
         if os.path.isdir(pdfPath):
             logger.info('  deleting folder pdf folder:')
             logger.info(f'    {pdfPath}')
