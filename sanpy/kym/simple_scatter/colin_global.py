@@ -95,11 +95,11 @@ class FileInfo:
             condition=condition
         )
 
-conditionOrder = ['Control', 'Ivab', 'Thap']
+conditionOrder = ['Control', 'Ivab', 'Thap', 'FCCP']
 # List of all possible conditions
 
 # abb 20250621
-conditionEpochOrder = ['Control 0', 'Control 1', 'Ivab 0', 'Thap 0']
+# conditionEpochOrder = ['Control 0', 'Control 1', 'Ivab 0', 'Thap 0']
 
 fijiConditions = ['Control', 'Ivabradine', 'Thapsigargin']
 
