@@ -141,6 +141,16 @@ _ROOT_SANPY_REPORT_FOLDER = 'sanpy-reports-pdf'
 
 # _IGOR_THESE_FOLDERS = [_ROOT_ANALYSIS_FOLDER]
 
+def getCellCondEpoch(df:pd.DataFrame, cellID:str, condition:str, epoch:int, roi:int=None) -> pd.DataFrame:
+    """Get a dataframe with only the rows for a given cellID, condition, epoch, and roi.
+    """
+    df = df[df['Cell ID'] == cellID]
+    df = df[df['Condition'] == condition]
+    df = df[df['Epoch'] == epoch]
+    if roi is not None:
+        df = df[df['ROI Number'] == roi]
+    return df
+
 def getRootAnalysisFolder() -> str:
     return _ROOT_ANALYSIS_FOLDER
 
