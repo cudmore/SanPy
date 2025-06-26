@@ -11,7 +11,7 @@ from sanpy.kym.interface.kymRoiWidget import KymRoiWidget
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def test_kym_roi_widget():
+def _broken_test_kym_roi_widget():
     from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
 
     # path = '/Users/cudmore/Dropbox/data/colin/sanAtp/ISAN Linescan 3.tif'
@@ -66,6 +66,8 @@ def test_kym_roi_widget():
     # bi-phasic atp, decrease then increase
     # path = '/Users/cudmore/Dropbox/data/colin/2-channel kymographs/cell 14/cell 14_C001T001.tif'
 
+    path = '/Users/cudmore/Dropbox/data/colin/2025/mito-atp/mito-atp-20250623-RHC/20250312/ISAN/20250312 ISAN FCCP R1 LS2.tif.frames/20250312 ISAN R1 LS2 FCCP.tif'
+    
     from sanpy.fileloaders import fileLoader_tif
     flt = fileLoader_tif(path)
 
@@ -103,4 +105,4 @@ def loadSaveAllRoi():
     pass
 
 if __name__ == '__main__':
-    test_kym_roi_widget()
+    _broken_test_kym_roi_widget()

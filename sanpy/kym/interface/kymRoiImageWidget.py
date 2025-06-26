@@ -224,12 +224,14 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         rectRoi.addScaleHandle(
             (0.5, 1), (0.5, 0), name="top center"
         )  # bottom center
-        rectRoi.addScaleHandle(
-            (0, .5), (1, 0.5), name="left center"
-        )  # bottom center
-        rectRoi.addScaleHandle(
-            (1, .5), (0, 0.5), name="right center"
-        )  # bottom center
+
+        # abb 20250624 removed
+        # rectRoi.addScaleHandle(
+        #     (0, .5), (1, 0.5), name="left center"
+        # )  # bottom center
+        # rectRoi.addScaleHandle(
+        #     (1, .5), (0, 0.5), name="right center"
+        # )  # bottom center
         
         rectRoi.setAcceptedMouseButtons(QtCore.Qt.MouseButton.LeftButton)
         rectRoi.sigClicked.connect(self._on_roi_clicked)
@@ -322,20 +324,28 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         pos = pgRoi.pos()
         size = pgRoi.size()
-                
+        # logger.info(f'pg.ROI pos:{pos}')
+        # logger.info(f'pg.ROI size:{size}')
+
         # update the backend
         roiLabel = self.getRoiLabel(pgRoi)
         kymRoi = self._kymRoiAnalysis.getRoi(roiLabel)  # KymRoi
-        # newRect = kymRoi.setRectPosSize(pos, size)
+        
+        # abb 20250624, was commented?
+        # set the updated rect in backend
+        newRect = kymRoi.setRectPosSize(pos, size)
 
         # get the actual constrained roi
         pos, size = kymRoi.getPosSize()
                 
+
         update = False
         finish = False
         pgRoi.setPos(pos, update=update, finish=finish)
         pgRoi.setSize(size, update=update, finish=finish)
         pgRoi.stateChanged(finish=False)  # update handles
+
+        logger.info(f'sanpy roi pos:{pos} size:{size}')
 
         roiLabelStr = self.getRoiLabel(pgRoi)
         logger.info(f'   -->> signalRoiChanged with event:"{roiLabelStr}"')

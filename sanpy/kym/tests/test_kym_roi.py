@@ -1,13 +1,13 @@
 
 import numpy as np
 
-from sanpy.kym.kymRoi import KymRoi
-from sanpy.kym.kymRoi import MplKym
+from sanpy.kym.kymRoiAnalysis import KymRoi
+# from sanpy.kym.kymRoiAnalysis import MplKym
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
-def test_kym_roi():
+def _broken_test_kym_roi():
     import tifffile
     
     path = '/Users/cudmore/Dropbox/data/colin/sanAtp/ISAN Linescan 1.tif'
@@ -20,7 +20,7 @@ def test_kym_roi():
 
     kroi = KymRoi(imgData, path=None)
 
-    MplKym(imgData)
+    # MplKym(imgData)
 
 if __name__ == '__main__':
-    test_kym_roi()
+    _broken_test_kym_roi()

@@ -8,6 +8,10 @@ sanpy_env/*
 sanpy.log
 sanpy/sanpy.log
 
+# Log files
+logs/
+*.log
+
 .AppleDouble
 .DS_Store
 *.pyc

@@ -77,6 +77,8 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         self._updateGuiOnPlotType(self._state['plotType'])
 
     def slot_analysisChanged(self, channel, roi):
+        if not self.isVisible():
+            return
         logger.info(f'channel:{channel} roi:{roi}')
         
         # get 2x df, one for intensity and other for diameter

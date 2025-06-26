@@ -598,9 +598,11 @@ class KymDetectionGroupBox(QtWidgets.QGroupBox):
             from sanpy.kym.kymRoiAnalysis import plotDetectionResults
             # plotDetectionResults(self._kymRoiAnalysis.getRoi(self._selectedRoiLabel),
             #                      self._selectedChannel)
-            plotDetectionResults(self._kymRoiAnalysis,
+            fig, ax = plotDetectionResults(self._kymRoiAnalysis,
                                  self._selectedRoiLabel,
                                  self._selectedChannel)
+            from matplotlib import pyplot as plt
+            plt.show()
 
     def _updateDetectionParamGui(self):
 
@@ -718,27 +720,23 @@ class KymDetectionGroupBox_Intensity(KymDetectionGroupBox):
         aLabel = QtWidgets.QLabel('Plots:')
         hLayoutButtons.addWidget(aLabel)
 
-        # visual control of interface (not part of detection parameters)
-        aCheckBoxName = 'Intensity'
-        aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
-        # aCheckBox.setToolTip(detectionDict.getDescription(aCheckBoxName))
-        # aCheckBox.setChecked(detectionDict[aCheckBoxName])
-        aCheckBox.setChecked(True)
-        aCheckBox.stateChanged.connect(
-            partial(self._on_checkbox_clicked, aCheckBoxName)
-        )
-        hLayoutButtons.addWidget(aCheckBox)
+        # # visual control of interface (not part of detection parameters)
+        # aCheckBoxName = 'Intensity'
+        # aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
+        # aCheckBox.setChecked(True)
+        # aCheckBox.stateChanged.connect(
+        #     partial(self._on_checkbox_clicked, aCheckBoxName)
+        # )
+        # hLayoutButtons.addWidget(aCheckBox)
         
-        # visual control of interface (not part of detection parameters)
-        aCheckBoxName = 'f0'
-        aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
-        # aCheckBox.setToolTip(detectionDict.getDescription(aCheckBoxName))
-        # aCheckBox.setChecked(detectionDict[aCheckBoxName])
-        aCheckBox.setChecked(False)
-        aCheckBox.stateChanged.connect(
-            partial(self._on_checkbox_clicked, aCheckBoxName)
-        )
-        hLayoutButtons.addWidget(aCheckBox)
+        # # visual control of interface (not part of detection parameters)
+        # aCheckBoxName = 'f0'
+        # aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
+        # aCheckBox.setChecked(False)
+        # aCheckBox.stateChanged.connect(
+        #     partial(self._on_checkbox_clicked, aCheckBoxName)
+        # )
+        # hLayoutButtons.addWidget(aCheckBox)
 
         #
         buttonName = 'Plot Quality'
@@ -759,14 +757,16 @@ class KymDetectionGroupBox_Intensity(KymDetectionGroupBox):
         if value > 0:
             value = 1
 
-        if name == 'Intensity':
-            logger.info('TODO: hide show intensity plot (sum)')
-            self.signalSetWidgetVisible.emit(name, value)
-        elif name == 'f0':
-            logger.info('TODO: hide show f0 intensity plot')
-            self.signalSetWidgetVisible.emit(name, value)
-        else:
-            super()._on_checkbox_clicked(name, value)
+        # if name == 'Intensity':
+        #     logger.info('TODO: hide show intensity plot (sum)')
+        #     self.signalSetWidgetVisible.emit(name, value)
+        # elif name == 'f0':
+        #     logger.info('TODO: hide show f0 intensity plot')
+        #     self.signalSetWidgetVisible.emit(name, value)
+        # else:
+        #     super()._on_checkbox_clicked(name, value)
+
+        super()._on_checkbox_clicked(name, value)
 
 class KymDetectionGroupBox_Diameter(KymDetectionGroupBox):
     def __init__(self,

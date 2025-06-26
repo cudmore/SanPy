@@ -248,13 +248,13 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         )
         hLayout.addWidget(aButton)
 
-        buttonName = 'Load'
-        aButton = QtWidgets.QPushButton(buttonName)
-        aButton.setToolTip('Save analysis for all roi(s)')
-        aButton.clicked.connect(
-            self.saveAnalysis
-        )
-        hLayout.addWidget(aButton)
+        # buttonName = 'Load'
+        # aButton = QtWidgets.QPushButton(buttonName)
+        # aButton.setToolTip('Load analysis for all roi(s)')
+        # aButton.clicked.connect(
+        #     self.saveAnalysis
+        # )
+        # hLayout.addWidget(aButton)
 
         # second row
         # hLayout1 = QtWidgets.QHBoxLayout()
@@ -265,6 +265,26 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
         aCheckBox.setToolTip('Toggle detection panel on/off')
         aCheckBox.setChecked(True)  # show by default
+        aCheckBox.stateChanged.connect(
+            partial(self._on_checkbox_clicked, aCheckBoxName)
+        )
+        hLayout.addWidget(aCheckBox)
+
+        # visual control of interface (not part of detection parameters)
+        aCheckBoxName = 'Intensity'
+        aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
+        aCheckBox.setToolTip('Toggle Intensity plot on/off')
+        aCheckBox.setChecked(True)
+        aCheckBox.stateChanged.connect(
+            partial(self._on_checkbox_clicked, aCheckBoxName)
+        )
+        hLayout.addWidget(aCheckBox)
+        
+        # visual control of interface (not part of detection parameters)
+        aCheckBoxName = 'f0'
+        aCheckBox = QtWidgets.QCheckBox(aCheckBoxName)
+        aCheckBox.setToolTip('Toggle f0 plot on/off')
+        aCheckBox.setChecked(False)
         aCheckBox.stateChanged.connect(
             partial(self._on_checkbox_clicked, aCheckBoxName)
         )
@@ -345,8 +365,13 @@ class KymRoiWidget(QtWidgets.QMainWindow):
 
         # elif name == 'Diameter':
         #     self.diameterPlotItem.setVisible(value)
+        if name == 'Intensity':
+            self.sumIntensityPlotItem.setVisible(value)
 
-        if name == 'Clips':
+        elif name == 'f0':
+            self._setf0Widget.setVisible(value)
+
+        elif name == 'Clips':
             self.peakClipsWidget.setVisible(value)
 
         elif name == 'Scatter':
@@ -904,7 +929,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
             logger.info(f'setting santana norm line to lineScanNumber:{lineScanNumber}')
             self._kymRoiAnalysis.setKymDetectionParam('Divide Line Scan', lineScanNumber)
 
-        elif _showAnalysisFolder:
+        elif action == _showAnalysisFolder:
             saveFolder = self._kymRoiAnalysis._getSaveFolder(enclosingFolder=True, createFolder=False)
             logger.info(f'showing analysis folder:\n{saveFolder}')
             # open in finder
