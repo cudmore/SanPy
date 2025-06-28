@@ -1,3 +1,5 @@
+sandbox/
+
 pyinstaller/monterey/tmp_env
 
 build/
