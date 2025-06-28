@@ -2,6 +2,12 @@ from functools import partial
 from typing import Optional
 
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSlider, QCheckBox
+from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QPixmap, QImage
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
@@ -9,7 +15,7 @@ import pyqtgraph as pg
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, KymRoi
 from sanpy.kym.kymRoiDetection import KymRoiDetection
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 class SetScaleDialog(QtWidgets.QDialog):

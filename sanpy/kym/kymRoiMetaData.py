@@ -3,9 +3,17 @@ from typing import List, Optional, Any
 import json
 
 import numpy as np
+import pandas as pd
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
+
+def get_parent_folders(path):
+    folder, _ = os.path.split(path)
+    parent = os.path.basename(folder)
+    grandparent = os.path.basename(os.path.dirname(folder))
+    great_grandparent = os.path.basename(os.path.dirname(os.path.dirname(folder)))
+    return parent, grandparent, great_grandparent
 
 class KymRoiMetaData():
     def __init__(self, path : str,
@@ -13,25 +21,24 @@ class KymRoiMetaData():
         
         folder, filename = os.path.split(path)
 
-        parentFolder1 = os.path.split(folder)[1]
-        _parentFolder1 = os.path.split(folder)[0]
-        parentFolder2 = os.path.split(_parentFolder1)[1]
+        
+        parentFolder1, parentFolder2, parentFolder3 = get_parent_folders(path)
 
         self._dict = {
             # user can edit these, see allowTextEdit()
             'Animal ID' : '',
             'Region' : '',
             'Cell Type' : '',
-            'Condition 1' : '',
-            'Note 1' : '',
-            'Note 2' : '',
-            'Note 3' : '',
+            'Cell ID' : '',
+            'Condition' : '',
+            'Note' : '',
             
             # not editable
             'path' : path,
             'File Name' : filename,
             'Parent Folder 1' : parentFolder1,
             'Parent Folder 2' : parentFolder2,
+            'Parent Folder 3' : parentFolder3,
             'Acq Date': '',
             'Acq Time': '',
             'secondsPerLine' : None,
@@ -41,7 +48,13 @@ class KymRoiMetaData():
             'imageWidth' : 0 if imgData is None else imgData[0].shape[1],  # number of line scans
         }
     
-        self._allowEdit = ['Animal ID', 'Region', 'Cell Type', 'Condition 1', 'Condition 2']
+        self._allowEdit = ['Animal ID',
+                           'Region',
+                           'Cell Type',
+                           'Cell ID',
+                           'Condition',
+                           'Note',
+                           ]
         """Keys that are editable in qt dialog.
         """
 
@@ -50,6 +63,10 @@ class KymRoiMetaData():
         """
 
     def setParam(self, key, value) -> bool:
+        if key not in self._dict.keys():
+            # logger.error(f'did not set "{key}", available keys are {self._dict.keys()}')
+            return False
+        
         try:
             self._dict[key] = value
             return True
@@ -79,6 +96,7 @@ class KymRoiMetaData():
         return _ret
     
     def fromJson(self,jsonStr):
+        logger.info('')
         _dict = json.loads(jsonStr)
         for k,v in _dict.items():
             self.setParam(k, v)
@@ -97,6 +115,7 @@ class KymRoiMetaData():
         KymRoiMetaData
             New instance with values from the dictionary
         """
+        logger.info('')
         # Extract required parameters for __init__
         path = _dict.get('path', '')
         

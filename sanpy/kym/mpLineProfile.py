@@ -5,8 +5,12 @@ from multiprocessing import Pool
 
 import numpy as np
 from skimage.measure import profile  # for profile_line()
+import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from typing import List, Tuple, Optional, Union
+import pandas as pd
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 def roiLineProfileWorker(imgData, tmp):
@@ -132,7 +136,6 @@ def testPool():
     lineWidth = 3
     _outImg = roiLineProfilePool(roiImg, lineWidth=lineWidth)
 
-    import matplotlib.pyplot as plt
     plt.imshow(_outImg)
     plt.show()
 

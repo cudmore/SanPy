@@ -64,7 +64,14 @@ conda install -y numpy \
 conda install -y -c conda-forge mplcursors
 
 pip install pyabf
+
+# 20250627, abb building sanpykym, we might need, pyqtdarktheme-fork
 pip install pyqtdarktheme
+pip install qtawesome
+pip install roifile
+pip install statannotations
+# pip install tifffile
+# pip install tables
 
 # install sanpy with no packages
 pip install -e '../../.'
@@ -76,4 +83,5 @@ pip install pyinstaller
 # build the app with pyinstaller
 python macos_build.py
 
-python notarizeSanpy.py dist_arm
+# abb 202506 turn back on to notarize, getting password error
+# python notarizeSanpy.py dist_arm

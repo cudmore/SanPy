@@ -3,7 +3,7 @@ from functools import partial
 from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 class sanpyCursors(QtCore.QObject):

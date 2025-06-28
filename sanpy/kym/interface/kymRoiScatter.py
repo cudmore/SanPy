@@ -15,7 +15,7 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, PeakDetectionTypes
 from sanpy.kym.kymRoiResults import KymRoiResults
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 class simpleTableWidget(QtWidgets.QTableWidget):
@@ -174,6 +174,8 @@ class SimpleRoiScatter(QtWidgets.QWidget):
     def copyTableToClipboard(self):
         _tabIndex = self._tabwidget.currentIndex()
         if _tabIndex == 0:
+            if self._df is None:
+                return ''
             logger.info('=== copy raw to clipboard ===')
             print(self._df)
             self._df.to_clipboard(sep="\t", index=False)

@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
 #TODO: use this to plot one of seaborn plots
 
-class MainWindow(QMainWindow):
+class KymRoiMainWindow(QMainWindow):
     def __init__(self, figure, ax):
         super().__init__()
         self.setWindowTitle("Matplotlib in PyQt")

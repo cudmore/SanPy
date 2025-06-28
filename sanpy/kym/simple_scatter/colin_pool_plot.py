@@ -19,18 +19,21 @@ import seaborn as sns
 
 import tifffile
 
-from colin_global import (loadMasterDfFile,
+from sanpy.kym.kymRoiAnalysis import plotDetectionResults
+
+from sanpy.kym.simple_scatter.colin_global import (loadMasterDfFile,
                           loadMeanDfFile,
                           getCellIdPdfFolder,
                           iterate_unique_cell_rows,
                           _loadKymRoiAnalysis,
+                          # conditionOrder,
+                          FileInfo,
                           )
 
 from sanpy.kym.kymRoiAnalysis import KymRoi, KymRoiAnalysis, PeakDetectionTypes
 from sanpy.kym.kymUtils import getAutoContrast
 
-
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 roiColorList = ['r', 'g', 'b', 'c', 'm', 'y']
@@ -63,23 +66,24 @@ def _old_getDfTraces(tifFile, cellID, condition) -> pd.DataFrame:
 
     return dfTraces
 
-def plotOneKym(dfMaster, dfMean,
-               cellID,
-               condition,
-               epoch,
-               ):
+# def plotOneKym(dfMaster, dfMean,
+#                cellID,
+#                condition,
+#                epoch,
+#                ):
+def plotOneKym(tifPath:str) -> tuple[plt.Figure, plt.Axes]:
     """Plot all ROI in one kym image.
     
     This includes the kym image and one f/f0 plot per ROI.
     """
-    dfMeanPlot = dfMean[dfMean['Cell ID'] == cellID]
-    dfMeanPlot = dfMeanPlot[dfMeanPlot['Condition'] == condition]
-    dfMeanPlot = dfMeanPlot[dfMeanPlot['Epoch'] == epoch]
+    # dfMeanPlot = dfMean[dfMean['Cell ID'] == cellID]
+    # dfMeanPlot = dfMeanPlot[dfMeanPlot['Condition'] == condition]
+    # dfMeanPlot = dfMeanPlot[dfMeanPlot['Epoch'] == epoch]
 
-    tifFile = dfMeanPlot.iloc[0]['Path']
+    # tifFile = dfMeanPlot.iloc[0]['Path']
 
     # load kymRoiAnalysis
-    kymRoiAnalysis = _loadKymRoiAnalysis(tifFile)
+    kymRoiAnalysis = _loadKymRoiAnalysis(tifPath)
 
     numRois = kymRoiAnalysis.numRoi
 
@@ -88,7 +92,9 @@ def plotOneKym(dfMaster, dfMean,
                             figsize=(8, 6),
                            sharex=True,
                             )
-    fig.suptitle(f'"{cellID}" condition:"{condition}" epoch:{epoch}', fontsize=11)
+    fileInfo = FileInfo.from_path(tif_path=tifPath)
+    
+    fig.suptitle(f'"{fileInfo.cellID}" condition:"{fileInfo.condition}" epoch:{fileInfo.epoch}', fontsize=11)
 
     # despine top and right
     for oneAx in ax:
@@ -103,9 +109,15 @@ def plotOneKym(dfMaster, dfMean,
 
     roiLabels = kymRoiAnalysis.getRoiLabels()
     for roiIdx, roiLabelStr in enumerate(roiLabels):
-        
+        logger.info(f'-->> plotting roiIdx:{roiIdx} roiLabelStr:{roiLabelStr}')
         plotRow = roiIdx + 1
-        _color = roiColorList[roiIdx]
+        try:
+            _color = roiColorList[roiIdx]
+        except IndexError:
+            tifPath = kymRoiAnalysis.path
+            tifName = os.path.basename(tifPath)
+            logger.error(f'tifName:{tifName} roiIdx:{roiIdx} out of range for roiColorList:{roiColorList}')
+            _color = 'k'
 
         kymRoi = kymRoiAnalysis.getRoi(roiLabelStr)
         kymRoiDetection = kymRoi.getDetectionParams(channel=0,
@@ -125,17 +137,22 @@ def plotOneKym(dfMaster, dfMean,
         ax[plotRow].plot(timeTrace, f_f0Trace,
                         'g',
                         linewidth=linewidth,
-                        label=f'{cellID} {condition}')
+                        label=f'{fileInfo.cellID} {fileInfo.condition}')
 
         # in kymRoi, labels are str, in df they are int
         roiLabelInt = int(roiLabelStr)
         
-        theseRows = (dfMaster['Cell ID']==cellID) \
-                & (dfMaster['ROI Number']==roiLabelInt) \
-                & (dfMaster['Condition']==condition) \
-                & (dfMaster['Epoch']==epoch)
-        dfPeaks = dfMaster.loc[theseRows]
+        # theseRows = (dfMaster['Cell ID']==cellID) \
+        #         & (dfMaster['ROI Number']==roiLabelInt) \
+        #         & (dfMaster['Condition']==condition) \
+        #         & (dfMaster['Epoch']==epoch)
+        # dfPeaks = dfMaster.loc[theseRows]
 
+        kymRoiResults = kymRoiAnalysis.getDataFrame(channel=0,
+                                               peakDetectionType=PeakDetectionTypes.intensity,
+                                               roiLabel=roiLabelInt)
+        dfPeaks = kymRoiResults.df
+        
         # onset
         xPlot = dfPeaks['Onset (s)']
         yPlot = dfPeaks['Onset Int']
@@ -156,32 +173,48 @@ def plotOneKym(dfMaster, dfMean,
 
     return fig, ax
 
-def plotStatSwarm(dfMaster, yStat, cellID, roiLabel, ax):
+def plotStatSwarm(dfMaster, yStat, cellID, epoch, roiLabel, ax):
     """plot a swarmplot for one kym, one roi
     
     x-axis is cond, y-axis is stat
     """
     theseRows = (dfMaster['Cell ID']==cellID) \
+            & (dfMaster['Epoch']==epoch) \
             & (dfMaster['ROI Number']==roiLabel)
     dfSwarm = dfMaster.loc[theseRows]
     
-    from colin_global import conditionOrder
+    # Create new column with condition and epoch on separate lines
+    # dfSwarm['Condition Epoch'] = dfSwarm['Condition Epoch'].str.replace(' ', '\n')
+    dfSwarm.loc[:, 'Condition Epoch'] = dfSwarm['Condition Epoch'].str.replace(' ', '\n')
+    # dfSwarm['Condition Epoch'] = dfSwarm['Condition Epoch Multiline'].astype('category')
+
+    if yStat not in dfSwarm.columns:
+        logger.warning(f'yStat:"{yStat}" not in dfSwarm.columns')
+        logger.warning(f'dfSwarm.columns:{dfSwarm.columns}')
+        return
+    
+    hue = 'Condition Epoch'
+
+    # abb 20250623 mito atp, need to limit this so we do not plot non-existent conditions...
+    hue_order = ['Control\n0', 'Control\n1', 'Ivab\n0', 'Thap\n0', 'FCCP\n0']
+
     plotDict = {
         'data': dfSwarm,  # df for one cell id
-        'x': 'Condition',
+        'x': 'Condition Epoch',
         'y': yStat,
-        'hue': 'Condition',
-        'order': conditionOrder
+        # using new 'Condition Epoch' column
+        'hue': hue,
+        'order': hue_order
     }
     sns.swarmplot(ax=ax, **plotDict)
 
     # overlay mean bar
     markersize = 30
     sns.pointplot(data=dfSwarm,
-                    x='Condition',
+                    x='Condition Epoch',
                     y=yStat,
-                hue='Condition',
-                order=conditionOrder,
+                hue=hue,
+                # order=conditionOrder,
                 errorbar=None,  # can be 'se', 'sem', etc
                 # capsize=capsize,
                 linestyle='none',  # do not connect (with line) between categorical x
@@ -193,6 +226,7 @@ def plotStatSwarm(dfMaster, yStat, cellID, roiLabel, ax):
                 # dodge=0.5,  # separate the points by hue
                 # dodge=None if len(uniqueHue)==1 else 0.5,  # separate the points by hue
                 # dodge=True,  # 0.5 or true
+                order = hue_order,
                 ax=ax,
                 )
 
@@ -205,7 +239,13 @@ def plotRoiRects(ax:Axes,
 
     roiLabels = kymRoiAnalysis.getRoiLabels()
     for roiIdx, kymRoiLabel in enumerate(roiLabels):
-        roiColor = roiColorList[roiIdx]
+        try:
+            roiColor = roiColorList[roiIdx]
+        except IndexError:
+            tifPath = kymRoiAnalysis.path
+            tifName = os.path.basename(tifPath)
+            logger.error(f'tifName:{tifName} roiIdx:{roiIdx} out of range for roiColorList:{roiColorList}')
+            roiColor = 'k'
 
         kymRoi = kymRoiAnalysis.getRoi(kymRoiLabel)
         roiRect = kymRoi.getRect()
@@ -337,7 +377,7 @@ def plotTif(path:str,
             roiLabelStr:str = None,
             secondsPerLine:float = None,
             umPerPixel:float = None,  # debug
-            ):
+            ) -> np.ndarray:
     """Plot clipped roi for one ROI and its tif
     """
     from sanpy.bAnalysis_ import bAnalysis
@@ -348,8 +388,10 @@ def plotTif(path:str,
     if f0 is not None:
         if detectThisTrace == 'f/f0':
             imgData = imgData / f0
+            imgData = imgData.astype(np.int16)
         elif detectThisTrace == 'df/f0':
             imgData = (imgData - f0) / f0
+            imgData = imgData.astype(np.int16)
         else:
             logger.error(f'detectThisTrace:{detectThisTrace} not supported')
             return
@@ -380,12 +422,8 @@ def plotTif(path:str,
     else:
         extent=[left, right, 0, height] # [left, right, top, bottom]
 
-    # imgData stats
-    imgMin = imgData.min()
-    imgMax = imgData.max()
 
-    imgMin = np.percentile(imgData, 2)
-    imgMax = np.percentile(imgData, 98)
+    imgMin, imgMax = getAutoContrast(imgData)  # new 20240925, should mimic ImageJ
 
     # plot the roi kym, normalizaition is critical
     ax.imshow(imgData,
@@ -410,6 +448,7 @@ def plotTif(path:str,
     sns.despine(bottom=True, left=True, ax=ax)
 
     # ax.set_aspect('auto')
+    return imgData
 
 def plotTif2(path:str,
              ax:Axes,
@@ -457,49 +496,49 @@ def plotRois():
             dateStr = row['Date']
             dateStr = str(dateStr)  # dateStr is coming in as np.int64 (makes sense)
             regionStr = row['Region']
-            
+            tifPath = row['Path']
+
+            _tifFile = os.path.split(tifPath)[1]
+            _tifFile, _ = os.path.splitext(_tifFile)
+
             # logger.info(f'cellID:"{cellID}" condition:"{condition}" epoch:"{epoch}" Date:"{row["Date"]}"')
 
             # plot all roi for one kym
-            fig, ax = plotOneKym(dfMaster, dfMean,
-                                 cellID=cellID,
-                                 condition=condition,
-                                 epoch=epoch,
-                                 )
+            fig, ax = plotOneKym(tifPath)
 
             # save the figure
             pdfPath = getCellIdPdfFolder(pdfOutputType='Per Cell ROI Plots',
                                         cellId=cellID,
                                         dateStr=dateStr,
                                         regionStr=regionStr)
-            pdfFilePath = os.path.join(pdfPath, f'{cellID} ROIs.pdf')
+            # pdfFilePath = os.path.join(pdfPath, f'{cellID} ROIs.pdf')
+            pdfFilePath = os.path.join(pdfPath, f'{_tifFile} ROIs.pdf')
             logger.info(f'saving pdfFilePath:{pdfFilePath}')
             
-            plt.savefig(pdfFilePath, format="pdf")
+            plt.savefig(pdfFilePath, format="pdf", dpi=300)
             plt.close()
 
-def _exportClips(cellID, roiLabelStr):
-    """Export clips and traces.
+def _exportClips(cellID):
+    """Export image clips and traces.
 
     Traverse all conditions for one cell id and roi label
     """
 
+    logger.info('')
+    
     channel = 0
 
     dfMean = loadMeanDfFile()
-    dfMaster = loadMasterDfFile()
-
-    # _traces = ColinTraces(dfMaster, dfMean)
     
     theseRows = (dfMean['Cell ID']==cellID) \
-            & (dfMean['ROI Number']==roiLabelStr)
+            & (dfMean['Condition']==condition) \
+            & (dfMean['Epoch']==epoch)
     dfMeanOne = dfMean.loc[theseRows]
 
     regionStr = dfMeanOne.iloc[0]['Region']
     dateStr = dfMeanOne.iloc[0]['Date']
     dateStr = str(dateStr)  # dateStr is coming in as np.int64 (makes sense)
-
-    conditions = dfMeanOne['Condition'].unique()
+    tifPath = dfMeanOne.iloc[0]['Path']
     
     pdfPath = getCellIdPdfFolder(pdfOutputType='Per Cell Cond Plots',
                                  cellId=cellID,
@@ -512,13 +551,9 @@ def _exportClips(cellID, roiLabelStr):
 
     # we will save one csv with columns across each condition
     dfSaveTraces = pd.DataFrame()
-    for condition in conditions:
-        tifPath = dfMeanOne.loc[dfMeanOne['Condition']==condition, 'Path'].iloc[0]
-        # _path, _tifFile = os.path.split(tifPath)
-
         # load the kymRoiAnalysis
-        ka = _loadKymRoiAnalysis(tifPath)
-
+    ka = _loadKymRoiAnalysis(tifPath)
+    for roiLabelStr in dfMeanOne['ROI Number'].unique():
         kymRoi = ka.getRoi(roiLabelStr)
         roiImgClipsDict = kymRoi.getRoiImgClips(channel)
         # logger.info(f'roiImgClipsDict:{roiImgClipsDict.keys()}')
@@ -530,7 +565,7 @@ def _exportClips(cellID, roiLabelStr):
         os.makedirs(clipFolderPath, exist_ok=True)
 
         # theseClips = ['raw', 'f_f0', 'df_f0']
-        theseClips = ['f_f0']
+        theseClips = ['raw', 'f_f0', 'df_f0']
         for thisClip in theseClips:
             # logger.info(f'thisClip:{thisClip}')
             # logger.info(f'clip:{clip.shape}')
@@ -546,7 +581,7 @@ def _exportClips(cellID, roiLabelStr):
         # just use kymroianalysis api
         
         logger.error('TODO: use kymroianalysis api')
-        sys.exit(1)
+        return
         
         # save one df with f/f_0 for each condition
         # logger.info(f'dfAnalysisResults:{dfAnalysisResults.columns}')
@@ -567,27 +602,21 @@ def _exportClips(cellID, roiLabelStr):
     # logger.info(f'  saving dfTraceFile:{dfTraceFile}')
     dfSaveTraces.to_csv(os.path.join(clipFolderPath, dfTraceFile), index=False)
 
-def new_plotCellID(dfMaster, dfMean, cellID, roiLabelStr:int) -> tuple[plt.Figure, plt.Axes]:
+def new_plotCellID(dfMaster,
+                   dfMean,
+                   cellID,
+                   roiLabelStr:int) -> tuple[plt.Figure, plt.Axes, dict]:
     roiLabelInt = int(roiLabelStr)
-
     channel = 0
 
-    # iterate through one at a time (not what we want)
-    # for row in iterate_unique_cell_rows(dfMean, cellID, roiNumber=roiLabelInt):
-    #     cellID = row['Cell ID']
-    #     cond = row['Condition']
-    #     epoch = row['Epoch']
-    #     tifFile = row['Tif File']
-    #     logger.info(f'cellID:"{cellID}" cond:"{cond}" epoch:"{epoch}" tifFile:"{tifFile}"')
-    # sys.exit()
-
-    theseRows = (dfMean['Cell ID']==cellID) \
-            & (dfMean['ROI Number']==roiLabelInt)
-    
     # get rows across all Epoch, each row becomes a column
+    theseRows = (dfMean['Cell ID']==cellID) \
+            & (dfMean['ROI Number']==roiLabelInt)    
     dfPlot = dfMean.loc[theseRows]
     # plot each (cond, epoch) as a column
     numCols = len(dfPlot)
+    if numCols < 3:
+        numCols = 3
 
     linewidth = 1
     markersize = 4  # for overlay of (onset, peak, decay)
@@ -611,6 +640,7 @@ def new_plotCellID(dfMaster, dfMean, cellID, roiLabelStr:int) -> tuple[plt.Figur
     peakRow = 1
     plotRow = 2
 
+    # link x/y axis
     for colIdx in range(numCols):
         if colIdx > 0:
             # all columns in imgRow share y axis
@@ -622,9 +652,12 @@ def new_plotCellID(dfMaster, dfMean, cellID, roiLabelStr:int) -> tuple[plt.Figur
         ax[peakRow][colIdx].sharex(ax[imgRow][colIdx])
 
     # iterate through rows in dfPlot (one column per row)
-    logger.info('dfPlot is:')
-    print(dfPlot)
+    # logger.info('dfPlot is:')
+    # print(dfPlot)
     
+    # return a dict with imgData and x/y traces
+    imgDataDict = {}
+
     for rowIdx, (rowLabel, row) in enumerate(dfPlot.iterrows()):
         colIdx = rowIdx  # each row in df corresponds to a column
         cond = row['Condition']
@@ -649,7 +682,7 @@ def new_plotCellID(dfMaster, dfMean, cellID, roiLabelStr:int) -> tuple[plt.Figur
 
         logger.info(f'  cond:{cond} epoch:{epoch} roiRect:{roiRect} f0:{f0_value_percentile}')
 
-        plotTif(tifPath,
+        imgData = plotTif(tifPath,
                 ax=axImg,
                 f0=f0_value_percentile,
                 detectThisTrace=detectThisTrace,
@@ -669,6 +702,20 @@ def new_plotCellID(dfMaster, dfMean, cellID, roiLabelStr:int) -> tuple[plt.Figur
         # plot sum intensity like f/f_0
         xPlot = kymRoi.getTrace(channel, 'Time (s)')
         yPlot = kymRoi.getTrace(channel, detectThisTrace)
+
+        # collect into return dict
+        # info for one (Cell id, cond, epoch, roi label)
+        f_f0 = kymRoi.getTrace(channel, 'f/f0')
+        df_f0 = kymRoi.getTrace(channel, 'df/f0')
+        raw = kymRoi.getTrace(channel, 'intRaw')
+        imgDataDict[tifPath] = {
+            'roiLabelStr': roiLabelStr,
+            'imgDataClip': imgData,
+            'Time (s)': xPlot,
+            'intRaw': raw,
+            'f_f0': f_f0,
+            'df_f0': df_f0,
+        }
 
         ax[peakRow][colIdx].plot(xPlot, yPlot,
                                  color='g',
@@ -698,15 +745,77 @@ def new_plotCellID(dfMaster, dfMean, cellID, roiLabelStr:int) -> tuple[plt.Figur
         xPlot = dfMasterOne['Decay (s)']    
         yPlot = dfMasterOne['Decay Int']
         ax[peakRow][colIdx].plot(xPlot, yPlot, 'mo', markersize=markersize)
+
+        # plot ystat across conditions
+        plotStatSwarm(dfMean, 'Number of Spikes', cellID, epoch, roiLabelStr, ax[plotRow][0])
+
+        # make 2x swarm plot (height, mass)
+        plotStatSwarm(dfMaster, 'Peak Height', cellID, epoch, roiLabelStr, ax[plotRow][1])
+        plotStatSwarm(dfMaster, 'Area Under Peak', cellID, epoch, roiLabelStr, ax[plotRow][2])
+
+        if numCols > 3:
+            # fig.delaxes(ax[plotRow][3])
+            ax[plotRow][3].set_visible(False)
+
+        fig.tight_layout()
+
+    return fig, ax, imgDataDict
+
+
+def _plotQuality():
+    """Plot quality of detection for one cell id, roi.
+    """
+    _debug = False
+
+    channel = 0
+
+    dfMean = loadMeanDfFile()
+
+    cellIDs = dfMean['Cell ID'].unique()
+
+    if _debug:
+        cellIDs = ['20250602 ISAN R1 LS3']
+
+    for cellID in cellIDs:
+        dfCellID = dfMean[dfMean['Cell ID'] == cellID]
         
-    return fig, ax
+        regionStr = dfCellID.iloc[0]['Region']
+        dateStr = dfCellID.iloc[0]['Date']
+        dateStr = str(dateStr)  # dateStr is coming in as np.int64 (makes sense)
+        tifPath = dfCellID.iloc[0]['Path']
+
+        roiLabels = dfCellID['ROI Number'].unique()
+        logger.info(f'cellID:{cellID} roiLabels:{roiLabels}')
+
+        kymRoiAnalysis = _loadKymRoiAnalysis(tifPath)
+
+        # one plot per tif file roi
+        for roiLabelStr in roiLabels:
+            fig, ax = plotDetectionResults(kymRoiAnalysis, roiLabelStr, channel)
+
+            pdfPath = getCellIdPdfFolder(pdfOutputType='ROI Quality Plots',
+                                         cellId=cellID,
+                                         dateStr=dateStr,
+                                         regionStr=regionStr)
+            _tifPath, _tifFile = os.path.split(tifPath)
+            _tifFile, _ = os.path.splitext(_tifFile)
+            pdfFilePath = os.path.join(pdfPath, f'{_tifFile} ROI {roiLabelStr}.pdf')
+            # print(f'saving pdfPath:{pdfPath}')
+            if _debug:
+                pass
+            else:
+                plt.savefig(pdfFilePath, format="pdf")
+                plt.close()
+        
+        if _debug:
+            plt.show()
 
 def plotCellID():
     """ Plot one pdf for each (cell id, roi), plot a column for each condition.
 
     Now with 'Epoch', we have one column for each (Condition, Epoch).
     """
-    _debug = True
+    _debug = False
 
     dfMaster = loadMasterDfFile()
     dfMean = loadMeanDfFile()
@@ -736,7 +845,8 @@ def plotCellID():
 
         for roiLabelStr in roiLabels:
             # plot one cell id across all (conditions, epochs)
-            fig, ax = new_plotCellID(dfMaster, dfMean, cellID, roiLabelStr=roiLabelStr)
+            fig, ax, imgDataDict = \
+                new_plotCellID(dfMaster, dfMean, cellID, roiLabelStr=roiLabelStr)
             # fig, ax = plotCellID(dfMaster=dfMaster, dfMean=dfMean, cellID=cellID, roiLabelStr=roiLabelStr)
             if fig is None:
                 logger.warning('did not plot?')
@@ -755,12 +865,41 @@ def plotCellID():
                 plt.savefig(pdfFilePath, format="pdf")
                 plt.close()
 
+            """
+            imgDataDict[tifPath] = {
+            'roiLabelStr': roiLabelStr,
+            'imgDataClip': imgData,
+            'Time (s)': xPlot,
+            'intRaw': raw,
+            'f_f0': f_f0,
+            'df_f0': df_f0,
+                }
+            """
             # make a new folder and save: tif clips and plotted detectThisTrace
-            # clipsPath = os.path.join(pdfPath, 'clips')
-            # os.makedirs(clipsPath, exist_ok=True)
-            # tifPath = _traces.getTifPath(cellID, cond, roiLabelStr)
-            # roiImgClipsDict = kymRoi.getRoiImgClips(channel)
-            _exportClips(cellID, roiLabelStr)
+            cellIdPath = os.path.join(pdfPath, cellID)
+            os.makedirs(cellIdPath, exist_ok=True)
+            _roiDir = os.path.join(cellIdPath, f'ROI {roiLabelStr}')
+            os.makedirs(_roiDir, exist_ok=True)
+            for _tif, _dict in imgDataDict.items():
+                # fileInfo = FileInfo.from_path(_tif)
+                imgDataClip = _dict['imgDataClip']
+
+                _tifBase = os.path.split(_tif)[1]
+                _tifBase, _ = os.path.splitext(_tifBase)
+                _tifBase += f' ROI {roiLabelStr}'
+                # make df from (raw, f_f0, df_f0)
+                _df = pd.DataFrame()
+                _df['Time (s)'] = _dict['Time (s)']
+                _df['raw'] = _dict['intRaw']
+                _df['f_f0'] = _dict['f_f0']
+                _df['df_f0'] = _dict['df_f0']
+                _tifBase = os.path.join(_roiDir, _tifBase)
+                print(f'_tifBase:{_tifBase}')
+                _df.to_csv(_tifBase + '.csv', index=False)
+                tifffile.imwrite(_tifBase + '.tif', imgDataClip)
+            
+        #
+        # _exportClips(cellID)
 
         numCellID += 1
 
@@ -771,11 +910,24 @@ def plotCellID():
             plt.show()
 
 if __name__ == '__main__':
-    # works
-    if 1:
-        # one pdf and folder of clips, traces
-        plotCellID()
+    import argparse
     
-    if 0:
+    parser = argparse.ArgumentParser(description='SanPy kymograph plotting tools')
+    parser.add_argument('command', 
+                       choices=['plotcellid', 'plotrois', 'plotquality'],
+                       help='Which plotting function to run')
+    
+    args = parser.parse_args()
+    
+    if args.command == 'plotcellid':
+        # one pdf for a cell id across conditions and folder of clips, traces
+        plotCellID()
+    elif args.command == 'plotrois':
         # plot all rois f/f0 for one (cell id, condition)
         plotRois()
+    elif args.command == 'plotquality':
+        # plot quality of detection for one cell id, roi
+        _plotQuality()
+    else:
+        print(f"Unknown command: {args.command}")
+        print("Available commands: plotcellid, plotrois, plotquality")

@@ -11,7 +11,7 @@ from sanpy.interface.util import sanpyCursors
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, PeakDetectionTypes
 from sanpy.kym.kymRoiResults import KymRoiResults
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 class KymPlotWidget(QtWidgets.QWidget):

@@ -5,12 +5,17 @@ from dataclasses import dataclass
 
 import pandas as pd
 import shutil
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from typing import List, Dict, Any, Optional, NamedTuple
+from datetime import datetime
+import warnings
 
 from sanpy.analysisDir import _walk
 # from sanpy.bAnalysis_ import bAnalysis
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
-
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 @dataclass
@@ -95,13 +100,15 @@ class FileInfo:
             condition=condition
         )
 
+
 conditionOrder = ['Control', 'Ivab', 'Thap', 'FCCP']
 # List of all possible conditions
 
 # abb 20250621
 # conditionEpochOrder = ['Control 0', 'Control 1', 'Ivab 0', 'Thap 0']
 
-fijiConditions = ['Control', 'Ivabradine', 'Thapsigargin']
+# fijiConditions = ['Control', 'Ivabradine', 'Thapsigargin']
+fijiConditions = ['Control', 'Ivabradine', 'Thapsigargin', 'FCCP']
 
 regionOrder = ['SSAN', 'ISAN']
 
@@ -128,14 +135,16 @@ TODO:
 # _ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/sanpy-20250610-f_f0'
 
 # adding mode 1/2 to each roi
-_ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/sanpy-20250612-f_f0'
+# _ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/sanpy-20250612-f_f0'
 
 # analyzing divided
 # _ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250510-rhc/sanpy-20250608-div'
 # working on import of new data, this wil be merged into main fiolder
-_ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/new-20250613/20250602'
+# _ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/new-20250613/20250602'
 
 _ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250618-rhc'
+
+_ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/mito-atp/mito-atp-20250623-RHC'
 
 _ROOT_SANPY_REPORT_FOLDER = 'sanpy-reports-pdf'
 
@@ -277,9 +286,10 @@ def iterate_unique_cell_rows(df: pd.DataFrame, cellID: str, roiNumber: int = Non
     Args:
         df: DataFrame with columns 'Cell ID', 'Condition', 'Epoch'
         cellID: The cell ID to filter by
+        roiNumber: Optional ROI number to filter by
         
     Yields:
-        pd.Series: Each unique row for the given cellID
+        pd.Series: Each unique row for the given cellID (unique by Condition and Epoch)
     """
     # Filter DataFrame for the given cellID
     cell_df = df[df['Cell ID'] == cellID]
@@ -288,9 +298,12 @@ def iterate_unique_cell_rows(df: pd.DataFrame, cellID: str, roiNumber: int = Non
         roiNumber = int(roiNumber)
         cell_df = cell_df[cell_df['ROI Number'] == roiNumber]
 
+    # Get unique combinations of Condition and Epoch
+    # Use drop_duplicates to remove duplicate rows based on these columns
+    unique_rows = cell_df.drop_duplicates(subset=['Condition', 'Epoch'])
+
     # Yield each unique row
-    # for _, row in unique_rows.iterrows():
-    for _, row in cell_df.iterrows():
+    for _, row in unique_rows.iterrows():
         yield row
 
 def loadAllKymRoiAnalysis(loadImgData=True) -> dict:

@@ -1,6 +1,12 @@
 from typing import Optional
 
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSlider, QCheckBox, QSpinBox
+from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QFont
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
@@ -10,7 +16,7 @@ from sanpy.interface.util import sanpyCursors
 from sanpy.kym.kymRoiDetection import KymRoiDetection
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, PeakDetectionTypes
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 class SetF0Widget(QtWidgets.QWidget):

@@ -6,7 +6,7 @@ from PyQt5 import QtCore, QtWidgets
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, PeakDetectionTypes
 from sanpy.kym.kymRoiDetection import KymRoiDetection
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 class KymDetectionGroupBox(QtWidgets.QGroupBox):

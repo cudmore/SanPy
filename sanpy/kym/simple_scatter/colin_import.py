@@ -1,10 +1,12 @@
 import os
 import pathlib
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 from colin_global import _walk
-from colin_global import _ROOT_SANPY_REPORT_FOLDER
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 def rename_files2():
@@ -21,17 +23,22 @@ def rename_files(thisExt:str):
     # dataPath = os.path.join(basePath, 'new-20250613')
     
     # this is colins main atp folder -->> working
-    dataPath = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250618-rhc'
+    # dataPath = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250618-rhc'
 
-    # run this twice, once for .tif and then for .txt
-    # thisExt = '.tif'
-    # thisExt = '.txt'
+    logger.info(f'thisExt:"{thisExt}"')
 
-    paths = _walk(dataPath, thisExt, 5)
+    from colin_global import getRootAnalysisFolder
+    rootPath = getRootAnalysisFolder()
+    print(f'rootPath:{rootPath}')
+
+    paths = _walk(rootPath, thisExt, 5)
     paths = list(paths)
     
+    logger.info(f'original list len is:{len(paths)}')
     # remove 'Region Name' folder
+    from colin_global import _ROOT_SANPY_REPORT_FOLDER
     paths = [p for p in paths if 'Region Images' not in p and _ROOT_SANPY_REPORT_FOLDER not in p]
+
     
     for _idx, path in enumerate(paths):
         
@@ -43,7 +50,7 @@ def rename_files(thisExt:str):
         # print(shortPath)
         
         # first element is date
-        _tmpPath = path.replace(dataPath, '')
+        _tmpPath = path.replace(rootPath, '')
         p = pathlib.Path(_tmpPath)
         dateStr = p.parts[1]  # short path starts with '/'
         logger.info(f'  dateStr:"{dateStr}"')
@@ -56,18 +63,23 @@ def rename_files(thisExt:str):
             newname = f'{dateStr} {orig_filename}'
         else:
             newname = orig_filename
-        
 
         # expCond = 1
         if 'Thapsigargin' in newname:
             newname = newname.replace('Thapsigargin', '')
             newname = newname.replace('Ivabradine', '')  # remove
             newname += ' Thap'
-            # expCond = 3
         elif 'Ivabradine' in newname:
             newname = newname.replace('Ivabradine', '')
             newname += ' Ivab'
-            # expCond = 2
+        # 20250623 mito atp
+        elif 'FCCP' in newname:
+            newname = newname.replace('FCCP', '')
+            newname += ' FCCP'
+        elif 'Control' in newname:
+            newname = newname.replace('Control', '')
+            newname += ' Control'
+
         else:
             newname += ' Control'
 
@@ -103,4 +115,13 @@ def rename_files(thisExt:str):
     print(f'found {len(paths)} files')
       
 if __name__ == '__main__':
-    rename_files2()
+    # add in command line switch 'RENAME-FILES
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--rename-files', action='store_true', help='rename files')
+    args = parser.parse_args()
+
+    if args.rename_files:
+        rename_files2()
+    else:
+        print('call with "--rename-files"')

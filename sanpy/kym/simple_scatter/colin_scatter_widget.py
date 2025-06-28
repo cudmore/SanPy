@@ -24,8 +24,9 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 from colin_tree_widget import KymTreeWidget
 # from colin_traces import plotCellID
 from colin_global import conditionOrder
+from colin_simple_figure import KymRoiMainWindow
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 class simpleTableWidget(QtWidgets.QTableWidget):
@@ -532,12 +533,11 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # fig, ax = self._colinTraces.plotCellID(cell_id, roiLabelStr=roi_number)
         
         from colin_pool_plot import new_plotCellID
-        fig, ax = new_plotCellID(self._masterDf, self._meanDf, cell_id, roi_number)
+        fig, ax, _tmpDict = new_plotCellID(self._masterDf, self._meanDf, cell_id, roi_number)
         
         if fig is None or ax is None:
             return
         
-        from colin_simple_figure import MainWindow
         self._mainWindow = MainWindow(fig, ax)
         self._mainWindow.setWindowTitle(f'cell ID:"{cell_id}" roi:{roi_number}')
         self._mainWindow.show()
@@ -918,7 +918,6 @@ class ScatterWidget(QtWidgets.QMainWindow):
             if fig is None or ax is None:
                 return
 
-            from colin_simple_figure import MainWindow
             self._mainWindow = MainWindow(fig, ax)
             self._mainWindow.setWindowTitle(f'cell ID:"{clickedCellID}" roi:{roiLabelStr}')
             self._mainWindow.show()

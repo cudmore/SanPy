@@ -18,7 +18,7 @@ gui = [
     "pandas>=2.0.0",
     "pyabf",
     "PyQt5>=5.15.0",
-    "pyqtdarktheme",
+    "pyqtdarktheme-fork",
     "pyqtgraph",
     "qtawesome",
     "qtpy",
@@ -59,6 +59,7 @@ test = [
 
 [project.scripts]
 sanpy = "sanpy.interface.sanpy_app:main"
+sanpykym = "sanpy.kym.interface.kym_file_list.tif_tree_window:main"
 
 [tool.setuptools]
 packages = ["sanpy"]
@@ -73,3 +74,6 @@ local_scheme = "no-local-version"
 ignore = [
     "E501",  # Supress line-too-long warnings: trust black's judgement on this one.
 ]
+
+[tool.pytest.ini_options]
+addopts = "--ignore=napari"

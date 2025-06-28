@@ -21,6 +21,7 @@ import pandas as pd
 
 import pyqtgraph as pg
 
+# enable_hi_dpi() must be called before the instantiation of QApplication.
 import qdarktheme
 qdarktheme.enable_hi_dpi()
 
@@ -451,10 +452,12 @@ class SanPyApp(QtWidgets.QApplication):
         sweep : int
             Only works for file path
         """
+        interface_mode = self.configDict['interface_mode']
         
         logger.info(f'path:{path}')
         logger.info(f'   sweep:{sweep}')
         logger.info(f'   spikeNumber:{spikeNumber}')
+        logger.info(f'   interface_mode:{interface_mode}')
 
         # check if it is open
         foundWindow = None
@@ -468,7 +471,13 @@ class SanPyApp(QtWidgets.QApplication):
         # open new window
         if foundWindow is None:
             logger.info('   opening new window')
-            foundWindow = SanPyWindow(self, path)
+            
+            if interface_mode == 'sanpy':
+                foundWindow = SanPyWindow(self, path)
+            elif interface_mode == 'kymograph':
+                from sanpy.kym.interface.kym_file_list.tif_tree_window import TifTreeWindow
+                foundWindow = TifTreeWindow(self, path)
+            
             foundWindow.show()
             foundWindow.raise_()  # bring to front, raise is a python keyword
             foundWindow.activateWindow()  # bring to front

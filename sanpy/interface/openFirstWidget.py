@@ -159,6 +159,15 @@ class openFirstWidget(QtWidgets.QMainWindow):
 
         self.getSanPyApp().getWindowsMenu(self.windowsMenu)
 
+    def _on_radio_toggled(self):
+        """Handle radio button toggle between SanPy and Kymograph modes."""
+        if self.sanpyRadio.isChecked():
+            logger.info('Switched to SanPy mode')
+            self._sanpyApp.configDict['interface_mode'] = 'sanpy'
+        elif self.kymographRadio.isChecked():
+            logger.info('Switched to Kymograph mode') 
+            self._sanpyApp.configDict['interface_mode'] = 'kymograph'
+
     def _buildUI(self):
         # typical wrapper for PyQt, we can't use setLayout(), we need to use setCentralWidget()
         _mainWidget = QtWidgets.QWidget()
@@ -194,6 +203,35 @@ class openFirstWidget(QtWidgets.QMainWindow):
         aButton.clicked.connect(partial(self._on_open_button_click, name))
         hBoxLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
 
+        # abb 202506 sanpy-kym
+        # radio buttons for selecting interface mode
+
+        radioLayout = QtWidgets.QHBoxLayout()
+        radioLayout.setAlignment(QtCore.Qt.AlignLeft)
+        hBoxLayout.addLayout(radioLayout)
+
+        radioGroup = QtWidgets.QButtonGroup()
+        
+        self.sanpyRadio = QtWidgets.QRadioButton("SanPy")
+        # sanpyRadio.setChecked(True)
+        radioGroup.addButton(self.sanpyRadio)
+        radioLayout.addWidget(self.sanpyRadio)
+
+        self.kymographRadio = QtWidgets.QRadioButton("SanPy Kymograph") 
+        radioGroup.addButton(self.kymographRadio)
+        radioLayout.addWidget(self.kymographRadio)
+
+        interface_mode = self._sanpyApp.configDict['interface_mode']
+        if interface_mode == 'kymograph':
+            self.kymographRadio.setChecked(True)
+        else:
+            self.sanpyRadio.setChecked(True)
+
+        # Connect radio button signals
+        self.sanpyRadio.toggled.connect(self._on_radio_toggled)
+        self.kymographRadio.toggled.connect(self._on_radio_toggled)
+
+        #
         # recent files and tables
         recent_vBoxLayout = QtWidgets.QVBoxLayout()
 

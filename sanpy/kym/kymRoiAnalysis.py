@@ -1,7 +1,7 @@
 import json
 import os
 import sys
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any, Tuple
 from enum import Enum
 
 import numpy as np
@@ -14,14 +14,17 @@ from scipy.signal import peak_widths, medfilt, savgol_filter, detrend, find_peak
 from skimage import restoration
 
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
+from scipy import ndimage
+from scipy.stats import linregress
+import warnings
 
 from sanpy.bAnalysis_ import bAnalysis
 from sanpy._util import _loadLineScanHeader
 from sanpy.kym.kymRoiDetection import KymRoiDetection, getAnalysisDict
 from sanpy.kym.kymRoiResults import KymRoiResults
 from sanpy.kym.kymRoiMetaData import KymRoiMetaData
-
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 def _printImgStats(imgData:np.ndarray, name:str=''):
@@ -2591,7 +2594,7 @@ def plotDetectionResults(kymRoiAnalysis : KymRoiAnalysis,
     peakValue = analysisResults.getValues('Peak Int')
 
     #
-    fig, axs = plt.subplots(4, 1, figsize=(6,8), sharex=True)
+    fig, axs = plt.subplots(4, 1, figsize=(8,10), sharex=True)
 
     roiLabel = kymRoi.getLabel()
     _backgroundsubtract = f"Background subtract: {detectionParams['Background Subtract']}"
@@ -2618,12 +2621,35 @@ def plotDetectionResults(kymRoiAnalysis : KymRoiAnalysis,
     rightSec = timeSec[-1]
 
     _extent=[leftSec, rightSec, bottom, top]
-    # logger.info(f'_extent:{_extent}')
-    # _label = f"Background subtract: {kymRoi.detectionParams['backgroundsubtract']}"
-    imgplot = axs[0].imshow(imgData, extent=_extent, aspect="auto")
-    
+
+    detectThisTrace = detectionParams['detectThisTrace']
+    f0 = detectionParams['f0 Value Percentile']
+    if detectThisTrace == 'f/f0':
+        imgData = imgData / f0
+        imgData = imgData.astype(np.int16)
+    elif detectThisTrace == 'df/f0':
+        imgData = (imgData - f0) / f0
+        imgData = imgData.astype(np.int16)
+    else:
+        logger.error(f'detectThisTrace:{detectThisTrace} not supported')
+        return
+
+    from sanpy.kym.kymUtils import getAutoContrast
+    _min, _max = getAutoContrast(imgData)  # new 20240925, should mimic ImageJ
+
+    # imgplot = axs[0].imshow(imgData, extent=_extent, aspect="auto")
+
+    axs[0].imshow(imgData,
+              cmap="Greens",
+              origin='lower',
+              aspect='auto',
+              extent=_extent,
+              vmin=_min,
+              vmax=_max,
+              )
+
     # I do not like how 'Greens' look ...
-    imgplot.set_cmap('nipy_spectral')
+    # imgplot.set_cmap('nipy_spectral')
     # if _channelColor == 'Green':
     #     imgPlotColor = 'Greens'
     # else:
@@ -2762,7 +2788,7 @@ def plotDetectionResults(kymRoiAnalysis : KymRoiAnalysis,
     #
     axs[3].plot(xDecay2, yDecay2, 'b')  # double exp fit to decay
 
-    plt.show()
+    return fig, axs
 
 if __name__ == '__main__':
     pass

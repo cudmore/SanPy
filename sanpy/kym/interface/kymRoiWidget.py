@@ -4,6 +4,9 @@ import json
 import subprocess
 
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 
 from PyQt5 import QtGui, QtCore, QtWidgets
 import pyqtgraph as pg
@@ -23,7 +26,7 @@ from sanpy.kym.interface.kymRoiMetaDataWidget import MetaDataWidget
 from sanpy.kym.interface.kymRoiScatter import SimpleRoiScatter
 from sanpy.kym.interface.kymRoiClipsWidget import KymRoiClipsWidget
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 class KymRoiWidget(QtWidgets.QMainWindow):
@@ -785,8 +788,8 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         elif key in [QtCore.Qt.Key_Plus, QtCore.Qt.Key_Equal]:
             self._kymRoiImageWidget.onUserAddRoi()
 
-        elif key in [QtCore.Qt.Key_W] and isCtrl:
-            self.simpleScatter.copyTableToClipboard()
+        # elif key in [QtCore.Qt.Key_C] and isCtrl:
+        #     self.simpleScatter.copyTableToClipboard()
 
         elif isCtrl and key == QtCore.Qt.Key_S:
             self.saveAnalysis()

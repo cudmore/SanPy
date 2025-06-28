@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
-
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 def getAnalysisDict():
@@ -164,7 +163,7 @@ def getAnalysisDict():
         'color' : (255, 255, 0, 200)  # yellow
 
     },
-    
+
     # ret['Decay Bin'] = {
     #     'value': None,
     #     'description': '',

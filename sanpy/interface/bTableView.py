@@ -276,14 +276,16 @@ class bTableView(QtWidgets.QTableView):
         """
         # self._lastClick = "Click"
 
-        if self.last == "Click":
-            row = item.row()
-            realRow = self.model()._data.index[row]  # sort order
-            # logger.info(f'User clicked row:{row} realRow:{realRow}')
-            # self._onLeftClick(realRow)
-            QtCore.QTimer.singleShot(QtWidgets.QApplication.instance().doubleClickInterval(),
-                            self._onLeftClick(realRow))
-
+        try:
+            if self.last == "Click":
+                row = item.row()
+                realRow = self.model()._data.index[row]  # sort order
+                # logger.info(f'User clicked row:{row} realRow:{realRow}')
+                # self._onLeftClick(realRow)
+                QtCore.QTimer.singleShot(QtWidgets.QApplication.instance().doubleClickInterval(),
+                                self._onLeftClick(realRow))
+        except (AttributeError) as e:
+            logger.error(e)
 
     def selectRowByFile(self, filename : str):
         # fileList = self.model()._data['File'].tolist()

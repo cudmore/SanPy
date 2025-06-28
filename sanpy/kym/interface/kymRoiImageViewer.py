@@ -1,6 +1,12 @@
 from functools import partial
 
 import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSlider, QCheckBox
+from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QFont
 
 from PyQt5 import QtWidgets, QtCore
 import pyqtgraph as pg
@@ -9,7 +15,7 @@ from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, KymRoi, PeakDetectionTypes
 from sanpy.kym.interface.kymRoiImageWidget import KymRoiImageWidget
 from sanpy.kym.interface.imageViewer import ImageViewer
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 class KymRoiImageViewer(QtWidgets.QWidget):

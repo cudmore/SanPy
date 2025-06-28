@@ -1,10 +1,12 @@
 from functools import partial
 
 from PyQt5 import QtGui, QtCore, QtWidgets
+import numpy as np
+from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem
+from PyQt5.QtCore import pyqtSignal
 
 from sanpy.kym.kymRoiMetaData import KymRoiMetaData
-
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 class MetaDataWidget(QtWidgets.QWidget):

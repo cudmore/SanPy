@@ -1,10 +1,14 @@
-
+import sys
+import os
 import numpy as np
+import matplotlib.pyplot as plt
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import Qt
 
 from sanpy.kym.kymRoiAnalysis import KymRoi
 # from sanpy.kym.kymRoiAnalysis import MplKym
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 def _broken_test_kym_roi():

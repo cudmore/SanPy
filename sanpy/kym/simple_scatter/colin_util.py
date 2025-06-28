@@ -5,10 +5,16 @@ from pprint import pprint
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+from typing import List, Dict, Any, Optional, Tuple
+import pathlib
+from datetime import datetime
+import warnings
+from scipy import stats
+from scipy.stats import mannwhitneyu, ttest_ind, pearsonr, spearmanr
 
 import roifile  # to import Fiji roi manager zip files
-
-import matplotlib.pyplot as plt
 
 from colin_global import getAllTifFilePaths, FileInfo
 
@@ -17,7 +23,7 @@ from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, PeakDetectionTypes
 
 from sanpy.kym.simple_scatter.colin_global import fijiConditions
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 def _getRawTifDict():
@@ -101,7 +107,16 @@ def _parseFijiRoiName(fijiRoiName:str,
             elif fijiCond == 'Thapsigargin':
                 retDict['Sanpy ROI Condition'] = 'Thap'
                 sanpyCond = 'Thap'
+            # abb 20250623 mito atp
+            elif fijiCond == 'FCCP':
+                retDict['Sanpy ROI Condition'] = 'FCCP'
+                sanpyCond = 'FCCP'
+            elif fijiCond == 'Control':
+                retDict['Sanpy ROI Condition'] = 'Control'
+                sanpyCond = 'Control'
+
             else:
+                logger.warning(f'did not find condition in fijiRoiName:"{fijiRoiName}"')
                 retDict['Sanpy ROI Condition'] = 'Control'
                 sanpyCond = 'Control'
 
@@ -259,7 +274,7 @@ def loadRoiFile(masterDict, oneZipFile) -> pd.DataFrame:
 
         
 def test_loadRoiFile():
-    dfRoi, roiDict, tifList = makeRoiDictFromZips()
+    dfRoi, roiDict, tifList = makeRoiDictFromZips2()
         
     # roiTifList = dfRoi['tifFileName'].unique()
     # for tifPath in tifList:
@@ -268,6 +283,35 @@ def test_loadRoiFile():
     #         logger.error(f'did not find tif file "{tifFile}" in roi dfMaster')
 
     logger.info(f'df has {len(dfRoi)} rows (one row per fiji roi)')
+
+def makeRoiDictFromZips2() -> tuple[pd.DataFrame, dict, list]:
+    """While starting analysis for mito atp.
+    """
+
+    masterDict, rawTifList = _getRawTifDict()
+
+    from colin_global import _ROOT_ANALYSIS_FOLDER, _walk
+    zipPaths = _walk(_ROOT_ANALYSIS_FOLDER, '.zip', 5)
+    zipPaths = list(zipPaths)
+    zipPaths = [z for z in zipPaths if 'RoiSet.zip' in z]
+
+    for zipIdx, oneZipPath in enumerate(zipPaths):
+        print(f'zipIdx:{zipIdx} of {len(zipPaths)}')
+        print(oneZipPath)
+
+        dfOne = loadRoiFile(masterDict, oneZipPath)
+        if zipIdx == 0:
+            dfMaster = dfOne
+        else:
+            dfMaster = pd.concat([dfMaster, dfOne])
+    
+    # check if any tif file keys have empty list (no roi)
+    # for k,v in masterDict.items():
+    #     if len(v['sanpyRoiRects'])==0:
+    #         logger.error(f'did not get any rois for tif file "{k}"')
+
+    #pprint(masterDict, indent=4)
+    return dfMaster, masterDict, rawTifList
 
 def makeRoiDictFromZips() -> tuple[pd.DataFrame, dict, list]:
     """
@@ -395,7 +439,7 @@ def insertRoiIntoSanPy():
     _startTime = time.time()
 
     logger.info('making master dict')
-    dfMaster, masterDict, rawTifList = makeRoiDictFromZips()
+    dfMaster, masterDict, rawTifList = makeRoiDictFromZips2()
 
     channel = 0
 
@@ -409,10 +453,13 @@ def insertRoiIntoSanPy():
         _tifList = dfMaster['tifFileName'].unique()
         if tifFile not in _tifList:
             logger.error(f'did not find tif file "{tifFile}" in roi dfMaster')
+
+            # when code fails, turn this on
             # for p in _tifList:
             #     print(p)
             # logger.error('-->> exit')
             # sys.exit(1)
+            
             continue
 
         dfTif = dfMaster[dfMaster['tifFileName']==tifFile]
@@ -522,27 +569,35 @@ def checkRoiPerCondition():
 
     cellIDs = df['Cell ID'].unique()
     for cellID in cellIDs:
-        print(cellID)
+        logger.info(f'cellID:{cellID}')
         dfCellID = df[df['Cell ID']==cellID]
         conditions = dfCellID['Condition'].unique()
         # logger.info(f'cellID:{cellID} has conditions:{conditions}')
+        _numRoi = None
         for idx, condition in enumerate(conditions):
             dfCondition = dfCellID[dfCellID['Condition']==condition]
             rois = dfCondition['ROI Number'].unique()
-            print(f'  cellID:{cellID} condition:{condition} num:{len(rois)} rois:{rois}')
+            if idx == 0:
+                _numRoi = len(rois)
+            numRoi = len(rois)
+            print(f'  cellID:{cellID} condition:{condition} num:{numRoi}')
+            if numRoi != _numRoi:
+                logger.error(f'  cellID:{cellID} condition:{condition} numRoi:{numRoi} != _numRoi:{_numRoi}')
+                # sys.exit(1)
 
 if __name__ == '__main__':
-    
+    # run this first to ensure we get matches between colins fiji roi names and tif file
+    if 0:
+        test_loadRoiFile()
+
     # load all Colin's fiji roi manager and recreate ALL sanpy analysis
-    if 1:
+    if 0:
+        # WILL PERFORM PEAK DETECTION !!!
         insertRoiIntoSanPy()
 
     # _throwOutAllSanPyAnalysis()
 
     # works
     # check that each (Cell ID, Condition) has the same number of ROI
-    if 0:
+    if 1:
         checkRoiPerCondition()
-
-    if 0:
-        test_loadRoiFile()

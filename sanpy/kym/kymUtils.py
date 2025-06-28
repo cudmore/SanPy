@@ -1,6 +1,5 @@
 import numpy as np
-
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 # found 20240925 at

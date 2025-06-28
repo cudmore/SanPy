@@ -18,6 +18,187 @@ logger = get_logger(__name__)
 
 from sanpy.kym.tif_file_backend import TifFileBackend
 
+class TreeColumnConfig:
+    """Configuration class for tree widget columns."""
+    
+    def __init__(self):
+        # Current columns
+        self.current_columns = [
+            'files_folders',  # Main tree column with checkboxes
+            'condition',      # Condition column
+            'repeat'          # Repeat column
+        ]
+        
+        # Planned additional columns (from backend)
+        self.planned_columns = [
+            'date',           # Date column (redundant with table)
+            'region',         # Region column (redundant with table)
+            'error',          # Error column (new)
+            'um_per_pixel',   # um per pixel (new)
+            'ms_per_line',    # ms per line (new)
+            'acq_date',       # Acquisition date (new)
+            'acq_time'        # Acquisition time (new)
+        ]
+        
+        # All columns (current + planned)
+        self.all_columns = self.current_columns + self.planned_columns
+        
+        # Column metadata
+        self.column_metadata = {
+            # Current columns
+            'files_folders': {
+                'display_name': 'Files and Folders',
+                'width': 300,
+                'stretch': True,
+                'editable': False,
+                'has_checkbox': True,
+                'backend_field': None  # Special case for tree structure
+            },
+            'condition': {
+                'display_name': 'Condition',
+                'width': 100,
+                'stretch': False,
+                'editable': False,
+                'has_checkbox': False,
+                'backend_field': 'condition'
+            },
+            'repeat': {
+                'display_name': 'Repeat',
+                'width': 80,
+                'stretch': False,
+                'editable': False,
+                'has_checkbox': False,
+                'backend_field': 'repeat'
+            },
+            
+            # Planned columns
+            'date': {
+                'display_name': 'Date',
+                'width': 100,
+                'stretch': False,
+                'editable': False,
+                'has_checkbox': False,
+                'backend_field': 'date'
+            },
+            'region': {
+                'display_name': 'Region',
+                'width': 80,
+                'stretch': False,
+                'editable': False,
+                'has_checkbox': False,
+                'backend_field': 'region'
+            },
+            'error': {
+                'display_name': 'Error',
+                'width': 80,
+                'stretch': False,
+                'editable': False,
+                'has_checkbox': False,
+                'backend_field': 'error'
+            },
+            'um_per_pixel': {
+                'display_name': 'μm/px',
+                'width': 70,
+                'stretch': False,
+                'editable': False,
+                'has_checkbox': False,
+                'backend_field': 'um_per_pixel'
+            },
+            'ms_per_line': {
+                'display_name': 'ms/line',
+                'width': 70,
+                'stretch': False,
+                'editable': False,
+                'has_checkbox': False,
+                'backend_field': 'ms_per_line'
+            },
+            'acq_date': {
+                'display_name': 'Acq Date',
+                'width': 90,
+                'stretch': False,
+                'editable': False,
+                'has_checkbox': False,
+                'backend_field': 'acq_date'
+            },
+            'acq_time': {
+                'display_name': 'Acq Time',
+                'width': 90,
+                'stretch': False,
+                'editable': False,
+                'has_checkbox': False,
+                'backend_field': 'acq_time'
+            }
+        }
+        
+        # Active columns (can be modified to show/hide columns)
+        self.active_columns = self.current_columns.copy()
+        
+        # Update indexes
+        self._update_indexes()
+    
+    def _update_indexes(self):
+        """Update column indexes based on active columns."""
+        self.column_indexes = {col: idx for idx, col in enumerate(self.active_columns)}
+    
+    def get_index(self, column_name: str) -> int:
+        """Get column index by name."""
+        return self.column_indexes.get(column_name, -1)
+    
+    def get_display_name(self, column_name: str) -> str:
+        """Get display name for column."""
+        return self.column_metadata.get(column_name, {}).get('display_name', column_name)
+    
+    def get_width(self, column_name: str) -> Optional[int]:
+        """Get column width by name."""
+        return self.column_metadata.get(column_name, {}).get('width')
+    
+    def is_stretch(self, column_name: str) -> bool:
+        """Check if column should stretch."""
+        return self.column_metadata.get(column_name, {}).get('stretch', False)
+    
+    def has_checkbox(self, column_name: str) -> bool:
+        """Check if column has checkboxes."""
+        return self.column_metadata.get(column_name, {}).get('has_checkbox', False)
+    
+    def get_backend_field(self, column_name: str) -> Optional[str]:
+        """Get backend field name for column."""
+        return self.column_metadata.get(column_name, {}).get('backend_field')
+    
+    def get_active_columns(self) -> List[str]:
+        """Get list of currently active columns."""
+        return self.active_columns.copy()
+    
+    def get_active_display_names(self) -> List[str]:
+        """Get list of display names for active columns."""
+        return [self.get_display_name(col) for col in self.active_columns]
+    
+    def add_column(self, column_name: str):
+        """Add a column to the active columns."""
+        if column_name in self.all_columns and column_name not in self.active_columns:
+            self.active_columns.append(column_name)
+            self._update_indexes()
+    
+    def remove_column(self, column_name: str):
+        """Remove a column from active columns."""
+        if column_name in self.active_columns and column_name != 'files_folders':
+            self.active_columns.remove(column_name)
+            self._update_indexes()
+    
+    def set_columns(self, column_names: List[str]):
+        """Set the active columns."""
+        if 'files_folders' not in column_names:
+            column_names.insert(0, 'files_folders')  # Always keep files_folders first
+        
+        self.active_columns = [col for col in column_names if col in self.all_columns]
+        self._update_indexes()
+    
+    def is_checkbox_column(self, column_index: int) -> bool:
+        """Check if column index is a checkbox column."""
+        if column_index < 0 or column_index >= len(self.active_columns):
+            return False
+        column_name = self.active_columns[column_index]
+        return self.has_checkbox(column_name)
+
 class TifTreeWidget(QWidget):
     """A QTreeWidget that displays .tif files from a folder structure with refresh capability."""
     
@@ -53,6 +234,9 @@ class TifTreeWidget(QWidget):
         self.backend = backend
         self.show_third_level = show_third_level
         
+        # Column configuration
+        self.column_config = TreeColumnConfig()
+        
         # Set up context menu
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._contextMenu)
@@ -65,37 +249,18 @@ class TifTreeWidget(QWidget):
 
     def _createUI(self):
         """Create the user interface elements."""
-        # Create Refresh button
-        self.refreshButton = QPushButton("Refresh")
-        self.refreshButton.clicked.connect(self.refresh)
-        self.refreshButton.setToolTip("Refresh the file list from disk")
-        
-        # Create Save State button
-        self.saveStateButton = QPushButton("Save State")
-        self.saveStateButton.clicked.connect(self.saveState)
-        self.saveStateButton.setToolTip("Save current selection state to CSV file")
-        
-        # Create button layout - all buttons in one row
-        buttonLayout = QHBoxLayout()
-        buttonLayout.addWidget(self.refreshButton)
-        buttonLayout.addWidget(self.saveStateButton)
-        buttonLayout.addStretch()
-        
         # Create tree with multiple columns
         self.tree = QTreeWidget()
-        self.tree.setHeaderLabels(["Files and Folders", "Condition", "Repeat"])
+        self.tree.setHeaderLabels(self.column_config.get_active_display_names())
         self.tree.itemChanged.connect(self.handleItemChanged)
         self.tree.itemSelectionChanged.connect(self.handleItemSelectionChanged)
         self.tree.itemDoubleClicked.connect(self.handleItemDoubleClicked)
         
-        # Set column widths
-        self.tree.setColumnWidth(0, 300)  # Files and Folders
-        self.tree.setColumnWidth(1, 100)  # Condition
-        self.tree.setColumnWidth(2, 80)   # Repeat
+        # Set up column widths
+        self._setup_column_widths()
         
         # Main layout
         layout = QVBoxLayout()
-        layout.addLayout(buttonLayout)
         layout.addWidget(self.tree)
         self.setLayout(layout)
 
@@ -126,10 +291,8 @@ class TifTreeWidget(QWidget):
         if great_grandparents:
             # We have great-grandparent folders, use the original logic
             for great_grandparent_name in sorted(great_grandparents):
-                # Create great-grandparent item (no checkbox, just for display)
-                great_grandparent_item = QTreeWidgetItem([great_grandparent_name, "", ""])
-                great_grandparent_item.setFlags(great_grandparent_item.flags() | Qt.ItemIsSelectable)
-                great_grandparent_item.setData(0, Qt.UserRole, ("great_grandparent", great_grandparent_name))
+                # Create great-grandparent item
+                great_grandparent_item = self._create_tree_item("great_grandparent", great_grandparent_name)
                 
                 # Get grandparent folders for this great-grandparent
                 grandparent_data = self.backend.df[self.backend.df['great_grandparent_folder'] == great_grandparent_name]
@@ -137,10 +300,8 @@ class TifTreeWidget(QWidget):
                 grandparents = [gp for gp in grandparents if gp]  # Remove empty strings
                 
                 for grandparent_name in sorted(grandparents):
-                    # Create grandparent item (no checkbox, just for display)
-                    grandparent_item = QTreeWidgetItem([grandparent_name, "", ""])
-                    grandparent_item.setFlags(grandparent_item.flags() | Qt.ItemIsSelectable)
-                    grandparent_item.setData(0, Qt.UserRole, ("grandparent", grandparent_name))
+                    # Create grandparent item
+                    grandparent_item = self._create_tree_item("grandparent", grandparent_name)
                     
                     # Get data for this grandparent
                     parent_data = grandparent_data[grandparent_data['grandparent_folder'] == grandparent_name]
@@ -151,37 +312,21 @@ class TifTreeWidget(QWidget):
                         folders = [f for f in folders if f]  # Remove empty strings
                         
                         for folder_name in sorted(folders):
-                            # Create folder item (no checkbox, just for display)
-                            folder_item = QTreeWidgetItem([folder_name, "", ""])
-                            folder_item.setFlags(folder_item.flags() | Qt.ItemIsSelectable)
-                            folder_item.setData(0, Qt.UserRole, ("folder", folder_name))
+                            # Create folder item
+                            folder_item = self._create_tree_item("folder", folder_name)
                             
-                            # Add .tif files as children (with checkboxes)
+                            # Add .tif files as children
                             folder_data = parent_data[parent_data['parent_folder'] == folder_name]
                             for _, row in folder_data.iterrows():
-                                file_item = QTreeWidgetItem([
-                                    row['filename'], 
-                                    row['condition'], 
-                                    str(row['repeat'])
-                                ])
-                                file_item.setFlags(file_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable)
-                                file_item.setCheckState(0, Qt.Checked if row['show_file'] else Qt.Unchecked)
-                                file_item.setData(0, Qt.UserRole, ("file", row['full_path']))
+                                file_item = self._create_tree_item("file", row['filename'], row)
                                 folder_item.addChild(file_item)
                             
                             grandparent_item.addChild(folder_item)
                     else:
                         # Two-level structure: great_grandparent -> grandparent -> files
-                        # Add .tif files directly as children of grandparent (with checkboxes)
+                        # Add .tif files directly as children of grandparent
                         for _, row in parent_data.iterrows():
-                            file_item = QTreeWidgetItem([
-                                row['filename'], 
-                                row['condition'], 
-                                str(row['repeat'])
-                            ])
-                            file_item.setFlags(file_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable)
-                            file_item.setCheckState(0, Qt.Checked if row['show_file'] else Qt.Unchecked)
-                            file_item.setData(0, Qt.UserRole, ("file", row['full_path']))
+                            file_item = self._create_tree_item("file", row['filename'], row)
                             grandparent_item.addChild(file_item)
                     
                     great_grandparent_item.addChild(grandparent_item)
@@ -194,10 +339,8 @@ class TifTreeWidget(QWidget):
             grandparents = [gp for gp in grandparents if gp]  # Remove empty strings
             
             for grandparent_name in sorted(grandparents):
-                # Create grandparent item (no checkbox, just for display)
-                grandparent_item = QTreeWidgetItem([grandparent_name, "", ""])
-                grandparent_item.setFlags(grandparent_item.flags() | Qt.ItemIsSelectable)
-                grandparent_item.setData(0, Qt.UserRole, ("grandparent", grandparent_name))
+                # Create grandparent item
+                grandparent_item = self._create_tree_item("grandparent", grandparent_name)
                 
                 # Get data for this grandparent
                 parent_data = self.backend.df[self.backend.df['grandparent_folder'] == grandparent_name]
@@ -208,37 +351,21 @@ class TifTreeWidget(QWidget):
                     folders = [f for f in folders if f]  # Remove empty strings
                     
                     for folder_name in sorted(folders):
-                        # Create folder item (no checkbox, just for display)
-                        folder_item = QTreeWidgetItem([folder_name, "", ""])
-                        folder_item.setFlags(folder_item.flags() | Qt.ItemIsSelectable)
-                        folder_item.setData(0, Qt.UserRole, ("folder", folder_name))
+                        # Create folder item
+                        folder_item = self._create_tree_item("folder", folder_name)
                         
-                        # Add .tif files as children (with checkboxes)
+                        # Add .tif files as children
                         folder_data = parent_data[parent_data['parent_folder'] == folder_name]
                         for _, row in folder_data.iterrows():
-                            file_item = QTreeWidgetItem([
-                                row['filename'], 
-                                row['condition'], 
-                                str(row['repeat'])
-                            ])
-                            file_item.setFlags(file_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable)
-                            file_item.setCheckState(0, Qt.Checked if row['show_file'] else Qt.Unchecked)
-                            file_item.setData(0, Qt.UserRole, ("file", row['full_path']))
+                            file_item = self._create_tree_item("file", row['filename'], row)
                             folder_item.addChild(file_item)
                         
                         grandparent_item.addChild(folder_item)
                 else:
                     # Two-level structure: grandparent -> files
-                    # Add .tif files directly as children of grandparent (with checkboxes)
+                    # Add .tif files directly as children of grandparent
                     for _, row in parent_data.iterrows():
-                        file_item = QTreeWidgetItem([
-                            row['filename'], 
-                            row['condition'], 
-                            str(row['repeat'])
-                        ])
-                        file_item.setFlags(file_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable)
-                        file_item.setCheckState(0, Qt.Checked if row['show_file'] else Qt.Unchecked)
-                        file_item.setData(0, Qt.UserRole, ("file", row['full_path']))
+                        file_item = self._create_tree_item("file", row['filename'], row)
                         grandparent_item.addChild(file_item)
                 
                 self.tree.addTopLevelItem(grandparent_item)
@@ -337,33 +464,37 @@ class TifTreeWidget(QWidget):
             elif data[0] == "folder":
                 subprocess.run(['open', data[1]])
             elif data[0] == "file":
-                subprocess.run(['open', '-R', data[1]])
+                # Resolve relative path to absolute path for file operations
+                file_path = os.path.join(self.backend.root_path, data[1])
+                subprocess.run(['open', '-R', file_path])
         elif actionText == 'Open File':
             if data[0] == "file":
-                subprocess.run(['open', data[1]])
+                # Resolve relative path to absolute path for file operations
+                file_path = os.path.join(self.backend.root_path, data[1])
+                subprocess.run(['open', file_path])
         elif actionText == 'Copy Path':
             if data[0] == "file":
                 clipboard = QApplication.clipboard()
-                clipboard.setText(data[1])
+                # Resolve relative path to absolute path for clipboard
+                file_path = os.path.join(self.backend.root_path, data[1])
+                clipboard.setText(file_path)
 
     def handleItemChanged(self, item, column):
         """Handle checkbox state changes for individual files."""
-        data = item.data(0, Qt.UserRole)
+        data = item.data(self.get_column_index('files_folders'), Qt.UserRole)
         if data is None:
             return
 
-        # Only handle file checkboxes
-        if data[0] == "file":
+        # Only handle file checkboxes in the checkbox column
+        if data[0] == "file" and self.is_checkbox_column(column):
             file_path = data[1]
-            checked = item.checkState(0) == Qt.Checked
+            checked = item.checkState(column) == Qt.Checked
             
             # Update backend
             self.backend.set_checked('file', file_path, checked)
             
             # Emit signal
             self.fileToggled.emit(file_path, checked)
-
-        self.tree.itemChanged.connect(self.handleItemChanged)
 
     def handleItemSelectionChanged(self):
         """Handle item selection changes."""
@@ -372,7 +503,7 @@ class TifTreeWidget(QWidget):
             return
 
         item = selected_items[0]
-        data = item.data(0, Qt.UserRole)
+        data = item.data(self.get_column_index('files_folders'), Qt.UserRole)
         if data is None:
             return
 
@@ -387,7 +518,7 @@ class TifTreeWidget(QWidget):
 
     def handleItemDoubleClicked(self, item, column):
         """Handle double-click on .tif files."""
-        data = item.data(0, Qt.UserRole)
+        data = item.data(self.get_column_index('files_folders'), Qt.UserRole)
         if data is None:
             return
 
@@ -419,7 +550,7 @@ class TifTreeWidget(QWidget):
         if self.backend.df is not None:
             # Update backend for all files using the backend's API
             for _, row in self.backend.df.iterrows():
-                self.backend.set_checked('file', row['full_path'], checked)
+                self.backend.set_checked('file', row['relative_path'], checked)
             
             # Update tree display to reflect the changes
             self._rebuildTreeDisplay()
@@ -433,4 +564,87 @@ class TifTreeWidget(QWidget):
             if csv_filepath:
                 csv_filename = os.path.basename(csv_filepath)
                 self.stateSaved.emit(csv_filename)
-                logger.info(f"State saved to: {csv_filename}") 
+                logger.info(f"State saved to: {csv_filename}")
+
+    def get_column_index(self, column_name: str) -> int:
+        """Get the column index for a given column name."""
+        return self.column_config.get_index(column_name)
+    
+    def is_checkbox_column(self, column: int) -> bool:
+        """Check if the given column is a checkbox column."""
+        return self.column_config.is_checkbox_column(column)
+    
+    def add_column(self, column_name: str):
+        """Add a column to the tree widget."""
+        self.column_config.add_column(column_name)
+        self._rebuild_tree_headers()
+        self._rebuildTreeDisplay()
+    
+    def remove_column(self, column_name: str):
+        """Remove a column from the tree widget."""
+        self.column_config.remove_column(column_name)
+        self._rebuild_tree_headers()
+        self._rebuildTreeDisplay()
+    
+    def set_columns(self, column_names: List[str]):
+        """Set the active columns for the tree widget."""
+        self.column_config.set_columns(column_names)
+        self._rebuild_tree_headers()
+        self._rebuildTreeDisplay()
+    
+    def _rebuild_tree_headers(self):
+        """Rebuild the tree headers based on current column configuration."""
+        if hasattr(self, 'tree'):
+            self.tree.setHeaderLabels(self.column_config.get_active_display_names())
+            self._setup_column_widths()
+    
+    def _setup_column_widths(self):
+        """Set up column widths based on column configuration."""
+        for column_name in self.column_config.get_active_columns():
+            col_idx = self.get_column_index(column_name)
+            width = self.column_config.get_width(column_name)
+            
+            if width is not None:
+                self.tree.setColumnWidth(col_idx, width)
+
+    def _create_tree_item(self, item_type: str, item_name: str, row_data: pd.Series = None) -> QTreeWidgetItem:
+        """Create a tree item with the appropriate columns based on configuration."""
+        # Initialize item text for all active columns
+        item_texts = [""] * len(self.column_config.get_active_columns())
+        
+        # Set the main item name in the files_folders column
+        files_folders_idx = self.get_column_index('files_folders')
+        if files_folders_idx >= 0:
+            item_texts[files_folders_idx] = item_name
+        
+        # For file items, populate data from backend
+        if item_type == "file" and row_data is not None:
+            for column_name in self.column_config.get_active_columns():
+                col_idx = self.get_column_index(column_name)
+                if col_idx >= 0 and column_name != 'files_folders':
+                    backend_field = self.column_config.get_backend_field(column_name)
+                    if backend_field and backend_field in row_data:
+                        value = row_data[backend_field]
+                        # Format the value appropriately
+                        if pd.isna(value):
+                            item_texts[col_idx] = ""
+                        elif isinstance(value, (int, float)):
+                            item_texts[col_idx] = str(value)
+                        else:
+                            item_texts[col_idx] = str(value)
+        
+        # Create the tree item
+        item = QTreeWidgetItem(item_texts)
+        
+        # Set flags and data
+        if item_type == "file":
+            item.setFlags(item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable)
+            if row_data is not None:
+                checked = row_data.get('show_file', False)
+                item.setCheckState(files_folders_idx, Qt.Checked if checked else Qt.Unchecked)
+                item.setData(files_folders_idx, Qt.UserRole, ("file", row_data['relative_path']))
+        else:
+            item.setFlags(item.flags() | Qt.ItemIsSelectable)
+            item.setData(files_folders_idx, Qt.UserRole, (item_type, item_name))
+        
+        return item 
