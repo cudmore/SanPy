@@ -1,3 +1,4 @@
+pyinstaller/macos/_secrets.py
 sandbox/
 
 pyinstaller/monterey/tmp_env
