@@ -1,3 +1,4 @@
+.vscode/
 data/
 pyinstaller/macos/_secrets.py
 sandbox/
