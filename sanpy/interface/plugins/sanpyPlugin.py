@@ -1,3 +1,4 @@
+import os
 import math
 import enum
 
@@ -5,7 +6,7 @@ import enum
 # Error shows up in sanpy.bPlugin when it tries to grab <plugin>.myHumanName ???
 import functools
 
-from typing import Union, Dict, List, Tuple, Optional, Optional
+from typing import Union, List, Optional
 
 from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
@@ -610,7 +611,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         logger.info(f'Saving: "{fileName}"')
         df.to_csv(fileName, index=False)
 
-    def saveResultsFigure(self, pgPlot=None):
+    def saveResultsFigure(self, pgPlot=None, appendToFileName = ''):
         """In derived, add code to save main figure to file.
 
         In derived, pass in a pg plot from a view and we will save it.
@@ -630,6 +631,9 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         # ask user for file
         fileName = self.ba.fileLoader.filename
+        filename = os.path.splitext(appendToFileName)[0]
+        if appendToFileName:
+            filename += '-' + appendToFileName
         fileName += ".png"
         savePath = fileName
         options = QtWidgets.QFileDialog.Options()
@@ -786,7 +790,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         }
         self.signalSelectSpikeList.emit(sDict)
 
-    def closeEvent(self, event):
+    def closeEvent(self, event=None):
         """Called when window is closed.
 
         Signal close event back to parent bPlugin object.
@@ -956,6 +960,9 @@ class sanpyPlugin(QtWidgets.QWidget):
         startStopList : list(float)
             Two element list with [start, stop] in seconds
         """
+
+        return
+    
         if not self._getResponseOption(self.responseTypes.setAxis):
             return
 
@@ -966,6 +973,7 @@ class sanpyPlugin(QtWidgets.QWidget):
             if self._ba != ba:
                 return
 
+        
         if startStopList is None:
             self._startSec = None
             self._stopSec = None
@@ -1154,7 +1162,8 @@ class sanpyPlugin(QtWidgets.QWidget):
             self._blockComboBox = False
         else:
             # no epochs defined
-            self._epochComboBox.setEnabled(False)
+            logger.warning('turned on 20250313 EPOCHS')
+            # self._epochComboBox.setEnabled(False)
 
         # filename = self.ba.getFileName()
         # self._fileLabel.setText(filename)

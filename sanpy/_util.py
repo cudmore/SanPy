@@ -201,6 +201,26 @@ def _loadLineScanHeader(path):
     txtFile = os.path.splitext(path)[0] + ".txt"
 
     if not os.path.isfile(txtFile):
+        # find "ISAN Linescan 6 Metadata.txt"
+        logger.info(f'did not find {txtFile}')
+        logger.info('  -->> searching ...')
+        
+        _folder, _file = os.path.split(path)
+        _file, _ = os.path.splitext(_file)
+        _file += ' Metadata.txt'
+        logger.info(f'   -->> looking for Olympus "{_file}"')
+        txtFile = os.path.join(_folder, _file)
+        if not os.path.isfile(txtFile):
+            _folder, _file = os.path.split(path)
+            _file, _ = os.path.splitext(_file)
+            _file = _file.split('_')[0]  # may fail
+            _file += '.txt'
+            logger.info(f'     -->> looking for Olympus "{_file}"')
+            txtFile = os.path.join(_folder, _file)
+            if not os.path.isfile(txtFile):
+                logger.warning(f'DID NOT FIND CORRESPONDING OLYMPUS FILE: {os.path.split(path)[1]}')
+
+    if not os.path.isfile(txtFile):
         # logger.error(f"did not find file:{txtFile}")
 
         _filePath, _fileName = os.path.split(path)
@@ -283,6 +303,17 @@ def _loadLineScanHeader(path):
             # elif line.startswith('"Image Size(Unit Converted)"'):
             # 	print('loadLineScanHeader:', line)
 
+            elif line.startswith('"Date"'):
+                # "Date"	"09/12/2024 01:33:26.239 PM"
+                # logger.info(f'date line is: {line}')
+                _date, _datetime = line.split('\t')
+                _datetime = _datetime.replace('"', '')  # remove ""
+                _date, _time, _ampm = _datetime.split(' ')
+                # logger.info(f'   _date:{_date} _time:{_time} _ampm:{_ampm}')
+                
+                theRet ['date'] = _date
+                theRet ['time'] = _time + ' ' + _ampm
+
     # tif shape is (lines, pixels)
     if gotNumPixels and gotImageSize:
         shape = (theRet["numLines"], theRet["numPixels"])
@@ -341,9 +372,5 @@ def getFileList(path, depth=1):
     return fileList
 
 if __name__ == '__main__':
-    path = '/Users/cudmore/Dropbox/data/cell-shortening/fig1'
-    fileList = getFileList(path, 4)
-    for file in fileList:
-        print(file)
-
+    pass
 

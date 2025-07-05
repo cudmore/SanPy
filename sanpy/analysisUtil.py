@@ -22,6 +22,8 @@ def throwOutAboveBelow(
         spikeTimes (list): list of spike times
         spikeErrors (list): list of error
     """
+    logger.warning('')
+    
     newSpikeTimes = []
     newSpikeErrorList = []
     newSpikePeakPnt = []

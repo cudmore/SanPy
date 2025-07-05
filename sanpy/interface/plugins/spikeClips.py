@@ -291,7 +291,7 @@ class spikeClips(sanpyPlugin):
         elif self.respondTo == "Spike Selection":
             selectedSpikeList = self.getSelectedSpikes()
 
-        logger.info(f'  startSec:{startSec} stopSec:{stopSec}')
+        logger.info(f'  startSec:{startSec} stopSec:{stopSec} self.epochNumber:{self.epochNumber}')
 
         # print('=== selectedSpikeList:', selectedSpikeList)
 

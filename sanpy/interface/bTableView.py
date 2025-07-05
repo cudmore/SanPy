@@ -33,8 +33,8 @@ class bTableView(QtWidgets.QTableView):
     """
 
     signalSelectRow = QtCore.pyqtSignal(
-        object, object, object
-    )  # (row, rowDict, selectingAgain)
+        int, dict, bool, bool
+    )  # (row, rowDict, selectingAgain, isDoubleClick)
 
     signalUpdateStatus = QtCore.pyqtSignal(object)
     """Update status in main SanPy app."""
@@ -56,8 +56,11 @@ class bTableView(QtWidgets.QTableView):
 
         self.lastSeletedRow = None
         self.clicked.connect(self.onLeftClick)
+        self.doubleClicked.connect(self._onDoubleClick)
 
         self.mySetModel(model)
+
+        self._lastClick = None
 
         # frozen table was my attempt to keep a few columns always on the left
         # this led to huge problems and is not worth it
@@ -165,6 +168,23 @@ class bTableView(QtWidgets.QTableView):
     # def dropEvent(self, event):
     #     logger.info('')
 
+    def mousePressEvent(self, event):
+        logger.info('')
+        super().mousePressEvent(event)
+        self._lastClick = "Click"
+
+    # def mouseReleaseEvent(self, event):
+    #     logger.info('')
+    #     super().mouseReleaseEvent(event)
+    #     if self.last == "Click":
+    #         QtCore.QTimer.singleShot(QtWidgets.QApplication.instance().doubleClickInterval(),
+    #                                  self._onLeftClick(event))
+
+    def mouseDoubleClickEvent(self, event):
+        logger.info('')
+        super().mouseDoubleClickEvent(event)
+        self._lastClick = "DoubleClick"
+
     #
     # frozen
     def _old_initFrozenColumn(self):
@@ -230,16 +250,42 @@ class bTableView(QtWidgets.QTableView):
         rowDict = self.model().myGetRowDict(selectedRow)
         return rowDict
 
+    def _onDoubleClick(self, item):
+        """Handle user double-click on a row.
+
+        This is used to open the file in the default application.
+        """
+        self._lastClick = "DoubleClick"
+
+        row = item.row()
+        realRow = self.model()._data.index[row]
+
+        rowDict = self.model().myGetRowDict(realRow)
+
+        # if tif/kym clicked, open kymRoiPlugin
+        logger.info('-->> emit signalSelectRow')
+        selectedAgain = False
+        doubleClick = True
+        self.signalSelectRow.emit(realRow, rowDict, selectedAgain, doubleClick)
+
     def onLeftClick(self, item):
         """Hanlde user left-click on a row.
 
         Keep track of lastSelected row to differentiate between
         switch-file and click again.
         """
-        row = item.row()
-        realRow = self.model()._data.index[row]  # sort order
-        # logger.info(f'User clicked row:{row} realRow:{realRow}')
-        self._onLeftClick(realRow)
+        # self._lastClick = "Click"
+
+        try:
+            if self.last == "Click":
+                row = item.row()
+                realRow = self.model()._data.index[row]  # sort order
+                # logger.info(f'User clicked row:{row} realRow:{realRow}')
+                # self._onLeftClick(realRow)
+                QtCore.QTimer.singleShot(QtWidgets.QApplication.instance().doubleClickInterval(),
+                                self._onLeftClick(realRow))
+        except (AttributeError) as e:
+            logger.error(e)
 
     def selectRowByFile(self, filename : str):
         # fileList = self.model()._data['File'].tolist()
@@ -252,6 +298,7 @@ class bTableView(QtWidgets.QTableView):
             logger.warning(f"Did not find file {filename} in {df['File'].tolist()}")
 
     def _onLeftClick(self, realRow):
+        
         rowDict = self.model().myGetRowDict(realRow)
 
         logger.info(f"=== User click row:{realRow} relPath:{rowDict['relPath']}")
@@ -264,7 +311,8 @@ class bTableView(QtWidgets.QTableView):
             # print('  new row selection')
             # logger.info(f'realRow:{realRow} rowDict:{rowDict}')
             logger.info('-->> emit signalSelectRow')
-            self.signalSelectRow.emit(realRow, rowDict, selectedAgain)
+            doubleClick = False
+            self.signalSelectRow.emit(realRow, rowDict, selectedAgain,doubleClick)
         else:
             # print('  handle another click on already selected row')
             pass

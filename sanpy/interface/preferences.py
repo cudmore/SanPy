@@ -32,6 +32,8 @@ class preferences:
         self._version = 1.8  # 20231226, implementing single file and folder windows
         self._version = 1.9  # 20231229, get rid of saving open plugins and single window position
 
+        self._version = 2.0  # 20250627, adding interface_mode for (SanPy, Kymograph)
+
         self._maxRecent = 7  # a lucky number
         self._configDict = self.load()
 
@@ -249,9 +251,11 @@ class preferences:
         configDict["rawDataPanels"]["DAC"] = False  #
 
         configDict['fileList'] = {}
-        
         # 20240124 changed from 1 to 3 (don't use for load file !!!)
-        configDict['fileList']['Folder Depth'] = 3
+        configDict['fileList']['Folder Depth'] = 5
+
+        # abb 202506
+        configDict['interface_mode'] = 'sanpy'  # from ('sanpy', 'kymograph')
 
         return configDict
 

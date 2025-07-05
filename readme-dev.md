@@ -30,6 +30,32 @@ git tag -d v0.1.25
 git push --delete origin v0.1.25
 ``` 
 
+202402
+
+list remote tags
+    git ls-remote --tags origin  
+commit with a tag
+    git tag -a v1.0.36 -m 'release 1.0.36'
+push the tag
+    git push --follow-tags   
+
+get version from setup
+    python setup.py --version
+
+I AM SO SICK OF VERSIONING !!!!!!
+
+Logic is (this is the way)
+
+```
+update version in setup.py
+update version in _myVersion.py
+git commit -am 'v1.0.42'
+git push
+
+git tag -a v1.0.42 -m 'release v1.0.42'
+git push --follow-tags     
+```
+
 ## Lock down a version to accompany SanPy manuscript
 
 Working on publishing v0.1.8

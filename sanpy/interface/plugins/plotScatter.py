@@ -11,6 +11,7 @@ from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RectangleSelector  # To click+drag rectangular selection
+from matplotlib.cm import ScalarMappable
 import matplotlib.markers as mmarkers  # To define different markers for scatter
 
 from sanpy.sanpyLogger import get_logger
@@ -40,7 +41,7 @@ def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
     cMap.set_under("white")  # only works for dark theme
     # do not specify 'c' argument, we set colors using set_facecolor, set_color
 
-    cMap = None
+    # cMap = None
     colorMapArray = None
     faceColors = None
     pathList = None
@@ -140,7 +141,7 @@ def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
     retDict = {
         'cMap': cMap,
         'colorMapArray': colorMapArray,
-        'faceColors': faceColors,
+        'faceColors': faceColors,  # 032024 not always assigned?
         'pathList': pathList,
         'markerList_pg': markerList_pg,
     }
@@ -186,6 +187,8 @@ class plotScatter(sanpyPlugin):
         self.yData = []
         
         self._markerSize = 20
+
+        self._colorbar = None  # colorbar when showing hue
 
         # when we plot, we plot a subset of spikes
         # this list tells us the spikes we are plotting and [ind_1] gives us the real spike number
@@ -405,6 +408,7 @@ class plotScatter(sanpyPlugin):
                 1, 1, left=0.1, right=0.9, bottom=0.1, top=0.9, wspace=0.05, hspace=0.05
             )
 
+        # redraw everything
         self.static_canvas.figure.clear()
         
         if self.plotHistograms:
@@ -443,6 +447,8 @@ class plotScatter(sanpyPlugin):
         # do not specify 'c' argument, we set colors using set_facecolor, set_color
 
         self.lines = self.axScatter.scatter([], [], picker=5)
+
+        logger.info(f'self.lines:{self.lines}')
 
         # make initial empty spike selection plot
 
@@ -674,99 +680,39 @@ class plotScatter(sanpyPlugin):
         _tmpDict = getPlotMarkersAndColors(self.ba, plotSpikeNumberList, self._hue)
 
         cMap = _tmpDict['cMap']
-        colorMapArray = _tmpDict['colorMapArray']
+        colorMapArray = _tmpDict['colorMapArray']  # used by Time hue
         faceColors = _tmpDict['faceColors']
         pathList = _tmpDict['pathList']
 
         # logger.info('   setting lots of xxx')
         self.lines.set_array(colorMapArray)  # set_array is for a color map
-        self.lines.set_cmap(cMap)  # mpl.pyplot.cm.coolwarm
-        self.lines.set_color(faceColors)
-        self.lines.set_color(faceColors)  # sets the outline
-        self.lines.set_paths(pathList)
+        if cMap is not None:
+            self.lines.set_cmap(cMap)  # mpl.pyplot.cm.coolwarm
+        if 1 or faceColors is not None:
+            self.lines.set_color(faceColors)
+        # if faceColors is not None:
+        #     self.lines.set_color(faceColors)  # sets the outline
+        if pathList is not None:
+            self.lines.set_paths(pathList)
         # logger.info('      done setting lots of xxx')
 
-        #
-        # color
-        # if self._hue == "Time":
-        #     tmpColor = np.array(range(len(xData)))
-        #     self.lines.set_array(tmpColor)  # set_array is for a color map
-        #     self.lines.set_cmap(self.cmap)  # mpl.pyplot.cm.coolwarm
-        #     self.lines.set_color(None)
-        # elif self._hue == "Sweep":
-        #     # color sweeps
-        #     _sweeps = self.getStat("sweep")
-        #     tmpColor = np.array(range(len(_sweeps)))
-        #     self.lines.set_array(tmpColor)  # set_array is for a color map
-        #     self.lines.set_cmap(self.cmap)  # mpl.pyplot.cm.coolwarm
-        #     self.lines.set_color(None)
-
-        # else:
-        #     # tmpColor = np.array(range(len(xData)))
-        #     # assuming self.cmap.set_under("white")
-
-        #     # from matplotlib.colors import ListedColormap
-        #     color_dict = {1: "blue", 2: "red", 13: "orange", 7: "green"}
-        #     color_dict = {
-        #         "good": (0, 1, 1, 1),  # cyan
-        #         "bad": (1, 0, 0, 1),  # red
-        #         #'userType1':(0,0,1,1), # blue
-        #         #'userType2':(0,1,1,1), # cyan
-        #         #'userType3':(1,0,1,1), # magenta
-        #     }
-        #     marker_dict = {
-        #         "userType1": mmarkers.MarkerStyle("*"),  # star
-        #         "userType2": mmarkers.MarkerStyle("v"),  # triangle_down
-        #         "userType3": mmarkers.MarkerStyle("<"),  # triangle_left
-        #     }
-
-        #     # no need for a cmap ???
-        #     # cm = ListedColormap([color_dict[x] for x in color_dict.keys()])
-        #     # self.lines.set_cmap(cm)
-
-        #     goodSpikes = self.getStat("include")
-        #     userTypeList = self.getStat("userType")
-
-        #     logger.warning("   debug set spike stat, user types need to be int")
-        #     logger.warning("   we ARE NOT GETTING THE CORRECT SPIKE INDEX")
-        #     # print(userTypeList)
-
-        #     if self.plotChasePlot:
-        #         # xData = xData[1:-1] # x is the reference spike for marking (bad, type)
-        #         # goodSpikes = goodSpikes[1:-1]
-        #         # userTypeList = userTypeList[1:-1]
-        #         goodSpikes = goodSpikes[0:-2]
-        #         userTypeList = userTypeList[0:-2]
-
-        #     tmpColors = [color_dict["bad"]] * len(xData)  # start as all good
-
-        #     # user types will use symbols
-        #     # tmpColors = [color_dict['type'+num2str(x)] if x>0 else tmpColors[idx] for idx,x in enumerate(userTypeList)]
-        #     # bad needs to trump user type !!!
-        #     tmpColors = [
-        #         color_dict["good"] if x else tmpColors[idx]
-        #         for idx, x in enumerate(goodSpikes)
-        #     ]
-        #     tmpColors = np.array(tmpColors)
-        #     # print('tmpColors', type(tmpColors), tmpColors.shape, tmpColors)
-
-        #     self.lines.set_array(None)  # used to map [0,1] to color map
-        #     self.lines.set_facecolor(tmpColors)
-        #     self.lines.set_color(tmpColors)  # sets the outline
-
-        #     # set user type 2 to 'star'
-        #     # see: https://stackoverflow.com/questions/52303660/iterating-markers-in-plots/52303895#52303895
-        #     # import matplotlib.markers as mmarkers
-        #     myMarkerList = [
-        #         marker_dict["userType" + str(x)] if x > 0 else mmarkers.MarkerStyle("o")
-        #         for x in userTypeList
-        #     ]
-        #     myPathList = []
-        #     for myMarker in myMarkerList:
-        #         path = myMarker.get_path().transformed(myMarker.get_transform())
-        #         myPathList.append(path)
-        #     self.lines.set_paths(myPathList)
-
+        # show colorbar
+        if colorMapArray is not None:
+            norm = plt.Normalize(colorMapArray.min(), colorMapArray.max())
+            sm =  ScalarMappable(norm=norm, cmap=cMap)
+            sm.set_array([])
+            if self._colorbar is None:
+                self._colorbar = self.fig.colorbar(sm, ax=self.axScatter)
+            else:
+                self._colorbar.update_normal(sm)
+                # self._colorbar.show()
+        else:
+            if self._colorbar is not None:
+                try:
+                    self._colorbar.remove()
+                except (KeyError):
+                    pass
+                self._colorbar = None
         #
         # update highlighter, needs coordinates of x/y to highlight
         self.myHighlighter.setData(xData, yData, self._plotSpikeNumber)

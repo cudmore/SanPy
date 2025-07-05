@@ -3,24 +3,41 @@ from functools import partial
 from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 class sanpyCursors(QtCore.QObject):
     signalCursorDragged = QtCore.pyqtSignal(str)  # dx
     signalSetDetectionParam = QtCore.pyqtSignal(str, float)
 
-    def __init__(self, plotWidget : pg.PlotWidget, showInView=True):
+    def __init__(self,
+                 plotWidget : pg.PlotWidget,
+                 showInView=True,
+                 showCursorD=False,
+                 cursorC_label=''):
         """Add cursors to a PlotWidget. Normally vmPlot.
+
+        Parameters
+        ----------
+        showCursorD : bool
+            Added when working on KymRoi
         """
         super().__init__(None)
         
+        self._showCursorA = True
+        self._showCursorB = True
+        self._showCursorC = True
+        self._showCursorD = showCursorD
+
         self._showCursors = False
         self._delx : float = float('nan')
+        self._dely : float = float('nan')
 
         self._aCursorVal : float = float('nan')
         self._bCursorVal : float = float('nan')
         self._cCursorVal : float = float('nan')
+        if self._showCursorD:
+            self._dCursorVal : float = float('nan')
 
         self._showCursorsY = False
         self._delx : float = float('nan')
@@ -28,7 +45,7 @@ class sanpyCursors(QtCore.QObject):
         self._plotWidget = plotWidget
 
         _rect = self._plotWidget.viewRect()  # get xaxis
-        logger.info(f'_rect:{_rect}')
+        # logger.info(f'_rect:{_rect}')
         _left = _rect.left()
         _top = _rect.top()
         _right = _rect.right()
@@ -43,19 +60,28 @@ class sanpyCursors(QtCore.QObject):
         self._cursorB.sigDragged.connect(partial(self._cursorDragged, 'cursorB'))
         self._cursorB.setVisible(self._showCursors)
 
-        yLabelOpts = {'position':0.05}
-        self._cursorC = pg.InfiniteLine(pos=_top, angle=0, label='C', labelOpts=yLabelOpts, movable=True)
-        self._cursorC.sigDragged.connect(partial(self._cursorDragged, 'cursorA'))
+        yLabelOpts = {'position':0.1}
+        # label='f0%:{value:.2f}'
+        self._cursorC = pg.InfiniteLine(pos=_top,
+                                        angle=0,
+                                        # label='C',
+                                        label=cursorC_label+'{value:.2f}',  # value is hidden, current pos of line
+                                        labelOpts=yLabelOpts,
+                                        movable=True)
+        self._cursorC.sigDragged.connect(partial(self._cursorDragged, 'cursorC'))
         self._cursorC.setVisible(self._showCursors)
-        # self._cursorD = pg.InfiniteLine(pos=10, angle=0, label='D', labelOpts=yLabelOpts, movable=True)
-        # self._cursorD.sigDragged.connect(partial(self._cursorDragged, 'cursorB'))
-        # self._cursorD.setVisible(self._showCursors)
+
+        if showCursorD:
+            self._cursorD = pg.InfiniteLine(pos=10, angle=0, label='D', labelOpts=yLabelOpts, movable=True)
+            self._cursorD.sigDragged.connect(partial(self._cursorDragged, 'cursorD'))
+            self._cursorD.setVisible(self._showCursors)
 
         
         self._plotWidget.addItem(self._cursorA)
         self._plotWidget.addItem(self._cursorB)
         self._plotWidget.addItem(self._cursorC)
-        # self._plotWidget.addItem(self._cursorD)
+        if showCursorD:
+            self._plotWidget.addItem(self._cursorD)
 
         # logger.info(self._getName())
         #self._showInView()
@@ -70,11 +96,26 @@ class sanpyCursors(QtCore.QObject):
     
     def toggleCursors(self, visible):
         self._showCursors = visible
-        self._cursorA.setVisible(visible)
-        self._cursorB.setVisible(visible)
         
-        self._cursorC.setVisible(visible)
-        # self._cursorD.setVisible(visible)
+        if self._showCursorA:
+            self._cursorA.setVisible(visible)
+        else:
+            self._cursorA.setVisible(False)
+
+        if self._showCursorB:
+            self._cursorB.setVisible(visible)
+        else:
+            self._cursorB.setVisible(False)
+        
+        if self._showCursorC:
+            self._cursorC.setVisible(visible)
+        else:
+            self._cursorC.setVisible(False)
+        
+        if self._showCursorD:
+            self._cursorD.setVisible(visible)
+        # else:
+        #     self._cursorD.setVisible(False)
 
         if visible:
             # set position to start/stop of current view
@@ -150,13 +191,15 @@ class sanpyCursors(QtCore.QObject):
         bottom = rect.top() + yPercentOfView  # y is flipped
         top = rect.bottom() - yPercentOfView
 
-        logger.info(f'left:{left} right:{right} bottom:{bottom} top:{top}')
+        # logger.info(f'left:{left} right:{right} bottom:{bottom} top:{top}')
 
         self._cursorA.setValue(left)
         self._cursorB.setValue(right)
 
         self._cursorC.setValue(bottom)
-        # self._cursorD.setValue(top)
+        
+        if self._showCursorD:
+            self._cursorD.setValue(top)
 
         self._cursorDragged('cursorA', self._cursorA)
 
@@ -181,11 +224,26 @@ class sanpyCursors(QtCore.QObject):
         self._cCursorVal = round(yCursorC,3)
 
         yCursorC = round(yCursorC,4)
+
         # yCursorD = round(yCursorD,4)
+        if self._showCursorD:
+            yCursorD = self._cursorD.pos().y()
+            self._dCursorVal = round(yCursorD,3)
+            yCursorD = round(yCursorD,4)
+
+            dely = yCursorD - yCursorC
+            dely = round(dely, 4)
+
+            self._dely = dely
 
         # self._cursorB.label.setFormat(f'B\ndelx={delx}')
         delStr = f'A:{xCursorA} B:{xCursorB} Delta:{delx}'
-        delStr += f' | C:{yCursorC}'
+        if self._showCursorD:
+            delStr += f' | C:{yCursorC} D:{yCursorD} Delta:{dely}'
+        else:
+            # 20240916 original behavior
+            delStr += f' | C:{yCursorC}'
+
         # delStr += f' | C:{yCursorC} D:{yCursorD} Delta:{dely}'
         
         self.signalCursorDragged.emit(delStr)

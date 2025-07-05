@@ -34,7 +34,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
     signalSelectSpikeList = QtCore.Signal(object)
     """Emit spike list selection."""
 
-    def __init__(self, sanPyApp : "sanpy.interface.SanPyApp", path, parent=None):
+    def __init__(self, sanPyApp : "sanpy.interface.SanPyApp",
+                 path, parent=None):
         """Main SanPy window to show one file or a file of files.
 
         Parameters
@@ -47,7 +48,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         super().__init__(parent)
 
-        logger.info(f'Initializing SanPyWindow with path: {path}')
+        logger.info(f'Initializing SanPyWindow with path:')
+        logger.info(f'  {path}')
 
         # logger.info("Constructing SanPyWindow")
         # date_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -326,7 +328,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         event : PyQt5.QtGui.QCloseEvent
         """
 
-        logger.info(event)
+        logger.info('ask user to save changes')
 
         # check if our table view has been edited by user and warn
         doQuit = True
@@ -518,7 +520,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
         return rowDict
         """
 
-    def slot_fileTableClicked(self, row, rowDict, selectingAgain):
+    def slot_fileTableClicked(self, row, rowDict,
+                              selectingAgain,
+                              isDoubleClick):
         """Respond to selections in file table.
 
         Parameters
@@ -541,6 +545,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
         if self.myAnalysisDir is not None:
             ba = self.myAnalysisDir.getAnalysis(row)  # if None then problem loading
 
+            # logger.info(f'got row:{row} rowDict:{rowDict} ba: {ba}')
+
             if ba is not None:
                 self.signalSwitchFile.emit(ba, rowDict)
                 if selectingAgain:
@@ -554,6 +560,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
                     self.slot_updateStatus(
                         f'Loaded file {rowDict["parent1"]}/{ba.fileLoader.filename} {fileNote}'
                     )  # this will load ba if necc
+
+        if isDoubleClick and ba.kymAnalysis is not None:
+            logger.info('if ba is kym, open "Kymograph ROI" plugin')
+            self.sanpyPlugin_action('Kymograph ROI')
 
     def _buildMenus(self):
         
@@ -1145,6 +1155,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
             folderDepth = 1
         elif os.path.isdir(path):
             folderDepth = self.configDict["fileList"]["Folder Depth"]
+            logger.warning(f'baltimore april, need to allow uset to configure folderDepth:{folderDepth}')
+            logger.warning('20250510 colin folder depth is 5')
+            folderDepth = 5
         else:
             logger.error(f'did not load path:{path}')
             return

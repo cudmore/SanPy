@@ -997,6 +997,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
             if self._kymographAnalysis.hasDiamAnalysis():
                 yPlot = self._kymographAnalysis.getResults('rangeInt')
 
+        logger.info(f'xPlot:{len(xPlot)} yPlot:{len(yPlot)}')
+
         if yPlot is not None:
             self.sumIntensityPlot.setData(xPlot, yPlot, connect="finite")
 
@@ -1024,6 +1026,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         xPlot = self._ba.fileLoader.sweepX
 
+        # yDiamPlot is a list []
         if self._plotDiamType == 'Diameter (um)':
             leftLabel = 'Diameter (um)'
             yDiamPlot = self._kymographAnalysis.getResults("diameter_um")
@@ -1048,6 +1051,8 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         #     yDiam_um = self._kymographAnalysis.getResults("diameter_um")
         
         if yDiamPlot is not None:
+            logger.info(f'xPlot from sweepX:{xPlot.shape} yDiamPlot:{len(yDiamPlot)}')
+
             self.diameterPlot.setData(xPlot, yDiamPlot, connect="finite")
             self.diameterPlotItem.setLabel("left", leftLabel, units="")
         else:
@@ -1085,9 +1090,9 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         if autoRange == 'all':
             self.diameterPlotItem.autoRange()
         elif autoRange == 'y':
-            self.diameterPlotItem.setRange(yRange=[min(yDiamPlot), max(yDiamPlot)])
+            self.diameterPlotItem.setRange(yRange=[np.nanmin(yDiamPlot), np.nanmax(yDiamPlot)])
         elif autoRange == 'x':
-            self.diameterPlotItem.setRange(xRange=[min(xPlot), max(xPlot)])
+            self.diameterPlotItem.setRange(xRange=[np.nanmin(xPlot), np.nanmax(xPlot)])
 
 def exportDiameter():
     import sanpy.interface.bExportWidget

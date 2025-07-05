@@ -199,7 +199,7 @@ class fileLoader_base(ABC):
 
         super().__init__()
 
-        logger.info(filepath)
+        # logger.info(filepath)
 
         self._loadError = False
 

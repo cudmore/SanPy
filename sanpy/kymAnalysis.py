@@ -136,6 +136,8 @@ def startStopFromDeriv(lineProfile, stdMult, doPlot=False, verbose=False):
     midPoint = int(lineProfile.shape[0]/2)
     # print('midPoint:', midPoint)
 
+    logger.info(f'lineDeriv:{lineDeriv.shape} midPoint:{midPoint}')
+
     leftDeriv = lineDeriv[0:midPoint]
     rightDeriv = lineDeriv[midPoint:-1]
 
@@ -609,7 +611,7 @@ class kymAnalysis:
     
     def __init__(self,
                  path : str,
-                 tifData : np.ndarray = None,
+                 tifData : np.ndarray = None,  # can be multichannel
                  tifHeader : dict = None,
                  autoLoad: bool = True):
         """
@@ -626,6 +628,9 @@ class kymAnalysis:
                 auto load analysis
         """
 
+        self._timeDim = 1  # 20241004, add while working on kym roi
+        self._spaceDim = 0
+
         self._path = path
         # path to tif file
 
@@ -634,6 +639,7 @@ class kymAnalysis:
             self._kymImage = tifData
         else:
             # load
+            logger.error('DO NOT LOAD TIF DIRECTLY -->> USE fileloader_tiff')
             self._kymImage: np.ndarray = tifffile.imread(path)
 
         self._kymImageFiltered = None
@@ -645,11 +651,12 @@ class kymAnalysis:
             logger.error(f"image must be 2d but is {self._kymImage.shape}")
 
         # image must be shape[0] is time/big, shape[1] is space/small
-        if self._kymImage.shape[0] < self._kymImage.shape[1]:
-            # logger.info(f"rot90 image with shape: {self._kymImage.shape}")
-            self._kymImage = np.rot90(
-                self._kymImage, 3
-            )  # ROSIE, so lines are not backward
+        # logger.warning('1 removed np.rot90()')
+        # if self._kymImage.shape[0] < self._kymImage.shape[1]:
+        #     # logger.info(f"rot90 image with shape: {self._kymImage.shape}")
+        #     self._kymImage = np.rot90(
+        #         self._kymImage, 3
+        #     )  # ROSIE, so lines are not backward
 
         # this is what we extract line profiles from
         # we create filtered version at start of detect()
@@ -715,13 +722,13 @@ class kymAnalysis:
 
     def getAnalysisParam(self, name):
         if name not in self._analysisParams.keys():
-            logger.error(f'did not find key: {name}')
+            logger.error(f'did not find key: "{name}"')
             return
         return self._analysisParams[name]
     
     def setAnalysisParam(self, name, value):
         if name not in self._analysisParams.keys():
-            logger.error(f'did not find key: {name}')
+            logger.error(f'did not find key: "{name}"')
         self._analysisParams[name] = value
 
     @property
@@ -946,7 +953,7 @@ class kymAnalysis:
     def getImage(self):
         return self._kymImage
 
-    def getImageContrasted(self, theMin, theMax, rot90=False):
+    def _old_getImageContrasted(self, theMin, theMax, rot90=False):
         bitDepth = self._header['bitDepth']
         lut = np.arange(2**bitDepth, dtype="uint8")
         lut = self._getContrastedImage(lut, theMin, theMax)  # get a copy of the image
@@ -984,11 +991,11 @@ class kymAnalysis:
 
     def numLineScans(self):
         """Number of line scans in kymograph."""
-        return self.getImageShape()[0]
+        return self.getImageShape()[self._timeDim]
 
     def pointsPerLineScan(self):
         """Number of points in each line scan."""
-        return self.getImageShape()[1]
+        return self.getImageShape()[self._spaceDim]
 
     def _getAnalysisFolder(self):
         savePath, saveFile = os.path.split(self._path)
@@ -1202,16 +1209,18 @@ class kymAnalysis:
 
         # we know the scan line, determine start/stop based on roi
         roiRect = self.getRoiRect()  # (l, t, r, b) in um and seconds (float)
+        logger.info(f'lineWidth:{lineWidth} roiRect:{roiRect}')
         src_pnt_space = roiRect.getBottom()
         dst_pnt_space = roiRect.getTop()
 
         if lineWidth == 1:
-            intensityProfile = self._filteredImage[lineScanNumber, :]
+            # intensityProfile = self._filteredImage[lineScanNumber, :]
+            intensityProfile = self._filteredImage[:, lineScanNumber]
             intensityProfile = np.flip(intensityProfile)  # FLIPPED
 
         else:
             # numPixels = self._filteredImage.shape[1]
-            _numLines = self._filteredImage.shape[0]
+            _numLines = self._filteredImage.shape[self._timeDim]
             
             halfLineWidth = (lineWidth-1) / 2  # assuming lineWidth is odd
             halfLineWidth = int(halfLineWidth)
@@ -1223,11 +1232,15 @@ class kymAnalysis:
             if _stopLine >= _numLines:
                 _stopLine = _numLines - 1
             
-            _slice = self._filteredImage[_startLine:_stopLine, :]
-            intensityProfile = np.mean(_slice, axis=0)
+            _slice = self._filteredImage[:, _startLine:_stopLine]
+            logger.info(f'   _slice:{_slice.shape}')
+            # intensityProfile = np.mean(_slice, axis=0)
+            intensityProfile = np.mean(_slice, axis=1)
 
             intensityProfile = np.flip(intensityProfile)  # FLIPPED
 
+        logger.warning(f'  1 intensityProfile:{intensityProfile.shape}')
+        
         # median filter line profile
         if lineFilterKernel > 0:
             intensityProfile = scipy.signal.medfilt(intensityProfile, lineFilterKernel)
@@ -1968,7 +1981,7 @@ def plotKym(ka: kymAnalysis):
     _extent = ka.getImageRect().getMatPlotLibExtent()  # [l, t, r, b]
     logger.info(f"_extent [left, right, bottom, top]:{_extent}")
     tifDataCopy = ka.getImage().copy()
-    tifDataCopy = np.rot90(tifDataCopy)
+    # tifDataCopy = np.rot90(tifDataCopy)
     # axs[0].imshow(tifDataCopy, extent=_extent)
     axs[0].imshow(tifDataCopy)
 

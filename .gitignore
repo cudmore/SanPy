@@ -1,3 +1,10 @@
+*.egg-info
+.coverage*
+.vscode/
+data/
+pyinstaller/macos/_secrets.py
+sandbox/
+
 pyinstaller/monterey/tmp_env
 
 build/
@@ -7,6 +14,10 @@ dist/
 sanpy_env/*
 sanpy.log
 sanpy/sanpy.log
+
+# Log files
+logs/
+*.log
 
 .AppleDouble
 .DS_Store

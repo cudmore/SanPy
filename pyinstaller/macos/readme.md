@@ -1,5 +1,7 @@
 This folder contains scripts to build macOS app(s) from Python source code using pyinstaller.
 
+My apple developer account is at https://developer.apple.com/account
+
 Building a Python app on macOS is by no means simple. The app needs to be properly codesigned, notarized on an Apple server (requires uploading a zip of the app to Apple), waiting for the ok, and then staple(ing) the app with the notarization.
 
 This all requires an Apple Developer Subscription which is $99/year.

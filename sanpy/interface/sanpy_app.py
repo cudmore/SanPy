@@ -21,6 +21,7 @@ import pandas as pd
 
 import pyqtgraph as pg
 
+# enable_hi_dpi() must be called before the instantiation of QApplication.
 import qdarktheme
 qdarktheme.enable_hi_dpi()
 
@@ -72,7 +73,7 @@ class SanPyApp(QtWidgets.QApplication):
         if firstTimeRunning:
             logger.info("  We created <user>/Documents/Sanpy and need to restart")
 
-        self._fileLoaderDict = sanpy.fileloaders.getFileLoaders(verbose=True)
+        self._fileLoaderDict = sanpy.fileloaders.getFileLoaders(verbose=False)
         
         self._detectionClass : sanpy.bDetection = sanpy.bDetection()
 
@@ -136,8 +137,12 @@ class SanPyApp(QtWidgets.QApplication):
         self.openRecentMenu.aboutToShow.connect(self._refreshOpenRecent)
         fileMenu.addMenu(self.openRecentMenu)
 
-        ## fileMenu.addSeparator()
-        # fileMenu.addAction(saveDatabaseAction)
+        fileMenu.addSeparator()
+
+        # save frontmost window
+        saveAction = QtWidgets.QAction("Save", self)
+        saveAction.triggered.connect(self.saveFrontmost)
+        fileMenu.addAction(saveAction)
 
         fileMenu.addSeparator()
         
@@ -301,6 +306,16 @@ class SanPyApp(QtWidgets.QApplication):
         logger.info('   spawning new window')
         self.openSanPyWindow(filePath)
 
+    def saveFrontmost(self):
+        """Save analysis in frontmost window.
+        """
+        logger.info('')
+        # sanpy.interface.sanpy_window.SanPyWindow
+        activeWindow = self.activeWindow()
+        
+        if isinstance(activeWindow, sanpy.interface.sanpy_window.SanPyWindow):
+            activeWindow.saveFilesTable()
+
     def loadFolder(self, path : str = None, folderDepth=None):
         """Load a folder of raw data files.
 
@@ -313,7 +328,8 @@ class SanPyApp(QtWidgets.QApplication):
         if folderDepth is None:
             # get the depth from file list widget
             #folderDepth = self._fileListWidget.getDepth()
-            folderDepth = 1
+            folderDepth = 4
+            logger.warning(f'balt april 2025, hard coding folderDepth to {folderDepth}')
 
         logger.info(f"Loading depth:{folderDepth} path: {path}")
 
@@ -436,10 +452,12 @@ class SanPyApp(QtWidgets.QApplication):
         sweep : int
             Only works for file path
         """
+        interface_mode = self.configDict['interface_mode']
         
         logger.info(f'path:{path}')
         logger.info(f'   sweep:{sweep}')
         logger.info(f'   spikeNumber:{spikeNumber}')
+        logger.info(f'   interface_mode:{interface_mode}')
 
         # check if it is open
         foundWindow = None
@@ -453,7 +471,13 @@ class SanPyApp(QtWidgets.QApplication):
         # open new window
         if foundWindow is None:
             logger.info('   opening new window')
-            foundWindow = SanPyWindow(self, path)
+            
+            if interface_mode == 'sanpy':
+                foundWindow = SanPyWindow(self, path)
+            elif interface_mode == 'kymograph':
+                from sanpy.kym.interface.kym_file_list.tif_tree_window import TifTreeWindow
+                foundWindow = TifTreeWindow(self, path)
+            
             foundWindow.show()
             foundWindow.raise_()  # bring to front, raise is a python keyword
             foundWindow.activateWindow()  # bring to front
@@ -487,10 +511,10 @@ class SanPyApp(QtWidgets.QApplication):
     def closeSanPyWindow(self, theWindow : SanPyWindow):
         """Remove theWindow from self._windowList.
         """
-        logger.info('todo: implement this')
-        logger.info('  remove sanpy window from app list of windows')
+
         for idx, aWindow in enumerate(self._windowList):
             if aWindow == theWindow:
+                logger.info(f'remove/pop sanpy window from app, idx:{idx}')
                 _removedValue = self._windowList.pop(idx)
 
     def _onHelpMenuAction(self, name: str):
