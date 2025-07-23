@@ -15,8 +15,6 @@ import matplotlib.pyplot as plt
 
 import seaborn as sns
 
-# sns.set_palette("colorblind")
-
 from statannotations.Annotator import Annotator
 
 from PyQt5 import QtGui, QtCore, QtWidgets
@@ -32,7 +30,8 @@ from sanpy.kym.interface.kym_file_list.tif_viewer_base import MainWindow
 # abb 20250704
 conditionOrder = ['Control', 'Ivab']
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
 
 logger = get_logger(__name__)
 
@@ -210,6 +209,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         defaultStyle: str = None,
         imgFolder: str = None,  # to load sm2 images
         plotColumns=None,
+        errorsDf: Optional[pd.DataFrame] = None,  # NEW: errors DataFrame
     ):
         super().__init__(None)
 
@@ -222,6 +222,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         self._masterDf = masterDf
         self._meanDf = meanDf
+        self._errorsDf = errorsDf if errorsDf is not None else pd.DataFrame()  # NEW
 
         # columns in analysis df
         if plotColumns is None:
@@ -277,6 +278,10 @@ class ScatterWidget(QtWidgets.QMainWindow):
         self._updateGuiOnPlotType(self._state['plotType'])
 
         self.replot()
+
+        # Close window shortcut: platform-independent (Ctrl+W or Cmd+W)
+        shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Close), self)
+        shortcut.activated.connect(self.close)
 
     def getDf(self):
         if self.state['plotDf'] == 'Raw':
@@ -372,6 +377,10 @@ class ScatterWidget(QtWidgets.QMainWindow):
         self.yStatSummaryTableWidget = simpleTableWidget()
         self._tabwidget.addTab(self.yStatSummaryTableWidget, "Y-Stat Summary")
 
+        # NEW: Errors tab
+        self.errorsTableWidget = simpleTableWidget(self._errorsDf)
+        self._tabwidget.addTab(self.errorsTableWidget, "Errors")
+
         self._tabwidget.setCurrentIndex(0)
 
         self._tabwidget.setVisible(False)
@@ -395,10 +404,92 @@ class ScatterWidget(QtWidgets.QMainWindow):
             logger.info('=== copy summary to clipboard ===')
             self._dfYStatSummary.to_clipboard(sep="\t", index=False)
             _ret = 'Copied y-stat-summary table to clipboard'
+        elif _tabIndex == 2:
+            logger.info('=== copy errors to clipboard ===')
+            self._errorsDf.to_clipboard(sep="\t", index=False)
+            _ret = 'Copied errors table to clipboard'
         else:
             logger.warning(f'did not understand tab: {_tabIndex}')
             _ret = 'Did not copy, please select a table'
         return _ret
+
+    def _buildFilterToobar(self, layout: QtWidgets.QLayout) -> QtWidgets.QWidget:
+        """Add a number of groupboxes(s), one for each column in columns.
+        """
+            
+        # maintain a dict where each key is a column name, and the value is a list of checkboxes
+        self._filterDict = {}
+
+        # we do this so we can call this function after re-scanning the folder
+        # if self.hBoxLayout exists, remove all widgets
+        if hasattr(self, '_filter_HBoxLayout'):
+            for i in range(self._filter_HBoxLayout.count()):
+                item = self._filter_HBoxLayout.itemAt(i)
+                if item:
+                    item.widget().deleteLater()
+        
+        theseColumns = ['Region', 'Condition', 'Polarity']
+
+        # hLayout for ['Regions', 'Conditions']
+        self._filter_HBoxLayout = QtWidgets.QHBoxLayout()
+        layout.addLayout(self._filter_HBoxLayout)
+        for column in theseColumns:
+
+            if column not in self.getDf().columns:
+                logger.warning(f'did not understand column: {column}')
+                logger.info(f'available columns are: {self.getDf().columns}')
+                continue
+
+            groupBox = QtWidgets.QGroupBox(title=column)
+            self._filter_HBoxLayout.addWidget(groupBox)
+
+            # one checkbox for each Region
+            vLayout = QtWidgets.QVBoxLayout()
+            groupBox.setLayout(vLayout)
+
+            regions = self.getDf()[column].unique()
+            for regionStr in regions:
+                if column == 'Condition':
+                    # for condition we want an qhboxlayout with checkboxes for:
+                    # condition then each repeat
+                    conditionHLayout = QtWidgets.QHBoxLayout()
+                    vLayout.addLayout(conditionHLayout)
+
+                    conditionCheckBox = QtWidgets.QCheckBox(str(regionStr))
+                    conditionCheckBox.setChecked(True)
+                    conditionCheckBox.stateChanged.connect(
+                        lambda state, col=column, cond=regionStr: self._on_condition_checkbox(col, cond, value=state)
+                    )
+                    conditionHLayout.addWidget(conditionCheckBox)
+
+                    for repeatStr in self.getDf()[self.getDf()['Condition'] == regionStr]['Repeat'].unique():
+                        repeatStr = str(repeatStr)  # repeatStr is npInt64
+                        repeatCheckBox = QtWidgets.QCheckBox(str(repeatStr))
+                        conditionHLayout.addWidget(repeatCheckBox)
+                        repeatCheckBox.setChecked(True)
+                        repeatCheckBox.stateChanged.connect(
+                            lambda state, col=column, cond=regionStr, rep=repeatStr: self._on_condition_checkbox(col, cond, rep, state))
+                else:
+                    regionCheckBox = QtWidgets.QCheckBox(str(regionStr))
+
+                    regionCheckBox.setChecked(True)
+                    regionCheckBox.stateChanged.connect(
+                        lambda state, col=column, cond=regionStr: self._on_condition_checkbox(col, cond, value=state)
+                    )
+                    vLayout.addWidget(regionCheckBox)
+
+            # Initialize _filterDict based on column type
+            if column == 'Condition':
+                # Special structure for Condition: dict mapping condition names to lists of repeat values
+                self._filterDict[column] = {}
+                for conditionStr in regions:
+                    repeatValues = self.getDf()[self.getDf()['Condition'] == conditionStr]['Repeat'].unique()
+                    self._filterDict[column][conditionStr] = [str(r) for r in repeatValues]
+            else:
+                # Simple list for other columns
+                self._filterDict[column] = list(regions)
+            
+            logger.info(f'self._filterDict:{self._filterDict}')
 
     def _buildLeftToobar(self) -> QtWidgets.QWidget:
         # Create a widget to hold the layout
@@ -414,98 +505,103 @@ class ScatterWidget(QtWidgets.QMainWindow):
         regionConditionHBox = QtWidgets.QHBoxLayout()
         vBoxLayout.addLayout(regionConditionHBox)
 
-        #
-        # Regions group box
-        regionsGroupBox = QtWidgets.QGroupBox('Regions')
-        regionConditionHBox.addWidget(regionsGroupBox)
+        self._buildFilterToobar(vBoxLayout)
 
-        # one checkbox for each Region
-        regionsVLayout = QtWidgets.QVBoxLayout()
-        regionsGroupBox.setLayout(regionsVLayout)
+        # testing if rebuild works
+        # self._buildFilterToobar(vBoxLayout)
 
-        regions = self.getDf()['Region'].unique()
-        for regionStr in regions:
-            regionCheckBox = QtWidgets.QCheckBox(regionStr)
-            regionCheckBox.setChecked(True)
-            regionCheckBox.stateChanged.connect(
-                partial(self._on_condition_checkbox, 'Region', regionStr)
-            )
-            regionsVLayout.addWidget(regionCheckBox)
+        # #
+        # # Regions group box
+        # regionsGroupBox = QtWidgets.QGroupBox('Regions')
+        # regionConditionHBox.addWidget(regionsGroupBox)
 
-        #
-        # conditions group box
-        conditionsGroupBox = QtWidgets.QGroupBox('Conditions')
-        regionConditionHBox.addWidget(conditionsGroupBox)
+        # # one checkbox for each Region
+        # regionsVLayout = QtWidgets.QVBoxLayout()
+        # regionsGroupBox.setLayout(regionsVLayout)
 
-        # one checkbox for each Condition
-        conditionsVLayout = QtWidgets.QVBoxLayout()
-        conditionsGroupBox.setLayout(conditionsVLayout)
+        # regions = self.getDf()['Region'].unique()
+        # for regionStr in regions:
+        #     regionCheckBox = QtWidgets.QCheckBox(regionStr)
+        #     regionCheckBox.setChecked(True)
+        #     regionCheckBox.stateChanged.connect(
+        #         partial(self._on_condition_checkbox, 'Region', regionStr)
+        #     )
+        #     regionsVLayout.addWidget(regionCheckBox)
 
-        conditions = sorted(self.getDf()['Condition'].unique())
-        for conditionStr in conditions:
-            # each condition has a hlayout with epoch checkboxes
-            conditionHLayout = QtWidgets.QHBoxLayout()
-            conditionsVLayout.addLayout(conditionHLayout)
+        # #
+        # # conditions group box
+        # conditionsGroupBox = QtWidgets.QGroupBox('Conditions')
+        # regionConditionHBox.addWidget(conditionsGroupBox)
 
-            conditionCheckBox = QtWidgets.QCheckBox(conditionStr)
-            conditionCheckBox.setChecked(True)
-            conditionCheckBox.stateChanged.connect(
-                partial(self._on_condition_checkbox, 'Condition', conditionStr)
-            )
-            conditionHLayout.addWidget(conditionCheckBox)
+        # # one checkbox for each Condition
+        # conditionsVLayout = QtWidgets.QVBoxLayout()
+        # conditionsGroupBox.setLayout(conditionsVLayout)
 
-            # one checkbox for each Epoch
-            theseRows = self.getDf()['Condition'] == conditionStr
-            # abb 20250704 switched epoch to repeat !!!
-            try:
-                theseEpochs = sorted(self.getDf()[theseRows]['Repeat'].unique())
-            except (KeyError) as e:
-                logger.error(f'did not understand Epoch column: {e}')
-                logger.error('self.getDf() is:')
-                logger.error(f'available columns are: {self.getDf().columns}')
-                return
+        # conditions = sorted(self.getDf()['Condition'].unique())
+        # for conditionStr in conditions:
+        #     # each condition has a hlayout with epoch checkboxes
+        #     conditionHLayout = QtWidgets.QHBoxLayout()
+        #     conditionsVLayout.addLayout(conditionHLayout)
 
-            for epochInt in theseEpochs:
-                epochStr = str(epochInt)
-                epochCheckBox = QtWidgets.QCheckBox(epochStr)
-                epochCheckBox.setChecked(True)
+        #     conditionCheckBox = QtWidgets.QCheckBox(conditionStr)
+        #     conditionCheckBox.setChecked(True)
+        #     conditionCheckBox.stateChanged.connect(
+        #         partial(self._on_condition_checkbox, 'Condition', conditionStr)
+        #     )
+        #     conditionHLayout.addWidget(conditionCheckBox)
 
-                # if condition has 1 epoch, disable
-                if len(theseEpochs) == 1:
-                    epochCheckBox.setEnabled(False)
+        #     # one checkbox for each Epoch
+        #     theseRows = self.getDf()['Condition'] == conditionStr
+        #     # abb 20250704 switched epoch to repeat !!!
+        #     try:
+        #         theseEpochs = sorted(self.getDf()[theseRows]['Repeat'].unique())
+        #     except (KeyError) as e:
+        #         logger.error(f'did not understand Epoch column: {e}')
+        #         logger.error('self.getDf() is:')
+        #         logger.error(f'available columns are: {self.getDf().columns}')
+        #         return
 
-                epochCheckBox.stateChanged.connect(
-                    partial(
-                        self._on_condition_checkbox, 'Epoch', conditionStr, epochStr
-                    )
-                )
-                conditionHLayout.addWidget(epochCheckBox)
+        #     for epochInt in theseEpochs:
+        #         epochStr = str(epochInt)
+        #         epochCheckBox = QtWidgets.QCheckBox(epochStr)
+        #         epochCheckBox.setChecked(True)
 
-        #
-        # polarity group box
-        polarityGroupBox = QtWidgets.QGroupBox('Polarity')
-        regionConditionHBox.addWidget(polarityGroupBox)
+        #         # if condition has 1 epoch, disable
+        #         if len(theseEpochs) == 1:
+        #             epochCheckBox.setEnabled(False)
 
-        # one checkbox for each Condition
-        polaritiesVLayout = QtWidgets.QVBoxLayout()
-        polarityGroupBox.setLayout(polaritiesVLayout)
+        #         epochCheckBox.stateChanged.connect(
+        #             partial(
+        #                 self._on_condition_checkbox, 'Epoch', conditionStr, epochStr
+        #             )
+        #         )
+        #         conditionHLayout.addWidget(epochCheckBox)
 
-        # abb 202707
-        try:
-            polarities = sorted(self.getDf()['Polarity'].unique())
-        except (KeyError) as e:
-            logger.error(f'did not understand Polarity column: {e}')
-            logger.error('self.getDf() is:')
-            logger.error(f'available columns are: {self.getDf().columns}')
-        else:
+        # #
+        # # polarity group box
+        # polarityGroupBox = QtWidgets.QGroupBox('Polarity')
+        # regionConditionHBox.addWidget(polarityGroupBox)
 
-            for polarityStr in polarities:
-                polarityCheckBox = QtWidgets.QCheckBox(polarityStr)
-                polarityCheckBox.setChecked(True)
-                polarityCheckBox.stateChanged.connect(
-                    partial(self._on_condition_checkbox, 'Polarity', polarityStr)
-                )
-                polaritiesVLayout.addWidget(polarityCheckBox)
+        # # one checkbox for each Condition
+        # polaritiesVLayout = QtWidgets.QVBoxLayout()
+        # polarityGroupBox.setLayout(polaritiesVLayout)
+
+        # # abb 202707
+        # try:
+        #     polarities = sorted(self.getDf()['Polarity'].unique())
+        # except (KeyError) as e:
+        #     logger.error(f'did not understand Polarity column: {e}')
+        #     logger.error('self.getDf() is:')
+        #     logger.error(f'available columns are: {self.getDf().columns}')
+        # else:
+
+        #     for polarityStr in polarities:
+        #         polarityCheckBox = QtWidgets.QCheckBox(polarityStr)
+        #         polarityCheckBox.setChecked(True)
+        #         polarityCheckBox.stateChanged.connect(
+        #             partial(self._on_condition_checkbox, 'Polarity', polarityStr)
+        #         )
+        #         polaritiesVLayout.addWidget(polarityCheckBox)
 
         #
         # cell id group box
@@ -551,41 +647,41 @@ class ScatterWidget(QtWidgets.QMainWindow):
         df.loc[theseRows, 'show_cell'] = checked
         self.replot()
 
-    def slot_toggle_roi(self, cell_id: str, roi_number: int, checked: bool):
+    def slot_toggle_roi(self, cell_id: str, roi_label: str, checked: bool):
         """Handle ROI checkbox toggle."""
         df = self.getDf()
-        theseRows = (df['Cell ID'] == cell_id) & (df['ROI Number'] == roi_number)
+        theseRows = (df['Cell ID'] == cell_id) & (df['ROI Label'] == roi_label)
         df.loc[theseRows, 'show_roi'] = checked
         self.replot()
 
     def slot_cell_selected(self, cell_id: str, condition: str):
         logger.info(f'cell_id:"{cell_id}" condition:"{condition}"')
 
-    def slot_plot_cell_id(self, cell_id: str, roi_number: int):
-        logger.info(f'cell_id:"{cell_id}" roi_number:{roi_number}')
+    def slot_plot_cell_id(self, cell_id: str, roi_label: str):
+        logger.info(f'cell_id:"{cell_id}" roi_label:{roi_label}')
 
         logger.warning('TODO: plotCellID()')
         return
     
-        # fig, ax = self._colinTraces.plotCellID(cell_id, roiLabelStr=roi_number)
+        # fig, ax = self._colinTraces.plotCellID(cell_id, roiLabelStr=roi_label)
 
         from colin_pool_plot import new_plotCellID
 
         fig, ax, _tmpDict = new_plotCellID(
-            self._masterDf, self._meanDf, cell_id, roi_number
+            self._masterDf, self._meanDf, cell_id, roi_label
         )
 
         if fig is None or ax is None:
             return
 
         self._mainWindow = MainWindow(fig, ax)
-        self._mainWindow.setWindowTitle(f'cell ID:"{cell_id}" roi:{roi_number}')
+        self._mainWindow.setWindowTitle(f'cell ID:"{cell_id}" roi:{roi_label}')
         self._mainWindow.show()
 
-    def slot_roi_selected(self, cell_id: str, condition: str, roi_number: int):
-        # logger.info(f'cellID:"{cell_id}" condition:{condition} roiLabelInt:{roi_number} -->> plotCellID()')
+    def slot_roi_selected(self, cell_id: str, condition: str, roi_label: str):
+        # logger.info(f'cellID:"{cell_id}" condition:{condition} roi_label:{roi_label} -->> plotCellID()')
         # logger.info('-->> off')
-        logger.info('TODO: select roi peaks in plot !!!')
+        logger.info(f'TODO: select roi peaks in plot !!! cell_id:{cell_id} condition:{condition} roi_label:{roi_label}')
         pass
 
     def _buildTopToobar(self) -> QtWidgets.QVBoxLayout:
@@ -684,19 +780,19 @@ class ScatterWidget(QtWidgets.QMainWindow):
         )
         hBoxLayout.addWidget(legendCheckBox)
 
-        # tables
-        aCheckbox = QtWidgets.QCheckBox('Tables')
-        aCheckbox.setChecked(False)
-        aCheckbox.stateChanged.connect(
-            lambda state: self._on_stat_combobox('Tables', state)
-        )
-        hBoxLayout.addWidget(aCheckbox)
-
         # stats
         aCheckbox = QtWidgets.QCheckBox('Stats')
         aCheckbox.setChecked(True)
         aCheckbox.stateChanged.connect(
             lambda state: self._on_stat_combobox('Stats', state)
+        )
+        hBoxLayout.addWidget(aCheckbox)
+
+        # summary table
+        aCheckbox = QtWidgets.QCheckBox('Summary Table')
+        aCheckbox.setChecked(False)
+        aCheckbox.stateChanged.connect(
+            lambda state: self._on_stat_combobox('Tables', state)
         )
         hBoxLayout.addWidget(aCheckbox)
 
@@ -732,7 +828,14 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         self.yComboBox = QtWidgets.QComboBox()
         self.yComboBox.addItems(self._columns)
-        _index = self._columns.index(self.state['yStat'])
+        # abb 20250705
+        if self.state['yStat'] in self._columns:
+            _index = self._columns.index(self.state['yStat'])
+        else:
+            _index = 0
+            logger.warning(f'did not understand yStat:"{self.state["yStat"]}"')
+            logger.warning(f'  available columns are: {self._columns}')
+
         self.yComboBox.setCurrentIndex(_index)
         self.yComboBox.currentTextChanged.connect(
             partial(self._on_stat_combobox, yName)
@@ -795,7 +898,9 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         elif name == 'Tables':
             self._tabwidget.setVisible(value == QtCore.Qt.Checked)
-            # don't replot
+            # Trigger replot to generate statistical summary if tables are being shown
+            if value == QtCore.Qt.Checked:
+                self.replot()
             return
 
         elif name == 'Stats':
@@ -822,48 +927,60 @@ class ScatterWidget(QtWidgets.QMainWindow):
         epochStr: str = None,
         value=None,  # PyQt Checkbox value
     ):
-        logger.info(f'name:{name} conditionStr:{conditionStr} value:{value}')
+        logger.info(f'name:{name} conditionStr:{conditionStr} epochStr:{epochStr} value:{value}')
+        
+        # Convert PyQt checkbox value to boolean
+        isChecked = value == QtCore.Qt.Checked
+        
         if name == 'Condition':
-            value = value == QtCore.Qt.Checked
-            # logger.info(f'name:{name} name: "{conditionStr}" value: {value}')
-            self.getDf().loc[
-                self.getDf()['Condition'] == conditionStr, 'show_condition'
-            ] = value
-
-            self.replot()
+            if epochStr is None:
+                # This is the main condition checkbox
+                if isChecked:
+                    # Add all repeat values for this condition back to the filter
+                    repeatValues = self.getDf()[self.getDf()['Condition'] == conditionStr]['Repeat'].unique()
+                    self._filterDict[name][conditionStr] = [str(r) for r in repeatValues]
+                else:
+                    # Remove all repeat values for this condition from the filter
+                    self._filterDict[name][conditionStr] = []
+            else:
+                # This is a repeat checkbox for a specific condition
+                if conditionStr not in self._filterDict[name]:
+                    self._filterDict[name][conditionStr] = []
+                
+                if isChecked:
+                    # Add this repeat value to the filter
+                    if epochStr not in self._filterDict[name][conditionStr]:
+                        self._filterDict[name][conditionStr].append(epochStr)
+                else:
+                    # Remove this repeat value from the filter
+                    if epochStr in self._filterDict[name][conditionStr]:
+                        self._filterDict[name][conditionStr].remove(epochStr)
 
         elif name == 'Region':
-            value = value == QtCore.Qt.Checked
-            # logger.info(f'name:{name} name: "{conditionStr}" value: {value}')
-            self.getDf().loc[
-                self.getDf()['Region'] == conditionStr, 'show_region'
-            ] = value
-
-            self.replot()
+            if isChecked:
+                # Add this region to the filter
+                if conditionStr not in self._filterDict[name]:
+                    self._filterDict[name].append(conditionStr)
+            else:
+                # Remove this region from the filter
+                if conditionStr in self._filterDict[name]:
+                    self._filterDict[name].remove(conditionStr)
 
         elif name == 'Polarity':
-            value = value == QtCore.Qt.Checked
-            # logger.info(f'name:{name} name: "{conditionStr}" value: {value}')
-            self.getDf().loc[
-                self.getDf()['Polarity'] == conditionStr, 'show_polarity'
-            ] = value
-
-            self.replot()
-
-        elif name == 'Epoch':
-            value = value == QtCore.Qt.Checked
-            # logger.info(f'name:{name} name: "{conditionStr}" value: {value}')
-            logger.info(f'  conditionStr:"{conditionStr}" epochStr:"{epochStr}"')
-            epochInt = int(epochStr)
-            theseRows = (self.getDf()['Condition'] == conditionStr) & (
-                self.getDf()['Epoch'] == epochInt
-            )
-            self.getDf().loc[theseRows, 'show_epoch'] = value
-
-            self.replot()
+            if isChecked:
+                # Add this polarity to the filter
+                if conditionStr not in self._filterDict[name]:
+                    self._filterDict[name].append(conditionStr)
+            else:
+                # Remove this polarity from the filter
+                if conditionStr in self._filterDict[name]:
+                    self._filterDict[name].remove(conditionStr)
 
         else:
             logger.warning(f'did not understand name:"{name}')
+
+        logger.info(f'Updated _filterDict: {self._filterDict}')
+        self.replot()
 
     def _on_user_pick_scatterplot(self, event):
         """
@@ -919,7 +1036,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         # CRITICAL TO STRIP NAN HERE IN CALLBACK !!!
         df2 = dfNoNan[dfNoNan[hue] == event.artist.label]
-        colList = ['Cell ID', 'Region', 'Condition', 'ROI Number', xStat, yStat, hue]
+        colList = ['Cell ID', 'Region', 'Condition', 'ROI Label', xStat, yStat, hue]
         # print(f'df2 from event.artist.label:"{event.artist.label}" is:')
         # print(df2[colList])
 
@@ -951,8 +1068,8 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # update status bar
         cellID = dfClicked['Cell ID'].iloc[0]
         condition = dfClicked['Condition'].iloc[0]
-        roiLabelStr = dfClicked['ROI Number'].iloc[0]
-        _str = f"Cell ID:'{cellID}' Condition:{condition} ROI Number: {roiLabelStr}"
+        roiLabelStr = dfClicked['ROI Label'].iloc[0]
+        _str = f"Cell ID:'{cellID}' Condition:{condition} ROI Label: {roiLabelStr}"
         self.setStatusBar(_str)
 
         modifiers = QtWidgets.QApplication.keyboardModifiers()
@@ -961,7 +1078,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # show raw analysis (first peak, user click can yield multiple)
         if isShift:
             clickedCellID = dfClicked['Cell ID'].iloc[0]
-            roiLabelStr = dfClicked['ROI Number'].iloc[0]
+            roiLabelStr = dfClicked['ROI Label'].iloc[0]
             logger.info(
                 f'-->> plotting cell id:"{clickedCellID}" roiLabelStr:{roiLabelStr}'
             )
@@ -1066,7 +1183,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
                 y=yStat,
                 hue=myHue,  # one line per cell (x is control, ivab, thaps)
                 # style='Region',
-                style='ROI Number',
+                style='ROI Label',
                 #  hue_order=hue_order,
                 markers=True,
                 legend=legend,
@@ -1076,7 +1193,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
                 ax=self.axScatter,
             )
 
-            # dfPlot = df.groupby(['Cell ID', 'ROI Number'])
+            # dfPlot = df.groupby(['Cell ID', 'ROI Label'])
 
             _lines = self.axScatter.get_lines()
             print('_lines')
@@ -1105,32 +1222,42 @@ class ScatterWidget(QtWidgets.QMainWindow):
             plt.show()
 
     def getFilteredDf(self):
-        """Get the filtered df"""
+        """Get the filtered df based on _filterDict"""
         df = self.getDf()
-        df = df[df['show_region']]  # include if true
-        df = df[df['show_condition']]  # include if true
-        df = df[df['show_cell']]  # include if true
-        df = df[df['show_roi']]  # include if true
-        df = df[df['show_polarity']]  # include if true
-        df = df[df['show_epoch']]  # include if true
+        
+        # Apply filters based on _filterDict
+        for column, filterValues in self._filterDict.items():
+            if column == 'Condition':
+                # Special handling for Condition column with nested structure
+                condition_mask = pd.Series([False] * len(df), index=df.index)
+                for condition, repeatList in filterValues.items():
+                    if repeatList:  # Only include if there are repeat values
+                        condition_repeat_mask = (df['Condition'] == condition) & (df['Repeat'].astype(str).isin(repeatList))
+                        condition_mask = condition_mask | condition_repeat_mask
+                df = df[condition_mask]
+            else:
+                # Simple filtering for other columns
+                if filterValues:  # Only filter if there are values
+                    df = df[df[column].isin(filterValues)]
+        
+        # Also apply cell and ROI filters (these still use the old boolean approach for now)
+        # Only apply if the columns exist (they might not if we're not using the old approach)
+        if 'show_cell' in df.columns:
+            df = df[df['show_cell']]
+        if 'show_roi' in df.columns:
+            df = df[df['show_roi']]
+            
         return df
 
     def replot(self):
         """Replot the scatter plot"""
 
-        df = self.getDf()
-        # reduce based on show_condition and show_cell
-        df = df[df['show_region']]  # include if true
-        df = df[df['show_condition']]  # include if true
-        df = df[df['show_cell']]  # include if true
-        df = df[df['show_roi']]  # include if true
-        df = df[df['show_polarity']]  # include if true
-        df = df[df['show_epoch']]  # include if true
+        df = self.getFilteredDf()
 
         # logger.info(f'plotting df with rows:{len(df)}')
         # print(df)
 
-        # store df for striplot callback _on_user_pick_striplot
+        # store df for striplot callback _on_user_pick_stripplot
         self._dfStripPlot = df
 
         xStat = self.state['xStat']
@@ -1150,45 +1277,40 @@ class ScatterWidget(QtWidgets.QMainWindow):
         else:
             hue_order = None
 
-        # if hue == 'Condition':
-        #     # hue_order = conditionOrder
-        #     hue_order = sorted(df[hue].unique())
-        # elif hue == 'Region':
-        #     # hue_order = regionOrder
-        #     hue_order = sorted(df[hue].unique())
-        # elif hue == 'Condition Epoch':
-        #     hue_order = sorted(df[hue].unique())
-        # else:
-        #     hue_order = None
-
         if hue_order is not None and len(hue_order) == 0:
             hue_order = None
 
         logger.info(f'hue:"{hue}" hue_order:"{hue_order}"')
 
         # dodge = False if numHue<=1 else 0.5
-        dodge = True if numHue <= 1 else 0.5
+        dodge = False if numHue <= 1 else 0.5
 
         logger.info(f'numHue:{numHue} dodge:{dodge}')
 
-        # print stats to cli
-        # from colin_summary import genStats
-        # logger.info(f'=== generating stats for "{yStat}"')
-        # genStats(df, yStat)
+        # Generate statistical summary for the currently plotted data
+        if self._tabwidget.isVisible():
+            try:
+                # Use the new function that replicates seaborn's grouping behavior
+                dfGrouped = self.getPlottedDataSummary(df, xStat, yStat, hue)
+                self._dfYStatSummary = dfGrouped
 
-        # broken
-        logger.warning('turned off getGroupedDataframe')
-        if 0:
-            dfGrouped = self.getGroupedDataframe(yStat, groupByColumn=hue)
-            self._dfYStatSummary = dfGrouped
-
-            if self.rawTableWidget is not None:
-                self.rawTableWidget.setDf(self.getDf())
-                self.yStatSummaryTableWidget.setDf(dfGrouped)
+                if self.rawTableWidget is not None:
+                    self.rawTableWidget.setDf(self.getDf())
+                    self.yStatSummaryTableWidget.setDf(dfGrouped)
+                if self.errorsTableWidget is not None:
+                    self.errorsTableWidget.setDf(self._errorsDf)
+            except Exception as e:
+                logger.error(f'Failed to generate statistical summary: {e}')
+                # Fallback: just show the raw filtered data
+                if self.rawTableWidget is not None:
+                    self.rawTableWidget.setDf(self.getDf())
+                    self.yStatSummaryTableWidget.setDf(self.getDf())
+                if self.errorsTableWidget is not None:
+                    self.errorsTableWidget.setDf(self._errorsDf)
 
         # sns.set_palette()
-        # numRoiNum = len(df['ROI Number'].unique())
-        logger.warning('202505 turned off palette')
+        # numRoiLabel = len(df['ROI Label'].unique())
+        # logger.warning('202505 turned off palette')
         # numRoiNum = len(df)
         # sns.set_palette("colorblind")
         # palette = sns.color_palette(n_colors=numRoiNum)
@@ -1513,6 +1635,8 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         elif actionText == 'Copy Stats Table ...':
             _ret = self.copyTableToClipboard()
+            # Show feedback to user via status bar
+            self.setStatusBar(_ret, msecs=3000)
 
         elif actionText == 'Reset Toolbar Width':
             self.resetSplitterSizes()
@@ -1558,7 +1682,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         aggDf.insert(0, 'Stat', statColumn)  # add column 0, in place
         aggDf = (
             aggDf.reset_index()
-        )  # move groupByColum (e.g. 'ROI Number') from row index label to column
+        )  # move groupByColum (e.g. 'ROI Label') from row index label to column
 
         # rename column 'variation' as 'CV'
         aggDf = aggDf.rename(columns={'variation': 'CV'})
@@ -1622,6 +1746,81 @@ class ScatterWidget(QtWidgets.QMainWindow):
         self.saveSplitterSizes()
         super().closeEvent(event)
 
+    def getPlottedDataSummary(self, df, xStat, yStat, hue):
+        """Generate statistical summary that matches what seaborn plots are actually showing.
+        
+        This replicates the grouping that seaborn performs when plotting with x, y, and hue parameters.
+        
+        Args:
+            df (pd.DataFrame): The filtered dataframe to analyze
+            xStat (str): The x-axis variable name (categorical variable for grouping)
+            yStat (str): The y-axis variable name (numeric variable for statistics)
+            hue (str): The hue variable name for additional grouping (can be None)
+            
+        Returns:
+            pd.DataFrame: A dataframe with statistical summaries for each group combination.
+                         Columns include: Y-Stat, X-Stat, Hue (if applicable), 
+                         count, mean, std, sem, CV, median, min, max, plus the 
+                         original grouping columns.
+                         
+        Example:
+            If xStat="Region", yStat="Peak Height", hue="Condition":
+            Returns stats for each Region×Condition combination (e.g., ISAN-Control, ISAN-FCCP, SSAN-Control)
+        """
+        logger.info(f'getPlottedDataSummary: xStat="{xStat}" yStat="{yStat}" hue="{hue}"')
+        
+        # Determine the grouping columns based on plot parameters
+        groupColumns = [xStat]
+        if hue is not None and hue != 'None':
+            groupColumns.append(hue)
+            
+        logger.info(f'Grouping by: {groupColumns}')
+        
+        # Drop NaN values in the yStat column (same as seaborn does)
+        dfClean = df.dropna(subset=[yStat])
+        
+        if len(dfClean) == 0:
+            logger.warning('No data after dropping NaN values')
+            return pd.DataFrame()
+        
+        # Perform the same grouping that seaborn would do
+        aggList = ["count", "mean", "std", "sem", variation, "median", "min", "max"]
+        
+        try:
+            aggDf = dfClean.groupby(groupColumns).agg({yStat: aggList})
+        except Exception as e:
+            logger.error(f'Grouping failed: {e}')
+            return pd.DataFrame()
+        
+        # Flatten column names (remove multi-level index)
+        try:
+            aggDf.columns = aggDf.columns.droplevel(0)
+        except ValueError:
+            # Already flat
+            pass
+            
+        # Add metadata columns
+        aggDf.insert(0, 'Y-Stat', yStat)
+        aggDf.insert(1, 'X-Stat', xStat)
+        if hue is not None and hue != 'None':
+            aggDf.insert(2, 'Hue', hue)
+        
+        # Reset index to make grouping columns regular columns
+        aggDf = aggDf.reset_index()
+        
+        # Rename 'variation' to 'CV' for consistency
+        if 'variation' in aggDf.columns:
+            aggDf = aggDf.rename(columns={'variation': 'CV'})
+        
+        # Round numeric columns
+        numericColumns = ["mean", "std", "sem", "CV", "median", "min", "max"]
+        for col in numericColumns:
+            if col in aggDf.columns:
+                aggDf[col] = aggDf[col].round(2)
+        
+        logger.info(f'Generated summary with {len(aggDf)} rows')
+        return aggDf
+
 
 def run():
     # this was my analysis with 1 roi per kym
@@ -1639,24 +1838,37 @@ def run():
 
     # load pandas from csv
     # masterDf = '/Users/cudmore/Sites/SanPy/sanpy/kym/sample-data/tif_pool_main.csv'
-    masterDf = pd.read_csv('/Users/cudmore/Sites/SanPy/sanpy/kym/sample-data/tif_pool_main.csv')
+    # masterDf = pd.read_csv('/Users/cudmore/Sites/SanPy/sanpy/kym/sample-data/tif_pool_main.csv')
 
     # load pandas from csv
     # meanDf = '/Users/cudmore/Sites/SanPy/sanpy/kym/sample-data/tif_pool_mean.csv'
-    meanDf = pd.read_csv('/Users/cudmore/Sites/SanPy/sanpy/kym/sample-data/tif_pool_mean.csv')
+    # meanDf = pd.read_csv('/Users/cudmore/Sites/SanPy/sanpy/kym/sample-data/tif_pool_mean.csv')
 
+    # load a TifPool
+    from sanpy.kym.tif_pool import TiffPool
+    from sanpy.kym.tif_file_backend import TifFileBackend
+    path = '/Users/cudmore/Sites/SanPy/sanpy/kym/sample-data'
+    tifFileBackend = TifFileBackend(path)
+    tifPool = TiffPool(tifFileBackend)
+    tifPool.refresh_analysis()
+
+    masterDf = tifPool.get_master_dataframe()
+    meanDf = tifPool.get_df_mean()
+
+    # logger.info('masterDf')
+    # print(masterDf)
+    
+    # logger.info('meanDf')
+    # print(meanDf)
+    
     logger.info('meanDf.columns:')
     for _column in meanDf.columns:
         logger.info(f'  {_column}')
 
     # abb 20250704
-    # for backward compatibility, add show_roi, show_cell, and show_region set to True
+    # Add boolean columns for cell and ROI filtering (still needed for KymTreeWidget)
     meanDf['show_roi'] = True
     meanDf['show_cell'] = True
-    meanDf['show_region'] = True
-    meanDf['show_condition'] = True
-    meanDf['show_polarity'] = True
-    meanDf['show_epoch'] = True
 
     # print(meanDf.columns)
     # meanSavePath = '/Users/cudmore/colin_peak_mean_20250521.csv'
@@ -1672,7 +1884,7 @@ def run():
         'Condition Epoch',
         'Region',
         'Date',
-        'ROI Number',
+        'ROI Label',
         'Polarity',
     ]
 
@@ -1685,12 +1897,12 @@ def run():
         'Condition',
         'Region',
         'Date',
-        'ROI Number',
+        'ROI Label',
         'Polarity',
         # 'Onset (s)',
         # 'Decay (s)',
         'Peak Inst Interval (s)',
-        'Peak Inst Freq (Hz)_mean',
+        'Peak Inst Freq (Hz)',
         'Peak Height',
         'FW (ms)',
         'HW (ms)',
@@ -1698,7 +1910,7 @@ def run():
         'Decay Time (ms)',
         'Area Under Peak',
         'Area Under Peak (Sum)',
-        'Number of Spikes',
+        'Number of Peaks',
         # 'Spike Frequency (Hz)',
         'fit_tau',
         'fit_tau1',
@@ -1716,7 +1928,7 @@ def run():
         meanDf,
         xStat='Region',
         # yStat='Peak Inst Freq (Hz)',
-        yStat='Peak Inst Freq (Hz)_mean',
+        yStat='Peak Inst Freq (Hz)',
         
         # defaultPlotType='Line Plot',
         defaultPlotType='Swarm + Mean + SEM',

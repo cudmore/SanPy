@@ -1,4 +1,5 @@
 import numpy as np
+
 # from scipy.signal import peak_widths, medfilt, savgol_filter, detrend, find_peaks
 from scipy.signal import medfilt
 from typing import List, Tuple, Optional
@@ -6,32 +7,37 @@ import pandas as pd
 
 import matplotlib.pyplot as plt
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
 
+
 def backgroundSubtract(imgData):
-    """Subtract median.
-    """
+    """Subtract median."""
     theMedian = np.median(imgData)
     retData = imgData - theMedian
     return retData
 
-def getLineProfile(imgData : np.ndarray,
-                   lineIdx : int,
-                   doBackgroundSubtract : bool,
-                   lineWidth : int,
-                   lineMedianKernel,
-                   lineInterptMult : int = 1) -> np.ndarray:
-    
+
+def getLineProfile(
+    imgData: np.ndarray,
+    lineIdx: int,
+    doBackgroundSubtract: bool,
+    lineWidth: int,
+    lineMedianKernel,
+    lineInterptMult: int = 1,
+) -> np.ndarray:
+
     # if doBackgroundSubtract:
     #     imgData = backgroundSubtract(imgData)
 
-    m,n = imgData.shape
-    
+    m, n = imgData.shape
+
     # logger.info(f'imgData.shape:{imgData.shape}')
 
     if lineWidth == 0:
-        lineImg = imgData[:,lineIdx]
+        lineImg = imgData[:, lineIdx]
 
     else:
         startLine = lineIdx - lineWidth
@@ -40,8 +46,8 @@ def getLineProfile(imgData : np.ndarray,
         endLine = lineIdx + lineWidth
         if endLine > n:
             endLine = n
-        
-        lineImg = imgData[:,startLine:endLine]
+
+        lineImg = imgData[:, startLine:endLine]
         lineImg = np.mean(lineImg, axis=1)
 
     if lineMedianKernel > 0:
@@ -54,22 +60,26 @@ def getLineProfile(imgData : np.ndarray,
         _nIntensityProfile = len(lineImg)
         # logger.info(f'_nIntensityProfile:{_nIntensityProfile} lineInterptMult:{lineInterptMult}')
         _xOld = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile)
-        _xNew = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile*lineInterptMult)        
-        
+        _xNew = np.linspace(
+            0, _nIntensityProfile, num=_nIntensityProfile * lineInterptMult
+        )
+
         # ValueError: array of sample points is empty
         lineImg = np.interp(_xNew, _xOld, lineImg)
 
     return lineImg
 
-def detectKymRoiDiam(imgData,
-                     doBackgroundSubtract,
-                     lineWidth,
-                     lineMedianKernel,
-                     stdThreshold,
-                     lineScanFraction = 4,
-                     lineInterptMult = 1,
-                     verbose = False
-                     ):
+
+def detectKymRoiDiam(
+    imgData,
+    doBackgroundSubtract,
+    lineWidth,
+    lineMedianKernel,
+    stdThreshold,
+    lineScanFraction=4,
+    lineInterptMult=1,
+    verbose=False,
+):
     """
     Parameters
     ----------
@@ -90,10 +100,10 @@ def detectKymRoiDiam(imgData,
 
     # middle bin in the line scan
     mLine = imgData.shape[0]
-    firstQuarterBin = int(mLine/lineScanFraction)
-    lastQuarterBin = mLine - int(mLine/lineScanFraction)
+    firstQuarterBin = int(mLine / lineScanFraction)
+    lastQuarterBin = mLine - int(mLine / lineScanFraction)
 
-    m,n = imgData.shape
+    m, n = imgData.shape
 
     #
     leftThresholdBinList = np.empty((n,))
@@ -115,13 +125,13 @@ def detectKymRoiDiam(imgData,
         endLine = lineIdx + lineWidth
         if endLine > n:
             endLine = n
-            
-        lineImg = imgData[:,startLine:endLine]
+
+        lineImg = imgData[:, startLine:endLine]
         lineImg = np.mean(lineImg, axis=1)
 
         if lineMedianKernel > 0:
             lineImg = medfilt(lineImg, lineMedianKernel)
-            
+
         # interpolate each line scan (this screws up our firstQauarterBin ???)
         if lineInterptMult > 1:
             # if lineIdx == 10:
@@ -129,9 +139,11 @@ def detectKymRoiDiam(imgData,
 
             _nIntensityProfile = len(lineImg)
             _xOld = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile)
-            _xNew = np.linspace(0, _nIntensityProfile, num=_nIntensityProfile*lineInterptMult)        
+            _xNew = np.linspace(
+                0, _nIntensityProfile, num=_nIntensityProfile * lineInterptMult
+            )
             lineImg = np.interp(_xNew, _xOld, lineImg)
-        
+
             # if lineIdx == 10:
             #     logger.info(f'after lineIdx:{lineIdx} lineInterptMult:{lineInterptMult} lineImg:{len(lineImg)}')
 
@@ -144,12 +156,14 @@ def detectKymRoiDiam(imgData,
         leftThreshold = leftLineMean + (leftLineSTD * stdThreshold)
 
         leftThreshold_crossings = np.diff(startLineImg > leftThreshold, append=False)
-        leftThresholdBins = np.where(leftThreshold_crossings==1)[0]
+        leftThresholdBins = np.where(leftThreshold_crossings == 1)[0]
         if len(leftThresholdBins) == 0:
             if verbose:
                 logger.error(f'lineIDx:{lineIdx} --> no left threshold')
         else:
-            leftThresholdBin = leftThresholdBins[0]  # from left to right, first threshold crossing
+            leftThresholdBin = leftThresholdBins[
+                0
+            ]  # from left to right, first threshold crossing
             # leftThresholdInt = startLineImg[leftThresholdBin]
 
             leftThresholdBinList[lineIdx] = leftThresholdBin
@@ -158,18 +172,20 @@ def detectKymRoiDiam(imgData,
         #
         # right
         endLineImg = lineImg[lastQuarterBin:]
-        
+
         rightLineMean = np.mean(endLineImg)
         rightLineSTD = np.std(endLineImg)
         rightThreshold = rightLineMean + (rightLineSTD * stdThreshold)
 
         rightThreshold_crossings = np.diff(endLineImg > rightThreshold, append=False)
-        rightThresholdBins = np.where(rightThreshold_crossings==1)[0]
+        rightThresholdBins = np.where(rightThreshold_crossings == 1)[0]
         if len(rightThresholdBins) == 0:
             if verbose:
                 logger.error(f'lineIDx:{lineIdx} --> no right threshold')
         else:
-            rightThresholdBin = rightThresholdBins[-1]  # from right to right, last threshold crossing
+            rightThresholdBin = rightThresholdBins[
+                -1
+            ]  # from right to right, last threshold crossing
             # rightThresholdInt = endLineImg[rightThresholdBin]
 
             rightThresholdBin += lastQuarterBin  # we started in the middle
@@ -193,16 +209,17 @@ def detectKymRoiDiam(imgData,
         # diamBins = [_bin / lineInterptMult for _bin in diamBins]
         diamBins /= lineInterptMult
 
-
     return leftThresholdBinList, rightThresholdBinList, diamBins, sumIntensity
 
-def plotKyn(imgData, leftThresholdBinList, rightThresholdBinList, diamBins, sumIntensity=None):
-    """Plot kym with left diameter.
-    """
+
+def plotKyn(
+    imgData, leftThresholdBinList, rightThresholdBinList, diamBins, sumIntensity=None
+):
+    """Plot kym with left diameter."""
     xLines = np.arange(imgData.shape[1])
 
     fig, axs = plt.subplots(2, 1, sharex=True)
-    
+
     # imgData = np.flip(imgData)  # flip for matplotlib
 
     axs[0].imshow(imgData, aspect='auto')
@@ -213,25 +230,26 @@ def plotKyn(imgData, leftThresholdBinList, rightThresholdBinList, diamBins, sumI
     axs[1].set_ylabel('Diameter (bins)')
 
     if sumIntensity is not None:
-        axs2 = axs[1].twinx() 
+        axs2 = axs[1].twinx()
         axs2.plot(sumIntensity, 'k', label='sum')
         axs2.set_ylabel('Sum Intensity')
 
     plt.show()
 
+
 def plotLine(lineImg, lineMean, lineSTD, threshold, thresholdBin, thresholdInt):
-    """Plot one line scan.
-    """
+    """Plot one line scan."""
     n = len(lineImg)
-    
+
     plt.plot(lineImg)
     plt.hlines(lineMean, xmin=0, xmax=n)
-    plt.hlines(lineMean+lineSTD, xmin=0, xmax=n, linestyles='dotted')
-    plt.hlines(lineMean+2*lineSTD, xmin=0, xmax=n, linestyles='dotted')
+    plt.hlines(lineMean + lineSTD, xmin=0, xmax=n, linestyles='dotted')
+    plt.hlines(lineMean + 2 * lineSTD, xmin=0, xmax=n, linestyles='dotted')
     plt.hlines(threshold, xmin=0, xmax=n, colors='r', linestyles='dotted')
     plt.plot(thresholdBin, thresholdInt, 'or')
 
     plt.show()
+
 
 if __name__ == '__main__':
     from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
@@ -246,18 +264,26 @@ if __name__ == '__main__':
     lineWidth = 1  # 2  # don't go too big (filters too much)
     stdThreshold = 1.2  # 1.8
     lineInterptMult = 4  # 0  # interpolate each line scan by this multiplyer
-    lineScanFraction = 4 # 2 # percent of line scan to detect for onset/offset
-        # if 2 then half/half
-        # if 4 then first/last 25%
+    lineScanFraction = 4  # 2 # percent of line scan to detect for onset/offset
+    # if 2 then half/half
+    # if 4 then first/last 25%
 
-    leftThresholdBinList, rightThresholdBinList, diamBins, sumIntensity = \
-        detectKymRoiDiam(roiImg,
-                     doBackgroundSubtract=doBackgroundSubtract,
-                     lineWidth=lineWidth,
-                     lineMedianKernel=lineMedianKernel,
-                     lineInterptMult=lineInterptMult,
-                     stdThreshold=stdThreshold,
+    leftThresholdBinList, rightThresholdBinList, diamBins, sumIntensity = (
+        detectKymRoiDiam(
+            roiImg,
+            doBackgroundSubtract=doBackgroundSubtract,
+            lineWidth=lineWidth,
+            lineMedianKernel=lineMedianKernel,
+            lineInterptMult=lineInterptMult,
+            stdThreshold=stdThreshold,
+        )
     )
 
     plotSumIntensity = None
-    plotKyn(roiImg, leftThresholdBinList, rightThresholdBinList, diamBins, sumIntensity=plotSumIntensity)
+    plotKyn(
+        roiImg,
+        leftThresholdBinList,
+        rightThresholdBinList,
+        diamBins,
+        sumIntensity=plotSumIntensity,
+    )

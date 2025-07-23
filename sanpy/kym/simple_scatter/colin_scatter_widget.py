@@ -7,13 +7,14 @@ from typing import Optional, List
 import pandas as pd
 import numpy as np
 
-from scipy.stats import variation 
+from scipy.stats import variation
 
 from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import seaborn as sns
+
 # sns.set_palette("colorblind")
 
 from statannotations.Annotator import Annotator
@@ -22,23 +23,27 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 
 # from colin_traces import ColinTraces
 from colin_tree_widget import KymTreeWidget
+
 # from colin_traces import plotCellID
 from colin_global import conditionOrder
 from colin_simple_figure import KymRoiMainWindow
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
 
+
 class simpleTableWidget(QtWidgets.QTableWidget):
-    def __init__(self, df : Optional[pd.DataFrame] = None):
+    def __init__(self, df: Optional[pd.DataFrame] = None):
         super().__init__(None)
         self._df = df
         if self._df is not None:
             self.setDf(self._df)
 
-    def setDf(self, df : pd.DataFrame):
+    def setDf(self, df: pd.DataFrame):
         self._df = df
-        
+
         self.setRowCount(df.shape[0])
         self.setColumnCount(df.shape[1])
         self.setHorizontalHeaderLabels(df.columns)
@@ -48,11 +53,10 @@ class simpleTableWidget(QtWidgets.QTableWidget):
                 item = QtWidgets.QTableWidgetItem(str(df.iloc[row, col]))
                 self.setItem(row, col, item)
 
-def _makeComboBox(name:str,
-                    items: List[str],
-                    defaultItem:Optional[str]=None,
-                    callbackFn=None
-                    ) -> QtWidgets.QHBoxLayout:
+
+def _makeComboBox(
+    name: str, items: List[str], defaultItem: Optional[str] = None, callbackFn=None
+) -> QtWidgets.QHBoxLayout:
     hBoxLayout = QtWidgets.QHBoxLayout()
     aLabel = QtWidgets.QLabel(name)
     hBoxLayout.addWidget(aLabel)
@@ -61,7 +65,7 @@ def _makeComboBox(name:str,
     hBoxLayout.addWidget(aComboBox)
 
     aComboBox.addItems(items)
-    
+
     if defaultItem is not None:
         _index = items.index(defaultItem)
     else:
@@ -70,13 +74,12 @@ def _makeComboBox(name:str,
     aComboBox.setCurrentIndex(_index)
 
     if callbackFn is not None:
-        aComboBox.currentTextChanged.connect(
-            partial(callbackFn, name)
-        )
+        aComboBox.currentTextChanged.connect(partial(callbackFn, name))
 
     return hBoxLayout
 
-def _getNumSpikesDf(df)  -> pd.DataFrame:
+
+def _getNumSpikesDf(df) -> pd.DataFrame:
     dictList = []
     for oneCellID in df['Cell ID'].unique():
         logger.info(f'oneCellStr:{oneCellID}')
@@ -118,7 +121,7 @@ def _getNumSpikesDf(df)  -> pd.DataFrame:
             }
             # print(oneDict)
             dictList.append(oneDict)
-    
+
     dfNumSpikes = pd.DataFrame(dictList)
     print('=== dfNumSpikes:')
     print(dfNumSpikes)
@@ -126,22 +129,23 @@ def _getNumSpikesDf(df)  -> pd.DataFrame:
     #
     # run stats on num spikes
     from scipy.stats import mannwhitneyu
+
     # 1) isan vs ssan in control
     iSanSpikes = dfNumSpikes
-    iSanSpikes = iSanSpikes[iSanSpikes['Region']=='ISAN']
-    iSanControlSpikes = iSanSpikes[iSanSpikes['Condition']=='Control']
-    iSanIvabSpikes = iSanSpikes[iSanSpikes['Condition']=='Ivab']
+    iSanSpikes = iSanSpikes[iSanSpikes['Region'] == 'ISAN']
+    iSanControlSpikes = iSanSpikes[iSanSpikes['Condition'] == 'Control']
+    iSanIvabSpikes = iSanSpikes[iSanSpikes['Condition'] == 'Ivab']
     #
     sSanSpikes = dfNumSpikes
-    sSanSpikes = sSanSpikes[sSanSpikes['Region']=='SSAN']
-    sSanControlSpikes = sSanSpikes[sSanSpikes['Condition']=='Control']
-    sSanIvabSpikes = sSanSpikes[sSanSpikes['Condition']=='Ivab']
+    sSanSpikes = sSanSpikes[sSanSpikes['Region'] == 'SSAN']
+    sSanControlSpikes = sSanSpikes[sSanSpikes['Condition'] == 'Control']
+    sSanIvabSpikes = sSanSpikes[sSanSpikes['Condition'] == 'Ivab']
 
     # compare control and ivan (for each of isan and ssan)
     # ssan
     sample1 = sSanControlSpikes['Num Spikes'].to_list()
     sample2 = sSanIvabSpikes['Num Spikes'].to_list()
-    if len(sample1)==0 or len(sample2)==0:
+    if len(sample1) == 0 or len(sample2) == 0:
         pass
     else:
         print('=== mannwhitneyu comparing num spikes in Control versus Ivab (SSAN)')
@@ -151,7 +155,7 @@ def _getNumSpikesDf(df)  -> pd.DataFrame:
     # isan
     sample1 = iSanControlSpikes['Num Spikes'].to_list()
     sample2 = iSanIvabSpikes['Num Spikes'].to_list()
-    if len(sample1)==0 or len(sample2)==0:
+    if len(sample1) == 0 or len(sample2) == 0:
         pass
     else:
         print('=== mannwhitneyu comparing num spikes in Control versus Ivab (ISAN)')
@@ -162,7 +166,7 @@ def _getNumSpikesDf(df)  -> pd.DataFrame:
     sample1 = iSanControlSpikes['Num Spikes'].to_list()
     sample2 = sSanControlSpikes['Num Spikes'].to_list()
     logger.warning(f'sample1:{len(sample1)} sample2:{len(sample2)}')
-    if len(sample1)==0 or len(sample2)==0:
+    if len(sample1) == 0 or len(sample2) == 0:
         pass
     else:
         print('=== mannwhitneyu comparing num spikes in control (SSAN vs ISAN)')
@@ -170,6 +174,7 @@ def _getNumSpikesDf(df)  -> pd.DataFrame:
         print(result)
 
     return dfNumSpikes
+
 
 class ScatterOptions(QtWidgets.QWidget):
     def __init__(self, parent=None):
@@ -185,25 +190,26 @@ class ScatterOptions(QtWidgets.QWidget):
         label = QtWidgets.QLabel("Scatter Options")
         layout.addWidget(label)
 
+
 class ScatterWidget(QtWidgets.QMainWindow):
-    """Plot a scatter plot from peak/diameter detection df.
-    """
-    
+    """Plot a scatter plot from peak/diameter detection df."""
+
     # TODO emit signal on user selection
-    def __init__(self,
-                 masterDf : pd.DataFrame,
-                 meanDf : pd.DataFrame,
-                 xStat:str,
-                 yStat:str,
-                 hueList: List[str],
-                 defaultPlotType:str = None,
-                 defaultHue:str = None,
-                 defaultStyle:str = None,
-                 imgFolder:str = None,  # to load sm2 images
-                 plotColumns = None
-                 ):
+    def __init__(
+        self,
+        masterDf: pd.DataFrame,
+        meanDf: pd.DataFrame,
+        xStat: str,
+        yStat: str,
+        hueList: List[str],
+        defaultPlotType: str = None,
+        defaultHue: str = None,
+        defaultStyle: str = None,
+        imgFolder: str = None,  # to load sm2 images
+        plotColumns=None,
+    ):
         super().__init__(None)
-        
+
         # logger.error('problems with tif Path')
         # print(df['Path'].iloc[0])
         # sys.exit()
@@ -211,13 +217,15 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # always construct from master (one peak per row)
         # self._colinTraces = ColinTraces(masterDf, meanDf)
 
-        self._masterDf = masterDf  
-        self._meanDf = meanDf  
+        self._masterDf = masterDf
+        self._meanDf = meanDf
 
         # columns in analysis df
         if plotColumns is None:
             # all columns
-            self._columns = list(masterDf.columns)  # reduce analysis keys, just for the user
+            self._columns = list(
+                masterDf.columns
+            )  # reduce analysis keys, just for the user
         else:
             # only show these columns
             self._columns = plotColumns
@@ -229,16 +237,18 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         self._plotColumns = plotColumns
 
-        self._plotTypes = ['Line Plot',
-                           'Scatter',
-                           'Swarm',
-                           'Swarm + Mean',
-                           'Swarm + Mean + STD',
-                           'Swarm + Mean + SEM',
-                           'Box Plot',
-                           'Histogram',
-                           'Cumulative Histogram']
-        
+        self._plotTypes = [
+            'Line Plot',
+            'Scatter',
+            'Swarm',
+            'Swarm + Mean',
+            'Swarm + Mean + STD',
+            'Swarm + Mean + SEM',
+            'Box Plot',
+            'Histogram',
+            'Cumulative Histogram',
+        ]
+
         self._state = {
             'xStat': xStat,
             'yStat': yStat,
@@ -297,7 +307,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         self.static_canvas.figure.clear()
 
         # self.axScatter = self.static_canvas.figure.add_subplot(self.gs[0, 0])
-        self.axScatter = self.static_canvas.figure.add_subplot(1,1,1)
+        self.axScatter = self.static_canvas.figure.add_subplot(1, 1, 1)
 
         # despine top/right
         self.axScatter.spines["right"].set_visible(False)
@@ -323,8 +333,11 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         # Create a horizontal splitter for resizable left toolbar and plot
         self._mainSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
-        self._mainSplitter.setHandleWidth(8)  # Make the splitter handle wider and more visible
-        self._mainSplitter.setStyleSheet("""
+        self._mainSplitter.setHandleWidth(
+            8
+        )  # Make the splitter handle wider and more visible
+        self._mainSplitter.setStyleSheet(
+            """
             QSplitter::handle {
                 background-color: #cccccc;
                 border: 1px solid #999999;
@@ -332,7 +345,8 @@ class ScatterWidget(QtWidgets.QMainWindow):
             QSplitter::handle:hover {
                 background-color: #aaaaaa;
             }
-        """)
+        """
+        )
         vLayoutPlot.addWidget(self._mainSplitter)
 
         # Build left toolbar as a widget
@@ -367,7 +381,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
     @property
     def state(self):
         return self._state
-    
+
     def copyTableToClipboard(self):
         _tabIndex = self._tabwidget.currentIndex()
         if _tabIndex == 0:
@@ -382,13 +396,13 @@ class ScatterWidget(QtWidgets.QMainWindow):
             logger.warning(f'did not understand tab: {_tabIndex}')
             _ret = 'Did not copy, please select a table'
         return _ret
-    
+
     def _buildLeftToobar(self) -> QtWidgets.QWidget:
         # Create a widget to hold the layout
         leftToolbarWidget = QtWidgets.QWidget()
         leftToolbarWidget.setMinimumWidth(200)  # Set minimum width for the toolbar
         leftToolbarWidget.setMaximumWidth(600)  # Set maximum width for the toolbar
-        
+
         vBoxLayout = QtWidgets.QVBoxLayout(leftToolbarWidget)
         # vBoxLayout.setAlignment(QtCore.Qt.AlignTop)
         vBoxLayout.setAlignment(QtCore.Qt.AlignTop | QtCore.Qt.AlignLeft)
@@ -405,7 +419,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # one checkbox for each Region
         regionsVLayout = QtWidgets.QVBoxLayout()
         regionsGroupBox.setLayout(regionsVLayout)
-        
+
         regions = self.getDf()['Region'].unique()
         for regionStr in regions:
             regionCheckBox = QtWidgets.QCheckBox(regionStr)
@@ -423,7 +437,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # one checkbox for each Condition
         conditionsVLayout = QtWidgets.QVBoxLayout()
         conditionsGroupBox.setLayout(conditionsVLayout)
-        
+
         conditions = sorted(self.getDf()['Condition'].unique())
         for conditionStr in conditions:
             # each condition has a hlayout with epoch checkboxes
@@ -438,7 +452,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
             conditionHLayout.addWidget(conditionCheckBox)
 
             # one checkbox for each Epoch
-            theseRows = (self.getDf()['Condition']==conditionStr)
+            theseRows = self.getDf()['Condition'] == conditionStr
             theseEpochs = sorted(self.getDf()[theseRows]['Epoch'].unique())
             for epochInt in theseEpochs:
                 epochStr = str(epochInt)
@@ -450,7 +464,9 @@ class ScatterWidget(QtWidgets.QMainWindow):
                     epochCheckBox.setEnabled(False)
 
                 epochCheckBox.stateChanged.connect(
-                    partial(self._on_condition_checkbox, 'Epoch', conditionStr, epochStr)
+                    partial(
+                        self._on_condition_checkbox, 'Epoch', conditionStr, epochStr
+                    )
                 )
                 conditionHLayout.addWidget(epochCheckBox)
 
@@ -462,7 +478,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # one checkbox for each Condition
         polaritiesVLayout = QtWidgets.QVBoxLayout()
         polarityGroupBox.setLayout(polaritiesVLayout)
-        
+
         polarities = sorted(self.getDf()['Polarity'].unique())
         for polarityStr in polarities:
             polarityCheckBox = QtWidgets.QCheckBox(polarityStr)
@@ -472,7 +488,6 @@ class ScatterWidget(QtWidgets.QMainWindow):
             )
             polaritiesVLayout.addWidget(polarityCheckBox)
 
-
         #
         # cell id group box
         cellGroupBox = QtWidgets.QGroupBox('Cells')
@@ -481,7 +496,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # one checkbox for each Condition
         cellVLayout = QtWidgets.QVBoxLayout()
         cellGroupBox.setLayout(cellVLayout)
-    
+
         # All checkbox
         # cellCheckBox = QtWidgets.QCheckBox('All')
         # cellCheckBox.setChecked(True)
@@ -489,7 +504,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         #     partial(self._on_cell_checkbox, 'All')
         # )
         # cellVLayout.addWidget(cellCheckBox)
-        
+
         # one checkbox per cell id
         # populate with mean df
         _df = self._meanDf
@@ -503,7 +518,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         cellVLayout.addWidget(kymTreeWidget)
 
         return leftToolbarWidget
-    
+
     def slot_toggle_all_cell_id(self, value: bool):
         """Handle toggle all checkbox."""
         self.getDf()['show_cell'] = value
@@ -513,14 +528,14 @@ class ScatterWidget(QtWidgets.QMainWindow):
     def slot_toggle_cell(self, cell_id: str, checked: bool):
         """Handle cell checkbox toggle."""
         df = self.getDf()
-        theseRows = (df['Cell ID']==cell_id)
+        theseRows = df['Cell ID'] == cell_id
         df.loc[theseRows, 'show_cell'] = checked
         self.replot()
 
     def slot_toggle_roi(self, cell_id: str, roi_number: int, checked: bool):
         """Handle ROI checkbox toggle."""
         df = self.getDf()
-        theseRows = (df['Cell ID']==cell_id) & (df['ROI Number']==roi_number)
+        theseRows = (df['Cell ID'] == cell_id) & (df['ROI Number'] == roi_number)
         df.loc[theseRows, 'show_roi'] = checked
         self.replot()
 
@@ -531,13 +546,16 @@ class ScatterWidget(QtWidgets.QMainWindow):
         logger.info(f'cell_id:"{cell_id}" roi_number:{roi_number}')
 
         # fig, ax = self._colinTraces.plotCellID(cell_id, roiLabelStr=roi_number)
-        
+
         from colin_pool_plot import new_plotCellID
-        fig, ax, _tmpDict = new_plotCellID(self._masterDf, self._meanDf, cell_id, roi_number)
-        
+
+        fig, ax, _tmpDict = new_plotCellID(
+            self._masterDf, self._meanDf, cell_id, roi_number
+        )
+
         if fig is None or ax is None:
             return
-        
+
         self._mainWindow = MainWindow(fig, ax)
         self._mainWindow.setWindowTitle(f'cell ID:"{cell_id}" roi:{roi_number}')
         self._mainWindow.show()
@@ -557,11 +575,12 @@ class ScatterWidget(QtWidgets.QMainWindow):
         hBoxLayout.setAlignment(QtCore.Qt.AlignLeft)
         vBoxLayout.addLayout(hBoxLayout)
 
-        plotTypeComboBox = _makeComboBox(name='Plot Type',
-                       items=self._plotTypes,
-                       defaultItem=self._state['plotType'],
-                       callbackFn=self._on_stat_combobox,
-                       )
+        plotTypeComboBox = _makeComboBox(
+            name='Plot Type',
+            items=self._plotTypes,
+            defaultItem=self._state['plotType'],
+            callbackFn=self._on_stat_combobox,
+        )
         hBoxLayout.addLayout(plotTypeComboBox)
 
         # plot type
@@ -577,13 +596,14 @@ class ScatterWidget(QtWidgets.QMainWindow):
         #     partial(self._on_stat_combobox, aName)
         # )
         # hBoxLayout.addWidget(plotTypeComboBox)
-        
+
         # hue
         _hueList = ['None'] + self._hueList
-        hueComboBox = _makeComboBox(name='Hue',
-                                    items=_hueList,
-                                    defaultItem=self._state['hue'],
-                                    callbackFn=self._on_stat_combobox,
+        hueComboBox = _makeComboBox(
+            name='Hue',
+            items=_hueList,
+            defaultItem=self._state['hue'],
+            callbackFn=self._on_stat_combobox,
         )
         hBoxLayout.addLayout(hueComboBox)
 
@@ -605,13 +625,14 @@ class ScatterWidget(QtWidgets.QMainWindow):
         #     partial(self._on_stat_combobox, hueName)
         # )
         # hBoxLayout.addWidget(self.hueComboBox)
-        
+
         # style
         _hueList = ['None'] + self._hueList
-        styleCombo = _makeComboBox(name='Style',
-                                   items=_hueList,
-                                   callbackFn=self._on_stat_combobox,
-                                   )
+        styleCombo = _makeComboBox(
+            name='Style',
+            items=_hueList,
+            callbackFn=self._on_stat_combobox,
+        )
         hBoxLayout.addLayout(styleCombo)
 
         # aName = 'Style'
@@ -660,9 +681,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # plot
         aPushButton = QtWidgets.QPushButton('Replot')
         aPushButton.setCheckable(False)
-        aPushButton.clicked.connect(
-            partial(self.replot)
-        )
+        aPushButton.clicked.connect(partial(self.replot))
         hBoxLayout.addWidget(aPushButton)
 
         # second row
@@ -699,104 +718,113 @@ class ScatterWidget(QtWidgets.QMainWindow):
         hBoxLayout2.addWidget(self.yComboBox)
 
         # popup to plot (raw, mean) dataframe
-        hBox = _makeComboBox(name="Plot Data",
-                             items=('Raw', 'Mean'),
-                             defaultItem='Mean',
-                             callbackFn=self._on_stat_combobox)
+        hBox = _makeComboBox(
+            name="Plot Data",
+            items=('Raw', 'Mean'),
+            defaultItem='Mean',
+            callbackFn=self._on_stat_combobox,
+        )
         hBoxLayout2.addLayout(hBox)
 
         # popup to plot mean(default) or CV
-        hBox = _makeComboBox(name="Plot Stat",
-                             items=('Mean', 'CV'),
-                             defaultItem='Mean',
-                             callbackFn=self._on_stat_combobox)
+        hBox = _makeComboBox(
+            name="Plot Stat",
+            items=('Mean', 'CV'),
+            defaultItem='Mean',
+            callbackFn=self._on_stat_combobox,
+        )
         hBoxLayout2.addLayout(hBox)
 
         #
         return vBoxLayout
-    
+
     def _updateGuiOnPlotType(self, plotType):
-        """Enable/disable giu on plot type.
-        """
+        """Enable/disable giu on plot type."""
         # plot types turn on/off X-Stat
         enableXStat = plotType == 'Scatter'
         # self.xComboBox.setEnabled(enableXStat)
 
-    def _on_stat_combobox(self, name : str,
-                          value : str):
-        """Handle both combobox and checkbox changes
-        """
+    def _on_stat_combobox(self, name: str, value: str):
+        """Handle both combobox and checkbox changes"""
         logger.info(f'name:{name} value:{value}')
-        
+
         if name == 'Plot Type':
             self.state['plotType'] = value
             self._updateGuiOnPlotType(self._state['plotType'])
 
         elif name == 'X-Stat':
             self.state['xStat'] = value
-        
+
         elif name == 'Y-Stat':
             self.state['yStat'] = value
-        
+
         elif name == 'Hue':
             if value == 'None':
                 value = None
             self.state['hue'] = value
-        
+
         elif name == 'Style':
             if value == 'None':
                 value = None
             self.state['style'] = value
-        
+
         elif name == 'Legend':
-            self.state['legend'] = value  == QtCore.Qt.Checked
-        
+            self.state['legend'] = value == QtCore.Qt.Checked
+
         elif name == 'Tables':
             self._tabwidget.setVisible(value == QtCore.Qt.Checked)
             # don't replot
             return
-        
+
         elif name == 'Stats':
             # statistical tests on/off
             self.state['stats'] = value == QtCore.Qt.Checked
-        
+
         elif name == 'Plot Data':
             # either master or mead dataframe
             self.state['plotDf'] = value
-        
+
         elif name == 'Plot Stat':
             # either mean (default) or cv
             self.state['plotStat'] = value
-        
+
         else:
             logger.warning(f'did not understand "{name}"')
 
         self.replot()
 
-    def _on_condition_checkbox(self, name : str,
-                               conditionStr : str,  # either (Condition, Region)
-                               epochStr : str = None,
-                               value = None,  # PyQt Checkbox value
-                               ):
+    def _on_condition_checkbox(
+        self,
+        name: str,
+        conditionStr: str,  # either (Condition, Region)
+        epochStr: str = None,
+        value=None,  # PyQt Checkbox value
+    ):
         logger.info(f'name:{name} conditionStr:{conditionStr} value:{value}')
         if name == 'Condition':
             value = value == QtCore.Qt.Checked
             # logger.info(f'name:{name} name: "{conditionStr}" value: {value}')
-            self.getDf().loc[self.getDf()['Condition'] == conditionStr, 'show_condition'] = value
+            self.getDf().loc[
+                self.getDf()['Condition'] == conditionStr, 'show_condition'
+            ] = value
 
             self.replot()
 
         elif name == 'Region':
             value = value == QtCore.Qt.Checked
             # logger.info(f'name:{name} name: "{conditionStr}" value: {value}')
-            self.getDf().loc[self.getDf()['Region'] == conditionStr, 'show_region'] = value
+            self.getDf().loc[
+                self.getDf()['Region'] == conditionStr, 'show_region'
+            ] = value
 
             self.replot()
 
         elif name == 'Polarity':
             value = value == QtCore.Qt.Checked
             # logger.info(f'name:{name} name: "{conditionStr}" value: {value}')
-            self.getDf().loc[self.getDf()['Polarity'] == conditionStr, 'show_polarity'] = value
+            self.getDf().loc[
+                self.getDf()['Polarity'] == conditionStr, 'show_polarity'
+            ] = value
 
             self.replot()
 
@@ -805,8 +833,9 @@ class ScatterWidget(QtWidgets.QMainWindow):
             # logger.info(f'name:{name} name: "{conditionStr}" value: {value}')
             logger.info(f'  conditionStr:"{conditionStr}" epochStr:"{epochStr}"')
             epochInt = int(epochStr)
-            theseRows = (self.getDf()['Condition'] == conditionStr) \
-                    & (self.getDf()['Epoch'] == epochInt)
+            theseRows = (self.getDf()['Condition'] == conditionStr) & (
+                self.getDf()['Epoch'] == epochInt
+            )
             self.getDf().loc[theseRows, 'show_epoch'] = value
 
             self.replot()
@@ -819,9 +848,11 @@ class ScatterWidget(QtWidgets.QMainWindow):
         event : matplotlib.backend_bases.PickEvent
         """
         # logger.info(event)
-        logger.info(f'  event.artist:{event.artist}')  # matplotlib.collections.PathCollection
+        logger.info(
+            f'  event.artist:{event.artist}'
+        )  # matplotlib.collections.PathCollection
         logger.info(f'  event.ind:{event.ind}')
-        
+
         # assuming scatterplot preserves index
         ind = event.ind
         dfRow = self.getDf().loc[ind]
@@ -845,10 +876,10 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         try:
             event.artist.label
-        except (AttributeError) as e:
+        except AttributeError as e:
             logger.warning(f'event.artist.label failed: {e}')
             return
-        
+
         df = self._dfStripPlot
 
         xStat = self.state['xStat']
@@ -857,7 +888,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # plotType = self.state['plotType']
 
         dfNoNan = df[df[yStat].notna()]
-        
+
         # print(f'  xStat: {xStat} hue: {hue} plotType: {plotType}')
 
         # print(f'  event.artist.label: "{event.artist.label}"')
@@ -869,12 +900,12 @@ class ScatterWidget(QtWidgets.QMainWindow):
         colList = ['Cell ID', 'Region', 'Condition', 'ROI Number', xStat, yStat, hue]
         # print(f'df2 from event.artist.label:"{event.artist.label}" is:')
         # print(df2[colList])
-        
+
         # abb 20250519 THIS IS TOTALLY WRONG
         # WTF DID I DO !!!!
         # logger.info(f'=== user picked row ind :{event.ind}')
         # print(df2[colList].iloc[event.ind])
-        
+
         # TODO: fix
         df3 = df2[df2[xStat] == event.artist.animal]  # animal is region (ssan, isan)
 
@@ -909,28 +940,34 @@ class ScatterWidget(QtWidgets.QMainWindow):
         if isShift:
             clickedCellID = dfClicked['Cell ID'].iloc[0]
             roiLabelStr = dfClicked['ROI Number'].iloc[0]
-            logger.info(f'-->> plotting cell id:"{clickedCellID}" roiLabelStr:{roiLabelStr}')
-            
+            logger.info(
+                f'-->> plotting cell id:"{clickedCellID}" roiLabelStr:{roiLabelStr}'
+            )
+
             # fig, ax = self._colinTraces.plotCellID(clickedCellID, roiLabelStr=roiLabelStr)
             from colin_pool_plot import new_plotCellID
-            fig, ax = new_plotCellID(self._masterDf, self._meanDf, clickedCellID, roiLabelStr)
-            
+
+            fig, ax = new_plotCellID(
+                self._masterDf, self._meanDf, clickedCellID, roiLabelStr
+            )
+
             if fig is None or ax is None:
                 return
 
             self._mainWindow = MainWindow(fig, ax)
-            self._mainWindow.setWindowTitle(f'cell ID:"{clickedCellID}" roi:{roiLabelStr}')
+            self._mainWindow.setWindowTitle(
+                f'cell ID:"{clickedCellID}" roi:{roiLabelStr}'
+            )
             self._mainWindow.show()
 
     def _old_sparkMasterShowImg(self, ind):
-        """Open image from spark master
-        """
+        """Open image from spark master"""
         if self._imgFolder is None:
             logger.warning('imgFolder is None')
             return
 
         logger.warning(f'ind:{ind} type:{type(ind)}')
-        
+
         # assuming sm2 saved file has these !!!!
         # get l,t,r,b
         minRow = self._df.at[ind, 'bounding box min row (pixels)']
@@ -941,6 +978,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         logger.info(f'minRow:{minRow} maxRow:{maxRow} minCol:{minCol} maxCol:{maxCol}')
 
         import matplotlib.patches as patches
+
         # _x = minCol
         # _y = minRow
         # _width = maxCol - minCol
@@ -951,7 +989,9 @@ class ScatterWidget(QtWidgets.QMainWindow):
         _width = maxRow - minRow
         _height = maxCol - minCol
 
-        _rect = patches.Rectangle((_x, _y), _width, _height, linewidth=1, edgecolor='r', facecolor='none')
+        _rect = patches.Rectangle(
+            (_x, _y), _width, _height, linewidth=1, edgecolor='r', facecolor='none'
+        )
         logger.info(f'_rect is:{_rect}')
 
         imgFile = self._df.at[ind, 'File Name']
@@ -962,7 +1002,9 @@ class ScatterWidget(QtWidgets.QMainWindow):
         imgPath = os.path.join(self._imgFolder, imgFile)
         logger.info(f'opening image: {imgPath}')
 
-        logger.warning('defaulting to matplotlib imread -->> no good!')# import tifffile
+        logger.warning(
+            'defaulting to matplotlib imread -->> no good!'
+        )  # import tifffile
         # imgData = tifffile.imread(imgPath)
         imgData = plt.imread(imgPath)
         logger.info(f'lodaded imgData: {imgData.shape} {imgData.dtype}')
@@ -977,38 +1019,40 @@ class ScatterWidget(QtWidgets.QMainWindow):
         _plot = ax.imshow(imgData)  # AxesImage
         # todo: add path to title
         # _plot.setTitle(imgPath)
-    
+
         ax.add_patch(_rect)
 
         plt.show()
- 
+
     def linePlot(self, df, yStat, hue):
         logger.info(f'=== yStat:{yStat} hue:{hue}')
-        
+
         legend = self.state['legend']
         logger.warning(f'forcing xStat to "Condition"')
         xStat = 'Condition'
         hue_order = conditionOrder
         try:
             df[xStat] = pd.Categorical(df[xStat], categories=hue_order, ordered=True)
-        except (KeyError) as e:
+        except KeyError as e:
             logger.error(f'KeyError xStat:{xStat} avail col:{df.columns}')
         myHue = 'Cell ID'  # one line per cell across (C, i, t)
 
         if 1:
-            self.axScatter = sns.lineplot(data=df,
-                        x="Condition",  # want order ['c', 'i', 't']
-                        y=yStat,
-                        hue=myHue,  # one line per cell (x is control, ivab, thaps)
-                    # style='Region',
-                    style='ROI Number',
-                    #  hue_order=hue_order,
-                        markers=True,
-                        legend=legend,
-                    # err_style="bars",  # for mean df we have _std and _sem columns
-                    # errorbar=("se", 1),
-                    errorbar=None,
-                        ax=self.axScatter)
+            self.axScatter = sns.lineplot(
+                data=df,
+                x="Condition",  # want order ['c', 'i', 't']
+                y=yStat,
+                hue=myHue,  # one line per cell (x is control, ivab, thaps)
+                # style='Region',
+                style='ROI Number',
+                #  hue_order=hue_order,
+                markers=True,
+                legend=legend,
+                # err_style="bars",  # for mean df we have _std and _sem columns
+                # errorbar=("se", 1),
+                errorbar=None,
+                ax=self.axScatter,
+            )
 
             # dfPlot = df.groupby(['Cell ID', 'ROI Number'])
 
@@ -1039,8 +1083,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
             plt.show()
 
     def replot(self):
-        """Replot the scatter plot
-        """
+        """Replot the scatter plot"""
 
         df = self.getDf()
         # reduce based on show_condition and show_cell
@@ -1061,8 +1104,8 @@ class ScatterWidget(QtWidgets.QMainWindow):
         yStat = self.state['yStat']
         if self.state['plotStat'] == 'CV':
             yStat = f'{yStat}_cv'
-        hue = None if self.state['hue']=='None' else self.state['hue']
-        style = None if self.state['style']=='None' else self.state['style']
+        hue = None if self.state['hue'] == 'None' else self.state['hue']
+        style = None if self.state['style'] == 'None' else self.state['style']
         plotType = self.state['plotType']
         legend = self.state['legend']
 
@@ -1091,7 +1134,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         logger.info(f'hue:"{hue}" hue_order:"{hue_order}"')
 
         # dodge = False if numHue<=1 else 0.5
-        dodge = True if numHue<=1 else 0.5
+        dodge = True if numHue <= 1 else 0.5
 
         logger.info(f'numHue:{numHue} dodge:{dodge}')
 
@@ -1105,7 +1148,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         if 0:
             dfGrouped = self.getGroupedDataframe(yStat, groupByColumn=hue)
             self._dfYStatSummary = dfGrouped
-            
+
             if self.rawTableWidget is not None:
                 self.rawTableWidget.setDf(self.getDf())
                 self.yStatSummaryTableWidget.setDf(dfGrouped)
@@ -1127,22 +1170,26 @@ class ScatterWidget(QtWidgets.QMainWindow):
             if len(df) == 0:
                 logger.warning('nothing to plot -->> return')
                 return
-            
+
             if plotType == 'Line Plot':
                 self.linePlot(df, yStat, hue)
 
             elif plotType == 'Scatter':
-                self.axScatter = sns.scatterplot(data=df,
-                                                 x=xStat,
-                                                 y=yStat,
-                                                 hue=hue,
-                                                #  palette=palette,
-                                                 ax=self.axScatter,
-                                                 legend=legend,  # TODO ad QCheckbox for this
-                                                 picker=5)  # return matplotlib.axes.Axes
+                self.axScatter = sns.scatterplot(
+                    data=df,
+                    x=xStat,
+                    y=yStat,
+                    hue=hue,
+                    #  palette=palette,
+                    ax=self.axScatter,
+                    legend=legend,  # TODO ad QCheckbox for this
+                    picker=5,
+                )  # return matplotlib.axes.Axes
 
                 # abb 202505 removed
-                self.axScatter.figure.canvas.mpl_connect("pick_event", self._on_user_pick_scatterplot)
+                self.axScatter.figure.canvas.mpl_connect(
+                    "pick_event", self._on_user_pick_scatterplot
+                )
 
                 if self._state['makeSquare']:
                     # logger.info('making scatter plot square')
@@ -1157,26 +1204,38 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
                     # draw a diagonal line
                     # Using transform=self.axScatter.transAxes, the supplied x and y coordinates are interpreted as axes coordinates instead of data coordinates.
-                    self.axScatter.plot([0, 1], [0, 1], '--', transform=self.axScatter.transAxes)
-            
-            elif plotType in ['Box Plot']:
-                self.axScatter = sns.boxplot(data=df,
-                                               x=xStat,
-                                               y=yStat,
-                                               hue=hue,
-                                               legend=legend,
-                                               ax=self.axScatter,
-                                               dodge=dodge,  # separate the points by hue
-                                               hue_order=hue_order,
-                                               )
+                    self.axScatter.plot(
+                        [0, 1], [0, 1], '--', transform=self.axScatter.transAxes
+                    )
 
-            elif plotType in ['Swarm', 'Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM']:
+            elif plotType in ['Box Plot']:
+                self.axScatter = sns.boxplot(
+                    data=df,
+                    x=xStat,
+                    y=yStat,
+                    hue=hue,
+                    legend=legend,
+                    ax=self.axScatter,
+                    dodge=dodge,  # separate the points by hue
+                    hue_order=hue_order,
+                )
+
+            elif plotType in [
+                'Swarm',
+                'Swarm + Mean',
+                'Swarm + Mean + STD',
+                'Swarm + Mean + SEM',
+            ]:
                 # 20250515 colin, got it working
                 # picker does not work for stripplot
                 # fernando's favorite
-                
+
                 # reduce the brightness of raw data
-                if plotType in ['Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM']:
+                if plotType in [
+                    'Swarm + Mean',
+                    'Swarm + Mean + STD',
+                    'Swarm + Mean + SEM',
+                ]:
                     alpha = 0.6
                     # ['ci', 'pi', 'se', 'sd']
                     if plotType == 'Swarm + Mean':
@@ -1194,7 +1253,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
                 # 20250520 hue_order has to be the same length as unique() hue
                 # hue_order = ['Control', 'Ivab']
-                
+
                 plotDict = {
                     'data': df,
                     'x': xStat,
@@ -1241,19 +1300,25 @@ class ScatterWidget(QtWidgets.QMainWindow):
                     for idx, artist in enumerate(self.axScatter.collections):
                         # logger.info(f'idx:{idx} artist:{artist}')
                         # matplotlib.collections.PathCollection
-                        artist.animal = splits[idx // group_len]  # floor division 5//2 = 2
+                        artist.animal = splits[
+                            idx // group_len
+                        ]  # floor division 5//2 = 2
                         artist.label = groups[idx % group_len]
                         # print(f'{idx}')
                         # print(f'  artist.animal: "{artist.animal}"')
                         # print(f'  artist.label: "{artist.label}"')
 
-                    self.fig.canvas.mpl_connect("pick_event", self._on_user_pick_stripplot)
+                    self.fig.canvas.mpl_connect(
+                        "pick_event", self._on_user_pick_stripplot
+                    )
 
                 # add stats
                 if self.state['stats']:
                     # # between all hue within each x (cell)
                     if hue is None or (xStat == hue):
-                        logger.warning('no pairwise comparison if no hue -->> default to pairwise x-stat')
+                        logger.warning(
+                            'no pairwise comparison if no hue -->> default to pairwise x-stat'
+                        )
                         # pairwise between x-stat (cell id)
                         _xUnique = df[xStat].unique()
                         pairs = list(combinations(_xUnique, 2))
@@ -1261,7 +1326,10 @@ class ScatterWidget(QtWidgets.QMainWindow):
                         pairs = []
                         for _xStat in df[xStat].unique():
                             # logger.info(f'adding pair for _xStat: {_xStat}')
-                            onePair = [[(_xStat, a), (_xStat, b)] for a, b in combinations(uniqueHue, 2)]
+                            onePair = [
+                                [(_xStat, a), (_xStat, b)]
+                                for a, b in combinations(uniqueHue, 2)
+                            ]
                             # logger.info(f'onePair is len:{len(onePair)}')
                             # logger.info(f'  {onePair}')
                             # append items in onePair to pairs
@@ -1274,75 +1342,87 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
                     try:
 
-                        logger.info(f'constructing stats Annotator Mann-Whitney NO CORRECTION')
-                        annotator = Annotator(pairs=pairs,
-                                              ax=self.axScatter,
-                                              **plotDict)
+                        logger.info(
+                            f'constructing stats Annotator Mann-Whitney NO CORRECTION'
+                        )
+                        annotator = Annotator(
+                            pairs=pairs, ax=self.axScatter, **plotDict
+                        )
                         # logger.info('  annotator.configure')
-                        annotator.configure(test='Mann-Whitney',
-                                            text_format='star',
-                                            # loc='outside',
-                                            verbose=False,
-                                            )
+                        annotator.configure(
+                            test='Mann-Whitney',
+                            text_format='star',
+                            # loc='outside',
+                            verbose=False,
+                        )
                         # logger.info('  annotator.apply_and_annotate')
                         annotator.apply_and_annotate()
-                    except (ValueError) as e:
+                    except ValueError as e:
                         logger.error(f'annotator failed: {e}')
                     # 20250708
-                    except( TypeError) as e:
+                    except TypeError as e:
                         logger.error(f'annotator failed: {e}')
                         logger.error(f'  pairs:{pairs}')
                         logger.error(f'  hue:{hue}')
-
 
                 # overlay mean +- std or sem
                 # no overlay if hue is None
                 # if hue is not None and \
                 #     plotType in ['Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM']:
-                if plotType in ['Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM']:
-                    
+                if plotType in [
+                    'Swarm + Mean',
+                    'Swarm + Mean + STD',
+                    'Swarm + Mean + SEM',
+                ]:
+
                     errorbar = errorBar
                     markersize = 30
-                    sns.pointplot(data=df,
-                                  x=xStat,
-                                  y=yStat,
-                                  # ???
-                                #   hue= xStat if hue is None else hue,
-                                hue=hue,
-                                errorbar=errorbar,  # can be 'se', 'sem', etc
-                                # capsize=capsize,
-                                linestyle='none',  # do not connect (with line) between categorical x
-                                marker="_",
-                                markersize=markersize,
-                                # markeredgewidth=3,
-                                legend=False,
-                                # palette=palette,
-                                # dodge=0.5,  # separate the points by hue
-                                # dodge=None if len(uniqueHue)==1 else 0.5,  # separate the points by hue
-                                dodge=dodge,
-                                hue_order=hue_order,
-                                ax=self.axScatter)
+                    sns.pointplot(
+                        data=df,
+                        x=xStat,
+                        y=yStat,
+                        # ???
+                        #   hue= xStat if hue is None else hue,
+                        hue=hue,
+                        errorbar=errorbar,  # can be 'se', 'sem', etc
+                        # capsize=capsize,
+                        linestyle='none',  # do not connect (with line) between categorical x
+                        marker="_",
+                        markersize=markersize,
+                        # markeredgewidth=3,
+                        legend=False,
+                        # palette=palette,
+                        # dodge=0.5,  # separate the points by hue
+                        # dodge=None if len(uniqueHue)==1 else 0.5,  # separate the points by hue
+                        dodge=dodge,
+                        hue_order=hue_order,
+                        ax=self.axScatter,
+                    )
 
             elif plotType == 'Histogram':
-                self.axScatter = sns.histplot(data=df,
-                                              x=yStat,
-                                              hue=hue,
-                                                # palette=palette,
-                                                legend=legend,
-                                               ax=self.axScatter)
+                self.axScatter = sns.histplot(
+                    data=df,
+                    x=yStat,
+                    hue=hue,
+                    # palette=palette,
+                    legend=legend,
+                    ax=self.axScatter,
+                )
 
             elif plotType == 'Cumulative Histogram':
-                self.axScatter = sns.histplot(data=df,
-                                              x=yStat,
-                                              hue=hue,
-                                              element="step",
-                                              fill=False,
-                                              cumulative=True,
-                                              stat="density",
-                                              common_norm=False,
-                                                # palette=palette,
-                                                legend=legend,
-                                               ax=self.axScatter)
+                self.axScatter = sns.histplot(
+                    data=df,
+                    x=yStat,
+                    hue=hue,
+                    element="step",
+                    fill=False,
+                    cumulative=True,
+                    stat="density",
+                    common_norm=False,
+                    # palette=palette,
+                    legend=legend,
+                    ax=self.axScatter,
+                )
 
             else:
                 logger.warning(f'did not understand plot type: {plotType}')
@@ -1377,34 +1457,34 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         contextMenu.addSeparator()
         contextMenu.addAction('Copy Stats Table ...')
-        
+
         # Add splitter control options
         contextMenu.addSeparator()
         resetSplitterAction = QtWidgets.QAction('Reset Toolbar Width')
         contextMenu.addAction(resetSplitterAction)
-        
+
         # contextMenu.addSeparator()
         # contextMenu.addAction('Show Analysis Folder')
-        
+
         # show menu
         pos = self.mapToGlobal(pos)
         action = contextMenu.exec_(pos)
         if action is None:
             return
-        
+
         _ret = ''
         actionText = action.text()
         if action == makeSquareAction:
-            self._state['makeSquare'] =  makeSquareAction.isChecked()
+            self._state['makeSquare'] = makeSquareAction.isChecked()
             self.replot()
-        
+
         elif actionText == 'Copy Stats Table ...':
             _ret = self.copyTableToClipboard()
-            
+
         elif actionText == 'Reset Toolbar Width':
             self.resetSplitterSizes()
 
-    def setStatusBar(self, msg:str, msecs:int=0):
+    def setStatusBar(self, msg: str, msecs: int = 0):
         """Set the text of the status bar.
 
         Defaults to 4 seconds.
@@ -1413,12 +1493,10 @@ class ScatterWidget(QtWidgets.QMainWindow):
         #     msecs=4000
         self.status_bar.showMessage(msg, msecs=msecs)
 
-    def getGroupedDataframe(self,
-                            statColumn,
-                            groupByColumn):
-        
+    def getGroupedDataframe(self, statColumn, groupByColumn):
+
         logger.info(f'groupByColumn:{groupByColumn}')
-        
+
         aggList = ["count", "mean", "std", "sem", variation, "median", "min", "max"]
 
         # if len(self._df)>0:
@@ -1428,23 +1506,29 @@ class ScatterWidget(QtWidgets.QMainWindow):
         #     detectedTrace = 'N/A'
 
         # aggDf = self._df.groupby(groupByColumn, as_index=False)[statColumn].agg(aggList)
-        dfDropNan = self.getDf().dropna(subset=[statColumn])  # drop rows where statColumn is nan
-            
+        dfDropNan = self.getDf().dropna(
+            subset=[statColumn]
+        )  # drop rows where statColumn is nan
+
         try:
-            aggDf = dfDropNan.groupby(groupByColumn).agg({statColumn : aggList})
-        except (TypeError) as e:
+            aggDf = dfDropNan.groupby(groupByColumn).agg({statColumn: aggList})
+        except TypeError as e:
             logger.error(f'groupByColumn "{groupByColumn}" failed e:{e}')
             aggDf = dfDropNan
 
         try:
-            aggDf.columns = aggDf.columns.droplevel(0)  # get rid of statColumn multiindex
-        except (ValueError) as e:
+            aggDf.columns = aggDf.columns.droplevel(
+                0
+            )  # get rid of statColumn multiindex
+        except ValueError as e:
             logger.error(e)
         aggDf.insert(0, 'Stat', statColumn)  # add column 0, in place
-        aggDf = aggDf.reset_index()  # move groupByColum (e.g. 'ROI Number') from row index label to column
-        
+        aggDf = (
+            aggDf.reset_index()
+        )  # move groupByColum (e.g. 'ROI Number') from row index label to column
+
         # rename column 'variation' as 'CV'
-        aggDf = aggDf.rename(columns={'variation': 'CV'}) 
+        aggDf = aggDf.rename(columns={'variation': 'CV'})
 
         # round some columns
         aggList = ["mean", "std", "sem", "CV", "median", "min", "max"]
@@ -1453,14 +1537,16 @@ class ScatterWidget(QtWidgets.QMainWindow):
                 continue
             # logger.info(f'rounding agg:{agg}')
             try:
-                aggDf[agg] =round(aggDf[agg], 2)
-            except (KeyError) as e:
-                logger.warning(f'did not find agg column:{agg} possible keys are {aggDf.columns}')
+                aggDf[agg] = round(aggDf[agg], 2)
+            except KeyError as e:
+                logger.warning(
+                    f'did not find agg column:{agg} possible keys are {aggDf.columns}'
+                )
         return aggDf
 
     def setSplitterSizes(self, leftWidth: int, rightWidth: int = None):
         """Set the splitter sizes programmatically.
-        
+
         Args:
             leftWidth: Width for the left toolbar in pixels
             rightWidth: Width for the right plot area in pixels (optional)
@@ -1503,16 +1589,18 @@ class ScatterWidget(QtWidgets.QMainWindow):
         self.saveSplitterSizes()
         super().closeEvent(event)
 
+
 def run():
     # this was my analysis with 1 roi per kym
     # savePath = '/Users/cudmore/colin_peak_summary_20250517.csv'
-    
+
     # this is new colin analysis with multiple roi per kym
     # savePath = '/Users/cudmore/colin_peak_summary_20250521.csv'
     # savePath = '/Users/cudmore/colin_peak_summary_20250527.csv'
 
     # load csv analysis files as pd DataFrame
     from colin_global import loadMasterDfFile, loadMeanDfFile, getMeanDfPath
+
     masterDf = loadMasterDfFile()
     meanDf = loadMeanDfFile()
 
@@ -1520,19 +1608,20 @@ def run():
     # meanSavePath = '/Users/cudmore/colin_peak_mean_20250521.csv'
     # meanDf = pd.read_csv(meanSavePath)
 
-    hueList = ['File Number',
-               'Cell ID',
-            #    'Cell ID (plot)',  # removed 20250521
-            #    'Tif File',
-               'Condition',
-               'Epoch',
-               'Condition Epoch',
-               'Region',
-               'Date',
-               'ROI Number',
-               'Polarity',
-               ]
-    
+    hueList = [
+        'File Number',
+        'Cell ID',
+        #    'Cell ID (plot)',  # removed 20250521
+        #    'Tif File',
+        'Condition',
+        'Epoch',
+        'Condition Epoch',
+        'Region',
+        'Date',
+        'ROI Number',
+        'Polarity',
+    ]
+
     # limit what we show user
     plotColumns = [
         'Cell ID',
@@ -1568,18 +1657,19 @@ def run():
     app.setFont(QtGui.QFont("Arial", 10))
     # app.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 
-    myWin = ScatterWidget(masterDf,
-                          meanDf,
-                          xStat='Region',
-                          yStat='Peak Inst Freq (Hz)',
-                          #defaultPlotType='Line Plot',
-                          defaultPlotType='Swarm + Mean + SEM',
-                          hueList=hueList,
-                          defaultHue='Condition',
-                          imgFolder = None,
-                          plotColumns=plotColumns,
-                          )
-    
+    myWin = ScatterWidget(
+        masterDf,
+        meanDf,
+        xStat='Region',
+        yStat='Peak Inst Freq (Hz)',
+        # defaultPlotType='Line Plot',
+        defaultPlotType='Swarm + Mean + SEM',
+        hueList=hueList,
+        defaultHue='Condition',
+        imgFolder=None,
+        plotColumns=plotColumns,
+    )
+
     myWin.setWindowTitle(getMeanDfPath())
 
     # plot all control traces for ssan and isan
@@ -1588,11 +1678,12 @@ def run():
     # plt.show()
 
     myWin.show()
-    
+
     # options = ScatterOptions()
     # options.show()
 
     sys.exit(app.exec_())
+
 
 if __name__ == '__main__':
     run()

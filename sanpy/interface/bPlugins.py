@@ -11,14 +11,13 @@ import inspect
 from typing import Union, Dict, List, Tuple, Optional
 
 import sanpy
+# from sanpy.bAnalysis_ import bAnalysis
 
 # import sanpy.interface
 import sanpy.interface.plugins
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
-
 
 class bPlugins:
     """Generate a dict of plugins.
@@ -82,8 +81,14 @@ class bPlugins:
         loadedList = []
         for moduleName, obj in inspect.getmembers(sanpy.interface.plugins):
             # print('moduleName:', moduleName, 'obj:', obj)
+            # 202507 when cleaning up sanpy.__init__ we are getting bAnalysis here ???
+            if moduleName == 'bAnalysis':
+                logger.debug(f'skipping moduleName: "{moduleName}"')
+                continue
+            
             if inspect.isclass(obj):
-                # logger.info(f'moduleName: {moduleName}')
+                # # when cleaning up sanpy.__init__ we are getting bAnalysis here ???
+                # logger.debug(f'moduleName: {moduleName}')
                 if moduleName in ignoreModuleList:
                     # our base plugin class
                     continue

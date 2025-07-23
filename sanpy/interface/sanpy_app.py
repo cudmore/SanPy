@@ -27,21 +27,133 @@ qdarktheme.enable_hi_dpi()
 
 from qtpy import QtCore, QtWidgets, QtGui
 
-import sanpy
-import sanpy._util
+# from sanpy.interface.plugins.sanpyLog import sanpyLog
+
+# # import sanpy
+# from sanpy.bDetection import bDetection
+# from sanpy.bAnalysisUtil import bAnalysisUtil
+# # import sanpy._util
+# import sanpy.interface
+# import sanpy.interface.preferences
+
+# from sanpy.interface.sanpy_window import SanPyWindow
+# from sanpy.interface.openFirstWidget import openFirstWidget
+
+# import sanpy.interface.SanPyWindow
+
+# 202507 need this before starting logger
+# from sanpy._util import addUserPath
+
+def _getUserDocumentsFolder():
+    """Get <user>/Documents folder."""
+    userPath = pathlib.Path.home()
+    userDocumentsFolder = os.path.join(userPath, "Documents")
+    if not os.path.isdir(userDocumentsFolder):
+        # logger.error(f'Did not find path "{userDocumentsFolder}"')
+        # logger.error(f'   Using "{userPath}"')
+        return userPath
+    else:
+        return userDocumentsFolder
+    
+def _getUserSanPyFolder():
+    """Get <user>/Documents/SanPy folder."""
+    userDocumentsFolder = _getUserDocumentsFolder()
+    sanpyFolder = os.path.join(userDocumentsFolder, "SanPy-User-Files")
+    return sanpyFolder
+
+def addSanPyUserPath():
+    """Make <user>/Documents/SanPy folder and add it to the Python sys.path
+
+    Returns:
+        True: If we made the folder (first time SanPy is running)
+    """
+
+    # logger.info("")
+
+    madeUserFolder = _makeSanPyFolders()  # make <user>/Documents/SanPy if necc
+    userSanPyFolder = _getUserSanPyFolder()
+
+    # if userSanPyFolder in sys.path:
+    #     sys.path.remove(userSanPyFolder)
+
+    if userSanPyFolder not in sys.path:
+        # logger.info(f"Adding to sys.path: {userSanPyFolder}")
+        sys.path.append(userSanPyFolder)
+
+        # logger.info("sys.path is now:")
+        # for path in sys.path:
+        #     logger.info(f"    {path}")
+
+    return madeUserFolder
+
+def getBundledDir():
+    """Get the working directory where user preferences are installed with the package.
+
+    This will be source code folder when running from source,
+      will be a more freeform folder when running as a frozen app/exe
+    """
+    if getattr(sys, "frozen", False):
+        # we are running in a bundle (frozen)
+        bundle_dir = sys._MEIPASS
+    else:
+        # we are running in a normal Python environment
+        bundle_dir = os.path.dirname(os.path.abspath(__file__))
+        # 202507 get the path to the package source
+        # when running locally this is Sanpy/sanpy
+        bundle_dir = os.path.dirname(bundle_dir)
+    return bundle_dir
+
+def _makeSanPyFolders():
+    """Make <user>/Documents/SanPy-User-Files folder .
+
+    If no Documents folder then make SanPy folder directly in <user> path.
+    """
+    # userDocumentsFolder = _getUserDocumentsFolder()
+
+    madeUserFolder = False
+
+    # main <user>/Documents/SanPy folder
+    sanpyFolder = _getUserSanPyFolder()
+    if not os.path.isdir(sanpyFolder):
+        # first time run
+        # logger.info(f'Making <user>/SanPy-User-Files folder "{sanpyFolder}"')
+        madeUserFolder = True
+        #
+        # copy entire xxx into <user>/Documents/SanPy
+        _bundDir = getBundledDir()  # where our package source is
+        _srcPath = pathlib.Path(_bundDir) / "_userFiles" / "SanPy-User-Files"
+        _dstPath = pathlib.Path(sanpyFolder)
+        # logger.info("    copying folder tree to <user>/Documents/SanPy-User-Folder")
+        # logger.info(f"    _srcPath:{_srcPath}")
+        # logger.info(f"    _dstPath:{_dstPath}")
+        import shutil
+        shutil.copytree(_srcPath, _dstPath)
+    else:
+        # already exists, make sure we have all sub-folders that are expected
+        pass
+
+    return madeUserFolder
+
+# CRITICAL: THIS INSTALLS SanPy user files in <user>/Documents
+# needs to be done before we start the logger
+addSanPyUserPath()
+
+# import sanpy
+from sanpy.bDetection import bDetection
+from sanpy.bAnalysisUtil import bAnalysisUtil
+# import sanpy._util
 import sanpy.interface
 import sanpy.interface.preferences
 
 from sanpy.interface.sanpy_window import SanPyWindow
 from sanpy.interface.openFirstWidget import openFirstWidget
 
-# import sanpy.interface.SanPyWindow
-
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 # This causes mkdocs to infinite recurse when running locally as 'mkdocs serve'
 # logger.info('SanPy app.py is starting up')
 
+# import to turn off some annoying logging in other packages
 import logging
 
 # turn off qdarkstyle logging
@@ -51,7 +163,8 @@ import logging
 logging.getLogger("numexpr").setLevel(logging.WARNING)
 
 def getAppIconPath():
-    bundle_dir = sanpy._util.getBundledDir()
+    # bundle_dir = sanpy._util.getBundledDir()
+    bundle_dir = getBundledDir()
     if getattr(sys, "frozen", False):
         appIconPath = (
             pathlib.Path(bundle_dir) / "sanpy_transparent.png"
@@ -69,13 +182,14 @@ class SanPyApp(QtWidgets.QApplication):
         self._windowList = []
         # list of open SanPyWindow
 
-        firstTimeRunning = sanpy._util.addUserPath()
-        if firstTimeRunning:
-            logger.info("  We created <user>/Documents/Sanpy and need to restart")
+        # firstTimeRunning = sanpy._util.addUserPath()
+        # firstTimeRunning = addSanPyUserPath()
+        # if firstTimeRunning:
+        #     logger.info("  We created <user>/Documents/Sanpy and need to restart")
 
         self._fileLoaderDict = sanpy.fileloaders.getFileLoaders(verbose=False)
         
-        self._detectionClass : sanpy.bDetection = sanpy.bDetection()
+        self._detectionClass : bDetection = bDetection()
 
         self._configDict : sanpy.interface.preferences = sanpy.interface.preferences(self)
         self._currentWindowGeometry = {
@@ -86,7 +200,8 @@ class SanPyApp(QtWidgets.QApplication):
         }
 
         self._plugins = sanpy.interface.bPlugins(sanpyApp=self)
-        self._analysisUtil = sanpy.bAnalysisUtil()
+        
+        self._analysisUtil = bAnalysisUtil()
 
         # self._useDarkStyle = self._configDict["useDarkStyle"]
         self.toggleStyleSheet(buildingInterface=True)
@@ -121,13 +236,15 @@ class SanPyApp(QtWidgets.QApplication):
         # fileMenu = mainMenu.addMenu("&File")
         fileMenu = mainMenu.addMenu("File")
 
-        loadFileAction = QtWidgets.QAction("Open...", self)
+        loadFileAction = QtWidgets.QAction("Open File...", self)
+        loadFileAction.setEnabled(False)  # disable for now
         loadFileAction.setCheckable(False)  # setChecked is True by default?
         loadFileAction.setShortcut("Ctrl+O")
         loadFileAction.triggered.connect(self.loadFile)
         fileMenu.addAction(loadFileAction)
         
         loadFolderAction = QtWidgets.QAction("Open Folder...", self)
+        loadFolderAction.setEnabled(False)  # disable for now
         loadFolderAction.setCheckable(False)  # setChecked is True by default?
         loadFolderAction.triggered.connect(self.loadFolder)
         fileMenu.addAction(loadFolderAction)
@@ -141,12 +258,14 @@ class SanPyApp(QtWidgets.QApplication):
 
         # save frontmost window
         saveAction = QtWidgets.QAction("Save", self)
+        saveAction.setEnabled(False)  # disable for now
         saveAction.triggered.connect(self.saveFrontmost)
         fileMenu.addAction(saveAction)
 
         fileMenu.addSeparator()
         
         savePreferencesAction = QtWidgets.QAction("Save Preferences", self)
+        savePreferencesAction.setEnabled(False)  # disable for now
         savePreferencesAction.triggered.connect(self.configDict.save)
         fileMenu.addAction(savePreferencesAction)
 
@@ -173,15 +292,23 @@ class SanPyApp(QtWidgets.QApplication):
         action.triggered.connect(self._onAboutMenuAction)
         self.helpMenu.addAction(action)
 
+        # Add 'SanPy Log...' action before 'About SanPy'
+        name = "SanPy Log..."
+        # self._sanpyLogWindow = None  # instance variable to hold the log window
+        action = QtWidgets.QAction(name, self)
+        action.triggered.connect(partial(self._showSanPyLog))
+        self.helpMenu.addAction(action)
+
         # like the help menu, this gets rerouted to the main python/sanp menu
         name = "Preferences ..."
         action = QtWidgets.QAction(name, self)
         action.triggered.connect(self._onPreferencesMenuAction)
+        action.setEnabled(False)  # disable for now
         self.helpMenu.addAction(action)
     
         # get help menu as action so other windows can insert their menus before it
         # e.g. SanPyWindow inserts (View, Windows) menus
-        logger.info('mainMenu is now')
+        # logger.info('mainMenu is now')
         self._helpMenuAction = None
         for _action in mainMenu.actions():
             actionText = _action.text()
@@ -190,7 +317,35 @@ class SanPyApp(QtWidgets.QApplication):
                 self._helpMenuAction = _action
 
         return self._helpMenuAction
-    
+
+    def _showSanPyLog(self):
+        # _sanpyLogWindow = sanpyLog()
+        # _sanpyLogWindow.show()
+        pluginName = 'SanPy Log'
+        pluginDict = self.getPlugins().pluginDict
+        if pluginName not in pluginDict.keys():
+            logger.error(f'Did not find plugin: "{pluginName}"')
+            return
+        else:
+            humanName = pluginDict[pluginName]["constructor"].myHumanName
+
+            logger.info("Running plugin:")
+            logger.info(f"  pluginName:{pluginName}")
+            logger.info(f"  humanName:{humanName}")
+            # if _pluginDict is not None:
+            #     logger.info(f"  _pluginDict:{_pluginDict}")
+            logger.info("  TODO: put try except back in !!!")
+            # TODO: to open PyQt windows, we need to keep a local (persistent) variable
+            # try:
+            if 1:
+                # print(1)
+                newPlugin = pluginDict[pluginName]["constructor"](
+                    ba=None,
+                    sanPyWindow=None,
+                    startStop=None
+                )
+                newPlugin.getWidget().show()
+                newPlugin.getWidget().setVisible(True)
     # def _refreshWindowsMenu(self):
     def getWindowsMenu(self, aWindowsMenu):
         
@@ -452,7 +607,7 @@ class SanPyApp(QtWidgets.QApplication):
         sweep : int
             Only works for file path
         """
-        interface_mode = self.configDict['interface_mode']
+        interface_mode = self.configDict['interface_mode']  # 'sanpy' or 'kymograph'
         
         logger.info(f'path:{path}')
         logger.info(f'   sweep:{sweep}')
@@ -475,8 +630,19 @@ class SanPyApp(QtWidgets.QApplication):
             if interface_mode == 'sanpy':
                 foundWindow = SanPyWindow(self, path)
             elif interface_mode == 'kymograph':
-                from sanpy.kym.interface.kym_file_list.tif_tree_window import TifTreeWindow
-                foundWindow = TifTreeWindow(self, path)
+                # will either open a TifTreeWindow or a KymRoiWidget
+
+                if os.path.isfile(path):
+                    # open KymRoiWidget
+                    # from sanpy.kym.interface.kymRoiWidget import KymRoiWidget
+                    # foundWindow = KymRoiWidget(self, path)
+                    pass
+                elif os.path.isdir(path):
+                    from sanpy.kym.interface.kym_file_list.tif_tree_window import TifTreeWindow
+                    foundWindow = TifTreeWindow(self, path)
+                else:
+                    logger.warning(f'   Did not load path "{path}"')
+                    return
             
             foundWindow.show()
             foundWindow.raise_()  # bring to front, raise is a python keyword
@@ -514,7 +680,7 @@ class SanPyApp(QtWidgets.QApplication):
 
         for idx, aWindow in enumerate(self._windowList):
             if aWindow == theWindow:
-                logger.info(f'remove/pop sanpy window from app, idx:{idx}')
+                logger.info(f'  remove/pop sanpy window from app, idx:{idx}')
                 _removedValue = self._windowList.pop(idx)
 
     def _onHelpMenuAction(self, name: str):

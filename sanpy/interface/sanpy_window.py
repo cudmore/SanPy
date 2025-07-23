@@ -143,6 +143,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # self.raise_()  # bring to front, raise is a python keyword
         # self.activateWindow()  # bring to front
 
+        # Close window shortcut: platform-independent (Ctrl+W or Cmd+W)
+        shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Close), self)
+        shortcut.activated.connect(self.close)
+
         self.slot_updateStatus(f"Loaded {self.path}")
         logger.info(f"-->> SanPyWindow done initializing with {self.path}")
 
@@ -155,7 +159,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
     # 20231229 moving this to new SanPyWindow
     # the main window opens plugins, the app does not
-    def runPlugin(self, pluginName: str, ba: sanpy.bAnalysis, show: bool = True):
+    def runPlugin(self, pluginName: str,
+                  ba: sanpy.bAnalysis,
+                  show: bool = True):
         """Run one plugin with given a bAnalysis.
 
         Args:
@@ -494,7 +500,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #
         event.accept()
 
-    def get_bAnalysis(self):
+    def get_bAnalysis(self) -> sanpy.bAnalysis:
         return self.myDetectionWidget.ba
 
     def _old_getSelectedFileDict(self):

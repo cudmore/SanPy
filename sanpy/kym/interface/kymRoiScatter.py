@@ -8,6 +8,7 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 import seaborn as sns
+
 # sns.set_palette("colorblind")
 
 from PyQt5 import QtGui, QtCore, QtWidgets
@@ -15,19 +16,22 @@ from PyQt5 import QtGui, QtCore, QtWidgets
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, PeakDetectionTypes
 from sanpy.kym.kymRoiResults import KymRoiResults
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
 
+
 class simpleTableWidget(QtWidgets.QTableWidget):
-    def __init__(self, df : Optional[pd.DataFrame] = None):
+    def __init__(self, df: Optional[pd.DataFrame] = None):
         super().__init__(None)
         self._df = df
         if self._df is not None:
             self.setDf(self._df)
 
-    def setDf(self, df : pd.DataFrame):
+    def setDf(self, df: pd.DataFrame):
         self._df = df
-        
+
         self.setRowCount(df.shape[0])
         self.setColumnCount(df.shape[1])
         self.setHorizontalHeaderLabels(df.columns)
@@ -36,15 +40,16 @@ class simpleTableWidget(QtWidgets.QTableWidget):
             for col in range(df.shape[1]):
                 item = QtWidgets.QTableWidgetItem(str(df.iloc[row, col]))
                 self.setItem(row, col, item)
-                 
+
+
 class SimpleRoiScatter(QtWidgets.QWidget):
-    """Plot a scatter plot from peak/diameter detection df.
-    """
-    def __init__(self, kymRoiAnalysis : KymRoiAnalysis):
+    """Plot a scatter plot from peak/diameter detection df."""
+
+    def __init__(self, kymRoiAnalysis: KymRoiAnalysis):
         super().__init__(None)
-        
+
         self._kymRoiAnalysis = kymRoiAnalysis
-        
+
         # need two df for f/f0 and another for diameter
         self._df = None  # set this to context of (df/f0 or diameter)
         #
@@ -52,12 +57,22 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         self._dfDiameter = None
 
         # columns in analysis df
-        self._columns = KymRoiResults.userAnalysisKeys  # reduces analysis keys, just for the user
+        self._columns = (
+            KymRoiResults.userAnalysisKeys
+        )  # reduces analysis keys, just for the user
 
         # ignore some bookkeeping columns
 
-        self._plotTypes = ['Scatter', 'Swarm', 'Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM', 'Histogram', 'Cumulative Histogram']
-        
+        self._plotTypes = [
+            'Scatter',
+            'Swarm',
+            'Swarm + Mean',
+            'Swarm + Mean + STD',
+            'Swarm + Mean + SEM',
+            'Histogram',
+            'Cumulative Histogram',
+        ]
+
         self._state = {
             'xStat': 'Peak Number',
             'yStat': 'Peak Height',
@@ -80,14 +95,18 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         if not self.isVisible():
             return
         logger.info(f'channel:{channel} roi:{roi}')
-        
+
         # get 2x df, one for intensity and other for diameter
         # we do not know that actual 'analyzethisTrace' within each, e.g. could be f/f0 or df/f0
-        self._dfIntensity = self._kymRoiAnalysis.getDataFrame(channel, PeakDetectionTypes.intensity)  # get full dataframe across all 'roi number'
-        self._dfDiameter = self._kymRoiAnalysis.getDataFrame(channel, PeakDetectionTypes.diameter)  # get full dataframe across all 'roi number'
-        
+        self._dfIntensity = self._kymRoiAnalysis.getDataFrame(
+            channel, PeakDetectionTypes.intensity
+        )  # get full dataframe across all 'roi number'
+        self._dfDiameter = self._kymRoiAnalysis.getDataFrame(
+            channel, PeakDetectionTypes.diameter
+        )  # get full dataframe across all 'roi number'
+
         # df = self._kymRoiAnalysis.getCombindedDataFrame(channel)  # get full dataframe across all 'roi number'
-        
+
         if self._state['analysisType'] == 'Intensity':
             dfReplot = self._dfIntensity
         elif self._state['analysisType'] == 'Diameter':
@@ -96,8 +115,7 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         self.replot(dfReplot)
 
     def _refreshAnalysisType(self):
-        """Swap in correct df when user chooses an 'analysisType'.
-        """
+        """Swap in correct df when user chooses an 'analysisType'."""
         if self._state['analysisType'] == 'Intensity':
             self._df = self._dfIntensity
         elif self._state['analysisType'] == 'Diameter':
@@ -142,13 +160,13 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         # put toolbar and static_canvas in a V layout
         # plotWidget = QtWidgets.QWidget()
         vLayoutPlot = QtWidgets.QVBoxLayout(self)
-        
+
         self._topToolbar = self._buildTopToobar()
         vLayoutPlot.addLayout(self._topToolbar)
 
         vLayoutPlot.addWidget(self.static_canvas)
         vLayoutPlot.addWidget(self.mplToolbar)
-        #plotWidget.setLayout(vLayoutPlot)
+        # plotWidget.setLayout(vLayoutPlot)
 
         #
         # raw and y-stat summary in tabs
@@ -170,7 +188,7 @@ class SimpleRoiScatter(QtWidgets.QWidget):
     @property
     def state(self):
         return self._state
-    
+
     def copyTableToClipboard(self):
         _tabIndex = self._tabwidget.currentIndex()
         if _tabIndex == 0:
@@ -189,7 +207,7 @@ class SimpleRoiScatter(QtWidgets.QWidget):
             logger.warning(f'did not understand tab: {_tabIndex}')
             _ret = 'Did not copy, please select a table'
         return _ret
-    
+
     def _buildTopToobar(self):
         vBoxLayout = QtWidgets.QVBoxLayout()
         vBoxLayout.setAlignment(QtCore.Qt.AlignTop)
@@ -219,9 +237,7 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         aComboBox.addItems(['Intensity', 'Diameter'])
         _index = self._plotTypes.index('Swarm')
         aComboBox.setCurrentIndex(0)  # default to f/f0
-        aComboBox.currentTextChanged.connect(
-            partial(self._on_stat_combobox, aName)
-        )
+        aComboBox.currentTextChanged.connect(partial(self._on_stat_combobox, aName))
         hBoxLayout.addWidget(aComboBox)
 
         #
@@ -273,17 +289,16 @@ class SimpleRoiScatter(QtWidgets.QWidget):
 
         #
         return vBoxLayout
-    
+
     def _updateGuiOnPlotType(self, plotType):
-        """Enable/disable giu on plot type.
-        """
+        """Enable/disable giu on plot type."""
         # plot types turn on/off X-Stat
         enableXStat = plotType == 'Scatter'
         self.xComboBox.setEnabled(enableXStat)
 
-    def _on_stat_combobox(self, name : str, value : str):
+    def _on_stat_combobox(self, name: str, value: str):
         logger.info(f'name:{name} value:{value}')
-        
+
         if name == 'Plot Type':
             self.state['plotType'] = value
             self._updateGuiOnPlotType(self._state['plotType'])
@@ -294,15 +309,15 @@ class SimpleRoiScatter(QtWidgets.QWidget):
 
         elif name == 'X-Stat':
             self.state['xStat'] = value
-        
+
         elif name == 'Y-Stat':
             self.state['yStat'] = value
-        
+
         # elif name == 'Hue':
         #     if value == 'None':
         #         value = None
         #     self.state['hue'] = value
-        
+
         else:
             logger.warning(f'did not understand "{name}"')
 
@@ -313,9 +328,11 @@ class SimpleRoiScatter(QtWidgets.QWidget):
         event : matplotlib.backend_bases.PickEvent
         """
         logger.info(event)
-        logger.info(f'  event.artist:{event.artist}')  # matplotlib.collections.PathCollection
+        logger.info(
+            f'  event.artist:{event.artist}'
+        )  # matplotlib.collections.PathCollection
         logger.info(f'  event.ind:{event.ind}')
-        
+
         ind = event.ind
         dfRow = self._df.loc[ind]
         print(dfRow)
@@ -341,7 +358,7 @@ class SimpleRoiScatter(QtWidgets.QWidget):
 
         dfGrouped = self.getGroupedDataframe(yStat)
         self._dfYStatSummary = dfGrouped
-        
+
         self.rawTableWidget.setDf(self._df)
         self.yStatSummaryTableWidget.setDf(dfGrouped)
 
@@ -355,15 +372,17 @@ class SimpleRoiScatter(QtWidgets.QWidget):
 
             # returns "matplotlib.axes._axes.Axes"
             self.axScatter.cla()
-                   
+
             if plotType == 'Scatter':
-                self.axScatter = sns.scatterplot(data=df,
-                                                 x=xStat,
-                                                 y=yStat,
-                                                 hue=hue,
-                                                 palette=palette,
-                                                 ax=self.axScatter,
-                                                 picker=5)  # return matplotlib.axes.Axes
+                self.axScatter = sns.scatterplot(
+                    data=df,
+                    x=xStat,
+                    y=yStat,
+                    hue=hue,
+                    palette=palette,
+                    ax=self.axScatter,
+                    picker=5,
+                )  # return matplotlib.axes.Axes
 
                 if self._state['makeSquare']:
                     # logger.info('making scatter plot square')
@@ -378,14 +397,25 @@ class SimpleRoiScatter(QtWidgets.QWidget):
 
                     # draw a diagonal line
                     # Using transform=self.axScatter.transAxes, the supplied x and y coordinates are interpreted as axes coordinates instead of data coordinates.
-                    self.axScatter.plot([0, 1], [0, 1], '--', transform=self.axScatter.transAxes)
-                
-            elif plotType in ['Swarm', 'Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM']:
+                    self.axScatter.plot(
+                        [0, 1], [0, 1], '--', transform=self.axScatter.transAxes
+                    )
+
+            elif plotType in [
+                'Swarm',
+                'Swarm + Mean',
+                'Swarm + Mean + STD',
+                'Swarm + Mean + SEM',
+            ]:
                 # picker does not work for stripplot
                 # fernando's favorite
-                
+
                 # reduce the brightness of raw data
-                if plotType in ['Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM']:
+                if plotType in [
+                    'Swarm + Mean',
+                    'Swarm + Mean + STD',
+                    'Swarm + Mean + SEM',
+                ]:
                     alpha = 0.6
                     # ['ci', 'pi', 'se', 'sd']
                     if plotType == 'Swarm + Mean':
@@ -398,47 +428,60 @@ class SimpleRoiScatter(QtWidgets.QWidget):
                     alpha = 1
                     errorBar = None
 
-                self.axScatter = sns.stripplot(data=df,
-                                               x='ROI Number',
-                                               y=yStat,
-                                               hue=hue,
-                                               alpha=alpha,
-                                               palette=palette,
-                                               legend=False,
-                                               ax=self.axScatter)
-                    
+                self.axScatter = sns.stripplot(
+                    data=df,
+                    x='ROI Number',
+                    y=yStat,
+                    hue=hue,
+                    alpha=alpha,
+                    palette=palette,
+                    legend=False,
+                    ax=self.axScatter,
+                )
+
                 # if errorBar is not None:
-                if plotType in ['Swarm + Mean', 'Swarm + Mean + STD', 'Swarm + Mean + SEM']:
+                if plotType in [
+                    'Swarm + Mean',
+                    'Swarm + Mean + STD',
+                    'Swarm + Mean + SEM',
+                ]:
                     # overlay mean +- sem
                     errorbar = errorBar
                     markersize = 30
-                    sns.pointplot(data=df, x='ROI Number', y=yStat, hue=hue,
-                                errorbar=errorbar,  # can be 'se', 'sem', etc
-                                # capsize=capsize,
-                                linestyle='none',  # do not connect (with line) between categorical x
-                                marker="_",
-                                markersize=markersize,
-                                # markeredgewidth=3,
-                                legend=False,
-                                palette=palette,
-                                ax=self.axScatter)
+                    sns.pointplot(
+                        data=df,
+                        x='ROI Number',
+                        y=yStat,
+                        hue=hue,
+                        errorbar=errorbar,  # can be 'se', 'sem', etc
+                        # capsize=capsize,
+                        linestyle='none',  # do not connect (with line) between categorical x
+                        marker="_",
+                        markersize=markersize,
+                        # markeredgewidth=3,
+                        legend=False,
+                        palette=palette,
+                        ax=self.axScatter,
+                    )
 
             elif plotType == 'Histogram':
-                self.axScatter = sns.histplot(data=df,
-                                              x=yStat,
-                                              hue=hue,
-                                                palette=palette,
-                                               ax=self.axScatter)
+                self.axScatter = sns.histplot(
+                    data=df, x=yStat, hue=hue, palette=palette, ax=self.axScatter
+                )
 
             elif plotType == 'Cumulative Histogram':
-                self.axScatter = sns.histplot(data=df, x=yStat, hue=hue,
-                                              element="step",
-                                              fill=False,
-                                              cumulative=True,
-                                              stat="density",
-                                              common_norm=False,
-                                                palette=palette,
-                                               ax=self.axScatter)
+                self.axScatter = sns.histplot(
+                    data=df,
+                    x=yStat,
+                    hue=hue,
+                    element="step",
+                    fill=False,
+                    cumulative=True,
+                    stat="density",
+                    common_norm=False,
+                    palette=palette,
+                    ax=self.axScatter,
+                )
 
             else:
                 logger.warning(f'did not understand plot type: {plotType}')
@@ -474,50 +517,54 @@ class SimpleRoiScatter(QtWidgets.QWidget):
 
         contextMenu.addSeparator()
         contextMenu.addAction('Copy Stats Table ...')
-        
+
         # show menu
         pos = self.mapToGlobal(pos)
         action = contextMenu.exec_(pos)
         if action is None:
             return
-        
+
         _ret = ''
         actionText = action.text()
         if action == makeSquareAction:
-            self._state['makeSquare'] =  makeSquareAction.isChecked()
+            self._state['makeSquare'] = makeSquareAction.isChecked()
             self.replot()
-        
+
         elif actionText == 'Copy Stats Table ...':
             _ret = self.copyTableToClipboard()
 
-    def getGroupedDataframe(self, statColumn, groupByColumn = 'ROI Number'):
+    def getGroupedDataframe(self, statColumn, groupByColumn='ROI Number'):
         import numpy as np
-        from scipy.stats import variation 
-        
+        from scipy.stats import variation
+
         aggList = ["count", "mean", "std", "sem", variation, "median", "min", "max"]
 
-        if len(self._df)>0:
+        if len(self._df) > 0:
             # get first row value
             detectedTrace = self._df['Detected Trace'].iloc[0]
         else:
             detectedTrace = 'N/A'
 
         # aggDf = self._df.groupby(groupByColumn, as_index=False)[statColumn].agg(aggList)
-        dfDropNan = self._df.dropna(subset=[statColumn])  # drop rows where statColumn is nan
-            
+        dfDropNan = self._df.dropna(
+            subset=[statColumn]
+        )  # drop rows where statColumn is nan
+
         try:
-            aggDf = dfDropNan.groupby(groupByColumn).agg({statColumn : aggList})
-        except (TypeError) as e:
+            aggDf = dfDropNan.groupby(groupByColumn).agg({statColumn: aggList})
+        except TypeError as e:
             logger.error(f'groupByColumn "{groupByColumn}" failed e:{e}')
             aggDf = dfDropNan
 
         aggDf.columns = aggDf.columns.droplevel(0)  # get rid of statColumn multiindex
         aggDf.insert(0, 'Stat', statColumn)  # add column 0, in place
         aggDf.insert(0, 'Detected Trace', detectedTrace)  #
-        aggDf = aggDf.reset_index()  # move groupByColum (e.g. 'ROI Number') from row index label to column
-        
+        aggDf = (
+            aggDf.reset_index()
+        )  # move groupByColum (e.g. 'ROI Number') from row index label to column
+
         # rename column 'variation' as 'CV'
-        aggDf = aggDf.rename(columns={'variation': 'CV'}) 
+        aggDf = aggDf.rename(columns={'variation': 'CV'})
 
         # round some columns
         aggList = ["mean", "std", "sem", "CV", "median", "min", "max"]
@@ -525,7 +572,6 @@ class SimpleRoiScatter(QtWidgets.QWidget):
             if agg == 'count':
                 continue
             # logger.info(f'rounding agg:{agg}')
-            aggDf[agg] =round(aggDf[agg], 2)
+            aggDf[agg] = round(aggDf[agg], 2)
 
         return aggDf
-    

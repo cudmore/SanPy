@@ -14,9 +14,9 @@ from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
 
-import sanpy
-from sanpy import bDetection
-from sanpy import bAnalysis
+# import sanpy
+from sanpy.bDetection import bDetection
+from sanpy.bAnalysis_ import bAnalysis
 from sanpy.interface import myTableView_tmp  # name conflict with interface.myTableView
 from sanpy.interface.plugins import sanpyPlugin
 from sanpy.interface.plugins import (

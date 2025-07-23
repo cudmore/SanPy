@@ -29,7 +29,8 @@ gui = [
     "seaborn",  # For statistical visualizations
     "statannotations",  # For statistical annotations
     "tables",
-    "tifffile"
+    "tifffile",
+    "platformdirs",  # to put log files in a ~user folder
 ]
 
 dev = [

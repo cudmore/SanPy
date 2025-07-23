@@ -12,14 +12,9 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 import matplotlib.pyplot as plt  # abb 202012 added to set theme
 import matplotlib.ticker as ticker
 
-# from SanPy import bAnalysis
-# from SanPy import bAnalysisPlot
-# import bAnalysis
-# import bAnalysisPlot
 import sanpy
-from sanpy import bAnalysis
-from sanpy.sanpyLogger import get_logger
 
+from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class CustomStyle(QtWidgets.QProxyStyle):
@@ -279,7 +274,7 @@ class bExportWidget(QtWidgets.QWidget):
 
         # self._setXAxis(xMin, xMax)
 
-    def switchFile(self, ba: bAnalysis, x, y):
+    def switchFile(self, ba: sanpy.bAnalysis, x, y):
         self.mySweepX = x  # ba.fileLoader.sweepX
         self.mySweepY = y  # ba.fileLoader.sweepY
         self.mySweepX_Downsample = self.mySweepX
@@ -1169,7 +1164,7 @@ class bExportWidget(QtWidgets.QWidget):
 def run():
     path = "../data/19114001.abf"
 
-    ba = bAnalysis(path)
+    ba = sanpy.bAnalysis(path)
     if ba.loadError:
         logger.error(f"Error loading file: {path}")
     else:

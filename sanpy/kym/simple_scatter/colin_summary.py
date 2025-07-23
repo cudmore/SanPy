@@ -1,6 +1,7 @@
 import os
 import sys
 import pathlib
+
 # import itertools
 
 import numpy as np
@@ -17,8 +18,11 @@ from sanpy.fileloaders import getFileLoaders
 
 from sanpy.kym.simple_scatter.colin_global import FileInfo
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
+
 
 def _old_run():
     # Define the path and folder depth
@@ -28,9 +32,9 @@ def _old_run():
     fileLoaderDict = getFileLoaders(verbose=True)
 
     # Create an instance of AnalysisDirectory
-    analysis_dir = analysisDir(path=path,
-                               fileLoaderDict=fileLoaderDict,
-                               folderDepth=folderDepth)
+    analysis_dir = analysisDir(
+        path=path, fileLoaderDict=fileLoaderDict, folderDepth=folderDepth
+    )
 
     df = analysis_dir.getDataFrame()
 
@@ -39,14 +43,15 @@ def _old_run():
     print(df.columns)
     print(df)
 
-  
+
 def collect_analysis():
     """Walk through a path and collect csv files into one dataframe.
-    
+
     This is our master df.
     """
-    
+
     from colin_global import getAllPeakAnalysisCsv
+
     paths = getAllPeakAnalysisCsv()
 
     # collect all the dataframes
@@ -54,16 +59,16 @@ def collect_analysis():
     for idx, csvPath in enumerate(paths):
         # print(f'loading peak anaysis csvPath: {csvPath}')
         _path, csvFile = os.path.split(csvPath)
-        
+
         df = pd.read_csv(csvPath, header=1)  # first line is detection parameters
-        
+
         # df.insert(0, 'File Name', csvFile)
         df.insert(0, 'File Number', idx)
-        
+
         # get original filename from df['path']
         try:
             rawTifPath = df.at[0, 'Path']  # capitol 'P'
-        except (KeyError) as e:
+        except KeyError as e:
             # empty dataframe, no spikes (in any roi)
             logger.error(f'  ERROR: did not find any spikes in {csvPath}')
             continue
@@ -71,15 +76,15 @@ def collect_analysis():
         _path, rawTifFile = os.path.split(rawTifPath)
         rawTifFile, _ext = os.path.splitext(rawTifFile)
         df.insert(0, 'Tif File', rawTifFile)
-        
+
         # insert condition
         # _cond = getCondFromTifPath(rawTifPath)
         # df.insert(0, 'Condition', _cond)
-        
+
         # insert condition from FileInfo
         fileInfo = FileInfo.from_path(rawTifPath)
         df.insert(0, 'Condition', fileInfo.condition)
-        
+
         # insert epoch from FileInfo
         df.insert(0, 'Epoch', fileInfo.epoch)
         # all peaks are labeled with Epoch.
@@ -107,10 +112,12 @@ def collect_analysis():
         # print(f'loaded {csvFile} {rawDataTif} with {len(df)} peak')
         dfMaster = pd.concat([dfMaster, df], ignore_index=True)
 
-    dfMaster['Condition Epoch'] = \
-        (dfMaster['Condition'].fillna('') + ' ' + dfMaster['Epoch'].astype(str).fillna('')).str.strip()
-    dfMaster['Condition Epoch'] = \
-        dfMaster['Condition Epoch'].astype('category')
+    dfMaster['Condition Epoch'] = (
+        dfMaster['Condition'].fillna('')
+        + ' '
+        + dfMaster['Epoch'].astype(str).fillna('')
+    ).str.strip()
+    dfMaster['Condition Epoch'] = dfMaster['Condition Epoch'].astype('category')
 
     # for show/hide in scatter widget
     dfMaster['show_region'] = True
@@ -129,41 +136,49 @@ def collect_analysis():
     # save to csv
     # this was my analysis with 1 roi per kym
     # savePath = '/Users/cudmore/colin_peak_summary_20250517.csv'
-    
+
     # this is colins analysis with multiple roi per kym
     # savePath = '/Users/cudmore/colin_peak_summary_20250527.csv'
     from colin_global import getMasterDfPath
+
     savePath = getMasterDfPath()
     print(f'=== saving dfMaster to savePath:{savePath}')
     dfMaster.to_csv(savePath, index=False)
 
-def create_condition_epoch_column(df: pd.DataFrame, condition_col: str = 'Condition', epoch_col: str = 'Epoch') -> pd.DataFrame:
+
+def create_condition_epoch_column(
+    df: pd.DataFrame, condition_col: str = 'Condition', epoch_col: str = 'Epoch'
+) -> pd.DataFrame:
     """Create a 'Condition Epoch' column by combining Condition and Epoch columns.
-    
+
     Args:
         df: DataFrame containing Condition and Epoch columns
         condition_col: Name of the condition column (default: 'Condition')
         epoch_col: Name of the epoch column (default: 'Epoch')
-    
+
     Returns:
         DataFrame with new 'Condition Epoch' column added
     """
     df_copy = df.copy()
-    
+
     # Combine condition and epoch with space, handle NaN values
     # Convert epoch to string first to avoid TypeError
-    df_copy['Condition Epoch'] = \
-        (df_copy[condition_col].fillna('') + ' ' + df_copy[epoch_col].astype(str).fillna('')).str.strip()
-    
+    df_copy['Condition Epoch'] = (
+        df_copy[condition_col].fillna('')
+        + ' '
+        + df_copy[epoch_col].astype(str).fillna('')
+    ).str.strip()
+
     # Convert to categorical for efficiency
     df_copy['Condition Epoch'] = df_copy['Condition Epoch'].astype('category')
-    
+
     return df_copy
+
 
 if __name__ == "__main__":
     # run()
-    #rename_files()
-    
+    # rename_files()
+
     # works
     # this appends all peak analysis into one saved df
     if 1:

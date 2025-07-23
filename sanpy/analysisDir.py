@@ -11,7 +11,6 @@ import pathlib  # ned to use this (introduced in Python 3.4) to maname paths on 
 from typing import List, Optional
 
 import numpy as np
-
 import pandas as pd
 
 # Turn off pandas save h5 performance warnnig
@@ -26,7 +25,7 @@ import requests
 import io  # too load from the web
 
 import sanpy
-import sanpy.h5Util
+# import sanpy.h5Util
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)

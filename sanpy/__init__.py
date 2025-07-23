@@ -4,7 +4,7 @@ DO_KYMOGRAPH_ANALYSIS = True
 
 from .sanpyLogger import *
 
-from ._util import *
+# from ._util import *
 from .analysisUtil import *
 
 from .bAnalysis_ import bAnalysis
@@ -31,3 +31,4 @@ from ._util import _loadLineScanHeader
 from .fileloaders import *
 
 from .metaData import MetaData
+

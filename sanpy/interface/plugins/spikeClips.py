@@ -13,10 +13,9 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
 
-import sanpy
+from sanpy.bAnalysis_ import bAnalysis
 from sanpy.interface.plugins import sanpyPlugin
 
 
@@ -189,7 +188,7 @@ class spikeClips(sanpyPlugin):
         self.replot()
 
     def slot_switchFile(
-        self, ba: sanpy.bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
+        self, ba: bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
     ):
         # logger.info('')
 

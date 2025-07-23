@@ -14,14 +14,15 @@ from matplotlib.widgets import RectangleSelector  # To click+drag rectangular se
 from matplotlib.cm import ScalarMappable
 import matplotlib.markers as mmarkers  # To define different markers for scatter
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.bAnalysis_ import bAnalysis
 
+from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
-def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
+def getPlotMarkersAndColors(ba : bAnalysis,
                             spikeList : List[int],
                             hue = '') -> dict:
     """Given a list of spikes, get plotting color and symbol.

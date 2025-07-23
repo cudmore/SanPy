@@ -4,7 +4,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel, QSlider, QCheckBox
+from PyQt5.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QPushButton,
+    QLabel,
+    QSlider,
+    QCheckBox,
+)
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QFont
 
@@ -14,27 +22,32 @@ import pyqtgraph.exporters
 
 from sanpy.kym.kymUtils import getAutoContrast
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
 
 from enum import Enum, auto
 
+
 class ImageDisplayMode(Enum):
     """Display modes for image data."""
-    RAW = 'Raw'      # Raw fluorescence values
-    F_F0 = 'f/f0'     # F/F0 normalized values 
-    DF_F0 = 'df/f0'    # (F-F0)/F0 normalized values
+
+    RAW = 'Raw'  # Raw fluorescence values
+    F_F0 = 'f/f0'  # F/F0 normalized values
+    DF_F0 = 'df/f0'  # (F-F0)/F0 normalized values
+
 
 class ImageViewer(QtWidgets.QWidget):
+    """General perpose 2D image viewer."""
 
-    """General perpose 2D image viewer.
-    """
-    def __init__(self,
-                 imgData : np.ndarray,
-                 secondsPerLine:float = 1,
-                 umPerPixel:float = 1,
-                 f0=1
-                 ):
+    def __init__(
+        self,
+        imgData: np.ndarray,
+        secondsPerLine: float = 1,
+        umPerPixel: float = 1,
+        f0=1,
+    ):
         super().__init__(None)
 
         self._imgData = imgData
@@ -48,12 +61,11 @@ class ImageViewer(QtWidgets.QWidget):
         self._minContrast = 0
         self._maxContrast = self.imgDisplayMax
 
-        self._buildUI()        
-        
+        self._buildUI()
+
     @property
     def imgData(self) -> np.ndarray:
-        """Get image data for one image channel.
-        """
+        """Get image data for one image channel."""
         return self._imgData
 
     @property
@@ -75,9 +87,9 @@ class ImageViewer(QtWidgets.QWidget):
 
         return left, bottom, width, height  # x, y, w, h
 
-    def _on_button_click(self, name : str):
+    def _on_button_click(self, name: str):
         logger.info(f'name:{name}')
-        
+
         if name == 'Auto':
             # auto contrast
             self.setAutoContrast()
@@ -89,7 +101,9 @@ class ImageViewer(QtWidgets.QWidget):
             logger.warning(f'did not understand button "{name}"')
 
     def setAutoContrast(self):
-        _min, _max = getAutoContrast(self._imgDataDisplay)  # new 20240925, should mimic ImageJ
+        _min, _max = getAutoContrast(
+            self._imgDataDisplay
+        )  # new 20240925, should mimic ImageJ
 
         logger.info(f'_min:{_min} _max:{_max}')
 
@@ -100,11 +114,11 @@ class ImageViewer(QtWidgets.QWidget):
         self.minContrastSlider.setValue(self._minContrast)
         self.maxContrastSlider.setValue(self._maxContrast)
 
-    def setColorMap(self, colorMap : str):
+    def setColorMap(self, colorMap: str):
         """
         _colorList = ['Green', 'Red', 'Blue', 'Grey', 'Grey Invert', 'viridis', 'plasma', 'inferno']
         """
-    
+
         # cm is type pg.ColorMap
         if colorMap == 'Green':
             cm = pg.colormap.get('Greens_r', source='matplotlib')
@@ -125,18 +139,17 @@ class ImageViewer(QtWidgets.QWidget):
         else:
             logger.error(f'did not understand color map: {colorMap}')
             return
-        
+
         # logger.info(f'{colorMap} cm:{cm}')
 
         # self.aColorBar.setColorMap(cm)
         self.myImageItem.setColorMap(cm)
 
     def _hoverEvent(self, event):
-        """Hover on image -> update status in QMainWindow
-        """
+        """Hover on image -> update status in QMainWindow"""
         if event.isExit():
             return
-        
+
         xPos = event.pos().x()
         yPos = event.pos().y()
 
@@ -145,15 +158,15 @@ class ImageViewer(QtWidgets.QWidget):
 
         try:
             intensity = self._imgDataDisplay[yPos, xPos]  # flipped
-        except (IndexError) as e:
+        except IndexError as e:
             intensity = 'None'
-        
+
         intensity = f'{xPos} {yPos} intensity:{intensity}'
 
         # logger.warning(f'todo: set on hover "{intensity}"')
         # self.mySetStatusBar(intensity)
-    
-    def _toggleGui(self, item:str, visible:bool):
+
+    def _toggleGui(self, item: str, visible: bool):
         if item == 'contrastSliders':
             self._contrastSliders.setVisible(visible)
         else:
@@ -171,7 +184,16 @@ class ImageViewer(QtWidgets.QWidget):
         leftColumn.setSpacing(5)
 
         # Color selection combo
-        _colorList = ['Red', 'Green', 'Blue', 'Grey', 'Grey Invert', 'viridis', 'plasma', 'inferno']
+        _colorList = [
+            'Red',
+            'Green',
+            'Blue',
+            'Grey',
+            'Grey Invert',
+            'viridis',
+            'plasma',
+            'inferno',
+        ]
         colorComboBox = QtWidgets.QComboBox()
         colorComboBox.addItems(_colorList)
         colorComboBox.setCurrentIndex(0)
@@ -192,7 +214,7 @@ class ImageViewer(QtWidgets.QWidget):
         minContrastLayout = QtWidgets.QHBoxLayout()
         minContrastLayout.setSpacing(5)
         minContrastLayout.addWidget(QtWidgets.QLabel("Min"))
-        
+
         self.minContrastSpinBox = QtWidgets.QSpinBox()
         self.minContrastSpinBox.setEnabled(False)
         self.minContrastSpinBox.setMinimum(0)
@@ -207,7 +229,7 @@ class ImageViewer(QtWidgets.QWidget):
             lambda val, name="minSlider": self._onContrastSliderChanged(val, name)
         )
         minContrastLayout.addWidget(self.minContrastSlider)
-        
+
         self.tifMinLabel = QtWidgets.QLabel(f'Img Min:{np.min(self._imgDataDisplay)}')
         minContrastLayout.addWidget(self.tifMinLabel)
         rightColumn.addLayout(minContrastLayout)
@@ -216,7 +238,7 @@ class ImageViewer(QtWidgets.QWidget):
         maxContrastLayout = QtWidgets.QHBoxLayout()
         maxContrastLayout.setSpacing(5)
         maxContrastLayout.addWidget(QtWidgets.QLabel("Max"))
-        
+
         self.maxContrastSpinBox = QtWidgets.QSpinBox()
         self.maxContrastSpinBox.setEnabled(False)
         self.maxContrastSpinBox.setMinimum(0)
@@ -231,7 +253,7 @@ class ImageViewer(QtWidgets.QWidget):
             lambda val, name="maxSlider": self._onContrastSliderChanged(val, name)
         )
         maxContrastLayout.addWidget(self.maxContrastSlider)
-        
+
         self.tifMaxLabel = QtWidgets.QLabel(f'Max:{np.max(self._imgDataDisplay)}')
         maxContrastLayout.addWidget(self.tifMaxLabel)
         rightColumn.addLayout(maxContrastLayout)
@@ -240,11 +262,11 @@ class ImageViewer(QtWidgets.QWidget):
         scaleLayout = QtWidgets.QHBoxLayout()
         scaleLayout.setAlignment(QtCore.Qt.AlignRight)
         scaleLayout.setSpacing(10)
-        
+
         self._imgBitDepth = QtWidgets.QLabel(f'dtype:{self._imgDataDisplay.dtype}')
         self._xScaleLabel = QtWidgets.QLabel(f'ms/line:{self._secondsPerLine*1000}')
         self._yScaleLabel = QtWidgets.QLabel(f'um/pixel:{self._umPerPixel}')
-        
+
         scaleLayout.addWidget(self._imgBitDepth)
         scaleLayout.addWidget(self._xScaleLabel)
         scaleLayout.addWidget(self._yScaleLabel)
@@ -268,7 +290,6 @@ class ImageViewer(QtWidgets.QWidget):
         self._contrastSliders.setVisible(False)  # Set initial visibility
         vLayout.addWidget(self._contrastSliders)
 
-
         # Display mode selection and f0 control
         displayModeLayout = QtWidgets.QHBoxLayout()
         displayModeLayout.setAlignment(QtCore.Qt.AlignLeft)
@@ -284,14 +305,14 @@ class ImageViewer(QtWidgets.QWidget):
         self.f0SpinBox.valueChanged.connect(self._onF0Changed)
         displayModeLayout.addWidget(f0Label)
         displayModeLayout.addWidget(self.f0SpinBox)
-        
+
         displayModeLabel = QtWidgets.QLabel("Display Mode:")
         self.displayModeCombo = QtWidgets.QComboBox()
         for mode in ImageDisplayMode:
             self.displayModeCombo.addItem(mode.value)
         self.displayModeCombo.setCurrentText(ImageDisplayMode.RAW.name)
         self.displayModeCombo.currentTextChanged.connect(self._onDisplayModeChanged)
-        
+
         displayModeLayout.addWidget(displayModeLabel)
         displayModeLayout.addWidget(self.displayModeCombo)
         vLayout.addLayout(displayModeLayout)
@@ -322,15 +343,16 @@ class ImageViewer(QtWidgets.QWidget):
         self.kymographPlot.setMouseEnabled(x=True, y=False)
         self.kymographPlot.hideButtons()  # hide the little 'A' button to rescale axis
         # self.kymographPlot.setMenuEnabled(False)  # turn off right-click menu
-        
+
         # switching to PyMapManager style contrast with setLevels()
         imageRect = self.getImageRect()  # l,b,h,w
-        self.myImageItem = pg.ImageItem(self._imgDataDisplay,
-                                        axisOrder = "row-major",
-                                        rect=imageRect
-                                        )  # need transpose for row-major
+        self.myImageItem = pg.ImageItem(
+            self._imgDataDisplay, axisOrder="row-major", rect=imageRect
+        )  # need transpose for row-major
 
-        self.setColorMap('Green')  # sets self.aColorBar which sets children (self.myImageItem)
+        self.setColorMap(
+            'Green'
+        )  # sets self.aColorBar which sets children (self.myImageItem)
 
         self.kymographPlot.addItem(self.myImageItem, ignorBounds=True)
 
@@ -339,14 +361,14 @@ class ImageViewer(QtWidgets.QWidget):
 
     def _onF0Changed(self, value):
         """Handle changes to f0 spinbox value.
-        
+
         Parameters
         ----------
         value : float
             New f0 value
         """
         self._f0 = value
-        
+
         logger.info(f'f0:{self._f0}')
 
         # refresh displayed image based on current display mode
@@ -358,16 +380,15 @@ class ImageViewer(QtWidgets.QWidget):
         else:
             # Raw mode - no f0 normalization needed
             self._imgDataDisplay = self._imgData
-            
+
         # update image
         self.myImageItem.setImage(self._imgDataDisplay, autoRange=True)
 
     def exportImage(self):
-        """Export the current image to a file.
-        """
-        filter = ["*."+str(f) for f in QtGui.QImageWriter.supportedImageFormats()]
+        """Export the current image to a file."""
+        filter = ["*." + str(f) for f in QtGui.QImageWriter.supportedImageFormats()]
         preferred = ['*.png', '*.tif', '*.jpg']
-    
+
         logger.info(f'filter:{filter}')
         logger.info(f'preferred:{preferred}')
 
@@ -384,7 +405,7 @@ class ImageViewer(QtWidgets.QWidget):
             self.kymographPlot.showAxis('left')
         else:
             self.kymographPlot.hideAxis('bottom')
-            self.kymographPlot.hideAxis('left') 
+            self.kymographPlot.hideAxis('left')
 
     def _resetZoom(self, doEmit=True):
         self.kymographPlot.autoRange(item=self.myImageItem)
@@ -404,12 +425,14 @@ class ImageViewer(QtWidgets.QWidget):
         logger.info('')
         key = event.key()
         text = event.text()
-        
+
         isShift = event.modifiers() == QtCore.Qt.ShiftModifier
         isAlt = event.modifiers() == QtCore.Qt.AltModifier
         isCtrl = event.modifiers() == QtCore.Qt.ControlModifier
-        
-        logger.info(f'key:{key} text:{text} isCtrl:{isCtrl} isAlt:{isAlt} isShift:{isShift}')
+
+        logger.info(
+            f'key:{key} text:{text} isCtrl:{isCtrl} isAlt:{isAlt} isShift:{isShift}'
+        )
 
         if key == QtCore.Qt.Key_Return or key == QtCore.Qt.Key_Enter:
             self._resetZoom()
@@ -419,7 +442,7 @@ class ImageViewer(QtWidgets.QWidget):
 
     def _onDisplayModeChanged(self, mode):
         """Handle changes to display mode.
-        
+
         Parameters
         ----------
         mode : ImageDisplayMode
@@ -435,19 +458,19 @@ class ImageViewer(QtWidgets.QWidget):
         else:
             logger.warning(f'did not understand display mode: {mode}')
             return
-        
+
         displayData = displayData.astype(np.int16)
         self._imgDataDisplay = displayData
 
         imageRect = self.getImageRect()
         self.myImageItem.setImage(displayData, rect=imageRect)
-        
+
         # Reset contrast to auto levels for new display mode
         minVal, maxVal = getAutoContrast(displayData)
         self._minContrast = minVal
         self._maxContrast = maxVal
         self.myImageItem.setLevels([minVal, maxVal])
-        
+
         # Update UI controls
         self.minContrastSpinBox.setValue(minVal)
         self.maxContrastSpinBox.setValue(maxVal)
@@ -471,7 +494,7 @@ class ImageViewer(QtWidgets.QWidget):
     def contextMenuEvent(self, event):
         """Handle right-click context menu events."""
         menu = QtWidgets.QMenu(self)
-        
+
         # Create toggle action for contrast sliders
         showContrastAction = menu.addAction("Show Contrast Controls")
         showContrastAction.setCheckable(True)
@@ -479,14 +502,12 @@ class ImageViewer(QtWidgets.QWidget):
         showContrastAction.triggered.connect(
             lambda checked: self._contrastSliders.setVisible(checked)
         )
-        
+
         # Create toggle action for axis visibility
         showAxisAction = menu.addAction("Show Axis")
         showAxisAction.setCheckable(True)
         showAxisAction.setChecked(self.kymographPlot.getAxis("bottom").isVisible())
-        showAxisAction.triggered.connect(
-            lambda checked: self.toggleAxis(checked)
-        )
+        showAxisAction.triggered.connect(lambda checked: self.toggleAxis(checked))
         # Add export image action
         exportAction = menu.addAction("Export Image...")
         exportAction.triggered.connect(self.exportImage)

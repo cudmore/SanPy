@@ -7,6 +7,7 @@ from qtpy import QtCore, QtWidgets, QtGui
 import sanpy
 
 # from sanpy.interface.plugins import myStatListWidget
+from sanpy.kym.interface.mySection import Section as mySection
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -43,6 +44,10 @@ class openFirstWidget(QtWidgets.QMainWindow):
         self.setGeometry(left, top, width, height)
 
         self.setWindowTitle('SanPy Open Files and Folders')
+
+        # Close window shortcut: platform-independent (Ctrl+W or Cmd+W)
+        shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Close), self)
+        shortcut.activated.connect(self.close)
 
     def getSanPyApp(self):
         return self._sanpyApp
@@ -117,10 +122,20 @@ class openFirstWidget(QtWidgets.QMainWindow):
 
     def _on_open_button_click(self, name : str):
         logger.info(name)
-        if name == 'Open...':
+        if name == 'Open File...':
             self._sanpyApp.loadFile()
         elif name == 'Open Folder...':
             self._sanpyApp.loadFolder()
+
+    def _on_show_files_toggled(self, checked: bool):
+        """Handle show files checkbox toggle."""
+        self.recentFilesLabel.setVisible(checked)
+        self.recentFilesWidget.setVisible(checked)
+        
+    def _on_show_folders_toggled(self, checked: bool):
+        """Handle show folders checkbox toggle."""
+        self.recentFoldersLabel.setVisible(checked)
+        self.recentFoldersWidget.setVisible(checked)
 
     def _buildMenus(self):
     
@@ -189,16 +204,18 @@ class openFirstWidget(QtWidgets.QMainWindow):
         hBoxLayout.addWidget(aLabel,
                              alignment=QtCore.Qt.AlignLeft)
 
-        name = 'Open...'
+        _bigSize = (120, 40)
+
+        name = 'Open File...'
         aButton = QtWidgets.QPushButton(name)
-        aButton.setFixedSize(QtCore.QSize(200, 60))
+        aButton.setFixedSize(QtCore.QSize(*_bigSize))
         aButton.setToolTip('Open a file.')
         aButton.clicked.connect(partial(self._on_open_button_click, name))
         hBoxLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
 
         name = 'Open Folder...'
         aButton = QtWidgets.QPushButton(name)
-        aButton.setFixedSize(QtCore.QSize(200, 60))
+        aButton.setFixedSize(QtCore.QSize(*_bigSize))
         aButton.setToolTip('Open a folder.')
         aButton.clicked.connect(partial(self._on_open_button_click, name))
         hBoxLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
@@ -213,11 +230,13 @@ class openFirstWidget(QtWidgets.QMainWindow):
         radioGroup = QtWidgets.QButtonGroup()
         
         self.sanpyRadio = QtWidgets.QRadioButton("SanPy")
+        self.sanpyRadio.setToolTip('Classic SanPy ePhys analysis (abf).')
         # sanpyRadio.setChecked(True)
         radioGroup.addButton(self.sanpyRadio)
         radioLayout.addWidget(self.sanpyRadio)
 
-        self.kymographRadio = QtWidgets.QRadioButton("SanPy Kymograph") 
+        self.kymographRadio = QtWidgets.QRadioButton("SanPy Kymograph")
+        self.kymographRadio.setToolTip('SanPy Kymograph analysis (tif).')
         radioGroup.addButton(self.kymographRadio)
         radioLayout.addWidget(self.kymographRadio)
 
@@ -231,31 +250,82 @@ class openFirstWidget(QtWidgets.QMainWindow):
         self.sanpyRadio.toggled.connect(self._on_radio_toggled)
         self.kymographRadio.toggled.connect(self._on_radio_toggled)
 
+        # Add toolbar with visibility checkboxes
+        # toolbar = QtWidgets.QToolBar()
+        # toolbar.setMovable(False)
+        # self.addToolBar(toolbar)
+        
+        # Add spacer to push checkboxes to the right
+        # spacer = QtWidgets.QWidget()
+        # spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Preferred)
+        # toolbar.addWidget(spacer)
+        
+        # Show Files checkbox
+        # self.showFilesCheckbox = QtWidgets.QCheckBox("Recent Files")
+        # self.showFilesCheckbox.setChecked(False)  # Hidden by default
+        # self.showFilesCheckbox.toggled.connect(self._on_show_files_toggled)
+        # toolbar.addWidget(self.showFilesCheckbox)
+        
+        # Show Folders checkbox
+        # self.showFoldersCheckbox = QtWidgets.QCheckBox("Recent Folders")
+        # self.showFoldersCheckbox.setChecked(True)  # Visible by default
+        # self.showFoldersCheckbox.toggled.connect(self._on_show_folders_toggled)
+        # toolbar.addWidget(self.showFoldersCheckbox)
+
         #
         # recent files and tables
-        recent_vBoxLayout = QtWidgets.QVBoxLayout()
+        # recent_vBoxLayout = QtWidgets.QVBoxLayout()
 
-        aLabel = QtWidgets.QLabel('Recent Files')
-        recent_vBoxLayout.addWidget(aLabel)
+        # Recent Files section
+        # self.recentFilesLabel = QtWidgets.QLabel('Recent Files')
+        # recent_vBoxLayout.addWidget(self.recentFilesLabel)
 
         # headerStr='Recent Files (double-click to open)'
         headerStr = ''
         recentFileTable = self._makeRecentTable(self.recentFileList,
                                                 headerStr=headerStr)
         recentFileTable.cellDoubleClicked.connect(self._on_recent_file_click)
-        recent_vBoxLayout.addWidget(recentFileTable)
+        self.recentFilesWidget = recentFileTable
+        # recent_vBoxLayout.addWidget(recentFileTable)
 
-        aLabel = QtWidgets.QLabel('Recent Folders')
-        recent_vBoxLayout.addWidget(aLabel)
+        # Recent Folders section
+        # self.recentFoldersLabel = QtWidgets.QLabel('Recent Folders')
+        # recent_vBoxLayout.addWidget(self.recentFoldersLabel)
 
         # headerStr='Recent Files (double-click to open)'
         headerStr = ''
         recentFolderTable = self._makeRecentTable(self.recentFolderList,
                                                   headerStr=headerStr)
         recentFolderTable.cellDoubleClicked.connect(self._on_recent_folder_click)
-        recent_vBoxLayout.addWidget(recentFolderTable)
+        self.recentFoldersWidget = recentFolderTable
+        # recent_vBoxLayout.addWidget(recentFolderTable)
 
-        _mainVLayout.addLayout(recent_vBoxLayout)
+        # _mainVLayout.addLayout(recent_vBoxLayout)
+        
+        # abb 20250714
+        # recent file disclosure section
+        _vBoxSection = QtWidgets.QVBoxLayout()
+        _vBoxSection.addWidget(recentFileTable)
+        recentFileSection = mySection("Recent Files", 100, self)
+        recentFileSection.setContentLayout(_vBoxSection)
+        recentFileSection.toggle(False)
+        _mainVLayout.addWidget(recentFileSection)
+
+        # recent folder disclosure section
+        _vBoxSection = QtWidgets.QVBoxLayout()
+        _vBoxSection.addWidget(recentFolderTable)
+        recentFolderSection = mySection("Recent Folders", 100, self)
+        recentFolderSection.setContentLayout(_vBoxSection)
+        recentFolderSection.toggle(True)
+        _mainVLayout.addWidget(recentFolderSection)
+
+        _mainVLayout.addStretch(1)
+
+        # Set initial visibility based on checkbox states
+        # self.recentFilesLabel.setVisible(self.showFilesCheckbox.isChecked())
+        # self.recentFilesWidget.setVisible(self.showFilesCheckbox.isChecked())
+        # self.recentFoldersLabel.setVisible(self.showFoldersCheckbox.isChecked())
+        # self.recentFoldersWidget.setVisible(self.showFoldersCheckbox.isChecked())
 
 def test():
     import sys

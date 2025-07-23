@@ -9,13 +9,10 @@ import uuid
 import numpy as np
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
-
 
 def getNewUuid():
     return "t" + str(uuid.uuid4()).replace("-", "_")
-
 
 def getBundledDir():
     """Get the working directory where user preferences are save.
@@ -30,7 +27,6 @@ def getBundledDir():
         # we are running in a normal Python environment
         bundle_dir = os.path.dirname(os.path.abspath(__file__))
     return bundle_dir
-
 
 def _module_from_file(module_name: str, file_path: str):
     """
@@ -61,13 +57,13 @@ def addUserPath():
     # if userSanPyFolder in sys.path:
     #     sys.path.remove(userSanPyFolder)
 
-    if not userSanPyFolder in sys.path:
+    if userSanPyFolder not in sys.path:
         logger.info(f"Adding to sys.path: {userSanPyFolder}")
         sys.path.append(userSanPyFolder)
 
-    logger.info("sys.path is now:")
-    for path in sys.path:
-        logger.info(f"    {path}")
+        logger.info("sys.path is now:")
+        for path in sys.path:
+            logger.info(f"    {path}")
 
     return madeUserFolder
 
@@ -140,7 +136,6 @@ def _getUserPreferencesFolder():
     userPreferencesFolder = os.path.join(userPreferencesFolder, "preferences")
     return userPreferencesFolder
 
-
 def pprint(d: dict):
     for k, v in d.items():
         print(f"  {k}: {v}")
@@ -151,7 +146,7 @@ def _makeSanPyFolders():
 
     If no Documents folder then make SanPy folder directly in <user> path.
     """
-    userDocumentsFolder = _getUserDocumentsFolder()
+    # userDocumentsFolder = _getUserDocumentsFolder()
 
     madeUserFolder = False
 
@@ -166,7 +161,7 @@ def _makeSanPyFolders():
         _bundDir = getBundledDir()
         _srcPath = pathlib.Path(_bundDir) / "_userFiles" / "SanPy-User-Files"
         _dstPath = pathlib.Path(sanpyFolder)
-        logger.info(f"    copying folder tree to <user>/Documents/SanPy-User-Folder")
+        logger.info("    copying folder tree to <user>/Documents/SanPy-User-Folder")
         logger.info(f"    _srcPath:{_srcPath}")
         logger.info(f"    _dstPath:{_dstPath}")
         shutil.copytree(_srcPath, _dstPath)
@@ -201,24 +196,23 @@ def _loadLineScanHeader(path):
     txtFile = os.path.splitext(path)[0] + ".txt"
 
     if not os.path.isfile(txtFile):
-        # find "ISAN Linescan 6 Metadata.txt"
-        logger.info(f'did not find {txtFile}')
-        logger.info('  -->> searching ...')
+        # logger.info(f'did not find {txtFile}')
+        # logger.info('  -->> searching ...')
         
         _folder, _file = os.path.split(path)
         _file, _ = os.path.splitext(_file)
         _file += ' Metadata.txt'
-        logger.info(f'   -->> looking for Olympus "{_file}"')
+        # logger.info(f'   -->> looking for Olympus "{_file}"')
         txtFile = os.path.join(_folder, _file)
         if not os.path.isfile(txtFile):
             _folder, _file = os.path.split(path)
             _file, _ = os.path.splitext(_file)
             _file = _file.split('_')[0]  # may fail
             _file += '.txt'
-            logger.info(f'     -->> looking for Olympus "{_file}"')
+            # logger.info(f'     -->> looking for Olympus "{_file}"')
             txtFile = os.path.join(_folder, _file)
-            if not os.path.isfile(txtFile):
-                logger.warning(f'DID NOT FIND CORRESPONDING OLYMPUS FILE: {os.path.split(path)[1]}')
+            # if not os.path.isfile(txtFile):
+            #     logger.warning(f'DID NOT FIND CORRESPONDING OLYMPUS FILE: {os.path.split(path)[1]}')
 
     if not os.path.isfile(txtFile):
         # logger.error(f"did not find file:{txtFile}")
@@ -230,6 +224,7 @@ def _loadLineScanHeader(path):
         txtFileName = filePrefix + '.txt'
         txtFilePath = os.path.join(_filePath, txtFileName)
         if not os.path.isfile(txtFilePath):
+            logger.warning(f'DID NOT FIND CORRESPONDING OLYMPUS FILE FOR TIF: {os.path.split(path)[1]}')
             return None
         txtFile = txtFilePath
         

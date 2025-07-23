@@ -1597,8 +1597,9 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # is assigned when we select a plot
         self._plotState = None  #plotState()
         
-        self.shortcut = QtWidgets.QShortcut(QtGui.QKeySequence("Ctrl+w"), self)
-        self.shortcut.activated.connect(self.myCloseAction)
+        # Close window shortcut: platform-independent (Ctrl+W or Cmd+W)
+        shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Close), self)
+        shortcut.activated.connect(self.myCloseAction)
 
         # bottom status bar
         self.statusBar = QtWidgets.QStatusBar()

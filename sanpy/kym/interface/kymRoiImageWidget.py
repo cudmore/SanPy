@@ -5,7 +5,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-from PyQt5.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QSlider, QCheckBox
+from PyQt5.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QSlider,
+    QCheckBox,
+)
 from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QPixmap, QImage
 
@@ -14,18 +22,23 @@ import pyqtgraph as pg
 
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, KymRoi
 from sanpy.kym.kymRoiDetection import KymRoiDetection
+from sanpy.kym.kymRoi import PeakDetectionTypes
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
+
 
 class SetScaleDialog(QtWidgets.QDialog):
     """Dialog to set x/y kymograph scale.
-    
+
     If set, analysis has to be redone.
     """
-    def __init__(self, secondsPerLine :float, umPerPixel : float, parent=None):
+
+    def __init__(self, secondsPerLine: float, umPerPixel: float, parent=None):
         # logger.info(f'secondsPerLine:{secondsPerLine} umPerPixel:{umPerPixel}')
-        
+
         super().__init__(parent)
 
         self.setWindowTitle("Set Kymograph Scale")
@@ -42,7 +55,7 @@ class SetScaleDialog(QtWidgets.QDialog):
         self.xScale = QtWidgets.QDoubleSpinBox()
         self.xScale.setDecimals(5)
         self.xScale.setSingleStep(0.01)
-        msPerLine =  secondsPerLine * 1000
+        msPerLine = secondsPerLine * 1000
         self.xScale.setValue(msPerLine)
 
         yScaleLabel = QtWidgets.QLabel("Microns/Pixel")
@@ -76,17 +89,20 @@ class SetScaleDialog(QtWidgets.QDialog):
         }
         return retDict
 
+
 class KymRoiImageWidget(QtWidgets.QWidget):
-    """Display an image kymograph for one kymRoiAnalysis.
-    """
+    """Display an image kymograph for one kymRoiAnalysis."""
+
     # signalSetChannel = QtCore.pyqtSignal(object)  # (channel)
-    signalSelectRoi = QtCore.pyqtSignal(object, object)  # (channel, roi label), can be None
+    signalSelectRoi = QtCore.pyqtSignal(
+        object, object
+    )  # (channel, roi label), can be None
     signalRoiChanged = QtCore.pyqtSignal(object)  # (roi label)
     signalSetLineProfile = QtCore.pyqtSignal(object)  # (int), line scan index
 
-    def __init__(self, kymRoiAnalysis : KymRoiAnalysis,
-                 detectThisTrace:str,
-                 kymRoiWidget = None):
+    def __init__(
+        self, kymRoiAnalysis: KymRoiAnalysis, detectThisTrace: str, kymRoiWidget=None
+    ):
         super().__init__(None)
 
         self._kymRoiAnalysis = kymRoiAnalysis
@@ -95,17 +111,17 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         self._currentChannel = 0
 
-        self.selectedRoi : Optional[str] = None
+        self.selectedRoi: Optional[str] = None
         """The selected roi label str."""
 
         self._minContrast = 0
         self._maxContrast = 0
-        
+
         self.roiList = {}
         """Keys are str label, values are pg.ROI"""
 
         self.roiLabelList = {}
-        """Keys are str label, value are QLabel."""
+        """Keys are str roi label, value are QLabel."""
 
         self.imgData = self._kymRoiAnalysis.getImageChannel(self._currentChannel)
         # this display the entire kym image, there is no f0, each roi has an f0
@@ -123,24 +139,23 @@ class KymRoiImageWidget(QtWidgets.QWidget):
     #     """Get image data for one image channel.
     #     """
     #     return self._kymRoiAnalysis.getImageChannel(self._currentChannel)
-    
-    def onUserAddRoi(self, ltrbRoi = None):
-        """Add to backend with default ltrb
-        """
+
+    def onUserAddRoi(self, ltrbRoi=None):
+        """Add to backend with default ltrb"""
 
         selectedRoiLabel = self.getSelectedRoiLabel()
 
         # get the current view to make roi visible
-        #ltrbRoi = [100, 200, 500, 0]
-        
+        # ltrbRoi = [100, 200, 500, 0]
+
         # _rect = self.myImageItem.viewRect()
         # logger.warning(f'nope _rect:{_rect}')
         # _rect = self.kymographPlot.viewRect()
         # logger.warning(f'nope kymographPlot (PlotItem) _rect:{_rect}')
-        
+
         # _range is in PHYSICAL UNITS [ [xMin, xMax], [yMin, yMax]]
         _range = self.kymographPlot.viewRange()
-        logger.warning(f'kymographPlot (PlotItem) _range:{_range}')
+        # logger.warning(f'kymographPlot (PlotItem) _range:{_range}')
 
         if ltrbRoi is None:
             _left = _range[0][0] / self._kymRoiAnalysis.secondsPerLine
@@ -150,7 +165,7 @@ class KymRoiImageWidget(QtWidgets.QWidget):
             _view_ltrb = [_left, _top, _right, _bottom]
             _view_ltrb = [int(x) for x in _view_ltrb]
             ltrbRoi = _view_ltrb
-        
+
         logger.info(f'adding roi ltrbRoi:{ltrbRoi}')
 
         # add to backend
@@ -158,24 +173,32 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         # add pg.ROI to GUI
         roi = self._addRoi(newKymRoi)
-     
+
         # select the new roi
         self._selectRoi(roi)
 
         self.mySetStatusBar(f'Added ROI {newKymRoi}')
 
         return roi
-    
-    def onUserDeleteRoi(self, roiLabel:Optional[str] = None):
-        """Delete the selected pg.ROI from backend and gui.
-        """
+
+    def onUserDeleteRoi(self, roiLabel: Optional[str] = None):
+        """Delete the selected pg.ROI from backend and gui."""
         if roiLabel is None and self.selectedRoi is None:
             logger.warning('no selected roi')
             return
-        
+
         if roiLabel is not None:
             # delete the selected roi
             self.selectedRoi = roiLabel
+
+        # ask the user if they want to delete the roi
+        from sanpy.interface.bDialog import yesNoCancelDialog
+        retval = yesNoCancelDialog(message=f'Delete ROI "{self.selectedRoi}"?',
+                                #    informativeText=f'This may cause problems if you are comparing ROIs across conditions.'
+                                   )
+        if retval in [QtWidgets.QMessageBox.No, QtWidgets.QMessageBox.Cancel]:
+            logger.info(f'user chose to not delete roi {roiLabel}')
+            return
 
         # delete from backend
         self._kymRoiAnalysis.deleteRoi(self.selectedRoi)
@@ -187,9 +210,9 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         self.selectedRoi = None
 
         self.signalSelectRoi.emit(self._currentChannel, None)
-        
-    def _deleteRoi(self, roiLabelStr : str):
-        
+
+    def _deleteRoi(self, roiLabelStr: str):
+
         pgRoi = self.roiList[roiLabelStr]
 
         _roi = self.roiList.pop(roiLabelStr, None)
@@ -198,12 +221,12 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         self.refreshDiameterPlot([], [], [])
 
         self.view.scene().removeItem(pgRoi)
-    
+
         return _roi
 
-    def _addRoi(self, kymRoi : KymRoi) -> pg.ROI:
+    def _addRoi(self, kymRoi: KymRoi) -> pg.ROI:
         """Add an ROI to self.imageItem
-        
+
         Add a kymRoi to the GUI (NOT THE BACKEND)
         """
 
@@ -221,15 +244,11 @@ class KymRoiImageWidget(QtWidgets.QWidget):
             movable=False,  # do not allow drag (makes gui better)
             rotatable=False,
             resizable=False,
-            removable=False  # we have gui <del> to remove
+            removable=False,  # we have gui <del> to remove
         )
         # self.myLineRoi.addScaleHandle((0,0), (1,1), name='topleft')  # at origin
-        rectRoi.addScaleHandle(
-            (0.5, 0), (0.5, 1), name="bottom center"
-        )  # top center
-        rectRoi.addScaleHandle(
-            (0.5, 1), (0.5, 0), name="top center"
-        )  # bottom center
+        rectRoi.addScaleHandle((0.5, 0), (0.5, 1), name="bottom center")  # top center
+        rectRoi.addScaleHandle((0.5, 1), (0.5, 0), name="top center")  # bottom center
 
         # abb 20250624 removed
         # rectRoi.addScaleHandle(
@@ -238,7 +257,7 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         # rectRoi.addScaleHandle(
         #     (1, .5), (0, 0.5), name="right center"
         # )  # bottom center
-        
+
         rectRoi.setAcceptedMouseButtons(QtCore.Qt.MouseButton.LeftButton)
         rectRoi.sigClicked.connect(self._on_roi_clicked)
         rectRoi.sigRegionChangeFinished.connect(self._on_roi_changed)
@@ -246,7 +265,7 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         # each roi has a label
         roiLabelName = kymRoi.getLabel()
-        
+
         # color does not match seaborn scatter
         _color = 'c'  # just use cyan
         roiLabel = pg.TextItem(roiLabelName, color=_color)
@@ -254,23 +273,41 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         font = QtGui.QFont()
         # font.setBold(True)
         from sanpy.kym.interface.kymRoiWidget import KymRoiWidget
+
         font.setPointSize(KymRoiWidget._pgAxisLabelFontSize)
         roiLabel.setFont(font)
         self.roiLabelList[roiLabelName] = roiLabel  # actual pyqtgraph TextItem()
 
         self.roiList[roiLabelName] = rectRoi  # actual pyqtgraph ROI()
-        
+
         # 20241024, do not need this
         # self.kymRoiList[rectRoi] = kymRoi  # v2 backend roi
 
         return rectRoi
 
-    def getKymRoi(self, roiLabel : str) -> KymRoi:
+    def slot_setRoiLabel(self, oldRoiLabel: str, newRoiLabel: str):
+        """Set the label for a roi."""
+        logger.info(f'setting roi label from "{oldRoiLabel}" to "{newRoiLabel}"')
+
+        # update the label
+        _pgTextItem = self.roiLabelList.pop(oldRoiLabel)
+        _pgTextItem.setText(newRoiLabel)
+        self.roiLabelList[newRoiLabel] = _pgTextItem
+
+        # update the roi
+        _pgRoi = self.roiList.pop(oldRoiLabel)
+        self.roiList[newRoiLabel] = _pgRoi
+
+        # update the roi
+        # self.roiList[newRoiLabel] = self.roiList.pop(oldRoiLabel)
+
+
+    def getKymRoi(self, roiLabel: str) -> KymRoi:
         return self._kymRoiAnalysis.getRoi(roiLabel)
-    
-    def getRoiLabel(self, pgRoi : pg.ROI) -> str:
+
+    def getRoiLabel(self, pgRoi: pg.ROI) -> str:
         """Get the string label of a pg.ROI (for backend).
-        
+
         Reverse lookup from pgRoi to dictionary key (roi label str)
         """
         roiLabelStr = None
@@ -292,33 +329,32 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         return self.getKymRoi(roiLabel)
 
     # abb 202505
-    def slot_roi_changed(self, roiLabelStr : str):
+    def slot_roi_changed(self, roiLabelStr: str):
         """roi has changed update pg roi.
-        
+
         comming from KymRoiToolbar.
-        
+
         abb 202505
         """
         pgRoi = self.roiList[roiLabelStr]
         if pgRoi is None:
             logger.warning(f'roiLabelStr:{roiLabelStr} not found in roiList')
             return
-        
+
         # update the pgRoi
         kymRoi = self._kymRoiAnalysis.getRoi(roiLabelStr)  # KymRoi
         pos, size = kymRoi.getPosSize()
-                
+
         update = False
         finish = False
         pgRoi.setPos(pos, update=update, finish=finish)
         pgRoi.setSize(size, update=update, finish=finish)
         pgRoi.stateChanged(finish=False)  # update handles
 
-
         logger.info(f'   -->> signalRoiChanged roiLabelStr:"{roiLabelStr}"')
         self.signalRoiChanged.emit(roiLabelStr)
 
-    def _on_roi_changed(self, pgRoi : pg.ROI):
+    def _on_roi_changed(self, pgRoi: pg.ROI):
         """User finished dragging the ROI
 
         Args:
@@ -336,14 +372,13 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         # update the backend
         roiLabel = self.getRoiLabel(pgRoi)
         kymRoi = self._kymRoiAnalysis.getRoi(roiLabel)  # KymRoi
-        
+
         # abb 20250624, was commented?
         # set the updated rect in backend
         newRect = kymRoi.setRectPosSize(pos, size)
 
         # get the actual constrained roi
         pos, size = kymRoi.getPosSize()
-                
 
         update = False
         finish = False
@@ -356,8 +391,8 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         roiLabelStr = self.getRoiLabel(pgRoi)
         logger.info(f'   -->> signalRoiChanged with event:"{roiLabelStr}"')
         self.signalRoiChanged.emit(roiLabelStr)
-    
-    def _on_roi_clicked(self, event : pg.ROI):
+
+    def _on_roi_clicked(self, event: pg.ROI):
         """Respond to user selecting (clicking) an ROI.
 
         Parameters
@@ -366,29 +401,32 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         """
         self._selectRoi(event)
 
-    def selectRoiFromLabel(self, roiLabelStr : str):
+    def selectRoiFromLabel(self, roiLabelStr: str):
         """Select an roi based on its text label (key).
-        
+
         Used by parent.
         """
-        try:
-            pgRoi = self.roiList[roiLabelStr]
-        except (KeyError):
-            logger.warning(f'did not find roi label "{roiLabelStr}"')
-            return
-        self._selectRoi(pgRoi)
-
-    def _selectRoi(self, pgRoi : Optional[pg.ROI] = None):
+        if roiLabelStr is not None:
+            try:
+                pgRoi = self.roiList[roiLabelStr]
+            except KeyError:
+                logger.warning(f'did not find roi label "{roiLabelStr}"')
+                return
+            self._selectRoi(pgRoi)
+        else:
+            self._selectRoi(None)
+            
+    def _selectRoi(self, pgRoi: Optional[pg.ROI] = None):
         """
         Parameter
         ---------
-        roi : ???
+        pgRoi : pg.ROI
             The roi to select, None will deselect all roi.
         """
         # if pgRoi is not None and pgRoi == self.selectedRoi:
         #     # do not re-select
         #     return
-        
+
         # deselect all
         pen = pg.mkPen('c', width=2)
         for v in self.roiList.values():
@@ -410,32 +448,38 @@ class KymRoiImageWidget(QtWidgets.QWidget):
             self.refreshDiameterPlot([], [], [])
         else:
             # timeSec = self._kymRoiAnalysis.getAnalysisTrace(roiLabel, 'timeSec', self._currentChannel)
-            timeSec = self._kymRoiAnalysis.getAnalysisTrace(roiLabel, 'Time (s)', self._currentChannel)
-            leftDiameterUm = self._kymRoiAnalysis.getAnalysisTrace(roiLabel, 'Left Diameter (um)', self._currentChannel)
-            rightDiameterUm = self._kymRoiAnalysis.getAnalysisTrace(roiLabel, 'Right Diameter (um)', self._currentChannel)
+            timeSec = self._kymRoiAnalysis.getAnalysisTrace(
+                roiLabel, 'Time (s)', self._currentChannel
+            )
+            leftDiameterUm = self._kymRoiAnalysis.getAnalysisTrace(
+                roiLabel, 'Left Diameter (um)', self._currentChannel
+            )
+            rightDiameterUm = self._kymRoiAnalysis.getAnalysisTrace(
+                roiLabel, 'Right Diameter (um)', self._currentChannel
+            )
             self.refreshDiameterPlot(timeSec, leftDiameterUm, rightDiameterUm)
 
         logger.warning(f'   -->> signalSelectRoi.emit with roiLabel:"{roiLabel}"')
         self.signalSelectRoi.emit(self._currentChannel, roiLabel)
 
-    def _toggleROI(self, visible : bool):
-        """Toggle all roi on/off.
-        """
+    def _toggleROI(self, visible: bool):
+        """Toggle all roi on/off."""
         # toggle labels
         for label in self.roiLabelList.values():
             label.setVisible(visible)
-        
+
         # toggle roi
         for roi in self.roiList.values():
             roi.setVisible(visible)
 
     def setAutoContrast(self):
         from sanpy.kym.kymUtils import getAutoContrast
+
         _min, _max = getAutoContrast(self.imgData)  # new 20240925, should mimic ImageJ
 
         logger.info(f'_min:{_min} _max:{_max}')
 
-        self._minContrast = _min  #np.min(self.imgData)
+        self._minContrast = _min  # np.min(self.imgData)
         self._maxContrast = _max  # int(np.max(self.imgData) / 2)
 
         # update gui
@@ -456,13 +500,12 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         height = top - bottom
 
         return left, bottom, width, height  # x, y, w, h
-        
+
     def _hoverEvent(self, event):
-        """Hover on image -> update status in QMainWindow
-        """
+        """Hover on image -> update status in QMainWindow"""
         if event.isExit():
             return
-        
+
         xPos = event.pos().x()
         yPos = event.pos().y()
 
@@ -471,18 +514,18 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         try:
             intensity = self.imgData[yPos, xPos]  # flipped
-        except (IndexError) as e:
+        except IndexError as e:
             intensity = 'None'
-        
+
         intensity = f'{xPos} {yPos} intensity:{intensity}'
 
         # logger.warning(f'todo: set on hover "{intensity}"')
         # self.mySetStatusBar(intensity)
-        
+
     def _buildTopToolbar(self) -> QtWidgets.QVBoxLayout:
         vBoxLayout = QtWidgets.QVBoxLayout()
         vBoxLayout.setAlignment(QtCore.Qt.AlignTop)
-        
+
         hLayout = QtWidgets.QHBoxLayout()
         hLayout.setAlignment(QtCore.Qt.AlignLeft)
         vBoxLayout.addLayout(hLayout)
@@ -504,21 +547,17 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         #     partial(self._on_checkbox_clicked, aCheckBoxName)
         # )
         # hLayout.addWidget(aCheckBox)
-        
+
         buttonName = 'Add ROI'
         aButton = QtWidgets.QPushButton(buttonName)
         aButton.setToolTip('Add an ROI')
-        aButton.clicked.connect(
-            partial(self._on_button_click, buttonName)
-        )
+        aButton.clicked.connect(partial(self._on_button_click, buttonName))
         hLayout.addWidget(aButton)
 
         buttonName = 'Delete ROI'
         aButton = QtWidgets.QPushButton(buttonName)
         aButton.setToolTip('Delete selected ROI')
-        aButton.clicked.connect(
-            partial(self._on_button_click, buttonName)
-        )
+        aButton.clicked.connect(partial(self._on_button_click, buttonName))
         hLayout.addWidget(aButton)
 
         aCheckBoxName = 'ROI'
@@ -558,12 +597,13 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         # hLayout.addWidget(aLabel)
 
         channelComboBox = QtWidgets.QComboBox()
-        _channelList = [f'Channel {str(_channel+1)}' for _channel in range(self._kymRoiAnalysis.numChannels)]
+        _channelList = [
+            f'Channel {str(_channel+1)}'
+            for _channel in range(self._kymRoiAnalysis.numChannels)
+        ]
         channelComboBox.addItems(_channelList)
         channelComboBox.setCurrentIndex(0)  # default to 0
-        channelComboBox.currentTextChanged.connect(
-            partial(self._on_combobox, aName)
-        )
+        channelComboBox.currentTextChanged.connect(partial(self._on_combobox, aName))
         hLayout.addWidget(channelComboBox)
 
         # second row
@@ -577,9 +617,9 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         # hLayout1.addWidget(self.hoverLabel, alignment=QtCore.Qt.AlignRight)
 
         return vBoxLayout
-    
+
     def _buildContrastSliders(self) -> QtWidgets.QWidget:
-        
+
         hBox = QtWidgets.QHBoxLayout()
 
         vBoxLeft = QtWidgets.QVBoxLayout()
@@ -589,22 +629,27 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         hBox.addLayout(vBoxLeft)
         hBox.addLayout(vBoxRight)
-        
+
         # color popup
-        _colorList = ['Red', 'Green', 'Blue', 'Grey', 'Grey Invert', 'viridis', 'plasma', 'inferno']
+        _colorList = [
+            'Red',
+            'Green',
+            'Blue',
+            'Grey',
+            'Grey Invert',
+            'viridis',
+            'plasma',
+            'inferno',
+        ]
         colorComboBox = QtWidgets.QComboBox()
         colorComboBox.addItems(_colorList)
         colorComboBox.setCurrentIndex(0)  # default to Red
-        colorComboBox.currentTextChanged.connect(
-            partial(self.setColorMap)
-        )
+        colorComboBox.currentTextChanged.connect(partial(self.setColorMap))
         vBoxLeft.addWidget(colorComboBox)
 
         buttonName = 'Auto'
         aButton = QtWidgets.QPushButton(buttonName)
-        aButton.clicked.connect(
-            partial(self._on_button_click, buttonName)
-        )
+        aButton.clicked.connect(partial(self._on_button_click, buttonName))
         vBoxLeft.addWidget(aButton)
 
         # image min/max
@@ -673,22 +718,23 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         hScaleLayout = QtWidgets.QHBoxLayout()
         hScaleLayout.setAlignment(QtCore.Qt.AlignRight)
         vBoxRight.addLayout(hScaleLayout)
-        
+
         self._imgBitDepth = QtWidgets.QLabel(f'dtype:{self.imgData.dtype}')
-        self._xScaleLabel = QtWidgets.QLabel(f'ms/line:{self._kymRoiAnalysis.secondsPerLine*1000}')
-        self._yScaleLabel = QtWidgets.QLabel(f'um/pixel:{self._kymRoiAnalysis.umPerPixel}')
-        
+        self._xScaleLabel = QtWidgets.QLabel(
+            f'ms/line:{self._kymRoiAnalysis.secondsPerLine*1000}'
+        )
+        self._yScaleLabel = QtWidgets.QLabel(
+            f'um/pixel:{self._kymRoiAnalysis.umPerPixel}'
+        )
+
         aName = 'Set Scale'
         aButton = QtWidgets.QPushButton(aName)
         aButton.setToolTip('Add an ROI')
-        aButton.clicked.connect(
-            partial(self._on_button_click, aName)
-        )
+        aButton.clicked.connect(partial(self._on_button_click, aName))
         hScaleLayout.addWidget(self._imgBitDepth)
         hScaleLayout.addWidget(self._xScaleLabel)
         hScaleLayout.addWidget(self._yScaleLabel)
         hScaleLayout.addWidget(aButton)
-
 
         # return as widget so we can call setVisible()
         aWidget = QtWidgets.QWidget()
@@ -697,8 +743,7 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         return aWidget
 
     def _setScaleDialog(self):
-        """Show a set scale dialog.
-        """
+        """Show a set scale dialog."""
         secondsPerLine = self._kymRoiAnalysis.secondsPerLine
         umPerPixel = self._kymRoiAnalysis.umPerPixel
         mcd = SetScaleDialog(secondsPerLine, umPerPixel)
@@ -707,22 +752,23 @@ class KymRoiImageWidget(QtWidgets.QWidget):
             logger.info(f'got from dialog scaleDict:{scaleDict}')
             secondsPerLine = scaleDict['secondsPerLine']
             umPerPixel = scaleDict['umPerPixel']
-            
+
             # set new scale in backend
             self._kymRoiAnalysis.header['secondsPerLine'] = secondsPerLine
             self._kymRoiAnalysis.header['umPerPixel'] = umPerPixel
 
             # update labels
-            self._xScaleLabel.setText(str(f'ms/line:{self._kymRoiAnalysis.secondsPerLine*1000}'))
-            self._yScaleLabel.setText(str(f'um/pixel:{self._kymRoiAnalysis.umPerPixel}'))
+            self._xScaleLabel.setText(
+                str(f'ms/line:{self._kymRoiAnalysis.secondsPerLine*1000}')
+            )
+            self._yScaleLabel.setText(
+                str(f'um/pixel:{self._kymRoiAnalysis.umPerPixel}')
+            )
 
             # update image
             imageRect = self.getImageRect()  # l,b,h,w
             axisOrder = "row-major"
-            self.myImageItem.setImage(self.imgData,
-                                        axisOrder=axisOrder,
-                                        rect=imageRect
-                                        )
+            self.myImageItem.setImage(self.imgData, axisOrder=axisOrder, rect=imageRect)
 
     def _buildUI(self):
         self.setContentsMargins(0, 0, 0, 0)
@@ -732,7 +778,9 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         mainVBoxLayout.setAlignment(QtCore.Qt.AlignTop)
         self.setLayout(mainVBoxLayout)
 
-        self._topToolbar = self._buildTopToolbar()  # one row with file name, image params
+        self._topToolbar = (
+            self._buildTopToolbar()
+        )  # one row with file name, image params
         mainVBoxLayout.addLayout(self._topToolbar)
 
         self._contrastSliders = self._buildContrastSliders()
@@ -766,18 +814,19 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         self.kymographPlot.setMouseEnabled(x=True, y=False)
         self.kymographPlot.hideButtons()  # hide the little 'A' button to rescale axis
         self.kymographPlot.setMenuEnabled(False)  # turn off right-click menu
-        
+
         # switching to PyMapManager style contrast with setLevels()
         imageRect = self.getImageRect()  # l,b,h,w
-        self.myImageItem = pg.ImageItem(self.imgData,
-                                        axisOrder = "row-major",
-                                        rect=imageRect
-                                        )  # need transpose for row-major
+        self.myImageItem = pg.ImageItem(
+            self.imgData, axisOrder="row-major", rect=imageRect
+        )  # need transpose for row-major
 
         # logger.warning('--->>> tryin ColorBarItem')
         # self.aColorBar = pg.ColorBarItem()
         # self.aColorBar.setImageItem(self.myImageItem)
-        self.setColorMap('Green')  # sets self.aColorBar which sets children (self.myImageItem)
+        self.setColorMap(
+            'Green'
+        )  # sets self.aColorBar which sets children (self.myImageItem)
 
         self.kymographPlot.addItem(self.myImageItem, ignorBounds=True)
 
@@ -786,27 +835,31 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         # left/right scatter on top of kymograph
         self._overlayKymDict = {}
-        self._overlayKymDict['leftDiamOverlay'] = self.kymographPlot.plot(name="leftDiamOverlay",
-                                                  pen=None,
-                                                  symbol='o',
-                                                  symbolPen=None,
-                                                  symbolSize=5,
-                                                  symbolBrush=pg.mkBrush(250, 0, 250, 200)  # green
-                                                  )
-        self._overlayKymDict['rightDiamOverlay'] = self.kymographPlot.plot(name="rightDiamOverlay",
-                                                  pen=None,
-                                                  symbol='o',
-                                                  symbolPen=None,
-                                                  symbolSize=5,
-                                                  symbolBrush=pg.mkBrush(0, 250, 250, 200)  # red
-                                                  )
+        self._overlayKymDict['leftDiamOverlay'] = self.kymographPlot.plot(
+            name="leftDiamOverlay",
+            pen=None,
+            symbol='o',
+            symbolPen=None,
+            symbolSize=5,
+            symbolBrush=pg.mkBrush(250, 0, 250, 200),  # green
+        )
+        self._overlayKymDict['rightDiamOverlay'] = self.kymographPlot.plot(
+            name="rightDiamOverlay",
+            pen=None,
+            symbol='o',
+            symbolPen=None,
+            symbolSize=5,
+            symbolBrush=pg.mkBrush(0, 250, 250, 200),  # red
+        )
 
         # vertical line in kymographPlot to show selected line scan
         self._kymLineScanLine = pg.InfiniteLine(pen=pg.mkPen(color='c', width=2))
         self.kymographPlot.addItem(self._kymLineScanLine)
 
         # line scan slider
-        self._lineScanSlider = QtWidgets.QSlider(orientation=QtCore.Qt.Orientation.Horizontal)
+        self._lineScanSlider = QtWidgets.QSlider(
+            orientation=QtCore.Qt.Orientation.Horizontal
+        )
         self._lineScanSlider.setMinimum(0)
         self._lineScanSlider.setMaximum(self.imgData.shape[1])
         self._lineScanSlider.setValue(0)
@@ -818,7 +871,9 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         self._lineProfileWidget = LineProfileWidget(self)
         self.signalSelectRoi.connect(self._lineProfileWidget.selectRoi)
         self.signalRoiChanged.connect(self._lineProfileWidget.selectRoi)
-        self.signalSetLineProfile.connect(self._lineProfileWidget.slot_updateLineProfile)
+        self.signalSetLineProfile.connect(
+            self._lineProfileWidget.slot_updateLineProfile
+        )
         self._lineProfileWidget.setVisible(False)
         mainVBoxLayout.addWidget(self._lineProfileWidget)
 
@@ -839,10 +894,9 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         self.myImageItem.setLevels(_levels, update=True)
         # self.aColorBar.setLevels(_levels)
 
-    def setLineScanSlider(self, lineScanNumber : int):
-        """Programatically set the selected line scan.
-        """
-        
+    def setLineScanSlider(self, lineScanNumber: int):
+        """Programatically set the selected line scan."""
+
         # line scan plot
         secondsValue = lineScanNumber * self._kymRoiAnalysis.secondsPerLine
         self._kymLineScanLine.setPos(secondsValue)
@@ -862,19 +916,6 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         self.signalSetLineProfile.emit(lineScanIdx)
 
-        # from sanpy.kym.kymRoiAnalysis import PeakDetectionTypes
-        _selectedRoi = self.getSelectedRoiLabel()
-        if _selectedRoi is None:
-            logger.warning('  -->> about')
-            return
-        logger.info(f'setting kymRoiAnalysis "Divide Line Scan": {lineScanIdx}')
-        # not the roi
-        # _detection = self._kymRoiAnalysis.getRoi(_selectedRoi).getDetectionParams(self._currentChannel, PeakDetectionTypes.intensity)
-        # _detection.setParam('Divide Line Scan', lineScanIdx)
-
-        # the kymAnalysis
-        self._kymRoiAnalysis.setKymDetectionParam('Divide Line Scan', lineScanIdx)
-
     def _on_combobox(self, name, value):
         """
         Parameters
@@ -882,22 +923,22 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         detectionDict : dict
             Switches between multiple detection group boxes like (detect int, detect diam)
         """
-        
+
         logger.info(f'"{name}" value:{value} {type(value)}')
-        
+
         if name == 'Channel':
             value = value.replace('Channel ', '')
             value = int(value)
             self.switchChannel(value)
-    
-    def _on_checkbox_clicked(self, name, value = None):
+
+    def _on_checkbox_clicked(self, name, value=None):
         # if self._blockSlots:
         #     # logger.warning(f'_blockSlots -->> no update for {name} {value}')
         #     return
 
         if value > 0:
             value = 1
-        
+
         # show/hide widgets
         if name == 'Contrast':
             self._contrastSliders.setVisible(value)
@@ -912,13 +953,13 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         else:
             logger.warning(f'did not understand name "{name}"')
 
-    def _on_button_click(self, name : str):
+    def _on_button_click(self, name: str):
         logger.info(f'name:{name}')
-        
+
         if name == 'Add ROI':
             self.onUserAddRoi()
 
-        elif name =='Delete ROI':
+        elif name == 'Delete ROI':
             self.onUserDeleteRoi()
 
         elif name == 'Auto':
@@ -931,9 +972,9 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         else:
             logger.warning(f'did not understand button "{name}"')
 
-    def mySetStatusBar(self, statusStr : str):
+    def mySetStatusBar(self, statusStr: str):
         """Set the status bar of a parent kymRoiWidget.
-        
+
         Only exists during PyQt runtime (not in scripts).
         """
         logger.info(statusStr)
@@ -945,11 +986,11 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         self._overlayKymDict['leftDiamOverlay'].setData(timeSec, leftDiameterUm)
         self._overlayKymDict['rightDiamOverlay'].setData(timeSec, rightDiameterUm)
 
-    def setColorMap(self, colorMap : str):
+    def setColorMap(self, colorMap: str):
         """
         _colorList = ['Green', 'Red', 'Blue', 'Grey', 'Grey Invert', 'viridis', 'plasma', 'inferno']
         """
-    
+
         # cm is type pg.ColorMap
         if colorMap == 'Green':
             cm = pg.colormap.get('Greens_r', source='matplotlib')
@@ -970,25 +1011,27 @@ class KymRoiImageWidget(QtWidgets.QWidget):
         else:
             logger.error(f'did not understand color map: {colorMap}')
             return
-        
+
         # logger.info(f'{colorMap} cm:{cm}')
 
         # self.aColorBar.setColorMap(cm)
         self.myImageItem.setColorMap(cm)
 
-    def switchChannel(self, channel : int):
+    def switchChannel(self, channel: int):
         """
         Parameters
         ==========
         channel : int
             Image channel (user GUI is 1 based)
         """
-        channelIdx = channel-1
-        
-        if channelIdx<0 or channelIdx>self._kymRoiAnalysis.numChannels:
-            logger.error(f'got channel:{channel} but channel has to be in range {1}..{self._kymRoiAnalysis.numChannels}')
+        channelIdx = channel - 1
+
+        if channelIdx < 0 or channelIdx > self._kymRoiAnalysis.numChannels:
+            logger.error(
+                f'got channel:{channel} but channel has to be in range {1}..{self._kymRoiAnalysis.numChannels}'
+            )
             return
-        
+
         logger.info(f'channel:{channel} channelIdx:{channelIdx}')
 
         self._currentChannel = channelIdx
@@ -1002,10 +1045,7 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         imageRect = self.getImageRect()  # l,b,h,w
         axisOrder = "row-major"
-        self.myImageItem.setImage(self.imgData,
-                                    axisOrder=axisOrder,
-                                    rect=imageRect
-                                    )
+        self.myImageItem.setImage(self.imgData, axisOrder=axisOrder, rect=imageRect)
 
         # min/max in contrast slider
         imgMax = np.max(self.imgData)
@@ -1030,13 +1070,13 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         # self.signalSetChannel.emit(self._currentChannel)
 
-    def slot_detectionChanged(self, detectionType : str, detectionDict : KymRoiDetection):
-        """Pass changes in diameter detection to child lineProfileWidget.
-        """
+    def slot_detectionChanged(self, detectionType: str, detectionDict: KymRoiDetection):
+        """Pass changes in diameter detection to child lineProfileWidget."""
         self._lineProfileWidget.slot_detectionChanged(detectionType, detectionDict)
 
+
 class LineProfileWidget(QtWidgets.QWidget):
-    def __init__(self, kymRoiImageWidget : KymRoiImageWidget):
+    def __init__(self, kymRoiImageWidget: KymRoiImageWidget):
         super().__init__(None)
 
         self._kymRoiImageWidget = kymRoiImageWidget
@@ -1047,19 +1087,19 @@ class LineProfileWidget(QtWidgets.QWidget):
     def currentChannel(self):
         return self._kymRoiImageWidget._currentChannel
 
-    def slot_detectionChanged(self, detectionType : str, detectionDict : KymRoiDetection):
+    def slot_detectionChanged(self, detectionType: str, detectionDict: KymRoiDetection):
         # logger.info(f'detectionType:"{detectionType}"')
         # kymRoi = self._kymRoiImageWidget.getSelectedKymRoi()
         self.slot_updateLineProfile()
 
-    def selectRoi(self, roiLabel : str):
+    def selectRoi(self, roiLabel: str):
         # if roiLabel is None:
         #     self.lineProfilePlot.setData([], [])
         #     return
         # kymRoi = self._kymRoiImageWidget.getKymRoi(roiLabel)
         self.slot_updateLineProfile()
 
-    def slot_updateLineProfile(self, lineIdx : int = None):
+    def slot_updateLineProfile(self, lineIdx: int = None):
 
         kymRoi = self._kymRoiImageWidget.getSelectedKymRoi()
 
@@ -1076,19 +1116,26 @@ class LineProfileWidget(QtWidgets.QWidget):
 
         # pen for mean/std/2*std
         _channelColor = self._kymRoiImageWidget._kymRoiAnalysis.getChannelColor(channel)
-        _penForChannel = pg.mkPen(color=_channelColor, width=2, style=QtCore.Qt.DashLine)
+        _penForChannel = pg.mkPen(
+            color=_channelColor, width=2, style=QtCore.Qt.DashLine
+        )
 
-        from sanpy.kym.kymRoiAnalysis import PeakDetectionTypes
-        detectionParams = kymRoi.getDetectionParams(channel, PeakDetectionTypes.diameter)
+        detectionParams = kymRoi.getDetectionParams(
+            channel, PeakDetectionTypes.diameter
+        )
         stdThreshold = detectionParams['std_threshold_mult_diam']
-        lineScanFraction = detectionParams['line_scan_fraction_diam']  # fraction of line for lef/right, 4 is 25% and 2 is 50%
-        lineInterptMult = detectionParams['line_interp_mult_diam']  # interpolate each line scan by this multiplyer
+        lineScanFraction = detectionParams[
+            'line_scan_fraction_diam'
+        ]  # fraction of line for lef/right, 4 is 25% and 2 is 50%
+        lineInterptMult = detectionParams[
+            'line_interp_mult_diam'
+        ]  # interpolate each line scan by this multiplyer
 
         xUm, lineProfile = kymRoi.getLineProfile(channel, lineIdx)
         self.lineProfilePlot.setData(xUm, lineProfile)
 
         # left
-        leftStopBin = int(len(lineProfile)/lineScanFraction)
+        leftStopBin = int(len(lineProfile) / lineScanFraction)
         leftStopUm = leftStopBin / lineInterptMult * kymRoi.umPerPixel
         # logger.info(f'   leftStopUm:{leftStopUm} leftStopBins:{leftStopBin}')
         leftMean = np.mean(lineProfile[0:leftStopBin])
@@ -1096,24 +1143,38 @@ class LineProfileWidget(QtWidgets.QWidget):
         leftThreshold = leftMean + (leftStd * stdThreshold)
         self.leftThreshold.setData([0, leftStopUm], [leftThreshold, leftThreshold])
         self.leftMean.setData([0, leftStopUm], [leftMean, leftMean])
-        self.leftStd1.setData([0, leftStopUm], [leftMean+leftStd, leftMean+leftStd])
-        self.leftStd2.setData([0, leftStopUm], [leftMean+2*leftStd, leftMean+2*leftStd])
+        self.leftStd1.setData([0, leftStopUm], [leftMean + leftStd, leftMean + leftStd])
+        self.leftStd2.setData(
+            [0, leftStopUm], [leftMean + 2 * leftStd, leftMean + 2 * leftStd]
+        )
         # color based on channel
         self.leftMean.setPen(_penForChannel)
         self.leftStd1.setPen(_penForChannel)
         self.leftStd2.setPen(_penForChannel)
 
         # right
-        rightStartBin = len(lineProfile) - int(len(lineProfile)/lineScanFraction)
+        rightStartBin = len(lineProfile) - int(len(lineProfile) / lineScanFraction)
         rightStartUm = rightStartBin / lineInterptMult * kymRoi.umPerPixel
         # logger.info(f'   rightStartUm:{rightStartUm} rightStartBins:{rightStartBin}')
         rightMean = np.mean(lineProfile[rightStartBin:-1])
         rightStd = np.std(lineProfile[rightStartBin:-1])
         rightThreshold = rightMean + (rightStd * stdThreshold)
-        self.rightThreshold.setData([rightStartUm, len(lineProfile)/lineInterptMult*kymRoi.umPerPixel], [rightThreshold, rightThreshold])
-        self.rightMean.setData([rightStartUm, len(lineProfile)/lineInterptMult*kymRoi.umPerPixel], [rightMean, rightMean])
-        self.rightStd1.setData([rightStartUm, len(lineProfile)/lineInterptMult*kymRoi.umPerPixel], [rightMean+rightStd, rightMean+rightStd])
-        self.rightStd2.setData([rightStartUm, len(lineProfile)/lineInterptMult*kymRoi.umPerPixel], [rightMean+2*rightStd, rightMean+2*rightStd])
+        self.rightThreshold.setData(
+            [rightStartUm, len(lineProfile) / lineInterptMult * kymRoi.umPerPixel],
+            [rightThreshold, rightThreshold],
+        )
+        self.rightMean.setData(
+            [rightStartUm, len(lineProfile) / lineInterptMult * kymRoi.umPerPixel],
+            [rightMean, rightMean],
+        )
+        self.rightStd1.setData(
+            [rightStartUm, len(lineProfile) / lineInterptMult * kymRoi.umPerPixel],
+            [rightMean + rightStd, rightMean + rightStd],
+        )
+        self.rightStd2.setData(
+            [rightStartUm, len(lineProfile) / lineInterptMult * kymRoi.umPerPixel],
+            [rightMean + 2 * rightStd, rightMean + 2 * rightStd],
+        )
         # color based on channel
         self.rightMean.setPen(_penForChannel)
         self.rightStd1.setPen(_penForChannel)
@@ -1122,7 +1183,7 @@ class LineProfileWidget(QtWidgets.QWidget):
     def _buildGui(self):
         vBoxPlot = QtWidgets.QVBoxLayout()
         self.setLayout(vBoxPlot)
-        
+
         self.lineProfilePlotWidget = pg.PlotWidget()
         vBoxPlot.addWidget(self.lineProfilePlotWidget)
 
@@ -1135,55 +1196,64 @@ class LineProfileWidget(QtWidgets.QWidget):
         self.lineProfilePlotWidget.setLabel("bottom", 'Distance (um)', units="")
 
         # the actual line profileplot
-        
-        # left
-        self.lineProfilePlot = self.lineProfilePlotWidget.plot(name="lineProfilePlot",
-                                                        pen=pg.mkPen(color='c', width=3),
-                                                        #   symbol='o',
-                                                        #   brush=pg.mkBrush(100, 255, 100, 220),
-                                                        )   
 
-        self.leftMean = self.lineProfilePlotWidget.plot(name="leftMean",
-                                                        pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
-                                                        #   symbol='o',
-                                                        #   brush=pg.mkBrush(200, 0, 0, 220),
-                                                        )   
-        self.leftStd1 = self.lineProfilePlotWidget.plot(name="leftStd1",
-                                                        pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
-                                                        #   symbol='o',
-                                                        #   brush=pg.mkBrush(200, 0, 0, 220),
-                                                        )   
-        self.leftStd2 = self.lineProfilePlotWidget.plot(name="leftStd1",
-                                                        pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
-                                                        #   symbol='o',
-                                                        #   brush=pg.mkBrush(200, 0, 0, 220),
-                                                        )   
+        # left
+        self.lineProfilePlot = self.lineProfilePlotWidget.plot(
+            name="lineProfilePlot",
+            pen=pg.mkPen(color='c', width=3),
+            #   symbol='o',
+            #   brush=pg.mkBrush(100, 255, 100, 220),
+        )
+
+        self.leftMean = self.lineProfilePlotWidget.plot(
+            name="leftMean",
+            pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
+            #   symbol='o',
+            #   brush=pg.mkBrush(200, 0, 0, 220),
+        )
+        self.leftStd1 = self.lineProfilePlotWidget.plot(
+            name="leftStd1",
+            pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
+            #   symbol='o',
+            #   brush=pg.mkBrush(200, 0, 0, 220),
+        )
+        self.leftStd2 = self.lineProfilePlotWidget.plot(
+            name="leftStd1",
+            pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
+            #   symbol='o',
+            #   brush=pg.mkBrush(200, 0, 0, 220),
+        )
         # build last so it is on top
-        self.leftThreshold = self.lineProfilePlotWidget.plot(name="leftThreshold",
-                                                        pen=pg.mkPen(color='y', width=2, style=QtCore.Qt.DashLine),
-                                                        #   symbol='o',
-                                                        #   brush=pg.mkBrush(200, 0, 0, 220),
-                                                        )   
+        self.leftThreshold = self.lineProfilePlotWidget.plot(
+            name="leftThreshold",
+            pen=pg.mkPen(color='y', width=2, style=QtCore.Qt.DashLine),
+            #   symbol='o',
+            #   brush=pg.mkBrush(200, 0, 0, 220),
+        )
 
         # right
-        self.rightMean = self.lineProfilePlotWidget.plot(name="leftMean",
-                                                        pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
-                                                        #   symbol='o',
-                                                        #   brush=pg.mkBrush(200, 0, 0, 220),
-                                                        )   
-        self.rightStd1 = self.lineProfilePlotWidget.plot(name="leftStd1",
-                                                        pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
-                                                        #   symbol='o',
-                                                        #   brush=pg.mkBrush(200, 0, 0, 220),
-                                                        )   
-        self.rightStd2 = self.lineProfilePlotWidget.plot(name="leftStd1",
-                                                        pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
-                                                        #   symbol='o',
-                                                        #   brush=pg.mkBrush(200, 0, 0, 220),
-                                                        )   
+        self.rightMean = self.lineProfilePlotWidget.plot(
+            name="leftMean",
+            pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
+            #   symbol='o',
+            #   brush=pg.mkBrush(200, 0, 0, 220),
+        )
+        self.rightStd1 = self.lineProfilePlotWidget.plot(
+            name="leftStd1",
+            pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
+            #   symbol='o',
+            #   brush=pg.mkBrush(200, 0, 0, 220),
+        )
+        self.rightStd2 = self.lineProfilePlotWidget.plot(
+            name="leftStd1",
+            pen=pg.mkPen(color='r', width=2, style=QtCore.Qt.DashLine),
+            #   symbol='o',
+            #   brush=pg.mkBrush(200, 0, 0, 220),
+        )
         # build last so it is on top
-        self.rightThreshold = self.lineProfilePlotWidget.plot(name="leftThreshold",
-                                                        pen=pg.mkPen(color='y', width=2, style=QtCore.Qt.DashLine),
-                                                        #   symbol='o',
-                                                        #   brush=pg.mkBrush(200, 0, 0, 220),
-                                                        )   
+        self.rightThreshold = self.lineProfilePlotWidget.plot(
+            name="leftThreshold",
+            pen=pg.mkPen(color='y', width=2, style=QtCore.Qt.DashLine),
+            #   symbol='o',
+            #   brush=pg.mkBrush(200, 0, 0, 220),
+        )

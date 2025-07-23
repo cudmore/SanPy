@@ -1,27 +1,23 @@
-import os
 import sys
 import pandas as pd
-import numpy as np
-from typing import List, Tuple, Optional
 
-# from sanpy.kym.kymRoiAnalysis import PeakDetectionTypes
+from sanpy.sanpyLogger import get_logger
 
-from sanpy.kym.logger import get_logger
 logger = get_logger(__name__)
 
 # specify default for diameter detection
 def getDiameterDefault():
     ret = {
-        'Background Subtract' : 'Off',
-        'Polarity' : 'Neg',
-        'Bin Line Scans' : 2,
-        'Prominence' : 4,
+        'Background Subtract': 'Off',
+        'Polarity': 'Neg',
+        'Bin Line Scans': 2,
+        'Prominence': 4,
     }
     return ret
 
+
 def getAnalysisDict():
-    """Returns a dict of dict, first key is "stat" name.
-    """
+    """Returns a dict of dict, first key is "stat" name."""
     ret = {}
 
     # 0.2 added some columns to analysis
@@ -42,7 +38,7 @@ def getAnalysisDict():
         'type': "str",
         'userdisplay': True,  # display to user
     }
-    
+
     #
     # filled in during anlysis
     ret['ltrb'] = {
@@ -184,7 +180,7 @@ def getAnalysisDict():
     }
 
     ret['Prominence'] = {
-        'defaultvalue': 1.0,  #0.5,  #0.09,
+        'defaultvalue': 1.0,  # 0.5,  #0.09,
         'value': None,
         'description': 'Detect peaks that rise this amount above surrounding.',
         'type': "float",
@@ -260,6 +256,7 @@ def getAnalysisDict():
 
     return ret
 
+
 def getDetectDiamDict():
     #
     # Detect diameters in kymograph
@@ -289,7 +286,7 @@ def getDetectDiamDict():
         'type': "int",
         'userdisplay': True,  # display to user
     }
-    
+
     ret['std_threshold_mult_diam'] = {
         'defaultvalue': 1.2,
         'value': None,
@@ -316,15 +313,13 @@ def getDetectDiamDict():
 
     return ret
 
+
 class KymRoiDetection:
-    """Dictionary of detection parameters.
-    """
+    """Dictionary of detection parameters."""
 
     backgroundSubtractTypes = ['Off', 'Rolling-Ball', 'Median', 'Mean']
 
-    def __init__(self, peakDetectionType,
-                 kymRoiDetection = None,
-                 fromDict : dict = None):
+    def __init__(self, peakDetectionType, kymRoiDetection=None, fromDict: dict = None):
         """
         Parameters
         ----------
@@ -333,28 +328,31 @@ class KymRoiDetection:
         fromDict : dict
             Set values from dict (used on load)
         """
-        from sanpy.kym.kymRoiAnalysis import PeakDetectionTypes
-        self._peakDetectionType : PeakDetectionTypes = peakDetectionType
         
+        # abb 20250714 circular
+        from sanpy.kym.kymRoi import PeakDetectionTypes
+
+        self._peakDetectionType: PeakDetectionTypes = peakDetectionType
+
         self._dict = getAnalysisDict()
 
         if peakDetectionType == PeakDetectionTypes.diameter:
             self._dict['Detection Type']['defaultvalue'] = 'Diameter'
-            
+
             # some additional keys inique to diameter detection
-            _diamDict = getDetectDiamDict()  
+            _diamDict = getDetectDiamDict()
             for k, v in _diamDict.items():
                 self._dict[k] = v
-            
+
             # special default for diam detection
             for k, v in getDiameterDefault().items():
                 try:
                     self._dict[k]['defaultvalue'] = v
-                except (KeyError):
+                except KeyError:
                     logger.error(f'getDiameterDefault() contained bad key "{k}"')
 
         self.setDefaults()
-        
+
         if kymRoiDetection is not None:
             self._fromDict(kymRoiDetection.getValueDict())
             # for k,v in kymRoiDetection._dict.items():
@@ -398,10 +396,10 @@ class KymRoiDetection:
             return
         self._dict[key]['value'] = value
         return True
-    
+
     def setDefaults(self):
         """Set default values.
-        
+
         'diameter' detection needs to have some specific parameters off.
         """
         for k, v in self._dict.items():
@@ -419,18 +417,18 @@ class KymRoiDetection:
 
     def getValueDict(self):
         """Get dictionary of [key][value].
-        
+
         Used to save.
         """
         valueDict = {}
         for k, v in self._dict.items():
             valueDict[k] = v['value']
         return valueDict
-    
+
     def getDataframe(self):
         # _columns = ['Parameter', 'Default', 'Value', 'Type', 'Description']
         _columns = ['Parameter', 'Default', 'Type', 'Description']
-        
+
         df = pd.DataFrame(columns=_columns)
 
         paramList = []
@@ -438,13 +436,13 @@ class KymRoiDetection:
         # valueList = []
         typeList = []
         descriptionList = []
-        for k,v in self._dict.items():
+        for k, v in self._dict.items():
             paramList.append(k)
             defaultList.append(v['defaultvalue'])
             # valueList.append(v['value'])
             typeList.append(v['type'])
             descriptionList.append(v['description'])
-        
+
         df['Parameter'] = paramList
         df['Default'] = defaultList
         # df['Value'] = valueList
@@ -453,10 +451,9 @@ class KymRoiDetection:
 
         return df
 
-    def _fromDict(self, d : dict):
-        """From dictionary of key values.
-        """
-        for k,v in d.items():
+    def _fromDict(self, d: dict):
+        """From dictionary of key values."""
+        for k, v in d.items():
             self.setParam(k, v)
 
     def __getitem__(self, key):
@@ -464,21 +461,21 @@ class KymRoiDetection:
 
     def __setitem__(self, key, value):
         return self.setParam(key, value)
-    
+
     def __str__(self):
         ret = ''
-        for k,v in self._dict.items():
+        for k, v in self._dict.items():
             ret += f'   {k}: {v}\n'
         return ret
-    
+
     def printValues(self):
-        """Return a string with the name value pairs.
-        """
+        """Return a string with the name value pairs."""
         ret = ''
-        for k,v in self._dict.items():
+        for k, v in self._dict.items():
             ret += f"   {k}: {v['value']}\n"
         return ret
-    
+
+
 def _makeMarkdownTable():
     """
     Requires
@@ -486,10 +483,12 @@ def _makeMarkdownTable():
         pip install tabulate
     """
     from kymRoiAnalysis import PeakDetectionTypes
+
     krd = KymRoiDetection(PeakDetectionTypes.diameter)
     df = krd.getDataframe()
     md = df.to_markdown()
     print(md)
+
 
 if __name__ == '__main__':
     _makeMarkdownTable()

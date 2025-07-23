@@ -20,8 +20,8 @@ import pyqtgraph as pg
 import qdarktheme
 
 import sanpy
-import sanpy.interface
-import sanpy.user_analysis
+# import sanpy.interface
+# import sanpy.user_analysis
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -65,6 +65,10 @@ class kymographPlugin2(QtWidgets.QMainWindow):
 
         self.refreshSumLinePlot()
         self.refreshDiameterPlot()
+
+        # Close window shortcut: platform-independent (Ctrl+W or Cmd+W)
+        shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Close), self)
+        shortcut.activated.connect(self.close)
 
     def _cursor_setDetectionParam(self, detectionParam : str, value : float):
         """Used by sanpyCursor.
@@ -955,7 +959,7 @@ class kymographPlugin2(QtWidgets.QMainWindow):
         self.sumIntensityPlot.setData(xPlot, yPlot, connect="finite")  # fill with nan
         # link x-axis with kymograph PlotWidget
         # self.sumIntensityPlotItem.setXLink(self.kymographWindow)
-        # Link this view’s X axis to another view. (see LinkView)
+        # Link this view's X axis to another view. (see LinkView)
         # link to kymographWidget plot of the image
         self.sumIntensityPlotItem.setXLink(self._kymWidgetMain.kymographPlot)
 

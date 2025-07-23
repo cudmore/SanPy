@@ -5,14 +5,21 @@ import subprocess
 from PyQt5 import QtGui, QtCore, QtWidgets
 
 from PyQt5.QtWidgets import (
-    QWidget, QTreeWidget, QTreeWidgetItem,
-    QVBoxLayout, QApplication, QCheckBox
+    QWidget,
+    QTreeWidget,
+    QTreeWidgetItem,
+    QVBoxLayout,
+    QApplication,
+    QCheckBox,
 )
 from PyQt5.QtCore import pyqtSignal, Qt
 import pandas as pd
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
+
 
 class KymTreeWidget(QWidget):
     # Emitted when a cell (group of ROIs) is checked or unchecked
@@ -25,12 +32,14 @@ class KymTreeWidget(QWidget):
     cellSelected = pyqtSignal(str, str, int)  # cell_id, condition, epoch
 
     # Emitted when the user selects a ROI (row selected, not checkbox)
-    roiSelected = pyqtSignal(str, str, int, int)  # cell_id, condition, epoch, roi_number
+    roiSelected = pyqtSignal(
+        str, str, int, int
+    )  # cell_id, condition, epoch, roi_number
 
     # Emitted when the "Toggle All" checkbox is toggled (True = checked)
     toggleAllToggled = pyqtSignal(bool)
 
-    # Emitted on right-click plot cell id (cell id, roi number)
+    # Emitted on right-click plot cell id (cell id, roi label)
     plotCellID = pyqtSignal(str, int)
 
     def __init__(self, dataframe, parent=None):
@@ -47,8 +56,8 @@ class KymTreeWidget(QWidget):
         self.toggleAllCheckbox.stateChanged.connect(self.toggleAll)
 
         # Create tree
-        self.tree:QTreeWidget = QTreeWidget()
-        self.tree.setHeaderLabels(["Cell ID / ROI Number"])
+        self.tree: QTreeWidget = QTreeWidget()
+        self.tree.setHeaderLabels(["Cell ID / ROI Label"])
         self.tree.itemChanged.connect(self.handleItemChanged)
         self.tree.itemSelectionChanged.connect(self.handleItemSelectionChanged)
 
@@ -91,7 +100,11 @@ class KymTreeWidget(QWidget):
             epoch = item.data(0, Qt.UserRole)[3]
 
             # find cell id row in df
-            theseRows = (self.df['Cell ID']==cell_id) & (self.df['Condition']==condition) & (self.df['Epoch']==epoch)
+            theseRows = (
+                (self.df['Cell ID'] == cell_id)
+                & (self.df['Condition'] == condition)
+                & (self.df['Epoch'] == epoch)
+            )
             df = self.df[theseRows]
             tifPath = df.iloc[0]['Path']
             tifFolder = os.path.split(tifPath)[0]
@@ -104,36 +117,55 @@ class KymTreeWidget(QWidget):
             if item.data(0, Qt.UserRole)[0] != "roi":
                 # only for an roi (plots a kym roi across conditions)
                 return
-                    
+
             cell_id = item.data(0, Qt.UserRole)[1]
             roi_number = item.data(0, Qt.UserRole)[4]
             self.plotCellID.emit(cell_id, roi_number)
 
     def _populateTree(self):
         # Group by Cell ID, Condition, and Epoch (each group represents a top-level item)
-        grouped = self.df.groupby(["Cell ID", "Condition", "Epoch"])
+        
+        try:
+            grouped = self.df.groupby(["Cell ID", "Condition", "Epoch"])
+        except (KeyError) as e:
+            grouped = self.df.groupby(["Cell ID", "Condition", "Repeat"])
+        
         for (cell_id, condition, epoch), group in grouped:
             # region = group["Region"].iloc[0] if "Region" in group.columns else "Unknown"
             # cell_text = f"{cell_id} | Region: {region} | Condition: {condition}"
             cell_text = f"{cell_id} | {condition} | Epoch {epoch}"
 
             cell_item = QTreeWidgetItem([cell_text])
-            cell_item.setFlags(cell_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable)
-            cell_item.setCheckState(0, Qt.Checked if group["show_cell"].iloc[0] else Qt.Unchecked)
+            cell_item.setFlags(
+                cell_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable
+            )
+            cell_item.setCheckState(
+                0, Qt.Checked if group["show_cell"].iloc[0] else Qt.Unchecked
+            )
             cell_item.setData(0, Qt.UserRole, ("cell", cell_id, condition, epoch))
             # abb
             cell_item.setData(1, Qt.UserRole, ("cell", condition, epoch))
 
             for _, row in group.iterrows():
-                num_peaks = row["Number of Spikes"] if "Number of Spikes" in row else "N/A"
+                num_peaks = (
+                    row["Number of Spikes"] if "Number of Spikes" in row else "N/A"
+                )
                 polarity = row["Polarity"] if "Polarity" in row else "N/A"
-                roi_text = f"ROI {row['ROI Number']} | {polarity} | Peaks: {num_peaks}"
+                roi_text = f"ROI {row['ROI Label']} | {polarity} | Peaks: {num_peaks}"
 
                 roi_item = QTreeWidgetItem([roi_text])
-                roi_item.setFlags(roi_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable)
-                roi_item.setCheckState(0, Qt.Checked if row["show_roi"] else Qt.Unchecked)
-                roi_item.setData(0, Qt.UserRole, ("roi", cell_id, condition, epoch, row['ROI Number']))
-                # roi_item.setData(1, Qt.UserRole, ("roi", cell_id, condition, epoch, row['ROI Number']))
+                roi_item.setFlags(
+                    roi_item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable
+                )
+                roi_item.setCheckState(
+                    0, Qt.Checked if row["show_roi"] else Qt.Unchecked
+                )
+                roi_item.setData(
+                    0,
+                    Qt.UserRole,
+                    ("roi", cell_id, condition, epoch, row['ROI Label']),
+                )
+                # roi_item.setData(1, Qt.UserRole, ("roi", cell_id, condition, epoch, row['ROI Label']))
                 cell_item.addChild(roi_item)
 
             self.tree.addTopLevelItem(cell_item)
@@ -164,8 +196,14 @@ class KymTreeWidget(QWidget):
             # Update parent state based on children's state
             parent = item.parent()
             if parent:
-                all_checked = all(parent.child(i).checkState(0) == Qt.Checked for i in range(parent.childCount()))
-                all_unchecked = all(parent.child(i).checkState(0) == Qt.Unchecked for i in range(parent.childCount()))
+                all_checked = all(
+                    parent.child(i).checkState(0) == Qt.Checked
+                    for i in range(parent.childCount())
+                )
+                all_unchecked = all(
+                    parent.child(i).checkState(0) == Qt.Unchecked
+                    for i in range(parent.childCount())
+                )
                 if all_checked:
                     parent.setCheckState(0, Qt.Checked)
                 elif all_unchecked:
@@ -191,7 +229,7 @@ class KymTreeWidget(QWidget):
             condition = data[2]
             epoch = data[3]
             self.cellSelected.emit(cell_id, condition, epoch)
-        
+
         elif data[0] == "roi":
             # (cell id, condition, epoch, roi)
             cellID = data[1]
@@ -209,7 +247,9 @@ class KymTreeWidget(QWidget):
             parent.setCheckState(0, Qt.Checked if state == Qt.Checked else Qt.Unchecked)
             for j in range(parent.childCount()):
                 child = parent.child(j)
-                child.setCheckState(0, Qt.Checked if state == Qt.Checked else Qt.Unchecked)
+                child.setCheckState(
+                    0, Qt.Checked if state == Qt.Checked else Qt.Unchecked
+                )
 
         self.tree.itemChanged.connect(self.handleItemChanged)
         self.toggleAllToggled.emit(state == Qt.Checked)
@@ -220,23 +260,27 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     # Sample data
-    df = pd.DataFrame({
-        'Cell ID': ['Cell1', 'Cell1', 'Cell2', 'Cell2', 'Cell2'],
-        'ROI Number': [1, 2, 1, 2, 3],
-        'accept cell': [True, True, False, False, False],
-        'accept roi': [True, False, True, False, True],
-        'Number of Spikes': [5, 3, 7, 0, 2],
-        'Region': ['CA1', 'CA1', 'CA3', 'CA3', 'CA3'],
-        'Condition': ['Control', 'Control', 'Treated', 'Treated', 'Stimulated'],
-        'Epoch': [1, 1, 1, 2, 1],
-        'show_cell': [True, True, False, False, False],
-        'show_roi': [True, False, True, False, True]
-    })
+    df = pd.DataFrame(
+        {
+            'Cell ID': ['Cell1', 'Cell1', 'Cell2', 'Cell2', 'Cell2'],
+            'ROI Label': [1, 2, 1, 2, 3],
+            'accept cell': [True, True, False, False, False],
+            'accept roi': [True, False, True, False, True],
+            'Number of Spikes': [5, 3, 7, 0, 2],
+            'Region': ['CA1', 'CA1', 'CA3', 'CA3', 'CA3'],
+            'Condition': ['Control', 'Control', 'Treated', 'Treated', 'Stimulated'],
+            'Epoch': [1, 1, 1, 2, 1],
+            'show_cell': [True, True, False, False, False],
+            'show_roi': [True, False, True, False, True],
+        }
+    )
 
     widget = KymTreeWidget(df)
 
     def on_cell_toggled(cell_id, condition, epoch, state):
-        print(f"Cell {cell_id} in Condition {condition} and Epoch {epoch} toggled to {state}")
+        print(
+            f"Cell {cell_id} in Condition {condition} and Epoch {epoch} toggled to {state}"
+        )
 
     def on_roi_toggled(cell_id, roi, state):
         print(f"ROI {roi} in Cell {cell_id} toggled to {state}")
@@ -245,7 +289,9 @@ if __name__ == '__main__':
         print(f"Selected Cell: {cell_id} in Condition {condition} and Epoch {epoch}")
 
     def on_roi_selected(cell_id, condition, epoch, roi):
-        print(f"Selected ROI {roi} in Cell {cell_id} in Condition {condition} and Epoch {epoch}")
+        print(
+            f"Selected ROI {roi} in Cell {cell_id} in Condition {condition} and Epoch {epoch}"
+        )
 
     def on_toggle_all(state):
         print(f"'Toggle All' checkbox toggled to {state}")

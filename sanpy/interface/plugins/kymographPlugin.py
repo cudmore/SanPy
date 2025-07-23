@@ -1,13 +1,11 @@
 from typing import Union, Dict, List, Tuple, Optional, Optional
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
 
-import sanpy
+# import sanpy
+from sanpy.bAnalysis_ import bAnalysis
 from sanpy.interface.plugins import sanpyPlugin
-
-# from sanpy.interface import kymographWidget
 
 
 class kymographPlugin(sanpyPlugin):
@@ -42,7 +40,7 @@ class kymographPlugin(sanpyPlugin):
         self._kymWidget.slotSwitchFile(self.ba)
 
     def slot_switchFile(
-        self, ba: sanpy.bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
+        self, ba: bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
     ):
         # don't replot until we set our detectionClass
         replot = False

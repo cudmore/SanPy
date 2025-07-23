@@ -16,7 +16,8 @@ import matplotlib.pyplot as plt
 from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
 
-import sanpy
+# import sanpy
+from sanpy.bAnalysis_ import bAnalysis
 import sanpy.interface
 
 from sanpy.sanpyLogger import get_logger
@@ -37,7 +38,7 @@ class SpikeSelectEvent:
     """Class that encapsulates a spike(s) selection event."""
 
     def __init__(
-        self, spikeList: List[int] = [], ba: sanpy.bAnalysis = None, isAlt: bool = False
+        self, spikeList: List[int] = [], ba: bAnalysis = None, isAlt: bool = False
     ):
         self._spikeList = spikeList
         self._ba = ba
@@ -133,7 +134,7 @@ class sanpyPlugin(QtWidgets.QWidget):
 
     def __init__(
         self,
-        ba: Optional[sanpy.bAnalysis] = None,
+        ba: Optional[bAnalysis] = None,
         # bPlugin: Optional["sanpy.interface.bPlugin"] = None,
         sanPyWindow: Optional["sanpy.interface.SanPyWindow"] = None,
         startStop: Optional[List[float]] = None,
@@ -167,7 +168,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._initError: bool = False
 
         # underlying bAnalaysis
-        self._ba: sanpy.bAnalysis = ba
+        self._ba: bAnalysis = ba
 
         # the sweep number of the sanpy.bAnalaysis
         self._sweepNumber: Union[int, str] = "All"
@@ -804,7 +805,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         self.signalCloseWindow.emit(self)
 
     def slot_switchFile(self,
-                        ba: sanpy.bAnalysis,
+                        ba: bAnalysis,
                         rowDict: Optional[dict] = None,
                         replot: bool = True
     ):
@@ -1285,25 +1286,3 @@ class sanpyPlugin(QtWidgets.QWidget):
         return left, top, width, height
 
 
-def test_plugin():
-    import sys
-    from PyQt5 import QtCore, QtWidgets, QtGui
-    import sanpy
-    import sanpy.interface
-
-    # create a PyQt application
-    app = QtWidgets.QApplication([])
-
-    # load and analyze sample data
-    path = "/home/cudmore/Sites/SanPy/data/19114001.abf"
-    ba = sanpy.bAnalysis(path)
-    ba.spikeDetect()
-
-    # open the interface for the 'saveAnalysis' plugin.
-    sa = sanpy.interface.plugins.plotScatter(ba=ba, startStop=None)
-
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
-    test_plugin()

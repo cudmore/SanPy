@@ -11,19 +11,24 @@ from sanpy.interface.util import sanpyCursors
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, PeakDetectionTypes
 from sanpy.kym.kymRoiResults import KymRoiResults
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
 
+
 class KymPlotWidget(QtWidgets.QWidget):
-    """Plot a trace like sum intensity or diameter and overlay KymAnalysis results.
-    """
+    """Plot a trace like sum intensity or diameter and overlay KymAnalysis results."""
 
     signalCursorMove = QtCore.pyqtSignal(object)  # roi
 
-    def __init__(self, kymRoiAnalysis : KymRoiAnalysis,
-                 xTrace : str,
-                 yTrace : str,  # we get seeded with one (e.g. f/f0) but can switch to other
-                 peakDetectionType : PeakDetectionTypes):
+    def __init__(
+        self,
+        kymRoiAnalysis: KymRoiAnalysis,
+        xTrace: str,
+        yTrace: str,  # we get seeded with one (e.g. f/f0) but can switch to other
+        peakDetectionType: PeakDetectionTypes,
+    ):
         super().__init__()
 
         self._kymRoiAnalysis = kymRoiAnalysis
@@ -35,7 +40,7 @@ class KymPlotWidget(QtWidgets.QWidget):
 
         # sloppy
         self._rightAxisPlot = None
-        
+
         self._buildUI()
 
         for _channel in range(self._kymRoiAnalysis.numChannels):
@@ -45,29 +50,27 @@ class KymPlotWidget(QtWidgets.QWidget):
         self.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._contextMenu)
 
-
-    def slot_selectRoi(self, channelIdx : int, roiLabel : Optional[str]):
-        """Select an roi in one channel.
-        """
+    def slot_selectRoi(self, channelIdx: int, roiLabel: Optional[str]):
+        """Select an roi in one channel."""
         # logger.info(f'channelIdx:{channelIdx} roiLabel:{roiLabel} self.peakDetectionType:{self.peakDetectionType}')
 
         if not self.isVisible():
             return
-        
+
         if roiLabel is None:
             # clear all plots
             self.sumIntensityPlot.setData(np.array([]), np.array([]))
-            
+
             if self._rightAxisPlot is not None:
                 self._rightAxisPlot.setData(np.array([]), np.array([]))
 
             for _channel in range(self._kymRoiAnalysis.numChannels):
                 self.replotOverlays(_channel, roiLabel)
-            
+
             self.setRoiLabelText('ROI: None')
             self.setNumPeaksLabelText('Peaks: None')
             return
-        
+
         # backend KymRoi
         kymRoi = self._kymRoiAnalysis.getRoi(roiLabel)
 
@@ -79,9 +82,11 @@ class KymPlotWidget(QtWidgets.QWidget):
                 thisPlot = self.sumIntensityPlot
             else:
                 thisPlot = self._rightAxisPlot
-            
+
             # get what was detected, may change yPlot
-            _detectionParams = kymRoi.getDetectionParams(_channel, self.peakDetectionType)
+            _detectionParams = kymRoi.getDetectionParams(
+                _channel, self.peakDetectionType
+            )
             # the trace that was detected
             detectThisTrace = _detectionParams.getParam('detectThisTrace')
 
@@ -91,7 +96,9 @@ class KymPlotWidget(QtWidgets.QWidget):
             # xPlot (time s) will always have values, yPlot might all be nan
             yAllNan = np.isnan(yPlot).all()
             if yAllNan:
-                logger.info(f'detectThisTrace:{detectThisTrace} is all nan, setting x to nan as well.')
+                logger.info(
+                    f'detectThisTrace:{detectThisTrace} is all nan, setting x to nan as well.'
+                )
                 # xPlot[:] = np.nan
                 xPlot = np.array([])
                 yPlot = np.array([])
@@ -118,7 +125,7 @@ class KymPlotWidget(QtWidgets.QWidget):
 
     def _contextMenu(self, pos):
         """Context menu for entire widget.
-        
+
         See also myRawContextMenu.
         """
         logger.info('')
@@ -145,10 +152,10 @@ class KymPlotWidget(QtWidgets.QWidget):
         action = contextMenu.exec_(pos)
         if action is None:
             return
-        
+
         # respond to menu selection
         actionText = action.text()
-        
+
         if actionText == 'Full Zoom':
             self.autoRange()
 
@@ -162,15 +169,15 @@ class KymPlotWidget(QtWidgets.QWidget):
         logger.info('')
         self.sumIntensityPlotItem.autoRange()
 
-    def setMouseEnabled(self, x : bool, y : bool):
+    def setMouseEnabled(self, x: bool, y: bool):
         logger.info(f'{self.peakDetectionType}')
         # the left axis
         self.sumIntensityPlotItem.setMouseEnabled(x=x, y=y)
-        
+
         # the right axis
         if self._rightAxisPlotItem is not None:
             self._rightAxisPlotItem.setMouseEnabled(x=x, y=y)
-        
+
         # AttributeError: 'PlotCurveItem' object has no attribute 'setMouseEnabled'
         # self._rightAxisPlot.setMouseEnabled(x=x, y=y)
 
@@ -203,6 +210,7 @@ class KymPlotWidget(QtWidgets.QWidget):
         # get the original font andmake it bigger
         _origFont = self.sumIntensityPlotItem.getAxis("bottom").label.font()
         from sanpy.kym.interface.kymRoiWidget import KymRoiWidget
+
         _origFont.setPointSize(KymRoiWidget._pgAxisLabelFontSize)
         self.sumIntensityPlotItem.getAxis("bottom").label.setFont(_origFont)
         self.sumIntensityPlotItem.getAxis("left").label.setFont(_origFont)
@@ -220,7 +228,6 @@ class KymPlotWidget(QtWidgets.QWidget):
         #                                                 #   symbol='o',
         #                                                 #   brush=pg.mkBrush(100, 255, 100, 220),
         #                                                 )
-
 
         self.sumIntensityPlot = pg.PlotCurveItem(pen=pg.mkPen(_channelColor, width=2))
         self.sumIntensityPlotItem.addItem(self.sumIntensityPlot)
@@ -252,7 +259,7 @@ class KymPlotWidget(QtWidgets.QWidget):
     def _updateViews(self):
         ## view has resized; update auxiliary views to match
         pw = self.sumIntensityPlotItem  # plot widget that contains a plotItem
-        
+
         if self._rightAxisPlotItem is not None:
             p2 = self._rightAxisPlotItem
             p2.setGeometry(pw.plotItem.vb.sceneBoundingRect())
@@ -261,10 +268,10 @@ class KymPlotWidget(QtWidgets.QWidget):
             ## incorrectly while views had different shapes.
             ## (probably this should be handled in ViewBox.resizeEvent)
             # p2.linkedViewChanged(p1.vb, p2.XAxis)
-            
+
             p2.linkedViewChanged(pw.plotItem.vb, p2.XAxis)
-            #p2.linkedViewChanged(pw.plotItem.vb, p2.YAxis)
-        
+            # p2.linkedViewChanged(pw.plotItem.vb, p2.YAxis)
+
     def _addRightAxisPlot(self):
         """Add a right axis like matplotlib twinx.
 
@@ -276,7 +283,7 @@ class KymPlotWidget(QtWidgets.QWidget):
         if self._kymRoiAnalysis.numChannels == 1:
             self._rightAxisPlotItem = None
             return
-        
+
         p1 = self.sumIntensityPlotItem  # original left axis
 
         self._rightAxisPlotItem = pg.ViewBox()
@@ -285,7 +292,7 @@ class KymPlotWidget(QtWidgets.QWidget):
         p1.scene().addItem(p2)
         p1.getAxis('right').linkToView(p2)
         p2.setXLink(p1)
-        #p2.setYLink(p1)  # this does link but left/right have different scale (does not visially work)
+        # p2.setYLink(p1)  # this does link but left/right have different scale (does not visially work)
         p1.getAxis('right').setLabel('Channel 2', color='#00ff00')
 
         self._rightAxisPlot = pg.PlotCurveItem(pen=pg.mkPen('Green', width=2))
@@ -300,9 +307,8 @@ class KymPlotWidget(QtWidgets.QWidget):
         # we can setdata on self._rightAxisPlot
         # self._rightAxisPlot.setData(np.array([10, 30, 20]))
 
-    def slot_updateLineProfile(self, lineScanIdx : int):
-        """Update vertical line showing current selected line scan.
-        """
+    def slot_updateLineProfile(self, lineScanIdx: int):
+        """Update vertical line showing current selected line scan."""
         # logger.info(f'lineScanIdx:{lineScanIdx}')
         lineScanSec = lineScanIdx * self._kymRoiAnalysis.secondsPerLine
         self._kymLineScanLine.setPos(lineScanSec)
@@ -326,8 +332,8 @@ class KymPlotWidget(QtWidgets.QWidget):
             logger.info(f'spotItem.index():{spotItem.index()}')
 
     def _initSumPlotOverlays(self):
-        """"Initialize a number of overlay plots on top of self.sumIntensityPlotItem.
-        
+        """ "Initialize a number of overlay plots on top of self.sumIntensityPlotItem.
+
         e.g. (peak, threshold, half-width, etc) taken from KymAnalysis
         """
 
@@ -336,7 +342,7 @@ class KymPlotWidget(QtWidgets.QWidget):
 
         for _channel in range(self._kymRoiAnalysis.numChannels):
             self._overlayPlotDict[_channel] = {}
-            
+
             for analysisKey in KymRoiResults.overlayKeys:
                 symbol = KymRoiResults.getMarker(analysisKey)
                 if symbol is None:
@@ -344,13 +350,13 @@ class KymPlotWidget(QtWidgets.QWidget):
                 color = KymRoiResults.getColor(analysisKey)
                 if color is None:
                     color = (200, 200, 200, 220)
-                aPlot = pg.ScatterPlotItem( 
-                                    name = analysisKey,
-                                    pen=None,  # draws outline
-                                    symbol=symbol,
-                                    size=10,
-                                    brush=pg.mkBrush(color)
-                                    )
+                aPlot = pg.ScatterPlotItem(
+                    name=analysisKey,
+                    pen=None,  # draws outline
+                    symbol=symbol,
+                    size=10,
+                    brush=pg.mkBrush(color),
+                )
                 aPlot.sigClicked.connect(self._on_user_scatter_click)
                 if _channel == 0:
                     self.sumIntensityPlotItem.addItem(aPlot)
@@ -363,7 +369,11 @@ class KymPlotWidget(QtWidgets.QWidget):
             # half-width and exp decay are special cases
             for _additionalKey in self._additionalKeys:
                 # connect='finite' will not draw lines between np.nan
-                aLinePlot = pg.PlotCurveItem(pen=pg.mkPen('Yellow', width=3), connect='finite', name=_additionalKey)
+                aLinePlot = pg.PlotCurveItem(
+                    pen=pg.mkPen('Yellow', width=3),
+                    connect='finite',
+                    name=_additionalKey,
+                )
                 aLinePlot.setVisible(False)
                 #
                 if _channel == 0:
@@ -372,7 +382,7 @@ class KymPlotWidget(QtWidgets.QWidget):
                     self._rightAxisPlotItem.addItem(aLinePlot)
                 self._overlayPlotDict[_channel][_additionalKey] = aLinePlot
 
-    def clearPlotOverlays(self, channelIdx : int = None):
+    def clearPlotOverlays(self, channelIdx: int = None):
 
         if channelIdx is None:
             theseChannels = range(self._kymRoiAnalysis.numChannels)
@@ -386,10 +396,10 @@ class KymPlotWidget(QtWidgets.QWidget):
 
     def _buildPlotOverlayToolbar(self):
         """Dynamically build a number of check boxes from keys in _overlayPlotDict.
-        
+
         A VBox with two HBox rows.
         """
-        
+
         # checkboxes only have one copy, shared between channel 0/1
         self._overlayCheckboxDict = {}
 
@@ -423,13 +433,15 @@ class KymPlotWidget(QtWidgets.QWidget):
             )
             self._overlayCheckboxDict[analysisResultKey] = aCheckBox
             # switch to second row
-            if numberCreated == _controlsPerRow:  # hard coding 4 checkboxes per row (only two rows)
+            if (
+                numberCreated == _controlsPerRow
+            ):  # hard coding 4 checkboxes per row (only two rows)
                 thisHBox = QtWidgets.QHBoxLayout()
                 thisHBox.setAlignment(QtCore.Qt.AlignLeft)
                 vBox.addLayout(thisHBox)
                 numberCreated = -1
             thisHBox.addWidget(aCheckBox)
-        
+
             numberCreated += 1
 
         # add in additional key like Half-Width and Exp Decay (not explicitly in analysis results)
@@ -473,12 +485,11 @@ class KymPlotWidget(QtWidgets.QWidget):
 
         # initially hidden
         _widget.setVisible(False)
-        
+
         return _widget
 
     def showingChannel(self, channelIdx):
-        """If 'channel 1' and/or channel 2 checkbox is clicked.
-        """
+        """If 'channel 1' and/or channel 2 checkbox is clicked."""
         thisCheckbox = f'Channel {channelIdx+1}'
         return self._overlayCheckboxDict[thisCheckbox].isChecked()
 
@@ -491,7 +502,7 @@ class KymPlotWidget(QtWidgets.QWidget):
         """
         if value > 0:
             value = 1
-        
+
         logger.info(f'name:"{name}" channelIdx:{channelIdx} value:{value}')
 
         # name might originate from an analysis result key like 'Peak Int'
@@ -504,11 +515,11 @@ class KymPlotWidget(QtWidgets.QWidget):
                 # this would turn them all on/off (not what we want
                 # for _key, _item in self._overlayPlotDict[channelIdx].items():
                 #     _item.setVisible(value)
-                
+
                 # turn overlays on/off
                 # for on, will follow check box is chacked
                 self._showHideOverlays(channelIdx, value)
-                
+
                 # if value == 0:
                 #     self.clearPlotOverlays(channelIdx=0)
                 # else:
@@ -518,7 +529,7 @@ class KymPlotWidget(QtWidgets.QWidget):
                 # for the right-axis plot, this turns of trace and all overlay
                 self._rightAxisPlotItem.setVisible(value)
                 self._showHideOverlays(channelIdx, value)
-        
+
         elif intKey in self._overlayPlotDict[channelIdx].keys():
             for _channel in range(self._kymRoiAnalysis.numChannels):
                 logger.info(f'   -->> refreshing _channel:{_channel} intKey:{intKey}')
@@ -527,16 +538,18 @@ class KymPlotWidget(QtWidgets.QWidget):
 
         elif name in self._additionalKeys:
             for _channel in range(self._kymRoiAnalysis.numChannels):
-                logger.info(f'   -->> refreshing _channel:{_channel} _additionalKeys name:{name}')
+                logger.info(
+                    f'   -->> refreshing _channel:{_channel} _additionalKeys name:{name}'
+                )
                 if self.showingChannel(_channel):
                     self._overlayPlotDict[_channel][name].setVisible(value)
 
         else:
             logger.info(f'did not understand name:"{name}"')
 
-    def _showHideOverlays(self, channelIdx : int, value : bool):
+    def _showHideOverlays(self, channelIdx: int, value: bool):
         """Set Visible of each plot overlay (scatter) based on its checkbox values.
-        
+
         We have 2x channels of plots but only one set of checkboxes.
         """
         _turningOn = value > 0
@@ -547,8 +560,8 @@ class KymPlotWidget(QtWidgets.QWidget):
             else:
                 _turnOn = value
             _item.setVisible(_turnOn)
-    
-    def replotOverlays(self, channelIdx, roiLabel : str):
+
+    def replotOverlays(self, channelIdx, roiLabel: str):
         """Replot all scatter/line overlay plots.
 
         Parameters
@@ -558,7 +571,7 @@ class KymPlotWidget(QtWidgets.QWidget):
         """
 
         # logger.info(f'channelIdx:{channelIdx} roiLabel:{roiLabel} self.peakDetectionType:{self.peakDetectionType}-->> replotOverlay with dfPlot:')
-            
+
         if roiLabel is None:
             logger.warning('   -->> got roiLabel None.')
             self.clearPlotOverlays(channelIdx=channelIdx)
@@ -576,7 +589,7 @@ class KymPlotWidget(QtWidgets.QWidget):
             # analysisKey should contain "Int" and is used as y-axis in scatter
             # if 'Int' not in analysisKey:
             #     continue
-            
+
             if ' Int' in analysisKey:
                 xKey = analysisKey.replace(' Int', ' (s)')
                 xPlot = dfPlot[xKey].to_numpy()
@@ -594,20 +607,25 @@ class KymPlotWidget(QtWidgets.QWidget):
         # refresh additional plots like half-width and exp decay
         for analysisKey in self._additionalKeys:
             if analysisKey == 'Exp Decay':
-                xExp, yExp = kymRoi.getExpDecayPlot(channel=channelIdx, peakDetectionType=self.peakDetectionType)
+                xExp, yExp = kymRoi.getExpDecayPlot(
+                    channel=channelIdx, peakDetectionType=self.peakDetectionType
+                )
                 # logger.info(f'channel:{channelIdx} analysisKey:"{analysisKey}"')
                 # logger.info(f'  xExp:{xExp}')
                 # logger.info(f'  yExp:{yExp}')
                 self._overlayPlotDict[channelIdx][analysisKey].setData(xExp, yExp)
 
-            elif analysisKey =='Half-Width':
-                xHalWidth, yHalfWidth = kymRoi.getHalfWidthPlot(channel=channelIdx, peakDetectionType=self.peakDetectionType)
+            elif analysisKey == 'Half-Width':
+                xHalWidth, yHalfWidth = kymRoi.getHalfWidthPlot(
+                    channel=channelIdx, peakDetectionType=self.peakDetectionType
+                )
                 # logger.info(f'channel:{channelIdx} analysisKey:"{analysisKey}"')
                 # logger.info(f'  xHalWidth:{xHalWidth}')
                 # logger.info(f'  yHalfWidth:{yHalfWidth}')
-                self._overlayPlotDict[channelIdx][analysisKey].setData(xHalWidth, yHalfWidth)
+                self._overlayPlotDict[channelIdx][analysisKey].setData(
+                    xHalWidth, yHalfWidth
+                )
 
             #
             # _isVisible = self._overlayCheckboxDict[analysisKey].isVisible()
             # self._overlayPlotDict[channelIdx][analysisKey].setVisible(_isVisible)
-

@@ -1,5 +1,7 @@
 import numpy as np
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
 
 # found 20240925 at
@@ -17,8 +19,8 @@ logger = get_logger(__name__)
 # total amount of pixels.
 
 
-def getAutoContrast(imgData : np.ndarray):
-    
+def getAutoContrast(imgData: np.ndarray):
+
     im = imgData
 
     im_type = im.dtype
@@ -34,7 +36,7 @@ def getAutoContrast(imgData : np.ndarray):
         # if it's not checked, use this line
         # im = np.mean(im, axis = -1)
         # instead of the following
-        im = 0.3 * im[:,:,2] + 0.59 * im[:,:,1] + 0.11 * im[:,:,0]
+        im = 0.3 * im[:, :, 2] + 0.59 * im[:, :, 1] + 0.11 * im[:, :, 0]
         im = im.astype(im_type)
 
     # histogram computation =============================================================================================
@@ -54,8 +56,8 @@ def getAutoContrast(imgData : np.ndarray):
         raise NotImplementedError(f"Not implemented for dtype {im_type}")
 
     # compute histogram
-    histogram = np.histogram(im, bins = 256, range = (hist_min, hist_max))[0]
-    bin_size = (hist_max - hist_min)/256
+    histogram = np.histogram(im, bins=256, range=(hist_min, hist_max))[0]
+    bin_size = (hist_max - hist_min) / 256
 
     # compute output min and max bins =================================================================================
 
@@ -63,12 +65,14 @@ def getAutoContrast(imgData : np.ndarray):
     h, w = im.shape[:2]
     pixel_count = h * w
     # the following values are taken directly from the ImageJ file.
-    limit = pixel_count/10
+    limit = pixel_count / 10
     const_auto_threshold = 5000
     auto_threshold = 0
 
-    auto_threshold = const_auto_threshold if auto_threshold <= 10 else auto_threshold/2
-    threshold = int(pixel_count/auto_threshold)
+    auto_threshold = (
+        const_auto_threshold if auto_threshold <= 10 else auto_threshold / 2
+    )
+    threshold = int(pixel_count / auto_threshold)
 
     # setting the output min bin
     i = -1
@@ -81,9 +85,13 @@ def getAutoContrast(imgData : np.ndarray):
 
         try:
             count = histogram[i]
-        except (IndexError) as e:
-            logger.error(f'histogram.shape:{histogram.shape} i:{i} threshold:{threshold} {e}')
-            logger.error(f'  hist_min:{hist_min} hist_max:{hist_max} threshold:{threshold} {e}')
+        except IndexError as e:
+            logger.error(
+                f'histogram.shape:{histogram.shape} i:{i} threshold:{threshold} {e}'
+            )
+            logger.error(
+                f'  hist_min:{hist_min} hist_max:{hist_max} threshold:{threshold} {e}'
+            )
 
         if count > limit:
             count = 0
@@ -115,12 +123,12 @@ def getAutoContrast(imgData : np.ndarray):
         max_ = hist_max
 
     # apply the contrast ================================================================================================
-    #imr = (im-min_)/(max_-min_) * 255
+    # imr = (im-min_)/(max_-min_) * 255
 
     # return imr
     min_ = int(min_)
     max_ = int(max_)
 
     logger.info(f'min_:{min_} max_:{max_}')
-    
+
     return min_, max_

@@ -6,8 +6,9 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 import matplotlib.pyplot as plt
 
-import sanpy
-from sanpy import bAnalysis
+# import sanpy
+from sanpy.bAnalysis_ import bAnalysis
+
 from sanpy.interface.plugins import sanpyPlugin
 from sanpy.interface.plugins import (
     ResponseType,

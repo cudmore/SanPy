@@ -255,7 +255,7 @@ class preferences:
         configDict['fileList']['Folder Depth'] = 5
 
         # abb 202506
-        configDict['interface_mode'] = 'sanpy'  # from ('sanpy', 'kymograph')
+        configDict['interface_mode'] = 'kymograph'  # from ('sanpy', 'kymograph')
 
         return configDict
 

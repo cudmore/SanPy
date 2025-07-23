@@ -119,10 +119,10 @@ def getDefaultDetection() -> dict:
 
     key = "detectionType"
     theDict[key] = {}
-    theDict[key]["defaultValue"] = sanpy.bDetection.detectionTypes[
+    theDict[key]["defaultValue"] = bDetection.detectionTypes[
         "dvdt"
     ].value  # ('dvdt', 'mv')
-    theDict[key]["type"] = "sanpy.bDetection.detectionTypes"
+    theDict[key]["type"] = "bDetection.detectionTypes"
     theDict[key][
         "allowNone"
     ] = False  # To do, have 2x entry points to bAnalysis detect, never set this to nan

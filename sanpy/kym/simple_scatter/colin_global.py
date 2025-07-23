@@ -13,45 +13,50 @@ from datetime import datetime
 import warnings
 
 from sanpy.analysisDir import _walk
+
 # from sanpy.bAnalysis_ import bAnalysis
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
+
 
 @dataclass
 class FileInfo:
     """Dataclass to hold parsed file information from tif file paths.
-    
+
     Example path: "20250602 ISAN R3 LS3 Control Epoch 1.tif"
     """
+
     cellID: str
     epoch: int
     date: str
     region: str
     condition: str
-    
+
     @classmethod
     def from_path(cls, tif_path: str) -> 'FileInfo':
         """Create FileInfo from a tif file path.
-        
+
         Args:
             tif_path: Path like "20250602 ISAN R3 LS3 Control Epoch 1.tif"
-            
+
         Returns:
             FileInfo object with parsed components
         """
         # Get just the filename without path
         _, tif_file = os.path.split(tif_path)
-        
+
         # Remove .tif extension
         tif_file = tif_file.replace('.tif', '')
-        
+
         # Split into components
         parts = tif_file.split(' ')
-        
+
         # Extract date (first part)
         date = parts[0]
-        
+
         # Extract region (ISAN or SSAN)
         region = None
         for part in parts:
@@ -59,9 +64,11 @@ class FileInfo:
                 region = part
                 break
         if region is None:
-            logger.error(f'ERROR: did not find ISAN or SSAN in raw tif file ??? {tif_file}')
+            logger.error(
+                f'ERROR: did not find ISAN or SSAN in raw tif file ??? {tif_file}'
+            )
             region = 'Unknown'
-        
+
         # Extract condition
         condition = None
         for cond in conditionOrder:
@@ -69,35 +76,33 @@ class FileInfo:
                 condition = cond
                 break
         if condition is None:
-            logger.error(f'ERROR: did not find one of {conditionOrder} in raw tif file ??? {tif_file}')
+            logger.error(
+                f'ERROR: did not find one of {conditionOrder} in raw tif file ??? {tif_file}'
+            )
             condition = 'Unknown'
-        
+
         # Extract epoch
         epoch = 0  # default
         if 'Epoch' in tif_file:
             epoch_str = tif_file.split('Epoch ')[1]
             epoch = int(epoch_str)
-        
+
         # Extract cellID - everything up to the condition
         # Remove epoch part if present
         cell_id_parts = tif_file
         if 'Epoch' in cell_id_parts:
             cell_id_parts = cell_id_parts.split(' Epoch')[0]
-        
+
         # Remove condition part
         for cond in conditionOrder:
             if cond in cell_id_parts:
                 cell_id_parts = cell_id_parts.replace(f' {cond}', '')
                 break
-        
+
         cellID = cell_id_parts.strip()
-        
+
         return cls(
-            cellID=cellID,
-            epoch=epoch,
-            date=date,
-            region=region,
-            condition=condition
+            cellID=cellID, epoch=epoch, date=date, region=region, condition=condition
         )
 
 
@@ -144,15 +149,23 @@ TODO:
 
 _ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/analysis-20250618-rhc'
 
-_ROOT_ANALYSIS_FOLDER = '/Users/cudmore/Dropbox/data/colin/2025/mito-atp/mito-atp-20250623-RHC'
+_ROOT_ANALYSIS_FOLDER = (
+    '/Users/cudmore/Dropbox/data/colin/2025/mito-atp/mito-atp-20250623-RHC'
+)
+
+_ROOT_ANALYSIS_FOLDER = (
+    '/Users/cudmore/Dropbox/data/colin/2025/mito-atp/mito-iATP Analysis'
+)
 
 _ROOT_SANPY_REPORT_FOLDER = 'sanpy-reports-pdf'
 
 # _IGOR_THESE_FOLDERS = [_ROOT_ANALYSIS_FOLDER]
 
-def getCellCondEpoch(df:pd.DataFrame, cellID:str, condition:str, epoch:int, roi:int=None) -> pd.DataFrame:
-    """Get a dataframe with only the rows for a given cellID, condition, epoch, and roi.
-    """
+
+def getCellCondEpoch(
+    df: pd.DataFrame, cellID: str, condition: str, epoch: int, roi: int = None
+) -> pd.DataFrame:
+    """Get a dataframe with only the rows for a given cellID, condition, epoch, and roi."""
     df = df[df['Cell ID'] == cellID]
     df = df[df['Condition'] == condition]
     df = df[df['Epoch'] == epoch]
@@ -160,12 +173,13 @@ def getCellCondEpoch(df:pd.DataFrame, cellID:str, condition:str, epoch:int, roi:
         df = df[df['ROI Number'] == roi]
     return df
 
+
 def getRootAnalysisFolder() -> str:
     return _ROOT_ANALYSIS_FOLDER
 
+
 def loadMasterDfFile() -> pd.DataFrame:
-    """Load our master df csv file and return as DataFrame.
-    """
+    """Load our master df csv file and return as DataFrame."""
     file = getMasterDfPath()
     if not os.path.isfile(file):
         logger.error(f'did not find master csv file')
@@ -174,9 +188,9 @@ def loadMasterDfFile() -> pd.DataFrame:
         df = pd.read_csv(file)
         return df
 
+
 def loadMeanDfFile() -> pd.DataFrame:
-    """Load our mean df csv file and return as DataFrame.
-    """
+    """Load our mean df csv file and return as DataFrame."""
     meanDfPath = getMeanDfPath()
     if not os.path.isfile(meanDfPath):
         logger.error(f'did not find meanDfPath')
@@ -184,7 +198,8 @@ def loadMeanDfFile() -> pd.DataFrame:
     else:
         df = pd.read_csv(meanDfPath)
         return df
-    
+
+
 def getMasterDfPath() -> str:
     """Get the full path to our master df csv file.
 
@@ -193,6 +208,7 @@ def getMasterDfPath() -> str:
     dfMasterFile = 'df-master-file.csv'
     dfMaster = os.path.join(_ROOT_ANALYSIS_FOLDER, dfMasterFile)
     return dfMaster
+
 
 def getMeanDfPath() -> str:
     """Get the full path to our mean df csv file.
@@ -203,9 +219,10 @@ def getMeanDfPath() -> str:
     dfMean = os.path.join(_ROOT_ANALYSIS_FOLDER, dfMeanFile)
     return dfMean
 
+
 def getAllTifFilePaths() -> List[str]:
     """Get a list of all raw tif paths.
-    
+
     This assumes all tif files in analysis folder are to be analyzed.
     """
     thisExt = '.tif'
@@ -213,9 +230,12 @@ def getAllTifFilePaths() -> List[str]:
     paths = list(paths)
 
     # only accept tif files not in folder 'roi-img-clips
-    paths = [p for p in paths if 'roi-img-clips' not in p and 'sanpy-reports-pdf' not in p]
+    paths = [
+        p for p in paths if 'roi-img-clips' not in p and 'sanpy-reports-pdf' not in p
+    ]
 
     return paths
+
 
 def getAllSanPyAnalysisCsv() -> List[str]:
     thisExt = '.csv'
@@ -227,9 +247,10 @@ def getAllSanPyAnalysisCsv() -> List[str]:
 
     return paths
 
+
 def getAllPeakAnalysisCsv() -> List[str]:
     """Get all SanPy saved analysis csv files using G_MASTER_DATA_FOLDER.
-    
+
     Be sure to skip csv files not saved by SanPy.
     """
     thisExt = '.csv'
@@ -241,6 +262,7 @@ def getAllPeakAnalysisCsv() -> List[str]:
 
     return paths
 
+
 def getSanpyReportsPdfPath() -> str:
     """Get the full path to the sanpy reports pdf folder.
 
@@ -251,13 +273,12 @@ def getSanpyReportsPdfPath() -> str:
         os.makedirs(pdfPath)
     return pdfPath
 
-def getCellIdPdfFolder(pdfOutputType: str,
-                       cellId: str,
-                       dateStr:str,
-                       regionStr:str
-                       ) -> str:
+
+def getCellIdPdfFolder(
+    pdfOutputType: str, cellId: str, dateStr: str, regionStr: str
+) -> str:
     """Get the full folder path to the cell id pdf folder.
-    
+
     like 'Per Cell Cond Plots'
 
     Actually makes folders
@@ -267,7 +288,7 @@ def getCellIdPdfFolder(pdfOutputType: str,
     if not os.path.exists(reportPath):
         # like 'Per Cell Cond Plots'
         os.mkdir(reportPath)
-    
+
     # make date folders
     reportPath = os.path.join(reportPath, dateStr)
     if not os.path.exists(reportPath):
@@ -280,14 +301,15 @@ def getCellIdPdfFolder(pdfOutputType: str,
 
     return reportPath
 
+
 def iterate_unique_cell_rows(df: pd.DataFrame, cellID: str, roiNumber: int = None):
     """Iterator function that returns unique rows from DataFrame for a given cellID.
-    
+
     Args:
         df: DataFrame with columns 'Cell ID', 'Condition', 'Epoch'
         cellID: The cell ID to filter by
         roiNumber: Optional ROI number to filter by
-        
+
     Yields:
         pd.Series: Each unique row for the given cellID (unique by Condition and Epoch)
     """
@@ -306,36 +328,42 @@ def iterate_unique_cell_rows(df: pd.DataFrame, cellID: str, roiNumber: int = Non
     for _, row in unique_rows.iterrows():
         yield row
 
+
 def loadAllKymRoiAnalysis(loadImgData=True) -> dict:
     """Load analysis for each tif and store in a dict.
-    
+
     keys are tif path
     values are KymRoiAnalysis
     """
     retDict = {}
     # from sanpy.kym.simple_scatter.colin_global import getAllTifFilePaths
     tifPaths = getAllTifFilePaths()
-    logger.info(f'loading all kym roi analysis from {len(tifPaths)} tif files, loadImgData:{loadImgData}')
+    logger.info(
+        f'loading all kym roi analysis from {len(tifPaths)} tif files, loadImgData:{loadImgData}'
+    )
     for tifPath in tifPaths:
         # print(tifPath)
         ka = _loadKymRoiAnalysis(tifPath, loadImgData=loadImgData)
         retDict[tifPath] = ka
     return retDict
 
+
 def _loadKymRoiAnalysis(tifPath, loadImgData=True):
-    """Load one kymRoiAnalysis..
-    """
+    """Load one kymRoiAnalysis.."""
     # ba = bAnalysis(tifPath)
     # imgData = ba.fileLoader._tif  # list of color channel images
     # logger.info(f'imgData:{imgData[0].shape} {np.min(imgData[0])} {np.max(imgData[0])} {np.mean(imgData[0])}')
-    ka = KymRoiAnalysis(tifPath,
-                        # imgData=imgData,
-                        loadImgData=loadImgData)
+    ka = KymRoiAnalysis(
+        tifPath,
+        # imgData=imgData,
+        loadImgData=loadImgData,
+    )
     return ka
+
 
 if __name__ == '__main__':
     print('')
-    
+
     # getAllPeakAnalysisCsv()
     # print(getMasterDfPath())
     # print(getMeanDfPath())
@@ -367,7 +395,6 @@ if __name__ == '__main__':
             logger.info('  deleting folder pdf folder:')
             logger.info(f'    {pdfPath}')
             shutil.rmtree(pdfPath)
-
 
     # print(getSanpyReportsPdfPath())
     # print(getCellIdPdfFolder('test pdf out', 'fakecellid', '20250521', 'left'))

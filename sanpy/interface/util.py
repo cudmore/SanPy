@@ -3,11 +3,13 @@ from functools import partial
 from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
 logger = get_logger(__name__)
 
 class sanpyCursors(QtCore.QObject):
     signalCursorDragged = QtCore.pyqtSignal(str)  # dx
+    signalCursorDragFinished = QtCore.pyqtSignal(str, float)  # name, value
     signalSetDetectionParam = QtCore.pyqtSignal(str, float)
 
     def __init__(self,
@@ -69,6 +71,7 @@ class sanpyCursors(QtCore.QObject):
                                         labelOpts=yLabelOpts,
                                         movable=True)
         self._cursorC.sigDragged.connect(partial(self._cursorDragged, 'cursorC'))
+        self._cursorC.sigPositionChangeFinished.connect(partial(self._cursorDraggedFinished, 'cursorC'))
         self._cursorC.setVisible(self._showCursors)
 
         if showCursorD:
@@ -202,6 +205,14 @@ class sanpyCursors(QtCore.QObject):
             self._cursorD.setValue(top)
 
         self._cursorDragged('cursorA', self._cursorA)
+
+    # abb 20250715
+    def _cursorDraggedFinished(self, name, infLine):
+        # abb 20250715 signal when user sets cursorc (f0)
+        if name == 'cursorC':
+            yCursorC = self._cursorC.pos().y()
+            logger.info(f'{name} yCursorC:{yCursorC}')
+            self.signalCursorDragFinished.emit(name, yCursorC)
 
     def _cursorDragged(self, name, infLine):
         # logger.info(f'{name} {infLine.pos()}')

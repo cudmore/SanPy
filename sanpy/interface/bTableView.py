@@ -1,20 +1,16 @@
-import os, math
+# import os, math
 
-import numpy as np
+# import numpy as np
 import pandas as pd
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtWidgets
 
 import sanpy
 import sanpy.interface
-
-# import sanpy.analysisDir
 import sanpy.bDetection
 
 from sanpy.sanpyLogger import get_logger
-
 logger = get_logger(__name__)
-
 
 class bTableView(QtWidgets.QTableView):
     """Table view to display list of files."""
@@ -277,7 +273,7 @@ class bTableView(QtWidgets.QTableView):
         # self._lastClick = "Click"
 
         try:
-            if self.last == "Click":
+            if self._lastClick == "Click":
                 row = item.row()
                 realRow = self.model()._data.index[row]  # sort order
                 # logger.info(f'User clicked row:{row} realRow:{realRow}')

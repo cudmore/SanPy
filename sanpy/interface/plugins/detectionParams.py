@@ -6,7 +6,8 @@ from typing import Union, Dict, List, Tuple, Optional, Optional
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-import sanpy
+# import sanpy
+from sanpy.bAnalysis_ import bAnalysis
 from sanpy.interface.plugins import sanpyPlugin
 
 from sanpy.sanpyLogger import get_logger
@@ -555,7 +556,7 @@ class detectionParams(sanpyPlugin):
                 )
 
     def slot_switchFile(
-        self, ba: sanpy.bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
+        self, ba: bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
     ):
         # don't replot until we set our detectionClass
         replot = False

@@ -5,40 +5,45 @@ from PyQt5 import QtCore, QtWidgets
 from sanpy.kym.kymRoiDetection import KymRoiDetection
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis, PeakDetectionTypes
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
 
-class KymDiameterToolbar(QtWidgets.QGroupBox):
-    """A groupbox to detect diameter in kym image.
-    """
 
-    signalDetectionParamChanged = QtCore.pyqtSignal(str, object)  # (group name, KymRoiDetection)
+class KymDiameterToolbar(QtWidgets.QGroupBox):
+    """A groupbox to detect diameter in kym image."""
+
+    signalDetectionParamChanged = QtCore.pyqtSignal(
+        str, object
+    )  # (group name, KymRoiDetection)
     signalDetection = QtCore.pyqtSignal(object)
 
-    def __init__(self,
-                 kymRoiAnalysis : KymRoiAnalysis,
-                 kymRoiDetection : KymRoiDetection,
-                 groupName : str):
+    def __init__(
+        self,
+        kymRoiAnalysis: KymRoiAnalysis,
+        kymRoiDetection: KymRoiDetection,
+        groupName: str,
+    ):
         super().__init__()
 
-        self._kymRoiAnalysis : KymRoiAnalysis = kymRoiAnalysis
-        self._kymRoiDetection = kymRoiDetection  #KymRoiDetection(PeakDetectionTypes.diameter)  # on init is defaults
+        self._kymRoiAnalysis: KymRoiAnalysis = kymRoiAnalysis
+        self._kymRoiDetection = kymRoiDetection  # KymRoiDetection(PeakDetectionTypes.diameter)  # on init is defaults
         self._groupName = groupName
         self._blockSlots = False
 
         self._buildUI()
 
-    def setDetectionDict(self, detectionDict : KymRoiDetection):
+    def setDetectionDict(self, detectionDict: KymRoiDetection):
         """Update with new dict.
-        
+
         Used when selecting an roi.
         """
         self._kymRoiDetection = detectionDict
         self._updateDetectionParamGui()
 
     def _updateDetectionParamGui(self):
-        """Update GUI with current detection parameters.
-        """
+        """Update GUI with current detection parameters."""
         logger.warning('  this is triggering KeyError on "Detect Diameter"')
         self._blockSlots = True
         detectionDict = self._kymRoiDetection
@@ -54,7 +59,7 @@ class KymDiameterToolbar(QtWidgets.QGroupBox):
 
     def _buildUI(self):
         self._detectionControls = {}
-        
+
         detectionDict = self._kymRoiDetection
 
         # self.detectionGroupBox = QtWidgets.QGroupBox(self._groupName)
@@ -72,18 +77,14 @@ class KymDiameterToolbar(QtWidgets.QGroupBox):
         aButtonName = 'Detect Diameter'
         aButton = QtWidgets.QPushButton(aButtonName)
         aButton.setToolTip('Perform the analysis')
-        aButton.clicked.connect(
-            partial(self._on_button_click, aButtonName)
-        )
+        aButton.clicked.connect(partial(self._on_button_click, aButtonName))
         self._detectionControls[aButtonName] = aButton
         self._addHLayout(aButton, mainLayout, labelStr=None)
 
         aName = 'do_background_subtract_diam'
         aCheckBox = QtWidgets.QCheckBox(aName)
         aCheckBox.setChecked(detectionDict[aName])
-        aCheckBox.stateChanged.connect(
-            partial(self._on_checkbox_clicked, aName)
-        )
+        aCheckBox.stateChanged.connect(partial(self._on_checkbox_clicked, aName))
         self._detectionControls[aName] = aCheckBox
         self._addHLayout(aCheckBox, mainLayout, labelStr=None)
 
@@ -115,9 +116,9 @@ class KymDiameterToolbar(QtWidgets.QGroupBox):
         self._detectionControls[aName] = aSpinBox
         self._addHLayout(aSpinBox, mainLayout, labelStr=aName)
 
-    def _aSpinBox(self, name : str):
+    def _aSpinBox(self, name: str):
         detectionDict = self._kymRoiDetection
-        
+
         _type = detectionDict.getType(name)
         if _type == 'int':
             aSpinBox = QtWidgets.QSpinBox()
@@ -127,20 +128,19 @@ class KymDiameterToolbar(QtWidgets.QGroupBox):
         else:
             logger.error(f'did not understand type for spinbox "{_type}"')
             return
-        
+
         aSpinBox.setToolTip(detectionDict.getDescription(name))
         # aSpinBox.setRange(1,100)
         # aSpinBox.setSingleStep(2)
         aSpinBox.setValue(detectionDict[name])
         aSpinBox.setKeyboardTracking(False)
-        aSpinBox.valueChanged.connect(
-            partial(self._on_spin_box, name)
-            )
+        aSpinBox.valueChanged.connect(partial(self._on_spin_box, name))
         return aSpinBox
-    
-    def _addHLayout(self, widget : QtWidgets.QWidget, parentLayout, labelStr : str = None):
-        """Add a new hLayout to parentLayout.
-        """
+
+    def _addHLayout(
+        self, widget: QtWidgets.QWidget, parentLayout, labelStr: str = None
+    ):
+        """Add a new hLayout to parentLayout."""
         hLayout = QtWidgets.QHBoxLayout()
         hLayout.setAlignment(QtCore.Qt.AlignLeft)
 
@@ -166,11 +166,15 @@ class KymDiameterToolbar(QtWidgets.QGroupBox):
         logger.info(f'{name} {value}')
         detectionDict = self._kymRoiDetection
         if name not in detectionDict.keys():
-            logger.error(f'did not understand "{name}" available keys are {detectionDict.keys()}')
+            logger.error(
+                f'did not understand "{name}" available keys are {detectionDict.keys()}'
+            )
             return
         else:
             detectionDict[name] = value
-            logger.info(f'-->> emit signalDetectionParamChanged group:{self._groupName} + KymRoiDetection')
+            logger.info(
+                f'-->> emit signalDetectionParamChanged group:{self._groupName} + KymRoiDetection'
+            )
             self.signalDetectionParamChanged.emit(self._groupName, detectionDict)
 
     def _on_spin_box(self, name, value):
@@ -181,14 +185,18 @@ class KymDiameterToolbar(QtWidgets.QGroupBox):
         logger.info(f'{name} {value}')
         detectionDict = self._kymRoiDetection
         if name not in detectionDict.keys():
-            logger.error(f'did not understand "{name}" available keys are {detectionDict.keys()}')
+            logger.error(
+                f'did not understand "{name}" available keys are {detectionDict.keys()}'
+            )
             return
         else:
             detectionDict[name] = value
-            logger.info(f'-->> emit signalDetectionParamChanged group:{self._groupName} + KymRoiDetection')
+            logger.info(
+                f'-->> emit signalDetectionParamChanged group:{self._groupName} + KymRoiDetection'
+            )
             self.signalDetectionParamChanged.emit(self._groupName, detectionDict)
 
-    def slot_selectRoi(self, channel : int, roiLabel : str):
+    def slot_selectRoi(self, channel: int, roiLabel: str):
         # logger.info(f'channel:{channel} roi:{roi}')
         # logger.info('   TODO: implemet this')
 
@@ -200,16 +208,20 @@ class KymDiameterToolbar(QtWidgets.QGroupBox):
         if roiLabel is not None:
             # self.detectionGroupBox.setEnabled(True)
             self.setEnabled(True)
-            
-            self._kymRoiDetection = self._kymRoiAnalysis.getRoi(roiLabel).getDetectionParams(channel, PeakDetectionTypes.diameter)
+
+            self._kymRoiDetection = self._kymRoiAnalysis.getRoi(
+                roiLabel
+            ).getDetectionParams(channel, PeakDetectionTypes.diameter)
             self._updateDetectionParamGui()
 
             # detect button follow channel color
             # from sanpy.kym.interface.kymRoiWidget import getChannelColor
             detectButtonColor = self._kymRoiAnalysis.getChannelColor(channel)
-            self._detectionControls['Detect Diameter'].setStyleSheet(f'background-color: {detectButtonColor}')
+            self._detectionControls['Detect Diameter'].setStyleSheet(
+                f'background-color: {detectButtonColor}'
+            )
 
         else:
             # self.detectionGroupBox.setEnabled(False)
             self.setEnabled(False)
-            self._kymRoiDetection = None        
+            self._kymRoiDetection = None

@@ -7,7 +7,8 @@ import seaborn as sns
 
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget
 
-#TODO: use this to plot one of seaborn plots
+# TODO: use this to plot one of seaborn plots
+
 
 class KymRoiMainWindow(QMainWindow):
     def __init__(self, figure, ax):
@@ -15,7 +16,7 @@ class KymRoiMainWindow(QMainWindow):
         self.setWindowTitle("Matplotlib in PyQt")
 
         # Create a Matplotlib figure and axes
-        #self.figure, self.ax = plt.subplots()
+        # self.figure, self.ax = plt.subplots()
         self.figure = figure
         self.ax = ax
         self.canvas = FigureCanvas(self.figure)

@@ -10,8 +10,11 @@ from matplotlib.patches import Rectangle
 from typing import List, Tuple, Optional, Union
 import pandas as pd
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
+
 
 def roiLineProfileWorker(imgData, tmp):
     """
@@ -30,9 +33,9 @@ def roiLineProfileWorker(imgData, tmp):
     """
     lineWidth = imgData.shape[1]
     numPixels = imgData.shape[0]
-    
+
     if lineWidth == 1:
-        intensityProfile = imgData[:,0]
+        intensityProfile = imgData[:, 0]
         # intensityProfile = np.flip(intensityProfile)  # FLIPPED
 
     else:
@@ -50,7 +53,8 @@ def roiLineProfileWorker(imgData, tmp):
 
     return intensityProfile
 
-def roiLineProfilePool(imgData : np.ndarray, lineWidth : int):
+
+def roiLineProfilePool(imgData: np.ndarray, lineWidth: int):
     """
     Parameters
     ==========
@@ -63,19 +67,21 @@ def roiLineProfilePool(imgData : np.ndarray, lineWidth : int):
 
     numLines = imgData.shape[1]
 
-    logger.info(f'imgData:{imgData.shape} lineWidth:{lineWidth} numLines:{numLines}')  # tifData:(10000, 519)
+    logger.info(
+        f'imgData:{imgData.shape} lineWidth:{lineWidth} numLines:{numLines}'
+    )  # tifData:(10000, 519)
 
     result_objs = []
 
     with Pool(processes=os.cpu_count() - 1) as pool:
-        
+
         # add the workers
         for line in range(numLines):
-            startLine = line - math.floor(lineWidth/2)
+            startLine = line - math.floor(lineWidth / 2)
             if startLine < 0:
                 startLine = 0
             # numpy uses (] indexing
-            stopLine = line + math.floor(lineWidth/2) + 1
+            stopLine = line + math.floor(lineWidth / 2) + 1
             if stopLine > numLines:
                 stopLine = numLines
 
@@ -85,7 +91,7 @@ def roiLineProfilePool(imgData : np.ndarray, lineWidth : int):
                 logger.info(f'line:{line} imageSlice:{imageSlice.shape}')
 
             workerParams = (imageSlice, None)
-            
+
             result = pool.apply_async(roiLineProfileWorker, workerParams)
             result_objs.append(result)
 
@@ -96,11 +102,10 @@ def roiLineProfilePool(imgData : np.ndarray, lineWidth : int):
     # building only takes like 1 ms
     _outImg = np.empty_like(imgData)
     for _resultIdx, result in enumerate(results):
-        _outImg[:,_resultIdx] = result
+        _outImg[:, _resultIdx] = result
 
     stopTime = time.time()
     logger.info(f'  took {round(stopTime-startTime,3)} seconds')
-
 
     # results is a list of intensity profiles
 
@@ -111,16 +116,17 @@ def roiLineProfilePool(imgData : np.ndarray, lineWidth : int):
 
     return _outImg
 
+
 def testPool():
     import tifffile
-    
+
     # path = '/Users/cudmore/Dropbox/data/colin/sanAtp/ISAN Linescan 1.tif'
-    
+
     # a kym with negative peaks
     path = '/Users/cudmore/Dropbox/data/colin/sanAtp/SSAN Linescan 8.tif'
-    
+
     imgData = tifffile.imread(path)
-    
+
     imgData = np.rot90(imgData)
 
     imgData = imgData[:, :, 1]
@@ -141,6 +147,7 @@ def testPool():
 
     # print('results[0]')
     # print(results[0])
+
 
 if __name__ == '__main__':
     testPool()

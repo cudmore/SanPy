@@ -21,7 +21,8 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
-import sanpy
+# import sanpy
+from sanpy.bAnalysis_ import bAnalysis
 from sanpy.interface.plugins import sanpyPlugin
 
 from sanpy.sanpyLogger import get_logger
@@ -1287,7 +1288,7 @@ class fftPlugin(sanpyPlugin):
         print("  model data:", data.shape)
 
         modelDict = {"sweepX": t, "sweepY": data, "mode": "I-Clamp"}
-        self._ba = sanpy.bAnalysis(fromDict=modelDict)
+        self._ba = bAnalysis(fromDict=modelDict)
 
         # self.modelDetect()
 
@@ -1458,7 +1459,7 @@ class fftPlugin(sanpyPlugin):
             self.replotFilter()
 
     def slot_switchFile(
-        self, ba: sanpy.bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
+        self, ba: bAnalysis, rowDict: Optional[dict] = None, replot: bool = True
     ):
         super().slot_switchFile(ba, rowDict, replot=False)
 
@@ -1487,7 +1488,7 @@ def test_fft():
     if 0:
         # abf data
         path = "/Users/cudmore/Sites/SanPy/data/fft/2020_07_07_0000.abf"
-        ba = sanpy.bAnalysis(path)
+        ba = bAnalysis(path)
 
         x = ba.fileLoader.sweepX
         y = ba.fileLoader.sweepY
@@ -1661,7 +1662,7 @@ def testFilter():
 
 def main():
     path = "/home/cudmore/Sites/SanPy/data/19114001.abf"
-    ba = sanpy.bAnalysis(path)
+    ba = bAnalysis(path)
     ba.spikeDetect()
     print(ba.numSpikes)
 

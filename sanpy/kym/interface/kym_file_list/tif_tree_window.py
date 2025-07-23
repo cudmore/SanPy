@@ -9,9 +9,21 @@ to browse and select .tif files from a folder structure.
 import sys
 import os
 from PyQt5.QtWidgets import (
-    QApplication, QMainWindow, QVBoxLayout, QWidget, QLabel, QPushButton, QFileDialog, QCheckBox, QMenuBar, QMenu, QAction, QHBoxLayout, QTabWidget, QMessageBox
+    QMainWindow,
+    QVBoxLayout,
+    QWidget,
+    QLabel,
+    QPushButton,
+    QFileDialog,
+    QCheckBox,
+    QMenuBar,
+    QMenu,
+    QAction,
+    QHBoxLayout,
+    QTabWidget,
+    QMessageBox,
 )
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtGui
 from PyQt5.QtCore import Qt
 from functools import partial
 import sip
@@ -23,9 +35,13 @@ from sanpy.kym.interface.kym_file_list.tif_tree_widget import TifTreeWidget
 from sanpy.kym.interface.kym_file_list.tif_table_view import TifTableView
 from sanpy.kym.interface.preferences_dialog import PreferencesDialog
 from sanpy.kym.interface.preferences_manager import preferences_manager
+from sanpy.kym.interface.tif_pool_scatter import ScatterWidget
 
-from sanpy.kym.logger import get_logger
+from sanpy.sanpyLogger import get_logger
+
+
 logger = get_logger(__name__)
+
 
 def yesNoCancelDialog(message, informativeText=None):
     """Simple yes/no/cancel dialog to avoid importing from sanpy.interface.bDialog."""
@@ -35,113 +51,218 @@ def yesNoCancelDialog(message, informativeText=None):
     if informativeText is not None:
         msg.setInformativeText(informativeText)
     msg.setWindowTitle(message)
-    msg.setStandardButtons(
-        QMessageBox.Yes
-        | QMessageBox.No
-        | QMessageBox.Cancel
-    )
+    msg.setStandardButtons(QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel)
     retval = msg.exec_()
     return retval
 
+
+def get_folder_hierarchy_title(folder_path):
+    """
+    Extract parent and grandparent folder names for display in window title.
+    
+    Parameters
+    ----------
+    folder_path : str
+        Full path to the folder
+        
+    Returns
+    -------
+    str
+        Formatted title showing parent/grandparent folders, or just folder name if not enough levels
+    """
+    try:
+        # Split the path into components
+        path_parts = folder_path.split(os.sep)
+        
+        # Remove empty parts (can happen with leading/trailing separators)
+        path_parts = [part for part in path_parts if part]
+        
+        if len(path_parts) >= 3:
+            # We have enough levels: show grandparent/parent/current
+            grandparent = path_parts[-3]
+            parent = path_parts[-2]
+            current = path_parts[-1]
+            return f"{grandparent} / {parent} / {current}"
+        elif len(path_parts) == 2:
+            # Two levels: show parent/current
+            parent = path_parts[-2]
+            current = path_parts[-1]
+            return f"{parent} / {current}"
+        else:
+            # Single level or root: just show the folder name
+            return path_parts[-1] if path_parts else "Unknown"
+    except Exception:
+        # Fallback to just the folder name if anything goes wrong
+        return os.path.basename(folder_path)
+
+
 class TifTreeWindow(QMainWindow):
-    def __init__(self, sanPyApp : SanPyApp, path=None):
+    def __init__(self,
+                 sanPyApp: SanPyApp,
+                 path:str):
         """
         Parameters
         ----------
         sanPyApp : SanPyApp
             Allows access to app wide info such as options, file loaders, plugins
         path : str
-            Full path to folder with raw files (abf,csv,tif).
+            Full path to folder with raw files (tif).
         """
         super().__init__()
         self.setWindowTitle("TifTreeWindow")
         self.setGeometry(100, 100, 1000, 700)
-        
-        self._sanPyApp : SanPyApp = sanPyApp
-        self.path = path
-        
+
+        self._sanPyApp: SanPyApp = sanPyApp
+        self.path = path  # abb is this used?
+
         # Track open widgets: {widget_id: (widget_instance, label)}
         self.open_widgets = {}
         self.widget_counter = 0
         
-        # Default path
-        self.default_path = path
-        
+        # Track TifPoolScatter widget separately for checkable menu
+        self.tif_pool_scatter_widget = None
+
         # Create menu bar
         self.createMenuBar()
-        
+
         # Create central widget
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
-        
+
         # Create layout
         layout = QVBoxLayout(central_widget)
-        
+
         # Create controls
         self.createControls(layout)
-        
+
         # Create tab widget
         self.tab_widget = QTabWidget()
         layout.addWidget(self.tab_widget)
-        
+
         # Initialize widgets (will be created when folder is selected)
         self.tree_widget = None
         self.table_widget = None
         self.backend = None
-        
+
         # Connect signals
-        self.connectSignals()
-        
+        # self.connectSignals()
+
+        # Close window shortcut: platform-independent (Ctrl+W or Cmd+W)
+        shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Close), self)
+        shortcut.activated.connect(self.close)
+
         # Initialize with default path if it exists
-        if self.default_path and os.path.exists(self.default_path):
-            self.initializeWidgets(self.default_path)
+        if os.path.exists(self.path):
+            self.initializeWidgets(self.path)
         else:
-            self.statusBar().showMessage("No folder selected")
+            self.statusBar().showMessage(f"Folder not found: {self.path}")
+
+    def closeEvent(self, event):
+        logger.info('')
+        # check if we have any dirty kymRoiAnalysis
+        doCloseWindow = True
+        for widget_id, (widget, label) in self.open_widgets.items():
+            if widget.isDirty():
+                doCloseWindow = False
+                userResp = yesNoCancelDialog(
+                    f"{label} has analysis that is not saved.\nDo you want to save?"
+                )
+                if userResp == QtWidgets.QMessageBox.Yes:
+                    widget.saveAnalysis()
+                    widget.close()
+                    doCloseWindow = True
+                elif userResp == QtWidgets.QMessageBox.No:
+                    widget.close()
+                    doCloseWindow = True
+                else:  # userResp == QtWidgets.QMessageBox.Cancel:
+                    # cancel
+                    doCloseWindow = False
+                    break
+
+        if doCloseWindow:
+            self._sanPyApp.closeSanPyWindow(self)
 
     def createMenuBar(self):
-        """Create the menu bar with Windows menu."""
+        """Create the menu bar using SanPyApp menu structure."""
         menubar = self.menuBar()
         
-        # Create File menu
-        self.file_menu = QMenu("File", self)
-        menubar.addMenu(self.file_menu)
+        # Get the SanPyApp menu structure and insert our menus before Help
+        _helpAction = self._sanPyApp._buildMenus(menubar)
         
-        # Add Save table as... action
-        self.save_table_action = QAction("Save table as...", self)
-        self.save_table_action.setShortcut("Ctrl+S")
-        self.save_table_action.setStatusTip("Save current table data to CSV file")
-        self.save_table_action.setEnabled(False)  # Disabled until folder is loaded
-        self.save_table_action.triggered.connect(self.saveTableAs)
-        self.file_menu.addAction(self.save_table_action)
+        # Create our custom Kym menu
+        self._createKymMenu(menubar, _helpAction)
         
-        # Create Settings menu
-        self.settings_menu = QMenu("Settings", self)
-        menubar.addMenu(self.settings_menu)
-        
-        # Add Preferences action
-        self.preferences_action = QAction("Preferences...", self)
-        self.preferences_action.setShortcut("Ctrl+,")
-        self.preferences_action.setStatusTip("Open application preferences")
-        self.preferences_action.triggered.connect(self.showPreferences)
-        self.settings_menu.addAction(self.preferences_action)
-        
-        # Create Windows menu
-        self.windows_menu = QMenu("Windows", self)
-        menubar.addMenu(self.windows_menu)
+        # Create Windows menu (similar to SanPyWindow)
+        self._createWindowsMenu(menubar, _helpAction)
         
         # Update the Windows menu
         self.updateWindowsMenu()
 
-    def updateWindowsMenu(self):
-        """Update the Windows menu with current open widgets."""
-        # Robustness: Only update if menu and window are valid
-        if not hasattr(self, 'windows_menu') or self.windows_menu is None:
-            return
-        if sip.isdeleted(self.windows_menu):
-            return
+    def _createKymMenu(self, menubar: QMenuBar, helpAction: QAction):
+        """Create the Kym menu and insert it before Help."""
+        self.kym_menu = QMenu("Kym", self)
+        menubar.insertMenu(helpAction, self.kym_menu)
+        
+        # Add TifPoolScatter action (checkable) to the Kym menu
+        self.tif_pool_scatter_action = QAction("Tif Pool Scatter", self)
+        self.tif_pool_scatter_action.setStatusTip("Open/Close TifPoolScatter window")
+        self.tif_pool_scatter_action.setCheckable(True)
+        self.tif_pool_scatter_action.setEnabled(False)  # Will be enabled when backend is created
+        self.tif_pool_scatter_action.triggered.connect(self.toggleTifPoolScatter)
+        self.kym_menu.addAction(self.tif_pool_scatter_action)
+
+        # Add 'Show Folder In Finder' action
+        show_folder_action = QAction("Show Folder In Finder", self)
+        show_folder_action.setStatusTip("Show the current folder in the system file explorer")
+        show_folder_action.setEnabled(True)
+        def _show_folder_in_finder():
+            import subprocess, sys
+            folder_path = self.path
+            if os.path.exists(folder_path):
+                if sys.platform == "darwin":
+                    subprocess.run(["open", folder_path])
+                elif sys.platform == "win32":
+                    subprocess.run(["explorer", folder_path])
+                else:
+                    subprocess.run(["xdg-open", folder_path])
+        show_folder_action.triggered.connect(_show_folder_in_finder)
+        self.kym_menu.addSeparator()
+        self.kym_menu.addAction(show_folder_action)
+        
+        self.kym_menu.addSeparator()
+
+        # add a refresh folder action to the Kym menu
+        refresh_folder_action = QAction("Refresh Folder", self)
+        refresh_folder_action.setStatusTip("Refresh the file list from disk (add new and remove deleted tif files)")
+        refresh_folder_action.setEnabled(True)  # self.path always exists
+        refresh_folder_action.triggered.connect(self.refreshData)
+        self.kym_menu.addAction(refresh_folder_action)
+        
+        # add a 'Rebuild Folder Database' action to the Kym menu
+        rebuild_database_action = QAction("Rebuild Folder Database", self)
+        rebuild_database_action.setStatusTip("Force re-analysis of all files (expensive operation)")
+        rebuild_database_action.setEnabled(True)  # self.path always exists
+        rebuild_database_action.triggered.connect(self.forceReanalyzeAll)
+        self.kym_menu.addAction(rebuild_database_action)
+                
+    def _createWindowsMenu(self, menubar, helpAction):
+        """Create the Windows menu and insert it before Help."""
+        self.windows_menu = QMenu("Windows", self)
+        menubar.insertMenu(helpAction, self.windows_menu)
+        self.windows_menu.aboutToShow.connect(self._refreshWindowsMenu)
+
+    def _refreshWindowsMenu(self):
+        """Refresh the Windows menu with current open widgets."""
         self.windows_menu.clear()
+        
+        # Add SanPyApp's windows
+        self._sanPyApp.getWindowsMenu(self.windows_menu)
+        
+        self.windows_menu.addSeparator()
+        
+        # Add our open widgets
         if not self.open_widgets:
-            no_windows_action = QAction("No windows open", self)
+            no_windows_action = QAction("No kymograph windows open", self)
             no_windows_action.setEnabled(False)
             self.windows_menu.addAction(no_windows_action)
         else:
@@ -150,22 +271,43 @@ class TifTreeWindow(QMainWindow):
                 action.triggered.connect(partial(self.bringWidgetToFront, widget))
                 self.windows_menu.addAction(action)
 
+    def updateWindowsMenu(self):
+        """Update the Windows menu with current open widgets."""
+        # Robustness: Only update if menu and window are valid
+        if not hasattr(self, 'windows_menu') or self.windows_menu is None:
+            return
+        if sip.isdeleted(self.windows_menu):
+            return
+        self._refreshWindowsMenu()
+        
+        # Update TifPoolScatter action state (now in Kym menu)
+        if hasattr(self, 'tif_pool_scatter_action'):
+            # Update enabled state based on backend availability
+            self.tif_pool_scatter_action.setEnabled(hasattr(self, 'backend') and self.backend is not None)
+            # Update checked state based on widget existence
+            self.tif_pool_scatter_action.setChecked(self.tif_pool_scatter_widget is not None)
+
     def bringWidgetToFront(self, widget):
         """Bring the specified widget to the front."""
         if widget:
             widget.raise_()
             widget.activateWindow()
 
-    def addOpenWidget(self, widget, label, widget_type="Widget"):
+    def addOpenWidget(self,
+                      widget,
+                      label,
+                      widget_type="Widget"):
         """Add a widget to the tracking system."""
         self.widget_counter += 1
         widget_id = f"{widget_type} {self.widget_counter}"
         self.open_widgets[widget_id] = (widget, label)
         # Connect widget's closeEvent to remove from menu immediately
         orig_closeEvent = widget.closeEvent
+
         def new_closeEvent(ev):
             self.removeOpenWidget(widget_id)
             orig_closeEvent(ev)
+
         widget.closeEvent = new_closeEvent
         # Also connect destroyed for robustness
         widget.destroyed.connect(partial(self.removeOpenWidget, widget_id))
@@ -183,50 +325,26 @@ class TifTreeWindow(QMainWindow):
     def createControls(self, layout):
         """Create control buttons for the top toolbar."""
         # Create horizontal layout for buttons
+        return
+    
+        """
         button_layout = QHBoxLayout()
-        
-        # Load Folder button
-        self.select_folder_btn = QPushButton("Load Folder")
-        self.select_folder_btn.setToolTip("Select a folder containing .tif files to load")
-        button_layout.addWidget(self.select_folder_btn)
-        
+
         # Add some spacing
-        button_layout.addSpacing(10)
-        
-        # Refresh button
-        self.refresh_btn = QPushButton("Refresh")
-        self.refresh_btn.setToolTip("Refresh the file list from disk")
+        # button_layout.addSpacing(10)
+
+        # Refresh Folder button
+        self.refresh_btn = QPushButton("Refresh Folder")
+        self.refresh_btn.setToolTip("Refresh the file list from disk (add new and remove deleted tif files)")
         self.refresh_btn.setEnabled(False)  # Disabled until folder is loaded
         button_layout.addWidget(self.refresh_btn)
-        
-        # Save State button
-        self.save_state_btn = QPushButton("Save State")
-        self.save_state_btn.setToolTip("Save current selection state to CSV file")
-        self.save_state_btn.setEnabled(False)  # Disabled until folder is loaded
-        button_layout.addWidget(self.save_state_btn)
-        
+
         # Add stretch to push buttons to the left
         button_layout.addStretch()
-        
+
         # Add the button layout to the main layout
         layout.addLayout(button_layout)
-
-    def connectSignals(self):
-        """Connect button signals to slots."""
-        self.select_folder_btn.clicked.connect(self.selectFolder)
-        self.refresh_btn.clicked.connect(self.refreshData)
-        self.save_state_btn.clicked.connect(self.saveState)
-
-    def selectFolder(self):
-        """Open folder dialog and initialize tree widget."""
-        folder_path = QFileDialog.getExistingDirectory(
-            self, 
-            "Select Folder Containing .tif Files",
-            self.default_path if self.default_path and os.path.exists(self.default_path) else os.path.expanduser("~")
-        )
-        
-        if folder_path:
-            self.initializeWidgets(folder_path)
+        """
 
     def initializeWidgets(self, folder_path):
         """Initialize the tree and table widgets with the selected folder."""
@@ -235,36 +353,55 @@ class TifTreeWindow(QMainWindow):
             self.tree_widget.deleteLater()
         if self.table_widget:
             self.table_widget.deleteLater()
-        
+
         # Create backend
         # abb sort_by_grandparent=True for opening tif exported from olympus
-        self.backend = TifFileBackend(folder_path, exclude_folders=["sanpy-reports-pdf"], sort_by_grandparent=True)
+        self.backend = TifFileBackend(
+            folder_path,
+            exclude_folders=["sanpy-reports-pdf"],
+            sort_by_grandparent=True,
+            load_analysis_csv=False  # abb 20250714 turned off
+        )
+        # Save state CSV only if it does not already exist
+        state_csv_path = self.backend._get_state_filepath()
+        if not os.path.exists(state_csv_path):
+            self.backend.save_state()
         
+        # Create TiffPool for analysis data management
+        from sanpy.kym.tif_pool import TiffPool
+        self.backend._tifPool = TiffPool(
+            self.backend,
+            group_columns=['Cell ID', 'Condition', 'ROI Label', 'Channel'],
+            metadata_columns=['Region', 'Date', 'Repeat', 'Analysis Type', 'Channel', 'Polarity']
+        )
+        
+        # Intelligently initialize TiffPool data
+        self._initialize_tiff_pool_data()
+        
+        logger.info("Created TiffPool for analysis data management")
+
         # Create new tree widget (default to no third level)
-        self.tree_widget = TifTreeWidget(self.backend, show_third_level=False, parent=self)
-        
+        self.tree_widget = TifTreeWidget(
+            self.backend, show_third_level=False, parent=self
+        )
         # Create new table widget
         self.table_widget = TifTableView(self.backend, parent=self)
-        
+        self.table_widget.statusBarMessage.connect(self.statusBar().showMessage)
+
         # Add widgets to tab widget
         self.tab_widget.addTab(self.table_widget, "Table View")
         self.tab_widget.addTab(self.tree_widget, "Tree View")
-        
+
         # Update window title with folder name
-        folder_name = os.path.basename(folder_path)
+        folder_name = get_folder_hierarchy_title(folder_path)
         self.setWindowTitle(f"{folder_name}")
-        
+
         # Update status
         file_count = self.tree_widget.getFileCount()
-        self.statusBar().showMessage(f"Folder: {folder_name} | Found {file_count} .tif files")
-        
-        # Enable the toolbar buttons now that we have a backend
-        self.refresh_btn.setEnabled(True)
-        self.save_state_btn.setEnabled(True)
-        
-        # Enable the save table action
-        self.save_table_action.setEnabled(True)
-        
+        self.statusBar().showMessage(
+            f"Folder: {folder_name} | Found {file_count} .tif files"
+        )
+
         # Connect tree widget signals
         self.tree_widget.filesRefreshed.connect(self.onFilesRefreshed)
         self.tree_widget.fileSelected.connect(self.onFileSelected)
@@ -272,14 +409,57 @@ class TifTreeWindow(QMainWindow):
         self.tree_widget.fileToggled.connect(self.onFileToggled)
         self.tree_widget.fileDoubleClicked.connect(self.onFileDoubleClicked)
         self.tree_widget.plotRoisRequested.connect(self.onPlotRoisRequested)
-        self.tree_widget.stateSaved.connect(self.onStateSaved)
-        
+
         # Connect table widget signals (only connect to signals that exist)
         self.table_widget.fileSelected.connect(self.onFileSelected)
         self.table_widget.fileToggled.connect(self.onFileToggled)
         self.table_widget.fileDoubleClicked.connect(self.onFileDoubleClicked)
         self.table_widget.plotRoisRequested.connect(self.onPlotRoisRequested)
-        self.table_widget.loadKymAnalysisRequested.connect(self.onLoadKymAnalysisRequested)
+        
+        # Update Windows menu and enable TifPoolScatter action now that backend exists
+        self.updateWindowsMenu()
+
+    def _initialize_tiff_pool_data(self):
+        """
+        Intelligently initialize TiffPool data based on what's available.
+        
+        This method checks if main/mean CSV files exist and loads them.
+        If they don't exist but kymRoiAnalysis files are available, it generates
+        the pooled data from the analysis files.
+        """
+        tiff_pool = self.backend._tifPool
+        
+        # Check if main/mean CSV files exist
+        main_csv_exists = os.path.exists(tiff_pool._get_pooled_data_filepath())
+        mean_csv_exists = os.path.exists(tiff_pool._get_mean_data_filepath())
+        
+        if main_csv_exists and mean_csv_exists:
+            logger.info("Found existing TiffPool CSV files - loaded successfully")
+            return
+        
+        # Check if we have any kymRoiAnalysis files available
+        analysis_files_exist = False
+        for idx, row in self.backend.df.iterrows():
+            kym_analysis = self.backend.get_kym_roi_analysis(idx)
+            if kym_analysis is not None:
+                analysis_files_exist = True
+                break
+        
+        if analysis_files_exist:
+            logger.info("No TiffPool CSV files found, but kymRoiAnalysis files exist - generating pooled data")
+            tiff_pool.pool_all_analysis()
+            
+            # Verify that data was generated and saved
+            master_count = len(tiff_pool.get_master_dataframe())
+            mean_count = len(tiff_pool.get_df_mean())
+            logger.info(f"After pooling: master_df has {master_count} rows, dfMean has {mean_count} rows")
+            
+            # Check if CSV files were created
+            main_csv_exists = os.path.exists(tiff_pool._get_pooled_data_filepath())
+            mean_csv_exists = os.path.exists(tiff_pool._get_mean_data_filepath())
+            logger.info(f"CSV files created: main={main_csv_exists}, mean={mean_csv_exists}")
+        else:
+            logger.info("No TiffPool CSV files or kymRoiAnalysis files found - TiffPool ready for future analysis")
 
     def onFilesRefreshed(self, absolute_path_list):
         """Called when files are refreshed."""
@@ -302,236 +482,399 @@ class TifTreeWindow(QMainWindow):
 
     def onFileDoubleClicked(self, relative_path):
         """Called when a .tif file is double-clicked."""
-        logger.info(f"File double-clicked: {relative_path}")
+        logger.info(f"relative_path:{relative_path}")
         # You can add custom actions here, such as opening the file
         # subprocess.run(['open', relative_path])  # Uncomment to open files
-        
-        from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
-        from sanpy.kym.interface.kymRoiWidget import KymRoiWidget
-        
-        # Create a custom KymRoiWidget that uses our local dialog function
-        class CustomKymRoiWidget(KymRoiWidget):
-            def closeEvent(self, event):
-                logger.info('veto close if peak analysis is dirty')
-                acceptAndContinue = True
-                if self.isDirty():
-                    logger.info('   kym peak analysis is dirty, prompt to save')
 
-                    userResp = yesNoCancelDialog(
-                        "There is analysis that is not saved.\nDo you want to save?"
-                    )
-                    if userResp == QtWidgets.QMessageBox.Yes:
-                        logger.warning('TODO: actually save kym roi peaks')
-                        self.saveAnalysis()
-                        acceptAndContinue = True
-                    elif userResp == QtWidgets.QMessageBox.No:
-                        acceptAndContinue = True
-                    else:  # userResp == QtWidgets.QMessageBox.Cancel:
-                        acceptAndContinue = False
-                
-                if acceptAndContinue:
-                    event.accept()
-                else:
-                    event.ignore()
-        
-        # Resolve the relative path to full path
-        if self.backend:
-            absolute_path = self.backend.resolve_path(relative_path)
-            logger.info(f"Resolved relative path '{relative_path}' to absolute path '{absolute_path}'")
-        else:
-            # Fallback if no backend available
-            absolute_path = relative_path
-            logger.warning(f"No backend available, using path as-is: {relative_path}")
-        
-        logger.info(f"creating widget: {absolute_path}")
-        
-        aKymRoiAnalysis = KymRoiAnalysis(absolute_path)
-        aWidget = CustomKymRoiWidget(aKymRoiAnalysis)
-        
+        # from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
+        from sanpy.kym.interface.kymRoiWidget import KymRoiWidget
+
+        # logger.info(f"creating widget: {relative_path}")
+
+        # Get KymRoiAnalysis with image data loaded (not just CSV analysis)
+        aKymRoiAnalysis = self.backend.get_kym_roi_analysis_with_image_data_by_path(relative_path)
+        if aKymRoiAnalysis is None:
+            logger.error(f"Failed to load KymRoiAnalysis with image data for: {relative_path}")
+            return
+            
+        aWidget = KymRoiWidget(aKymRoiAnalysis)
+
+        aWidget.signalAnalysisSaved.connect(self.slot_analysisSaved)
+        # Connect to ROI label change signal with the widget instance
+        aWidget.signalRoiLabelChanged.connect(lambda old_label, new_label, widget=aWidget: self.slot_roiLabelChanged(old_label, new_label, widget))
+
+        # Update the table to show the loaded status
+        if aKymRoiAnalysis is not None:
+            filename = os.path.basename(relative_path)
+            self.table_widget.updateKymAnalysisStatus(filename)
+            # logger.info(f"Updated KymRoiAnalysis status for: {filename}")
+
         # Add widget to tracking system, use tif file name as label
         tif_label = os.path.basename(relative_path)
         widget_id = self.addOpenWidget(aWidget, tif_label, "KymRoi")
         aWidget.setWindowTitle(f"KymRoi - {tif_label}")
         aWidget.show()
 
+    def slot_analysisSaved(self, path):
+        """Called when analysis is saved."""
+        logger.info(f"path:{path}")
+
+        # Update the backend analysis data
+        backend_success = self.backend.update_analysis(path)
+        
+        # Update the TiffPool data
+        tiff_pool_success = self.backend._tifPool.on_analysis_saved(path)
+        
+        if backend_success and tiff_pool_success:
+            # Refresh the table view to show updated data
+            if self.table_widget:
+                self.table_widget.refresh_display()
+            logger.info(f"Successfully updated analysis for {path} and refreshed table and TiffPool")
+        else:
+            if not backend_success:
+                logger.warning(f"Failed to update backend analysis for {path}")
+            if not tiff_pool_success:
+                logger.warning(f"Failed to update TiffPool analysis for {path}")
+
+    def slot_roiLabelChanged(self, oldRoiLabel: str, newRoiLabel: str, kymRoiWidget):
+        """Called when an ROI label is changed in a KymRoiWidget."""
+        logger.info(f"ROI label changed from '{oldRoiLabel}' to '{newRoiLabel}' for widget: {kymRoiWidget}")
+        
+        # Get the TiffPool from the backend
+        if not hasattr(self, 'backend') or self.backend is None:
+            logger.warning("No backend available for ROI label update")
+            return
+            
+        tiff_pool = self.backend._tifPool
+        if tiff_pool is None:
+            logger.warning("No TiffPool available for ROI label update")
+            return
+        
+        # Get the TIF file path from the KymRoiWidget
+        tif_path = kymRoiWidget.path
+        logger.info(f"Updating ROI label for TIF file: {tif_path}")
+        
+        # Update the TiffPool dataframes with the new ROI label for this specific file
+        success = tiff_pool.update_roi_label_for_file(oldRoiLabel, newRoiLabel, tif_path)
+        
+        if success:
+            logger.info(f"Successfully updated ROI label in TiffPool from '{oldRoiLabel}' to '{newRoiLabel}' for file: {tif_path}")
+            
+            # Refresh the table view to show updated data
+            if self.table_widget:
+                self.table_widget.refresh_display()
+                
+            # Refresh the tree widget if it displays ROI information
+            if self.tree_widget:
+                self.tree_widget.refresh()
+                
+            # Refresh the TifPoolScatter widget if it's open
+            if self.tif_pool_scatter_widget is not None:
+                try:
+                    # Get updated dataframes from TiffPool
+                    master_df = tiff_pool.get_master_dataframe()
+                    mean_df = tiff_pool.get_df_mean()
+                    errors_df = tiff_pool.get_df_errors()
+                    
+                    # Update the ScatterWidget's data
+                    self.tif_pool_scatter_widget._masterDf = master_df
+                    self.tif_pool_scatter_widget._meanDf = mean_df
+                    self.tif_pool_scatter_widget._errorsDf = errors_df
+                    
+                    # Replot to show the updated data
+                    self.tif_pool_scatter_widget.replot()
+                    
+                    logger.info("Successfully refreshed TifPoolScatter widget with updated ROI labels")
+                except Exception as e:
+                    logger.warning(f"Failed to refresh TifPoolScatter widget: {e}")
+        else:
+            logger.warning(f"Failed to update ROI label in TiffPool from '{oldRoiLabel}' to '{newRoiLabel}' for file: {tif_path}")
+
     def onPlotRoisRequested(self, relative_path):
         """Called when user selects 'Plot ROIs' from context menu."""
         logger.info(f"Plot ROIs requested for: {relative_path}")
         # You can add custom actions here, such as opening a plotting window
-        
-    def onLoadKymAnalysisRequested(self, relative_path):
-        """Called when user selects 'Load Kym Analysis' from context menu."""
-        logger.info(f"Load Kym Analysis requested for: {relative_path}")
-        
-        try:
-            # Use the backend's lazy loading to get or create the KymRoiAnalysis
-            kym_analysis = self.backend.get_kym_roi_analysis_by_path(relative_path)
-            
-            if kym_analysis is not None:
-                # Get the filename for status update
-                filename = os.path.basename(relative_path)
-                # Update the table to show the loaded status
-                self.table_widget.updateKymAnalysisStatus(filename)
-                
-                # Show success message
-                self.statusBar().showMessage(f"KymRoiAnalysis loaded for: {filename}")
-                
-                logger.info(f"Successfully loaded KymRoiAnalysis for: {filename}")
-            else:
-                # Show error message
-                self.statusBar().showMessage(f"Failed to load KymRoiAnalysis for: {relative_path}")
-                
-                logger.error(f"Failed to load KymRoiAnalysis for: {relative_path}")
-                
-        except Exception as e:
-            logger.error(f"Error loading KymRoiAnalysis for {relative_path}: {e}")
-            self.statusBar().showMessage(f"Error loading KymRoiAnalysis: {str(e)}")
-
-    def onStateSaved(self, csv_filename):
-        """Update the status bar when state is saved."""
-        self.statusBar().showMessage(f"State saved to: {csv_filename}")
+        from sanpy.kym.kymRoiPlot_mpl import plotOneKym
+        kymRoiAnalysis = self.backend.get_kym_roi_analysis_by_path(relative_path)
+        fig, ax = plotOneKym(kymRoiAnalysis)
+        fig.show()
 
     def showSelectedFiles(self):
         """Show all currently checked files."""
         if not self.backend:
             return
-        
+
         checked_files = self.backend.get('files')
-        
+
         logger.info("\n=== Selected Files ===")
         for absolute_path in checked_files:
             logger.info(f"  {absolute_path}")
-        
+
         logger.info(f"\nTotal: {len(checked_files)} files selected")
 
     def refreshData(self):
-        """Refresh the data from disk."""
+        """Refresh the data from disk.
+        
+        Remove deleted and add new tif files from the backend
+        and refresh the tree and table widgets.
+        """
         if self.backend:
-            logger.info("Refreshing data from disk")
-            
+            logger.info("Refreshing data from disk (Add new and remove deleted)")
+
             # Refresh the backend
             self.backend.refresh()
-            
+
             # Refresh both widgets
             if self.tree_widget:
                 self.tree_widget.refresh()
             if self.table_widget:
                 self.table_widget.refresh()
-            
+
+            # Re-initialize TiffPool data after refresh
+            self._initialize_tiff_pool_data()
+
             # Update status
             file_count = self.backend.get('file_count')
-            folder_name = os.path.basename(self.backend.root_path)
-            self.statusBar().showMessage(f"Refreshed: {folder_name} | Found {file_count} .tif files")
-            
+            folder_name = get_folder_hierarchy_title(self.backend.root_path)
+            self.statusBar().showMessage(
+                f"Refreshed: {folder_name} | Found {file_count} .tif files"
+            )
+
             logger.info(f"Data refreshed. Found {file_count} .tif files")
         else:
             logger.warning("No backend available to refresh")
-    
-    def saveState(self):
-        """Save the current state to a CSV file."""
-        if self.backend:
-            logger.info("Saving current state")
-            
-            # Save state using the backend
-            csv_filepath = self.backend.save_state()
-            
-            if csv_filepath:
-                csv_filename = os.path.basename(csv_filepath)
-                self.statusBar().showMessage(f"State saved to: {csv_filename}")
-                logger.info(f"State saved to: {csv_filename}")
-            else:
-                self.statusBar().showMessage("Failed to save state")
-                logger.error("Failed to save state")
-        else:
-            logger.warning("No backend available to save state")
 
-    def saveTableAs(self):
-        """Save the current table data to a CSV file."""
-        if not self.table_widget:
-            self.statusBar().showMessage("No table widget available")
-            return
-        
-        # Get the table data
-        table_data = self.table_widget.getTableData()
-        
-        if table_data is None or len(table_data) == 0:
-            self.statusBar().showMessage("No table data to save")
-            return
-        
-        # Show current status
-        total_rows = len(table_data)
-        self.statusBar().showMessage(f"Saving {total_rows} rows of table data...")
-        
-        # Save the table data to a CSV file
-        csv_filepath = self.table_widget.saveTableDataToCSV(table_data)
-        
-        if csv_filepath:
-            csv_filename = os.path.basename(csv_filepath)
-            self.statusBar().showMessage(f"Table saved: {csv_filename} ({total_rows} rows)")
-            logger.info(f"Table saved to: {csv_filepath} ({total_rows} rows)")
+    def forceReanalyzeAll(self):
+        """Force re-analysis of all files (expensive operation)."""
+        if self.backend:
+            logger.info("Force re-analyzing all files")
+
+            # Show status message
+            self.statusBar().showMessage("Force re-analyzing all files...")
+
+            # Force re-analyze all files in the backend
+            self.backend.force_reanalyze_all()
+
+            # Refresh both widgets
+            if self.tree_widget:
+                self.tree_widget.refresh()
+            if self.table_widget:
+                self.table_widget.refresh()
+
+            # Re-initialize TiffPool data after force re-analyze
+            self._initialize_tiff_pool_data()
+
+            # Update status
+            file_count = self.backend.get('file_count')
+            folder_name = get_folder_hierarchy_title(self.backend.root_path)
+            self.statusBar().showMessage(
+                f"Force re-analyzed: {folder_name} | Found {file_count} .tif files"
+            )
+
+            logger.info(f"Force re-analyzed all files. Found {file_count} .tif files")
         else:
-            self.statusBar().showMessage("Save cancelled or failed")
-            logger.warning("Table save was cancelled or failed")
+            logger.warning("No backend available to force re-analyze")
 
     def showPreferences(self):
         """Show the preferences dialog."""
         dialog = PreferencesDialog(self)
-        
+
         # Connect the preferences saved signal
         dialog.preferencesSaved.connect(self.onPreferencesSaved)
-        
+
         # Show the dialog
         dialog.exec_()
-    
+
     def onPreferencesSaved(self, preferences):
         """Called when preferences are saved."""
         logger.info("Preferences saved")
-        self.statusBar().showMessage("Preferences saved successfully")
-        
+        self.statusBar().showMessage("Kym Preferences saved successfully")
+
         # You can add code here to apply preferences to the current application state
         # For example, if the Olympus Export preference changed, you might need to
         # reload the current data or update the UI accordingly
-        
+
         # Example: Check if Olympus Export preference changed
-        olympus_export = preferences.get('Load Kymograph', {}).get('olympus_export', False)
+        olympus_export = preferences.get('Load Kymograph', {}).get(
+            'olympus_export', False
+        )
         logger.info(f"Olympus Export setting: {olympus_export}")
-        
+
         # If you have a backend loaded, you might want to refresh it with new settings
         if self.backend:
             # You could add a method to the backend to reload with new preferences
             # self.backend.reloadWithPreferences(preferences)
             pass
 
+    def toggleTifPoolScatter(self):
+        """Toggle the TifPoolScatter window open/closed."""
+        if self.tif_pool_scatter_widget is None:
+            # Widget is not open, so open it
+            self.openTifPoolScatter()
+        else:
+            # Widget is open, so bring it to front
+            self.bringTifPoolScatterToFront()
+    
+    def bringTifPoolScatterToFront(self):
+        """Bring the TifPoolScatter widget to the front."""
+        if self.tif_pool_scatter_widget:
+            self.tif_pool_scatter_widget.raise_()
+            self.tif_pool_scatter_widget.activateWindow()
+            logger.info("Brought TifPoolScatter to front")
+    
+    def openTifPoolScatter(self):
+        """Open the TifPoolScatter window."""
+        if self.backend:
+            # Get the TiffPool from the backend
+            tiff_pool = self.backend._tifPool
+            
+            # Get the master and mean dataframes
+            master_df = tiff_pool.get_master_dataframe()
+            mean_df = tiff_pool.get_df_mean()
+            errors_df = tiff_pool.get_df_errors()
+            
+            # Check if we have data
+            if len(master_df) == 0 or len(mean_df) == 0:
+                raise Exception("No analysis data available. Please ensure files have been analyzed.")
+            
+            # Debug: Log available columns
+            logger.info(f"Available columns in mean_df: {list(mean_df.columns)}")
+            logger.info(f"Available columns in master_df: {list(master_df.columns)}")
+            
+            # Define hue list for the scatter widget - use columns that actually exist in the DataFrame
+            potential_hue_columns = [
+                'File Number',
+                'Cell ID',
+                'Condition',
+                'Epoch',
+                'Condition Epoch',
+                'Region',
+                'Date',
+                'ROI Label',
+                # 'ROI Label',  # Fallback for legacy data
+                'Polarity',
+            ]
+            
+            # Filter to only include columns that actually exist in the DataFrame
+            hue_list = [col for col in potential_hue_columns if col in mean_df.columns]
+            
+            # Ensure we have at least some hue options
+            if not hue_list:
+                logger.warning("No suitable hue columns found in DataFrame, using basic options")
+                hue_list = ['Cell ID', 'Condition']  # Fallback options
+            
+            # Define plot columns to show user - use columns that actually exist in the DataFrame
+            potential_plot_columns = [
+                'Cell ID',
+                'File Number',
+                'Tif File',
+                'Condition',
+                'Region',
+                'Date',
+                'ROI Label',
+                # 'ROI Number',  # Fallback for legacy data
+                'Polarity',
+                'Peak Inst Interval (s)',
+                'Peak Inst Freq (Hz)',
+                'Peak Height',
+                'FW (ms)',
+                'HW (ms)',
+                'Rise Time (ms)',
+                'Decay Time (ms)',
+                'Area Under Peak',
+                'Area Under Peak (Sum)',
+                'Number of Peaks',
+                'fit_tau',
+                'fit_tau1',
+            ]
+            
+            # Filter to only include columns that actually exist in the DataFrame
+            plot_columns = [col for col in potential_plot_columns if col in mean_df.columns]
+            
+            # Create the ScatterWidget
+            scatter_widget = ScatterWidget(
+                master_df,
+                mean_df,
+                xStat='Region',
+                yStat='Peak Inst Freq (Hz)',
+                defaultPlotType='Swarm + Mean + SEM',
+                hueList=hue_list,
+                defaultHue='Condition',
+                imgFolder=None,
+                plotColumns=plot_columns,
+                errorsDf=errors_df,
+            )
+            
+            # Set window title
+            folder_name = get_folder_hierarchy_title(self.backend.root_path)
+            scatter_widget.setWindowTitle(f"TifPoolScatter - {folder_name}")
+            
+            # Store reference to TifPoolScatter widget
+            self.tif_pool_scatter_widget = scatter_widget
+            
+            # Connect widget's closeEvent to handle cleanup
+            orig_closeEvent = scatter_widget.closeEvent
+            def new_closeEvent(ev):
+                self.tif_pool_scatter_widget = None
+                # Update menu checked state
+                if hasattr(self, 'tif_pool_scatter_action'):
+                    self.tif_pool_scatter_action.setChecked(False)
+                orig_closeEvent(ev)
+            scatter_widget.closeEvent = new_closeEvent
+            
+            # Also connect destroyed for robustness
+            scatter_widget.destroyed.connect(self._on_tif_pool_scatter_destroyed)
+            
+            scatter_widget.show()
+            logger.info(f"Opened TifPoolScatter window with {len(master_df)} master rows and {len(mean_df)} mean rows")
+        else:
+            logger.warning("No backend available to open TifPoolScatter")
+            QMessageBox.warning(self, "Error", "No backend available. Please load a folder first.")
+    
+    def _on_tif_pool_scatter_destroyed(self):
+        """Called when TifPoolScatter widget is destroyed."""
+        self.tif_pool_scatter_widget = None
+        # Update menu checked state
+        if hasattr(self, 'tif_pool_scatter_action'):
+            self.tif_pool_scatter_action.setChecked(False)
+
+
 def main():
     """Main function to run the example."""
     # Set dark theme before creating QApplication
     try:
         import qdarktheme
+
         qdarktheme.enable_hi_dpi()
     except ImportError:
         print("qdarktheme not available, using default theme")
-    
+
     from sanpy.interface.sanpy_app import SanPyApp
+
     sanPyApp = SanPyApp(sys.argv)
-    
+
     # app = QApplication(sys.argv)
-    
+
     # Apply dark theme after QApplication is created
     # try:
     #     import qdarktheme
     #     qdarktheme.setup_theme("dark")
     # except ImportError:
     #     pass
-    
+
     # Default path to use
-    default_path = "/Users/cudmore/Dropbox/data/colin/2025/mito-atp/mito-atp-20250623-RHC"
-    
+    default_path = (
+        # "/Users/cudmore/Dropbox/data/colin/2025/mito-atp/mito-atp-20250623-RHC"
+        '/Users/cudmore/Sites/SanPy/sanpy/kym/sample-data'
+    )
+
     # Create and show the main window
     window = TifTreeWindow(sanPyApp=sanPyApp, path=default_path)
     window.show()
-    
+
     # Run the application
     sys.exit(sanPyApp.exec_())
 
+
 if __name__ == "__main__":
-    main() 
+    main()
