@@ -3,6 +3,8 @@
 .vscode/
 data/
 pyinstaller/macos/_secrets.py
+pyinstaller/macos/dist_arm/
+pyinstaller/macos/dist_x86/
 sandbox/
 
 pyinstaller/monterey/tmp_env
