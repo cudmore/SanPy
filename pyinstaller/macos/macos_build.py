@@ -18,13 +18,8 @@ import subprocess
 import platform
 import site
 
-logger = logging.getLogger()
-
-logging.basicConfig(
-    # %(filename)s %(funcName)s() line:%(lineno)d
-    format="%(asctime)s - %(name)s - %(levelname)s - %(filename)s %(funcName)s() line:%(lineno)d %(message)s",
-    level=logging.INFO,
-)
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 def buildWithPyInstaller(output_dir : str,
                          #target_arch : str,
@@ -68,41 +63,6 @@ def buildWithPyInstaller(output_dir : str,
         ]
     )
 
-def makeZip(appPath : str, shortPlatformStr : str):
-    """Make a zip file from app.
-    
-    Parameters
-    ----------
-    appPath : str
-        Relative path to the app we are building. Like 'dist/SanPy.app'
-    shortPlatformStr : str
-        Append this with hyphen '-' to zip file name.
-        From ['intel', 'm1']
-
-    Returns
-    -------
-    zipPath : str
-        The relative path to the zip that we distribute
-
-    """
-    zipPath, _ = os.path.splitext(appPath)
-    zipPath += '-' + shortPlatformStr + '.zip'
-    logger.info(f'ditto is compressing {appPath} to {zipPath} ...')
-
-    # ditto -c -k --keepParent "dist/SanPy-Monterey-arm.app" dist/SanPy-Monterey-arm.zip
-    subprocess.run(
-        [
-            'ditto',
-            '-c',
-            '-k',
-            '--keepParent',
-            appPath,
-            zipPath
-        ]
-    )
-
-    return zipPath
-
 def _copy_provisioning_file_to_app(provisioning_file: str, output_dir: str, app_name: str) -> None:
     """Copies the provisioning file to the app bundle
     """
@@ -110,7 +70,9 @@ def _copy_provisioning_file_to_app(provisioning_file: str, output_dir: str, app_
     logger.info(f'  output_dir:{output_dir}')
     logger.info(f'  app_name:{app_name}')
 
-    app_path = os.path.join(output_dir, f"{app_name}.app")
+    # app_path = os.path.join(output_dir, f"{app_name}.app")
+    from build_utils import getAppPath
+    app_path = getAppPath()
 
     logger.info(f'  provisioning_file: {provisioning_file}')
     logger.info(f'  app_path: {app_path}')
@@ -432,8 +394,10 @@ def run_signing_commands(provisioning_profile,
 
     _codesign_verify(output_dir, app_name)  # verify the app we just signed
 
+
 def run():
-    app_name = 'SanPy'
+    from build_utils import getAppName
+    app_name = getAppName()
     
     # _platform in ['macOS-10.16-x86_64-i386-64bit', 'macOS-13.3.1-arm64-arm-64bit']
     _platform = platform.platform()
@@ -459,7 +423,8 @@ def run():
         logger.error(f'did not understand platform: {_platform}')
         return
 
-    appPath = os.path.join(output_dir, 'SanPy.app')
+    from build_utils import getAppPath
+    appPath = getAppPath()  # inncludes .app
     # the target SanPy.app bundle that we are building
 
     logger.info(f'  shortPlatformStr: {shortPlatformStr}')
@@ -482,10 +447,10 @@ def run():
     #_codesign_app_resources(entitlements, app_certificate, output_dir, app_name)
 
     # make a zip of the app, this is what we distribute
-    zipPath = makeZip(appPath, shortPlatformStr)
+    # zipPath = makeZip(appPath, None)
     
-    logger.info(f'DONE')
-    logger.info(f'  distribute this zip file: {zipPath} for target_arch: {shortPlatformStr}')
+    # logger.info(f'DONE')
+    # logger.info(f'  distribute this zip file: {zipPath} for target_arch: {shortPlatformStr}')
 
 if __name__ == '__main__':
     run()

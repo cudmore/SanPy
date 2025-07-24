@@ -36,6 +36,7 @@ from sanpy.kym.interface.kym_file_list.tif_table_view import TifTableView
 from sanpy.kym.interface.preferences_dialog import PreferencesDialog
 from sanpy.kym.interface.preferences_manager import preferences_manager
 from sanpy.kym.interface.tif_pool_scatter import ScatterWidget
+from sanpy.interface.progress_widget import ProgressWidget, get_progress_callback
 
 from sanpy.sanpyLogger import get_logger
 
@@ -134,6 +135,10 @@ class TifTreeWindow(QMainWindow):
 
         # Create controls
         self.createControls(layout)
+
+        # Create progress widget (hidden by default)
+        self.progress_widget = ProgressWidget(parent=self)
+        layout.addWidget(self.progress_widget)
 
         # Create tab widget
         self.tab_widget = QTabWidget()
@@ -447,7 +452,25 @@ class TifTreeWindow(QMainWindow):
         
         if analysis_files_exist:
             logger.info("No TiffPool CSV files found, but kymRoiAnalysis files exist - generating pooled data")
-            tiff_pool.pool_all_analysis()
+            
+            # Get total number of files for progress tracking
+            total_files = len(self.backend.df)
+            
+            # Create progress callback
+            progress_callback = get_progress_callback(
+                total_steps=total_files,
+                title="Generating TiffPool Data"
+            )
+            
+            # Start progress widget
+            self.progress_widget.start_task(
+                title="Generating TiffPool Data",
+                total_steps=total_files,
+                initial_message=f"Found {total_files} files to process..."
+            )
+            
+            # Run the analysis with progress tracking
+            tiff_pool.pool_all_analysis(progress_callback=progress_callback)
             
             # Verify that data was generated and saved
             master_count = len(tiff_pool.get_master_dataframe())

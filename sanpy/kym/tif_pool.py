@@ -918,7 +918,7 @@ class TiffPool:
         df_to_export.to_csv(filepath, index=False)
         logger.info(f"Exported {len(df_to_export)} mean rows to: {filepath}")
 
-    def pool_all_analysis(self):
+    def pool_all_analysis(self, progress_callback=None):
         """Pool analysis results from all files in the backend using lazy KymRoiAnalysis loading."""
         logger.info("Pooling analysis results from all files...")
         all_results = []
@@ -926,8 +926,17 @@ class TiffPool:
         if df is None or len(df) == 0:
             logger.warning("No files found in backend.")
             return
+            
+        total_files = len(df)
+        if progress_callback:
+            progress_callback.update(0, f"Starting analysis of {total_files} files...")
         for idx, row in df.iterrows():
             rel_path = row['relative_path']
+            
+            # Update progress
+            if progress_callback:
+                progress_callback.update(idx + 1, f"Processing file {idx + 1}/{total_files}: {Path(rel_path).name}")
+                
             kym_analysis = self.tif_file_backend.get_kym_roi_analysis(idx)
             if kym_analysis is None:
                 continue
@@ -999,7 +1008,10 @@ class TiffPool:
         else:
             logger.warning("No master data to create dfMean from")
         
-        logger.info(f"Pooling complete. Master DataFrame has {len(self.master_df)} rows.")
+        if progress_callback:
+            progress_callback.complete(f"Pooling complete. Master DataFrame has {len(self.master_df)} rows.")
+        else:
+            logger.info(f"Pooling complete. Master DataFrame has {len(self.master_df)} rows.")
 
     def update_from_analysis(self, tif_path: str) -> bool:
         """Update pool with analysis results from a specific file.

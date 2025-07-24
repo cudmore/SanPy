@@ -6,19 +6,13 @@ Submit a zip of the app for notarize
 if it is successful then zip the app into the final zip we will distribute.
 """
 
-import logging
 import os
 import sys
 import subprocess
-#import argparse
 
-logger = logging.getLogger()
-
-logging.basicConfig(
-    # %(filename)s %(funcName)s() line:%(lineno)d
-    format="%(asctime)s - %(name)s - %(levelname)s - %(filename)s %(funcName)s() line:%(lineno)d %(message)s",
-    level=logging.INFO,
-)
+from build_utils import getAppPath, makeZip
+from sanpy.sanpyLogger import get_logger
+logger = get_logger(__name__)
 
 from _secrets import email
 from _secrets import team_id
@@ -27,8 +21,6 @@ from _secrets import app_password
 PROD_MACOS_NOTARIZATION_APPLE_ID = email
 PROD_MACOS_NOTARIZATION_TEAM_ID = team_id
 PROD_MACOS_NOTARIZATION_PWD = app_password
-
-#app_path = os.path.join('dist_x86', 'SanPy.app')
 
 '''
     Goals
@@ -57,27 +49,22 @@ ISSUER_UUID = 'c055ca8c-e5a8-4836-b61d-aa5794eeb3f4'
 xcrun notarytool history --key PATH_TO_KEY --key-id KEY_ID -i ISSUER_UUID
 '''
 
-def run(dist : str):
+def run():
     """
     dist : str
         Either dist_arm or dist_x86
     """
 
-    app_path = os.path.join(dist, 'SanPy.app')
+    app_path = getAppPath()  # includes .app
 
-    doZip = True
-    if doZip:
-        # this make 'SanPy-pre-notarize.zip'
-        zipPath = makeZip(app_path, 'pre-notarize')
-        print('zipPath:', zipPath)
-    else:
-        zipPath = dist + '/SanPy-pre-notarize.zip'
+    # this make 'SanPy-pre-notarize.zip'
+    zipPath_preNotarize = makeZip(app_path, 'pre-notarize')
 
-    logger.info(f'zipPath: {zipPath}')
+    logger.info(f'zipPath_preNotarize: {zipPath_preNotarize}')
 
     # check that the zip path exists
-    if not os.path.isfile(zipPath):
-        logger.error(f'Did not find zip file to send to notarize: {zipPath}')
+    if not os.path.isfile(zipPath_preNotarize):
+        logger.error(f'Did not find zip file to send to notarize: {zipPath_preNotarize}')
         return
     
     # xcrun notarytool store-credentials "my-notarytool-profile-oct2023" --apple-id "$PROD_MACOS_NOTARIZATION_APPLE_ID" --team-id "$PROD_MACOS_NOTARIZATION_TEAM_ID" --password "$PROD_MACOS_NOTARIZATION_PWD"
@@ -108,13 +95,13 @@ def run(dist : str):
 
     # xcrun notarytool submit "dist_x86/SanPy-pre-notarize.zip" --keychain-profile "my-notarytool-profile" --wait
     logger.info(f'submit to xcrun notarytool and wait for output of pass/fail ... need to wait ... like 10 minutes')
-    logger.info(f'  zipPath:{zipPath}')
+    logger.info(f'  zipPath:{zipPath_preNotarize}')
     logger.info(f'  --keychain-profile "my-notarytool-profile-oct2023"')
 
     _result = subprocess.run(
         [
             "xcrun", "notarytool",
-            "submit", zipPath,  # like "dist_x86/SanPy-pre-notarize.zip"
+            "submit", zipPath_preNotarize,  # like "dist_x86/SanPy-pre-notarize.zip"
             "--keychain-profile", "my-notarytool-profile-oct2023",
             "--wait"
         ],
@@ -168,16 +155,16 @@ def run(dist : str):
 
     # finally, create the final zip to upload to GitHub release
     
-    if dist == 'dist_arm':
-        _platform = 'macOS-arm'
-    elif dist == 'dist_x86':
-        _platform = 'macOS-x86'
+    # if dist == 'dist_arm':
+    #     _platform = 'macOS-arm'
+    # elif dist == 'dist_x86':
+    #     _platform = 'macOS-x86'
 
 
-    zipPath = makeZip(app_path, _platform)
+    zipPath = makeZip(app_path, None)
     logger.info(f'Upload this zip to the GitHub release zipPath: {zipPath}')
 
-def makeZip(appPath : str, shortPlatformStr : str):
+def _oldmakeZip(appPath : str, shortPlatformStr : str):
     """Make a zip file from app.
     
     Parameters
@@ -235,14 +222,4 @@ def _store_credentials():
     )
 
 if __name__ == '__main__':
-    [myFile, dist] = sys.argv
-    
-    print(sys.argv)
-
-    print('dist:', dist)
-
-    if not dist in ['dist_arm', 'dist_x86']:
-        logger.error(f'invalid dist folder. Expecting dist_arm or dist_x86')
-    else:
-        run(dist)
-        # _store_credentials()
+    run()

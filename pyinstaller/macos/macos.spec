@@ -5,8 +5,20 @@
 import sanpy
 VERSION = sanpy.__version__
 
+# Add current directory to Python path to find build_utils
+import sys
+import os
+sys.path.insert(0, os.getcwd())
+
+from build_utils import getAppName, getAppPath, getDistFolder
+
+app_name = getAppName()
+dist_folder = getDistFolder()
+app_name_with_app_extension = app_name+'.app'
+
 import platform
 _platform = platform.machine()
+
 
 binaries = None
 
@@ -57,7 +69,8 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='SanPy',
+    #name='SanPy',
+    name=app_name,
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -83,11 +96,12 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='SanPy',
+    #name='SanPy',
+    name=app_name,
 )
 app = BUNDLE(
     coll,
-    name='SanPy.app',
+    name=app_name_with_app_extension,
     icon='sanpy_transparent.icns',
     bundle_identifier=None,
     version=VERSION,
