@@ -7,7 +7,8 @@ pyinstaller/macos/dist_arm/
 pyinstaller/macos/dist_x86/
 sandbox/
 
-pyinstaller/monterey/tmp_env
+# local sanpy version, never push
+sanpy/_version.py
 
 build/
 dist/
