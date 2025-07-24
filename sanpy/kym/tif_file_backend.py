@@ -324,15 +324,6 @@ class TifFileBackend:
             tooltip="Check to include this file in analysis/export operations",
         ),
         # Acquisition parameters (populated from KymRoiAnalysis)
-        'msPerLine': ColumnConfig(
-            display_name='ms/Line',
-            column_type=float,
-            width=100,
-            backend_field='msPerLine',
-            table_visible=True,
-            default_value=None,  # Unknown until analysis
-            tooltip="Time duration for each line scan (milliseconds)",
-        ),
         'umPerPixel': ColumnConfig(
             display_name='μm/Pixel',
             column_type=float,
@@ -341,6 +332,15 @@ class TifFileBackend:
             table_visible=True,
             default_value=None,  # Unknown until analysis
             tooltip="Spatial resolution in micrometers per pixel",
+        ),
+        'msPerLine': ColumnConfig(
+            display_name='ms/Line',
+            column_type=float,
+            width=100,
+            backend_field='msPerLine',
+            table_visible=True,
+            default_value=None,  # Unknown until analysis
+            tooltip="Time duration for each line scan (milliseconds)",
         ),
         'numChannels': ColumnConfig(
             display_name='Channels',
@@ -369,24 +369,26 @@ class TifFileBackend:
             default_value=None,  # Unknown until analysis
             tooltip="Width of the image in pixels",
         ),
-        'numLineScans': ColumnConfig(
-            display_name='Line Scans',
-            column_type=int,
-            width=100,
-            backend_field='numLineScans',
-            table_visible=True,
-            default_value=None,  # Unknown until analysis
-            tooltip="Number of line scans in the acquisition",
-        ),
-        'pixelsPerLine': ColumnConfig(
-            display_name='Pixels/Line',
-            column_type=int,
-            width=100,
-            backend_field='pixelsPerLine',
-            table_visible=True,
-            default_value=None,  # Unknown until analysis
-            tooltip="Number of pixels per line scan",
-        ),
+        # abb removed 20250724
+        # 'numLineScans': ColumnConfig(
+        #     display_name='Line Scans',
+        #     column_type=int,
+        #     width=100,
+        #     backend_field='numLineScans',
+        #     table_visible=True,
+        #     default_value=None,  # Unknown until analysis
+        #     tooltip="Number of line scans in the acquisition",
+        # ),
+        # 'pixelsPerLine': ColumnConfig(
+        #     display_name='Pixels/Line',
+        #     column_type=int,
+        #     width=100,
+        #     backend_field='pixelsPerLine',
+        #     table_visible=True,
+        #     default_value=None,  # Unknown until analysis
+        #     tooltip="Number of pixels per line scan",
+        # ),
+
         # Hidden columns (for internal use)
         'relative_path': ColumnConfig(
             display_name='Relative Path',

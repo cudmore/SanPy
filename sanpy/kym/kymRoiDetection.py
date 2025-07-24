@@ -383,6 +383,9 @@ class KymRoiDetection:
 
     def getParam(self, key):
         if key not in self._dict.keys():
+            # raise exception to debug
+            raise KeyError(f'Did not find key:"{key}"')
+        
             logger.error(f'Did not find key:"{key}"')
             logger.error(f'  Available keys are {self._dict.keys()}')
             return

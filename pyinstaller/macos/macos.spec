@@ -31,8 +31,9 @@ binaries = None
 #    binaries = [('/Users/cudmore/opt/miniconda3/envs/sanpy-pyinstaller-i386/lib/python3.11/site-packages/tables/libblosc2.dylib', 'tables')]
 
 # x86, used with 'tables'
-if _platform == 'x86_64':
-    binaries = [('/Users/cudmore/opt/miniconda3/envs/sanpy-pyinstaller-i386/lib/python3.11/site-packages/tables/libblosc2.dylib', 'tables')]
+# abb removed 20250724 -->>> this is bad because conda env and python version are hard coded
+#if _platform == 'x86_64':
+#    binaries = [('/Users/cudmore/opt/miniconda3/envs/sanpy-pyinstaller-osx-64/lib/python3.12/site-packages/tables/libblosc2.dylib', 'tables')]
 
 hiddenimports=['pkg_resources']
 block_cipher = None

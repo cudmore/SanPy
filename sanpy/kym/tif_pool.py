@@ -926,76 +926,45 @@ class TiffPool:
         if df is None or len(df) == 0:
             logger.warning("No files found in backend.")
             return
-            
         total_files = len(df)
         if progress_callback:
             progress_callback.update(0, f"Starting analysis of {total_files} files...")
+        processed = 0
         for idx, row in df.iterrows():
             rel_path = row['relative_path']
-            
-            # Update progress
-            if progress_callback:
-                progress_callback.update(idx + 1, f"Processing file {idx + 1}/{total_files}: {Path(rel_path).name}")
-                
             kym_analysis = self.tif_file_backend.get_kym_roi_analysis(idx)
             if kym_analysis is None:
                 continue
+            processed += 1
+            # Update progress
+            if progress_callback:
+                progress_callback.update(processed, f"Processing file {processed}/{total_files}: {Path(rel_path).name}")
             for channel in range(kym_analysis.numChannels):
                 # Intensity
                 intensity_df = kym_analysis.getDataFrame(channel, PeakDetectionTypes.intensity)
-                
                 if len(intensity_df) > 0:
-                    # Only add columns that don't already exist in the KymRoiAnalysis DataFrame
                     if 'Analysis Type' not in intensity_df.columns:
                         intensity_df['Analysis Type'] = 'Intensity'
-                    # Add Channel column - this is required for grouping
                     intensity_df['Channel'] = channel
-                    # Add file identification columns - use the relative_path from backend
                     intensity_df['Tif Rel Path'] = rel_path
                     intensity_df['TIF Filename'] = Path(rel_path).name
-                    
-                    # Add key metadata columns from TifFileBackend's COLUMN_CONFIG
                     intensity_df['Date'] = row['date']
                     intensity_df['Cell ID'] = row['cell_id']
                     intensity_df['Region'] = row['region']
                     intensity_df['Condition'] = row['condition']
                     intensity_df['Repeat'] = row['repeat']
-                                        
-                    # add polarity column from kymRoiAnalysis detection parameters
-                    # get polarit from each roi
                     for roi in kym_analysis.getRoiLabels():
-                        # roi = int(roi)
-                        polarity =kym_analysis.getDetectionParams(roi, PeakDetectionTypes.intensity, channel)['Polarity']
-                        # logger.info(f'roi:{roi}, polarity:{polarity}')
-                        # assign polarity column for 'ROI Name' = roi
+                        polarity = kym_analysis.getDetectionParams(roi, PeakDetectionTypes.intensity, channel)['Polarity']
                         intensity_df.loc[intensity_df['ROI Label'] == roi, 'Polarity'] = polarity
-
-                    # logger.info(f'intensity_df:{intensity_df['Polarity']}')
-
-                    #
                     all_results.append(intensity_df)
-
-                # Diameter (commented out for now)
-                # diameter_df = kym_analysis.getDataFrame(channel, PeakDetectionTypes.diameter)
-                # if len(diameter_df) > 0:
-                #     if 'Analysis Type' not in diameter_df.columns:
-                #         diameter_df['Analysis Type'] = 'Diameter'
-                #     # Note: 'Channel' column already exists in KymRoiAnalysis DataFrame
-                #     diameter_df['Tif Rel Path'] = rel_path
-                #     diameter_df['TIF Filename'] = os.path.basename(rel_path)
-                #     all_results.append(diameter_df)
         if all_results:
             self.master_df = pd.concat(all_results, ignore_index=True)
-            
-            # Debug: Log ROI Label data types after pooling
             if len(self.master_df) > 0 and 'ROI Label' in self.master_df.columns:
                 unique_roi_labels = self.master_df['ROI Label'].unique()
                 logger.info(f"After pooling: ROI Label data types: {[type(label) for label in unique_roi_labels]}")
                 logger.info(f"After pooling: Sample ROI labels: {unique_roi_labels[:5]}")
         else:
             self.master_df = pd.DataFrame()
-        
-        # Auto-save after pooling all analysis
         self._auto_save_pooled_data()
         
         # Refresh dfMean after updating master_df
@@ -1008,10 +977,11 @@ class TiffPool:
         else:
             logger.warning("No master data to create dfMean from")
         
+        _resultStr = f"Pooling complete. Master DataFrame has {len(self.master_df)} rows."
         if progress_callback:
-            progress_callback.complete(f"Pooling complete. Master DataFrame has {len(self.master_df)} rows.")
+            progress_callback.complete(_resultStr)
         else:
-            logger.info(f"Pooling complete. Master DataFrame has {len(self.master_df)} rows.")
+            logger.info(_resultStr)
 
     def update_from_analysis(self, tif_path: str) -> bool:
         """Update pool with analysis results from a specific file.

@@ -134,6 +134,10 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         self.switchChannel(self._currentChannel + 1)
 
+        # select the first kymRoi
+        # if len(self.roiList) > 0:
+        #     self.selectRoiFromLabel(list(self.roiList.keys())[0])
+
     # @property
     # def imgData(self) -> np.ndarray:
     #     """Get image data for one image channel.
@@ -406,6 +410,7 @@ class KymRoiImageWidget(QtWidgets.QWidget):
 
         Used by parent.
         """
+        logger.info(f'selectRoiFromLabel roiLabelStr:"{roiLabelStr}"')
         if roiLabelStr is not None:
             try:
                 pgRoi = self.roiList[roiLabelStr]

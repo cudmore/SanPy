@@ -80,6 +80,7 @@ class KymRoiWidget(QtWidgets.QMainWindow):
         shortcut = QtWidgets.QShortcut(QtGui.QKeySequence(QtGui.QKeySequence.Close), self)
         shortcut.activated.connect(self.close)
 
+        # abb this is not working, selects in image but not in intensity plot???
         # select the first roi
         # if self._kymRoiAnalysis.getRoiLabels():
         #     self._kymRoiImageWidget.selectRoiFromLabel(self._kymRoiAnalysis.getRoiLabels()[0])
@@ -224,16 +225,17 @@ class KymRoiWidget(QtWidgets.QMainWindow):
 
         If roi is None then deselect all.
         """
-        logger.info(f'channel:{channel} roi:"{roiLabel}"')
+        return
+        # logger.info(f'channel:{channel} roi:"{roiLabel}"')
 
         # 20250609 set image line scan slider
         # roi = self._kymRoiAnalysis.getRoi(roiLabel)
         # _detectParams = roi.getDetectionParams(channel, PeakDetectionTypes.intensity)
         # _divideLinesScan = _detectParams['Divide Line Scan']
-        _divideLinesScan = self._kymRoiAnalysis.getKymDetectionParam('Divide Line Scan')
-        logger.info(f'  _divideLinesScan:{_divideLinesScan}')
-        if _divideLinesScan is not None:
-            self._kymRoiImageWidget.setLineScanSlider(_divideLinesScan)
+        # _divideLinesScan = self._kymRoiAnalysis.getKymDetectionParam('Divide Line Scan')
+        # logger.info(f'  _divideLinesScan:{_divideLinesScan}')
+        # if _divideLinesScan is not None:
+        #     self._kymRoiImageWidget.setLineScanSlider(_divideLinesScan)
 
         # if roiLabel is not None:
         #     # set our detection params to the selected roi

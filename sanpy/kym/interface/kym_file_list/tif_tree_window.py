@@ -36,7 +36,7 @@ from sanpy.kym.interface.kym_file_list.tif_table_view import TifTableView
 from sanpy.kym.interface.preferences_dialog import PreferencesDialog
 from sanpy.kym.interface.preferences_manager import preferences_manager
 from sanpy.kym.interface.tif_pool_scatter import ScatterWidget
-from sanpy.interface.progress_widget import ProgressWidget, get_progress_callback
+from sanpy.interface.progress_widget.progress_widget import ProgressWidget, get_progress_callback, ProgressDialog
 
 from sanpy.sanpyLogger import get_logger
 
@@ -462,14 +462,16 @@ class TifTreeWindow(QMainWindow):
                 title="Generating TiffPool Data"
             )
             
-            # Start progress widget
-            self.progress_widget.start_task(
+            # Show modal progress dialog
+            progress_dialog = ProgressDialog(
                 title="Generating TiffPool Data",
                 total_steps=total_files,
-                initial_message=f"Found {total_files} files to process..."
+                parent=self,
+                show_cancel_button=True
             )
-            
-            # Run the analysis with progress tracking
+            progress_dialog.show()
+            from PyQt5.QtWidgets import QApplication
+            QApplication.processEvents()
             tiff_pool.pool_all_analysis(progress_callback=progress_callback)
             
             # Verify that data was generated and saved
@@ -481,6 +483,8 @@ class TifTreeWindow(QMainWindow):
             main_csv_exists = os.path.exists(tiff_pool._get_pooled_data_filepath())
             mean_csv_exists = os.path.exists(tiff_pool._get_mean_data_filepath())
             logger.info(f"CSV files created: main={main_csv_exists}, mean={mean_csv_exists}")
+            progress_dialog.status_label.setText("Pooling complete!")
+            progress_dialog.accept()
         else:
             logger.info("No TiffPool CSV files or kymRoiAnalysis files found - TiffPool ready for future analysis")
 
@@ -761,8 +765,8 @@ class TifTreeWindow(QMainWindow):
                 raise Exception("No analysis data available. Please ensure files have been analyzed.")
             
             # Debug: Log available columns
-            logger.info(f"Available columns in mean_df: {list(mean_df.columns)}")
-            logger.info(f"Available columns in master_df: {list(master_df.columns)}")
+            # logger.info(f"Available columns in mean_df: {list(mean_df.columns)}")
+            # logger.info(f"Available columns in master_df: {list(master_df.columns)}")
             
             # Define hue list for the scatter widget - use columns that actually exist in the DataFrame
             potential_hue_columns = [

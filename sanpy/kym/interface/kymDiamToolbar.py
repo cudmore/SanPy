@@ -44,11 +44,17 @@ class KymDiameterToolbar(QtWidgets.QGroupBox):
 
     def _updateDetectionParamGui(self):
         """Update GUI with current detection parameters."""
-        logger.warning('  this is triggering KeyError on "Detect Diameter"')
+
         self._blockSlots = True
+
         detectionDict = self._kymRoiDetection
 
         for name, widget in self._detectionControls.items():
+            if name not in detectionDict.keys():
+                # logger.warning(f'  this is triggering KeyError on "{name}"')
+                logger.error(f'did not find key:"{name}"')
+                # logger.error(f'  Available keys are {detectionDict.keys()}')
+                continue
             value = detectionDict[name]
             if isinstance(widget, QtWidgets.QCheckBox):
                 widget.setChecked(value)

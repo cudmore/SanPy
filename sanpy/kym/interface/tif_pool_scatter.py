@@ -489,7 +489,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
                 # Simple list for other columns
                 self._filterDict[column] = list(regions)
             
-            logger.info(f'self._filterDict:{self._filterDict}')
+            # logger.info(f'self._filterDict:{self._filterDict}')
 
     def _buildLeftToobar(self) -> QtWidgets.QWidget:
         # Create a widget to hold the layout

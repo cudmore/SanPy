@@ -57,9 +57,15 @@ def run():
 
     app_path = getAppPath()  # includes .app
 
+    logger.info(f'zipping app_path: {app_path}')
+    
     # this make 'SanPy-pre-notarize.zip'
     zipPath_preNotarize = makeZip(app_path, 'pre-notarize')
 
+    if zipPath_preNotarize is None:
+        logger.error(f'Did not find zip file to send to notarize: {zipPath_preNotarize}')
+        return
+    
     logger.info(f'zipPath_preNotarize: {zipPath_preNotarize}')
 
     # check that the zip path exists
@@ -94,15 +100,15 @@ def run():
     # )
 
     # xcrun notarytool submit "dist_x86/SanPy-pre-notarize.zip" --keychain-profile "my-notarytool-profile" --wait
-    logger.info(f'submit to xcrun notarytool and wait for output of pass/fail ... need to wait ... like 10 minutes')
-    logger.info(f'  zipPath:{zipPath_preNotarize}')
-    logger.info(f'  --keychain-profile "my-notarytool-profile-oct2023"')
+    logger.info(f'submit to xcrun notarytool ... wait for output of pass/fail')
+    logger.info(f'  -->> need to wait ... like 10 minutes')
+    # logger.info(f'  --keychain-profile "my-notarytool-profile-oct2023"')
 
     _result = subprocess.run(
         [
             "xcrun", "notarytool",
             "submit", zipPath_preNotarize,  # like "dist_x86/SanPy-pre-notarize.zip"
-            "--keychain-profile", "my-notarytool-profile-oct2023",
+            "--keychain-profile", "my-notarytool-profile-oct2025",
             "--wait"
         ],
         capture_output=True, text=True
@@ -161,43 +167,14 @@ def run():
     #     _platform = 'macOS-x86'
 
 
+    # delete zipPath_preNotarize
+    logger.info(f'deleting zipPath_preNotarize: {zipPath_preNotarize}')
+    if os.path.exists(zipPath_preNotarize):
+        os.remove(zipPath_preNotarize)
+
+    logger.info(f'zipping the app for distribution app_path:{app_path}')
     zipPath = makeZip(app_path, None)
     logger.info(f'Upload this zip to the GitHub release zipPath: {zipPath}')
-
-def _oldmakeZip(appPath : str, shortPlatformStr : str):
-    """Make a zip file from app.
-    
-    Parameters
-    ----------
-    appPath : str
-        Relative path to the app we are building. Like 'dist/SanPy.app'
-    shortPlatformStr : str
-        Append this with hyphen '-' to zip file name.
-        From ['intel', 'm1']
-
-    Returns
-    -------
-    zipPath : str
-        The relative path to the zip that we distribute
-
-    """
-    zipPath, _ = os.path.splitext(appPath)
-    zipPath += '-' + shortPlatformStr + '.zip'
-    logger.info(f'=== ditto is compressing {appPath} to {zipPath} ...')
-
-    # ditto -c -k --keepParent "dist/SanPy-Monterey-arm.app" dist/SanPy-Monterey-arm.zip
-    subprocess.run(
-        [
-            'ditto',
-            '-c',
-            '-k',
-            '--keepParent',
-            appPath,
-            zipPath
-        ]
-    )
-
-    return zipPath
 
 def _store_credentials():
     """

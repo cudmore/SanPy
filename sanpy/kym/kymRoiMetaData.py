@@ -5,8 +5,9 @@ import json
 import numpy as np
 import pandas as pd
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.kym.tif_info import TifInfo
 
+from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
 
@@ -26,13 +27,25 @@ class KymRoiMetaData:
 
         parentFolder1, parentFolder2, parentFolder3 = get_parent_folders(path)
 
+        # auto fill some values from TifInfo (parses filename)
+        tifInfo = TifInfo.from_filename(filename)
+
+        """
+            date: str
+            cellid: str
+            condition: str
+            region: str
+            repeat: int
+        """
         self._dict = {
             # user can edit these, see allowTextEdit()
             'Animal ID': '',
-            'Region': '',
+            'Region': tifInfo.region,
             'Cell Type': '',
-            'Cell ID': '',
-            'Condition': '',
+            'Cell ID': tifInfo.cellid,
+            'Condition': tifInfo.condition,
+            'Repeat': tifInfo.repeat,
+            'Date': tifInfo.date,
             'Note': '',
             # not editable
             'path': path,
@@ -55,6 +68,8 @@ class KymRoiMetaData:
             'Cell Type',
             'Cell ID',
             'Condition',
+            'Repeat',
+            'Date',
             'Note',
         ]
         """Keys that are editable in qt dialog.

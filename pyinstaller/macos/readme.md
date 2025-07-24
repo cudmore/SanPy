@@ -1,3 +1,8 @@
+# 20250724
+
+for pyinstaller, following this recipe:
+    https://gist.github.com/bpteague/750906b9a02094e7389427d308ba1002
+    
 This folder contains scripts to build macOS app(s) from Python source code using pyinstaller.
 
 My apple developer account is at https://developer.apple.com/account

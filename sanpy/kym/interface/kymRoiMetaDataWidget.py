@@ -48,6 +48,10 @@ class MetaDataWidget(QtWidgets.QWidget):
 
             _allowEdit = self._kymRoiMetaData.allowTextEdit(key)
             if _allowEdit:
+                # abb 20250724
+                if not isinstance(v, str):
+                    logger.warning(f'key:{key} v:{v} is unexpected type: {type(v)} ... casting to str')
+                    v = str(v)
                 aLineEdit = QtWidgets.QLineEdit(v)
                 aLineEdit.editingFinished.connect(
                     partial(self.on_text_edit, aLineEdit, key)
