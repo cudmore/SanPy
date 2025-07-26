@@ -28,7 +28,10 @@ class KymRoiMetaData:
         parentFolder1, parentFolder2, parentFolder3 = get_parent_folders(path)
 
         # auto fill some values from TifInfo (parses filename)
-        tifInfo = TifInfo.from_filename(filename)
+        tifInfo = TifInfo.from_filename(path)
+
+        if tifInfo.condition == '':
+            logger.warning(f'tifInfo.condition is empty for {path}')
 
         """
             date: str
@@ -47,6 +50,7 @@ class KymRoiMetaData:
             'Repeat': tifInfo.repeat,
             'Date': tifInfo.date,
             'Note': '',
+            'Accept': True,
             # not editable
             'path': path,
             'File Name': filename,
@@ -71,6 +75,7 @@ class KymRoiMetaData:
             'Repeat',
             'Date',
             'Note',
+            'Accept',
         ]
         """Keys that are editable in qt dialog.
         """
@@ -100,7 +105,7 @@ class KymRoiMetaData:
         """Return True if we show in Qt gui."""
         return key not in self._doNotShowInGui
 
-    def allowTextEdit(self, key):
+    def allowTextEdit(self, key: str) -> bool:
         """Return True if we edit a str in the gui."""
         return key in self._allowEdit
 

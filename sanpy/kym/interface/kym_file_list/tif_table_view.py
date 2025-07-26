@@ -200,7 +200,7 @@ class TifTableView(QWidget):
                 for col_idx, column in enumerate(self.visible_columns):
                     value = row[column]
 
-                    if column == 'show_file':
+                    if column == 'Accept':
                         # Create checkbox
                         checkbox = QCheckBox()
                         checkbox.setChecked(value)
@@ -226,32 +226,50 @@ class TifTableView(QWidget):
                         # Regular text item - format based on column type
                         column_type = self.backend.get_column_type(column)
                         
-                        # Format value based on its type
-                        if pd.isna(value) or value is None:
-                            display_value = ""
-                        elif column_type == int:
-                            # Ensure integers are displayed as integers, not floats
-                            try:
-                                display_value = str(int(value))
-                            except (ValueError, TypeError):
-                                display_value = str(value)
-                        elif column_type == float:
-                            # Format floats with appropriate precision
-                            try:
-                                float_value = float(value)
-                                # Use more precision for msPerLine since values are larger
-                                if column == 'msPerLine':
-                                    display_value = f"{float_value:.1f}"
-                                else:
-                                    display_value = f"{float_value:.2f}"
-                            except (ValueError, TypeError):
-                                display_value = str(value)
-                        elif column_type == bool:
-                            # Display booleans as Yes/No
-                            display_value = "Yes" if value else "No"
+                        # Special handling for editable columns - use KymRoiAnalysis metadata if available
+                        if self.backend.is_column_editable(column):
+                            kym_analysis = row['_kymRoiAnalysis']
+                            if kym_analysis is not None:
+                                try:
+                                    # Column names now directly match KymRoiMetaData keys
+                                    value_from_analysis = kym_analysis.header.getParam(column)
+                                    if value_from_analysis is not None:
+                                        display_value = str(value_from_analysis)
+                                    else:
+                                        display_value = str(value) if value is not None else ""
+                                except Exception as e:
+                                    logger.error(f"Failed to get {column} from KymRoiAnalysis metadata: {e}")
+                                    display_value = str(value) if value is not None else ""
+                            else:
+                                # KymRoiAnalysis not loaded, use backend value
+                                display_value = str(value) if value is not None else ""
                         else:
-                            # Default to string representation
-                            display_value = str(value)
+                            # Format value based on its type for other columns
+                            if pd.isna(value) or value is None:
+                                display_value = ""
+                            elif column_type == int:
+                                # Ensure integers are displayed as integers, not floats
+                                try:
+                                    display_value = str(int(value))
+                                except (ValueError, TypeError):
+                                    display_value = str(value)
+                            elif column_type == float:
+                                # Format floats with appropriate precision
+                                try:
+                                    float_value = float(value)
+                                    # Use more precision for msPerLine since values are larger
+                                    if column == 'msPerLine':
+                                        display_value = f"{float_value:.1f}"
+                                    else:
+                                        display_value = f"{float_value:.2f}"
+                                except (ValueError, TypeError):
+                                    display_value = str(value)
+                            elif column_type == bool:
+                                # Display booleans as Yes/No
+                                display_value = "Yes" if value else "No"
+                            else:
+                                # Default to string representation
+                                display_value = str(value)
                         
                         item = QTableWidgetItem(display_value)
                         item.setData(
@@ -259,8 +277,13 @@ class TifTableView(QWidget):
                         )  # Store relative path for reference
 
                         # Set edit flags based on backend column configuration
+                        # For editable columns, only allow editing if KymRoiAnalysis is loaded
                         if self.backend.is_column_editable(column):
-                            item.setFlags(item.flags() | Qt.ItemIsEditable)
+                            kym_analysis = row['_kymRoiAnalysis']
+                            if kym_analysis is not None:
+                                item.setFlags(item.flags() | Qt.ItemIsEditable)
+                            else:
+                                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                         else:
                             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
 
@@ -342,19 +365,19 @@ class TifTableView(QWidget):
             self.current_filters.get('condition')
             and self.current_filters['condition'] != "All Conditions"
         ):
-            df = df[df['condition'] == self.current_filters['condition']]
+            df = df[df['Condition'] == self.current_filters['condition']]
 
         if (
             self.current_filters.get('region')
             and self.current_filters['region'] != "All Regions"
         ):
-            df = df[df['region'] == self.current_filters['region']]
+            df = df[df['Region'] == self.current_filters['region']]
 
         if (
             self.current_filters.get('repeat')
             and self.current_filters['repeat'] != "All Repeats"
         ):
-            df = df[df['repeat'] == int(self.current_filters['repeat'])]
+            df = df[df['Repeat'] == int(self.current_filters['repeat'])]
 
         # Search filtering - COMMENTED OUT due to issues
         # if self.current_filters.get('search'):
@@ -389,19 +412,19 @@ class TifTableView(QWidget):
 
         # Update condition filter
         conditions = ['All Conditions'] + sorted(
-            self.backend.df['condition'].unique().tolist()
+            self.backend.df['Condition'].unique().tolist()
         )
         self.condition_filter.clear()
         self.condition_filter.addItems(conditions)
 
         # Update region filter
-        regions = ['All Regions'] + sorted(self.backend.df['region'].unique().tolist())
+        regions = ['All Regions'] + sorted(self.backend.df['Region'].unique().tolist())
         self.region_filter.clear()
         self.region_filter.addItems(regions)
 
         # Update repeat filter
         repeats = ['All Repeats'] + [
-            str(r) for r in sorted(self.backend.df['repeat'].unique().tolist())
+            str(r) for r in sorted(self.backend.df['Repeat'].unique().tolist())
         ]
         self.repeat_filter.clear()
         self.repeat_filter.addItems(repeats)
@@ -461,6 +484,28 @@ class TifTableView(QWidget):
         column = item.column()
         if not self.is_checkbox_column(column):
             if self.is_editable_column(column):
+                # Check if KymRoiAnalysis is loaded before allowing editing
+                file_path = item.data(Qt.UserRole)
+                if file_path:
+                    # Find the row in the backend DataFrame
+                    mask = self.backend.df['relative_path'] == file_path
+                    if mask.any():
+                        backend_row_idx = mask.idxmax()
+                        kym_analysis = self.backend.df.loc[backend_row_idx, '_kymRoiAnalysis']
+                        
+                        if kym_analysis is None:
+                            # KymRoiAnalysis not loaded, don't allow editing
+                            col_name = (
+                                self.visible_columns[column]
+                                if column < len(self.visible_columns)
+                                else "unknown"
+                            )
+                            status_msg = f"Cannot edit {col_name}: KymRoiAnalysis not loaded. Double-click the file to load it first."
+                            self.statusBarMessage.emit(status_msg)
+                            logger.warning(f"Cannot edit {col_name} for {file_path}: KymRoiAnalysis not loaded")
+                            return
+                
+                # KymRoiAnalysis is loaded, allow editing
                 self.table.editItem(item)
                 return
             file_path = item.data(Qt.UserRole)
@@ -487,14 +532,14 @@ class TifTableView(QWidget):
 
         column_name = self.visible_columns[column]
 
-        # Handle note changes
-        if column_name == 'note':
-            # Get the new note value
+        # Handle editable column changes
+        if self.backend.is_column_editable(column_name):
+            # Get the new value
             item = self.table.item(row, column)
             if item is None:
                 return
 
-            new_note = item.text()
+            new_value = item.text()
 
             # Get the relative_path directly from the item's data
             # This works correctly even when the table is sorted
@@ -503,22 +548,68 @@ class TifTableView(QWidget):
             if not relative_path:
                 return
 
-            # Update the note in the backend
-            self._updateNoteInBackend(relative_path, new_note)
+            # Check if KymRoiAnalysis is loaded for this file
+            # Find the row in the backend DataFrame
+            mask = self.backend.df['relative_path'] == relative_path
+            if not mask.any():
+                return
+                
+            backend_row_idx = mask.idxmax()
+            kym_analysis = self.backend.df.loc[backend_row_idx, '_kymRoiAnalysis']
+            
+            if kym_analysis is None:
+                # KymRoiAnalysis not loaded, don't allow editing
+                logger.warning(f"Cannot edit {column_name} for {relative_path}: KymRoiAnalysis not loaded")
+                # Revert the change by restoring the original value
+                self._populating_table = True
+                item.setText("")  # Clear the value since it's not loaded
+                self._populating_table = False
+                return
 
-            logger.info(f"Note updated for {relative_path}: {new_note}")
+            # Update the value in the backend and KymRoiAnalysis
+            self._updateEditableColumnInBackend(relative_path, column_name, new_value)
 
-    def _updateNoteInBackend(self, relative_path: str, note: str):
-        """Update the note for a specific file in the backend."""
+            logger.info(f"{column_name} updated for {relative_path}: {new_value}")
+
+    def _updateEditableColumnInBackend(self, relative_path: str, column_name: str, new_value: str):
+        """Update an editable column for a specific file in the backend and KymRoiAnalysis."""
         if self.backend.df is None:
             return
 
         # Find the row with this relative path
         mask = self.backend.df['relative_path'] == relative_path
         if mask.any():
-            # Update the note
-            self.backend.df.loc[mask, 'note'] = note
-            # Auto-save state after updating note
+            backend_row_idx = mask.idxmax()
+            
+            # Convert value to appropriate type based on column configuration
+            column_type = self.backend.get_column_type(column_name)
+            try:
+                if column_type == int:
+                    converted_value = int(new_value) if new_value.strip() else 0
+                elif column_type == float:
+                    converted_value = float(new_value) if new_value.strip() else 0.0
+                elif column_type == bool:
+                    converted_value = new_value.lower() in ('true', 'yes', '1', 'on')
+                else:
+                    converted_value = new_value
+            except (ValueError, TypeError) as e:
+                logger.error(f"Failed to convert value '{new_value}' to type {column_type} for column {column_name}: {e}")
+                return
+            
+            # Update the value in the backend DataFrame
+            self.backend.df.loc[backend_row_idx, column_name] = converted_value
+            
+            # Update the value in KymRoiAnalysis metadata if loaded
+            kym_analysis = self.backend.df.loc[backend_row_idx, '_kymRoiAnalysis']
+            if kym_analysis is not None:
+                try:
+                    # Column names now directly match KymRoiMetaData keys
+                    kym_analysis.header.setParam(column_name, converted_value)
+                    logger.debug(f"Updated {column_name} in KymRoiAnalysis metadata for {relative_path}")
+                except Exception as e:
+                    logger.error(f"Failed to update {column_name} in KymRoiAnalysis metadata for {relative_path}: {e}")
+            
+            # Auto-save state after updating
             self.backend._auto_save_state()
 
     def _onCheckboxChanged(self, file_path, state):
@@ -670,7 +761,7 @@ class TifTableView(QWidget):
     def getSelectedFiles(self) -> List[str]:
         """Get list of selected file paths."""
         selected_files = []
-        checkbox_col = self.get_column_index('show_file')
+        checkbox_col = self.get_column_index('Accept')
 
         # Iterate through all table rows and check checkbox state
         # Use Qt.UserRole data to get the correct file path regardless of sorting
@@ -827,3 +918,116 @@ class TifTableView(QWidget):
         item.setData(Qt.UserRole, relative_path)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         self.table.setItem(target_table_row, status_col_idx, item)
+
+    def update_kym_analysis_status_icons(self):
+        """Update all KymRoiAnalysis status icons in the table without full refresh."""
+        # Find the status column index
+        try:
+            status_col_idx = self.get_column_index('_kymRoiAnalysis')
+        except ValueError:
+            # Status column not visible
+            return
+            
+        for row in range(self.table.rowCount()):
+            # Get the relative path for this row from any column
+            relative_path = None
+            for col in range(self.table.columnCount()):
+                item = self.table.item(row, col)
+                if item and item.data(Qt.UserRole):
+                    relative_path = item.data(Qt.UserRole)
+                    break
+                    
+            if relative_path is None:
+                continue
+                
+            # Get the current KymRoiAnalysis status from backend
+            mask = self.backend.df['relative_path'] == relative_path
+            if mask.any():
+                backend_row_idx = mask.idxmax()
+                kym_analysis = self.backend.df.loc[backend_row_idx, '_kymRoiAnalysis']
+                
+                # Update the status icon
+                if kym_analysis is not None:
+                    # Green circle for loaded
+                    status_item = QTableWidgetItem("●")
+                    status_item.setForeground(QtGui.QColor("#449944"))  # Green
+                else:
+                    # Empty for not loaded
+                    status_item = QTableWidgetItem("○")
+                    status_item.setForeground(QtGui.QColor("#999999"))  # Gray
+                
+                status_item.setData(Qt.UserRole, relative_path)
+                status_item.setFlags(status_item.flags() & ~Qt.ItemIsEditable)
+                self.table.setItem(row, status_col_idx, status_item)
+
+    def refresh_row_after_save(self, relative_path: str):
+        """
+        Refresh the entire row in the table after KymRoiAnalysis is saved.
+        
+        This method is called when KymRoiAnalysis is saved via KymRoiWidget to
+        update all column displays in the table to match the saved metadata.
+        
+        Parameters
+        ----------
+        relative_path : str
+            The relative path of the file that was saved
+        """
+        # Find the row in the backend DataFrame
+        mask = self.backend.df['relative_path'] == relative_path
+        if not mask.any():
+            return
+            
+        backend_row_idx = mask.idxmax()
+        kym_analysis = self.backend.df.loc[backend_row_idx, '_kymRoiAnalysis']
+        
+        if kym_analysis is None:
+            return
+            
+        # Find and update the table row
+        target_table_row = None
+        for row in range(self.table.rowCount()):
+            for col in range(self.table.columnCount()):
+                item = self.table.item(row, col)
+                if item and item.data(Qt.UserRole) == relative_path:
+                    target_table_row = row
+                    break
+            if target_table_row is not None:
+                break
+                
+        if target_table_row is not None:
+            # Update all columns that can be populated from KymRoiAnalysis
+            for column_name in self.visible_columns:
+                # Skip special columns that shouldn't be updated from analysis
+                if column_name in ['_kymRoiAnalysis', '_analyzed', 'relative_path', 'filename']:
+                    continue
+                    
+                try:
+                    # Find the column index
+                    col_idx = self.get_column_index(column_name)
+                except ValueError:
+                    # Column not visible, skip
+                    continue
+                    
+                # Get the value from KymRoiAnalysis metadata
+                try:
+                    # Column names now directly match KymRoiMetaData keys
+                    value_from_analysis = kym_analysis.header.getParam(column_name)
+                    if value_from_analysis is None:
+                        value_from_analysis = ""
+                except Exception as e:
+                    logger.error(f"Failed to get {column_name} from KymRoiAnalysis metadata for {relative_path}: {e}")
+                    continue
+                    
+                # Update the table item
+                self._populating_table = True
+                item = self.table.item(target_table_row, col_idx)
+                if item is None:
+                    item = QTableWidgetItem()
+                    item.setData(Qt.UserRole, relative_path)
+                    self.table.setItem(target_table_row, col_idx, item)
+                item.setText(str(value_from_analysis))
+                self._populating_table = False
+                
+                logger.debug(f"Refreshed {column_name} in table after save for {relative_path}: {value_from_analysis}")
+
+

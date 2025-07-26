@@ -34,14 +34,14 @@ class TreeColumnConfig:
         # Current columns
         self.current_columns = [
             'files_folders',  # Main tree column with checkboxes
-            'condition',  # Condition column
-            'repeat',  # Repeat column
+                    'Condition',  # Condition column
+        'Repeat',  # Repeat column
         ]
 
         # Planned additional columns (from backend)
         self.planned_columns = [
-            'date',  # Date column (redundant with table)
-            'region',  # Region column (redundant with table)
+                    'Date',  # Date column (redundant with table)
+        'Region',  # Region column (redundant with table)
             'error',  # Error column (new)
             'um_per_pixel',  # um per pixel (new)
             'ms_per_line',  # ms per line (new)
@@ -63,38 +63,38 @@ class TreeColumnConfig:
                 'has_checkbox': True,
                 'backend_field': None,  # Special case for tree structure
             },
-            'condition': {
+            'Condition': {
                 'display_name': 'Condition',
                 'width': 100,
                 'stretch': False,
                 'editable': False,
                 'has_checkbox': False,
-                'backend_field': 'condition',
+                'backend_field': 'Condition',
             },
-            'repeat': {
+            'Repeat': {
                 'display_name': 'Repeat',
                 'width': 80,
                 'stretch': False,
                 'editable': False,
                 'has_checkbox': False,
-                'backend_field': 'repeat',
+                'backend_field': 'Repeat',
             },
             # Planned columns
-            'date': {
+            'Date': {
                 'display_name': 'Date',
                 'width': 100,
                 'stretch': False,
                 'editable': False,
                 'has_checkbox': False,
-                'backend_field': 'date',
+                'backend_field': 'Date',
             },
-            'region': {
+            'Region': {
                 'display_name': 'Region',
                 'width': 80,
                 'stretch': False,
                 'editable': False,
                 'has_checkbox': False,
-                'backend_field': 'region',
+                'backend_field': 'Region',
             },
             'error': {
                 'display_name': 'Error',
@@ -671,7 +671,7 @@ class TifTreeWidget(QWidget):
         if item_type == "file":
             item.setFlags(item.flags() | Qt.ItemIsUserCheckable | Qt.ItemIsSelectable)
             if row_data is not None:
-                checked = row_data.get('show_file', False)
+                checked = row_data.get('Accept', False)
                 item.setCheckState(
                     files_folders_idx, Qt.Checked if checked else Qt.Unchecked
                 )

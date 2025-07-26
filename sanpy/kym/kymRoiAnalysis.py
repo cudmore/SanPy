@@ -91,7 +91,7 @@ class KymRoiAnalysis:
         self._kymRoiMetaData = KymRoiMetaData(self._path, self._imgData)
         # logger.debug("KymRoiAnalysis: metadata initialized")
         
-        # Load analysis results if available
+        # Load analysis results if available (e.g. saved csv files)
         # logger.debug("KymRoiAnalysis: loading analysis results (loadAnalysis)")
         loadedHeaderDict = self.loadAnalysis()
         # logger.debug("KymRoiAnalysis: finished loadAnalysis")
@@ -109,15 +109,24 @@ class KymRoiAnalysis:
         else:
             logger.info("KymRoiAnalysis: no analysis file found, loading Olympus header or using defaults")
             # Only try to load from Olympus header if we have image data or are not in analysis_only mode
-            if not analysis_only:
+            # abb our __init__ is overly complicated
+            # if we did not load saved analysis (csv files) then always load olympus header
+            # if not analysis_only:
+            if 1:  # colin
                 # logger.info("KymRoiAnalysis: trying to load Olympus header")
                 olympusHeader = _loadLineScanHeader(path)
                 if olympusHeader is not None:
                     logger.info("KymRoiAnalysis: loaded Olympus header")
+                    pprint(olympusHeader)
                     self._kymRoiMetaData['Acq Date'] = olympusHeader['date']
                     self._kymRoiMetaData['Acq Time'] = olympusHeader['time']
                     self._kymRoiMetaData['secondsPerLine'] = olympusHeader['secondsPerLine']
                     self._kymRoiMetaData['umPerPixel'] = olympusHeader['umPerPixel']
+                    # abb
+                    self._kymRoiMetaData['imageWidth'] = olympusHeader['numLines']
+                    self._kymRoiMetaData['imageHeight'] = olympusHeader['numPixels']
+                    # abb hard coding number of channels (does Olympus export have this?)
+                    self._kymRoiMetaData['numChannels'] = 1
                 else:
                     logger.error("  KymRoiAnalysis: USING FAKE IMAGE SCALE !!")
                     self._fakeScale = True
@@ -261,7 +270,7 @@ class KymRoiAnalysis:
         return self._imgData[channel]
 
     @property
-    def header(self):
+    def header(self) -> KymRoiMetaData:
         # return self._headerDict
         return self._kymRoiMetaData
 

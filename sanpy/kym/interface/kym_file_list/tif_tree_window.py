@@ -249,6 +249,13 @@ class TifTreeWindow(QMainWindow):
         rebuild_database_action.setEnabled(True)  # self.path always exists
         rebuild_database_action.triggered.connect(self.forceReanalyzeAll)
         self.kym_menu.addAction(rebuild_database_action)
+        
+        # add an 'Unload all analysis' action to the Kym menu
+        self.unload_all_analysis_action = QAction("Unload all analysis", self)
+        self.unload_all_analysis_action.setStatusTip("Unload all KymRoiAnalysis objects from memory to free up resources")
+        self.unload_all_analysis_action.setEnabled(False)  # Will be enabled when backend is created
+        self.unload_all_analysis_action.triggered.connect(self.unloadAllAnalysis)
+        self.kym_menu.addAction(self.unload_all_analysis_action)
                 
     def _createWindowsMenu(self, menubar, helpAction):
         """Create the Windows menu and insert it before Help."""
@@ -285,12 +292,20 @@ class TifTreeWindow(QMainWindow):
             return
         self._refreshWindowsMenu()
         
-        # Update TifPoolScatter action state (now in Kym menu)
+        # Update Kym menu action states
         if hasattr(self, 'tif_pool_scatter_action'):
             # Update enabled state based on backend availability
             self.tif_pool_scatter_action.setEnabled(hasattr(self, 'backend') and self.backend is not None)
             # Update checked state based on widget existence
             self.tif_pool_scatter_action.setChecked(self.tif_pool_scatter_widget is not None)
+            
+        # Update unload all analysis action state
+        if hasattr(self, 'unload_all_analysis_action'):
+            # Enable if backend exists and has loaded analysis
+            has_loaded_analysis = (hasattr(self, 'backend') and 
+                                 self.backend is not None and 
+                                 self.backend.get_cached_kym_roi_analysis_count() > 0)
+            self.unload_all_analysis_action.setEnabled(has_loaded_analysis)
 
     def bringWidgetToFront(self, widget):
         """Bring the specified widget to the front."""
@@ -421,7 +436,7 @@ class TifTreeWindow(QMainWindow):
         self.table_widget.fileDoubleClicked.connect(self.onFileDoubleClicked)
         self.table_widget.plotRoisRequested.connect(self.onPlotRoisRequested)
         
-        # Update Windows menu and enable TifPoolScatter action now that backend exists
+        # Update Windows menu and enable actions now that backend exists
         self.updateWindowsMenu()
 
     def _initialize_tiff_pool_data(self):
@@ -529,6 +544,9 @@ class TifTreeWindow(QMainWindow):
         aWidget.signalAnalysisSaved.connect(self.slot_analysisSaved)
         # Connect to ROI label change signal with the widget instance
         aWidget.signalRoiLabelChanged.connect(lambda old_label, new_label, widget=aWidget: self.slot_roiLabelChanged(old_label, new_label, widget))
+        
+        # Update menu states after loading analysis
+        self.updateWindowsMenu()
 
         # Update the table to show the loaded status
         if aKymRoiAnalysis is not None:
@@ -546,20 +564,25 @@ class TifTreeWindow(QMainWindow):
         """Called when analysis is saved."""
         logger.info(f"path:{path}")
 
-        # Update the backend analysis data
-        backend_success = self.backend.update_analysis(path)
+        # Update the entire row in the backend from saved analysis
+        backend_success = self.backend.update_row_from_saved_analysis(path)
         
         # Update the TiffPool data
         tiff_pool_success = self.backend._tifPool.on_analysis_saved(path)
         
         if backend_success and tiff_pool_success:
-            # Refresh the table view to show updated data
+            # Refresh the table row to show updated data
             if self.table_widget:
-                self.table_widget.refresh_display()
-            logger.info(f"Successfully updated analysis for {path} and refreshed table and TiffPool")
+                # Get relative path for the table update
+                if os.path.isabs(path):
+                    relative_path = os.path.relpath(path, self.backend.root_path)
+                else:
+                    relative_path = path
+                self.table_widget.refresh_row_after_save(relative_path)
+            logger.info(f"Successfully updated row for {path} and refreshed table and TiffPool")
         else:
             if not backend_success:
-                logger.warning(f"Failed to update backend analysis for {path}")
+                logger.warning(f"Failed to update backend row for {path}")
             if not tiff_pool_success:
                 logger.warning(f"Failed to update TiffPool analysis for {path}")
 
@@ -702,6 +725,42 @@ class TifTreeWindow(QMainWindow):
         else:
             logger.warning("No backend available to force re-analyze")
 
+    def unloadAllAnalysis(self):
+        """Unload all KymRoiAnalysis objects from memory to free up resources."""
+        if self.backend:
+            # Get count before unloading
+            loaded_count = self.backend.get_cached_kym_roi_analysis_count()
+            
+            if loaded_count == 0:
+                logger.info("No KymRoiAnalysis objects loaded to unload")
+                self.statusBar().showMessage("No analysis objects loaded")
+                return
+            
+            logger.info(f"Unloading {loaded_count} KymRoiAnalysis objects from memory")
+            
+            # Show status message
+            self.statusBar().showMessage(f"Unloading {loaded_count} analysis objects...")
+            
+            # Clear all cached KymRoiAnalysis objects (just set pointers to None)
+            self.backend.clear_kym_roi_analysis_cache()
+            
+            # Update status icons in table widget without full refresh
+            if self.table_widget:
+                self.table_widget.update_kym_analysis_status_icons()
+            
+            # Update menu states
+            self.updateWindowsMenu()
+            
+            # Update status
+            folder_name = get_folder_hierarchy_title(self.backend.root_path)
+            self.statusBar().showMessage(
+                f"Unloaded {loaded_count} analysis objects from {folder_name}"
+            )
+            
+            logger.info(f"Successfully unloaded {loaded_count} KymRoiAnalysis objects")
+        else:
+            logger.warning("No backend available to unload analysis")
+
     def showPreferences(self):
         """Show the preferences dialog."""
         dialog = PreferencesDialog(self)
@@ -762,7 +821,8 @@ class TifTreeWindow(QMainWindow):
             
             # Check if we have data
             if len(master_df) == 0 or len(mean_df) == 0:
-                raise Exception("No analysis data available. Please ensure files have been analyzed.")
+                self.statusBar().showMessage("No analysis data available. Please analyze files before using Tif Pool Scatter.")
+                return
             
             # Debug: Log available columns
             # logger.info(f"Available columns in mean_df: {list(mean_df.columns)}")

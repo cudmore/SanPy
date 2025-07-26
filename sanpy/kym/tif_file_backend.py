@@ -80,9 +80,6 @@ import pandas as pd
 
 from sanpy.sanpyLogger import get_logger
 
-from sanpy.kym.tif_info import TifInfo
-# from sanpy.kym.tif_pool import TiffPool  # circular import
-
 from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
 
 logger = get_logger(__name__)
@@ -241,55 +238,60 @@ class TifFileBackend:
             default_value="",
             tooltip="The name of the .tif file",
         ),
-        'date': ColumnConfig(
+        'Date': ColumnConfig(
             display_name='Date',
             column_type=str,
             width=100,
-            backend_field='date',
+            backend_field='Date',
             tree_visible=True,
             table_visible=True,
             default_value="",
             tooltip="Date extracted from the filename (YYYYMMDD format)",
+            editable=True,  # Make it editable
         ),
-        'cell_id': ColumnConfig(
+        'Cell ID': ColumnConfig(
             display_name='Cell ID',
             column_type=str,
             width=120,
-            backend_field='cell_id',
+            backend_field='Cell ID',
             tree_visible=True,
             table_visible=True,
             default_value="",
             tooltip="Cell identifier extracted from the filename",
+            editable=True,  # Make it editable
         ),
-        'region': ColumnConfig(
+        'Region': ColumnConfig(
             display_name='Region',
             column_type=str,
             width=80,
-            backend_field='region',
+            backend_field='Region',
             tree_visible=True,
             table_visible=True,
             default_value="",
             tooltip="Region identifier extracted from the filename",
+            editable=True,  # Make it editable
         ),
-        'condition': ColumnConfig(
+        'Condition': ColumnConfig(
             display_name='Condition',
             column_type=str,
             width=100,
-            backend_field='condition',
+            backend_field='Condition',
             tree_visible=True,
             table_visible=True,
             default_value="",
             tooltip="Experimental condition extracted from the filename",
+            editable=True,  # Make it editable
         ),
-        'repeat': ColumnConfig(
+        'Repeat': ColumnConfig(
             display_name='Repeat',
             column_type=int,
             width=80,
-            backend_field='repeat',
+            backend_field='Repeat',
             tree_visible=True,
             table_visible=True,
             default_value=0,
             tooltip="Repeat number for this experimental condition",
+            editable=True,  # Make it editable
         ),
         'numRois': ColumnConfig(
             display_name='ROIs',
@@ -300,28 +302,48 @@ class TifFileBackend:
             default_value=None,  # Unknown until analysis
             tooltip="Number of regions of interest (ROIs) defined",
         ),
-        'note': ColumnConfig(
+        'Note': ColumnConfig(
             display_name='Note',
             column_type=str,
             width=150,
             editable=True,  # Make it editable
-            backend_field='note',
+            backend_field='Note',
             table_visible=True,  # Show in table
             default_value="",
             tooltip="User-editable notes about this file",
         ),
-        'show_file': ColumnConfig(
-            display_name='Show',
+        'Animal ID': ColumnConfig(
+            display_name='Animal ID',
+            column_type=str,
+            width=100,
+            editable=True,
+            backend_field='Animal ID',
+            table_visible=True,
+            default_value="",
+            tooltip="Animal identifier",
+        ),
+        'Cell Type': ColumnConfig(
+            display_name='Cell Type',
+            column_type=str,
+            width=100,
+            editable=True,
+            backend_field='Cell Type',
+            table_visible=True,
+            default_value="",
+            tooltip="Type of cell",
+        ),
+        'Accept': ColumnConfig(
+            display_name='Accept',
             column_type=bool,
             width=80,
             editable=True,
             widget_type='checkbox',
-            backend_field='show_file',
+            backend_field='Accept',
             tree_visible=True,
             table_visible=True,
             sortable=False,
             default_value=True,
-            tooltip="Check to include this file in analysis/export operations",
+            tooltip="Check to accept this file for analysis/export operations",
         ),
         # Acquisition parameters (populated from KymRoiAnalysis)
         'umPerPixel': ColumnConfig(
@@ -584,13 +606,13 @@ class TifFileBackend:
                     if common_cols:
                         update_cols = ['relative_path'] + [col for col in common_cols if col != 'relative_path']
                         update_df = loaded_df[update_cols].copy()
-                        if 'repeat' in common_cols:
-                            update_df['repeat'] = pd.to_numeric(update_df['repeat'], errors='coerce').fillna(0).astype(int)
+                        if 'Repeat' in common_cols:
+                            update_df['Repeat'] = pd.to_numeric(update_df['Repeat'], errors='coerce').fillna(0).astype(int)
                         # Ensure integer columns are properly typed
                         for col in ['numChannels', 'imageHeight', 'imageWidth', 'numLineScans', 'pixelsPerLine', 'numRois']:
                             if col in common_cols:
                                 update_df[col] = pd.to_numeric(update_df[col], errors='coerce').fillna(0).astype(int)
-                        for col in ['show_file']:
+                        for col in ['Accept']:
                             if col in common_cols:
                                 update_df[col] = update_df[col].astype(int).astype(bool)
                         for col in common_cols:
@@ -599,15 +621,15 @@ class TifFileBackend:
                             mapping_series = update_df.set_index('relative_path')[col]
                             mapped_values = self.df['relative_path'].map(mapping_series)
                             updated_column = mapped_values.fillna(self.df[col])
-                            if col == 'show_file':
+                            if col == 'Accept':
                                 updated_column = updated_column.map(lambda x: bool(x))
-                            elif col == 'repeat':
+                            elif col == 'Repeat':
                                 updated_column = pd.to_numeric(updated_column, errors='coerce').fillna(0).astype(int)
                             elif col in ['numChannels', 'imageHeight', 'imageWidth', 'numLineScans', 'pixelsPerLine', 'numRois']:
                                 updated_column = pd.to_numeric(updated_column, errors='coerce').fillna(0).astype(int)
                             elif col in ['parent_folder', 'grandparent_folder', 'great_grandparent_folder']:
                                 updated_column = updated_column.astype(str).replace('nan', '')
-                            elif col == 'note':
+                            elif col == 'Note':
                                 updated_column = updated_column.astype(str).replace('nan', '')
                             elif hasattr(updated_column, 'infer_objects') and updated_column.dtype == 'object':
                                 updated_column = updated_column.infer_objects(copy=False)
@@ -717,14 +739,15 @@ class TifFileBackend:
                             'parent_folder': parent_folder,
                             'grandparent_folder': grandparent_folder,
                             'great_grandparent_folder': great_grandparent_folder,
-                            'date': self.get_column_default_value('date'),
-                            'cell_id': self.get_column_default_value('cell_id'),
-                            'region': self.get_column_default_value('region'),
-                            'condition': self.get_column_default_value('condition'),
-                            'repeat': self.get_column_default_value('repeat'),
-                            'error': self.get_column_default_value('error'),
-                            'show_file': self.get_column_default_value('show_file'),
-                            'note': self.get_column_default_value('note'),
+                            'Date': self.get_column_default_value('Date'),
+                            'Cell ID': self.get_column_default_value('Cell ID'),
+                            'Region': self.get_column_default_value('Region'),
+                            'Condition': self.get_column_default_value('Condition'),
+                            'Repeat': self.get_column_default_value('Repeat'),
+                            'Note': self.get_column_default_value('Note'),
+                            'Animal ID': self.get_column_default_value('Animal ID'),
+                            'Cell Type': self.get_column_default_value('Cell Type'),
+                            'Accept': self.get_column_default_value('Accept'),
                             '_kymRoiAnalysis': self.get_column_default_value('_kymRoiAnalysis'),
                             '_analyzed': self.get_column_default_value('_analyzed'),
                             # Acquisition parameters - will be populated in _analyze_files()
@@ -749,9 +772,9 @@ class TifFileBackend:
 
         # Create DataFrame from collected data
         self.df = pd.DataFrame(file_data)
-        # Ensure 'date' column is always str type
-        if 'date' in self.df.columns:
-            self.df['date'] = self.df['date'].astype(str)
+        # Ensure 'Date' column is always str type
+        if 'Date' in self.df.columns:
+            self.df['Date'] = self.df['Date'].astype(str)
 
         # Sort by grandparent_folder first, then by filename
         # This groups all files in the same grandparent folder together
@@ -853,18 +876,22 @@ class TifFileBackend:
                 logger.debug(f"Analyzing file: {row['filename']}")
 
                 # Parse filename with TifInfo (expensive operation)
-                tif_info = TifInfo.from_filename(row['filename'])
+                # tif_info = TifInfo.from_filename(row['filename'])
+                # Instead, use KymRoiAnalysis for metadata extraction
+                tif_path = self.resolve_path(row['relative_path'])
+                kym_analysis = KymRoiAnalysis(str(tif_path), imgData=None, analysis_only=True, loadImgData=False)
+                header = kym_analysis.header
 
-                # Ensure 'date' column is str type before assignment
-                self.df['date'] = self.df['date'].astype(str)
+                # Ensure 'Date' column is str type before assignment
+                self.df['Date'] = self.df['Date'].astype(str)
 
                 # Update the DataFrame with analysis results
-                self.df.at[idx, 'date'] = str(tif_info.date)
-                self.df.at[idx, 'cell_id'] = tif_info.cellid
-                self.df.at[idx, 'region'] = tif_info.region
-                self.df.at[idx, 'condition'] = tif_info.condition
-                self.df.at[idx, 'repeat'] = tif_info.repeat
-                self.df.at[idx, 'error'] = tif_info.error
+                self.df.at[idx, 'Date'] = str(header.getParam('Date'))
+                self.df.at[idx, 'Cell ID'] = header.getParam('Cell ID')
+                self.df.at[idx, 'Region'] = header.getParam('Region')
+                self.df.at[idx, 'Condition'] = header.getParam('Condition')
+                self.df.at[idx, 'Repeat'] = header.getParam('Repeat')
+                self.df.at[idx, 'error'] = ""
 
                 # Mark as analyzed
                 self.df.at[idx, '_analyzed'] = True
@@ -1028,7 +1055,7 @@ class TifFileBackend:
         item_type : str
             Type of data to retrieve. Valid options:
             
-            - `'files'`: Get full paths of checked files (files with `show_file=True`)
+            - `'files'`: Get full paths of checked files (files with `Accept=True`)
             - `'file_count'`: Get total number of files in the backend
             - `'condition_counts'`: Get counts of files by experimental condition
             - `'repeat_counts'`: Get counts of files by repeat number
@@ -1097,7 +1124,7 @@ class TifFileBackend:
         
         Notes
         -----
-        - The `'files'` item type only returns files where `show_file=True`
+        - The `'files'` item type only returns files where `Accept=True`
         - Filter methods return full DataFrames that can be further processed
         - Count methods return dictionaries for easy iteration and display
         - All paths returned by `'files'` are absolute paths
@@ -1111,35 +1138,35 @@ class TifFileBackend:
         
         if item_type == 'files':
             # Construct full paths from relative paths
-            relative_paths = self.df[self.df['show_file']]['relative_path'].tolist()
+            relative_paths = self.df[self.df['Accept']]['relative_path'].tolist()
             return [self.resolve_path(rel_path) for rel_path in relative_paths]
         
         elif item_type == 'file_count':
             return len(self.df)
         
         elif item_type == 'condition_counts':
-            return self.df['condition'].value_counts().to_dict()
+            return self.df['Condition'].value_counts().to_dict()
         
         elif item_type == 'repeat_counts':
-            return self.df['repeat'].value_counts().to_dict()
+            return self.df['Repeat'].value_counts().to_dict()
         
         elif item_type == 'unique_conditions':
-            return self.df['condition'].unique().tolist()
+            return self.df['Condition'].unique().tolist()
         
         elif item_type == 'unique_repeats':
-            return sorted(self.df['repeat'].unique().tolist())
+            return sorted(self.df['Repeat'].unique().tolist())
         
         elif item_type == 'filter_by_condition':
             condition = kwargs.get('condition')
             if condition is None:
                 raise ValueError("condition parameter required for filter_by_condition")
-            return self.df[self.df['condition'] == condition]
+            return self.df[self.df['Condition'] == condition]
         
         elif item_type == 'filter_by_repeat':
             repeat = kwargs.get('repeat')
             if repeat is None:
                 raise ValueError("repeat parameter required for filter_by_repeat")
-            return self.df[self.df['repeat'] == repeat]
+            return self.df[self.df['Repeat'] == repeat]
         
         else:
             raise ValueError(
@@ -1178,10 +1205,10 @@ class TifFileBackend:
             mask = self.df['relative_path'] == relative_path
             if mask.any():
                 # Ensure we're setting a Python bool, not numpy.bool_
-                self.df.loc[mask, 'show_file'] = bool(checked)
+                self.df.loc[mask, 'Accept'] = bool(checked)
                 # Force the entire column to be native Python bool
-                self.df['show_file'] = (
-                    self.df['show_file'].map(lambda x: bool(x)).astype(object)
+                self.df['Accept'] = (
+                    self.df['Accept'].map(lambda x: bool(x)).astype(object)
                 )
                 # Auto-save state after modification
                 self._auto_save_state()
@@ -1317,14 +1344,15 @@ class TifFileBackend:
                         'parent_folder': parent_folder,
                         'grandparent_folder': grandparent_folder,
                         'great_grandparent_folder': great_grandparent_folder,
-                        'date': self.get_column_default_value('date'),
-                        'cell_id': self.get_column_default_value('cell_id'),
-                        'region': self.get_column_default_value('region'),
-                        'condition': self.get_column_default_value('condition'),
-                        'repeat': self.get_column_default_value('repeat'),
-                        'error': self.get_column_default_value('error'),
-                        'show_file': self.get_column_default_value('show_file'),
-                        'note': self.get_column_default_value('note'),
+                        'Date': self.get_column_default_value('Date'),
+                        'Cell ID': self.get_column_default_value('Cell ID'),
+                        'Region': self.get_column_default_value('Region'),
+                        'Condition': self.get_column_default_value('Condition'),
+                        'Repeat': self.get_column_default_value('Repeat'),
+                        'Note': self.get_column_default_value('Note'),
+                        'Animal ID': self.get_column_default_value('Animal ID'),
+                        'Cell Type': self.get_column_default_value('Cell Type'),
+                        'Accept': self.get_column_default_value('Accept'),
                         '_kymRoiAnalysis': self.get_column_default_value('_kymRoiAnalysis'),
                         '_analyzed': self.get_column_default_value('_analyzed'),
                         # Acquisition parameters - will be populated in _analyze_files()
@@ -1367,18 +1395,22 @@ class TifFileBackend:
                 logger.debug(f"Analyzing file: {row['filename']}")
 
                 # Parse filename with TifInfo (expensive operation)
-                tif_info = TifInfo.from_filename(row['filename'])
+                # tif_info = TifInfo.from_filename(row['filename'])
+                # Instead, use KymRoiAnalysis for metadata extraction
+                tif_path = self.resolve_path(row['relative_path'])
+                kym_analysis = KymRoiAnalysis(str(tif_path), imgData=None, analysis_only=True, loadImgData=False)
+                header = kym_analysis.header
 
-                # Ensure 'date' column is str type before assignment
-                self.df['date'] = self.df['date'].astype(str)
+                # Ensure 'Date' column is str type before assignment
+                self.df['Date'] = self.df['Date'].astype(str)
 
                 # Update the DataFrame with analysis results
-                self.df.at[idx, 'date'] = str(tif_info.date)
-                self.df.at[idx, 'cell_id'] = tif_info.cellid
-                self.df.at[idx, 'region'] = tif_info.region
-                self.df.at[idx, 'condition'] = tif_info.condition
-                self.df.at[idx, 'repeat'] = tif_info.repeat
-                self.df.at[idx, 'error'] = tif_info.error
+                self.df.at[idx, 'Date'] = str(header.getParam('Date'))
+                self.df.at[idx, 'Cell ID'] = header.getParam('Cell ID')
+                self.df.at[idx, 'Region'] = header.getParam('Region')
+                self.df.at[idx, 'Condition'] = header.getParam('Condition')
+                self.df.at[idx, 'Repeat'] = header.getParam('Repeat')
+                self.df.at[idx, 'error'] = ""
 
                 # Mark as analyzed
                 self.df.at[idx, '_analyzed'] = True
@@ -2102,6 +2134,85 @@ class TifFileBackend:
             logger.error(f"Failed to update analysis for {tif_path}: {e}")
             return False
 
+    def update_row_from_saved_analysis(self, tif_path: str) -> bool:
+        """
+        Update the entire row in the backend DataFrame from KymRoiAnalysis metadata after saving.
+        
+        This method is called when KymRoiAnalysis is saved via KymRoiWidget to sync
+        all columns from the analysis metadata to the backend DataFrame.
+        
+        Parameters
+        ----------
+        tif_path : str
+            Path to the TIF file that was saved (can be absolute or relative)
+            
+        Returns
+        -------
+        bool
+            True if row was successfully updated, False otherwise
+        """
+        try:
+            # Find the row index in the backend DataFrame
+            row_index = self._find_file_by_path(tif_path)
+            if row_index is None:
+                logger.warning(f"File not found in backend: {tif_path}")
+                return False
+                
+            kym_analysis = self.df.at[row_index, '_kymRoiAnalysis']
+            
+            if kym_analysis is None:
+                logger.warning(f"KymRoiAnalysis not loaded for {tif_path}")
+                return False
+                
+            updated_columns = []
+            
+            # Update all columns that can be populated from KymRoiAnalysis
+            for column_name, config in self.COLUMN_CONFIG.items():
+                # Skip special columns that shouldn't be updated from analysis
+                if column_name in ['_kymRoiAnalysis', '_analyzed', 'relative_path', 'filename']:
+                    continue
+                    
+                try:
+                    # Column names now directly match KymRoiMetaData keys
+                    value_from_analysis = kym_analysis.header.getParam(column_name)
+                    
+                    if value_from_analysis is not None:
+                        # Convert value to appropriate type
+                        column_type = config.column_type
+                        try:
+                            if column_type == int:
+                                converted_value = int(value_from_analysis) if value_from_analysis else 0
+                            elif column_type == float:
+                                converted_value = float(value_from_analysis) if value_from_analysis else 0.0
+                            elif column_type == bool:
+                                converted_value = bool(value_from_analysis) if value_from_analysis else False
+                            else:
+                                converted_value = str(value_from_analysis) if value_from_analysis else ""
+                        except (ValueError, TypeError) as e:
+                            logger.warning(f"Failed to convert value '{value_from_analysis}' to type {column_type} for column {column_name}: {e}")
+                            continue
+                        
+                        # Update the backend DataFrame
+                        self.df.at[row_index, column_name] = converted_value
+                        updated_columns.append(column_name)
+                        
+                except Exception as e:
+                    logger.error(f"Failed to get {column_name} from KymRoiAnalysis metadata for {tif_path}: {e}")
+                    continue
+            
+            if updated_columns:
+                # Auto-save state after updating
+                self._auto_save_state()
+                logger.debug(f"Updated row in backend from saved KymRoiAnalysis for {tif_path}: {', '.join(updated_columns)}")
+                return True
+            else:
+                logger.warning(f"No columns were updated for {tif_path}")
+                return False
+            
+        except Exception as e:
+            logger.error(f"Failed to update row from saved KymRoiAnalysis for {tif_path}: {e}")
+            return False
+
     def get_kym_roi_analysis_by_path(
         self, relative_path: str
     ) -> Optional[KymRoiAnalysis]:
@@ -2156,7 +2267,7 @@ class TifFileBackend:
         if self.df is None or '_kymRoiAnalysis' not in self.df.columns:
             return 0
 
-        return self.df['_kymRoiAnalysis'].notna().sum()
+        return int(self.df['_kymRoiAnalysis'].notna().sum())
 
     def get_full_path(self, relative_path: str) -> str:
         """

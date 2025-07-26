@@ -15,6 +15,13 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 
+def get_parent_folders(path):
+    folder, _ = os.path.split(path)
+    parent = os.path.basename(folder)
+    grandparent = os.path.basename(os.path.dirname(folder))
+    great_grandparent = os.path.basename(os.path.dirname(os.path.dirname(folder)))
+    return parent, grandparent, great_grandparent
+
 @dataclass
 class TifInfo:
     """Dataclass to hold parsed file information from TIF file names.
@@ -33,12 +40,13 @@ class TifInfo:
     error: str = ""
 
     # Class variables for configurable parsing
-    POSSIBLE_CONDITIONS = ['Control', 'Ivab', 'Thap', 'FCCP']
+    POSSIBLE_CONDITIONS = ['Control', 'Ivabradine', 'Thapsigargin', 'FCCP']
     POSSIBLE_REGIONS = ['ISAN', 'SSAN']
 
+
     @classmethod
-    def from_filename(cls, filename: str) -> 'TifInfo':
-        """Create TifInfo from a TIF filename.
+    def from_filename(cls, filePath: str) -> 'TifInfo':
+        """Create TifInfo from a TIF path.
 
         Args:
             filename: Filename like "20250312 ISAN R1 LS1.tif" or "20250312 ISAN FCCP R1 LS1.tif"
@@ -48,6 +56,10 @@ class TifInfo:
         """
         errors = []
 
+        parent, grandparent, great_grandparent = get_parent_folders(filePath)
+
+        filepathRoot, filename = os.path.split(filePath)
+                
         # Remove .tif extension if present
         clean_filename = filename.replace('.tif', '')
 
@@ -60,27 +72,30 @@ class TifInfo:
         parts = clean_filename.split(' ')
 
         # Validate minimum parts
-        if len(parts) < 4:
-            error_msg = f"Filename '{filename}' has insufficient parts (need at least 4, got {len(parts)})"
-            logger.error(error_msg)
-            errors.append(error_msg)
-            return cls(
-                date="",
-                cellid="",
-                condition="Control",  # default
-                region="",
-                repeat=0,
-                error="; ".join(errors),
-            )
+        # if len(parts) < 4:
+        #     error_msg = f"Filename '{filename}' has insufficient parts (need at least 4, got {len(parts)})"
+        #     logger.error(error_msg)
+        #     errors.append(error_msg)
+        #     return cls(
+        #         date="",
+        #         cellid="",
+        #         condition="Control",  # default
+        #         region="",
+        #         repeat=0,
+        #         error="; ".join(errors),
+        #     )
 
         # Extract date (first part)
+        _dateInFilename = True
         date = parts[0]
         if not date.isdigit() or len(date) != 8:
             error_msg = f"Date '{date}' in filename '{filename}' is not a valid 8-digit date (YYYYMMDD)"
             logger.error(error_msg)
             errors.append(error_msg)
             date = ""
-
+            date = great_grandparent  # colin <date>/<region>/<file.tif>
+            _dateInFilename = False
+    
         # Extract region
         region = None
         for part in parts:
@@ -95,11 +110,20 @@ class TifInfo:
             region = ""
 
         # Extract condition
-        condition = "Control"  # default
-        for cond in cls.POSSIBLE_CONDITIONS:
-            if cond in clean_filename:
-                condition = cond
-                break
+        condition = None
+        for part in parts:
+            if part in cls.POSSIBLE_CONDITIONS:
+                condition = part
+                # don't break, some tif files have 'Ivabradine Thapsigargin' in the cellid
+                # in those cases, condition is Thapsigargin
+                # break
+
+        if condition is None:
+            error_msg = f"Condition not found in filename '{filename}'. Expected one of {cls.POSSIBLE_CONDITIONS}"
+            logger.error(error_msg)
+            errors.append(error_msg)
+            # condition = "Unknown"
+            condition = "Control"  # colin, some tif do not have 'Control' in name
 
         # Extract repeat number
         repeat = 0  # default
@@ -140,9 +164,13 @@ class TifInfo:
         for cond in cls.POSSIBLE_CONDITIONS:
             if cond in cellid_parts:
                 cellid_parts = cellid_parts.replace(f' {cond}', '')
-                break
+                # don't break, some tif files have 'Ivabradine Thapsigargin' in the cellid
+                # break
 
         cellid = cellid_parts.strip()
+
+        if not _dateInFilename:
+            cellid = f'{great_grandparent} {cellid}'
 
         # Validate cellid has expected format
         if not cellid or len(cellid.split(' ')) < 3:

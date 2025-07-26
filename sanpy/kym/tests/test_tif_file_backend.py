@@ -329,7 +329,7 @@ class TestTifFileBackend(unittest.TestCase):
                 self.assertEqual(row['error'], "")
         
         # Check that repeat column is always integer
-        self.assertTrue(backend.df['repeat'].dtype in ['int32', 'int64'])
+        self.assertTrue(backend.df['Repeat'].dtype in ['int32', 'int64'])
         
         # Check that condition extraction is now from TifInfo (not regex)
         conditions = backend.get('unique_conditions')
@@ -649,7 +649,7 @@ class TestTifFileBackend(unittest.TestCase):
         
         # Check that all notes are initialized to empty string
         if len(backend.df) > 0:
-            note_values = backend.df['note'].tolist()
+            note_values = backend.df['Note'].tolist()
             for note in note_values:
                 self.assertEqual(note, '', f"Notes should be initialized to empty string, got: '{note}'")
         
