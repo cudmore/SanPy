@@ -650,6 +650,26 @@ class TifTreeWindow(QMainWindow):
         fig, ax = plotOneKym(kymRoiAnalysis)
         fig.show()
 
+    def plot_cellid_cond(self, pathToTif: str, roiLabel: str):
+        """Plot a single cell and condition.
+        
+        Parameters
+        ----------
+        pathToTif : str
+            The path to the TIF file (abs or relative).
+        roiLabel : str
+            The ROI label to plot.
+        """
+        # get cell id from backend
+        from sanpy.kym.kymRoiPlot_mpl import plotOneKym, plot_cell_id_conds
+        row = self.backend.get_row_by_path(pathToTif)
+        plot_cell_id_conds(self.backend._tifPool.get_master_dataframe(),
+                           self.backend._tifPool.get_df_mean(),
+                           cellID=row['Cell ID'],
+                           roiLabel=roiLabel)
+        fig.show()
+    
+
     def showSelectedFiles(self):
         """Show all currently checked files."""
         if not self.backend:

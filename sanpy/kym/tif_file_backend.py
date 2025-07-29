@@ -2333,6 +2333,31 @@ class TifFileBackend:
             
         return relative_path
 
+    def get_row_by_path(self, path: str) -> Optional[pd.Series]:
+        """
+        Get a pandas Series containing the row data for a given path (absolute or relative).
+        
+        Parameters
+        ----------
+        path : str
+            The path to the file (can be absolute or relative)
+            
+        Returns
+        -------
+        Optional[pd.Series]
+            The row data as a pandas Series if found, None if not found
+        """
+        if self.df is None or len(self.df) == 0:
+            return None
+            
+        # Find the row index using the existing helper method
+        row_index = self._find_file_by_path(path)
+        if row_index is None:
+            return None
+            
+        # Return the row as a pandas Series
+        return self.df.loc[row_index]
+
     def resolve_path(self, path: str) -> Path:
         """
         Resolve a path to an absolute Path object.
