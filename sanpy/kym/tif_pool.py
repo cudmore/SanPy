@@ -14,6 +14,7 @@ TiffPool appends the CSV for each .tif into its own 'master df' and provides API
 """
 
 import os
+import json
 import sys
 import pandas as pd
 from pathlib import Path
@@ -49,7 +50,7 @@ class TiffPool:
         self.root_path = tif_file_backend.root_path
         self.master_df = pd.DataFrame()
         self.dfMean = pd.DataFrame()  # New attribute for mean statistics
-        self.dfErrors = pd.DataFrame()  # New attribute for error tracking
+        self.dfErrors = pd.DataFrame(columns=['Cell ID', 'Condition', 'ROI Count', 'Error Message'])  # New attribute for error tracking
         
         # User-specified or default grouping columns
         self._group_columns = group_columns or ['Cell ID',
@@ -104,7 +105,10 @@ class TiffPool:
             'Decay 90 (s)',
             'Decay 90 Int'
         ]
-        
+
+        self._headerDict = {
+            'version': 0.1,
+        }
         # Try to load existing pooled data
         self.load_pooled_data()
 
@@ -140,8 +144,18 @@ class TiffPool:
         """Load pooled data from CSV file if it exists."""
         filepath = self._get_pooled_data_filepath()
         if os.path.exists(filepath):
-            self.master_df = pd.read_csv(filepath)
+            # self.master_df = pd.read_csv(filepath)
+            with open(filepath, 'r') as f:
+                # Read the first line as JSON
+                _loadedHeaderDict = json.loads(f.readline())
+                # Read the remaining lines as a DataFrame
+                loaded_df = pd.read_csv(f)
             # logger.info(f"Loaded pooled data from: {filepath} ({len(self.master_df)} rows)")
+            if _loadedHeaderDict['version'] != self._headerDict['version']:
+                logger.error(f"Version mismatch in saved state file: {filepath}")
+                # return
+            self._headerDict = _loadedHeaderDict
+            self.master_df = loaded_df
         else:
             logger.debug(f"No existing pooled data found at: {filepath}")
             self.master_df = pd.DataFrame()
@@ -149,8 +163,17 @@ class TiffPool:
         # Load mean data if it exists
         mean_filepath = self._get_mean_data_filepath()
         if os.path.exists(mean_filepath):
-            self.dfMean = pd.read_csv(mean_filepath)
+            # self.dfMean = pd.read_csv(mean_filepath)
+            with open(mean_filepath, 'r') as f:
+                # Read the first line as JSON
+                _loadedHeaderDict = json.loads(f.readline())
+                # Read the remaining lines as a DataFrame
+                loaded_df = pd.read_csv(f)
             # logger.info(f"Loaded mean data from: {mean_filepath} ({len(self.dfMean)} rows)")
+            if _loadedHeaderDict['version'] != self._headerDict['version']:
+                logger.error(f"Version mismatch in saved mean data file: {mean_filepath}")
+                # return
+            self.dfMean = loaded_df
         else:
             logger.debug(f"No existing mean data found at: {mean_filepath}")
             self.dfMean = pd.DataFrame()
@@ -165,35 +188,54 @@ class TiffPool:
             logger.info(f"Cast ROI Label column to string in dfMean: {len(self.dfMean)} rows")
         
         # Initialize errors DataFrame (no file loading - runtime only)
-        self.dfErrors = pd.DataFrame(columns=['cell_id', 'condition', 'roi_count', 'error_message'])
+        self.dfErrors = pd.DataFrame(columns=['Cell ID', 'Condition', 'ROI Count', 'Error Message'])
 
     def _auto_save_pooled_data(self):
         """Auto-save pooled data to CSV file whenever the master DataFrame is modified."""
+        # Call save_pooled_data with default parameters but use info logging
         if len(self.master_df) > 0:
-            filepath = self._get_pooled_data_filepath()
-            try:
-                self.master_df.to_csv(filepath, index=False)
+            result = self.save_pooled_data()
+            # Override the debug logging with info logging for auto-save
+            if result:
+                filepath = self._get_pooled_data_filepath()
                 logger.info(f"Auto-saved pooled data to: {filepath} ({len(self.master_df)} rows)")
-            except Exception as e:
-                logger.error(f"Failed to auto-save pooled data to {filepath}: {e}")
+            return result
         else:
             logger.warning("No pooled data to auto-save (master_df is empty)")
+            return None
 
     def _auto_save_mean_data(self):
         """Auto-save mean data to CSV file whenever the mean DataFrame is modified."""
+        # Call save_mean_data with default parameters but use info logging
+        if len(self.dfMean) > 0:
+            result = self.save_mean_data()
+            # Override the debug logging with info logging for auto-save
+            if result:
+                filepath = self._get_mean_data_filepath()
+                logger.info(f"Auto-saved mean data to: {filepath} ({len(self.dfMean)} rows)")
+            return result
+        else:
+            logger.warning("No mean data to auto-save (dfMean is empty)")
+            return None
+
+    def save_mean_data(self):
+        """Save mean data to CSV file in the loaded folder."""
         if len(self.dfMean) > 0:
             filepath = self._get_mean_data_filepath()
             try:
-                self.dfMean.to_csv(filepath, index=False)
-                logger.info(f"Auto-saved mean data to: {filepath} ({len(self.dfMean)} rows)")
-                # logger.info('df mean is:')
-                # print(self.dfMean)
+                # self.dfMean.to_csv(filepath, index=False)
+                with open(filepath,'w') as f:
+                    # save self._headerDict as json
+                    f.write(json.dumps(self._headerDict) + '\n')
+                    self.dfMean.to_csv(f, index=False)
+                logger.debug(f"Saved mean data to: {filepath} ({len(self.dfMean)} rows)")
+                return filepath
             except Exception as e:
-                logger.error(f"Failed to auto-save mean data to {filepath}: {e}")
+                logger.error(f"Failed to save mean data to {filepath}: {e}")
+                return None
         else:
-            logger.warning("No mean data to auto-save (dfMean is empty)")
-
-
+            logger.debug("No mean data to save (dfMean is empty)")
+            return None
 
     def create_df_mean(self, force_recalculate: bool = False) -> pd.DataFrame:
         """
@@ -948,11 +990,11 @@ class TiffPool:
                     intensity_df['Channel'] = channel
                     intensity_df['Tif Rel Path'] = rel_path
                     intensity_df['TIF Filename'] = Path(rel_path).name
-                    intensity_df['Date'] = row['date']
-                    intensity_df['Cell ID'] = row['cell_id']
-                    intensity_df['Region'] = row['region']
-                    intensity_df['Condition'] = row['condition']
-                    intensity_df['Repeat'] = row['repeat']
+                    intensity_df['Date'] = row['Date']
+                    intensity_df['Cell ID'] = row['Cell ID']
+                    intensity_df['Region'] = row['Region']
+                    intensity_df['Condition'] = row['Condition']
+                    intensity_df['Repeat'] = row['Repeat']
                     for roi in kym_analysis.getRoiLabels():
                         polarity = kym_analysis.getDetectionParams(roi, PeakDetectionTypes.intensity, channel)['Polarity']
                         intensity_df.loc[intensity_df['ROI Label'] == roi, 'Polarity'] = polarity
@@ -1035,11 +1077,11 @@ class TiffPool:
                     intensity_df['TIF Filename'] = Path(rel_path).name
                     
                     # Add key metadata columns from TifFileBackend's COLUMN_CONFIG
-                    intensity_df['Date'] = self.tif_file_backend.df.at[row_index, 'date']
-                    intensity_df['Cell ID'] = self.tif_file_backend.df.at[row_index, 'cell_id']
-                    intensity_df['Region'] = self.tif_file_backend.df.at[row_index, 'region']
-                    intensity_df['Condition'] = self.tif_file_backend.df.at[row_index, 'condition']
-                    intensity_df['Repeat'] = self.tif_file_backend.df.at[row_index, 'repeat']
+                    intensity_df['Date'] = self.tif_file_backend.df.at[row_index, 'Date']
+                    intensity_df['Cell ID'] = self.tif_file_backend.df.at[row_index, 'Cell ID']
+                    intensity_df['Region'] = self.tif_file_backend.df.at[row_index, 'Region']
+                    intensity_df['Condition'] = self.tif_file_backend.df.at[row_index, 'Condition']
+                    intensity_df['Repeat'] = self.tif_file_backend.df.at[row_index, 'Repeat']
                     
                     new_results.append(intensity_df)
                 # Diameter analysis (commented out for now)
@@ -1430,12 +1472,19 @@ class TiffPool:
         if len(self.master_df) > 0:
             filepath = self._get_pooled_data_filepath()
             try:
-                self.master_df.to_csv(filepath, index=False)
-                logger.info(f"Saved pooled data to: {filepath} ({len(self.master_df)} rows)")
+                # self.master_df.to_csv(filepath, index=False)
+                with open(filepath,'w') as f:
+                    # save self._headerDict as json
+                    f.write(json.dumps(self._headerDict) + '\n')
+                    self.master_df.to_csv(f, index=False)
+                logger.debug(f"Saved pooled data to: {filepath} ({len(self.master_df)} rows)")
+                return filepath
             except Exception as e:
                 logger.error(f"Failed to save pooled data to {filepath}: {e}")
+                return None
         else:
             logger.debug("No pooled data to save (master_df is empty)")
+            return None
 
     def get_master_dataframe(self) -> pd.DataFrame:
         return self.master_df.copy()
@@ -1455,8 +1504,8 @@ class TiffPool:
             'analysis_types': self.master_df['Analysis Type'].unique().tolist(),
             'channels': sorted(self.master_df['Channel'].unique().tolist()),
         }
-        if 'date' in self.master_df.columns:
-            dates = pd.to_datetime(self.master_df['date'], errors='coerce')
+        if 'Date' in self.master_df.columns:
+            dates = pd.to_datetime(self.master_df['Date'], errors='coerce')
             valid_dates = dates.dropna()
             if len(valid_dates) > 0:
                 summary['date_range'] = {
@@ -1467,18 +1516,18 @@ class TiffPool:
 
     def filter_by_condition(self, condition: str) -> pd.DataFrame:
         df = self.tif_file_backend.df
-        if 'condition' not in df.columns:
-            logger.warning("No 'condition' column found in backend DataFrame")
+        if 'Condition' not in df.columns:
+            logger.warning("No 'Condition' column found in backend DataFrame")
             return pd.DataFrame()
-        rel_paths = set(df[df['condition'] == condition]['relative_path'])
+        rel_paths = set(df[df['Condition'] == condition]['relative_path'])
         return self.master_df[self.master_df['Tif Rel Path'].isin(rel_paths)]
 
     def filter_by_region(self, region: str) -> pd.DataFrame:
         df = self.tif_file_backend.df
-        if 'region' not in df.columns:
-            logger.warning("No 'region' column found in backend DataFrame")
+        if 'Region' not in df.columns:
+            logger.warning("No 'Region' column found in backend DataFrame")
             return pd.DataFrame()
-        rel_paths = set(df[df['region'] == region]['relative_path'])
+        rel_paths = set(df[df['Region'] == region]['relative_path'])
         return self.master_df[self.master_df['Tif Rel Path'].isin(rel_paths)]
 
     def get_unique_values(self, column: str) -> List[str]:

@@ -7,7 +7,8 @@ name = "sanpy"
 # version = "0.0.1"  # Remove any existing version parameter.
 dynamic = ["version"]
 requires-python = ">=3.11"
-dependencies = []  # Base install has no requirements
+dependencies = [
+]  # Base install has no requirements
 
 [project.optional-dependencies]
 gui = [

@@ -97,15 +97,20 @@ class KymRoiAnalysis:
         # logger.debug("KymRoiAnalysis: finished loadAnalysis")
 
         if loadedHeaderDict is not None:
-            # logger.info("KymRoiAnalysis: loaded header dict from analysis file")
-            # Only set metadata keys that are valid
-            valid_metadata_keys = [
-                'Acq Date', 'Acq Time', 'secondsPerLine', 'umPerPixel',
-                'Animal ID', 'Region', 'Cell Type', 'Cell ID', 'Condition', 'Note'
-            ]
-            for key in valid_metadata_keys:
-                if key in loadedHeaderDict:
-                    self._kymRoiMetaData[key] = loadedHeaderDict[key]
+            pass  # abb 20250728 all handled in KymRoiMetaData
+
+            # # logger.info("KymRoiAnalysis: loaded header dict from analysis file")
+            # # Only set metadata keys that are valid
+            # logger.info('loadedHeaderDict:')
+            # pprint(loadedHeaderDict)
+
+            # valid_metadata_keys = [
+            #     'Acq Date', 'Acq Time', 'secondsPerLine', 'umPerPixel',
+            #     'Animal ID', 'Region', 'Cell Type', 'Cell ID', 'Condition', 'Note'
+            # ]
+            # for key in valid_metadata_keys:
+            #     if key in loadedHeaderDict:
+            #         self._kymRoiMetaData[key] = loadedHeaderDict[key]
         else:
             logger.info("KymRoiAnalysis: no analysis file found, loading Olympus header or using defaults")
             # Only try to load from Olympus header if we have image data or are not in analysis_only mode
@@ -147,7 +152,7 @@ class KymRoiAnalysis:
         self._xAxisSeconds *= self.secondsPerLine
 
         self._fakeScale = False
-        self._isDirty = False
+        self._isDirty = False  # redundant
 
         if loadedHeaderDict is not None:
             self._kymRoiMetaData['Acq Date'] = loadedHeaderDict['Acq Date']
@@ -504,8 +509,8 @@ class KymRoiAnalysis:
             except ValueError as e:
                 logger.error(e)
 
-            logger.info('returning df:')
-            print(df)
+            # logger.info('returning df:')
+            # print(df)
 
             return df
 
@@ -825,39 +830,39 @@ class KymRoiAnalysis:
             # Try to load header (metadata) from trace file first
             header_loaded = False
             if os.path.isfile(tracePath):
-                try:
-                    # logger.debug(f"loadAnalysis: opening tracePath: {tracePath}")
-                    with open(tracePath) as f:
-                        headerJson = f.readline()
-                        # logger.debug(f"loadAnalysis: read headerJson: {headerJson[:100]}")
-                        _loadedHeaderDict = json.loads(headerJson)
-                        # set the path to the actual path during runtime
-                        _loadedHeaderDict['path'] = self.path
-                        self._kymRoiMetaData = KymRoiMetaData.fromDict(_loadedHeaderDict)
-                    header_loaded = True
-                except Exception as e:
-                    logger.error(f"loadAnalysis: failed to load header from trace file: {e}")
+                logger.info(f"loadAnalysis: opening tracePath: {tracePath}")
+                with open(tracePath) as f:
+                    headerJson = f.readline()
+                    _loadedHeaderDict = json.loads(headerJson)
+                    # set the path to the actual path during runtime
+                    _loadedHeaderDict['path'] = self.path
+                    self._kymRoiMetaData = KymRoiMetaData.fromDict(_loadedHeaderDict)
+                header_loaded = True
             
             # If trace file doesn't exist or failed to load header, try to load from peak file
-            if not header_loaded and os.path.isfile(peakPath):
-                try:
-                    logger.debug(f"loadAnalysis: loading header from peak file: {peakPath}")
-                    with open(peakPath) as f:
-                        headerJson = f.readline()
-                        _loadedHeaderDict = json.loads(headerJson)
-                        _loadedHeaderDict['path'] = self.path
-                        self._kymRoiMetaData = KymRoiMetaData.fromDict(_loadedHeaderDict)
-                    header_loaded = True
-                except Exception as e:
-                    logger.debug(f"loadAnalysis: failed to load header from peak file: {e}")
+            # if not header_loaded and os.path.isfile(peakPath):
+            #     try:
+            #         logger.debug(f"loadAnalysis: loading header from peak file: {peakPath}")
+            #         with open(peakPath) as f:
+            #             headerJson = f.readline()
+            #             _loadedHeaderDict = json.loads(headerJson)
+            #             if '_loadedHeaderDict' not in _loadedHeaderDict.keys() or _loadedHeaderDict['version'] < self._kymRoiMetaData.getParam('version'):
+            #                 logger.error(f'Version mismatch in saved state file: {peakPath}')
+            #                 logger.error(F'  -->> ignore loaded header')
+            #             else:
+            #                 _loadedHeaderDict['path'] = self.path  # runtime path (in case user moved folder)
+            #             self._kymRoiMetaData = KymRoiMetaData.fromDict(_loadedHeaderDict)
+            #         header_loaded = True
+            #     except Exception as e:
+            #         logger.debug(f"loadAnalysis: failed to load header from peak file: {e}")
             
             # If we still don't have header, skip this channel
             if not header_loaded:
                 # there was no saved csv file for channel
-                # logger.debug(f"loadAnalysis: no header found for channel {channel}, skipping")
+                logger.debug(f"loadAnalysis: no header found for channel {channel}, skipping")
                 continue
 
-            logger.debug("  loadAnalysis: loading peak file")
+            logger.debug(f"  loadAnalysis: loading peak file channel:{channel}")
             loaded_f_f0 = self._loadThisFile(peakPath, channel, PeakDetectionTypes.intensity, addRois=addRois)
             if loaded_f_f0:
                 addRois = False

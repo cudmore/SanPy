@@ -756,6 +756,7 @@ class KymRoi:
                 numLineScans = imgData[channel].shape[1]
             else:
                 # Default to a reasonable number if we can't determine
+                logger.error('defaulting to numLineScans = 1000')
                 numLineScans = 1000
                 
             self.kymRoiTraces[channel] = KymRoiTraces(numLineScans, self.secondsPerLine)

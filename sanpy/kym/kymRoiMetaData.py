@@ -1,6 +1,8 @@
 import os
+import sys
 from typing import List, Optional, Any
 import json
+from pprint import pprint
 
 import numpy as np
 import pandas as pd
@@ -30,9 +32,6 @@ class KymRoiMetaData:
         # auto fill some values from TifInfo (parses filename)
         tifInfo = TifInfo.from_filename(path)
 
-        if tifInfo.condition == '':
-            logger.warning(f'tifInfo.condition is empty for {path}')
-
         """
             date: str
             cellid: str
@@ -40,17 +39,19 @@ class KymRoiMetaData:
             region: str
             repeat: int
         """
+
         self._dict = {
             # user can edit these, see allowTextEdit()
+            'version': 0.1,  # abb 20250728
             'Animal ID': '',
-            'Region': tifInfo.region,
             'Cell Type': '',
+            'Region': tifInfo.region,
             'Cell ID': tifInfo.cellid,
             'Condition': tifInfo.condition,
             'Repeat': tifInfo.repeat,
             'Date': tifInfo.date,
-            'Note': '',
-            'Accept': True,
+            'Note': '',  # abb todo move to kymroianalysis
+            'Accept': True,  # abb todo move to kymroianalysis
             # not editable
             'path': path,
             'File Name': filename,
@@ -83,6 +84,17 @@ class KymRoiMetaData:
         self._doNotShowInGui = 'path'
         """Keys to not show in GUI.
         """
+
+    def setValuesFromTifFile(self, path: str):
+        """Set values from tif file name."""
+        logger.info('  setting vlaues from filename')
+
+        tifInfo = TifInfo.from_filename(path)
+        self.setParam('Region', tifInfo.region)
+        self.setParam('Cell ID', tifInfo.cellid)
+        self.setParam('Condition', tifInfo.condition)
+        self.setParam('Repeat', tifInfo.repeat)
+        self.setParam('Date', tifInfo.date)
 
     def setParam(self, key, value):
         """Set a parameter value."""
@@ -120,7 +132,7 @@ class KymRoiMetaData:
             self.setParam(k, v)
 
     @classmethod
-    def fromDict(cls, _dict):
+    def fromDict(cls, _dict: dict):
         """Create a KymRoiMetaData instance from a dictionary.
 
         Parameters
@@ -133,16 +145,42 @@ class KymRoiMetaData:
         KymRoiMetaData
             New instance with values from the dictionary
         """
-        logger.debug('fromDict called')
+
         # Extract required parameters for __init__
         path = _dict.get('path', '')
 
         # Create the instance with optional imgData (None is now allowed)
         instance = cls(path, imgData=None)
 
-        # Set all the dictionary values
-        for k, v in _dict.items():
-            instance.setParam(k, v)
+        if 'version' not in _dict.keys():
+            # abb 20250728 this is an upgrade from our previous (no version) file version
+            logger.error('no version in loaded metadata: -->> upgrading to new file version')
+
+            # grab values from loaded dict
+            logger.info('setting loaded key values:')
+            for k, v in _dict.items():
+                logger.info(f'k:{k} v:{v}')
+                instance.setParam(k, v)
+
+            # this is the upgrade, reset values from tif file name (colin)
+            logger.info('recalculating some keys from tif file name')
+            instance.setValuesFromTifFile(path)
+
+            logger.info('  -->>upgrade complete self._dict is:')
+            pprint(instance._dict)
+
+        # abb 20250728 we are never here (yet)
+        elif _dict['version'] < cls.getParam('version'):
+            # abb 20250728 we are never here (yet)
+            # this will handle future version changes
+            logger.error(f'Version mismatch in saved state file: {_dict["path"]}')
+            logger.error('  -->> ignore loaded header (implement this when we incrment version for metadata)')
+            return instance
+
+        else:
+            # Set all the dictionary values
+            for k, v in _dict.items():
+                instance.setParam(k, v)
 
         return instance
 

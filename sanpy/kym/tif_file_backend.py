@@ -71,6 +71,8 @@ API METHODS:
 
 import os
 import re
+import sys
+import json
 from pathlib import Path
 
 # import random  # Uncomment when adding columns that need random data
@@ -555,6 +557,10 @@ class TifFileBackend:
             logger.error(f"Root path does not exist: {self.root_path}")
             return
 
+        self._headerDict = {
+            'version': 0.1,
+        }
+
         self._scan_files()
         self._load_saved_state()
         self._analyze_files()  # Run expensive computations on unanalyzed files
@@ -594,7 +600,18 @@ class TifFileBackend:
         state_filepath = self._get_state_filepath()
         if os.path.exists(state_filepath):
             try:
-                loaded_df = pd.read_csv(state_filepath)
+                # loaded_df = pd.read_csv(state_filepath)
+                with open(state_filepath, 'r') as f:
+                    # Read the first line as JSON
+                    _loadedHeaderDict = json.loads(f.readline())
+                    # Read the remaining lines as a DataFrame
+                    loaded_df = pd.read_csv(f)
+                    
+                # check if version in header dict matches our runtime version
+                if _loadedHeaderDict['version'] != self._headerDict['version']:
+                    logger.error(f"Version mismatch in saved state file: {state_filepath}")
+                    # return
+                
                 if len(self.df) > 0 and len(loaded_df) > 0:
                     common_cols = [
                         col for col in loaded_df.columns
@@ -657,11 +674,11 @@ class TifFileBackend:
                 logger.error(f"Error loading state from {state_filepath}: {e}")
                 # Set _analyzed to False on error
                 self.df['_analyzed'] = False
-            except Exception as e:
-                logger.error(f"Unexpected error loading state from {state_filepath}: {e}")
-                # Set _analyzed to False on error
-                self.df['_analyzed'] = False
-                raise
+            # except Exception as e:
+            #     logger.error(f"Unexpected error loading state from {state_filepath}: {e}")
+            #     # Set _analyzed to False on error
+            #     self.df['_analyzed'] = False
+            #     raise
         else:
             # No saved state file exists, ensure all columns exist and set _analyzed to False
             self._ensure_all_columns_exist()
@@ -835,7 +852,8 @@ class TifFileBackend:
             
         except Exception as e:
             logger.warning(f"Failed to extract acquisition parameters from {tif_path}: {e}")
-            return {}
+            raise
+            # return {}
 
     def _analyze_files(self, force_reanalyze: bool = False):
         """
@@ -882,6 +900,12 @@ class TifFileBackend:
                 kym_analysis = KymRoiAnalysis(str(tif_path), imgData=None, analysis_only=True, loadImgData=False)
                 header = kym_analysis.header
 
+                # if header.getParam('Region') == '':
+                #     logger.error(f'Region is empty for filename: {row["filename"]}')
+                #     print(kym_analysis.header)
+                #     # raise
+                #     sys.exit(1)
+
                 # Ensure 'Date' column is str type before assignment
                 self.df['Date'] = self.df['Date'].astype(str)
 
@@ -916,7 +940,10 @@ class TifFileBackend:
 
             except (ValueError, AttributeError, TypeError) as e:
                 # If TifInfo parsing fails, use default values and log the error
-                logger.warning(f"Failed to analyze filename '{row['filename']}': {e}")
+                logger.error(f"Failed to analyze filename '{row['filename']}': {e}")
+                raise
+
+
                 default_values = self._get_analysis_default_values(error_message=str(e))
                 default_values['_analyzed'] = True  # Mark as analyzed to avoid retrying
                 
@@ -945,16 +972,17 @@ class TifFileBackend:
                 except Exception as acq_error:
                     logger.warning(f"Failed to extract acquisition parameters for {row['filename']}: {acq_error}")
 
-            except Exception as e:
-                # Log unexpected errors but continue processing other files
-                logger.error(
-                    f"Unexpected error analyzing file '{row['filename']}': {e}"
-                )
-                default_values = self._get_analysis_default_values(error_message=str(e))
-                default_values['_analyzed'] = True  # Mark as analyzed to avoid retrying
+            # except Exception as e:
+            #     raise
+            #     # Log unexpected errors but continue processing other files
+            #     logger.error(
+            #         f"Unexpected error analyzing file '{row['filename']}': {e}"
+            #     )
+            #     default_values = self._get_analysis_default_values(error_message=str(e))
+            #     default_values['_analyzed'] = True  # Mark as analyzed to avoid retrying
                 
-                # Apply all default values
-                self._apply_default_values(idx, default_values)
+            #     # Apply all default values
+            #     self._apply_default_values(idx, default_values)
 
         logger.info(f"Completed analysis of {len(files_to_analyze)} files")
 
@@ -994,6 +1022,7 @@ class TifFileBackend:
                     logger.info(f"Pre-loaded {loaded_count}/{len(self.df)} CSV analysis files...")
                     
             except Exception as e:
+                raise
                 logger.warning(f"Failed to pre-load CSV analysis for {row['filename']}: {e}")
                 failed_count += 1
                 # Set to None to indicate failure
@@ -1368,7 +1397,8 @@ class TifFileBackend:
                 )
 
             except Exception as e:
-                logger.error(f"Error scanning file {relative_path}: {e}")
+                raise
+                #logger.error(f"Error scanning file {relative_path}: {e}")
 
         return file_data
 
@@ -1462,9 +1492,11 @@ class TifFileBackend:
                     else:
                         logger.debug(f"Failed to extract acquisition parameters for {row['filename']} (despite filename parsing failure)")
                 except Exception as acq_error:
+                    raise
                     logger.warning(f"Failed to extract acquisition parameters for {row['filename']}: {acq_error}")
 
             except Exception as e:
+                raise
                 # Log unexpected errors but continue processing other files
                 logger.error(
                     f"Unexpected error analyzing file '{row['filename']}': {e}"
@@ -1607,26 +1639,14 @@ class TifFileBackend:
 
     def _auto_save_state(self):
         """Automatically save the current state without verbose logging."""
+        # Call save_state with default parameters but use debug logging
         if len(self.df) > 0:
             filepath = self._get_state_filepath()
-            save_df = self.df.copy()
-            if '_kymRoiAnalysis' in save_df.columns:
-                save_df = save_df.drop(columns=['_kymRoiAnalysis'])
-            
-            # Use COLUMN_CONFIG to determine type conversions
-            for col_name, config in self.COLUMN_CONFIG.items():
-                if col_name in save_df.columns:
-                    column_type = config.column_type
-                    if column_type == bool:
-                        save_df[col_name] = save_df[col_name].astype(bool).astype(int)
-                    elif column_type == int:
-                        save_df[col_name] = pd.to_numeric(save_df[col_name], errors='coerce').fillna(0).astype(int)
-                    elif column_type == float:
-                        save_df[col_name] = pd.to_numeric(save_df[col_name], errors='coerce').fillna(0.0).astype(float)
-            
-            save_df.to_csv(filepath, index=False)
-            logger.debug(f"Auto-saved state to: {filepath}")
-            return filepath
+            result = self.save_state(filepath)
+            # Override the info logging with debug logging for auto-save
+            if result:
+                logger.debug(f"Auto-saved state to: {filepath}")
+            return result
         return None
 
     def save_state(self, filepath: str = None):
@@ -1652,7 +1672,10 @@ class TifFileBackend:
                         save_df[col_name] = pd.to_numeric(save_df[col_name], errors='coerce').fillna(0.0).astype(float)
                     # For str columns, no conversion needed as they're already strings
             
-            save_df.to_csv(filepath, index=False)
+            with open(filepath,'w') as f:
+                # save self._headerDict as json
+                f.write(json.dumps(self._headerDict) + '\n')
+                save_df.to_csv(f, index=False)
             logger.info(f"Saved state to: {filepath}")
             return filepath
         return None
@@ -1839,6 +1862,10 @@ class TifFileBackend:
         relative_path = self.df.at[row_index, 'relative_path']
         tif_path = self.resolve_path(relative_path)
 
+        if not os.path.isfile(tif_path):
+            logger.error(f'tif_path is not a file tif_path:{tif_path}')
+            raise
+
         try:
             # Create the KymRoiAnalysis object
             # Note: KymRoiAnalysis always loads analysis results if available, regardless of load_analysis_csv setting
@@ -1862,12 +1889,12 @@ class TifFileBackend:
                 f"Data format error creating KymRoiAnalysis for {tif_path}: {e}"
             )
             return None
-        except Exception as e:
-            logger.error(
-                f"Unexpected error creating KymRoiAnalysis for {tif_path}: {e}"
-            )
-            # Re-raise unexpected errors to avoid masking bugs
-            raise
+        # except Exception as e:
+        #     logger.error(
+        #         f"Unexpected error creating KymRoiAnalysis for {tif_path}: {e}"
+        #     )
+        #     # Re-raise unexpected errors to avoid masking bugs
+        #     raise
 
     def load_kym_roi_analysis_image_data(self, row_index: int) -> bool:
         """
@@ -1909,7 +1936,8 @@ class TifFileBackend:
 
         except Exception as e:
             logger.error(f"Failed to load image data for row {row_index}: {e}")
-            return False
+            raise
+            # return False
 
     def load_kym_roi_analysis_image_data_by_path(self, relative_path: str) -> bool:
         """
@@ -2132,6 +2160,7 @@ class TifFileBackend:
                 
         except Exception as e:
             logger.error(f"Failed to update analysis for {tif_path}: {e}")
+            raise
             return False
 
     def update_row_from_saved_analysis(self, tif_path: str) -> bool:
@@ -2198,7 +2227,8 @@ class TifFileBackend:
                         
                 except Exception as e:
                     logger.error(f"Failed to get {column_name} from KymRoiAnalysis metadata for {tif_path}: {e}")
-                    continue
+                    raise
+                    # continue
             
             if updated_columns:
                 # Auto-save state after updating
@@ -2211,7 +2241,8 @@ class TifFileBackend:
             
         except Exception as e:
             logger.error(f"Failed to update row from saved KymRoiAnalysis for {tif_path}: {e}")
-            return False
+            raise
+            # return False
 
     def get_kym_roi_analysis_by_path(
         self, relative_path: str
