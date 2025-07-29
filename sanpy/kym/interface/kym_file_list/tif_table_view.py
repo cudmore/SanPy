@@ -651,9 +651,18 @@ class TifTableView(QWidget):
         context_menu = QMenu()
 
         # Single file actions only
-        context_menu.addAction(
+
+        plotRoiAction = context_menu.addAction(
             'Plot ROIs', partial(self.plotRoisRequested.emit, relative_path)
         )
+        # enable plotRoiAction if kymRoiAnalysis is loaded
+        mask = self.backend.df['relative_path'] == relative_path
+        if mask.any():
+            backend_row_idx = mask.idxmax()
+            kym_analysis = self.backend.df.loc[backend_row_idx, '_kymRoiAnalysis']
+            plotRoiAction.setEnabled(kym_analysis is not None)
+
+                
         context_menu.addSeparator()
         context_menu.addAction(
             'Show in Finder', partial(self._showInFinder, relative_path)

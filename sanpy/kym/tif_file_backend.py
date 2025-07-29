@@ -715,11 +715,7 @@ class TifFileBackend:
                     full_path = root_path / tif_file
 
                     # Calculate relative path using pathlib
-                    try:
-                        relative_path = full_path.relative_to(self.root_path).as_posix()
-                    except ValueError:
-                        # Handle case where paths are on different drives
-                        relative_path = str(full_path)
+                    relative_path = self.get_relative_path(str(full_path))
 
                     # Extract folder hierarchy using pathlib
                     rel_path_obj = Path(relative_path)
@@ -1220,16 +1216,7 @@ class TifFileBackend:
 
         if item_type == 'file':
             # Convert full path to relative path for matching using pathlib
-            identifier_path = Path(identifier)
-            if identifier_path.is_absolute():
-                # If it's an absolute path, convert to relative path
-                try:
-                    relative_path = identifier_path.relative_to(self.root_path).as_posix()
-                except ValueError:
-                    # Handle case where paths are on different drives
-                    relative_path = identifier_path.as_posix()
-            else:
-                relative_path = identifier_path.as_posix()
+            relative_path = self.get_relative_path(identifier)
 
             mask = self.df['relative_path'] == relative_path
             if mask.any():
@@ -1322,12 +1309,8 @@ class TifFileBackend:
 
                 for tif_file in tif_files:
                     full_path = root_path / tif_file
-                    try:
-                        relative_path = full_path.relative_to(self.root_path).as_posix()
-                        current_files.add(relative_path)
-                    except ValueError:
-                        # Handle case where paths are on different drives
-                        current_files.add(full_path.as_posix())
+                    relative_path = self.get_relative_path(str(full_path))
+                    current_files.add(relative_path)
 
         except (PermissionError, OSError, IOError) as e:
             logger.error(f"Error scanning filesystem: {e}")
@@ -2315,6 +2298,40 @@ class TifFileBackend:
             The full absolute path
         """
         return str(self.resolve_path(relative_path))
+
+    def get_relative_path(self, path: str) -> str:
+        """
+        Convert an absolute or relative path to a relative path from the backend's root.
+
+        If the input path is already relative to the root_path, it will be returned as-is.
+        If the input path is absolute, it will be converted to a relative path from root_path.
+        If the path is on a different drive (Windows) or cannot be made relative, 
+        the absolute path will be returned as a string.
+
+        Parameters
+        ----------
+        path : str
+            The path to convert (can be absolute or relative)
+
+        Returns
+        -------
+        str
+            The relative path from root_path, or the absolute path if conversion fails
+        """
+        path_obj = Path(path)
+        
+        if path_obj.is_absolute():
+            # If it's an absolute path, convert to relative path
+            try:
+                relative_path = path_obj.relative_to(self.root_path).as_posix()
+            except ValueError:
+                # Handle case where paths are on different drives or cannot be made relative
+                relative_path = path_obj.as_posix()
+        else:
+            # If it's already a relative path, normalize it
+            relative_path = path_obj.as_posix()
+            
+        return relative_path
 
     def resolve_path(self, path: str) -> Path:
         """

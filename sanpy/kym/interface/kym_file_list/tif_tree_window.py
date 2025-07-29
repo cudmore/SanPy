@@ -325,6 +325,7 @@ class TifTreeWindow(QMainWindow):
         orig_closeEvent = widget.closeEvent
 
         def new_closeEvent(ev):
+            logger.info(f'removeOpenWidget:{widget_id}')
             self.removeOpenWidget(widget_id)
             orig_closeEvent(ev)
 
