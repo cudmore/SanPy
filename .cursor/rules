@@ -1,0 +1,38 @@
+# SanPy Project Rules for Cursor AI Assistant
+
+## Code Style and Preferences
+
+- Use 'Any' as the return type in code as a project-wide type convention
+- Do not catch errors and instead let Python exceptions propagate for easier debugging
+- Be realistic and not overly confident in responses
+- Do not include stock phrases offering further suggestions like "If you want a more advanced version, just ask!"
+
+## Testing
+
+- Do NOT automatically create new pytest test files
+- Tests should be created only when explicitly requested
+- Make tests an explicit task rather than automatic
+
+## File Organization
+
+- Place feature-related files (example scripts, README files) in dedicated module folders under sanpy/interface
+- Store documentation in a docs subfolder to avoid cluttering the code folder
+
+## Error Handling
+
+- Let exceptions propagate naturally for easier debugging
+- Avoid try/except blocks unless absolutely necessary
+- Use logging for debugging information
+
+## Code Structure
+
+- Follow the existing project patterns and conventions
+- Use the established import structure
+- Maintain consistency with existing naming conventions
+- Prefer explicit over implicit behavior
+
+## Documentation
+
+- Keep documentation concise and practical
+- Focus on implementation details rather than theoretical explanations
+- Use clear, descriptive variable and function names 
