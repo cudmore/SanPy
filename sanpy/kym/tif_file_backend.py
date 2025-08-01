@@ -137,57 +137,6 @@ class TifFileBackend:
     in a directory structure. It uses a two-phase approach to separate fast file discovery from
     expensive computations, making it efficient for large datasets.
     
-    **Key Features:**
-    
-    - **Two-phase system**: Fast file discovery + expensive analysis
-    - **Automatic metadata extraction**: From filenames and TIF headers
-    - **Acquisition parameter extraction**: From KymRoiAnalysis objects
-    - **State persistence**: Save/load analysis results to CSV
-    - **Incremental updates**: Only re-analyze new or changed files
-    - **Flexible filtering**: By condition, region, repeat, etc.
-    - **Memory-efficient**: Lazy loading of KymRoiAnalysis objects
-    
-    **Typical Usage:**
-    
-    ```python
-    from sanpy.kym.tif_file_backend import TifFileBackend
-    
-    # Create backend for a directory
-    backend = TifFileBackend(
-        root_path="/path/to/tif/files",
-        exclude_folders=["sanpy-reports-pdf"],
-        sort_by_grandparent=True
-    )
-    
-    # Get analyzed files
-    files = backend.get('files')
-    
-    # Force re-analysis if needed
-    backend.force_reanalyze_all()
-    
-    # Save state
-    backend.save_state()
-    ```
-    
-    **Column System:**
-    
-    The backend uses a configurable column system defined in `COLUMN_CONFIG`. Each column
-    has properties like display name, data type, width, visibility, and editability.
-    
-    **Analysis Status:**
-    
-    - `_analyzed`: Tracks whether expensive analysis has been performed
-    - Use `get_analysis_status()` to check progress
-    - Use `analyze_unanalyzed_files()` to continue analysis
-    
-    **File Organization:**
-    
-    Files are organized by folder hierarchy:
-    - `great_grandparent_folder`: Top-level experiment folder
-    - `grandparent_folder`: Condition folder (e.g., "Control", "Treatment")
-    - `parent_folder`: Sub-folder within condition
-    - `filename`: The actual .tif file
-    
     Attributes
     ----------
     root_path : str
@@ -1088,12 +1037,14 @@ class TifFileBackend:
             - `'unique_repeats'`: Get list of unique repeat numbers
             - `'filter_by_condition'`: Filter files by specific condition (requires `condition` parameter)
             - `'filter_by_repeat'`: Filter files by specific repeat (requires `repeat` parameter)
+            - `'filter_by_cell_id'`: Filter files by specific cell ID (requires `cell_id` parameter)
             
         **kwargs
             Additional parameters for specific item types:
             
             - `condition` (str): Required for `'filter_by_condition'` - the condition to filter by
             - `repeat` (int): Required for `'filter_by_repeat'` - the repeat number to filter by
+            - `cell_id` (str): Required for `'filter_by_cell_id'` - the cell ID to filter by
             
         Returns
         -------
@@ -1103,7 +1054,7 @@ class TifFileBackend:
             - `List[str]`: For `'files'`, `'unique_conditions'`, `'unique_repeats'`
             - `Dict[str, int]`: For `'condition_counts'`, `'repeat_counts'`
             - `int`: For `'file_count'`
-            - `pd.DataFrame`: For `'filter_by_condition'`, `'filter_by_repeat'`
+            - `pd.DataFrame`: For `'filter_by_condition'`, `'filter_by_repeat'`, `'filter_by_cell_id'`
             
         Raises
         ------
@@ -1193,9 +1144,15 @@ class TifFileBackend:
                 raise ValueError("repeat parameter required for filter_by_repeat")
             return self.df[self.df['Repeat'] == repeat]
         
+        elif item_type == 'filter_by_cell_id':
+            cell_id = kwargs.get('cell_id')
+            if cell_id is None:
+                raise ValueError("cell_id parameter required for filter_by_cell_id")
+            return self.df[self.df['Cell ID'] == cell_id]
+        
         else:
             raise ValueError(
-                f"Invalid item_type: {item_type}. Valid options: ['files', 'file_count', 'condition_counts', 'repeat_counts', 'unique_conditions', 'unique_repeats', 'filter_by_condition', 'filter_by_repeat']"
+                f"Invalid item_type: {item_type}. Valid options: ['files', 'file_count', 'condition_counts', 'repeat_counts', 'unique_conditions', 'unique_repeats', 'filter_by_condition', 'filter_by_repeat', 'filter_by_cell_id']"
             )
 
     def set_checked(self, item_type: str, identifier: str, checked: bool):
@@ -1835,7 +1792,7 @@ class TifFileBackend:
         
         if existing_analysis is not None:
             logger.debug(f"Returning cached analysis for row {row_index}")
-            print(existing_analysis)
+            # print(existing_analysis)
             return existing_analysis
 
         # If we get here, the KymRoiAnalysis object wasn't pre-loaded or failed to load
@@ -2210,8 +2167,8 @@ class TifFileBackend:
                         
                 except Exception as e:
                     logger.error(f"Failed to get {column_name} from KymRoiAnalysis metadata for {tif_path}: {e}")
-                    raise
-                    # continue
+                    #raise
+                    continue
             
             if updated_columns:
                 # Auto-save state after updating

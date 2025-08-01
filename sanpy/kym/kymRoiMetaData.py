@@ -87,7 +87,7 @@ class KymRoiMetaData:
 
     def setValuesFromTifFile(self, path: str):
         """Set values from tif file name."""
-        logger.info('  setting vlaues from filename')
+        logger.info('  setting values from filename')
 
         tifInfo = TifInfo.from_filename(path)
         self.setParam('Region', tifInfo.region)
@@ -159,15 +159,15 @@ class KymRoiMetaData:
             # grab values from loaded dict
             logger.info('setting loaded key values:')
             for k, v in _dict.items():
-                logger.info(f'k:{k} v:{v}')
+                # logger.info(f'k:{k} v:{v}')
                 instance.setParam(k, v)
 
             # this is the upgrade, reset values from tif file name (colin)
-            logger.info('recalculating some keys from tif file name')
+            # logger.info('recalculating some keys from tif file name')
             instance.setValuesFromTifFile(path)
 
-            logger.info('  -->>upgrade complete self._dict is:')
-            pprint(instance._dict)
+            # logger.info('  -->>upgrade complete self._dict is:')
+            # pprint(instance._dict)
 
         # abb 20250728 we are never here (yet)
         elif _dict['version'] < cls.getParam('version'):

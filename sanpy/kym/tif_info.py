@@ -40,7 +40,10 @@ class TifInfo:
     error: str = ""
 
     # Class variables for configurable parsing
-    POSSIBLE_CONDITIONS = ['Control', 'Ivabradine', 'Thapsigargin', 'FCCP']
+    POSSIBLE_CONDITIONS = ['Control',
+                           'Ivabradine', 'Ivab',
+                           'Thapsigargin', 'Thap',
+                           'FCCP']
     POSSIBLE_REGIONS = ['ISAN', 'SSAN']
 
 

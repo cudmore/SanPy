@@ -1644,7 +1644,7 @@ def run():
         'Decay Time (ms)',
         'Area Under Peak',
         'Area Under Peak (Sum)',
-        'Number of Spikes',
+        'Number of Peaks',
         # 'Spike Frequency (Hz)',
         'fit_tau',
         'fit_tau1',

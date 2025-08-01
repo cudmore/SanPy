@@ -56,6 +56,7 @@ class TiffPool:
         self._group_columns = group_columns or ['Cell ID',
                                                 'Condition',
                                                 'ROI Label',
+                                                'Repeat',
                                                 'Channel']
         # User-specified or default metadata columns
         self._metadata_columns = metadata_columns or ['Region',
@@ -341,6 +342,10 @@ class TiffPool:
                     # Take the first value from each group (they should be consistent)
                     metadata_data[col] = self.master_df.groupby(self._group_columns)[col].first().values
             
+            # Add Tif Rel Path as metadata (should be consistent within groups)
+            if 'Tif Rel Path' in self.master_df.columns:
+                metadata_data['Tif Rel Path'] = self.master_df.groupby(self._group_columns)['Tif Rel Path'].first().values
+            
             # Add metadata columns to the grouped DataFrame
             for col, values in metadata_data.items():
                 grouped[col] = values
@@ -391,6 +396,16 @@ class TiffPool:
         
         # Add boolean columns for cell and ROI filtering (needed for KymTreeWidget)
         self._add_filter_columns()
+        
+        # Add 'Condition Repeat' column for plotting (combines Condition and Repeat)
+        if 'Condition' in self.dfMean.columns and 'Repeat' in self.dfMean.columns:
+            self.dfMean['Condition Repeat'] = (
+                self.dfMean['Condition'].fillna('')
+                + ' '
+                + self.dfMean['Repeat'].astype(str).fillna('')
+            ).str.strip()
+            self.dfMean['Condition Repeat'] = self.dfMean['Condition Repeat'].astype('category')
+            logger.debug("20250731 Added 'Condition Repeat' column to dfMean")
         
         # Auto-save the mean data
         self._auto_save_mean_data()
@@ -827,7 +842,7 @@ class TiffPool:
                 new_row[col] = group_tuple[i]
             
             # Add metadata columns (take first value from group)
-            metadata_columns = ['Region', 'Date', 'Repeat', 'Analysis Type', 'Polarity']
+            metadata_columns = ['Region', 'Date', 'Repeat', 'Analysis Type', 'Polarity', 'Tif Rel Path']
             for col in metadata_columns:
                 if col in group_data.columns:
                     new_row[col] = group_data[col].iloc[0]

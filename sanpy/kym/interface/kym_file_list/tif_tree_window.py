@@ -644,14 +644,18 @@ class TifTreeWindow(QMainWindow):
     def onPlotRoisRequested(self, relative_path):
         """Called when user selects 'Plot ROIs' from context menu."""
         logger.info(f"Plot ROIs requested for: {relative_path}")
-        # You can add custom actions here, such as opening a plotting window
-        from sanpy.kym.kymRoiPlot_mpl import plotOneKym
-        kymRoiAnalysis = self.backend.get_kym_roi_analysis_by_path(relative_path)
-        fig, ax = plotOneKym(kymRoiAnalysis)
-        fig.show()
+        
+        if 0:
+            from sanpy.kym.kymRoiPlot_mpl import plotOneKym
+            kymRoiAnalysis = self.backend.get_kym_roi_analysis_by_path(relative_path)
+            fig, ax = plotOneKym(kymRoiAnalysis)
+            fig.show()
+
+        # test plot_cellid_cond
+        self.plot_cellid_cond(relative_path, '1')
 
     def plot_cellid_cond(self, pathToTif: str, roiLabel: str):
-        """Plot a single cell and condition.
+        """Given a tif file and a roi label, plot the label across all conditions.
         
         Parameters
         ----------
@@ -661,12 +665,12 @@ class TifTreeWindow(QMainWindow):
             The ROI label to plot.
         """
         # get cell id from backend
-        from sanpy.kym.kymRoiPlot_mpl import plotOneKym, plot_cell_id_conds
+        from sanpy.kym.kymRoiPlot_mpl import plot_cell_id_conds
         row = self.backend.get_row_by_path(pathToTif)
-        plot_cell_id_conds(self.backend._tifPool.get_master_dataframe(),
-                           self.backend._tifPool.get_df_mean(),
-                           cellID=row['Cell ID'],
-                           roiLabel=roiLabel)
+        fig, ax, imgDataDict = plot_cell_id_conds(
+            self.backend,
+            cellID=row['Cell ID'],
+            roiLabel=roiLabel)
         fig.show()
     
 
@@ -854,8 +858,8 @@ class TifTreeWindow(QMainWindow):
                 'File Number',
                 'Cell ID',
                 'Condition',
-                'Epoch',
-                'Condition Epoch',
+                'Repeat',
+                'Condition Repeat',
                 'Region',
                 'Date',
                 'ROI Label',

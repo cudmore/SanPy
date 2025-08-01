@@ -53,7 +53,7 @@ def getAutoContrast(imgData: np.ndarray):
         hist_min = im_min
         hist_max = im_max
     else:
-        raise NotImplementedError(f"Not implemented for dtype {im_type}")
+        raise NotImplementedError(f"Not implemented for dtype {im_type}. Acceptable dtypes are: np.uint8, np.int8, np.uint16, np.int16, np.int32")
 
     # compute histogram
     histogram = np.histogram(im, bins=256, range=(hist_min, hist_max))[0]

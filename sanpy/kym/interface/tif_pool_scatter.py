@@ -507,102 +507,6 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         self._buildFilterToobar(vBoxLayout)
 
-        # testing if rebuild works
-        # self._buildFilterToobar(vBoxLayout)
-
-        # #
-        # # Regions group box
-        # regionsGroupBox = QtWidgets.QGroupBox('Regions')
-        # regionConditionHBox.addWidget(regionsGroupBox)
-
-        # # one checkbox for each Region
-        # regionsVLayout = QtWidgets.QVBoxLayout()
-        # regionsGroupBox.setLayout(regionsVLayout)
-
-        # regions = self.getDf()['Region'].unique()
-        # for regionStr in regions:
-        #     regionCheckBox = QtWidgets.QCheckBox(regionStr)
-        #     regionCheckBox.setChecked(True)
-        #     regionCheckBox.stateChanged.connect(
-        #         partial(self._on_condition_checkbox, 'Region', regionStr)
-        #     )
-        #     regionsVLayout.addWidget(regionCheckBox)
-
-        # #
-        # # conditions group box
-        # conditionsGroupBox = QtWidgets.QGroupBox('Conditions')
-        # regionConditionHBox.addWidget(conditionsGroupBox)
-
-        # # one checkbox for each Condition
-        # conditionsVLayout = QtWidgets.QVBoxLayout()
-        # conditionsGroupBox.setLayout(conditionsVLayout)
-
-        # conditions = sorted(self.getDf()['Condition'].unique())
-        # for conditionStr in conditions:
-        #     # each condition has a hlayout with epoch checkboxes
-        #     conditionHLayout = QtWidgets.QHBoxLayout()
-        #     conditionsVLayout.addLayout(conditionHLayout)
-
-        #     conditionCheckBox = QtWidgets.QCheckBox(conditionStr)
-        #     conditionCheckBox.setChecked(True)
-        #     conditionCheckBox.stateChanged.connect(
-        #         partial(self._on_condition_checkbox, 'Condition', conditionStr)
-        #     )
-        #     conditionHLayout.addWidget(conditionCheckBox)
-
-        #     # one checkbox for each Epoch
-        #     theseRows = self.getDf()['Condition'] == conditionStr
-        #     # abb 20250704 switched epoch to repeat !!!
-        #     try:
-        #         theseEpochs = sorted(self.getDf()[theseRows]['Repeat'].unique())
-        #     except (KeyError) as e:
-        #         logger.error(f'did not understand Epoch column: {e}')
-        #         logger.error('self.getDf() is:')
-        #         logger.error(f'available columns are: {self.getDf().columns}')
-        #         return
-
-        #     for epochInt in theseEpochs:
-        #         epochStr = str(epochInt)
-        #         epochCheckBox = QtWidgets.QCheckBox(epochStr)
-        #         epochCheckBox.setChecked(True)
-
-        #         # if condition has 1 epoch, disable
-        #         if len(theseEpochs) == 1:
-        #             epochCheckBox.setEnabled(False)
-
-        #         epochCheckBox.stateChanged.connect(
-        #             partial(
-        #                 self._on_condition_checkbox, 'Epoch', conditionStr, epochStr
-        #             )
-        #         )
-        #         conditionHLayout.addWidget(epochCheckBox)
-
-        # #
-        # # polarity group box
-        # polarityGroupBox = QtWidgets.QGroupBox('Polarity')
-        # regionConditionHBox.addWidget(polarityGroupBox)
-
-        # # one checkbox for each Condition
-        # polaritiesVLayout = QtWidgets.QVBoxLayout()
-        # polarityGroupBox.setLayout(polaritiesVLayout)
-
-        # # abb 202707
-        # try:
-        #     polarities = sorted(self.getDf()['Polarity'].unique())
-        # except (KeyError) as e:
-        #     logger.error(f'did not understand Polarity column: {e}')
-        #     logger.error('self.getDf() is:')
-        #     logger.error(f'available columns are: {self.getDf().columns}')
-        # else:
-
-        #     for polarityStr in polarities:
-        #         polarityCheckBox = QtWidgets.QCheckBox(polarityStr)
-        #         polarityCheckBox.setChecked(True)
-        #         polarityCheckBox.stateChanged.connect(
-        #             partial(self._on_condition_checkbox, 'Polarity', polarityStr)
-        #         )
-        #         polaritiesVLayout.addWidget(polarityCheckBox)
-
         #
         # cell id group box
         cellGroupBox = QtWidgets.QGroupBox('Cells')
@@ -624,7 +528,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # populate with mean df
         _df = self._meanDf
         kymTreeWidget = KymTreeWidget(_df)
-        kymTreeWidget.toggleAllToggled.connect(self.slot_toggle_all_cell_id)
+        # kymTreeWidget.toggleAllToggled.connect(self.slot_toggle_all_cell_id)
         kymTreeWidget.cellToggled.connect(self.slot_toggle_cell)
         kymTreeWidget.roiToggled.connect(self.slot_toggle_roi)
         kymTreeWidget.roiSelected.connect(self.slot_roi_selected)
@@ -634,20 +538,31 @@ class ScatterWidget(QtWidgets.QMainWindow):
 
         return leftToolbarWidget
 
-    def slot_toggle_all_cell_id(self, value: bool):
-        """Handle toggle all checkbox."""
-        self.getDf()['show_cell'] = value
-        self.getDf()['show_roi'] = value
-        self.replot()
+    # def slot_toggle_all_cell_id(self, value: bool):
+    #     """Handle toggle all checkbox."""
+    #     self.getDf()['show_cell'] = value
+    #     self.getDf()['show_roi'] = value
+    #     self.replot()
 
-    def slot_toggle_cell(self, cell_id: str, checked: bool):
+    # cell_id:"20250312 ISAN R1 LS1" condition:"Control" repeat:"0" checked:False
+    def slot_toggle_cell(self,
+                         cell_id: str,
+                         condition: str,
+                         repeat: int,
+                         checked: bool):
         """Handle cell checkbox toggle."""
+        logger.info(f'cell_id:"{cell_id}" condition:"{condition}" repeat:"{repeat}" checked:{checked}')
         df = self.getDf()
+        # logger.info(f'df is:')
+        # print(df)
         theseRows = df['Cell ID'] == cell_id
         df.loc[theseRows, 'show_cell'] = checked
         self.replot()
 
-    def slot_toggle_roi(self, cell_id: str, roi_label: str, checked: bool):
+    def slot_toggle_roi(self,
+                        cell_id: str,
+                        roi_label: str,
+                        checked: bool):
         """Handle ROI checkbox toggle."""
         df = self.getDf()
         theseRows = (df['Cell ID'] == cell_id) & (df['ROI Label'] == roi_label)
@@ -1243,9 +1158,17 @@ class ScatterWidget(QtWidgets.QMainWindow):
         # Also apply cell and ROI filters (these still use the old boolean approach for now)
         # Only apply if the columns exist (they might not if we're not using the old approach)
         if 'show_cell' in df.columns:
-            df = df[df['show_cell']]
+            try:
+                df = df[df['show_cell']]
+            except KeyError as e:
+                logger.error(f'KeyError show_cell in df.columns:{df.columns}')
+                logger.error(f'df is:')
+                print(df)
         if 'show_roi' in df.columns:
-            df = df[df['show_roi']]
+            try:
+                df = df[df['show_roi']]
+            except KeyError as e:
+                logger.error(f'KeyError show_roi in df.columns:{df.columns}')
             
         return df
 
@@ -1272,7 +1195,7 @@ class ScatterWidget(QtWidgets.QMainWindow):
         uniqueHue = [] if hue is None else df[hue].unique()
         numHue = len(uniqueHue)
 
-        if hue in ['Condition', 'Region', 'Condition Epoch']:
+        if hue in ['Condition', 'Region', 'Condition Repeat']:
             hue_order = sorted(df[hue].unique())
         else:
             hue_order = None
@@ -1880,8 +1803,8 @@ def run():
         #    'Cell ID (plot)',  # removed 20250521
         #    'Tif File',
         'Condition',
-        'Epoch',
-        'Condition Epoch',
+        'Repeat',
+        'Condition Repeat',
         'Region',
         'Date',
         'ROI Label',

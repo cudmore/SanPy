@@ -81,6 +81,8 @@ class TifTableView(QWidget):
         self.table.setSelectionBehavior(QTableWidget.SelectRows)
         self.table.setSelectionMode(QTableWidget.ExtendedSelection)
 
+        self.table.setAlternatingRowColors(True)
+
         # Layout
         layout = QVBoxLayout()
 

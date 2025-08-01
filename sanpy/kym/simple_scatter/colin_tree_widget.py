@@ -23,18 +23,18 @@ logger = get_logger(__name__)
 
 class KymTreeWidget(QWidget):
     # Emitted when a cell (group of ROIs) is checked or unchecked
-    cellToggled = pyqtSignal(str, str, int, bool)  # cell_id, condition, epoch, checked
+    cellToggled = pyqtSignal(str, str, int, bool)  # cell_id, condition, repeat, checked
 
     # Emitted when an individual ROI is checked or unchecked
-    roiToggled = pyqtSignal(str, int, bool)  # cell_id, roi_number, checked
+    roiToggled = pyqtSignal(str, str, bool)  # cell_id, roi_number, checked
 
     # Emitted when the user selects a cell (row selected, not checkbox)
-    cellSelected = pyqtSignal(str, str, int)  # cell_id, condition, epoch
+    cellSelected = pyqtSignal(str, str, int)  # cell_id, condition, repeat
 
     # Emitted when the user selects a ROI (row selected, not checkbox)
     roiSelected = pyqtSignal(
         str, str, int, int
-    )  # cell_id, condition, epoch, roi_number
+    )  # cell_id, condition, repeat, roi_number
 
     # Emitted when the "Toggle All" checkbox is toggled (True = checked)
     toggleAllToggled = pyqtSignal(bool)
@@ -51,19 +51,19 @@ class KymTreeWidget(QWidget):
         self.customContextMenuRequested.connect(self._contextMenu)
 
         # Create Toggle All checkbox
-        self.toggleAllCheckbox = QCheckBox("Toggle All")
-        self.toggleAllCheckbox.setTristate(False)
-        self.toggleAllCheckbox.stateChanged.connect(self.toggleAll)
+        # self.toggleAllCheckbox = QCheckBox("Toggle All")
+        # self.toggleAllCheckbox.setTristate(False)
+        # self.toggleAllCheckbox.stateChanged.connect(self.toggleAll)
 
         # Create tree
         self.tree: QTreeWidget = QTreeWidget()
-        self.tree.setHeaderLabels(["Cell ID / ROI Label"])
+        self.tree.setHeaderLabels(["Cell ID / Condition / Repeat"])
         self.tree.itemChanged.connect(self.handleItemChanged)
         self.tree.itemSelectionChanged.connect(self.handleItemSelectionChanged)
 
         # Layout
         layout = QVBoxLayout()
-        layout.addWidget(self.toggleAllCheckbox)
+        # layout.addWidget(self.toggleAllCheckbox)
         layout.addWidget(self.tree)
         self.setLayout(layout)
 
@@ -97,13 +97,13 @@ class KymTreeWidget(QWidget):
         if actionText == 'Show Analysis Folder':
             cell_id = item.data(0, Qt.UserRole)[1]
             condition = item.data(0, Qt.UserRole)[2]
-            epoch = item.data(0, Qt.UserRole)[3]
+            repeat = item.data(0, Qt.UserRole)[3]
 
             # find cell id row in df
             theseRows = (
                 (self.df['Cell ID'] == cell_id)
                 & (self.df['Condition'] == condition)
-                & (self.df['Epoch'] == epoch)
+                & (self.df['Repeat'] == repeat)
             )
             df = self.df[theseRows]
             tifPath = df.iloc[0]['Path']
@@ -123,17 +123,14 @@ class KymTreeWidget(QWidget):
             self.plotCellID.emit(cell_id, roi_number)
 
     def _populateTree(self):
-        # Group by Cell ID, Condition, and Epoch (each group represents a top-level item)
+        # Group by Cell ID, Condition, and Repeat (each group represents a top-level item)
         
-        try:
-            grouped = self.df.groupby(["Cell ID", "Condition", "Epoch"])
-        except (KeyError) as e:
-            grouped = self.df.groupby(["Cell ID", "Condition", "Repeat"])
+        grouped = self.df.groupby(["Cell ID", "Condition", "Repeat"])
         
-        for (cell_id, condition, epoch), group in grouped:
+        for (cell_id, condition, repeat), group in grouped:
             # region = group["Region"].iloc[0] if "Region" in group.columns else "Unknown"
             # cell_text = f"{cell_id} | Region: {region} | Condition: {condition}"
-            cell_text = f"{cell_id} | {condition} | Epoch {epoch}"
+            cell_text = f"{cell_id} | {condition} | Repeat {repeat}"
 
             cell_item = QTreeWidgetItem([cell_text])
             cell_item.setFlags(
@@ -142,13 +139,13 @@ class KymTreeWidget(QWidget):
             cell_item.setCheckState(
                 0, Qt.Checked if group["show_cell"].iloc[0] else Qt.Unchecked
             )
-            cell_item.setData(0, Qt.UserRole, ("cell", cell_id, condition, epoch))
+            cell_item.setData(0, Qt.UserRole, ("cell", cell_id, condition, repeat))
             # abb
-            cell_item.setData(1, Qt.UserRole, ("cell", condition, epoch))
+            cell_item.setData(1, Qt.UserRole, ("cell", condition, repeat))
 
             for _, row in group.iterrows():
                 num_peaks = (
-                    row["Number of Spikes"] if "Number of Spikes" in row else "N/A"
+                    row["Number of Peaks"] if "Number of Peaks" in row else "N/A"
                 )
                 polarity = row["Polarity"] if "Polarity" in row else "N/A"
                 roi_text = f"ROI {row['ROI Label']} | {polarity} | Peaks: {num_peaks}"
@@ -163,9 +160,9 @@ class KymTreeWidget(QWidget):
                 roi_item.setData(
                     0,
                     Qt.UserRole,
-                    ("roi", cell_id, condition, epoch, row['ROI Label']),
+                    ("roi", cell_id, condition, repeat, row['ROI Label']),
                 )
-                # roi_item.setData(1, Qt.UserRole, ("roi", cell_id, condition, epoch, row['ROI Label']))
+                # roi_item.setData(1, Qt.UserRole, ("roi", cell_id, condition, repeat, row['ROI Label']))
                 cell_item.addChild(roi_item)
 
             self.tree.addTopLevelItem(cell_item)
@@ -181,16 +178,18 @@ class KymTreeWidget(QWidget):
         if data[0] == "cell":
             cell_id = data[1]
             condition = data[2]
-            epoch = data[3]
+            repeat = data[3]
             checked = item.checkState(0) == Qt.Checked
             for i in range(item.childCount()):
                 child = item.child(i)
                 child.setCheckState(0, Qt.Checked if checked else Qt.Unchecked)
-            self.cellToggled.emit(cell_id, condition, epoch, checked)
+            logger.info(f'cellToggled -->> emit with cell_id:"{cell_id}" condition:"{condition}" repeat:"{repeat}" checked:{checked}')
+            self.cellToggled.emit(cell_id, condition, repeat, checked)
 
         elif data[0] == "roi":
-            cell_id, condition, epoch, roi_number = data[1], data[2], data[3], data[4]
+            cell_id, condition, repeat, roi_number = data[1], data[2], data[3], data[4]
             checked = item.checkState(0) == Qt.Checked
+            logger.info(f'roiToggled -->> emit with cell_id:"{cell_id}" roi_number:"{roi_number}" checked:{checked}')
             self.roiToggled.emit(cell_id, roi_number, checked)
 
             # Update parent state based on children's state
@@ -227,16 +226,16 @@ class KymTreeWidget(QWidget):
             # dataCondition = item.data(1, Qt.UserRole)
             cell_id = data[1]
             condition = data[2]
-            epoch = data[3]
-            self.cellSelected.emit(cell_id, condition, epoch)
+            repeat = data[3]
+            self.cellSelected.emit(cell_id, condition, repeat)
 
         elif data[0] == "roi":
-            # (cell id, condition, epoch, roi)
+            # (cell id, condition, repeat, roi)
             cellID = data[1]
             condition = data[2]
-            epoch = data[3]
+            repeat = data[3]
             roiNumber = data[4]
-            self.roiSelected.emit(cellID, condition, epoch, roiNumber)
+            self.roiSelected.emit(cellID, condition, repeat, roiNumber)
 
     def toggleAll(self, state):
         """Toggles all tree items on/off based on the checkbox state."""
@@ -269,7 +268,7 @@ if __name__ == '__main__':
             'Number of Spikes': [5, 3, 7, 0, 2],
             'Region': ['CA1', 'CA1', 'CA3', 'CA3', 'CA3'],
             'Condition': ['Control', 'Control', 'Treated', 'Treated', 'Stimulated'],
-            'Epoch': [1, 1, 1, 2, 1],
+            'Repeat': [1, 1, 1, 2, 1],
             'show_cell': [True, True, False, False, False],
             'show_roi': [True, False, True, False, True],
         }
@@ -277,20 +276,20 @@ if __name__ == '__main__':
 
     widget = KymTreeWidget(df)
 
-    def on_cell_toggled(cell_id, condition, epoch, state):
+    def on_cell_toggled(cell_id, condition, repeat, state):
         print(
-            f"Cell {cell_id} in Condition {condition} and Epoch {epoch} toggled to {state}"
+            f"Cell {cell_id} in Condition {condition} and Repeat {repeat} toggled to {state}"
         )
 
     def on_roi_toggled(cell_id, roi, state):
         print(f"ROI {roi} in Cell {cell_id} toggled to {state}")
 
-    def on_cell_selected(cell_id, condition, epoch):
-        print(f"Selected Cell: {cell_id} in Condition {condition} and Epoch {epoch}")
+    def on_cell_selected(cell_id, condition, repeat):
+        print(f"Selected Cell: {cell_id} in Condition {condition} and Repeat {repeat}")
 
-    def on_roi_selected(cell_id, condition, epoch, roi):
+    def on_roi_selected(cell_id, condition, repeat, roi):
         print(
-            f"Selected ROI {roi} in Cell {cell_id} in Condition {condition} and Epoch {epoch}"
+            f"Selected ROI {roi} in Cell {cell_id} in Condition {condition} and Repeat {repeat}"
         )
 
     def on_toggle_all(state):
