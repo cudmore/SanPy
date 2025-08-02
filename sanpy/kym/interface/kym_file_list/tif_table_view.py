@@ -247,7 +247,13 @@ class TifTableView(QWidget):
                                 display_value = str(value) if value is not None else ""
                         else:
                             # Format value based on its type for other columns
-                            if pd.isna(value) or value is None:
+                            if column == 'roiLabels':
+                                # Special handling for ROI Labels column - format list as comma-separated string
+                                if isinstance(value, list):
+                                    display_value = ", ".join(str(label) for label in value)
+                                else:
+                                    display_value = str(value) if value is not None else ""
+                            elif pd.isna(value) or value is None:
                                 display_value = ""
                             elif column_type == int:
                                 # Ensure integers are displayed as integers, not floats

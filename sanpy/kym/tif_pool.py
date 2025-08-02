@@ -1010,6 +1010,7 @@ class TiffPool:
                     intensity_df['Region'] = row['Region']
                     intensity_df['Condition'] = row['Condition']
                     intensity_df['Repeat'] = row['Repeat']
+                    
                     for roi in kym_analysis.getRoiLabels():
                         polarity = kym_analysis.getDetectionParams(roi, PeakDetectionTypes.intensity, channel)['Polarity']
                         intensity_df.loc[intensity_df['ROI Label'] == roi, 'Polarity'] = polarity

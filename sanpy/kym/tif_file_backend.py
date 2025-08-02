@@ -253,6 +253,15 @@ class TifFileBackend:
             default_value=None,  # Unknown until analysis
             tooltip="Number of regions of interest (ROIs) defined",
         ),
+        'roiLabels': ColumnConfig(
+            display_name='ROI Labels',
+            column_type=list,
+            width=150,
+            backend_field='roiLabels',
+            table_visible=True,
+            default_value=None,  # Unknown until analysis
+            tooltip="List of ROI labels (e.g., ['ROI 1', 'ROI 2', 'ROI 3'])",
+        ),
         'Note': ColumnConfig(
             display_name='Note',
             column_type=str,
@@ -597,6 +606,24 @@ class TifFileBackend:
                                 updated_column = updated_column.astype(str).replace('nan', '')
                             elif col == 'Note':
                                 updated_column = updated_column.astype(str).replace('nan', '')
+                            elif col == 'roiLabels':
+                                # Handle roiLabels column - convert string representation back to list
+                                def parse_roi_labels(val):
+                                    if pd.isna(val) or val == '' or val == 'nan':
+                                        return None
+                                    try:
+                                        # Try to evaluate as a list (for saved state)
+                                        if isinstance(val, str) and val.startswith('[') and val.endswith(']'):
+                                            import ast
+                                            return ast.literal_eval(val)
+                                        # If it's already a list, return as is
+                                        elif isinstance(val, list):
+                                            return val
+                                        else:
+                                            return None
+                                    except (ValueError, SyntaxError):
+                                        return None
+                                updated_column = updated_column.apply(parse_roi_labels)
                             elif hasattr(updated_column, 'infer_objects') and updated_column.dtype == 'object':
                                 updated_column = updated_column.infer_objects(copy=False)
                             self.df[col] = updated_column
@@ -791,6 +818,7 @@ class TifFileBackend:
                 'numLineScans': int(kym_analysis.numLineScans),
                 'pixelsPerLine': int(kym_analysis.numPixelsPerLine),
                 'numRois': int(kym_analysis.numRoi),
+                'roiLabels': kym_analysis.getRoiLabels(),
             }
             
             return params
@@ -879,6 +907,7 @@ class TifFileBackend:
                     self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
                     self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
                     self.df.at[idx, 'numRois'] = acquisition_params['numRois']
+                    self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
                     logger.debug(f"Extracted acquisition parameters for {row['filename']}")
                 else:
                     logger.debug(f"Failed to extract acquisition parameters for {row['filename']}")
@@ -911,6 +940,7 @@ class TifFileBackend:
                         self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
                         self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
                         self.df.at[idx, 'numRois'] = acquisition_params['numRois']
+                        self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
                         logger.debug(f"Extracted acquisition parameters for {row['filename']} (despite filename parsing failure)")
                     else:
                         logger.debug(f"Failed to extract acquisition parameters for {row['filename']} (despite filename parsing failure)")
@@ -1399,6 +1429,7 @@ class TifFileBackend:
                     self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
                     self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
                     self.df.at[idx, 'numRois'] = acquisition_params['numRois']
+                    self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
                     logger.debug(f"Extracted acquisition parameters for {row['filename']}")
                 else:
                     logger.debug(f"Failed to extract acquisition parameters for {row['filename']}")
@@ -1428,6 +1459,7 @@ class TifFileBackend:
                         self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
                         self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
                         self.df.at[idx, 'numRois'] = acquisition_params['numRois']
+                        self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
                         logger.debug(f"Extracted acquisition parameters for {row['filename']} (despite filename parsing failure)")
                     else:
                         logger.debug(f"Failed to extract acquisition parameters for {row['filename']} (despite filename parsing failure)")
@@ -1610,6 +1642,10 @@ class TifFileBackend:
                         save_df[col_name] = pd.to_numeric(save_df[col_name], errors='coerce').fillna(0).astype(int)
                     elif column_type == float:
                         save_df[col_name] = pd.to_numeric(save_df[col_name], errors='coerce').fillna(0.0).astype(float)
+                    elif column_type == list:
+                        # Handle list columns - convert to string representation for CSV
+                        if col_name == 'roiLabels':
+                            save_df[col_name] = save_df[col_name].apply(lambda x: str(x) if x is not None else '')
                     # For str columns, no conversion needed as they're already strings
             
             with open(filepath,'w') as f:
@@ -2066,6 +2102,18 @@ class TifFileBackend:
                         logger.debug(f"Updated numRois to {num_rois} for {tif_path}")
                 except (AttributeError, ValueError) as e:
                     logger.warning(f"Failed to update numRois for {tif_path}: {e}")
+            
+            # Update roiLabels if the column exists
+            if 'roiLabels' in self.df.columns:
+                try:
+                    # Use the KymRoiAnalysis API method to get ROI labels
+                    roi_labels = kym_analysis.getRoiLabels()
+                    if roi_labels is not None:
+                        self.df.at[row_index, 'roiLabels'] = roi_labels
+                        updated_columns.append('roiLabels')
+                        logger.debug(f"Updated roiLabels to {roi_labels} for {tif_path}")
+                except (AttributeError, ValueError) as e:
+                    logger.warning(f"Failed to update roiLabels for {tif_path}: {e}")
             
             # Note: TifPool updates are handled by on_analysis_saved() method
             # to avoid duplicate refresh calls
