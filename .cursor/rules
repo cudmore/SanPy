@@ -12,6 +12,10 @@
 - Do NOT automatically create new pytest test files
 - Tests should be created only when explicitly requested
 - Make tests an explicit task rather than automatic
+- **Test File Locations:**
+  - Pure Python backend tests: `sanpy/kym/tests/`
+  - PyQt-dependent interface tests: `sanpy/kym/interface/tests/`
+  - Always place tests in the appropriate directory based on their dependencies
 
 ## File Organization
 
