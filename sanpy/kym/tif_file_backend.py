@@ -76,7 +76,7 @@ import json
 from pathlib import Path
 
 # import random  # Uncomment when adding columns that need random data
-from typing import List, Optional, Dict, Any, Union
+from typing import List, Optional, Dict, Any, Union, Callable
 from dataclasses import dataclass
 import pandas as pd
 
@@ -176,7 +176,7 @@ class TifFileBackend:
             table_visible=True,  # Make it visible in table view
             tree_visible=False,  # Keep it hidden in tree view
             widget_type='status_icon',  # Indicates this is a status icon column
-            tooltip="KymRoiAnalysis Loaded Status\n● Green: Analysis object loaded in memory\n○ Gray: Analysis object not loaded",
+            tooltip="KymRoiAnalysis Loaded Status\n● Green: Analysis object loaded in memory\n● Red: Analysis object loaded and has unsaved changes\n○ Gray: Analysis object not loaded",
         ),
         # Core display columns (always shown)
         'filename': ColumnConfig(
@@ -800,11 +800,8 @@ class TifFileBackend:
             Dictionary of acquisition parameters, or empty dict if extraction fails
         """
         try:
-            # Import here to avoid circular imports
-            # from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
-            
-            # Create KymRoiAnalysis in analysis_only mode to avoid loading image data
-            kym_analysis = KymRoiAnalysis(path=str(tif_path), analysis_only=True, loadImgData=False)
+            # Create KymRoiAnalysis using centralized factory method
+            kym_analysis = self._create_kym_roi_analysis(tif_path, load_img_data=False)
             
             ms_per_line = None
             if kym_analysis.secondsPerLine is not None:
@@ -870,7 +867,7 @@ class TifFileBackend:
                 # tif_info = TifInfo.from_filename(row['filename'])
                 # Instead, use KymRoiAnalysis for metadata extraction
                 tif_path = self.resolve_path(row['relative_path'])
-                kym_analysis = KymRoiAnalysis(str(tif_path), imgData=None, analysis_only=True, loadImgData=False)
+                kym_analysis = self._create_kym_roi_analysis(str(tif_path), load_img_data=False)
                 header = kym_analysis.header
 
                 # if header.getParam('Region') == '':
@@ -987,7 +984,7 @@ class TifFileBackend:
                 tif_path = self.resolve_path(relative_path)
                 
                 # Create KymRoiAnalysis with CSV analysis loaded but no image data
-                kym_analysis = KymRoiAnalysis(path=str(tif_path), analysis_only=True, loadImgData=False)
+                kym_analysis = self._create_kym_roi_analysis(str(tif_path), load_img_data=False)
                 
                 # Cache the KymRoiAnalysis object
                 self.df.at[idx, '_kymRoiAnalysis'] = kym_analysis
@@ -1398,7 +1395,7 @@ class TifFileBackend:
                 # tif_info = TifInfo.from_filename(row['filename'])
                 # Instead, use KymRoiAnalysis for metadata extraction
                 tif_path = self.resolve_path(row['relative_path'])
-                kym_analysis = KymRoiAnalysis(str(tif_path), imgData=None, analysis_only=True, loadImgData=False)
+                kym_analysis = self._create_kym_roi_analysis(str(tif_path), load_img_data=False)
                 header = kym_analysis.header
 
                 # Ensure 'Date' column is str type before assignment
@@ -1847,7 +1844,7 @@ class TifFileBackend:
             # Note: KymRoiAnalysis always loads analysis results if available, regardless of load_analysis_csv setting
             # The load_analysis_csv parameter only controls whether we pre-load all KymRoiAnalysis objects during initialization
             logger.info(f'loading KymRoiAnalysis with analysis_only:{True} loadImgData:{False}')
-            kym_analysis = KymRoiAnalysis(path=str(tif_path), analysis_only=True, loadImgData=False)
+            kym_analysis = self._create_kym_roi_analysis(str(tif_path), load_img_data=False)
             logger.debug(f"Created KymRoiAnalysis for row {row_index}")
 
             # Set the KymRoiAnalysis object for this row
@@ -2389,5 +2386,48 @@ class TifFileBackend:
 
         # Normalize the path to handle different separators and resolve any relative components
         return resolved_path.resolve()
+
+    def _create_kym_roi_analysis(self,
+                                 tif_path: str,
+                                 load_img_data: bool = False,
+                                 dirty_callback: Optional[Callable] = None) -> Optional[KymRoiAnalysis]:
+        """
+        Centralized factory method for creating KymRoiAnalysis objects.
+        
+        This method provides a single point of control for KymRoiAnalysis instantiation,
+        ensuring consistent configuration across all usage points in TifFileBackend.
+        
+        Parameters
+        ----------
+        tif_path : str
+            Full path to the TIF file
+        load_img_data : bool, optional
+            Whether to load image data. Default is False (analysis_only mode).
+        dirty_callback : Callable, optional
+            Callback function for dirty state changes. Should have signature:
+            callback(tif_path: str, is_dirty: bool) -> None
+            
+        Returns
+        -------
+        Optional[KymRoiAnalysis]
+            The created KymRoiAnalysis object, or None if creation fails
+        """
+        try:
+            # Import here to avoid circular imports
+            from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
+            
+            # Create KymRoiAnalysis with consistent configuration
+            kym_analysis = KymRoiAnalysis(
+                path=str(tif_path),
+                analysis_only=not load_img_data,  # analysis_only=True when not loading image data
+                loadImgData=load_img_data,
+                dirty_callback_function=dirty_callback
+            )
+            
+            return kym_analysis
+            
+        except Exception as e:
+            logger.error(f"Failed to create KymRoiAnalysis for {tif_path}: {e}")
+            return None
 
 

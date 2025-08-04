@@ -50,7 +50,7 @@ class TiffPool:
         self.root_path = tif_file_backend.root_path
         self.master_df = pd.DataFrame()
         self.dfMean = pd.DataFrame()  # New attribute for mean statistics
-        self.dfErrors = pd.DataFrame(columns=['Cell ID', 'Condition', 'ROI Count', 'Error Message'])  # New attribute for error tracking
+        self.dfErrors = pd.DataFrame(columns=['Cell ID', 'Error Message', 'Mismatched'])  # New attribute for error tracking
         
         # User-specified or default grouping columns
         self._group_columns = group_columns or ['Cell ID',
@@ -189,7 +189,7 @@ class TiffPool:
             logger.info(f"Cast ROI Label column to string in dfMean: {len(self.dfMean)} rows")
         
         # Initialize errors DataFrame (no file loading - runtime only)
-        self.dfErrors = pd.DataFrame(columns=['Cell ID', 'Condition', 'ROI Count', 'Error Message'])
+        self.dfErrors = pd.DataFrame(columns=['Cell ID', 'Error Message', 'Mismatched'])
 
     def _auto_save_pooled_data(self):
         """Auto-save pooled data to CSV file whenever the master DataFrame is modified."""
@@ -439,31 +439,32 @@ class TiffPool:
             self.dfMean['show_cell'] = self.dfMean['show_cell'].fillna(True).astype(bool)
             logger.debug("Ensured 'show_cell' column is boolean with no NaN values")
 
-    def detect_roi_count_mismatches(self, force_recalculate: bool = False) -> pd.DataFrame:
+    def detect_roi_label_mismatches(self, force_recalculate: bool = False, baseline_condition: str = 'Control', baseline_repeat: int = 0) -> pd.DataFrame:
         """
-        Detect errors where a Cell ID has different numbers of ROIs between conditions.
+        Detect errors where a Cell ID has different ROI labels between conditions.
         
         This method analyzes the dfMean DataFrame to find cases where the same Cell ID
-        has different numbers of ROIs across different conditions.
+        has different ROI labels across different conditions, using a configurable baseline.
         
         Parameters
         ----------
         force_recalculate : bool, optional
             If True, recalculate even if dfErrors already exists. Default is False.
+        baseline_condition : str, optional
+            The condition to use as baseline for comparison. Default is 'Control'.
+        baseline_repeat : int, optional
+            The repeat number to use as baseline for comparison. Default is 0.
             
         Returns
         -------
         pd.DataFrame
             DataFrame containing detected errors with columns:
-            - Error Type: Type of error (e.g., "ROI Count Mismatch")
             - Cell ID: The cell ID with the error
-            - Error Message: Detailed error description
-            - Conditions: List of conditions involved
-            - ROI Counts: Dictionary of condition -> ROI count
-            - Timestamp: When the error was detected
+            - Error Message: Concise error description (e.g., "Control(0): [1, 2, 3] | Mismatched: Treatment(0): [4, 5, 6]")
+            - Mismatched: List of mismatched conditions (e.g., "Treatment(0), Treatment(1)")
         """
         if len(self.dfMean) == 0:
-            logger.warning("Cannot detect ROI count mismatches: dfMean is empty")
+            logger.warning("Cannot detect ROI label mismatches: dfMean is empty")
             self.dfErrors = pd.DataFrame()
             return self.dfErrors
         
@@ -471,60 +472,85 @@ class TiffPool:
             logger.debug(f"dfErrors already exists with {len(self.dfErrors)} rows. Use force_recalculate=True to recalculate.")
             return self.dfErrors
         
-        logger.info("Detecting ROI count mismatches...")
+        logger.info(f"Detecting ROI label mismatches using baseline ({baseline_condition}, {baseline_repeat})...")
         
         # Check if required columns exist
-        required_columns = ['Cell ID', 'Condition', 'ROI Label']
+        required_columns = ['Cell ID', 'Condition', 'Repeat', 'ROI Label']
         missing_columns = [col for col in required_columns if col not in self.dfMean.columns]
         if missing_columns:
-            logger.error(f"Cannot detect ROI count mismatches: missing required columns: {missing_columns}")
+            logger.error(f"Cannot detect ROI label mismatches: missing required columns: {missing_columns}")
             self.dfErrors = pd.DataFrame()
             return self.dfErrors
         
-        # Group by Cell ID and Condition, count unique ROI Labels
-        roi_counts = self.dfMean.groupby(['Cell ID', 'Condition'])['ROI Label'].nunique().reset_index()
-        roi_counts = roi_counts.rename(columns={'ROI Label': 'ROI_Count'})
-        
-        # Find Cell IDs that have different ROI counts across conditions
-        cell_roi_counts = roi_counts.groupby('Cell ID')['ROI_Count'].nunique()
-        cells_with_mismatches = cell_roi_counts[cell_roi_counts > 1].index.tolist()
-        
         errors_list = []
         
-        for cell_id in cells_with_mismatches:
-            # Get the ROI counts for this cell across all conditions
-            cell_data = roi_counts[roi_counts['Cell ID'] == cell_id]
+        # Get unique Cell IDs
+        unique_cell_ids = self.dfMean['Cell ID'].unique()
+        
+        for cell_id in unique_cell_ids:
+            # Get baseline ROI labels for this cell
+            baseline_data = self.dfMean[
+                (self.dfMean['Cell ID'] == cell_id) & 
+                (self.dfMean['Condition'] == baseline_condition) & 
+                (self.dfMean['Repeat'] == baseline_repeat)
+            ]
             
-            # Create a dictionary of condition -> ROI count
-            condition_roi_counts = dict(zip(cell_data['Condition'], cell_data['ROI_Count']))
+            if len(baseline_data) == 0:
+                # No baseline data for this cell, skip
+                continue
             
-            # Create error message
-            conditions = list(condition_roi_counts.keys())
-            roi_counts_list = list(condition_roi_counts.values())
+            baseline_roi_labels = set(baseline_data['ROI Label'].unique())
             
-            # Find the condition with the most ROIs for the error message
-            max_roi_condition = max(condition_roi_counts, key=condition_roi_counts.get)
-            max_roi_count = condition_roi_counts[max_roi_condition]
+            if len(baseline_roi_labels) == 0:
+                # No ROI labels in baseline, skip
+                continue
             
-            # Find a condition with fewer ROIs for comparison
-            other_conditions = [c for c in conditions if c != max_roi_condition]
-            if other_conditions:
-                other_condition = other_conditions[0]
-                other_count = condition_roi_counts[other_condition]
-                error_message = f"{cell_id} {max_roi_condition} has {max_roi_count} ROIs but {other_condition} has {other_count}"
-            else:
-                error_message = f"{cell_id} has inconsistent ROI counts across conditions: {condition_roi_counts}"
+            # Get all other conditions/repeats for this cell
+            other_data = self.dfMean[
+                (self.dfMean['Cell ID'] == cell_id) & 
+                ~((self.dfMean['Condition'] == baseline_condition) & (self.dfMean['Repeat'] == baseline_repeat))
+            ]
             
-            # Create error record
-            error_record = {
-                'Error Type': 'ROI Count Mismatch',
-                'Cell ID': cell_id,
-                'Error Message': error_message,
-                'Conditions': str(conditions),
-                'ROI Counts': str(condition_roi_counts),
-                'Timestamp': pd.Timestamp.now().isoformat()
-            }
-            errors_list.append(error_record)
+            if len(other_data) == 0:
+                # No other conditions to compare, skip
+                continue
+            
+            # Group by condition and repeat to get ROI labels for each
+            mismatched_conditions = []
+            
+            for (condition, repeat), group_data in other_data.groupby(['Condition', 'Repeat']):
+                group_roi_labels = set(group_data['ROI Label'].unique())
+                
+                # Compare sets (order doesn't matter)
+                if group_roi_labels != baseline_roi_labels:
+                    mismatched_conditions.append({
+                        'condition': condition,
+                        'repeat': repeat,
+                        'roi_labels': list(group_roi_labels)
+                    })
+            
+            # If we found mismatches, create error record
+            if mismatched_conditions:
+                # Create user-friendly error message showing the actual differences
+                baseline_labels_str = ", ".join(sorted(baseline_roi_labels))
+                
+                # Show what ROI labels each mismatched condition actually has
+                mismatch_details = []
+                for mc in mismatched_conditions:
+                    mc_labels_str = ", ".join(sorted(mc['roi_labels']))
+                    mismatch_details.append(f"{mc['condition']}({mc['repeat']}): [{mc_labels_str}]")
+                
+                # Create error message with baseline value instead of "Baseline: [values]"
+                baseline_value = f"{baseline_condition}({baseline_repeat})"
+                error_message = f"{baseline_value}: [{baseline_labels_str}] | Mismatched: {'; '.join(mismatch_details)}"
+                
+                # Create error record
+                error_record = {
+                    'Cell ID': cell_id,
+                    'Error Message': error_message,
+                    'Mismatched': "; ".join([f"{mc['condition']}({mc['repeat']})" for mc in mismatched_conditions])
+                }
+                errors_list.append(error_record)
         
         # Create DataFrame from errors
         if errors_list:
@@ -532,9 +558,9 @@ class TiffPool:
         else:
             self.dfErrors = pd.DataFrame()
         
-
+        logger.info(f"Detected {len(self.dfErrors)} ROI label mismatch errors")
+        print(self.dfErrors)
         
-        logger.info(f"Detected {len(self.dfErrors)} ROI count mismatch errors")
         return self.dfErrors
 
     def validate_df_mean_structure(self) -> Dict[str, Any]:
@@ -731,14 +757,14 @@ class TiffPool:
             # First ensure we have dfMean
             self.get_df_mean(force_recalculate)
             # Then detect errors
-            self.detect_roi_count_mismatches(force_recalculate)
+            self.detect_roi_label_mismatches(force_recalculate)
         
         return self.dfErrors.copy()
 
     def refresh_df_errors(self):
         """Refresh the errors DataFrame by recalculating it from the current dfMean."""
         logger.info("Refreshing dfErrors...")
-        self.detect_roi_count_mismatches(force_recalculate=True)
+        self.detect_roi_label_mismatches(force_recalculate=True)
 
     def refresh_df_mean(self, affected_groups: Optional[List[Tuple]] = None):
         """

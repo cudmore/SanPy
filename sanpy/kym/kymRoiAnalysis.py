@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Optional
+from typing import List, Optional, Callable
 from pprint import pprint
 
 import numpy as np
@@ -34,6 +34,7 @@ class KymRoiAnalysis:
         loadAnalysis: bool = False,
         loadImgData: bool = True,
         analysis_only: bool = False,
+        dirty_callback_function: Callable = None,
     ):
         """
         Holds a number of kymRoi for one image file (multiple channels).
@@ -54,6 +55,12 @@ class KymRoiAnalysis:
             If True, only load analysis results without image data. This is efficient
             for accessing previously saved analysis results without the overhead of
             loading large image files. Image data will be loaded on-demand when needed.
+        dirty_callback_function : Callable
+            A function to call when the analysis is marked as dirty.
+            The function should take two arguments: tifPath (str) and isDirty (bool).
+            Example: myCallback(tifPath: str, isDirty: bool) -> None
+            This callback can be used to update UI elements or external systems
+            when the dirty state of the analysis changes.
         """
         # logger.debug("KymRoiAnalysis: __init__ start path=%s analysis_only=%s loadImgData=%s", path, analysis_only, loadImgData)
         

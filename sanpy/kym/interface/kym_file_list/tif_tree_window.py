@@ -162,6 +162,18 @@ class TifTreeWindow(QMainWindow):
         else:
             self.statusBar().showMessage(f"Folder not found: {self.path}")
 
+    def dirty_callback(self, tifPath:str, isDirty:bool):
+        """
+        Callback function for dirty state changes.
+        Parameters
+        ----------
+        tifPath : str
+            The path to the tif file that has been marked as dirty.
+        isDirty : bool
+            True if the analysis is dirty, False otherwise.
+        """
+        logger.info(f"dirty_callback: {tifPath} isDirty: {isDirty}")
+
     def closeEvent(self, event):
         logger.info('')
         # check if we have any dirty kymRoiAnalysis

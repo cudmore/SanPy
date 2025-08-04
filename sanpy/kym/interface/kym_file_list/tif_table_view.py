@@ -54,6 +54,11 @@ class TifTableView(QWidget):
 
         # Get visible columns from backend
         self.visible_columns = self.backend.get_visible_columns('table')
+        
+        # Filter to only include columns that exist in the backend DataFrame
+        if self.backend.df is not None and len(self.backend.df) > 0:
+            existing_columns = set(self.backend.df.columns)
+            self.visible_columns = [col for col in self.visible_columns if col in existing_columns]
 
         # Filter state
         self.current_filters = {}
@@ -211,13 +216,19 @@ class TifTableView(QWidget):
                         )
                         self.table.setCellWidget(row_idx, col_idx, checkbox)
                     elif column == '_kymRoiAnalysis':
-                        # Create status icon item based on whether KymRoiAnalysis is loaded
+                        # Create status icon item based on whether KymRoiAnalysis is loaded and dirty
                         if value is not None:
-                            # Green circle for loaded
-                            item = QTableWidgetItem("●")
-                            item.setForeground(QtGui.QColor("#449944"))  # Green
+                            # Check if the KymRoiAnalysis object is dirty
+                            if value.isDirty():
+                                # Red circle for loaded and dirty (unsaved changes)
+                                item = QTableWidgetItem("●")
+                                item.setForeground(QtGui.QColor("#cc4444"))  # Red
+                            else:
+                                # Green circle for loaded and clean
+                                item = QTableWidgetItem("●")
+                                item.setForeground(QtGui.QColor("#449944"))  # Green
                         else:
-                            # Empty for not loaded
+                            # Empty circle for not loaded
                             item = QTableWidgetItem("○")
                             item.setForeground(QtGui.QColor("#999999"))  # Gray
 
@@ -917,14 +928,20 @@ class TifTableView(QWidget):
 
         backend_row_idx = mask.idxmax()
 
-        # Check if the KymRoiAnalysis is loaded
-        is_loaded = self.backend.df.loc[backend_row_idx, '_kymRoiAnalysis'] is not None
+        # Get the KymRoiAnalysis object
+        kym_analysis = self.backend.df.loc[backend_row_idx, '_kymRoiAnalysis']
 
         # Update the table item
-        if is_loaded:
-            # Green circle for loaded
-            item = QTableWidgetItem("●")
-            item.setForeground(QtGui.QColor("#449944"))  # Green
+        if kym_analysis is not None:
+            # Check if the KymRoiAnalysis object is dirty
+            if kym_analysis.isDirty():
+                # Red circle for loaded and dirty (unsaved changes)
+                item = QTableWidgetItem("●")
+                item.setForeground(QtGui.QColor("#cc4444"))  # Red
+            else:
+                # Green circle for loaded and clean
+                item = QTableWidgetItem("●")
+                item.setForeground(QtGui.QColor("#449944"))  # Green
         else:
             # Empty circle for not loaded
             item = QTableWidgetItem("○")
@@ -965,11 +982,17 @@ class TifTableView(QWidget):
                 
                 # Update the status icon
                 if kym_analysis is not None:
-                    # Green circle for loaded
-                    status_item = QTableWidgetItem("●")
-                    status_item.setForeground(QtGui.QColor("#449944"))  # Green
+                    # Check if the KymRoiAnalysis object is dirty
+                    if kym_analysis.isDirty():
+                        # Red circle for loaded and dirty (unsaved changes)
+                        status_item = QTableWidgetItem("●")
+                        status_item.setForeground(QtGui.QColor("#cc4444"))  # Red
+                    else:
+                        # Green circle for loaded and clean
+                        status_item = QTableWidgetItem("●")
+                        status_item.setForeground(QtGui.QColor("#449944"))  # Green
                 else:
-                    # Empty for not loaded
+                    # Empty circle for not loaded
                     status_item = QTableWidgetItem("○")
                     status_item.setForeground(QtGui.QColor("#999999"))  # Gray
                 
