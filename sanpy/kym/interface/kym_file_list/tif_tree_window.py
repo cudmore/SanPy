@@ -162,7 +162,7 @@ class TifTreeWindow(QMainWindow):
         else:
             self.statusBar().showMessage(f"Folder not found: {self.path}")
 
-    def dirty_callback(self, tifPath:str, isDirty:bool):
+    def dirty_callback_not_used(self, tifPath:str, isDirty:bool):
         """
         Callback function for dirty state changes.
         Parameters
@@ -171,8 +171,13 @@ class TifTreeWindow(QMainWindow):
             The path to the tif file that has been marked as dirty.
         isDirty : bool
             True if the analysis is dirty, False otherwise.
+        
+        Notes
+        -----
+        This is not used, our df and TifPool df will reflect what is saved,
+        not what is being edited.
         """
-        logger.info(f"dirty_callback: {tifPath} isDirty: {isDirty}")
+        logger.info(f"{tifPath} isDirty: {isDirty}")
 
     def closeEvent(self, event):
         logger.info('')
@@ -393,7 +398,8 @@ class TifTreeWindow(QMainWindow):
             folder_path,
             exclude_folders=["sanpy-reports-pdf"],
             sort_by_grandparent=True,
-            load_analysis_csv=False  # abb 20250714 turned off
+            load_analysis_csv=False,  # abb 20250714 turned off
+            # dirty_callback=self.dirty_callback_not_used  # NEW: Pass the dirty callback
         )
         # Save state CSV only if it does not already exist
         state_csv_path = self.backend._get_state_filepath()

@@ -432,6 +432,7 @@ class TifFileBackend:
         sort_by_grandparent: bool = True,
         max_depth: int = 5,
         load_analysis_csv: bool = True,  # NEW: Control loading of saved CSV analysis
+        dirty_callback: Optional[Callable] = None,  # NEW: Callback for dirty state changes
     ) -> None:
         """Initialize the TifFileBackend with a root path and configuration.
         
@@ -463,6 +464,12 @@ class TifFileBackend:
             
             When `True`, all CSV analysis files are pre-loaded during initialization
             for fast access to analysis results. Image data remains lazy-loaded.
+        dirty_callback : Callable, optional
+            A function to call when KymRoiAnalysis objects change their dirty state.
+            The function should take two arguments: tifPath (str) and isDirty (bool).
+            Example: myCallback(tifPath: str, isDirty: bool) -> None
+            This callback can be used to update UI elements when analysis objects
+            have unsaved changes. Default is None.
             
         Raises
         ------
@@ -507,6 +514,7 @@ class TifFileBackend:
         self.sort_by_grandparent = sort_by_grandparent
         self.max_depth = max_depth
         self.load_analysis_csv = load_analysis_csv  # NEW: Store the parameter
+        self.dirty_callback = dirty_callback  # NEW: Store the dirty callback
 
         # Initialize DataFrame with proper column structure
         self.df = pd.DataFrame(columns=list(self.COLUMN_CONFIG.keys()))
@@ -1720,6 +1728,8 @@ class TifFileBackend:
 
     def is_column_editable(self, column_name: str) -> bool:
         """Check if a column is editable."""
+        # Temporarily disable all editable columns
+        return False
         config = self.COLUMN_CONFIG.get(column_name)
         return getattr(config, 'editable', False) if config else False
 
@@ -2389,8 +2399,7 @@ class TifFileBackend:
 
     def _create_kym_roi_analysis(self,
                                  tif_path: str,
-                                 load_img_data: bool = False,
-                                 dirty_callback: Optional[Callable] = None) -> Optional[KymRoiAnalysis]:
+                                 load_img_data: bool = False) -> Optional[KymRoiAnalysis]:
         """
         Centralized factory method for creating KymRoiAnalysis objects.
         
@@ -2403,9 +2412,6 @@ class TifFileBackend:
             Full path to the TIF file
         load_img_data : bool, optional
             Whether to load image data. Default is False (analysis_only mode).
-        dirty_callback : Callable, optional
-            Callback function for dirty state changes. Should have signature:
-            callback(tif_path: str, is_dirty: bool) -> None
             
         Returns
         -------
@@ -2421,7 +2427,7 @@ class TifFileBackend:
                 path=str(tif_path),
                 analysis_only=not load_img_data,  # analysis_only=True when not loading image data
                 loadImgData=load_img_data,
-                dirty_callback_function=dirty_callback
+                dirty_callback_function=self.dirty_callback  # NEW: Use stored callback
             )
             
             return kym_analysis

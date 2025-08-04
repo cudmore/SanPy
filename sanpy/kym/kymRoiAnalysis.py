@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 from sanpy.bAnalysis_ import bAnalysis
 from sanpy._util import _loadLineScanHeader
-from sanpy.kym.kymRoiDetection import KymRoiDetection, getAnalysisDict
+from sanpy.kym.kymRoiDetection import KymRoiDetection
 from sanpy.kym.kymRoiResults import KymRoiResults
 from sanpy.kym.kymRoiMetaData import KymRoiMetaData
 from sanpy.kym.kymRoi import KymRoi, PeakDetectionTypes, myMonoExp, myDoubleExp
@@ -77,7 +77,8 @@ class KymRoiAnalysis:
         self._kymDetectionParams = {}
         self._isDirty = False
         self._fakeScale = False
-
+        self.dirty_callback_function = dirty_callback_function
+        
         # Initialize metadata based on analysis_only mode
         if self._analysis_only:
             # logger.debug("KymRoiAnalysis: analysis_only mode, skipping image data loading")
@@ -258,6 +259,8 @@ class KymRoiAnalysis:
     def setDirty(self, value):
         # logger.info(f'value:{value}')
         self._isDirty = value
+        if self.dirty_callback_function is not None:
+            self.dirty_callback_function(self._path, value)
 
     @property
     def path(self):
