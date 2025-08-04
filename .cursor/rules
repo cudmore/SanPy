@@ -27,6 +27,10 @@
 - Let exceptions propagate naturally for easier debugging
 - Avoid try/except blocks unless absolutely necessary
 - Use logging for debugging information
+- **NEVER use `except Exception:` or `except:` - always catch specific exception types**
+- If you must catch exceptions, catch only the specific types you can handle meaningfully
+- Prefer to let exceptions bubble up to the calling code rather than catching them prematurely
+- Only use broad exception handlers at the very top level of applications (main loops, request handlers) and always log full exception details
 
 ## Code Structure
 

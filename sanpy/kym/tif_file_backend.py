@@ -559,7 +559,7 @@ class TifFileBackend:
             if col_name not in self.df.columns:
                 default_value = self.get_column_default_value(col_name)
                 self.df[col_name] = default_value
-                logger.debug(f"Added missing column '{col_name}' with default value: {default_value}")
+    
 
     def _load_saved_state(self):
         """Load saved state from CSV file if it exists."""
@@ -690,7 +690,7 @@ class TifFileBackend:
                 if current_depth >= self.max_depth:
                     # Clear dirs list to prevent os.walk from going deeper
                     dirs.clear()
-                    logger.debug(f"Reached max depth ({self.max_depth}) at: {root_path}")
+        
 
                 # Filter for .tif files and sort them
                 tif_files = sorted([f for f in files if f.lower().endswith('.tif')])
@@ -807,31 +807,25 @@ class TifFileBackend:
         Dict[str, Any]
             Dictionary of acquisition parameters, or empty dict if extraction fails
         """
-        try:
-            # Create KymRoiAnalysis using centralized factory method
-            kym_analysis = self._create_kym_roi_analysis(tif_path, load_img_data=False)
-            
-            ms_per_line = None
-            if kym_analysis.secondsPerLine is not None:
-                ms_per_line = float(kym_analysis.secondsPerLine) * 1000.0
-            params = {
-                'msPerLine': ms_per_line,
-                'umPerPixel': kym_analysis.umPerPixel,
-                'numChannels': int(kym_analysis.numChannels),
-                'imageHeight': int(kym_analysis.header.getParam('imageHeight')),
-                'imageWidth': int(kym_analysis.header.getParam('imageWidth')),
-                'numLineScans': int(kym_analysis.numLineScans),
-                'pixelsPerLine': int(kym_analysis.numPixelsPerLine),
-                'numRois': int(kym_analysis.numRoi),
-                'roiLabels': kym_analysis.getRoiLabels(),
-            }
-            
-            return params
-            
-        except Exception as e:
-            logger.warning(f"Failed to extract acquisition parameters from {tif_path}: {e}")
-            raise
-            # return {}
+        # Create KymRoiAnalysis using centralized factory method
+        kym_analysis = self._create_kym_roi_analysis(tif_path, load_img_data=False)
+        
+        ms_per_line = None
+        if kym_analysis.secondsPerLine is not None:
+            ms_per_line = float(kym_analysis.secondsPerLine) * 1000.0
+        params = {
+            'msPerLine': ms_per_line,
+            'umPerPixel': kym_analysis.umPerPixel,
+            'numChannels': int(kym_analysis.numChannels),
+            'imageHeight': int(kym_analysis.header.getParam('imageHeight')),
+            'imageWidth': int(kym_analysis.header.getParam('imageWidth')),
+            'numLineScans': int(kym_analysis.numLineScans),
+            'pixelsPerLine': int(kym_analysis.numPixelsPerLine),
+            'numRois': int(kym_analysis.numRoi),
+            'roiLabels': kym_analysis.getRoiLabels(),
+        }
+        
+        return params
 
     def _analyze_files(self, force_reanalyze: bool = False):
         """
@@ -869,8 +863,6 @@ class TifFileBackend:
             default_values = self._get_analysis_default_values(error_message="")
             
             try:
-                logger.debug(f"Analyzing file: {row['filename']}")
-
                 # Parse filename with TifInfo (expensive operation)
                 # tif_info = TifInfo.from_filename(row['filename'])
                 # Instead, use KymRoiAnalysis for metadata extraction
@@ -913,9 +905,8 @@ class TifFileBackend:
                     self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
                     self.df.at[idx, 'numRois'] = acquisition_params['numRois']
                     self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
-                    logger.debug(f"Extracted acquisition parameters for {row['filename']}")
                 else:
-                    logger.debug(f"Failed to extract acquisition parameters for {row['filename']}")
+                    pass
 
             except (ValueError, AttributeError, TypeError) as e:
                 # If TifInfo parsing fails, use default values and log the error
@@ -931,26 +922,20 @@ class TifFileBackend:
                 
                 # Still try to extract acquisition parameters even if filename parsing failed
                 # Acquisition parameters come from the TIF file, not the filename
-                try:
-                    tif_path = self.resolve_path(row['relative_path'])
-                    acquisition_params = self._extract_acquisition_parameters(tif_path)
-                    
-                    # Update acquisition parameters if extraction was successful
-                    if acquisition_params:
-                        self.df.at[idx, 'msPerLine'] = acquisition_params['msPerLine']
-                        self.df.at[idx, 'umPerPixel'] = acquisition_params['umPerPixel']
-                        self.df.at[idx, 'numChannels'] = acquisition_params['numChannels']
-                        self.df.at[idx, 'imageHeight'] = acquisition_params['imageHeight']
-                        self.df.at[idx, 'imageWidth'] = acquisition_params['imageWidth']
-                        self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
-                        self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
-                        self.df.at[idx, 'numRois'] = acquisition_params['numRois']
-                        self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
-                        logger.debug(f"Extracted acquisition parameters for {row['filename']} (despite filename parsing failure)")
-                    else:
-                        logger.debug(f"Failed to extract acquisition parameters for {row['filename']} (despite filename parsing failure)")
-                except Exception as acq_error:
-                    logger.warning(f"Failed to extract acquisition parameters for {row['filename']}: {acq_error}")
+                tif_path = self.resolve_path(row['relative_path'])
+                acquisition_params = self._extract_acquisition_parameters(tif_path)
+                
+                # Update acquisition parameters if extraction was successful
+                if acquisition_params:
+                    self.df.at[idx, 'msPerLine'] = acquisition_params['msPerLine']
+                    self.df.at[idx, 'umPerPixel'] = acquisition_params['umPerPixel']
+                    self.df.at[idx, 'numChannels'] = acquisition_params['numChannels']
+                    self.df.at[idx, 'imageHeight'] = acquisition_params['imageHeight']
+                    self.df.at[idx, 'imageWidth'] = acquisition_params['imageWidth']
+                    self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
+                    self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
+                    self.df.at[idx, 'numRois'] = acquisition_params['numRois']
+                    self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
 
             # except Exception as e:
             #     raise
@@ -986,27 +971,19 @@ class TifFileBackend:
         failed_count = 0
         
         for idx, row in self.df.iterrows():
-            try:
-                # Get the file path for this row
-                relative_path = row['relative_path']
-                tif_path = self.resolve_path(relative_path)
-                
-                # Create KymRoiAnalysis with CSV analysis loaded but no image data
-                kym_analysis = self._create_kym_roi_analysis(str(tif_path), load_img_data=False)
-                
-                # Cache the KymRoiAnalysis object
-                self.df.at[idx, '_kymRoiAnalysis'] = kym_analysis
-                loaded_count += 1
-                
-                if loaded_count % 50 == 0:  # Log progress every 50 files
-                    logger.info(f"Pre-loaded {loaded_count}/{len(self.df)} CSV analysis files...")
-                    
-            except Exception as e:
-                raise
-                logger.warning(f"Failed to pre-load CSV analysis for {row['filename']}: {e}")
-                failed_count += 1
-                # Set to None to indicate failure
-                self.df.at[idx, '_kymRoiAnalysis'] = None
+            # Get the file path for this row
+            relative_path = row['relative_path']
+            tif_path = self.resolve_path(relative_path)
+            
+            # Create KymRoiAnalysis with CSV analysis loaded but no image data
+            kym_analysis = self._create_kym_roi_analysis(str(tif_path), load_img_data=False)
+            
+            # Cache the KymRoiAnalysis object
+            self.df.at[idx, '_kymRoiAnalysis'] = kym_analysis
+            loaded_count += 1
+            
+            if loaded_count % 50 == 0:  # Log progress every 50 files
+                logger.info(f"Pre-loaded {loaded_count}/{len(self.df)} CSV analysis files...")
         
         logger.info(f"Pre-loading complete: {loaded_count} successful, {failed_count} failed")
 
@@ -1314,66 +1291,61 @@ class TifFileBackend:
         file_data = []
 
         for relative_path in relative_paths:
-            try:
-                full_path = self.root_path / relative_path
+            full_path = self.root_path / relative_path
 
-                # Extract folder hierarchy using pathlib
-                rel_path_obj = Path(relative_path)
-                path_parts = rel_path_obj.parts
+            # Extract folder hierarchy using pathlib
+            rel_path_obj = Path(relative_path)
+            path_parts = rel_path_obj.parts
 
-                if len(path_parts) >= 4:
-                    parent_folder = path_parts[-2]
-                    grandparent_folder = path_parts[-3]
-                    great_grandparent_folder = path_parts[-4]
-                elif len(path_parts) == 3:
-                    parent_folder = path_parts[-2]
-                    grandparent_folder = path_parts[-3]
-                    great_grandparent_folder = ""
-                elif len(path_parts) == 2:
-                    parent_folder = path_parts[-2]
-                    grandparent_folder = ""
-                    great_grandparent_folder = ""
-                else:
-                    parent_folder = ""
-                    grandparent_folder = ""
-                    great_grandparent_folder = ""
+            if len(path_parts) >= 4:
+                parent_folder = path_parts[-2]
+                grandparent_folder = path_parts[-3]
+                great_grandparent_folder = path_parts[-4]
+            elif len(path_parts) == 3:
+                parent_folder = path_parts[-2]
+                grandparent_folder = path_parts[-3]
+                great_grandparent_folder = ""
+            elif len(path_parts) == 2:
+                parent_folder = path_parts[-2]
+                grandparent_folder = ""
+                great_grandparent_folder = ""
+            else:
+                parent_folder = ""
+                grandparent_folder = ""
+                great_grandparent_folder = ""
 
-                filename = rel_path_obj.name
+            filename = rel_path_obj.name
 
-                # Basic file data - no expensive computations here
-                file_data.append(
-                    {
-                        'relative_path': relative_path,
-                        'filename': filename,
-                        'parent_folder': parent_folder,
-                        'grandparent_folder': grandparent_folder,
-                        'great_grandparent_folder': great_grandparent_folder,
-                        'Date': self.get_column_default_value('Date'),
-                        'Cell ID': self.get_column_default_value('Cell ID'),
-                        'Region': self.get_column_default_value('Region'),
-                        'Condition': self.get_column_default_value('Condition'),
-                        'Repeat': self.get_column_default_value('Repeat'),
-                        'Note': self.get_column_default_value('Note'),
-                        'Animal ID': self.get_column_default_value('Animal ID'),
-                        'Cell Type': self.get_column_default_value('Cell Type'),
-                        'Accept': self.get_column_default_value('Accept'),
-                        '_kymRoiAnalysis': self.get_column_default_value('_kymRoiAnalysis'),
-                        '_analyzed': self.get_column_default_value('_analyzed'),
-                        # Acquisition parameters - will be populated in _analyze_files()
-                        'msPerLine': self.get_column_default_value('msPerLine'),
-                        'umPerPixel': self.get_column_default_value('umPerPixel'),
-                        'numChannels': self.get_column_default_value('numChannels'),
-                        'imageHeight': self.get_column_default_value('imageHeight'),
-                        'imageWidth': self.get_column_default_value('imageWidth'),
-                        'numLineScans': self.get_column_default_value('numLineScans'),
-                        'pixelsPerLine': self.get_column_default_value('pixelsPerLine'),
-                        'numRois': self.get_column_default_value('numRois'),
-                    }
-                )
-
-            except Exception as e:
-                raise
-                #logger.error(f"Error scanning file {relative_path}: {e}")
+            # Basic file data - no expensive computations here
+            file_data.append(
+                {
+                    'relative_path': relative_path,
+                    'filename': filename,
+                    'parent_folder': parent_folder,
+                    'grandparent_folder': grandparent_folder,
+                    'great_grandparent_folder': great_grandparent_folder,
+                    'Date': self.get_column_default_value('Date'),
+                    'Cell ID': self.get_column_default_value('Cell ID'),
+                    'Region': self.get_column_default_value('Region'),
+                    'Condition': self.get_column_default_value('Condition'),
+                    'Repeat': self.get_column_default_value('Repeat'),
+                    'Note': self.get_column_default_value('Note'),
+                    'Animal ID': self.get_column_default_value('Animal ID'),
+                    'Cell Type': self.get_column_default_value('Cell Type'),
+                    'Accept': self.get_column_default_value('Accept'),
+                    '_kymRoiAnalysis': self.get_column_default_value('_kymRoiAnalysis'),
+                    '_analyzed': self.get_column_default_value('_analyzed'),
+                    # Acquisition parameters - will be populated in _analyze_files()
+                    'msPerLine': self.get_column_default_value('msPerLine'),
+                    'umPerPixel': self.get_column_default_value('umPerPixel'),
+                    'numChannels': self.get_column_default_value('numChannels'),
+                    'imageHeight': self.get_column_default_value('imageHeight'),
+                    'imageWidth': self.get_column_default_value('imageWidth'),
+                    'numLineScans': self.get_column_default_value('numLineScans'),
+                    'pixelsPerLine': self.get_column_default_value('pixelsPerLine'),
+                    'numRois': self.get_column_default_value('numRois'),
+                }
+            )
 
         return file_data
 
@@ -1397,8 +1369,6 @@ class TifFileBackend:
             default_values = self._get_analysis_default_values(error_message="")
             
             try:
-                logger.debug(f"Analyzing file: {row['filename']}")
-
                 # Parse filename with TifInfo (expensive operation)
                 # tif_info = TifInfo.from_filename(row['filename'])
                 # Instead, use KymRoiAnalysis for metadata extraction
@@ -1435,9 +1405,8 @@ class TifFileBackend:
                     self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
                     self.df.at[idx, 'numRois'] = acquisition_params['numRois']
                     self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
-                    logger.debug(f"Extracted acquisition parameters for {row['filename']}")
                 else:
-                    logger.debug(f"Failed to extract acquisition parameters for {row['filename']}")
+                    pass
 
             except (ValueError, AttributeError, TypeError) as e:
                 # If TifInfo parsing fails, use default values and log the error
@@ -1450,39 +1419,22 @@ class TifFileBackend:
                 
                 # Still try to extract acquisition parameters even if filename parsing failed
                 # Acquisition parameters come from the TIF file, not the filename
-                try:
-                    tif_path = self.resolve_path(row['relative_path'])
-                    acquisition_params = self._extract_acquisition_parameters(tif_path)
-                    
-                    # Update acquisition parameters if extraction was successful
-                    if acquisition_params:
-                        self.df.at[idx, 'msPerLine'] = acquisition_params['msPerLine']
-                        self.df.at[idx, 'umPerPixel'] = acquisition_params['umPerPixel']
-                        self.df.at[idx, 'numChannels'] = acquisition_params['numChannels']
-                        self.df.at[idx, 'imageHeight'] = acquisition_params['imageHeight']
-                        self.df.at[idx, 'imageWidth'] = acquisition_params['imageWidth']
-                        self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
-                        self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
-                        self.df.at[idx, 'numRois'] = acquisition_params['numRois']
-                        self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
-                        logger.debug(f"Extracted acquisition parameters for {row['filename']} (despite filename parsing failure)")
-                    else:
-                        logger.debug(f"Failed to extract acquisition parameters for {row['filename']} (despite filename parsing failure)")
-                except Exception as acq_error:
-                    raise
-                    logger.warning(f"Failed to extract acquisition parameters for {row['filename']}: {acq_error}")
-
-            except Exception as e:
-                raise
-                # Log unexpected errors but continue processing other files
-                logger.error(
-                    f"Unexpected error analyzing file '{row['filename']}': {e}"
-                )
-                default_values = self._get_analysis_default_values(error_message=str(e))
-                default_values['_analyzed'] = True  # Mark as analyzed to avoid retrying
+                tif_path = self.resolve_path(row['relative_path'])
+                acquisition_params = self._extract_acquisition_parameters(tif_path)
                 
-                # Apply all default values
-                self._apply_default_values(idx, default_values)
+                # Update acquisition parameters if extraction was successful
+                if acquisition_params:
+                    self.df.at[idx, 'msPerLine'] = acquisition_params['msPerLine']
+                    self.df.at[idx, 'umPerPixel'] = acquisition_params['umPerPixel']
+                    self.df.at[idx, 'numChannels'] = acquisition_params['numChannels']
+                    self.df.at[idx, 'imageHeight'] = acquisition_params['imageHeight']
+                    self.df.at[idx, 'imageWidth'] = acquisition_params['imageWidth']
+                    self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
+                    self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
+                    self.df.at[idx, 'numRois'] = acquisition_params['numRois']
+                    self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
+
+            # Let exceptions propagate for easier debugging
 
     def set_max_depth(self, max_depth: int, refresh_scan: bool = True):
         """
@@ -1622,7 +1574,7 @@ class TifFileBackend:
             result = self.save_state(filepath)
             # Override the info logging with debug logging for auto-save
             if result:
-                logger.debug(f"Auto-saved state to: {filepath}")
+                pass
             return result
         return None
 
@@ -1663,43 +1615,38 @@ class TifFileBackend:
 
     def load_state(self, filepath: str):
         """Load state from a specific CSV file."""
-        try:
-            if not os.path.exists(filepath):
-                logger.warning(f"State file does not exist: {filepath}")
-                return
-            
-            # Load the saved state
-            saved_df = pd.read_csv(filepath)
-            
-            # Ensure all columns exist in the loaded DataFrame
-            for col_name in self.df.columns:
-                if col_name not in saved_df.columns:
-                    saved_df[col_name] = self.get_column_default_value(col_name)
-            
-            # Robustly convert boolean columns
-            for col_name, config in self.COLUMN_CONFIG.items():
-                if config.column_type == bool and col_name in saved_df.columns:
-                    # Accepts True/False, 1/0, 'True'/'False', NaN
-                    def to_bool(val):
-                        if pd.isna(val):
-                            return False
-                        if isinstance(val, bool):
-                            return val
-                        if isinstance(val, (int, float)):
-                            return bool(val)
-                        if isinstance(val, str):
-                            return val.strip().lower() in ("true", "1", "yes", "y", "t")
+        if not os.path.exists(filepath):
+            logger.warning(f"State file does not exist: {filepath}")
+            return
+        
+        # Load the saved state
+        saved_df = pd.read_csv(filepath)
+        
+        # Ensure all columns exist in the loaded DataFrame
+        for col_name in self.df.columns:
+            if col_name not in saved_df.columns:
+                saved_df[col_name] = self.get_column_default_value(col_name)
+        
+        # Robustly convert boolean columns
+        for col_name, config in self.COLUMN_CONFIG.items():
+            if config.column_type == bool and col_name in saved_df.columns:
+                # Accepts True/False, 1/0, 'True'/'False', NaN
+                def to_bool(val):
+                    if pd.isna(val):
                         return False
-                    saved_df[col_name] = saved_df[col_name].map(to_bool)
-            
-            # Update the current DataFrame
-            self.df = saved_df
-            
-            logger.info(f"Loaded state from: {filepath}")
-            
-        except Exception as e:
-            logger.error(f"Error loading state from {filepath}: {e}")
-            raise
+                    if isinstance(val, bool):
+                        return val
+                    if isinstance(val, (int, float)):
+                        return bool(val)
+                    if isinstance(val, str):
+                        return val.strip().lower() in ("true", "1", "yes", "y", "t")
+                    return False
+                saved_df[col_name] = saved_df[col_name].map(to_bool)
+        
+        # Update the current DataFrame
+        self.df = saved_df
+        
+        logger.info(f"Loaded state from: {filepath}")
 
     # Column management methods for frontend widgets
     def get_column_config(self, column_name: str) -> Dict[str, Any]:
@@ -1834,7 +1781,7 @@ class TifFileBackend:
         existing_analysis: KymRoiAnalysis = self.df.at[row_index, '_kymRoiAnalysis']
         
         if existing_analysis is not None:
-            logger.debug(f"Returning cached analysis for row {row_index}")
+
             # print(existing_analysis)
             return existing_analysis
 
@@ -1855,7 +1802,7 @@ class TifFileBackend:
             # The load_analysis_csv parameter only controls whether we pre-load all KymRoiAnalysis objects during initialization
             logger.info(f'loading KymRoiAnalysis with analysis_only:{True} loadImgData:{False}')
             kym_analysis = self._create_kym_roi_analysis(str(tif_path), load_img_data=False)
-            logger.debug(f"Created KymRoiAnalysis for row {row_index}")
+
 
             # Set the KymRoiAnalysis object for this row
             self.df.at[row_index, '_kymRoiAnalysis'] = kym_analysis
@@ -1909,18 +1856,12 @@ class TifFileBackend:
             logger.warning(f"No KymRoiAnalysis object found for row {row_index}")
             return False
 
-        try:
-            # Load image data into the existing KymRoiAnalysis object
-            # abb
-            # kym_analysis.loadImgData()
-            kym_analysis.load_image_data()
-            logger.debug(f"Loaded image data for KymRoiAnalysis at row {row_index}")
-            return True
+        # Load image data into the existing KymRoiAnalysis object
+        # abb
+        # kym_analysis.loadImgData()
+        kym_analysis.load_image_data()
 
-        except Exception as e:
-            logger.error(f"Failed to load image data for row {row_index}: {e}")
-            raise
-            # return False
+        return True
 
     def load_kym_roi_analysis_image_data_by_path(self, relative_path: str) -> bool:
         """
@@ -1972,7 +1913,7 @@ class TifFileBackend:
 
         # Check if image data is already loaded
         if hasattr(kym_analysis, 'imgData') and kym_analysis.imgData is not None:
-            logger.debug(f"Image data already loaded for row {row_index}")
+
             return kym_analysis
 
         # Load image data if not already loaded
@@ -2082,80 +2023,74 @@ class TifFileBackend:
         bool
             True if analysis was successfully updated, False otherwise
         """
-        try:
-            # Find the row index in the backend DataFrame using helper method
-            row_index = self._find_file_by_path(tif_path)
-            if row_index is None:
-                logger.warning(f"File not found in backend: {tif_path}")
-                return False
-            
-            # Get the KymRoiAnalysis object for this file (lazy loading)
-            kym_analysis = self.get_kym_roi_analysis(row_index)
-            if kym_analysis is None:
-                logger.warning(f"Failed to load KymRoiAnalysis for {tif_path}")
-                return False
-            
-            # Update analysis-related columns
-            updated_columns = []
-            
-            # Update numRois if the column exists
-            if 'numRois' in self.df.columns:
-                try:
-                    # Use the proper KymRoiAnalysis API method to get number of ROIs
-                    num_rois = kym_analysis.numRoi
-                    if num_rois is not None:
-                        self.df.at[row_index, 'numRois'] = int(num_rois)
-                        updated_columns.append('numRois')
-                        logger.debug(f"Updated numRois to {num_rois} for {tif_path}")
-                except (AttributeError, ValueError) as e:
-                    logger.warning(f"Failed to update numRois for {tif_path}: {e}")
-            
-            # Update roiLabels if the column exists
-            if 'roiLabels' in self.df.columns:
-                try:
-                    # Use the KymRoiAnalysis API method to get ROI labels
-                    roi_labels = kym_analysis.getRoiLabels()
-                    if roi_labels is not None:
-                        self.df.at[row_index, 'roiLabels'] = roi_labels
-                        updated_columns.append('roiLabels')
-                        logger.debug(f"Updated roiLabels to {roi_labels} for {tif_path}")
-                except (AttributeError, ValueError) as e:
-                    logger.warning(f"Failed to update roiLabels for {tif_path}: {e}")
-            
-            # Note: TifPool updates are handled by on_analysis_saved() method
-            # to avoid duplicate refresh calls
+        # Find the row index in the backend DataFrame using helper method
+        row_index = self._find_file_by_path(tif_path)
+        if row_index is None:
+            logger.warning(f"File not found in backend: {tif_path}")
+            return False
+        
+        # Get the KymRoiAnalysis object for this file (lazy loading)
+        kym_analysis = self.get_kym_roi_analysis(row_index)
+        if kym_analysis is None:
+            logger.warning(f"Failed to load KymRoiAnalysis for {tif_path}")
+            return False
+        
+        # Update analysis-related columns
+        updated_columns = []
+        
+        # Update numRois if the column exists
+        if 'numRois' in self.df.columns:
+            try:
+                # Use the proper KymRoiAnalysis API method to get number of ROIs
+                num_rois = kym_analysis.numRoi
+                if num_rois is not None:
+                    self.df.at[row_index, 'numRois'] = int(num_rois)
+                    updated_columns.append('numRois')
+        
+            except (AttributeError, ValueError) as e:
+                logger.warning(f"Failed to update numRois for {tif_path}: {e}")
+        
+        # Update roiLabels if the column exists
+        if 'roiLabels' in self.df.columns:
+            try:
+                # Use the KymRoiAnalysis API method to get ROI labels
+                roi_labels = kym_analysis.getRoiLabels()
+                if roi_labels is not None:
+                    self.df.at[row_index, 'roiLabels'] = roi_labels
+                    updated_columns.append('roiLabels')
+        
+            except (AttributeError, ValueError) as e:
+                logger.warning(f"Failed to update roiLabels for {tif_path}: {e}")
+        
+        # Note: TifPool updates are handled by on_analysis_saved() method
+        # to avoid duplicate refresh calls
 
-            # EXTENDING THIS METHOD:
-            # To add new analysis-related columns, follow this pattern:
-            # 1. Check if the column exists: if 'ColumnName' in self.df.columns:
-            # 2. Get the value from KymRoiAnalysis: value = getattr(kym_analysis, 'attribute_name', None)
-            # 3. Update the DataFrame: self.df.at[row_index, 'ColumnName'] = value
-            # 4. Track the update: updated_columns.append('ColumnName')
-            # 5. Add error handling: except (AttributeError, ValueError) as e: logger.warning(...)
-            #
-            # Example:
-            # if 'PeakCount' in self.df.columns:
-            #     try:
-            #         peak_count = getattr(kym_analysis, 'peakCount', None)
-            #         if peak_count is not None:
-            #             self.df.at[row_index, 'PeakCount'] = int(peak_count)
-            #             updated_columns.append('PeakCount')
-            #             logger.debug(f"Updated PeakCount to {peak_count} for {tif_path}")
-            #     except (AttributeError, ValueError) as e:
-            #         logger.warning(f"Failed to update PeakCount for {tif_path}: {e}")
-            
-            if updated_columns:
-                logger.info(f"Updated analysis for {tif_path}: {', '.join(updated_columns)}")
-                # Auto-save state after updating analysis
-                self._auto_save_state()
-                return True
-            else:
-                logger.warning(f"No analysis columns were updated for {tif_path}")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Failed to update analysis for {tif_path}: {e}")
-            raise
+        # EXTENDING THIS METHOD:
+        # To add new analysis-related columns, follow this pattern:
+        # 1. Check if the column exists: if 'ColumnName' in self.df.columns:
+        # 2. Get the value from KymRoiAnalysis: value = getattr(kym_analysis, 'attribute_name', None)
+        # 3. Update the DataFrame: self.df.at[row_index, 'ColumnName'] = value
+        # 4. Track the update: updated_columns.append('ColumnName')
+        # 5. Add error handling: except (AttributeError, ValueError) as e: logger.warning(...)
+        #
+        # Example:
+        # if 'PeakCount' in self.df.columns:
+        #     try:
+        #         peak_count = getattr(kym_analysis, 'peakCount', None)
+        #         if peak_count is not None:
+        #             self.df.at[row_index, 'PeakCount'] = int(peak_count)
+        #             updated_columns.append('PeakCount')
+
+        #     except (AttributeError, ValueError) as e:
+        #         logger.warning(f"Failed to update PeakCount for {tif_path}: {e}")
+        
+        if updated_columns:
+            logger.info(f"Updated analysis for {tif_path}: {', '.join(updated_columns)}")
+            # Auto-save state after updating analysis
+            self._auto_save_state()
+            return True
+        else:
+            logger.warning(f"No analysis columns were updated for {tif_path}")
             return False
 
     def update_row_from_saved_analysis(self, tif_path: str) -> bool:
@@ -2175,69 +2110,57 @@ class TifFileBackend:
         bool
             True if row was successfully updated, False otherwise
         """
-        try:
-            # Find the row index in the backend DataFrame
-            row_index = self._find_file_by_path(tif_path)
-            if row_index is None:
-                logger.warning(f"File not found in backend: {tif_path}")
-                return False
-                
-            kym_analysis = self.df.at[row_index, '_kymRoiAnalysis']
+        # Find the row index in the backend DataFrame
+        row_index = self._find_file_by_path(tif_path)
+        if row_index is None:
+            logger.warning(f"File not found in backend: {tif_path}")
+            return False
             
-            if kym_analysis is None:
-                logger.warning(f"KymRoiAnalysis not loaded for {tif_path}")
-                return False
-                
-            updated_columns = []
+        kym_analysis = self.df.at[row_index, '_kymRoiAnalysis']
+        
+        if kym_analysis is None:
+            logger.warning(f"KymRoiAnalysis not loaded for {tif_path}")
+            return False
             
-            # Update all columns that can be populated from KymRoiAnalysis
-            for column_name, config in self.COLUMN_CONFIG.items():
-                # Skip special columns that shouldn't be updated from analysis
-                if column_name in ['_kymRoiAnalysis', '_analyzed', 'relative_path', 'filename']:
-                    continue
-                    
+        updated_columns = []
+        
+        # Update all columns that can be populated from KymRoiAnalysis
+        for column_name, config in self.COLUMN_CONFIG.items():
+            # Skip special columns that shouldn't be updated from analysis
+            if column_name in ['_kymRoiAnalysis', '_analyzed', 'relative_path', 'filename']:
+                continue
+                
+            # Column names now directly match KymRoiMetaData keys
+            value_from_analysis = kym_analysis.header.getParam(column_name)
+            
+            if value_from_analysis is not None:
+                # Convert value to appropriate type
+                column_type = config.column_type
                 try:
-                    # Column names now directly match KymRoiMetaData keys
-                    value_from_analysis = kym_analysis.header.getParam(column_name)
-                    
-                    if value_from_analysis is not None:
-                        # Convert value to appropriate type
-                        column_type = config.column_type
-                        try:
-                            if column_type == int:
-                                converted_value = int(value_from_analysis) if value_from_analysis else 0
-                            elif column_type == float:
-                                converted_value = float(value_from_analysis) if value_from_analysis else 0.0
-                            elif column_type == bool:
-                                converted_value = bool(value_from_analysis) if value_from_analysis else False
-                            else:
-                                converted_value = str(value_from_analysis) if value_from_analysis else ""
-                        except (ValueError, TypeError) as e:
-                            logger.warning(f"Failed to convert value '{value_from_analysis}' to type {column_type} for column {column_name}: {e}")
-                            continue
-                        
-                        # Update the backend DataFrame
-                        self.df.at[row_index, column_name] = converted_value
-                        updated_columns.append(column_name)
-                        
-                except Exception as e:
-                    logger.error(f"Failed to get {column_name} from KymRoiAnalysis metadata for {tif_path}: {e}")
-                    #raise
+                    if column_type == int:
+                        converted_value = int(value_from_analysis) if value_from_analysis else 0
+                    elif column_type == float:
+                        converted_value = float(value_from_analysis) if value_from_analysis else 0.0
+                    elif column_type == bool:
+                        converted_value = bool(value_from_analysis) if value_from_analysis else False
+                    else:
+                        converted_value = str(value_from_analysis) if value_from_analysis else ""
+                except (ValueError, TypeError) as e:
+                    logger.warning(f"Failed to convert value '{value_from_analysis}' to type {column_type} for column {column_name}: {e}")
                     continue
-            
-            if updated_columns:
-                # Auto-save state after updating
-                self._auto_save_state()
-                logger.debug(f"Updated row in backend from saved KymRoiAnalysis for {tif_path}: {', '.join(updated_columns)}")
-                return True
-            else:
-                logger.warning(f"No columns were updated for {tif_path}")
-                return False
-            
-        except Exception as e:
-            logger.error(f"Failed to update row from saved KymRoiAnalysis for {tif_path}: {e}")
-            raise
-            # return False
+                
+                # Update the backend DataFrame
+                self.df.at[row_index, column_name] = converted_value
+                updated_columns.append(column_name)
+        
+        if updated_columns:
+            # Auto-save state after updating
+            self._auto_save_state()
+
+            return True
+        else:
+            logger.warning(f"No columns were updated for {tif_path}")
+            return False
 
     def get_kym_roi_analysis_by_path(
         self, relative_path: str
@@ -2418,22 +2341,17 @@ class TifFileBackend:
         Optional[KymRoiAnalysis]
             The created KymRoiAnalysis object, or None if creation fails
         """
-        try:
-            # Import here to avoid circular imports
-            from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
-            
-            # Create KymRoiAnalysis with consistent configuration
-            kym_analysis = KymRoiAnalysis(
-                path=str(tif_path),
-                analysis_only=not load_img_data,  # analysis_only=True when not loading image data
-                loadImgData=load_img_data,
-                dirty_callback_function=self.dirty_callback  # NEW: Use stored callback
-            )
-            
-            return kym_analysis
-            
-        except Exception as e:
-            logger.error(f"Failed to create KymRoiAnalysis for {tif_path}: {e}")
-            return None
+        # Import here to avoid circular imports
+        from sanpy.kym.kymRoiAnalysis import KymRoiAnalysis
+        
+        # Create KymRoiAnalysis with consistent configuration
+        kym_analysis = KymRoiAnalysis(
+            path=str(tif_path),
+            analysis_only=not load_img_data,  # analysis_only=True when not loading image data
+            loadImgData=load_img_data,
+            dirty_callback_function=self.dirty_callback  # NEW: Use stored callback
+        )
+        
+        return kym_analysis
 
 

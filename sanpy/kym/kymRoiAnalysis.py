@@ -86,7 +86,7 @@ class KymRoiAnalysis:
         else:
             # Load image data if requested
             if self._loadImgData and self._path is not None:
-                logger.debug("KymRoiAnalysis: loading image data")
+        
                 ba = bAnalysis(self._path)
                 self._imgData = ba.fileLoader._tif
                 if not isinstance(self._imgData, List):
@@ -169,7 +169,7 @@ class KymRoiAnalysis:
             self._kymRoiMetaData['umPerPixel'] = loadedHeaderDict['umPerPixel']
         else:
             if not self._analysis_only:
-                logger.debug("KymRoiAnalysis: no analysis file found, loading Olympus header or using defaults")
+
                 olympusHeader = _loadLineScanHeader(self._path)
                 if olympusHeader is not None:
                     self._kymRoiMetaData['Acq Date'] = olympusHeader['date']
@@ -216,7 +216,7 @@ class KymRoiAnalysis:
         """Ensure image data is loaded. Load it if needed and not in analysis_only mode."""
         if self._imgData is None and self._path is not None and not self._analysis_only:
             # Only load image data if not in analysis_only mode
-            logger.debug(f"Loading image data for: {self._path}")
+    
             ba = bAnalysis(self._path)
             self._imgData = ba.fileLoader._tif
             if not isinstance(self._imgData, List):
@@ -227,8 +227,8 @@ class KymRoiAnalysis:
                 self._kymRoiMetaData['numChannels'] = len(self._imgData)
                 self._kymRoiMetaData['imageHeight'] = self._imgData[0].shape[0]
                 self._kymRoiMetaData['imageWidth'] = self._imgData[0].shape[1]
-        elif self._imgData is None and self._analysis_only:
-            logger.debug(f"Image data not loaded (analysis_only mode): {self._path}")
+            elif self._imgData is None and self._analysis_only:
+                pass
 
     def setKymDetectionParam(self, key, value):
         if key not in self._kymDetectionParams.keys():
@@ -869,10 +869,10 @@ class KymRoiAnalysis:
             # If we still don't have header, skip this channel
             if not header_loaded:
                 # there was no saved csv file for channel
-                logger.debug(f"loadAnalysis: no header found for channel {channel}, skipping")
+
                 continue
 
-            logger.debug(f"  loadAnalysis: loading peak file channel:{channel}")
+
             loaded_f_f0 = self._loadThisFile(peakPath, channel, PeakDetectionTypes.intensity, addRois=addRois)
             if loaded_f_f0:
                 addRois = False
@@ -893,12 +893,11 @@ class KymRoiAnalysis:
                             kymRoi = self.getRoi(_roiLabel)
                             kymRoi.kymRoiTraces[channel].loadTraces(_roiLabel, loadedIntDf)
                         except pd.errors.EmptyDataError:
-                            logger.debug(f"loadAnalysis: EmptyDataError for ROI {_roiLabel}")
                             pass
                 except Exception as e:
-                    logger.debug(f"loadAnalysis: failed to load trace data: {e}")
+                    pass
 
-        # logger.debug("loadAnalysis: end")
+          # logger.debug("loadAnalysis: end")
 
         # when we load, we and our rois are never dirty
         self.setDirty(False)

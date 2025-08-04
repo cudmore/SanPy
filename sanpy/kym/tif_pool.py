@@ -158,7 +158,7 @@ class TiffPool:
             self._headerDict = _loadedHeaderDict
             self.master_df = loaded_df
         else:
-            logger.debug(f"No existing pooled data found at: {filepath}")
+            
             self.master_df = pd.DataFrame()
         
         # Load mean data if it exists
@@ -176,7 +176,7 @@ class TiffPool:
                 # return
             self.dfMean = loaded_df
         else:
-            logger.debug(f"No existing mean data found at: {mean_filepath}")
+            
             self.dfMean = pd.DataFrame()
         
         # Cast ROI Label columns to string to ensure consistency
@@ -223,19 +223,15 @@ class TiffPool:
         """Save mean data to CSV file in the loaded folder."""
         if len(self.dfMean) > 0:
             filepath = self._get_mean_data_filepath()
-            try:
-                # self.dfMean.to_csv(filepath, index=False)
-                with open(filepath,'w') as f:
-                    # save self._headerDict as json
-                    f.write(json.dumps(self._headerDict) + '\n')
-                    self.dfMean.to_csv(f, index=False)
-                logger.debug(f"Saved mean data to: {filepath} ({len(self.dfMean)} rows)")
-                return filepath
-            except Exception as e:
-                logger.error(f"Failed to save mean data to {filepath}: {e}")
-                return None
+            # self.dfMean.to_csv(filepath, index=False)
+            with open(filepath,'w') as f:
+                # save self._headerDict as json
+                f.write(json.dumps(self._headerDict) + '\n')
+                self.dfMean.to_csv(f, index=False)
+
+            return filepath
         else:
-            logger.debug("No mean data to save (dfMean is empty)")
+
             return None
 
     def create_df_mean(self, force_recalculate: bool = False) -> pd.DataFrame:
@@ -405,7 +401,7 @@ class TiffPool:
                 + self.dfMean['Repeat'].astype(str).fillna('')
             ).str.strip()
             self.dfMean['Condition Repeat'] = self.dfMean['Condition Repeat'].astype('category')
-            logger.debug("20250731 Added 'Condition Repeat' column to dfMean")
+    
         
         # Auto-save the mean data
         self._auto_save_mean_data()
@@ -424,20 +420,20 @@ class TiffPool:
         # Always ensure show_roi column exists and is boolean True
         if 'show_roi' not in self.dfMean.columns:
             self.dfMean['show_roi'] = True
-            logger.debug("Added 'show_roi' column to dfMean")
+    
         else:
             # Ensure existing column is boolean and has no NaN values
             self.dfMean['show_roi'] = self.dfMean['show_roi'].fillna(True).astype(bool)
-            logger.debug("Ensured 'show_roi' column is boolean with no NaN values")
+    
         
         # Always ensure show_cell column exists and is boolean True
         if 'show_cell' not in self.dfMean.columns:
             self.dfMean['show_cell'] = True
-            logger.debug("Added 'show_cell' column to dfMean")
+    
         else:
             # Ensure existing column is boolean and has no NaN values
             self.dfMean['show_cell'] = self.dfMean['show_cell'].fillna(True).astype(bool)
-            logger.debug("Ensured 'show_cell' column is boolean with no NaN values")
+    
 
     def detect_roi_label_mismatches(self, force_recalculate: bool = False, baseline_condition: str = 'Control', baseline_repeat: int = 0) -> pd.DataFrame:
         """
@@ -469,7 +465,7 @@ class TiffPool:
             return self.dfErrors
         
         if len(self.dfErrors) > 0 and not force_recalculate:
-            logger.debug(f"dfErrors already exists with {len(self.dfErrors)} rows. Use force_recalculate=True to recalculate.")
+
             return self.dfErrors
         
         logger.info(f"Detecting ROI label mismatches using baseline ({baseline_condition}, {baseline_repeat})...")
@@ -676,8 +672,7 @@ class TiffPool:
                 comparison['significant'] = p_value < 0.05
             except ImportError:
                 logger.warning("scipy not available for t-test")
-            except Exception as e:
-                logger.warning(f"T-test failed: {e}")
+            # Let exceptions propagate for easier debugging
         
         return comparison
 
@@ -829,7 +824,7 @@ class TiffPool:
                 for i, col in enumerate(self._group_columns):
                     df_mean_mask &= (self.dfMean[col] == group_tuple[i])
                 self.dfMean = self.dfMean[~df_mean_mask]
-                logger.debug(f"Removed group {group_tuple} from dfMean (no data in master_df)")
+
                 continue
             
             # Calculate statistics for this group
@@ -884,12 +879,12 @@ class TiffPool:
                 for col, value in new_row.items():
                     if col in self.dfMean.columns:
                         self.dfMean.at[row_idx, col] = value
-                logger.debug(f"Updated group {group_tuple} in dfMean")
+
             else:
                 # Add new row
                 new_df = pd.DataFrame([new_row])
                 self.dfMean = pd.concat([self.dfMean, new_df], ignore_index=True)
-                logger.debug(f"Added new group {group_tuple} to dfMean")
+
         
         # Ensure filter columns exist
         self._add_filter_columns()
@@ -1081,94 +1076,89 @@ class TiffPool:
         bool
             True if analysis was successfully updated, False otherwise
         """
-        try:
-            # Validate input path
-            if not tif_path or tif_path.strip() == "":
-                logger.error(f"Invalid tif_path provided: '{tif_path}'")
-                return False
-            
-            # Find the row index in the backend DataFrame using helper method
-            row_index = self._find_file_by_path(tif_path)
-            if row_index is None:
-                logger.warning(f"File not found in backend: {tif_path}")
-                return False
-            
-            # Get the KymRoiAnalysis object for this file
-            kym_analysis = self.tif_file_backend.get_kym_roi_analysis(row_index)
-            if kym_analysis is None:
-                logger.warning(f"Failed to load KymRoiAnalysis for {tif_path}")
-                return False
-            
-            # Remove existing data for this file from the master DataFrame
-            self._remove_file_from_pool(tif_path)
-            
-            # Add new analysis results for this file
-            new_results = []
-            for channel in range(kym_analysis.numChannels):
-                # Intensity analysis
-                intensity_df = kym_analysis.getDataFrame(channel, PeakDetectionTypes.intensity)
-                if len(intensity_df) > 0:
-                    # Only add columns that don't already exist in the KymRoiAnalysis DataFrame
-                    if 'Analysis Type' not in intensity_df.columns:
-                        intensity_df['Analysis Type'] = 'Intensity'
-                    # Add Channel column - this is required for grouping
-                    intensity_df['Channel'] = channel
-                    # Add file identification columns - use the relative_path from backend
-                    rel_path = self.tif_file_backend.df.at[row_index, 'relative_path']
-                    intensity_df['Tif Rel Path'] = rel_path
-                    intensity_df['TIF Filename'] = Path(rel_path).name
-                    
-                    # Add key metadata columns from TifFileBackend's COLUMN_CONFIG
-                    intensity_df['Date'] = self.tif_file_backend.df.at[row_index, 'Date']
-                    intensity_df['Cell ID'] = self.tif_file_backend.df.at[row_index, 'Cell ID']
-                    intensity_df['Region'] = self.tif_file_backend.df.at[row_index, 'Region']
-                    intensity_df['Condition'] = self.tif_file_backend.df.at[row_index, 'Condition']
-                    intensity_df['Repeat'] = self.tif_file_backend.df.at[row_index, 'Repeat']
-                    
-                    new_results.append(intensity_df)
-                # Diameter analysis (commented out for now)
-                # diameter_df = kym_analysis.getDataFrame(channel, PeakDetectionTypes.diameter)
-                # if len(diameter_df) > 0:
-                #     diameter_df['Analysis Type'] = 'Diameter'
-                #     diameter_df['Channel'] = channel
-                #     diameter_df['TIF Path'] = resolved_path
-                #     diameter_df['TIF Filename'] = os.path.basename(tif_path)
-                #     new_results.append(diameter_df)
-            
-            # Add new results to master DataFrame
-            if new_results:
-                new_df = pd.concat(new_results, ignore_index=True)
+        # Validate input path
+        if not tif_path or tif_path.strip() == "":
+            logger.error(f"Invalid tif_path provided: '{tif_path}'")
+            return False
+        
+        # Find the row index in the backend DataFrame using helper method
+        row_index = self._find_file_by_path(tif_path)
+        if row_index is None:
+            logger.warning(f"File not found in backend: {tif_path}")
+            return False
+        
+        # Get the KymRoiAnalysis object for this file
+        kym_analysis = self.tif_file_backend.get_kym_roi_analysis(row_index)
+        if kym_analysis is None:
+            logger.warning(f"Failed to load KymRoiAnalysis for {tif_path}")
+            return False
+        
+        # Remove existing data for this file from the master DataFrame
+        self._remove_file_from_pool(tif_path)
+        
+        # Add new analysis results for this file
+        new_results = []
+        for channel in range(kym_analysis.numChannels):
+            # Intensity analysis
+            intensity_df = kym_analysis.getDataFrame(channel, PeakDetectionTypes.intensity)
+            if len(intensity_df) > 0:
+                # Only add columns that don't already exist in the KymRoiAnalysis DataFrame
+                if 'Analysis Type' not in intensity_df.columns:
+                    intensity_df['Analysis Type'] = 'Intensity'
+                # Add Channel column - this is required for grouping
+                intensity_df['Channel'] = channel
+                # Add file identification columns - use the relative_path from backend
+                rel_path = self.tif_file_backend.df.at[row_index, 'relative_path']
+                intensity_df['Tif Rel Path'] = rel_path
+                intensity_df['TIF Filename'] = Path(rel_path).name
                 
-                # Identify which groups will be affected by this update
-                affected_groups = []
-                if len(new_df) > 0:
-                    # Get unique groups from the new data
-                    affected_groups = new_df[self._group_columns].drop_duplicates().values.tolist()
-                    # Convert to tuples for the refresh method
-                    affected_groups = [tuple(group) for group in affected_groups]
+                # Add key metadata columns from TifFileBackend's COLUMN_CONFIG
+                intensity_df['Date'] = self.tif_file_backend.df.at[row_index, 'Date']
+                intensity_df['Cell ID'] = self.tif_file_backend.df.at[row_index, 'Cell ID']
+                intensity_df['Region'] = self.tif_file_backend.df.at[row_index, 'Region']
+                intensity_df['Condition'] = self.tif_file_backend.df.at[row_index, 'Condition']
+                intensity_df['Repeat'] = self.tif_file_backend.df.at[row_index, 'Repeat']
                 
-                if len(self.master_df) == 0:
-                    self.master_df = new_df
-                else:
-                    self.master_df = pd.concat([self.master_df, new_df], ignore_index=True)
-                
-                # Auto-save after updating analysis
-                self._auto_save_pooled_data()
-                
-                # Refresh dfMean after updating master_df - only affected groups
-                if len(self.master_df) > 0:
-                    self.refresh_df_mean(affected_groups=affected_groups)
-                    # Also refresh errors after updating mean data
-                    self.refresh_df_errors()
-                
-                logger.info(f"Updated analysis for {tif_path}: added {len(new_df)} rows, refreshed {len(affected_groups)} groups")
-                return True
+                new_results.append(intensity_df)
+            # Diameter analysis (commented out for now)
+            # diameter_df = kym_analysis.getDataFrame(channel, PeakDetectionTypes.diameter)
+            # if len(diameter_df) > 0:
+            #     diameter_df['Analysis Type'] = 'Diameter'
+            #     diameter_df['Channel'] = channel
+            #     diameter_df['TIF Path'] = resolved_path
+            #     diameter_df['TIF Filename'] = os.path.basename(tif_path)
+            #     new_results.append(diameter_df)
+        
+        # Add new results to master DataFrame
+        if new_results:
+            new_df = pd.concat(new_results, ignore_index=True)
+            
+            # Identify which groups will be affected by this update
+            affected_groups = []
+            if len(new_df) > 0:
+                # Get unique groups from the new data
+                affected_groups = new_df[self._group_columns].drop_duplicates().values.tolist()
+                # Convert to tuples for the refresh method
+                affected_groups = [tuple(group) for group in affected_groups]
+            
+            if len(self.master_df) == 0:
+                self.master_df = new_df
             else:
-                logger.warning(f"No analysis results found for {tif_path}")
-                return False
-                
-        except Exception as e:
-            logger.error(f"Failed to update analysis for {tif_path}: {e}")
+                self.master_df = pd.concat([self.master_df, new_df], ignore_index=True)
+            
+            # Auto-save after updating analysis
+            self._auto_save_pooled_data()
+            
+            # Refresh dfMean after updating master_df - only affected groups
+            if len(self.master_df) > 0:
+                self.refresh_df_mean(affected_groups=affected_groups)
+                # Also refresh errors after updating mean data
+                self.refresh_df_errors()
+            
+            logger.info(f"Updated analysis for {tif_path}: added {len(new_df)} rows, refreshed {len(affected_groups)} groups")
+            return True
+        else:
+            logger.warning(f"No analysis results found for {tif_path}")
             return False
 
     def on_analysis_saved(self, tif_path: str) -> bool:
@@ -1285,7 +1275,7 @@ class TiffPool:
         removed_count = initial_count - len(self.master_df)
         
         if removed_count > 0:
-            logger.debug(f"Removed {removed_count} rows for {tif_path} from pool")
+    
             # Auto-save after removing data
             self._auto_save_pooled_data()
             
@@ -1513,19 +1503,15 @@ class TiffPool:
         """Save pooled data to CSV file in the loaded folder."""
         if len(self.master_df) > 0:
             filepath = self._get_pooled_data_filepath()
-            try:
-                # self.master_df.to_csv(filepath, index=False)
-                with open(filepath,'w') as f:
-                    # save self._headerDict as json
-                    f.write(json.dumps(self._headerDict) + '\n')
-                    self.master_df.to_csv(f, index=False)
-                logger.debug(f"Saved pooled data to: {filepath} ({len(self.master_df)} rows)")
-                return filepath
-            except Exception as e:
-                logger.error(f"Failed to save pooled data to {filepath}: {e}")
-                return None
+            # self.master_df.to_csv(filepath, index=False)
+            with open(filepath,'w') as f:
+                # save self._headerDict as json
+                f.write(json.dumps(self._headerDict) + '\n')
+                self.master_df.to_csv(f, index=False)
+
+            return filepath
         else:
-            logger.debug("No pooled data to save (master_df is empty)")
+
             return None
 
     def get_master_dataframe(self) -> pd.DataFrame:
@@ -1731,53 +1717,48 @@ class TiffPool:
         bool
             True if export was successful, False otherwise
         """
-        try:
-            df_to_export = self.get_df_mean().copy()
+        df_to_export = self.get_df_mean().copy()
+        
+        # Apply filters
+        if conditions:
+            df_to_export = df_to_export[df_to_export['Condition'].isin(conditions)]
+            logger.info(f"Filtered by conditions: {conditions}")
+        
+        if regions:
+            df_to_export = df_to_export[df_to_export['Region'].isin(regions)]
+            logger.info(f"Filtered by regions: {regions}")
+        
+        if min_peaks is not None:
+            df_to_export = df_to_export[df_to_export['Number of Peaks'] >= min_peaks]
+            logger.info(f"Filtered by minimum peaks: {min_peaks}")
+        
+        if exclude_outliers:
+            outliers_df = self.detect_outliers(exclude_outliers)
+            if len(outliers_df) > 0:
+                # Remove outlier rows
+                outlier_indices = outliers_df.index
+                df_to_export = df_to_export.drop(outlier_indices)
+                logger.info(f"Excluded {len(outliers_df)} outliers based on {exclude_outliers}")
+        
+        # Apply formatting if specified
+        if format_options:
+            if 'round_decimals' in format_options:
+                decimals = format_options['round_decimals']
+                if not df_to_export.empty:
+                    numeric_columns = [col for col in df_to_export.select_dtypes(include=[np.number]).columns if col in df_to_export.columns]
+                    if numeric_columns:
+                        df_to_export[numeric_columns] = df_to_export[numeric_columns].round(decimals)
             
-            # Apply filters
-            if conditions:
-                df_to_export = df_to_export[df_to_export['Condition'].isin(conditions)]
-                logger.info(f"Filtered by conditions: {conditions}")
-            
-            if regions:
-                df_to_export = df_to_export[df_to_export['Region'].isin(regions)]
-                logger.info(f"Filtered by regions: {regions}")
-            
-            if min_peaks is not None:
-                df_to_export = df_to_export[df_to_export['Number of Peaks'] >= min_peaks]
-                logger.info(f"Filtered by minimum peaks: {min_peaks}")
-            
-            if exclude_outliers:
-                outliers_df = self.detect_outliers(exclude_outliers)
-                if len(outliers_df) > 0:
-                    # Remove outlier rows
-                    outlier_indices = outliers_df.index
-                    df_to_export = df_to_export.drop(outlier_indices)
-                    logger.info(f"Excluded {len(outliers_df)} outliers based on {exclude_outliers}")
-            
-            # Apply formatting if specified
-            if format_options:
-                if 'round_decimals' in format_options:
-                    decimals = format_options['round_decimals']
-                    if not df_to_export.empty:
-                        numeric_columns = [col for col in df_to_export.select_dtypes(include=[np.number]).columns if col in df_to_export.columns]
-                        if numeric_columns:
-                            df_to_export[numeric_columns] = df_to_export[numeric_columns].round(decimals)
-                
-                if 'sort_by' in format_options:
-                    sort_columns = format_options['sort_by']
-                    if isinstance(sort_columns, str):
-                        sort_columns = [sort_columns]
-                    df_to_export = df_to_export.sort_values(sort_columns)
-            
-            # Export to CSV
-            df_to_export.to_csv(filepath, index=False)
-            logger.info(f"Exported {len(df_to_export)} filtered mean rows to: {filepath}")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Failed to export filtered dfMean: {e}")
-            return False
+            if 'sort_by' in format_options:
+                sort_columns = format_options['sort_by']
+                if isinstance(sort_columns, str):
+                    sort_columns = [sort_columns]
+                df_to_export = df_to_export.sort_values(sort_columns)
+        
+        # Export to CSV
+        df_to_export.to_csv(filepath, index=False)
+        logger.info(f"Exported {len(df_to_export)} filtered mean rows to: {filepath}")
+        return True
 
     def get_df_mean_info(self) -> Dict[str, Any]:
         """
