@@ -790,6 +790,13 @@ class TifFileBackend:
             # Ensure all columns exist even when no files are found
             self._ensure_all_columns_exist()
 
+    def _convert_roi_labels_for_dataframe(self, roi_labels) -> str:
+        """Convert ROI labels list to string representation for DataFrame storage."""
+        if roi_labels is not None:
+            return str(roi_labels)
+        else:
+            return None
+
     def _extract_acquisition_parameters(self, tif_path: Path) -> Dict[str, Any]:
         """
         Extract acquisition parameters from analysis files without loading full KymRoiAnalysis objects.
@@ -904,7 +911,12 @@ class TifFileBackend:
                     self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
                     self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
                     self.df.at[idx, 'numRois'] = acquisition_params['numRois']
-                    self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
+                    # Convert list to string representation for DataFrame storage
+                    roi_labels = acquisition_params['roiLabels']
+                    if roi_labels is not None:
+                        self.df.at[idx, 'roiLabels'] = str(roi_labels)
+                    else:
+                        self.df.at[idx, 'roiLabels'] = None
                 else:
                     pass
 
@@ -935,7 +947,12 @@ class TifFileBackend:
                     self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
                     self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
                     self.df.at[idx, 'numRois'] = acquisition_params['numRois']
-                    self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
+                    # Convert list to string representation for DataFrame storage
+                    roi_labels = acquisition_params['roiLabels']
+                    if roi_labels is not None:
+                        self.df.at[idx, 'roiLabels'] = str(roi_labels)
+                    else:
+                        self.df.at[idx, 'roiLabels'] = None
 
             # except Exception as e:
             #     raise
@@ -1404,7 +1421,12 @@ class TifFileBackend:
                     self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
                     self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
                     self.df.at[idx, 'numRois'] = acquisition_params['numRois']
-                    self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
+                    # Convert list to string representation for DataFrame storage
+                    roi_labels = acquisition_params['roiLabels']
+                    if roi_labels is not None:
+                        self.df.at[idx, 'roiLabels'] = str(roi_labels)
+                    else:
+                        self.df.at[idx, 'roiLabels'] = None
                 else:
                     pass
 
@@ -1432,7 +1454,12 @@ class TifFileBackend:
                     self.df.at[idx, 'numLineScans'] = acquisition_params['numLineScans']
                     self.df.at[idx, 'pixelsPerLine'] = acquisition_params['pixelsPerLine']
                     self.df.at[idx, 'numRois'] = acquisition_params['numRois']
-                    self.df.at[idx, 'roiLabels'] = acquisition_params['roiLabels']
+                    # Convert list to string representation for DataFrame storage
+                    roi_labels = acquisition_params['roiLabels']
+                    if roi_labels is not None:
+                        self.df.at[idx, 'roiLabels'] = str(roi_labels)
+                    else:
+                        self.df.at[idx, 'roiLabels'] = None
 
             # Let exceptions propagate for easier debugging
 

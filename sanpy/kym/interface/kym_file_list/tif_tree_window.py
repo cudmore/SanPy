@@ -742,29 +742,66 @@ class TifTreeWindow(QMainWindow):
         if self.backend:
             logger.info("Force re-analyzing all files")
 
-            # Show status message
-            self.statusBar().showMessage("Force re-analyzing all files...")
-
-            # Force re-analyze all files in the backend
-            self.backend.force_reanalyze_all()
-
-            # Refresh both widgets
-            if self.tree_widget:
-                self.tree_widget.refresh()
-            if self.table_widget:
-                self.table_widget.refresh()
-
-            # Re-initialize TiffPool data after force re-analyze
-            self._initialize_tiff_pool_data()
-
-            # Update status
-            file_count = self.backend.get('file_count')
-            folder_name = get_folder_hierarchy_title(self.backend.root_path)
-            self.statusBar().showMessage(
-                f"Force re-analyzed: {folder_name} | Found {file_count} .tif files"
+            # Get total number of files for progress tracking
+            total_files = len(self.backend.df)
+            
+            # Create progress dialog
+            progress_dialog = ProgressDialog(
+                title="Rebuilding Folder Database",
+                total_steps=total_files,
+                parent=self,
+                show_cancel_button=True
             )
+            progress_dialog.show()
+            from PyQt5.QtWidgets import QApplication
+            QApplication.processEvents()
 
-            logger.info(f"Force re-analyzed all files. Found {file_count} .tif files")
+            try:
+                # Show status message
+                self.statusBar().showMessage("Force re-analyzing all files...")
+                progress_dialog.status_label.setText("Re-analyzing files...")
+
+                # Force re-analyze all files in the backend
+                self.backend.force_reanalyze_all()
+
+                # Update progress
+                progress_dialog.status_label.setText("Refreshing widgets...")
+                progress_dialog.progress_bar.setValue(total_files // 2)
+
+                # Refresh both widgets
+                if self.tree_widget:
+                    self.tree_widget.refresh()
+                if self.table_widget:
+                    self.table_widget.refresh()
+
+                # Update progress
+                progress_dialog.status_label.setText("Re-initializing TiffPool data...")
+                progress_dialog.progress_bar.setValue(total_files * 3 // 4)
+
+                # Re-initialize TiffPool data after force re-analyze
+                self._initialize_tiff_pool_data()
+
+                # Complete progress
+                progress_dialog.progress_bar.setValue(total_files)
+                progress_dialog.status_label.setText("Rebuild complete!")
+
+                # Update status
+                file_count = self.backend.get('file_count')
+                folder_name = get_folder_hierarchy_title(self.backend.root_path)
+                self.statusBar().showMessage(
+                    f"Force re-analyzed: {folder_name} | Found {file_count} .tif files"
+                )
+
+                logger.info(f"Force re-analyzed all files. Found {file_count} .tif files")
+                
+                # Close progress dialog
+                progress_dialog.accept()
+                
+            except Exception as e:
+                logger.error(f"Error during force re-analyze: {e}")
+                progress_dialog.status_label.setText(f"Error: {str(e)}")
+                progress_dialog.reject()
+                raise
         else:
             logger.warning("No backend available to force re-analyze")
 

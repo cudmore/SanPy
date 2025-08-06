@@ -299,6 +299,12 @@ class SanPyApp(QtWidgets.QApplication):
         action.triggered.connect(partial(self._showSanPyLog))
         self.helpMenu.addAction(action)
 
+        # Add 'Email SanPy Support' action
+        name = "Email SanPy Support"
+        action = QtWidgets.QAction(name, self)
+        action.triggered.connect(self._showSupportDialog)
+        self.helpMenu.addAction(action)
+
         # like the help menu, this gets rerouted to the main python/sanp menu
         name = "Preferences ..."
         action = QtWidgets.QAction(name, self)
@@ -724,6 +730,13 @@ class SanPyApp(QtWidgets.QApplication):
         dlg.setLayout(vLayout)
 
         dlg.exec()
+    
+    def _showSupportDialog(self):
+        """Show the support dialog for sending emails."""
+        from sanpy.interface.sanpy_support_widget import show_support_dialog
+        # Find the active window to use as parent, or use None if no window is active
+        active_window = self.activeWindow()
+        show_support_dialog(active_window)
   
     def _getVersionInfo(self) -> dict:
         retDict = {}
