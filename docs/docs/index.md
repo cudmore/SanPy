@@ -45,7 +45,7 @@ If you find the code in this repository interesting, please email Robert Cudmore
 
 :   Guarina L, Johnson TL, Griffith T, Santana LF, **Cudmore RH** (2024) SanPy: Software for the analysis and visualization of whole-cell current-clamp recordings. Biophys J, 2;123(7):759-769. doi: 10.1016/j.bpj.2024.02.025. [PubMed: 38419330](https://pubmed.ncbi.nlm.nih.gov/38419330/).
 
-:   SanPy was originally described in a bioRxiv manuscript 2023.05.06.539660; doi: [https://doi.org/10.1101/2023.05.06.539660](https://doi.org/10.1101/2023.05.06.539660)]
+:   SanPy was originally described in a bioRxiv manuscript 2023.05.06.539660; doi: [https://doi.org/10.1101/2023.05.06.539660](https://doi.org/10.1101/2023.05.06.539660).
 
 
 <!-- ### On the web -->

@@ -135,7 +135,7 @@ setup(
         'test': testRequirements,
     },
 
-    python_requires=">=3.8",
+    python_requires=">=3.11",
     entry_points={
         'console_scripts': [
             'sanpy=sanpy.interface.sanpy_app:main',
