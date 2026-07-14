@@ -1434,7 +1434,28 @@ class ScatterWidget(QtWidgets.QMainWindow):
                             verbose=False,
                         )
                         # logger.info('  annotator.apply_and_annotate')
-                        annotator.apply_and_annotate()
+                        _retAx, test_results = annotator.apply_and_annotate()
+                        # _retAx, test_results = annotator.annotate()
+
+                        print('annotator _retAx:')
+                        print(_retAx)
+
+                        print('annotator test_results:')
+                        print(test_results)
+
+                        for res in test_results:
+                            print(f'res.formatted_output: {res.formatted_output}')
+                            print(f'res.text: {res.text}')
+                            print('print_labels_and_content')
+                            res.print_labels_and_content()
+                            print('')
+
+                        # 20250806
+                        # _results = annotator._stat_test_results  # <-- This works
+                        # results_df = pd.DataFrame(_results)
+                        # print('annotator results_df:')
+                        # print(results_df)
+
                     except ValueError as e:
                         logger.error(f'annotator failed: {e}')
                     # 20250708
