@@ -19,8 +19,11 @@
         <link rel="next" href="../fileloader/fileLoader_base/">
       
       
+        
+      
+      
       <link rel="icon" href="../../img/sanpy-transparent.png">
-      <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.4.14">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -28,7 +31,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.fad675c6.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -51,21 +57,34 @@
     
       <link rel="stylesheet" href="../../css/style.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
+  
 
-    
+
+  
+  
+
+<script id="__analytics">function __md_analytics(){function e(){dataLayer.push(arguments)}window.dataLayer=window.dataLayer||[],e("js",new Date),e("config","G-8057JCR6M8"),document.addEventListener("DOMContentLoaded",(function(){document.forms.search&&document.forms.search.query.addEventListener("blur",(function(){this.value&&e("event","search",{search_term:this.value})}));document$.subscribe((function(){var t=document.forms.feedback;if(void 0!==t)for(var a of t.querySelectorAll("[type=submit]"))a.addEventListener("click",(function(a){a.preventDefault();var n=document.location.pathname,d=this.getAttribute("data-md-value");e("event","feedback",{page:n,data:d}),t.firstElementChild.disabled=!0;var r=t.querySelector(".md-feedback__note [data-md-value='"+d+"']");r&&(r.hidden=!1)})),t.hidden=!1})),location$.subscribe((function(t){e("config","G-8057JCR6M8",{page_path:t.pathname})}))}));var t=document.createElement("script");t.async=!0,t.src="https://www.googletagmanager.com/gtag/js?id=G-8057JCR6M8",document.getElementById("__analytics").insertAdjacentElement("afterEnd",t)}</script>
+  
+    <script>"undefined"!=typeof __md_analytics&&__md_analytics()</script>
+  
+
     
     
   </head>
   
   
-    <body dir="ltr">
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo">
   
-    
-    
-      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -96,7 +115,7 @@
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
     </label>
     <div class="md-header__title" data-md-component="header-title">
       <div class="md-header__ellipsis">
@@ -115,34 +134,65 @@
       </div>
     </div>
     
+      
+        <form class="md-header__option" data-md-component="palette">
+  
     
     
-      <label class="md-header__button md-icon" for="__search">
-        
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
       </label>
-      <div class="md-search" data-md-component="search" role="dialog">
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
       <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
         
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
         
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
       </label>
       <nav class="md-search__options" aria-label="Search">
         
         <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
           
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
         </button>
       </nav>
       
     </form>
     <div class="md-search__output">
-      <div class="md-search__scrollwrap" data-md-scrollfix>
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
         <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Initializing search
@@ -153,13 +203,14 @@
     </div>
   </div>
 </div>
+      
     
     
       <div class="md-header__source">
         <a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     SanPy Repository
@@ -204,7 +255,7 @@
       <a href="https://github.com/cudmore/sanpy" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2023 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     SanPy Repository
@@ -224,9 +275,16 @@
       <a href="../.." class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Introducing SanPy
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -244,9 +302,16 @@
       <a href="../../download/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Download
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -264,9 +329,16 @@
       <a href="../../desktop-application/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Desktop Application
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -284,9 +356,16 @@
       <a href="../../getting-started-gui/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Getting Started With The GUI
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -304,9 +383,16 @@
       <a href="../../plugins/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Plugins
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -324,9 +410,16 @@
       <a href="../../install/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Install From Command Line
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -351,16 +444,22 @@
       
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
         
           
           <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
             
   
+  
   <span class="md-ellipsis">
+    
+  
     API
+  
+
+    
   </span>
+  
   
 
             <span class="md-nav__icon md-icon"></span>
@@ -369,7 +468,11 @@
         <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_7">
             <span class="md-nav__icon md-icon"></span>
-            API
+            
+  
+    API
+  
+
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -383,9 +486,16 @@
       <a href="../overview/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Overview
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -404,9 +514,16 @@
       <a href="../../scripting/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Getting Started
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -425,9 +542,16 @@
       <a href="../writing-a-file-loader/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Writing A File Loader
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -446,9 +570,16 @@
       <a href="../writing-a-plugin/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Writing A Plugin
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -467,9 +598,16 @@
       <a href="../writing-new-analysis/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Writing New Analysis
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -488,9 +626,16 @@
       <a href="../adding-to-core-analysis/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Adding To Core Analysis
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -509,9 +654,16 @@
       <a href="../bAnalysis/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     bAnalysis
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -530,9 +682,16 @@
       <a href="../bAnalysisResults/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     bAnalysisResults
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -551,9 +710,16 @@
       <a href="../epochTable/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     epochTable
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -572,9 +738,16 @@
       <a href="../analysisPlot/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     analysisPlot
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -593,9 +766,16 @@
       <a href="../analysisDir/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     analysisDir
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -614,9 +794,16 @@
       <a href="../bExport/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     bExport
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -635,9 +822,16 @@
       <a href="../bDetection/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     bDetection
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -663,9 +857,16 @@
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
   
+  
   <span class="md-ellipsis">
+    
+  
     bAnalysisUtil
+  
+
+    
   </span>
+  
   
 
           <span class="md-nav__icon md-icon"></span>
@@ -674,9 +875,16 @@
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     bAnalysisUtil
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -697,35 +905,32 @@
         <li class="md-nav__item">
   <a href="#sanpy.bAnalysisUtil" class="md-nav__link">
     <span class="md-ellipsis">
-      bAnalysisUtil
+      
+        bAnalysisUtil
+      
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisUtil-functions" class="md-nav__link">
+  <a href="#sanpy.bAnalysisUtil-attributes" class="md-nav__link">
     <span class="md-ellipsis">
-      Functions
+      
+        Attributes
+      
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Functions">
+    <nav class="md-nav" aria-label="Attributes">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisUtil.getHumanFromStat" class="md-nav__link">
+  <a href="#sanpy.bAnalysisUtil.logger" class="md-nav__link">
     <span class="md-ellipsis">
-      getHumanFromStat()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisUtil.getStatFromHuman" class="md-nav__link">
-    <span class="md-ellipsis">
-      getStatFromHuman()
+      
+        logger
+      
     </span>
   </a>
   
@@ -733,6 +938,45 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisUtil-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisUtil.bAnalysisUtil" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bAnalysisUtil
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisUtil-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions:
+      
+    </span>
+  </a>
   
 </li>
       
@@ -760,16 +1004,22 @@
       
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_15" >
         
           
           <label class="md-nav__link" for="__nav_7_15" id="__nav_7_15_label" tabindex="0">
             
   
+  
   <span class="md-ellipsis">
+    
+  
     fileLoader
+  
+
+    
   </span>
+  
   
 
             <span class="md-nav__icon md-icon"></span>
@@ -778,7 +1028,11 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_15_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7_15">
             <span class="md-nav__icon md-icon"></span>
-            fileLoader
+            
+  
+    fileLoader
+  
+
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -792,9 +1046,16 @@
       <a href="../fileloader/fileLoader_base/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     fileLoader_base
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -813,9 +1074,16 @@
       <a href="../fileloader/fileLoader_abf/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     fileLoader_abf
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -834,9 +1102,16 @@
       <a href="../fileloader/fileLoader_csv/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     fileLoader_csv
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -863,9 +1138,16 @@
       <a href="../userAnalysis/baseUserAnalysis/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     baseUserAnalysis
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -889,16 +1171,22 @@
       
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_17" >
         
           
           <label class="md-nav__link" for="__nav_7_17" id="__nav_7_17_label" tabindex="0">
             
   
+  
   <span class="md-ellipsis">
+    
+  
     interface
+  
+
+    
   </span>
+  
   
 
             <span class="md-nav__icon md-icon"></span>
@@ -907,7 +1195,11 @@
         <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_7_17_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7_17">
             <span class="md-nav__icon md-icon"></span>
-            interface
+            
+  
+    interface
+  
+
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -921,9 +1213,16 @@
       <a href="../interface/sanpy_app/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     sanp_app
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -947,16 +1246,22 @@
       
         
         
-        
         <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7_17_2" >
         
           
           <label class="md-nav__link" for="__nav_7_17_2" id="__nav_7_17_2_label" tabindex="0">
             
   
+  
   <span class="md-ellipsis">
+    
+  
     plugins
+  
+
+    
   </span>
+  
   
 
             <span class="md-nav__icon md-icon"></span>
@@ -965,7 +1270,11 @@
         <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_7_17_2_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_7_17_2">
             <span class="md-nav__icon md-icon"></span>
-            plugins
+            
+  
+    plugins
+  
+
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
             
@@ -979,9 +1288,16 @@
       <a href="../interface/plugins/sanpyPlugin/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     sanpyPlugin
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -1023,9 +1339,16 @@
       <a href="../../methods/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     Methods
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -1043,9 +1366,16 @@
       <a href="../../about/" class="md-nav__link">
         
   
+  
   <span class="md-ellipsis">
+    
+  
     About SanPy
+  
+
+    
   </span>
+  
   
 
       </a>
@@ -1080,35 +1410,32 @@
         <li class="md-nav__item">
   <a href="#sanpy.bAnalysisUtil" class="md-nav__link">
     <span class="md-ellipsis">
-      bAnalysisUtil
+      
+        bAnalysisUtil
+      
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisUtil-functions" class="md-nav__link">
+  <a href="#sanpy.bAnalysisUtil-attributes" class="md-nav__link">
     <span class="md-ellipsis">
-      Functions
+      
+        Attributes
+      
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Functions">
+    <nav class="md-nav" aria-label="Attributes">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisUtil.getHumanFromStat" class="md-nav__link">
+  <a href="#sanpy.bAnalysisUtil.logger" class="md-nav__link">
     <span class="md-ellipsis">
-      getHumanFromStat()
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#sanpy.bAnalysisUtil.getStatFromHuman" class="md-nav__link">
-    <span class="md-ellipsis">
-      getStatFromHuman()
+      
+        logger
+      
     </span>
   </a>
   
@@ -1116,6 +1443,45 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisUtil-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Classes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisUtil.bAnalysisUtil" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        bAnalysisUtil
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sanpy.bAnalysisUtil-functions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Functions:
+      
+    </span>
+  </a>
   
 </li>
       
@@ -1129,24 +1495,96 @@
           
           
             <div class="md-content" data-md-component="content">
+              
               <article class="md-content__inner md-typeset">
                 
                   
 
 
+
   <h1>bAnalysisUtil</h1>
+
+<div class="doc doc-object doc-module">
+
+
+
+<a id="sanpy.bAnalysisUtil"></a>
+    <div class="doc doc-contents first">
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+<h2 id="sanpy.bAnalysisUtil-attributes">Attributes<a href="#sanpy.bAnalysisUtil-attributes" class="headerlink" title="Permanent link">¤</a></h2>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="sanpy.bAnalysisUtil.logger" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">logger</span> <span class="o">=</span> <span class="n">get_logger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span></code>
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#sanpy.bAnalysisUtil.logger" class="headerlink" title="Permanent link">¤</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+        <p>A dictionary of detection parameters.</p>
+<p>Functions to map human readable name to backend stat name and vica versa.</p>
+<p>See <a href="../../Methods">xxx-methods</a> section for a list of available stats</p>
+<p>Example:</p>
+<div class="highlight"><pre><span></span><code>from sanpy.bAnalysisUtil import getHumandFromStat, getStatFromHuman
+
+humanStr = getHumandFromStat(&#39;thresholdSec&#39;)
+statStr = getStatFromHuman(&#39;Spike Time (s)&#39;)
+</code></pre></div>
+
+    </div>
+
+</div>
+
+<h2 id="sanpy.bAnalysisUtil-classes">Classes<a href="#sanpy.bAnalysisUtil-classes" class="headerlink" title="Permanent link">¤</a></h2>
 
 <div class="doc doc-object doc-class">
 
 
 
-<a id="sanpy.bAnalysisUtil"></a>
-  <div class="doc doc-contents first">
+<h3 id="sanpy.bAnalysisUtil.bAnalysisUtil" class="doc doc-heading">
+            <code>bAnalysisUtil</code>
 
 
-            <details class="quote">
-              <summary>Source code in <code>sanpy/bAnalysisUtil.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 42</span>
+<a href="#sanpy.bAnalysisUtil.bAnalysisUtil" class="headerlink" title="Permanent link">¤</a></h3>
+
+
+    <div class="doc doc-contents ">
+
+
+
+
+
+
+
+
+
+
+              <details class="mkdocstrings-source">
+                <summary>Source code in <code>sanpy/bAnalysisUtil.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 42</span>
 <span class="normal"> 43</span>
 <span class="normal"> 44</span>
 <span class="normal"> 45</span>
@@ -1698,8 +2136,8 @@
 <span class="normal">591</span>
 <span class="normal">592</span>
 <span class="normal">593</span>
-<span class="normal">594</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span> <span class="nc">bAnalysisUtil</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="normal">594</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">bAnalysisUtil</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
         <span class="c1"># built in analysis results</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_statList</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_builStatList</span><span class="p">()</span>
@@ -1720,10 +2158,10 @@
 
         <span class="c1"># self.top = None  # used by tkinter interface</span>
 
-    <span class="k">def</span> <span class="nf">getStatList</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getStatList</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statList</span>
 
-    <span class="k">def</span> <span class="nf">getHumanFromStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statName</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getHumanFromStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statName</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get human readable stat name from backend stat name.&quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statList</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -1736,7 +2174,7 @@
         <span class="c1">#</span>
         <span class="k">return</span> <span class="n">ret</span>
 
-    <span class="k">def</span> <span class="nf">getStatFromHuman</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">humanStat</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getStatFromHuman</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">humanStat</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get backend stat name from human readable stat.&quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1812,7 +2250,7 @@
 <span class="sd">        return &#39;&#39;</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">_buildUserStatList</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_buildUserStatList</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Append user stats to self._statList</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">userStatList</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span>
@@ -1832,7 +2270,7 @@
 
         <span class="c1"># return coreStatList</span>
 
-    <span class="k">def</span> <span class="nf">_builStatList</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_builStatList</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="n">statList</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
         <span class="n">statList</span><span class="p">[</span><span class="s2">&quot;Spike Time (s)&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;thresholdSec&quot;</span><span class="p">,</span>
@@ -2137,13 +2575,13 @@
 
         <span class="k">return</span> <span class="n">statList</span>
 
-    <span class="k">def</span> <span class="nf">prettyPrint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">prettyPrint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 
-    <span class="k">def</span> <span class="nf">getDetectionConfig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getDetectionConfig</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
 
-    <span class="k">def</span> <span class="nf">getDetectionParam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theParam</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getDetectionParam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theParam</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">theParam</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="n">theParam</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -2153,7 +2591,7 @@
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">getDetectionDescription</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theParam</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">getDetectionDescription</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theParam</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">theParam</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="n">theParam</span><span class="p">][</span><span class="s2">&quot;meaning&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -2163,7 +2601,7 @@
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">setDetectionParam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theParam</span><span class="p">,</span> <span class="n">theValue</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setDetectionParam</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">theParam</span><span class="p">,</span> <span class="n">theValue</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">theParam</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">][</span><span class="n">theParam</span><span class="p">][</span><span class="s2">&quot;value&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">theValue</span>
         <span class="k">else</span><span class="p">:</span>
@@ -2173,12 +2611,12 @@
             <span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">configSave</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configSave</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;bAnalysisUtil.configSave()&quot;</span><span class="p">)</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configFilePath</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
             <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configDict</span><span class="p">,</span> <span class="n">outfile</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">sort_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">configLoad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configLoad</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">configFilePath</span><span class="p">):</span>
             <span class="nb">print</span><span class="p">(</span>
                 <span class="s2">&quot;    bAnalysisUtil.configLoad() loading configFile file:&quot;</span><span class="p">,</span>
@@ -2190,7 +2628,7 @@
             <span class="c1"># print(&#39;    bAnalysisUtil.preferencesLoad() using program provided default options&#39;)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">configDefault</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="nf">configDefault</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">configDefault</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">theRet</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
 
         <span class="n">theRet</span><span class="p">[</span><span class="s2">&quot;detection&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
@@ -2221,7 +2659,7 @@
 
         <span class="k">return</span> <span class="n">theRet</span>
 
-    <span class="k">def</span> <span class="nf">_print</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_print</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Print out human readable detection parameters and convert to markdown table</span>
 
 <span class="sd">        This is then pasted as a markdown table into the SanPy docs methods section</span>
@@ -2232,7 +2670,7 @@
 <span class="sd">            pip install tabulate</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
         <span class="c1"># statList is a dict with keys, one key per stat</span>
         <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statList</span>
@@ -2252,39 +2690,38 @@
         <span class="nb">str</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_markdown</span><span class="p">()</span>
         <span class="nb">print</span><span class="p">(</span><span class="nb">str</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
-            </details>
-
-  
-
-  <div class="doc doc-children">
+              </details>
 
 
+
+<div class="doc doc-children">
 
 
 
 
 
-<h2 id="sanpy.bAnalysisUtil-functions">Functions<a href="#sanpy.bAnalysisUtil-functions" class="headerlink" title="Permanent link">¤</a></h2>
 
+
+
+<h4 id="sanpy.bAnalysisUtil.bAnalysisUtil-functions">Methods:<a href="#sanpy.bAnalysisUtil.bAnalysisUtil-functions" class="headerlink" title="Permanent link">¤</a></h4>
 
 <div class="doc doc-object doc-function">
 
 
+<h5 id="sanpy.bAnalysisUtil.bAnalysisUtil.getHumanFromStat" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">getHumanFromStat</span><span class="p">(</span><span class="n">statName</span><span class="p">)</span></code>
+
+<a href="#sanpy.bAnalysisUtil.bAnalysisUtil.getHumanFromStat" class="headerlink" title="Permanent link">¤</a></h5>
 
 
-<h3 id="sanpy.bAnalysisUtil.getHumanFromStat" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">getHumanFromStat</span><span class="p">(</span><span class="n">statName</span><span class="p">)</span></code>
+    <div class="doc doc-contents ">
 
-<a href="#sanpy.bAnalysisUtil.getHumanFromStat" class="headerlink" title="Permanent link">¤</a></h3>
+        <p>Get human readable stat name from backend stat name.</p>
 
 
-  <div class="doc doc-contents ">
-  
-      <p>Get human readable stat name from backend stat name.</p>
-
-          <details class="quote">
-            <summary>Source code in <code>sanpy/bAnalysisUtil.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">67</span>
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>sanpy/bAnalysisUtil.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">67</span>
 <span class="normal">68</span>
 <span class="normal">69</span>
 <span class="normal">70</span>
@@ -2295,7 +2732,7 @@
 <span class="normal">75</span>
 <span class="normal">76</span>
 <span class="normal">77</span>
-<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getHumanFromStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statName</span><span class="p">):</span>
+<span class="normal">78</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">getHumanFromStat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">statName</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get human readable stat name from backend stat name.&quot;&quot;&quot;</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_statList</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -2308,30 +2745,28 @@
     <span class="c1">#</span>
     <span class="k">return</span> <span class="n">ret</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
-
 
 <div class="doc doc-object doc-function">
 
 
+<h5 id="sanpy.bAnalysisUtil.bAnalysisUtil.getStatFromHuman" class="doc doc-heading">
+            <code class="highlight language-python"><span class="n">getStatFromHuman</span><span class="p">(</span><span class="n">humanStat</span><span class="p">)</span></code>
+
+<a href="#sanpy.bAnalysisUtil.bAnalysisUtil.getStatFromHuman" class="headerlink" title="Permanent link">¤</a></h5>
 
 
-<h3 id="sanpy.bAnalysisUtil.getStatFromHuman" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">getStatFromHuman</span><span class="p">(</span><span class="n">humanStat</span><span class="p">)</span></code>
+    <div class="doc doc-contents ">
 
-<a href="#sanpy.bAnalysisUtil.getStatFromHuman" class="headerlink" title="Permanent link">¤</a></h3>
+        <p>Get backend stat name from human readable stat.</p>
 
 
-  <div class="doc doc-contents ">
-  
-      <p>Get backend stat name from human readable stat.</p>
-
-          <details class="quote">
-            <summary>Source code in <code>sanpy/bAnalysisUtil.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">80</span>
+            <details class="mkdocstrings-source">
+              <summary>Source code in <code>sanpy/bAnalysisUtil.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">80</span>
 <span class="normal">81</span>
 <span class="normal">82</span>
 <span class="normal">83</span>
@@ -2339,7 +2774,7 @@
 <span class="normal">85</span>
 <span class="normal">86</span>
 <span class="normal">87</span>
-<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span> <span class="nf">getStatFromHuman</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">humanStat</span><span class="p">):</span>
+<span class="normal">88</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">getStatFromHuman</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">humanStat</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get backend stat name from human readable stat.&quot;&quot;&quot;</span>
     <span class="n">ret</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
@@ -2349,8 +2784,8 @@
     <span class="c1">#</span>
     <span class="k">return</span> <span class="n">ret</span>
 </code></pre></div></td></tr></table></div>
-          </details>
-  </div>
+            </details>
+    </div>
 
 </div>
 
@@ -2358,10 +2793,28 @@
 
   </div>
 
+    </div>
+
+</div>
+<h2 id="sanpy.bAnalysisUtil-functions">Functions:<a href="#sanpy.bAnalysisUtil-functions" class="headerlink" title="Permanent link">¤</a></h2>
+
+
+
   </div>
+
+    </div>
 
 </div>
 
+
+
+
+
+
+
+
+
+  
 
 
 
@@ -2371,11 +2824,12 @@
             </div>
           
           
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
         </div>
         
       </main>
       
-        All material is Copyright 2011-2023 Robert H. Cudmore
+        All material is Copyright 2019-2026 Robert H. Cudmore
       
     </div>
     <div class="md-dialog" data-md-component="dialog">
@@ -2383,10 +2837,13 @@
     </div>
     
     
-    <script id="__config" type="application/json">{"base": "../..", "features": ["navigation.instant"], "search": "../../assets/javascripts/workers/search.f886a092.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.instant"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.cd18aaf1.min.js"></script>
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
       
     
   </body>
