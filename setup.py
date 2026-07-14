@@ -94,7 +94,7 @@ setup(
     long_description_content_type = 'text/markdown',
     url='http://github.com/cudmore/SanPy',
     author='Robert H Cudmore',
-    author_email='rhcudmore@ucdavis.edu',
+    author_email='robert.cudmore@gmail.com',
     license='GNU General Public License, Version 3',
     classifiers=[
         'Programming Language :: Python :: 3',
