@@ -1,65 +1,116 @@
-# Download and run the deskop applications
+# Request the SanPy Desktop App
 
-The macOS and Windows desktop applications are meant to work out of the box. If there are any issues, please email Robert Cudmore (rhcudmore@ucdavis.edu) and we will fix it.
+Please fill out the form below to request the SanPy desktop app. We will email you with a download link.
 
-Downloading and running SanPy is designed to be very simple. You download a file (links below), unzip the download (macOS), and double-click to run. There is no installer, just a downloaded file you can double-click.
+As always, contact Robert Cudmore (rober.cudmore@gmail.com) with any questions. We are always looking for collaborators and users!
 
-## Mac download
+<style>
+.sp-form {
+    max-width: 700px;
+    margin-top: 0.6rem;
+}
 
-If you have an older Mac with an Intel/x86 chip then download the **`x86`** version. If you have a newer Mac with an M1/M2/M3 chip then download the **`arm`** version.
+.sp-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 0.75rem;
+}
 
-If your not sure which type of Mac you have, then download the **`x86`** version.
+.sp-form .sp-field {
+    margin: 0 !important;
+    padding: 0 !important;
+}
 
-[Download macOS x86 zip](https://github.com/cudmore/SanPy/releases/download/v0.2.4/SanPy-macOS-x86.zip){ .md-button .md-button--primary}
-[Download macOS arm zip](https://github.com/cudmore/SanPy/releases/download/v0.2.4/SanPy-macOS-arm.zip){ .md-button .md-button--primary}
+.sp-form .sp-field-full {
+    grid-column: 1 / -1;
+}
 
-### Mac download and run recipe
+.sp-form .sp-field label {
+    display: block;
+    margin: 0 0 0.1rem 0 !important;
+    padding: 0 !important;
+    font-weight: 600;
+    line-height: 1.15;
+}
 
- - Download the `zip` file
- - Once downloaded, double-click on `SanPy.zip` to uncompress it to `SanPy.app`
- - **Important:** Move the `SanPy.app` to your `Applications` folder
- - Double-click on `SanPy.app` (in your Applications folder) to run SanPy
- 
-**Troubleshooting:** If you run into security issues, please see [Security on macOS](#security-on-macos).
+.sp-form .sp-input,
+.sp-form .sp-textarea {
+    display: block;
+    width: 100%;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0.32rem 0.5rem !important;
+    border: 1px solid #aaa;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font: inherit;
+    line-height: 1.2;
+}
 
-## Windows download
+.sp-form .sp-textarea {
+    resize: vertical;
+}
 
-[Download Windows exe](https://github.com/cudmore/SanPy/releases/download/v0.2.4/SanPyWindowsExe.zip){ .md-button .md-button--primary}
+.sp-form .sp-button {
+    margin-top: 0.55rem !important;
+    padding: 0.45rem 1rem !important;
+    border: none;
+    border-radius: 4px;
+    background: #1976d2;
+    color: white;
+    font: inherit;
+    font-weight: 600;
+    line-height: 1.2;
+    cursor: pointer;
+}
 
-### Windows download and run recipe
+@media (max-width: 600px) {
+    .sp-form-grid {
+        grid-template-columns: 1fr;
+    }
 
- - Download the `zip` file
- - Uncompress the zip file to `SanPy.exe`
- - Once downloaded, double-click on `SanPy.exe` to run SanPy
+    .sp-form .sp-field-full {
+        grid-column: auto;
+    }
+}
+</style>
 
-**Troubleshooting:** If you run into security issues, please see [Security on Windows](#security-on-windows).
+<form class="sp-form" action="https://formspree.io/f/mwpqrayn" method="POST">
 
+<div class="sp-form-grid">
 
-## Current Version
- - Version v0.2.4, Released on Jan 17, 2024
+<div class="sp-field">
+<label for="name">Name</label>
+<input class="sp-input" type="text" id="name" name="name" placeholder="Jane Smith">
+</div>
 
+<div class="sp-field">
+<label for="institution">University / Institution</label>
+<input class="sp-input" type="text" id="institution" name="institution" placeholder="University of California">
+</div>
 
-## Current and previous releases (on GitHub)
+<div class="sp-field">
+<label for="lab">Lab</label>
+<input class="sp-input" type="text" id="lab" name="lab" placeholder="Smith Lab">
+</div>
 
-You can always download all previous versions of SanPy from our GitHub repository.
+<div class="sp-field">
+<label for="email">Email <span style="color:#c00">*</span></label>
+<input class="sp-input" type="email" id="email" name="email" required placeholder="name@example.edu">
+</div>
 
-[Go To Current Release](https://github.com/cudmore/SanPy/releases){ .md-button .md-button--primary }
+<div class="sp-field sp-field-full">
+<label for="platform">Desktop Version (macOS or Windows)</label>
+<input class="sp-input" type="text" id="platform" name="platform" placeholder="macOS or Windows">
+</div>
 
-## Troubleshooting
+<div class="sp-field sp-field-full">
+<label for="comments">Comments</label>
+<textarea class="sp-input sp-textarea" id="comments" name="comments" rows="2" placeholder="Tell us anything you'd like us to know..."></textarea>
+</div>
 
-Here are some common ways to troubleshoot the running of the SanPy GUI on macOS and Windows.
+</div>
 
-### Security on macOS
+<button class="sp-button" type="submit">Submit Request</button>
 
-If SanPy does not run, the simplest solution is to do the following:
-
- - Put the `SanPy.app` into your `Applications` folder.
- - Right click `SanPy.app` and select the `Open` menu. Or, use `command+click` and select the `Open` menu.
-
- The first time you run SanPy it might take 10-30 seconds to show the GUI. After that, it will open again pretty quick.
-
-### Security on Windows
-
-Same story as on macOS. Work your way through the warnings and it will run on Windows.
-
-On Windows 11, each time you run SanPy, it takes between 10-30 seconds to bring up the GUI. We are working on fixing this.
+</form>

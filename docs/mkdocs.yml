@@ -15,12 +15,23 @@ theme:
     features:
         - navigation.instant
         #- navigation.expand
+    palette:
+      - scheme: slate
+        toggle:
+          icon: material/brightness-4
+          name: Switch to light mode
+      - scheme: default
+        toggle:
+          icon: material/brightness-7
+          name: Switch to dark mode
+
 
 extra_css:
 - css/style.css
 
 markdown_extensions:
 - attr_list # needed to use {target=_blank}
+- def_list
 - admonition
 - pymdownx.emoji
 - pymdownx.magiclink
@@ -56,8 +67,11 @@ plugins:
             show_source: true
             docstring_style: numpy
 
-#extra:
-#  generator: false
+extra:
+  generator: false
+  analytics:
+    provider: google
+    property: G-8057JCR6M8
 
 nav:
     - Introducing SanPy: index.md
