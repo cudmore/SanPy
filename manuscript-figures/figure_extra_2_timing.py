@@ -31,7 +31,7 @@ def timingFigure():
     if not os.path.isfile(path):
         logger.warning(f'File not found. This file was not included in the repo.')
         logger.warning(f'  {path}')
-        logger.warning(f'  please contact rhcudmore@ucdavis.edu if you want a copy of this file')
+        logger.warning(f'  please contact robert.cudmore@gmail.com if you want a copy of this file')
         sys.exit()
         
     ba = sanpy.bAnalysis(path)

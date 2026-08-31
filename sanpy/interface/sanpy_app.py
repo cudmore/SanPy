@@ -554,7 +554,7 @@ class SanPyApp(QtWidgets.QApplication):
         # retDict['Log file'] = sanpy.sanpyLogger.getLoggerFile()
         retDict['GitHub'] = 'https://github.com/cudmore/sanpy'
         retDict['Documentation'] = 'https://cudmore.github.io/SanPy/'
-        retDict['email'] = 'rhcudmore@ucdavis.edu'
+        retDict['email'] = 'robert.cudmore@gmail.com'
 
         return retDict
 

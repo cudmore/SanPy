@@ -2,7 +2,7 @@
 
 Please fill out the form below to request the SanPy desktop app. We will email you with a download link.
 
-As always, contact Robert Cudmore (rober.cudmore@gmail.com) with any questions. We are always looking for collaborators and users!
+As always, contact Robert Cudmore (robert.cudmore@gmail.com) with any questions. We are always looking for collaborators and users!
 
 <style>
 .sp-form {
