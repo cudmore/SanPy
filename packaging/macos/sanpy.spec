@@ -1,12 +1,17 @@
 # -*- mode: python ; coding: utf-8 -*-
-# Minimal unsigned arm64 app. Add datas/icon only after a smoke test shows they are needed.
+# Unsigned arm64 app. Runtime assets live next to sys._MEIPASS (Contents/Frameworks).
+# Icons come from sanpy/interface/icons, not pyinstaller/macos.
 
 a = Analysis(
     ['../../sanpy/interface/sanpy_app.py'],
     pathex=[],
     binaries=[],
-    datas=[],
-    hiddenimports=[],
+    datas=[
+        ('../../sanpy/interface/icons/sanpy_transparent.png', '.'),
+        ('../../sanpy/detection-presets', 'detection-presets'),
+        ('../../sanpy/_userFiles', '_userFiles'),
+    ],
+    hiddenimports=['numpy.core.multiarray'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -47,6 +52,6 @@ coll = COLLECT(
 app = BUNDLE(
     coll,
     name='SanPy.app',
-    icon=None,
+    icon='../../sanpy/interface/icons/sanpy_transparent.icns',
     bundle_identifier=None,
 )

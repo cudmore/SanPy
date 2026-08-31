@@ -17,6 +17,15 @@ from datetime import datetime
 
 from typing import Union, Dict, List, Tuple
 
+# 202609 - upgrade to packaging
+# PyInstaller sets MPLCONFIGDIR to a throwaway temp dir; persist the font cache.
+if getattr(sys, "frozen", False):
+    _mpl_config_dir = os.path.join(
+        os.path.expanduser("~"), "Library", "Caches", "SanPy", "matplotlib"
+    )
+    os.makedirs(_mpl_config_dir, exist_ok=True)
+    os.environ["MPLCONFIGDIR"] = _mpl_config_dir
+
 import pandas as pd
 
 import pyqtgraph as pg
