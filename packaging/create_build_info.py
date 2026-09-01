@@ -32,7 +32,7 @@ def _package_version(distribution: str) -> str | None:
         return None
 
 
-def create_build_info(repo_root: Path) -> dict:
+def create_build_info(repo_root: Path, output_folder: str) -> dict:
     """Collect metadata from the interpreter and source tree doing the build."""
     now = datetime.now(ZoneInfo("America/New_York"))
     commit = subprocess.run(
@@ -49,6 +49,7 @@ def create_build_info(repo_root: Path) -> dict:
             "date": now.strftime("%Y%m%d"),
             "time": now.strftime("%H:%M:%S"),
             "timezone": "America/New_York",
+            "output_folder": output_folder,
             "sanpy_version": version("sanpy-ephys"),
             "python_version": platform.python_version(),
             "pyinstaller_version": version("pyinstaller"),
@@ -75,7 +76,8 @@ def main() -> None:
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parent.parent
-    build_info = create_build_info(repo_root)
+    output_folder = args.output.parent.name
+    build_info = create_build_info(repo_root, output_folder)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(build_info, indent=2) + "\n", encoding="utf-8"

@@ -80,6 +80,8 @@ print('h5py', h5py.__version__)
 print('sanpy', sanpy.__version__)
 "
 
+# Give every build its own dated output folder. If multiple builds are made on
+# the same day, increment _v1, _v2, and so on instead of overwriting one.
 mkdir -p "${DIST_ROOT}" "${BUILD_ROOT}"
 RUN_DATE="$(date +%Y%m%d)"
 RUN_NUMBER=1
@@ -88,6 +90,8 @@ while [[ -e "${DIST_ROOT}/${RUN_DATE}_v${RUN_NUMBER}" ]]; do
 done
 RUN_NAME="${RUN_DATE}_v${RUN_NUMBER}"
 RUN_DIR="${DIST_ROOT}/${RUN_NAME}"
+# Keep PyInstaller's temporary work separate, using the same run name so its
+# files can be matched to the corresponding output in dist/.
 WORK_DIR="${BUILD_ROOT}/${RUN_NAME}"
 mkdir -p "${RUN_DIR}" "${WORK_DIR}"
 

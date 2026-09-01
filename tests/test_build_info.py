@@ -6,12 +6,13 @@ from sanpy import build_info
 def test_build_info_rows_include_new_nested_values():
     info = {
         "schema_version": 1,
-        "build": {"date": "20260901"},
+        "build": {"date": "20260901", "output_folder": "20260901_v1"},
         "future_section": {"new_value": 42},
     }
 
     assert build_info.get_build_info_rows(info) == [
         ("build date", "20260901"),
+        ("build output folder", "20260901_v1"),
         ("future section new value", "42"),
     ]
 
