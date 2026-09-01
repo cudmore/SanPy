@@ -8,11 +8,14 @@ on:
 jobs:
   test:
     strategy:
+      fail-fast: false
       matrix:
         os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     permissions:
       contents: read
+    env:
+      UV_PYTHON: "3.11"
 
     steps:
       - uses: actions/checkout@v4
@@ -25,20 +28,24 @@ jobs:
 
       - name: Install Python and dependencies
         run: |
-          uv python install
-          uv sync --locked
+          uv python install 3.11
+          uv sync --locked --group dev
 
       - name: Lint
-        run: uv run ruff check sanpy
+        run: uv run --locked ruff check sanpy
 
-      - name: Test
+      - name: Test core analysis
         run: |
-          uv run coverage erase
-          uv run pytest tests/test_analysisDir.py --cov=sanpy --cov-append
-          uv run pytest tests/test_analysis.py tests/test_detection.py tests/test_fileLoader.py tests/test_metadata.py --cov=sanpy --cov-append
-          uv run pytest tests/interface
-          uv run coverage xml -o coverage.xml
+          uv run --locked coverage erase
+          uv run --locked pytest tests/test_analysisDir.py --cov=sanpy --cov-append
+          uv run --locked pytest tests/test_analysis.py tests/test_detection.py tests/test_fileLoader.py tests/test_metadata.py --cov=sanpy --cov-append
+
+      - name: Test interface
+        run: uv run --locked pytest tests/interface
+
+      - name: Create coverage report
+        run: uv run --locked coverage xml -o coverage.xml
 
       - name: Upload coverage
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' && hashFiles('coverage.xml') != ''
         uses: codecov/codecov-action@v5
