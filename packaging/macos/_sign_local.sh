@@ -4,9 +4,20 @@
 set -euo pipefail
 
 cd "$(dirname "$0")"
+# shellcheck source=config.sh
+source ./config.sh
 
-APP="dist/SanPy.app"
-ENTITLEMENTS="entitlements.plist"
+RUN_NAME="${1:-}"
+if [[ -z "${RUN_NAME}" ]]; then
+  if [[ ! -f "${LATEST_FILE}" ]]; then
+    echo "error: ${LATEST_FILE} not found. Run ./build_local.sh first." >&2
+    exit 1
+  fi
+  RUN_NAME="$(<"${LATEST_FILE}")"
+fi
+
+RUN_DIR="${DIST_ROOT}/${RUN_NAME}"
+APP="${RUN_DIR}/${APP_NAME}.app"
 
 if [[ ! -d "${APP}" ]]; then
   echo "error: ${APP} not found. Run ./build_local.sh first." >&2
@@ -18,7 +29,7 @@ if [[ ! -f "${ENTITLEMENTS}" ]]; then
   exit 1
 fi
 
-if [[ ! -f _secrets.py ]]; then
+if [[ ! -f "${PACKAGING_DIR}/_secrets.py" ]]; then
   echo "error: _secrets.py not found." >&2
   exit 1
 fi
@@ -30,14 +41,11 @@ if [[ -z "${IDENTITY}" ]]; then
 fi
 
 echo "==> signing as: ${IDENTITY}"
-echo "==> app: ${PWD}/${APP}"
+echo "==> run: ${RUN_NAME}"
+echo "==> app: ${APP}"
 
-# Runtime logs land in the bundle (frozen logger uses sys._MEIPASS). codesign rejects them.
-find "${APP}" -name .DS_Store -delete
-find "${APP}" \( -name '*.log' -o -name '*.log.*' -o -name 'sanpy.log*' \) -delete
-
-# Sign nested Mach-O first (not the main executable). Then sign the bundle. No --deep.
-MAIN_BIN="${APP}/Contents/MacOS/SanPy"
+# Sign nested Mach-O files without app entitlements, then sign the bundle.
+MAIN_BIN="${APP}/Contents/MacOS/${APP_NAME}"
 signed=0
 while IFS= read -r -d '' f; do
   if [[ "${f}" == "${MAIN_BIN}" ]]; then
@@ -45,7 +53,6 @@ while IFS= read -r -d '' f; do
   fi
   if file -b "${f}" | grep -q 'Mach-O'; then
     if ! out="$(codesign --force --options runtime --timestamp \
-      --entitlements "${ENTITLEMENTS}" \
       --sign "${IDENTITY}" \
       "${f}" 2>&1)"; then
       echo "${out}" >&2
@@ -67,20 +74,25 @@ codesign --force --options runtime --timestamp \
   "${APP}"
 
 echo "==> codesign --verify"
-codesign --verify --verbose "${APP}"
+codesign --verify --deep --strict --verbose=2 "${APP}"
 
 echo "==> codesign -dv"
-codesign -dv --verbose=2 "${APP}" 2>&1 | tee /tmp/sanpy-codesign-dv.txt
+SIGN_DETAILS="$(codesign -dv --verbose=2 "${APP}" 2>&1)"
+echo "${SIGN_DETAILS}"
 
 # codesign --verify succeeds for ad-hoc too. Require Developer ID.
-if grep -q 'Signature=adhoc' /tmp/sanpy-codesign-dv.txt; then
+if grep -q 'Signature=adhoc' <<<"${SIGN_DETAILS}"; then
   echo "error: still ad-hoc; Developer ID sign did not take" >&2
   exit 1
 fi
-if ! grep -q 'Authority=Developer ID Application: Robert Cudmore' /tmp/sanpy-codesign-dv.txt; then
-  echo "error: Authority is not Developer ID Application" >&2
+if ! grep -q 'Authority=Developer ID Application:' <<<"${SIGN_DETAILS}"; then
+  echo "error: signature is not Developer ID Application" >&2
+  exit 1
+fi
+if ! grep -q "TeamIdentifier=${TEAM_ID}" <<<"${SIGN_DETAILS}"; then
+  echo "error: signature TeamIdentifier is not ${TEAM_ID}" >&2
   exit 1
 fi
 
-echo "signed: ${PWD}/${APP}"
-echo "smoke test: open ${PWD}/${APP}"
+echo "signed: ${APP}"
+echo "smoke test: open ${APP}"

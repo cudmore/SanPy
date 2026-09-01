@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Build an unsigned arm64 SanPy.app for local smoke testing.
-# Fail fast: no codesign, no notary, no Intel, no workarounds.
+# Build an unsigned arm64 SanPy.app in a new dated dist folder.
 set -euo pipefail
 
 cd "$(dirname "$0")"
-REPO_ROOT="$(cd ../.. && pwd)"
+# shellcheck source=config.sh
+source ./config.sh
 
-if [[ "$(uname -m)" != "arm64" ]]; then
-  echo "error: packaging/macos is arm64-only (got $(uname -m))" >&2
+if [[ "$(uname -m)" != "${ARCH}" ]]; then
+  echo "error: packaging/macos is ${ARCH}-only (got $(uname -m))" >&2
   exit 1
 fi
 
@@ -16,44 +16,38 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ -x .venv/bin/python ]]; then
-  VENV_PYTHON_VERSION="$(.venv/bin/python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+if [[ -x "${PYTHON}" ]]; then
+  VENV_PYTHON_VERSION="$("${PYTHON}" -c 'import platform; print(platform.python_version())')"
 else
   VENV_PYTHON_VERSION=""
 fi
 
-if [[ "${VENV_PYTHON_VERSION}" != "3.11" ]]; then
-  echo "==> creating .venv with Python 3.11"
-  uv venv --clear --python 3.11 .venv
+if [[ "${VENV_PYTHON_VERSION}" != "${PYTHON_VERSION}" ]]; then
+  echo "==> creating .venv with Python ${PYTHON_VERSION}"
+  uv venv --clear --python "${PYTHON_VERSION}" "${VENV}"
 fi
 
-# shellcheck disable=SC1091
-source .venv/bin/activate
-
-python -c "
+"${PYTHON}" -c "
 import platform
 import sys
 machine = platform.machine()
-if machine != 'arm64':
-    raise SystemExit(f'error: venv is not arm64 (got {machine})')
-if sys.version_info[:2] != (3, 11):
-    raise SystemExit(f'error: venv is not Python 3.11 (got {sys.version.split()[0]})')
+if machine != '${ARCH}':
+    raise SystemExit(f'error: venv is not ${ARCH} (got {machine})')
+if platform.python_version() != '${PYTHON_VERSION}':
+    raise SystemExit(f'error: expected Python ${PYTHON_VERSION} (got {platform.python_version()})')
 print(sys.executable)
 print(sys.version)
 print('machine', machine)
 "
 
-echo "==> installing legacy scientific stack, SanPy [gui], and PyInstaller"
-uv pip install \
-  --overrides legacy-overrides.txt \
-  -e "${REPO_ROOT}[gui]" \
-  pyinstaller
+echo "==> syncing locked build environment"
+uv pip sync --python "${PYTHON}" --strict "${LOCK_FILE}"
 
 echo "==> dependency compatibility gate"
-uv pip check
+uv pip check --python "${PYTHON}"
 
 echo "==> import gate"
-python -c "
+"${PYTHON}" -c "
 from PyQt5 import QtCore
 import numpy
 import pandas
@@ -78,14 +72,35 @@ print('h5py', h5py.__version__)
 print('sanpy', sanpy.__version__)
 "
 
-echo "==> pyinstaller"
-pyinstaller --noconfirm --clean --distpath dist --workpath build sanpy.spec
+mkdir -p "${DIST_ROOT}" "${BUILD_ROOT}"
+RUN_DATE="$(date +%Y%m%d)"
+RUN_NUMBER=1
+while [[ -e "${DIST_ROOT}/${RUN_DATE}_v${RUN_NUMBER}" ]]; do
+  RUN_NUMBER=$((RUN_NUMBER + 1))
+done
+RUN_NAME="${RUN_DATE}_v${RUN_NUMBER}"
+RUN_DIR="${DIST_ROOT}/${RUN_NAME}"
+WORK_DIR="${BUILD_ROOT}/${RUN_NAME}"
+mkdir -p "${RUN_DIR}" "${WORK_DIR}"
 
-APP="dist/SanPy.app"
+echo "==> pyinstaller"
+SANPY_ARCH="${ARCH}" \
+SANPY_BUNDLE_ID="${BUNDLE_ID}" \
+SANPY_MIN_MACOS_VERSION="${MIN_MACOS_VERSION}" \
+"${PYINSTALLER}" --noconfirm --clean \
+  --distpath "${RUN_DIR}" \
+  --workpath "${WORK_DIR}" \
+  sanpy.spec
+
+APP="${RUN_DIR}/${APP_NAME}.app"
 if [[ ! -d "${APP}" ]]; then
   echo "error: expected ${APP}" >&2
   exit 1
 fi
 
-echo "unsigned app: ${PWD}/${APP}"
-echo "smoke test:   open ${PWD}/${APP}"
+printf '%s\n' "${RUN_NAME}" > "${DIST_ROOT}/.latest.txt.tmp"
+mv "${DIST_ROOT}/.latest.txt.tmp" "${LATEST_FILE}"
+
+echo "run:          ${RUN_NAME}"
+echo "unsigned app: ${APP}"
+echo "smoke test:   open ${APP}"
