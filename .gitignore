@@ -1,4 +1,4 @@
-pyinstaller/monterey/tmp_env
+*.zip
 
 build/
 dist/

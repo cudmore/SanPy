@@ -54,6 +54,7 @@ guiRequirements = [
     'scikit-image',  #==0.19.3', 
     'h5py',  # conflicts with conda install
 
+    'platformdirs',  # 202609 - upgrade to packaging (log + matplotlib cache dirs)
     'qtpy',
     'pyqtgraph',
     'pyqtdarktheme',  # switched to this mar 2023

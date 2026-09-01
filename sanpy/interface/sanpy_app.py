@@ -19,11 +19,15 @@ from typing import Union, Dict, List, Tuple
 
 # 202609 - upgrade to packaging
 # PyInstaller sets MPLCONFIGDIR to a throwaway temp dir; persist the font cache.
+# Import platformdirs here, not sanpy (matplotlib).
+from platformdirs import user_cache_dir
 if getattr(sys, "frozen", False):
     _mpl_config_dir = os.path.join(
-        os.path.expanduser("~"), "Library", "Caches", "SanPy", "matplotlib"
+        user_cache_dir("SanPy", appauthor=False, ensure_exists=True),
+        "matplotlib",
     )
     os.makedirs(_mpl_config_dir, exist_ok=True)
+    # Override PyInstaller's runtime hook (throwaway temp MPLCONFIGDIR).
     os.environ["MPLCONFIGDIR"] = _mpl_config_dir
 
 import pandas as pd

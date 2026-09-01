@@ -27,36 +27,20 @@ sys.exit(1)
 
 # from sanpy._util import _getUserPreferencesFolder
 
+from platformdirs import user_log_dir
+
 
 def getLoggerFile():
     """Get the path to save the log file.
 
-    If <user>/Documents/SanPy/preferences exists
-    else MEIPASS
+    macOS: ~/Library/Logs/SanPy/sanpy.log
+    Windows: %LOCALAPPDATA%/SanPy/Logs/sanpy.log
     """
-    # logPath = sanpy._util._getUserPreferencesFolder()
-    # logPath = os.path.join(logPath, 'sanpy.log')
-    # return logPath
-
-    userPath = pathlib.Path.home()
-    userPreferencesFolder = os.path.join(userPath, "Documents", "SanPy", "preferences")
-    # print('looking for userPreferencesFolder:', userPreferencesFolder)
-    if os.path.isdir(userPreferencesFolder):
-        myPath = userPreferencesFolder
-        # print('  my path 1:', myPath)
-    elif getattr(sys, "frozen", False):
-        # running in a bundle (frozen)
-        myPath = sys._MEIPASS
-        # print('  my path 2:', myPath)
-    else:
-        # running in a normal Python environment
-        # myPath = os.path.dirname(os.path.abspath(__file__))
-        myPath = pathlib.Path(__file__).parent.absolute()
-        # print('  my path 3:', myPath)
-
-    fileName = "sanpy.log"
-    logPath = os.path.join(myPath, fileName)
-    return logPath
+    # 202609 - upgrade to packaging
+    # Frozen apps must not write into the .app / .exe, or SanPy-User-Files
+    # (first-run copytree). platformdirs, not a hand-rolled path table.
+    log_dir = user_log_dir("SanPy", appauthor=False, ensure_exists=True)
+    return os.path.join(log_dir, "sanpy.log")
 
 
 def get_logger(name, level=logging.DEBUG):

@@ -1,0 +1,19 @@
+---
+description: Ask never guess; recommend with every question; keep edits narrow
+alwaysApply: true
+---
+
+# Agent constraints
+
+You always ask and never guess. All questions require a senior developer recommendation.
+
+- Do not offer a menu of next steps without saying which option you recommend and why.
+- Do not implement until the user agrees, unless they already said to do it.
+- Do not invent modules, helpers, or extra files to "centralize" a two-line change.
+- Keep diffs to the files the current task requires. Call out any `sanpy/` edit before making it.
+- Chat answers are specific: what is true, what you recommend, what you need decided.
+
+# Scope
+
+- `packaging/` is the macOS packaging pipeline. Do not treat `pyinstaller/macos/` as the active pipeline.
+- Do not change `sanpy/` for packaging convenience without stating the behavior change first.

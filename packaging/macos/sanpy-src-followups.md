@@ -20,11 +20,11 @@ Packaging work lives in this folder; leave these until we choose to edit app sou
 - Later source fix: assign with `dfSweepsSummary[stat + "_first"] = ...` using a Series indexed by **sweep** (e.g. `groupby("sweep")[stat].apply(lambda s: s.iloc[n] if len(s) > n else np.nan)`), not `.at` + `nth`. Same for `_second` and `_last`.
 - Do not "fix" this by copying old conda pandas pins into packaging unless we decide to pin the whole stack.
 
-## Frozen app writes `sanpy.log` into the .app bundle
+## Frozen app writes `sanpy.log` into the .app bundle — FIXED 202609
 
 - File: `sanpy/sanpyLogger.py` (`getLoggerFile`)
-- Frozen path is `sys._MEIPASS` when `Documents/SanPy/preferences` does not exist (actual user folder is `Documents/SanPy-User-Files`). Smoke-testing the app writes `Contents/Frameworks/sanpy.log`, and `codesign` then fails (`code object is not signed at all`).
-- `sign_local.sh` deletes `*.log` before signing. Later: log to a user-writable location (e.g. `SanPy-User-Files` or `~/Library/Logs/SanPy`).
+- Was: frozen path `sys._MEIPASS` so first run wrote `Contents/Frameworks/sanpy.log`. After that, moving the app made Gatekeeper say "damaged".
+- Now: `platformdirs.user_log_dir("SanPy", appauthor=False)` so the log is outside the bundle and not under `SanPy-User-Files`. Needs a new build/notarize to ship.
 
 ## Comment convention
 
