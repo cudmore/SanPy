@@ -1,61 +1,44 @@
-name: Test with flake8 and pytest (cudmore)
+name: Tests
 
 on:
   pull_request:
-    branches: [main]
   push:
-    branches: [master]
-
-# permissions:
-#   contents: read
+    branches: [main, master]
 
 jobs:
   test:
-    runs-on: ${{ matrix.platform }}
     strategy:
       matrix:
-        # platform: [ubuntu-latest, windows-latest, macos-latest]
-        platform: [windows-latest, macos-latest]
-        python-version: ["3.11", "3.12"]
-
-    # env:
-    #     DISPLAY: ':99.0'
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
 
     steps:
-    - name: get sanpyrepo
-      uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        # cache: pip
-        # cache-dependency-path: setup.py
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
+        with:
+          version: "0.12.8"
+          enable-cache: true
 
-    # enable testing on Qt on linux
-    # - name: Install Linux dependencies
-    #   uses: tlambert03/setup-qt-libs@v1
+      - name: Install Python and dependencies
+        run: |
+          uv python install
+          uv sync --locked
 
-    # workaround for testing Qt on linux
-    # - name: Workaround for testing Qt on linux
-    #   if: runner.os == 'Linux'
-    #   run: |
-    #     sudo mkdir /usr/bin/platforms
-    #     sudo ln -s /our/local/libqxcb.so /usr/bin/platforms/libqxcb.so
+      - name: Lint
+        run: uv run ruff check sanpy
 
-    - name: Install dependencies
-      run: |
-        pip install '.[test]'
+      - name: Test
+        run: |
+          uv run coverage erase
+          uv run pytest tests/test_analysisDir.py --cov=sanpy --cov-append
+          uv run pytest tests/test_analysis.py tests/test_detection.py tests/test_fileLoader.py tests/test_metadata.py --cov=sanpy --cov-append
+          uv run pytest tests/interface
+          uv run coverage xml -o coverage.xml
 
-    - name: Run flake8
-      run: |
-        flake8 ./sanpy --count --select=E9,F63,F7,F82 --show-source --statistics
-
-    - name: Test and generate coverage report
-      run: |
-        # ignore /interface tests, they are running out of memory on github?
-        # pytest --cov=./tests --cov-report=xml --ignore=./tests/interface ./tests
-        pytest -s --cov=./tests --cov-report=xml ./tests
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      - name: Upload coverage
+        if: matrix.os == 'macos-latest'
+        uses: codecov/codecov-action@v5

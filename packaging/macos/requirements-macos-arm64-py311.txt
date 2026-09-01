@@ -6,6 +6,7 @@ altgraph==0.17.5
     #   pyinstaller
 blosc2==2.5.1
     # via
+    #   -c (workspace)
     #   --override legacy-overrides.txt
     #   tables
 certifi==2026.7.22
@@ -14,6 +15,7 @@ charset-normalizer==3.5.1
     # via requests
 contourpy==1.0.5
     # via
+    #   -c (workspace)
     #   --override legacy-overrides.txt
     #   matplotlib
 cycler==0.12.1
@@ -57,6 +59,7 @@ networkx==3.6.1
     # via scikit-image
 numexpr==2.8.4
     # via
+    #   -c (workspace)
     #   --override legacy-overrides.txt
     #   tables
 numpy==1.23.5
@@ -140,6 +143,7 @@ pytz==2026.3.post1
     # via pandas
 pywavelets==1.4.1
     # via
+    #   -c (workspace)
     #   --override legacy-overrides.txt
     #   scikit-image
 qtpy==2.4.3

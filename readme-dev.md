@@ -136,24 +136,16 @@ Error: Process completed with exit code 134.
 ### flake8
 
 ```
-flake8 ./sanpy --count --select=E9,F63,F7,F82 --show-source --statistics
+uv run ruff check sanpy
 ```
 
 ### PyTest
 
 ```
-pytest tests
+uv run pytest
 ```
 
 ### xxx
-
-### tox
-
-install
-
-```
-python -m pip install --user tox
-```
 
 ## Writing code 202212
 

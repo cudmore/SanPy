@@ -574,7 +574,7 @@ class SanPyApp(QtWidgets.QApplication):
 def main():
     """Main entry point for the SanPy desktop app.
 
-    Configured in setup.py
+    Configured in pyproject.toml.
     """
     # logger.info('calling freeze support')
     # freeze_support()

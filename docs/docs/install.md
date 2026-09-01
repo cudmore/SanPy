@@ -4,28 +4,8 @@ If you want to download and run SanPy as a pre-built desktop application, please
 
 ## Install from the command line
 
-Create and activate a virtual environment with either `conda` or `venv`.
-
-!!! Important
-
-    M1/2 Mac users need to use a [Conda][mini-conda] environment as the arm64 versions of a number of Python packages are not available on PyPi (e.g. with pip install).
-
-[mini-conda]: https://docs.conda.io/en/latest/miniconda.html
-
-### Either create a `conda` environment
-
-    conda create -y -n sanpy-env python=3.9
-    conda activate sanpy-env
-
-### Or create a `venv` environment
-
-    python -m venv sanpy-env
-    
-    # macOS activate the environment
-    source sanpy-env/bin/activate
-
-    # Windows activate the environment
-    sanpy-env\Scripts\activate
+SanPy currently uses Python 3.11 and a pinned scientific stack. We recommend
+[uv](https://docs.astral.sh/uv/) to create and manage the environment.
 
 ### Install SanPy from [PyPi](https://pypi.org/project/sanpy-ephys/)
 
@@ -33,9 +13,7 @@ Create and activate a virtual environment with either `conda` or `venv`.
 
     The SanPy package is named `sanpy-ephys`.
 
-```
-pip install "sanpy-ephys[gui]"
-```
+    uv tool install --python 3.11 sanpy-ephys
 
 ### Run the GUI
 
@@ -43,31 +21,26 @@ pip install "sanpy-ephys[gui]"
 
 ## Install from a local source
 
-For users interested in modifying the source code, you can clone the GitHub repository and install from local source.
-
-Be sure to create and activate a virtual environment (See above).
-
-Assuming you have the following
-
- - [Python > 3.8][python3]
- - [pip][pip]
- - [git][git]
-
-[python3]: https://www.python.org/downloads/
-[pip]: https://pip.pypa.io/en/stable/
-[git]: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+For users interested in modifying the source code, install
+[uv](https://docs.astral.sh/uv/getting-started/installation/) and Git.
 
 1) Clone the repository
 
     git clone https://github.com/cudmore/SanPy.git
 
-2) Install SanPy
+2) Install the locked SanPy development environment
 
     cd SanPy
-    pip install -e ".[gui]"
+    uv sync --locked
 
-4) Run `sanpy`
+3) Run SanPy
 
-    sanpy
+    uv run sanpy
 
-5) Have fun
+4) Run the tests
+
+    Run the groups in separate processes to avoid a known PyQt teardown crash.
+
+    uv run pytest tests/test_analysisDir.py
+    uv run pytest tests/test_analysis.py tests/test_detection.py tests/test_fileLoader.py tests/test_metadata.py
+    uv run pytest tests/interface

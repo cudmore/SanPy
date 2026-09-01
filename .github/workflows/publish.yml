@@ -1,40 +1,30 @@
-# my twine key is in
-#         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-
-name: Publish sanpy-ephys to PyPi (cudmore)
+name: Publish sanpy-ephys to PyPI
 
 on:
-  workflow_run:
-    workflows: ["Release (cudmore)"]
-    types: [completed]
-    #branches: [master]
+  push:
+    tags: ["v*"]
 
 jobs:
-  deploy:
-    # this will run when you have tagged a commit, starting with "v*"
-    # and requires that you have put your twine API key in your
-    # github secrets (see readme for details)
+  publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
     steps:
-      - name: Checkout source (cudmore)
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # needed so setuptools_scm can get tags
-      - name: Set up Python (cudmore)
-        uses: actions/setup-python@v4
+          fetch-depth: 0
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9
         with:
-          python-version: "3.x"
-      - name: Install dependencies (cudmore)
-        run: |
-          python -m pip install --upgrade pip
-          pip install -U setuptools wheel twine build
-          pip install -U '.[gui]'
-      - name: Build and publish (cudmore)
+          version: "0.12.8"
+          enable-cache: false
+
+      - name: Build
+        run: uv build
+
+      - name: Publish
+        run: uv publish
         env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: |
-          git tag
-          #python setup.py --version
-          python -m build .
-          twine upload dist/*
+          UV_PUBLISH_TOKEN: ${{ secrets.PYPI_API_TOKEN }}

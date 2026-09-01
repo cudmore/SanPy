@@ -1,2 +1,21 @@
-recursive-include sanpy/_userFiles ['.py', 'abf']
-recursive-include sanpy/detection-presets ['.json']
+include CHANGELOG.md
+include LICENSE
+include README.md
+include pyproject.toml
+graft sanpy
+graft tests
+
+prune .cursor
+prune .github
+prune data
+prune docs
+prune hide
+prune manuscript-figures
+prune packaging
+prune pyinstaller
+prune sandbox
+
+exclude .gitignore
+exclude readme-dev.md
+global-exclude .DS_Store
+global-exclude *.py[cod]
