@@ -34,7 +34,7 @@ with open('sanpy/_buildDateTime.py', 'w') as f:
 
 guiRequirements = [
     'numpy',  # ==1.23.4',  # 1.24 breaks PyQtGraph with numpy.float error
-    'pandas',  #==1.5',  # version 2.0 removes dataframe append
+    'pandas==2.3.1',  # match conda sanpy-env; packaging unpinned pulled 3.x and broke Plot FI
     'scipy',
     'pyabf',
     'tifffile',

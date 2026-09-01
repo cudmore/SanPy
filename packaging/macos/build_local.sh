@@ -42,11 +42,13 @@ uv pip install pyinstaller
 echo "==> import gate"
 python -c "
 from PyQt5 import QtCore
+import pandas
 import tables
 import skimage
 import h5py
 import sanpy
 print('PyQt5', QtCore.PYQT_VERSION_STR)
+print('pandas', pandas.__version__)
 print('tables', tables.__version__)
 print('skimage', skimage.__version__)
 print('h5py', h5py.__version__)
