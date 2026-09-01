@@ -134,6 +134,7 @@ def test_plugins(qtbot, qapp):
     
     path = os.path.join('data', '19114001.abf')
     sanpyWindowObject = SanPyWindow(qapp, path=path)
+    qtbot.addWidget(sanpyWindowObject)
 
     if 1:
         #
@@ -175,41 +176,41 @@ def test_plugins(qtbot, qapp):
         _newPlugin = sanpyWindowObject.runPlugin(_pluginName, baNone, show=False)
         assert _newPlugin is not None
         assert _newPlugin.getInitError() == False
-        
-        # removed sept 9
-        qtbot.addWidget(_newPlugin)
 
-        _newPlugin.slot_switchFile(ba=baNoAnalysis)
-        _newPlugin.slot_switchFile(ba=baWithAnalysis)
+        try:
+            _newPlugin.slot_switchFile(ba=baNoAnalysis)
+            _newPlugin.slot_switchFile(ba=baWithAnalysis)
 
-        # select an empty list
-        logger.info('   selecting empy spike list')
-        _selectSpikesDict = {'ba': baWithAnalysis, 'spikeList':[]}
-        _newPlugin.slot_selectSpikeList(_selectSpikesDict)
+            # select an empty list
+            logger.info('   selecting empy spike list')
+            _selectSpikesDict = {'ba': baWithAnalysis, 'spikeList':[]}
+            _newPlugin.slot_selectSpikeList(_selectSpikesDict)
 
-        # select a list
-        _selectSpikesDict = {'ba': baWithAnalysis, 'spikeList':[1,10,15]}
-        logger.info(f'   selecting spikes {_selectSpikesDict}')
-        _newPlugin.slot_selectSpikeList(_selectSpikesDict)
+            # select a list
+            _selectSpikesDict = {'ba': baWithAnalysis, 'spikeList':[1,10,15]}
+            logger.info(f'   selecting spikes {_selectSpikesDict}')
+            _newPlugin.slot_selectSpikeList(_selectSpikesDict)
 
-        # TODO: test switch file
-        # switch to csv ba with no spikes
-        # _newPlugin.slot_switchFile(ba=baCsv)
+            # TODO: test switch file
+            # switch to csv ba with no spikes
+            # _newPlugin.slot_switchFile(ba=baCsv)
 
-        # switch back to ba with no analysis
-        logger.info(f'   switching ba: {baNoAnalysis}')
-        _newPlugin.slot_switchFile(ba=baNoAnalysis)
+            # switch back to ba with no analysis
+            logger.info(f'   switching ba: {baNoAnalysis}')
+            _newPlugin.slot_switchFile(ba=baNoAnalysis)
 
-        # switch to a file with sweeps
-        logger.info(f'   switching baSweeps:{baSweeps}')
-        _newPlugin.slot_switchFile(ba=baSweeps)
+            # switch to a file with sweeps
+            logger.info(f'   switching baSweeps:{baSweeps}')
+            _newPlugin.slot_switchFile(ba=baSweeps)
 
-        # TODO: test set sweep
+            # TODO: test set sweep
+        finally:
+            _newPlugin.close()
+            qapp.processEvents()
 
-        # try to close and garbage collect
-        # _newPlugin.close()
-        # _newPlugin = None
+        assert _newPlugin not in sanpyWindowObject._openPluginSet
 
+    assert not sanpyWindowObject._openPluginSet
     logger.info('   done')
 
 if __name__ == '__main__':
