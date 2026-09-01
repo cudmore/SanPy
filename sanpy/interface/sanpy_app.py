@@ -55,6 +55,7 @@ qdarktheme.enable_hi_dpi()
 from qtpy import QtCore, QtWidgets, QtGui
 
 import sanpy
+from sanpy import build_info
 import sanpy._util
 import sanpy.interface
 import sanpy.interface.preferences
@@ -541,50 +542,40 @@ class SanPyApp(QtWidgets.QApplication):
 
         _versionInfo = self._getVersionInfo()
         for k,v in _versionInfo.items():
-            aText = k + ' ' + str(v)
+            aText = k + ': ' + str(v)
             aLabel = QtWidgets.QLabel(aText)
 
             if 'https' in v:
-                aLabel.setText(f'{k} <a href="{v}">{v}</a>')
+                aLabel.setText(f'{k}: <a href="{v}">{v}</a>')
                 aLabel.setTextFormat(QtCore.Qt.RichText)
                 aLabel.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
                 aLabel.setOpenExternalLinks(True)
 
-            if k == 'email':
+            if k.lower().endswith('email'):
                 # <a href = "mailto: abc@example.com">Send Email</a>
-                aLabel.setText(f'{k} <a href="mailto:{v}">{v}</a>')
+                aLabel.setText(f'{k}: <a href="mailto:{v}">{v}</a>')
                 aLabel.setTextFormat(QtCore.Qt.RichText)
                 aLabel.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
                 aLabel.setOpenExternalLinks(True)
             
             vLayout.addWidget(aLabel)
 
+        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
+        copyButton = buttonBox.addButton('Copy', QtWidgets.QDialogButtonBox.ActionRole)
+        copyButton.clicked.connect(
+            lambda: QtWidgets.QApplication.clipboard().setText(
+                build_info.get_build_info_json()
+            )
+        )
+        buttonBox.rejected.connect(dlg.reject)
+        vLayout.addWidget(buttonBox)
+
         dlg.setLayout(vLayout)
 
         dlg.exec()
   
     def _getVersionInfo(self) -> dict:
-        retDict = {}
-
-        #import platform
-        _platform = platform.machine()
-        # arm64
-        # x86_64
-
-        # from sanpy.version import __version__
-
-        # retDict['SanPy version'] = __version__
-        retDict['SanPy version'] = sanpy.__version__
-        retDict['Python version'] = platform.python_version()
-        retDict['Python platform'] = _platform  # platform.platform()
-        retDict['PyQt version'] = QtCore.__version__  # when using import qtpy
-        # retDict['Bundle folder'] = sanpy._util.getBundledDir()
-        # retDict['Log file'] = sanpy.sanpyLogger.getLoggerFile()
-        retDict['GitHub'] = 'https://github.com/cudmore/sanpy'
-        retDict['Documentation'] = 'https://cudmore.github.io/SanPy/'
-        retDict['email'] = 'robert.cudmore@gmail.com'
-
-        return retDict
+        return dict(build_info.get_build_info_rows())
 
 def main():
     """Main entry point for the SanPy desktop app.

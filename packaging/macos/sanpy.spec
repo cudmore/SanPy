@@ -10,6 +10,9 @@ SANPY_VERSION = version('sanpy-ephys')
 ARCH = os.environ.get('SANPY_ARCH', 'arm64')
 BUNDLE_ID = os.environ.get('SANPY_BUNDLE_ID', 'org.sanpy.SanPy')
 MIN_MACOS_VERSION = os.environ.get('SANPY_MIN_MACOS_VERSION', '11.0')
+BUILD_INFO_PATH = os.environ.get('SANPY_BUILD_INFO')
+if not BUILD_INFO_PATH or not os.path.isfile(BUILD_INFO_PATH):
+    raise ValueError('SANPY_BUILD_INFO must name an existing build_info.json')
 version_match = re.match(r'^(\d+)\.(\d+)\.(\d+)', SANPY_VERSION)
 if version_match is None:
     raise ValueError(f'Cannot convert SanPy version for macOS: {SANPY_VERSION}')
@@ -24,6 +27,7 @@ a = Analysis(
         ('../../sanpy/interface/icons/sanpy_transparent.png', '.'),
         ('../../sanpy/detection-presets', 'detection-presets'),
         ('../../sanpy/_userFiles', '_userFiles'),
+        (BUILD_INFO_PATH, 'sanpy'),
     ],
     hiddenimports=['numpy.core.multiarray'],
     hookspath=[],

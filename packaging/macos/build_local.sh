@@ -6,6 +6,14 @@ cd "$(dirname "$0")"
 # shellcheck source=config.sh
 source ./config.sh
 
+GIT_STATUS="$(git -C "${REPO_ROOT}" status --porcelain --untracked-files=normal)"
+if [[ -n "${GIT_STATUS}" ]]; then
+  echo "error: refusing to build because the Git working tree is not clean:" >&2
+  printf '%s\n' "${GIT_STATUS}" >&2
+  echo "Commit, stash, or remove these changes before building." >&2
+  exit 1
+fi
+
 if [[ "$(uname -m)" != "${ARCH}" ]]; then
   echo "error: packaging/macos is ${ARCH}-only (got $(uname -m))" >&2
   exit 1
@@ -83,10 +91,15 @@ RUN_DIR="${DIST_ROOT}/${RUN_NAME}"
 WORK_DIR="${BUILD_ROOT}/${RUN_NAME}"
 mkdir -p "${RUN_DIR}" "${WORK_DIR}"
 
+BUILD_INFO_PATH="${RUN_DIR}/build_info.json"
+echo "==> recording build info"
+"${PYTHON}" ../create_build_info.py --output "${BUILD_INFO_PATH}"
+
 echo "==> pyinstaller"
 SANPY_ARCH="${ARCH}" \
 SANPY_BUNDLE_ID="${BUNDLE_ID}" \
 SANPY_MIN_MACOS_VERSION="${MIN_MACOS_VERSION}" \
+SANPY_BUILD_INFO="${BUILD_INFO_PATH}" \
 "${PYINSTALLER}" --noconfirm --clean \
   --distpath "${RUN_DIR}" \
   --workpath "${WORK_DIR}" \
