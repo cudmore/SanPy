@@ -16,9 +16,15 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 1
 fi
 
-if [[ ! -d .venv ]]; then
-  echo "==> creating .venv with Python 3.12"
-  uv venv --python 3.12 .venv
+if [[ -x .venv/bin/python ]]; then
+  VENV_PYTHON_VERSION="$(.venv/bin/python -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')"
+else
+  VENV_PYTHON_VERSION=""
+fi
+
+if [[ "${VENV_PYTHON_VERSION}" != "3.11" ]]; then
+  echo "==> creating .venv with Python 3.11"
+  uv venv --clear --python 3.11 .venv
 fi
 
 # shellcheck disable=SC1091
@@ -30,25 +36,42 @@ import sys
 machine = platform.machine()
 if machine != 'arm64':
     raise SystemExit(f'error: venv is not arm64 (got {machine})')
+if sys.version_info[:2] != (3, 11):
+    raise SystemExit(f'error: venv is not Python 3.11 (got {sys.version.split()[0]})')
 print(sys.executable)
 print(sys.version)
 print('machine', machine)
 "
 
-echo "==> installing SanPy [gui] and PyInstaller"
-uv pip install -e "${REPO_ROOT}[gui]"
-uv pip install pyinstaller
+echo "==> installing legacy scientific stack, SanPy [gui], and PyInstaller"
+uv pip install \
+  --overrides legacy-overrides.txt \
+  -e "${REPO_ROOT}[gui]" \
+  pyinstaller
+
+echo "==> dependency compatibility gate"
+uv pip check
 
 echo "==> import gate"
 python -c "
 from PyQt5 import QtCore
+import numpy
 import pandas
+import scipy
 import tables
 import skimage
 import h5py
 import sanpy
+if numpy.__version__ != '1.23.5':
+    raise SystemExit(f'error: expected numpy 1.23.5 (got {numpy.__version__})')
+if pandas.__version__ != '1.5.3':
+    raise SystemExit(f'error: expected pandas 1.5.3 (got {pandas.__version__})')
+if scipy.__version__ != '1.10.1':
+    raise SystemExit(f'error: expected scipy 1.10.1 (got {scipy.__version__})')
 print('PyQt5', QtCore.PYQT_VERSION_STR)
+print('numpy', numpy.__version__)
 print('pandas', pandas.__version__)
+print('scipy', scipy.__version__)
 print('tables', tables.__version__)
 print('skimage', skimage.__version__)
 print('h5py', h5py.__version__)

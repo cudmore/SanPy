@@ -1,0 +1,20 @@
+# Reproduce the scientific core of the known-good ARM conda environment
+# `sanpy-env-pyinstaller`. Keep these overrides local to macOS packaging.
+numpy==1.23.5
+pandas==1.5.3
+scipy==1.10.1
+blosc2==2.5.1
+contourpy==1.0.5
+h5py==3.8.0
+matplotlib==3.7.1
+# The conda reference used 0.5.1, whose source distribution fails to build
+# under the current UV build isolation. Use its nearest patch release.
+mplcursors==0.5.2
+numexpr==2.8.4
+pyqtgraph==0.13.1
+pywavelets==1.4.1
+# The conda reference used 0.19.3, which has no Python 3.11 ARM wheel on PyPI.
+scikit-image==0.20.0
+seaborn==0.12.2
+# The conda reference used 3.7.0, which has no Python 3.11 ARM wheel on PyPI.
+tables==3.10.2
