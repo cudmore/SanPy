@@ -1,5 +1,27 @@
 
-SanPy Documentation is available at [https://cudmore.github.io/SanPy/](https://cudmore.github.io/SanPy/)
+# Changelog
+
+SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://cudmore.github.io/SanPy/).
+
+## Unreleased
+
+### Added
+
+- Added a reproducible macOS PyInstaller pipeline for building, signing, notarizing, and stapling the SanPy desktop application.
+- Added a locked Python 3.11 development environment using `uv.lock`.
+
+### Changed
+
+- Replaced the legacy `setup.py` and `requirements.txt` installation with `pyproject.toml` and uv.
+- Updated source-installation documentation and GitHub Actions to use Python 3.11 and uv.
+- Changed PyPI publishing to an explicit, tag-based manual workflow.
+
+### Fixed
+
+- Store SanPy logs outside frozen application bundles so logging does not modify signed or notarized applications.
+- Persist the Matplotlib cache outside PyInstaller's temporary directory to avoid rebuilding the font cache on every launch.
+- Allow SanPy to start when its preferred log or Matplotlib cache directory is unavailable.
+- Clean up Qt plugins correctly in the test suite, preventing a teardown segmentation fault.
 
 ## 20240126
 
@@ -42,4 +64,3 @@ SanPy Documentation is available at [https://cudmore.github.io/SanPy/](https://c
 ### Bug fixes
  - Fixed bug in loading detection-presets when they do not match the default detection presets (missing keys)
  - Fixed bug in loading folder of raw data. Previouslly, the folder would not load if there was an error in one abf file. We are getting abf file errors trying to read abf exported from sutter patch.
-

@@ -39,8 +39,4 @@ For users interested in modifying the source code, install
 
 4) Run the tests
 
-    Run the groups in separate processes to avoid a known PyQt teardown crash.
-
-    uv run pytest tests/test_analysisDir.py
-    uv run pytest tests/test_analysis.py tests/test_detection.py tests/test_fileLoader.py tests/test_metadata.py
-    uv run pytest tests/interface
+    uv run pytest
