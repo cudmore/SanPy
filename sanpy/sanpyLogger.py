@@ -3,7 +3,6 @@ import os
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
-import pathlib
 
 """
 DEBUG
@@ -21,11 +20,6 @@ for k,v in os.environ.items():
     print(f'  {k}: {v}')
 sys.exit(1)
 """
-
-# basedir = os.path.dirname(__file__)
-# print('sanpyLogger basedir:', basedir)
-
-# from sanpy._util import _getUserPreferencesFolder
 
 from platformdirs import user_log_dir
 
@@ -46,20 +40,6 @@ def getLoggerFile():
 def get_logger(name, level=logging.DEBUG):
     """ """
 
-    # if getattr(sys, 'frozen', False):
-    #     # running in a bundle (frozen)
-    #     myPath = sys._MEIPASS
-    # else:
-    #     # running in a normal Python environment
-    #     myPath = pathlib.Path(__file__).parent.absolute()
-
-    # fileName = 'sanpy.log'
-    # logPath = os.path.join(myPath, fileName)
-
-    logPath = getLoggerFile()
-
-    # print('logPath:', logPath)
-
     # Create a custom logger
     logger = logging.getLogger(name)
     logger.setLevel(level)  # abb 20220609
@@ -73,25 +53,26 @@ def get_logger(name, level=logging.DEBUG):
 
         # Create handlers
         c_handler = logging.StreamHandler()
-        f_handler = RotatingFileHandler(logPath, maxBytes=2e6, backupCount=1)
-        # f_handler = logging.FileHandler(logPath)
-
         c_handler.setLevel(level)
-        f_handler.setLevel(level)
 
         # Create formatters and add it to handlers
         consoleFormat = "%(levelname)5s %(name)8s  %(filename)s %(funcName)s() line:%(lineno)d -- %(message)s"
         c_format = logging.Formatter(consoleFormat)
-
-        fileFormat = "%(asctime)s  %(levelname)5s %(name)8s  %(filename)s %(funcName)s() line:%(lineno)d -- %(message)s"
-        f_format = logging.Formatter(fileFormat)
-
         c_handler.setFormatter(c_format)
-        f_handler.setFormatter(f_format)
-
-        # Add handlers to the logger
         logger.addHandler(c_handler)
-        logger.addHandler(f_handler)
+
+        try:
+            logPath = getLoggerFile()
+            f_handler = RotatingFileHandler(
+                logPath, maxBytes=2_000_000, backupCount=1
+            )
+        except OSError as error:
+            logger.warning("File logging is unavailable: %s", error)
+        else:
+            f_handler.setLevel(level)
+            fileFormat = "%(asctime)s  %(levelname)5s %(name)8s  %(filename)s %(funcName)s() line:%(lineno)d -- %(message)s"
+            f_handler.setFormatter(logging.Formatter(fileFormat))
+            logger.addHandler(f_handler)
     #
     #
     return logger
