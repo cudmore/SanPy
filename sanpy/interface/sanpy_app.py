@@ -539,9 +539,9 @@ class SanPyApp(QtWidgets.QApplication):
         vLayout = QtWidgets.QVBoxLayout()
 
         description = QtWidgets.QLabel(
-            'SanPy is designed for whole-cell current clamp analysis.\n'
+            'SanPy is designed for whole-cell current clamp analysis. '
             'We are always open to comments and suggestions on how to improve, '
-            'extend, and fix SanPy.\n'
+            'extend, and fix SanPy. '
             'Reach out to Robert Cudmore with any ideas, questions, or bug fixes.'
         )
         description.setWordWrap(True)
@@ -593,7 +593,7 @@ class SanPyApp(QtWidgets.QApplication):
             
             infoLayout.addWidget(aLabel)
 
-        copyButton = QtWidgets.QPushButton('Copy')
+        copyButton = QtWidgets.QPushButton('Copy SanPy Info')
         copyButton.clicked.connect(
             lambda: QtWidgets.QApplication.clipboard().setText(
                 build_info.get_build_info_json()
