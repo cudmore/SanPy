@@ -533,12 +533,45 @@ class SanPyApp(QtWidgets.QApplication):
     def _onAboutMenuAction(self):
         """Show a dialog with help.
         """
-        # print(self._getVersionInfo())
-
         dlg = QtWidgets.QDialog()
         dlg.setWindowTitle('About SanPy')
 
         vLayout = QtWidgets.QVBoxLayout()
+
+        description = QtWidgets.QLabel(
+            'SanPy is designed for whole-cell current clamp analysis.\n'
+            'We are always open to comments and suggestions on how to improve, '
+            'extend, and fix SanPy.\n'
+            'Reach out to Robert Cudmore with any ideas, questions, or bug fixes.'
+        )
+        description.setWordWrap(True)
+        vLayout.addWidget(description)
+
+        contact = QtWidgets.QLabel(
+            'Contact: Robert Cudmore '
+            '(<a href="mailto:robert.cudmore@gmail.com">'
+            'robert.cudmore@gmail.com</a>)<br>'
+            'Website: <a href="https://mapmanager.net/">'
+            'https://mapmanager.net/</a><br>'
+            'SanPy Documentation: '
+            '<a href="https://cudmore.github.io/SanPy/">'
+            'https://cudmore.github.io/SanPy/</a>'
+        )
+        contact.setTextFormat(QtCore.Qt.RichText)
+        contact.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        contact.setOpenExternalLinks(True)
+        vLayout.addWidget(contact)
+
+        infoButton = QtWidgets.QToolButton()
+        infoButton.setText('SanPy Info')
+        infoButton.setCheckable(True)
+        infoButton.setArrowType(QtCore.Qt.RightArrow)
+        infoButton.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        vLayout.addWidget(infoButton)
+
+        infoWidget = QtWidgets.QWidget()
+        infoLayout = QtWidgets.QVBoxLayout(infoWidget)
+        infoLayout.setContentsMargins(20, 0, 0, 0)
 
         _versionInfo = self._getVersionInfo()
         for k,v in _versionInfo.items():
@@ -558,24 +591,41 @@ class SanPyApp(QtWidgets.QApplication):
                 aLabel.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
                 aLabel.setOpenExternalLinks(True)
             
-            vLayout.addWidget(aLabel)
+            infoLayout.addWidget(aLabel)
 
-        buttonBox = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
-        copyButton = buttonBox.addButton('Copy', QtWidgets.QDialogButtonBox.ActionRole)
+        copyButton = QtWidgets.QPushButton('Copy')
         copyButton.clicked.connect(
             lambda: QtWidgets.QApplication.clipboard().setText(
                 build_info.get_build_info_json()
             )
         )
-        buttonBox.rejected.connect(dlg.reject)
-        vLayout.addWidget(buttonBox)
+        infoLayout.addWidget(copyButton)
+        infoWidget.setVisible(False)
+        vLayout.addWidget(infoWidget)
+
+        def toggleInfo(expanded):
+            infoButton.setArrowType(
+                QtCore.Qt.DownArrow if expanded else QtCore.Qt.RightArrow
+            )
+            infoWidget.setVisible(expanded)
+            dlg.adjustSize()
+
+        infoButton.toggled.connect(toggleInfo)
+
+        closeButton = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
+        closeButton.rejected.connect(dlg.reject)
+        vLayout.addWidget(closeButton)
 
         dlg.setLayout(vLayout)
 
         dlg.exec()
   
     def _getVersionInfo(self) -> dict:
-        return dict(build_info.get_build_info_rows())
+        return {
+            key: value
+            for key, value in build_info.get_build_info_rows()
+            if not key.startswith('contact ')
+        }
 
 def main():
     """Main entry point for the SanPy desktop app.
