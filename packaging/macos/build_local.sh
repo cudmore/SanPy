@@ -54,6 +54,8 @@ uv pip sync --python "${PYTHON}" --strict "${LOCK_FILE}"
 echo "==> dependency compatibility gate"
 uv pip check --python "${PYTHON}"
 
+# Confirm that important compiled dependencies import successfully. Exact
+# versions are controlled by pyproject.toml and the generated platform lock.
 echo "==> import gate"
 "${PYTHON}" -c "
 from PyQt5 import QtCore
@@ -64,12 +66,6 @@ import tables
 import skimage
 import h5py
 import sanpy
-if numpy.__version__ != '1.23.5':
-    raise SystemExit(f'error: expected numpy 1.23.5 (got {numpy.__version__})')
-if pandas.__version__ != '1.5.3':
-    raise SystemExit(f'error: expected pandas 1.5.3 (got {pandas.__version__})')
-if scipy.__version__ != '1.10.1':
-    raise SystemExit(f'error: expected scipy 1.10.1 (got {scipy.__version__})')
 print('PyQt5', QtCore.PYQT_VERSION_STR)
 print('numpy', numpy.__version__)
 print('pandas', pandas.__version__)
