@@ -2,7 +2,8 @@
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
-Set-Location $PSScriptRoot
+Push-Location -LiteralPath $PSScriptRoot
+try {
 . .\config.ps1
 
 $GitStatus = git -C $RepoRoot status --porcelain --untracked-files=normal
@@ -20,7 +21,7 @@ if ($GitStatus) {
 if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
     throw "packaging/windows must be run on Windows"
 }
-if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -ne "X64") {
+if ($env:PROCESSOR_ARCHITECTURE -ne $Architecture) {
     throw "packaging/windows requires a 64-bit Intel/AMD Windows machine"
 }
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
@@ -153,3 +154,7 @@ Write-Host "run:        $RunName"
 Write-Host "executable: $Exe"
 Write-Host "distribute: $ZipFile"
 Write-Host "smoke test: & `"$Exe`""
+}
+finally {
+    Pop-Location
+}

@@ -8,7 +8,7 @@ Set-Location $PSScriptRoot
 if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
     throw "packaging/windows must be run on Windows"
 }
-if ([System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture -ne "X64") {
+if ($env:PROCESSOR_ARCHITECTURE -ne $Architecture) {
     throw "packaging/windows requires a 64-bit Intel/AMD Windows machine"
 }
 if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
