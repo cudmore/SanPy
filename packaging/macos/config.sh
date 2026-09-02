@@ -5,7 +5,7 @@ REPO_ROOT="$(cd "${PACKAGING_DIR}/../.." && pwd)"
 
 APP_NAME="SanPy"
 ARCH="arm64"
-PYTHON_VERSION="3.11.14"
+PYTHON_VERSION="$(<"${REPO_ROOT}/.python-version")"
 BUNDLE_ID="org.sanpy.SanPy"
 MIN_MACOS_VERSION="11.0"
 TEAM_ID="794C773KDS"
