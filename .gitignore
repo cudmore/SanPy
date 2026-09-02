@@ -44,3 +44,6 @@ docs/.cache/
 # client-server for flask-vue
 flask-vue/server/flask_env
 flask-vue/server/node_modules
+
+# Legacy local PyInstaller files
+/pyinstaller/
