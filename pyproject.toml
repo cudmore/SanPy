@@ -55,6 +55,10 @@ Issues = "https://github.com/cudmore/SanPy/issues"
 sanpy = "sanpy.interface.sanpy_app:main"
 
 [dependency-groups]
+packaging = [
+    "pyinstaller==6.22.2",
+    "pyinstaller-hooks-contrib==2026.7",
+]
 test = [
     "pytest>=8,<10",
     "pytest-cov>=5,<8",

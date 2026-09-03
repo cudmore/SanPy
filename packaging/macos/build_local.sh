@@ -49,13 +49,16 @@ print('machine', machine)
 "
 
 echo "==> syncing locked build environment"
-uv pip sync --python "${PYTHON}" --strict "${LOCK_FILE}"
+UV_PROJECT_ENVIRONMENT="${VENV}" uv sync \
+  --project "${REPO_ROOT}" \
+  --locked \
+  --no-dev \
+  --group packaging \
+  --python "${PYTHON_VERSION}"
 
 echo "==> dependency compatibility gate"
 uv pip check --python "${PYTHON}"
 
-# Confirm that important compiled dependencies import successfully. Exact
-# versions are controlled by pyproject.toml and the generated platform lock.
 echo "==> import gate"
 "${PYTHON}" -c "
 from PyQt5 import QtCore
@@ -76,8 +79,6 @@ print('h5py', h5py.__version__)
 print('sanpy', sanpy.__version__)
 "
 
-# Give every build its own dated output folder. If multiple builds are made on
-# the same day, increment _v1, _v2, and so on instead of overwriting one.
 mkdir -p "${DIST_ROOT}" "${BUILD_ROOT}"
 RUN_DATE="$(date +%Y%m%d)"
 RUN_NUMBER=1
@@ -86,14 +87,27 @@ while [[ -e "${DIST_ROOT}/${RUN_DATE}_v${RUN_NUMBER}" ]]; do
 done
 RUN_NAME="${RUN_DATE}_v${RUN_NUMBER}"
 RUN_DIR="${DIST_ROOT}/${RUN_NAME}"
-# Keep PyInstaller's temporary work separate, using the same run name so its
-# files can be matched to the corresponding output in dist/.
 WORK_DIR="${BUILD_ROOT}/${RUN_NAME}"
 mkdir -p "${RUN_DIR}" "${WORK_DIR}"
 
+GIT_COMMIT="$(git -C "${REPO_ROOT}" rev-parse HEAD)"
 BUILD_INFO_PATH="${RUN_DIR}/build_info.json"
+ENVIRONMENT_PATH="${RUN_DIR}/environment.txt"
+SOURCE_ARCHIVE="${RUN_DIR}/source-${GIT_COMMIT}.zip"
+
 echo "==> recording build info"
 "${PYTHON}" ../create_build_info.py --output "${BUILD_INFO_PATH}"
+
+echo "==> recording installed environment"
+uv pip freeze \
+  --python "${PYTHON}" \
+  --exclude-editable > "${ENVIRONMENT_PATH}"
+
+echo "==> archiving exact committed source"
+git -C "${REPO_ROOT}" archive \
+  --format=zip \
+  --output="${SOURCE_ARCHIVE}" \
+  "${GIT_COMMIT}"
 
 echo "==> pyinstaller"
 SANPY_ARCH="${ARCH}" \
@@ -116,4 +130,7 @@ mv "${DIST_ROOT}/.latest.txt.tmp" "${LATEST_FILE}"
 
 echo "run:          ${RUN_NAME}"
 echo "unsigned app: ${APP}"
+echo "build info:   ${BUILD_INFO_PATH}"
+echo "environment:  ${ENVIRONMENT_PATH}"
+echo "source:       ${SOURCE_ARCHIVE}"
 echo "smoke test:   open ${APP}"

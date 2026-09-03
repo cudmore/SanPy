@@ -10,7 +10,6 @@ import subprocess
 from datetime import datetime
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 
 PACKAGE_DISTRIBUTIONS = (
@@ -32,31 +31,47 @@ def _package_version(distribution: str) -> str | None:
         return None
 
 
-def create_build_info(repo_root: Path, output_folder: str) -> dict:
-    """Collect metadata from the interpreter and source tree doing the build."""
-    now = datetime.now(ZoneInfo("America/New_York"))
-    commit = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
+def _run(repo_root: Path, *command: str) -> str:
+    return subprocess.run(
+        command,
         cwd=repo_root,
         check=True,
         capture_output=True,
         text=True,
     ).stdout.strip()
 
+
+def create_build_info(repo_root: Path, output_folder: str) -> dict:
+    """Collect metadata from the interpreter and source tree doing the build."""
+    now = datetime.now().astimezone()
+    commit = _run(repo_root, "git", "rev-parse", "HEAD")
+    git_status = _run(
+        repo_root,
+        "git",
+        "status",
+        "--porcelain",
+        "--untracked-files=normal",
+    )
+    uv_version = _run(repo_root, "uv", "--version").removeprefix("uv ")
+
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "build": {
-            "date": now.strftime("%Y%m%d"),
-            "time": now.strftime("%H:%M:%S"),
-            "timezone": "America/New_York",
-            "output_folder": output_folder,
+            "build_id": output_folder,
+            "timestamp_local": now.isoformat(timespec="seconds"),
             "sanpy_version": version("sanpy-ephys"),
             "python_version": platform.python_version(),
             "pyinstaller_version": version("pyinstaller"),
+            "uv_version": uv_version,
         },
-        "git": {"commit": commit},
+        "git": {
+            "commit": commit,
+            "dirty": bool(git_status),
+        },
         "platform": {
             "system": platform.system(),
+            "release": platform.release(),
+            "version": platform.version(),
             "machine": platform.machine(),
         },
         "packages": {

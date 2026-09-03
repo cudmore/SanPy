@@ -16,6 +16,7 @@ APP="${RUN_DIR}/${APP_NAME}.app"
 ZIP_SUBMIT="${RUN_DIR}/${APP_NAME}-submit.zip"
 ID_FILE="${RUN_DIR}/notary-submission-id.txt"
 NOTARY_LOG="${RUN_DIR}/notary-log.json"
+CHECKSUM_FILE="${RUN_DIR}/SHA256SUMS.txt"
 
 if [[ ! -d "${APP}" ]]; then
   echo "error: ${APP} not found. Run ./build_local.sh first." >&2
@@ -73,18 +74,22 @@ finish_release() {
   codesign --verify --deep --strict --verbose=2 "${APP}"
   spctl --assess --type execute --verbose=2 "${APP}"
 
-  local app_version zip_dist
+  local app_version zip_dist zip_name
   app_version="$(plutil -extract CFBundleShortVersionString raw "${APP}/Contents/Info.plist")"
   zip_dist="${RUN_DIR}/${APP_NAME}-macos-${ARCH}-${app_version}.zip"
+  zip_name="$(basename "${zip_dist}")"
   echo "==> distribution zip: ${zip_dist}"
-  rm -f "${zip_dist}" "${zip_dist}.sha256"
+  rm -f "${zip_dist}" "${zip_dist}.sha256" "${CHECKSUM_FILE}"
   ditto -c -k --sequesterRsrc --keepParent "${APP}" "${zip_dist}"
-  shasum -a 256 "${zip_dist}" > "${zip_dist}.sha256"
+  (
+    cd "${RUN_DIR}"
+    shasum -a 256 "${zip_name}" > "$(basename "${CHECKSUM_FILE}")"
+  )
   rm -f "${ZIP_SUBMIT}"
   echo "run:        ${RUN_NAME}"
   echo "stapled:    ${APP}"
   echo "distribute: ${zip_dist}"
-  echo "checksum:   ${zip_dist}.sha256"
+  echo "checksum:   ${CHECKSUM_FILE}"
 }
 
 echo "==> run: ${RUN_NAME}"

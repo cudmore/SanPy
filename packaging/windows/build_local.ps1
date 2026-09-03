@@ -2,48 +2,54 @@
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version Latest
 
+$PreviousUvProjectEnvironment = [Environment]::GetEnvironmentVariable(
+    "UV_PROJECT_ENVIRONMENT",
+    "Process"
+)
+$PreviousSanPyBuildInfo = [Environment]::GetEnvironmentVariable(
+    "SANPY_BUILD_INFO",
+    "Process"
+)
+
 Push-Location -LiteralPath $PSScriptRoot
 try {
-. .\config.ps1
+    . .\config.ps1
 
-$GitStatus = git -C $RepoRoot status --porcelain --untracked-files=normal
-if ($LASTEXITCODE -ne 0) {
-    throw "git status failed"
-}
-if ($GitStatus) {
-    [Console]::Error.WriteLine(
-        "error: refusing to build because the Git working tree is not clean:"
-    )
-    $GitStatus | ForEach-Object { [Console]::Error.WriteLine($_) }
-    throw "Commit, stash, or remove these changes before building"
-}
-
-if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
-    throw "packaging/windows must be run on Windows"
-}
-if ($env:PROCESSOR_ARCHITECTURE -ne $Architecture) {
-    throw "packaging/windows requires a 64-bit Intel/AMD Windows machine"
-}
-if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
-    throw "uv was not found on PATH"
-}
-if (-not (Test-Path $LockFile)) {
-    throw "$LockFile was not found. Run .\update_lock.ps1 first"
-}
-
-$VenvPythonVersion = ""
-if (Test-Path $Python) {
-    $VenvPythonVersion = & $Python -c "import platform; print(platform.python_version())"
-}
-if ($VenvPythonVersion -ne $PythonVersion) {
-    Write-Host "==> creating .venv with Python $PythonVersion"
-    uv venv --clear --python $PythonVersion $Venv
+    $GitStatus = git -C $RepoRoot status --porcelain --untracked-files=normal
     if ($LASTEXITCODE -ne 0) {
-        throw "uv failed to create the build environment"
+        throw "git status failed"
     }
-}
+    if ($GitStatus) {
+        [Console]::Error.WriteLine(
+            "error: refusing to build because the Git working tree is not clean:"
+        )
+        $GitStatus | ForEach-Object { [Console]::Error.WriteLine($_) }
+        throw "Commit, stash, or remove these changes before building"
+    }
 
-$EnvironmentCheck = @"
+    if ([System.Environment]::OSVersion.Platform -ne [System.PlatformID]::Win32NT) {
+        throw "packaging/windows must be run on Windows"
+    }
+    if ($env:PROCESSOR_ARCHITECTURE -ne $Architecture) {
+        throw "packaging/windows requires a 64-bit Intel/AMD Windows machine"
+    }
+    if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+        throw "uv was not found on PATH"
+    }
+
+    $VenvPythonVersion = ""
+    if (Test-Path $Python) {
+        $VenvPythonVersion = & $Python -c "import platform; print(platform.python_version())"
+    }
+    if ($VenvPythonVersion -ne $PythonVersion) {
+        Write-Host "==> creating .venv with Python $PythonVersion"
+        uv venv --clear --python $PythonVersion $Venv
+        if ($LASTEXITCODE -ne 0) {
+            throw "uv failed to create the build environment"
+        }
+    }
+
+    $EnvironmentCheck = @"
 import platform
 import sys
 machine = platform.machine()
@@ -57,27 +63,35 @@ print(sys.executable)
 print(sys.version)
 print('machine', machine)
 "@
-& $Python -c $EnvironmentCheck
-if ($LASTEXITCODE -ne 0) {
-    throw "Python environment validation failed"
-}
+    & $Python -c $EnvironmentCheck
+    if ($LASTEXITCODE -ne 0) {
+        throw "Python environment validation failed"
+    }
 
-Write-Host "==> syncing locked build environment"
-uv pip sync --python $Python --strict $LockFile
-if ($LASTEXITCODE -ne 0) {
-    throw "uv failed to synchronize the build environment"
-}
+    Write-Host "==> syncing locked build environment"
+    [Environment]::SetEnvironmentVariable(
+        "UV_PROJECT_ENVIRONMENT",
+        $Venv,
+        "Process"
+    )
+    uv sync `
+        --project $RepoRoot `
+        --locked `
+        --no-dev `
+        --group packaging `
+        --python $PythonVersion
+    if ($LASTEXITCODE -ne 0) {
+        throw "uv failed to synchronize the build environment"
+    }
 
-Write-Host "==> dependency compatibility gate"
-uv pip check --python $Python
-if ($LASTEXITCODE -ne 0) {
-    throw "the build environment has incompatible dependencies"
-}
+    Write-Host "==> dependency compatibility gate"
+    uv pip check --python $Python
+    if ($LASTEXITCODE -ne 0) {
+        throw "the build environment has incompatible dependencies"
+    }
 
-# Confirm that important compiled dependencies import successfully. Exact
-# versions are controlled by pyproject.toml and the generated platform lock.
-Write-Host "==> import gate"
-$ImportCheck = @"
+    Write-Host "==> import gate"
+    $ImportCheck = @"
 from PyQt5 import QtCore
 import numpy
 import pandas
@@ -95,61 +109,100 @@ print('skimage', skimage.__version__)
 print('h5py', h5py.__version__)
 print('sanpy', sanpy.__version__)
 "@
-& $Python -c $ImportCheck
-if ($LASTEXITCODE -ne 0) {
-    throw "one or more required packages failed to import"
-}
+    & $Python -c $ImportCheck
+    if ($LASTEXITCODE -ne 0) {
+        throw "one or more required packages failed to import"
+    }
 
-# Give every build its own Eastern-date output folder. Increment the suffix
-# instead of overwriting another build made on the same day.
-$EasternNow = [System.TimeZoneInfo]::ConvertTimeBySystemTimeZoneId(
-    [DateTime]::UtcNow,
-    "Eastern Standard Time"
-)
-$RunDate = $EasternNow.ToString("yyyyMMdd")
-$RunNumber = 1
-do {
-    $RunName = "${RunDate}_v${RunNumber}"
-    $RunDir = Join-Path $DistRoot $RunName
-    $RunNumber += 1
-} while (Test-Path $RunDir)
+    $RunDate = [DateTime]::Now.ToString("yyyyMMdd")
+    $RunNumber = 1
+    do {
+        $RunName = "${RunDate}_v${RunNumber}"
+        $RunDir = Join-Path $DistRoot $RunName
+        $RunNumber += 1
+    } while (Test-Path $RunDir)
 
-$WorkDir = Join-Path $BuildRoot $RunName
-New-Item -ItemType Directory -Force -Path $RunDir, $WorkDir | Out-Null
+    $WorkDir = Join-Path $BuildRoot $RunName
+    New-Item -ItemType Directory -Force -Path $RunDir, $WorkDir | Out-Null
 
-$BuildInfoPath = Join-Path $RunDir "build_info.json"
-Write-Host "==> recording build info"
-& $Python ..\create_build_info.py --output $BuildInfoPath
-if ($LASTEXITCODE -ne 0) {
-    throw "failed to create build_info.json"
-}
+    $GitCommit = (git -C $RepoRoot rev-parse HEAD).Trim()
+    if ($LASTEXITCODE -ne 0) {
+        throw "git rev-parse failed"
+    }
 
-Write-Host "==> pyinstaller"
-$env:SANPY_BUILD_INFO = $BuildInfoPath
-& $PyInstaller --noconfirm --clean `
-    --distpath $RunDir `
-    --workpath $WorkDir `
-    sanpy.spec
-if ($LASTEXITCODE -ne 0) {
-    throw "PyInstaller failed"
-}
+    $BuildInfoPath = Join-Path $RunDir "build_info.json"
+    $EnvironmentPath = Join-Path $RunDir "environment.txt"
+    $SourceArchive = Join-Path $RunDir "source-$GitCommit.zip"
 
-$Exe = Join-Path $RunDir "$AppName.exe"
-if (-not (Test-Path $Exe)) {
-    throw "Expected executable was not created: $Exe"
-}
+    Write-Host "==> recording build info"
+    & $Python ..\create_build_info.py --output $BuildInfoPath
+    if ($LASTEXITCODE -ne 0) {
+        throw "failed to create build_info.json"
+    }
 
-$BuildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
-$SanPyVersion = $BuildInfo.build.sanpy_version
-$ZipFile = Join-Path $RunDir "$AppName-windows-$Architecture-$SanPyVersion.zip"
-Write-Host "==> distribution zip: $ZipFile"
-Compress-Archive -Path $Exe -DestinationPath $ZipFile -Force
+    Write-Host "==> recording installed environment"
+    $EnvironmentLines = uv pip freeze --python $Python --exclude-editable
+    if ($LASTEXITCODE -ne 0) {
+        throw "failed to record the installed environment"
+    }
+    $EnvironmentLines | Set-Content -LiteralPath $EnvironmentPath -Encoding ascii
 
-Write-Host "run:        $RunName"
-Write-Host "executable: $Exe"
-Write-Host "distribute: $ZipFile"
-Write-Host "smoke test: & `"$Exe`""
+    Write-Host "==> archiving exact committed source"
+    git -C $RepoRoot archive `
+        --format=zip `
+        "--output=$SourceArchive" `
+        $GitCommit
+    if ($LASTEXITCODE -ne 0) {
+        throw "failed to create the source archive"
+    }
+
+    Write-Host "==> pyinstaller"
+    $env:SANPY_BUILD_INFO = $BuildInfoPath
+    & $PyInstaller --noconfirm --clean `
+        --distpath $RunDir `
+        --workpath $WorkDir `
+        sanpy.spec
+    if ($LASTEXITCODE -ne 0) {
+        throw "PyInstaller failed"
+    }
+
+    $Exe = Join-Path $RunDir "$AppName.exe"
+    if (-not (Test-Path $Exe)) {
+        throw "Expected executable was not created: $Exe"
+    }
+
+    $BuildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
+    $SanPyVersion = $BuildInfo.build.sanpy_version
+    $ZipFile = Join-Path $RunDir "$AppName-windows-$Architecture-$SanPyVersion.zip"
+    Write-Host "==> distribution zip: $ZipFile"
+    Compress-Archive -Path $Exe -DestinationPath $ZipFile -Force
+
+    $ChecksumFile = Join-Path $RunDir "SHA256SUMS.txt"
+    $ZipHash = Get-FileHash -LiteralPath $ZipFile -Algorithm SHA256
+    $ChecksumLine = "{0}  {1}" -f `
+        $ZipHash.Hash.ToLowerInvariant(), `
+        (Split-Path $ZipFile -Leaf)
+    $ChecksumLine | Set-Content -LiteralPath $ChecksumFile -Encoding ascii
+
+    Write-Host "run:          $RunName"
+    Write-Host "executable:   $Exe"
+    Write-Host "distribute:   $ZipFile"
+    Write-Host "build info:   $BuildInfoPath"
+    Write-Host "environment:  $EnvironmentPath"
+    Write-Host "source:       $SourceArchive"
+    Write-Host "checksum:     $ChecksumFile"
+    Write-Host "smoke test:   & `"$Exe`""
 }
 finally {
+    [Environment]::SetEnvironmentVariable(
+        "SANPY_BUILD_INFO",
+        $PreviousSanPyBuildInfo,
+        "Process"
+    )
+    [Environment]::SetEnvironmentVariable(
+        "UV_PROJECT_ENVIRONMENT",
+        $PreviousUvProjectEnvironment,
+        "Process"
+    )
     Pop-Location
 }
