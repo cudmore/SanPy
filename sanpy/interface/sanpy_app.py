@@ -646,7 +646,9 @@ def main():
     # app = QtWidgets.QApplication(sys.argv)
     app = SanPyApp(sys.argv)
 
-    app.setQuitOnLastWindowClosed(False)
+    # abb 202609 on windows is painful
+    # app.setQuitOnLastWindowClosed(False)
+    app.setQuitOnLastWindowClosed(True)
 
     # for manuscript we need to allow user to set light/dark theme
     # was this
