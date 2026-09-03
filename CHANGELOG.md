@@ -7,12 +7,19 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 
 ### Added
 
-- Added a reproducible macOS PyInstaller pipeline for building, signing, notarizing, and stapling the SanPy desktop application.
+- Added local PyInstaller build pipelines for macOS ARM64 and Windows AMD64. The macOS pipeline builds, signs, notarizes, staples, and validates the application; the Windows pipeline produces a single-file executable.
+- Added self-contained build records with `build_info.json`, an installed-package `environment.txt`, an exact `source-<commit>.zip`, the user distribution ZIP, and `SHA256SUMS.txt`.
+- Added platform-specific build IDs and output directories such as `macos-YYYYMMDD-vN` and `windows-YYYYMMDD-vN`.
+- Added a consolidated packaging guide covering both platforms, dependency updates, build-record retention, and recovery of the exact source used for a distributed application.
 - Added a locked Python 3.11 development environment using `uv.lock`.
 
 ### Changed
 
 - Replaced the legacy `setup.py` and `requirements.txt` installation with `pyproject.toml` and uv.
+- Moved PyInstaller and its hooks into a shared `packaging` dependency group in `pyproject.toml`; both platform build scripts now install from the cross-platform `uv.lock` with `uv sync --locked`.
+- Expanded packaged build metadata to include the platform-local build ID and timestamp, full Git commit and clean-tree state, platform details, and Python, uv, PyInstaller, and key package versions.
+- Changed macOS and Windows builds to require a clean committed source tree and to archive that exact commit before packaging.
+- Changed final distribution checksums to use `SHA256SUMS.txt`, generated only after the user-facing ZIP is complete.
 - Updated source-installation documentation and GitHub Actions to use Python 3.11 and uv.
 - Changed PyPI publishing to an explicit, tag-based manual workflow.
 
