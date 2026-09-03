@@ -145,10 +145,6 @@ $ZipFile = Join-Path $RunDir "$AppName-windows-$Architecture-$SanPyVersion.zip"
 Write-Host "==> distribution zip: $ZipFile"
 Compress-Archive -Path $Exe -DestinationPath $ZipFile -Force
 
-$LatestTemp = "$LatestFile.tmp"
-Set-Content -Path $LatestTemp -Value $RunName
-Move-Item -Path $LatestTemp -Destination $LatestFile -Force
-
 Write-Host "run:        $RunName"
 Write-Host "executable: $Exe"
 Write-Host "distribute: $ZipFile"
