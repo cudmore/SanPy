@@ -597,6 +597,17 @@ class SanPyApp(QtWidgets.QApplication):
         description.setWordWrap(True)
         vLayout.addWidget(description)
 
+        for label, value in build_info.get_build_summary_rows():
+            vLayout.addWidget(QtWidgets.QLabel(f'{label}: {value}'))
+
+        copyButton = QtWidgets.QPushButton('Copy SanPy Info')
+        copyButton.clicked.connect(
+            lambda: QtWidgets.QApplication.clipboard().setText(
+                build_info.get_build_info_json()
+            )
+        )
+        vLayout.addWidget(copyButton)
+
         contact = QtWidgets.QLabel(
             'Contact: Robert Cudmore '
             '(<a href="mailto:robert.cudmore@gmail.com">'
@@ -612,56 +623,6 @@ class SanPyApp(QtWidgets.QApplication):
         contact.setOpenExternalLinks(True)
         vLayout.addWidget(contact)
 
-        infoButton = QtWidgets.QToolButton()
-        infoButton.setText('SanPy Info')
-        infoButton.setCheckable(True)
-        infoButton.setArrowType(QtCore.Qt.RightArrow)
-        infoButton.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
-        vLayout.addWidget(infoButton)
-
-        infoWidget = QtWidgets.QWidget()
-        infoLayout = QtWidgets.QVBoxLayout(infoWidget)
-        infoLayout.setContentsMargins(20, 0, 0, 0)
-
-        _versionInfo = self._getVersionInfo()
-        for k,v in _versionInfo.items():
-            aText = k + ': ' + str(v)
-            aLabel = QtWidgets.QLabel(aText)
-
-            if 'https' in v:
-                aLabel.setText(f'{k}: <a href="{v}">{v}</a>')
-                aLabel.setTextFormat(QtCore.Qt.RichText)
-                aLabel.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
-                aLabel.setOpenExternalLinks(True)
-
-            if k.lower().endswith('email'):
-                # <a href = "mailto: abc@example.com">Send Email</a>
-                aLabel.setText(f'{k}: <a href="mailto:{v}">{v}</a>')
-                aLabel.setTextFormat(QtCore.Qt.RichText)
-                aLabel.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
-                aLabel.setOpenExternalLinks(True)
-            
-            infoLayout.addWidget(aLabel)
-
-        copyButton = QtWidgets.QPushButton('Copy SanPy Info')
-        copyButton.clicked.connect(
-            lambda: QtWidgets.QApplication.clipboard().setText(
-                build_info.get_build_info_json()
-            )
-        )
-        infoLayout.addWidget(copyButton)
-        infoWidget.setVisible(False)
-        vLayout.addWidget(infoWidget)
-
-        def toggleInfo(expanded):
-            infoButton.setArrowType(
-                QtCore.Qt.DownArrow if expanded else QtCore.Qt.RightArrow
-            )
-            infoWidget.setVisible(expanded)
-            dlg.adjustSize()
-
-        infoButton.toggled.connect(toggleInfo)
-
         closeButton = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
         closeButton.rejected.connect(dlg.reject)
         vLayout.addWidget(closeButton)
@@ -669,13 +630,6 @@ class SanPyApp(QtWidgets.QApplication):
         dlg.setLayout(vLayout)
 
         dlg.exec()
-  
-    def _getVersionInfo(self) -> dict:
-        return {
-            key: value
-            for key, value in build_info.get_build_info_rows()
-            if not key.startswith('contact ')
-        }
 
 def main():
     """Main entry point for the SanPy desktop app.
@@ -688,10 +642,6 @@ def main():
     logger.info("Starting sanpy_app.py in main()")
     # date_time_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     # logger.info(f'    {date_time_str}')
-
-    # _version = _getVersionInfo()
-    # for k,v in _version.items():
-    #     logger.info(f'{k} {v}')
 
     # app = QtWidgets.QApplication(sys.argv)
     app = SanPyApp(sys.argv)

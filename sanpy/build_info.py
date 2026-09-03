@@ -16,6 +16,8 @@ def _development_info() -> dict:
         "build": {
             "type": "Development run",
             "sanpy_version": __version__,
+            "build_id": "Development run",
+            "timestamp_local": "Not available",
             "python_version": platform.python_version(),
         },
         "platform": {
@@ -55,6 +57,26 @@ def get_build_info_rows(build_info: dict | None = None) -> list[tuple[str, str]]
     """Flatten all metadata into ordered rows for a thin user interface."""
     info = load_build_info() if build_info is None else build_info
     return list(_display_rows(info))
+
+
+def get_build_summary_rows(
+    build_info: dict | None = None,
+) -> list[tuple[str, str]]:
+    """Return the concise build identity displayed in the About dialog."""
+    info = load_build_info() if build_info is None else build_info
+    build = info.get("build", {})
+    if not isinstance(build, dict):
+        build = {}
+
+    def display_value(key: str) -> str:
+        value = build.get(key)
+        return "Not available" if value in (None, "") else str(value)
+
+    return [
+        ("SanPy version", display_value("sanpy_version")),
+        ("Build ID", display_value("build_id")),
+        ("Built", display_value("timestamp_local")),
+    ]
 
 
 def get_build_info_json(build_info: dict | None = None) -> str:
