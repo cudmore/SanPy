@@ -1,5 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
-# Windows one-directory build. Add hidden imports or binaries only when a
+# Windows one-file build. Add hidden imports or binaries only when a
 # Windows build demonstrates that PyInstaller's standard hooks need help.
 
 import os
@@ -32,8 +32,9 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
+    a.binaries,
+    a.datas,
     [],
-    exclude_binaries=True,
     name='SanPy',
     debug=False,
     bootloader_ignore_signals=False,
@@ -41,14 +42,4 @@ exe = EXE(
     upx=False,
     console=False,
     disable_windowed_traceback=False,
-)
-
-coll = COLLECT(
-    exe,
-    a.binaries,
-    a.datas,
-    strip=False,
-    upx=False,
-    upx_exclude=[],
-    name='SanPy',
 )

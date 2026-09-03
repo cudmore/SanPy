@@ -134,8 +134,7 @@ if ($LASTEXITCODE -ne 0) {
     throw "PyInstaller failed"
 }
 
-$AppDir = Join-Path $RunDir $AppName
-$Exe = Join-Path $AppDir "$AppName.exe"
+$Exe = Join-Path $RunDir "$AppName.exe"
 if (-not (Test-Path $Exe)) {
     throw "Expected executable was not created: $Exe"
 }
@@ -144,7 +143,7 @@ $BuildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
 $SanPyVersion = $BuildInfo.build.sanpy_version
 $ZipFile = Join-Path $RunDir "$AppName-windows-$Architecture-$SanPyVersion.zip"
 Write-Host "==> distribution zip: $ZipFile"
-Compress-Archive -Path $AppDir -DestinationPath $ZipFile -Force
+Compress-Archive -Path $Exe -DestinationPath $ZipFile -Force
 
 $LatestTemp = "$LatestFile.tmp"
 Set-Content -Path $LatestTemp -Value $RunName
