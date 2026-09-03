@@ -174,6 +174,10 @@ class SanPyApp(QtWidgets.QApplication):
         savePreferencesAction.triggered.connect(self.configDict.save)
         fileMenu.addAction(savePreferencesAction)
 
+        quitAction = QtWidgets.QAction("Quit", self)
+        quitAction.triggered.connect(self.closeAllWindows)
+        fileMenu.addAction(quitAction)
+
         # moved to SanPyWindow, see self.getWindowsMenu()
         # show open SanPyWindow(s)
         # self.windowsMenu = mainMenu.addMenu('&Window')
