@@ -46,6 +46,15 @@ class openFirstWidget(QtWidgets.QMainWindow):
 
     def getSanPyApp(self):
         return self._sanpyApp
+
+    def closeEvent(self, event):
+        """Hide the launcher while analysis windows remain open."""
+        app = self.getSanPyApp()
+        if app.hasAnalysisWindows() and not app.quitInProgress:
+            self.hide()
+            event.ignore()
+            return
+        event.accept()
     
     def _makeRecentTable(self, pathList : List[str], headerStr = ''):
         """Given a list of file/folder path, make a table.

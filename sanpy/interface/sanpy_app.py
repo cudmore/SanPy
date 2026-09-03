@@ -97,6 +97,8 @@ class SanPyApp(QtWidgets.QApplication):
         self._windowList = []
         # list of open SanPyWindow
 
+        self._quitInProgress = False
+
         firstTimeRunning = sanpy._util.addUserPath()
         if firstTimeRunning:
             logger.info("  We created <user>/Documents/Sanpy and need to restart")
@@ -144,6 +146,49 @@ class SanPyApp(QtWidgets.QApplication):
         # self._openFirstWidget.raise_()  # bring to front, raise is a python keyword
         # self._openFirstWidget.activateWindow()  # bring to front
 
+    def showOpenFirstWidget(self):
+        """Show and activate the reusable file/folder launcher."""
+        self._openFirstWidget.show()
+        self._openFirstWidget.raise_()
+        self._openFirstWidget.activateWindow()
+
+    def hasAnalysisWindows(self) -> bool:
+        """Return True when at least one analysis window is registered."""
+        return bool(self._windowList)
+
+    def isLastAnalysisWindow(self, window: SanPyWindow) -> bool:
+        """Return True when ``window`` is the only registered analysis window."""
+        return len(self._windowList) == 1 and self._windowList[0] is window
+
+    @property
+    def quitInProgress(self) -> bool:
+        return self._quitInProgress
+
+    def requestQuit(self) -> bool:
+        """Ask every analysis window to approve, then quit the application.
+
+        Saves are intentionally performed as each window is reviewed. If a later
+        window cancels, earlier successful saves remain saved, but no windows
+        have been closed.
+        """
+        if self._quitInProgress:
+            return False
+
+        windows = list(self._windowList)
+        for window in windows:
+            if not window.prepareToClose():
+                return False
+
+        self._quitInProgress = True
+        for window in windows:
+            window.close()
+
+        if self._openFirstWidget is not None:
+            self._openFirstWidget.close()
+
+        self.quit()
+        return True
+
     def _buildMenus(self, mainMenu):
         
         # fileMenu = mainMenu.addMenu("&File")
@@ -175,7 +220,9 @@ class SanPyApp(QtWidgets.QApplication):
         fileMenu.addAction(savePreferencesAction)
 
         quitAction = QtWidgets.QAction("Quit", self)
-        quitAction.triggered.connect(self.closeAllWindows)
+        quitAction.setMenuRole(QtWidgets.QAction.QuitRole)
+        quitAction.setShortcut(QtGui.QKeySequence.Quit)
+        quitAction.triggered.connect(self.requestQuit)
         fileMenu.addAction(quitAction)
 
         # moved to SanPyWindow, see self.getWindowsMenu()
@@ -520,11 +567,10 @@ class SanPyApp(QtWidgets.QApplication):
     def closeSanPyWindow(self, theWindow : SanPyWindow):
         """Remove theWindow from self._windowList.
         """
-        logger.info('todo: implement this')
-        logger.info('  remove sanpy window from app list of windows')
-        for idx, aWindow in enumerate(self._windowList):
-            if aWindow == theWindow:
-                _removedValue = self._windowList.pop(idx)
+        try:
+            self._windowList.remove(theWindow)
+        except ValueError:
+            logger.warning("Analysis window was not registered: %r", theWindow)
 
     def _onHelpMenuAction(self, name: str):
         if name == "SanPy Help (Opens In Browser)":

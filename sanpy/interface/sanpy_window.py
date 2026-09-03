@@ -5,6 +5,7 @@ from typing import List
 import webbrowser  # to open online help
 
 import pandas as pd
+import tables
 
 from qtpy import QtCore, QtWidgets, QtGui
 
@@ -301,22 +302,46 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         If this returns True then proceed with caller action
         """
-        acceptAndContinue = True
-        if self.myAnalysisDir is not None:
-            tableIsDirty = self.myAnalysisDir.isDirty
-            analysisIsDirty = self.myAnalysisDir.hasDirty()
-            if tableIsDirty or analysisIsDirty:
-                userResp = sanpy.interface.bDialog.yesNoCancelDialog(
-                    "There is analysis that is not saved.\nDo you want to save?"
-                )
-                if userResp == QtWidgets.QMessageBox.Yes:
-                    self.saveFilesTable()
-                    acceptAndContinue = True
-                elif userResp == QtWidgets.QMessageBox.No:
-                    acceptAndContinue = True
-                else:  # userResp == QtWidgets.QMessageBox.Cancel:
-                    acceptAndContinue = False
-        return acceptAndContinue
+        return self.prepareToClose()
+
+    def _hasUnsavedAnalysis(self) -> bool:
+        if self.myAnalysisDir is None:
+            return False
+        return self.myAnalysisDir.isDirty or self.myAnalysisDir.hasDirty()
+
+    def prepareToClose(self) -> bool:
+        """Return whether this analysis window may close.
+
+        Only expected filesystem and HDF5 storage failures are converted into a
+        user-facing save failure. Unexpected exceptions deliberately propagate.
+        """
+        if not self._hasUnsavedAnalysis():
+            return True
+
+        userResp = sanpy.interface.bDialog.yesNoCancelDialog(
+            f'There is unsaved analysis for:\n{self.path}\n\nDo you want to save?'
+        )
+        if userResp == QtWidgets.QMessageBox.No:
+            return True
+        if userResp != QtWidgets.QMessageBox.Yes:
+            return False
+
+        try:
+            self.saveFilesTable()
+        except (OSError, tables.exceptions.HDF5ExtError) as error:
+            logger.exception("Could not save analysis for %s", self.path)
+            QtWidgets.QMessageBox.critical(
+                self,
+                "Unable to Save Analysis",
+                f'SanPy could not save the analysis for:\n{self.path}\n\n{error}',
+            )
+            return False
+        return True
+
+    def _closePluginWindows(self):
+        """Close every plugin logically owned by this analysis window."""
+        for plugin in list(self._openPluginSet):
+            plugin.getWidget().close()
 
     def closeEvent(self, event):
         """Called when user closes main window or selects quit.
@@ -327,47 +352,24 @@ class SanPyWindow(QtWidgets.QMainWindow):
         """
 
         logger.info(event)
+        # QCloseEvent starts accepted. Keep the window open unless every close
+        # step below completes and explicitly accepts it.
+        event.ignore()
 
-        # check if our table view has been edited by user and warn
-        doQuit = True
-        alreadyAsked = False
-        # self.myAnalysisDir is only defined after we load a folder
-        doCloseWindow = True
-        if self.myAnalysisDir is not None:
-            tableIsDirty = self.myAnalysisDir.isDirty
-            analysisIsDirty = self.myAnalysisDir.hasDirty()
-            if tableIsDirty or analysisIsDirty:
-                alreadyAsked = True
-                userResp = sanpy.interface.bDialog.yesNoCancelDialog(
-                    "There is analysis that is not saved.\nDo you want to save?"
-                )
-                if userResp == QtWidgets.QMessageBox.Yes:
-                    self.saveFilesTable()
-                    event.accept()
-                elif userResp == QtWidgets.QMessageBox.No:
-                    event.accept()
-                else:
-                    # cancel
-                    doCloseWindow = False
-                    event.ignore()
-                    # doQuit = False
+        app = self.getSanPyApp()
+        if not app.quitInProgress and not self.prepareToClose():
+            event.ignore()
+            return
 
-        if doCloseWindow:
-            self.getSanPyApp().closeSanPyWindow(self)
+        self._closePluginWindows()
 
-        # removing to switch to both load folder window and load file window
-        # if doQuit:
-        #     if not alreadyAsked:
-        #         userResp = sanpy.interface.bDialog.okCancelDialog(
-        #             "Are you sure you want to quit SanPy?", informativeText=None
-        #         )
-        #         if userResp == QtWidgets.QMessageBox.Cancel:
-        #             event.ignore()
-        #             doQuit = False
+        # Keep a usable window visible during an ordinary close of the final
+        # analysis. Explicit application Quit suppresses launcher restoration.
+        if not app.quitInProgress and app.isLastAnalysisWindow(self):
+            app.showOpenFirstWidget()
 
-        #     if doQuit:
-        #         logger.info("SanPy is quiting")
-        #         QtCore.QCoreApplication.quit()
+        app.closeSanPyWindow(self)
+        event.accept()
 
         #event.ignore()
 
@@ -1440,10 +1442,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.signalSelectSweep.emit(sweepNumber)
 
     def saveFilesTable(self):
-        """Save the folder hdf5 file."""
+        """Save the folder HDF5 file, raising if the save does not complete."""
         # logger.info('')
         self.myAnalysisDir.saveHdf()
         self.slot_updateStatus(f"Save analysis for folder: {self.myAnalysisDir.path}")
+        return True
 
     def slot_updateStatus(self, text: str):
         """Update the bottom status bar with new str"""
@@ -1669,5 +1672,3 @@ def testFFT(sanpyWindow):
     ba = sanpyWindow.get_bAnalysis()
     pluginName = "FFT"
     fftPlugin = sanpyWindow.myPlugins.runPlugin(pluginName, ba)
-
-

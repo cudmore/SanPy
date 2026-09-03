@@ -99,6 +99,7 @@ def _repackHdf(hdfPath):
     except FileNotFoundError as e:
         logger.error("tables.scripts.ptrepack.main() failed ... file was not saved")
         logger.error(e)
+        raise
         # self.signalApp(f'ERROR in tables.scripts.ptrepack.main(): {e}')
 
 
