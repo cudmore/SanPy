@@ -82,10 +82,10 @@ print('sanpy', sanpy.__version__)
 mkdir -p "${DIST_ROOT}" "${BUILD_ROOT}"
 RUN_DATE="$(date +%Y%m%d)"
 RUN_NUMBER=1
-while [[ -e "${DIST_ROOT}/${RUN_DATE}_v${RUN_NUMBER}" ]]; do
+while [[ -e "${DIST_ROOT}/macos-${RUN_DATE}-v${RUN_NUMBER}" ]]; do
   RUN_NUMBER=$((RUN_NUMBER + 1))
 done
-RUN_NAME="${RUN_DATE}_v${RUN_NUMBER}"
+RUN_NAME="macos-${RUN_DATE}-v${RUN_NUMBER}"
 RUN_DIR="${DIST_ROOT}/${RUN_NAME}"
 WORK_DIR="${BUILD_ROOT}/${RUN_NAME}"
 mkdir -p "${RUN_DIR}" "${WORK_DIR}"

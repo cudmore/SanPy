@@ -117,7 +117,7 @@ print('sanpy', sanpy.__version__)
     $RunDate = [DateTime]::Now.ToString("yyyyMMdd")
     $RunNumber = 1
     do {
-        $RunName = "${RunDate}_v${RunNumber}"
+        $RunName = "windows-${RunDate}-v${RunNumber}"
         $RunDir = Join-Path $DistRoot $RunName
         $RunNumber += 1
     } while (Test-Path $RunDir)
