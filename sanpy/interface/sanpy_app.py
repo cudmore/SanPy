@@ -597,17 +597,6 @@ class SanPyApp(QtWidgets.QApplication):
         description.setWordWrap(True)
         vLayout.addWidget(description)
 
-        for label, value in build_info.get_build_summary_rows():
-            vLayout.addWidget(QtWidgets.QLabel(f'{label}: {value}'))
-
-        copyButton = QtWidgets.QPushButton('Copy SanPy Info')
-        copyButton.clicked.connect(
-            lambda: QtWidgets.QApplication.clipboard().setText(
-                build_info.get_build_info_json()
-            )
-        )
-        vLayout.addWidget(copyButton)
-
         contact = QtWidgets.QLabel(
             'Contact: Robert Cudmore '
             '(<a href="mailto:robert.cudmore@gmail.com">'
@@ -622,6 +611,22 @@ class SanPyApp(QtWidgets.QApplication):
         contact.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
         contact.setOpenExternalLinks(True)
         vLayout.addWidget(contact)
+
+        divider = QtWidgets.QFrame()
+        divider.setFrameShape(QtWidgets.QFrame.HLine)
+        divider.setFrameShadow(QtWidgets.QFrame.Sunken)
+        vLayout.addWidget(divider)
+
+        for label, value in build_info.get_build_summary_rows():
+            vLayout.addWidget(QtWidgets.QLabel(f'{label}: {value}'))
+
+        copyButton = QtWidgets.QPushButton('Copy SanPy Info')
+        copyButton.clicked.connect(
+            lambda: QtWidgets.QApplication.clipboard().setText(
+                build_info.get_build_info_json()
+            )
+        )
+        vLayout.addWidget(copyButton)
 
         closeButton = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
         closeButton.rejected.connect(dlg.reject)
