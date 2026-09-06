@@ -30,8 +30,8 @@ dependencies = [
     "h5py==3.8.0",
     "matplotlib==3.7.1",
     "mplcursors==0.5.2",
-    "numpy==1.23.5",
-    "pandas==1.5.3",
+    "numpy==1.26.4",
+    "pandas==2.3.3",
     "platformdirs==4.11.6",
     "pyabf==2.3.8",
     "PyQt5==5.15.11",
@@ -44,6 +44,19 @@ dependencies = [
     "seaborn==0.12.2",
     "tables==3.10.2",
     "tifffile==2026.3.3",
+]
+
+[project.optional-dependencies]
+zarr-export = [
+    "jsonschema>=4.26,<5",
+    "numcodecs>=0.16,<0.17",
+    "zarr>=3.1,<4",
+]
+zarr-export-parquet = [
+    "jsonschema>=4.26,<5",
+    "numcodecs>=0.16,<0.17",
+    "pyarrow>=16,<17",
+    "zarr>=3.1,<4",
 ]
 
 [project.urls]
@@ -83,6 +96,7 @@ include = ["sanpy", "sanpy.*"]
 sanpy = [
     "_userFiles/**/*",
     "detection-presets/*.json",
+    "io/zarr_export/schemas/*.json",
     "models/*.mmt",
 ]
 "sanpy.interface" = [

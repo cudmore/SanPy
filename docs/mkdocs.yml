@@ -82,6 +82,7 @@ nav:
     - Install From Command Line: install.md
     - API:
         - Overview: api/overview.md
+        - Zarr Export: api/zarr-export.md
         - Getting Started: scripting.ipynb
         - Writing A File Loader: api/writing-a-file-loader.md
         - Writing A Plugin: api/writing-a-plugin.md
