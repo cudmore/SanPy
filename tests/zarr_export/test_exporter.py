@@ -16,7 +16,8 @@ from sanpy.bAnalysisResults import analysisResultDict
 from sanpy.bDetection import getDefaultDetection
 from sanpy.io.zarr_export.exporter import export_collection
 from sanpy.io.zarr_export.json_codec import json_value
-from sanpy.io.zarr_export.validator import validate_collection
+from sanpy.io.zarr_export.validator import SanPyZarrValidationError, validate_collection
+from sanpy.trace_overlays import get_trace_overlay_definitions
 
 
 def _analysis(path: Path) -> Any:
@@ -178,6 +179,16 @@ def test_collection_contains_multiple_independent_recordings(
     manifest = json.loads((destination / "collection.json").read_text())
     assert len(manifest["members"]) == 2
     assert len({member["id"] for member in manifest["members"]}) == 2
+    summary = manifest["members"][0]["summary"]
+    assert summary == {
+        "sweeps": 18,
+        "channels": 2,
+        "points": 1600,
+        "sampling_rate_hz": 10000.0,
+        "analysis_results": 0,
+        "protocol": "I-Clamp MedDRG",
+        "acquisition_datetime": "2021-07-20T17:26:31.796000",
+    }
     assert not list(destination.rglob("*.abf"))
     validate_collection(destination)
 
@@ -235,6 +246,7 @@ def test_actual_detection_parameters_and_results_are_separate_from_definitions(
     actual_parameters = json.loads((root / "metadata" / "detection_parameters.json").read_text())
     parameter_definitions = json.loads((root / "metadata" / "detection_parameter_definitions.json").read_text())
     result_definitions = json.loads((root / "metadata" / "analysis_result_definitions.json").read_text())
+    overlay_definitions = json.loads((root / "metadata" / "trace_overlays.json").read_text())
     results = pd.read_csv(root / "tables" / "analysis_results.csv")
     assert actual_parameters["detectionName"] == detection["detectionName"]
     assert isinstance(actual_parameters["detectionName"], str)
@@ -245,5 +257,28 @@ def test_actual_detection_parameters_and_results_are_separate_from_definitions(
     assert "depends on detection" in result_definitions["thresholdPnt"]
     assert parameter_definitions == json_value(getDefaultDetection())
     assert result_definitions == json_value(analysisResultDict)
+    assert overlay_definitions == {
+        "overlays": json_value(get_trace_overlay_definitions())
+    }
     assert len(results) == analysis.numSpikes
     assert "errors" in results.columns
+
+
+def test_overlay_definitions_must_reference_known_results(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Reject overlay mappings that reference an unknown result column.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Source ABF fixture.
+    """
+    destination = tmp_path / "invalid-overlay.sanpy.zarr"
+    export_collection([_analysis(small_abf)], destination, table_format="csv")
+    overlay_path = _recording_root(destination) / "metadata" / "trace_overlays.json"
+    overlays = json.loads(overlay_path.read_text())
+    overlays["overlays"][0]["x_result"] = "unknownResult"
+    overlay_path.write_text(json.dumps(overlays))
+
+    with pytest.raises(SanPyZarrValidationError, match="unknown result"):
+        validate_collection(destination)

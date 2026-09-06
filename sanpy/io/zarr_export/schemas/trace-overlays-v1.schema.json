@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["overlays"],
+  "properties": {
+    "overlays": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label", "x_result", "y_result", "point_id_result", "sweep_result"],
+        "properties": {
+          "id": {"type": "string", "minLength": 1},
+          "label": {"type": "string", "minLength": 1},
+          "x_result": {"type": "string", "minLength": 1},
+          "y_result": {"type": "string", "minLength": 1},
+          "point_id_result": {"type": "string", "minLength": 1},
+          "sweep_result": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

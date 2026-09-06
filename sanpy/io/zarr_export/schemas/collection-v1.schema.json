@@ -23,12 +23,15 @@
           "summary": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["sweeps", "channels", "points", "analysis_results"],
+            "required": ["sweeps", "channels", "points", "sampling_rate_hz", "analysis_results", "protocol", "acquisition_datetime"],
             "properties": {
               "sweeps": {"type": "integer", "minimum": 1},
               "channels": {"type": "integer", "minimum": 1},
               "points": {"type": "integer", "minimum": 1},
-              "analysis_results": {"type": "integer", "minimum": 0}
+              "sampling_rate_hz": {"type": "number", "exclusiveMinimum": 0},
+              "analysis_results": {"type": "integer", "minimum": 0},
+              "protocol": {"type": "string"},
+              "acquisition_datetime": {"type": "string"}
             }
           }
         }

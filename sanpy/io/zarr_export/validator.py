@@ -86,12 +86,54 @@ def _validate_recording(
         raise SanPyZarrValidationError("Command channel metadata count mismatch")
     if recording["analysis_channel"] >= dimensions["channels"]:
         raise SanPyZarrValidationError("Analysis channel is out of bounds")
-    for key in ("sanpy_metadata", "detection_parameters", "detection_parameter_definitions", "analysis_result_definitions"):
+    for key in ("sanpy_metadata", "detection_parameters", "detection_parameter_definitions"):
         _json(_resource(recording_root, recording["resources"][key]))
+    result_definitions = _json(
+        _resource(recording_root, recording["resources"]["analysis_result_definitions"])
+    )
+    overlays = _json(_resource(recording_root, recording["resources"]["trace_overlays"]))
+    _validate_trace_overlays(overlays, result_definitions)
     for key in ("epochs", "analysis_results"):
         _validate_table(recording_root, recording["resources"][key])
     if member["summary"]["analysis_results"] != recording["resources"]["analysis_results"]["rows"]:
         raise SanPyZarrValidationError("Analysis result row count mismatch")
+    expected_summary = {
+        "sweeps": dimensions["sweeps"],
+        "channels": dimensions["channels"],
+        "points": dimensions["points"],
+        "sampling_rate_hz": recording["sampling_rate_hz"],
+        "analysis_results": recording["resources"]["analysis_results"]["rows"],
+        "protocol": recording["protocol"],
+        "acquisition_datetime": recording["acquisition_datetime"],
+    }
+    if member["summary"] != expected_summary:
+        raise SanPyZarrValidationError("Collection recording summary mismatch")
+
+
+def _validate_trace_overlays(
+    document: dict[str, Any],
+    result_definitions: dict[str, Any],
+) -> None:
+    """Validate runtime overlay mappings against analysis-result definitions.
+
+    Args:
+        document: Parsed trace-overlay document.
+        result_definitions: Parsed runtime analysis-result definitions.
+
+    Raises:
+        SanPyZarrValidationError: If definitions are duplicated or reference
+            unknown analysis-result columns.
+    """
+    _schema(document, "trace-overlays-v1.schema.json")
+    ids = [item["id"] for item in document["overlays"]]
+    if len(ids) != len(set(ids)):
+        raise SanPyZarrValidationError("Trace overlay identifiers must be unique")
+    for overlay in document["overlays"]:
+        for field in ("x_result", "y_result", "point_id_result", "sweep_result"):
+            if overlay[field] not in result_definitions:
+                raise SanPyZarrValidationError(
+                    f"Trace overlay references unknown result: {overlay[field]}"
+                )
 
 
 def _validate_table(root: Path, resource: dict[str, Any]) -> None:

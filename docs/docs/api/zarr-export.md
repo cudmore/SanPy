@@ -34,6 +34,7 @@ experiment.sanpy.zarr/
         detection_parameters.json
         detection_parameter_definitions.json
         analysis_result_definitions.json
+        trace_overlays.json
       tables/
         epochs.csv
         epochs.parquet
@@ -63,6 +64,8 @@ All arrays use Zarr format 3. Recorded and command values retain `float64` preci
 `detection_parameters.json` stores the actual values applied to the recording. `detection_parameter_definitions.json` separately explains the available parameters.
 
 `analysis_results` stores the actual one-row-per-spike results. `analysis_result_definitions.json` separately explains result columns. SanPy's runtime definitions are the source of truth for both definition documents, including their presentation-only `category` values. The exporter preserves native SanPy schema keys and does not infer categories or rename fields. Nested result values are canonical JSON text in tabular files.
+
+Each collection member also carries a complete display summary in `collection.json`: recording name, sweeps, channels, points, sampling rate, result count, protocol, and acquisition datetime. A client can render a collection table without opening recording resources. `trace_overlays.json` stores runtime-owned mappings from result columns to meaningful trace points. It intentionally contains no colors, marker sizes, or layout instructions.
 
 ## Installation safety
 

@@ -72,7 +72,7 @@
     "resources": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["data", "epochs", "analysis_results", "sanpy_metadata", "detection_parameters", "detection_parameter_definitions", "analysis_result_definitions"],
+      "required": ["data", "epochs", "analysis_results", "sanpy_metadata", "detection_parameters", "detection_parameter_definitions", "analysis_result_definitions", "trace_overlays"],
       "properties": {
         "data": {"const": "data.zarr"},
         "epochs": {"$ref": "#/$defs/table"},
@@ -80,7 +80,8 @@
         "sanpy_metadata": {"const": "metadata/sanpy_metadata.json"},
         "detection_parameters": {"const": "metadata/detection_parameters.json"},
         "detection_parameter_definitions": {"const": "metadata/detection_parameter_definitions.json"},
-        "analysis_result_definitions": {"const": "metadata/analysis_result_definitions.json"}
+        "analysis_result_definitions": {"const": "metadata/analysis_result_definitions.json"},
+        "trace_overlays": {"const": "metadata/trace_overlays.json"}
       }
     }
   }

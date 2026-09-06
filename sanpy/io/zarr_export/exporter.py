@@ -134,7 +134,10 @@ def _write_collection(
                     "sweeps": int(acquisition.raw.shape[0]),
                     "channels": int(acquisition.raw.shape[1]),
                     "points": int(acquisition.raw.shape[2]),
+                    "sampling_rate_hz": acquisition.sample_rate_hz,
                     "analysis_results": len(recording.sanpy.analysis_results),
+                    "protocol": acquisition.protocol,
+                    "acquisition_datetime": acquisition.acquisition_datetime,
                 },
             }
         )
@@ -191,6 +194,10 @@ def _write_recording(
     _write_json(metadata_root / "detection_parameter_definitions.json", sanpy_state.detection_definitions)
     _write_json(metadata_root / "analysis_result_definitions.json", sanpy_state.result_definitions)
     _write_json(
+        metadata_root / "trace_overlays.json",
+        {"overlays": sanpy_state.trace_overlay_definitions},
+    )
+    _write_json(
         root / "recording.json",
         {
             "format": "sanpy-zarr-recording",
@@ -227,6 +234,7 @@ def _write_recording(
                 "detection_parameters": "metadata/detection_parameters.json",
                 "detection_parameter_definitions": "metadata/detection_parameter_definitions.json",
                 "analysis_result_definitions": "metadata/analysis_result_definitions.json",
+                "trace_overlays": "metadata/trace_overlays.json",
             },
         },
     )

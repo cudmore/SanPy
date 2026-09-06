@@ -18,3 +18,7 @@ All Python code must use complete type annotations and Google-style docstrings.
 For SanPy Zarr work, keep imports explicit and package `__init__.py` files empty
 or minimal. Preserve existing ABF loading, HDF5 persistence, analysis, and GUI
 behavior unless a change is explicitly approved.
+
+Work as a senior developer: verify facts from code, tests, or authoritative APIs
+rather than guessing. When user input is genuinely required, ask a focused
+question and include a clear senior-level recommendation.

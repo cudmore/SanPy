@@ -5,6 +5,7 @@ from __future__ import annotations
 import enum
 import json
 import math
+from dataclasses import asdict, is_dataclass
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -35,6 +36,8 @@ def json_value(value: Any) -> Any:
         return json_value(value.item())
     if isinstance(value, enum.Enum):
         return json_value(value.value)
+    if is_dataclass(value) and not isinstance(value, type):
+        return json_value(asdict(value))
     if isinstance(value, (datetime, date, pd.Timestamp)):
         return value.isoformat()
     if isinstance(value, Path):

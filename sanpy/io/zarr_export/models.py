@@ -9,6 +9,8 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
+from sanpy.trace_overlays import TraceOverlayDefinition
+
 
 @dataclass(frozen=True)
 class AcquisitionSnapshot:
@@ -57,6 +59,8 @@ class SanPySnapshot:
         detection_parameters: Applied detection parameter values.
         detection_definitions: Runtime detection parameter schema.
         result_definitions: Runtime analysis-result schema.
+        trace_overlay_definitions: Runtime mappings from results to trace
+            overlays.
         analysis_results: Actual one-row-per-spike results.
         filtered: Filtered analysis-channel values by sweep and point.
         dvdt: Analysis-channel derivative values by sweep and point.
@@ -69,6 +73,7 @@ class SanPySnapshot:
     detection_parameters: dict[str, Any]
     detection_definitions: dict[str, dict[str, Any]]
     result_definitions: dict[str, dict[str, Any]]
+    trace_overlay_definitions: tuple[TraceOverlayDefinition, ...]
     analysis_results: pd.DataFrame
     filtered: np.ndarray | None
     dvdt: np.ndarray | None

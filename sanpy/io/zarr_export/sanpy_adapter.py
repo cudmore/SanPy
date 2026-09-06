@@ -12,6 +12,7 @@ import pandas as pd
 import sanpy
 from sanpy.bAnalysisResults import analysisResultDict
 from sanpy.bDetection import getDefaultDetection
+from sanpy.trace_overlays import get_trace_overlay_definitions
 
 from .models import SanPySnapshot
 
@@ -36,6 +37,7 @@ def snapshot_banalysis(analysis: Any) -> SanPySnapshot:
         detection_parameters=copy.deepcopy(analysis.getDetectionDict() or {}),
         detection_definitions=copy.deepcopy(getDefaultDetection()),
         result_definitions=copy.deepcopy(analysisResultDict),
+        trace_overlay_definitions=get_trace_overlay_definitions(),
         analysis_results=results,
         filtered=_copy_array(loader._filteredY),
         dvdt=_copy_array(loader._filteredDeriv),
