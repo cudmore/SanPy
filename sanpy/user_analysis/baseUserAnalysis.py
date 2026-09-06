@@ -1,3 +1,7 @@
+"""Discover, register, and run SanPy user-analysis plugins."""
+
+from __future__ import annotations
+
 import glob
 import importlib
 
@@ -5,10 +9,11 @@ import importlib
 import os
 import traceback  # to print call stack on exception
 import inspect
-from typing import List, Union
+from typing import Any, List, Union
 
 import sanpy
 from sanpy import DO_KYMOGRAPH_ANALYSIS
+from sanpy.schema import AnalysisResultCategory
 
 from sanpy.sanpyLogger import get_logger
 
@@ -227,43 +232,57 @@ class baseUserAnalysis:
         """
         pass
 
-    def addUserStat(self, humanName: str, internalName: str):
-        """Add a user stat. Derived classes do this in defineUserStats().
+    def addUserStat(
+        self,
+        humanName: str,
+        internalName: str,
+        *,
+        category: AnalysisResultCategory = AnalysisResultCategory.CUSTOM,
+        valueType: str = "unknown",
+        default: Any = None,
+        units: str = "",
+        description: str = "",
+    ) -> bool:
+        """Register a user statistic for analysis and presentation.
 
-        Parameters
-        ----------
-        humanName : str
-            Human readable name for the stat, like 'Threshold Potential (mV)'
-        internalName : str
-            Name to use for the variable name of the stat.
-            Should not contain special characters like space or '-'
-            Can contain '_'
+        Args:
+            humanName: Human-readable statistic name.
+            internalName: Internal dataframe-column name without spaces or
+                punctuation.
+            category: Presentation category stored in the runtime result
+                schema.
+            valueType: Runtime value type name, such as ``"float"``.
+            default: Default value for the result.
+            units: Physical or logical units.
+            description: Human-readable explanation. The human name is used
+                when this value is empty.
 
-        Notes
-        -----
-        userStatDict = {
-            'User Time To Peak (ms)' : {
-                'name': 'user_timeToPeak_ms',
-                'units': 'ms',
-                'yStat': 'user_timeToPeak_ms',
-                'yStatUnits': 'ms',
-                'xStat': 'thresholdPnt',
-                'xStatUnits': 'Points'
-                }
-        }
+        Returns:
+            ``True`` when the definition was registered or was already
+            registered identically; ``False`` when a conflicting definition
+            was rejected.
         """
+        from sanpy.bAnalysisResults import register_analysis_result
+
         if humanName in self._userStatDict.keys():
-            # logger.error(f'User stat with human name "{humanName}" already exists')
-            return
+            return True
         statDict = {
             "name": internalName,
-            "units": None,
+            "units": units,
             "yStat": None,
-            "yStatUnits": None,
+            "yStatUnits": units,
             "xStat": None,
             "xStatUnits": None,
         }
         self._userStatDict[humanName] = statDict
+        return register_analysis_result(
+            internalName,
+            category=category,
+            value_type=valueType,
+            default=default,
+            units=units,
+            description=description or humanName,
+        )
 
     @property
     def ba(self):

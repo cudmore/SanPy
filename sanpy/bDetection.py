@@ -35,12 +35,14 @@ from pprint import pprint
 import glob
 import copy
 from collections import OrderedDict
+from typing import Any
 
 from matplotlib.font_manager import json_load
 
 # from colin.stochAnalysis import load
 
 import sanpy
+from sanpy.schema import DetectionParameterCategory
 
 from sanpy.sanpyLogger import get_logger
 
@@ -66,17 +68,12 @@ class detectionTypes_(Enum):
 # allow user to save to detection presets
 
 
-def getDefaultDetection() -> dict:
-    """Get detection parameters
-
-    This includes a mapping from backend variable names to
-    front-end human readable and long-format descriptions.
-
-    Args:
-        detectionPreset (enum): bDetection.detectionPresets.default
+def getDefaultDetection() -> dict[str, dict[str, Any]]:
+    """Build the authoritative detection-parameter definition dictionary.
 
     Returns:
-        dict: The default detection dictionary.
+        A new ordered dictionary mapping internal parameter names to their
+        runtime definitions, including presentation categories.
     """
 
     theDict = OrderedDict()  # {}
@@ -95,6 +92,7 @@ def getDefaultDetection() -> dict:
 
     key = "detectionName"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.GENERAL
     theDict[key]["defaultValue"] = "default"  # detectionPreset.value # ('dvdt', 'mv')
     theDict[key]["type"] = "string"
     theDict[key][
@@ -107,6 +105,7 @@ def getDefaultDetection() -> dict:
 
     key = "userSaveName"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.GENERAL
     theDict[key]["defaultValue"] = ""  # detectionPreset.value # ('dvdt', 'mv')
     theDict[key]["type"] = "string"
     theDict[key][
@@ -119,6 +118,7 @@ def getDefaultDetection() -> dict:
 
     key = "detectionType"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.DETECTION
     theDict[key]["defaultValue"] = sanpy.bDetection.detectionTypes[
         "dvdt"
     ].value  # ('dvdt', 'mv')
@@ -135,6 +135,7 @@ def getDefaultDetection() -> dict:
 
     key = "dvdtThreshold"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.DETECTION
     theDict[key]["defaultValue"] = 20
     theDict[key]["type"] = "float"
     theDict[key][
@@ -149,6 +150,7 @@ def getDefaultDetection() -> dict:
 
     key = "mvThreshold"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.DETECTION
     theDict[key]["defaultValue"] = -20
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -161,6 +163,7 @@ def getDefaultDetection() -> dict:
 
     key = "startSeconds"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["defaultValue"] = None
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = True
@@ -171,6 +174,7 @@ def getDefaultDetection() -> dict:
 
     key = "stopSeconds"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["defaultValue"] = None
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = True
@@ -181,6 +185,7 @@ def getDefaultDetection() -> dict:
 
     key = "cellType"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.GENERAL
     theDict[key]["defaultValue"] = ""
     theDict[key]["type"] = "string"
     theDict[key]["allowNone"] = False
@@ -191,6 +196,7 @@ def getDefaultDetection() -> dict:
 
     key = "sex"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.GENERAL
     theDict[key]["defaultValue"] = ""
     theDict[key]["type"] = "string"
     theDict[key]["allowNone"] = False
@@ -201,6 +207,7 @@ def getDefaultDetection() -> dict:
 
     key = "condition"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.GENERAL
     theDict[key]["defaultValue"] = ""
     theDict[key]["type"] = "string"
     theDict[key]["allowNone"] = False
@@ -211,6 +218,7 @@ def getDefaultDetection() -> dict:
 
     key = "userType"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.GENERAL
     theDict[key]["defaultValue"] = "0"
     theDict[key]["type"] = "int"
     theDict[key]["allowNone"] = False
@@ -221,6 +229,7 @@ def getDefaultDetection() -> dict:
 
     key = "dvdt_percentOfMax"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.DETECTION
     theDict[key]["defaultValue"] = 0.1
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -233,6 +242,7 @@ def getDefaultDetection() -> dict:
 
     key = "onlyPeaksAbove_mV"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WAVEFORM
     theDict[key]["defaultValue"] = None
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = True
@@ -243,6 +253,7 @@ def getDefaultDetection() -> dict:
 
     key = "onlyPeaksBelow_mV"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WAVEFORM
     theDict[key]["defaultValue"] = None
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = True
@@ -254,6 +265,7 @@ def getDefaultDetection() -> dict:
     # TODO: get rid of this and replace with foot
     key = "doBackupSpikeVm"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.ADVANCED
     theDict[key]["defaultValue"] = False
     theDict[key]["type"] = "boolean"
     theDict[key]["allowNone"] = False
@@ -266,6 +278,7 @@ def getDefaultDetection() -> dict:
 
     key = "refractory_ms"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["defaultValue"] = 170
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -278,6 +291,7 @@ def getDefaultDetection() -> dict:
 
     key = "peakWindow_ms"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["defaultValue"] = 100
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -288,6 +302,7 @@ def getDefaultDetection() -> dict:
 
     key = "dvdtPreWindow_ms"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["defaultValue"] = 10
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -300,6 +315,7 @@ def getDefaultDetection() -> dict:
 
     key = "dvdtPostWindow_ms"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["defaultValue"] = 20
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -312,6 +328,7 @@ def getDefaultDetection() -> dict:
 
     key = "mdp_ms"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.DETECTION
     theDict[key]["defaultValue"] = 250
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -322,6 +339,7 @@ def getDefaultDetection() -> dict:
 
     key = "avgWindow_ms"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["defaultValue"] = 5
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -334,6 +352,7 @@ def getDefaultDetection() -> dict:
 
     key = "lowEddRate_warning"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.ADVANCED
     theDict[key]["defaultValue"] = 8
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -346,6 +365,7 @@ def getDefaultDetection() -> dict:
 
     key = "halfHeights"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WAVEFORM
     theDict[key]["defaultValue"] = [10, 20, 50, 80, 90]
     theDict[key]["type"] = "list"  # list of number
     theDict[key]["allowNone"] = False
@@ -358,6 +378,7 @@ def getDefaultDetection() -> dict:
 
     key = "halfWidthWindow_ms"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["defaultValue"] = 200
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -368,6 +389,7 @@ def getDefaultDetection() -> dict:
 
     key = "preSpikeClipWidth_ms"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["defaultValue"] = 200
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -378,6 +400,7 @@ def getDefaultDetection() -> dict:
 
     key = "postSpikeClipWidth_ms"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["defaultValue"] = 500
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -389,6 +412,7 @@ def getDefaultDetection() -> dict:
     # new 20231201, for mich lab
     key = "fastAhpWindow_ms"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.WINDOWS
     theDict[key]["defaultValue"] = 8
     theDict[key]["type"] = "float"
     theDict[key]["allowNone"] = False
@@ -399,6 +423,7 @@ def getDefaultDetection() -> dict:
 
     key = "medianFilter"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.FILTERING
     theDict[key]["defaultValue"] = 0
     theDict[key]["type"] = "int"
     theDict[key]["allowNone"] = True  # 0 is no median filter (see SavitzkyGolay_pnts)
@@ -411,6 +436,7 @@ def getDefaultDetection() -> dict:
 
     key = "SavitzkyGolay_pnts"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.FILTERING
     theDict[key]["defaultValue"] = 5  # 20211001 was 5
     theDict[key]["type"] = "int"
     theDict[key]["allowNone"] = True  # 0 is no filter
@@ -423,6 +449,7 @@ def getDefaultDetection() -> dict:
 
     key = "SavitzkyGolay_poly"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.FILTERING
     theDict[key]["defaultValue"] = 2
     theDict[key]["type"] = "int"
     theDict[key]["allowNone"] = False
@@ -445,6 +472,7 @@ def getDefaultDetection() -> dict:
 
     key = "verbose"
     theDict[key] = {}
+    theDict[key]["category"] = DetectionParameterCategory.ADVANCED
     theDict[key]["defaultValue"] = False
     theDict[key]["type"] = "boolean"
     theDict[key]["allowNone"] = False
@@ -538,13 +566,11 @@ def getDefaultDetection() -> dict:
     return theDict.copy()
 
 
-def printDocs():
-    """Print out human readable detection parameters and convert to markdown table.
+def printDocs() -> None:
+    """Print or save human-readable detection-parameter documentation.
 
-    Requires:
-        pip install tabulate
-
-    See: bAnalysisResults.printDocs()
+    This developer utility currently writes a CSV file used when maintaining
+    SanPy documentation.
     """
     logger.info("")
 
@@ -557,6 +583,7 @@ def printDocs():
         parameter = k
         oneDict = {
             "Parameter": parameter,
+            "Category": v["category"],
             "Default Value": v["defaultValue"],
             "Units": v["units"],
             "Human Readable": v["humanName"],

@@ -6,7 +6,7 @@ The completed collection does not contain or require its source ABFs or SanPy HD
 
 ## Explicit optional API
 
-The exporter is not imported by `sanpy` or by package initializers. For CSV-only export, install the `zarr-export` optional dependencies. For Parquet or the default `"both"` mode, install `zarr-export-parquet`:
+The exporter is not imported by `sanpy` or by package initializers. The modernization branch targets Python 3.13. For CSV-only export, install the `zarr-export` optional dependencies. For Parquet or the default `"both"` mode, install `zarr-export-parquet`:
 
 ```python
 from sanpy.io.zarr_export.exporter import export_collection
@@ -62,7 +62,7 @@ All arrays use Zarr format 3. Recorded and command values retain `float64` preci
 
 `detection_parameters.json` stores the actual values applied to the recording. `detection_parameter_definitions.json` separately explains the available parameters.
 
-`analysis_results` stores the actual one-row-per-spike results. `analysis_result_definitions.json` separately explains result columns. Both definition documents add a presentation-only `category` string for sanpy-web. Nested result values are canonical JSON text in tabular files.
+`analysis_results` stores the actual one-row-per-spike results. `analysis_result_definitions.json` separately explains result columns. SanPy's runtime definitions are the source of truth for both definition documents, including their presentation-only `category` values. The exporter preserves native SanPy schema keys and does not infer categories or rename fields. Nested result values are canonical JSON text in tabular files.
 
 ## Installation safety
 

@@ -1,8 +1,11 @@
+"""Tests for optional import boundaries around Zarr dependencies."""
+
 import subprocess
 import sys
 
 
-def test_ordinary_sanpy_import_does_not_import_export_dependencies():
+def test_ordinary_sanpy_import_does_not_import_export_dependencies() -> None:
+    """Keep ordinary SanPy imports independent of optional export packages."""
     command = [
         sys.executable,
         "-c",

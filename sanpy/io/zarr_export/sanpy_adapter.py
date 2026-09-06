@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import copy
 import uuid
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -12,35 +13,29 @@ import sanpy
 from sanpy.bAnalysisResults import analysisResultDict
 from sanpy.bDetection import getDefaultDetection
 
-from .definitions import detection_definitions, result_definitions
 from .models import SanPySnapshot
 
 
-def snapshot_banalysis(analysis) -> SanPySnapshot:
+def snapshot_banalysis(analysis: Any) -> SanPySnapshot:
+    """Copy exportable state from a SanPy ``bAnalysis`` instance.
+
+    Args:
+        analysis: An ABF-backed SanPy analysis instance.
+
+    Returns:
+        An immutable snapshot of metadata, applied parameters, runtime
+        definitions, results, and derived signals.
+    """
     loader = analysis.fileLoader
-    definitions = result_definitions(analysisResultDict)
     results = analysis.spikeDict.asDataFrame().copy(deep=True)
     if len(results.columns) == 0:
-        results = results.reindex(columns=definitions)
-    for column in results.columns:
-        definitions.setdefault(
-            str(column),
-            {
-                "category": "custom",
-                "type": "unknown",
-                "default": None,
-                "units": "",
-                "depends_on_detection": "",
-                "error": "",
-                "description": "Custom SanPy analysis result.",
-            },
-        )
+        results = results.reindex(columns=analysisResultDict)
     return SanPySnapshot(
         recording_id=str(getattr(analysis, "uuid", None) or uuid.uuid4()),
         metadata=copy.deepcopy(dict(analysis.metaData)),
         detection_parameters=copy.deepcopy(analysis.getDetectionDict() or {}),
-        detection_definitions=detection_definitions(getDefaultDetection()),
-        result_definitions=definitions,
+        detection_definitions=copy.deepcopy(getDefaultDetection()),
+        result_definitions=copy.deepcopy(analysisResultDict),
         analysis_results=results,
         filtered=_copy_array(loader._filteredY),
         dvdt=_copy_array(loader._filteredDeriv),
@@ -49,5 +44,13 @@ def snapshot_banalysis(analysis) -> SanPySnapshot:
     )
 
 
-def _copy_array(value) -> np.ndarray | None:
+def _copy_array(value: Any) -> np.ndarray | None:
+    """Copy and orient a SanPy point-by-sweep array for persistence.
+
+    Args:
+        value: SanPy array-like value or ``None``.
+
+    Returns:
+        A sweep-by-point array copy, or ``None`` when no value exists.
+    """
     return None if value is None else np.asarray(value).T.copy()

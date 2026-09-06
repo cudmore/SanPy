@@ -14,6 +14,17 @@ import pandas as pd
 
 
 def json_value(value: Any) -> Any:
+    """Convert a runtime value into a strict, portable JSON value.
+
+    Args:
+        value: Runtime value to convert recursively.
+
+    Returns:
+        A value supported by the standard JSON data model.
+
+    Raises:
+        TypeError: If the value has no supported JSON representation.
+    """
     if isinstance(value, dict):
         return {str(key): json_value(item) for key, item in value.items()}
     if isinstance(value, (list, tuple)):
@@ -38,4 +49,12 @@ def json_value(value: Any) -> Any:
 
 
 def canonical_json(value: Any) -> str:
+    """Serialize a structured table cell as deterministic compact JSON.
+
+    Args:
+        value: Structured runtime value to serialize.
+
+    Returns:
+        Canonical JSON text with sorted keys and no insignificant whitespace.
+    """
     return json.dumps(json_value(value), sort_keys=True, separators=(",", ":"))

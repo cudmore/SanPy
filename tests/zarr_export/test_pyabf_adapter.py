@@ -1,10 +1,19 @@
+"""Tests for complete ABF extraction through the public PyABF API."""
+
+from pathlib import Path
+
 import numpy as np
 import pyabf
 
 from sanpy.io.zarr_export.pyabf_adapter import snapshot_abf
 
 
-def test_snapshot_reads_every_sweep_and_adc_channel(small_abf):
+def test_snapshot_reads_every_sweep_and_adc_channel(small_abf: Path) -> None:
+    """Read raw and command values for every sweep and ADC channel.
+
+    Args:
+        small_abf: Multi-sweep, multi-channel ABF fixture.
+    """
     snapshot = snapshot_abf(small_abf)
     source = pyabf.ABF(str(small_abf))
 
@@ -19,7 +28,12 @@ def test_snapshot_reads_every_sweep_and_adc_channel(small_abf):
             np.testing.assert_array_equal(snapshot.command[sweep, channel], source.sweepC)
 
 
-def test_epoch_rows_use_half_open_point_bounds(small_abf):
+def test_epoch_rows_use_half_open_point_bounds(small_abf: Path) -> None:
+    """Represent epoch point bounds as valid half-open ranges.
+
+    Args:
+        small_abf: Multi-sweep, multi-channel ABF fixture.
+    """
     snapshot = snapshot_abf(small_abf)
 
     assert not snapshot.epochs.empty

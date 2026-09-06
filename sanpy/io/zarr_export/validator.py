@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from importlib.resources import files
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import numpy as np
@@ -15,10 +16,21 @@ from .contract import FORMAT_NAME, FORMAT_VERSION
 
 
 class SanPyZarrValidationError(ValueError):
+    """Raised when a SanPy Zarr collection violates its format contract."""
+
     pass
 
 
 def validate_collection(root: str | Path) -> None:
+    """Validate collection manifests, resources, arrays, and tables.
+
+    Args:
+        root: Existing SanPy Zarr collection directory.
+
+    Raises:
+        FileNotFoundError: If the collection root does not exist.
+        SanPyZarrValidationError: If any contract requirement is violated.
+    """
     collection_root = Path(root).expanduser().resolve(strict=True)
     collection = _json(collection_root / "collection.json")
     _schema(collection, "collection-v1.schema.json")
@@ -35,7 +47,21 @@ def validate_collection(root: str | Path) -> None:
         _validate_recording(collection_root, member, _json(path))
 
 
-def _validate_recording(root, member, recording) -> None:
+def _validate_recording(
+    root: Path,
+    member: dict[str, Any],
+    recording: dict[str, Any],
+) -> None:
+    """Validate one recording referenced by a collection member.
+
+    Args:
+        root: Collection root directory.
+        member: Collection member manifest entry.
+        recording: Parsed recording manifest.
+
+    Raises:
+        SanPyZarrValidationError: If recording resources are inconsistent.
+    """
     _schema(recording, "recording-v1.schema.json")
     if recording.get("id") != member.get("id"):
         raise SanPyZarrValidationError("Recording identity mismatch")
@@ -68,7 +94,16 @@ def _validate_recording(root, member, recording) -> None:
         raise SanPyZarrValidationError("Analysis result row count mismatch")
 
 
-def _validate_table(root: Path, resource: dict) -> None:
+def _validate_table(root: Path, resource: dict[str, Any]) -> None:
+    """Validate one logical table and its physical representations.
+
+    Args:
+        root: Recording directory containing the ``tables`` directory.
+        resource: Table resource descriptor.
+
+    Raises:
+        SanPyZarrValidationError: If representations are missing or disagree.
+    """
     frames = {}
     for kind, relative in resource["representations"].items():
         path = _resource(root / "tables", relative)
@@ -92,6 +127,15 @@ def _validate_table(root: Path, resource: dict) -> None:
 
 
 def _equivalent_values(left: pd.DataFrame, right: pd.DataFrame) -> bool:
+    """Compare CSV and Parquet tables after representation normalization.
+
+    Args:
+        left: First table representation.
+        right: Second table representation.
+
+    Returns:
+        ``True`` when both tables contain equivalent logical values.
+    """
     for column in left.columns:
         left_values = left[column].map(_comparison_cell)
         right_values = right[column].map(_comparison_cell)
@@ -116,23 +160,63 @@ def _equivalent_values(left: pd.DataFrame, right: pd.DataFrame) -> bool:
     return True
 
 
-def _comparison_cell(value):
+def _comparison_cell(value: Any) -> Any:
+    """Normalize a scalar for cross-representation comparison.
+
+    Args:
+        value: Table cell value.
+
+    Returns:
+        A shared null sentinel or the original scalar value.
+    """
     if pd.isna(value) or value == "null":
         return "<null>"
     return value
 
 
-def _shape(group, name, expected) -> None:
+def _shape(group: zarr.Group, name: str, expected: tuple[int, ...]) -> None:
+    """Require an array to exist with the expected shape.
+
+    Args:
+        group: Open recording data group.
+        name: Required array name.
+        expected: Expected array shape.
+
+    Raises:
+        SanPyZarrValidationError: If the array is absent or has another shape.
+    """
     if name not in group or tuple(group[name].shape) != expected:
         raise SanPyZarrValidationError(f"Zarr array {name!r} shape mismatch")
 
 
-def _dimensions(group, name, expected) -> None:
+def _dimensions(group: zarr.Group, name: str, expected: tuple[str, ...]) -> None:
+    """Require an array to declare the expected semantic dimensions.
+
+    Args:
+        group: Open recording data group.
+        name: Required array name.
+        expected: Expected ordered dimension names.
+
+    Raises:
+        SanPyZarrValidationError: If dimension metadata differs.
+    """
     if tuple(group[name].metadata.dimension_names or ()) != expected:
         raise SanPyZarrValidationError(f"Zarr array {name!r} dimensions mismatch")
 
 
 def _resource(root: Path, relative: str) -> Path:
+    """Resolve a safe package-relative resource path.
+
+    Args:
+        root: Directory against which to resolve the path.
+        relative: Untrusted relative resource path from a manifest.
+
+    Returns:
+        Existing resolved resource path.
+
+    Raises:
+        SanPyZarrValidationError: If the path is unsafe or missing.
+    """
     path = Path(relative)
     if path.is_absolute() or ".." in path.parts or "\\" in relative:
         raise SanPyZarrValidationError(f"Unsafe resource path: {relative}")
@@ -142,7 +226,19 @@ def _resource(root: Path, relative: str) -> Path:
     return resolved
 
 
-def _json(path: Path) -> dict:
+def _json(path: Path) -> dict[str, Any]:
+    """Read a JSON resource that must contain an object.
+
+    Args:
+        path: JSON resource path.
+
+    Returns:
+        Parsed JSON object.
+
+    Raises:
+        SanPyZarrValidationError: If the file is unreadable, malformed, or is
+        not a JSON object.
+    """
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -152,7 +248,16 @@ def _json(path: Path) -> dict:
     return value
 
 
-def _schema(value: dict, filename: str) -> None:
+def _schema(value: dict[str, Any], filename: str) -> None:
+    """Validate a JSON object against a bundled schema.
+
+    Args:
+        value: Parsed JSON object.
+        filename: Bundled schema filename.
+
+    Raises:
+        SanPyZarrValidationError: If schema validation fails.
+    """
     schema_path = files("sanpy.io.zarr_export.schemas").joinpath(filename)
     schema = json.loads(schema_path.read_text(encoding="utf-8"))
     errors = sorted(Draft202012Validator(schema).iter_errors(value), key=lambda error: list(error.path))

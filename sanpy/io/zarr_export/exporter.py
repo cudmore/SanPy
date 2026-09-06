@@ -10,14 +10,14 @@ import tempfile
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable, Sequence
 
 import numpy as np
 import zarr
 
 from .contract import DEFAULT_CHUNK_POINTS, FORMAT_NAME, FORMAT_VERSION, TABLE_FORMATS
 from .json_codec import json_value
-from .models import RecordingExport
+from .models import AcquisitionSnapshot, RecordingExport
 from .pyabf_adapter import snapshot_abf
 from .sanpy_adapter import snapshot_banalysis
 from .table_writer import write_table
@@ -25,7 +25,7 @@ from .validator import validate_collection
 
 
 def export_collection(
-    analyses: Iterable,
+    analyses: Iterable[Any],
     destination: str | Path,
     *,
     name: str | None = None,
@@ -33,7 +33,25 @@ def export_collection(
     overwrite: bool = False,
     chunk_points: int = DEFAULT_CHUNK_POINTS,
 ) -> Path:
-    """Export bAnalysis objects into one self-contained SanPy Zarr collection."""
+    """Export analyses into one self-contained SanPy Zarr collection.
+
+    Args:
+        analyses: ABF-backed SanPy ``bAnalysis`` instances to export.
+        destination: Output directory ending in ``.sanpy.zarr``.
+        name: Optional collection name. The destination name is used when
+            omitted.
+        table_format: One of ``"csv"``, ``"parquet"``, or ``"both"``.
+        overwrite: Replace an existing destination when ``True``.
+        chunk_points: Maximum number of points in each signal chunk.
+
+    Returns:
+        Absolute path to the completed collection.
+
+    Raises:
+        ValueError: If arguments are invalid or an analysis is not ABF-backed.
+        FileExistsError: If the destination exists and overwrite is disabled.
+        SanPyZarrValidationError: If the staged collection fails validation.
+    """
     if table_format not in TABLE_FORMATS:
         raise ValueError(f"table_format must be one of {sorted(TABLE_FORMATS)}")
     if chunk_points <= 0:
@@ -58,14 +76,43 @@ def export_collection(
     return target
 
 
-def _snapshot(analysis) -> RecordingExport:
+def _snapshot(analysis: Any) -> RecordingExport:
+    """Create complete acquisition and SanPy snapshots for one analysis.
+
+    Args:
+        analysis: ABF-backed SanPy analysis instance.
+
+    Returns:
+        Complete recording export data.
+
+    Raises:
+        ValueError: If the analysis is not backed by an ABF file.
+    """
     source_path = analysis.fileLoader.filepath
     if not source_path or Path(source_path).suffix.lower() != ".abf":
         raise ValueError("SanPy Zarr export currently requires an ABF-backed bAnalysis")
     return RecordingExport(snapshot_abf(source_path), snapshot_banalysis(analysis))
 
 
-def _write_collection(root, recordings, name, table_format, chunk_points) -> None:
+def _write_collection(
+    root: Path,
+    recordings: Sequence[RecordingExport],
+    name: str,
+    table_format: str,
+    chunk_points: int,
+) -> None:
+    """Write collection and recording resources into a staging directory.
+
+    Args:
+        root: Staging collection root.
+        recordings: Fully snapshotted recordings.
+        name: Human-readable collection name.
+        table_format: Requested table representation mode.
+        chunk_points: Maximum signal chunk length.
+
+    Raises:
+        ValueError: If a recording identifier is unsafe or duplicated.
+    """
     members = []
     used_ids = set()
     for recording in recordings:
@@ -104,7 +151,20 @@ def _write_collection(root, recordings, name, table_format, chunk_points) -> Non
     )
 
 
-def _write_recording(root, recording, table_format, chunk_points) -> None:
+def _write_recording(
+    root: Path,
+    recording: RecordingExport,
+    table_format: str,
+    chunk_points: int,
+) -> None:
+    """Write all resources for one recording.
+
+    Args:
+        root: Recording output directory.
+        recording: Acquisition and SanPy snapshots.
+        table_format: Requested table representation mode.
+        chunk_points: Maximum signal chunk length.
+    """
     root.mkdir(parents=True)
     metadata_root = root / "metadata"
     tables_root = root / "tables"
@@ -172,7 +232,24 @@ def _write_recording(root, recording, table_format, chunk_points) -> None:
     )
 
 
-def _array(group, name, data, chunks, dimensions, unit) -> None:
+def _array(
+    group: zarr.Group,
+    name: str,
+    data: np.ndarray,
+    chunks: tuple[int, ...],
+    dimensions: tuple[str, ...],
+    unit: str | None,
+) -> None:
+    """Create one dimension-labeled Zarr array.
+
+    Args:
+        group: Destination Zarr group.
+        name: Array name.
+        data: Array values.
+        chunks: Chunk shape.
+        dimensions: Ordered semantic dimension names.
+        unit: Optional uniform unit for the complete array.
+    """
     array = group.create_array(
         name,
         data=np.asarray(data),
@@ -183,18 +260,43 @@ def _array(group, name, data, chunks, dimensions, unit) -> None:
         array.attrs["unit"] = unit
 
 
-def _epoch_index(acquisition) -> np.ndarray:
+def _epoch_index(acquisition: AcquisitionSnapshot) -> np.ndarray:
+    """Build a point-aligned epoch label array.
+
+    Args:
+        acquisition: Acquisition snapshot containing signal shapes and epochs.
+
+    Returns:
+        Integer labels arranged as sweep, channel, and point, with ``-1`` for
+        points outside defined epochs.
+    """
     labels = np.full(acquisition.raw.shape, -1, dtype=np.int32)
     for row in acquisition.epochs.itertuples(index=False):
         labels[row.sweep, row.channel, row.startPnt : row.stopPnt] = row.epoch
     return labels
 
 
-def _write_json(path: Path, value) -> None:
+def _write_json(path: Path, value: Any) -> None:
+    """Write a runtime value as deterministic, strict JSON.
+
+    Args:
+        path: Destination JSON path.
+        value: Runtime value to convert and serialize.
+    """
     path.write_text(json.dumps(json_value(value), indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 def _install(staged: Path, destination: Path, overwrite: bool) -> None:
+    """Atomically install a validated staged collection.
+
+    Args:
+        staged: Validated staging directory.
+        destination: Final collection path.
+        overwrite: Whether an existing destination may be replaced.
+
+    Raises:
+        FileExistsError: If the destination exists and overwrite is disabled.
+    """
     if not destination.exists():
         os.replace(staged, destination)
         return
@@ -211,4 +313,12 @@ def _install(staged: Path, destination: Path, overwrite: bool) -> None:
 
 
 def _collection_name(path: Path) -> str:
+    """Derive a default collection name from its directory name.
+
+    Args:
+        path: Collection directory path.
+
+    Returns:
+        Filename with the ``.sanpy.zarr`` suffix removed.
+    """
     return path.name[: -len(".sanpy.zarr")]

@@ -28,6 +28,20 @@ _EPOCH_COLUMNS = (
 
 
 def snapshot_abf(path: str | Path) -> AcquisitionSnapshot:
+    """Read every sweep and ADC channel from an ABF through PyABF.
+
+    Args:
+        path: Source ABF path.
+
+    Returns:
+        A self-contained acquisition snapshot containing scaled signals,
+        commands, channel metadata, timing, and epochs.
+
+    Raises:
+        FileNotFoundError: If the source ABF does not exist.
+        ValueError: If the ABF is empty, has inconsistent point counts, or has
+            differing time axes between sweeps or channels.
+    """
     source = Path(path).expanduser().resolve(strict=True)
     abf = pyabf.ABF(str(source))
     sweeps = tuple(int(value) for value in abf.sweepList)
@@ -72,7 +86,25 @@ def snapshot_abf(path: str | Path) -> AcquisitionSnapshot:
     )
 
 
-def _require_points(path, sweep, channel, points, *arrays) -> None:
+def _require_points(
+    path: Path,
+    sweep: int,
+    channel: int,
+    points: int,
+    *arrays: np.ndarray,
+) -> None:
+    """Require point-aligned arrays to match the declared sweep length.
+
+    Args:
+        path: Source ABF path used in error messages.
+        sweep: Zero-based sweep position.
+        channel: Zero-based channel position.
+        points: Expected number of points.
+        *arrays: Point-aligned arrays to check.
+
+    Raises:
+        ValueError: If any array length differs from ``points``.
+    """
     lengths = tuple(len(value) for value in arrays)
     if any(length != points for length in lengths):
         raise ValueError(
@@ -81,7 +113,17 @@ def _require_points(path, sweep, channel, points, *arrays) -> None:
         )
 
 
-def _epoch_rows(abf, sweep: int, channel: int) -> list[dict]:
+def _epoch_rows(abf: pyabf.ABF, sweep: int, channel: int) -> list[dict[str, object]]:
+    """Normalize the selected PyABF sweep's epoch table.
+
+    Args:
+        abf: PyABF recording with its target sweep and channel selected.
+        sweep: Zero-based sweep position stored in the output.
+        channel: Zero-based channel position stored in the output.
+
+    Returns:
+        One normalized dictionary per epoch.
+    """
     epochs = abf.sweepEpochs
     rows = []
     for index, start in enumerate(epochs.p1s):

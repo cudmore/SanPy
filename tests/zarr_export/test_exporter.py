@@ -1,5 +1,9 @@
+"""End-to-end tests for self-contained SanPy Zarr collection export."""
+
 import json
 import shutil
+from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -8,20 +12,47 @@ import pytest
 import zarr
 
 import sanpy
+from sanpy.bAnalysisResults import analysisResultDict
+from sanpy.bDetection import getDefaultDetection
 from sanpy.io.zarr_export.exporter import export_collection
+from sanpy.io.zarr_export.json_codec import json_value
 from sanpy.io.zarr_export.validator import validate_collection
 
 
-def _analysis(path):
+def _analysis(path: Path) -> Any:
+    """Create a SanPy analysis for an ABF fixture.
+
+    Args:
+        path: Source ABF path.
+
+    Returns:
+        Newly loaded SanPy ``bAnalysis`` instance.
+    """
     return sanpy.bAnalysis(str(path))
 
 
-def _recording_root(export):
+def _recording_root(export: Path) -> Path:
+    """Resolve the first recording directory in an exported collection.
+
+    Args:
+        export: SanPy Zarr collection root.
+
+    Returns:
+        Directory containing the first recording manifest.
+    """
     collection = json.loads((export / "collection.json").read_text())
     return export / collection["members"][0]["recording"].rsplit("/", 1)[0]
 
 
-def test_export_is_zarr3_and_preserves_runtime_state(tmp_path, small_abf):
+def test_export_is_zarr3_and_preserves_runtime_state(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Write Zarr v3 without mutating the supplied SanPy analysis.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Multi-sweep, multi-channel ABF fixture.
+    """
     analysis = _analysis(small_abf)
     analysis.fileLoader.setSweep(4)
     filtered = analysis.fileLoader._filteredY.copy()
@@ -46,7 +77,20 @@ def test_export_is_zarr3_and_preserves_runtime_state(tmp_path, small_abf):
 
 
 @pytest.mark.parametrize("table_format,extension", [("csv", ".csv"), ("parquet", ".parquet")])
-def test_table_format_selects_one_representation(tmp_path, small_abf, table_format, extension):
+def test_table_format_selects_one_representation(
+    tmp_path: Path,
+    small_abf: Path,
+    table_format: str,
+    extension: str,
+) -> None:
+    """Write only the requested physical table representation.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Multi-sweep, multi-channel ABF fixture.
+        table_format: Requested table format.
+        extension: Expected output filename extension.
+    """
     destination = tmp_path / f"{table_format}.sanpy.zarr"
     export_collection([_analysis(small_abf)], destination, table_format=table_format)
     tables = _recording_root(destination) / "tables"
@@ -55,7 +99,15 @@ def test_table_format_selects_one_representation(tmp_path, small_abf, table_form
     assert all(path.suffix == extension for path in tables.iterdir())
 
 
-def test_export_remains_readable_after_source_is_removed(tmp_path, small_abf):
+def test_export_remains_readable_after_source_is_removed(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Validate source independence after deleting a copied source ABF.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Source ABF fixture copied before export.
+    """
     source = tmp_path / "source.abf"
     shutil.copy2(small_abf, source)
     destination = tmp_path / "independent.sanpy.zarr"
@@ -68,7 +120,15 @@ def test_export_remains_readable_after_source_is_removed(tmp_path, small_abf):
     assert not pd.read_csv(root / "tables" / "epochs.csv").empty
 
 
-def test_existing_destination_requires_overwrite(tmp_path, small_abf):
+def test_existing_destination_requires_overwrite(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Protect an existing collection unless overwrite is explicit.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Source ABF fixture.
+    """
     destination = tmp_path / "existing.sanpy.zarr"
     export_collection([_analysis(small_abf)], destination, table_format="csv")
 
@@ -76,7 +136,15 @@ def test_existing_destination_requires_overwrite(tmp_path, small_abf):
         export_collection([_analysis(small_abf)], destination, table_format="csv")
 
 
-def test_overwrite_replaces_an_existing_export(tmp_path, small_abf):
+def test_overwrite_replaces_an_existing_export(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Atomically replace an existing collection when requested.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Source ABF fixture.
+    """
     destination = tmp_path / "replace.sanpy.zarr"
     export_collection([_analysis(small_abf)], destination, name="first", table_format="csv")
 
@@ -92,7 +160,15 @@ def test_overwrite_replaces_an_existing_export(tmp_path, small_abf):
     assert not list(tmp_path.glob(".replace.sanpy.zarr.backup-*"))
 
 
-def test_collection_contains_multiple_independent_recordings(tmp_path, small_abf):
+def test_collection_contains_multiple_independent_recordings(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Store independently addressable recordings without embedding ABFs.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Source ABF fixture used for two distinct analyses.
+    """
     first = _analysis(small_abf)
     second = _analysis(small_abf)
     destination = tmp_path / "multiple.sanpy.zarr"
@@ -106,14 +182,30 @@ def test_collection_contains_multiple_independent_recordings(tmp_path, small_abf
     validate_collection(destination)
 
 
-def test_csv_export_writes_no_parquet_resources(tmp_path, small_abf):
+def test_csv_export_writes_no_parquet_resources(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Keep CSV-only export independent of Parquet resources.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Source ABF fixture.
+    """
     destination = tmp_path / "csv-only.sanpy.zarr"
     export_collection([_analysis(small_abf)], destination, table_format="csv")
 
     assert not list((_recording_root(destination) / "tables").glob("*.parquet"))
 
 
-def test_raw_data_matches_direct_pyabf_read(tmp_path, small_abf):
+def test_raw_data_matches_direct_pyabf_read(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Preserve direct PyABF signal values exactly.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Source ABF fixture.
+    """
     destination = tmp_path / "values.sanpy.zarr"
     export_collection([_analysis(small_abf)], destination, table_format="csv")
     raw = zarr.open_group(str(_recording_root(destination) / "data.zarr"), mode="r")["raw"]
@@ -123,7 +215,15 @@ def test_raw_data_matches_direct_pyabf_read(tmp_path, small_abf):
     np.testing.assert_array_equal(raw[7, 1], source.sweepY)
 
 
-def test_actual_detection_parameters_and_results_are_separate_from_definitions(tmp_path, small_abf):
+def test_actual_detection_parameters_and_results_are_separate_from_definitions(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Keep actual values separate from faithful runtime definitions.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Source ABF fixture.
+    """
     analysis = _analysis(small_abf)
     detection = sanpy.bDetection().getDetectionDict("SA Node")
     analysis.spikeDetect(detection)
@@ -138,8 +238,12 @@ def test_actual_detection_parameters_and_results_are_separate_from_definitions(t
     results = pd.read_csv(root / "tables" / "analysis_results.csv")
     assert actual_parameters["detectionName"] == detection["detectionName"]
     assert isinstance(actual_parameters["detectionName"], str)
-    assert "default" in parameter_definitions["detectionName"]
+    assert "defaultValue" in parameter_definitions["detectionName"]
     assert parameter_definitions["detectionName"]["category"]
-    assert result_definitions["thresholdPnt"]["category"] == "threshold"
+    assert parameter_definitions["detectionName"]["humanName"]
+    assert result_definitions["thresholdPnt"]["category"] == "waveform"
+    assert "depends on detection" in result_definitions["thresholdPnt"]
+    assert parameter_definitions == json_value(getDefaultDetection())
+    assert result_definitions == json_value(analysisResultDict)
     assert len(results) == analysis.numSpikes
     assert "errors" in results.columns

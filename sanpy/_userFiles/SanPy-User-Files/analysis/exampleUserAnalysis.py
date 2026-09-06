@@ -2,6 +2,7 @@ import numpy as np
 
 from sanpy.user_analysis.baseUserAnalysis import baseUserAnalysis
 from sanpy.sanpyLogger import get_logger
+from sanpy.schema import AnalysisResultCategory
 
 logger = get_logger(__name__)
 
@@ -27,7 +28,14 @@ class exampleUserAnalysis(baseUserAnalysis):
 
     def defineUserStats(self):
         """Add your user stats here."""
-        self.addUserStat("User Time To Peak (ms)", "user_timeToPeak_ms")
+        self.addUserStat(
+            "User Time To Peak (ms)",
+            "user_timeToPeak_ms",
+            category=AnalysisResultCategory.TIMING,
+            valueType="float",
+            units="ms",
+            description="Time from spike threshold to peak.",
+        )
 
     def run(self):
         """This is the user code to create and then fill in
