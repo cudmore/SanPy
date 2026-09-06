@@ -65,7 +65,7 @@ from sanpy.interface.openFirstWidget import openFirstWidget
 
 # import sanpy.interface.SanPyWindow
 
-from sanpy.sanpyLogger import get_logger
+from sanpy.sanpyLogger import getLoggerFile, get_logger
 logger = get_logger(__name__)
 # This causes mkdocs to infinite recurse when running locally as 'mkdocs serve'
 # logger.info('SanPy app.py is starting up')
@@ -77,6 +77,17 @@ import logging
 
 # turn off numexpr 'INFO' logging
 logging.getLogger("numexpr").setLevel(logging.WARNING)
+
+
+def _getSanPyInfoForClipboard() -> str:
+    """Return complete build metadata followed by the current log file."""
+    try:
+        logFilePath = pathlib.Path(getLoggerFile())
+        logText = logFilePath.read_text(encoding='utf-8', errors='replace')
+    except OSError as error:
+        logText = f'Log file unavailable: {error}'
+
+    return f'{build_info.get_build_info_json()}\n\n=== log file ===\n{logText}'
 
 def getAppIconPath():
     bundle_dir = sanpy._util.getBundledDir()
@@ -194,7 +205,7 @@ class SanPyApp(QtWidgets.QApplication):
         # fileMenu = mainMenu.addMenu("&File")
         fileMenu = mainMenu.addMenu("File")
 
-        loadFileAction = QtWidgets.QAction("Open...", self)
+        loadFileAction = QtWidgets.QAction("Open File...", self)
         loadFileAction.setCheckable(False)  # setChecked is True by default?
         loadFileAction.setShortcut("Ctrl+O")
         loadFileAction.triggered.connect(self.loadFile)
@@ -356,7 +367,7 @@ class SanPyApp(QtWidgets.QApplication):
         
         Notes
         -----
-        Selecting File -> Open... passes bool even when setCheckable(False)
+        Selecting File -> Open File... passes bool even when setCheckable(False)
         """
 
         logger.info(f'filePath:"{filePath}" {type(filePath)}')
@@ -623,7 +634,7 @@ class SanPyApp(QtWidgets.QApplication):
         copyButton = QtWidgets.QPushButton('Copy SanPy Info')
         copyButton.clicked.connect(
             lambda: QtWidgets.QApplication.clipboard().setText(
-                build_info.get_build_info_json()
+                _getSanPyInfoForClipboard()
             )
         )
         vLayout.addWidget(copyButton)

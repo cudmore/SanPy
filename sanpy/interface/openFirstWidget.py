@@ -61,7 +61,8 @@ class openFirstWidget(QtWidgets.QMainWindow):
         
         Caller needs to connect to cellClick()
         """
-        _rowHeight = 18
+        _fontSize = 12
+        _rowHeight = 24
 
         # recent files
         myTableWidget = QtWidgets.QTableWidget()
@@ -77,9 +78,9 @@ class openFirstWidget(QtWidgets.QMainWindow):
         # hide the row headers
         myTableWidget.horizontalHeader().hide()
 
-        # set font size of table (default seems to be 13 point)
+        # Keep long paths readable while fitting more recent items on screen.
         fnt = self.font()
-        fnt.setPointSize(_rowHeight)
+        fnt.setPointSize(_fontSize)
         myTableWidget.setFont(fnt)
 
         headerLabels = [headerStr]
@@ -96,7 +97,7 @@ class openFirstWidget(QtWidgets.QMainWindow):
         for idx, stat in enumerate(pathList):
             item = QtWidgets.QTableWidgetItem(stat)
             myTableWidget.setItem(idx, 0, item)
-            myTableWidget.setRowHeight(idx, _rowHeight + int(.7 * _rowHeight))
+            myTableWidget.setRowHeight(idx, _rowHeight)
 
         return myTableWidget
     
@@ -126,7 +127,7 @@ class openFirstWidget(QtWidgets.QMainWindow):
 
     def _on_open_button_click(self, name : str):
         logger.info(name)
-        if name == 'Open...':
+        if name == 'Open File...':
             self._sanpyApp.loadFile()
         elif name == 'Open Folder...':
             self._sanpyApp.loadFolder()
@@ -189,16 +190,16 @@ class openFirstWidget(QtWidgets.QMainWindow):
         hBoxLayout.addWidget(aLabel,
                              alignment=QtCore.Qt.AlignLeft)
 
-        name = 'Open...'
+        name = 'Open File...'
         aButton = QtWidgets.QPushButton(name)
-        aButton.setFixedSize(QtCore.QSize(200, 60))
+        aButton.setFixedSize(QtCore.QSize(200, 30))
         aButton.setToolTip('Open a file.')
         aButton.clicked.connect(partial(self._on_open_button_click, name))
         hBoxLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
 
         name = 'Open Folder...'
         aButton = QtWidgets.QPushButton(name)
-        aButton.setFixedSize(QtCore.QSize(200, 60))
+        aButton.setFixedSize(QtCore.QSize(200, 30))
         aButton.setToolTip('Open a folder.')
         aButton.clicked.connect(partial(self._on_open_button_click, name))
         hBoxLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
