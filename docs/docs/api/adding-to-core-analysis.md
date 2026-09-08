@@ -32,6 +32,7 @@ analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]["type"] = "int"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "point"
+analysisResultDict[key]["axis_label"] = "Fast AHP point"
 analysisResultDict[key]["depends on detection"] = "fastAhpWindow_ms"
 analysisResultDict[key]["description"] = "fast AHP point."
 
@@ -40,6 +41,7 @@ analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "sec"
+analysisResultDict[key]["axis_label"] = "Fast AHP time (s)"
 analysisResultDict[key]["description"] = "fast AHP seconds."
 
 key = "fastAhpValue"
@@ -47,6 +49,7 @@ analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "mV"  # voltage-clamp'
+analysisResultDict[key]["axis_label"] = "Fast AHP voltage (mV)"
 analysisResultDict[key]["description"] = "Value of Vm at fast AHP point."
 ```
 

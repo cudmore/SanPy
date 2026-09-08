@@ -241,6 +241,7 @@ class baseUserAnalysis:
         valueType: str = "unknown",
         default: Any = None,
         units: str = "",
+        axisLabel: str | None = None,
         description: str = "",
     ) -> bool:
         """Register a user statistic for analysis and presentation.
@@ -254,6 +255,7 @@ class baseUserAnalysis:
             valueType: Runtime value type name, such as ``"float"``.
             default: Default value for the result.
             units: Physical or logical units.
+            axisLabel: Plot-axis label. The human name is used when omitted.
             description: Human-readable explanation. The human name is used
                 when this value is empty.
 
@@ -281,6 +283,7 @@ class baseUserAnalysis:
             value_type=valueType,
             default=default,
             units=units,
+            axis_label=axisLabel or humanName,
             description=description or humanName,
         )
 

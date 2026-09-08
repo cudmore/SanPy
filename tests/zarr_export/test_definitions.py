@@ -22,6 +22,10 @@ def test_every_runtime_definition_has_a_category() -> None:
         isinstance(value["category"], AnalysisResultCategory)
         for value in analysisResultDict.values()
     )
+    assert all(
+        isinstance(value["axis_label"], str) and value["axis_label"]
+        for value in analysisResultDict.values()
+    )
 
 
 def test_user_result_registration_is_idempotent_and_non_throwing() -> None:
@@ -32,6 +36,7 @@ def test_user_result_registration_is_idempotent_and_non_throwing() -> None:
         "value_type": "float",
         "default": None,
         "units": "ms",
+        "axis_label": "Test result (ms)",
         "description": "Test user result.",
     }
 
@@ -77,12 +82,14 @@ def test_add_user_stat_registers_one_authoritative_definition() -> None:
             valueType="float",
             default=None,
             units="ms",
+            axisLabel="Test plugin result (ms)",
             description="A test-only plugin result.",
         )
         assert analysisResultDict[name] == {
             "type": "float",
             "default": None,
             "units": "ms",
+            "axis_label": "Test plugin result (ms)",
             "depends on detection": "",
             "error": "",
             "description": "A test-only plugin result.",
