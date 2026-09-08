@@ -777,7 +777,7 @@ class analysisDir:
         df = df.drop("_ba", axis=1)  # don't ever save _ba, use it for runtime
 
         # hdfStore[dbKey] = df  # save it
-        df.to_hdf(hdfFilePath, dbKey)
+        df.to_hdf(hdfFilePath, key=dbKey)
 
         #
         self._isDirty = False  # if true, prompt to save on quit

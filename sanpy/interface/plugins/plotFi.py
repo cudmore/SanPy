@@ -32,25 +32,24 @@ def getStatFi(
     intervalStat: bool = False,
     filename: str = "",
 ) -> pd.DataFrame:
-    """Given a bAnalysis stat, derive a number of stats
-    for each sweep
+    """Summarize one analysis statistic for every sweep in an epoch.
 
     Sweeps correspond to different current injection amplitudes.
 
-    Parameters
-    ----------
-    dfMaster : DataFrame
-    stat : str
-    epochNumber : int
-    epochNumber : bool
-        If true then skip first spike.
-        Used for stat like spike frequency (Hz) or ISI (ms)
-    filename : str
-        Append filename column
+    Args:
+        dfMaster: Per-spike analysis results.
+        stat: Column containing the statistic to summarize.
+        epochNumber: Epoch to include in the summary.
+        intervalStat: Whether to skip the first event when selecting the first
+            and second interval values.
+        filename: Value to include in the output ``filename`` column.
 
-    Notes
-    -----
-    Rows in the table are sweeps, if there are no spikes in a sweep it will not be included
+    Returns:
+        A DataFrame with one row per sweep and aggregate and positional
+        statistics in columns.
+
+    Notes:
+        Sweeps without spikes in the selected epoch are not included.
     """
 
     _startSec = time.time()
@@ -58,27 +57,23 @@ def getStatFi(
     # reduce to only spikes for given epochNumber
     dfEpoch = dfMaster[dfMaster["epoch"] == epochNumber]
 
-    # epochLevels is a list of current injection amplitudes
-    epochLevels = dfEpoch["epochLevel"].unique()
-    epochLevels = np.round(epochLevels, 3)
-
     # we also want 1st, 2nd, 3rd and nth values
     # don't use agg variable `first` or `last`` (they skip nan)
     #   `second`` is not available
     agg_func_math = {stat: ["count", "mean", "median", "min", "max", "std", "sem"]}
     as_index = True  # if True then 'sweep' number becomes the row index
-    dfSweepsSummary = (
-        dfEpoch.groupby(["sweep"], as_index=as_index).agg(agg_func_math).round(2)
-    )
+    grouped = dfEpoch.groupby(["sweep"], as_index=as_index, sort=False)
+    dfSweepsSummary = grouped.agg(agg_func_math).round(2)
 
     # flatten
     dfSweepsSummary.columns = [
         "_".join(col).rstrip("_") for col in dfSweepsSummary.columns.values
     ]
 
-    # insert as first column, after 'sweeps'
+    # Insert the current injection amplitude using the sweep index so values remain
+    # aligned when source rows or sweep numbers are non-contiguous.
+    epochLevels = grouped["epochLevel"].first().round(3)
     dfSweepsSummary.insert(0, "epochLevel", epochLevels)
-    # dfSweepsSummary['epochLevel'] = epochLevels
 
     # get the first, second and last values
     # if we are doing interval statistics like 'inter spike interval'
@@ -89,20 +84,26 @@ def getStatFi(
     else:
         firstSpike = 0
 
-    _first = dfEpoch.groupby(["sweep"], as_index=True)[stat].nth(firstSpike)
-    dfSweepsSummary.at[_first.index, stat + "_first"] = _first.values
-    # print('_first.index', _first.index)
+    _first = grouped[stat].agg(
+        lambda values: values.iloc[firstSpike]
+        if len(values) > firstSpike
+        else np.nan
+    )
+    dfSweepsSummary[stat + "_first"] = _first
 
-    _second = dfEpoch.groupby(["sweep"], as_index=True)[stat].nth(firstSpike + 1)
-    dfSweepsSummary.at[_second.index, stat + "_second"] = _second.values
-    # print('_second.index', _second.index)
+    secondSpike = firstSpike + 1
+    _second = grouped[stat].agg(
+        lambda values: values.iloc[secondSpike]
+        if len(values) > secondSpike
+        else np.nan
+    )
+    dfSweepsSummary[stat + "_second"] = _second
 
     # _third = dfEpoch.groupby(['sweep'], as_index=True)[stat].nth(2)
     # dfSweepsSummary.at[_second.index, stat + '_third'] = _third.values
 
-    _last = dfEpoch.groupby(["sweep"], as_index=True)[stat].nth(-1)
-    dfSweepsSummary.at[_last.index, stat + "_last"] = _last.values
-    # print('_last.index', _last.index)
+    _last = grouped[stat].last(skipna=False)
+    dfSweepsSummary[stat + "_last"] = _last
 
     # 1st / 2nd and 1s / last
     dfSweepsSummary[stat + "_1_2"] = (

@@ -307,18 +307,18 @@ class bAnalysis:
         with pd.HDFStore(hdfPath) as hdfStore:
             if self._detectionDict is not None:
                 key = uuid + "/" + "detectionDict"
-                dfDetection.to_hdf(hdfStore, key)  # default mode='a'
+                dfDetection.to_hdf(hdfStore, key=key)  # default mode='a'
 
             # always save meta data
             key = uuid + "/" + "metaDataDict"
-            dfMetaData.to_hdf(hdfStore, key)  # default mode='a'
+            dfMetaData.to_hdf(hdfStore, key=key)  # default mode='a'
             
             # logger.warning('=== saving dfMetaData')
             # print(dfMetaData)
 
             if len(self.spikeDict) > 0:
                 key = uuid + "/" + "analysisList"
-                dfAnalysis.to_hdf(hdfStore, key)
+                dfAnalysis.to_hdf(hdfStore, key=key)
 
         # we saved, detection is not dirty
         self._detectionDirty = False

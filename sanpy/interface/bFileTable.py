@@ -199,7 +199,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 
         # data is either DataFrame or analysisDir
         self.isAnalysisDir = False
-        if isinstance(data, pd.core.frame.DataFrame):
+        if isinstance(data, pd.DataFrame):
             self.isAnalysisDir = False
         elif isinstance(data, sanpy.analysisDir):
             self.isAnalysisDir = True
@@ -566,7 +566,7 @@ class pandasModel(QtCore.QAbstractTableModel):
             df = self._data  # either Dataframe or analysisDir
 
             # append dfRow to the end
-            df = df.append(dfRow, ignore_index=True)
+            df = pd.concat([df, dfRow], ignore_index=True)
 
             # sort by file name
             df = df.sort_values(

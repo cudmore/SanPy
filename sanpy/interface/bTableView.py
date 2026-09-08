@@ -304,7 +304,7 @@ class bTableView(QtWidgets.QTableView):
         self.setModel(model)
 
         # when we are created, we are given an empty dataframe
-        if isinstance(model._data, pd.core.frame.DataFrame):
+        if isinstance(model._data, pd.DataFrame):
             if model._data.empty:
                 return
 

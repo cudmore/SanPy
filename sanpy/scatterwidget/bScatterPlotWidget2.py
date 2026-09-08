@@ -22,6 +22,9 @@ Requires (need to make local copies of (pandas model, checkbox delegate)
     openpyxl # to load xlsx
 """
 
+# This legacy module is not used by the SanPy runtime. The active implementation
+# is sanpy.interface.bScatterPlotWidget2; keep runtime changes in that module.
+
 import os, sys, io, csv
 from collections import OrderedDict
 import traceback
