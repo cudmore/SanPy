@@ -7,6 +7,12 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 
 ### Added
 
+- Added a self-contained SanPy Zarr v3 collection export with validated JSON manifests, chunked signal arrays, CSV and Parquet table options, and atomic destination replacement.
+- Added export support for both ABF and canonical `.sanpy` recordings, including command waveforms, point-aligned epoch indexes, per-sweep epoch tables, and HDF5-restored analysis results.
+- Added a folder export command at `scripts/export_folder_to_zarr.py` for regenerating a complete collection from a SanPy data folder and its `sanpy_recording_db.h5` catalog.
+- Added runtime-owned detection and analysis-result definitions, result axis labels, trace-overlay definitions, and collection-level recording summaries to SanPy Zarr exports.
+- Added a strict `.sanpy` text loader format using `seconds`, optional integer `epoch_index`, numbered recording columns, and matching command columns.
+- Added a stochastic Hodgkin-Huxley `.sanpy` example with saved analysis results for loader and Zarr integration testing.
 - Added local PyInstaller build pipelines for macOS ARM64 and Windows AMD64. The macOS pipeline builds, signs, notarizes, staples, and validates the application; the Windows pipeline produces a single-file executable.
 - Added self-contained build records with `build_info.json`, an installed-package `environment.txt`, an exact `source-<commit>.zip`, the user distribution ZIP, and `SHA256SUMS.txt`.
 - Added platform-specific build IDs and output directories such as `macos-YYYYMMDD-vN` and `windows-YYYYMMDD-vN`.
@@ -15,6 +21,12 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 
 ### Changed
 
+- Updated the development environment and SanPy Zarr implementation for Python 3.13.
+- Changed `.sanpy` loading to construct one epoch table per sweep while preserving sweep-specific command levels.
+- Changed SanPy Zarr source provenance from ABF-specific metadata to explicit source format and reader version fields.
+- Normalized exported epoch levels consistently across epoch and analysis-result tables.
+- Updated SanPy for pandas 2.3 compatibility and removed obsolete analysis-directory duplication code.
+- Exposed the folder-analysis save action through the GUI application and window lifecycle.
 - Replaced the legacy `setup.py` and `requirements.txt` installation with `pyproject.toml` and uv.
 - Moved PyInstaller and its hooks into a shared `packaging` dependency group in `pyproject.toml`; both platform build scripts now install from the cross-platform `uv.lock` with `uv sync --locked`.
 - Expanded packaged build metadata to include the platform-local build ID and timestamp, full Git commit and clean-tree state, platform details, and Python, uv, PyInstaller, and key package versions.
