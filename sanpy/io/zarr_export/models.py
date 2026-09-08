@@ -12,9 +12,25 @@ import pandas as pd
 from sanpy.trace_overlays import TraceOverlayDefinition
 
 
+EPOCH_COLUMNS = (
+    "sweep",
+    "channel",
+    "epoch",
+    "startPnt",
+    "stopPnt",
+    "startSec",
+    "stopSec",
+    "level",
+    "type",
+    "pulseWidth",
+    "pulsePeriod",
+    "digitalStates",
+)
+
+
 @dataclass(frozen=True)
 class AcquisitionSnapshot:
-    """Immutable acquisition data extracted from one ABF recording.
+    """Immutable acquisition data extracted from one source recording.
 
     Attributes:
         source_path: Absolute path used only while producing the snapshot.
@@ -30,7 +46,8 @@ class AcquisitionSnapshot:
         command_names: Command channel names.
         command_units: Command channel units.
         epochs: Normalized epoch table.
-        pyabf_version: PyABF version used for extraction.
+        source_format: Source recording format without a leading dot.
+        reader_version: Version of the library used to read the source.
     """
 
     source_path: Path
@@ -46,7 +63,8 @@ class AcquisitionSnapshot:
     command_names: tuple[str, ...]
     command_units: tuple[str, ...]
     epochs: pd.DataFrame
-    pyabf_version: str
+    source_format: str
+    reader_version: str
 
 
 @dataclass(frozen=True)
@@ -86,7 +104,7 @@ class RecordingExport:
     """Complete acquisition and SanPy snapshots for one recording.
 
     Attributes:
-        acquisition: Complete ABF-derived acquisition snapshot.
+        acquisition: Complete source-recording acquisition snapshot.
         sanpy: SanPy runtime snapshot for the same recording.
     """
 

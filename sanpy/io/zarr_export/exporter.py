@@ -20,6 +20,7 @@ from .json_codec import json_value
 from .models import AcquisitionSnapshot, RecordingExport
 from .pyabf_adapter import snapshot_abf
 from .sanpy_adapter import snapshot_banalysis
+from .sanpy_file_adapter import snapshot_sanpy
 from .table_writer import write_table
 from .validator import validate_collection
 
@@ -39,7 +40,7 @@ def export_collection(
     """Export analyses into one self-contained SanPy Zarr collection.
 
     Args:
-        analyses: ABF-backed SanPy ``bAnalysis`` instances to export.
+        analyses: ABF- or SanPy-text-backed analyses to export.
         destination: Output directory ending in ``.sanpy.zarr``.
         name: Optional collection name. The destination name is used when
             omitted.
@@ -51,7 +52,7 @@ def export_collection(
         Absolute path to the completed collection.
 
     Raises:
-        ValueError: If arguments are invalid or an analysis is not ABF-backed.
+        ValueError: If arguments or source recording formats are invalid.
         FileExistsError: If the destination exists and overwrite is disabled.
         SanPyZarrValidationError: If the staged collection fails validation.
     """
@@ -83,18 +84,23 @@ def _snapshot(analysis: Any) -> RecordingExport:
     """Create complete acquisition and SanPy snapshots for one analysis.
 
     Args:
-        analysis: ABF-backed SanPy analysis instance.
+        analysis: Source-backed SanPy analysis instance.
 
     Returns:
         Complete recording export data.
 
     Raises:
-        ValueError: If the analysis is not backed by an ABF file.
+        ValueError: If the analysis source format is unsupported.
     """
     source_path = analysis.fileLoader.filepath
-    if not source_path or Path(source_path).suffix.lower() != ".abf":
-        raise ValueError("SanPy Zarr export currently requires an ABF-backed bAnalysis")
-    return RecordingExport(snapshot_abf(source_path), snapshot_banalysis(analysis))
+    suffix = Path(source_path).suffix.lower() if source_path else ""
+    if suffix == ".abf":
+        acquisition = snapshot_abf(source_path)
+    elif suffix == ".sanpy":
+        acquisition = snapshot_sanpy(analysis)
+    else:
+        raise ValueError(f"Unsupported SanPy Zarr source format: {suffix or '<none>'}")
+    return RecordingExport(acquisition, snapshot_banalysis(analysis))
 
 
 def _write_collection(
@@ -234,7 +240,8 @@ def _write_recording(
             "analysis_channel": sanpy_state.analysis_channel,
             "source": {
                 "filename": acquisition.name,
-                "pyabf_version": acquisition.pyabf_version,
+                "format": acquisition.source_format,
+                "reader_version": acquisition.reader_version,
             },
             "export": {"sanpy_version": sanpy_state.sanpy_version},
             "resources": {

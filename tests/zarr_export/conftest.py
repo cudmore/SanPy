@@ -13,3 +13,13 @@ def small_abf() -> Path:
         Absolute path to the ABF fixture.
     """
     return Path(__file__).parents[1] / "data" / "2021_07_20_0010.abf"
+
+
+@pytest.fixture
+def sanpy_data_folder() -> Path:
+    """Return the repository data folder with a saved SanPy-text analysis.
+
+    Returns:
+        Folder containing stochastic-hh.sanpy and its HDF5 catalog.
+    """
+    return Path(__file__).parents[2] / "data"

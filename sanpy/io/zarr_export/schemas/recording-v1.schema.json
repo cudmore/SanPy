@@ -57,10 +57,11 @@
     "source": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["filename", "pyabf_version"],
+      "required": ["filename", "format", "reader_version"],
       "properties": {
         "filename": {"type": "string"},
-        "pyabf_version": {"type": "string"}
+        "format": {"enum": ["abf", "sanpy"]},
+        "reader_version": {"type": "string"}
       }
     },
     "export": {

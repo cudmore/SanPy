@@ -8,23 +8,7 @@ import numpy as np
 import pandas as pd
 import pyabf
 
-from .models import AcquisitionSnapshot
-
-
-_EPOCH_COLUMNS = (
-    "sweep",
-    "channel",
-    "epoch",
-    "startPnt",
-    "stopPnt",
-    "startSec",
-    "stopSec",
-    "level",
-    "type",
-    "pulseWidth",
-    "pulsePeriod",
-    "digitalStates",
-)
+from .models import EPOCH_COLUMNS, AcquisitionSnapshot
 
 
 def snapshot_abf(path: str | Path) -> AcquisitionSnapshot:
@@ -81,8 +65,9 @@ def snapshot_abf(path: str | Path) -> AcquisitionSnapshot:
         channel_units=tuple(str(value) for value in abf.adcUnits),
         command_names=tuple(str(value) for value in abf.dacNames[: len(channels)]),
         command_units=tuple(str(value) for value in abf.dacUnits[: len(channels)]),
-        epochs=pd.DataFrame(epoch_rows, columns=_EPOCH_COLUMNS),
-        pyabf_version=str(pyabf.__version__),
+        epochs=pd.DataFrame(epoch_rows, columns=EPOCH_COLUMNS),
+        source_format="abf",
+        reader_version=str(pyabf.__version__),
     )
 
 

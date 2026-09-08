@@ -19,7 +19,7 @@ def export_folder(
     """Export a SanPy folder and its persisted analyses.
 
     Args:
-        source_folder: Folder containing the ABFs and
+        source_folder: Folder containing source recordings and
             ``sanpy_recording_db.h5``.
         destination: Output directory ending in ``.sanpy.zarr``.
         table_format: Table representation: ``csv``, ``parquet``, or
@@ -31,7 +31,7 @@ def export_folder(
 
     Raises:
         FileNotFoundError: If the folder or HDF5 catalog does not exist.
-        RuntimeError: If no ABF-backed analyses can be loaded.
+        RuntimeError: If no supported analyses can be loaded.
     """
     source_folder = source_folder.expanduser().resolve()
     h5_path = source_folder / "sanpy_recording_db.h5"
@@ -53,11 +53,13 @@ def export_folder(
             continue
 
         source_path = Path(analysis.fileLoader.filepath)
-        if source_path.suffix.lower() == ".abf":
+        if source_path.suffix.lower() in {".abf", ".sanpy"}:
             analyses.append(analysis)
 
     if not analyses:
-        raise RuntimeError(f"No ABF-backed analyses found in {source_folder}")
+        raise RuntimeError(
+            f"No ABF- or .sanpy-backed analyses found in {source_folder}"
+        )
 
     return export_collection(
         analyses,

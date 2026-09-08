@@ -46,6 +46,23 @@ def _recording_root(export: Path) -> Path:
     return export / collection["members"][0]["recording"].rsplit("/", 1)[0]
 
 
+def _saved_sanpy_analysis(data_folder: Path) -> Any:
+    """Load the saved stochastic SanPy-text analysis from HDF5.
+
+    Args:
+        data_folder: Repository data folder containing the source and catalog.
+
+    Returns:
+        SanPy analysis with its persisted results restored.
+    """
+    directory = sanpy.analysisDir(str(data_folder), autoLoad=False)
+    row = directory.findFileRow("stochastic-hh.sanpy")
+    assert row is not None
+    analysis = directory.getAnalysis(row, allowAutoLoad=True)
+    assert analysis is not None
+    return analysis
+
+
 def test_export_is_zarr3_and_preserves_runtime_state(
     tmp_path: Path, small_abf: Path
 ) -> None:
@@ -75,6 +92,47 @@ def test_export_is_zarr3_and_preserves_runtime_state(
     assert (root / "tables" / "epochs.parquet").is_file()
     assert (root / "tables" / "analysis_results.csv").is_file()
     assert (root / "tables" / "analysis_results.parquet").is_file()
+    validate_collection(destination)
+
+
+def test_export_saved_sanpy_recording(tmp_path: Path, sanpy_data_folder: Path) -> None:
+    """Export SanPy text signals, epochs, and HDF5-restored results.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        sanpy_data_folder: Data folder containing the saved analysis.
+    """
+    analysis = _saved_sanpy_analysis(sanpy_data_folder)
+    destination = tmp_path / "stochastic.sanpy.zarr"
+
+    export_collection([analysis], destination, table_format="csv")
+
+    root = _recording_root(destination)
+    manifest = json.loads((root / "recording.json").read_text())
+    group = zarr.open_group(str(root / "data.zarr"), mode="r")
+    epochs = pd.read_csv(root / "tables" / "epochs.csv")
+    results = pd.read_csv(root / "tables" / "analysis_results.csv")
+
+    assert manifest["source"] == {
+        "filename": "stochastic-hh.sanpy",
+        "format": "sanpy",
+        "reader_version": str(sanpy.__version__),
+    }
+    assert manifest["protocol"] == ""
+    assert manifest["acquisition_datetime"] == ""
+    assert manifest["channels"] == [
+        {"index": 0, "name": "Vm", "unit": "mV", "values_are_scaled": True}
+    ]
+    assert manifest["command_channels"] == [{"index": 0, "name": "Im", "unit": "pA"}]
+    assert group["raw"].shape == (15, 1, 100001)
+    assert group["command"].shape == (15, 1, 100001)
+    assert group["epoch_index"].shape == (15, 1, 100001)
+    assert len(epochs) == 60
+    assert len(results) == 388
+    np.testing.assert_array_equal(group["raw"][3, 0], analysis.fileLoader._sweepY[:, 3])
+    np.testing.assert_array_equal(
+        group["command"][3, 0], analysis.fileLoader._sweepC[:, 3]
+    )
     validate_collection(destination)
 
 

@@ -1,8 +1,8 @@
 # SanPy Zarr export
 
-SanPy Zarr is a self-contained collection format for electrophysiology recordings and their SanPy analyses. Export reopens each source ABF with PyABF so every sweep and ADC channel can be persisted, while the supplied SanPy `bAnalysis` objects provide metadata, applied detection parameters, analysis results, and the filtered and dV/dt signals.
+SanPy Zarr is a self-contained collection format for electrophysiology recordings and their SanPy analyses. Export supports ABF and canonical `.sanpy` source recordings, while the supplied SanPy `bAnalysis` objects provide metadata, applied detection parameters, analysis results, and the filtered and dV/dt signals.
 
-The completed collection does not contain or require its source ABFs or SanPy HDF5 catalog.
+The completed collection does not contain or require its source recordings or SanPy HDF5 catalog.
 
 ## Explicit optional API
 
@@ -51,13 +51,13 @@ Only requested table representations are present.
 | Array | Dimensions | Meaning |
 | --- | --- | --- |
 | `time` | `point` | Seconds from the start of a sweep |
-| `raw` | `sweep, channel, point` | PyABF-scaled ADC values |
-| `command` | `sweep, channel, point` | PyABF command waveform for the selected channel |
+| `raw` | `sweep, channel, point` | Scaled recorded values |
+| `command` | `sweep, channel, point` | Command waveform for the selected channel |
 | `epoch_index` | `sweep, channel, point` | Epoch number, or `-1` outside an epoch |
 | `filtered` | `sweep, point` | SanPy filtered channel-0 recording, when present |
 | `dvdt` | `sweep, point` | SanPy channel-0 derivative, when present |
 
-All arrays use Zarr format 3. Recorded and command values retain `float64` precision and are already scaled by PyABF into the units declared for each channel.
+All arrays use Zarr format 3. Recorded and command values retain `float64` precision in the units declared for each channel.
 
 ## Definitions and values
 
