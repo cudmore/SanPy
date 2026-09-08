@@ -1,4 +1,5 @@
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 from qtpy import QtCore, QtGui, QtWidgets
@@ -7,6 +8,7 @@ import sanpy.interface.sanpy_window as sanpy_window_module
 from sanpy.interface.openFirstWidget import openFirstWidget
 from sanpy.interface.sanpy_app import SanPyApp
 from sanpy.interface.sanpy_window import SanPyWindow
+from sanpy.interface.plugins.setMetaData import SetMetaData
 
 
 class _FakeCloseEvent:
@@ -124,6 +126,45 @@ def test_file_menu_exposes_folder_save_action(qtbot):
 
     save_action.trigger()
     assert save_calls == [True]
+
+
+def test_view_menu_omits_metadata_panel_action(qtbot: Any) -> None:
+    """Hide the metadata panel action while preserving its plugin.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    window = QtWidgets.QMainWindow()
+    qtbot.addWidget(window)
+    window.viewMenu = QtWidgets.QMenu(window)
+    window.configDict = {
+        "filePanels": {"File Panel": True},
+        "detectionPanels": {
+            "Detection Panel": True,
+            "Detection": True,
+            "Display": True,
+            "Set Spikes": False,
+            "Set Meta Data": False,
+            "Plot Options": False,
+        },
+        "rawDataPanels": {
+            "Full Recording": False,
+            "Derivative": True,
+            "DAC": False,
+        },
+    }
+    window._viewMenuAction = lambda *args: None
+    window.pluginDock1 = QtWidgets.QDockWidget(window)
+    window.useDarkStyle = False
+
+    SanPyWindow._refreshViewMenu(window)
+
+    action_names = [action.text() for action in window.viewMenu.actions()]
+    assert "Set Meta Data" not in action_names
+    assert "Set Spikes" in action_names
+    assert "Plot Options" in action_names
+    assert SetMetaData.myHumanName == "Set Meta Data"
+    assert SetMetaData.showInMenu
 
 
 class _FakeAnalysisDir:

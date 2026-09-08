@@ -16,7 +16,6 @@ jobs:
       contents: read
     env:
       PUBLISH_TAG: ${{ inputs.tag }}
-      UV_PYTHON: "3.11"
 
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +30,7 @@ jobs:
           enable-cache: false
 
       - name: Install Python
-        run: uv python install 3.11
+        run: uv python install
 
       - name: Validate tag
         shell: bash
@@ -58,7 +57,7 @@ jobs:
         shell: bash
         run: |
           wheel="$(find dist -maxdepth 1 -name '*.whl' -print -quit)"
-          uv venv --python 3.11 .publish-venv
+          uv venv .publish-venv
           uv pip install --python .publish-venv/bin/python "${wheel}"
           .publish-venv/bin/python -c "import os; import sanpy; import importlib.metadata as m; assert m.version('sanpy-ephys') == os.environ['PUBLISH_TAG'][1:]"
           test -x .publish-venv/bin/sanpy

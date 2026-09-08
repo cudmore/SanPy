@@ -5,7 +5,9 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 
 ## Unreleased
 
-### Added
+### SanPy Zarr
+
+#### Added
 
 - Added a self-contained SanPy Zarr v3 collection export with validated JSON manifests, chunked signal arrays, CSV and Parquet table options, and atomic destination replacement.
 - Added export support for both ABF and canonical `.sanpy` recordings, including command waveforms, point-aligned epoch indexes, per-sweep epoch tables, and HDF5-restored analysis results.
@@ -13,26 +15,34 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 - Added runtime-owned detection and analysis-result definitions, result axis labels, trace-overlay definitions, and collection-level recording summaries to SanPy Zarr exports.
 - Added a strict `.sanpy` text loader format using `seconds`, optional integer `epoch_index`, numbered recording columns, and matching command columns.
 - Added a stochastic Hodgkin-Huxley `.sanpy` example with saved analysis results for loader and Zarr integration testing.
+
+#### Changed
+
+- Updated the SanPy Zarr development environment and implementation for Python 3.13.
+- Changed `.sanpy` loading to construct one epoch table per sweep while preserving sweep-specific command levels.
+- Changed SanPy Zarr source provenance from ABF-specific metadata to explicit source format and reader version fields.
+- Normalized exported epoch levels consistently across epoch and analysis-result tables.
+
+### Added
+
 - Added local PyInstaller build pipelines for macOS ARM64 and Windows AMD64. The macOS pipeline builds, signs, notarizes, staples, and validates the application; the Windows pipeline produces a single-file executable.
 - Added self-contained build records with `build_info.json`, an installed-package `environment.txt`, an exact `source-<commit>.zip`, the user distribution ZIP, and `SHA256SUMS.txt`.
 - Added platform-specific build IDs and output directories such as `macos-YYYYMMDD-vN` and `windows-YYYYMMDD-vN`.
 - Added a consolidated packaging guide covering both platforms, dependency updates, build-record retention, and recovery of the exact source used for a distributed application.
-- Added a locked Python 3.11 development environment using `uv.lock`.
+- Added a locked Python 3.13 development environment using `uv.lock`.
 
 ### Changed
 
-- Updated the development environment and SanPy Zarr implementation for Python 3.13.
-- Changed `.sanpy` loading to construct one epoch table per sweep while preserving sweep-specific command levels.
-- Changed SanPy Zarr source provenance from ABF-specific metadata to explicit source format and reader version fields.
-- Normalized exported epoch levels consistently across epoch and analysis-result tables.
 - Updated SanPy for pandas 2.3 compatibility and removed obsolete analysis-directory duplication code.
 - Exposed the folder-analysis save action through the GUI application and window lifecycle.
+- Removed the redundant `Set Meta Data` action from the View menu; metadata editing remains available through its plugin.
+- Removed obsolete platform-specific Python 3.11 requirement files and broken lock-update scripts now superseded by `pyproject.toml` and the shared `uv.lock`.
 - Replaced the legacy `setup.py` and `requirements.txt` installation with `pyproject.toml` and uv.
 - Moved PyInstaller and its hooks into a shared `packaging` dependency group in `pyproject.toml`; both platform build scripts now install from the cross-platform `uv.lock` with `uv sync --locked`.
 - Expanded packaged build metadata to include the platform-local build ID and timestamp, full Git commit and clean-tree state, platform details, and Python, uv, PyInstaller, and key package versions.
 - Changed macOS and Windows builds to require a clean committed source tree and to archive that exact commit before packaging.
 - Changed final distribution checksums to use `SHA256SUMS.txt`, generated only after the user-facing ZIP is complete.
-- Updated source-installation documentation and GitHub Actions to use Python 3.11 and uv.
+- Updated source installation and GitHub workflows to use uv and follow the repository's single `.python-version` source of truth.
 - Changed PyPI publishing to an explicit, tag-based manual workflow.
 
 ### Fixed
