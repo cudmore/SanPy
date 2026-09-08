@@ -1548,43 +1548,6 @@ class analysisDir:
 
         self._updateLoadedAnalyzed()
 
-    def _old_duplicateRow(self, rowIdx):
-        """Depreciated, Was used to have different conditions within a recording,
-        this is now handled by condiiton column.
-        """
-        # duplicate rowIdx
-        newIdx = rowIdx + 0.5
-
-        rowDict = self.getRowDict(rowIdx)
-
-        # CRITICAL: Need to make a deep copy of the _ba pointer to bAnalysis object
-        logger.info(f"copying {type(rowDict['_ba'])} {rowDict['_ba']}")
-        baNew = copy.deepcopy(rowDict["_ba"])
-
-        # copy of bAnalysis needs a new uuid
-        new_uuid = (
-            sanpy._util.getNewUuid()
-        )  # 't' + str(uuid.uuid4())   #.replace('-', '_')
-        logger.info(f"assigning new uuid {new_uuid} to {baNew}")
-
-        if baNew.uuid == new_uuid:
-            logger.error("!!!!!!!!!!!!!!!!!!!!!!!!!CRITICAL, new uuid is same as old")
-
-        baNew.uuid = new_uuid
-
-        rowDict["_ba"] = baNew
-        rowDict["uuid"] = baNew.uuid  # new row can never have same uuid as old
-
-        dfRow = pd.DataFrame(rowDict, index=[newIdx])
-
-        df = self._df
-        df = df.append(dfRow, ignore_index=True)
-        df = df.sort_values(by=["File"], axis="index", ascending=True, inplace=False)
-        df = df.reset_index(drop=True)
-        self._df = df
-
-        self._updateLoadedAnalyzed()
-
     def syncDfWithPath(self):
         """Sync path with existing df. Used to detect new/removed files.
         
