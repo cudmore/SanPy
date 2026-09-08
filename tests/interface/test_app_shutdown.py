@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 
 import pytest
-from qtpy import QtWidgets
+from qtpy import QtCore, QtGui, QtWidgets
 
 import sanpy.interface.sanpy_window as sanpy_window_module
 from sanpy.interface.openFirstWidget import openFirstWidget
@@ -82,6 +82,48 @@ def test_request_quit_closes_everything_after_all_windows_approve():
     assert app._openFirstWidget.close_calls == 1
     assert app.quit_calls == 1
     assert app._quitInProgress is True
+
+
+def test_file_menu_exposes_folder_save_action(qtbot):
+    """The analysis-window save action appears in File and invokes its slot."""
+    main_window = QtWidgets.QMainWindow()
+    qtbot.addWidget(main_window)
+
+    class _MenuApp(QtCore.QObject):
+        """Minimal QObject owner for exercising the shared menu builder."""
+
+        _buildMenus = SanPyApp._buildMenus
+
+        def __init__(self) -> None:
+            """Provide the callbacks consumed while building menus."""
+            super().__init__()
+            self.configDict = SimpleNamespace(save=lambda: None)
+            self.loadFile = lambda: None
+            self.loadFolder = lambda: None
+            self._refreshOpenRecent = lambda: None
+            self.requestQuit = lambda: None
+            self._onHelpMenuAction = lambda name: None
+            self._onAboutMenuAction = lambda: None
+            self._onPreferencesMenuAction = lambda: None
+
+    app = _MenuApp()
+
+    save_calls = []
+    save_action = QtWidgets.QAction("Save Folder Analysis", main_window)
+    save_action.setShortcut(QtGui.QKeySequence.Save)
+    save_action.triggered.connect(lambda: save_calls.append(True))
+
+    app._buildMenus(
+        main_window.menuBar(),
+        saveFolderAnalysisAction=save_action,
+    )
+
+    file_menu = main_window.menuBar().actions()[0].menu()
+    assert save_action in file_menu.actions()
+    assert save_action.shortcut() == QtGui.QKeySequence(QtGui.QKeySequence.Save)
+
+    save_action.trigger()
+    assert save_calls == [True]
 
 
 class _FakeAnalysisDir:

@@ -200,8 +200,27 @@ class SanPyApp(QtWidgets.QApplication):
         self.quit()
         return True
 
-    def _buildMenus(self, mainMenu):
-        
+    def _buildMenus(
+        self,
+        mainMenu: QtWidgets.QMenuBar,
+        saveFolderAnalysisAction: QtWidgets.QAction | None = None,
+    ) -> QtWidgets.QAction | None:
+        """Build the shared application menus for a SanPy window.
+
+        Parameters
+        ----------
+        mainMenu : QtWidgets.QMenuBar
+            Menu bar that receives the shared menus.
+        saveFolderAnalysisAction : QtWidgets.QAction or None, optional
+            Window-specific action for saving folder analysis. The launcher
+            window does not supply this action.
+
+        Returns
+        -------
+        QtWidgets.QAction or None
+            The Help menu action, used to insert window-specific menus before
+            Help.
+        """
         # fileMenu = mainMenu.addMenu("&File")
         fileMenu = mainMenu.addMenu("File")
 
@@ -221,8 +240,9 @@ class SanPyApp(QtWidgets.QApplication):
         self.openRecentMenu.aboutToShow.connect(self._refreshOpenRecent)
         fileMenu.addMenu(self.openRecentMenu)
 
-        ## fileMenu.addSeparator()
-        # fileMenu.addAction(saveDatabaseAction)
+        if saveFolderAnalysisAction is not None:
+            fileMenu.addSeparator()
+            fileMenu.addAction(saveFolderAnalysisAction)
 
         fileMenu.addSeparator()
         

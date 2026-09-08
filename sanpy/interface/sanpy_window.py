@@ -557,10 +557,18 @@ class SanPyWindow(QtWidgets.QMainWindow):
                         f'Loaded file {rowDict["parent1"]}/{ba.fileLoader.filename} {fileNote}'
                     )  # this will load ba if necc
 
-    def _buildMenus(self):
-        
+    def _buildMenus(self) -> None:
+        """Build menus for an analysis window."""
         mainMenu = self.menuBar()
-        _helpAction = self.getSanPyApp()._buildMenus(mainMenu)
+
+        saveDatabaseAction = QtWidgets.QAction("Save Folder Analysis", self)
+        saveDatabaseAction.setShortcut(QtGui.QKeySequence.Save)
+        saveDatabaseAction.triggered.connect(self.saveFilesTable)
+
+        _helpAction = self.getSanPyApp()._buildMenus(
+            mainMenu,
+            saveFolderAnalysisAction=saveDatabaseAction,
+        )
 
         # load
         # loadFileAction = QtWidgets.QAction("Open...", self)
@@ -574,10 +582,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # # open recent (submenu) will show two lists, one for files and then one for folders
         # self.openRecentMenu = QtWidgets.QMenu("Open Recent ...")
         # self.openRecentMenu.aboutToShow.connect(self._refreshOpenRecent)
-
-        saveDatabaseAction = QtWidgets.QAction("Save Folder Analysis", self)
-        saveDatabaseAction.setShortcut("Ctrl+S")
-        saveDatabaseAction.triggered.connect(self.saveFilesTable)
 
         # buildDatabaseAction = QtWidgets.QAction('Build Big Database ...', self)
         # buildDatabaseAction.triggered.connect(self.buildDatabase)
