@@ -16,6 +16,7 @@ from sanpy.bAnalysisResults import analysisResultDict
 from sanpy.bDetection import getDefaultDetection
 from sanpy.io.zarr_export.exporter import export_collection
 from sanpy.io.zarr_export.json_codec import json_value
+from sanpy.io.zarr_export.pyabf_adapter import snapshot_abf
 from sanpy.io.zarr_export.validator import SanPyZarrValidationError, validate_collection
 from sanpy.trace_overlays import get_trace_overlay_definitions
 
@@ -75,6 +76,32 @@ def test_export_is_zarr3_and_preserves_runtime_state(
     assert (root / "tables" / "analysis_results.csv").is_file()
     assert (root / "tables" / "analysis_results.parquet").is_file()
     validate_collection(destination)
+
+
+def test_export_normalizes_only_epoch_levels_in_both_table_formats(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Round epoch levels consistently without mutating SanPy results."""
+    analysis = _analysis(small_abf)
+    analysis.spikeDetect(sanpy.bDetection().getDetectionDict("SA Node"))
+    original_results = analysis.spikeDict.asDataFrame().copy(deep=True)
+    original_epochs = snapshot_abf(small_abf).epochs
+    destination = tmp_path / "epoch-levels.sanpy.zarr"
+
+    export_collection([analysis], destination, table_format="both")
+
+    tables = _recording_root(destination) / "tables"
+    for name, column, original in (
+        ("epochs", "level", original_epochs),
+        ("analysis_results", "epochLevel", original_results),
+    ):
+        expected = original[column].round(2).reset_index(drop=True)
+        csv_values = pd.read_csv(tables / f"{name}.csv")[column]
+        parquet_values = pd.read_parquet(tables / f"{name}.parquet")[column]
+        pd.testing.assert_series_equal(csv_values, expected, check_names=False)
+        pd.testing.assert_series_equal(parquet_values, expected, check_names=False)
+
+    pd.testing.assert_frame_equal(analysis.spikeDict.asDataFrame(), original_results)
 
 
 @pytest.mark.parametrize("table_format,extension", [("csv", ".csv"), ("parquet", ".parquet")])

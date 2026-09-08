@@ -24,6 +24,9 @@ from .table_writer import write_table
 from .validator import validate_collection
 
 
+_EPOCH_LEVEL_DECIMAL_PLACES = 2
+
+
 def export_collection(
     analyses: Iterable[Any],
     destination: str | Path,
@@ -187,8 +190,16 @@ def _write_recording(
     if sanpy_state.dvdt is not None:
         _array(group, "dvdt", sanpy_state.dvdt, (1, min(sanpy_state.dvdt.shape[1], chunk_points)), ("sweep", "point"), f"{acquisition.channel_units[0]}/ms")
 
-    epoch_resource = write_table(acquisition.epochs, tables_root / "epochs", table_format)
-    result_resource = write_table(sanpy_state.analysis_results, tables_root / "analysis_results", table_format)
+    epoch_resource = write_table(
+        _normalize_epoch_level(acquisition.epochs, "level"),
+        tables_root / "epochs",
+        table_format,
+    )
+    result_resource = write_table(
+        _normalize_epoch_level(sanpy_state.analysis_results, "epochLevel"),
+        tables_root / "analysis_results",
+        table_format,
+    )
     _write_json(metadata_root / "sanpy_metadata.json", sanpy_state.metadata)
     _write_json(metadata_root / "detection_parameters.json", sanpy_state.detection_parameters)
     _write_json(metadata_root / "detection_parameter_definitions.json", sanpy_state.detection_definitions)
@@ -238,6 +249,15 @@ def _write_recording(
             },
         },
     )
+
+
+def _normalize_epoch_level(table: Any, column: str) -> Any:
+    """Round one exported epoch-level column without mutating its snapshot."""
+    if column not in table.columns:
+        return table
+    normalized = table.copy(deep=True)
+    normalized[column] = normalized[column].round(_EPOCH_LEVEL_DECIMAL_PLACES)
+    return normalized
 
 
 def _array(
