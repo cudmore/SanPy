@@ -820,11 +820,26 @@ def myRun2(durSec=10, amp=8, baseLineShift=-60, fs=10000, doPlot=False, gK=36):
     )
     timeArray = arange(0, durMs, stepMs)
     inputCurrent = zeros(len(timeArray))
-    startStepMs = 20
-    stopStepMs = durMs - 20
+    epochIndex = zeros(len(timeArray), dtype=int)
+
+    startStepMs = 250
+    # startStepMs = 1000
+
+    stopStepMs = durMs - 250
+    # stopStepMs = durMs - 1000
+
+    _small_epoch_0_ms = 10
+
     for i, t in enumerate(timeArray):
-        if startStepMs <= t <= stopStepMs:
+        if t < _small_epoch_0_ms:
+            epochIndex[i] = 0
+        elif t < startStepMs:
+            epochIndex[i] = 1
+        elif startStepMs <= t <= stopStepMs:
             inputCurrent[i] = amp  # 10 # uA/cm2
+            epochIndex[i] = 2  # hard coding 2 to match abf current clamp for plot FI
+        elif t > stopStepMs:
+            epochIndex[i] = 3
 
     noiseModel = "Subunit"  # []'Subunit', None]
     n = Neuron(timeArray=timeArray, inputCurrent=inputCurrent, noiseModel=noiseModel)
@@ -834,85 +849,59 @@ def myRun2(durSec=10, amp=8, baseLineShift=-60, fs=10000, doPlot=False, gK=36):
     if doPlot:
         n.plotVoltage()
 
-    return n.timeArray, n.inputCurrent, n.voltageArray
-
-
-def myRun(doPlot=True):
-    # added by robert cudmore, abb
-    durMs = 500.01  # 100.01
-    stepMs = 0.01
-    print(f"myRun() durMs:{durMs} stepMs:{stepMs}")
-    timeArray = arange(0, durMs, stepMs)
-    inputCurrent = zeros(len(timeArray))
-    startStepMs = 20
-    stopStepMs = durMs - 20
-    for i, t in enumerate(timeArray):
-        if startStepMs <= t <= stopStepMs:
-            inputCurrent[i] = 8  # 10 # uA/cm2
-
-    n = Neuron(timeArray=timeArray, inputCurrent=inputCurrent, noiseModel="Subunit")
-    # n()
-    n.solveStochasticModel()
-    n.voltageArray -= 60
-
-    n.plotVoltage()
-    # n.plotChannelFractions()
-
-    """
-    import pandas as pd
-    outFile = 'hh1.csv'
-    df = pd.DataFrame(columns=['s', 'mV'])
-    df['s'] = n.timeArray / 1000
-    df['mV'] = n.voltageArray
-    print('saving outFile:', outFile)
-    df.to_csv(outFile, index=False)
-    """
-
+    return n.timeArray, n.inputCurrent, n.voltageArray, epochIndex
 
 if __name__ == "__main__":
-    # works
-    # myRun(doPlot=True)
-
     # amp 5, gK2 28
     gK1 = 36
     gK2 = 30  # 31  # 32  # 12
-    amp = 4  # 5 is good # 7
 
     now = datetime.datetime.now()
     dateStr = now.strftime("%Y%m%d")
     timeStr = now.strftime("%H%M%S")
-    saveFile = f"/Users/cudmore/Desktop/sanpy-model-data/stoch-hh-gk-{dateStr}-{timeStr}-{gK1}-{gK2}.csv"
+    saveFile = f"/Users/cudmore/Desktop/sanpy-model-data/stoch-hh-gk-{dateStr}-{timeStr}-{gK1}-{gK2}.sanpy"
 
     durSec = 1
     doPlot = False
 
-    # run 1
-    timeArray, inputCurrent, voltageArray = myRun2(
-        durSec=durSec, amp=amp, baseLineShift=60, fs=10000, doPlot=doPlot, gK=gK1
-    )
+    amp_list = [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    for _index, _amp in enumerate(amp_list):
+        
+        timeArray, inputCurrent, voltageArray, epochIndex = myRun2(
+            durSec=durSec,
+            amp=_amp,
+            baseLineShift=60,
+            fs=10000,
+            doPlot=doPlot,
+            gK=gK2
+        )
 
-    # ms to seconds
-    timeArray /= 1000
+        timeArray /= 1000
 
-    print(f"saving gK:{gK1} {saveFile}")
-    df = pd.DataFrame()
-    df["seconds"] = timeArray
-    df["mV"] = voltageArray
-    # df['inputCurrent'] = inputCurrent
+        # plot with mpl, plot a mpl subplot with input, voltage, epoch
+        if 0:
+            import matplotlib.pyplot as plt
+            fig, axs = plt.subplots(3, 1, figsize=(10, 10))
+            axs[0].plot(timeArray, inputCurrent)
+            axs[1].plot(timeArray, voltageArray)
+            axs[2].plot(timeArray, epochIndex)
+            plt.show()
+
+        if _index == 0:
+            df = pd.DataFrame()
+            df['seconds'] = timeArray
+            df['epoch_index'] = epochIndex
+
+        _mv_col_name = f"mv_{_index}"
+        _cmd_col_name = f"cmd_{_index}"
+        print(f"  appending _mv_col_name:{_mv_col_name} _amp:{_amp} gK:{gK2}")
+        
+        # import numpy as np
+        # print(f'  inputCurrent: min:{np.min(inputCurrent)} max:{np.max(inputCurrent)}')
+        
+        df[_mv_col_name] = voltageArray
+        df[_cmd_col_name] = inputCurrent
+
+    # df.to_csv(saveFile, index=False, header=False, mode="a")
+    print(f'saving file: {saveFile}')
     df.to_csv(saveFile, index=False)
-
-    # run 2
-    timeArray, inputCurrent, voltageArray = myRun2(
-        durSec=durSec, amp=amp, baseLineShift=60, fs=10000, doPlot=doPlot, gK=gK2
-    )
-
-    # ms to seconds
-    timeArray /= 1000
-    timeArray += durSec + (0.01 / 1000)
-
-    print(f"saving and appending gK:{gK2} {saveFile}")
-    df = pd.DataFrame()
-    df["seconds"] = timeArray
-    df["mV"] = voltageArray
-    # df['inputCurrent'] = inputCurrent
-    df.to_csv(saveFile, index=False, header=False, mode="a")
