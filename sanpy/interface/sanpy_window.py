@@ -35,18 +35,25 @@ class SanPyWindow(QtWidgets.QMainWindow):
     signalSelectSpikeList = QtCore.Signal(object)
     """Emit spike list selection."""
 
-    def __init__(self, sanPyApp : "sanpy.interface.SanPyApp", path, parent=None):
-        """Main SanPy window to show one file or a file of files.
+    def __init__(
+        self,
+        sanPyApp: "sanpy.interface.SanPyApp",
+        path: str | os.PathLike[str] | None,
+        parent: QtWidgets.QWidget | None = None,
+    ) -> None:
+        """Initialize a window for one recording or a folder of recordings.
 
-        Parameters
-        ----------
-        sanPyApp : SanPyApp
-            Allows access to app wide info such as options, file loaders, plugins
-        path : str
-            Full path to folder with raw files (abf,csv,tif).
+        Args:
+            sanPyApp: Application that owns shared options, loaders, and plugins.
+            path: Recording or folder path to load, or None for an empty window.
+            parent: Optional parent widget.
         """
 
         super().__init__(parent)
+
+        # Let Qt destroy the graphics hierarchy after an accepted close event.
+        # Delayed Python garbage collection of pyqtgraph scenes can crash PyQt.
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
 
         logger.info(f'Initializing SanPyWindow with path: {path}')
 
@@ -351,12 +358,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
         for plugin in list(self._openPluginSet):
             plugin.getWidget().close()
 
-    def closeEvent(self, event):
-        """Called when user closes main window or selects quit.
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """Close the analysis window after preserving unsaved work.
 
-        Parameters
-        ----------
-        event : PyQt5.QtGui.QCloseEvent
+        Args:
+            event: Qt close event to accept or reject.
         """
 
         logger.info(event)
@@ -376,7 +382,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         if not app.quitInProgress and app.isLastAnalysisWindow(self):
             app.showOpenFirstWidget()
 
-        app.closeSanPyWindow(self)
         event.accept()
 
         #event.ignore()

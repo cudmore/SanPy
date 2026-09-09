@@ -1,8 +1,10 @@
+import gc
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import Mock
 
 import pytest
+import pyqtgraph as pg
 from qtpy import QtCore, QtGui, QtWidgets
 
 import sanpy.interface.sanpy_window as sanpy_window_module
@@ -85,6 +87,86 @@ def test_request_quit_closes_everything_after_all_windows_approve():
     assert app._openFirstWidget.close_calls == 1
     assert app.quit_calls == 1
     assert app._quitInProgress is True
+
+
+def test_window_registry_removes_window_only_after_qt_destroys_it(
+    qtbot: Any,
+) -> None:
+    """Keep a strong window reference until Qt completes deferred deletion.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    app = _FakeApp([])
+    app._on_sanpy_window_destroyed = (
+        SanPyApp._on_sanpy_window_destroyed.__get__(app)
+    )
+    window = QtWidgets.QMainWindow()
+    window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+    qtbot.addWidget(window)
+
+    SanPyApp._register_sanpy_window(app, window)
+    assert app._windowList == [window]
+
+    window.show()
+    window.close()
+    assert app._windowList == [window]
+
+    # Deliver Qt's deferred-delete event before Python can collect the wrapper.
+    QtCore.QCoreApplication.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
+    assert app._windowList == []
+
+
+def test_sanpy_window_enables_qt_managed_deletion(
+    monkeypatch: pytest.MonkeyPatch, qtbot: Any
+) -> None:
+    """Apply the analysis-window lifetime policy during construction.
+
+    Args:
+        monkeypatch: Pytest fixture used to isolate expensive window setup.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    geometry = {"x": 0, "y": 0, "width": 800, "height": 600}
+    app = SimpleNamespace(newWindowGeometry=lambda: geometry, quitInProgress=True)
+    monkeypatch.setattr(SanPyWindow, "_buildUI", lambda _window: None)
+    monkeypatch.setattr(SanPyWindow, "_buildMenus", lambda _window: None)
+    monkeypatch.setattr(SanPyWindow, "_load", lambda _window: None)
+    monkeypatch.setattr(SanPyWindow, "slot_updateStatus", lambda _window, _text: None)
+
+    window = SanPyWindow(app, None)
+    qtbot.addWidget(window)
+
+    assert window.testAttribute(QtCore.Qt.WA_DeleteOnClose)
+
+
+def test_qt_managed_plot_windows_survive_repeated_garbage_collection(
+    qtbot: Any,
+) -> None:
+    """Destroy plot windows through Qt before forcing Python collection.
+
+    Args:
+        qtbot: Pytest-Qt helper that provides the running Qt application.
+    """
+    app = _FakeApp([])
+    app._on_sanpy_window_destroyed = (
+        SanPyApp._on_sanpy_window_destroyed.__get__(app)
+    )
+
+    for _index in range(10):
+        window = QtWidgets.QMainWindow()
+        window.setAttribute(QtCore.Qt.WA_DeleteOnClose, True)
+        plot_widget = pg.PlotWidget(window)
+        plot_widget.plot([0, 1, 2], [0, 1, 0])
+        window.setCentralWidget(plot_widget)
+        SanPyApp._register_sanpy_window(app, window)
+
+        window.show()
+        window.close()
+        # Complete C++ graphics destruction before collecting Python cycles.
+        QtCore.QCoreApplication.sendPostedEvents(None, QtCore.QEvent.DeferredDelete)
+        gc.collect()
+
+    assert app._windowList == []
 
 
 def test_file_menu_exposes_folder_save_action(qtbot):
@@ -357,13 +439,13 @@ def test_close_plugin_windows_uses_snapshot():
     assert owner._openPluginSet == set()
 
 
-def test_final_analysis_close_closes_plugins_and_restores_launcher():
+def test_final_analysis_close_closes_plugins_and_restores_launcher() -> None:
+    """Close plugins and restore the launcher without early deregistration."""
     calls = []
     app = SimpleNamespace(
         quitInProgress=False,
         isLastAnalysisWindow=lambda window: True,
         showOpenFirstWidget=lambda: calls.append("show launcher"),
-        closeSanPyWindow=lambda window: calls.append("unregister analysis"),
     )
     window = SimpleNamespace(
         getSanPyApp=lambda: app,
@@ -374,7 +456,7 @@ def test_final_analysis_close_closes_plugins_and_restores_launcher():
 
     SanPyWindow.closeEvent(window, event)
 
-    assert calls == ["close plugins", "show launcher", "unregister analysis"]
+    assert calls == ["close plugins", "show launcher"]
     assert event.accepted is True
 
 
@@ -395,12 +477,10 @@ def test_cancelled_analysis_close_keeps_plugins_and_window_open():
     assert event.accepted is False
 
 
-def test_application_quit_does_not_restore_launcher_or_prompt_again():
+def test_application_quit_does_not_restore_launcher_or_prompt_again() -> None:
+    """Accept app-driven closure without restoring or prompting again."""
     calls = []
-    app = SimpleNamespace(
-        quitInProgress=True,
-        closeSanPyWindow=lambda window: calls.append("unregister analysis"),
-    )
+    app = SimpleNamespace(quitInProgress=True)
     window = SimpleNamespace(
         getSanPyApp=lambda: app,
         prepareToClose=lambda: calls.append("prompt again"),
@@ -410,7 +490,7 @@ def test_application_quit_does_not_restore_launcher_or_prompt_again():
 
     SanPyWindow.closeEvent(window, event)
 
-    assert calls == ["close plugins", "unregister analysis"]
+    assert calls == ["close plugins"]
     assert event.accepted is True
 
 

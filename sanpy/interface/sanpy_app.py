@@ -126,8 +126,8 @@ class SanPyApp(QtWidgets.QApplication):
     def __init__(self, argv):
         super().__init__(argv)
 
-        self._windowList = []
-        # list of open SanPyWindow
+        self._windowList: list[SanPyWindow] = []
+        # Keep analysis windows alive until Qt emits their destroyed signal.
 
         self._quitInProgress = False
 
@@ -191,6 +191,39 @@ class SanPyApp(QtWidgets.QApplication):
     def isLastAnalysisWindow(self, window: SanPyWindow) -> bool:
         """Return True when ``window`` is the only registered analysis window."""
         return len(self._windowList) == 1 and self._windowList[0] is window
+
+    def _register_sanpy_window(self, window: SanPyWindow) -> None:
+        """Register an analysis window until Qt destroys it.
+
+        Args:
+            window: Analysis window whose Qt lifetime should be tracked.
+        """
+        window_id = id(window)
+
+        # Capture only the immutable ID. Capturing the window in this callback
+        # would create another strong Python reference to the closing widget.
+        window.destroyed.connect(
+            partial(self._on_sanpy_window_destroyed, window_id)
+        )
+        self._windowList.append(window)
+
+    def _on_sanpy_window_destroyed(
+        self,
+        window_id: int,
+        _destroyed_object: QtCore.QObject | None = None,
+    ) -> None:
+        """Remove a window from the registry after Qt destroys it.
+
+        Args:
+            window_id: Python identity recorded when the window was registered.
+            _destroyed_object: QObject supplied by Qt's ``destroyed`` signal.
+        """
+        # Do not inspect the emitted QObject because its C++ destruction is
+        # already in progress. The stable Python ID is sufficient for removal.
+        for index, window in enumerate(self._windowList):
+            if id(window) == window_id:
+                self._windowList.pop(index)
+                return
 
     @property
     def quitInProgress(self) -> bool:
@@ -558,15 +591,21 @@ class SanPyApp(QtWidgets.QApplication):
 
         return newWindowGeometry
 
-    def openSanPyWindow(self, path=None, sweep=None, spikeNumber=None):
-        """Open a new SanPyWindow from a path.
-        
-        Can be either a file or a folder.
-        
-        Parameters
-        ----------
-        sweep : int
-            Only works for file path
+    def openSanPyWindow(
+        self,
+        path: str | os.PathLike[str] | None = None,
+        sweep: int | None = None,
+        spikeNumber: int | None = None,
+    ) -> SanPyWindow:
+        """Open or activate an analysis window for a recording or folder.
+
+        Args:
+            path: Recording or folder path, or None for an empty window.
+            sweep: Optional sweep to select when opening a recording.
+            spikeNumber: Optional spike to select when opening a recording.
+
+        Returns:
+            Newly created or existing analysis window for ``path``.
         """
         
         logger.info(f'path:{path}')
@@ -589,7 +628,7 @@ class SanPyApp(QtWidgets.QApplication):
             foundWindow.show()
             foundWindow.raise_()  # bring to front, raise is a python keyword
             foundWindow.activateWindow()  # bring to front
-            self._windowList.append(foundWindow)
+            self._register_sanpy_window(foundWindow)
 
         # only set sweep and select spike if
         # we opened a file path
@@ -616,14 +655,6 @@ class SanPyApp(QtWidgets.QApplication):
 
         return foundWindow
     
-    def closeSanPyWindow(self, theWindow : SanPyWindow):
-        """Remove theWindow from self._windowList.
-        """
-        try:
-            self._windowList.remove(theWindow)
-        except ValueError:
-            logger.warning("Analysis window was not registered: %r", theWindow)
-
     def _onHelpMenuAction(self, name: str):
         if name == "SanPy Help (Opens In Browser)":
             url = "https://cudmore.github.io/SanPy/desktop-application"
