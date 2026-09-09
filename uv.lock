@@ -177,7 +177,7 @@ name = "cffi"
 version = "2.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "pycparser", marker = "implementation_name != 'PyPy'" },
+    { name = "pycparser" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/9e/ef/008a1939e372c06329a3fce4279c02f328488f3526744906eeec3da7ad5f/cffi-2.1.1.tar.gz", hash = "sha256:dd31f52ea1086513bb9df30f8fcee9b8918323ae067a3d5b78bc826a000712be", size = 530807, upload-time = "2026-08-03T21:21:18.939Z" }
 wheels = [
@@ -777,7 +777,7 @@ name = "macholib"
 version = "1.16.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "altgraph", marker = "sys_platform != 'win32'" },
+    { name = "altgraph" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/10/2f/97589876ea967487978071c9042518d28b958d87b17dceb7cdc1d881f963/macholib-1.16.4.tar.gz", hash = "sha256:f408c93ab2e995cd2c46e34fe328b130404be143469e41bc366c807448979362", size = 59427, upload-time = "2025-11-22T08:28:38.373Z" }
 wheels = [
@@ -1325,7 +1325,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess", marker = "sys_platform != 'win32'" },
+    { name = "ptyprocess" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -1654,15 +1654,15 @@ wheels = [
 ]
 
 [[package]]
-name = "pyqtdarktheme"
-version = "2.1.0"
+name = "pyqtdarktheme-fork"
+version = "2.3.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "darkdetect" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5c/f1/786feaad7a333072b34a913dbe38aef94b5ae43ad188934f5d70007aea79/pyqtdarktheme-2.1.0.tar.gz", hash = "sha256:5f8274ddfa3a5481ed9743cdb0f9debfeb7ff695b3a0d202a8104361d17dadb8", size = 42186, upload-time = "2022-12-25T08:33:11.662Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/e8/9d/2ce9dca0e37e4ef2385102effec80457e981b0a64923376d122a52190bef/pyqtdarktheme_fork-2.3.6.tar.gz", hash = "sha256:9ab287a033a4742767bcb6698fb60247beef7967d74eb949f7ab36ee866ff1d7", size = 40476, upload-time = "2026-03-04T12:50:23.721Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/12/cd/8ce0ac84e9f68dc549edcc5cbdeac7511439c5f7ee6c05f1f8826ef05d44/pyqtdarktheme-2.1.0-py3-none-any.whl", hash = "sha256:8739d99502230fbaca42551ea033c9ae31c81c4ebfec2f1ffde38f32a18bea7a", size = 54242, upload-time = "2022-12-25T08:33:10.125Z" },
+    { url = "https://files.pythonhosted.org/packages/8f/8e/fecdf206415c432fcc301a19701ea437af5dbdcd33020ac4f5288d060a65/pyqtdarktheme_fork-2.3.6-py3-none-any.whl", hash = "sha256:876dc8cc0e01468a3f7fe5a860dfd422ccab48b33beef18dfdecb6312c20c556", size = 54552, upload-time = "2026-03-04T12:50:21.311Z" },
 ]
 
 [[package]]
@@ -1918,7 +1918,7 @@ dependencies = [
     { name = "platformdirs" },
     { name = "pyabf" },
     { name = "pyqt5" },
-    { name = "pyqtdarktheme" },
+    { name = "pyqtdarktheme-fork" },
     { name = "pyqtgraph" },
     { name = "qtpy" },
     { name = "requests" },
@@ -1981,7 +1981,7 @@ requires-dist = [
     { name = "pyabf", specifier = "==2.3.8" },
     { name = "pyarrow", marker = "extra == 'zarr-export-parquet'", specifier = ">=19,<24" },
     { name = "pyqt5", specifier = "==5.15.11" },
-    { name = "pyqtdarktheme", specifier = "==2.1.0" },
+    { name = "pyqtdarktheme-fork", specifier = "==2.3.6" },
     { name = "pyqtgraph", specifier = ">=0.13.7,<1" },
     { name = "qtpy", specifier = ">=2.4,<3" },
     { name = "requests", specifier = ">=2.32,<3" },

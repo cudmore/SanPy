@@ -35,7 +35,7 @@ dependencies = [
     "platformdirs>=4.3,<5",
     "pyabf==2.3.8",
     "PyQt5==5.15.11",
-    "pyqtdarktheme==2.1.0",
+    "pyqtdarktheme-fork==2.3.6",
     "pyqtgraph>=0.13.7,<1",
     "QtPy>=2.4,<3",
     "requests>=2.32,<3",
