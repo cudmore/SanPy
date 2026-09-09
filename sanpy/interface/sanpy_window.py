@@ -1,7 +1,7 @@
 import os
 import platform
 from functools import partial
-from typing import List
+from typing import List, Optional
 import webbrowser  # to open online help
 
 import pandas as pd
@@ -154,13 +154,21 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
     # 20231229 moving this to new SanPyWindow
     # the main window opens plugins, the app does not
-    def runPlugin(self, pluginName: str, ba: sanpy.bAnalysis, show: bool = True):
+    def runPlugin(
+        self,
+        pluginName: str,
+        ba: Optional[sanpy.bAnalysis],
+        show: bool = True,
+    ) -> Optional[object]:
         """Run one plugin with given a bAnalysis.
 
         Args:
-            pluginName (str):
-            ba (bAnalysis): object
-            show:
+            pluginName: Human-readable plugin name.
+            ba: Analysis supplied to the plugin, if one is selected.
+            show: Whether to open and register a standalone plugin window.
+
+        Returns:
+            The plugin instance, or ``None`` when the plugin name is unknown.
         """
         pluginDict = self.getSanPyApp().getPlugins().pluginDict
         if pluginName not in pluginDict.keys():
@@ -231,7 +239,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             # except(TypeError) as e:
             #     logger.error(f'Error opening plugin "{pluginName}": {e}')
             #     return
-            if not newPlugin.getInitError():
+            if not newPlugin.getInitError() and show:
                 self._openPluginSet.add(newPlugin)
 
             return newPlugin
@@ -520,14 +528,15 @@ class SanPyWindow(QtWidgets.QMainWindow):
         return rowDict
         """
 
-    def slot_fileTableClicked(self, row, rowDict, selectingAgain):
+    def slot_fileTableClicked(
+        self, row: int, rowDict: dict, selectingAgain: bool
+    ) -> None:
         """Respond to selections in file table.
 
-        Parameters
-        ----------
-        row (int):
-        rowDict (dict):
-        selectingAgain (bool): True if row was already selected
+        Args:
+            row: Source row in the folder analysis table.
+            rowDict: File-table values for the selected row.
+            selectingAgain: Whether the selected row was already active.
         """
 
         if selectingAgain:
@@ -556,6 +565,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
                     self.slot_updateStatus(
                         f'Loaded file {rowDict["parent1"]}/{ba.fileLoader.filename} {fileNote}'
                     )  # this will load ba if necc
+            else:
+                self.slot_updateStatus(
+                    f'Unable to load "{rowDict["File"]}"; see the SanPy log for details.'
+                )
 
     def _buildMenus(self) -> None:
         """Build menus for an analysis window."""
@@ -1359,11 +1372,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
         print('  ', rowDict)
     '''
 
-    def slot_closeWindow(self, pluginObj : "sanpy.interface.sanpyLugin"):
+    def slot_closeWindow(self, pluginObj: object) -> None:
         """Close named plugin window.
 
         Args:
-            pluginObj (object): The running plugin object reference.
+            pluginObj: The running plugin object reference.
 
         Important:
             Need to disconnect signal/slot using _disconnectSignalSlot().
@@ -1374,14 +1387,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
             logger.info(f'Removing plugin from _openSet: "{pluginObj.getHumanName()}"')
             # Critical to detatch signal/slot, removing from set does not seem to do this?
             pluginObj._disconnectSignalSlot()
-            self._openPluginSet.remove(pluginObj)
+            self._openPluginSet.discard(pluginObj)
 
             # remove from preferences
             # if pluginObj is not None and self.getSanPyApp() is not None:
             #     self.getSanPyApp().configDict.removePlugin(pluginObj.getHumanName())
 
-        except KeyError as e:
-            logger.exception(e)
+        except RuntimeError as error:
+            logger.warning("Plugin signals were already disconnected: %s", error)
 
     def slot_updateAnalysis(self, sDict : dict):
         """Respond to both detect and user setting columns in ba.
@@ -1584,15 +1597,12 @@ class SanPyWindow(QtWidgets.QMainWindow):
         logger.info(f"topLevel:{topLevel} sender:{sender}")
         return
 
-    def slot_closeTab(self, index, sender):
+    def slot_closeTab(self, index: int, sender: QtWidgets.QTabWidget) -> None:
         """Close an open plugin tab.
 
-        Parameters
-        ----------
-        index : int
-            The index into sender that gives us the tab, sender.widget(index)
-        sender : PyQt5.QtWidgets.QTabWidget
-            The tab group where a single tab was was closed
+        Args:
+            index: Index of the tab being closed.
+            sender: Tab group containing the embedded plugin.
         """
 
         logger.info(f"index:{index} sender:{type(sender)}")
@@ -1610,8 +1620,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # 20231229 not need in multiple windows, not keeping track of open plugins
         # self.myPlugins.slot_closeWindow(pluginInstancePointer)
 
-        # remove the tab
+        # Removing a tab does not close its widget or disconnect its signals.
         sender.removeTab(index)
+        if pluginInstancePointer is not None:
+            pluginInstancePointer.close()
+            pluginInstancePointer.deleteLater()
 
     def slot_changeTab(self, index, sender):
         """User brought a different tab to the front

@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from sanpy.analysisDir import analysisDir
+from sanpy.fileloaders import getFileLoaders
 from sanpy.fileloaders.fileLoader_csv import fileLoader_text
 
 
@@ -56,6 +58,29 @@ def test_epoch_index_is_optional(tmp_path):
 
     assert not loader.getLoadError()
     assert loader.getEpochTable(0) is None
+
+
+def test_rejects_legacy_sec_column_without_raising() -> None:
+    """Reject a legacy time-column spelling as a contained load failure."""
+    loader = fileLoader_text("tests/data/2021_07_20_0010.sanpy")
+
+    assert loader.getLoadError()
+    assert loader.sweepList is None
+    assert "sweeps: unavailable" in str(loader)
+
+
+def test_analysis_dir_does_not_return_failed_recording() -> None:
+    """Prevent a malformed recording from reaching GUI signal consumers."""
+    manager = analysisDir.__new__(analysisDir)
+    manager.path = "tests/data"
+    manager.dbFile = "sanpy_recording_db.csv"
+    manager._fileLoaderDict = getFileLoaders()
+
+    analysis = manager.loadOneAnalysis(
+        "tests/data/2021_07_20_0010.sanpy"
+    )
+
+    assert analysis is None
 
 
 @pytest.mark.parametrize(

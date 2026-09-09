@@ -231,9 +231,15 @@ class fileLoader_base(ABC):
         # check our work
         self._checkLoadedData()
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Get a short string representing this file."""
-        txt = f"file: {self.filename} sweeps: {self.numSweeps} dur (Sec):{self.recordingDur}"
+        num_sweeps = (
+            len(self._sweepList) if self._sweepList is not None else "unavailable"
+        )
+        txt = (
+            f"file: {self.filename} sweeps: {num_sweeps} "
+            f"dur (Sec):{self.recordingDur}"
+        )
         return txt
 
     @property

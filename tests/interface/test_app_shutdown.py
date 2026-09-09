@@ -1,5 +1,6 @@
 from types import SimpleNamespace
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
 from qtpy import QtCore, QtGui, QtWidgets
@@ -165,6 +166,98 @@ def test_view_menu_omits_metadata_panel_action(qtbot: Any) -> None:
     assert "Plot Options" in action_names
     assert SetMetaData.myHumanName == "Set Meta Data"
     assert SetMetaData.showInMenu
+
+
+def test_failed_file_selection_is_not_broadcast() -> None:
+    """Report a failed recording load without emitting a file-switch event."""
+    statuses = []
+    emitted = []
+    window = SimpleNamespace(
+        startSec=None,
+        stopSec=None,
+        myAnalysisDir=SimpleNamespace(getAnalysis=lambda row: None),
+        signalSwitchFile=SimpleNamespace(
+            emit=lambda *args: emitted.append(args)
+        ),
+        slot_updateStatus=lambda message: statuses.append(message),
+    )
+    row = {
+        "File": "invalid.sanpy",
+        "Start(s)": float("nan"),
+        "Stop(s)": float("nan"),
+    }
+
+    SanPyWindow.slot_fileTableClicked(window, 4, row, False)
+
+    assert emitted == []
+    assert statuses[-1] == (
+        'Unable to load "invalid.sanpy"; see the SanPy log for details.'
+    )
+
+
+def test_only_standalone_plugins_are_registered() -> None:
+    """Keep embedded plugin tabs out of the standalone Windows menu set."""
+    widget = SimpleNamespace(
+        show=lambda: None,
+        hide=lambda: None,
+        setVisible=lambda visible: None,
+    )
+    plugin = Mock()
+    plugin.getInitError.return_value = False
+    plugin.getWidget.return_value = widget
+    constructor = Mock(return_value=plugin)
+    constructor.myHumanName = "Example"
+    plugin_info = {
+        "Example": {
+            "constructor": constructor,
+        }
+    }
+    app = SimpleNamespace(
+        getPlugins=lambda: SimpleNamespace(pluginDict=plugin_info)
+    )
+    window = SimpleNamespace(
+        startSec=None,
+        stopSec=None,
+        _openPluginSet=set(),
+        getSanPyApp=lambda: app,
+    )
+
+    SanPyWindow.runPlugin(window, "Example", None, show=False)
+    assert window._openPluginSet == set()
+
+    SanPyWindow.runPlugin(window, "Example", None, show=True)
+    assert window._openPluginSet == {plugin}
+
+
+def test_closing_embedded_tab_closes_and_deletes_plugin() -> None:
+    """Closing a tab must end the embedded plugin widget lifecycle."""
+    calls = []
+    plugin = SimpleNamespace(
+        close=lambda: calls.append("close"),
+        deleteLater=lambda: calls.append("delete"),
+    )
+    tabs = SimpleNamespace(
+        widget=lambda index: plugin,
+        removeTab=lambda index: calls.append(("remove", index)),
+    )
+
+    SanPyWindow.slot_closeTab(SimpleNamespace(), 2, tabs)
+
+    assert calls == [("remove", 2), "close", "delete"]
+
+
+def test_plugin_close_is_safe_when_plugin_was_not_registered() -> None:
+    """Disconnect embedded plugins without requiring Windows-menu ownership."""
+    calls = []
+    plugin = Mock()
+    plugin.getHumanName.return_value = "Example"
+    plugin._disconnectSignalSlot.side_effect = lambda: calls.append("disconnect")
+    window = SimpleNamespace(_openPluginSet=set())
+
+    SanPyWindow.slot_closeWindow(window, plugin)
+
+    assert calls == ["disconnect"]
+    assert window._openPluginSet == set()
 
 
 class _FakeAnalysisDir:

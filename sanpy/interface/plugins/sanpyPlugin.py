@@ -1116,13 +1116,22 @@ class sanpyPlugin(QtWidgets.QWidget):
         """
         pass
 
-    def _updateTopToolbar(self):
+    def _updateTopToolbar(self) -> None:
         """Update the top toolbar on state change like switch file."""
         
         if self.ba is None:
             return
 
         _sweepList = self.ba.fileLoader.sweepList
+        if _sweepList is None:
+            self._blockComboBox = True
+            self._sweepComboBox.clear()
+            self._sweepComboBox.setEnabled(False)
+            self._epochComboBox.clear()
+            self._epochComboBox.setEnabled(False)
+            self._blockComboBox = False
+            return
+
         self._blockComboBox = True
         self._sweepComboBox.clear()
         self._sweepComboBox.addItem("All")

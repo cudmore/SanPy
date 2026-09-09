@@ -1,18 +1,10 @@
 import os
 import sys
-import pytest
-
 import sanpy
-from sanpy.interface.sanpy_app import SanPyApp
 from sanpy.interface.sanpy_window import SanPyWindow
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
-
-# this makes qapp be our SanPyApp, it is derived from QApplication
-@pytest.fixture(scope="session")
-def qapp_cls():
-    return SanPyApp
 
 # @pytest.fixture
 # def sanpyAppObject(qtbot):

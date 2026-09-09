@@ -836,11 +836,28 @@ class analysisDir:
 
         return df
 
-    def loadOneAnalysis(self, path, uuid=None, allowAutoLoad=True, verbose=False):
-        """Load one bAnalysis either from original file path or uuid of h5 file.
+    def loadOneAnalysis(
+        self,
+        path: str,
+        uuid: Optional[str] = None,
+        allowAutoLoad: bool = True,
+        verbose: bool = False,
+    ) -> Optional[sanpy.bAnalysis]:
+        """Load one analysis from its recording and optional HDF5 data.
 
         If from h5, we still need to reload sweeps !!!
         They are binary and fast, saving to h5 (in this case) is slow.
+
+        Args:
+            path: Recording path.
+            uuid: Optional analysis identifier in the folder HDF5 file.
+            allowAutoLoad: Load directly from the recording when HDF5 data is
+                unavailable.
+            verbose: Emit detailed loading messages.
+
+        Returns:
+            A valid loaded analysis, or ``None`` when the recording cannot be
+            loaded.
         """
         if verbose:
             logger.info(f'path:"{path}" uuid:"{uuid}" allowAutoLoad:"{allowAutoLoad}"')
@@ -863,6 +880,10 @@ class analysisDir:
             # load from abf
             ba = sanpy.bAnalysis(path, fileLoaderDict=self._fileLoaderDict, verbose=verbose)
 
+            if ba.loadError:
+                logger.error('Unable to load recording "%s"', path)
+                return None
+
             # load analysis from h5 file, will fail if uuid is not in file
             ba._loadHdf_pytables(hdfPath, uuid)
 
@@ -871,6 +892,10 @@ class analysisDir:
             ba = sanpy.bAnalysis(path, fileLoaderDict=self._fileLoaderDict, verbose=verbose)
             if verbose:
                 logger.info(f"    Loaded ba from path {path} and now ba:{ba}")
+
+        if ba is not None and ba.loadError:
+            logger.error('Unable to load recording "%s"', path)
+            return None
         #
         return ba
 

@@ -69,8 +69,10 @@ class fileLoader_text(fileLoader_base):
         """Load ``self.filepath`` and contain malformed-file failures."""
         try:
             self._load_file()
-        except Exception:
-            logger.exception("could not load .sanpy file: %s", self.filepath)
+        except Exception as error:
+            logger.error(
+                'Could not load .sanpy file "%s": %s', self.filepath, error
+            )
             self._loadError = True
 
     def _load_file(self) -> None:
