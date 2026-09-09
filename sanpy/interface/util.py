@@ -150,7 +150,7 @@ class sanpyCursors(QtCore.QObject):
         bottom = rect.top() + yPercentOfView  # y is flipped
         top = rect.bottom() - yPercentOfView
 
-        logger.info(f'left:{left} right:{right} bottom:{bottom} top:{top}')
+        # logger.info(f'left:{left} right:{right} bottom:{bottom} top:{top}')
 
         self._cursorA.setValue(left)
         self._cursorB.setValue(right)

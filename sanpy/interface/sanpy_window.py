@@ -435,14 +435,14 @@ class SanPyWindow(QtWidgets.QMainWindow):
             # self.signalSelectSpike.emit(data)
 
         elif this == "set x axis":
-            logger.info(f'"set x axis" {data}')
+            # logger.info(f'"set x axis" {data}')
 
             self.startSec = data[0]
             self.stopSec = data[1]
             # old
             # self.myScatterPlotWidget.selectXRange(data[0], data[1])
             # new
-            logger.info(f'"-->> emit signalSetXAxis set x axis" {data[0]} {data[1]}')
+            # logger.info(f'"-->> emit signalSetXAxis set x axis" {data[0]} {data[1]}')
             self.signalSetXAxis.emit([data[0], data[1]])  # emits to scatter plot ONLY
 
         elif this == "set full x axis":
@@ -451,7 +451,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 self.stopSec = self.get_bAnalysis().fileLoader.recordingDur
             else:
                 self.stopSec = None
-            logger.info(f'"-->> emit signalSetXAxis set full x axis" {self.startSec} {self.stopSec}')
+            # logger.info(f'"-->> emit signalSetXAxis set full x axis" {self.startSec} {self.stopSec}')
             # plugins are connected to this
             self.signalSetXAxis.emit(
                 [self.startSec, self.stopSec]
