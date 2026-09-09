@@ -3,6 +3,7 @@ import os
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 """
 DEBUG
@@ -24,6 +25,9 @@ sys.exit(1)
 from platformdirs import user_log_dir
 
 
+_LOG_BACKUP_COUNT = 1
+
+
 def getLoggerFile():
     """Get the path to save the log file.
 
@@ -35,6 +39,50 @@ def getLoggerFile():
     # (first-run copytree). platformdirs, not a hand-rolled path table.
     log_dir = user_log_dir("SanPy", appauthor=False, ensure_exists=True)
     return os.path.join(log_dir, "sanpy.log")
+
+
+def getLoggerText() -> str:
+    """Return all retained SanPy log text in chronological order.
+
+    The rotating file handler retains numbered backups alongside the active
+    log. Missing files are ignored because a new installation may not have
+    written or rotated its log yet.
+
+    Returns:
+        Contents of the retained log files, or a diagnostic when none can be
+        read.
+    """
+    log_path = Path(getLoggerFile())
+    retained_paths = [
+        log_path.with_name(f"{log_path.name}.{index}")
+        for index in range(_LOG_BACKUP_COUNT, 0, -1)
+    ]
+    retained_paths.append(log_path)
+
+    log_text = ""
+    read_errors: list[str] = []
+    for retained_path in retained_paths:
+        try:
+            text = retained_path.read_text(encoding="utf-8", errors="replace")
+        except FileNotFoundError:
+            continue
+        except OSError as error:
+            read_errors.append(f'{retained_path}: {error}')
+            continue
+
+        if log_text and not log_text.endswith("\n") and text:
+            log_text += "\n"
+        log_text += text
+
+    if read_errors:
+        diagnostic = "Log file unavailable: " + "; ".join(read_errors)
+        if log_text and not log_text.endswith("\n"):
+            log_text += "\n"
+        log_text += diagnostic
+
+    if not log_text:
+        return f"Log file unavailable: no log files found for {log_path}"
+    return log_text
 
 
 def get_logger(name, level=logging.DEBUG):
@@ -64,7 +112,7 @@ def get_logger(name, level=logging.DEBUG):
         try:
             logPath = getLoggerFile()
             f_handler = RotatingFileHandler(
-                logPath, maxBytes=2_000_000, backupCount=1
+                logPath, maxBytes=2_000_000, backupCount=_LOG_BACKUP_COUNT
             )
         except OSError as error:
             logger.warning("File logging is unavailable: %s", error)

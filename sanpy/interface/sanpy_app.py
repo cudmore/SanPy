@@ -65,7 +65,7 @@ from sanpy.interface.openFirstWidget import openFirstWidget
 
 # import sanpy.interface.SanPyWindow
 
-from sanpy.sanpyLogger import getLoggerFile, get_logger
+from sanpy.sanpyLogger import getLoggerText, get_logger
 logger = get_logger(__name__)
 # This causes mkdocs to infinite recurse when running locally as 'mkdocs serve'
 # logger.info('SanPy app.py is starting up')
@@ -80,14 +80,35 @@ logging.getLogger("numexpr").setLevel(logging.WARNING)
 
 
 def _getSanPyInfoForClipboard() -> str:
-    """Return complete build metadata followed by the current log file."""
-    try:
-        logFilePath = pathlib.Path(getLoggerFile())
-        logText = logFilePath.read_text(encoding='utf-8', errors='replace')
-    except OSError as error:
-        logText = f'Log file unavailable: {error}'
+    """Return complete build metadata followed by all retained log text."""
+    logText = getLoggerText()
 
     return f'{build_info.get_build_info_json()}\n\n=== log file ===\n{logText}'
+
+
+def _openSanPyUserFilesFolder(parent: QtWidgets.QWidget | None = None) -> bool:
+    """Open the SanPy user-files folder in the platform file browser.
+
+    Args:
+        parent: Parent widget for an error dialog.
+
+    Returns:
+        True when Qt accepts the request to open the folder, otherwise False.
+    """
+    user_folder = pathlib.Path(sanpy._util._getUserSanPyFolder())
+    if not user_folder.is_dir():
+        message = f'SanPy-User-Files folder was not found:\n{user_folder}'
+        logger.warning(message)
+        QtWidgets.QMessageBox.warning(parent, 'SanPy-User-Files', message)
+        return False
+
+    folder_url = QtCore.QUrl.fromLocalFile(str(user_folder))
+    if not QtGui.QDesktopServices.openUrl(folder_url):
+        message = f'Could not open SanPy-User-Files folder:\n{user_folder}'
+        logger.warning(message)
+        QtWidgets.QMessageBox.warning(parent, 'SanPy-User-Files', message)
+        return False
+    return True
 
 def getAppIconPath():
     bundle_dir = sanpy._util.getBundledDir()
@@ -651,13 +672,23 @@ class SanPyApp(QtWidgets.QApplication):
         for label, value in build_info.get_build_summary_rows():
             vLayout.addWidget(QtWidgets.QLabel(f'{label}: {value}'))
 
+        buttonLayout = QtWidgets.QHBoxLayout()
+
         copyButton = QtWidgets.QPushButton('Copy SanPy Info')
         copyButton.clicked.connect(
             lambda: QtWidgets.QApplication.clipboard().setText(
                 _getSanPyInfoForClipboard()
             )
         )
-        vLayout.addWidget(copyButton)
+        buttonLayout.addWidget(copyButton)
+
+        userFilesButton = QtWidgets.QPushButton('SanPy-User-Files')
+        userFilesButton.clicked.connect(
+            lambda: _openSanPyUserFilesFolder(dlg)
+        )
+        buttonLayout.addWidget(userFilesButton)
+
+        vLayout.addLayout(buttonLayout)
 
         closeButton = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
         closeButton.rejected.connect(dlg.reject)
