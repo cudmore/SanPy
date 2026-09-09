@@ -21,7 +21,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
-          version: "0.12.8"
           enable-cache: true
 
       - name: Install Python and dependencies
@@ -30,10 +29,10 @@ jobs:
           uv sync --locked --group dev --extra zarr-export-parquet
 
       - name: Lint
-        run: uv run --locked ruff check .
+        run: uv run --no-sync ruff check sanpy
 
       - name: Test
-        run: uv run --locked pytest --cov=sanpy --cov-report=xml
+        run: uv run --no-sync pytest --cov=sanpy --cov-report=xml
 
       - name: Upload coverage
         if: matrix.os == 'macos-latest' && hashFiles('coverage.xml') != ''
