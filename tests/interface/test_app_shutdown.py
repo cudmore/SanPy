@@ -256,14 +256,15 @@ def test_file_menu_exposes_platform_close_window_shortcut(qtbot: Any) -> None:
     assert main_window.isVisible() is False
 
 
-def test_parent_close_action_ignores_frontmost_plugin(qtbot: Any) -> None:
-    """Keep the parent open when its child plugin window is frontmost.
+def test_parent_close_action_closes_only_frontmost_plugin(qtbot: Any) -> None:
+    """Close a registered frontmost plugin while keeping its parent open.
 
     Args:
         qtbot: Pytest-Qt widget lifecycle helper.
     """
     parent_window = QtWidgets.QMainWindow()
     plugin_window = QtWidgets.QWidget(parent_window, QtCore.Qt.Window)
+    parent_window._openPluginSet = {plugin_window}
     qtbot.addWidget(parent_window)
     qtbot.addWidget(plugin_window)
 
@@ -300,7 +301,7 @@ def test_parent_close_action_ignores_frontmost_plugin(qtbot: Any) -> None:
     close_action.trigger()
 
     assert parent_window.isVisible() is True
-    assert plugin_window.isVisible() is True
+    assert plugin_window.isVisible() is False
 
 
 def test_view_menu_omits_metadata_panel_action(qtbot: Any) -> None:

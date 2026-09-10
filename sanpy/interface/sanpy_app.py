@@ -357,7 +357,7 @@ class SanPyApp(QtWidgets.QApplication):
         return self._helpMenuAction
 
     def _close_active_menu_window(self, _checked: bool = False) -> None:
-        """Close the menu-owning window only when it is the active window.
+        """Close the active owner window or one of its registered plugins.
 
         Args:
             _checked: Unused checked state emitted by ``QAction.triggered``.
@@ -372,10 +372,18 @@ class SanPyApp(QtWidgets.QApplication):
             logger.error("Close Window action does not have a window parent.")
             return
 
-        # A child plugin can leave its parent window shortcut eligible in Qt.
-        # Only close the owner when it, rather than a plugin, is frontmost.
-        if QtWidgets.QApplication.activeWindow() is window:
+        active_window = QtWidgets.QApplication.activeWindow()
+        if active_window is window:
             window.close()
+            return
+
+        # Native menu shortcuts can be consumed before a plugin receives its
+        # key event. Route the command only to a plugin owned by this window.
+        for plugin in getattr(window, "_openPluginSet", set()):
+            plugin_window = plugin.getWidget() if hasattr(plugin, "getWidget") else plugin
+            if active_window is plugin_window:
+                plugin_window.close()
+                return
     
     # def _refreshWindowsMenu(self):
     def getWindowsMenu(self, aWindowsMenu):
