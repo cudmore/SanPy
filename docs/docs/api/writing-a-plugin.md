@@ -1,7 +1,7 @@
 ## How to write a SanPy plugin.
 
 !!! note
-    Runtime loading of external Python plugins is currently disabled. The
+    Runtime loading of external Python plugins is currently disabled (SanPy 2.5, September 2026). The
     example below is retained as a developer reference in
     `examples/user_extensions/plugins/exampleUserPlugin1.py`.
 

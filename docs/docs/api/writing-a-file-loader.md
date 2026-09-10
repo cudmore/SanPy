@@ -1,7 +1,7 @@
 ## How to write a custom SanPy file loader.
 
 !!! note
-    Runtime loading of external Python file loaders is currently disabled.
+    Runtime loading of external Python file loaders is currently disabled (SanPy 2.5, September 2026).
     Built-in file loaders continue to work normally.
 
 1) Derive a new class from [sanpy.fileloaders.fileLoader_base](fileloader/fileLoader_base.md).
