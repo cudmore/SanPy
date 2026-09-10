@@ -205,9 +205,17 @@ class plotRecording(sanpyPlugin):
         self._buildGui()
         self.replot(firstPlot=True)
 
-    def toggleOffsetSpinBox(self, visible : bool):
-        self.xOffsetSpinBox.setVisible(visible)
-        self.yOffsetSpinBox.setVisible(visible)
+    def toggleOffsetSpinBox(self, enabled: bool) -> None:
+        """Enable or disable the X/Y sweep offset spinboxes.
+
+        The widgets stay visible; they are grayed out when offsets do not
+        apply (single-sweep files).
+
+        Args:
+            enabled: True to allow editing offsets, False to disable them.
+        """
+        self.xOffsetSpinBox.setEnabled(enabled)
+        self.yOffsetSpinBox.setEnabled(enabled)
 
     def _buildControlLayout(self):
         _vLayoutControls = QtWidgets.QVBoxLayout()
@@ -225,25 +233,29 @@ class plotRecording(sanpyPlugin):
 
         _vLayoutControls.addLayout(_hLayoutRawLineWidth)
 
-        # x/y offset per sweep
-        _hLayoutOffset = QtWidgets.QHBoxLayout()
-        _hLayoutOffset.setAlignment(QtCore.Qt.AlignLeft)
-        aLabel = QtWidgets.QLabel('Sweep Offsets (x/y)')
-        _hLayoutOffset.addWidget(aLabel)
-        # x offset
+        # x offset per sweep
+        _hLayoutXOffset = QtWidgets.QHBoxLayout()
+        _hLayoutXOffset.setAlignment(QtCore.Qt.AlignLeft)
+        xOffsetLabel = QtWidgets.QLabel('X Sweep Offset')
+        _hLayoutXOffset.addWidget(xOffsetLabel)
         self.xOffsetSpinBox = QtWidgets.QDoubleSpinBox()
         self.xOffsetSpinBox.setMaximum(2**16)
         self.xOffsetSpinBox.setValue(self.xOffset)
         self.xOffsetSpinBox.valueChanged.connect(partial(self._on_offset_spinbox, 'xOffset'))
-        _hLayoutOffset.addWidget(self.xOffsetSpinBox)
-        # y offset
+        _hLayoutXOffset.addWidget(self.xOffsetSpinBox)
+        _vLayoutControls.addLayout(_hLayoutXOffset)
+
+        # y offset per sweep
+        _hLayoutYOffset = QtWidgets.QHBoxLayout()
+        _hLayoutYOffset.setAlignment(QtCore.Qt.AlignLeft)
+        yOffsetLabel = QtWidgets.QLabel('Y Sweep Offset')
+        _hLayoutYOffset.addWidget(yOffsetLabel)
         self.yOffsetSpinBox = QtWidgets.QDoubleSpinBox()
         self.yOffsetSpinBox.setMaximum(2**16)
         self.yOffsetSpinBox.setValue(self.yOffset)
         self.yOffsetSpinBox.valueChanged.connect(partial(self._on_offset_spinbox, 'yOffset'))
-        _hLayoutOffset.addWidget(self.yOffsetSpinBox)
-
-        _vLayoutControls.addLayout(_hLayoutOffset)
+        _hLayoutYOffset.addWidget(self.yOffsetSpinBox)
+        _vLayoutControls.addLayout(_hLayoutYOffset)
 
         for humanName, optionsDict in self._plotOptionsDict.items():
             _rowHLayout = QtWidgets.QHBoxLayout()
