@@ -1,4 +1,3 @@
-from matplotlib.backends import backend_qt5agg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
