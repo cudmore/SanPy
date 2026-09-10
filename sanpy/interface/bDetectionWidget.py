@@ -1583,7 +1583,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._replot(startSec=None, stopSec=None, userUpdate=True)
         self.signalDetect.emit(self.ba)  # underlying _abf has new rect
 
-    def _buildUI(self):
+    def _buildUI(self) -> bool:
+        """Build the detection controls and plots, including signal wiring.
+
+        Returns:
+            True after the interface has been constructed.
+        """
         self.mySetTheme(doReplot=False)
 
         # left is toolbar, right is PYQtGraph (self.view)
@@ -1656,6 +1661,11 @@ class bDetectionWidget(QtWidgets.QWidget):
         # see: https://wiki.python.org/moin/PyQt/Handling%20context%20menus
         self.vmPlot.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.vmPlot.customContextMenuRequested.connect(partial(self.slot_contextMenu,'vmPlot', self.vmPlot))
+
+        # Plot range signals belong to this widget's lifetime. Connecting them
+        # here prevents every replot from adding another identical callback.
+        self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
+        self.vmPlot.sigYRangeChanged.connect(self._slot_y_range_changed)
 
         # 202401 trying to implement shift+wheel for zooming y
         # self._original_keyPressEvent = self.vmPlot.keyPressEvent
@@ -2312,28 +2322,26 @@ class bDetectionWidget(QtWidgets.QWidget):
         # this is needed to refresh the symbols of the selection
         self.selectSpikeList(self._selectedSpikeList)
 
-    def _slot_y_range_changed(self, viewBox):
+    def _slot_y_range_changed(self, viewBox: pg.ViewBox) -> None:
+        """Log a change to the primary plot's vertical range.
+
+        Args:
+            viewBox: View box whose displayed range changed.
+        """
         logger.info('')
         print('   viewBox.viewRange():', viewBox.viewRange())
 
-    def _slot_x_range_changed(self, viewBox):
-        """Respond to changes in x-axis
+    def _slot_x_range_changed(self, viewBox: pg.ViewBox) -> None:
+        """Propagate a change to the primary plot's horizontal range.
 
-        Parameters
-        ----------
-        viewBox : pyqtgraph.graphicsItems.ViewBox.ViewBox.ViewBox
-            Viewbox of a plot like self.vmPlot
-
-        viewbox : pyqtgraph.graphicsItems.ViewBox.ViewBox.ViewBox
-        range_ : (float, float)
-            The current x-axis range
-        Notes
-        -----
-        Trying to connect but not working yet
-
-        self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
-
+        Args:
+            viewBox: View box whose displayed range changed.
         """
+        # Plot widgets can emit initial range changes before recording overlays
+        # exist. There is no analysis range to propagate in that state.
+        if self.ba is None or self.linearRegionItem2 is None:
+            return
+
         logger.info('')
         print('   viewBox.viewRange():', viewBox.viewRange())
         
@@ -2365,17 +2373,18 @@ class bDetectionWidget(QtWidgets.QWidget):
         # stop = range_[1]
         # self.linearRegionItem2.setRegion([start, stop])
 
-    def _replot(self, startSec : Optional[float] = None,
-                stopSec : Optional[float] = None,
-                userUpdate : bool = False):
-        """Full replot.
+    def _replot(
+        self,
+        startSec: Optional[float] = None,
+        stopSec: Optional[float] = None,
+        userUpdate: bool = False,
+    ) -> None:
+        """Redraw recording traces and overlays for the selected sweep.
 
-        Parameters
-        ----------
-        startSec : float or None
-        stopSec : float or None
-        userUpdate : bool
-            Depreciated, not used
+        Args:
+            startSec: Optional beginning of the displayed time range in seconds.
+            stopSec: Optional end of the displayed time range in seconds.
+            userUpdate: Deprecated flag retained for existing callers.
         """
         logger.info(f"startSec:{startSec} stopSec:{stopSec} userUpdate:{userUpdate}")
 
@@ -2453,12 +2462,6 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # vmPlot_ is PlotDataItem
         # logger.info(f'vmPlot.viewRange {self.vmPlot.viewRange()}')
-
-        # april 30, 2023
-        # was this jun 4
-        # 20240118
-        self.vmPlot.sigXRangeChanged.connect(self._slot_x_range_changed)
-        self.vmPlot.sigYRangeChanged.connect(self._slot_y_range_changed)
 
         # pg.setConfigOption('leftButtonPan', False)
 
