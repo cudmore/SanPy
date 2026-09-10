@@ -1,3 +1,5 @@
+"""Launcher window for opening recent or new SanPy recordings."""
+
 import os
 from functools import partial
 from typing import List
@@ -16,7 +18,17 @@ class openFirstWidget(QtWidgets.QMainWindow):
     
     Open this at app start and close once a file/folder is loaded
     """
-    def __init__(self, sanpyApp : "sanpy.interface.SanPyApp", parent=None):
+    def __init__(
+        self,
+        sanpyApp: "sanpy.interface.SanPyApp",
+        parent: QtWidgets.QWidget | None = None,
+    ) -> None:
+        """Initialize the launcher window.
+
+        Args:
+            sanpyApp: Application that owns preferences and analysis windows.
+            parent: Optional parent widget.
+        """
         super().__init__(parent)
 
         self._sanpyApp = sanpyApp
@@ -56,19 +68,24 @@ class openFirstWidget(QtWidgets.QMainWindow):
             return
         event.accept()
     
-    def _makeRecentTable(self, pathList : List[str], headerStr = ''):
-        """Given a list of file/folder path, make a table.
-        
-        Caller needs to connect to cellClick()
+    def _makeRecentTable(
+        self, pathList: List[str], headerStr: str = ""
+    ) -> QtWidgets.QTableWidget:
+        """Build a table containing recent paths.
+
+        Args:
+            pathList: Paths to display.
+            headerStr: Optional table header.
+
+        Returns:
+            Configured table widget.
         """
         _fontSize = 12
-        _rowHeight = 24
-
         # recent files
         myTableWidget = QtWidgets.QTableWidget()
         myTableWidget.setToolTip('Double-click to open')
         myTableWidget.setWordWrap(False)
-        myTableWidget.setRowCount(len(pathList))
+        myTableWidget.setRowCount(0)
         myTableWidget.setColumnCount(1)
         myTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         myTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -94,12 +111,31 @@ class openFirstWidget(QtWidgets.QMainWindow):
         # QHeaderView will automatically resize the section to fill the available space. The size cannot be changed by the user or programmatically.
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
-        for idx, stat in enumerate(pathList):
-            item = QtWidgets.QTableWidgetItem(stat)
-            myTableWidget.setItem(idx, 0, item)
-            myTableWidget.setRowHeight(idx, _rowHeight)
+        self._populateRecentTable(myTableWidget, pathList)
 
         return myTableWidget
+
+    def _populateRecentTable(
+        self, table: QtWidgets.QTableWidget, paths: List[str]
+    ) -> None:
+        """Replace a recent-path table's rows.
+
+        Args:
+            table: Table whose rows should be replaced.
+            paths: Paths to display.
+        """
+        table.setRowCount(len(paths))
+        for index, path in enumerate(paths):
+            table.setItem(index, 0, QtWidgets.QTableWidgetItem(path))
+            table.setRowHeight(index, 24)
+
+    def refreshRecent(self) -> None:
+        """Reload recent paths and refresh both launcher tables."""
+        preferences = self._sanpyApp.getConfigDict()
+        self.recentFileList = preferences.getRecentFiles()
+        self.recentFolderList = preferences.getRecentFolder()
+        self._populateRecentTable(self.recentFileTable, self.recentFileList)
+        self._populateRecentTable(self.recentFolderTable, self.recentFolderList)
     
     def _on_recent_file_click(self, rowIdx : int):
         """On double-click, open a file and close self.
@@ -169,7 +205,8 @@ class openFirstWidget(QtWidgets.QMainWindow):
 
         self.getSanPyApp().getWindowsMenu(self.windowsMenu)
 
-    def _buildUI(self):
+    def _buildUI(self) -> None:
+        """Build the launcher controls and recent-path tables."""
         # typical wrapper for PyQt, we can't use setLayout(), we need to use setCentralWidget()
         _mainWidget = QtWidgets.QWidget()
         _mainVLayout = QtWidgets.QVBoxLayout()
@@ -212,20 +249,24 @@ class openFirstWidget(QtWidgets.QMainWindow):
 
         # headerStr='Recent Files (double-click to open)'
         headerStr = ''
-        recentFileTable = self._makeRecentTable(self.recentFileList,
-                                                headerStr=headerStr)
-        recentFileTable.cellDoubleClicked.connect(self._on_recent_file_click)
-        recent_vBoxLayout.addWidget(recentFileTable)
+        self.recentFileTable = self._makeRecentTable(
+            self.recentFileList, headerStr=headerStr
+        )
+        self.recentFileTable.cellDoubleClicked.connect(self._on_recent_file_click)
+        recent_vBoxLayout.addWidget(self.recentFileTable)
 
         aLabel = QtWidgets.QLabel('Recent Folders')
         recent_vBoxLayout.addWidget(aLabel)
 
         # headerStr='Recent Files (double-click to open)'
         headerStr = ''
-        recentFolderTable = self._makeRecentTable(self.recentFolderList,
-                                                  headerStr=headerStr)
-        recentFolderTable.cellDoubleClicked.connect(self._on_recent_folder_click)
-        recent_vBoxLayout.addWidget(recentFolderTable)
+        self.recentFolderTable = self._makeRecentTable(
+            self.recentFolderList, headerStr=headerStr
+        )
+        self.recentFolderTable.cellDoubleClicked.connect(
+            self._on_recent_folder_click
+        )
+        recent_vBoxLayout.addWidget(self.recentFolderTable)
 
         _mainVLayout.addLayout(recent_vBoxLayout)
 

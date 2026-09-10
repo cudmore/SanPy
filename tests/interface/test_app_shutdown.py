@@ -461,6 +461,49 @@ def test_close_all_plugin_tabs_uses_tab_cleanup_only() -> None:
     assert window._openPluginSet == {external_plugin}
 
 
+def test_clear_recents_refreshes_menu_and_launcher(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any
+) -> None:
+    """Clear recent preferences from the menu and refresh launcher tables.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+    """
+    options = qapp.getOptions()
+    original_values = {
+        "recentFiles": list(options["recentFiles"]),
+        "recentFolders": list(options["recentFolders"]),
+        "mostRecentFile": options.configDict.get("mostRecentFile", ""),
+        "mostRecentFolder": options["mostRecentFolder"],
+    }
+    monkeypatch.setattr(options, "save", Mock())
+    options["recentFiles"][:] = ["recording.abf"]
+    options["recentFolders"][:] = ["recordings"]
+    options["mostRecentFile"] = "recording.abf"
+    options["mostRecentFolder"] = "recordings"
+    launcher = qapp._openFirstWidget
+    launcher.refreshRecent()
+
+    try:
+        qapp._refreshOpenRecent()
+        clear_action = next(
+            action
+            for action in qapp.openRecentMenu.actions()
+            if action.text() == "Clear Recents"
+        )
+        clear_action.trigger()
+
+        assert options["recentFiles"] == []
+        assert options["recentFolders"] == []
+        assert launcher.recentFileTable.rowCount() == 0
+        assert launcher.recentFolderTable.rowCount() == 0
+    finally:
+        for key, value in original_values.items():
+            options[key] = value
+        launcher.refreshRecent()
+
+
 def test_plugin_close_is_safe_when_plugin_was_not_registered() -> None:
     """Disconnect embedded plugins without requiring Windows-menu ownership."""
     calls = []

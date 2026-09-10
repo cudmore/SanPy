@@ -425,10 +425,8 @@ class SanPyApp(QtWidgets.QApplication):
         self._openFirstWidget.raise_()
         self._openFirstWidget.activateWindow()  # bring to front
 
-    def _refreshOpenRecent(self):
-        """Dynamically generate the open recent file/folder menu.
-        
-        This is a list of files and then a list of folders"""
+    def _refreshOpenRecent(self) -> None:
+        """Rebuild the recent file/folder menu from preferences."""
         self.openRecentMenu.clear()
 
         # add files
@@ -450,6 +448,20 @@ class SanPyApp(QtWidgets.QApplication):
             )
 
             self.openRecentMenu.addAction(loadFolderAction)
+
+        self.openRecentMenu.addSeparator()
+        clear_action = self.openRecentMenu.addAction("Clear Recents")
+        clear_action.triggered.connect(self._clearRecent)
+
+    def _clearRecent(self, _checked: bool = False) -> None:
+        """Clear recent paths and refresh the reusable launcher.
+
+        Args:
+            _checked: Unused checked state emitted by ``QAction.triggered``.
+        """
+        self.configDict.clearRecent()
+        if self._openFirstWidget is not None:
+            self._openFirstWidget.refreshRecent()
 
     def _windowsMenuAction(self, aSanPyWindow : "SanPyWindow", path, isChecked):
         """

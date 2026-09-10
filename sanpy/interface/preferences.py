@@ -1,3 +1,5 @@
+"""Persistent preferences for the SanPy desktop interface."""
+
 import os
 import pathlib
 import json
@@ -124,6 +126,16 @@ class preferences:
     def getRecentFolder(self):
         return self.configDict["recentFolders"]
 
+    def clearRecent(self) -> None:
+        """Clear recent file and folder history and persist the change."""
+        # Mutate the lists in place so existing views holding their references
+        # also observe that the history has been cleared.
+        self.configDict["recentFiles"].clear()
+        self.configDict["recentFolders"].clear()
+        self.configDict["mostRecentFile"] = ""
+        self.configDict["mostRecentFolder"] = ""
+        self.save()
+
     def preferencesSet(self, key1, key2, val):
         """Set a preference. See `getDefaults()` for key values."""
         try:
@@ -207,7 +219,7 @@ class preferences:
         ] = True  # FALSE DOES NOT WORK!!!! auto detect on file selection and/or sweep selection
 
         configDict["recentFiles"] = []
-        configDict["mostRectFile"] = ""
+        configDict["mostRecentFile"] = ""
 
         configDict["recentFolders"] = []
         configDict["mostRecentFolder"] = ""

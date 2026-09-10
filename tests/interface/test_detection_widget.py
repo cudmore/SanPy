@@ -262,10 +262,10 @@ def test_full_recording_fits_y_axis_on_load_and_sweep_change(
     assert actual_y_range[1] >= np.nanmax(sweep_y)
 
 
-def test_plugins_button_uses_shared_menu_and_opens_new_tabs(
+def test_plugins_button_reuses_existing_plugin_tabs(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
 ) -> None:
-    """Open repeated plugin tabs from the right-aligned shared plugin menu.
+    """Activate an existing plugin tab instead of constructing a duplicate.
 
     Args:
         monkeypatch: Pytest fixture used to isolate plugin construction.
@@ -286,7 +286,11 @@ def test_plugins_button_uses_shared_menu_and_opens_new_tabs(
     assert button_layout.itemAt(button_layout.count() - 1).widget() is plugin_button
     assert button_layout.itemAt(button_layout.count() - 2).spacerItem() is not None
 
-    plugin_widgets = [QtWidgets.QWidget(), QtWidgets.QWidget()]
+    plugin_widgets = [
+        QtWidgets.QWidget(),
+        QtWidgets.QWidget(),
+        QtWidgets.QWidget(),
+    ]
     plugins = [
         SimpleNamespace(
             getInitError=lambda: False,
@@ -303,10 +307,28 @@ def test_plugins_button_uses_shared_menu_and_opens_new_tabs(
     window.openPluginInTab(expected_plugins[0], window.myPluginTab1)
     window.openPluginInTab(expected_plugins[0], window.myPluginTab1)
 
-    assert window.myPluginTab1.count() == initial_count + 2
-    assert window.myPluginTab1.currentWidget() is plugin_widgets[-1]
+    assert window.myPluginTab1.count() == initial_count + 1
+    assert window.myPluginTab1.currentWidget() is plugin_widgets[0]
     assert window.pluginDock1.isHidden() is False
+    assert run_plugin.call_count == 1
+
+    window.openPluginInTab(expected_plugins[1], window.myPluginTab1)
+
+    assert window.myPluginTab1.count() == initial_count + 2
+    assert window.myPluginTab1.currentWidget() is plugin_widgets[1]
     assert run_plugin.call_count == 2
+
+    first_plugin_index = next(
+        index
+        for index in range(window.myPluginTab1.count())
+        if window.myPluginTab1.tabText(index) == expected_plugins[0]
+    )
+    window.slot_closeTab(first_plugin_index, window.myPluginTab1)
+    window.openPluginInTab(expected_plugins[0], window.myPluginTab1)
+
+    assert window.myPluginTab1.count() == initial_count + 2
+    assert window.myPluginTab1.currentWidget() is plugin_widgets[2]
+    assert run_plugin.call_count == 3
 
 
 def test_raw_plot_column_expands_with_central_widget(

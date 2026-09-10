@@ -1569,13 +1569,20 @@ class SanPyWindow(QtWidgets.QMainWindow):
         targetTab: QtWidgets.QTabWidget,
         _checked: bool = False,
     ) -> None:
-        """Create a plugin and display it as a new tab.
+        """Create or activate a plugin tab.
 
         Args:
             pluginName: Registered plugin name to open.
             targetTab: Tab widget that receives the plugin widget.
             _checked: Unused checked state emitted by the menu action.
         """
+        for index in range(targetTab.count()):
+            if targetTab.tabText(index) == pluginName:
+                targetTab.setCurrentIndex(index)
+                if targetTab is self.myPluginTab1:
+                    self.pluginDock1.show()
+                return
+
         new_plugin = self.runPlugin(pluginName, self.get_bAnalysis(), show=False)
         if new_plugin is None:
             logger.error('Unable to open plugin tab "%s".', pluginName)
