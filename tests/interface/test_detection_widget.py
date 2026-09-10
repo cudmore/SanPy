@@ -2,6 +2,7 @@
 
 from pathlib import Path
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
 from qtpy import QtCore
@@ -97,3 +98,38 @@ def test_raw_plot_buttons_share_view_menu_state(
 
     assert button.isChecked() is menu_state
     assert (not widget.derivPlot.isHidden()) is menu_state
+
+
+def test_raw_plot_toolbar_resets_axis_and_rebalances_visible_plots(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Reset the time range and equally stretch only visible trace plots.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    qtbot.addWidget(window)
+    widget = window.myDetectionWidget
+    reset_axis = Mock()
+    widget._resetAxisButton.clicked.disconnect()
+    widget._resetAxisButton.clicked.connect(reset_axis)
+
+    widget._resetAxisButton.click()
+    window.setViewPanelVisible("rawDataPanels", "Derivative", False)
+    window.setViewPanelVisible("rawDataPanels", "DAC", True)
+
+    reset_axis.assert_called_once()
+    plot_visibility = {
+        widget.vmPlotGlobal: not widget.vmPlotGlobal.isHidden(),
+        widget.derivPlot: not widget.derivPlot.isHidden(),
+        widget.dacPlot: not widget.dacPlot.isHidden(),
+        widget.vmPlot: not widget.vmPlot.isHidden(),
+    }
+    for plot_widget, visible in plot_visibility.items():
+        layout_index = widget._rawPlotLayout.indexOf(plot_widget)
+        assert widget._rawPlotLayout.stretch(layout_index) == (1 if visible else 0)

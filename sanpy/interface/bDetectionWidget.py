@@ -1493,16 +1493,19 @@ class bDetectionWidget(QtWidgets.QWidget):
                 self.vmPlotGlobal.show()
             else:
                 self.vmPlotGlobal.hide()
+            self._rebalance_raw_plot_stretches()
         elif item == "Derivative":
             if on:
                 self.derivPlot.show()
             else:
                 self.derivPlot.hide()
+            self._rebalance_raw_plot_stretches()
         elif item == "DAC":
             if on:
                 self.dacPlot.show()
             else:
                 self.dacPlot.hide()
+            self._rebalance_raw_plot_stretches()
 
         # toggle in myDetectionToolbarWidget
         elif item == "Detection Panel":
@@ -1560,6 +1563,47 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         layout.addStretch()
         return bar
+
+    def _build_raw_plot_toggle_bar(self) -> QtWidgets.QWidget:
+        """Build raw-plot visibility controls and the full-range action.
+
+        Returns:
+            Toolbar containing trace toggles and the axis-reset button.
+        """
+        bar = self._build_view_toggle_bar(
+            "rawDataPanels", ["Full Recording", "Derivative", "DAC"]
+        )
+        layout = bar.layout()
+        if not isinstance(layout, QtWidgets.QHBoxLayout):
+            logger.error("Raw-plot toggle bar does not have a horizontal layout.")
+            return bar
+
+        self._resetAxisButton = QtWidgets.QToolButton(bar)
+        self._resetAxisButton.setText("[]")
+        self._resetAxisButton.setToolTip("Display Full Recording")
+        self._resetAxisButton.setAutoRaise(True)
+        self._resetAxisButton.clicked.connect(self.setAxisFull)
+        layout.insertWidget(layout.count() - 1, self._resetAxisButton)
+        return bar
+
+    def _rebalance_raw_plot_stretches(self) -> None:
+        """Give every visible pyqtgraph trace an equal share of vertical space."""
+        if not hasattr(self, "_rawPlotLayout"):
+            return
+
+        plot_widgets = (
+            self.vmPlotGlobal,
+            self.derivPlot,
+            self.dacPlot,
+            self.vmPlot,
+        )
+        for plot_widget in plot_widgets:
+            stretch = 0 if plot_widget.isHidden() else 1
+            self._rawPlotLayout.setStretchFactor(plot_widget, stretch)
+
+        # Force an immediate geometry recalculation after show/hide operations.
+        self._rawPlotLayout.invalidate()
+        self._rawPlotLayout.activate()
 
     def _on_view_toggle_button(
         self, section: str, name: str, checked: bool
@@ -1704,12 +1748,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         # self.myHBoxLayout_detect.addWidget(_hSplitter)
 
         # kymograph, we need a vboxlayout to hold (kym widget, self.view)
-        vBoxLayoutForPlot = QtWidgets.QVBoxLayout(self)
-        vBoxLayoutForPlot.addWidget(
-            self._build_view_toggle_bar(
-                "rawDataPanels", ["Full Recording", "Derivative", "DAC"]
-            )
-        )
+        self._rawPlotLayout = QtWidgets.QVBoxLayout(self)
+        vBoxLayoutForPlot = self._rawPlotLayout
+        vBoxLayoutForPlot.addWidget(self._build_raw_plot_toggle_bar())
 
         # for publication, don't do kymographs
         # make a branch and get this working
