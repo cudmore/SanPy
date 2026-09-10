@@ -53,12 +53,11 @@ class bPlugins:
             return
         return self._sanpyApp.getStatList()
     
-    def loadPlugins(self):
-        """Load plugins from both:
-         - Package: sanpy.interface.plugins
-         - Folder: <user>/sanpy_plugins
+    def loadPlugins(self) -> None:
+        """Load built-in and user plugins available to the application.
 
-        See: sanpy.fileLoaders.fileLoader_base.getFileLoader()
+        Invalid user plugins are logged and skipped so one optional plugin
+        cannot prevent SanPy from starting or hide other valid plugins.
         """
         self.pluginDict = {}
 
@@ -130,17 +129,20 @@ class bPlugins:
             moduleName = os.path.splitext(moduleName)[0]
             fullModuleName = "sanpy.interface.plugins." + moduleName
 
-            loadedModule = self._module_from_file(fullModuleName, file)
-
+            # Treat external plugin code as an isolation boundary at startup.
             try:
+                loadedModule = self._module_from_file(fullModuleName, file)
                 oneConstructor = getattr(loadedModule, moduleName)
-            except AttributeError as e:
-                logger.error(
-                    f'Did not load user plugin, make sure file name and class name are the same:"{moduleName}"'
-                )
-            else:
                 humanName = oneConstructor.myHumanName
                 showInMenu = oneConstructor.showInMenu
+            except Exception:
+                logger.exception(
+                    'Failed to load user plugin "%s" from "%s"; skipping it.',
+                    moduleName,
+                    file,
+                )
+                continue
+            else:
                 pluginDict = {
                     "pluginClass": moduleName,
                     "type": "user",
