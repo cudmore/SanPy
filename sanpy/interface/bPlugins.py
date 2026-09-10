@@ -14,6 +14,7 @@ import sanpy
 
 # import sanpy.interface
 import sanpy.interface.plugins
+from sanpy.sanpyPaths import SanPyPaths
 
 from sanpy.sanpyLogger import get_logger
 
@@ -28,10 +29,18 @@ class bPlugins:
         - folder, <user>/sanpy_plugins
     """
 
-    def __init__(self, sanpyApp: Optional["sanpy.interface.SanPyApp"] = None):
+    def __init__(
+        self, sanpyApp: Optional["sanpy.interface.SanPyApp"] = None
+    ) -> None:
+        """Discover plugins available to an optional SanPy application.
+
+        Args:
+            sanpyApp: Application that owns the plugin manager.
+        """
         self._sanpyApp = sanpyApp
 
-        self.userPluginFolder: str = sanpy._util._getUserPluginFolder()
+        sanpy_paths = sanpyApp.sanpy_paths if sanpyApp is not None else SanPyPaths()
+        self.userPluginFolder: str | None = str(sanpy_paths.plugin_dir)
         if not os.path.isdir(self.userPluginFolder):
             self.userPluginFolder = None
         """path to <user>/plugin_dir"""

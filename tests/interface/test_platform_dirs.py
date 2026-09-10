@@ -7,6 +7,7 @@ from qtpy import QtCore, QtWidgets
 
 from sanpy.interface import sanpy_app
 from sanpy import sanpyLogger
+from sanpy.sanpyPaths import SanPyPaths
 
 
 def test_logger_text_combines_retained_logs(
@@ -91,18 +92,17 @@ def test_open_user_files_folder(
         tmp_path: Existing temporary directory supplied by pytest.
     """
     opened_urls: list[QtCore.QUrl] = []
-    monkeypatch.setattr(
-        sanpy_app.sanpy._util, "_getUserSanPyFolder", lambda: str(tmp_path)
-    )
+    sanpy_paths = SanPyPaths(documents_dir=tmp_path)
+    sanpy_paths.user_files_dir.mkdir()
     monkeypatch.setattr(
         sanpy_app.QtGui.QDesktopServices,
         "openUrl",
         lambda url: opened_urls.append(url) or True,
     )
 
-    assert sanpy_app._openSanPyUserFilesFolder() is True
+    assert sanpy_app._openSanPyUserFilesFolder(sanpy_paths=sanpy_paths) is True
     assert len(opened_urls) == 1
-    assert opened_urls[0].toLocalFile() == str(tmp_path)
+    assert opened_urls[0].toLocalFile() == str(sanpy_paths.user_files_dir)
 
 
 def test_open_user_files_folder_warns_when_missing(
@@ -114,18 +114,16 @@ def test_open_user_files_folder_warns_when_missing(
         monkeypatch: Pytest fixture used to isolate folder-opening services.
         tmp_path: Temporary directory supplied by pytest.
     """
-    missing_path = tmp_path / "missing"
+    sanpy_paths = SanPyPaths(documents_dir=tmp_path)
+    missing_path = sanpy_paths.user_files_dir
     warnings: list[tuple[QtWidgets.QWidget | None, str, str]] = []
-    monkeypatch.setattr(
-        sanpy_app.sanpy._util, "_getUserSanPyFolder", lambda: str(missing_path)
-    )
     monkeypatch.setattr(
         sanpy_app.QtWidgets.QMessageBox,
         "warning",
         lambda parent, title, message: warnings.append((parent, title, message)),
     )
 
-    assert sanpy_app._openSanPyUserFilesFolder() is False
+    assert sanpy_app._openSanPyUserFilesFolder(sanpy_paths=sanpy_paths) is False
     assert warnings == [
         (
             None,
@@ -145,9 +143,8 @@ def test_open_user_files_folder_warns_when_launch_fails(
         tmp_path: Existing temporary directory supplied by pytest.
     """
     warnings: list[tuple[QtWidgets.QWidget | None, str, str]] = []
-    monkeypatch.setattr(
-        sanpy_app.sanpy._util, "_getUserSanPyFolder", lambda: str(tmp_path)
-    )
+    sanpy_paths = SanPyPaths(documents_dir=tmp_path)
+    sanpy_paths.user_files_dir.mkdir()
     monkeypatch.setattr(
         sanpy_app.QtGui.QDesktopServices, "openUrl", lambda _url: False
     )
@@ -157,12 +154,12 @@ def test_open_user_files_folder_warns_when_launch_fails(
         lambda parent, title, message: warnings.append((parent, title, message)),
     )
 
-    assert sanpy_app._openSanPyUserFilesFolder() is False
+    assert sanpy_app._openSanPyUserFilesFolder(sanpy_paths=sanpy_paths) is False
     assert warnings == [
         (
             None,
             "SanPy-User-Files",
-            f"Could not open SanPy-User-Files folder:\n{tmp_path}",
+            f"Could not open SanPy-User-Files folder:\n{sanpy_paths.user_files_dir}",
         )
     ]
 

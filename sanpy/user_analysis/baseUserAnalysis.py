@@ -14,6 +14,7 @@ from typing import Any, List, Union
 import sanpy
 from sanpy import DO_KYMOGRAPH_ANALYSIS
 from sanpy.schema import AnalysisResultCategory
+from sanpy.sanpyPaths import SanPyPaths
 
 from sanpy.sanpyLogger import get_logger
 
@@ -56,9 +57,9 @@ def _getObjectList(verbose: bool = False) -> List[dict]:
   
     #
     # user plugins from files in folder <user>/SanPy/analysis
-    userAnalysisFolder = sanpy._util._getUserAnalysisFolder()
+    userAnalysisFolder = SanPyPaths().analysis_dir
     if sanpy._util.ALLOW_USER_CODE_IMPORTS:
-        files = glob.glob(os.path.join(userAnalysisFolder, "*.py"))
+        files = glob.glob(str(userAnalysisFolder / "*.py"))
     else:
         files = []
 

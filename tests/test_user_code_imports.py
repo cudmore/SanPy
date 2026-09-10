@@ -1,36 +1,12 @@
 """Tests for the default-off external user-code policy."""
 
 import importlib
-import sys
 from pathlib import Path
 
 import pytest
 
 import sanpy
 from sanpy.interface.bPlugins import bPlugins
-
-
-def test_user_files_are_not_added_to_sys_path(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    """Prepare user files without making their Python code importable.
-
-    Args:
-        monkeypatch: Pytest fixture used to isolate user-folder operations.
-        tmp_path: Temporary directory representing SanPy-User-Files.
-    """
-    user_folder = str(tmp_path)
-    monkeypatch.setattr(sanpy._util, "ALLOW_USER_CODE_IMPORTS", False)
-    monkeypatch.setattr(sanpy._util, "_makeSanPyFolders", lambda: False)
-    monkeypatch.setattr(
-        sanpy._util, "_getUserSanPyFolder", lambda: user_folder
-    )
-    monkeypatch.setattr(sys, "path", list(sys.path))
-    while user_folder in sys.path:
-        sys.path.remove(user_folder)
-
-    assert sanpy._util.addUserPath() is False
-    assert user_folder not in sys.path
 
 
 def test_external_plugin_files_are_ignored(
@@ -75,9 +51,6 @@ def test_external_file_loaders_are_ignored(
     (tmp_path / "externalLoader.py").write_text("raise RuntimeError\n")
     monkeypatch.setattr(sanpy._util, "ALLOW_USER_CODE_IMPORTS", False)
     monkeypatch.setattr(
-        sanpy._util, "_getUserFileLoaderFolder", lambda: str(tmp_path)
-    )
-    monkeypatch.setattr(
         sanpy._util,
         "_module_from_file",
         lambda module_name, file_path: attempted_imports.append(
@@ -106,9 +79,6 @@ def test_external_analysis_files_are_ignored(
     attempted_imports: list[tuple[str, str]] = []
     (tmp_path / "externalAnalysis.py").write_text("raise RuntimeError\n")
     monkeypatch.setattr(sanpy._util, "ALLOW_USER_CODE_IMPORTS", False)
-    monkeypatch.setattr(
-        sanpy._util, "_getUserAnalysisFolder", lambda: str(tmp_path)
-    )
     monkeypatch.setattr(
         analysis_module,
         "_module_from_file",

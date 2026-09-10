@@ -164,10 +164,13 @@ class preferences:
         except KeyError as e:
             logger.error(f'Did not get preference with keys "{key1}" and "{key2}"')
 
-    def getPreferencesFile(self):
-        userPreferencesFolder = sanpy._util._getUserPreferencesFolder()
-        optionsFile = pathlib.Path(userPreferencesFolder) / "sanpy_preferences.json"
-        return optionsFile
+    def getPreferencesFile(self) -> pathlib.Path:
+        """Return the application preferences file path.
+
+        Returns:
+            Path to the persisted preferences JSON file.
+        """
+        return self._sanpyApp.sanpy_paths.preferences_dir / "sanpy_preferences.json"
 
     def load(self):
         """

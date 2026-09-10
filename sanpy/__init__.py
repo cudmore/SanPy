@@ -5,6 +5,7 @@ DO_KYMOGRAPH_ANALYSIS = False
 from .sanpyLogger import *
 
 from ._util import *
+from .sanpyPaths import SanPyPaths
 from .analysisUtil import *
 
 from .bAnalysis_ import bAnalysis

@@ -569,16 +569,18 @@ class detectionParams(sanpyPlugin):
 
         self.replot()
 
-    def save(self):
+    def save(self) -> None:
         """Save our current detection dict to a user file."""
-        userDetectionFolder = sanpy._util._getUserDetectionFolder()
+        sanpy_app = self.getSanPyApp()
+        sanpy_paths = sanpy_app.sanpy_paths if sanpy_app is not None else sanpy.SanPyPaths()
+        userDetectionFolder = sanpy_paths.detection_dir
 
         # key 'detectionName'
         filename = self._detectionDict["userSaveName"]
         if not filename:
             filename = self._detectionDict["detectionName"] + " User"
 
-        savePath = os.path.join(userDetectionFolder, filename + ".json")
+        savePath = str(userDetectionFolder / f"{filename}.json")
 
         userSaveFile, _tmp = QtWidgets.QFileDialog.getSaveFileName(
             self, "Save Detection Params", savePath

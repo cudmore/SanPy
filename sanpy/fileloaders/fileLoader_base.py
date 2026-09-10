@@ -12,6 +12,7 @@ import scipy.signal
 import sanpy.fileloaders
 
 import sanpy.metaData
+from sanpy.sanpyPaths import SanPyPaths
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -74,13 +75,13 @@ def getFileLoaders(verbose: bool = False) -> dict:
 
     #
     # user plugins from files in folder "<user>/SanPy/file loaders"
-    fileLoaderFolder = sanpy._util._getUserFileLoaderFolder()
+    fileLoaderFolder = SanPyPaths().file_loader_dir
     # loadedModuleList = []
     if (
         sanpy._util.ALLOW_USER_CODE_IMPORTS
-        and os.path.isdir(fileLoaderFolder)
+        and fileLoaderFolder.is_dir()
     ):
-        files = glob.glob(os.path.join(fileLoaderFolder, "*.py"))
+        files = glob.glob(str(fileLoaderFolder / "*.py"))
     else:
         # no user file loader folder ???
         files = []

@@ -57,6 +57,7 @@ from qtpy import QtCore, QtWidgets, QtGui
 import sanpy
 from sanpy import build_info
 import sanpy._util
+from sanpy.sanpyPaths import SanPyPaths
 import sanpy.interface
 import sanpy.interface.preferences
 
@@ -86,16 +87,20 @@ def _getSanPyInfoForClipboard() -> str:
     return f'{build_info.get_build_info_json()}\n\n=== log file ===\n{logText}'
 
 
-def _openSanPyUserFilesFolder(parent: QtWidgets.QWidget | None = None) -> bool:
+def _openSanPyUserFilesFolder(
+    parent: QtWidgets.QWidget | None = None,
+    sanpy_paths: SanPyPaths | None = None,
+) -> bool:
     """Open the SanPy user-files folder in the platform file browser.
 
     Args:
         parent: Parent widget for an error dialog.
+        sanpy_paths: Optional application path manager.
 
     Returns:
         True when Qt accepts the request to open the folder, otherwise False.
     """
-    user_folder = pathlib.Path(sanpy._util._getUserSanPyFolder())
+    user_folder = (sanpy_paths or SanPyPaths()).user_files_dir
     if not user_folder.is_dir():
         message = f'SanPy-User-Files folder was not found:\n{user_folder}'
         logger.warning(message)
@@ -110,8 +115,16 @@ def _openSanPyUserFilesFolder(parent: QtWidgets.QWidget | None = None) -> bool:
         return False
     return True
 
-def getAppIconPath():
-    bundle_dir = sanpy._util.getBundledDir()
+def getAppIconPath(sanpy_paths: SanPyPaths | None = None) -> str:
+    """Return the application icon path.
+
+    Args:
+        sanpy_paths: Optional application path manager.
+
+    Returns:
+        Application icon path for source or frozen execution.
+    """
+    bundle_dir = (sanpy_paths or SanPyPaths()).bundled_dir
     if getattr(sys, "frozen", False):
         appIconPath = (
             pathlib.Path(bundle_dir) / "sanpy_transparent.png"
@@ -123,21 +136,33 @@ def getAppIconPath():
     return str(appIconPath)
 
 class SanPyApp(QtWidgets.QApplication):
-    def __init__(self, argv):
+    """Own the SanPy desktop application and its shared services."""
+
+    def __init__(
+        self, argv: list[str], sanpy_paths: SanPyPaths | None = None
+    ) -> None:
+        """Initialize the desktop application.
+
+        Args:
+            argv: Command-line arguments passed to Qt.
+            sanpy_paths: Optional path manager, primarily for test isolation.
+        """
         super().__init__(argv)
+
+        self.sanpy_paths = sanpy_paths or SanPyPaths()
 
         self._windowList: list[SanPyWindow] = []
         # Keep analysis windows alive until Qt emits their destroyed signal.
 
         self._quitInProgress = False
 
-        firstTimeRunning = sanpy._util.addUserPath()
+        firstTimeRunning = self.sanpy_paths.ensure_user_files()
         if firstTimeRunning:
             logger.info("  We created <user>/Documents/Sanpy and need to restart")
 
         self._fileLoaderDict = sanpy.fileloaders.getFileLoaders(verbose=True)
         
-        self._detectionClass : sanpy.bDetection = sanpy.bDetection()
+        self._detectionClass : sanpy.bDetection = sanpy.bDetection(self.sanpy_paths)
 
         self._configDict : sanpy.interface.preferences = sanpy.interface.preferences(self)
         self._currentWindowGeometry = {
@@ -153,7 +178,7 @@ class SanPyApp(QtWidgets.QApplication):
         # self._useDarkStyle = self._configDict["useDarkStyle"]
         self.toggleStyleSheet(buildingInterface=True)
         
-        appIconPath = getAppIconPath()    
+        appIconPath = getAppIconPath(self.sanpy_paths)
         if os.path.isfile(appIconPath):
             # logger.info(f'  app.setWindowIcon with: "{appIconPath}"')
             self.setWindowIcon(QtGui.QIcon(appIconPath))
@@ -544,8 +569,13 @@ class SanPyApp(QtWidgets.QApplication):
 
         self.openSanPyWindow(path)
         
-    def getAppIconPath(self):
-        return getAppIconPath()
+    def getAppIconPath(self) -> str:
+        """Return the application icon path.
+
+        Returns:
+            Application icon path for source or frozen execution.
+        """
+        return getAppIconPath(self.sanpy_paths)
     
     @property
     def useDarkStyle(self):
@@ -759,7 +789,7 @@ class SanPyApp(QtWidgets.QApplication):
 
         userFilesButton = QtWidgets.QPushButton('SanPy-User-Files')
         userFilesButton.clicked.connect(
-            lambda: _openSanPyUserFilesFolder(dlg)
+            lambda: _openSanPyUserFilesFolder(dlg, self.sanpy_paths)
         )
         buttonLayout.addWidget(userFilesButton)
 

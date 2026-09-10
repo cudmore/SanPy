@@ -33,6 +33,8 @@ import json
 import pathlib
 from pprint import pprint
 import glob
+
+from sanpy.sanpyPaths import SanPyPaths
 import copy
 from collections import OrderedDict
 from typing import Any
@@ -633,8 +635,14 @@ class bDetection(object):
     detectionTypes = detectionTypes_
     """ Enum with the type of spike detection, (dvdt, mv)"""
 
-    def __init__(self):
-        """Load all sanpy and <user> detection json files."""
+    def __init__(self, sanpy_paths: SanPyPaths | None = None) -> None:
+        """Load all bundled and user detection presets.
+
+        Args:
+            sanpy_paths: Optional application path manager.
+        """
+
+        self._sanpy_paths = sanpy_paths or SanPyPaths()
 
         # dict with detection key and current value
         self._dDict = getDefaultDetection()
@@ -721,7 +729,7 @@ class bDetection(object):
 
         #
         # get files in our 'detection-presets' folder
-        presetsPath = pathlib.Path(sanpy._util.getBundledDir()) / 'detection-presets' / '*.json'
+        presetsPath = self._sanpy_paths.bundled_dir / 'detection-presets' / '*.json'
         files = glob.glob(str(presetsPath))
         for filePath in files:
             fileName, fileNameKey = fileNameToKey(filePath)
@@ -754,8 +762,6 @@ class bDetection(object):
 
         #
         # get files in <users>/Documents/SanPy/detection/ folder
-        # userDetectionPath = pathlib.Path(sanpy._util._getUserDetectionFolder()) / '*.json'
-        # files = glob.glob(str(userDetectionPath))
         files = self._getUserFiles()
         for filePath in files:
             fileName, fileNameKey = fileNameToKey(filePath)
@@ -775,14 +781,16 @@ class bDetection(object):
 
         return theDict  #, userPresets
 
-    def _getUserFiles(self):
-        """Get the full path to all user file presets .json"""
-        userDetectionPath = pathlib.Path(sanpy._util._getUserDetectionFolder())
-        if userDetectionPath.is_dir:
-            files = userDetectionPath.glob("*.json")
-            return files
-        else:
-            return []
+    def _getUserFiles(self) -> list[pathlib.Path]:
+        """Return paths to user detection-preset files.
+
+        Returns:
+            Detection-preset JSON paths, or an empty list when unavailable.
+        """
+        userDetectionPath = self._sanpy_paths.detection_dir
+        if userDetectionPath.is_dir():
+            return list(userDetectionPath.glob("*.json"))
+        return []
 
     def toJson(self):
         """Get key and defaultValue"""
@@ -799,7 +807,12 @@ class bDetection(object):
         # logger.info('theJson:')
         return theJson
 
-    def old_saveAs(self, detectionType: str, filename, path=None):
+    def old_saveAs(
+        self,
+        detectionType: str,
+        filename: str,
+        path: str | pathlib.Path | None = None,
+    ) -> None:
         """Save a detection dictionary to json.
 
         If running in GUI, main SanPy app will specify the correct path.
@@ -809,12 +822,14 @@ class bDetection(object):
         Args:
             detectionType: human readable like 'SA Node', will become 'SA Node.json'
             filename: Name of file to save (no extension, will append .json)
+            path: Optional explicit output path.
         """
         # _keyName = self._detectionEnum(detectionType).name
         if path is None:
             # get <user>/Documents/SanPy/xxx folder
-            savePath = sanpy._util._getUserDetectionFolder()
-            savePath = pathlib.Path(savePath) / f"{filename}.json"
+            savePath = self._sanpy_paths.detection_dir / f"{filename}.json"
+        else:
+            savePath = pathlib.Path(path)
         logger.info(str(savePath))
         with open(savePath, "w") as f:
             dDict = self.getDetectionDict(detectionType)
