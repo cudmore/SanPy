@@ -91,20 +91,6 @@ def _getUserSanPyFolder():
     return sanpyFolder
 
 
-def _old_getUserFolder(folder: str) -> str:
-    userSanPyFolder = _getUserSanPyFolder()
-    if folder == "plugins":
-        theFolder = os.path.join(userSanPyFolder, "plugins")
-    elif folder == "analysis":
-        theFolder = os.path.join(userSanPyFolder, "analysis")
-    elif folder == "preferences":
-        theFolder = os.path.join(userSanPyFolder, "preferences")
-    else:
-        logger.error(f'did not understand folder: "{folder}"')
-        return None
-    return theFolder
-
-
 def _getUserFileLoaderFolder():
     userSanPyFolder = _getUserSanPyFolder()
     fileLoaderFolder = os.path.join(userSanPyFolder, "file loaders")
