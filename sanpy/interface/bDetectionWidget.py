@@ -487,18 +487,36 @@ class bDetectionWidget(QtWidgets.QWidget):
         updateStr = f"Detected {numSpikes} in {_elapsedSec} seconds"
         self.updateStatusBar(updateStr)
 
-    def mySetTheme(self, doReplot=True):
-        # 20231229 not used with multiple windows
-        # if self.myMainWindow is not None and self.myMainWindow.useDarkStyle:
-        #     # pg.setConfigOption('background', 'k')
-        #     # pg.setConfigOption('foreground', 'w')
-        #     self.useDarkStyle = True
-        # else:
-        #     # pg.setConfigOption('background', 'w')
-        #     # pg.setConfigOption('foreground', 'k')
-        #     self.useDarkStyle = False
-        if doReplot:
-            self._replot(startSec=None, stopSec=None)
+    def setPlotTheme(self, is_dark: bool) -> None:
+        """Apply a light or dark theme to existing recording plots.
+
+        Args:
+            is_dark: Whether plot backgrounds should use the dark theme.
+        """
+        background = "k" if is_dark else "w"
+        foreground = "w" if is_dark else "k"
+        plot_widgets = (
+            self.vmPlotGlobal,
+            self.derivPlot,
+            self.dacPlot,
+            self.vmPlot,
+        )
+
+        for plot_widget in plot_widgets:
+            plot_widget.setBackground(background)
+            plot_item = plot_widget.getPlotItem()
+            for axis_name in ("left", "bottom", "right", "top"):
+                axis = plot_item.getAxis(axis_name)
+                axis.setPen(foreground)
+                axis.setTextPen(foreground)
+
+        # These traces use the theme foreground. Keep explicitly colored
+        # overlays and the blue Full Recording trace unchanged.
+        for trace in (self.derivPlot_, self.dacPlot_, self.vmPlot_):
+            trace.setPen(foreground)
+
+        self._displayHoverText.setColor(foreground)
+        self._displayHoverText_deriv.setColor(foreground)
 
     def getMainWindowOptions(self):
         theRet = None
@@ -1510,9 +1528,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         # toggle in myDetectionToolbarWidget
         elif item == "Detection Panel":
             if on:
-                self.detectToolbarWidget.show()
+                self._detectionPanelWidget.show()
             else:
-                self.detectToolbarWidget.hide()
+                self._detectionPanelWidget.hide()
         elif item == "Detection":
             self.detectToolbarWidget.toggleInterface(item, on)
         elif item == "Display":
@@ -1577,6 +1595,30 @@ class bDetectionWidget(QtWidgets.QWidget):
         if not isinstance(layout, QtWidgets.QHBoxLayout):
             logger.error("Raw-plot toggle bar does not have a horizontal layout.")
             return bar
+
+        self._detectionPanelButton = QtWidgets.QToolButton(bar)
+        self._detectionPanelButton.setText("<<")
+        self._detectionPanelButton.setToolTip("Show or Hide Detection Panel")
+        self._detectionPanelButton.setCheckable(True)
+        self._detectionPanelButton.setAutoRaise(True)
+        options = self.getMainWindowOptions()
+        detection_panel_visible = (
+            bool(options["detectionPanels"]["Detection Panel"])
+            if options is not None
+            else True
+        )
+        self._detectionPanelButton.setChecked(detection_panel_visible)
+        self._detectionPanelButton.toggled.connect(
+            partial(
+                self._on_view_toggle_button,
+                "detectionPanels",
+                "Detection Panel",
+            )
+        )
+        layout.insertWidget(0, self._detectionPanelButton)
+        self._viewToggleButtons[("detectionPanels", "Detection Panel")] = (
+            self._detectionPanelButton
+        )
 
         self._resetAxisButton = QtWidgets.QToolButton(bar)
         self._resetAxisButton.setText("[]")
@@ -1720,8 +1762,6 @@ class bDetectionWidget(QtWidgets.QWidget):
         Returns:
             True after the interface has been constructed.
         """
-        self.mySetTheme(doReplot=False)
-
         self._viewToggleButtons: dict[tuple[str, str], QtWidgets.QToolButton] = {}
 
         # left is toolbar, right is PYQtGraph (self.view)
@@ -1740,8 +1780,8 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.detectToolbarWidget.slot_selectSpikeList
         )
 
-        detection_column = QtWidgets.QWidget(self)
-        detection_layout = QtWidgets.QVBoxLayout(detection_column)
+        self._detectionPanelWidget = QtWidgets.QWidget(self)
+        detection_layout = QtWidgets.QVBoxLayout(self._detectionPanelWidget)
         detection_layout.setContentsMargins(0, 0, 0, 0)
         detection_layout.setAlignment(QtCore.Qt.AlignTop)
         detection_layout.addWidget(
@@ -1755,7 +1795,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.detectToolbarWidget, alignment=QtCore.Qt.AlignTop
         )
         self.myHBoxLayout_detect.addWidget(
-            detection_column, alignment=QtCore.Qt.AlignTop
+            self._detectionPanelWidget, alignment=QtCore.Qt.AlignTop
         )
         # v2
         # _hSplitter.addWidget(self.detectToolbarWidget)

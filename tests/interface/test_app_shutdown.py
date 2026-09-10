@@ -1,3 +1,5 @@
+"""Tests for SanPy application, window, and plugin shutdown behavior."""
+
 import gc
 from types import SimpleNamespace
 from typing import Any
@@ -419,6 +421,44 @@ def test_closing_embedded_tab_closes_and_deletes_plugin() -> None:
     SanPyWindow.slot_closeTab(SimpleNamespace(), 2, tabs)
 
     assert calls == [("remove", 2), "close", "delete"]
+
+
+def test_closing_plugin_dock_requests_tab_cleanup(qtbot: Any) -> None:
+    """Emit one cleanup request when the Plugins dock is closed.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    dock = sanpy_window_module._PluginDockWidget("Plugins")
+    qtbot.addWidget(dock)
+    close_requested = Mock()
+    dock.closeRequested.connect(close_requested)
+    dock.show()
+
+    dock.close()
+
+    close_requested.assert_called_once_with()
+
+
+def test_close_all_plugin_tabs_uses_tab_cleanup_only() -> None:
+    """Close embedded tabs in reverse order without touching external plugins."""
+    external_plugin = object()
+    tabs = SimpleNamespace(count=lambda: 3)
+    close_tab = Mock()
+    window = SimpleNamespace(
+        myPluginTab1=tabs,
+        slot_closeTab=close_tab,
+        _openPluginSet={external_plugin},
+    )
+
+    SanPyWindow._closeAllPluginTabs(window)
+
+    assert [call.args for call in close_tab.call_args_list] == [
+        (2, tabs),
+        (1, tabs),
+        (0, tabs),
+    ]
+    assert window._openPluginSet == {external_plugin}
 
 
 def test_plugin_close_is_safe_when_plugin_was_not_registered() -> None:

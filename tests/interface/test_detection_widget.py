@@ -7,7 +7,7 @@ from unittest.mock import Mock
 
 import numpy as np
 import pytest
-from qtpy import QtCore, QtWidgets
+from qtpy import QtCore, QtGui, QtWidgets
 
 
 def test_plot_range_signals_are_connected_once(
@@ -72,6 +72,55 @@ def test_detection_view_buttons_share_view_menu_state(
     assert button.isChecked() is menu_state
     assert (not widget.detectToolbarWidget.detectionGroupBox.isHidden()) is menu_state
 
+    window.setViewPanelVisible("detectionPanels", "Detection Panel", False)
+    assert detection_column.isHidden()
+    assert button_bar.isVisibleTo(window) is False
+    assert widget.detectToolbarWidget.isVisibleTo(window) is False
+
+    window.setViewPanelVisible("detectionPanels", "Detection Panel", True)
+    assert detection_column.isHidden() is False
+
+
+def test_theme_switch_updates_existing_recording_plots(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Refresh existing pyqtgraph backgrounds, axes, and trace pens.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    qtbot.addWidget(window)
+    widget = window.myDetectionWidget
+    original_theme = qapp.useDarkStyle
+    full_recording_pen = widget.vmPlotGlobal_.opts["pen"]
+
+    try:
+        for is_dark in (False, True):
+            background = QtGui.QColor("black" if is_dark else "white")
+            foreground = QtGui.QColor("white" if is_dark else "black")
+            qapp.toggleStyleSheet(doDark=is_dark)
+
+            for plot_widget in (
+                widget.vmPlotGlobal,
+                widget.derivPlot,
+                widget.dacPlot,
+                widget.vmPlot,
+            ):
+                assert plot_widget.backgroundBrush().color() == background
+                assert plot_widget.getAxis("left").pen().color() == foreground
+                assert plot_widget.getAxis("left").textPen().color() == foreground
+
+            for trace in (widget.derivPlot_, widget.dacPlot_, widget.vmPlot_):
+                assert trace.curve.opts["pen"].color() == foreground
+            assert widget.vmPlotGlobal_.opts["pen"] == full_recording_pen
+    finally:
+        qapp.toggleStyleSheet(doDark=original_theme)
+
 
 def test_raw_plot_buttons_share_view_menu_state(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
@@ -89,6 +138,22 @@ def test_raw_plot_buttons_share_view_menu_state(
     qtbot.addWidget(window)
     widget = window.myDetectionWidget
     button = widget._viewToggleButtons[("rawDataPanels", "Derivative")]
+    detection_button = widget._viewToggleButtons[
+        ("detectionPanels", "Detection Panel")
+    ]
+
+    assert detection_button.text() == "<<"
+    assert detection_button.parentWidget().layout().itemAt(0).widget() is detection_button
+
+    detection_button.click()
+
+    assert qapp.getOptions()["detectionPanels"]["Detection Panel"] is False
+    assert widget._detectionPanelWidget.isHidden()
+
+    window._viewMenuAction("detectionPanels", "Detection Panel", True)
+
+    assert detection_button.isChecked()
+    assert widget._detectionPanelWidget.isHidden() is False
 
     button.click()
 

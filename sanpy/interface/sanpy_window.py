@@ -1,3 +1,5 @@
+"""Main SanPy analysis window and its Qt lifecycle helpers."""
+
 import os
 import platform
 from functools import partial
@@ -13,6 +15,22 @@ import sanpy
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
+
+
+class _PluginDockWidget(QtWidgets.QDockWidget):
+    """Dock widget that reports an explicit Qt close request."""
+
+    closeRequested = QtCore.Signal()
+
+    def closeEvent(self, event: QtGui.QCloseEvent) -> None:
+        """Notify the owner before Qt hides the dock.
+
+        Args:
+            event: Close event generated for the dock widget.
+        """
+        self.closeRequested.emit()
+        super().closeEvent(event)
+
 
 class SanPyWindow(QtWidgets.QMainWindow):
     # TODO: define parameter block for all signals.
@@ -1110,10 +1128,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
         #             # on add tab, the QTabWIdget makes a copy !!!
         #             self.myPluginTab1.addTab(_oneOpenPlugin, _oneOpenPlugin.myHumanName)
 
-        self.pluginDock1 = QtWidgets.QDockWidget("Plugins", self)
+        self.pluginDock1 = _PluginDockWidget("Plugins", self)
         self.pluginDock1.setWidget(self.myPluginTab1)
         self.pluginDock1.setVisible(self.myPluginTab1.count() > 0)
         self.pluginDock1.setFloating(False)
+        self.pluginDock1.closeRequested.connect(self._closeAllPluginTabs)
         self.pluginDock1.dockLocationChanged.connect(
             partial(self.slot_dockLocationChanged, self.pluginDock1)
         )
@@ -1642,6 +1661,13 @@ class SanPyWindow(QtWidgets.QMainWindow):
         if pluginInstancePointer is not None:
             pluginInstancePointer.close()
             pluginInstancePointer.deleteLater()
+
+    def _closeAllPluginTabs(self) -> None:
+        """Close every plugin embedded in the primary Plugins dock."""
+        # Close in reverse order so removing a tab cannot shift an index that
+        # remains to be processed.
+        for index in reversed(range(self.myPluginTab1.count())):
+            self.slot_closeTab(index, self.myPluginTab1)
 
     def slot_changeTab(self, index, sender):
         """User brought a different tab to the front

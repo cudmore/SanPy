@@ -540,7 +540,17 @@ class SanPyApp(QtWidgets.QApplication):
         # return self._useDarkStyle
         return self._configDict["useDarkStyle"]
     
-    def toggleStyleSheet(self, doDark=None, buildingInterface=False):
+    def toggleStyleSheet(
+        self, doDark: bool | None = None, buildingInterface: bool = False
+    ) -> None:
+        """Apply the selected Qt and pyqtgraph application theme.
+
+        Args:
+            doDark: Whether to use the dark theme. The saved preference is used
+                when omitted.
+            buildingInterface: Whether the application is still constructing
+                its initial interface.
+        """
         logger.info("")
         if doDark is None:
             # doDark = not self._useDarkStyle
@@ -566,26 +576,11 @@ class SanPyApp(QtWidgets.QApplication):
         self.configDict["useDarkStyle"] = doDark  # self._useDarkStyle
 
         if not buildingInterface:
-            # self.myScatterPlotWidget.defaultPlotLayout()
-            # self.myScatterPlotWidget.buildUI(doRebuild=True)
-            
-            # 20231229 removed
-            # self.myDetectionWidget.mySetTheme()
-            pass
+            # pyqtgraph configuration options are defaults for new widgets;
+            # refresh plots that already belong to every open analysis window.
+            for window in tuple(self._windowList):
+                window.myDetectionWidget.setPlotTheme(doDark)
 
-        if buildingInterface:
-            pass
-        else:
-            pass
-            # msg = QtWidgets.QMessageBox()
-            # msg.setIcon(QtWidgets.QMessageBox.Warning)
-            # msg.setText("Theme Changed")
-            # msg.setInformativeText('Please restart SanPy for changes to take effect.')
-            # msg.setWindowTitle("Theme Changed")
-            # retval = msg.exec_()
-
-            # self.configDict.save()
-        
     def getAnalysisUtil(self):
         return self._analysisUtil
     
