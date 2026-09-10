@@ -3,7 +3,7 @@ from .fileLoader_atf import fileLoader_atf
 
 from .fileLoader_csv import fileLoader_text
 
-from sanpy import DO_KYMOGRAPH_ANALYSIS  # this seems like bad form ???
+from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 if DO_KYMOGRAPH_ANALYSIS:
     from .fileLoader_tif import fileLoader_tif
     from .fileLoader_tif import fileLoader_czi
@@ -19,4 +19,3 @@ from .epochTable import epochTable
 
 # errors on building kym app, put back in for Sack lab
 # from .hekaUtils import hekaLoad
-

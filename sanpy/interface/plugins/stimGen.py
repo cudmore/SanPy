@@ -33,6 +33,7 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
 import sanpy
+import sanpy.atfStim as atf_stim
 from sanpy.interface.plugins import sanpyPlugin
 
 from sanpy.sanpyLogger import get_logger
@@ -346,7 +347,7 @@ class stimGen(sanpyPlugin):
             #     f"  makeStim() {type} sweep:{sweepNum} durSec:{durSec} amp:{currAmp} freq:{currFreq} noiseAmp:{currNoiseAmp}"
             # )
 
-            self._data[sweepNum] = sanpy.atfStim.makeStim(
+            self._data[sweepNum] = atf_stim.makeStim(
                 type,
                 sweepDurSec=sweepDurSeconds,
                 startStimSec=stimStartSeconds,
@@ -378,7 +379,7 @@ class stimGen(sanpyPlugin):
 
     """
     def saveStim(Self):
-        sanpy.atfStim.saveAtf(self.data, fileName="output.atf", fs=10000)
+        atf_stim.saveAtf(self.data, fileName="output.atf", fs=10000)
     """
 
     def _grabParams(self):

@@ -10,6 +10,7 @@ import sanpy
 
 from sanpy.sanpyLogger import get_logger
 from sanpy.schema import AnalysisResultCategory
+from sanpy.version import analysisVersion
 
 logger = get_logger(__name__)
 
@@ -749,7 +750,7 @@ def printDocs():
         # str = df.to_markdown()
         str = df.to_html()
         myDate = datetime.today().strftime("%Y-%m-%d")
-        print(f"Generated {myDate} with sanpy.analysisVersion {sanpy.analysisVersion}")
+        print(f"Generated {myDate} with sanpy.analysisVersion {analysisVersion}")
         print(str)
 
     if 0:

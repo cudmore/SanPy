@@ -47,7 +47,7 @@ from sanpy.schema import DetectionParameterCategory
 
 from sanpy.sanpyLogger import get_logger
 
-from sanpy import D_BJ_MANUSCRIPT
+from sanpy.config import D_BJ_MANUSCRIPT
 
 logger = get_logger(__name__)
 

@@ -10,6 +10,7 @@ import numpy as np
 import scipy.signal
 
 import sanpy.fileloaders
+from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 
 import sanpy.metaData
 from sanpy.sanpyPaths import SanPyPaths
@@ -31,7 +32,7 @@ def getFileLoaders(verbose: bool = False) -> dict:
 
     ignoreModuleList = ["fileLoader_base", "recordingModes", "epochTable", "hekaUtils"]
 
-    if not sanpy.DO_KYMOGRAPH_ANALYSIS:
+    if not DO_KYMOGRAPH_ANALYSIS:
         ignoreModuleList.append('fileLoader_tif')
     #
     # system file loaders from sanpy.fileloaders

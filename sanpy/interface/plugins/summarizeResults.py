@@ -7,6 +7,7 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 import sanpy
+from sanpy.bExport import bExport
 from sanpy.interface.plugins import sanpyPlugin
 # from sanpy.interface.plugins import ResponseType
 
@@ -132,7 +133,7 @@ class SummarizeResults(sanpyPlugin):
             return
 
         # an export object to create any number of reports
-        exportObject = sanpy.bExport(self.ba)
+        exportObject = bExport(self.ba)
 
         startSec, stopSec = self.getStartStop()
 

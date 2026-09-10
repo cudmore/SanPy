@@ -14,6 +14,7 @@ import sanpy
 
 # import sanpy.interface
 import sanpy.interface.plugins
+from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 from sanpy.sanpyPaths import SanPyPaths
 
 from sanpy.sanpyLogger import get_logger
@@ -81,7 +82,7 @@ class bPlugins:
             "myStatListWidget",
         ]
 
-        if not sanpy.DO_KYMOGRAPH_ANALYSIS:
+        if not DO_KYMOGRAPH_ANALYSIS:
             ignoreModuleList.append('kymographPlugin')
 
         #

@@ -9,6 +9,7 @@ import pandas as pd
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
+from sanpy.version import analysisVersion, interfaceVersion
 
 logger = get_logger(__name__)
 
@@ -265,8 +266,8 @@ class bExport:
         # headerDict['mV Threshold'] = [self.ba.mvThreshold] # abb 202012
         headerDict["Vm Threshold (mV)"] = [dDict["mvThreshold"]]
         # headerDict['Median Filter (pnts)'] = [self.ba.medianFilter]
-        headerDict["Analysis Version"] = [sanpy.analysisVersion]
-        headerDict["Interface Version"] = [sanpy.interfaceVersion]
+        headerDict["Analysis Version"] = [analysisVersion]
+        headerDict["Interface Version"] = [interfaceVersion]
 
         # headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
         # headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
@@ -434,8 +435,8 @@ class bExport:
             # headerDict['mV Threshold'] = [self.ba.mvThreshold] # abb 202012
             headerDict["Vm Threshold (mV)"] = [dDict["mvThreshold"]]
             # headerDict['Median Filter (pnts)'] = [self.ba.medianFilter]
-            headerDict["Analysis Version"] = [sanpy.analysisVersion]
-            headerDict["Interface Version"] = [sanpy.interfaceVersion]
+            headerDict["Analysis Version"] = [analysisVersion]
+            headerDict["Interface Version"] = [interfaceVersion]
 
             # headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
             # headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]

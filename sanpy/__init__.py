@@ -1,34 +1,17 @@
-# using this to turn off for 1st sanpy publication
-D_BJ_MANUSCRIPT = True
-DO_KYMOGRAPH_ANALYSIS = False
+"""SanPy electrophysiology analysis package."""
 
-from .sanpyLogger import *
-
-from ._util import *
-from .sanpyPaths import SanPyPaths
-from .analysisUtil import *
-
-from .bAnalysis_ import bAnalysis
-# from .bAnalysis_ import MetaData  # Aug 2023
-from .analysisDir import *
-from .analysisPlot import *
-from .bAnalysisUtil import *
-from .atfStim import *
-from .bAnalysisResults import *
-
-from .bAbfText import bAbfText
-from .bExport import bExport
-
-from .version import analysisVersion
-from .version import interfaceVersion
-#from .version import __version__
 from ._version import __version__
-
+from .bAnalysis_ import bAnalysis
 from .bDetection import bDetection
-
-from .kymAnalysis import kymAnalysis
-from ._util import _loadLineScanHeader
-
-from .fileloaders import *
-
+from .analysisDir import analysisDir
 from .metaData import MetaData
+from .sanpyPaths import SanPyPaths
+
+__all__ = [
+    "__version__",
+    "analysisDir",
+    "bAnalysis",
+    "bDetection",
+    "MetaData",
+    "SanPyPaths",
+]

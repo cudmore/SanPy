@@ -14,8 +14,11 @@ import pyqtgraph as pg
 from pyqtgraph.exporters import ImageExporter
 
 import sanpy
+import sanpy.analysisUtil as analysis_util
+from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 import sanpy.bDetection
 import sanpy.interface
+from sanpy.bExport import bExport
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -572,7 +575,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         if len(savefile) > 0:
             logger.info(f"savefile: {savefile}")
             logger.info(f"  xMin:{xMin} xMax:{xMax} alsoSaveTxt:{saveCsv}")
-            exportObj = sanpy.bExport(self.ba)
+            exportObj = bExport(self.ba)
             analysisName, df = exportObj.saveReport(
                 savefile, xMin, xMax, alsoSaveTxt=saveCsv
             )
@@ -717,7 +720,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # kymograph
         # self.myKymWidget.kymographPlot.setXRange(start, stop, padding=padding)  # row major is different
         #self.myKymWidget.kymographPlot.autoRange()  # row major is different
-        if sanpy.DO_KYMOGRAPH_ANALYSIS:
+        if DO_KYMOGRAPH_ANALYSIS:
             if self.ba.fileLoader.isKymograph():
                 self.myKymWidget.kymographPlot.autoRange()
 
@@ -970,7 +973,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 sweepY = self.ba.fileLoader.sweepY
                 # filteredVm = self.ba.filteredVm
                 # filteredVm = filteredVm[:,0]
-                xPlot, yPlot = sanpy.analysisUtil.getHalfWidthLines(
+                xPlot, yPlot = analysis_util.getHalfWidthLines(
                     sweepX, sweepY, spikeDictionaries
                 )
                 self.myPlotList[idx].setData(x=xPlot, y=yPlot)
@@ -996,7 +999,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 self.myPlotList[idx].setData(x=xPlot, y=yPlot)
 
             elif plotIsOn and plot["humanName"] == "EDD Rate":
-                xPlot, yPlot = sanpy.analysisUtil.getEddLines(self.ba)
+                xPlot, yPlot = analysis_util.getEddLines(self.ba)
                 self.myPlotList[idx].setData(x=xPlot, y=yPlot)
 
             elif plotIsOn:
@@ -1808,7 +1811,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # for publication, don't do kymographs
         # make a branch and get this working
-        if sanpy.DO_KYMOGRAPH_ANALYSIS:
+        if DO_KYMOGRAPH_ANALYSIS:
             self.myKymWidget = sanpy.interface.kymographWidget()
             self.myKymWidget.signalKymographRoiChanged.connect(self.slot_kymographChanged)
             self.myKymWidget.setVisible(False)
@@ -2473,7 +2476,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlot.getAxis("left").setLabel(yLabel)
         self.vmPlot.getAxis("bottom").setLabel("Seconds")
 
-        if sanpy.DO_KYMOGRAPH_ANALYSIS:
+        if DO_KYMOGRAPH_ANALYSIS:
             if self.ba.fileLoader.isKymograph():
                 self.myKymWidget.setVisible(True)
                 # self.myKymWidget.slot_switchFile(ba, startSec, stopSec)

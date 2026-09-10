@@ -12,7 +12,7 @@ import inspect
 from typing import Any, List, Union
 
 import sanpy
-from sanpy import DO_KYMOGRAPH_ANALYSIS
+from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 from sanpy.schema import AnalysisResultCategory
 from sanpy.sanpyPaths import SanPyPaths
 

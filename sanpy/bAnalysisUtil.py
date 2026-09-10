@@ -9,7 +9,7 @@ from collections import OrderedDict
 from typing import List
 
 import sanpy
-from sanpy import DO_KYMOGRAPH_ANALYSIS
+from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 
 from sanpy.sanpyLogger import get_logger
 

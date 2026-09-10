@@ -27,8 +27,11 @@ import sanpy.h5Util
 import sanpy.fileloaders
 import sanpy.bAnalysisResults
 import sanpy._util
+import sanpy.analysisUtil as analysis_util
 
 from sanpy.fileloaders import recordingModes
+from sanpy.bExport import bExport
+from sanpy.version import analysisVersion, interfaceVersion
 
 # from metaData import MetaData
 
@@ -169,16 +172,22 @@ class bAnalysis:
                 logger.error(f'did not find a file loader for extension "{_ext}", available loaders are: {fileLoaderDict.keys()}')
                 self.loadError = True
             
-            self._kymAnalysis : sanpy.kymAnalysis = None
+            self._kymAnalysis = None
             if (self.fileLoader is not None) and (self.fileLoader.recordingMode == recordingModes.kymograph):
+                # Kymograph support is optional, so avoid loading its plotting
+                # dependencies during ordinary electrophysiology imports.
+                from sanpy.kymAnalysis import kymAnalysis
+
                 if verbose:
                     logger.info('creating kymAnalysis')
                     logger.info(f'    self.fileLoader.filepath:{self.fileLoader.filepath}')
                     logger.info(f'    self.fileLoader.tifData:{self.fileLoader.tifData.shape}')
                     logger.info(f'    self.fileLoader.tifHeader:{self.fileLoader.tifHeader}')
-                self._kymAnalysis = sanpy.kymAnalysis(self.fileLoader.filepath,
-                                                      self.fileLoader.tifData,
-                                                      self.fileLoader.tifHeader)
+                self._kymAnalysis = kymAnalysis(
+                    self.fileLoader.filepath,
+                    self.fileLoader.tifData,
+                    self.fileLoader.tifHeader,
+                )
 
             if self._fileLoader is not None:
                 # we need to so file loader meta data can set ba (Self) dirty when changed
@@ -1582,7 +1591,7 @@ class bAnalysis:
             spikeErrorList,
             newSpikePeakPnt,
             newSpikePeakVal,
-        ) = sanpy.analysisUtil.throwOutAboveBelow(
+        ) = analysis_util.throwOutAboveBelow(
             filteredVm,
             spikeTimes,
             spikeErrorList,
@@ -1616,8 +1625,8 @@ class bAnalysis:
             # spikeDict[i]['isBad'] = False
             spikeDict[i]["analysisDate"] = dateStr
             spikeDict[i]["analysisTime"] = timeStr
-            spikeDict[i]["analysisVersion"] = sanpy.analysisVersion
-            spikeDict[i]["interfaceVersion"] = sanpy.interfaceVersion
+            spikeDict[i]["analysisVersion"] = analysisVersion
+            spikeDict[i]["interfaceVersion"] = interfaceVersion
             spikeDict[i]["file"] = self.fileLoader.filename
 
             spikeDict[i]["detectionType"] = detectionType
@@ -2541,7 +2550,7 @@ class bAnalysis:
         alsoSaveTxt = True
         logger.info(f'Saving "{savefile}"')
 
-        be = sanpy.bExport(self)
+        be = bExport(self)
         be.saveReport(savefile, saveExcel=saveExcel, alsoSaveTxt=alsoSaveTxt)
 
     def _old__normalizeData(self, data):

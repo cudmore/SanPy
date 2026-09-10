@@ -61,6 +61,9 @@ from sanpy.sanpyPaths import SanPyPaths
 import sanpy.interface
 import sanpy.interface.preferences
 
+from sanpy.bAnalysisUtil import bAnalysisUtil
+from sanpy.fileloaders import getFileLoaders
+from sanpy.interface.preferences import preferences
 from sanpy.interface.sanpy_window import SanPyWindow
 from sanpy.interface.openFirstWidget import openFirstWidget
 
@@ -160,11 +163,11 @@ class SanPyApp(QtWidgets.QApplication):
         if firstTimeRunning:
             logger.info("  We created <user>/Documents/Sanpy and need to restart")
 
-        self._fileLoaderDict = sanpy.fileloaders.getFileLoaders(verbose=True)
+        self._fileLoaderDict = getFileLoaders(verbose=True)
         
         self._detectionClass : sanpy.bDetection = sanpy.bDetection(self.sanpy_paths)
 
-        self._configDict : sanpy.interface.preferences = sanpy.interface.preferences(self)
+        self._configDict: preferences = preferences(self)
         self._currentWindowGeometry = {
             'x': self._configDict['windowGeometry']['x'],
             'y': self._configDict['windowGeometry']['y'],
@@ -172,8 +175,11 @@ class SanPyApp(QtWidgets.QApplication):
             'height': self._configDict['windowGeometry']['height']
         }
 
-        self._plugins = sanpy.interface.bPlugins(sanpyApp=self)
-        self._analysisUtil = sanpy.bAnalysisUtil()
+        # Import after sanpy.interface finishes initializing its plugin helpers.
+        from sanpy.interface.bPlugins import bPlugins
+
+        self._plugins = bPlugins(sanpyApp=self)
+        self._analysisUtil = bAnalysisUtil()
 
         # self._useDarkStyle = self._configDict["useDarkStyle"]
         self.toggleStyleSheet(buildingInterface=True)
