@@ -994,7 +994,7 @@ def run():
         "/Users/cudmore/Library/CloudStorage/Box-Box/data/stoch-res/new20220104"
     )
 
-    from sanpy.bAnalysisStim import bAnalysisStim
+    from bAnalysisStim import bAnalysisStim
 
     for file in sorted(os.listdir(folderPath)):
         if not file.endswith(".abf"):
