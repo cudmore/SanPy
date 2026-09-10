@@ -687,6 +687,9 @@ class SanPyApp(QtWidgets.QApplication):
         # add to recent opened windows
         if path is not None:
             self.getOptions().addPath(path)
+            # The launcher is reused rather than reconstructed, so refresh its
+            # cached tables after the successful open updates preferences.
+            self._openFirstWidget.refreshRecent()
 
         # close the initial open first window
         # logger.warning('todo: figure out how to close and garbage collect the _openFirstWidget properly')

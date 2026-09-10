@@ -7,7 +7,12 @@ import functools
 
 from typing import Union, Dict, List, Tuple, Optional, Optional
 
-from matplotlib.backends import backend_qt5agg
+from matplotlib.backends.backend_qtagg import (
+    FigureCanvasQTAgg as _FigureCanvasQTAgg,
+)
+from matplotlib.backends.backend_qtagg import (
+    NavigationToolbar2QT as _NavigationToolbar2QT,
+)
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -276,14 +281,20 @@ class sanpyPlugin(QtWidgets.QWidget):
     def responseOptions(self):
         return self._responseOptions
 
-    def toggleTopToobar(self, visible: bool = None):
-        """Toggle or set the top toolbar.
+    def toggleTopToobar(
+        self,
+        visible: bool | None = None,
+        show_response_options: bool | None = None,
+    ) -> None:
+        """Toggle the top toolbar and optionally select its detail level.
 
-        Parameters
-        ----------
-        visible : bool or None
-            If None then toggle, otherwise set to `visible`.
+        Args:
+            visible: Explicit visibility, or ``None`` to toggle it.
+            show_response_options: Whether to show the response-option row, or
+                ``None`` to preserve its current state.
         """
+        if show_response_options is not None:
+            self._responseToolbarWidget.setVisible(show_response_options)
         if visible is None:
             visible = not self._topToolbarWidget.isVisible()
         self._topToolbarWidget.setVisible(visible)
@@ -694,7 +705,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         # not working
         # self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
 
-        self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
+        self.static_canvas = _FigureCanvasQTAgg(self.fig)
         self.static_canvas.setFocusPolicy(
             QtCore.Qt.ClickFocus
         )  # this is really triccky and annoying
@@ -721,11 +732,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         # does this need to be a member? I think so?
         self._cid = self.static_canvas.mpl_connect("pick_event", self.spike_pick_event)
 
-        # matplotlib plot tools toolbar (zoom, pan, save, etc)
-        # from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-        self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(
-            self.static_canvas, self.static_canvas
-        )
+        self.mplToolbar = self._makeMplToolbar(self.static_canvas)
 
         # layout = QtWidgets.QVBoxLayout()
         if addToLayout:
@@ -734,6 +741,24 @@ class sanpyPlugin(QtWidgets.QWidget):
             layout.addWidget(self.mplToolbar)
         else:
             return self.static_canvas, self.mplToolbar
+
+    def _makeMplToolbar(
+        self, canvas: _FigureCanvasQTAgg
+    ) -> _NavigationToolbar2QT:
+        """Create a compact, consistently parented Matplotlib toolbar.
+
+        Args:
+            canvas: Matplotlib Qt canvas controlled by the toolbar.
+
+        Returns:
+            Navigation toolbar with compact icons and fixed vertical sizing.
+        """
+        toolbar = _NavigationToolbar2QT(canvas, self, coordinates=True)
+        toolbar.setIconSize(QtCore.QSize(16, 16))
+        size_policy = toolbar.sizePolicy()
+        size_policy.setVerticalPolicy(QtWidgets.QSizePolicy.Fixed)
+        toolbar.setSizePolicy(size_policy)
+        return toolbar
 
     def _mySetWindowTitle(self):
         """Set the window title based on ba."""
@@ -1269,8 +1294,11 @@ class sanpyPlugin(QtWidgets.QWidget):
         # hLayout0.addStretch()
 
         #
-        # second row of controls
-        hLayout1 = QtWidgets.QHBoxLayout()
+        # Keep response controls in a widget so compact toolbar mode can hide
+        # this row without rebuilding the shared selector toolbar.
+        self._responseToolbarWidget = QtWidgets.QWidget()
+        hLayout1 = QtWidgets.QHBoxLayout(self._responseToolbarWidget)
+        hLayout1.setContentsMargins(0, 0, 0, 0)
 
         # a checkbox for each 'respond to' in the ResponseType enum
         for item in ResponseType:
@@ -1287,7 +1315,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         _mainWidget = QtWidgets.QWidget()
         _topToolbarLayout = QtWidgets.QVBoxLayout(_mainWidget)
         _topToolbarLayout.addLayout(hLayout0)
-        _topToolbarLayout.addLayout(hLayout1)
+        _topToolbarLayout.addWidget(self._responseToolbarWidget)
 
         return _mainWidget
 

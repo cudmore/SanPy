@@ -1,12 +1,14 @@
 """Tests for SanPy application, window, and plugin shutdown behavior."""
 
 import gc
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 from unittest.mock import Mock
 
 import pytest
 import pyqtgraph as pg
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
 from qtpy import QtCore, QtGui, QtWidgets
 
 import sanpy.interface.sanpy_window as sanpy_window_module
@@ -14,6 +16,7 @@ from sanpy.interface.openFirstWidget import openFirstWidget
 from sanpy.interface.sanpy_app import SanPyApp
 from sanpy.interface.sanpy_window import SanPyWindow
 from sanpy.interface.plugins.setMetaData import SetMetaData
+from sanpy.interface.plugins.sanpyPlugin import sanpyPlugin
 
 
 class _FakeCloseEvent:
@@ -502,6 +505,75 @@ def test_clear_recents_refreshes_menu_and_launcher(
         for key, value in original_values.items():
             options[key] = value
         launcher.refreshRecent()
+
+
+def test_successful_open_refreshes_launcher_recents(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any
+) -> None:
+    """Refresh launcher tables after the shared window-open path succeeds.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+    """
+    data_path = str(Path(__file__).resolve().parents[2] / "data")
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    refresh_recent = Mock(wraps=qapp._openFirstWidget.refreshRecent)
+    monkeypatch.setattr(qapp._openFirstWidget, "refreshRecent", refresh_recent)
+
+    qapp.openSanPyWindow(data_path)
+
+    refresh_recent.assert_called_once_with()
+
+
+def test_plugin_toolbar_supports_compact_modes(qtbot: Any) -> None:
+    """Use compact Matplotlib controls and preserve selector-only mode.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    plugin = sanpyPlugin()
+    qtbot.addWidget(plugin)
+
+    plugin.toggleTopToobar(True, show_response_options=False)
+    assert plugin._topToolbarWidget.isHidden() is False
+    assert plugin._responseToolbarWidget.isHidden()
+
+    plugin.toggleTopToobar(False)
+    plugin.toggleTopToobar(True)
+    assert plugin._responseToolbarWidget.isHidden()
+
+    plugin.toggleTopToobar(True, show_response_options=True)
+    assert plugin._responseToolbarWidget.isHidden() is False
+
+    _canvas, toolbar = plugin.mplWindow2(addToLayout=False)
+    assert isinstance(toolbar, NavigationToolbar2QT)
+    assert toolbar.parent() is plugin
+    assert toolbar.iconSize() == QtCore.QSize(16, 16)
+    assert toolbar.sizePolicy().verticalPolicy() == QtWidgets.QSizePolicy.Fixed
+
+
+def test_plot_scatter_starts_with_selector_toolbar_only(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Show Plot Scatter's sweep/epoch row without response controls.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = str(Path(__file__).resolve().parents[2] / "data")
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(data_path)
+    plugin = window.runPlugin("Plot Scatter", window.get_bAnalysis(), show=False)
+    assert plugin is not None
+    qtbot.addWidget(plugin)
+
+    assert plugin._topToolbarWidget.isHidden() is False
+    assert plugin._responseToolbarWidget.isHidden()
+    assert plugin._sweepComboBox.isHidden() is False
+    assert plugin._epochComboBox.isHidden() is False
 
 
 def test_plugin_close_is_safe_when_plugin_was_not_registered() -> None:

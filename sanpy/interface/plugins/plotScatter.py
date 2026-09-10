@@ -9,7 +9,7 @@ import pandas as pd
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-from matplotlib.backends import backend_qt5agg
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RectangleSelector  # To click+drag rectangular selection
@@ -160,6 +160,7 @@ class plotScatter(sanpyPlugin):
             ba (bAnalysis): Not required
         """
         super().__init__(**kwargs)
+        self.toggleTopToobar(True, show_response_options=False)
 
         self._hueList = ["None", "Time", "Sweep"]
         self._hue = "None"  # from ["None", "Time", "Sweep"]
@@ -286,7 +287,7 @@ class plotScatter(sanpyPlugin):
         # this is dangerous, collides with self.mplWindow()
         self.fig = mpl.figure.Figure()
         # self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
-        self.static_canvas = backend_qt5agg.FigureCanvasQTAgg(self.fig)
+        self.static_canvas = FigureCanvasQTAgg(self.fig)
         self.static_canvas.setFocusPolicy(
             QtCore.Qt.ClickFocus
         )  # this is really tricky and annoying
@@ -325,11 +326,7 @@ class plotScatter(sanpyPlugin):
         self.axHistY.spines['top'].set_visible(False)
         """
 
-        # can do self.mplToolbar.hide()
-        # matplotlib.backends.backend_qt5.NavigationToolbar2QT
-        self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(
-            self.static_canvas, self.static_canvas
-        )
+        self.mplToolbar = self._makeMplToolbar(self.static_canvas)
 
         # put toolbar and static_canvas in a V layout
         plotWidget = QtWidgets.QWidget()

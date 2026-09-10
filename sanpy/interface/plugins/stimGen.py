@@ -30,7 +30,7 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-from matplotlib.backends import backend_qt5agg
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
@@ -688,14 +688,11 @@ class stimGen(sanpyPlugin):
             plt.rcParams.update(plt.rcParamsDefault)
 
         self.fig = mpl.figure.Figure(constrained_layout=True)
-        self.static_canvas = backend_qt5agg.FigureCanvas(self.fig)
+        self.static_canvas = FigureCanvasQTAgg(self.fig)
         self.static_canvas.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.static_canvas.setFocus()
 
-        # can do self.mplToolbar.hide()
-        self.mplToolbar = mpl.backends.backend_qt5agg.NavigationToolbar2QT(
-            self.static_canvas, self.static_canvas
-        )
+        self.mplToolbar = self._makeMplToolbar(self.static_canvas)
 
         self._updateNumSweeps(self.numSweeps)
         # self.rawAxes = self.static_canvas.figure.add_subplot(self.numSweeps,1,1)
