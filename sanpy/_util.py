@@ -202,9 +202,3 @@ def _walk(path='.', depth=None):
 def getFileList(path, depth=1):
     fileList = [filePath for filePath in _walk(path, depth)]
     return fileList
-
-if __name__ == '__main__':
-    path = '/Users/cudmore/Dropbox/data/cell-shortening/fig1'
-    fileList = getFileList(path, 4)
-    for file in fileList:
-        print(file)
