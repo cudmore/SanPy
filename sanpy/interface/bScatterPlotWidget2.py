@@ -1540,6 +1540,12 @@ class plotState:
         return self._dict[key]
 
 class bScatterPlotMainWindow(QtWidgets.QMainWindow):
+    """Display and configure one or more statistical plots."""
+
+    _SANPY_CATEGORICAL_STATS = frozenset(
+        {"sweep", "epoch", "epochLevel", "File Number"}
+    )
+
     # send_fig = QtCore.pyqtSignal(str)
     signalStateChange = QtCore.Signal(object)
     signalSelectFromPlot = QtCore.Signal(object)
@@ -2120,20 +2126,45 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # append
         self.hBoxLayout.addLayout(self.plotLayout)
 
-    def slot_setStatName(self, headerStr, statName):
-        """User clicked on a new stat in one of (X-Stat, Y-Stat).
+    def _is_categorical_stat(self, backend_stat: str) -> bool:
+        """Return whether a DataFrame column should use categorical plotting.
+
+        SanPy has several numeric identifiers or stimulus levels whose values
+        represent discrete groups. Callers may also declare categorical
+        columns through the existing ``categoricalList`` constructor argument.
+
+        Args:
+            backend_stat: DataFrame column name for the selected statistic.
+
+        Returns:
+            True when the column is declared categorical or has string dtype.
+        """
+        is_declared_category = (
+            backend_stat in self._SANPY_CATEGORICAL_STATS
+            or backend_stat in self.masterCatColumns
+        )
+        return is_declared_category or pd.api.types.is_string_dtype(
+            self.masterDf[backend_stat].dtype
+        )
+
+    def slot_setStatName(self, headerStr: str, statName: str) -> None:
+        """Update the selected X or Y statistic.
+
+        Args:
+            headerStr: Statistic axis selected by the user.
+            statName: Human-readable statistic name selected by the user.
         """
         backendStat = self.getBackendStat(statName)
         logger.info(f'headerStr:{headerStr} statName:{statName} backendStat:{backendStat}')
         if headerStr == 'X-Stat':
             self._plotState.setState('X Statistic', statName)
             self._plotState.setState('xStat', backendStat)
-            xIsCategorical = pd.api.types.is_string_dtype(self.masterDf[backendStat].dtype)
+            xIsCategorical = self._is_categorical_stat(backendStat)
             self._plotState.setState("xIsCategorical", xIsCategorical)
         elif headerStr == 'Y-Stat':
             self._plotState.setState('Y Statistic', statName)
             self._plotState.setState('yStat', backendStat)
-            yIsCategorical = pd.api.types.is_string_dtype(self.masterDf[backendStat].dtype)
+            yIsCategorical = self._is_categorical_stat(backendStat)
             self._plotState.setState("yIsCategorical", yIsCategorical)
         else:
             logger.error(f'did not understand headerStr:{headerStr}')
@@ -2152,8 +2183,11 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         logger.info(f'plotNumber:{plotNumber} {type(plotNumber)}')
         self.updatePlot = plotNumber
 
-    def updatePlotLayoutGrid(self):
-        """use this to switch between (1x, 1x2, 2x1, 2x2)
+    def updatePlotLayoutGrid(self) -> None:
+        """Arrange and initialize the configured statistical plots.
+
+        Each plot is placed in the selected grid layout and initialized with
+        the correct continuous or categorical state for its X and Y columns.
         """
 
         plotLayoutType = self.plotLayoutType  # 1x, 1x2, 2x1, 2x2
@@ -2220,8 +2254,17 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                 _plotState.setState('X Statistic', _humanX)
                 _plotState.setState('Y Statistic', _humanY)
                 _plotState.setState('xStat', _xStat)
-                _plotState.setState('xStat', _xStat)
                 _plotState.setState('yStat', _yStat)
+
+            # Initialize categorical state for defaults and saved selections.
+            _plotState.setState(
+                "xIsCategorical",
+                self._is_categorical_stat(_plotState["xStat"]),
+            )
+            _plotState.setState(
+                "yIsCategorical",
+                self._is_categorical_stat(_plotState["yStat"]),
+            )
 
             print(f'plot {i} xxx plot state is:')
             print(_plotState)
@@ -2721,9 +2764,23 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
             pass
     """
 
-    def getMeanDf(self, verbose=False):
-        # need to get all categorical columns from orig df
-        # these do not change per file (sex, condition, region)
+    def getMeanDf(
+        self, verbose: bool = False
+    ) -> tuple[
+        Optional[pd.DataFrame],
+        Optional[pd.DataFrame],
+        Optional[pd.DataFrame],
+    ]:
+        """Build summary tables for the selected X and Y statistics.
+
+        Args:
+            verbose: Reserved diagnostic flag retained for caller compatibility.
+
+        Returns:
+            X-statistics, Y-statistics, and combined mean DataFrames. A result
+            may be None when its statistic is categorical or unavailable.
+        """
+        # Categorical columns do not receive numeric aggregate tables.
 
         includeNo = self._plotState['Include No']
 
@@ -2742,8 +2799,8 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
             logger.error(self.masterDf.columns)
             return None, None, None
         
-        xIsCategorical = pd.api.types.is_string_dtype(self.masterDf[xStat].dtype)
-        yIsCategorical = pd.api.types.is_string_dtype(self.masterDf[yStat].dtype)
+        xIsCategorical = self._is_categorical_stat(xStat)
+        yIsCategorical = self._is_categorical_stat(yStat)
 
         groupByNone = groupByColumnName == "None"
 
