@@ -79,7 +79,8 @@ print('machine', machine)
         --locked `
         --no-dev `
         --group packaging `
-        --python $PythonVersion
+        --python $PythonVersion `
+        --reinstall-package sanpy-ephys
     if ($LASTEXITCODE -ne 0) {
         throw "uv failed to synchronize the build environment"
     }
@@ -138,6 +139,12 @@ print('sanpy', sanpy.__version__)
     & $Python ..\create_build_info.py --output $BuildInfoPath
     if ($LASTEXITCODE -ne 0) {
         throw "failed to create build_info.json"
+    }
+
+    $InstalledSanPyVersion = (& $Python -c "from importlib.metadata import version; print(version('sanpy-ephys'))").Trim()
+    $RecordedSanPyVersion = (& $Python -c "import json, sys; print(json.load(open(sys.argv[1]))['build']['sanpy_version'])" $BuildInfoPath).Trim()
+    if ($RecordedSanPyVersion -ne $InstalledSanPyVersion) {
+        throw "build metadata version $RecordedSanPyVersion does not match installed SanPy $InstalledSanPyVersion"
     }
 
     Write-Host "==> recording installed environment"

@@ -54,7 +54,8 @@ UV_PROJECT_ENVIRONMENT="${VENV}" uv sync \
   --locked \
   --no-dev \
   --group packaging \
-  --python "${PYTHON_VERSION}"
+  --python "${PYTHON_VERSION}" \
+  --reinstall-package sanpy-ephys
 
 echo "==> dependency compatibility gate"
 uv pip check --python "${PYTHON}"
@@ -97,6 +98,16 @@ SOURCE_ARCHIVE="${RUN_DIR}/source-${GIT_COMMIT}.zip"
 
 echo "==> recording build info"
 "${PYTHON}" ../create_build_info.py --output "${BUILD_INFO_PATH}"
+
+INSTALLED_SANPY_VERSION="$("${PYTHON}" -c \
+  'from importlib.metadata import version; print(version("sanpy-ephys"))')"
+RECORDED_SANPY_VERSION="$("${PYTHON}" -c \
+  'import json, sys; print(json.load(open(sys.argv[1]))["build"]["sanpy_version"])' \
+  "${BUILD_INFO_PATH}")"
+if [[ "${RECORDED_SANPY_VERSION}" != "${INSTALLED_SANPY_VERSION}" ]]; then
+  echo "error: build metadata version ${RECORDED_SANPY_VERSION} does not match installed SanPy ${INSTALLED_SANPY_VERSION}" >&2
+  exit 1
+fi
 
 echo "==> recording installed environment"
 uv pip freeze \

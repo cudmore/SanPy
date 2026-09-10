@@ -35,6 +35,26 @@ windows-YYYYMMDD-vN
 The number starts at `v1` each day and increases without overwriting an
 existing run. It is not coordinated between the two build computers.
 
+## Set the SanPy release version
+
+SanPy derives its version from Git tags. After committing the release source,
+create the release tag from the repository root, then run the normal platform
+build. For example:
+
+```bash
+git tag -a v0.2.7 -m "SanPy 0.2.7"
+./packaging/macos/build_local.sh
+```
+
+The build script refreshes the installed SanPy metadata automatically. No
+manual virtual-environment synchronization is required. Smoke-test the
+unsigned application before running the existing signing and notarization
+step. Push the release tag only when the release is ready to publish:
+
+```bash
+git push origin v0.2.7
+```
+
 ## Build output and provenance
 
 A completed run is stored under the appropriate platform's `dist/` directory:
