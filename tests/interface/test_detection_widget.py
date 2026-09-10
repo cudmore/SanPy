@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from qtpy import QtCore
 
 
 def test_plot_range_signals_are_connected_once(
@@ -49,6 +50,11 @@ def test_detection_view_buttons_share_view_menu_state(
     qtbot.addWidget(window)
     widget = window.myDetectionWidget
     button = widget._viewToggleButtons[("detectionPanels", "Detection")]
+    button_bar = button.parentWidget()
+    detection_column = button_bar.parentWidget()
+
+    assert button_bar.sizePolicy().verticalPolicy() == button_bar.sizePolicy().Fixed
+    assert detection_column.layout().alignment() & QtCore.Qt.AlignTop
 
     button.click()
 

@@ -1538,6 +1538,9 @@ class bDetectionWidget(QtWidgets.QWidget):
             Widget containing the checkable view buttons.
         """
         bar = QtWidgets.QWidget(self)
+        bar.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Fixed
+        )
         layout = QtWidgets.QHBoxLayout(bar)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -1682,14 +1685,20 @@ class bDetectionWidget(QtWidgets.QWidget):
         detection_column = QtWidgets.QWidget(self)
         detection_layout = QtWidgets.QVBoxLayout(detection_column)
         detection_layout.setContentsMargins(0, 0, 0, 0)
+        detection_layout.setAlignment(QtCore.Qt.AlignTop)
         detection_layout.addWidget(
             self._build_view_toggle_bar(
                 "detectionPanels",
                 ["Detection", "Display", "Set Spikes", "Plot Options"],
-            )
+            ),
+            alignment=QtCore.Qt.AlignTop,
         )
-        detection_layout.addWidget(self.detectToolbarWidget)
-        self.myHBoxLayout_detect.addWidget(detection_column)
+        detection_layout.addWidget(
+            self.detectToolbarWidget, alignment=QtCore.Qt.AlignTop
+        )
+        self.myHBoxLayout_detect.addWidget(
+            detection_column, alignment=QtCore.Qt.AlignTop
+        )
         # v2
         # _hSplitter.addWidget(self.detectToolbarWidget)
         # self.myHBoxLayout_detect.addWidget(_hSplitter)
