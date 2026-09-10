@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import Mock
 
+import numpy as np
 import pytest
 from qtpy import QtCore
 
@@ -133,3 +134,31 @@ def test_raw_plot_toolbar_resets_axis_and_rebalances_visible_plots(
     for plot_widget, visible in plot_visibility.items():
         layout_index = widget._rawPlotLayout.indexOf(plot_widget)
         assert widget._rawPlotLayout.stretch(layout_index) == (1 if visible else 0)
+
+
+def test_sweep_change_fits_vm_y_axis_without_changing_x_axis(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Fit the selected sweep vertically while preserving its time range.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    window.selectFileListRow(2)
+    widget = window.myDetectionWidget
+    widget.vmPlot.setXRange(0.1, 0.2, padding=0)
+    expected_x_range = widget.vmPlot.viewRange()[0]
+
+    widget.selectSweep(1)
+    qtbot.wait(1)
+
+    actual_x_range, actual_y_range = widget.vmPlot.viewRange()
+    sweep_y = np.asarray(widget.ba.fileLoader.sweepY)
+    assert actual_x_range == pytest.approx(expected_x_range)
+    assert actual_y_range[0] <= np.nanmin(sweep_y)
+    assert actual_y_range[1] >= np.nanmax(sweep_y)

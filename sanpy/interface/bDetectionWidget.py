@@ -2591,10 +2591,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         # )
         # self.vmPlot.addItem(self.vmLinesFiltered)
         self.vmPlot_.setData(sweepX, sweepY, connect="finite")
-
-        # self.vmPlot.autoRange()
-        # self.vmPlot.enableAutoRange(axis='y')
-        # self.vmPlot.setAutoVisible(y=True)
+        # A new sweep can have a different voltage range. Re-enable only the
+        # vertical auto-range so the user's current time range is preserved.
+        self.vmPlot.enableAutoRange(axis="y")
 
         # vmPlot_ is PlotDataItem
         # logger.info(f'vmPlot.viewRange {self.vmPlot.viewRange()}')
