@@ -1,3 +1,5 @@
+"""Reusable Qt and pyqtgraph interface utilities."""
+
 from functools import partial
 
 from PyQt5 import QtCore, QtWidgets, QtGui
@@ -7,11 +9,20 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 class sanpyCursors(QtCore.QObject):
+    """Manage movable measurement cursors over a recording plot."""
+
     signalCursorDragged = QtCore.pyqtSignal(str)  # dx
     signalSetDetectionParam = QtCore.pyqtSignal(str, float)
 
-    def __init__(self, plotWidget : pg.PlotWidget, showInView=True):
-        """Add cursors to a PlotWidget. Normally vmPlot.
+    def __init__(
+        self, plotWidget: pg.PlotWidget, showInView: bool = True
+    ) -> None:
+        """Add measurement cursors to a recording plot.
+
+        Args:
+            plotWidget: Plot that owns and displays the cursor overlays.
+            showInView: Whether cursors should initially be visible and placed
+                inside the current view.
         """
         super().__init__(None)
         
@@ -52,10 +63,12 @@ class sanpyCursors(QtCore.QObject):
         # self._cursorD.setVisible(self._showCursors)
 
         
-        self._plotWidget.addItem(self._cursorA)
-        self._plotWidget.addItem(self._cursorB)
-        self._plotWidget.addItem(self._cursorC)
-        # self._plotWidget.addItem(self._cursorD)
+        # Cursors are annotations, not recording data. Excluding them from the
+        # plot bounds keeps automatic axis fitting independent of cursor position.
+        self._plotWidget.addItem(self._cursorA, ignoreBounds=True)
+        self._plotWidget.addItem(self._cursorB, ignoreBounds=True)
+        self._plotWidget.addItem(self._cursorC, ignoreBounds=True)
+        # self._plotWidget.addItem(self._cursorD, ignoreBounds=True)
 
         # logger.info(self._getName())
         #self._showInView()
@@ -190,4 +203,3 @@ class sanpyCursors(QtCore.QObject):
         
         self.signalCursorDragged.emit(delStr)
         #self.updateStatusBar(delStr)
-        

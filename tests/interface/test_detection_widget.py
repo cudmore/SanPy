@@ -6,8 +6,11 @@ from typing import Any
 from unittest.mock import Mock
 
 import numpy as np
+import pyqtgraph as pg
 import pytest
 from qtpy import QtCore, QtGui, QtWidgets
+
+from sanpy.interface.util import sanpyCursors
 
 
 def test_plot_range_signals_are_connected_once(
@@ -219,6 +222,8 @@ def test_sweep_change_fits_vm_y_axis_without_changing_x_axis(
     widget = window.myDetectionWidget
     widget.vmPlot.setXRange(0.1, 0.2, padding=0)
     expected_x_range = widget.vmPlot.viewRange()[0]
+    offscreen_cursor_y = 1_000_000.0
+    widget._sanpyCursors._cursorC.setValue(offscreen_cursor_y)
 
     widget.selectSweep(1)
     qtbot.wait(1)
@@ -228,6 +233,36 @@ def test_sweep_change_fits_vm_y_axis_without_changing_x_axis(
     assert actual_x_range == pytest.approx(expected_x_range)
     assert actual_y_range[0] <= np.nanmin(sweep_y)
     assert actual_y_range[1] >= np.nanmax(sweep_y)
+    assert actual_y_range[1] < offscreen_cursor_y
+    assert widget._sanpyCursors._cursorC.value() == offscreen_cursor_y
+
+
+
+def test_cursor_overlays_do_not_affect_plot_bounds(qtbot: Any) -> None:
+    """Exclude cursor overlays from auto-range while retaining Show In View.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    plot_widget = pg.PlotWidget(name="vmPlot")
+    qtbot.addWidget(plot_widget)
+    plot_widget.plot([10.0, 20.0], [-2.0, 3.0])
+    cursors = sanpyCursors(plot_widget)
+    offscreen_cursor_y = 1_000_000.0
+    cursors._cursorC.setValue(offscreen_cursor_y)
+
+    plot_widget.autoRange()
+    _, y_range = plot_widget.viewRange()
+
+    assert y_range[0] <= -2.0
+    assert y_range[1] >= 3.0
+    assert y_range[1] < offscreen_cursor_y
+    assert cursors._cursorC.value() == offscreen_cursor_y
+
+    # Show In View remains the explicit way to return an off-screen cursor.
+    cursors.handleMenu("Show In View", False)
+    cursor_y = cursors._cursorC.value()
+    assert y_range[0] <= cursor_y <= y_range[1]
 
 
 def test_full_recording_fits_y_axis_on_load_and_sweep_change(
