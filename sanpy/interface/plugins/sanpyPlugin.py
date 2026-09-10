@@ -1157,6 +1157,10 @@ class sanpyPlugin(QtWidgets.QWidget):
             combo_box: Selector to update.
             include_all: Whether to include an ``All`` choice.
         """
+        combo_box.setMinimumContentsLength(4)
+        combo_box.setSizeAdjustPolicy(
+            QtWidgets.QComboBox.AdjustToMinimumContentsLengthWithIcon
+        )
         self._blockComboBox = True
         combo_box.blockSignals(True)
         try:
@@ -1173,6 +1177,9 @@ class sanpyPlugin(QtWidgets.QWidget):
 
             combo_box.setEnabled(num_epochs > 0)
             combo_box.setCurrentIndex(combo_box.findData(self.epochNumber))
+
+            # Some themes size the popup independently from the closed combo.
+            combo_box.view().setMinimumWidth(combo_box.minimumSizeHint().width())
         finally:
             combo_box.blockSignals(False)
             self._blockComboBox = False
