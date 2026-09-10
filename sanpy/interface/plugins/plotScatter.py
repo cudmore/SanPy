@@ -1,3 +1,5 @@
+"""Interactive scatter plotting for SanPy spike statistics."""
+
 import math
 
 from typing import Union, Dict, List, Tuple, Optional
@@ -20,26 +22,19 @@ logger = get_logger(__name__)
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
-def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
-                            spikeList : List[int],
-                            hue = '') -> dict:
-    """Given a list of spikes, get plotting color and symbol.
-    
-    Parse bAnalysis for 'condition' and usertype'
+def getPlotMarkersAndColors(
+    ba: sanpy.bAnalysis, spikeList: List[int], hue: str = ""
+) -> dict[str, object]:
+    """Build valid Matplotlib and pyqtgraph styles for plotted spikes.
 
-    Parameters
-    ----------
-    ba : sanpy.bAnalysis
-    spikeList List[int]
-    hue : str
-        In ("", "Time", "Sweep")
+    Args:
+        ba: Analysis containing the requested spikes.
+        spikeList: Absolute spike indices represented by the scatter points.
+        hue: Color mode: ``Time``, ``Sweep``, or no hue.
 
-    TODO: Add one more return for pyqtgraph markers in ('o', 'star', 't', 't3')
+    Returns:
+        Style values consumed by Matplotlib and pyqtgraph scatter plots.
     """
-    cMap = mpl.pyplot.cm.coolwarm.copy()
-    cMap.set_under("white")  # only works for dark theme
-    # do not specify 'c' argument, we set colors using set_facecolor, set_color
-
     cMap = None
     colorMapArray = None
     faceColors = None
@@ -47,18 +42,18 @@ def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
     markerList_pg = None
 
     if hue == "Time":
-        colorMapArray = np.array(range(len(spikeList)))
-        # self.lines.set_array(colorMapArray)  # set_array is for a color map
-        # self.lines.set_cmap(cmap)  # mpl.pyplot.cm.coolwarm
-        # self.lines.set_color(faceColors)
+        cMap = mpl.pyplot.cm.coolwarm.copy()
+        colorMapArray = np.arange(len(spikeList))
 
     elif hue == "Sweep":
-        # color sweeps
-        _sweeps = ba.getSpikeStat(spikeList, 'sweep')
-        colorMapArray = np.array(range(len(_sweeps)))
-        # self.lines.set_array(colorMapArray)  # set_array is for a color map
-        # self.lines.set_cmap(self.cmap)  # mpl.pyplot.cm.coolwarm
-        # self.lines.set_color(faceColors)
+        cMap = mpl.pyplot.cm.coolwarm.copy()
+        colorMapArray = np.asarray(ba.getSpikeStat(spikeList, "sweep"))
+
+    if hue in ("Time", "Sweep"):
+        # Matplotlib requires at least one concrete marker path during draw.
+        marker = mmarkers.MarkerStyle("o")
+        pathList = [marker.get_path().transformed(marker.get_transform())]
+        markerList_pg = ["o"] * len(spikeList)
 
     else:
         # tmpColor = np.array(range(len(xData)))
@@ -137,7 +132,7 @@ def getPlotMarkersAndColors(ba : sanpy.bAnalysis,
             pathList.append(path)
         #self.lines.set_paths(pathList)
 
-    retDict = {
+    retDict: dict[str, object] = {
         'cMap': cMap,
         'colorMapArray': colorMapArray,
         'faceColors': faceColors,
