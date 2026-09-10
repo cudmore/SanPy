@@ -239,11 +239,12 @@ class sanpyPlugin(QtWidgets.QWidget):
         
         # if ba has > 1 sweep or > 2 epochs then show top toolbar
         _showTop = False
-        if self.ba is not None:
-            _numEpochs = self.ba.fileLoader.numEpochs  # can be None
-            _showTop = self.ba.fileLoader.numSweeps>1
-            _numEpoch = (_numEpochs is not None) and _numEpochs>2
-            _showTop = _showTop | _numEpoch
+        # abb removed with chatgpt 20260909
+        # if self.ba is not None:
+        #     _numEpochs = self.ba.fileLoader.numEpochs  # can be None
+        #     _showTop = self.ba.fileLoader.numSweeps>1
+        #     _numEpoch = (_numEpochs is not None) and _numEpochs>2
+        #     _showTop = _showTop | _numEpoch
         self.toggleTopToobar(_showTop)  # initially hidden
         
         self._updateTopToolbar()
