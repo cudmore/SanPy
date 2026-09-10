@@ -178,6 +178,7 @@ def test_file_menu_exposes_folder_save_action(qtbot):
         """Minimal QObject owner for exercising the shared menu builder."""
 
         _buildMenus = SanPyApp._buildMenus
+        _close_active_menu_window = SanPyApp._close_active_menu_window
 
         def __init__(self) -> None:
             """Provide the callbacks consumed while building menus."""
@@ -224,6 +225,7 @@ def test_file_menu_exposes_platform_close_window_shortcut(qtbot: Any) -> None:
         """Minimal application callbacks required by the shared menu builder."""
 
         _buildMenus = SanPyApp._buildMenus
+        _close_active_menu_window = SanPyApp._close_active_menu_window
 
         def __init__(self) -> None:
             """Initialize callback state used by the menu test."""
@@ -248,8 +250,57 @@ def test_file_menu_exposes_platform_close_window_shortcut(qtbot: Any) -> None:
     assert close_action.shortcutContext() == QtCore.Qt.WindowShortcut
 
     main_window.show()
+    main_window.activateWindow()
+    qtbot.waitUntil(lambda: QtWidgets.QApplication.activeWindow() is main_window)
     close_action.trigger()
     assert main_window.isVisible() is False
+
+
+def test_parent_close_action_ignores_frontmost_plugin(qtbot: Any) -> None:
+    """Keep the parent open when its child plugin window is frontmost.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    parent_window = QtWidgets.QMainWindow()
+    plugin_window = QtWidgets.QWidget(parent_window, QtCore.Qt.Window)
+    qtbot.addWidget(parent_window)
+    qtbot.addWidget(plugin_window)
+
+    class _MenuApp(QtCore.QObject):
+        """Minimal shared-menu owner for active-window testing."""
+
+        _buildMenus = SanPyApp._buildMenus
+        _close_active_menu_window = SanPyApp._close_active_menu_window
+
+        def __init__(self) -> None:
+            """Initialize callbacks required by the shared menu builder."""
+            super().__init__()
+            self.configDict = SimpleNamespace(save=lambda: None)
+            self.loadFile = lambda: None
+            self.loadFolder = lambda: None
+            self._refreshOpenRecent = lambda: None
+            self.requestQuit = lambda: None
+            self._onHelpMenuAction = lambda _name: None
+            self._onAboutMenuAction = lambda: None
+            self._onPreferencesMenuAction = lambda: None
+
+    app = _MenuApp()
+    app._buildMenus(parent_window.menuBar())
+    file_menu = parent_window.menuBar().actions()[0].menu()
+    close_action = next(
+        action for action in file_menu.actions() if action.text() == "Close Window"
+    )
+
+    parent_window.show()
+    plugin_window.show()
+    plugin_window.activateWindow()
+    qtbot.waitUntil(lambda: QtWidgets.QApplication.activeWindow() is plugin_window)
+
+    close_action.trigger()
+
+    assert parent_window.isVisible() is True
+    assert plugin_window.isVisible() is True
 
 
 def test_view_menu_omits_metadata_panel_action(qtbot: Any) -> None:

@@ -520,17 +520,20 @@ class sanpyPlugin(QtWidgets.QWidget):
     def keyReleaseEvent(self, event):
         self.keyIsDown = None
 
-    def keyPressEvent(self, event):
-        """Handle key press events.
+    def keyPressEvent(
+        self, event: Union[QtGui.QKeyEvent, mpl.backend_bases.KeyEvent]
+    ) -> Optional[str]:
+        """Handle Qt and Matplotlib key presses in a plugin window.
 
         On 'ctrl+c' will copy-to-clipboard.
 
         On 'esc' emits signalSelectSpikeList.
 
-        Parameters
-        ----------
-        event : Union[QtGui.QKeyEvent, matplotlib.backend_bases.KeyEvent]
-            Either a PyQt or matplotlib key press event.
+        Args:
+            event: PyQt or Matplotlib key event.
+
+        Returns:
+            Matplotlib key text for Matplotlib events; otherwise ``None``.
         """
         isQt = isinstance(event, QtGui.QKeyEvent)
         isMpl = isinstance(event, mpl.backend_bases.KeyEvent)
@@ -560,6 +563,10 @@ class sanpyPlugin(QtWidgets.QWidget):
             self.copyToClipboard()
         elif doClose:
             self.close()
+            if isQt:
+                # Do not propagate a plugin close gesture to its parent window.
+                event.accept()
+                return None
         elif key == QtCore.Qt.Key_Escape or text == "esc" or text == "escape":
             # single spike
             # sDict = {
