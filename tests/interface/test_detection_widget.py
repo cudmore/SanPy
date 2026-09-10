@@ -210,3 +210,28 @@ def test_plugins_button_uses_shared_menu_and_opens_new_tabs(
     assert window.myPluginTab1.currentWidget() is plugin_widgets[-1]
     assert window.pluginDock1.isHidden() is False
     assert run_plugin.call_count == 2
+
+
+def test_raw_plot_column_expands_with_central_widget(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Assign expanding horizontal space to the raw-plot column.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    qtbot.addWidget(window)
+    widget = window.myDetectionWidget
+
+    raw_plot_index = next(
+        index
+        for index in range(widget.myHBoxLayout_detect.count())
+        if widget.myHBoxLayout_detect.itemAt(index).layout() is widget._rawPlotLayout
+    )
+
+    assert widget.myHBoxLayout_detect.stretch(raw_plot_index) == 1

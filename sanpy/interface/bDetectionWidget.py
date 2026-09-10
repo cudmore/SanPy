@@ -2014,7 +2014,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         # vBoxLayoutForPlot.addWidget(self.view)
 
         # v1
-        self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot)
+        # Let the plot column consume space released when a dock is hidden.
+        self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot, 1)
         # v2
         # _tmpSplitterWidget = QtWidgets.QWidget()
         # _tmpSplitterWidget.setLayout(vBoxLayoutForPlot)
