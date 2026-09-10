@@ -1,12 +1,18 @@
 """Tests for pandas-backed Plot FI summary calculations."""
 
 import warnings
+from types import SimpleNamespace
+from typing import Any
+from unittest.mock import Mock
 
 import numpy as np
 import pandas as pd
 import pandas.testing as pdt
+import pytest
+from qtpy import QtWidgets
 
-from sanpy.interface.plugins.plotFi import getStatFi
+from sanpy.interface.plugins.plotFi import getStatFi, plotFi
+from sanpy.interface.plugins.sanpyPlugin import sanpyPlugin
 
 
 def test_get_stat_fi_aligns_results_by_sweep() -> None:
@@ -107,3 +113,138 @@ def test_get_stat_fi_returns_expected_empty_schema() -> None:
     )
     pdt.assert_index_equal(result.columns, expected_columns)
     assert result.empty
+
+
+def test_plot_fi_preserves_epoch_when_switching_files(
+    qtbot: Any, monkeypatch: Any
+) -> None:
+    """Keep Plot FI's numeric epoch while delegating shared switch behavior.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+        monkeypatch: Pytest attribute replacement helper.
+    """
+    plugin = plotFi.__new__(plotFi)
+    QtWidgets.QWidget.__init__(plugin)
+    qtbot.addWidget(plugin)
+    plugin._epochNumber = 2
+    calls: list[tuple[str, object]] = []
+
+    def fake_base_switch(
+        self: sanpyPlugin,
+        ba: object,
+        rowDict: dict[str, object] | None = None,
+        replot: bool = True,
+    ) -> None:
+        """Record delegation while reproducing the shared epoch reset.
+
+        Args:
+            self: Plugin receiving the file switch.
+            ba: Newly selected analysis.
+            rowDict: Optional file-table state.
+            replot: Whether the base implementation should redraw.
+        """
+        calls.append(("base", replot))
+        self._epochNumber = "All"
+
+    def fake_toolbar(self: plotFi) -> None:
+        """Record toolbar synchronization after restoring the epoch.
+
+        Args:
+            self: Plot FI instance being synchronized.
+        """
+        calls.append(("toolbar", self.epochNumber))
+
+    def fake_replot(self: plotFi) -> None:
+        """Record the final redraw and its selected epoch.
+
+        Args:
+            self: Plot FI instance being redrawn.
+        """
+        calls.append(("replot", self.epochNumber))
+
+    monkeypatch.setattr(sanpyPlugin, "slot_switchFile", fake_base_switch)
+    monkeypatch.setattr(plotFi, "_updateTopToolbar", fake_toolbar)
+    monkeypatch.setattr(plotFi, "replot", fake_replot)
+
+    plugin.slot_switchFile(SimpleNamespace())
+
+    assert plugin.epochNumber == 2
+    assert calls == [("base", False), ("toolbar", 2), ("replot", 2)]
+
+
+def test_plot_fi_clears_stale_output_for_unavailable_epoch(qtbot: Any) -> None:
+    """Replace results from the prior file when its epoch is unavailable.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    plugin = plotFi.__new__(plotFi)
+    QtWidgets.QWidget.__init__(plugin)
+    qtbot.addWidget(plugin)
+    plugin._epochNumber = 2
+    plugin._ba = SimpleNamespace(
+        fileLoader=SimpleNamespace(numEpochs=2),
+        getFileName=lambda: "new.abf",
+    )
+    plugin.df_fi = pd.DataFrame({"stale": [1]})
+    plugin.axs = Mock()
+    plugin.axs.transAxes = object()
+    plugin.static_canvas = Mock()
+    plugin._fiTableView = Mock()
+
+    plugin.replot()
+
+    assert plugin.df_fi is None
+    plugin._fiTableView.slotSwitchTableDf.assert_called_once_with(None)
+    plugin.axs.text.assert_called_once()
+    assert "Epoch 2 is not available" in plugin.axs.text.call_args.args
+    plugin.static_canvas.draw.assert_called_once_with()
+
+
+@pytest.mark.parametrize(
+    "spike_frame",
+    [
+        pd.DataFrame(),
+        pd.DataFrame(
+            {"epoch": [1], "epochLevel": [10.0], "thresholdSec": [0.1]}
+        ),
+    ],
+    ids=["no-detected-spikes", "no-spikes-in-selected-epoch"],
+)
+def test_plot_fi_clears_stale_output_when_epoch_has_no_spikes(
+    qtbot: Any, spike_frame: pd.DataFrame
+) -> None:
+    """Render a no-data message when no selected-epoch spikes are available.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+        spike_frame: New recording's per-spike analysis results.
+    """
+    plugin = plotFi.__new__(plotFi)
+    QtWidgets.QWidget.__init__(plugin)
+    qtbot.addWidget(plugin)
+    plugin._epochNumber = 2
+    plugin._ba = SimpleNamespace(
+        fileLoader=SimpleNamespace(numEpochs=3),
+        spikeDict=SimpleNamespace(asDataFrame=lambda: spike_frame),
+        getFileName=lambda: "new.abf",
+    )
+    plugin.df_fi = pd.DataFrame({"stale": [1]})
+    plugin.axs = Mock()
+    plugin.axs.transAxes = object()
+    plugin.static_canvas = Mock()
+    plugin._fiTableView = Mock()
+    plugin._yStatListWidget = Mock()
+    plugin._yStatListWidget.getCurrentStat.return_value = (
+        "Threshold Time",
+        "thresholdSec",
+    )
+
+    plugin.replot()
+
+    assert plugin.df_fi is None
+    plugin._fiTableView.slotSwitchTableDf.assert_called_once_with(None)
+    plugin.axs.text.assert_called_once()
+    assert "No spikes detected in epoch 2" in plugin.axs.text.call_args.args
+    plugin.static_canvas.draw.assert_called_once_with()

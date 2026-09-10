@@ -1,3 +1,5 @@
+"""Plot firing-rate/current summaries for one recording epoch."""
+
 import time
 from typing import Union, Dict, List, Tuple, Optional, Optional
 from functools import partial
@@ -131,6 +133,8 @@ def getStatFi(
 
 
 class plotFi(sanpyPlugin):
+    """Display firing statistics across sweeps for one selected epoch."""
+
     myHumanName = "Plot FI"
 
     def __init__(self, **kwargs):
@@ -346,38 +350,95 @@ class plotFi(sanpyPlugin):
 
         return _vLayout
 
-    def replot(self):
-        """Replot when file or analysis changes."""
+    def slot_switchFile(
+        self,
+        ba: sanpy.bAnalysis,
+        rowDict: Optional[dict[str, object]] = None,
+        replot: bool = True,
+    ) -> None:
+        """Switch recordings while preserving the selected FI epoch.
+
+        Args:
+            ba: Newly selected analysis.
+            rowDict: Optional file-table state for the selected analysis.
+            replot: Whether to redraw after switching analyses.
+        """
+        selected_epoch = self.epochNumber
+
+        # The shared plugin implementation resets sweep and epoch state. Plot FI
+        # spans every sweep but requires one epoch, so restore its chosen epoch.
+        super().slot_switchFile(ba, rowDict, replot=False)
+        self._epochNumber = selected_epoch
+        self._updateTopToolbar()
+
+        if replot:
+            self.replot()
+
+    def _show_plot_message(self, message: str) -> None:
+        """Replace stale FI output with an explanatory plot message.
+
+        Args:
+            message: User-facing explanation for the unavailable plot.
+        """
+        self.df_fi = None
+        self._fiTableView.slotSwitchTableDf(None)
+        self.axs.text(
+            0.5,
+            0.5,
+            message,
+            horizontalalignment="center",
+            verticalalignment="center",
+            transform=self.axs.transAxes,
+        )
+        self.static_canvas.draw()
+
+    def replot(self) -> None:
+        """Redraw FI results or show why the selected epoch cannot be plotted."""
 
         logger.info("")
 
         if self.ba is None:
             return
 
-        # get from stat lists
-        yHumanStat, yStat = self._yStatListWidget.getCurrentStat()
-
-        # if yHumanStat is None or yStat is None:
-        #     # happens during pytest with no sanpyapp
-        #     return
-
         # always clear the axis
         self.axs.clear()
 
         self.axs.autoscale(enable=True, axis="y", tight=None)
 
+        epoch_number = self.epochNumber
+        if not isinstance(epoch_number, int) or isinstance(epoch_number, bool):
+            logger.warning("Plot FI requires one numeric epoch.")
+            self._show_plot_message("Select one epoch to plot")
+            return
+
+        num_epochs = self.ba.fileLoader.numEpochs
+        if num_epochs is None or not 0 <= epoch_number < num_epochs:
+            logger.warning(
+                "Epoch %s is unavailable in %s.", epoch_number, self.ba.getFileName()
+            )
+            self._show_plot_message(f"Epoch {epoch_number} is not available")
+            return
+
         # get masterDf
         dfMaster = self.ba.spikeDict.asDataFrame()
         if dfMaster is None or dfMaster.empty:
-            # no spikes
-            logger.info("no spikes to plot -> return")
+            logger.info("No detected spikes are available for Plot FI.")
+            self._show_plot_message(f"No spikes detected in epoch {epoch_number}")
             return
+
+        dfEpoch = dfMaster[dfMaster["epoch"] == epoch_number]
+        if dfEpoch.empty:
+            logger.info("No spikes were detected in epoch %s.", epoch_number)
+            self._show_plot_message(f"No spikes detected in epoch {epoch_number}")
+            return
+
+        # Resolve the selected statistic only after validating the recording.
+        yHumanStat, yStat = self._yStatListWidget.getCurrentStat()
 
         # user has to specify which epoch
         plotRaw = self._plotDict["Raw"]
         if plotRaw:
             # reduce to only spikes for given epochNumber
-            dfEpoch = dfMaster[dfMaster["epoch"] == self.epochNumber]
             # sns.scatterplot(x='epochLevel', y=stat, data=dfEpoch, ax=_ax)
             self.axs.scatter(
                 "epochLevel",
@@ -400,7 +461,7 @@ class plotFi(sanpyPlugin):
         self.df_fi = getStatFi(
             dfMaster,
             yStat,
-            epochNumber=self.epochNumber,
+            epochNumber=epoch_number,
             intervalStat=intervalStat,
             filename=_filename,
         )
@@ -409,7 +470,8 @@ class plotFi(sanpyPlugin):
         print(self.df_fi)
 
         if self.df_fi.empty:
-            logger.warning("  got empty dataframe -> return")
+            logger.warning("No FI summary was generated for epoch %s.", epoch_number)
+            self._show_plot_message(f"No FI results for epoch {epoch_number}")
             return
 
         self._fiTableView.slotSwitchTableDf(self.df_fi)
@@ -451,7 +513,7 @@ class plotFi(sanpyPlugin):
         #
         # set x-axis to full range of all injected currents (e.g. epochLevel)
         # pad by 10%
-        epochLevels = dfMaster["epochLevel"].unique()
+        epochLevels = dfEpoch["epochLevel"].unique()
         _minEpochLevel = np.min(epochLevels)
         _maxEpochLevel = np.max(epochLevels)
         _xRange = _maxEpochLevel - _minEpochLevel
