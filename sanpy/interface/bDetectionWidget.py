@@ -1696,6 +1696,11 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # kymograph, we need a vboxlayout to hold (kym widget, self.view)
         vBoxLayoutForPlot = QtWidgets.QVBoxLayout(self)
+        vBoxLayoutForPlot.addWidget(
+            self._build_view_toggle_bar(
+                "rawDataPanels", ["Full Recording", "Derivative", "DAC"]
+            )
+        )
 
         # for publication, don't do kymographs
         # make a branch and get this working
