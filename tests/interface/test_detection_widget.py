@@ -31,3 +31,34 @@ def test_plot_range_signals_are_connected_once(
     window.selectFileListRow(2)
     assert plot_item.receivers(widget.vmPlot.sigXRangeChanged) == 1
     assert plot_item.receivers(widget.vmPlot.sigYRangeChanged) == 1
+
+
+def test_detection_view_buttons_share_view_menu_state(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Keep detection buttons, preferences, and View-menu behavior synchronized.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    qtbot.addWidget(window)
+    widget = window.myDetectionWidget
+    button = widget._viewToggleButtons[("detectionPanels", "Detection")]
+
+    button.click()
+
+    assert qapp.getOptions()["detectionPanels"]["Detection"] is button.isChecked()
+    assert (
+        not widget.detectToolbarWidget.detectionGroupBox.isHidden()
+    ) is button.isChecked()
+
+    menu_state = not button.isChecked()
+    window._viewMenuAction("detectionPanels", "Detection", menu_state)
+
+    assert button.isChecked() is menu_state
+    assert (not widget.detectToolbarWidget.detectionGroupBox.isHidden()) is menu_state

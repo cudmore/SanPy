@@ -887,34 +887,51 @@ class SanPyWindow(QtWidgets.QMainWindow):
         action.triggered.connect(partial(self._viewMenuAction, "Dark Theme", name))
         self.viewMenu.addAction(action)
 
-    def _viewMenuAction(self, key1, name, isChecked):
-        """Respond to user selection in view menu."""
-        logger.info(f"{key1}, {name}, {isChecked}")
+    def _viewMenuAction(self, key1: str, name: str, isChecked: bool) -> None:
+        """Route a View-menu selection through the shared visibility handler.
+
+        Args:
+            key1: Configuration section containing the view state.
+            name: View controlled by the action.
+            isChecked: Whether the view should be visible.
+        """
+        self.setViewPanelVisible(key1, name, isChecked)
+
+    def setViewPanelVisible(self, section: str, name: str, visible: bool) -> None:
+        """Set one configurable view from either a menu or toolbar action.
+
+        Args:
+            section: Configuration section containing the view state.
+            name: View to show or hide.
+            visible: Whether the view should be visible.
+        """
+        logger.info(f"{section}, {name}, {visible}")
 
         try:
-            self.configDict[key1][name] = isChecked
-        except KeyError as e:
-            pass
+            section_options = self.configDict[section]
+        except KeyError:
+            section_options = None
+        if section_options is not None and name in section_options:
+            section_options[name] = visible
 
-        if key1 == "filePanels":
-            self.toggleInterface(name, isChecked)
+        if section == "filePanels":
+            self.toggleInterface(name, visible)
 
-        elif key1 == "pluginDocks":
-            self.toggleInterface(name, isChecked)
+        elif section == "pluginDocks":
+            self.toggleInterface(name, visible)
 
-        elif key1 == "rawDataPanels":
-            # self.toggleInterface(name, isChecked)
-            self.myDetectionWidget.toggleInterface(name, isChecked)
+        elif section == "rawDataPanels":
+            self.myDetectionWidget.toggleInterface(name, visible)
 
-        elif key1 == "detectionPanels":
-            self.myDetectionWidget.toggleInterface(name, isChecked)
+        elif section == "detectionPanels":
+            self.myDetectionWidget.toggleInterface(name, visible)
 
-        elif key1 == "Dark Theme":
-            # doDark = not self.useDarkStyle
-            # self.toggleStyleSheet(doDark=doDark)
-            self.getSanPyApp().toggleStyleSheet(doDark=isChecked)
+        elif section == "Dark Theme":
+            self.getSanPyApp().toggleStyleSheet(doDark=visible)
         else:
-            logger.warning(f'  no action for key1: "{key1}"')
+            logger.warning(f'  no action for view section: "{section}"')
+
+        self.myDetectionWidget.syncViewToggleButton(section, name, visible)
 
     def toggleInterface(self, name, on):
         """Toggle named interface widgets show and hide.

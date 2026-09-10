@@ -1440,8 +1440,13 @@ class bDetectionWidget(QtWidgets.QWidget):
     #     )
     #     self.clipPlot.addItem(self.meanClipLine)
 
-    def toggleInterface(self, item, on):
-        """Visually toggle different portions of interface"""
+    def toggleInterface(self, item: str | int, on: bool) -> None:
+        """Show or hide one detection control, trace, or plot overlay.
+
+        Args:
+            item: Named interface component or numeric plot-overlay index.
+            on: Whether the component should be visible.
+        """
         # print('toggle_Interface()', item, on)
         # if item == 'Clips':
         #    #self.toggleClips(on)
@@ -1520,6 +1525,71 @@ class bDetectionWidget(QtWidgets.QWidget):
             # Toggle overlay of stats like (TOP, spike peak, half-width, ...)
             self.togglePlot(item, on)  # assuming item is int !!!
 
+    def _build_view_toggle_bar(
+        self, section: str, names: list[str]
+    ) -> QtWidgets.QWidget:
+        """Build a compact row of buttons backed by View-menu state.
+
+        Args:
+            section: Configuration section containing the visibility values.
+            names: Ordered view names represented by the buttons.
+
+        Returns:
+            Widget containing the checkable view buttons.
+        """
+        bar = QtWidgets.QWidget(self)
+        layout = QtWidgets.QHBoxLayout(bar)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        options = self.getMainWindowOptions()
+        for name in names:
+            button = QtWidgets.QToolButton(bar)
+            button.setText(name)
+            button.setCheckable(True)
+            button.setAutoRaise(True)
+            checked = bool(options[section][name]) if options is not None else True
+            button.setChecked(checked)
+            button.toggled.connect(
+                partial(self._on_view_toggle_button, section, name)
+            )
+            layout.addWidget(button)
+            self._viewToggleButtons[(section, name)] = button
+
+        layout.addStretch()
+        return bar
+
+    def _on_view_toggle_button(
+        self, section: str, name: str, checked: bool
+    ) -> None:
+        """Apply a view-button change through the main-window handler.
+
+        Args:
+            section: Configuration section containing the visibility value.
+            name: View controlled by the button.
+            checked: Whether the view should be visible.
+        """
+        if self.myMainWindow is None:
+            logger.error("Cannot toggle %s without a SanPy window.", name)
+            return
+        self.myMainWindow.setViewPanelVisible(section, name, checked)
+
+    def syncViewToggleButton(
+        self, section: str, name: str, checked: bool
+    ) -> None:
+        """Synchronize a toolbar button after another control changes a view.
+
+        Args:
+            section: Configuration section containing the visibility value.
+            name: View controlled by the button.
+            checked: Whether the view is visible.
+        """
+        button = self._viewToggleButtons.get((section, name))
+        if button is None:
+            return
+        button.blockSignals(True)
+        button.setChecked(checked)
+        button.blockSignals(False)
+
     def _old_kymographChanged(self, event):
         """
         User finished gragging the ROI
@@ -1591,6 +1661,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         """
         self.mySetTheme(doReplot=False)
 
+        self._viewToggleButtons: dict[tuple[str, str], QtWidgets.QToolButton] = {}
+
         # left is toolbar, right is PYQtGraph (self.view)
         self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
         self.myHBoxLayout_detect.setAlignment(QtCore.Qt.AlignTop)
@@ -1607,8 +1679,17 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.detectToolbarWidget.slot_selectSpikeList
         )
 
-        # v1
-        self.myHBoxLayout_detect.addWidget(self.detectToolbarWidget)
+        detection_column = QtWidgets.QWidget(self)
+        detection_layout = QtWidgets.QVBoxLayout(detection_column)
+        detection_layout.setContentsMargins(0, 0, 0, 0)
+        detection_layout.addWidget(
+            self._build_view_toggle_bar(
+                "detectionPanels",
+                ["Detection", "Display", "Set Spikes", "Plot Options"],
+            )
+        )
+        detection_layout.addWidget(self.detectToolbarWidget)
+        self.myHBoxLayout_detect.addWidget(detection_column)
         # v2
         # _hSplitter.addWidget(self.detectToolbarWidget)
         # self.myHBoxLayout_detect.addWidget(_hSplitter)
