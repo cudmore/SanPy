@@ -4,18 +4,23 @@ from pathlib import Path
 
 import pytest
 
+import sanpy
 from sanpy.interface.bPlugins import bPlugins
 
 
 def test_invalid_user_plugin_does_not_stop_discovery(
-    tmp_path: Path, caplog: pytest.LogCaptureFixture
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Log one invalid user plugin and continue loading valid plugins.
 
     Args:
+        monkeypatch: Pytest fixture used to enable the isolated extension path.
         tmp_path: Temporary directory used as the external plugin folder.
         caplog: Pytest log-capture fixture.
     """
+    monkeypatch.setattr(sanpy._util, "ALLOW_USER_CODE_IMPORTS", True)
     broken_path = tmp_path / "brokenPlugin.py"
     broken_path.write_text("import module_that_does_not_exist\n", encoding="utf-8")
     valid_path = tmp_path / "validPlugin.py"

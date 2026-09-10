@@ -1,5 +1,10 @@
 ## How to extend the analysis of SanPy with user specified analysis
 
+!!! note
+    Runtime loading of external Python analysis files is currently disabled.
+    The example below is retained as a developer reference in
+    `examples/user_extensions/analysis/exampleUserAnalysis.py`.
+
 The core analysis algorithm of SanPy can be easily extended by the user.
 
  - Derive a class from [sanpy.user_analysis.baseUserAnalysis](userAnalysis/baseUserAnalysis.md)

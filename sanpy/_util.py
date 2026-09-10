@@ -1,3 +1,5 @@
+"""General filesystem and runtime utilities for SanPy."""
+
 import os
 import sys
 import importlib
@@ -11,6 +13,11 @@ import numpy as np
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
+
+
+# External Python extensions are intentionally disabled until the runtime
+# extension architecture and trust model are ready for end users.
+ALLOW_USER_CODE_IMPORTS = False
 
 
 def getNewUuid():
@@ -45,16 +52,20 @@ def _module_from_file(module_name: str, file_path: str):
     return module
 
 
-def addUserPath():
-    """Make <user>/Documents/SanPy folder and add it to the Python sys.path
+def addUserPath() -> bool:
+    """Prepare SanPy user files and optionally make them importable.
 
     Returns:
-        True: If we made the folder (first time SanPy is running)
+        True when the user-files folder was created during this call.
     """
 
     # logger.info("")
 
     madeUserFolder = _makeSanPyFolders()  # make <user>/Documents/SanPy if necc
+
+    if not ALLOW_USER_CODE_IMPORTS:
+        logger.info("External user Python imports are disabled")
+        return madeUserFolder
 
     userSanPyFolder = _getUserSanPyFolder()
 
@@ -331,5 +342,4 @@ if __name__ == '__main__':
     fileList = getFileList(path, 4)
     for file in fileList:
         print(file)
-
 

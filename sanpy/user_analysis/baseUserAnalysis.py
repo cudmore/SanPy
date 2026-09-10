@@ -41,14 +41,14 @@ def _module_from_file(module_name, file_path):
     return module
 
 
-def _getObjectList(verbose=False) -> List[dict]:
-    """Return a list of classes defined in sanpy.userAnalysis.
+def _getObjectList(verbose: bool = False) -> List[dict]:
+    """Return built-in and optionally external analysis classes.
 
-    Each of these is an object we can (i) construct or (ii) interrogate static class members
+    Args:
+        verbose: Whether to log details about discovered analysis classes.
 
-    Returns
-    -------
-    list of dict
+    Returns:
+        Analysis-class definitions that can be constructed or inspected.
     """
 
     if verbose:
@@ -57,7 +57,10 @@ def _getObjectList(verbose=False) -> List[dict]:
     #
     # user plugins from files in folder <user>/SanPy/analysis
     userAnalysisFolder = sanpy._util._getUserAnalysisFolder()
-    files = glob.glob(os.path.join(userAnalysisFolder, "*.py"))
+    if sanpy._util.ALLOW_USER_CODE_IMPORTS:
+        files = glob.glob(os.path.join(userAnalysisFolder, "*.py"))
+    else:
+        files = []
 
     pluginDict = {}
     loadedModuleList = []

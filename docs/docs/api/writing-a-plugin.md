@@ -1,5 +1,10 @@
 ## How to write a SanPy plugin.
 
+!!! note
+    Runtime loading of external Python plugins is currently disabled. The
+    example below is retained as a developer reference in
+    `examples/user_extensions/plugins/exampleUserPlugin1.py`.
+
 1) Derive a class from [sanpy.interface.plugins.sanpyPlugin](interface/plugins/sanpyPlugin.md)
 
 2) Give you plugin a name by defining the static property `myHumanName = 'Nice name for your plugin`.
@@ -9,13 +14,7 @@
 4) Have your plugin respond to the main interface by reploting in a `replot()` member function.
     This is to enable your plugin to respond to different pre-defined interface changes, see below.
 
-5) Place you new plugin py file in the `<user>Documents/SanPy/plugins` folder
-
-6) Run SanPy and it will append you plugin to the list of available plugins in the `Plugins Menu`.
-
-**Coming soon.** We will provide unit tests to ensure new plugins is working.
-
-Here is a template to get started. This is the same as gets installed in the User plugin folder file `exampleUserPlugin.py`.
+Here is a template retained for future extension development.
 
 ```python
 from sanpy.interface.plugins import sanpyPlugin
@@ -63,4 +62,3 @@ class exampleUserPlugin1(sanpyPlugin):
         # plt.draw()
         self.static_canvas.draw()
 ```
-

@@ -116,7 +116,10 @@ class bPlugins:
         #
         # user plugins from files in folder <user>/SanPy/plugins
         loadedModuleList = []
-        if self.userPluginFolder is not None:
+        if (
+            sanpy._util.ALLOW_USER_CODE_IMPORTS
+            and self.userPluginFolder is not None
+        ):
             files = glob.glob(os.path.join(self.userPluginFolder, "*.py"))
         else:
             files = []

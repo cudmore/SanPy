@@ -235,10 +235,9 @@ The `summarize results` plugin shows a number of different tables to review the 
 
 ## User Files
 
-When the SanPy desktop application is first run, it creates a folder to contain user files in `<username>/Documents/SanPy-User-Files`. This is where you drop in your custom code to extend the capabilities of SanPy. This includes:
-
-- [Writing a file loader](../api/writing-a-file-loader)
-- [Writing new analysis](../api/writing-new-analysis)
-- [Writing a plugin](../api/writing-a-plugin)
-
+When the SanPy desktop application is first run, it creates
+`<username>/Documents/SanPy-User-Files` for preferences, detection presets,
+and example recordings. Loading executable Python extensions from this folder
+is currently disabled. Developer extension examples remain available in the
+source repository under `examples/user_extensions`.
 

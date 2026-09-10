@@ -18,19 +18,13 @@ logger = get_logger(__name__)
 
 
 def getFileLoaders(verbose: bool = False) -> dict:
-    """Load file loaders from both
+    """Return built-in and optionally external recording file loaders.
 
-        1) Module sanpy.fileloaders
-        2) Folder <user>/Documents/SanPy/File Loaders
+    Args:
+        verbose: Whether to log details about registered file loaders.
 
-    Each file loader is a class derived from [fileLoader_base](../../api/fileloader/fileLoader_base.md)
-
-    See: sanpy.interface.bPlugins.loadPlugins()
-
-    Returns
-    -------
-    dict
-        A dictionary of file loaders.
+    Returns:
+        File-loader definitions keyed by supported file extension.
     """
     retDict = {}
 
@@ -82,7 +76,10 @@ def getFileLoaders(verbose: bool = False) -> dict:
     # user plugins from files in folder "<user>/SanPy/file loaders"
     fileLoaderFolder = sanpy._util._getUserFileLoaderFolder()
     # loadedModuleList = []
-    if os.path.isdir(fileLoaderFolder):
+    if (
+        sanpy._util.ALLOW_USER_CODE_IMPORTS
+        and os.path.isdir(fileLoaderFolder)
+    ):
         files = glob.glob(os.path.join(fileLoaderFolder, "*.py"))
     else:
         # no user file loader folder ???

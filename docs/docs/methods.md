@@ -87,7 +87,6 @@ Note: To generate this use bAnalysisUtil._print()
 | 26 | Half Width 50 (ms)                | widths_50                  | nan     | widths_50                  | ms           |                        |              |
 | 27 | Half Width 80 (ms)                | widths_80                  | nan     | widths_80                  | ms           |                        |              |
 | 28 | Half Width 90 (ms)                | widths_90                  | nan     | widths_90                  | ms           |                        |              |
-| 29 | User Time To Peak (ms)            | user_timeToPeak_ms         |         |                            |              |                        |              |
 
 # Analysis results (full)
 
@@ -761,4 +760,3 @@ myocytes contributes to the age-dependent decline in maximum heart rate. PNAS 11
 - The nonlinear late diastolic depolarization phase was estimated as the duration between 1% and 10% dV/dt
 
 [larson et al 2013]: https://www.ncbi.nlm.nih.gov/pubmed/24128759
-

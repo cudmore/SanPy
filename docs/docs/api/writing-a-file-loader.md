@@ -1,5 +1,9 @@
 ## How to write a custom SanPy file loader.
 
+!!! note
+    Runtime loading of external Python file loaders is currently disabled.
+    Built-in file loaders continue to work normally.
+
 1) Derive a new class from [sanpy.fileloaders.fileLoader_base](fileloader/fileLoader_base.md).
 
 2) Specify the file extension you want to load with `loadFileType = 'your_file_extension'`
@@ -8,13 +12,8 @@
 
 4) Call `self.setLoadedData(...)` with the results. 
 
-5) Place your file loader py file in the `<User>/Documents/SanPy/file loaders` folder.
-
-6) Run SanPy and make sure it works!
-
-**Coming Soon.** We will provide unit testing for user file loaders.
-
-Here is some sample code to get started, this is taken from the SanPy CSV file loader [fileLoader_csv](fileloader/fileLoader_csv.md).
+Here is some sample code based on the built-in SanPy CSV file loader
+[fileLoader_csv](fileloader/fileLoader_csv.md).
 
 ```python
 import sanpy.fileloaders.fileLoader_base as fileLoader_base
