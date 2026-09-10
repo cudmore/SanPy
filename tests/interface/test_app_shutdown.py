@@ -15,7 +15,6 @@ import sanpy.interface.sanpy_window as sanpy_window_module
 from sanpy.interface.openFirstWidget import openFirstWidget
 from sanpy.interface.sanpy_app import SanPyApp
 from sanpy.interface.sanpy_window import SanPyWindow
-from sanpy.interface.plugins.setMetaData import SetMetaData
 from sanpy.interface.plugins.sanpyPlugin import sanpyPlugin
 
 
@@ -309,8 +308,8 @@ def test_parent_close_action_closes_only_frontmost_plugin(qtbot: Any) -> None:
     assert plugin_window.isVisible() is False
 
 
-def test_view_menu_omits_metadata_panel_action(qtbot: Any) -> None:
-    """Hide the metadata panel action while preserving its plugin.
+def test_view_menu_contains_only_dark_theme(qtbot: Any) -> None:
+    """Expose only the theme control in the View menu.
 
     Args:
         qtbot: Pytest-Qt widget lifecycle helper.
@@ -340,12 +339,10 @@ def test_view_menu_omits_metadata_panel_action(qtbot: Any) -> None:
 
     SanPyWindow._refreshViewMenu(window)
 
-    action_names = [action.text() for action in window.viewMenu.actions()]
-    assert "Set Meta Data" not in action_names
-    assert "Set Spikes" in action_names
-    assert "Plot Options" in action_names
-    assert SetMetaData.myHumanName == "Set Meta Data"
-    assert SetMetaData.showInMenu
+    actions = window.viewMenu.actions()
+    assert [action.text() for action in actions] == ["Dark Theme"]
+    assert actions[0].isCheckable()
+    assert actions[0].isSeparator() is False
 
 
 def test_failed_file_selection_is_not_broadcast() -> None:
