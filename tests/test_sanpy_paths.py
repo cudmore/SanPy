@@ -37,7 +37,7 @@ def test_paths_derive_from_injected_roots(tmp_path: Path) -> None:
     assert sanpy_paths.user_files_dir == documents_dir / "SanPy-User-Files"
     assert sanpy_paths.preferences_dir == sanpy_paths.user_files_dir / "preferences"
     assert sanpy_paths.detection_dir == sanpy_paths.user_files_dir / "detection"
-    assert sanpy_paths.example_data_dir == sanpy_paths.user_files_dir / "exampleData"
+    assert sanpy_paths.example_data_dir == sanpy_paths.user_files_dir / "example-data"
     assert sanpy_paths.bundled_dir == bundled_dir
 
 

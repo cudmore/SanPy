@@ -76,7 +76,7 @@ class SanPyPaths:
     @property
     def example_data_dir(self) -> Path:
         """Return the directory containing bundled example recordings."""
-        return self.user_files_dir / "exampleData"
+        return self.user_files_dir / "example-data"
 
     @property
     def plugin_dir(self) -> Path:
