@@ -27,7 +27,7 @@ jobs:
       - name: Install Python and dependencies
         run: |
           uv python install
-          uv sync --locked --group dev --extra zarr-export-parquet
+          uv sync --locked --group dev
 
       - name: Lint
         run: uv run --no-sync ruff check sanpy

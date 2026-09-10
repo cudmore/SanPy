@@ -1911,12 +1911,15 @@ name = "sanpy-ephys"
 source = { editable = "." }
 dependencies = [
     { name = "h5py" },
+    { name = "jsonschema" },
     { name = "matplotlib" },
     { name = "mplcursors" },
+    { name = "numcodecs" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "platformdirs" },
     { name = "pyabf" },
+    { name = "pyarrow" },
     { name = "pyqt5" },
     { name = "pyqtdarktheme-fork" },
     { name = "pyqtgraph" },
@@ -1927,18 +1930,6 @@ dependencies = [
     { name = "seaborn" },
     { name = "tables" },
     { name = "tifffile" },
-]
-
-[package.optional-dependencies]
-zarr-export = [
-    { name = "jsonschema" },
-    { name = "numcodecs" },
-    { name = "zarr" },
-]
-zarr-export-parquet = [
-    { name = "jsonschema" },
-    { name = "numcodecs" },
-    { name = "pyarrow" },
     { name = "zarr" },
 ]
 
@@ -1969,17 +1960,15 @@ test = [
 [package.metadata]
 requires-dist = [
     { name = "h5py", specifier = ">=3.12,<4" },
-    { name = "jsonschema", marker = "extra == 'zarr-export'", specifier = ">=4.26,<5" },
-    { name = "jsonschema", marker = "extra == 'zarr-export-parquet'", specifier = ">=4.26,<5" },
+    { name = "jsonschema", specifier = ">=4.26,<5" },
     { name = "matplotlib", specifier = ">=3.9,<4" },
     { name = "mplcursors", specifier = ">=0.6,<1" },
-    { name = "numcodecs", marker = "extra == 'zarr-export'", specifier = ">=0.16,<0.17" },
-    { name = "numcodecs", marker = "extra == 'zarr-export-parquet'", specifier = ">=0.16,<0.17" },
+    { name = "numcodecs", specifier = ">=0.16,<0.17" },
     { name = "numpy", specifier = ">=2.1,<3" },
     { name = "pandas", specifier = ">=2.3,<2.4" },
     { name = "platformdirs", specifier = ">=4.3,<5" },
     { name = "pyabf", specifier = "==2.3.8" },
-    { name = "pyarrow", marker = "extra == 'zarr-export-parquet'", specifier = ">=19,<24" },
+    { name = "pyarrow", specifier = ">=19,<24" },
     { name = "pyqt5", specifier = "==5.15.11" },
     { name = "pyqtdarktheme-fork", specifier = "==2.3.6" },
     { name = "pyqtgraph", specifier = ">=0.13.7,<1" },
@@ -1990,10 +1979,8 @@ requires-dist = [
     { name = "seaborn", specifier = ">=0.13,<1" },
     { name = "tables", specifier = ">=3.10,<4" },
     { name = "tifffile", specifier = ">=2025.1,<2027" },
-    { name = "zarr", marker = "extra == 'zarr-export'", specifier = ">=3.1,<4" },
-    { name = "zarr", marker = "extra == 'zarr-export-parquet'", specifier = ">=3.1,<4" },
+    { name = "zarr", specifier = ">=3.1,<4" },
 ]
-provides-extras = ["zarr-export", "zarr-export-parquet"]
 
 [package.metadata.requires-dev]
 dev = [

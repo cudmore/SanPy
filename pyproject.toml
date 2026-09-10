@@ -28,12 +28,15 @@ classifiers = [
 ]
 dependencies = [
     "h5py>=3.12,<4",
+    "jsonschema>=4.26,<5",
     "matplotlib>=3.9,<4",
     "mplcursors>=0.6,<1",
+    "numcodecs>=0.16,<0.17",
     "numpy>=2.1,<3",
     "pandas>=2.3,<2.4",
     "platformdirs>=4.3,<5",
     "pyabf==2.3.8",
+    "pyarrow>=19,<24",
     "PyQt5==5.15.11",
     "pyqtdarktheme-fork==2.3.6",
     "pyqtgraph>=0.13.7,<1",
@@ -44,18 +47,6 @@ dependencies = [
     "seaborn>=0.13,<1",
     "tables>=3.10,<4",
     "tifffile>=2025.1,<2027",
-]
-
-[project.optional-dependencies]
-zarr-export = [
-    "jsonschema>=4.26,<5",
-    "numcodecs>=0.16,<0.17",
-    "zarr>=3.1,<4",
-]
-zarr-export-parquet = [
-    "jsonschema>=4.26,<5",
-    "numcodecs>=0.16,<0.17",
-    "pyarrow>=19,<24",
     "zarr>=3.1,<4",
 ]
 

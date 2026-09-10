@@ -4,9 +4,12 @@ SanPy Zarr is a self-contained collection format for electrophysiology recording
 
 The completed collection does not contain or require its source recordings or SanPy HDF5 catalog.
 
-## Explicit optional API
+## Explicit API
 
-The exporter is not imported by `sanpy` or by package initializers. The modernization branch targets Python 3.13. For CSV-only export, install the `zarr-export` optional dependencies. For Parquet or the default `"both"` mode, install `zarr-export-parquet`:
+The exporter is not imported by `sanpy` or by package initializers. SanPy
+installs its Zarr and Parquet dependencies in the normal Python 3.13
+environment, so CSV, Parquet, and the default `"both"` mode require no
+additional installation step.
 
 ```python
 from sanpy.io.zarr_export.exporter import export_collection
