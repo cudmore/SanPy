@@ -165,6 +165,38 @@ def test_sweep_change_fits_vm_y_axis_without_changing_x_axis(
     assert actual_y_range[1] >= np.nanmax(sweep_y)
 
 
+def test_full_recording_fits_y_axis_on_load_and_sweep_change(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Fit overview voltage data without changing its full time range.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    window.selectFileListRow(2)
+    widget = window.myDetectionWidget
+    qtbot.wait(1)
+
+    initial_x_range, initial_y_range = widget.vmPlotGlobal.viewRange()
+    initial_sweep_y = np.asarray(widget.ba.fileLoader.sweepY)
+    assert initial_y_range[0] <= np.nanmin(initial_sweep_y)
+    assert initial_y_range[1] >= np.nanmax(initial_sweep_y)
+
+    widget.selectSweep(1)
+    qtbot.wait(1)
+
+    actual_x_range, actual_y_range = widget.vmPlotGlobal.viewRange()
+    sweep_y = np.asarray(widget.ba.fileLoader.sweepY)
+    assert actual_x_range == pytest.approx(initial_x_range)
+    assert actual_y_range[0] <= np.nanmin(sweep_y)
+    assert actual_y_range[1] >= np.nanmax(sweep_y)
+
+
 def test_plugins_button_uses_shared_menu_and_opens_new_tabs(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
 ) -> None:

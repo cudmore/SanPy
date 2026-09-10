@@ -2621,6 +2621,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         # )
         # self.vmPlotGlobal.addItem(self.vmLinesFiltered2)
         self.vmPlotGlobal_.setData(sweepX, sweepY, connect="finite", pen='b')
+        # Keep the overview fitted to the selected sweep without changing its
+        # full-recording time range.
+        self.vmPlotGlobal.enableAutoRange(axis="y")
         if self.linearRegionItem2 is None:
             self.linearRegionItem2 = pg.LinearRegionItem(
                     values=(0, self.ba.fileLoader.recordingDur),
