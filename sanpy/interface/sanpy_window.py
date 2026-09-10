@@ -1521,75 +1521,70 @@ class SanPyWindow(QtWidgets.QMainWindow):
 
         self.slot_updateStatus(f"Detected {ba.numSpikes} spikes")
 
-    def on_plugin_contextMenu(self, point, sender):
-        """On right-click in dock, build a menu of plugins.
+    def populatePluginTabMenu(
+        self,
+        menu: QtWidgets.QMenu,
+        targetTab: QtWidgets.QTabWidget | None = None,
+    ) -> None:
+        """Populate a menu with plugins that open in a tab.
 
-        On user selection, run the plugin in a tab.
+        Args:
+            menu: Menu that receives the available plugin actions.
+            targetTab: Tab widget that should receive a selected plugin. The
+                primary plugin tab widget is used when omitted.
+        """
+        menu.clear()
+        if targetTab is None:
+            targetTab = self.myPluginTab1
+
+        plugin_names = self.getSanPyApp().getPlugins().pluginList()
+        for plugin_name in plugin_names:
+            action = menu.addAction(plugin_name)
+            action.triggered.connect(
+                partial(self.openPluginInTab, plugin_name, targetTab)
+            )
+
+    def openPluginInTab(
+        self,
+        pluginName: str,
+        targetTab: QtWidgets.QTabWidget,
+        _checked: bool = False,
+    ) -> None:
+        """Create a plugin and display it as a new tab.
+
+        Args:
+            pluginName: Registered plugin name to open.
+            targetTab: Tab widget that receives the plugin widget.
+            _checked: Unused checked state emitted by the menu action.
+        """
+        new_plugin = self.runPlugin(pluginName, self.get_bAnalysis(), show=False)
+        if new_plugin is None:
+            logger.error('Unable to open plugin tab "%s".', pluginName)
+            return
+        if new_plugin.getInitError() or not new_plugin.getShowSelf():
+            return
+
+        new_tab_index = targetTab.addTab(new_plugin.getWidget(), pluginName)
+        targetTab.setCurrentIndex(new_tab_index)
+        if targetTab is self.myPluginTab1:
+            # Preserve the dock's current floating/docked location when showing it.
+            self.pluginDock1.show()
+
+    def on_plugin_contextMenu(
+        self, point: QtCore.QPoint, sender: QtWidgets.QTabWidget
+    ) -> None:
+        """Show the shared plugin-tab menu after a dock right-click.
+
+        Args:
+            point: Context-menu position supplied by Qt.
+            sender: Tab widget that receives a selected plugin.
 
         Notes:
             See also sanpyPlugin_action for running a plugin outside a tab (via main plugin menu)
-
-        Parameters
-        ----------
-        point :QtCore.QPoint)
-            Not used
-        sender : QTabWidget
         """
-        # logger.info(f'point:{point}, sender:{sender}')
-
-        # list of available plugins
-        pluginList = self.getSanPyApp().getPlugins().pluginList()
-
         contextMenu = QtWidgets.QMenu(self)
-
-        for plugin in pluginList:
-            contextMenu.addAction(plugin)
-
-        # get current mouse/cursor position
-        # not sure what 'point' parameter is?
-        pos = QtGui.QCursor.pos()
-        action = contextMenu.exec_(pos)
-
-        if action is None:
-            # no menu selected
-            return
-
-        pluginName = action.text()
-        ba = self.get_bAnalysis()
-        # newPlugin = self.myPlugins.runPlugin(pluginName, ba, show=False)
-        newPlugin = self.runPlugin(pluginName, ba, show=False)
-
-        # only add if plugin wants to be shown
-        if not newPlugin.getInitError() and newPlugin.getShowSelf():
-            # add tab
-
-            # 1) either this
-            # newPlugin.insertIntoScrollArea()
-            """
-            scrollArea = newPlugin.insertIntoScrollArea()
-            if scrollArea is not None:
-                newTabIndex = sender.addTab(scrollArea, pluginName)
-            else:
-                newTabIndex = sender.addTab(newPlugin, pluginName)
-            """
-            # 2) or this
-            # newTabIndex = sender.addTab(newPlugin, pluginName)  # addTab takes ownership
-            newTabIndex = sender.addTab(
-                newPlugin.getWidget(), pluginName
-            )  # addTab takes ownership
-
-            # widgetPointer = sender.widget(newTabIndex)
-            # widgetPointer.insertIntoScrollArea()
-
-            # bring tab to front
-            sender.setCurrentIndex(newTabIndex)
-
-            # ltwhTuple = newPlugin.getWindowGeometry()
-
-            # if newPlugin is not None:
-            #     self.configDict.addPlugin(
-            #         newPlugin.getHumanName(), externalWindow=False, ltwhTuple=ltwhTuple
-            #     )
+        self.populatePluginTabMenu(contextMenu, sender)
+        contextMenu.exec_(QtGui.QCursor.pos())
 
     def slot_dockLocationChanged(self, dock, area):
         """Top level dock changed

@@ -1584,6 +1584,20 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._resetAxisButton.setAutoRaise(True)
         self._resetAxisButton.clicked.connect(self.setAxisFull)
         layout.insertWidget(layout.count() - 1, self._resetAxisButton)
+
+        self._pluginMenuButton = QtWidgets.QToolButton(bar)
+        self._pluginMenuButton.setText("Plugins >>")
+        self._pluginMenuButton.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        plugin_menu = QtWidgets.QMenu(self._pluginMenuButton)
+        self._pluginMenuButton.setMenu(plugin_menu)
+        if self.myMainWindow is None:
+            self._pluginMenuButton.setEnabled(False)
+        else:
+            plugin_menu.aboutToShow.connect(
+                partial(self.myMainWindow.populatePluginTabMenu, plugin_menu)
+            )
+        # The existing stretch keeps trace controls left and this menu right.
+        layout.addWidget(self._pluginMenuButton)
         return bar
 
     def _rebalance_raw_plot_stretches(self) -> None:

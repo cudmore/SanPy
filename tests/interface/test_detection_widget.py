@@ -1,12 +1,13 @@
 """Tests for detection-widget plotting behavior."""
 
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 from unittest.mock import Mock
 
 import numpy as np
 import pytest
-from qtpy import QtCore
+from qtpy import QtCore, QtWidgets
 
 
 def test_plot_range_signals_are_connected_once(
@@ -162,3 +163,50 @@ def test_sweep_change_fits_vm_y_axis_without_changing_x_axis(
     assert actual_x_range == pytest.approx(expected_x_range)
     assert actual_y_range[0] <= np.nanmin(sweep_y)
     assert actual_y_range[1] >= np.nanmax(sweep_y)
+
+
+def test_plugins_button_uses_shared_menu_and_opens_new_tabs(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Open repeated plugin tabs from the right-aligned shared plugin menu.
+
+    Args:
+        monkeypatch: Pytest fixture used to isolate plugin construction.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    widget = window.myDetectionWidget
+    plugin_button = widget._pluginMenuButton
+    menu = plugin_button.menu()
+    window.populatePluginTabMenu(menu)
+
+    expected_plugins = qapp.getPlugins().pluginList()
+    assert [action.text() for action in menu.actions()] == expected_plugins
+    button_layout = plugin_button.parentWidget().layout()
+    assert button_layout.itemAt(button_layout.count() - 1).widget() is plugin_button
+    assert button_layout.itemAt(button_layout.count() - 2).spacerItem() is not None
+
+    plugin_widgets = [QtWidgets.QWidget(), QtWidgets.QWidget()]
+    plugins = [
+        SimpleNamespace(
+            getInitError=lambda: False,
+            getShowSelf=lambda: True,
+            getWidget=lambda widget=widget: widget,
+        )
+        for widget in plugin_widgets
+    ]
+    run_plugin = Mock(side_effect=plugins)
+    monkeypatch.setattr(window, "runPlugin", run_plugin)
+    window.pluginDock1.hide()
+    initial_count = window.myPluginTab1.count()
+
+    window.openPluginInTab(expected_plugins[0], window.myPluginTab1)
+    window.openPluginInTab(expected_plugins[0], window.myPluginTab1)
+
+    assert window.myPluginTab1.count() == initial_count + 2
+    assert window.myPluginTab1.currentWidget() is plugin_widgets[-1]
+    assert window.pluginDock1.isHidden() is False
+    assert run_plugin.call_count == 2
