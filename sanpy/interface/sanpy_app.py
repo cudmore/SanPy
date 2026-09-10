@@ -261,19 +261,13 @@ class SanPyApp(QtWidgets.QApplication):
     ) -> QtWidgets.QAction | None:
         """Build the shared application menus for a SanPy window.
 
-        Parameters
-        ----------
-        mainMenu : QtWidgets.QMenuBar
-            Menu bar that receives the shared menus.
-        saveFolderAnalysisAction : QtWidgets.QAction or None, optional
-            Window-specific action for saving folder analysis. The launcher
-            window does not supply this action.
+        Args:
+            mainMenu: Menu bar that receives the shared menus.
+            saveFolderAnalysisAction: Optional window-specific folder-save
+                action. The launcher does not supply one.
 
-        Returns
-        -------
-        QtWidgets.QAction or None
-            The Help menu action, used to insert window-specific menus before
-            Help.
+        Returns:
+            Help-menu action used to insert window-specific menus before Help.
         """
         # fileMenu = mainMenu.addMenu("&File")
         fileMenu = mainMenu.addMenu("File")
@@ -299,7 +293,18 @@ class SanPyApp(QtWidgets.QApplication):
             fileMenu.addAction(saveFolderAnalysisAction)
 
         fileMenu.addSeparator()
-        
+
+        # QKeySequence.Close maps to Command-W on macOS and Ctrl-W on Windows.
+        # Parent the action to this menu's window so only the active window closes.
+        window = mainMenu.window()
+        closeWindowAction = QtWidgets.QAction("Close Window", window)
+        closeWindowAction.setShortcut(QtGui.QKeySequence.Close)
+        closeWindowAction.setShortcutContext(QtCore.Qt.WindowShortcut)
+        closeWindowAction.triggered.connect(window.close)
+        fileMenu.addAction(closeWindowAction)
+
+        fileMenu.addSeparator()
+
         savePreferencesAction = QtWidgets.QAction("Save Preferences", self)
         savePreferencesAction.triggered.connect(self.configDict.save)
         fileMenu.addAction(savePreferencesAction)

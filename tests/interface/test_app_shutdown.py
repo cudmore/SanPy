@@ -211,6 +211,47 @@ def test_file_menu_exposes_folder_save_action(qtbot):
     assert save_calls == [True]
 
 
+def test_file_menu_exposes_platform_close_window_shortcut(qtbot: Any) -> None:
+    """Close only the owning window through Qt's platform-standard shortcut.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    main_window = QtWidgets.QMainWindow()
+    qtbot.addWidget(main_window)
+
+    class _MenuApp(QtCore.QObject):
+        """Minimal application callbacks required by the shared menu builder."""
+
+        _buildMenus = SanPyApp._buildMenus
+
+        def __init__(self) -> None:
+            """Initialize callback state used by the menu test."""
+            super().__init__()
+            self.configDict = SimpleNamespace(save=lambda: None)
+            self.loadFile = lambda: None
+            self.loadFolder = lambda: None
+            self._refreshOpenRecent = lambda: None
+            self.requestQuit = lambda: None
+            self._onHelpMenuAction = lambda _name: None
+            self._onAboutMenuAction = lambda: None
+            self._onPreferencesMenuAction = lambda: None
+
+    app = _MenuApp()
+    app._buildMenus(main_window.menuBar())
+    file_menu = main_window.menuBar().actions()[0].menu()
+    close_action = next(
+        action for action in file_menu.actions() if action.text() == "Close Window"
+    )
+
+    assert close_action.shortcut() == QtGui.QKeySequence(QtGui.QKeySequence.Close)
+    assert close_action.shortcutContext() == QtCore.Qt.WindowShortcut
+
+    main_window.show()
+    close_action.trigger()
+    assert main_window.isVisible() is False
+
+
 def test_view_menu_omits_metadata_panel_action(qtbot: Any) -> None:
     """Hide the metadata panel action while preserving its plugin.
 
