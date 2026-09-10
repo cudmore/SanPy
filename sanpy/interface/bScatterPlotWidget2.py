@@ -33,8 +33,7 @@ import pandas as pd
 import numpy as np
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+from matplotlib.backends import backend_qtagg
 from matplotlib.figure import Figure
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt  # abb 202012 added to set theme
@@ -43,6 +42,7 @@ import mplcursors  # popup on hover
 
 # originally, I wanted this to not rely on sanpy
 import sanpy
+from sanpy.interface._mpl import _make_navigation_toolbar
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -550,7 +550,7 @@ class myMplCanvas(QtWidgets.QFrame):
         self.layout = QtWidgets.QVBoxLayout()  # any will do
 
         self.fig = Figure(constrained_layout=True)
-        self.canvas = FigureCanvas(self.fig)
+        self.canvas = backend_qtagg.FigureCanvasQTAgg(self.fig)
         self.canvas.axes = self.fig.add_subplot(111)  # was this
 
         # self.canvas.axes = self.fig.add_axes([0.1, 0.1, 0.9, 0.9]) # [x, y, w, h]
@@ -566,9 +566,7 @@ class myMplCanvas(QtWidgets.QFrame):
 
         self.scatterPlotSelection = None
 
-        self.mplToolbar = NavigationToolbar2QT(
-            self.canvas, self.canvas
-        )  # params are (canvas, parent)
+        self.mplToolbar = _make_navigation_toolbar(self.canvas, self)
         self.mplToolbar.hide()  # initially hidden
 
         # 20210829
@@ -2622,14 +2620,12 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         self.canvas = None
 
         self.fig = Figure()
-        self.canvas = FigureCanvas(self.fig)
+        self.canvas = backend_qtagg.FigureCanvasQTAgg(self.fig)
         tmpAx = self.fig.add_subplot(111)  # self.ax1 not used
         self.axes = [tmpAx]
         self.cid = self.canvas.mpl_connect("pick_event", self.on_pick_event)
         # matplotlib navigation toolbar
-        self.mplToolbar = NavigationToolbar2QT(
-            self.canvas, self.canvas
-        )  # params are (canvas, parent)
+        self.mplToolbar = _make_navigation_toolbar(self.canvas, self)
         self.hBoxLayout.addWidget(self.canvas)
 
         #

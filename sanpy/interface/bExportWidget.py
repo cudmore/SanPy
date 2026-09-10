@@ -7,8 +7,7 @@ import scipy.signal
 from PyQt5 import QtWidgets, QtGui, QtCore
 import matplotlib
 import matplotlib.figure
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.backends import backend_qtagg
 import matplotlib.pyplot as plt  # abb 202012 added to set theme
 import matplotlib.ticker as ticker
 
@@ -18,6 +17,7 @@ import matplotlib.ticker as ticker
 # import bAnalysisPlot
 import sanpy
 from sanpy import bAnalysis
+from sanpy.interface._mpl import _make_navigation_toolbar
 from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
@@ -679,7 +679,7 @@ class bExportWidget(QtWidgets.QWidget):
         # vBoxLayout.addStretch()
 
         self.figure = matplotlib.figure.Figure()
-        self.canvas = FigureCanvas(self.figure)
+        self.canvas = backend_qtagg.FigureCanvasQTAgg(self.figure)
 
         # set defaullt save name
         baseName = "export"
@@ -688,7 +688,7 @@ class bExportWidget(QtWidgets.QWidget):
         self.canvas.get_default_filename = lambda: f"{baseName}"
 
         # matplotlib navigation toolbar
-        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.toolbar = _make_navigation_toolbar(self.canvas, self)
         # self.toolbar.zoom()
 
         # need self. here to set theme
@@ -738,10 +738,10 @@ class bExportWidget(QtWidgets.QWidget):
             self.darkTheme = False
 
         self.figure = matplotlib.figure.Figure()
-        self.canvas = FigureCanvas(self.figure)
+        self.canvas = backend_qtagg.FigureCanvasQTAgg(self.figure)
 
         # matplotlib navigation toolbar
-        self.toolbar = NavigationToolbar(self.canvas, self)
+        self.toolbar = _make_navigation_toolbar(self.canvas, self)
         # self.toolbar.zoom()
 
         self.plotVBoxLayout.addWidget(self.toolbar)

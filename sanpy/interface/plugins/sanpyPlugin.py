@@ -7,12 +7,7 @@ import functools
 
 from typing import Union, Dict, List, Tuple, Optional, Optional
 
-from matplotlib.backends.backend_qtagg import (
-    FigureCanvasQTAgg as _FigureCanvasQTAgg,
-)
-from matplotlib.backends.backend_qtagg import (
-    NavigationToolbar2QT as _NavigationToolbar2QT,
-)
+from matplotlib.backends import backend_qtagg
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 
@@ -22,6 +17,7 @@ import pyqtgraph as pg
 
 import sanpy
 import sanpy.interface
+from sanpy.interface._mpl import _make_navigation_toolbar
 
 from sanpy.sanpyLogger import get_logger
 
@@ -705,7 +701,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         # not working
         # self.fig.canvas.mpl_connect('key_press_event', self.keyPressEvent)
 
-        self.static_canvas = _FigureCanvasQTAgg(self.fig)
+        self.static_canvas = backend_qtagg.FigureCanvasQTAgg(self.fig)
         self.static_canvas.setFocusPolicy(
             QtCore.Qt.ClickFocus
         )  # this is really triccky and annoying
@@ -743,8 +739,8 @@ class sanpyPlugin(QtWidgets.QWidget):
             return self.static_canvas, self.mplToolbar
 
     def _makeMplToolbar(
-        self, canvas: _FigureCanvasQTAgg
-    ) -> _NavigationToolbar2QT:
+        self, canvas: backend_qtagg.FigureCanvasQTAgg
+    ) -> backend_qtagg.NavigationToolbar2QT:
         """Create a compact, consistently parented Matplotlib toolbar.
 
         Args:
@@ -753,12 +749,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         Returns:
             Navigation toolbar with compact icons and fixed vertical sizing.
         """
-        toolbar = _NavigationToolbar2QT(canvas, self, coordinates=True)
-        toolbar.setIconSize(QtCore.QSize(16, 16))
-        size_policy = toolbar.sizePolicy()
-        size_policy.setVerticalPolicy(QtWidgets.QSizePolicy.Fixed)
-        toolbar.setSizePolicy(size_policy)
-        return toolbar
+        return _make_navigation_toolbar(canvas, self)
 
     def _mySetWindowTitle(self):
         """Set the window title based on ba."""
