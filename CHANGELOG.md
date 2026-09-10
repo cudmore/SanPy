@@ -23,6 +23,28 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 - Changed SanPy Zarr source provenance from ABF-specific metadata to explicit source format and reader version fields.
 - Normalized exported epoch levels consistently across epoch and analysis-result tables.
 
+### Desktop GUI
+
+#### Added
+
+- Added compact controls for showing and hiding detection tools and recording plots directly in the analysis window, including access to docked plugins without relying on the View menu.
+- Added numeric epoch selection to Plot FI and selector-only sweep/epoch controls for plugins that need them.
+- Added commands to clear recent files and folders, open the SanPy user-files folder, and copy complete diagnostics with the full SanPy log.
+
+#### Changed
+
+- Simplified the View menu to the Dark Theme control; panel and plot visibility remains available through the analysis-window controls and draggable dividers.
+- Reused existing docked-plugin tabs instead of opening duplicate instances, and close tab-hosted plugins when their dock is closed.
+- Standardized compact Matplotlib navigation toolbars across plugins and treated Sweep Number, Epoch, Epoch DAC, and File Number as categorical Plot Tool statistics.
+- Refined Plot Recording sweep-offset controls and recent-file refresh behavior.
+
+#### Fixed
+
+- Fixed Qt window and plugin lifecycle handling that could cause native crashes after closing and reopening analysis windows.
+- Fixed standard close-window shortcuts so they close only the active analysis or plugin window.
+- Fixed dark/light theme propagation, plot resizing when panels are toggled, and voltage and overview Y-axis fitting when sweeps change.
+- Fixed Plot Scatter time and sweep coloring and Plot FI updates when switching files.
+
 ### Added
 
 - Added local PyInstaller build pipelines for macOS ARM64 and Windows AMD64. The macOS pipeline builds, signs, notarizes, staples, and validates the application; the Windows pipeline produces a single-file executable.
@@ -35,7 +57,6 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 
 - Updated SanPy for pandas 2.3 compatibility and removed obsolete analysis-directory duplication code.
 - Exposed the folder-analysis save action through the GUI application and window lifecycle.
-- Removed the redundant `Set Meta Data` action from the View menu; metadata editing remains available through its plugin.
 - Removed obsolete platform-specific Python 3.11 requirement files and broken lock-update scripts now superseded by `pyproject.toml` and the shared `uv.lock`.
 - Replaced the legacy `setup.py` and `requirements.txt` installation with `pyproject.toml` and uv.
 - Moved PyInstaller and its hooks into a shared `packaging` dependency group in `pyproject.toml`; both platform build scripts now install from the cross-platform `uv.lock` with `uv sync --locked`.
