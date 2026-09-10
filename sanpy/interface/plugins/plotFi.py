@@ -254,7 +254,12 @@ class plotFi(sanpyPlugin):
         if _doReplot:
             self.replot()
 
-    def _buildTopToolbar(self):
+    def _buildTopToolbar(self) -> QtWidgets.QHBoxLayout:
+        """Build Plot FI's task-specific controls.
+
+        Returns:
+            Horizontal layout containing FI controls.
+        """
         _topToolbar = QtWidgets.QHBoxLayout()
 
         _defualtButtons = ["Inst Freq", "Spike Count"]
@@ -273,6 +278,15 @@ class plotFi(sanpyPlugin):
         )
         _topToolbar.addWidget(_aCheckbox, alignment=QtCore.Qt.AlignLeft)
 
+        epoch_label = QtWidgets.QLabel("Epoch")
+        _topToolbar.addWidget(epoch_label, alignment=QtCore.Qt.AlignLeft)
+        self._fiEpochComboBox = QtWidgets.QComboBox()
+        self._fiEpochComboBox.currentIndexChanged.connect(
+            self._on_fi_epoch_combo_box
+        )
+        _topToolbar.addWidget(self._fiEpochComboBox, alignment=QtCore.Qt.AlignLeft)
+        self._refresh_fi_epoch_combo_box()
+
         # toggle self._mplToolbar
         name = "Plot Toolbar"
         _aCheckbox = QtWidgets.QCheckBox(name)
@@ -285,6 +299,27 @@ class plotFi(sanpyPlugin):
         _topToolbar.addStretch()
 
         return _topToolbar
+
+    def _refresh_fi_epoch_combo_box(self) -> None:
+        """Refresh Plot FI's numeric-only epoch selector."""
+        self._populate_epoch_combo_box(self._fiEpochComboBox, include_all=False)
+
+    def _on_fi_epoch_combo_box(self, index: int) -> None:
+        """Replot after the user selects a numeric epoch.
+
+        Args:
+            index: Selected combo-box row, or ``-1`` when no epoch is valid.
+        """
+        if self._blockComboBox or index < 0:
+            return
+
+        epoch = self._fiEpochComboBox.itemData(index)
+        if not isinstance(epoch, int):
+            logger.error("Plot FI epoch selector returned a non-numeric value.")
+            return
+
+        self._epochNumber = epoch
+        self.replot()
 
     def _refreshPlotOptionsLayout(self):
         """Refresh all buttons in _overlayCheckboxes with self._plotDict['overlays']"""
@@ -370,6 +405,7 @@ class plotFi(sanpyPlugin):
         super().slot_switchFile(ba, rowDict, replot=False)
         self._epochNumber = selected_epoch
         self._updateTopToolbar()
+        self._refresh_fi_epoch_combo_box()
 
         if replot:
             self.replot()

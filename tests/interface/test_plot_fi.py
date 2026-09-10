@@ -163,14 +163,81 @@ def test_plot_fi_preserves_epoch_when_switching_files(
         """
         calls.append(("replot", self.epochNumber))
 
+    def fake_epoch_refresh(self: plotFi) -> None:
+        """Record synchronization of Plot FI's local epoch selector.
+
+        Args:
+            self: Plot FI instance being synchronized.
+        """
+        calls.append(("epoch-control", self.epochNumber))
+
     monkeypatch.setattr(sanpyPlugin, "slot_switchFile", fake_base_switch)
     monkeypatch.setattr(plotFi, "_updateTopToolbar", fake_toolbar)
+    monkeypatch.setattr(plotFi, "_refresh_fi_epoch_combo_box", fake_epoch_refresh)
     monkeypatch.setattr(plotFi, "replot", fake_replot)
 
     plugin.slot_switchFile(SimpleNamespace())
 
     assert plugin.epochNumber == 2
-    assert calls == [("base", False), ("toolbar", 2), ("replot", 2)]
+    assert calls == [
+        ("base", False),
+        ("toolbar", 2),
+        ("epoch-control", 2),
+        ("replot", 2),
+    ]
+
+
+def test_plot_fi_epoch_selector_lists_only_numeric_epochs(qtbot: Any) -> None:
+    """Populate Plot FI's local selector without an unsupported All item.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    plugin = plotFi.__new__(plotFi)
+    QtWidgets.QWidget.__init__(plugin)
+    qtbot.addWidget(plugin)
+    plugin._blockComboBox = False
+    plugin._epochNumber = 2
+    plugin._ba = SimpleNamespace(fileLoader=SimpleNamespace(numEpochs=4))
+    plugin._fiEpochComboBox = QtWidgets.QComboBox(plugin)
+    plugin._fiEpochComboBox.currentIndexChanged.connect(
+        plugin._on_fi_epoch_combo_box
+    )
+    plugin.replot = Mock()
+
+    plugin._refresh_fi_epoch_combo_box()
+
+    assert [
+        plugin._fiEpochComboBox.itemText(index)
+        for index in range(plugin._fiEpochComboBox.count())
+    ] == ["0", "1", "2", "3"]
+    assert plugin._fiEpochComboBox.currentData() == 2
+
+    plugin._fiEpochComboBox.setCurrentIndex(1)
+    assert plugin.epochNumber == 1
+    plugin.replot.assert_called_once_with()
+
+
+def test_plot_fi_epoch_selector_leaves_unavailable_epoch_unselected(
+    qtbot: Any,
+) -> None:
+    """Do not silently replace an unavailable preserved epoch.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    plugin = plotFi.__new__(plotFi)
+    QtWidgets.QWidget.__init__(plugin)
+    qtbot.addWidget(plugin)
+    plugin._blockComboBox = False
+    plugin._epochNumber = 2
+    plugin._ba = SimpleNamespace(fileLoader=SimpleNamespace(numEpochs=2))
+    plugin._fiEpochComboBox = QtWidgets.QComboBox(plugin)
+
+    plugin._refresh_fi_epoch_combo_box()
+
+    assert plugin.epochNumber == 2
+    assert plugin._fiEpochComboBox.currentIndex() == -1
 
 
 def test_plot_fi_clears_stale_output_for_unavailable_epoch(qtbot: Any) -> None:

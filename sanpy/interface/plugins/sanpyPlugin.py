@@ -237,15 +237,8 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._blockComboBox: bool = False
         self._topToolbarWidget = self._buildTopToolbarWidget()
         
-        # if ba has > 1 sweep or > 2 epochs then show top toolbar
-        _showTop = False
-        # abb removed with chatgpt 20260909
-        # if self.ba is not None:
-        #     _numEpochs = self.ba.fileLoader.numEpochs  # can be None
-        #     _showTop = self.ba.fileLoader.numSweeps>1
-        #     _numEpoch = (_numEpochs is not None) and _numEpochs>2
-        #     _showTop = _showTop | _numEpoch
-        self.toggleTopToobar(_showTop)  # initially hidden
+        # Plugins expose task-specific controls in their own interfaces.
+        self.toggleTopToobar(False)
         
         self._updateTopToolbar()
         self._vBoxLayout.addWidget(self._topToolbarWidget)
@@ -1153,25 +1146,36 @@ class sanpyPlugin(QtWidgets.QWidget):
             self._sweepComboBox.setCurrentIndex(self.sweepNumber + 1)
         self._blockComboBox = False
 
-        # minimum of 2 (never 1 or 0)
-        # because of annoying pClamp default short epoch 0
-        _numEpochs = self.ba.fileLoader.numEpochs
-        if _numEpochs is not None:
-            self._blockComboBox = True
-            self._epochComboBox.clear()
-            self._epochComboBox.addItem("All")
-            for _epoch in range(_numEpochs):
-                self._epochComboBox.addItem(str(_epoch))
-            _enabled = True  # _numEpochs > 2
-            self._epochComboBox.setEnabled(_enabled)
-            if self.epochNumber == "All":
-                self._epochComboBox.setCurrentIndex(0)
-            else:
-                self._epochComboBox.setCurrentIndex(self.epochNumber + 1)
+        self._populate_epoch_combo_box(self._epochComboBox, include_all=True)
+
+    def _populate_epoch_combo_box(
+        self, combo_box: QtWidgets.QComboBox, include_all: bool
+    ) -> None:
+        """Populate an epoch selector from the current recording.
+
+        Args:
+            combo_box: Selector to update.
+            include_all: Whether to include an ``All`` choice.
+        """
+        self._blockComboBox = True
+        combo_box.blockSignals(True)
+        try:
+            combo_box.clear()
+            num_epochs = None if self.ba is None else self.ba.fileLoader.numEpochs
+            if num_epochs is None:
+                combo_box.setEnabled(False)
+                return
+
+            if include_all:
+                combo_box.addItem("All", "All")
+            for epoch in range(num_epochs):
+                combo_box.addItem(str(epoch), epoch)
+
+            combo_box.setEnabled(num_epochs > 0)
+            combo_box.setCurrentIndex(combo_box.findData(self.epochNumber))
+        finally:
+            combo_box.blockSignals(False)
             self._blockComboBox = False
-        else:
-            # no epochs defined
-            self._epochComboBox.setEnabled(False)
 
         # filename = self.ba.getFileName()
         # self._fileLabel.setText(filename)
