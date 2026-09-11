@@ -1011,48 +1011,5 @@ class analysisResult:
         # to mimic a dictionary
         return self._rDict.keys()
 
-
-def test():
-    ar = analysisResultList()
-
-    for k, v in ar.items():
-        print(k, v)
-
-    key = "analysisVersion"
-    print(f'key:{key} value:"{ar[key]}" type:{type(ar[key])}')
-
-    key = "errors"
-    print(f'key:{key} value:"{ar[key]}" type:{type(ar[key])}')
-
-
-def test2():
-    # load abf
-    path = "data/19114000.abf"
-    ba = sanpy.bAnalysis(path)
-
-    # detect
-    sweepNumber = 0
-    detectionClass = ba.detectionClass
-    detectionClass["verbose"] = True
-    ba.spikeDetect2__(sweepNumber, detectionClass)
-
-    """
-    printSpikeNum = 4
-    print(f'== printing spike {printSpikeNum}')
-    ba.printSpike(printSpikeNum)
-    """
-
-    # ba.printErrors()
-
-    sd = ba.getSpikeDictionaries()
-    """
-    for idx, s in enumerate(sd):
-        if idx == 2:
-            print(s)
-    """
-
-
 if __name__ == "__main__":
-    # test()
-    # test2()
     printDocs()

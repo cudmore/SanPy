@@ -121,7 +121,7 @@ def _getObjectList(verbose: bool = False) -> List[dict]:
         loadedModuleList.append(pluginDict)
 
     # new, june 2023, get from user_analysis folder as well
-    logger.info('Loading core analysis plugins from sanpy.user_analysis')
+    # logger.info('Loading core analysis plugins from sanpy.user_analysis')
     _ignoreModuleList = []
     if not DO_KYMOGRAPH_ANALYSIS:
         _ignoreModuleList.append('kymUserAnalysis')
@@ -146,7 +146,7 @@ def _getObjectList(verbose: bool = False) -> List[dict]:
                 "staticStatDict": _statStatDict,
             }
 
-            if verbose:
+            if 1 or verbose:
                 logger.info(f' loaded user_analysis: "{moduleName}"')
 
             loadedModuleList.append(pluginDict)

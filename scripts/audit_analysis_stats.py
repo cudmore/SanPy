@@ -13,6 +13,7 @@ from typing import Iterable
 
 import sanpy
 from sanpy.bAnalysisResults import analysisResultDict
+from sanpy.bAnalysisUtil import bAnalysisUtil
 
 
 def _sorted_names(names: Iterable[str]) -> list[str]:
@@ -68,7 +69,7 @@ def audit_analysis_stats(path: Path, preset: str) -> None:
 
     plot_names = {
         str(entry.get("name") or entry.get("yStat"))
-        for entry in sanpy.bAnalysisUtil().getStatList().values()
+        for entry in bAnalysisUtil().getStatList().values()
         if entry.get("name") or entry.get("yStat")
     }
     schema_names = set(analysisResultDict.keys())
