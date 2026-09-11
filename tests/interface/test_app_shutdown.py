@@ -535,6 +535,11 @@ def test_plugin_toolbar_supports_compact_modes(qtbot: Any) -> None:
     plugin.toggleTopToobar(True, show_response_options=False)
     assert plugin._topToolbarWidget.isHidden() is False
     assert plugin._responseToolbarWidget.isHidden()
+    assert (
+        plugin._topToolbarWidget.sizePolicy().verticalPolicy()
+        == QtWidgets.QSizePolicy.Fixed
+    )
+    assert plugin._topToolbarWidget.layout().alignment() == QtCore.Qt.AlignTop
 
     plugin.toggleTopToobar(False)
     plugin.toggleTopToobar(True)

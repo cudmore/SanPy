@@ -1246,7 +1246,11 @@ class sanpyPlugin(QtWidgets.QWidget):
         self.replot()
 
     def _buildTopToolbarWidget(self) -> QtWidgets.QWidget:
-        """Top toolbar to show file, toggle responses on/off, etc"""
+        """Build the shared sweep, epoch, and response toolbar.
+
+        Returns:
+            Toolbar widget sized vertically to its visible controls.
+        """
 
         # TODO: Super annoying that popups come up blank if using AlignLeft ???
 
@@ -1304,7 +1308,12 @@ class sanpyPlugin(QtWidgets.QWidget):
 
         # toolbar layout needs to be in a widget so it can be hidden
         _mainWidget = QtWidgets.QWidget()
+        _mainWidget.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred,
+            QtWidgets.QSizePolicy.Fixed,
+        )
         _topToolbarLayout = QtWidgets.QVBoxLayout(_mainWidget)
+        _topToolbarLayout.setAlignment(QtCore.Qt.AlignTop)
         _topToolbarLayout.addLayout(hLayout0)
         _topToolbarLayout.addWidget(self._responseToolbarWidget)
 
