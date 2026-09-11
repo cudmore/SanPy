@@ -667,8 +667,10 @@ class sanpyPlugin(QtWidgets.QWidget):
         #     FigureManagerQT.window.raise_()
 
     def makeVLayout(self):
-        """Make a PyQt QVBoxLayout."""
+        """Make the plugin's main QVBoxLayout with compact margins."""
         vBoxLayout = QtWidgets.QVBoxLayout()
+        vBoxLayout.setContentsMargins(4, 2, 4, 2)
+        vBoxLayout.setSpacing(2)
         self.setLayout(vBoxLayout)
         return vBoxLayout
 
@@ -1173,7 +1175,7 @@ class sanpyPlugin(QtWidgets.QWidget):
             combo_box: Selector to update.
             include_all: Whether to include an ``All`` choice.
         """
-        combo_box.setMinimumContentsLength(4)
+        combo_box.setMinimumContentsLength(3)
         combo_box.setSizeAdjustPolicy(
             QtWidgets.QComboBox.AdjustToMinimumContentsLengthWithIcon
         )
@@ -1257,12 +1259,18 @@ class sanpyPlugin(QtWidgets.QWidget):
         #
         # first row of controls
         hLayout0 = QtWidgets.QHBoxLayout()
+        hLayout0.setContentsMargins(0, 0, 0, 0)
+        hLayout0.setSpacing(4)
 
         # sweep popup
         aLabel = QtWidgets.QLabel("Sweeps")
         # hLayout0.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
         hLayout0.addWidget(aLabel)
         self._sweepComboBox = QtWidgets.QComboBox()
+        self._sweepComboBox.setMinimumContentsLength(3)
+        self._sweepComboBox.setSizeAdjustPolicy(
+            QtWidgets.QComboBox.AdjustToMinimumContentsLengthWithIcon
+        )
         self._sweepComboBox.currentIndexChanged.connect(self._on_sweep_combo_box)
         # hLayout0.addWidget(self._sweepComboBox, alignment=QtCore.Qt.AlignLeft)
         hLayout0.addWidget(self._sweepComboBox)
@@ -1294,6 +1302,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._responseToolbarWidget = QtWidgets.QWidget()
         hLayout1 = QtWidgets.QHBoxLayout(self._responseToolbarWidget)
         hLayout1.setContentsMargins(0, 0, 0, 0)
+        hLayout1.setSpacing(4)
 
         # a checkbox for each 'respond to' in the ResponseType enum
         for item in ResponseType:
@@ -1313,6 +1322,8 @@ class sanpyPlugin(QtWidgets.QWidget):
             QtWidgets.QSizePolicy.Fixed,
         )
         _topToolbarLayout = QtWidgets.QVBoxLayout(_mainWidget)
+        _topToolbarLayout.setContentsMargins(0, 0, 0, 0)
+        _topToolbarLayout.setSpacing(2)
         _topToolbarLayout.setAlignment(QtCore.Qt.AlignTop)
         _topToolbarLayout.addLayout(hLayout0)
         _topToolbarLayout.addWidget(self._responseToolbarWidget)
