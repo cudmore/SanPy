@@ -163,6 +163,7 @@ class bExport:
             )  # use OrderedDict so Pandas output is in the correct order
 
             spikeDict["Sweep"] = spike["sweep"]
+            spikeDict["Epoch"] = spike["epoch"]
             spikeDict["Spike"] = spikeIdx
             spikeDict["Take Off Potential (s)"] = self.ba.fileLoader.pnt2Sec_(
                 spike["thresholdPnt"]
@@ -272,7 +273,8 @@ class bExport:
 
         # headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
         # headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
-        headerDict["Sweep Number"] = ["Default 0"]  # [self.ba.currentSweep]
+        headerDict["Sweep Number"] = [sweep]
+        headerDict["Epoch Number"] = [epoch]
         headerDict["Number of Sweeps"] = [self.ba.fileLoader.numSweeps]
         headerDict["Export Start (sec)"] = [
             float("%.2f" % (theMin))
@@ -284,7 +286,7 @@ class bExport:
         # 'stats' has xxx columns (name, mean, sd, se, n)
         headerDict["stats"] = []
 
-        ignoreColumns = ["Sweep", "Spike", "File"]
+        ignoreColumns = ["Sweep", "Epoch", "Spike", "File"]
         for idx, col in enumerate(cardiac_df):
             if col in ignoreColumns:
                 # in general, skip non numerical columns
@@ -335,6 +337,7 @@ class bExport:
                 headerDict["Analysis Version"].append("")
                 headerDict["Interface Version"].append("")
                 headerDict["Sweep Number"].append("")
+                headerDict["Epoch Number"].append("")
                 headerDict["Number of Sweeps"].append("")
                 headerDict["Export Start (sec)"].append("")
                 headerDict["Export Stop (sec)"].append("")
@@ -453,7 +456,7 @@ class bExport:
             # 'stats' has xxx columns (name, mean, sd, se, n)
             headerDict["stats"] = []
 
-            ignoreColumns = ["Sweep", "Spike", "File"]
+            ignoreColumns = ["Sweep", "Epoch", "Spike", "File"]
             for idx, col in enumerate(cardiac_df):
                 if col in ignoreColumns:
                     # in general, need to ignore string columns
