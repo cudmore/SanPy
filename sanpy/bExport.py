@@ -219,8 +219,8 @@ class bExport:
     def getSummary(self,
                    sweep='All',
                     epoch='All',
-                    theMin: float = None, 
-                    theMax: float = None
+                    theMin: Optional[float] = None, 
+                    theMax: Optional[float] = None
                     ) -> pd.DataFrame:
         """Get analysis summary as df.
         
@@ -231,9 +231,9 @@ class bExport:
             logger.warning(f"did not find and spikes for summary")
             return None
 
-        # if theMin is None or theMax is None:
-        #     theMin = 0
-        #     theMax = self.ba.fileLoader.recordingDur
+        if theMin is None or theMax is None:
+            theMin = 0
+            theMax = self.ba.fileLoader.recordingDur
 
         #
         # cardiac style analysis to sheet 'cardiac'
