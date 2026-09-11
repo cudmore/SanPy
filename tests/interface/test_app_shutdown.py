@@ -523,6 +523,56 @@ def test_successful_open_refreshes_launcher_recents(
     refresh_recent.assert_called_once_with()
 
 
+def test_open_file_dialog_lists_only_registered_recordings(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any
+) -> None:
+    """Limit the Open File chooser to registered recording extensions.
+
+    Args:
+        monkeypatch: Pytest fixture used to replace the native file dialog.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+    """
+    get_open_file_name = Mock(return_value=("", ""))
+    monkeypatch.setattr(
+        QtWidgets.QFileDialog,
+        "getOpenFileName",
+        get_open_file_name,
+    )
+
+    qapp.loadFile()
+
+    file_filter = get_open_file_name.call_args.kwargs["filter"]
+    assert "*.abf" in file_filter
+    assert "*.sanpy" in file_filter
+    assert "*.csv" not in file_filter
+
+
+def test_open_window_rejects_unsupported_file(
+    monkeypatch: pytest.MonkeyPatch,
+    qapp: Any,
+    tmp_path: Path,
+) -> None:
+    """Warn instead of constructing a window for an unsupported file.
+
+    Args:
+        monkeypatch: Pytest fixture used to replace the warning dialog.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        tmp_path: Temporary directory supplied by pytest.
+    """
+    csv_path = tmp_path / "unsupported.csv"
+    csv_path.write_text("seconds,value\n0,1\n", encoding="utf-8")
+    warning = Mock(return_value=QtWidgets.QMessageBox.Ok)
+    monkeypatch.setattr(QtWidgets.QMessageBox, "warning", warning)
+    original_windows = tuple(qapp._windowList)
+
+    window = qapp.openSanPyWindow(csv_path)
+
+    assert window is None
+    assert tuple(qapp._windowList) == original_windows
+    warning.assert_called_once()
+    assert ".csv" in warning.call_args.args[2]
+
+
 def test_plugin_toolbar_supports_compact_modes(qtbot: Any) -> None:
     """Use compact Matplotlib controls and preserve selector-only mode.
 

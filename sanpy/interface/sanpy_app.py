@@ -513,19 +513,55 @@ class SanPyApp(QtWidgets.QApplication):
         aSanPyWindow.activateWindow()
         aSanPyWindow.raise_()
 
-    def loadFile(self, filePath : str = None):
-        """Load one file and open a sanpy window.
-        
-        Notes
-        -----
-        Selecting File -> Open File... passes bool even when setCheckable(False)
+    def _recording_file_filter(self) -> str:
+        """Build the file-dialog filter from registered recording loaders.
+
+        Returns:
+            Qt file filter containing every supported recording extension.
+        """
+        extensions = sorted(
+            extension if extension.startswith(".") else f".{extension}"
+            for extension in self._fileLoaderDict
+        )
+        patterns = " ".join(f"*{extension}" for extension in extensions)
+        return f"SanPy recordings ({patterns})"
+
+    def _is_supported_recording(self, file_path: str | os.PathLike[str]) -> bool:
+        """Return whether a file has a registered recording loader.
+
+        Args:
+            file_path: Recording path to validate.
+
+        Returns:
+            True when the file extension has a registered loader.
+        """
+        supported_extensions = {
+            extension.lower()
+            if extension.startswith(".")
+            else f".{extension.lower()}"
+            for extension in self._fileLoaderDict
+        }
+        return pathlib.Path(file_path).suffix.lower() in supported_extensions
+
+    def loadFile(
+        self,
+        filePath: str | os.PathLike[str] | bool | None = None,
+    ) -> None:
+        """Prompt for one recording, then open it in an analysis window.
+
+        Args:
+            filePath: Explicit recording path. Qt may pass a boolean when this
+                method is connected directly to a menu action.
         """
 
         logger.info(f'filePath:"{filePath}" {type(filePath)}')
 
         # ask user for file
         if filePath is None or isinstance(filePath, bool):
-            filePath, _filter = QtWidgets.QFileDialog.getOpenFileName(caption="Select a raw data file")
+            filePath, _filter = QtWidgets.QFileDialog.getOpenFileName(
+                caption="Select a raw data file",
+                filter=self._recording_file_filter(),
+            )
             if len(filePath) == 0:
                 return
             # filePath is a tuple like
@@ -673,7 +709,7 @@ class SanPyApp(QtWidgets.QApplication):
         path: str | os.PathLike[str] | None = None,
         sweep: int | None = None,
         spikeNumber: int | None = None,
-    ) -> SanPyWindow:
+    ) -> SanPyWindow | None:
         """Open or activate an analysis window for a recording or folder.
 
         Args:
@@ -682,12 +718,28 @@ class SanPyApp(QtWidgets.QApplication):
             spikeNumber: Optional spike to select when opening a recording.
 
         Returns:
-            Newly created or existing analysis window for ``path``.
+            Newly created or existing analysis window, or None when ``path``
+            is an unsupported file.
         """
         
         logger.info(f'path:{path}')
         logger.info(f'   sweep:{sweep}')
         logger.info(f'   spikeNumber:{spikeNumber}')
+
+        # Reject unsupported files before constructing an analysis window.
+        if path is not None and os.path.isfile(path):
+            if not self._is_supported_recording(path):
+                extension = pathlib.Path(path).suffix or "(no extension)"
+                message = (
+                    f'SanPy cannot open files with the "{extension}" extension.'
+                )
+                logger.warning('%s Path: "%s"', message, path)
+                QtWidgets.QMessageBox.warning(
+                    self._openFirstWidget,
+                    "Unsupported File",
+                    message,
+                )
+                return None
 
         # check if it is open
         foundWindow = None
