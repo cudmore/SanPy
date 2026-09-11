@@ -242,16 +242,16 @@ class bAnalysisUtil:
         # not implemented
         # 20230914 BUG in bAnalysisResults we define 'epoch', not 'epochSpikeNumber'
         # WE need to sync these two interface !!!!
-        statList["Epoch Spike Number"] = {
-            # "name": "epochSpikeNumber",
-            "name": "epoch",
-            "units": "",
-            # "yStat": "epochSpikeNumber",
-            "yStat": "epoch",
-            "yStatUnits": "",
-            "xStat": "",
-            "xStatUnits": "",
-        }
+        # statList["Epoch Spike Number"] = {
+        #     # "name": "epochSpikeNumber",
+        #     "name": "epoch",
+        #     "units": "",
+        #     # "yStat": "epochSpikeNumber",
+        #     "yStat": "epoch",
+        #     "yStatUnits": "",
+        #     "xStat": "",
+        #     "xStatUnits": "",
+        # }
 
         statList["Take Off Potential (mV)"] = {
             "name": "thresholdVal",
