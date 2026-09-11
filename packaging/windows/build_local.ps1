@@ -115,15 +115,13 @@ print('sanpy', sanpy.__version__)
         throw "one or more required packages failed to import"
     }
 
-    $RunDate = [DateTime]::Now.ToString("yyyyMMdd")
-    $RunNumber = 1
-    do {
-        $RunName = "windows-${RunDate}-v${RunNumber}"
-        $RunDir = Join-Path $DistRoot $RunName
-        $RunNumber += 1
-    } while (Test-Path $RunDir)
-
+    $InstalledSanPyVersion = (& $Python -c "from importlib.metadata import version; print(version('sanpy-ephys'))").Trim()
+    $RunName = $InstalledSanPyVersion
+    $RunDir = Join-Path $DistRoot $RunName
     $WorkDir = Join-Path $BuildRoot $RunName
+    if ((Test-Path $RunDir) -or (Test-Path $WorkDir)) {
+        throw "Refusing to overwrite existing build version $RunName. Remove incomplete build and dist directories before rebuilding the same commit."
+    }
     New-Item -ItemType Directory -Force -Path $RunDir, $WorkDir | Out-Null
 
     $GitCommit = (git -C $RepoRoot rev-parse HEAD).Trim()
@@ -141,7 +139,6 @@ print('sanpy', sanpy.__version__)
         throw "failed to create build_info.json"
     }
 
-    $InstalledSanPyVersion = (& $Python -c "from importlib.metadata import version; print(version('sanpy-ephys'))").Trim()
     $RecordedSanPyVersion = (& $Python -c "import json, sys; print(json.load(open(sys.argv[1]))['build']['sanpy_version'])" $BuildInfoPath).Trim()
     if ($RecordedSanPyVersion -ne $InstalledSanPyVersion) {
         throw "build metadata version $RecordedSanPyVersion does not match installed SanPy $InstalledSanPyVersion"

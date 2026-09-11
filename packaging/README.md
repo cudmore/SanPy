@@ -5,12 +5,11 @@ Windows AMD64. Both builders use the committed source tree, the Python version
 in `.python-version`, the dependencies in `pyproject.toml`, and the exact
 cross-platform resolution in `uv.lock`.
 
-Every build must start from a clean Git working tree. macOS and Windows may
-build the same user-facing SanPy version from different commits, so a version
-number alone does not identify a build. The complete build identity is:
+Every build must start from a clean Git working tree. The complete build
+identity is:
 
 ```text
-SanPy version + platform + build ID + full Git commit
+SanPy version + platform + full Git commit
 ```
 
 ## Shared build design
@@ -25,15 +24,16 @@ under `packaging/macos/` or `packaging/windows/`. The build scripts synchronize
 those environments with `uv sync --locked`, which fails if `uv.lock` is stale
 instead of silently changing it.
 
-Every run receives a new platform-local build ID:
+Each platform stores a build under its installed SanPy version:
 
 ```text
-macos-YYYYMMDD-vN
-windows-YYYYMMDD-vN
+packaging/macos/dist/<version>/
+packaging/windows/dist/<version>/
 ```
 
-The number starts at `v1` each day and increases without overwriting an
-existing run. It is not coordinated between the two build computers.
+The scripts refuse to overwrite an existing version directory. Remove an
+incomplete `build/<version>/` and `dist/<version>/` deliberately before
+rebuilding the same commit.
 
 ## Set the SanPy release version
 
@@ -49,26 +49,31 @@ git tag -a v0.2.7 -m "SanPy 0.2.7"
 The build script refreshes the installed SanPy metadata automatically. No
 manual virtual-environment synchronization is required. Smoke-test the
 unsigned application before running the existing signing and notarization
-step. Push the release tag only when the release is ready to publish:
+step. Push the release tag only when the release is ready:
 
 ```bash
 git push origin v0.2.7
 ```
+
+Pushing a version tag runs the
+[GitHub release workflow](../.github/workflows/release.yml), which creates a
+GitHub Release with the standard source ZIP and tarball. Platform applications
+are still built locally.
 
 ## Build output and provenance
 
 A completed run is stored under the appropriate platform's `dist/` directory:
 
 ```text
-packaging/macos/dist/macos-20260903-v1/
-packaging/windows/dist/windows-20260903-v1/
+packaging/macos/dist/0.2.8/
+packaging/windows/dist/0.2.8/
 ```
 
 Each completed build record contains these provenance files:
 
-- `build_info.json` records the build ID, local timestamp, SanPy and tool
-  versions, full Git commit, clean-tree state, platform, architecture, and key
-  package versions. A copy is embedded in the application.
+- `build_info.json` records the local timestamp, SanPy and tool versions, full
+  Git commit, clean-tree state, platform, architecture, and key package
+  versions. A copy is embedded in the application.
 - `environment.txt` records all installed non-editable Python packages and
   their exact versions.
 - `source-<full-commit>.zip` contains the exact committed source tree used for
@@ -76,10 +81,10 @@ Each completed build record contains these provenance files:
 - `SHA256SUMS.txt` records the SHA-256 checksum of the final ZIP distributed to
   users.
 
-Keep the complete `dist/<build-id>/` directory for every build distributed to
+Keep the complete `dist/<version>/` directory for every build distributed to
 users. Back it up somewhere other than the build computer.
 
-The corresponding `packaging/<platform>/build/<build-id>/` directory contains
+The corresponding `packaging/<platform>/build/<version>/` directory contains
 only PyInstaller intermediate work files. After the application has been built
 and validated, that directory can be deleted without affecting the application,
 the distribution ZIP, or the retained provenance.
@@ -100,7 +105,7 @@ From the repository root, create the unsigned application:
 The script validates the clean source tree, machine architecture, Python
 version, dependencies, and important imports. It then creates an unsigned
 `SanPy.app` plus `build_info.json`, `environment.txt`, and the source archive in
-a new `macos-YYYYMMDD-vN` directory.
+a directory named for the installed SanPy version.
 
 Launch the unsigned application for a local smoke test using the command
 printed by the build script. Open representative SanPy data, exercise the main
@@ -143,8 +148,8 @@ Run the build:
 
 The script validates Windows AMD64, the clean source tree, Python version,
 dependencies, and important imports. It then creates `SanPy.exe`, the final
-distribution ZIP, and all provenance files in a new
-`windows-YYYYMMDD-vN` directory.
+distribution ZIP, and all provenance files in a directory named for the
+installed SanPy version.
 
 Verify the build by launching `SanPy.exe`, opening representative data,
 checking **About SanPy**, extracting the distribution ZIP into another
@@ -168,20 +173,19 @@ Separately archive the complete run directory after all platform-specific
 validation is finished. Do this manually; the build scripts intentionally do
 not create another archive.
 
-Use the run directory name for the record archive so its platform and build ID
-remain obvious:
+Include the platform and version in the record archive name:
 
 ```text
-macos-20260903-v1.zip
-windows-20260903-v1.zip
+SanPy-macos-arm64-0.2.8.zip
+SanPy-windows-AMD64-0.2.8.zip
 ```
 
 ## Reconstruct the exact SanPy source
 
 Start with the retained build-record directory or its manually created ZIP.
-Open `build_info.json` and record `build.build_id`, `build.sanpy_version`,
-`git.commit`, `platform.system`, and `platform.machine`. Confirm that the full
-commit in `git.commit` matches the name of `source-<full-commit>.zip`.
+Open `build_info.json` and record `build.sanpy_version`, `git.commit`,
+`platform.system`, and `platform.machine`. Confirm that the full commit in
+`git.commit` matches the name of `source-<full-commit>.zip`.
 
 ### Preferred: restore the original Git commit
 
@@ -206,9 +210,8 @@ git switch -c fix/<descriptive-name>
 ```
 
 Commit the correction before running a build so the clean-tree gate accepts it.
-The corrected application receives a new build ID, commit, source archive,
-environment record, and checksum even if its user-facing SanPy version is
-unchanged.
+The corrected application receives a Git-derived post-release version, commit,
+source archive, environment record, and checksum.
 
 ### Fallback: restore the archived source files
 
@@ -220,7 +223,7 @@ extracted directory:
 ```bash
 git init
 git add .
-git commit -m "Restore source from SanPy build <build-id>"
+git commit -m "Restore source from SanPy <version>"
 ```
 
 This fallback restores the exact file contents but cannot recreate the

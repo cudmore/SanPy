@@ -25,6 +25,14 @@ PACKAGE_DISTRIBUTIONS = (
 
 
 def _package_version(distribution: str) -> str | None:
+    """Return an installed distribution version when available.
+
+    Args:
+        distribution: Installed distribution name.
+
+    Returns:
+        Installed version, or None when the distribution is unavailable.
+    """
     try:
         return version(distribution)
     except PackageNotFoundError:
@@ -32,6 +40,15 @@ def _package_version(distribution: str) -> str | None:
 
 
 def _run(repo_root: Path, *command: str) -> str:
+    """Run a command and return its stripped standard output.
+
+    Args:
+        repo_root: Repository used as the command working directory.
+        *command: Command and arguments to execute.
+
+    Returns:
+        Command output without surrounding whitespace.
+    """
     return subprocess.run(
         command,
         cwd=repo_root,
@@ -41,8 +58,15 @@ def _run(repo_root: Path, *command: str) -> str:
     ).stdout.strip()
 
 
-def create_build_info(repo_root: Path, output_folder: str) -> dict:
-    """Collect metadata from the interpreter and source tree doing the build."""
+def create_build_info(repo_root: Path) -> dict[str, object]:
+    """Collect metadata from the interpreter and source tree doing the build.
+
+    Args:
+        repo_root: Root of the committed SanPy source tree.
+
+    Returns:
+        Nested build, Git, platform, package, and contact metadata.
+    """
     now = datetime.now().astimezone()
     commit = _run(repo_root, "git", "rev-parse", "HEAD")
     git_status = _run(
@@ -55,9 +79,8 @@ def create_build_info(repo_root: Path, output_folder: str) -> dict:
     uv_version = _run(repo_root, "uv", "--version").removeprefix("uv ")
 
     return {
-        "schema_version": 2,
+        "schema_version": 3,
         "build": {
-            "build_id": output_folder,
             "timestamp_local": now.isoformat(timespec="seconds"),
             "sanpy_version": version("sanpy-ephys"),
             "python_version": platform.python_version(),
@@ -86,13 +109,13 @@ def create_build_info(repo_root: Path, output_folder: str) -> dict:
 
 
 def main() -> None:
+    """Write build metadata to the requested JSON file."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parent.parent
-    output_folder = args.output.parent.name
-    build_info = create_build_info(repo_root, output_folder)
+    build_info = create_build_info(repo_root)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(build_info, indent=2) + "\n", encoding="utf-8"

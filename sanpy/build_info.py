@@ -10,13 +10,13 @@ from typing import Any, Iterator
 from ._version import __version__
 
 
-def _development_info() -> dict:
+def _development_info() -> dict[str, Any]:
+    """Return live metadata for an unpackaged development run."""
     return {
-        "schema_version": 1,
+        "schema_version": 3,
         "build": {
             "type": "Development run",
             "sanpy_version": __version__,
-            "build_id": "Development run",
             "timestamp_local": "Not available",
             "python_version": platform.python_version(),
         },
@@ -32,8 +32,12 @@ def _development_info() -> dict:
     }
 
 
-def load_build_info() -> dict:
-    """Return bundled metadata, or useful live values during development."""
+def load_build_info() -> dict[str, Any]:
+    """Return bundled metadata, or useful live values during development.
+
+    Returns:
+        Nested build metadata loaded from the package or generated live.
+    """
     build_info_file = files("sanpy").joinpath("build_info.json")
     try:
         return json.loads(build_info_file.read_text(encoding="utf-8"))
@@ -41,7 +45,19 @@ def load_build_info() -> dict:
         return _development_info()
 
 
-def _display_rows(value: Any, path: tuple[str, ...] = ()) -> Iterator[tuple[str, str]]:
+def _display_rows(
+    value: Any,
+    path: tuple[str, ...] = (),
+) -> Iterator[tuple[str, str]]:
+    """Flatten nested metadata into display labels and values.
+
+    Args:
+        value: Current metadata value or nested dictionary.
+        path: Keys leading to the current value.
+
+    Yields:
+        Display-label and string-value pairs.
+    """
     if isinstance(value, dict):
         for key, child in value.items():
             if not path and key == "schema_version":
@@ -53,16 +69,32 @@ def _display_rows(value: Any, path: tuple[str, ...] = ()) -> Iterator[tuple[str,
     yield label, "Not installed" if value is None else str(value)
 
 
-def get_build_info_rows(build_info: dict | None = None) -> list[tuple[str, str]]:
-    """Flatten all metadata into ordered rows for a thin user interface."""
+def get_build_info_rows(
+    build_info: dict[str, Any] | None = None,
+) -> list[tuple[str, str]]:
+    """Flatten all metadata into ordered rows for a thin user interface.
+
+    Args:
+        build_info: Optional metadata override, primarily for tests.
+
+    Returns:
+        Ordered display-label and value pairs.
+    """
     info = load_build_info() if build_info is None else build_info
     return list(_display_rows(info))
 
 
 def get_build_summary_rows(
-    build_info: dict | None = None,
+    build_info: dict[str, Any] | None = None,
 ) -> list[tuple[str, str]]:
-    """Return the concise build identity displayed in the About dialog."""
+    """Return the concise build identity displayed in the About dialog.
+
+    Args:
+        build_info: Optional metadata override, primarily for tests.
+
+    Returns:
+        SanPy version and build timestamp display rows.
+    """
     info = load_build_info() if build_info is None else build_info
     build = info.get("build", {})
     if not isinstance(build, dict):
@@ -74,12 +106,18 @@ def get_build_summary_rows(
 
     return [
         ("SanPy version", display_value("sanpy_version")),
-        ("Build ID", display_value("build_id")),
         ("Built", display_value("timestamp_local")),
     ]
 
 
-def get_build_info_json(build_info: dict | None = None) -> str:
-    """Return readable JSON suitable for copying into a support message."""
+def get_build_info_json(build_info: dict[str, Any] | None = None) -> str:
+    """Return readable JSON suitable for copying into a support message.
+
+    Args:
+        build_info: Optional metadata override, primarily for tests.
+
+    Returns:
+        Indented JSON representation of the metadata.
+    """
     info = load_build_info() if build_info is None else build_info
     return json.dumps(info, indent=2)

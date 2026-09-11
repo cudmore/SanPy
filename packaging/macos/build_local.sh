@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build an unsigned arm64 SanPy.app in a new dated dist folder.
+# Build an unsigned arm64 SanPy.app in a version-named dist folder.
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -80,15 +80,18 @@ print('h5py', h5py.__version__)
 print('sanpy', sanpy.__version__)
 "
 
+INSTALLED_SANPY_VERSION="$("${PYTHON}" -c \
+  'from importlib.metadata import version; print(version("sanpy-ephys"))')"
+
 mkdir -p "${DIST_ROOT}" "${BUILD_ROOT}"
-RUN_DATE="$(date +%Y%m%d)"
-RUN_NUMBER=1
-while [[ -e "${DIST_ROOT}/macos-${RUN_DATE}-v${RUN_NUMBER}" ]]; do
-  RUN_NUMBER=$((RUN_NUMBER + 1))
-done
-RUN_NAME="macos-${RUN_DATE}-v${RUN_NUMBER}"
+RUN_NAME="${INSTALLED_SANPY_VERSION}"
 RUN_DIR="${DIST_ROOT}/${RUN_NAME}"
 WORK_DIR="${BUILD_ROOT}/${RUN_NAME}"
+if [[ -e "${RUN_DIR}" || -e "${WORK_DIR}" ]]; then
+  echo "error: refusing to overwrite existing build version ${RUN_NAME}" >&2
+  echo "Remove incomplete build and dist directories before rebuilding the same commit." >&2
+  exit 1
+fi
 mkdir -p "${RUN_DIR}" "${WORK_DIR}"
 
 GIT_COMMIT="$(git -C "${REPO_ROOT}" rev-parse HEAD)"
@@ -99,8 +102,6 @@ SOURCE_ARCHIVE="${RUN_DIR}/source-${GIT_COMMIT}.zip"
 echo "==> recording build info"
 "${PYTHON}" ../create_build_info.py --output "${BUILD_INFO_PATH}"
 
-INSTALLED_SANPY_VERSION="$("${PYTHON}" -c \
-  'from importlib.metadata import version; print(version("sanpy-ephys"))')"
 RECORDED_SANPY_VERSION="$("${PYTHON}" -c \
   'import json, sys; print(json.load(open(sys.argv[1]))["build"]["sanpy_version"])' \
   "${BUILD_INFO_PATH}")"
