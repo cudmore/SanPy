@@ -13,6 +13,7 @@ from qtpy import QtCore, QtGui, QtWidgets
 
 import sanpy.interface.sanpy_window as sanpy_window_module
 from sanpy.interface.openFirstWidget import openFirstWidget
+from sanpy.interface.bDetectionWidget import _SweepSelectionWidget
 from sanpy.interface.sanpy_app import SanPyApp
 from sanpy.interface.sanpy_window import SanPyWindow
 from sanpy.interface.plugins.sanpyPlugin import sanpyPlugin
@@ -603,6 +604,27 @@ def test_plugin_toolbar_supports_compact_modes(qtbot: Any) -> None:
     assert toolbar.parent() is plugin
     assert toolbar.iconSize() == QtCore.QSize(16, 16)
     assert toolbar.sizePolicy().verticalPolicy() == QtWidgets.QSizePolicy.Fixed
+
+
+def test_shared_sweep_selector_navigates_and_synchronizes(qtbot: Any) -> None:
+    """Navigate sweeps while allowing external selection synchronization.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    selector = _SweepSelectionWidget()
+    qtbot.addWidget(selector)
+    selected_sweeps: list[int] = []
+    selector.sweepSelected.connect(selected_sweeps.append)
+    selector.set_sweeps(3)
+
+    qtbot.mouseClick(selector.next_button, QtCore.Qt.LeftButton)
+    assert selected_sweeps == [1]
+    assert selector.combo_box.currentData() == 1
+
+    selector.set_current_sweep(2)
+    assert selector.combo_box.currentData() == 2
+    assert selected_sweeps == [1]
 
 
 def test_plot_scatter_starts_with_selector_toolbar_only(

@@ -23,6 +23,99 @@ from sanpy.bExport import bExport
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
+
+class _SweepSelectionWidget(QtWidgets.QWidget):
+    """Provide a reusable sweep label, selector, and navigation buttons."""
+
+    sweepSelected = QtCore.pyqtSignal(int)
+
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        """Build an initially empty sweep selector.
+
+        Args:
+            parent: Optional owning Qt widget.
+        """
+        super().__init__(parent)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Preferred,
+            QtWidgets.QSizePolicy.Fixed,
+        )
+
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(QtWidgets.QLabel("Sweep", self))
+
+        self.previous_button = QtWidgets.QPushButton("<", self)
+        self.previous_button.setToolTip("Previous Sweep")
+        self.previous_button.clicked.connect(lambda: self._step_sweep(-1))
+        layout.addWidget(self.previous_button)
+
+        self.combo_box = QtWidgets.QComboBox(self)
+        self.combo_box.setToolTip("Select Sweep")
+        self.combo_box.currentIndexChanged.connect(self._on_sweep_changed)
+        layout.addWidget(self.combo_box)
+
+        self.next_button = QtWidgets.QPushButton(">", self)
+        self.next_button.setToolTip("Next Sweep")
+        self.next_button.clicked.connect(lambda: self._step_sweep(1))
+        layout.addWidget(self.next_button)
+        layout.addStretch()
+
+    def set_sweeps(self, num_sweeps: int, current_sweep: int = 0) -> None:
+        """Populate the selector for a recording.
+
+        Args:
+            num_sweeps: Number of sweeps in the selected recording.
+            current_sweep: Sweep to select after population.
+        """
+        self.combo_box.blockSignals(True)
+        self.combo_box.clear()
+        for sweep in range(num_sweeps):
+            self.combo_box.addItem(str(sweep), sweep)
+        if num_sweeps:
+            self.combo_box.setCurrentIndex(
+                max(0, min(current_sweep, num_sweeps - 1))
+            )
+        self.combo_box.blockSignals(False)
+
+        enabled = num_sweeps > 1
+        self.combo_box.setEnabled(enabled)
+        self.previous_button.setEnabled(enabled)
+        self.next_button.setEnabled(enabled)
+
+    def set_current_sweep(self, sweep: int) -> None:
+        """Synchronize the selector without emitting another selection.
+
+        Args:
+            sweep: Zero-based sweep number selected elsewhere.
+        """
+        index = self.combo_box.findData(sweep)
+        if index < 0:
+            return
+        self.combo_box.blockSignals(True)
+        self.combo_box.setCurrentIndex(index)
+        self.combo_box.blockSignals(False)
+
+    def _on_sweep_changed(self, index: int) -> None:
+        """Emit the sweep stored at a user-selected combo-box row.
+
+        Args:
+            index: Selected combo-box row.
+        """
+        sweep = self.combo_box.itemData(index)
+        if isinstance(sweep, int):
+            self.sweepSelected.emit(sweep)
+
+    def _step_sweep(self, increment: int) -> None:
+        """Select the adjacent sweep when it exists.
+
+        Args:
+            increment: Direction to move, normally ``-1`` or ``1``.
+        """
+        new_index = self.combo_box.currentIndex() + increment
+        if 0 <= new_index < self.combo_box.count():
+            self.combo_box.setCurrentIndex(new_index)
+
 class bDetectionWidget(QtWidgets.QWidget):
     signalSelectSpike = QtCore.pyqtSignal(object)  # spike number, doZoom
     signalSelectSpikeList = QtCore.pyqtSignal(object)  # spike number, doZoom
@@ -1808,6 +1901,12 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._rawPlotLayout = QtWidgets.QVBoxLayout(self)
         vBoxLayoutForPlot = self._rawPlotLayout
         vBoxLayoutForPlot.addWidget(self._build_raw_plot_toggle_bar())
+        self._plotSweepControls = _SweepSelectionWidget(self)
+        self._plotSweepControls.sweepSelected.connect(self.slot_selectSweep)
+        self.signalSelectSweep.connect(
+            self._plotSweepControls.set_current_sweep
+        )
+        vBoxLayoutForPlot.addWidget(self._plotSweepControls)
 
         # for publication, don't do kymographs
         # make a branch and get this working
@@ -2407,19 +2506,19 @@ class bDetectionWidget(QtWidgets.QWidget):
         #     spikeNumber = spikeList[0]
         # self.selectSpike(spikeNumber, doZoom=doZoom)
 
-    def slot_switchFile(self, ba: "sanpy.bAnalysis" = None, tableRowDict: dict = None):
-        """Switch to a new file.
+    def slot_switchFile(
+        self,
+        ba: Optional["sanpy.bAnalysis"] = None,
+        tableRowDict: Optional[dict[str, object]] = None,
+    ) -> Optional[bool]:
+        """Switch the plots and controls to a newly selected recording.
 
-        Set self.ba to new bAnalysis object ba
+        Args:
+            ba: Analysis for the selected recording.
+            tableRowDict: File-table values for the selected recording.
 
-        Can fail if .abf file is corrupt
-
-        Parameters
-        ----------
-        tableRowDict :dict
-        ba : sanpy.bAnalysis
-
-        Returns: True/False
+        Returns:
+            False when the analysis has a load error; otherwise None.
         """
         # logger.info(f"tableRowDict:{tableRowDict}")
         logger.info(f"ba:{ba}")
@@ -2440,6 +2539,10 @@ class bDetectionWidget(QtWidgets.QWidget):
         stopSec = ""
         if tableRowDict is not None:
             self.detectToolbarWidget.slot_selectFile(tableRowDict)
+            self._plotSweepControls.set_sweeps(
+                self.ba.fileLoader.numSweeps,
+                current_sweep=0,
+            )
             self.fillInDetectionParameters(tableRowDict)  # fills in controls
             # self.updateStatusBar(f'Plotting file {path}')
             startSec = tableRowDict["Start(s)"]
@@ -3078,9 +3181,21 @@ class MultiLine(QtWidgets.QGraphicsPathItem):
 
 
 class myDetectToolbarWidget2(QtWidgets.QWidget):
-    # signalSelectSpike = QtCore.Signal(object, object) # spike number, doZoom
+    """Display detection settings and controls for a detection widget."""
 
-    def __init__(self, myPlots, detectionWidget: bDetectionWidget, parent=None):
+    def __init__(
+        self,
+        myPlots: list[dict[str, object]],
+        detectionWidget: bDetectionWidget,
+        parent: QtWidgets.QWidget | None = None,
+    ) -> None:
+        """Initialize detection controls.
+
+        Args:
+            myPlots: Plot-overlay definitions displayed by the toolbar.
+            detectionWidget: Detection widget controlled by this toolbar.
+            parent: Optional owning Qt widget.
+        """
         super(myDetectToolbarWidget2, self).__init__(parent)
 
         self.myPlots = myPlots
@@ -3373,11 +3488,12 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         else:
             logger.warning(f'did not understand panelName "{panelName}"')
 
-    def _buildUI(self):
-        """
-        Notes
-        -----
-        Using setFixedWidth()
+    def _buildUI(self) -> None:
+        """Build the grouped detection, display, and plot controls.
+
+        Notes:
+            The toolbar uses a fixed width so the plot area receives the
+            remaining horizontal space.
         """
         
         # myPath = os.path.dirname(os.path.abspath(__file__))
@@ -3576,37 +3692,23 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # for channel in _fakeChannels:
         #     _channelComboBox.addItem(channel)
 
-        # sweeps
-        tmpSweepLabel = QtWidgets.QLabel("Sweep")
-        buttonName = "<"
-        self.previousSweepButton = QtWidgets.QPushButton(buttonName)
-        self.previousSweepButton.setToolTip("Previous Sweep")
-        self.previousSweepButton.clicked.connect(
-            partial(self._on_button_click, buttonName)
+        # Reuse the same sweep selector in this panel and above the raw plots.
+        self.sweepControls = _SweepSelectionWidget(self)
+        self.sweepControls.sweepSelected.connect(
+            self.detectionWidget.slot_selectSweep
         )
-        buttonName = ">"
-        self.nextSweepButton = QtWidgets.QPushButton(buttonName)
-        self.nextSweepButton.setToolTip("Next Sweep")
-        self.nextSweepButton.clicked.connect(partial(self._on_button_click, buttonName))
-
-        self.sweepComboBox = QtWidgets.QComboBox()
-        self.sweepComboBox.setToolTip("Select Sweep")
-        self.sweepComboBox.currentTextChanged.connect(self.on_sweep_change)
-        # will be set in self.slot_selectFile()
-        # for sweep in range(self.detectionWidget.ba.numSweeps):
-        #    self.sweepComboBox.addItem(str(sweep))
-        hSweepLayout = QtWidgets.QHBoxLayout()
-
-        # hSweepLayout.addWidget(_tmpChannelLabel)
-        # hSweepLayout.addWidget(_channelComboBox)
-
-        hSweepLayout.addWidget(tmpSweepLabel)
-        hSweepLayout.addWidget(self.previousSweepButton)
-        hSweepLayout.addWidget(self.sweepComboBox)
-        hSweepLayout.addWidget(self.nextSweepButton)
+        self.detectionWidget.signalSelectSweep.connect(
+            self.sweepControls.set_current_sweep
+        )
+        # Preserve these attributes for existing internal callers.
+        self.previousSweepButton = self.sweepControls.previous_button
+        self.sweepComboBox = self.sweepControls.combo_box
+        self.nextSweepButton = self.sweepControls.next_button
         tmpRowSpan = 1
         tmpColSpan = 2
-        displayGridLayout.addLayout(hSweepLayout, row, 0, tmpRowSpan, tmpColSpan)
+        displayGridLayout.addWidget(
+            self.sweepControls, row, 0, tmpRowSpan, tmpColSpan
+        )
         # displayGridLayout.addWidget(tmpSweepLabel, row, 0, tmpRowSpan, tmpColSpan)
         # displayGridLayout.addWidget(previousSweepButton, row, 1, tmpRowSpan, tmpColSpan)
         # displayGridLayout.addWidget(self.sweepComboBox, row, 2, tmpRowSpan, tmpColSpan)
@@ -3917,7 +4019,12 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         # self.selectSpike(spikeNumber, doZoom=doZoom)
         self.slot_selectSpike(sDict)
 
-    def slot_selectFile(self, rowDict):
+    def slot_selectFile(self, rowDict: dict[str, object]) -> None:
+        """Refresh toolbar controls for a newly selected recording.
+
+        Args:
+            rowDict: File-table values for the selected recording.
+        """
         file = rowDict["File"]
         
         #self.mySelectedFileLabel.setText(file)
@@ -3935,33 +4042,10 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             self.stopSeconds.setValue(stopSec)
         """
 
-        # block signals as we update
-        self.sweepComboBox.blockSignals(True)
-        #
-
-        # populate sweep combo box
-        self.sweepComboBox.clear()
-        # self.sweepComboBox.addItem('All')
-        for sweep in range(self.detectionWidget.ba.fileLoader.numSweeps):
-            self.sweepComboBox.addItem(str(sweep))
-        # always select sweep 0
-
-        # 1 was for when we had 'All'
-        self.sweepComboBox.setCurrentIndex(0)
-
-        # if self.detectionWidget.ba.numSweeps == 1:
-        #    # select sweep 0
-        #    self.sweepComboBox.setCurrentIndex(1)
-
-        # turn off sweep combo box if just one sweep
-        enableSweepButtons = self.detectionWidget.ba.fileLoader.numSweeps > 1
-        self.sweepComboBox.setEnabled(enableSweepButtons)
-        self.previousSweepButton.setEnabled(enableSweepButtons)
-        self.nextSweepButton.setEnabled(enableSweepButtons)
-
-        #
-        self.sweepComboBox.blockSignals(False)
-        #
+        self.sweepControls.set_sweeps(
+            self.detectionWidget.ba.fileLoader.numSweeps,
+            current_sweep=0,
+        )
 
         # TODO: Fix this, we need to set this when user performs new analysis
         # self.spikeNumber.setMaximum(self.detectionWidget.ba.numSpikes - 1)
