@@ -34,6 +34,8 @@ class SummarizeResults(sanpyPlugin):
         # self.toggleResponseOptions(ResponseType.setSweep, False)  # we plot all sweeps
         # self.toggleResponseOptions(ResponseType.setAxis, False)
 
+        self.toggleTopToobar(True, show_response_options=False)
+
         self._reportType = 'Full Export'
         
         self.cardiacDf = None

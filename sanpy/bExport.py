@@ -162,6 +162,7 @@ class bExport:
                 OrderedDict()
             )  # use OrderedDict so Pandas output is in the correct order
 
+            spikeDict["Sweep"] = spike["sweep"]
             spikeDict["Spike"] = spikeIdx
             spikeDict["Take Off Potential (s)"] = self.ba.fileLoader.pnt2Sec_(
                 spike["thresholdPnt"]
@@ -283,7 +284,7 @@ class bExport:
         # 'stats' has xxx columns (name, mean, sd, se, n)
         headerDict["stats"] = []
 
-        ignoreColumns = ["Spike", "File"]
+        ignoreColumns = ["Sweep", "Spike", "File"]
         for idx, col in enumerate(cardiac_df):
             if col in ignoreColumns:
                 # in general, skip non numerical columns
@@ -452,7 +453,7 @@ class bExport:
             # 'stats' has xxx columns (name, mean, sd, se, n)
             headerDict["stats"] = []
 
-            ignoreColumns = ["Spike", "File"]
+            ignoreColumns = ["Sweep", "Spike", "File"]
             for idx, col in enumerate(cardiac_df):
                 if col in ignoreColumns:
                     # in general, need to ignore string columns
