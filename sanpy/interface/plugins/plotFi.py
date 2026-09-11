@@ -256,7 +256,7 @@ class plotFi(sanpyPlugin):
 
         if name == "Results Table":
             self._fiTableView.setVisible(isChecked)
-        elif name == "Plot Toolbar":
+        elif name == "Toolbar":
             self._mplToolbar.setVisible(isChecked)
         elif name in self._plotDict.keys():
             # top level like [Raw, Legend, Error]
@@ -310,15 +310,6 @@ class plotFi(sanpyPlugin):
         )
         _topToolbar.addWidget(self._fiEpochComboBox, alignment=QtCore.Qt.AlignLeft)
         self._refresh_fi_epoch_combo_box()
-
-        # toggle self._mplToolbar
-        name = "Plot Toolbar"
-        _aCheckbox = QtWidgets.QCheckBox(name)
-        _aCheckbox.setChecked(False)
-        _aCheckbox.stateChanged.connect(
-            lambda state, name=name: self.on_check_click(state, name)
-        )
-        _topToolbar.addWidget(_aCheckbox, alignment=QtCore.Qt.AlignLeft)
 
         _topToolbar.addStretch()
 
@@ -383,6 +374,14 @@ class plotFi(sanpyPlugin):
         options_widget = QtWidgets.QWidget()
         _vLayout = QtWidgets.QVBoxLayout(options_widget)
         _vLayout.setContentsMargins(8, 8, 8, 8)
+
+        name = "Toolbar"
+        _aCheckbox = QtWidgets.QCheckBox(name)
+        _aCheckbox.setChecked(False)
+        _aCheckbox.stateChanged.connect(
+            lambda state, name=name: self.on_check_click(state, name)
+        )
+        _vLayout.addWidget(_aCheckbox, alignment=QtCore.Qt.AlignTop)
 
         # to toggle columns in fi analysis df
 
