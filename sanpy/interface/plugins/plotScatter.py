@@ -609,14 +609,24 @@ class plotScatter(sanpyPlugin):
         xData = np.array(xData)
         yData = np.array(yData)
 
-        #
-        # return if we got no data, happens when there is no analysis
         if (
             xData is None
             or yData is None
-            or np.isnan(xData).all()
-            or np.isnan(yData).all()
+            or not np.issubdtype(xData.dtype, np.number)
+            or not np.issubdtype(yData.dtype, np.number)
         ):
+            logger.warning(
+                f"Scatter requires numeric stats, got x:{xStat} ({getattr(xData, 'dtype', None)}) "
+                f"y:{yStat} ({getattr(yData, 'dtype', None)})"
+            )
+            self.lines.set_offsets([np.nan, np.nan])
+            self.scatter_hist([], [], self.axHistX, self.axHistY)
+            self.static_canvas.draw()
+            return
+
+        #
+        # return if we got no data, happens when there is no analysis
+        if np.isnan(xData).all() or np.isnan(yData).all():
             # We get here when there is no analysis
             # logger.warning(f'Did not find either xStat: "{xStat}" or yStat: "{yStat}"')
             self.lines.set_offsets([np.nan, np.nan])

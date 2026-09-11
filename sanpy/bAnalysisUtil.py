@@ -319,14 +319,14 @@ class bAnalysisUtil:
             "xStat": "preMinPnt",
             "xStatUnits": "Points",
         }
-        statList["Post AP Min (mV)"] = {
-            "name": "postMinVal",
-            "units": "mV",
-            "yStat": "postMinVal",
-            "yStatUnits": "mV",
-            "xStat": "postMinPnt",
-            "xStatUnits": "Points",
-        }
+        # statList["Post AP Min (mV)"] = {
+        #     "name": "postMinVal",
+        #     "units": "mV",
+        #     "yStat": "postMinVal",
+        #     "yStatUnits": "mV",
+        #     "xStat": "postMinPnt",
+        #     "xStatUnits": "Points",
+        # }
 
         # new 20231201
         statList["Fast AHP (mV)"] = {
@@ -390,14 +390,14 @@ class bAnalysisUtil:
             "xStatUnits": "Points",
         }
         # todo: fix this
-        statList["AP Duration (ms)"] = {
-            "name": "apDuration_ms",
-            "units": "ms",
-            "yStat": "apDuration_ms",
-            "yStatUnits": "ms",
-            "xStat": "thresholdPnt",
-            "xStatUnits": "Points",
-        }
+        # statList["AP Duration (ms)"] = {
+        #     "name": "apDuration_ms",
+        #     "units": "ms",
+        #     "yStat": "apDuration_ms",
+        #     "yStatUnits": "ms",
+        #     "xStat": "thresholdPnt",
+        #     "xStatUnits": "Points",
+        # }
 
         # new 20210211
         statList["Half Width 10 (ms)"] = {
@@ -444,13 +444,13 @@ class bAnalysisUtil:
             "xStatUnits": "",
         }
 
-        statList["Condition"] = {
-            "name": "condition",
-            "yStat": "condition",
-            "yStatUnits": "",
-            "xStat": "",
-            "xStatUnits": "",
-        }
+        # statList["Condition"] = {
+        #     "name": "condition",
+        #     "yStat": "condition",
+        #     "yStatUnits": "",
+        #     "xStat": "",
+        #     "xStatUnits": "",
+        # }
 
         # sa node specific
         """
