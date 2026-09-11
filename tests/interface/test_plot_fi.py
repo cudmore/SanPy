@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 import pandas.testing as pdt
 import pytest
-from qtpy import QtWidgets
+from qtpy import QtCore, QtWidgets
 
 from sanpy.interface.plugins.plotFi import getStatFi, plotFi
 from sanpy.interface.plugins.sanpyPlugin import sanpyPlugin
@@ -243,6 +243,37 @@ def test_plot_fi_epoch_selector_leaves_unavailable_epoch_unselected(
 
     assert plugin.epochNumber == 2
     assert plugin._fiEpochComboBox.currentIndex() == -1
+
+
+def test_plot_fi_options_popup_stays_open_for_multiple_changes(
+    qtbot: Any,
+) -> None:
+    """Keep the options popup open while applying embedded controls.
+
+    Args:
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    plugin = plotFi.__new__(plotFi)
+    QtWidgets.QWidget.__init__(plugin)
+    qtbot.addWidget(plugin)
+    plugin.setDefaultPlot()
+    plugin.replot = Mock()
+    button = plugin._buildPlotOptionsButton()
+    layout = QtWidgets.QVBoxLayout(plugin)
+    layout.addWidget(button)
+    plugin.show()
+
+    menu = button.menu()
+    menu.popup(button.mapToGlobal(QtCore.QPoint(0, button.height())))
+    qtbot.waitUntil(menu.isVisible)
+    qtbot.mouseClick(plugin._rawCheckbox, QtCore.Qt.LeftButton)
+
+    assert menu.isVisible()
+    assert plugin._plotDict["Raw"] is False
+    plugin.replot.assert_called_once_with()
+
+    qtbot.keyClick(menu, QtCore.Qt.Key_Escape)
+    qtbot.waitUntil(lambda: not menu.isVisible())
 
 
 def test_plot_fi_clears_stale_output_for_unavailable_epoch(qtbot: Any) -> None:

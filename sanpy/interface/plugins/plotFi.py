@@ -137,7 +137,12 @@ class plotFi(sanpyPlugin):
 
     myHumanName = "Plot FI"
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: object) -> None:
+        """Initialize the firing-rate/current plot.
+
+        Args:
+            **kwargs: Arguments forwarded to the shared plugin base class.
+        """
         super().__init__(**kwargs)
 
         self.toggleResponseOptions(ResponseType.setSweep, False)  # we plot all sweeps
@@ -158,8 +163,8 @@ class plotFi(sanpyPlugin):
 
         self.replot()
 
-    def setDefaultPlot(self):
-        """Default plot dict"""
+    def setDefaultPlot(self) -> None:
+        """Reset Plot FI to its default display options."""
 
         self._plotDict = {
             "Raw": True,
@@ -177,15 +182,23 @@ class plotFi(sanpyPlugin):
             },
         }
 
-    def on_error_combo_box(self, item: str):
+    def on_error_combo_box(self, item: str) -> None:
+        """Set the error-bar calculation and redraw the plot.
+
+        Args:
+            item: Error-bar choice displayed by the options combo box.
+        """
         if item == "None":
             item = None
         self._plotDict["Error"] = item
         self.replot()
 
-    def _selectInTable(self, findStatKey: str):
-        # this is a CLUDGE !!! FIX IT
-        # select in table
+    def _selectInTable(self, findStatKey: str) -> None:
+        """Select a statistic row by its human-readable name.
+
+        Args:
+            findStatKey: Statistic label to select.
+        """
         _statList = self._yStatListWidget.statList
         # find 'Spike Frequency (Hz)'
         foundKeyIdx = None
@@ -195,12 +208,11 @@ class plotFi(sanpyPlugin):
         if foundKeyIdx is not None:
             self._yStatListWidget.myTableWidget.selectRow(foundKeyIdx)
 
-    def on_button_click(self, name: str):
-        """
-        Parameters
-        ----------
-        name : str
-            Name of the buton clicked
+    def on_button_click(self, name: str) -> None:
+        """Apply one of Plot FI's preset configurations.
+
+        Args:
+            name: Name of the preset button clicked.
         """
         logger.info(name)
         if name == "Inst Freq":
@@ -229,7 +241,13 @@ class plotFi(sanpyPlugin):
         # replot
         self.replot()
 
-    def on_check_click(self, state: int, name: str):
+    def on_check_click(self, state: int, name: str) -> None:
+        """Apply one checkable display option.
+
+        Args:
+            state: Qt checkbox state value.
+            name: Plot FI option controlled by the checkbox.
+        """
         isChecked = state > 0
 
         logger.info(f"{name} is checked {isChecked}")
@@ -268,6 +286,12 @@ class plotFi(sanpyPlugin):
             _aButton = QtWidgets.QPushButton(buttonName)
             _aButton.clicked.connect(partial(self.on_button_click, buttonName))
             _topToolbar.addWidget(_aButton, alignment=QtCore.Qt.AlignLeft)
+
+        self._plotOptionsButton = self._buildPlotOptionsButton()
+        _topToolbar.addWidget(
+            self._plotOptionsButton,
+            alignment=QtCore.Qt.AlignLeft,
+        )
 
         # toggle the fi stat table
         name = "Results Table"
@@ -321,10 +345,20 @@ class plotFi(sanpyPlugin):
         self._epochNumber = epoch
         self.replot()
 
-    def _refreshPlotOptionsLayout(self):
-        """Refresh all buttons in _overlayCheckboxes with self._plotDict['overlays']"""
+    def _refreshPlotOptionsLayout(self) -> None:
+        """Synchronize the persistent options popup with plot state."""
 
-        # raw
+        # Presets update several controls together; block their callbacks so
+        # the caller performs one final redraw after synchronization.
+        controls = [
+            self._legendCheckbox,
+            self._rawCheckbox,
+            self._errorComboBox,
+            *self._overlayCheckBoxes.values(),
+        ]
+        blockers = [QtCore.QSignalBlocker(control) for control in controls]
+
+        self._legendCheckbox.setChecked(self._plotDict["Legend"])
         _plotRaw = self._plotDict["Raw"]
         self._rawCheckbox.setChecked(_plotRaw)
 
@@ -337,19 +371,29 @@ class plotFi(sanpyPlugin):
         for name, value in self._plotDict["overlays"].items():
             self._overlayCheckBoxes[name].setChecked(value)
 
-    def _buildPlotOptionsLayout(self):
-        _vLayout = QtWidgets.QVBoxLayout()
+        # Keep blockers alive until every option has been synchronized.
+        del blockers
+
+    def _buildPlotOptionsWidget(self) -> QtWidgets.QWidget:
+        """Build controls embedded in the persistent options popup.
+
+        Returns:
+            Widget containing Plot FI display options.
+        """
+        options_widget = QtWidgets.QWidget()
+        _vLayout = QtWidgets.QVBoxLayout(options_widget)
+        _vLayout.setContentsMargins(8, 8, 8, 8)
 
         # to toggle columns in fi analysis df
 
         name = "Legend"
         value = self._plotDict[name]
-        _aCheckbox = QtWidgets.QCheckBox(name)
-        _aCheckbox.setChecked(value)
-        _aCheckbox.stateChanged.connect(
+        self._legendCheckbox = QtWidgets.QCheckBox(name)
+        self._legendCheckbox.setChecked(value)
+        self._legendCheckbox.stateChanged.connect(
             lambda state, name=name: self.on_check_click(state, name)
         )
-        _vLayout.addWidget(_aCheckbox, alignment=QtCore.Qt.AlignTop)
+        _vLayout.addWidget(self._legendCheckbox, alignment=QtCore.Qt.AlignTop)
 
         name = "Raw"
         value = self._plotDict[name]
@@ -381,9 +425,28 @@ class plotFi(sanpyPlugin):
 
             self._overlayCheckBoxes[name] = _aCheckbox
 
-        _vLayout.addStretch()
+        return options_widget
 
-        return _vLayout
+    def _buildPlotOptionsButton(self) -> QtWidgets.QToolButton:
+        """Build the button and persistent popup for Plot FI options.
+
+        Returns:
+            Tool button whose menu contains the options widget.
+        """
+        button = QtWidgets.QToolButton(self)
+        button.setText("Options")
+        button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+
+        self._plotOptionsMenu = QtWidgets.QMenu(button)
+        self._plotOptionsWidgetAction = QtWidgets.QWidgetAction(
+            self._plotOptionsMenu
+        )
+        self._plotOptionsWidgetAction.setDefaultWidget(
+            self._buildPlotOptionsWidget()
+        )
+        self._plotOptionsMenu.addAction(self._plotOptionsWidgetAction)
+        button.setMenu(self._plotOptionsMenu)
+        return button
 
     def slot_switchFile(
         self,
@@ -581,7 +644,8 @@ class plotFi(sanpyPlugin):
         # want to provide some feedback
         # #if self.getSanPyApp() is not None:
 
-    def _buildUI(self):
+    def _buildUI(self) -> None:
+        """Build Plot FI's controls, plot canvas, and results table."""
         # top toolbar
         _topToolbar = self._buildTopToolbar()
         self.getVBoxLayout().addLayout(_topToolbar)
@@ -609,10 +673,6 @@ class plotFi(sanpyPlugin):
         )
         self._yStatListWidget.myTableWidget.selectRow(3)
         main_hLayout.addWidget(self._yStatListWidget)
-
-        # add vertical list of button for fi stats like (first, last, mean, cv, etc)
-        _plotOptionsLayout = self._buildPlotOptionsLayout()
-        main_hLayout.addLayout(_plotOptionsLayout)
 
         _vPlotLayout = QtWidgets.QVBoxLayout()
         _canvas, self._mplToolbar = self.mplWindow2(addToLayout=False)
