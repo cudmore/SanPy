@@ -1035,34 +1035,37 @@ class sanpyPlugin(QtWidgets.QWidget):
                 # don't process right-click when toolbar is active
                 return
 
-        logger.info("")
+        # logger.info("")
 
         contextMenu = QtWidgets.QMenu(self)
 
         # prepend any menu from derived classes
         self.prependMenus(contextMenu)
 
-        switchFile = contextMenu.addAction("Switch File")
-        switchFile.setCheckable(True)
-        switchFile.setChecked(self.responseOptions["switchFile"])
+        # abb 202609 removing. these were intended to allow turning event consumption on/off
 
-        setSweep = contextMenu.addAction("Set Sweep")
-        setSweep.setCheckable(True)
-        setSweep.setChecked(self.responseOptions["setSweep"])
+        # switchFile = contextMenu.addAction("Switch File")
+        # switchFile.setCheckable(True)
+        # switchFile.setChecked(self.responseOptions["switchFile"])
 
-        analysisChange = contextMenu.addAction("Analysis Change")
-        analysisChange.setCheckable(True)
-        analysisChange.setChecked(self.responseOptions["analysisChange"])
+        # setSweep = contextMenu.addAction("Set Sweep")
+        # setSweep.setCheckable(True)
+        # setSweep.setChecked(self.responseOptions["setSweep"])
 
-        selectSpike = contextMenu.addAction("Select Spike")
-        selectSpike.setCheckable(True)
-        selectSpike.setChecked(self.responseOptions["selectSpike"])
+        # analysisChange = contextMenu.addAction("Analysis Change")
+        # analysisChange.setCheckable(True)
+        # analysisChange.setChecked(self.responseOptions["analysisChange"])
 
-        axisChange = contextMenu.addAction("Axis Change")
-        axisChange.setCheckable(True)
-        axisChange.setChecked(self.responseOptions["setAxis"])
+        # selectSpike = contextMenu.addAction("Select Spike")
+        # selectSpike.setCheckable(True)
+        # selectSpike.setChecked(self.responseOptions["selectSpike"])
 
-        contextMenu.addSeparator()
+        # axisChange = contextMenu.addAction("Axis Change")
+        # axisChange.setCheckable(True)
+        # axisChange.setChecked(self.responseOptions["setAxis"])
+
+        # contextMenu.addSeparator()
+
         copyTable = contextMenu.addAction("Copy Results")
         saveFigure = contextMenu.addAction("Save Figure")
 
@@ -1087,16 +1090,16 @@ class sanpyPlugin(QtWidgets.QWidget):
         if handled:
             return
 
-        if action == switchFile:
-            self.toggleResponseOptions(self.responseTypes.switchFile)
-        elif action == setSweep:
-            self.toggleResponseOptions(self.responseTypes.setSweep)
-        elif action == analysisChange:
-            self.toggleResponseOptions(self.responseTypes.analysisChange)
-        elif action == selectSpike:
-            self.toggleResponseOptions(self.responseTypes.selectSpike)
-        elif action == axisChange:
-            self.toggleResponseOptions(self.responseTypes.setAxis)
+        # if action == switchFile:
+        #     self.toggleResponseOptions(self.responseTypes.switchFile)
+        # elif action == setSweep:
+        #     self.toggleResponseOptions(self.responseTypes.setSweep)
+        # elif action == analysisChange:
+        #     self.toggleResponseOptions(self.responseTypes.analysisChange)
+        # elif action == selectSpike:
+        #     self.toggleResponseOptions(self.responseTypes.selectSpike)
+        # elif action == axisChange:
+        #     self.toggleResponseOptions(self.responseTypes.setAxis)
         elif action == copyTable:
             self.copyToClipboard()
         elif action == saveFigure:
