@@ -9,7 +9,7 @@ import pandas as pd
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
-from sanpy.version import analysisVersion, interfaceVersion
+# from sanpy.version import analysisVersion, interfaceVersion
 
 logger = get_logger(__name__)
 
@@ -268,8 +268,8 @@ class bExport:
         # headerDict['mV Threshold'] = [self.ba.mvThreshold] # abb 202012
         headerDict["Vm Threshold (mV)"] = [dDict["mvThreshold"]]
         # headerDict['Median Filter (pnts)'] = [self.ba.medianFilter]
-        headerDict["Analysis Version"] = [analysisVersion]
-        headerDict["Interface Version"] = [interfaceVersion]
+        # headerDict["Analysis Version"] = [analysisVersion]
+        # headerDict["Interface Version"] = [interfaceVersion]
 
         # headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
         # headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
@@ -334,8 +334,8 @@ class bExport:
                 headerDict["dV/dt Threshold"].append("")
                 headerDict["Vm Threshold (mV)"].append("")
                 # headerDict['Median Filter (pnts)'].append('')
-                headerDict["Analysis Version"].append("")
-                headerDict["Interface Version"].append("")
+                # headerDict["Analysis Version"].append("")
+                # headerDict["Interface Version"].append("")
                 headerDict["Sweep Number"].append("")
                 headerDict["Epoch Number"].append("")
                 headerDict["Number of Sweeps"].append("")
@@ -439,8 +439,8 @@ class bExport:
             # headerDict['mV Threshold'] = [self.ba.mvThreshold] # abb 202012
             headerDict["Vm Threshold (mV)"] = [dDict["mvThreshold"]]
             # headerDict['Median Filter (pnts)'] = [self.ba.medianFilter]
-            headerDict["Analysis Version"] = [analysisVersion]
-            headerDict["Interface Version"] = [interfaceVersion]
+            # headerDict["Analysis Version"] = [analysisVersion]
+            # headerDict["Interface Version"] = [interfaceVersion]
 
             # headerDict['Analysis Start (sec)'] = [self.ba.startSeconds]
             # headerDict['Analysis Stop (sec)'] = [self.ba.stopSeconds]
@@ -498,8 +498,8 @@ class bExport:
                     headerDict["dV/dt Threshold"].append("")
                     headerDict["Vm Threshold (mV)"].append("")
                     # headerDict['Median Filter (pnts)'].append('')
-                    headerDict["Analysis Version"].append("")
-                    headerDict["Interface Version"].append("")
+                    # headerDict["Analysis Version"].append("")
+                    # headerDict["Interface Version"].append("")
                     headerDict["Sweep Number"].append("")
                     headerDict["Number of Sweeps"].append("")
                     headerDict["Export Start (sec)"].append("")

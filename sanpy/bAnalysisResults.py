@@ -10,7 +10,7 @@ import sanpy
 
 from sanpy.sanpyLogger import get_logger
 from sanpy.schema import AnalysisResultCategory
-from sanpy.version import analysisVersion
+# from sanpy.version import analysisVersion
 
 logger = get_logger(__name__)
 
@@ -255,27 +255,60 @@ analysisResultDict[key][
     "description"
 ] = "Modification time if AP is modified after detection."
 
-key = "analysisVersion"
+key = "sanpy_version"
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]["category"] = AnalysisResultCategory.PROVENANCE
 analysisResultDict[key]["type"] = "str"
 analysisResultDict[key]["default"] = ""
 analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Analysis version"
+analysisResultDict[key]["axis_label"] = "Sanpy Version"
 analysisResultDict[key][
     "description"
-] = "Analysis version when analysis was run. See sanpy.analysisVersion"
+] = "SanPy version when analysis was run."
 
-key = "interfaceVersion"
+key = "sanpy_git_commit"
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]["category"] = AnalysisResultCategory.PROVENANCE
 analysisResultDict[key]["type"] = "str"
 analysisResultDict[key]["default"] = ""
 analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Interface version"
+analysisResultDict[key]["axis_label"] = "Sanpy Git Commit"
 analysisResultDict[key][
     "description"
-] = "Interface version string when analysis was run. See sanpy.interfaceVersion"
+] = "SanPy git commit hash when analysis was run."
+
+key = "sanpy_git_dirty"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["category"] = AnalysisResultCategory.PROVENANCE
+analysisResultDict[key]["type"] = "str"
+analysisResultDict[key]["default"] = ""
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key]["axis_label"] = "Sanpy Git Dirty"
+analysisResultDict[key][
+    "description"
+] = "SanPy git dirty flag when analysis was run."
+
+# key = "analysisVersion"
+# analysisResultDict[key] = getDefaultDict()
+# analysisResultDict[key]["category"] = AnalysisResultCategory.PROVENANCE
+# analysisResultDict[key]["type"] = "str"
+# analysisResultDict[key]["default"] = ""
+# analysisResultDict[key]["units"] = ""
+# analysisResultDict[key]["axis_label"] = "Analysis version"
+# analysisResultDict[key][
+#     "description"
+# ] = "Analysis version when analysis was run. See sanpy.analysisVersion"
+
+# key = "interfaceVersion"
+# analysisResultDict[key] = getDefaultDict()
+# analysisResultDict[key]["category"] = AnalysisResultCategory.PROVENANCE
+# analysisResultDict[key]["type"] = "str"
+# analysisResultDict[key]["default"] = ""
+# analysisResultDict[key]["units"] = ""
+# analysisResultDict[key]["axis_label"] = "Interface version"
+# analysisResultDict[key][
+#     "description"
+# ] = "Interface version string when analysis was run. See sanpy.interfaceVersion"
 
 key = "file"
 analysisResultDict[key] = getDefaultDict()
@@ -819,7 +852,11 @@ def printDocs():
         # str = df.to_markdown()
         str = df.to_html()
         myDate = datetime.today().strftime("%Y-%m-%d")
-        print(f"Generated {myDate} with sanpy.analysisVersion {analysisVersion}")
+
+        from sanpy.sanpy_version import getSanPyProvenance
+        sanpyProvenance = getSanPyProvenance()
+
+        print(f"Generated {myDate} with SanPy version {sanpyProvenance.version}")
         print(str)
 
     if 0:

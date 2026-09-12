@@ -8,7 +8,7 @@ import json
 from collections import OrderedDict
 import warnings  # to catch np.polyfit -->> RankWarning: Polyfit may be poorly conditioned
 
-from typing import Union, Dict, List, Tuple, Optional
+from typing import Union, List, Optional
 
 # import h5py
 
@@ -18,12 +18,12 @@ import scipy
 import scipy.signal
 import scipy.stats
 
-import pyabf  # see: https://github.com/swharden/pyABF
+# import pyabf  # see: https://github.com/swharden/pyABF
 
 import sanpy
 import sanpy.bDetection
 import sanpy.user_analysis.baseUserAnalysis  # to stop circular imports
-import sanpy.h5Util
+# import sanpy.h5Util
 import sanpy.fileloaders
 import sanpy.bAnalysisResults
 import sanpy._util
@@ -31,9 +31,9 @@ import sanpy.analysisUtil as analysis_util
 
 from sanpy.fileloaders import recordingModes
 from sanpy.bExport import bExport
-from sanpy.version import analysisVersion, interfaceVersion
+# from sanpy.version import analysisVersion, interfaceVersion
 
-# from metaData import MetaData
+from sanpy.sanpy_version import getSanPyProvenance, SanPyProvenance
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -1487,9 +1487,12 @@ class bAnalysis:
 
         # self._spikesPerSweep = [0] * self.fileLoader.numSweeps
 
+        # abb 20260912
+        sanpyProvenance = getSanPyProvenance()
+
         for sweepNumber in self.fileLoader.sweepList:
             # self.setSweep(sweep)
-            self._spikeDetect2(sweepNumber)
+            self._spikeDetect2(sweepNumber, sanpyProvenance)
 
         #
         self.fileLoader.setSweep(rememberSweep)
@@ -1501,7 +1504,7 @@ class bAnalysis:
                 f"Detected {len(self.spikeDict)} spikes in {round(stopTime-startTime,3)} seconds"
             )
 
-    def _spikeDetect2(self, sweepNumber: int):
+    def _spikeDetect2(self, sweepNumber: int, sanpyProvenance: SanPyProvenance):
         """Detect all spikes in one sweep.
 
          Populate bAnalysisResult.py.
@@ -1622,8 +1625,14 @@ class bAnalysis:
             # spikeDict[i]['isBad'] = False
             spikeDict[i]["analysisDate"] = dateStr
             spikeDict[i]["analysisTime"] = timeStr
-            spikeDict[i]["analysisVersion"] = analysisVersion
-            spikeDict[i]["interfaceVersion"] = interfaceVersion
+
+
+            # spikeDict[i]["analysisVersion"] = analysisVersion
+            # spikeDict[i]["interfaceVersion"] = interfaceVersion
+            spikeDict[i]["sanpy_version"] = sanpyProvenance.version
+            spikeDict[i]["sanpy_git_commit"] = sanpyProvenance.commit or ""
+            spikeDict[i]["sanpy_git_dirty"] = sanpyProvenance.git_dirty
+
             spikeDict[i]["file"] = self.fileLoader.filename
 
             spikeDict[i]["detectionType"] = detectionType

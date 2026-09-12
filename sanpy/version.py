@@ -4,6 +4,8 @@ Started versioning very late, as of 20210425
 analysisVersion: saved for each spike
 				indicates the analysis we used
 				update this file as I change the analysis
+
+20260912, this is now not used, see sanpy/sanpy_version.py
 """
 
 # 20210425
