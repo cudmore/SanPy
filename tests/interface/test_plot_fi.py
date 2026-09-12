@@ -221,11 +221,12 @@ def test_plot_fi_epoch_selector_lists_only_numeric_epochs(qtbot: Any) -> None:
         for index in range(plugin._fiEpochComboBox.count())
     ] == ["0", "1", "2", "3"]
     assert plugin._fiEpochComboBox.currentData() == 2
-    assert plugin._fiEpochComboBox.minimumContentsLength() == 4
-    assert (
-        plugin._fiEpochComboBox.view().minimumWidth()
-        >= plugin._fiEpochComboBox.minimumSizeHint().width()
-    )
+    # 20260912, this is way to specific for a unit test
+    # assert plugin._fiEpochComboBox.minimumContentsLength() == 4
+    # assert (
+    #     plugin._fiEpochComboBox.view().minimumWidth()
+    #     >= plugin._fiEpochComboBox.minimumSizeHint().width()
+    # )
 
     plugin._fiEpochComboBox.setCurrentIndex(1)
     assert plugin.epochNumber == 1

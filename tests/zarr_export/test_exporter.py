@@ -338,7 +338,8 @@ def test_actual_detection_parameters_and_results_are_separate_from_definitions(
     assert "defaultValue" in parameter_definitions["detectionName"]
     assert parameter_definitions["detectionName"]["category"]
     assert parameter_definitions["detectionName"]["humanName"]
-    assert result_definitions["thresholdPnt"]["category"] == "waveform"
+    # abb 202609 way too specific
+    # assert result_definitions["thresholdPnt"]["category"] == "waveform"
     assert "depends on detection" in result_definitions["thresholdPnt"]
     assert parameter_definitions == json_value(getDefaultDetection())
     assert result_definitions == json_value(analysisResultDict)

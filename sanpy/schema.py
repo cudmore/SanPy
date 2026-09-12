@@ -17,12 +17,12 @@ class DetectionParameterCategory(StrEnum):
 class AnalysisResultCategory(StrEnum):
     """Categories used to organize analysis results for presentation."""
 
-    IDENTITY = "identity"
-    ANNOTATION = "annotation"
-    WAVEFORM = "waveform"
-    TIMING = "timing"
-    DERIVATIVE = "derivative"
-    STIMULUS = "stimulus"
-    CONFIGURATION = "configuration"
-    PROVENANCE = "provenance"
+    IDENTITY = "identity"  # like spike number
+    PEAK_DETECTION = "peak detection"
+    TIMING = "timing"  # like spike frequency or isi
     CUSTOM = "custom"
+    # abb 20260912
+    ACQUISITION = "acquisition"
+    DETECTION = "detection"
+    METADATA = "metadata"
+    WIDTHS = "widths"

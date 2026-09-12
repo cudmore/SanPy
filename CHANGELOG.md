@@ -3,7 +3,7 @@
 
 SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://cudmore.github.io/SanPy/).
 
-## Unreleased
+## [0.2.8] - 2026-09-10
 
 ### SanPy Zarr
 
@@ -27,16 +27,14 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 
 #### Added
 
-- Added compact controls for showing and hiding detection tools and recording plots directly in the analysis window, including access to docked plugins without relying on the View menu.
-- Added numeric epoch selection to Plot FI and selector-only sweep/epoch controls for plugins that need them.
-- Added commands to clear recent files and folders, open the SanPy user-files folder, and copy complete diagnostics with the full SanPy log.
+- Compact analysis-window controls for detection tools, plots, and docked plugins; recent-file, user-files, and diagnostics commands.
+- Sweep/epoch selection in plugins and reports, plus categorical statistics in scatter plots.
 
 #### Changed
 
-- Simplified the View menu to the Dark Theme control; panel and plot visibility remains available through the analysis-window controls and draggable dividers.
-- Reused existing docked-plugin tabs instead of opening duplicate instances, and close tab-hosted plugins when their dock is closed.
-- Standardized compact Matplotlib navigation toolbars across plugins and treated Sweep Number, Epoch, Epoch DAC, and File Number as categorical Plot Tool statistics.
-- Refined Plot Recording sweep-offset controls and recent-file refresh behavior.
+- View menu, docks, and plugin toolbars are more compact; Plot FI options live in the Options popup.
+- Plugin context menus are reduced; plot menus hide stats that are not computed or not numeric.
+- Plot Recording sweep-offset and recent-file refresh behavior.
 
 #### Fixed
 
@@ -44,6 +42,11 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 - Fixed standard close-window shortcuts so they close only the active analysis or plugin window.
 - Fixed dark/light theme propagation, plot resizing when panels are toggled, and voltage and overview Y-axis fitting when sweeps change.
 - Fixed Plot Scatter time and sweep coloring and Plot FI updates when switching files.
+- Fixed Sweep Summary crashing when export start/stop are unset.
+- Fixed Plot Scatter crashing on non-numeric axes.
+- Reject unsupported recording files instead of opening a broken window.
+- Keep plot cursors out of auto-range.
+- Size the compact plugin toolbar to its visible controls.
 
 ### Added
 
@@ -52,9 +55,18 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 - Added platform-specific build IDs and output directories such as `macos-YYYYMMDD-vN` and `windows-YYYYMMDD-vN`.
 - Added a consolidated packaging guide covering both platforms, dependency updates, build-record retention, and recovery of the exact source used for a distributed application.
 - Added a locked Python 3.13 development environment using `uv.lock`.
+- Added Myokit treatment example `.sanpy` output.
+- Install Zarr export dependencies by default.
 
 ### Changed
 
+- Spike results now record SanPy source identity via `sanpy/sanpy_version.py`. Removed `sanpy/version.py` and the old `analysisVersion` / `interfaceVersion` fields.
+- Analysis-result definitions were refactored toward a single schema.
+- Public SanPy import surface is explicit; tests enforce that the backend does not import the GUI.
+- External user-code imports are disabled; user-plugin load failures are isolated.
+- SanPy filesystem locations are centralized; sample data path is `sample-data`.
+- Archived legacy stimulus experiments and moved the old scatter widget out of the package.
+- Releases are named from the SanPy version; Git-derived version metadata was refreshed.
 - Updated SanPy for pandas 2.3 compatibility and removed obsolete analysis-directory duplication code.
 - Exposed the folder-analysis save action through the GUI application and window lifecycle.
 - Removed obsolete platform-specific Python 3.11 requirement files and broken lock-update scripts now superseded by `pyproject.toml` and the shared `uv.lock`.

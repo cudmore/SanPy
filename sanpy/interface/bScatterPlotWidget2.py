@@ -449,13 +449,8 @@ class myStatListWidget(QtWidgets.QWidget):
             category_font.setBold(True)
             # category_font.setPointSize(category_font.pointSize() + 1)
             category_item.setFont(category_font)
-            palette = self.myTableWidget.palette()
-            category_item.setBackground(
-                palette.brush(QtGui.QPalette.Button)
-            )
-            # category_item.setForeground(
-            #     palette.brush(QtGui.QPalette.ButtonText)
-            # )
+
+            category_item.setBackground(QtGui.QColor("#2a2a2a"))
             self.myTableWidget.setItem(row, 0, category_item)
             # category_height = QtGui.QFontMetrics(category_font).height() + 6
             # self.myTableWidget.setRowHeight(row, category_height)
