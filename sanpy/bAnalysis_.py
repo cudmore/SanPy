@@ -31,7 +31,6 @@ import sanpy.analysisUtil as analysis_util
 
 from sanpy.fileloaders import recordingModes
 from sanpy.bExport import bExport
-# from sanpy.version import analysisVersion, interfaceVersion
 
 from sanpy.sanpy_version import getSanPyProvenance, SanPyProvenance
 
@@ -1627,8 +1626,6 @@ class bAnalysis:
             spikeDict[i]["analysisTime"] = timeStr
 
 
-            # spikeDict[i]["analysisVersion"] = analysisVersion
-            # spikeDict[i]["interfaceVersion"] = interfaceVersion
             spikeDict[i]["sanpy_version"] = sanpyProvenance.version
             spikeDict[i]["sanpy_git_commit"] = sanpyProvenance.commit or ""
             spikeDict[i]["sanpy_git_dirty"] = sanpyProvenance.git_dirty

@@ -9,7 +9,6 @@ import pandas as pd
 import sanpy
 
 from sanpy.sanpyLogger import get_logger
-# from sanpy.version import analysisVersion, interfaceVersion
 
 logger = get_logger(__name__)
 

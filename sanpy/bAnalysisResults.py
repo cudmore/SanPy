@@ -10,7 +10,6 @@ import sanpy
 
 from sanpy.sanpyLogger import get_logger
 from sanpy.schema import AnalysisResultCategory
-# from sanpy.version import analysisVersion
 
 logger = get_logger(__name__)
 
@@ -287,28 +286,6 @@ analysisResultDict[key]["axis_label"] = "Sanpy Git Dirty"
 analysisResultDict[key][
     "description"
 ] = "SanPy git dirty flag when analysis was run."
-
-# key = "analysisVersion"
-# analysisResultDict[key] = getDefaultDict()
-# analysisResultDict[key]["category"] = AnalysisResultCategory.PROVENANCE
-# analysisResultDict[key]["type"] = "str"
-# analysisResultDict[key]["default"] = ""
-# analysisResultDict[key]["units"] = ""
-# analysisResultDict[key]["axis_label"] = "Analysis version"
-# analysisResultDict[key][
-#     "description"
-# ] = "Analysis version when analysis was run. See sanpy.analysisVersion"
-
-# key = "interfaceVersion"
-# analysisResultDict[key] = getDefaultDict()
-# analysisResultDict[key]["category"] = AnalysisResultCategory.PROVENANCE
-# analysisResultDict[key]["type"] = "str"
-# analysisResultDict[key]["default"] = ""
-# analysisResultDict[key]["units"] = ""
-# analysisResultDict[key]["axis_label"] = "Interface version"
-# analysisResultDict[key][
-#     "description"
-# ] = "Interface version string when analysis was run. See sanpy.interfaceVersion"
 
 key = "file"
 analysisResultDict[key] = getDefaultDict()
