@@ -648,6 +648,15 @@ def test_plot_scatter_starts_with_selector_toolbar_only(
     assert plugin._responseToolbarWidget.isHidden()
     assert plugin._sweepComboBox.isHidden() is False
     assert plugin._epochComboBox.isHidden() is False
+    assert list(plugin._hueKeyByLabel) == [
+        "None",
+        "Time",
+        "Sweep",
+        "Epoch",
+        "Epoch level",
+        "User type",
+        "Spike condition",
+    ]
 
 
 def test_plugin_close_is_safe_when_plugin_was_not_registered() -> None:

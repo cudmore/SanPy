@@ -215,6 +215,7 @@ class baseUserAnalysis:
         internalName: str,
         *,
         showInPlotMenu: bool,
+        isCategorical: bool,
         category: AnalysisResultCategory = AnalysisResultCategory.CUSTOM,
         valueType: str,
         default: Any,
@@ -229,6 +230,7 @@ class baseUserAnalysis:
             internalName: Internal dataframe-column name without spaces or
                 punctuation.
             showInPlotMenu: Whether X/Y statistic selectors show the result.
+            isCategorical: Whether plots interpret values as discrete groups.
             category: Presentation category stored in the runtime result
                 schema.
             valueType: Runtime value type name, such as ``"float"``.
@@ -252,6 +254,7 @@ class baseUserAnalysis:
             units=units,
             axis_label=axisLabel,
             show_in_plot_menu=showInPlotMenu,
+            is_categorical=isCategorical,
             description=description,
         )
         if internalName not in self._userStatNames:

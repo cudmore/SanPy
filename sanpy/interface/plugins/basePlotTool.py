@@ -57,13 +57,15 @@ class basePlotTool(sanpyPlugin):
         metaDataKeys = [key for key in sanpy.MetaData.getMetaDataDict().keys()]
 
         categoricalList = metaDataKeys
-        categoricalList.append('File Number')
-        categoricalList.append('Unique Name')
-
-        # per spike
-        categoricalList.append('condition')
-        categoricalList.append('spike_condition')
-        categoricalList.append('userType')
+        categoricalList.extend(["File Number", "Unique Name"])
+        categoricalList.extend(
+            name
+            for name, definition in analysisResultDict.items()
+            if definition["is_categorical"]
+            and self.masterDf is not None
+            and name in self.masterDf.columns
+            and name not in categoricalList
+        )
 
         for result_name in categoricalList:
             definition = analysisResultDict.get(result_name)

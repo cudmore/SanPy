@@ -656,7 +656,7 @@ class plotFi(sanpyPlugin):
             "epochLevel",
         }
         for key, definition in _statList.items():
-            if key not in _hideTheseKeys:
+            if key not in _hideTheseKeys and not definition["is_categorical"]:
                 _statListShort[key] = definition
 
         self._yStatListWidget = myStatListWidget(

@@ -1,8 +1,11 @@
 """Tests for explicit mutation of per-spike analysis results."""
 
-import pandas as pd
+from typing import Any
 
-from sanpy.bAnalysisResults import analysisResultList
+import pandas as pd
+from qtpy import QtWidgets
+
+from sanpy.bAnalysisResults import analysisResultList, get_plot_result_definitions
 from sanpy.bAnalysis_ import bAnalysis
 from sanpy.interface.bScatterPlotWidget2 import bScatterPlotMainWindow, plotState
 from sanpy.interface.plugins.setSpikeStat import EDITABLE_SPIKE_RESULTS
@@ -51,9 +54,36 @@ def test_set_spike_stat_accepts_one_integer_index() -> None:
     assert analysis.spikeDict[1]["spike_condition"] == "control"
 
 
-def test_plot_summary_supports_categorical_then_continuous_x_axis() -> None:
+def test_analysis_result_filtering_combines_sweep_and_epoch() -> None:
+    """Return only spikes matching both Plot Scatter toolbar filters."""
+    analysis = _analysis_with_two_spikes()
+    analysis.spikeDict[0]["sweep"] = 0
+    analysis.spikeDict[0]["epoch"] = 1
+    analysis.spikeDict[0]["thresholdSec"] = 1.0
+    analysis.spikeDict[1]["sweep"] = 1
+    analysis.spikeDict[1]["epoch"] = 2
+    analysis.spikeDict[1]["thresholdSec"] = 2.0
+
+    assert analysis.getStat("thresholdSec", sweepNumber="All", epochNumber="All") == [
+        1.0,
+        2.0,
+    ]
+    assert analysis.getStat("thresholdSec", sweepNumber=1, epochNumber="All") == [
+        2.0
+    ]
+    assert analysis.getStat("thresholdSec", sweepNumber="All", epochNumber=1) == [
+        1.0
+    ]
+    assert analysis.getStat("thresholdSec", sweepNumber=1, epochNumber=2) == [2.0]
+
+
+def test_plot_summary_supports_categorical_then_continuous_x_axis(
+    qtbot: Any,
+) -> None:
     """Avoid string means without poisoning subsequent stat selections."""
     window = bScatterPlotMainWindow.__new__(bScatterPlotMainWindow)
+    QtWidgets.QMainWindow.__init__(window)
+    qtbot.addWidget(window)
     window.masterDf = pd.DataFrame(
         {
             "File Number": [1, 1, 1, 1],
@@ -64,6 +94,7 @@ def test_plot_summary_supports_categorical_then_continuous_x_axis() -> None:
         }
     )
     window.masterCatColumns = ["File Number", "spike_condition"]
+    window.statListDict = get_plot_result_definitions()
     window.sortOrder = None
     window.xDf = None
     window.yDf = None

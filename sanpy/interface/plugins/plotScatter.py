@@ -2,7 +2,7 @@
 
 import math
 
-from typing import Union, Dict, List, Tuple, Optional
+from typing import Any, Union, Dict, List, Tuple, Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -11,6 +11,8 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
 import matplotlib as mpl
+import matplotlib.patches as mpatches
+import matplotlib.ticker as mticker
 import matplotlib.pyplot as plt
 from matplotlib.widgets import RectangleSelector  # To click+drag rectangular selection
 import matplotlib.markers as mmarkers  # To define different markers for scatter
@@ -24,15 +26,40 @@ from sanpy.bAnalysisResults import get_plot_result_definitions
 from sanpy.interface.bScatterPlotWidget2 import myStatListWidget
 from sanpy.interface.plugins import sanpyPlugin
 
+
+def encodePlotAxis(
+    values: Sequence[Any], is_categorical: bool
+) -> tuple[np.ndarray, list[str] | None]:
+    """Convert result values into stable numeric scatter coordinates.
+
+    Args:
+        values: Values aligned with the plotted spikes.
+        is_categorical: Whether values represent discrete groups.
+
+    Returns:
+        Numeric plotting coordinates and optional categorical tick labels.
+    """
+    if not is_categorical:
+        return np.asarray(values, dtype=float), None
+
+    codes, categories = pd.factorize(
+        np.asarray(values, dtype=object),
+        sort=False,
+        use_na_sentinel=True,
+    )
+    coordinates = codes.astype(float)
+    coordinates[codes < 0] = np.nan
+    return coordinates, [str(value) for value in categories]
+
 def getPlotMarkersAndColors(
-    ba: sanpy.bAnalysis, spikeList: List[int], hue: str = ""
+    ba: sanpy.bAnalysis, spikeList: List[int], hue: str | None = None
 ) -> dict[str, object]:
     """Build valid Matplotlib and pyqtgraph styles for plotted spikes.
 
     Args:
         ba: Analysis containing the requested spikes.
         spikeList: Absolute spike indices represented by the scatter points.
-        hue: Color mode: ``Time``, ``Sweep``, or no hue.
+        hue: Internal categorical result name, ``__time__``, or no hue.
 
     Returns:
         Style values consumed by Matplotlib and pyqtgraph scatter plots.
@@ -43,15 +70,18 @@ def getPlotMarkersAndColors(
     pathList = None
     markerList_pg = None
 
-    if hue == "Time":
+    hueCategories = None
+    if hue == "__time__":
         cMap = mpl.pyplot.cm.coolwarm.copy()
         colorMapArray = np.arange(len(spikeList))
 
-    elif hue == "Sweep":
-        cMap = mpl.pyplot.cm.coolwarm.copy()
-        colorMapArray = np.asarray(ba.getSpikeStat(spikeList, "sweep"))
+    elif hue:
+        hueValues = ba.getSpikeStat(spikeList, hue)
+        colorMapArray, hueCategories = encodePlotAxis(hueValues, True)
+        colorCount = max(len(hueCategories), 1)
+        cMap = mpl.colormaps["tab10"].resampled(colorCount)
 
-    if hue in ("Time", "Sweep"):
+    if hue:
         # Matplotlib requires at least one concrete marker path during draw.
         marker = mmarkers.MarkerStyle("o")
         pathList = [marker.get_path().transformed(marker.get_transform())]
@@ -140,6 +170,7 @@ def getPlotMarkersAndColors(
         'faceColors': faceColors,
         'pathList': pathList,
         'markerList_pg': markerList_pg,
+        "hueCategories": hueCategories,
     }
 
     # logger.info(f'spikeList: {spikeList}')
@@ -164,8 +195,16 @@ class plotScatter(sanpyPlugin):
         super().__init__(**kwargs)
         self.toggleTopToobar(True, show_response_options=False)
 
-        self._hueList = ["None", "Time", "Sweep"]
-        self._hue = "None"  # from ["None", "Time", "Sweep"]
+        self._statDefinitions = get_plot_result_definitions()
+        self._hueKeyByLabel = {"None": None, "Time": "__time__"}
+        self._hueKeyByLabel.update(
+            {
+                definition["axis_label"]: name
+                for name, definition in self._statDefinitions.items()
+                if definition["is_categorical"]
+            }
+        )
+        self._hue = None
         
         # april 2023, deactivated this, need to debug
         self.plotChasePlot = False  # i vs i-1
@@ -220,7 +259,7 @@ class plotScatter(sanpyPlugin):
         aLabel = QtWidgets.QLabel("Hue")
         hLayout2.addWidget(aLabel)
         aComboBox = QtWidgets.QComboBox()
-        aComboBox.addItems(self._hueList)  # from none, time, sweep
+        aComboBox.addItems(self._hueKeyByLabel)
         aComboBox.currentTextChanged.connect(self._on_select_hue)
         hLayout2.addWidget(aComboBox)
 
@@ -263,12 +302,12 @@ class plotScatter(sanpyPlugin):
         hLayout3 = QtWidgets.QHBoxLayout()
         self.xPlotWidget = myStatListWidget(self,
                                             headerStr="X Stat",
-                                            statList=get_plot_result_definitions())
+                                            statList=self._statDefinitions)
         self.xPlotWidget.setCurrentRow("Threshold time (s)")
 
         self.yPlotWidget = myStatListWidget(self,
                                             headerStr="Y Stat",
-                                            statList=get_plot_result_definitions())
+                                            statList=self._statDefinitions)
         self.yPlotWidget.setCurrentRow("Spike frequency (Hz)")
 
         hLayout3.addWidget(self.xPlotWidget)
@@ -542,7 +581,7 @@ class plotScatter(sanpyPlugin):
             logger.warning(f'Did not respond to button "{b.text()}"')
 
     def _on_select_hue(self, hue: str):
-        self._hue = hue
+        self._hue = self._hueKeyByLabel[hue]
         self.replot()
 
     def setAxis(self):
@@ -608,23 +647,10 @@ class plotScatter(sanpyPlugin):
         # logger.info(f'converting to np xData:{xData}')
         # logger.info(f'converting to np yData:{yData}')
         
-        xData = np.array(xData)
-        yData = np.array(yData)
-
-        if (
-            xData is None
-            or yData is None
-            or not np.issubdtype(xData.dtype, np.number)
-            or not np.issubdtype(yData.dtype, np.number)
-        ):
-            logger.warning(
-                f"Scatter requires numeric stats, got x:{xStat} ({getattr(xData, 'dtype', None)}) "
-                f"y:{yStat} ({getattr(yData, 'dtype', None)})"
-            )
-            self.lines.set_offsets([np.nan, np.nan])
-            self.scatter_hist([], [], self.axHistX, self.axHistY)
-            self.static_canvas.draw()
-            return
+        xIsCategorical = self._statDefinitions[xStat]["is_categorical"]
+        yIsCategorical = self._statDefinitions[yStat]["is_categorical"]
+        xData, xCategories = encodePlotAxis(xData, xIsCategorical)
+        yData, yCategories = encodePlotAxis(yData, yIsCategorical)
 
         #
         # return if we got no data, happens when there is no analysis
@@ -681,6 +707,7 @@ class plotScatter(sanpyPlugin):
         colorMapArray = _tmpDict['colorMapArray']
         faceColors = _tmpDict['faceColors']
         pathList = _tmpDict['pathList']
+        hueCategories = _tmpDict["hueCategories"]
 
         # logger.info('   setting lots of xxx')
         self.lines.set_array(colorMapArray)  # set_array is for a color map
@@ -688,6 +715,20 @@ class plotScatter(sanpyPlugin):
         self.lines.set_color(faceColors)
         self.lines.set_color(faceColors)  # sets the outline
         self.lines.set_paths(pathList)
+        legend = self.axScatter.get_legend()
+        if legend is not None:
+            legend.remove()
+        if hueCategories:
+            hueLabel = self._statDefinitions[self._hue]["axis_label"]
+            colorCount = len(hueCategories)
+            handles = [
+                mpatches.Patch(
+                    color=cMap(index / max(colorCount - 1, 1)),
+                    label=label,
+                )
+                for index, label in enumerate(hueCategories)
+            ]
+            self.axScatter.legend(handles=handles, title=hueLabel)
         # logger.info('      done setting lots of xxx')
 
         #
@@ -799,12 +840,20 @@ class plotScatter(sanpyPlugin):
         yMax = np.nanmax(yData)
         # expand by 5%
         xSpan = abs(xMax - xMin)
-        percentSpan = xSpan * 0.05
+        percentSpan = (
+            0.5
+            if xIsCategorical or xSpan == 0
+            else xSpan * 0.05
+        )
         xMin -= percentSpan
         xMax += percentSpan
         #
         ySpan = abs(yMax - yMin)
-        percentSpan = ySpan * 0.05
+        percentSpan = (
+            0.5
+            if yIsCategorical or ySpan == 0
+            else ySpan * 0.05
+        )
         yMin -= percentSpan
         yMax += percentSpan
 
@@ -814,7 +863,24 @@ class plotScatter(sanpyPlugin):
         self.axScatter.set_ylim([yMin, yMax])
 
         # self.scatter_hist(xData, yData, self.axScatter, self.axHistX, self.axHistY)
-        self.scatter_hist(xData, yData, self.axHistX, self.axHistY)
+        self.scatter_hist(
+            xData,
+            yData,
+            self.axHistX,
+            self.axHistY,
+            xCategories,
+            yCategories,
+        )
+        if xCategories is not None:
+            self.axScatter.set_xticks(range(len(xCategories)), xCategories)
+        else:
+            self.axScatter.xaxis.set_major_locator(mticker.AutoLocator())
+            self.axScatter.xaxis.set_major_formatter(mticker.ScalarFormatter())
+        if yCategories is not None:
+            self.axScatter.set_yticks(range(len(yCategories)), yCategories)
+        else:
+            self.axScatter.yaxis.set_major_locator(mticker.AutoLocator())
+            self.axScatter.yaxis.set_major_formatter(mticker.ScalarFormatter())
 
         # redraw
         # logger.info('calliing self.static_canvas.draw()')
@@ -825,7 +891,15 @@ class plotScatter(sanpyPlugin):
         # self.repaint() # update the widget
 
     # def scatter_hist(self, x, y, ax, ax_histx, ax_histy):
-    def scatter_hist(self, x, y, ax_histx, ax_histy):
+    def scatter_hist(
+        self,
+        x,
+        y,
+        ax_histx,
+        ax_histy,
+        x_categories=None,
+        y_categories=None,
+    ):
         """Plot a scatter with x/y histograms in margin.
 
         Args:
@@ -849,20 +923,26 @@ class plotScatter(sanpyPlugin):
         # logger.info('   making x bins')
         xTmp = np.array(x)  # y[~np.isnan(y)]
         xTmp = xTmp[~np.isnan(xTmp)]
-        xTmpBins = np.histogram_bin_edges(xTmp, "auto")
-        xNumBins = len(xTmpBins)
-        if xNumBins * 2 < len(x):
-            xNumBins *= 2
-        xBins = xNumBins
+        if x_categories is not None:
+            xBins = np.arange(len(x_categories) + 1) - 0.5
+        else:
+            xTmpBins = np.histogram_bin_edges(xTmp, "auto")
+            xNumBins = len(xTmpBins)
+            if xNumBins * 2 < len(x):
+                xNumBins *= 2
+            xBins = xNumBins
 
         # logger.info('   making y bins')
         yTmp = np.array(y)  # y[~np.isnan(y)]
         yTmp = yTmp[~np.isnan(yTmp)]
-        yTmpBins = np.histogram_bin_edges(yTmp, "auto")
-        yNumBins = len(yTmpBins)
-        if yNumBins * 2 < len(y):
-            yNumBins *= 2
-        yBins = yNumBins
+        if y_categories is not None:
+            yBins = np.arange(len(y_categories) + 1) - 0.5
+        else:
+            yTmpBins = np.histogram_bin_edges(yTmp, "auto")
+            yNumBins = len(yTmpBins)
+            if yNumBins * 2 < len(y):
+                yNumBins *= 2
+            yBins = yNumBins
 
         # x
         if ax_histx is not None:

@@ -1543,10 +1543,6 @@ class plotState:
 class bScatterPlotMainWindow(QtWidgets.QMainWindow):
     """Display and configure one or more statistical plots."""
 
-    _SANPY_CATEGORICAL_STATS = frozenset(
-        {"sweep", "epoch", "epochLevel", "File Number"}
-    )
-
     # send_fig = QtCore.pyqtSignal(str)
     signalStateChange = QtCore.Signal(object)
     signalSelectFromPlot = QtCore.Signal(object)
@@ -2144,10 +2140,10 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         Returns:
             True when the column is declared categorical or has string dtype.
         """
-        is_declared_category = (
-            backend_stat in self._SANPY_CATEGORICAL_STATS
-            or backend_stat in self.masterCatColumns
-        )
+        definition = self.statListDict.get(backend_stat, {})
+        is_declared_category = definition.get(
+            "is_categorical", False
+        ) or backend_stat in self.masterCatColumns
         return is_declared_category or pd.api.types.is_string_dtype(
             self.masterDf[backend_stat].dtype
         )

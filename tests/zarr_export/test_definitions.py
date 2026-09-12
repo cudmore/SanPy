@@ -37,6 +37,10 @@ def test_every_runtime_definition_has_a_category() -> None:
         isinstance(value["show_in_plot_menu"], bool)
         for value in analysisResultDict.values()
     )
+    assert all(
+        isinstance(value["is_categorical"], bool)
+        for value in analysisResultDict.values()
+    )
 
 
 def test_plot_result_definitions_are_an_ordered_safe_view() -> None:
@@ -62,7 +66,8 @@ def test_spike_condition_is_a_distinct_per_spike_result() -> None:
     assert "spike_condition" in result
     assert result["spike_condition"] == ""
     assert analysisResultDict["spike_condition"]["type"] == "str"
-    assert not analysisResultDict["spike_condition"]["show_in_plot_menu"]
+    assert analysisResultDict["spike_condition"]["show_in_plot_menu"]
+    assert analysisResultDict["spike_condition"]["is_categorical"]
 
 
 def test_user_result_registration_is_idempotent_and_conflicts_fail() -> None:
@@ -75,6 +80,7 @@ def test_user_result_registration_is_idempotent_and_conflicts_fail() -> None:
         "units": "ms",
         "axis_label": "Test result (ms)",
         "show_in_plot_menu": True,
+        "is_categorical": False,
         "description": "Test user result.",
     }
 
@@ -95,6 +101,7 @@ def test_registered_user_definition_does_not_change_core_result_rows() -> None:
         register_analysis_result(
             name,
             show_in_plot_menu=False,
+            is_categorical=False,
             description="Schema-only test result.",
         )
 
@@ -113,6 +120,7 @@ def test_invalid_user_category_fails_fast() -> None:
             name,
             category="invalid",
             show_in_plot_menu=False,
+            is_categorical=False,
         )
     assert name not in analysisResultDict
 
@@ -127,6 +135,7 @@ def test_add_user_stat_registers_one_authoritative_definition() -> None:
             humanName="Test plugin result",
             internalName=name,
             showInPlotMenu=True,
+            isCategorical=False,
             category=AnalysisResultCategory.TIMING,
             valueType="float",
             default=None,
@@ -140,6 +149,7 @@ def test_add_user_stat_registers_one_authoritative_definition() -> None:
             "units": "ms",
             "axis_label": "Test plugin result (ms)",
             "show_in_plot_menu": True,
+            "is_categorical": False,
             "depends on detection": "",
             "error": "",
             "description": "A test-only plugin result.",

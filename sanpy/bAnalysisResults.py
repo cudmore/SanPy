@@ -29,6 +29,7 @@ def getDefaultDict() -> dict[str, Any]:
         "category": AnalysisResultCategory.CUSTOM,
         "axis_label": "",
         "show_in_plot_menu": False,
+        "is_categorical": False,
         "type": "",  # like: int, float, boolean, list
         "default": "",  # default value, can be 0, None, NaN, ...
         "units": "",  # real world units like point, mV, dvdt
@@ -51,6 +52,7 @@ def register_analysis_result(
     units: str = "",
     axis_label: str = "",
     show_in_plot_menu: bool,
+    is_categorical: bool,
     description: str = "",
     depends_on_detection: str = "",
     error: str = "",
@@ -69,6 +71,7 @@ def register_analysis_result(
         units: Physical or logical units.
         axis_label: Human-readable plot-axis label.
         show_in_plot_menu: Whether X/Y statistic selectors show the result.
+        is_categorical: Whether plots interpret values as discrete groups.
         description: Human-readable explanation of the result.
         depends_on_detection: Detection parameter dependencies, if any.
         error: Error condition documented for the result, if any.
@@ -94,6 +97,7 @@ def register_analysis_result(
             "units": units,
             "axis_label": axis_label or name,
             "show_in_plot_menu": show_in_plot_menu,
+            "is_categorical": is_categorical,
             "depends on detection": depends_on_detection,
             "error": error,
             "description": description,
@@ -124,6 +128,7 @@ analysisResultDict[key]["type"] = "bool"
 analysisResultDict[key]["default"] = True
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Included"
+analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key][
     "description"
 ] = "Boolean indication include or not. Can be set by user/programmatically  after analysis."
@@ -149,6 +154,7 @@ analysisResultDict[key]["default"] = 0  # todo: not sure
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Sweep"
 analysisResultDict[key]["show_in_plot_menu"] = True
+analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key]["description"] = "Sweep number of analyzed sweep. Zero based."
 
 key = "epoch"
@@ -159,6 +165,7 @@ analysisResultDict[key]["default"] = np.nan  # todo: not sure
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Epoch"
 analysisResultDict[key]["show_in_plot_menu"] = True
+analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key][
     "description"
 ] = "Stimulus epoch number the spike occured in. Zero based."
@@ -171,6 +178,7 @@ analysisResultDict[key]["default"] = np.nan  # todo: not sure
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Epoch level"
 analysisResultDict[key]["show_in_plot_menu"] = True
+analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key]["description"] = "Epoch level (DAC) stimulus during the spike."
 
 key = "sweepSpikeNumber"
@@ -191,6 +199,7 @@ analysisResultDict[key]["default"] = 0
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "User type"
 analysisResultDict[key]["show_in_plot_menu"] = True
+analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key][
     "description"
 ] = "Integer indication user type. Can be set by user/programmatically  after analysis."
@@ -302,6 +311,7 @@ analysisResultDict[key]["type"] = "str"
 analysisResultDict[key]["default"] = ""
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Condition"
+analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key]["description"] = "User specified condition"
 
 key = "spike_condition"
@@ -311,6 +321,8 @@ analysisResultDict[key]["type"] = "str"
 analysisResultDict[key]["default"] = ""
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Spike condition"
+analysisResultDict[key]["show_in_plot_menu"] = True
+analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key][
     "description"
 ] = "User-assigned condition for an individual spike."

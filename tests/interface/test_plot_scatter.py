@@ -14,7 +14,7 @@ from sanpy.interface.bScatterPlotWidget2 import (
     bScatterPlotMainWindow,
     myStatListWidget,
 )
-from sanpy.interface.plugins.plotScatter import getPlotMarkersAndColors
+from sanpy.interface.plugins.plotScatter import encodePlotAxis, getPlotMarkersAndColors
 
 
 class _ScatterAnalysis:
@@ -35,6 +35,7 @@ class _ScatterAnalysis:
         """
         values = {
             "sweep": [0, 0, 3],
+            "spike_condition": ["control", "drug", "control"],
             "include": [True, False, True],
             "userType": [0, 1, 0],
         }
@@ -107,8 +108,8 @@ def test_plot_tool_scatter_switches_from_categorical_to_continuous_x(
     assert window.myPlotCanvasList[window.updatePlot].plotDf is not None
 
 
-@pytest.mark.parametrize("hue", ["", "None", "Time", "Sweep"])
-def test_plot_scatter_hue_styles_draw(hue: str) -> None:
+@pytest.mark.parametrize("hue", [None, "__time__", "sweep", "spike_condition"])
+def test_plot_scatter_hue_styles_draw(hue: str | None) -> None:
     """Draw the scatter collection successfully for every hue choice.
 
     Args:
@@ -130,7 +131,19 @@ def test_plot_scatter_hue_styles_draw(hue: str) -> None:
     canvas.draw()
 
     assert len(collection.get_paths()) > 0
-    if hue == "Sweep":
-        np.testing.assert_array_equal(collection.get_array(), [0, 0, 3])
-    elif hue == "Time":
+    if hue == "sweep":
+        np.testing.assert_array_equal(collection.get_array(), [0, 0, 1])
+        assert styles["hueCategories"] == ["0", "3"]
+    elif hue == "spike_condition":
+        np.testing.assert_array_equal(collection.get_array(), [0, 1, 0])
+        assert styles["hueCategories"] == ["control", "drug"]
+    elif hue == "__time__":
         np.testing.assert_array_equal(collection.get_array(), [0, 1, 2])
+
+
+def test_plot_scatter_axis_encoding_preserves_category_order() -> None:
+    """Use one numeric representation for plotting and selection."""
+    coordinates, labels = encodePlotAxis(["drug", "control", "drug", None], True)
+
+    np.testing.assert_equal(coordinates, [0.0, 1.0, 0.0, np.nan])
+    assert labels == ["drug", "control"]
