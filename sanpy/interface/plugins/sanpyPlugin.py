@@ -1283,6 +1283,7 @@ class sanpyPlugin(QtWidgets.QWidget):
         self._epochComboBox.currentIndexChanged.connect(self._on_epoch_combo_box)
         # hLayout0.addWidget(self._epochComboBox, alignment=QtCore.Qt.AlignLeft)
         hLayout0.addWidget(self._epochComboBox)
+        hLayout0.addStretch()
 
         # update on switch file
         # self._fileLabel = QtWidgets.QLabel('File')

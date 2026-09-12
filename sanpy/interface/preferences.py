@@ -92,28 +92,6 @@ class preferences:
 
         self.save()
         
-    def _old_addPlugin(self, pluginName: str, externalWindow: bool, ltwhTuple: tuple):
-        """Add plugin to preferences."""
-        # was this as list
-        # if not pluginName in self.configDict['pluginPanels']:
-        #     self.configDict['pluginPanels'].append(pluginName)
-        if not pluginName in self.configDict["pluginPanels"].keys():
-            self.configDict["pluginPanels"][pluginName] = {
-                "externalWindow": externalWindow,
-                "l": ltwhTuple[0],
-                "t": ltwhTuple[1],
-                "w": ltwhTuple[2],
-                "h": ltwhTuple[3],
-            }
-
-    def _old_removePlugin(self, pluginName: str):
-        """Remove plugin from preferences."""
-        # was this as list
-        # if pluginName in self.configDict['pluginPanels']:
-        #     self.configDict['pluginPanels'].remove(pluginName)
-        if pluginName in self.configDict["pluginPanels"].keys():
-            self.configDict["pluginPanels"].pop(pluginName)
-
     def getMostRecentFile(self):
         return self.configDict["mostRecentFile"]
 

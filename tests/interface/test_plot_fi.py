@@ -15,6 +15,15 @@ from sanpy.interface.plugins.plotFi import getStatFi, plotFi
 from sanpy.interface.plugins.sanpyPlugin import sanpyPlugin
 
 
+def test_plot_fi_uses_horizontal_splitter(qtbot: Any) -> None:
+    """Keep the statistic selector and plot in draggable left/right panes."""
+    plugin = plotFi(ba=None)
+    qtbot.addWidget(plugin)
+
+    assert plugin._mainSplitter.orientation() == QtCore.Qt.Horizontal
+    assert plugin._mainSplitter.count() == 2
+
+
 def test_get_stat_fi_aligns_results_by_sweep() -> None:
     """Verify FI results align by sweep rather than source-row index."""
     master = pd.DataFrame(

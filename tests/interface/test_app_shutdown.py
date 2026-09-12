@@ -648,6 +648,8 @@ def test_plot_scatter_starts_with_selector_toolbar_only(
     assert plugin._responseToolbarWidget.isHidden()
     assert plugin._sweepComboBox.isHidden() is False
     assert plugin._epochComboBox.isHidden() is False
+    assert plugin._getResponseOption(plugin.responseTypes.setSweep) is False
+    assert not hasattr(plugin, "spikeNumberLabel")
     assert list(plugin._hueKeyByLabel) == [
         "None",
         "Time",

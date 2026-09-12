@@ -644,6 +644,8 @@ class plotFi(sanpyPlugin):
         self.getVBoxLayout().addLayout(_topToolbar)
 
         main_hLayout = QtWidgets.QHBoxLayout()
+        self._mainSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        main_hLayout.addWidget(self._mainSplitter)
 
         # trim down stat list
         _statListShort = {}
@@ -663,7 +665,7 @@ class plotFi(sanpyPlugin):
             self, statList=_statListShort, headerStr="Y-Stat"
         )
         self._yStatListWidget.setCurrentRow("Spike frequency (Hz)")
-        main_hLayout.addWidget(self._yStatListWidget)
+        self._mainSplitter.addWidget(self._yStatListWidget)
 
         _vPlotLayout = QtWidgets.QVBoxLayout()
         _canvas, self._mplToolbar = self.mplWindow2(addToLayout=False)
@@ -675,7 +677,9 @@ class plotFi(sanpyPlugin):
         _vPlotLayout.addWidget(_canvas)
         _vPlotLayout.addWidget(self._mplToolbar)
 
-        main_hLayout.addLayout(_vPlotLayout)
+        plotWidget = QtWidgets.QWidget()
+        plotWidget.setLayout(_vPlotLayout)
+        self._mainSplitter.addWidget(plotWidget)
 
         self.getVBoxLayout().addLayout(main_hLayout)
 

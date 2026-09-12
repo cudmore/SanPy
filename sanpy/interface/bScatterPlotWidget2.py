@@ -406,7 +406,7 @@ class myStatListWidget(QtWidgets.QWidget):
 
         self._headerStr = headerStr
 
-        self._rowHeight = 9
+        self._rowHeight = 11  # 9 abb also font size
 
         self.myQVBoxLayout = QtWidgets.QVBoxLayout(self)
 
@@ -441,15 +441,24 @@ class myStatListWidget(QtWidgets.QWidget):
         first_result_row = None
         row = 0
         for category, results in grouped_stats.items():
-            category_item = QtWidgets.QTableWidgetItem(category)
+            category_item = QtWidgets.QTableWidgetItem(category.upper())
             category_item.setFlags(
                 category_item.flags() & ~QtCore.Qt.ItemIsSelectable
             )
             category_font = category_item.font()
             category_font.setBold(True)
+            # category_font.setPointSize(category_font.pointSize() + 1)
             category_item.setFont(category_font)
+            palette = self.myTableWidget.palette()
+            category_item.setBackground(
+                palette.brush(QtGui.QPalette.Button)
+            )
+            # category_item.setForeground(
+            #     palette.brush(QtGui.QPalette.ButtonText)
+            # )
             self.myTableWidget.setItem(row, 0, category_item)
-            self.myTableWidget.setRowHeight(row, self._rowHeight)
+            # category_height = QtGui.QFontMetrics(category_font).height() + 6
+            # self.myTableWidget.setRowHeight(row, category_height)
             row += 1
 
             for result_name, definition in results:
@@ -1839,6 +1848,8 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
         # HBox for control and plot grid
         self.hBoxLayout = QtWidgets.QHBoxLayout(self)
+        self.mainSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self.hBoxLayout.addWidget(self.mainSplitter)
 
         # this is confusing, beacaue we are a QMainWindow
         # we need to create a central widget, set its layout
@@ -1849,13 +1860,13 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
         # to hold popups, x/y stats list, and mean tables (tabs)
         self.leftVertLayout = QtWidgets.QVBoxLayout()
+        leftWidget = QtWidgets.QWidget()
+        leftWidget.setLayout(self.leftVertLayout)
+        self.mainSplitter.addWidget(leftWidget)
         
         self.layout = QtWidgets.QGridLayout()
         self.leftVertLayout.addLayout(self.layout)
         
-        # self.hBoxLayout.addLayout(self.layout)
-        self.hBoxLayout.addLayout(self.leftVertLayout)
-
         #
         # hue, to control colors in plot
         # hueList = ["None"] + self.hueTypes  # prepend 'None'
@@ -2149,8 +2160,9 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # # ???
         # self.updatePlotLayoutGrid()
 
-        # append
-        self.hBoxLayout.addLayout(self.plotLayout)
+        plotWidget = QtWidgets.QWidget()
+        plotWidget.setLayout(self.plotLayout)
+        self.mainSplitter.addWidget(plotWidget)
 
     def _is_categorical_stat(self, backend_stat: str) -> bool:
         """Return whether a DataFrame column should use categorical plotting.

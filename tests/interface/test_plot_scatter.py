@@ -74,9 +74,21 @@ def test_stat_widget_uses_registry_labels_and_internal_keys(
         for row in range(widget.myTableWidget.rowCount())
         if widget.myTableWidget.item(row, 0).data(QtCore.Qt.UserRole) is None
     ]
-    assert [item.text() for item in category_rows] == categories
+    assert [item.text() for item in category_rows] == [
+        category.upper() for category in categories
+    ]
     assert all(not item.flags() & QtCore.Qt.ItemIsSelectable for item in category_rows)
     assert all(item.font().bold() for item in category_rows)
+    result_row = next(
+        row
+        for row in range(widget.myTableWidget.rowCount())
+        if widget.myTableWidget.item(row, 0).data(QtCore.Qt.UserRole) is not None
+    )
+    assert all(
+        widget.myTableWidget.rowHeight(widget.myTableWidget.row(item))
+        > widget.myTableWidget.rowHeight(result_row)
+        for item in category_rows
+    )
 
 
 def test_plot_tool_scatter_switches_from_categorical_to_continuous_x(
@@ -106,6 +118,9 @@ def test_plot_tool_scatter_switches_from_categorical_to_continuous_x(
         masterDf=dataframe,
     )
     qtbot.addWidget(window)
+
+    assert window.mainSplitter.orientation() == QtCore.Qt.Horizontal
+    assert window.mainSplitter.count() == 2
 
     window.slot_setStatName("X-Stat", "Spike condition")
 

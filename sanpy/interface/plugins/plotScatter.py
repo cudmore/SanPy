@@ -193,6 +193,7 @@ class plotScatter(sanpyPlugin):
             ba (bAnalysis): Not required
         """
         super().__init__(**kwargs)
+        self.toggleResponseOptions(self.responseTypes.setSweep, newValue=False)
         self.toggleTopToobar(True, show_response_options=False)
 
         self._statDefinitions = get_plot_result_definitions()
@@ -286,17 +287,9 @@ class plotScatter(sanpyPlugin):
             lambda: self.btnstate(self.histogramCheckbox)
         )
         hLayout2.addWidget(self.histogramCheckbox)
+        hLayout2.addStretch()
 
         vLayout.addLayout(hLayout2)
-
-        # second row of controls
-        hLayout2_2 = QtWidgets.QHBoxLayout()
-
-        aName = "Spike: None"
-        self.spikeNumberLabel = QtWidgets.QLabel(aName)
-        hLayout2_2.addWidget(self.spikeNumberLabel)
-
-        vLayout.addLayout(hLayout2_2)
 
         # x and y stat lists
         hLayout3 = QtWidgets.QHBoxLayout()
@@ -1023,18 +1016,6 @@ class plotScatter(sanpyPlugin):
         #self.myHighlighter.setData(xData, yData, _plotSpikeIndexList)
         self.myHighlighter.selectSpikeList(_plotSpikeIndexList)
 
-        # update a little info about first spike
-        _str = ""
-        if len(spikeList) > 0:
-            firstSpike = spikeList[0]
-            _oneDict = self.ba.getOneSpikeDict(firstSpike)
-            _str += f"Number {_oneDict['spikeNumber']}"
-            _str += f" UserType {_oneDict['userType']}"
-            _str += f" Sweep {_oneDict['sweep']}"
-            _str += f" Epoch {_oneDict['epoch']}"
-
-        self.spikeNumberLabel.setText(f"First Spike Selection: {_str}")
-
         self.static_canvas.draw()
         # was this
         # self.repaint() # update the widget
@@ -1066,8 +1047,6 @@ class plotScatter(sanpyPlugin):
 
         self.spikeSel.set_data(xData, yData)
         # self.spikeSel.set_offsets(xData, yData)
-
-        self.spikeNumberLabel.setText(f"Spike: {spikeNumber}")
 
         self.static_canvas.draw()
         # was this
