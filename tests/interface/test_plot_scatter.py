@@ -7,7 +7,7 @@ import pandas as pd
 import pytest
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
-from qtpy import QtWidgets
+from qtpy import QtCore, QtWidgets
 
 from sanpy.bAnalysisResults import get_plot_result_definitions
 from sanpy.interface.bScatterPlotWidget2 import (
@@ -64,7 +64,19 @@ def test_stat_widget_uses_registry_labels_and_internal_keys(
     widget.setCurrentRow("Spike frequency (Hz)")
 
     assert widget.getCurrentStat() == ("Spike frequency (Hz)", "spikeFreq_hz")
-    assert widget.myTableWidget.rowCount() == len(definitions)
+    categories = list(
+        dict.fromkeys(str(definition["category"]) for definition in definitions.values())
+    )
+    assert widget.myTableWidget.rowCount() == len(definitions) + len(categories)
+
+    category_rows = [
+        widget.myTableWidget.item(row, 0)
+        for row in range(widget.myTableWidget.rowCount())
+        if widget.myTableWidget.item(row, 0).data(QtCore.Qt.UserRole) is None
+    ]
+    assert [item.text() for item in category_rows] == categories
+    assert all(not item.flags() & QtCore.Qt.ItemIsSelectable for item in category_rows)
+    assert all(item.font().bold() for item in category_rows)
 
 
 def test_plot_tool_scatter_switches_from_categorical_to_continuous_x(

@@ -412,7 +412,6 @@ class myStatListWidget(QtWidgets.QWidget):
 
         self.myTableWidget = QtWidgets.QTableWidget()
         self.myTableWidget.setWordWrap(False)
-        self.myTableWidget.setRowCount(len(self.statList))
         self.myTableWidget.setColumnCount(1)
         self.myTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.myTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
@@ -432,10 +431,35 @@ class myStatListWidget(QtWidgets.QWidget):
         # QHeaderView will automatically resize the section to fill the available space. The size cannot be changed by the user or programmatically.
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
-        for idx, definition in enumerate(self.statList.values()):
-            item = QtWidgets.QTableWidgetItem(definition["axis_label"])
-            self.myTableWidget.setItem(idx, 0, item)
-            self.myTableWidget.setRowHeight(idx, self._rowHeight)
+        grouped_stats: dict[str, list[tuple[str, dict]]] = {}
+        for result_name, definition in self.statList.items():
+            category = str(definition.get("category", "other"))
+            grouped_stats.setdefault(category, []).append((result_name, definition))
+
+        row_count = len(self.statList) + len(grouped_stats)
+        self.myTableWidget.setRowCount(row_count)
+        first_result_row = None
+        row = 0
+        for category, results in grouped_stats.items():
+            category_item = QtWidgets.QTableWidgetItem(category)
+            category_item.setFlags(
+                category_item.flags() & ~QtCore.Qt.ItemIsSelectable
+            )
+            category_font = category_item.font()
+            category_font.setBold(True)
+            category_item.setFont(category_font)
+            self.myTableWidget.setItem(row, 0, category_item)
+            self.myTableWidget.setRowHeight(row, self._rowHeight)
+            row += 1
+
+            for result_name, definition in results:
+                result_item = QtWidgets.QTableWidgetItem(definition["axis_label"])
+                result_item.setData(QtCore.Qt.UserRole, result_name)
+                self.myTableWidget.setItem(row, 0, result_item)
+                self.myTableWidget.setRowHeight(row, self._rowHeight)
+                if first_result_row is None:
+                    first_result_row = row
+                row += 1
 
         # assuming dark theme
         # does not work
@@ -450,8 +474,8 @@ class myStatListWidget(QtWidgets.QWidget):
         """
         self.myQVBoxLayout.addWidget(self.myTableWidget)
 
-        # select a default stat
-        self.myTableWidget.selectRow(0)  # hard coding 'Spike Frequency (Hz)'
+        if first_result_row is not None:
+            self.myTableWidget.selectRow(first_result_row)
 
     def setCurrentRow(self, axis_label: str) -> None:
         """Select a row by its human-readable axis label.
@@ -459,16 +483,15 @@ class myStatListWidget(QtWidgets.QWidget):
         Args:
             axis_label: Label to locate, such as ``Spike frequency (Hz)``.
         """
-        labels = [definition["axis_label"] for definition in self.statList.values()]
-        try:
-            idx = labels.index(axis_label)
-        except ValueError:
-            logger.error('Did not find axis label "%s"', axis_label)
-            return
-
-        # select row index
-        if idx >= 0:
-            self.myTableWidget.selectRow(idx)
+        for row in range(self.myTableWidget.rowCount()):
+            item = self.myTableWidget.item(row, 0)
+            result_name = item.data(QtCore.Qt.UserRole)
+            if result_name is None:
+                continue
+            if self.statList[result_name]["axis_label"] == axis_label:
+                self.myTableWidget.selectRow(row)
+                return
+        logger.error('Did not find axis label "%s"', axis_label)
 
     def getCurrentRow(self) -> int:
         """Return the selected row index.
@@ -486,9 +509,12 @@ class myStatListWidget(QtWidgets.QWidget):
             ``None`` when there is no valid selection.
         """
         row = self.getCurrentRow()
-        if row < 0 or row >= len(self.statList):
+        if row < 0:
             return None, None
-        stat = tuple(self.statList)[row]
+        item = self.myTableWidget.item(row, 0)
+        stat = item.data(QtCore.Qt.UserRole)
+        if stat is None:
+            return None, None
         return self.statList[stat]["axis_label"], stat
 
     @QtCore.pyqtSlot()
@@ -497,14 +523,13 @@ class myStatListWidget(QtWidgets.QWidget):
         replot the stat based on selected row
         """
         # print('*** on table click ***')
-        row = self.myTableWidget.currentRow()
-        if row == -1 or row is None:
+        human_stat, stat = self.getCurrentStat()
+        if human_stat is None or stat is None:
             return
-        yStat = self.myTableWidget.item(row, 0).text()
-        logger.info(f'{yStat}')
+        logger.info(human_stat)
         self.myParent.replot()
 
-        self.signalStatSelection.emit(self._headerStr, yStat)
+        self.signalStatSelection.emit(self._headerStr, human_stat)
 
     """
     @QtCore.pyqtSlot()
