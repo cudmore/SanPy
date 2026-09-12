@@ -36,8 +36,7 @@ from .setSpikeStat import SetSpikeStat
 from .setMetaData import SetMetaData
 
 
-# eventually move this out of plotScatter
-from .plotScatter import myStatListWidget
+from sanpy.interface.bScatterPlotWidget2 import myStatListWidget
 from .plotScatter import getPlotMarkersAndColors
 
 from .plotFi import plotFi

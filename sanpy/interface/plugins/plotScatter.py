@@ -20,6 +20,8 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 import sanpy
+from sanpy.bAnalysisResults import get_plot_result_definitions
+from sanpy.interface.bScatterPlotWidget2 import myStatListWidget
 from sanpy.interface.plugins import sanpyPlugin
 
 def getPlotMarkersAndColors(
@@ -149,7 +151,7 @@ def getPlotMarkersAndColors(
 class plotScatter(sanpyPlugin):
     """Plot x/y statiistics as a scatter.
 
-    Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
+    Statistic choices come from the analysis-result definition registry.
     """
 
     myHumanName = "Plot Scatter"
@@ -261,13 +263,13 @@ class plotScatter(sanpyPlugin):
         hLayout3 = QtWidgets.QHBoxLayout()
         self.xPlotWidget = myStatListWidget(self,
                                             headerStr="X Stat",
-                                            statList=self.getStatList())
-        self.xPlotWidget.myTableWidget.selectRow(0)
+                                            statList=get_plot_result_definitions())
+        self.xPlotWidget.setCurrentRow("Threshold time (s)")
 
         self.yPlotWidget = myStatListWidget(self,
                                             headerStr="Y Stat",
-                                            statList=self.getStatList())
-        self.yPlotWidget.myTableWidget.selectRow(7)
+                                            statList=get_plot_result_definitions())
+        self.yPlotWidget.setCurrentRow("Spike frequency (Hz)")
 
         hLayout3.addWidget(self.xPlotWidget)
         hLayout3.addWidget(self.yPlotWidget)
@@ -1185,115 +1187,6 @@ class plotScatter(sanpyPlugin):
         df.to_clipboard(excel=excel, sep=sep)
 
         logger.info(f"Copied {len(df)} spikes to clipboard.")
-
-
-class myStatListWidget(QtWidgets.QWidget):
-    """
-    Widget to display a table with selectable stats.
-
-    Gets list of stats from: sanpy.bAnalysisUtil.getStatList()
-    """
-
-    def __init__(self, myParent, statList, headerStr="Stat", parent=None):
-        """
-        Parameters
-        ----------
-        myParent : sanpy.interface.plugins.sanpyPlugin
-        """
-        super().__init__(parent)
-
-        self.myParent = myParent
-        self.statList = statList
-        self._rowHeight = 9
-
-        self.myQVBoxLayout = QtWidgets.QVBoxLayout(self)
-
-        self.myTableWidget = QtWidgets.QTableWidget()
-        self.myTableWidget.setWordWrap(False)
-        self.myTableWidget.setRowCount(len(self.statList))
-        self.myTableWidget.setColumnCount(1)
-        self.myTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
-        self.myTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.myTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.myTableWidget.cellClicked.connect(self.on_scatter_toolbar_table_click)
-
-        # set font size of table (default seems to be 13 point)
-        # fnt = self.font()
-        # fnt.setPointSize(self._rowHeight)
-        # self.myTableWidget.setFont(fnt)
-
-        headerLabels = [headerStr]
-        self.myTableWidget.setHorizontalHeaderLabels(headerLabels)
-
-        header = self.myTableWidget.horizontalHeader()
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
-        # QHeaderView will automatically resize the section to fill the available space. The size cannot be changed by the user or programmatically.
-        header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-
-        for idx, stat in enumerate(self.statList):
-            item = QtWidgets.QTableWidgetItem(stat)
-            self.myTableWidget.setItem(idx, 0, item)
-            self.myTableWidget.setRowHeight(idx, self._rowHeight)
-
-        # assuming dark theme
-        # does not work
-        """
-        p = self.myTableWidget.palette()
-        color1 = QtGui.QColor('#222222')
-        color2 = QtGui.QColor('#555555')
-        p.setColor(QtGui.QPalette.Base, color1)
-        p.setColor(QtGui.QPalette.AlternateBase, color2)
-        self.myTableWidget.setPalette(p)
-        self.myTableWidget.setAlternatingRowColors(True)
-        """
-        self.myQVBoxLayout.addWidget(self.myTableWidget)
-
-        # select a default stat
-        self.myTableWidget.selectRow(0)  # hard coding 'Spike Frequency (Hz)'
-
-    def getCurrentRow(self):
-        return self.myTableWidget.currentRow()
-
-    def getCurrentStat(self):
-        # assuming single selection
-        row = self.getCurrentRow()
-        
-        humanStat = self.myTableWidget.item(row, 0).text()
-        
-        # try:
-        #     humanStat = self.myTableWidget.item(row, 0).text()    
-        # except (AttributeError) as e:
-        #     logger.error(e)
-        #     return None, None
-        
-        # convert from human readbale to backend
-        try:
-            stat = self.statList[humanStat]["name"]
-        except KeyError as e:
-            logger.error(f'Did not find humanStat "{humanStat}" exception:{e}')
-            humanStat = None
-            stat = None
-            # for k,v in
-
-        return humanStat, stat
-
-    @QtCore.pyqtSlot()
-    def on_scatter_toolbar_table_click(self):
-        """
-        replot the stat based on selected row
-        """
-        # print('*** on table click ***')
-        row = self.myTableWidget.currentRow()
-        if row == -1 or row is None:
-            return
-        # yStat = self.myTableWidget.item(row,0).text()
-        self.myParent.replot()
-
-    """
-    @QtCore.pyqtSlot()
-    def on_button_click(self, name):
-        print('=== myStatPlotToolbarWidget.on_button_click() name:', name)
-    """
 
 
 class Highlighter(object):

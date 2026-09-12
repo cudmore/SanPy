@@ -61,7 +61,6 @@ from sanpy.sanpyPaths import SanPyPaths
 import sanpy.interface
 import sanpy.interface.preferences
 
-from sanpy.bAnalysisUtil import bAnalysisUtil
 from sanpy.fileloaders import getFileLoaders
 from sanpy.interface.preferences import preferences
 from sanpy.interface.sanpy_window import SanPyWindow
@@ -179,8 +178,6 @@ class SanPyApp(QtWidgets.QApplication):
         from sanpy.interface.bPlugins import bPlugins
 
         self._plugins = bPlugins(sanpyApp=self)
-        self._analysisUtil = bAnalysisUtil()
-
         # self._useDarkStyle = self._configDict["useDarkStyle"]
         self.toggleStyleSheet(buildingInterface=True)
         
@@ -665,9 +662,6 @@ class SanPyApp(QtWidgets.QApplication):
             for window in tuple(self._windowList):
                 window.myDetectionWidget.setPlotTheme(doDark)
 
-    def getAnalysisUtil(self):
-        return self._analysisUtil
-    
     def getPlugins(self):
         return self._plugins
     

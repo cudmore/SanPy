@@ -10,10 +10,8 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 import sanpy
+from sanpy.bAnalysisResults import analysisResultDict, get_plot_result_definitions
 from sanpy.interface.plugins import sanpyPlugin
-
-# from sanpy.bAnalysisUtil import statList
-
 
 class basePlotTool(sanpyPlugin):
     """ """
@@ -54,7 +52,7 @@ class basePlotTool(sanpyPlugin):
         # analysisName = 'analysisname'
         # analysisName = "Unique Name"
         # statListDict = statList  # maps human readable to comments
-        statListDict = self.getStatList()  # maps human readable to comments
+        statListDict = get_plot_result_definitions()
         
         metaDataKeys = [key for key in sanpy.MetaData.getMetaDataDict().keys()]
 
@@ -64,7 +62,13 @@ class basePlotTool(sanpyPlugin):
 
         # per spike
         categoricalList.append('condition')
+        categoricalList.append('spike_condition')
         categoricalList.append('userType')
+
+        for result_name in categoricalList:
+            definition = analysisResultDict.get(result_name)
+            if definition is not None:
+                statListDict.setdefault(result_name, definition.copy())
 
         # hueTypes = categoricalList
         # hueTypes = metaDataKeys

@@ -23,27 +23,27 @@ class kymUserAnalysis(baseUserAnalysis):
         logger.info('')
 
         # foot
-        self.addUserStat("Diameter Foot (um)", "k_diam_foot")
-        self.addUserStat("Diameter Foot Pnt", "k_diam_foot_pnt")
-        self.addUserStat("Diameter Foot Time (s)", "k_diam_foot_sec")
+        self.addUserStat("Diameter Foot (um)", "k_diam_foot", showInPlotMenu=True, valueType="float", default=np.nan, units="um", axisLabel="Diameter Foot (um)", description="Diameter at the foot of the transient.")
+        self.addUserStat("Diameter Foot Pnt", "k_diam_foot_pnt", showInPlotMenu=True, valueType="int", default=np.nan, units="point", axisLabel="Diameter Foot Pnt", description="Sample point at the foot of the diameter transient.")
+        self.addUserStat("Diameter Foot Time (s)", "k_diam_foot_sec", showInPlotMenu=True, valueType="float", default=np.nan, units="s", axisLabel="Diameter Foot Time (s)", description="Time at the foot of the diameter transient.")
         # peak
-        self.addUserStat("Diameter Peak (um)", "k_diam_peak")
-        self.addUserStat("Diameter Peak Pnt", "k_diam_peak_pnt")
-        self.addUserStat("Diameter Peak Time (s)", "k_diam_peak_sec")
+        self.addUserStat("Diameter Peak (um)", "k_diam_peak", showInPlotMenu=True, valueType="float", default=np.nan, units="um", axisLabel="Diameter Peak (um)", description="Diameter at the peak of the transient.")
+        self.addUserStat("Diameter Peak Pnt", "k_diam_peak_pnt", showInPlotMenu=True, valueType="int", default=np.nan, units="point", axisLabel="Diameter Peak Pnt", description="Sample point at the peak of the diameter transient.")
+        self.addUserStat("Diameter Peak Time (s)", "k_diam_peak_sec", showInPlotMenu=True, valueType="float", default=np.nan, units="s", axisLabel="Diameter Peak Time (s)", description="Time at the peak of the diameter transient.")
         # summary
 
         # do both time to peak with in
-        self.addUserStat("Diameter Time To Peak", "k_diam_time_to_peak_sec")
+        self.addUserStat("Diameter Time To Peak", "k_diam_time_to_peak_sec", showInPlotMenu=True, valueType="float", default=np.nan, units="s", axisLabel="Diameter Time To Peak", description="Time from the diameter foot to the diameter peak.")
 
-        self.addUserStat("Diameter Amp (um)", "k_diam_amp")
-        self.addUserStat("Diameter Percent Change (%)", "k_diam_percent")
+        self.addUserStat("Diameter Amp (um)", "k_diam_amp", showInPlotMenu=True, valueType="float", default=np.nan, units="um", axisLabel="Diameter Amp (um)", description="Difference between diameter peak and diameter foot.")
+        self.addUserStat("Diameter Percent Change (%)", "k_diam_percent", showInPlotMenu=True, valueType="float", default=np.nan, units="%", axisLabel="Diameter Percent Change (%)", description="Diameter peak as a percentage of diameter foot.")
 
         # 20230924
-        self.addUserStat("fit peak", "k_fit_m")
-        self.addUserStat("fit tau (pnts)", "k_fit_tau")
-        self.addUserStat("fit tau m", "k_fit_b")
-        self.addUserStat("Exponential fit (s) of decay from peak", "k_diam_tau_sec")
-        self.addUserStat("R squared quality of fit", "k_diam_fit_r2")
+        self.addUserStat("fit peak", "k_fit_m", showInPlotMenu=True, valueType="float", default=np.nan, units="", axisLabel="fit peak", description="Peak parameter from the diameter exponential fit.")
+        self.addUserStat("fit tau (pnts)", "k_fit_tau", showInPlotMenu=True, valueType="float", default=np.nan, units="point", axisLabel="fit tau (pnts)", description="Tau parameter from the diameter exponential fit in sample points.")
+        self.addUserStat("fit tau m", "k_fit_b", showInPlotMenu=True, valueType="float", default=np.nan, units="", axisLabel="fit tau m", description="Offset parameter from the diameter exponential fit.")
+        self.addUserStat("Exponential fit (s) of decay from peak", "k_diam_tau_sec", showInPlotMenu=True, valueType="float", default=np.nan, units="s", axisLabel="Exponential fit (s) of decay from peak", description="Time constant of the exponential decay from the diameter peak.")
+        self.addUserStat("R squared quality of fit", "k_diam_fit_r2", showInPlotMenu=True, valueType="float", default=np.nan, units="", axisLabel="R squared quality of fit", description="R-squared quality of the diameter exponential fit.")
         # self.addUserStat("Half-width of peak", "k_half_width")
 
     def run2_new(self):
@@ -149,8 +149,7 @@ class kymUserAnalysis(baseUserAnalysis):
         # TODO: add this as function to base class
         # add all our stats to every spike
         for spikeIdx, spikeDict in enumerate(self.ba.spikeDict):
-            for _k, _v in self._getUserStatDict().items():
-                name = _v['name']
+            for name in self._getUserStatNames():
                 self.setSpikeValue(spikeIdx, name, np.nan)
 
         # analyze each spike

@@ -6,6 +6,8 @@ from sanpy.sanpyLogger import get_logger
 
 logger = get_logger(__name__)
 
+EDITABLE_SPIKE_RESULTS = ("spike_condition", "userType", "include")
+
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
@@ -43,9 +45,7 @@ class ComboBox(QtWidgets.QComboBox):
 class SetSpikeStat(sanpyPlugin):
     """Plugin to provide an interface to set spike stats.
     
-    E.g. condition, userType, include, etc.
-
-    Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
+    Edits the explicit per-spike annotation fields supported by this view.
     """
 
     myHumanName = "Set Spike Stats"
@@ -89,7 +89,7 @@ class SetSpikeStat(sanpyPlugin):
         vBoxLayout.addLayout(hBoxLayout)
 
         # popup with column types
-        _items = ["condition", "userType", "include"]
+        _items = EDITABLE_SPIKE_RESULTS
         self._statComboBox = ComboBox()
         for item in _items:
             self._statComboBox.addItem(item)

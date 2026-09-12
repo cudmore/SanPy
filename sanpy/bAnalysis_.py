@@ -607,9 +607,6 @@ class bAnalysis:
         """
         if isinstance(spikeList, int):
             spikeList = [spikeList]
-            # else:
-            #     logger.error(f'Expecting list[int] or int but got spikeList type {type(spikeList)}')
-            return
 
         if len(spikeList) == 0:
             return

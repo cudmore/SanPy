@@ -17,6 +17,7 @@ from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
 
 import sanpy
+from sanpy.bAnalysisResults import get_plot_result_definitions
 from sanpy import bDetection
 from sanpy import bAnalysis
 from sanpy.interface import myTableView_tmp  # name conflict with interface.myTableView
@@ -159,7 +160,7 @@ class plotFi(sanpyPlugin):
 
         self._refreshPlotOptionsLayout()
 
-        self._selectInTable("Spike Frequency (Hz)")
+        self._selectInTable("Spike frequency (Hz)")
 
         self.replot()
 
@@ -194,19 +195,12 @@ class plotFi(sanpyPlugin):
         self.replot()
 
     def _selectInTable(self, findStatKey: str) -> None:
-        """Select a statistic row by its human-readable name.
+        """Select a statistic row by its human-readable axis label.
 
         Args:
             findStatKey: Statistic label to select.
         """
-        _statList = self._yStatListWidget.statList
-        # find 'Spike Frequency (Hz)'
-        foundKeyIdx = None
-        for keyIdx, k in enumerate(_statList.keys()):
-            if k == findStatKey:
-                foundKeyIdx = keyIdx
-        if foundKeyIdx is not None:
-            self._yStatListWidget.myTableWidget.selectRow(foundKeyIdx)
+        self._yStatListWidget.setCurrentRow(findStatKey)
 
     def on_button_click(self, name: str) -> None:
         """Apply one of Plot FI's preset configurations.
@@ -222,7 +216,7 @@ class plotFi(sanpyPlugin):
             self._plotDict["Error"] = "sem"
             self._plotDict["overlays"]["Mean"] = True
 
-            self._selectInTable("Spike Frequency (Hz)")
+            self._selectInTable("Spike frequency (Hz)")
 
         elif name == "Spike Count":
             self.setDefaultPlot()  # reset _plotDict to defaults
@@ -653,24 +647,22 @@ class plotFi(sanpyPlugin):
 
         # trim down stat list
         _statListShort = {}
-        _statList = self.getStatList()
-        if _statList is not None:
-            _hideTheseKeys = [
-                "Spike Number",
-                "Sweep Spike Number",
-                "Sweep Number",
-                "Epoch",
-                "Epoch DAC",
-                "Epoch Spike Number",
-            ]
-            for k, v in _statList.items():
-                if k not in _hideTheseKeys:
-                    _statListShort[k] = v
+        _statList = get_plot_result_definitions()
+        _hideTheseKeys = {
+            "spikeNumber",
+            "sweepSpikeNumber",
+            "sweep",
+            "epoch",
+            "epochLevel",
+        }
+        for key, definition in _statList.items():
+            if key not in _hideTheseKeys:
+                _statListShort[key] = definition
 
         self._yStatListWidget = myStatListWidget(
             self, statList=_statListShort, headerStr="Y-Stat"
         )
-        self._yStatListWidget.myTableWidget.selectRow(3)
+        self._yStatListWidget.setCurrentRow("Spike frequency (Hz)")
         main_hLayout.addWidget(self._yStatListWidget)
 
         _vPlotLayout = QtWidgets.QVBoxLayout()

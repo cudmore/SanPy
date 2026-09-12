@@ -382,7 +382,7 @@ class myTableView(QtWidgets.QTableView):
 class myStatListWidget(QtWidgets.QWidget):
     """Widget to display a table with selectable stats.
 
-    Gets list of stats from: sanpy.bAnalysisUtil.getStatList()
+    Result definitions are keyed by their internal analysis-result names.
     """
 
     signalStatSelection = QtCore.pyqtSignal(object, object)  # str: header str
@@ -394,7 +394,7 @@ class myStatListWidget(QtWidgets.QWidget):
         ----------
         myParent : sanpy.interface.plugins.sanpyPlugin
         statList : dict
-            from sanpy.bAnalysisUtil.getStatList()
+            Analysis-result definitions keyed by internal result name.
         headerStr : str
             Show as label aove stat list
         """
@@ -432,8 +432,8 @@ class myStatListWidget(QtWidgets.QWidget):
         # QHeaderView will automatically resize the section to fill the available space. The size cannot be changed by the user or programmatically.
         header.setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
-        for idx, stat in enumerate(self.statList):
-            item = QtWidgets.QTableWidgetItem(stat)
+        for idx, definition in enumerate(self.statList.values()):
+            item = QtWidgets.QTableWidgetItem(definition["axis_label"])
             self.myTableWidget.setItem(idx, 0, item)
             self.myTableWidget.setRowHeight(idx, self._rowHeight)
 
@@ -453,42 +453,43 @@ class myStatListWidget(QtWidgets.QWidget):
         # select a default stat
         self.myTableWidget.selectRow(0)  # hard coding 'Spike Frequency (Hz)'
 
-    def setCurrentRow(self, str):
-        """Select row based on row item string.
-        
-        Ussually a analysis parameter like 'Spike Frequency (Hz)'
+    def setCurrentRow(self, axis_label: str) -> None:
+        """Select a row by its human-readable axis label.
+
+        Args:
+            axis_label: Label to locate, such as ``Spike frequency (Hz)``.
         """
-        # find index in dict
+        labels = [definition["axis_label"] for definition in self.statList.values()]
         try:
-            idx = list(self.statList.keys()).index(str)
-        except (ValueError) as e:
-            logger.error(f'ValueError: did not find key {str}')
-            return
-        except (KeyError) as e:
-            logger.error(f'KeyError: did not find key {str}')
+            idx = labels.index(axis_label)
+        except ValueError:
+            logger.error('Did not find axis label "%s"', axis_label)
             return
 
         # select row index
         if idx >= 0:
             self.myTableWidget.selectRow(idx)
 
-    def getCurrentRow(self):
+    def getCurrentRow(self) -> int:
+        """Return the selected row index.
+
+        Returns:
+            Selected row index, or ``-1`` when no row is selected.
+        """
         return self.myTableWidget.currentRow()
 
-    def getCurrentStat(self):
-        # assuming single selection
+    def getCurrentStat(self) -> tuple[str | None, str | None]:
+        """Return the selected label and internal result key.
+
+        Returns:
+            Human-readable axis label and internal result key. Both are
+            ``None`` when there is no valid selection.
+        """
         row = self.getCurrentRow()
-        humanStat = self.myTableWidget.item(row, 0).text()
-
-        # convert from human readbale to backend
-        try:
-            stat = self.statList[humanStat]["name"]
-        except KeyError as e:
-            logger.error(f'Did not find humanStat:"{humanStat}"')
-            humanStat = None
-            stat = None
-
-        return humanStat, stat
+        if row < 0 or row >= len(self.statList):
+            return None, None
+        stat = tuple(self.statList)[row]
+        return self.statList[stat]["axis_label"], stat
 
     @QtCore.pyqtSlot()
     def on_scatter_toolbar_table_click(self):
@@ -1459,8 +1460,8 @@ class plotState:
             'Plot Index': plotIndex,  # will be set to 1,2,3,... on mpl canvas creation
             
             # we only want to set these if they are in stat dict
-            "X Statistic": 'Spike Time (s)',
-            "Y Statistic": 'Spike Frequency (Hz)',
+            "X Statistic": "Threshold time (s)",
+            "Y Statistic": "Spike frequency (Hz)",
             'xStat': 'thresholdSec',
             'yStat': 'spikeFreq_hz',
 
@@ -1619,17 +1620,16 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # dec 2022
         self._limitToCol = limitToCol
 
-        # statListDict is a dict with key=humanstat name and yStat=column name in csv
-        # self.statListDict = sanpy.bAnalysisUtil.getStatList()
-        # 20210305 done in loadPath()
+        # Definitions are keyed by internal result name and provide axis labels.
         if statListDict is not None:
             self.statListDict = statListDict
             # append all categorical
             if categoricalList is not None:
                 for categorical in categoricalList:
-                    self.statListDict[categorical] = {"yStat": categorical}
-                    self.statListDict[categorical] = {"name": categorical}
-                    # we need both yStat and name !!!
+                    self.statListDict.setdefault(
+                        categorical,
+                        {"axis_label": categorical},
+                    )
 
         # statListDict now has categorical like 'File Number'
         # for k, v in self.statListDict.items():
@@ -1708,15 +1708,20 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         # self.updatePlotSize() # calls update2()
         self.update2()
 
-    def getBackendStat(self, humanStat : str) -> str:
-        # convert from human readbale to backend
-        try:
-            return self.statListDict[humanStat]["name"]
-        except TypeError as e:
-            logger.error(f'TypeError for name human stat name:"{humanStat}"')
-            logger.error(f'{self.statListDict}')
-        except KeyError as e:
-            logger.error(f'Did not find human stat name:"{humanStat}"')
+    def getBackendStat(self, humanStat: str) -> str | None:
+        """Resolve an axis label to its internal dataframe column.
+
+        Args:
+            humanStat: Human-readable label selected in the interface.
+
+        Returns:
+            Internal dataframe column, or ``None`` when the label is unknown.
+        """
+        for stat, definition in self.statListDict.items():
+            if definition["axis_label"] == humanStat:
+                return stat
+        logger.error('Did not find human stat name: "%s"', humanStat)
+        return None
 
     def _mySetWindowTitle(self, windowTitle):
         """Required to interact with sanpyPlugin."""
@@ -2561,7 +2566,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
 
         self.statListDict = {}
         for colStr in self.masterDfColumns:
-            self.statListDict[colStr] = {"yStat": colStr}
+            self.statListDict[colStr] = {"axis_label": colStr}
 
         # not sure what this was for ???
         # 20210112, put back in if necc
@@ -2839,19 +2844,33 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                 logger.error(f'did not find "{groupByColumnName}" in columns -->> setting yDf to None')
                 self.yDf = None
 
-        # meanDf for plotState (mpl canvas)
-        if xStat == yStat:
-            groupList = [xStat]
-        else:
-            groupList = [xStat, yStat]
-
+        # Categorical selected statistics become grouping columns; only
+        # continuous selected statistics are averaged.
         if groupByNone:
             meanDf = None
         else:
             try:
-                meanDf = thisDf.groupby(groupByColumnName, as_index=False)[
-                    groupList
-                ].mean()
+                group_columns = [groupByColumnName]
+                numeric_stats = []
+                for stat, is_categorical in (
+                    (xStat, xIsCategorical),
+                    (yStat, yIsCategorical),
+                ):
+                    if is_categorical:
+                        if stat not in group_columns:
+                            group_columns.append(stat)
+                    elif stat not in numeric_stats:
+                        numeric_stats.append(stat)
+
+                grouped = thisDf.groupby(
+                    group_columns,
+                    as_index=False,
+                    dropna=False,
+                )
+                if numeric_stats:
+                    meanDf = grouped[numeric_stats].mean()
+                else:
+                    meanDf = thisDf[group_columns].drop_duplicates()
                 meanDf = meanDf.reset_index()
             except (KeyError) as e:
                 logger.error(f'did not find "{groupByColumnName}" in columns -->> setting meanDf to None')
@@ -2906,15 +2925,21 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                     # print('    updating categorical colum with catName:', catName)
                     catValue = tmpDf[catName].iloc[0]
 
-                    theseRows = (
+                    mean_rows = (
                         meanDf[groupByColumnName] == analysisname
                     ).tolist()
                     # if catName == groupByColumnName:
-                    meanDf.loc[theseRows, catName] = catValue
+                    meanDf.loc[mean_rows, catName] = catValue
                     if self.xDf is not None:
-                        self.xDf.loc[theseRows, catName] = catValue
+                        x_rows = (
+                            self.xDf[groupByColumnName] == analysisname
+                        ).tolist()
+                        self.xDf.loc[x_rows, catName] = catValue
                     if self.yDf is not None:
-                        self.yDf.loc[theseRows, catName] = catValue
+                        y_rows = (
+                            self.yDf[groupByColumnName] == analysisname
+                        ).tolist()
+                        self.yDf.loc[y_rows, catName] = catValue
                     # print('catName:', catName, 'catValue:', type(catValue), catValue)
                 else:
                     logger.warning(f"catName: {catName} has {numUnique} unique values")
@@ -3140,7 +3165,6 @@ def test():
         # path = '/Users/cudmore/data/laura-ephys/Superior vs Inferior database_master.csv'
         path = "/Users/cudmore/data/laura-ephys/SANdatabaseForMachineLearning.xlsx"
         analysisName = "File Number"
-        # statListDict = None #sanpy.bAnalysisUtil.getStatList()
         categoricalList = ["LOCATION", "SEX", "File Number"]  # , 'File Name']
         hueTypes = ["LOCATION", "SEX", "File Number"]  # , 'File Name'] #, 'None']
         sortOrder = ["LOCATION", "SEX", "File Number"]
@@ -3169,7 +3193,6 @@ def test():
         # path = '/Users/cudmore/data/laura-ephys/Superior_Inferior_database_master_jan25.csv'
         path = "data/Superior vs Inferior database_13_Feb_master.csv"
         analysisName = "analysisname"
-        # statListDict = None #sanpy.bAnalysisUtil.getStatList()
         categoricalList = [
             "include",
             "condition",
@@ -3205,12 +3228,6 @@ def test():
 
     # dualAnalysis database
     if 0:
-        # grab our list of dict mapping human readable to .csv column names
-        sys.path.append(os.path.join(os.path.dirname(sys.path[0]), "sanpy"))
-        import bAnalysisUtil
-
-        statListDict = bAnalysisUtil.statList
-
         path = "/Users/cudmore/Sites/SanPy/examples/dual-analysis/dualAnalysis_final_db.csv"
         analysisName = "fileNumber"  # # rows in .xlsx database, one recording per row
         # trial is 1a/1b/1c... trial withing cellNumber

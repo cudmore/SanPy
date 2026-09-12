@@ -58,11 +58,6 @@ class bPlugins:
         """Get the underlying SanPy app."""
         return self._sanpyApp
 
-    def getStatList(self):
-        if self._sanpyApp is None:
-            return
-        return self._sanpyApp.getStatList()
-    
     def loadPlugins(self) -> None:
         """Load built-in and user plugins available to the application.
 

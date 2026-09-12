@@ -12,8 +12,7 @@ from pathlib import Path
 from typing import Iterable
 
 import sanpy
-from sanpy.bAnalysisResults import analysisResultDict
-from sanpy.bAnalysisUtil import bAnalysisUtil
+from sanpy.bAnalysisResults import analysisResultDict, get_plot_result_definitions
 
 
 def _sorted_names(names: Iterable[str]) -> list[str]:
@@ -67,11 +66,7 @@ def audit_analysis_stats(path: Path, preset: str) -> None:
     if analysis.numSpikes == 0:
         raise RuntimeError(f"No spikes detected in {path} with preset {preset!r}")
 
-    plot_names = {
-        str(entry.get("name") or entry.get("yStat"))
-        for entry in bAnalysisUtil().getStatList().values()
-        if entry.get("name") or entry.get("yStat")
-    }
+    plot_names = set(get_plot_result_definitions())
     schema_names = set(analysisResultDict.keys())
     spike_names = set(analysis.spikeDict[0].keys())
 

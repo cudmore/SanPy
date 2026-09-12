@@ -13,7 +13,7 @@ class exampleUserPlugin1(sanpyPlugin):
     """
     Plot x/y statistics as a scatter
 
-    Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
+    Plot-stat definitions come from sanpy.bAnalysisResults.
     """
 
     myHumanName = "Example User Plugin 1"

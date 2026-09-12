@@ -28,6 +28,7 @@ def getDefaultDict() -> dict[str, Any]:
     defaultDict = {
         "category": AnalysisResultCategory.CUSTOM,
         "axis_label": "",
+        "show_in_plot_menu": False,
         "type": "",  # like: int, float, boolean, list
         "default": "",  # default value, can be 0, None, NaN, ...
         "units": "",  # real world units like point, mV, dvdt
@@ -49,6 +50,7 @@ def register_analysis_result(
     default: Any = None,
     units: str = "",
     axis_label: str = "",
+    show_in_plot_menu: bool,
     description: str = "",
     depends_on_detection: str = "",
     error: str = "",
@@ -56,9 +58,8 @@ def register_analysis_result(
     """Register a user-defined result in the authoritative runtime schema.
 
     Identical repeated registration is accepted because SanPy may discover a
-    user-analysis plugin more than once. A conflicting registration is logged
-    and the first definition remains authoritative so GUI startup is not
-    interrupted.
+    user-analysis plugin more than once. Conflicting or invalid definitions
+    fail immediately because they are programmer errors.
 
     Args:
         name: Internal analysis-result name used as the dataframe column.
@@ -67,17 +68,23 @@ def register_analysis_result(
         default: Default value for newly created results.
         units: Physical or logical units.
         axis_label: Human-readable plot-axis label.
+        show_in_plot_menu: Whether X/Y statistic selectors show the result.
         description: Human-readable explanation of the result.
         depends_on_detection: Detection parameter dependencies, if any.
         error: Error condition documented for the result, if any.
 
     Returns:
         ``True`` when the definition was added or already registered
-        identically; ``False`` when a conflicting definition was rejected.
+        identically.
+
+    Raises:
+        TypeError: If ``category`` is not an ``AnalysisResultCategory``.
+        ValueError: If ``name`` already has a different definition.
     """
     if not isinstance(category, AnalysisResultCategory):
-        logger.error('Invalid analysis-result category rejected for "%s"', name)
-        return False
+        raise TypeError(
+            f'Analysis-result category for "{name}" must be AnalysisResultCategory'
+        )
     definition = getDefaultDict()
     definition.update(
         {
@@ -86,6 +93,7 @@ def register_analysis_result(
             "default": default,
             "units": units,
             "axis_label": axis_label or name,
+            "show_in_plot_menu": show_in_plot_menu,
             "depends on detection": depends_on_detection,
             "error": error,
             "description": description,
@@ -97,8 +105,7 @@ def register_analysis_result(
         return True
     if existing == definition:
         return True
-    logger.error('Conflicting analysis-result definition rejected for "%s"', name)
-    return False
+    raise ValueError(f'Conflicting analysis-result definition for "{name}"')
 
 key = "spikeNumber"
 analysisResultDict[key] = getDefaultDict()
@@ -107,6 +114,7 @@ analysisResultDict[key]["type"] = "int"
 analysisResultDict[key]["default"] = None  # todo: not sure
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Spike number"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Spike number across all sweeps. Zero based."
 
 key = "include"
@@ -140,6 +148,7 @@ analysisResultDict[key]["type"] = "int"
 analysisResultDict[key]["default"] = 0  # todo: not sure
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Sweep"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Sweep number of analyzed sweep. Zero based."
 
 key = "epoch"
@@ -149,6 +158,7 @@ analysisResultDict[key]["type"] = "int"
 analysisResultDict[key]["default"] = np.nan  # todo: not sure
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Epoch"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key][
     "description"
 ] = "Stimulus epoch number the spike occured in. Zero based."
@@ -160,6 +170,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = np.nan  # todo: not sure
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Epoch level"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Epoch level (DAC) stimulus during the spike."
 
 key = "sweepSpikeNumber"
@@ -169,6 +180,7 @@ analysisResultDict[key]["type"] = "int"
 analysisResultDict[key]["default"] = None  # todo: not sure
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Sweep spike number"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Spike number within the sweep. Zero based."
 
 key = "userType"
@@ -178,6 +190,7 @@ analysisResultDict[key]["type"] = "int"
 analysisResultDict[key]["default"] = 0
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "User type"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key][
     "description"
 ] = "Integer indication user type. Can be set by user/programmatically  after analysis."
@@ -291,6 +304,17 @@ analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Condition"
 analysisResultDict[key]["description"] = "User specified condition"
 
+key = "spike_condition"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["category"] = AnalysisResultCategory.ANNOTATION
+analysisResultDict[key]["type"] = "str"
+analysisResultDict[key]["default"] = ""
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key]["axis_label"] = "Spike condition"
+analysisResultDict[key][
+    "description"
+] = "User-assigned condition for an individual spike."
+
 #
 # detection parameters
 key = "dvdtThreshold"
@@ -356,6 +380,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "sec"
 analysisResultDict[key]["axis_label"] = "Threshold time (s)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "AP threshold seconds"
 
 key = "thresholdVal"
@@ -365,6 +390,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "mV"  # TODO: will be pA for voltage-clamp
 analysisResultDict[key]["axis_label"] = "Threshold voltage (mV)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Value of Vm at AP threshold point."
 
 key = "thresholdVal_dvdt"
@@ -411,6 +437,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "mV"  # voltage-clamp'
 analysisResultDict[key]["axis_label"] = "Peak voltage (mV)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Value of Vm at AP peak point."
 
 key = "peakHeight"
@@ -420,6 +447,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "mV"  # voltage-clamp
 analysisResultDict[key]["axis_label"] = "Spike height (mV)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key][
     "description"
 ] = "Difference between peakVal minus thresholdVal."
@@ -431,6 +459,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "ms"  # voltage-clamp'
 analysisResultDict[key]["axis_label"] = "Time to peak (ms)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Time to peak (ms) after TOP."
 
 # new 20231201
@@ -460,6 +489,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "mV"  # voltage-clamp'
 analysisResultDict[key]["axis_label"] = "Fast AHP voltage (mV)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Value of Vm at fast AHP point."
 
 key = "preMinPnt"
@@ -481,6 +511,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "mV"  # voltage-clamp
 analysisResultDict[key]["axis_label"] = "Pre-spike minimum voltage (mV)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key][
     "description"
 ] = "Minimum before an AP taken from predefined window."
@@ -514,6 +545,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "ms"  # voltage-clamp
 analysisResultDict[key]["axis_label"] = "Early diastolic duration (ms)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Time (ms) between start/stop of EDD."
 
 key = "preLinearFitVal0"
@@ -541,6 +573,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "mv/S"
 analysisResultDict[key]["axis_label"] = "Early diastolic rate (mV/s)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key][
     "description"
 ] = "Early diastolic duration rate, the slope of the linear fit between start/stop of EDD."
@@ -572,6 +605,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "mV"
 analysisResultDict[key]["axis_label"] = "Voltage at pre-spike maximum dV/dt (mV)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Value of Vm at peak of dv/dt before an AP."
 
 key = "preSpike_dvdt_max_val2"
@@ -581,6 +615,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "dv/dt"
 analysisResultDict[key]["axis_label"] = "Pre-spike maximum dV/dt (mV/ms)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Value of dv/dt at peak of dv/dt before an AP."
 
 key = "postSpike_dvdt_min_pnt"
@@ -602,6 +637,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "mV"
 analysisResultDict[key]["axis_label"] = "Voltage at post-spike minimum dV/dt (mV)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Value of Vm at minimum of dv/dt after an AP."
 
 key = "postSpike_dvdt_min_val2"
@@ -634,6 +670,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "ms"
 analysisResultDict[key]["axis_label"] = "Interspike interval (ms)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key][
     "description"
 ] = "Inter-Spike-Interval (ms) with respect to previous AP."
@@ -645,6 +682,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "Hz"
 analysisResultDict[key]["axis_label"] = "Spike frequency (Hz)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "AP frequency with respect to previous AP."
 
 key = "cycleLength_pnts"
@@ -665,6 +703,7 @@ analysisResultDict[key]["type"] = "int"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "point"
 analysisResultDict[key]["axis_label"] = "Cycle length (ms)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key][
     "description"
 ] = "Time (ms) between APs with respect to previous AP."
@@ -676,6 +715,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "ms"
 analysisResultDict[key]["axis_label"] = "Diastolic duration (ms)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key][
     "description"
 ] = "Time (ms) between minimum before AP (preMinPnt) and AP time (thresholdPnt)."
@@ -700,10 +740,27 @@ for i in [10, 20, 50, 80, 90]:
     analysisResultDict[key]["default"] = defaultVal
     analysisResultDict[key]["units"] = "percent"
     analysisResultDict[key]["axis_label"] = f"Spike width at {i}% (ms)"
+    analysisResultDict[key]["show_in_plot_menu"] = True
     analysisResultDict[key]["depends on detection"] = "halfWidthWindow_ms"
     analysisResultDict[key]["description"] = f"Width (ms) at half-height {i} %."
 
 _CORE_ANALYSIS_RESULT_NAMES = tuple(analysisResultDict)
+
+
+def get_plot_result_definitions() -> dict[str, dict[str, Any]]:
+    """Return result definitions shown in X/Y statistic selectors.
+
+    Registry declaration order defines presentation order. Each definition is
+    copied so interface code cannot mutate the authoritative registry.
+
+    Returns:
+        Plottable definitions keyed by their internal analysis-result names.
+    """
+    return {
+        name: definition.copy()
+        for name, definition in analysisResultDict.items()
+        if definition["show_in_plot_menu"]
+    }
 
 # now we have (AP threshold, AP peak), derive stats about each AP
 

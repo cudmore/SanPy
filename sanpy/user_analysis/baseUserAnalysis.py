@@ -101,9 +101,8 @@ def _getObjectList(verbose: bool = False) -> List[dict]:
                 f'Make sure filename and class name are the same, file name is "{moduleName}"'
             )
 
-        # instantiate the object and it will create a dictionary of new stats
-        _tmpObj = oneConstructor(ba=None)
-        _statStatDict = _tmpObj._getUserStatDict()
+        # Instantiation registers the class's result definitions.
+        oneConstructor(ba=None)
 
         # humanName = oneConstructor.myHumanName
         pluginDict = {
@@ -112,7 +111,6 @@ def _getObjectList(verbose: bool = False) -> List[dict]:
             "module": fullModuleName,
             "path": file,
             "constructor": oneConstructor,
-            "staticStatDict": _statStatDict,
         }
 
         if verbose:
@@ -133,9 +131,8 @@ def _getObjectList(verbose: bool = False) -> List[dict]:
             # moduleName: kymUserAnalysis obj: <class 'sanpy.user_analysis.userKymDiamAnalysis.kymUserAnalysis'>
             fullModuleName = "sanpy.user_analysis." + moduleName
 
-            # instantiate the object and it will create a dictionary of new stats
-            _tmpObj = obj(ba=None)
-            _statStatDict = _tmpObj._getUserStatDict()
+            # Instantiation registers the class's result definitions.
+            obj(ba=None)
 
             pluginDict = {
                 "pluginClass": moduleName,
@@ -143,7 +140,6 @@ def _getObjectList(verbose: bool = False) -> List[dict]:
                 "module": fullModuleName,
                 "path": 'not_used',
                 "constructor": obj,
-                "staticStatDict": _statStatDict,
             }
 
             if 1 or verbose:
@@ -159,28 +155,6 @@ def _getObjectList(verbose: bool = False) -> List[dict]:
     #
     return loadedModuleList  # list of dict
 
-
-def findUserAnalysisStats() -> List[dict]:
-    """Get the stat names of all user defined analysis.
-    
-    This is determined once at runtime. If files change, sanpy must be restarted.
-    """
-    userStatList: List[dict] = []
-    objList = _getObjectList()  # list of dict
-    for obj in objList:
-        # sanpy._util.pprint(obj)
-        # print('')
-
-        # instantiate the object
-        userObj = obj["constructor"](ba=None)
-
-        userObjStatDict = userObj._getUserStatDict()
-
-        for k, v in userObjStatDict.items():
-            oneUserStatDict = {k: v}
-            userStatList.append(oneUserStatDict)
-
-    return userStatList
 
 def runAllUserAnalysis(ba, verbose=False):
     """Run all user defined analysis.
@@ -218,14 +192,13 @@ class baseUserAnalysis:
     def __init__(self, ba: "sanpy.bAnalysis"):
         self._myAnalysis: sanpy.bAnalysis = ba
 
-        self._userStatDict: dict = {}
-        # add to this with addUserStat()
+        self._userStatNames: list[str] = []
 
         self.defineUserStats()
 
-    def _getUserStatDict(self):
-        """Get dict of user defined stats, one key per stat."""
-        return self._userStatDict
+    def _getUserStatNames(self) -> tuple[str, ...]:
+        """Return internal names of results produced by this analysis."""
+        return tuple(self._userStatNames)
 
     def defineUserStats(self):
         """Derived classes add each stat with addUserStat().
@@ -241,12 +214,13 @@ class baseUserAnalysis:
         humanName: str,
         internalName: str,
         *,
+        showInPlotMenu: bool,
         category: AnalysisResultCategory = AnalysisResultCategory.CUSTOM,
-        valueType: str = "unknown",
-        default: Any = None,
-        units: str = "",
-        axisLabel: str | None = None,
-        description: str = "",
+        valueType: str,
+        default: Any,
+        units: str,
+        axisLabel: str,
+        description: str,
     ) -> bool:
         """Register a user statistic for analysis and presentation.
 
@@ -254,14 +228,14 @@ class baseUserAnalysis:
             humanName: Human-readable statistic name.
             internalName: Internal dataframe-column name without spaces or
                 punctuation.
+            showInPlotMenu: Whether X/Y statistic selectors show the result.
             category: Presentation category stored in the runtime result
                 schema.
             valueType: Runtime value type name, such as ``"float"``.
             default: Default value for the result.
             units: Physical or logical units.
-            axisLabel: Plot-axis label. The human name is used when omitted.
-            description: Human-readable explanation. The human name is used
-                when this value is empty.
+            axisLabel: Plot-axis label.
+            description: Human-readable explanation.
 
         Returns:
             ``True`` when the definition was registered or was already
@@ -270,26 +244,19 @@ class baseUserAnalysis:
         """
         from sanpy.bAnalysisResults import register_analysis_result
 
-        if humanName in self._userStatDict.keys():
-            return True
-        statDict = {
-            "name": internalName,
-            "units": units,
-            "yStat": None,
-            "yStatUnits": units,
-            "xStat": None,
-            "xStatUnits": None,
-        }
-        self._userStatDict[humanName] = statDict
-        return register_analysis_result(
+        registered = register_analysis_result(
             internalName,
             category=category,
             value_type=valueType,
             default=default,
             units=units,
-            axis_label=axisLabel or humanName,
-            description=description or humanName,
+            axis_label=axisLabel,
+            show_in_plot_menu=showInPlotMenu,
+            description=description,
         )
+        if internalName not in self._userStatNames:
+            self._userStatNames.append(internalName)
+        return registered
 
     @property
     def ba(self):
@@ -374,5 +341,3 @@ class baseUserAnalysis:
 if __name__ == "__main__":
     # test1()
     _getObjectList(verbose=True)
-    
-    #findUserAnalysisStats()

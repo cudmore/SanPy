@@ -283,10 +283,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
     def getPlugins(self):
         return self.getSanPyApp().getPlugins()
     
-    def getStatList(self):
-        # return self._analysisUtil.getStatList()
-        return self.getSanPyApp().getAnalysisUtil().getStatList()
-    
     def getFileLoaderDict(self):
         # return self._fileLoaderDict
         return self.getSanPyApp().getFileLoaderDict()

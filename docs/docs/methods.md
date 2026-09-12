@@ -54,7 +54,7 @@ When SanPy encounters errors during spike detection, they are stored for each sp
 
 Once spikes are detected, SanPy has the following analysis results. The `Stat` column is a human readable version. The `name` column is the variable name used in the code and is saved as a column when analysis results are saved to a csv file. 
 
-Note: To generate this use bAnalysisUtil._print()
+This table is generated from the analysis-result definition registry.
 
 |    | Stat                              | name                       | units   | yStat                      | yStatUnits   | xStat                  | xStatUnits   |
 |---:|:----------------------------------|:---------------------------|:--------|:---------------------------|:-------------|:-----------------------|:-------------|

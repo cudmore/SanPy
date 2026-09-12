@@ -33,6 +33,7 @@ analysisResultDict[key]["type"] = "int"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "point"
 analysisResultDict[key]["axis_label"] = "Fast AHP point"
+analysisResultDict[key]["show_in_plot_menu"] = False
 analysisResultDict[key]["depends on detection"] = "fastAhpWindow_ms"
 analysisResultDict[key]["description"] = "fast AHP point."
 
@@ -42,6 +43,7 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "sec"
 analysisResultDict[key]["axis_label"] = "Fast AHP time (s)"
+analysisResultDict[key]["show_in_plot_menu"] = False
 analysisResultDict[key]["description"] = "fast AHP seconds."
 
 key = "fastAhpValue"
@@ -50,22 +52,8 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "mV"  # voltage-clamp'
 analysisResultDict[key]["axis_label"] = "Fast AHP voltage (mV)"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["description"] = "Value of Vm at fast AHP point."
-```
-
-### Add to `bAnalysisUtil._buildStatList()`
-
-This defines a human readable `Fast AHP (mv)` and is used in the gui. For an example of how it is used, see the scatter plot plugin.
-
-```python
-statList["Fast AHP (mV)"] = {
-    "name": "fastAhpValue",
-    "units": "mV",
-    "yStat": "fastAhpValue",
-    "yStatUnits": "mV",
-    "xStat": "fastAhpPnt",
-    "xStatUnits": "Points",
-}
 ```
 
 ### Add to `bAnalysis_._spikeDetect2()`

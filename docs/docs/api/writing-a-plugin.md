@@ -22,8 +22,6 @@ from sanpy.interface.plugins import sanpyPlugin
 class exampleUserPlugin1(sanpyPlugin):
     """
     Plot x/y statistics as a scatter
-
-    Get stat names and variables from sanpy.bAnalysisUtil.getStatList()
     """
     myHumanName = 'Example User Plugin 1'
 
