@@ -29,8 +29,6 @@ def _nicepool_column_type(definition: Mapping[str, Any]) -> str:
     Returns:
         NicePool schema type for the result.
     """
-    if bool(definition.get("is_categorical")):
-        return "categorical"
     value_type = definition.get("type")
     if value_type in {"float", "int"}:
         return "number"
@@ -80,6 +78,11 @@ def prepare_nicepool_data(
                 "name": name,
                 "type": _nicepool_column_type(definition),
                 "axis_label": str(definition["axis_label"] or name),
+                **(
+                    {"categorical": True}
+                    if bool(definition.get("is_categorical"))
+                    else {}
+                ),
             }
         )
     prefilters = [name for name in _PREFILTER_COLUMNS if name in projected.columns]
@@ -129,6 +132,7 @@ class NicePoolPlugin(sanpyPlugin):
             **kwargs: Arguments forwarded to :class:`sanpyPlugin`.
         """
         super().__init__(**kwargs)
+        self.resize(1200, 800)
         self.toggleResponseOptions(self.responseTypes.setSweep, newValue=False)
         self.toggleResponseOptions(self.responseTypes.setAxis, newValue=False)
         self.toggleTopToobar(True, show_response_options=False)

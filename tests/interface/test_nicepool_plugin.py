@@ -26,6 +26,7 @@ def test_prepare_nicepool_data_projects_scalar_plot_columns() -> None:
             "spikeNumber": [3],
             "sweep": [0],
             "epoch": [1],
+            "epochLevel": [10.0],
             "include": [True],
             "thresholdVal": [-42.5],
             "halfHeights": [[10, 50, 90]],
@@ -39,12 +40,18 @@ def test_prepare_nicepool_data_projects_scalar_plot_columns() -> None:
         "include",
         "sweep",
         "epoch",
+        "epochLevel",
         "spikeNumber",
         "thresholdVal",
     ]
     assert "halfHeights" not in projected.columns
     assert prefilters == ["sweep", "epoch", "include"]
     assert {entry["name"] for entry in schema} == set(projected.columns)
+    schema_by_name = {entry["name"]: entry for entry in schema}
+    assert schema_by_name["sweep"]["type"] == "number"
+    assert schema_by_name["sweep"]["categorical"] is True
+    assert schema_by_name["epochLevel"]["type"] == "number"
+    assert schema_by_name["epochLevel"]["categorical"] is True
 
 
 def test_prepare_nicepool_data_requires_spike_identity() -> None:
@@ -94,6 +101,8 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
 
     plugin = NicePoolPlugin(ba=analysis)
     qtbot.addWidget(plugin)
+    assert plugin.size().width() == 1200
+    assert plugin.size().height() == 800
     assert plugin._nicepool is not None
     data_resets = QSignalSpy(plugin._nicepool.data_reset)
     emitted_selections = QSignalSpy(plugin.signalSelectSpikeList)
