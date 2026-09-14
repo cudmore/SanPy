@@ -13,9 +13,43 @@ from pytestqt.qtbot import QtBot
 
 from sanpy.interface.plugins.nicepool_plugin import (
     NicePoolPlugin,
+    build_fi_plot_preset,
     prepare_nicepool_data,
     selection_to_spikes,
 )
+
+
+def test_build_fi_plot_preset_uses_editable_sanpy_defaults() -> None:
+    """Configure both visible plots without replacing unrelated defaults."""
+    source_plot = {
+        "plotType": "scatter",
+        "groupColumn": None,
+        "yColumn": "thresholdVal",
+        "showPlotlyToolbar": True,
+        "pointSize": 7,
+    }
+    source_state = {
+        "schemaVersion": 1,
+        "layout": "1x1",
+        "activePlotIndex": 0,
+        "plots": [dict(source_plot) for _ in range(4)],
+    }
+
+    preset = build_fi_plot_preset(source_state)
+
+    assert preset["name"] == "FI Plot"
+    assert preset["state"]["layout"] == "1x2"
+    for plot in preset["state"]["plots"][:2]:
+        assert plot["plotType"] == "swarm"
+        assert plot["groupColumn"] == "epochLevel"
+        assert plot["yColumn"] == "spikeFreq_hz"
+        assert plot["pointSize"] == 7
+    assert all(
+        plot["showPlotlyToolbar"] is False
+        for plot in preset["state"]["plots"]
+    )
+    assert source_state["layout"] == "1x1"
+    assert source_state["plots"][0]["plotType"] == "scatter"
 
 
 def test_prepare_nicepool_data_projects_scalar_plot_columns() -> None:
@@ -94,8 +128,10 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
             "spikeNumber": [2, 3],
             "sweep": [0, 0],
             "epoch": [0, 0],
+            "epochLevel": [10.0, 10.0],
             "include": [True, True],
             "thresholdVal": [-42.5, -40.0],
+            "spikeFreq_hz": [20.0, 25.0],
         }
     )
 
@@ -110,6 +146,36 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
 
     plugin.show()
     qtbot.waitUntil(lambda: len(data_resets) == 1, timeout=20_000)
+    initial_state: list[object] = []
+
+    def collect_initial_state(state: object) -> None:
+        """Poll queued browser state until the initial preset is applied.
+
+        Args:
+            state: Complete NicePool state returned by the browser.
+        """
+        initial_state.append(state)
+        if isinstance(state, dict) and state.get("layout") != "1x2":
+            plugin._nicepool.get_state(collect_initial_state)
+
+    plugin._nicepool.get_state(collect_initial_state)
+    qtbot.waitUntil(
+        lambda: any(
+            isinstance(state, dict) and state.get("layout") == "1x2"
+            for state in initial_state
+        ),
+        timeout=5_000,
+    )
+    applied_state = next(
+        state
+        for state in initial_state
+        if isinstance(state, dict) and state.get("layout") == "1x2"
+    )
+    for plot in applied_state["plots"][:2]:
+        assert plot["plotType"] == "swarm"
+        assert plot["groupColumn"] == "epochLevel"
+        assert plot["yColumn"] == "spikeFreq_hz"
+        assert plot["showPlotlyToolbar"] is False
 
     plugin.setSelectedSpikes([3, 2])
     plugin.selectSpikeList()
@@ -134,6 +200,3 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
     assert event["doZoom"] is False
     assert event["ba"] is analysis
     assert len(errors) == 0
-    plugin.close()
-    plugin.deleteLater()
-    qtbot.wait(100)

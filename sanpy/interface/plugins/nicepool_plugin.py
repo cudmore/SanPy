@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from collections.abc import Mapping, Sequence
 from typing import Any
 
@@ -18,6 +19,45 @@ logger = get_logger(__name__)
 
 _IDENTITY_COLUMNS: tuple[str, ...] = ("file", "include")
 _PREFILTER_COLUMNS: tuple[str, ...] = ("sweep", "epoch", "include")
+_FI_PLOT_PRESET_NAME = "FI Plot"
+
+
+def build_fi_plot_preset(state: Mapping[str, Any]) -> dict[str, Any]:
+    """Build SanPy's editable initial NicePool preset from valid browser state.
+
+    Args:
+        state: Complete NicePool state returned by the embedded component.
+
+    Returns:
+        Named NicePool preset with two FI swarm plots.
+
+    Raises:
+        ValueError: If the browser state does not contain four plot mappings.
+    """
+    preset_state = deepcopy(dict(state))
+    plots = preset_state.get("plots")
+    if not isinstance(plots, list) or len(plots) != 4 or not all(
+        isinstance(plot, dict) for plot in plots
+    ):
+        raise ValueError("NicePool state does not contain four plot mappings")
+
+    preset_state["layout"] = "1x2"
+    preset_state["activePlotIndex"] = 0
+    for plot in plots:
+        plot["showPlotlyToolbar"] = False
+    for plot in plots[:2]:
+        plot.update(
+            {
+                "plotType": "swarm",
+                "groupColumn": "epochLevel",
+                "yColumn": "spikeFreq_hz",
+            }
+        )
+    return {
+        "schemaVersion": 1,
+        "name": _FI_PLOT_PRESET_NAME,
+        "state": preset_state,
+    }
 
 
 def _nicepool_column_type(definition: Mapping[str, Any]) -> str:
@@ -55,6 +95,12 @@ def prepare_nicepool_data(
         raise ValueError("SanPy spike results are missing the spikeNumber column")
 
     definitions = get_plot_result_definitions()
+
+    # abb debug definitions
+    logger.warning('definitions is ================================================')
+    from pprint import pprint
+    pprint(definitions)
+
     selected_names = [
         name
         for name in (*_IDENTITY_COLUMNS, *definitions)
@@ -135,7 +181,7 @@ class NicePoolPlugin(sanpyPlugin):
         self.resize(1200, 800)
         self.toggleResponseOptions(self.responseTypes.setSweep, newValue=False)
         self.toggleResponseOptions(self.responseTypes.setAxis, newValue=False)
-        self.toggleTopToobar(True, show_response_options=False)
+        self.toggleTopToobar(False, show_response_options=False)
 
         self._row_id_to_spike: dict[str, int] = {}
         self._nicepool: Any | None = None
@@ -198,6 +244,23 @@ class NicePoolPlugin(sanpyPlugin):
         finally:
             self._blockSlots = False
 
+    def _apply_initial_preset(self, state: object) -> None:
+        """Install and apply the initial FI plot after NicePool receives data.
+
+        Args:
+            state: Complete dataset-aware NicePool state from the browser.
+        """
+        if self._nicepool is None or not isinstance(state, Mapping):
+            logger.error("Unable to initialize NicePool FI Plot preset")
+            return
+        try:
+            preset = build_fi_plot_preset(state)
+        except ValueError as error:
+            logger.error("Unable to initialize NicePool FI Plot preset: %s", error)
+            return
+        self._nicepool.set_presets([preset])
+        self._nicepool.apply_preset(_FI_PLOT_PRESET_NAME)
+
     def replot(self) -> None:
         """Replace NicePool data after a file or analysis change."""
         if self._nicepool is None:
@@ -224,6 +287,15 @@ class NicePoolPlugin(sanpyPlugin):
                 schema=schema,
                 pre_filter_columns=prefilters,
             )
+            required_preset_columns = {"epochLevel", "spikeFreq_hz"}
+            if required_preset_columns.issubset(projected.columns):
+                self._nicepool.get_state(self._apply_initial_preset)
+            else:
+                missing = sorted(required_preset_columns.difference(projected.columns))
+                logger.warning(
+                    "NicePool FI Plot preset is unavailable; missing columns: %s",
+                    ", ".join(missing),
+                )
             self.selectSpikeList()
         except (TypeError, ValueError) as error:
             logger.error("Unable to prepare SanPy results for NicePool: %s", error)
