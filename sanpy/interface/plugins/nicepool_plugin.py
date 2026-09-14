@@ -109,9 +109,15 @@ def prepare_nicepool_data(
     projected = dataframe.loc[:, selected_names].copy()
 
     identity_definitions: dict[str, dict[str, Any]] = {
-        "file": {"axis_label": "File", "type": "str", "is_categorical": True},
+        "file": {
+            "axis_label": "File",
+            "category": "acquisition",
+            "type": "str",
+            "is_categorical": True,
+        },
         "include": {
-            "axis_label": "Include",
+            "axis_label": "Included",
+            "category": "metadata",
             "type": "bool",
             "is_categorical": True,
         },
@@ -119,11 +125,16 @@ def prepare_nicepool_data(
     schema = []
     for name in selected_names:
         definition = definitions[name] if name in definitions else identity_definitions[name]
+        category = definition["category"]
+        category_name = getattr(category, "value", category)
+        if not isinstance(category_name, str) or not category_name:
+            raise ValueError(f"SanPy result {name!r} has an invalid category")
         schema.append(
             {
                 "name": name,
                 "type": _nicepool_column_type(definition),
                 "axis_label": str(definition["axis_label"] or name),
+                "category": category_name,
                 **(
                     {"categorical": True}
                     if bool(definition.get("is_categorical"))

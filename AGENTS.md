@@ -23,6 +23,17 @@ Work as a senior developer: verify facts from code, tests, or authoritative APIs
 rather than guessing. When user input is genuinely required, ask a focused
 question and include a clear senior-level recommendation.
 
+## Local verification workflow
+
+During implementation, run focused tests for the affected SanPy module or
+plugin. Provide the user with exact commands for broader test suites and
+application smoke tests. Do not repeatedly run the full repository suite unless
+the user explicitly requests it or the scope and risk of the change justify it.
+
+The user normally performs interactive SanPy GUI and Qt WebEngine smoke tests
+on the local macOS development machine. Clearly report which checks were run
+and which remain for the user.
+
 ## Changelog
 
 When updating `CHANGELOG.md`:

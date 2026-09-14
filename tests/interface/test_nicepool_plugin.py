@@ -84,8 +84,15 @@ def test_prepare_nicepool_data_projects_scalar_plot_columns() -> None:
     schema_by_name = {entry["name"]: entry for entry in schema}
     assert schema_by_name["sweep"]["type"] == "number"
     assert schema_by_name["sweep"]["categorical"] is True
+    assert schema_by_name["sweep"]["category"] == "acquisition"
+    assert schema_by_name["sweep"]["axis_label"] == "Sweep"
     assert schema_by_name["epochLevel"]["type"] == "number"
     assert schema_by_name["epochLevel"]["categorical"] is True
+    assert schema_by_name["epochLevel"]["category"] == "acquisition"
+    assert schema_by_name["epochLevel"]["axis_label"] == "Epoch level"
+    assert schema_by_name["file"]["category"] == "acquisition"
+    assert schema_by_name["include"]["category"] == "metadata"
+    assert schema_by_name["include"]["axis_label"] == "Included"
 
 
 def test_prepare_nicepool_data_requires_spike_identity() -> None:
