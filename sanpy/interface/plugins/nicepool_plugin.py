@@ -184,7 +184,9 @@ class NicePoolPlugin(sanpyPlugin):
         """
         if self.ba is None:
             return
+        logger.info(f"NicePool selection: {selection}")
         spikes = selection_to_spikes(selection, self._row_id_to_spike)
+        logger.info(f"Spikes: {spikes}")
         event = {"spikeList": spikes, "doZoom": False, "ba": self.ba}
         self._blockSlots = True
         try:
