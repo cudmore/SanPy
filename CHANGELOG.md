@@ -9,6 +9,8 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 
 #### Added
 
+- Added a NicePool desktop plugin for linked exploration of detected spike
+  statistics with bidirectional SanPy selection synchronization.
 - Added a self-contained SanPy Zarr v3 collection export with validated JSON manifests, chunked signal arrays, CSV and Parquet table options, and atomic destination replacement.
 - Added export support for both ABF and canonical `.sanpy` recordings, including command waveforms, point-aligned epoch indexes, per-sweep epoch tables, and HDF5-restored analysis results.
 - Added a folder export command at `scripts/export_folder_to_zarr.py` for regenerating a complete collection from a SanPy data folder and its `sanpy_recording_db.h5` catalog.

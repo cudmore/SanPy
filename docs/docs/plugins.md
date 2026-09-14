@@ -22,6 +22,24 @@ Each plugin shares a common interface to turn these actions on and off. This int
 
 ## Built-in plugins.
 
+### NicePool
+
+NicePool provides linked interactive plots of detected spike statistics for the
+current recording. Selections are synchronized with the rest of SanPy without
+changing the recording zoom.
+
+During local development, build its browser assets and install the sibling
+adapter into SanPy's environment:
+
+```bash
+cd ../cs_project/mapmanager-web-components
+npm run build --workspace @mapmanager/nicepool-pyqt5-frontend
+
+cd ../../sanpy-zarr
+uv pip install --python .venv/bin/python --editable \
+  ../cs_project/mapmanager-web-components/integrations/nicepool-pyqt5
+```
+
 ### Plot Recording
 
 Plot a recording with an overlay of spike detection parameters.

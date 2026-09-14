@@ -149,6 +149,8 @@ class SanPyApp(QtWidgets.QApplication):
             argv: Command-line arguments passed to Qt.
             sanpy_paths: Optional path manager, primarily for test isolation.
         """
+        # Qt WebEngine plugins require shared contexts before QApplication exists.
+        QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_ShareOpenGLContexts)
         super().__init__(argv)
 
         self.sanpy_paths = sanpy_paths or SanPyPaths()
