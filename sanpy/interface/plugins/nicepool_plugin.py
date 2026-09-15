@@ -19,20 +19,94 @@ logger = get_logger(__name__)
 
 _IDENTITY_COLUMNS: tuple[str, ...] = ("file", "include")
 _PREFILTER_COLUMNS: tuple[str, ...] = ("sweep", "epoch", "include")
-_FI_PLOT_PRESET_NAME = "FI Plot"
+_PLOT_COLUMN_KEYS: tuple[str, ...] = ("groupColumn", "yColumn", "xColumn")
+_DEFAULT_PRESET_NAME = "FI Plot"
+
+_PRESET_FI_PLOT: dict[str, Any] = {
+    "name": "FI Plot",
+    "layout": "1x2",
+    "activePlotIndex": 0,
+    "plots": [
+        {
+            "plotType": "swarm",
+            "groupColumn": "epochLevel",
+            "yColumn": "spikeFreq_hz",
+            "showPlotlyToolbar": False,
+        },
+        {
+            "plotType": "swarm",
+            "groupColumn": "epochLevel",
+            "yColumn": "spikeFreq_hz",
+            "showPlotlyToolbar": False,
+        },
+    ],
+}
+
+_PRESET_SWEEP_PLOT: dict[str, Any] = {
+    "name": "Sweep Plot",
+    "layout": "1x2",
+    "activePlotIndex": 0,
+    "plots": [
+        {
+            "plotType": "swarm",
+            "groupColumn": "sweep",
+            "yColumn": "spikeFreq_hz",
+            "showPlotlyToolbar": False,
+        },
+        {
+            "plotType": "swarm",
+            "groupColumn": "sweep",
+            "yColumn": "spikeFreq_hz",
+            "showPlotlyToolbar": False,
+        },
+    ],
+}
+
+_NAMED_PRESETS: tuple[dict[str, Any], ...] = (
+    _PRESET_FI_PLOT,
+    _PRESET_SWEEP_PLOT,
+)
 
 
-def build_fi_plot_preset(state: Mapping[str, Any]) -> dict[str, Any]:
-    """Build SanPy's editable initial NicePool preset from valid browser state.
+def _preset_required_columns(preset: Mapping[str, Any]) -> set[str]:
+    """Return analysis-result columns referenced by one named preset.
+
+    Args:
+        preset: Named SanPy NicePool preset definition.
+
+    Returns:
+        Column names assigned as plot axes or grouping.
+    """
+    required: set[str] = set()
+    plots = preset.get("plots", [])
+    if not isinstance(plots, Sequence) or isinstance(plots, (str, bytes)):
+        return required
+    for plot in plots:
+        if not isinstance(plot, Mapping):
+            continue
+        for key in _PLOT_COLUMN_KEYS:
+            value = plot.get(key)
+            if isinstance(value, str) and value:
+                required.add(value)
+    return required
+
+
+def build_named_preset(
+    state: Mapping[str, Any],
+    preset: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Overlay one named SanPy preset onto complete NicePool browser state.
 
     Args:
         state: Complete NicePool state returned by the embedded component.
+        preset: Named SanPy plot preset with layout and per-slot key assignments.
 
     Returns:
-        Named NicePool preset with two FI swarm plots.
+        Named NicePool preset ready for ``set_presets``.
 
     Raises:
-        ValueError: If the browser state does not contain four plot mappings.
+        ValueError: If the browser state does not contain four plot mappings,
+            or the named preset plot list is invalid.
     """
     preset_state = deepcopy(dict(state))
     plots = preset_state.get("plots")
@@ -41,21 +115,21 @@ def build_fi_plot_preset(state: Mapping[str, Any]) -> dict[str, Any]:
     ):
         raise ValueError("NicePool state does not contain four plot mappings")
 
-    preset_state["layout"] = "1x2"
-    preset_state["activePlotIndex"] = 0
-    for plot in plots:
-        plot["showPlotlyToolbar"] = False
-    for plot in plots[:2]:
-        plot.update(
-            {
-                "plotType": "swarm",
-                "groupColumn": "epochLevel",
-                "yColumn": "spikeFreq_hz",
-            }
-        )
+    plot_overrides = preset.get("plots")
+    if not isinstance(plot_overrides, Sequence) or isinstance(
+        plot_overrides, (str, bytes)
+    ):
+        raise ValueError("NicePool preset does not contain plot mappings")
+
+    preset_state["layout"] = preset["layout"]
+    preset_state["activePlotIndex"] = preset["activePlotIndex"]
+    for index, slot in enumerate(plot_overrides):
+        if not isinstance(slot, Mapping):
+            raise ValueError("NicePool preset plot mapping is invalid")
+        plots[index].update(dict(slot))
     return {
         "schemaVersion": 1,
-        "name": _FI_PLOT_PRESET_NAME,
+        "name": preset["name"],
         "state": preset_state,
     }
 
@@ -195,6 +269,7 @@ class NicePoolPlugin(sanpyPlugin):
         self.toggleTopToobar(False, show_response_options=False)
 
         self._row_id_to_spike: dict[str, int] = {}
+        self._available_columns: set[str] = set()
         self._nicepool: Any | None = None
         self._status_label = QtWidgets.QLabel(self)
         self._status_label.setWordWrap(True)
@@ -256,21 +331,46 @@ class NicePoolPlugin(sanpyPlugin):
             self._blockSlots = False
 
     def _apply_initial_preset(self, state: object) -> None:
-        """Install and apply the initial FI plot after NicePool receives data.
+        """Install compatible named presets after NicePool receives data.
 
         Args:
             state: Complete dataset-aware NicePool state from the browser.
         """
         if self._nicepool is None or not isinstance(state, Mapping):
-            logger.error("Unable to initialize NicePool FI Plot preset")
+            logger.error("Unable to initialize NicePool plot presets")
             return
-        try:
-            preset = build_fi_plot_preset(state)
-        except ValueError as error:
-            logger.error("Unable to initialize NicePool FI Plot preset: %s", error)
+        presets: list[dict[str, Any]] = []
+        for definition in _NAMED_PRESETS:
+            missing = sorted(
+                _preset_required_columns(definition).difference(self._available_columns)
+            )
+            if missing:
+                logger.warning(
+                    "NicePool %s preset is unavailable; missing columns: %s",
+                    definition["name"],
+                    ", ".join(missing),
+                )
+                continue
+            try:
+                presets.append(build_named_preset(state, definition))
+            except ValueError as error:
+                logger.error(
+                    "Unable to initialize NicePool %s preset: %s",
+                    definition["name"],
+                    error,
+                )
+                return
+        if not presets:
+            logger.error("Unable to initialize NicePool plot presets")
             return
-        self._nicepool.set_presets([preset])
-        self._nicepool.apply_preset(_FI_PLOT_PRESET_NAME)
+        self._nicepool.set_presets(presets)
+        names = {preset["name"] for preset in presets}
+        applied_name = (
+            _DEFAULT_PRESET_NAME
+            if _DEFAULT_PRESET_NAME in names
+            else str(presets[0]["name"])
+        )
+        self._nicepool.apply_preset(applied_name)
 
     def replot(self) -> None:
         """Replace NicePool data after a file or analysis change."""
@@ -278,12 +378,14 @@ class NicePoolPlugin(sanpyPlugin):
             return
         if self.ba is None or not self.ba.isAnalyzed():
             self._row_id_to_spike = {}
+            self._available_columns = set()
             self._show_status("Detect spikes to populate NicePool.")
             return
 
         dataframe = self.ba.asDataFrame(regenerateAnalysisDataFrame=True)
         if dataframe is None or dataframe.empty:
             self._row_id_to_spike = {}
+            self._available_columns = set()
             self._show_status("Detect spikes to populate NicePool.")
             return
 
@@ -298,19 +400,29 @@ class NicePoolPlugin(sanpyPlugin):
                 schema=schema,
                 pre_filter_columns=prefilters,
             )
-            required_preset_columns = {"epochLevel", "spikeFreq_hz"}
-            if required_preset_columns.issubset(projected.columns):
+            self._available_columns = set(projected.columns)
+            if any(
+                _preset_required_columns(preset).issubset(self._available_columns)
+                for preset in _NAMED_PRESETS
+            ):
                 self._nicepool.get_state(self._apply_initial_preset)
             else:
-                missing = sorted(required_preset_columns.difference(projected.columns))
-                logger.warning(
-                    "NicePool FI Plot preset is unavailable; missing columns: %s",
-                    ", ".join(missing),
-                )
+                for preset in _NAMED_PRESETS:
+                    missing = sorted(
+                        _preset_required_columns(preset).difference(
+                            self._available_columns
+                        )
+                    )
+                    logger.warning(
+                        "NicePool %s preset is unavailable; missing columns: %s",
+                        preset["name"],
+                        ", ".join(missing),
+                    )
             self.selectSpikeList()
         except (TypeError, ValueError) as error:
             logger.error("Unable to prepare SanPy results for NicePool: %s", error)
             self._row_id_to_spike = {}
+            self._available_columns = set()
             self._show_status(f"Unable to populate NicePool: {error}")
             return
 

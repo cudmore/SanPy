@@ -13,14 +13,21 @@ from pytestqt.qtbot import QtBot
 
 from sanpy.interface.plugins.nicepool_plugin import (
     NicePoolPlugin,
-    build_fi_plot_preset,
+    _PRESET_FI_PLOT,
+    _PRESET_SWEEP_PLOT,
+    _preset_required_columns,
+    build_named_preset,
     prepare_nicepool_data,
     selection_to_spikes,
 )
 
 
-def test_build_fi_plot_preset_uses_editable_sanpy_defaults() -> None:
-    """Configure both visible plots without replacing unrelated defaults."""
+def _source_nicepool_state() -> dict[str, object]:
+    """Return complete four-slot NicePool state with editable browser defaults.
+
+    Returns:
+        Dataset-aware workspace state used as the overlay source.
+    """
     source_plot = {
         "plotType": "scatter",
         "groupColumn": None,
@@ -28,14 +35,19 @@ def test_build_fi_plot_preset_uses_editable_sanpy_defaults() -> None:
         "showPlotlyToolbar": True,
         "pointSize": 7,
     }
-    source_state = {
+    return {
         "schemaVersion": 1,
         "layout": "1x1",
         "activePlotIndex": 0,
         "plots": [dict(source_plot) for _ in range(4)],
     }
 
-    preset = build_fi_plot_preset(source_state)
+
+def test_build_named_preset_applies_fi_plot_slots() -> None:
+    """Configure both FI Plot slots without replacing unrelated defaults."""
+    source_state = _source_nicepool_state()
+
+    preset = build_named_preset(source_state, _PRESET_FI_PLOT)
 
     assert preset["name"] == "FI Plot"
     assert preset["state"]["layout"] == "1x2"
@@ -43,13 +55,40 @@ def test_build_fi_plot_preset_uses_editable_sanpy_defaults() -> None:
         assert plot["plotType"] == "swarm"
         assert plot["groupColumn"] == "epochLevel"
         assert plot["yColumn"] == "spikeFreq_hz"
+        assert plot["showPlotlyToolbar"] is False
         assert plot["pointSize"] == 7
-    assert all(
-        plot["showPlotlyToolbar"] is False
-        for plot in preset["state"]["plots"]
-    )
+    for plot in preset["state"]["plots"][2:]:
+        assert plot["plotType"] == "scatter"
+        assert plot["showPlotlyToolbar"] is True
+        assert plot["pointSize"] == 7
     assert source_state["layout"] == "1x1"
     assert source_state["plots"][0]["plotType"] == "scatter"
+
+
+def test_build_named_preset_applies_sweep_plot_slots() -> None:
+    """Configure both Sweep Plot slots from the same browser defaults."""
+    source_state = _source_nicepool_state()
+
+    preset = build_named_preset(source_state, _PRESET_SWEEP_PLOT)
+
+    assert preset["name"] == "Sweep Plot"
+    assert preset["state"]["layout"] == "1x2"
+    for plot in preset["state"]["plots"][:2]:
+        assert plot["plotType"] == "swarm"
+        assert plot["groupColumn"] == "sweep"
+        assert plot["yColumn"] == "spikeFreq_hz"
+        assert plot["showPlotlyToolbar"] is False
+        assert plot["pointSize"] == 7
+    assert source_state["plots"][0]["groupColumn"] is None
+
+
+def test_preset_required_columns_come_from_assigned_keys() -> None:
+    """Collect only columns assigned in a named preset's plot slots."""
+    assert _preset_required_columns(_PRESET_FI_PLOT) == {
+        "epochLevel",
+        "spikeFreq_hz",
+    }
+    assert _preset_required_columns(_PRESET_SWEEP_PLOT) == {"sweep", "spikeFreq_hz"}
 
 
 def test_prepare_nicepool_data_projects_scalar_plot_columns() -> None:
