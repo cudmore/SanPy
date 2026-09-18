@@ -16,70 +16,23 @@ from sanpy.interface.plugins.nicepool_plugin import (
     _PRESET_FI_PLOT,
     _PRESET_SWEEP_PLOT,
     _preset_required_columns,
-    build_named_preset,
     prepare_nicepool_data,
     selection_to_spikes,
 )
 
 
-def _source_nicepool_state() -> dict[str, object]:
-    """Return complete four-slot NicePool state with editable browser defaults.
-
-    Returns:
-        Dataset-aware workspace state used as the overlay source.
-    """
-    source_plot = {
-        "plotType": "scatter",
-        "groupColumn": None,
-        "yColumn": "thresholdVal",
-        "showPlotlyToolbar": True,
-        "pointSize": 7,
-    }
-    return {
-        "schemaVersion": 1,
-        "layout": "1x1",
-        "activePlotIndex": 0,
-        "plots": [dict(source_plot) for _ in range(4)],
-    }
-
-
-def test_build_named_preset_applies_fi_plot_slots() -> None:
-    """Configure both FI Plot slots without replacing unrelated defaults."""
-    source_state = _source_nicepool_state()
-
-    preset = build_named_preset(source_state, _PRESET_FI_PLOT)
-
-    assert preset["name"] == "FI Plot"
-    assert preset["state"]["layout"] == "1x2"
-    for plot in preset["state"]["plots"][:2]:
-        assert plot["plotType"] == "swarm"
+def test_named_presets_are_dataset_aware_override_definitions() -> None:
+    """Keep SanPy preset policy partial and leave complete state to NicePool."""
+    assert _PRESET_FI_PLOT["name"] == "FI Plot"
+    assert _PRESET_FI_PLOT["state"]["layout"] == "1x2"
+    assert _PRESET_SWEEP_PLOT["name"] == "Sweep Plot"
+    assert _PRESET_SWEEP_PLOT["state"]["layout"] == "1x2"
+    for plot in _PRESET_FI_PLOT["state"]["plots"]:
         assert plot["groupColumn"] == "epochLevel"
         assert plot["yColumn"] == "spikeFreq_hz"
-        assert plot["showPlotlyToolbar"] is False
-        assert plot["pointSize"] == 7
-    for plot in preset["state"]["plots"][2:]:
-        assert plot["plotType"] == "scatter"
-        assert plot["showPlotlyToolbar"] is True
-        assert plot["pointSize"] == 7
-    assert source_state["layout"] == "1x1"
-    assert source_state["plots"][0]["plotType"] == "scatter"
-
-
-def test_build_named_preset_applies_sweep_plot_slots() -> None:
-    """Configure both Sweep Plot slots from the same browser defaults."""
-    source_state = _source_nicepool_state()
-
-    preset = build_named_preset(source_state, _PRESET_SWEEP_PLOT)
-
-    assert preset["name"] == "Sweep Plot"
-    assert preset["state"]["layout"] == "1x2"
-    for plot in preset["state"]["plots"][:2]:
-        assert plot["plotType"] == "swarm"
+    for plot in _PRESET_SWEEP_PLOT["state"]["plots"]:
         assert plot["groupColumn"] == "sweep"
         assert plot["yColumn"] == "spikeFreq_hz"
-        assert plot["showPlotlyToolbar"] is False
-        assert plot["pointSize"] == 7
-    assert source_state["plots"][0]["groupColumn"] is None
 
 
 def test_preset_required_columns_come_from_assigned_keys() -> None:
@@ -195,33 +148,33 @@ def test_nicepool_plugin_webengine_selection_round_trip(qtbot: QtBot) -> None:
     initial_state: list[object] = []
 
     def collect_initial_state(state: object) -> None:
-        """Poll queued browser state until the initial preset is applied.
+        """Collect the atomically initialized NicePool state.
 
         Args:
             state: Complete NicePool state returned by the browser.
         """
         initial_state.append(state)
-        if isinstance(state, dict) and state.get("layout") != "1x2":
-            plugin._nicepool.get_state(collect_initial_state)
 
     plugin._nicepool.get_state(collect_initial_state)
     qtbot.waitUntil(
-        lambda: any(
-            isinstance(state, dict) and state.get("layout") == "1x2"
-            for state in initial_state
-        ),
+        lambda: len(initial_state) == 1,
         timeout=5_000,
     )
-    applied_state = next(
-        state
-        for state in initial_state
-        if isinstance(state, dict) and state.get("layout") == "1x2"
-    )
+    applied_state = initial_state[0]
+    assert isinstance(applied_state, dict)
+    assert applied_state["layout"] == "1x2"
     for plot in applied_state["plots"][:2]:
         assert plot["plotType"] == "swarm"
         assert plot["groupColumn"] == "epochLevel"
         assert plot["yColumn"] == "spikeFreq_hz"
         assert plot["showPlotlyToolbar"] is False
+    presets: list[object] = []
+    collapsed: list[object] = []
+    plugin._nicepool.get_presets(presets.append)
+    plugin._nicepool.get_controls_collapsed(collapsed.append)
+    qtbot.waitUntil(lambda: len(presets) == 1 and len(collapsed) == 1, timeout=5_000)
+    assert [preset["name"] for preset in presets[0]] == ["FI Plot", "Sweep Plot"]
+    assert collapsed == [True]
 
     plugin.setSelectedSpikes([3, 2])
     plugin.selectSpikeList()
