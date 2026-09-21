@@ -54,6 +54,17 @@ def test_set_spike_stat_accepts_one_integer_index() -> None:
     assert analysis.spikeDict[1]["spike_condition"] == "control"
 
 
+def test_regenerate_analysis_dataframe_clears_stale_zero_spike_results() -> None:
+    """Clear the cached result table after reanalysis detects no spikes."""
+    analysis = bAnalysis.__new__(bAnalysis)
+    analysis.spikeDict = analysisResultList()
+    analysis._dfReportForScatter = pd.DataFrame({"spikeNumber": [0]})
+
+    analysis.regenerateAnalysisDataFrame()
+
+    assert analysis.asDataFrame() is None
+
+
 def test_analysis_result_filtering_combines_sweep_and_epoch() -> None:
     """Return only spikes matching both Plot Scatter toolbar filters."""
     analysis = _analysis_with_two_spikes()

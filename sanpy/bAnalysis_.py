@@ -2140,7 +2140,7 @@ class bAnalysis:
                 self._dfReportForScatter[k] = v
 
         else:
-            self.dfReportForScatter = None
+            self._dfReportForScatter = None
 
     def _getFeet(self, thresholdPnts: List[int], prePnts: int) -> List[int]:
         """
