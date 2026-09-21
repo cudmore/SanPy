@@ -2,7 +2,7 @@
 
 Run after spike detection on a real recording::
 
-    python scripts/audit_analysis_stats.py --path data/2021_07_20_0010.abf
+    uv run scripts/audit_analysis_stats.py --path data/2021_07_20_0010.abf
 """
 
 from __future__ import annotations
