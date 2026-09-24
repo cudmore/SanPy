@@ -312,13 +312,13 @@ def _epoch_index(acquisition: AcquisitionSnapshot) -> np.ndarray:
 
 
 def _write_json(path: Path, value: Any) -> None:
-    """Write a runtime value as deterministic, strict JSON.
+    """Write a runtime value as strict, insertion-ordered JSON.
 
     Args:
         path: Destination JSON path.
         value: Runtime value to convert and serialize.
     """
-    path.write_text(json.dumps(json_value(value), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(json_value(value), indent=2, sort_keys=False) + "\n", encoding="utf-8")
 
 
 def _install(staged: Path, destination: Path, overwrite: bool) -> None:

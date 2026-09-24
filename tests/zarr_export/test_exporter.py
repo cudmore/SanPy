@@ -14,8 +14,8 @@ import zarr
 import sanpy
 from sanpy.bAnalysisResults import analysisResultDict
 from sanpy.bDetection import getDefaultDetection
-from sanpy.io.zarr_export.exporter import export_collection
-from sanpy.io.zarr_export.json_codec import json_value
+from sanpy.io.zarr_export.exporter import _write_json, export_collection
+from sanpy.io.zarr_export.json_codec import canonical_json, json_value
 from sanpy.io.zarr_export.pyabf_adapter import snapshot_abf
 from sanpy.io.zarr_export.validator import SanPyZarrValidationError, validate_collection
 from sanpy.trace_overlays import get_trace_overlay_definitions
@@ -61,6 +61,37 @@ def _saved_sanpy_analysis(data_folder: Path) -> Any:
     analysis = directory.getAnalysis(row, allowAutoLoad=True)
     assert analysis is not None
     return analysis
+
+
+def test_canonical_json_preserves_mapping_insertion_order() -> None:
+    """Preserve top-level and nested mapping order in compact JSON."""
+    value = {"second": {"nested_second": 2, "nested_first": 1}, "first": 0}
+
+    assert canonical_json(value) == (
+        '{"second":{"nested_second":2,"nested_first":1},"first":0}'
+    )
+
+
+def test_write_json_preserves_mapping_insertion_order(tmp_path: Path) -> None:
+    """Preserve top-level and nested mapping order in indented JSON.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+    """
+    path = tmp_path / "ordered.json"
+    value = {"second": {"nested_second": 2, "nested_first": 1}, "first": 0}
+
+    _write_json(path, value)
+
+    assert path.read_text(encoding="utf-8") == (
+        '{\n'
+        '  "second": {\n'
+        '    "nested_second": 2,\n'
+        '    "nested_first": 1\n'
+        '  },\n'
+        '  "first": 0\n'
+        '}\n'
+    )
 
 
 def test_export_is_zarr3_and_preserves_runtime_state(

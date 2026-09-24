@@ -11,7 +11,7 @@ from .json_codec import canonical_json
 
 
 def prepare_table(table: pd.DataFrame) -> pd.DataFrame:
-    """Copy a table and encode structured object cells as canonical JSON.
+    """Copy a table and encode structured object cells as compact JSON.
 
     Args:
         table: Source dataframe containing runtime analysis values.
@@ -57,8 +57,8 @@ def _cell(value: Any) -> Any:
         value: Cell value to normalize.
 
     Returns:
-        Canonical JSON text for structured values, otherwise the original
-        scalar value.
+        Insertion-ordered JSON text for structured values, otherwise the
+        original scalar value.
     """
     if isinstance(value, (dict, list, tuple)):
         return canonical_json(value)

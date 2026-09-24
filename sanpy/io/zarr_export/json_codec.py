@@ -52,12 +52,13 @@ def json_value(value: Any) -> Any:
 
 
 def canonical_json(value: Any) -> str:
-    """Serialize a structured table cell as deterministic compact JSON.
+    """Serialize a structured table cell as compact, insertion-ordered JSON.
 
     Args:
         value: Structured runtime value to serialize.
 
     Returns:
-        Canonical JSON text with sorted keys and no insignificant whitespace.
+        JSON text preserving mapping insertion order with no insignificant
+        whitespace.
     """
-    return json.dumps(json_value(value), sort_keys=True, separators=(",", ":"))
+    return json.dumps(json_value(value), sort_keys=False, separators=(",", ":"))
