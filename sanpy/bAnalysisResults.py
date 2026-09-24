@@ -164,6 +164,8 @@ analysisResultDict[key]["type"] = "float"
 analysisResultDict[key]["default"] = defaultVal
 analysisResultDict[key]["units"] = "mV"  # TODO: will be pA for voltage-clamp
 analysisResultDict[key]["axis_label"] = "DAC command (mV)"
+analysisResultDict[key]["show_in_plot_menu"] = True
+analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key]["description"] = "Value of DAC command at AP threshold point."
 
 ###############################################################################
