@@ -55,7 +55,7 @@ def test_detection_view_buttons_share_view_menu_state(
     window = qapp.openSanPyWindow(str(data_path))
     qtbot.addWidget(window)
     widget = window.myDetectionWidget
-    button = widget._viewToggleButtons[("detectionPanels", "Detection")]
+    button = widget._viewToggleButtons[("detectionPanels", "Detection")][0]
     button_bar = button.parentWidget()
     detection_column = button_bar.parentWidget()
 
@@ -140,10 +140,14 @@ def test_raw_plot_buttons_share_view_menu_state(
     window = qapp.openSanPyWindow(str(data_path))
     qtbot.addWidget(window)
     widget = window.myDetectionWidget
-    button = widget._viewToggleButtons[("rawDataPanels", "Derivative")]
-    detection_button = widget._viewToggleButtons[
-        ("detectionPanels", "Detection Panel")
-    ]
+    button = widget._viewToggleButtons[("rawDataPanels", "Derivative")][0]
+    detection_button = next(
+        candidate
+        for candidate in widget._viewToggleButtons[
+            ("detectionPanels", "Detection Panel")
+        ]
+        if candidate.text() == "<<"
+    )
 
     assert detection_button.text() == "<<"
     assert detection_button.parentWidget().layout().itemAt(0).widget() is detection_button
@@ -168,6 +172,67 @@ def test_raw_plot_buttons_share_view_menu_state(
 
     assert button.isChecked() is menu_state
     assert (not widget.derivPlot.isHidden()) is menu_state
+
+
+def test_left_toolbar_opens_one_panel_and_closes_plugin(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Show one left panel at a time and disconnect a closed plugin.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    qtbot.addWidget(window)
+    widget = window.myDetectionWidget
+    detection_buttons = widget._viewToggleButtons[
+        ("detectionPanels", "Detection Panel")
+    ]
+    plot_button = next(button for button in detection_buttons if button.text() == "<<")
+    toolbar_button = next(button for button in detection_buttons if button.text() != "<<")
+    params_button = widget._viewToggleButtons[
+        ("detectionPanels", "Detection Parameters")
+    ][0]
+
+    assert widget.myHBoxLayout_detect.itemAt(0).widget() is widget._leftToolbar
+    assert widget._leftPanelSplitter.widget(0) is widget._leftPanelContainer
+    assert widget._leftPanelSplitter.widget(1) is widget._rawPlotColumn
+    assert widget._leftToolbar.isHidden() is False
+    assert toolbar_button.isChecked() is plot_button.isChecked()
+    assert widget.detectToolbarWidget.maximumWidth() > 280
+
+    params_button.click()
+
+    assert params_button.isChecked() is True
+    assert plot_button.isChecked() is False
+    assert toolbar_button.isChecked() is False
+    assert widget._detectionPanelWidget.isHidden() is True
+    assert widget._leftPanelContainer.isHidden() is False
+    assert widget._leftToolbar.isHidden() is False
+    plugin = widget._detectionParametersPlugin
+    assert plugin is not None
+    assert plugin.getWidget().isHidden() is False
+
+    params_button.click()
+
+    assert widget._detectionParametersPlugin is None
+    assert widget._leftPanelContainer.isHidden() is True
+    assert widget._leftToolbar.isHidden() is False
+    with pytest.raises(TypeError):
+        window.signalSelectSpikeList.disconnect(plugin.slot_selectSpikeList)
+    with pytest.raises(TypeError):
+        plugin.signalDetect.disconnect(window.slot_detect)
+
+    toolbar_button.click()
+
+    assert toolbar_button.isChecked() is True
+    assert plot_button.isChecked() is True
+    assert widget._detectionPanelWidget.isHidden() is False
+    assert widget._leftPanelContainer.isHidden() is False
 
 
 def test_raw_plot_toolbar_resets_axis_and_rebalances_visible_plots(
@@ -382,10 +447,8 @@ def test_raw_plot_column_expands_with_central_widget(
     qtbot.addWidget(window)
     widget = window.myDetectionWidget
 
-    raw_plot_index = next(
-        index
-        for index in range(widget.myHBoxLayout_detect.count())
-        if widget.myHBoxLayout_detect.itemAt(index).layout() is widget._rawPlotLayout
-    )
+    splitter_index = widget.myHBoxLayout_detect.indexOf(widget._leftPanelSplitter)
 
-    assert widget.myHBoxLayout_detect.stretch(raw_plot_index) == 1
+    assert widget.myHBoxLayout_detect.stretch(splitter_index) == 1
+    assert widget._leftPanelSplitter.widget(1) is widget._rawPlotColumn
+    assert widget._rawPlotColumn.layout() is widget._rawPlotLayout

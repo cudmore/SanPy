@@ -783,13 +783,16 @@ def test_final_analysis_close_closes_plugins_and_restores_launcher() -> None:
     window = SimpleNamespace(
         getSanPyApp=lambda: app,
         prepareToClose=lambda: True,
+        myDetectionWidget=SimpleNamespace(
+            _close_detection_parameters_panel=lambda: calls.append("close left panel")
+        ),
         _closePluginWindows=lambda: calls.append("close plugins"),
     )
     event = _FakeCloseEvent()
 
     SanPyWindow.closeEvent(window, event)
 
-    assert calls == ["close plugins", "show launcher"]
+    assert calls == ["close left panel", "close plugins", "show launcher"]
     assert event.accepted is True
 
 
@@ -817,13 +820,16 @@ def test_application_quit_does_not_restore_launcher_or_prompt_again() -> None:
     window = SimpleNamespace(
         getSanPyApp=lambda: app,
         prepareToClose=lambda: calls.append("prompt again"),
+        myDetectionWidget=SimpleNamespace(
+            _close_detection_parameters_panel=lambda: calls.append("close left panel")
+        ),
         _closePluginWindows=lambda: calls.append("close plugins"),
     )
     event = _FakeCloseEvent()
 
     SanPyWindow.closeEvent(window, event)
 
-    assert calls == ["close plugins"]
+    assert calls == ["close left panel", "close plugins"]
     assert event.accepted is True
 
 

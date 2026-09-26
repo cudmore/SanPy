@@ -116,6 +116,64 @@ class _SweepSelectionWidget(QtWidgets.QWidget):
         if 0 <= new_index < self.combo_box.count():
             self.combo_box.setCurrentIndex(new_index)
 
+
+class _LeftToolbar(QtWidgets.QWidget):
+    """Vertical icon buttons that open one left panel at a time.
+
+    Icons are Qt standard placeholders until SanPy toolbar icons are added.
+    """
+
+    def __init__(self, detection_widget: "bDetectionWidget") -> None:
+        """Build the detection and detection-parameters buttons.
+
+        Args:
+            detection_widget: Detection widget that applies the button state.
+        """
+        super().__init__(detection_widget)
+        self.setFixedWidth(36)
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(2)
+
+        buttons = (
+            (
+                "detectionPanels",
+                "Detection Panel",
+                "Show or Hide Detection Panel",
+                QtWidgets.QStyle.SP_ArrowLeft,
+                True,
+            ),
+            (
+                "detectionPanels",
+                "Detection Parameters",
+                "Show or Hide Detection Parameters",
+                QtWidgets.QStyle.SP_FileDialogDetailedView,
+                False,
+            ),
+        )
+        options = detection_widget.getMainWindowOptions()
+        for section, name, tip, icon_id, default_checked in buttons:
+            button = QtWidgets.QToolButton(self)
+            button.setCheckable(True)
+            button.setAutoRaise(True)
+            button.setToolTip(tip)
+            button.setIcon(self.style().standardIcon(icon_id))
+            button.setIconSize(QtCore.QSize(22, 22))
+            button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+            section_options = options[section] if options is not None else None
+            if section_options is not None and name in section_options:
+                checked = bool(section_options[name])
+            else:
+                checked = default_checked
+            button.setChecked(checked)
+            button.toggled.connect(
+                partial(detection_widget._on_view_toggle_button, section, name)
+            )
+            layout.addWidget(button)
+            detection_widget._register_view_toggle_button(section, name, button)
+        layout.addStretch(1)
+
+
 class bDetectionWidget(QtWidgets.QWidget):
     signalSelectSpike = QtCore.pyqtSignal(object)  # spike number, doZoom
     signalSelectSpikeList = QtCore.pyqtSignal(object)  # spike number, doZoom
@@ -1623,10 +1681,19 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         # toggle in myDetectionToolbarWidget
         elif item == "Detection Panel":
+            self._detectionPanelWidget.setVisible(on)
+            self._set_left_panel_open(
+                on or self._detectionParametersPlugin is not None
+            )
+        elif item == "Detection Parameters":
             if on:
-                self._detectionPanelWidget.show()
+                self._open_detection_parameters_panel()
             else:
-                self._detectionPanelWidget.hide()
+                # Hiding this panel closes the plugin. It is not left off screen.
+                self._close_detection_parameters_panel()
+            self._set_left_panel_open(
+                on or not self._detectionPanelWidget.isHidden()
+            )
         elif item == "Detection":
             self.detectToolbarWidget.toggleInterface(item, on)
         elif item == "Display":
@@ -1673,7 +1740,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 partial(self._on_view_toggle_button, section, name)
             )
             layout.addWidget(button)
-            self._viewToggleButtons[(section, name)] = button
+            self._register_view_toggle_button(section, name, button)
 
         layout.addStretch()
         return bar
@@ -1712,8 +1779,8 @@ class bDetectionWidget(QtWidgets.QWidget):
             )
         )
         layout.insertWidget(0, self._detectionPanelButton)
-        self._viewToggleButtons[("detectionPanels", "Detection Panel")] = (
-            self._detectionPanelButton
+        self._register_view_toggle_button(
+            "detectionPanels", "Detection Panel", self._detectionPanelButton
         )
 
         self._resetAxisButton = QtWidgets.QToolButton(bar)
@@ -1782,12 +1849,120 @@ class bDetectionWidget(QtWidgets.QWidget):
             name: View controlled by the button.
             checked: Whether the view is visible.
         """
-        button = self._viewToggleButtons.get((section, name))
-        if button is None:
+        for button in self._viewToggleButtons.get((section, name), []):
+            button.blockSignals(True)
+            button.setChecked(checked)
+            button.blockSignals(False)
+
+    def _register_view_toggle_button(
+        self, section: str, name: str, button: QtWidgets.QToolButton
+    ) -> None:
+        """Remember every button that represents one view.
+
+        Args:
+            section: Configuration section containing the visibility value.
+            name: View controlled by the button.
+            button: Checkable button kept in sync with that view.
+        """
+        self._viewToggleButtons.setdefault((section, name), []).append(button)
+
+    def _prefer_detection_panel_over_parameters(self) -> None:
+        """Keep Detection Parameters closed when the detection panel is open.
+
+        Saved preferences can mark both left panels visible. The detection
+        panel wins, and only one left panel is open.
+        """
+        options = self.getMainWindowOptions()
+        if options is None:
             return
-        button.blockSignals(True)
-        button.setChecked(checked)
-        button.blockSignals(False)
+        panels = options["detectionPanels"]
+        if panels.get("Detection Parameters") and panels.get(
+            "Detection Panel", True
+        ):
+            panels["Detection Parameters"] = False
+
+    def _set_left_panel_open(self, open_panel: bool) -> None:
+        """Show or collapse the splitter pane that holds the open left panel.
+
+        Args:
+            open_panel: Whether a left panel should occupy the splitter's left side.
+        """
+        if open_panel:
+            self._leftPanelContainer.show()
+            self._apply_left_panel_width()
+            return
+        self._remember_left_panel_width()
+        self._leftPanelContainer.hide()
+
+    def _remember_left_panel_width(self) -> None:
+        """Store the dragged left-panel width for this session."""
+        sizes = self._leftPanelSplitter.sizes()
+        if sizes and sizes[0] > 0:
+            self._leftPanelWidth = sizes[0]
+
+    def _apply_left_panel_width(self) -> None:
+        """Restore the session left-panel width."""
+        sizes = self._leftPanelSplitter.sizes()
+        total = sum(sizes)
+        left = self._leftPanelWidth
+        if total <= left:
+            total = left + 800
+        self._leftPanelSplitter.setSizes([left, total - left])
+
+    def _on_left_panel_splitter_moved(self, _pos: int, _index: int) -> None:
+        """Remember a user drag of the left-panel divider.
+
+        Args:
+            _pos: New divider position supplied by Qt.
+            _index: Index of the widget to the right of the divider.
+        """
+        self._remember_left_panel_width()
+
+    def _open_detection_parameters_panel(self) -> None:
+        """Create the Detection Parameters plugin in the left panel.
+
+        Showing this panel always constructs a new plugin. Hiding it closes
+        that plugin instead of keeping a hidden copy.
+        """
+        if self._detectionParametersPlugin is not None:
+            self._detectionParametersPlugin.getWidget().show()
+            return
+        if self.myMainWindow is None:
+            logger.error(
+                "Cannot open Detection Parameters without a SanPy window."
+            )
+            return
+        plugin = self.myMainWindow.runPlugin(
+            "Detection Parameters",
+            self.myMainWindow.get_bAnalysis(),
+            show=False,
+        )
+        if plugin is None or plugin.getInitError() or not plugin.getShowSelf():
+            logger.error("Unable to open the Detection Parameters left panel.")
+            return
+        widget = plugin.getWidget()
+        widget.setMinimumWidth(0)
+        widget.setSizePolicy(
+            QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Expanding
+        )
+        self._leftPanelLayout.addWidget(widget, 1)
+        widget.show()
+        self._detectionParametersPlugin = plugin
+
+    def _close_detection_parameters_panel(self) -> None:
+        """Close the embedded Detection Parameters plugin.
+
+        Hiding this left panel closes and deletes the plugin. It is not kept
+        off screen, so it stops receiving SanPy signals immediately.
+        """
+        plugin = self._detectionParametersPlugin
+        if plugin is None:
+            return
+        self._detectionParametersPlugin = None
+        widget = plugin.getWidget()
+        self._leftPanelLayout.removeWidget(widget)
+        widget.close()
+        widget.deleteLater()
 
     def _old_kymographChanged(self, event):
         """
@@ -1858,15 +2033,45 @@ class bDetectionWidget(QtWidgets.QWidget):
         Returns:
             True after the interface has been constructed.
         """
-        self._viewToggleButtons: dict[tuple[str, str], QtWidgets.QToolButton] = {}
+        self._viewToggleButtons: dict[
+            tuple[str, str], list[QtWidgets.QToolButton]
+        ] = {}
+        self._detectionParametersPlugin: Optional[object] = None
+        self._leftPanelWidth = 280
+        self._prefer_detection_panel_over_parameters()
 
-        # left is toolbar, right is PYQtGraph (self.view)
+        # Left toolbar, then a splitter: open left panel | raw plot column.
         self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
         self.myHBoxLayout_detect.setAlignment(QtCore.Qt.AlignTop)
 
-        # hSplitter gets added to h layout
-        # then we add left/right widgets to the splitter
-        _hSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal)
+        self._leftToolbar = _LeftToolbar(self)
+        self.myHBoxLayout_detect.addWidget(
+            self._leftToolbar, alignment=QtCore.Qt.AlignTop
+        )
+
+        self._leftPanelContainer = QtWidgets.QWidget(self)
+        self._leftPanelLayout = QtWidgets.QVBoxLayout(self._leftPanelContainer)
+        self._leftPanelLayout.setContentsMargins(0, 0, 0, 0)
+        self._leftPanelLayout.setAlignment(QtCore.Qt.AlignTop)
+        self._leftPanelContainer.setMinimumWidth(180)
+        self._leftPanelContainer.setSizePolicy(
+            QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Expanding
+        )
+
+        self._rawPlotColumn = QtWidgets.QWidget(self)
+        self._rawPlotLayout = QtWidgets.QVBoxLayout(self._rawPlotColumn)
+        self._rawPlotLayout.setContentsMargins(0, 0, 0, 0)
+
+        self._leftPanelSplitter = QtWidgets.QSplitter(QtCore.Qt.Horizontal, self)
+        self._leftPanelSplitter.setChildrenCollapsible(True)
+        self._leftPanelSplitter.addWidget(self._leftPanelContainer)
+        self._leftPanelSplitter.addWidget(self._rawPlotColumn)
+        self._leftPanelSplitter.setStretchFactor(0, 0)
+        self._leftPanelSplitter.setStretchFactor(1, 1)
+        self._leftPanelSplitter.splitterMoved.connect(
+            self._on_left_panel_splitter_moved
+        )
+        self.myHBoxLayout_detect.addWidget(self._leftPanelSplitter, 1)
 
         # detection widget toolbar
         self.detectToolbarWidget = myDetectToolbarWidget2(self.myPlots, self)
@@ -1890,15 +2095,11 @@ class bDetectionWidget(QtWidgets.QWidget):
         detection_layout.addWidget(
             self.detectToolbarWidget, alignment=QtCore.Qt.AlignTop
         )
-        self.myHBoxLayout_detect.addWidget(
+        self._leftPanelLayout.addWidget(
             self._detectionPanelWidget, alignment=QtCore.Qt.AlignTop
         )
-        # v2
-        # _hSplitter.addWidget(self.detectToolbarWidget)
-        # self.myHBoxLayout_detect.addWidget(_hSplitter)
 
         # kymograph, we need a vboxlayout to hold (kym widget, self.view)
-        self._rawPlotLayout = QtWidgets.QVBoxLayout(self)
         vBoxLayoutForPlot = self._rawPlotLayout
         vBoxLayoutForPlot.addWidget(self._build_raw_plot_toggle_bar())
         self._plotSweepControls = _SweepSelectionWidget(self)
@@ -2155,13 +2356,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         # was this june 4
         # vBoxLayoutForPlot.addWidget(self.view)
 
-        # v1
-        # Let the plot column consume space released when a dock is hidden.
-        self.myHBoxLayout_detect.addLayout(vBoxLayoutForPlot, 1)
-        # v2
-        # _tmpSplitterWidget = QtWidgets.QWidget()
-        # _tmpSplitterWidget.setLayout(vBoxLayoutForPlot)
-        # _hSplitter.addWidget(_tmpSplitterWidget)
+        options = self.getMainWindowOptions()
+        detection_panel_visible = True
+        if options is not None:
+            detection_panel_visible = bool(
+                options["detectionPanels"].get("Detection Panel", True)
+            )
+        self.toggleInterface("Detection Panel", detection_panel_visible)
 
     # def _cursorDragged(self, name, infLine):
     #     # logger.info(f'{name} {infLine.pos()}')
@@ -3492,8 +3693,8 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         """Build the grouped detection, display, and plot controls.
 
         Notes:
-            The toolbar uses a fixed width so the plot area receives the
-            remaining horizontal space.
+            Width follows the left-panel splitter. The detection widget starts
+            that pane at 280 px and remembers a drag for the session.
         """
         
         # myPath = os.path.dirname(os.path.abspath(__file__))
@@ -3512,9 +3713,11 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             showDAC = windowOptions["rawDataPanels"]["DAC"]
             showGlobalVm = windowOptions["rawDataPanels"]["Full Recording"]
 
-        # April 15, 2023, removed when adding horizontal splitter
-        #self.setFixedWidth(280)
-        self.setFixedWidth(280)
+        # The left-panel splitter sets the width. A fixed width would ignore drags.
+        self.setMinimumWidth(180)
+        self.setSizePolicy(
+            QtWidgets.QSizePolicy.Ignored, QtWidgets.QSizePolicy.Preferred
+        )
 
         # why do I need self here?
         self.mainLayout = QtWidgets.QVBoxLayout()

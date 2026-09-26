@@ -410,7 +410,9 @@ class sanpyPlugin(QtWidgets.QWidget):
     def _installSignalSlot(self):
         """Set up PyQt signals/slots.
 
-        Be sure to call _disconnectSignalSlot() on plugin destruction.
+        Paired with ``_disconnectSignalSlot``. Every connect in this method
+        needs a matching disconnect there so a closed plugin stops receiving
+        SanPy signals immediately.
         """
         app = self.getSanPyWindow()
         if app is not None:
@@ -449,19 +451,24 @@ class sanpyPlugin(QtWidgets.QWidget):
         # self.signalSelectSpike.connect(self.slot_selectSpike)
         # self.signalSelectSpikeList.connect(self.slot_selectSpikeList)
 
-    def _disconnectSignalSlot(self):
-        """Disconnect PyQt signal/slot on destruction."""
+    def _disconnectSignalSlot(self) -> None:
+        """Disconnect every connection made in ``_installSignalSlot``.
+
+        Paired with ``_installSignalSlot``. Close must drop file, analysis,
+        sweep, axis, spike, and detect connections before Qt deletes the plugin.
+        """
         app = self.getSanPyWindow()
         if app is not None:
-            # receive spike selection
-            # app.signalSelectSpike.disconnect(self.slot_selectSpike)
-            # receive update analysis (both file change and detect)
-            app.signalSwitchFile.disconnect(self.slot_switchFile)
+            # Keep this list aligned with _installSignalSlot.
+            app.signalSelectSpikeList.disconnect(self.slot_selectSpikeList)
             app.signalUpdateAnalysis.disconnect(self.slot_updateAnalysis)
-            # recieve set sweep
+            self.signalUpdateAnalysis.disconnect(app.slot_updateAnalysis)
+            app.signalSwitchFile.disconnect(self.slot_switchFile)
             app.signalSelectSweep.disconnect(self.slot_setSweep)
-            # recieve set x axis
             app.signalSetXAxis.disconnect(self.slot_set_x_axis)
+            self.signalDetect.disconnect(app.slot_detect)
+            self.signalSelectSpikeList.disconnect(app.slot_selectSpikeList)
+            self.signalCloseWindow.disconnect(app.slot_closeWindow)
 
     def toggleResponseOptions(self, thisOption: ResponseType, newValue: bool = None):
         """Set underlying responseOptions based on name of thisOption.

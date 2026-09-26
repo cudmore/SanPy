@@ -217,6 +217,7 @@ class preferences:
         # panels withing detectionWidget -> myDetectionToolbar
         configDict["detectionPanels"] = {}
         configDict["detectionPanels"]["Detection Panel"] = True  # main panel
+        configDict["detectionPanels"]["Detection Parameters"] = False
         configDict["detectionPanels"]["Detection"] = True
         configDict["detectionPanels"]["Display"] = True
         configDict["detectionPanels"]["Plot Options"] = False

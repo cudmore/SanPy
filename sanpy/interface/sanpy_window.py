@@ -389,6 +389,11 @@ class SanPyWindow(QtWidgets.QMainWindow):
             event.ignore()
             return
 
+        # Close an embedded left-panel plugin so its SanPy signals disconnect
+        # with the window, the same way a hidden Detection Parameters panel does.
+        detection_widget = getattr(self, "myDetectionWidget", None)
+        if detection_widget is not None:
+            detection_widget._close_detection_parameters_panel()
         self._closePluginWindows()
 
         # Keep a usable window visible during an ordinary close of the final
@@ -811,13 +816,39 @@ class SanPyWindow(QtWidgets.QMainWindow):
             name: View to show or hide.
             visible: Whether the view should be visible.
         """
+        exclusive_left_panels = ("Detection Panel", "Detection Parameters")
+        if (
+            section == "detectionPanels"
+            and name in exclusive_left_panels
+            and visible
+        ):
+            self._applyViewPanelVisible(section, name, True)
+            for other_name in exclusive_left_panels:
+                if other_name != name:
+                    self._applyViewPanelVisible(section, other_name, False)
+            return
+        self._applyViewPanelVisible(section, name, visible)
+
+    def _applyViewPanelVisible(
+        self, section: str, name: str, visible: bool
+    ) -> None:
+        """Write one view flag and show or hide that view.
+
+        Args:
+            section: Configuration section containing the view state.
+            name: View to show or hide.
+            visible: Whether the view should be visible.
+        """
         logger.info(f"{section}, {name}, {visible}")
 
         try:
             section_options = self.configDict[section]
         except KeyError:
             section_options = None
-        if section_options is not None and name in section_options:
+        if section_options is not None and (
+            name in section_options
+            or (section == "detectionPanels" and name == "Detection Parameters")
+        ):
             section_options[name] = visible
 
         if section == "filePanels":
