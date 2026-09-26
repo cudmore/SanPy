@@ -393,7 +393,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         # with the window, the same way a hidden Detection Parameters panel does.
         detection_widget = getattr(self, "myDetectionWidget", None)
         if detection_widget is not None:
-            detection_widget._close_detection_parameters_panel()
+            detection_widget._close_left_panel_plugin()
         self._closePluginWindows()
 
         # Keep a usable window visible during an ordinary close of the final
@@ -808,6 +808,18 @@ class SanPyWindow(QtWidgets.QMainWindow):
         """
         self.setViewPanelVisible(key1, name, isChecked)
 
+    def _exclusiveLeftPanels(self) -> tuple[str, ...]:
+        """Return left panels that cannot be open together.
+
+        Returns:
+            Detection Panel, then each embedded plugin panel, in toolbar order.
+        """
+        detection_widget = getattr(self, "myDetectionWidget", None)
+        plugin_panels: tuple[str, ...] = ()
+        if detection_widget is not None:
+            plugin_panels = detection_widget.left_panel_plugin_names()
+        return ("Detection Panel",) + plugin_panels
+
     def setViewPanelVisible(self, section: str, name: str, visible: bool) -> None:
         """Set one configurable view from either a menu or toolbar action.
 
@@ -816,7 +828,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             name: View to show or hide.
             visible: Whether the view should be visible.
         """
-        exclusive_left_panels = ("Detection Panel", "Detection Parameters")
+        exclusive_left_panels = self._exclusiveLeftPanels()
         if (
             section == "detectionPanels"
             and name in exclusive_left_panels
@@ -845,9 +857,10 @@ class SanPyWindow(QtWidgets.QMainWindow):
             section_options = self.configDict[section]
         except KeyError:
             section_options = None
+        plugin_panels = self._exclusiveLeftPanels()[1:]
         if section_options is not None and (
             name in section_options
-            or (section == "detectionPanels" and name == "Detection Parameters")
+            or (section == "detectionPanels" and name in plugin_panels)
         ):
             section_options[name] = visible
 

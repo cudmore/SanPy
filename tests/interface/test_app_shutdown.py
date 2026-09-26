@@ -784,7 +784,7 @@ def test_final_analysis_close_closes_plugins_and_restores_launcher() -> None:
         getSanPyApp=lambda: app,
         prepareToClose=lambda: True,
         myDetectionWidget=SimpleNamespace(
-            _close_detection_parameters_panel=lambda: calls.append("close left panel")
+            _close_left_panel_plugin=lambda: calls.append("close left panel")
         ),
         _closePluginWindows=lambda: calls.append("close plugins"),
     )
@@ -821,7 +821,7 @@ def test_application_quit_does_not_restore_launcher_or_prompt_again() -> None:
         getSanPyApp=lambda: app,
         prepareToClose=lambda: calls.append("prompt again"),
         myDetectionWidget=SimpleNamespace(
-            _close_detection_parameters_panel=lambda: calls.append("close left panel")
+            _close_left_panel_plugin=lambda: calls.append("close left panel")
         ),
         _closePluginWindows=lambda: calls.append("close plugins"),
     )

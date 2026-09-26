@@ -11,6 +11,7 @@ import numpy as np
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 import pyqtgraph as pg
+import qtawesome as qta
 from pyqtgraph.exporters import ImageExporter
 
 import sanpy
@@ -117,20 +118,25 @@ class _SweepSelectionWidget(QtWidgets.QWidget):
             self.combo_box.setCurrentIndex(new_index)
 
 
-class _LeftToolbar(QtWidgets.QWidget):
-    """Vertical icon buttons that open one left panel at a time.
+# Left-panel preference name -> plugin myHumanName. Only one is embedded.
+_LEFT_PANEL_PLUGINS: dict[str, str] = {
+    "Detection Parameters": "Detection Parameters",
+    "Set Meta Data Panel": "Set Meta Data",
+}
 
-    Icons are Qt standard placeholders until SanPy toolbar icons are added.
-    """
+
+class _LeftToolbar(QtWidgets.QWidget):
+    """Vertical buttons that open one left panel at a time."""
 
     def __init__(self, detection_widget: "bDetectionWidget") -> None:
-        """Build the detection and detection-parameters buttons.
+        """Build the detection, parameters, and metadata buttons.
 
         Args:
             detection_widget: Detection widget that applies the button state.
         """
         super().__init__(detection_widget)
         self.setFixedWidth(36)
+        self._icon_buttons: list[tuple[QtWidgets.QToolButton, str]] = []
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
@@ -140,25 +146,32 @@ class _LeftToolbar(QtWidgets.QWidget):
                 "detectionPanels",
                 "Detection Panel",
                 "Show or Hide Detection Panel",
-                QtWidgets.QStyle.SP_ArrowLeft,
+                "fa6s.chart-line",
                 True,
             ),
             (
                 "detectionPanels",
                 "Detection Parameters",
                 "Show or Hide Detection Parameters",
-                QtWidgets.QStyle.SP_FileDialogDetailedView,
+                "fa6s.sliders",
+                False,
+            ),
+            (
+                "detectionPanels",
+                "Set Meta Data Panel",
+                "Show or Hide Set Meta Data",
+                "fa6s.tags",
                 False,
             ),
         )
         options = detection_widget.getMainWindowOptions()
-        for section, name, tip, icon_id, default_checked in buttons:
+        for section, name, tip, icon_name, default_checked in buttons:
             button = QtWidgets.QToolButton(self)
             button.setCheckable(True)
             button.setAutoRaise(True)
             button.setToolTip(tip)
-            button.setIcon(self.style().standardIcon(icon_id))
             button.setIconSize(QtCore.QSize(22, 22))
+            self._icon_buttons.append((button, icon_name))
             button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
             section_options = options[section] if options is not None else None
             if section_options is not None and name in section_options:
@@ -171,7 +184,16 @@ class _LeftToolbar(QtWidgets.QWidget):
             )
             layout.addWidget(button)
             detection_widget._register_view_toggle_button(section, name, button)
+        self.apply_icon_colors()
         layout.addStretch(1)
+
+    def apply_icon_colors(self) -> None:
+        """Recolor the toolbar icons with the current theme text color."""
+        application = QtWidgets.QApplication.instance()
+        palette = application.palette() if application is not None else self.palette()
+        icon_color = palette.color(QtGui.QPalette.Text).name()
+        for button, icon_name in self._icon_buttons:
+            button.setIcon(qta.icon(icon_name, color=icon_color))
 
 
 class bDetectionWidget(QtWidgets.QWidget):
@@ -642,7 +664,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.updateStatusBar(updateStr)
 
     def setPlotTheme(self, is_dark: bool) -> None:
-        """Apply a light or dark theme to existing recording plots.
+        """Apply a light or dark theme to existing recording plots and toolbar icons.
 
         Args:
             is_dark: Whether plot backgrounds should use the dark theme.
@@ -671,6 +693,7 @@ class bDetectionWidget(QtWidgets.QWidget):
 
         self._displayHoverText.setColor(foreground)
         self._displayHoverText_deriv.setColor(foreground)
+        self._leftToolbar.apply_icon_colors()
 
     def getMainWindowOptions(self):
         theRet = None
@@ -1682,17 +1705,16 @@ class bDetectionWidget(QtWidgets.QWidget):
         # toggle in myDetectionToolbarWidget
         elif item == "Detection Panel":
             self._detectionPanelWidget.setVisible(on)
-            self._set_left_panel_open(
-                on or self._detectionParametersPlugin is not None
-            )
-        elif item == "Detection Parameters":
+            self._set_left_panel_open(on or self._leftPanelPlugin is not None)
+        elif item in _LEFT_PANEL_PLUGINS:
             if on:
-                self._open_detection_parameters_panel()
+                self._open_left_panel_plugin(item)
             else:
                 # Hiding this panel closes the plugin. It is not left off screen.
-                self._close_detection_parameters_panel()
+                self._close_left_panel_plugin(item)
             self._set_left_panel_open(
-                on or not self._detectionPanelWidget.isHidden()
+                self._leftPanelPlugin is not None
+                or not self._detectionPanelWidget.isHidden()
             )
         elif item == "Detection":
             self.detectToolbarWidget.toggleInterface(item, on)
@@ -1866,20 +1888,37 @@ class bDetectionWidget(QtWidgets.QWidget):
         """
         self._viewToggleButtons.setdefault((section, name), []).append(button)
 
-    def _prefer_detection_panel_over_parameters(self) -> None:
-        """Keep Detection Parameters closed when the detection panel is open.
+    def left_panel_plugin_names(self) -> tuple[str, ...]:
+        """Return left-panel preference names that host a plugin.
 
-        Saved preferences can mark both left panels visible. The detection
-        panel wins, and only one left panel is open.
+        Returns:
+            Preference keys in toolbar order.
+        """
+        return tuple(_LEFT_PANEL_PLUGINS)
+
+    def _prefer_one_left_panel(self) -> None:
+        """Leave only one left panel marked open in preferences.
+
+        The detection panel wins when it is open. Otherwise the first saved
+        plugin panel wins.
         """
         options = self.getMainWindowOptions()
         if options is None:
             return
         panels = options["detectionPanels"]
-        if panels.get("Detection Parameters") and panels.get(
-            "Detection Panel", True
-        ):
-            panels["Detection Parameters"] = False
+        if panels.get("Detection Panel", True):
+            for panel_name in _LEFT_PANEL_PLUGINS:
+                if panels.get(panel_name):
+                    panels[panel_name] = False
+            return
+        found_open_plugin = False
+        for panel_name in _LEFT_PANEL_PLUGINS:
+            if not panels.get(panel_name):
+                continue
+            if found_open_plugin:
+                panels[panel_name] = False
+            else:
+                found_open_plugin = True
 
     def _set_left_panel_open(self, open_panel: bool) -> None:
         """Show or collapse the splitter pane that holds the open left panel.
@@ -1918,27 +1957,33 @@ class bDetectionWidget(QtWidgets.QWidget):
         """
         self._remember_left_panel_width()
 
-    def _open_detection_parameters_panel(self) -> None:
-        """Create the Detection Parameters plugin in the left panel.
+    def _open_left_panel_plugin(self, panel_name: str) -> None:
+        """Create one plugin in the left panel.
 
-        Showing this panel always constructs a new plugin. Hiding it closes
-        that plugin instead of keeping a hidden copy.
+        Showing a panel constructs a new plugin. A different open plugin is
+        closed first so only one left-panel plugin stays embedded.
+
+        Args:
+            panel_name: Left-panel preference name, such as ``Detection Parameters``.
         """
-        if self._detectionParametersPlugin is not None:
-            self._detectionParametersPlugin.getWidget().show()
+        if (
+            self._leftPanelPlugin is not None
+            and self._leftPanelPluginName == panel_name
+        ):
+            self._leftPanelPlugin.getWidget().show()
             return
+        self._close_left_panel_plugin()
         if self.myMainWindow is None:
-            logger.error(
-                "Cannot open Detection Parameters without a SanPy window."
-            )
+            logger.error("Cannot open %s without a SanPy window.", panel_name)
             return
+        plugin_name = _LEFT_PANEL_PLUGINS[panel_name]
         plugin = self.myMainWindow.runPlugin(
-            "Detection Parameters",
+            plugin_name,
             self.myMainWindow.get_bAnalysis(),
             show=False,
         )
         if plugin is None or plugin.getInitError() or not plugin.getShowSelf():
-            logger.error("Unable to open the Detection Parameters left panel.")
+            logger.error("Unable to open the %s left panel.", panel_name)
             return
         widget = plugin.getWidget()
         widget.setMinimumWidth(0)
@@ -1947,18 +1992,26 @@ class bDetectionWidget(QtWidgets.QWidget):
         )
         self._leftPanelLayout.addWidget(widget, 1)
         widget.show()
-        self._detectionParametersPlugin = plugin
+        self._leftPanelPlugin = plugin
+        self._leftPanelPluginName = panel_name
 
-    def _close_detection_parameters_panel(self) -> None:
-        """Close the embedded Detection Parameters plugin.
+    def _close_left_panel_plugin(self, panel_name: str | None = None) -> None:
+        """Close the embedded left-panel plugin.
 
-        Hiding this left panel closes and deletes the plugin. It is not kept
+        Hiding a plugin panel closes and deletes that plugin. It is not kept
         off screen, so it stops receiving SanPy signals immediately.
+
+        Args:
+            panel_name: Preference name to close. Closes the current plugin
+                when omitted.
         """
-        plugin = self._detectionParametersPlugin
+        plugin = self._leftPanelPlugin
         if plugin is None:
             return
-        self._detectionParametersPlugin = None
+        if panel_name is not None and self._leftPanelPluginName != panel_name:
+            return
+        self._leftPanelPlugin = None
+        self._leftPanelPluginName = None
         widget = plugin.getWidget()
         self._leftPanelLayout.removeWidget(widget)
         widget.close()
@@ -2036,9 +2089,10 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._viewToggleButtons: dict[
             tuple[str, str], list[QtWidgets.QToolButton]
         ] = {}
-        self._detectionParametersPlugin: Optional[object] = None
+        self._leftPanelPlugin: Optional[object] = None
+        self._leftPanelPluginName: str | None = None
         self._leftPanelWidth = 280
-        self._prefer_detection_panel_over_parameters()
+        self._prefer_one_left_panel()
 
         # Left toolbar, then a splitter: open left panel | raw plot column.
         self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
@@ -2363,6 +2417,12 @@ class bDetectionWidget(QtWidgets.QWidget):
                 options["detectionPanels"].get("Detection Panel", True)
             )
         self.toggleInterface("Detection Panel", detection_panel_visible)
+        if not detection_panel_visible and options is not None:
+            panels = options["detectionPanels"]
+            for panel_name in _LEFT_PANEL_PLUGINS:
+                if panels.get(panel_name):
+                    self.toggleInterface(panel_name, True)
+                    break
 
     # def _cursorDragged(self, name, infLine):
     #     # logger.info(f'{name} {infLine.pos()}')

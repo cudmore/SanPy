@@ -13,6 +13,25 @@ from qtpy import QtCore, QtGui, QtWidgets
 from sanpy.interface.util import sanpyCursors
 
 
+def _most_opaque_icon_color(button: QtWidgets.QToolButton) -> QtGui.QColor:
+    """Return the icon pixel with the strongest coverage.
+
+    Args:
+        button: Toolbar button whose icon is sampled.
+
+    Returns:
+        Color of the least transparent icon pixel.
+    """
+    image = button.icon().pixmap(button.iconSize()).toImage()
+    strongest = QtGui.QColor(0, 0, 0, 0)
+    for y in range(image.height()):
+        for x in range(image.width()):
+            color = image.pixelColor(x, y)
+            if color.alpha() > strongest.alpha():
+                strongest = color
+    return strongest
+
+
 def test_plot_range_signals_are_connected_once(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
 ) -> None:
@@ -125,6 +144,39 @@ def test_theme_switch_updates_existing_recording_plots(
         qapp.toggleStyleSheet(doDark=original_theme)
 
 
+def test_left_toolbar_icons_follow_theme_text_color(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Keep left-toolbar icon foregrounds on the theme text color.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    qtbot.addWidget(window)
+    widget = window.myDetectionWidget
+    original_theme = qapp.useDarkStyle
+
+    try:
+        for is_dark in (False, True):
+            qapp.toggleStyleSheet(doDark=is_dark)
+            expected_icon = qapp.palette().color(QtGui.QPalette.Text)
+            for button, _icon_name in widget._leftToolbar._icon_buttons:
+                icon_color = _most_opaque_icon_color(button)
+                assert icon_color.alpha() > 200
+                assert icon_color.red() == expected_icon.red()
+                assert icon_color.green() == expected_icon.green()
+                assert icon_color.blue() == expected_icon.blue()
+            if is_dark:
+                assert expected_icon.lightness() > 180
+    finally:
+        qapp.toggleStyleSheet(doDark=original_theme)
+
+
 def test_raw_plot_buttons_share_view_menu_state(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
 ) -> None:
@@ -197,11 +249,18 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     params_button = widget._viewToggleButtons[
         ("detectionPanels", "Detection Parameters")
     ][0]
+    meta_button = widget._viewToggleButtons[
+        ("detectionPanels", "Set Meta Data Panel")
+    ][0]
 
     assert widget.myHBoxLayout_detect.itemAt(0).widget() is widget._leftToolbar
     assert widget._leftPanelSplitter.widget(0) is widget._leftPanelContainer
     assert widget._leftPanelSplitter.widget(1) is widget._rawPlotColumn
     assert widget._leftToolbar.isHidden() is False
+    assert any(
+        icon_name == "fa6s.tags"
+        for _button, icon_name in widget._leftToolbar._icon_buttons
+    )
     assert toolbar_button.isChecked() is plot_button.isChecked()
     assert widget.detectToolbarWidget.maximumWidth() > 280
 
@@ -213,17 +272,29 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     assert widget._detectionPanelWidget.isHidden() is True
     assert widget._leftPanelContainer.isHidden() is False
     assert widget._leftToolbar.isHidden() is False
-    plugin = widget._detectionParametersPlugin
+    plugin = widget._leftPanelPlugin
     assert plugin is not None
+    assert plugin.getHumanName() == "Detection Parameters"
     assert plugin.getWidget().isHidden() is False
 
-    params_button.click()
+    meta_button.click()
 
-    assert widget._detectionParametersPlugin is None
+    assert meta_button.isChecked() is True
+    assert params_button.isChecked() is False
+    assert widget._leftPanelPlugin is not None
+    assert widget._leftPanelPlugin.getHumanName() == "Set Meta Data"
+    assert widget._detectionPanelWidget.isHidden() is True
+    with pytest.raises(TypeError):
+        window.signalSelectSpikeList.disconnect(plugin.slot_selectSpikeList)
+
+    meta_plugin = widget._leftPanelPlugin
+    meta_button.click()
+
+    assert widget._leftPanelPlugin is None
     assert widget._leftPanelContainer.isHidden() is True
     assert widget._leftToolbar.isHidden() is False
     with pytest.raises(TypeError):
-        window.signalSelectSpikeList.disconnect(plugin.slot_selectSpikeList)
+        window.signalSelectSpikeList.disconnect(meta_plugin.slot_selectSpikeList)
     with pytest.raises(TypeError):
         plugin.signalDetect.disconnect(window.slot_detect)
 

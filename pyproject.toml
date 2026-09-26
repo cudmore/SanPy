@@ -40,6 +40,7 @@ dependencies = [
     "PyQt5==5.15.11",
     "pyqtdarktheme-fork==2.3.6",
     "pyqtgraph>=0.13.7,<1",
+    "qtawesome>=1.4.2,<2",
     "QtPy>=2.4,<3",
     "requests>=2.32,<3",
     "scikit-image>=0.25,<1",

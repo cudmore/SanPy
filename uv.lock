@@ -1806,6 +1806,18 @@ wheels = [
 ]
 
 [[package]]
+name = "qtawesome"
+version = "1.4.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "qtpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cf/bc/475c8df94de4f358bbf7703747c13b16ae3c0c4cda50d5243b99cb45e2a8/qtawesome-1.4.2.tar.gz", hash = "sha256:b2bf9351beb335095006892796f072ffd9755a2d7e5113dc71918dcd9ba4ef4a", size = 2614207, upload-time = "2026-04-10T18:49:46.037Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/25/b1/da1d826ccc9258674b26dd0abcbbb1c55cab06e7fbf2697518b67edc79fc/qtawesome-1.4.2-py3-none-any.whl", hash = "sha256:dbf08524428fa2df73918ce362153254cd44f089380576d84bfaad8f40eece45", size = 2593557, upload-time = "2026-04-10T18:49:44.219Z" },
+]
+
+[[package]]
 name = "qtpy"
 version = "2.4.3"
 source = { registry = "https://pypi.org/simple" }
@@ -1923,6 +1935,7 @@ dependencies = [
     { name = "pyqt5" },
     { name = "pyqtdarktheme-fork" },
     { name = "pyqtgraph" },
+    { name = "qtawesome" },
     { name = "qtpy" },
     { name = "requests" },
     { name = "scikit-image" },
@@ -1972,6 +1985,7 @@ requires-dist = [
     { name = "pyqt5", specifier = "==5.15.11" },
     { name = "pyqtdarktheme-fork", specifier = "==2.3.6" },
     { name = "pyqtgraph", specifier = ">=0.13.7,<1" },
+    { name = "qtawesome", specifier = ">=1.4.2,<2" },
     { name = "qtpy", specifier = ">=2.4,<3" },
     { name = "requests", specifier = ">=2.32,<3" },
     { name = "scikit-image", specifier = ">=0.25,<1" },

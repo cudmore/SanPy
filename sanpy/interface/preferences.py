@@ -218,6 +218,7 @@ class preferences:
         configDict["detectionPanels"] = {}
         configDict["detectionPanels"]["Detection Panel"] = True  # main panel
         configDict["detectionPanels"]["Detection Parameters"] = False
+        configDict["detectionPanels"]["Set Meta Data Panel"] = False
         configDict["detectionPanels"]["Detection"] = True
         configDict["detectionPanels"]["Display"] = True
         configDict["detectionPanels"]["Plot Options"] = False
