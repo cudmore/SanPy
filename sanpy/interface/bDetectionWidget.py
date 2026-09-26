@@ -143,10 +143,10 @@ class _LeftToolbar(QtWidgets.QWidget):
 
         buttons = (
             (
-                "detectionPanels",
-                "Detection Panel",
-                "Show or Hide Detection Panel",
-                "fa6s.chart-line",
+                "detectionPanels",  # section
+                "Detection Panel",  # name
+                "Show or Hide Detection Panel",  # tip
+                "fa6s.chart-line",  # icon name
                 True,
             ),
             (
