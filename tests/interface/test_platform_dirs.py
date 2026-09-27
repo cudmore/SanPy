@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 from qtpy import QtCore, QtWidgets
 
-from sanpy.interface import sanpy_app
+from sanpy.interface import sanpy_app, sanpy_info_widget
 from sanpy import sanpyLogger
 from sanpy.sanpyPaths import SanPyPaths
 
@@ -73,11 +73,11 @@ def test_clipboard_info_uses_all_retained_log_text(
         monkeypatch: Pytest fixture used to isolate build and log text.
     """
     monkeypatch.setattr(
-        sanpy_app.build_info, "get_build_info_json", lambda: '{"build": "info"}'
+        sanpy_info_widget.build_info, "get_build_info_json", lambda: '{"build": "info"}'
     )
-    monkeypatch.setattr(sanpy_app, "getLoggerText", lambda: "old\nnew\n")
+    monkeypatch.setattr(sanpy_info_widget, "getLoggerText", lambda: "old\nnew\n")
 
-    assert sanpy_app._getSanPyInfoForClipboard() == (
+    assert sanpy_info_widget._getSanPyInfoForClipboard() == (
         '{"build": "info"}\n\n=== log file ===\nold\nnew\n'
     )
 
@@ -95,12 +95,12 @@ def test_open_user_files_folder(
     sanpy_paths = SanPyPaths(documents_dir=tmp_path)
     sanpy_paths.user_files_dir.mkdir()
     monkeypatch.setattr(
-        sanpy_app.QtGui.QDesktopServices,
+        sanpy_info_widget.QtGui.QDesktopServices,
         "openUrl",
         lambda url: opened_urls.append(url) or True,
     )
 
-    assert sanpy_app._openSanPyUserFilesFolder(sanpy_paths=sanpy_paths) is True
+    assert sanpy_info_widget._openSanPyUserFilesFolder(sanpy_paths=sanpy_paths) is True
     assert len(opened_urls) == 1
     assert opened_urls[0].toLocalFile() == str(sanpy_paths.user_files_dir)
 
@@ -118,12 +118,12 @@ def test_open_user_files_folder_warns_when_missing(
     missing_path = sanpy_paths.user_files_dir
     warnings: list[tuple[QtWidgets.QWidget | None, str, str]] = []
     monkeypatch.setattr(
-        sanpy_app.QtWidgets.QMessageBox,
+        sanpy_info_widget.QtWidgets.QMessageBox,
         "warning",
         lambda parent, title, message: warnings.append((parent, title, message)),
     )
 
-    assert sanpy_app._openSanPyUserFilesFolder(sanpy_paths=sanpy_paths) is False
+    assert sanpy_info_widget._openSanPyUserFilesFolder(sanpy_paths=sanpy_paths) is False
     assert warnings == [
         (
             None,
@@ -146,15 +146,15 @@ def test_open_user_files_folder_warns_when_launch_fails(
     sanpy_paths = SanPyPaths(documents_dir=tmp_path)
     sanpy_paths.user_files_dir.mkdir()
     monkeypatch.setattr(
-        sanpy_app.QtGui.QDesktopServices, "openUrl", lambda _url: False
+        sanpy_info_widget.QtGui.QDesktopServices, "openUrl", lambda _url: False
     )
     monkeypatch.setattr(
-        sanpy_app.QtWidgets.QMessageBox,
+        sanpy_info_widget.QtWidgets.QMessageBox,
         "warning",
         lambda parent, title, message: warnings.append((parent, title, message)),
     )
 
-    assert sanpy_app._openSanPyUserFilesFolder(sanpy_paths=sanpy_paths) is False
+    assert sanpy_info_widget._openSanPyUserFilesFolder(sanpy_paths=sanpy_paths) is False
     assert warnings == [
         (
             None,

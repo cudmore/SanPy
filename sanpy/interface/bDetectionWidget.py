@@ -20,6 +20,7 @@ from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 import sanpy.bDetection
 import sanpy.interface
 from sanpy.bExport import bExport
+from sanpy.interface.sanpy_info_widget import SanPyInfoWidget
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
@@ -1908,9 +1909,6 @@ class bDetectionWidget(QtWidgets.QWidget):
         if self._sanpyInfoWidget is not None:
             self._sanpyInfoWidget.show()
             return
-        # Imported here because sanpy_app imports this module while it loads.
-        from sanpy.interface.sanpy_app import SanPyInfoWidget
-
         application = QtWidgets.QApplication.instance()
         sanpy_paths = getattr(application, "sanpy_paths", None)
         self._sanpyInfoWidget = SanPyInfoWidget(
