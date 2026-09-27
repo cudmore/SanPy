@@ -15,7 +15,7 @@ logger = get_logger(__name__)
 class SetMetaData(sanpyPlugin):
 
     myHumanName = "Set Meta Data"
-    showInMenu = True
+    showInMenu = False
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

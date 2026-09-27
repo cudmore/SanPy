@@ -132,7 +132,7 @@ class _LeftToolbar(QtWidgets.QWidget):
     """
 
     def __init__(self, detection_widget: "bDetectionWidget") -> None:
-        """Build the detection, parameters, and metadata buttons.
+        """Build the detection, parameters, metadata, and SanPy Info buttons.
 
         Args:
             detection_widget: Detection widget that shows and hides left panels.
@@ -161,6 +161,11 @@ class _LeftToolbar(QtWidgets.QWidget):
                 "Set Meta Data Panel",
                 "Show or Hide Set Meta Data",
                 "fa6s.tags",
+            ),
+            (
+                "SanPy Info",
+                "Show or Hide SanPy Info",
+                "fa6s.circle-info",
             ),
         )
         for panel_name, tip, icon_name in buttons:
@@ -1697,17 +1702,20 @@ class bDetectionWidget(QtWidgets.QWidget):
         # toggle in myDetectionToolbarWidget
         elif item == "Detection Panel":
             self._detectionPanelWidget.setVisible(on)
-            self._set_left_panel_open(on or self._leftPanelPlugin is not None)
+            self._set_left_panel_open(on or self._left_panel_has_content())
+        elif item == "SanPy Info":
+            if on:
+                self._open_sanpy_info()
+            else:
+                self._close_sanpy_info()
+            self._set_left_panel_open(self._left_panel_has_content())
         elif item in _LEFT_PANEL_PLUGINS:
             if on:
                 self._open_left_panel_plugin(item)
             else:
                 # Hiding this panel closes the plugin. It is not left off screen.
                 self._close_left_panel_plugin(item)
-            self._set_left_panel_open(
-                self._leftPanelPlugin is not None
-                or not self._detectionPanelWidget.isHidden()
-            )
+            self._set_left_panel_open(self._left_panel_has_content())
 
         else:
             # Toggle overlay of stats like (TOP, spike peak, half-width, ...)
@@ -1846,6 +1854,18 @@ class bDetectionWidget(QtWidgets.QWidget):
         """
         self._viewToggleButtons.setdefault((section, name), []).append(button)
 
+    def _left_panel_has_content(self) -> bool:
+        """Return whether any left-panel content is open.
+
+        Returns:
+            True when the detection panel, a plugin, or SanPy Info is open.
+        """
+        return (
+            not self._detectionPanelWidget.isHidden()
+            or self._leftPanelPlugin is not None
+            or self._sanpyInfoWidget is not None
+        )
+
     def _set_left_panel_open(self, open_panel: bool) -> None:
         """Show or collapse the splitter pane that holds the open left panel.
 
@@ -1882,6 +1902,32 @@ class bDetectionWidget(QtWidgets.QWidget):
             _index: Index of the widget to the right of the divider.
         """
         self._remember_left_panel_width()
+
+    def _open_sanpy_info(self) -> None:
+        """Create the SanPy Info panel and add it to the left splitter."""
+        if self._sanpyInfoWidget is not None:
+            self._sanpyInfoWidget.show()
+            return
+        # Imported here because sanpy_app imports this module while it loads.
+        from sanpy.interface.sanpy_app import SanPyInfoWidget
+
+        application = QtWidgets.QApplication.instance()
+        sanpy_paths = getattr(application, "sanpy_paths", None)
+        self._sanpyInfoWidget = SanPyInfoWidget(
+            sanpy_paths, self._leftPanelContainer
+        )
+        self._leftPanelLayout.addWidget(self._sanpyInfoWidget)
+        self._sanpyInfoWidget.show()
+
+    def _close_sanpy_info(self) -> None:
+        """Remove and delete the SanPy Info panel."""
+        widget = self._sanpyInfoWidget
+        if widget is None:
+            return
+        self._sanpyInfoWidget = None
+        self._leftPanelLayout.removeWidget(widget)
+        widget.close()
+        widget.deleteLater()
 
     def _open_left_panel_plugin(self, panel_name: str) -> None:
         """Create one plugin in the left panel.
@@ -2017,6 +2063,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         ] = {}
         self._leftPanelPlugin: Optional[object] = None
         self._leftPanelPluginName: str | None = None
+        self._sanpyInfoWidget: QtWidgets.QWidget | None = None
         self._leftPanelWidth = 280
 
         # Left toolbar, then a splitter: open left panel | raw plot column.

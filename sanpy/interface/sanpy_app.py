@@ -117,6 +117,92 @@ def _openSanPyUserFilesFolder(
         return False
     return True
 
+
+class SanPyInfoWidget(QtWidgets.QWidget):
+    """Show the SanPy description, contact links, and build summary.
+
+    The About dialog and the detection view's SanPy Info panel both use this
+    widget. The dialog adds its own Close button.
+    """
+
+    def __init__(
+        self,
+        sanpy_paths: SanPyPaths | None = None,
+        parent: QtWidgets.QWidget | None = None,
+    ) -> None:
+        """Build the shared SanPy information controls.
+
+        Args:
+            sanpy_paths: Application path manager used to open the user-files folder.
+            parent: Optional owning Qt widget.
+        """
+        super().__init__(parent)
+        self._sanpy_paths = sanpy_paths
+
+        layout = QtWidgets.QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        description = QtWidgets.QLabel(
+            'SanPy is designed for whole-cell current clamp analysis. '
+            'We are always open to comments and suggestions on how to improve, '
+            'extend, and fix SanPy. '
+            'Reach out to Robert Cudmore with any ideas, questions, or bug fixes.'
+        )
+        description.setWordWrap(True)
+        layout.addWidget(description)
+
+        contact = QtWidgets.QLabel(
+            'Contact: Robert Cudmore '
+            '(<a href="mailto:robert.cudmore@gmail.com">'
+            'robert.cudmore@gmail.com</a>)<br>'
+            'Website: <a href="https://mapmanager.net/">'
+            'https://mapmanager.net/</a><br>'
+            'SanPy Documentation: '
+            '<a href="https://cudmore.github.io/SanPy/">'
+            'https://cudmore.github.io/SanPy/</a>'
+        )
+        contact.setTextFormat(QtCore.Qt.RichText)
+        contact.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
+        contact.setOpenExternalLinks(True)
+        contact.setWordWrap(True)
+        layout.addWidget(contact)
+
+        divider = QtWidgets.QFrame()
+        divider.setFrameShape(QtWidgets.QFrame.HLine)
+        divider.setFrameShadow(QtWidgets.QFrame.Sunken)
+        layout.addWidget(divider)
+
+        for label, value in build_info.get_build_summary_rows():
+            layout.addWidget(QtWidgets.QLabel(f'{label}: {value}'))
+
+        button_layout = QtWidgets.QHBoxLayout()
+        copy_button = QtWidgets.QPushButton('Copy SanPy Info')
+        copy_button.clicked.connect(self._copy_sanpy_info)
+        button_layout.addWidget(copy_button)
+
+        user_files_button = QtWidgets.QPushButton('SanPy-User-Files')
+        user_files_button.clicked.connect(self._open_user_files)
+        button_layout.addWidget(user_files_button)
+        layout.addLayout(button_layout)
+        layout.addStretch(1)
+
+    def _copy_sanpy_info(self, _checked: bool = False) -> None:
+        """Copy build metadata and the retained log to the clipboard.
+
+        Args:
+            _checked: Unused checked state emitted by ``QPushButton.clicked``.
+        """
+        QtWidgets.QApplication.clipboard().setText(_getSanPyInfoForClipboard())
+
+    def _open_user_files(self, _checked: bool = False) -> None:
+        """Open the SanPy user-files folder in the platform file browser.
+
+        Args:
+            _checked: Unused checked state emitted by ``QPushButton.clicked``.
+        """
+        _openSanPyUserFilesFolder(self, self._sanpy_paths)
+
+
 def getAppIconPath(sanpy_paths: SanPyPaths | None = None) -> str:
     """Return the application icon path.
 
@@ -791,69 +877,21 @@ class SanPyApp(QtWidgets.QApplication):
     def _onPreferencesMenuAction(self):
         logger.info('')
     
-    def _onAboutMenuAction(self):
-        """Show a dialog with help.
+    def _onAboutMenuAction(self) -> None:
+        """Show the About SanPy dialog.
+
+        The dialog body is the same widget as the SanPy Info left panel.
+        Close stays on the dialog.
         """
         dlg = QtWidgets.QDialog()
         dlg.setWindowTitle('About SanPy')
 
-        vLayout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QVBoxLayout(dlg)
+        layout.addWidget(SanPyInfoWidget(self.sanpy_paths, dlg))
 
-        description = QtWidgets.QLabel(
-            'SanPy is designed for whole-cell current clamp analysis. '
-            'We are always open to comments and suggestions on how to improve, '
-            'extend, and fix SanPy. '
-            'Reach out to Robert Cudmore with any ideas, questions, or bug fixes.'
-        )
-        description.setWordWrap(True)
-        vLayout.addWidget(description)
-
-        contact = QtWidgets.QLabel(
-            'Contact: Robert Cudmore '
-            '(<a href="mailto:robert.cudmore@gmail.com">'
-            'robert.cudmore@gmail.com</a>)<br>'
-            'Website: <a href="https://mapmanager.net/">'
-            'https://mapmanager.net/</a><br>'
-            'SanPy Documentation: '
-            '<a href="https://cudmore.github.io/SanPy/">'
-            'https://cudmore.github.io/SanPy/</a>'
-        )
-        contact.setTextFormat(QtCore.Qt.RichText)
-        contact.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction)
-        contact.setOpenExternalLinks(True)
-        vLayout.addWidget(contact)
-
-        divider = QtWidgets.QFrame()
-        divider.setFrameShape(QtWidgets.QFrame.HLine)
-        divider.setFrameShadow(QtWidgets.QFrame.Sunken)
-        vLayout.addWidget(divider)
-
-        for label, value in build_info.get_build_summary_rows():
-            vLayout.addWidget(QtWidgets.QLabel(f'{label}: {value}'))
-
-        buttonLayout = QtWidgets.QHBoxLayout()
-
-        copyButton = QtWidgets.QPushButton('Copy SanPy Info')
-        copyButton.clicked.connect(
-            lambda: QtWidgets.QApplication.clipboard().setText(
-                _getSanPyInfoForClipboard()
-            )
-        )
-        buttonLayout.addWidget(copyButton)
-
-        userFilesButton = QtWidgets.QPushButton('SanPy-User-Files')
-        userFilesButton.clicked.connect(
-            lambda: _openSanPyUserFilesFolder(dlg, self.sanpy_paths)
-        )
-        buttonLayout.addWidget(userFilesButton)
-
-        vLayout.addLayout(buttonLayout)
-
-        closeButton = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
-        closeButton.rejected.connect(dlg.reject)
-        vLayout.addWidget(closeButton)
-
-        dlg.setLayout(vLayout)
+        close_button = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Close)
+        close_button.rejected.connect(dlg.reject)
+        layout.addWidget(close_button)
 
         dlg.exec()
 

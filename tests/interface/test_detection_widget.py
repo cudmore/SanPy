@@ -116,7 +116,7 @@ def test_raw_plot_buttons_share_view_menu_state(
 def test_left_toolbar_opens_one_panel_and_closes_plugin(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
 ) -> None:
-    """Show one left panel at a time and disconnect a closed plugin.
+    """Show one left panel at a time, including SanPy Info, and disconnect a closed plugin.
 
     Args:
         monkeypatch: Pytest fixture used to prevent preference-file writes.
@@ -131,6 +131,7 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     toolbar_button = widget._leftToolbar._panel_buttons["Detection Panel"]
     params_button = widget._leftToolbar._panel_buttons["Detection Parameters"]
     meta_button = widget._leftToolbar._panel_buttons["Set Meta Data Panel"]
+    info_button = widget._leftToolbar._panel_buttons["SanPy Info"]
 
     assert widget.myHBoxLayout_detect.itemAt(0).widget() is widget._leftToolbar
     assert widget._leftPanelSplitter.widget(0) is widget._leftPanelContainer
@@ -140,13 +141,19 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
         icon_name == "fa6s.tags"
         for _button, icon_name in widget._leftToolbar._icon_buttons
     )
+    assert any(
+        icon_name == "fa6s.circle-info"
+        for _button, icon_name in widget._leftToolbar._icon_buttons
+    )
     assert toolbar_button.isChecked() is False
     assert params_button.isChecked() is False
     assert meta_button.isChecked() is False
+    assert info_button.isChecked() is False
     # A shared window may already be showing the detection panel.
     if not widget._detectionPanelWidget.isHidden():
         widget.toggleInterface("Detection Panel", False)
     assert widget._detectionPanelWidget.isHidden()
+    assert widget._sanpyInfoWidget is None
     assert widget._leftPanelContainer.isHidden()
     assert widget.detectToolbarWidget.maximumWidth() > 280
 
@@ -188,8 +195,33 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     assert toolbar_button.isChecked() is True
     assert params_button.isChecked() is False
     assert meta_button.isChecked() is False
+    assert info_button.isChecked() is False
     assert widget._detectionPanelWidget.isHidden() is False
+    assert widget._sanpyInfoWidget is None
     assert widget._leftPanelContainer.isHidden() is False
+
+    info_button.click()
+
+    assert info_button.isChecked() is True
+    assert toolbar_button.isChecked() is False
+    assert params_button.isChecked() is False
+    assert meta_button.isChecked() is False
+    assert widget._leftPanelPlugin is None
+    assert widget._detectionPanelWidget.isHidden() is True
+    assert widget._sanpyInfoWidget is not None
+    assert widget._sanpyInfoWidget.isHidden() is False
+    assert widget._leftPanelContainer.isHidden() is False
+    button_labels = [
+        button.text()
+        for button in widget._sanpyInfoWidget.findChildren(QtWidgets.QPushButton)
+    ]
+    assert button_labels == ["Copy SanPy Info", "SanPy-User-Files"]
+
+    info_button.click()
+
+    assert info_button.isChecked() is False
+    assert widget._sanpyInfoWidget is None
+    assert widget._leftPanelContainer.isHidden() is True
 
 
 def test_raw_plot_toolbar_resets_axis_and_rebalances_visible_plots(
