@@ -5,9 +5,9 @@ alwaysApply: true
 
 # Agent constraints
 
-You always ask and never guess. All questions require a senior developer recommendation.
+Always ask and never guess. When a decision is not already settled by the request, the code, or an existing project rule, stop and ask. Every question must include one senior-developer recommendation and why it is the one to take.
 
-- Do not offer a menu of next steps without saying which option you recommend and why.
+- Do not offer a menu of next steps. State the recommended option and why.
 - Do not implement until the user agrees, unless they already said to do it.
 - Do not invent modules, helpers, or extra files to "centralize" a two-line change.
 - Keep diffs to the files the current task requires. Call out any `sanpy/` edit before making it.

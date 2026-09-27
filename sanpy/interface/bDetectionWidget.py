@@ -126,66 +126,75 @@ _LEFT_PANEL_PLUGINS: dict[str, str] = {
 
 
 class _LeftToolbar(QtWidgets.QWidget):
-    """Vertical buttons that open one left panel at a time."""
+    """Vertical buttons that open one left panel at a time.
+
+    Button state lasts for the session. It is not stored in preferences.
+    """
 
     def __init__(self, detection_widget: "bDetectionWidget") -> None:
         """Build the detection, parameters, and metadata buttons.
 
         Args:
-            detection_widget: Detection widget that applies the button state.
+            detection_widget: Detection widget that shows and hides left panels.
         """
         super().__init__(detection_widget)
+        self._detection_widget = detection_widget
         self.setFixedWidth(36)
         self._icon_buttons: list[tuple[QtWidgets.QToolButton, str]] = []
+        self._panel_buttons: dict[str, QtWidgets.QToolButton] = {}
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(2)
 
         buttons = (
             (
-                "detectionPanels",  # section
-                "Detection Panel",  # name
-                "Show or Hide Detection Panel",  # tip
-                "fa6s.chart-line",  # icon name
-                True,
+                "Detection Panel",
+                "Show or Hide Detection Panel",
+                "fa6s.chart-line",
             ),
             (
-                "detectionPanels",
                 "Detection Parameters",
                 "Show or Hide Detection Parameters",
                 "fa6s.sliders",
-                False,
             ),
             (
-                "detectionPanels",
                 "Set Meta Data Panel",
                 "Show or Hide Set Meta Data",
                 "fa6s.tags",
-                False,
             ),
         )
-        options = detection_widget.getMainWindowOptions()
-        for section, name, tip, icon_name, default_checked in buttons:
+        for panel_name, tip, icon_name in buttons:
             button = QtWidgets.QToolButton(self)
             button.setCheckable(True)
+            button.setChecked(False)
             button.setAutoRaise(True)
             button.setToolTip(tip)
             button.setIconSize(QtCore.QSize(22, 22))
-            self._icon_buttons.append((button, icon_name))
             button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
-            section_options = options[section] if options is not None else None
-            if section_options is not None and name in section_options:
-                checked = bool(section_options[name])
-            else:
-                checked = default_checked
-            button.setChecked(checked)
-            button.toggled.connect(
-                partial(detection_widget._on_view_toggle_button, section, name)
-            )
+            button.toggled.connect(partial(self._on_panel_toggled, panel_name))
+            self._icon_buttons.append((button, icon_name))
+            self._panel_buttons[panel_name] = button
             layout.addWidget(button)
-            detection_widget._register_view_toggle_button(section, name, button)
         self.apply_icon_colors()
         layout.addStretch(1)
+
+    def _on_panel_toggled(self, panel_name: str, checked: bool) -> None:
+        """Open one left panel, or close it when its button is unchecked.
+
+        Args:
+            panel_name: Left panel controlled by the button.
+            checked: Whether that panel should be open.
+        """
+        if checked:
+            for other_name, other_button in self._panel_buttons.items():
+                if other_name == panel_name:
+                    continue
+                if other_button.isChecked():
+                    other_button.blockSignals(True)
+                    other_button.setChecked(False)
+                    other_button.blockSignals(False)
+                self._detection_widget.toggleInterface(other_name, False)
+        self._detection_widget.toggleInterface(panel_name, checked)
 
     def apply_icon_colors(self) -> None:
         """Recolor the toolbar icons with the current theme text color."""
@@ -397,23 +406,6 @@ class bDetectionWidget(QtWidgets.QWidget):
             self.toggleInterface("Derivative", showDerivative)
             self.toggleInterface("DAC", showDAC)
             # self.toggleInterface('Clips', showClips)
-
-            #
-            # toggle interface to myDetectionToolbarWidget
-            showPlotOption = windowOptions["detectionPanels"]["Detection"]
-            self.toggleInterface("Detection", showPlotOption)
-
-            showPlotOption = windowOptions["detectionPanels"]["Display"]
-            self.toggleInterface("Display", showPlotOption)
-
-            showPlotOption = windowOptions["detectionPanels"]["Plot Options"]
-            self.toggleInterface("Plot Options", showPlotOption)
-
-            showPlotOption = windowOptions["detectionPanels"]["Set Spikes"]
-            self.toggleInterface("Set Spikes", showPlotOption)
-
-            showPlotOption = windowOptions["detectionPanels"]["Set Meta Data"]
-            self.toggleInterface("Set Meta Data", showPlotOption)
 
         # 202401
         self.setAxisFull()
@@ -1716,16 +1708,6 @@ class bDetectionWidget(QtWidgets.QWidget):
                 self._leftPanelPlugin is not None
                 or not self._detectionPanelWidget.isHidden()
             )
-        elif item == "Detection":
-            self.detectToolbarWidget.toggleInterface(item, on)
-        elif item == "Display":
-            self.detectToolbarWidget.toggleInterface(item, on)
-        elif item == "Plot Options":
-            self.detectToolbarWidget.toggleInterface(item, on)
-        elif item == "Set Spikes":
-            self.detectToolbarWidget.toggleInterface(item, on)
-        elif item == "Set Meta Data":
-            self.detectToolbarWidget.toggleInterface(item, on)
 
         else:
             # Toggle overlay of stats like (TOP, spike peak, half-width, ...)
@@ -1780,30 +1762,6 @@ class bDetectionWidget(QtWidgets.QWidget):
         if not isinstance(layout, QtWidgets.QHBoxLayout):
             logger.error("Raw-plot toggle bar does not have a horizontal layout.")
             return bar
-
-        self._detectionPanelButton = QtWidgets.QToolButton(bar)
-        self._detectionPanelButton.setText("<<")
-        self._detectionPanelButton.setToolTip("Show or Hide Detection Panel")
-        self._detectionPanelButton.setCheckable(True)
-        self._detectionPanelButton.setAutoRaise(True)
-        options = self.getMainWindowOptions()
-        detection_panel_visible = (
-            bool(options["detectionPanels"]["Detection Panel"])
-            if options is not None
-            else True
-        )
-        self._detectionPanelButton.setChecked(detection_panel_visible)
-        self._detectionPanelButton.toggled.connect(
-            partial(
-                self._on_view_toggle_button,
-                "detectionPanels",
-                "Detection Panel",
-            )
-        )
-        layout.insertWidget(0, self._detectionPanelButton)
-        self._register_view_toggle_button(
-            "detectionPanels", "Detection Panel", self._detectionPanelButton
-        )
 
         self._resetAxisButton = QtWidgets.QToolButton(bar)
         self._resetAxisButton.setText("[]")
@@ -1888,38 +1846,6 @@ class bDetectionWidget(QtWidgets.QWidget):
         """
         self._viewToggleButtons.setdefault((section, name), []).append(button)
 
-    def left_panel_plugin_names(self) -> tuple[str, ...]:
-        """Return left-panel preference names that host a plugin.
-
-        Returns:
-            Preference keys in toolbar order.
-        """
-        return tuple(_LEFT_PANEL_PLUGINS)
-
-    def _prefer_one_left_panel(self) -> None:
-        """Leave only one left panel marked open in preferences.
-
-        The detection panel wins when it is open. Otherwise the first saved
-        plugin panel wins.
-        """
-        options = self.getMainWindowOptions()
-        if options is None:
-            return
-        panels = options["detectionPanels"]
-        if panels.get("Detection Panel", True):
-            for panel_name in _LEFT_PANEL_PLUGINS:
-                if panels.get(panel_name):
-                    panels[panel_name] = False
-            return
-        found_open_plugin = False
-        for panel_name in _LEFT_PANEL_PLUGINS:
-            if not panels.get(panel_name):
-                continue
-            if found_open_plugin:
-                panels[panel_name] = False
-            else:
-                found_open_plugin = True
-
     def _set_left_panel_open(self, open_panel: bool) -> None:
         """Show or collapse the splitter pane that holds the open left panel.
 
@@ -1964,7 +1890,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         closed first so only one left-panel plugin stays embedded.
 
         Args:
-            panel_name: Left-panel preference name, such as ``Detection Parameters``.
+            panel_name: Left panel name, such as ``Detection Parameters``.
         """
         if (
             self._leftPanelPlugin is not None
@@ -2092,7 +2018,6 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._leftPanelPlugin: Optional[object] = None
         self._leftPanelPluginName: str | None = None
         self._leftPanelWidth = 280
-        self._prefer_one_left_panel()
 
         # Left toolbar, then a splitter: open left panel | raw plot column.
         self.myHBoxLayout_detect = QtWidgets.QHBoxLayout(self)
@@ -2139,13 +2064,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         detection_layout = QtWidgets.QVBoxLayout(self._detectionPanelWidget)
         detection_layout.setContentsMargins(0, 0, 0, 0)
         detection_layout.setAlignment(QtCore.Qt.AlignTop)
-        detection_layout.addWidget(
-            self._build_view_toggle_bar(
-                "detectionPanels",
-                ["Detection", "Display", "Set Spikes", "Plot Options"],
-            ),
-            alignment=QtCore.Qt.AlignTop,
-        )
+
         detection_layout.addWidget(
             self.detectToolbarWidget, alignment=QtCore.Qt.AlignTop
         )
@@ -2410,19 +2329,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # was this june 4
         # vBoxLayoutForPlot.addWidget(self.view)
 
-        options = self.getMainWindowOptions()
-        detection_panel_visible = True
-        if options is not None:
-            detection_panel_visible = bool(
-                options["detectionPanels"].get("Detection Panel", True)
-            )
-        self.toggleInterface("Detection Panel", detection_panel_visible)
-        if not detection_panel_visible and options is not None:
-            panels = options["detectionPanels"]
-            for panel_name in _LEFT_PANEL_PLUGINS:
-                if panels.get(panel_name):
-                    self.toggleInterface(panel_name, True)
-                    break
+        self.toggleInterface("Detection Panel", False)
 
     # def _cursorDragged(self, name, infLine):
     #     # logger.info(f'{name} {infLine.pos()}')
@@ -3716,39 +3623,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         onOff = value == 2
         self.detectionWidget.toggleCrosshair(onOff)
 
-    def toggleInterface(self, panelName: str, onoff: bool):
-        """Toggle interface panels on/off."""
-
-        if panelName == "Detection":
-            if onoff:
-                self.detectionGroupBox.show()
-            else:
-                self.detectionGroupBox.hide()
-        elif panelName == "Display":
-            if onoff:
-                self.displayGroupBox.show()
-            else:
-                self.displayGroupBox.hide()
-        # mar 11
-        elif panelName == "Set Spikes":
-            if onoff:
-                self.setSpikeGroupBox.show()
-            else:
-                self.setSpikeGroupBox.hide()
-        elif panelName == "Set Meta Data":
-            if onoff:
-                self.setMetaDataGroupBox.show()
-            else:
-                self.setMetaDataGroupBox.hide()
-        elif panelName == "Plot Options":
-            if onoff:
-                self.plotGroupBox.show()
-            else:
-                self.plotGroupBox.hide()
-
-        else:
-            logger.warning(f'did not understand panelName "{panelName}"')
-
     def _buildUI(self) -> None:
         """Build the grouped detection, display, and plot controls.
 
@@ -4047,31 +3921,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         self.setSpikeGroupBox.setLayout(setSpikeLayout)
         self.mainLayout.addWidget(self.setSpikeGroupBox)
-
-        #
-        # SetMetaData group
-        self.setMetaDataGroupBox = QtWidgets.QGroupBox("Set Meta Data")
-        self.setContentsMargins(0,0,0,0)
-        setMetaDataLayout = QtWidgets.QHBoxLayout()
-        setMetaDataLayout.setContentsMargins(0,0,0,0)
-
-        # mar 11, created a setMetaData stat plugin
-        setMetaDataWidget = sanpy.interface.plugins.SetMetaData(
-            ba=self.detectionWidget.ba,
-            # bPlugin=self.detectionWidget.myMainWindow.myPlugins,
-            #bPlugin=self.detectionWidget.myMainWindow.getPlugins(),
-            sanPyWindow=self.detectionWidget.myMainWindow
-        )
-
-        # signalsetMetaData is now in sanpyPlugin base class
-        # setMetaDataWidget.signalsetMetaData.connect(
-        #     self.detectionWidget.slot_setMetaData
-        # )
-
-        setMetaDataLayout.addWidget(setMetaDataWidget)
-
-        self.setMetaDataGroupBox.setLayout(setMetaDataLayout)
-        self.mainLayout.addWidget(self.setMetaDataGroupBox)
 
         #
         # plots  group

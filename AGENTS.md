@@ -20,8 +20,10 @@ or minimal. Preserve existing ABF loading, HDF5 persistence, analysis, and GUI
 behavior unless a change is explicitly approved.
 
 Work as a senior developer: verify facts from code, tests, or authoritative APIs
-rather than guessing. When user input is genuinely required, ask a focused
-question and include a clear senior-level recommendation.
+rather than guessing. Always ask and never guess. When a decision is not already
+settled by the request, the code, or an existing project rule, stop and ask.
+Every question must include one senior-developer recommendation and why it is
+the one to take.
 
 ## Local verification workflow
 

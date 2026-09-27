@@ -808,18 +808,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         """
         self.setViewPanelVisible(key1, name, isChecked)
 
-    def _exclusiveLeftPanels(self) -> tuple[str, ...]:
-        """Return left panels that cannot be open together.
-
-        Returns:
-            Detection Panel, then each embedded plugin panel, in toolbar order.
-        """
-        detection_widget = getattr(self, "myDetectionWidget", None)
-        plugin_panels: tuple[str, ...] = ()
-        if detection_widget is not None:
-            plugin_panels = detection_widget.left_panel_plugin_names()
-        return ("Detection Panel",) + plugin_panels
-
     def setViewPanelVisible(self, section: str, name: str, visible: bool) -> None:
         """Set one configurable view from either a menu or toolbar action.
 
@@ -828,17 +816,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
             name: View to show or hide.
             visible: Whether the view should be visible.
         """
-        exclusive_left_panels = self._exclusiveLeftPanels()
-        if (
-            section == "detectionPanels"
-            and name in exclusive_left_panels
-            and visible
-        ):
-            self._applyViewPanelVisible(section, name, True)
-            for other_name in exclusive_left_panels:
-                if other_name != name:
-                    self._applyViewPanelVisible(section, other_name, False)
-            return
         self._applyViewPanelVisible(section, name, visible)
 
     def _applyViewPanelVisible(
@@ -857,11 +834,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             section_options = self.configDict[section]
         except KeyError:
             section_options = None
-        plugin_panels = self._exclusiveLeftPanels()[1:]
-        if section_options is not None and (
-            name in section_options
-            or (section == "detectionPanels" and name in plugin_panels)
-        ):
+        if section_options is not None and name in section_options:
             section_options[name] = visible
 
         if section == "filePanels":
@@ -871,9 +844,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
             self.toggleInterface(name, visible)
 
         elif section == "rawDataPanels":
-            self.myDetectionWidget.toggleInterface(name, visible)
-
-        elif section == "detectionPanels":
             self.myDetectionWidget.toggleInterface(name, visible)
 
         elif section == "Dark Theme":
@@ -991,10 +961,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.myDetectionWidget = sanpy.interface.bDetectionWidget(
             ba=baNone, mainWindow=self
         )
-
-        # show/hide
-        on = self.configDict["detectionPanels"]["Detection Panel"]
-        self.myDetectionWidget.toggleInterface("Detection Panel", on)
 
         # (1) detection widget in main v layout
         _mainVLayout.addWidget(self.myDetectionWidget)

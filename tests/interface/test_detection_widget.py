@@ -8,28 +8,9 @@ from unittest.mock import Mock
 import numpy as np
 import pyqtgraph as pg
 import pytest
-from qtpy import QtCore, QtGui, QtWidgets
+from qtpy import QtGui, QtWidgets
 
 from sanpy.interface.util import sanpyCursors
-
-
-def _most_opaque_icon_color(button: QtWidgets.QToolButton) -> QtGui.QColor:
-    """Return the icon pixel with the strongest coverage.
-
-    Args:
-        button: Toolbar button whose icon is sampled.
-
-    Returns:
-        Color of the least transparent icon pixel.
-    """
-    image = button.icon().pixmap(button.iconSize()).toImage()
-    strongest = QtGui.QColor(0, 0, 0, 0)
-    for y in range(image.height()):
-        for x in range(image.width()):
-            color = image.pixelColor(x, y)
-            if color.alpha() > strongest.alpha():
-                strongest = color
-    return strongest
 
 
 def test_plot_range_signals_are_connected_once(
@@ -57,50 +38,6 @@ def test_plot_range_signals_are_connected_once(
     window.selectFileListRow(2)
     assert plot_item.receivers(widget.vmPlot.sigXRangeChanged) == 1
     assert plot_item.receivers(widget.vmPlot.sigYRangeChanged) == 1
-
-
-def test_detection_view_buttons_share_view_menu_state(
-    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
-) -> None:
-    """Keep detection buttons, preferences, and View-menu behavior synchronized.
-
-    Args:
-        monkeypatch: Pytest fixture used to prevent preference-file writes.
-        qapp: Running SanPy Qt application supplied by pytest-qt.
-        qtbot: Pytest-Qt widget lifecycle helper.
-    """
-    data_path = Path(__file__).resolve().parents[2] / "data"
-    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
-    window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
-    widget = window.myDetectionWidget
-    button = widget._viewToggleButtons[("detectionPanels", "Detection")][0]
-    button_bar = button.parentWidget()
-    detection_column = button_bar.parentWidget()
-
-    assert button_bar.sizePolicy().verticalPolicy() == button_bar.sizePolicy().Fixed
-    assert detection_column.layout().alignment() & QtCore.Qt.AlignTop
-
-    button.click()
-
-    assert qapp.getOptions()["detectionPanels"]["Detection"] is button.isChecked()
-    assert (
-        not widget.detectToolbarWidget.detectionGroupBox.isHidden()
-    ) is button.isChecked()
-
-    menu_state = not button.isChecked()
-    window._viewMenuAction("detectionPanels", "Detection", menu_state)
-
-    assert button.isChecked() is menu_state
-    assert (not widget.detectToolbarWidget.detectionGroupBox.isHidden()) is menu_state
-
-    window.setViewPanelVisible("detectionPanels", "Detection Panel", False)
-    assert detection_column.isHidden()
-    assert button_bar.isVisibleTo(window) is False
-    assert widget.detectToolbarWidget.isVisibleTo(window) is False
-
-    window.setViewPanelVisible("detectionPanels", "Detection Panel", True)
-    assert detection_column.isHidden() is False
 
 
 def test_theme_switch_updates_existing_recording_plots(
@@ -144,39 +81,6 @@ def test_theme_switch_updates_existing_recording_plots(
         qapp.toggleStyleSheet(doDark=original_theme)
 
 
-def test_left_toolbar_icons_follow_theme_text_color(
-    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
-) -> None:
-    """Keep left-toolbar icon foregrounds on the theme text color.
-
-    Args:
-        monkeypatch: Pytest fixture used to prevent preference-file writes.
-        qapp: Running SanPy Qt application supplied by pytest-qt.
-        qtbot: Pytest-Qt widget lifecycle helper.
-    """
-    data_path = Path(__file__).resolve().parents[2] / "data"
-    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
-    window = qapp.openSanPyWindow(str(data_path))
-    qtbot.addWidget(window)
-    widget = window.myDetectionWidget
-    original_theme = qapp.useDarkStyle
-
-    try:
-        for is_dark in (False, True):
-            qapp.toggleStyleSheet(doDark=is_dark)
-            expected_icon = qapp.palette().color(QtGui.QPalette.Text)
-            for button, _icon_name in widget._leftToolbar._icon_buttons:
-                icon_color = _most_opaque_icon_color(button)
-                assert icon_color.alpha() > 200
-                assert icon_color.red() == expected_icon.red()
-                assert icon_color.green() == expected_icon.green()
-                assert icon_color.blue() == expected_icon.blue()
-            if is_dark:
-                assert expected_icon.lightness() > 180
-    finally:
-        qapp.toggleStyleSheet(doDark=original_theme)
-
-
 def test_raw_plot_buttons_share_view_menu_state(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
 ) -> None:
@@ -193,26 +97,9 @@ def test_raw_plot_buttons_share_view_menu_state(
     qtbot.addWidget(window)
     widget = window.myDetectionWidget
     button = widget._viewToggleButtons[("rawDataPanels", "Derivative")][0]
-    detection_button = next(
-        candidate
-        for candidate in widget._viewToggleButtons[
-            ("detectionPanels", "Detection Panel")
-        ]
-        if candidate.text() == "<<"
-    )
+    first_button = button.parentWidget().layout().itemAt(0).widget()
 
-    assert detection_button.text() == "<<"
-    assert detection_button.parentWidget().layout().itemAt(0).widget() is detection_button
-
-    detection_button.click()
-
-    assert qapp.getOptions()["detectionPanels"]["Detection Panel"] is False
-    assert widget._detectionPanelWidget.isHidden()
-
-    window._viewMenuAction("detectionPanels", "Detection Panel", True)
-
-    assert detection_button.isChecked()
-    assert widget._detectionPanelWidget.isHidden() is False
+    assert first_button.text() == "Full Recording"
 
     button.click()
 
@@ -241,17 +128,9 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     window = qapp.openSanPyWindow(str(data_path))
     qtbot.addWidget(window)
     widget = window.myDetectionWidget
-    detection_buttons = widget._viewToggleButtons[
-        ("detectionPanels", "Detection Panel")
-    ]
-    plot_button = next(button for button in detection_buttons if button.text() == "<<")
-    toolbar_button = next(button for button in detection_buttons if button.text() != "<<")
-    params_button = widget._viewToggleButtons[
-        ("detectionPanels", "Detection Parameters")
-    ][0]
-    meta_button = widget._viewToggleButtons[
-        ("detectionPanels", "Set Meta Data Panel")
-    ][0]
+    toolbar_button = widget._leftToolbar._panel_buttons["Detection Panel"]
+    params_button = widget._leftToolbar._panel_buttons["Detection Parameters"]
+    meta_button = widget._leftToolbar._panel_buttons["Set Meta Data Panel"]
 
     assert widget.myHBoxLayout_detect.itemAt(0).widget() is widget._leftToolbar
     assert widget._leftPanelSplitter.widget(0) is widget._leftPanelContainer
@@ -261,13 +140,19 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
         icon_name == "fa6s.tags"
         for _button, icon_name in widget._leftToolbar._icon_buttons
     )
-    assert toolbar_button.isChecked() is plot_button.isChecked()
+    assert toolbar_button.isChecked() is False
+    assert params_button.isChecked() is False
+    assert meta_button.isChecked() is False
+    # A shared window may already be showing the detection panel.
+    if not widget._detectionPanelWidget.isHidden():
+        widget.toggleInterface("Detection Panel", False)
+    assert widget._detectionPanelWidget.isHidden()
+    assert widget._leftPanelContainer.isHidden()
     assert widget.detectToolbarWidget.maximumWidth() > 280
 
     params_button.click()
 
     assert params_button.isChecked() is True
-    assert plot_button.isChecked() is False
     assert toolbar_button.isChecked() is False
     assert widget._detectionPanelWidget.isHidden() is True
     assert widget._leftPanelContainer.isHidden() is False
@@ -301,7 +186,8 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     toolbar_button.click()
 
     assert toolbar_button.isChecked() is True
-    assert plot_button.isChecked() is True
+    assert params_button.isChecked() is False
+    assert meta_button.isChecked() is False
     assert widget._detectionPanelWidget.isHidden() is False
     assert widget._leftPanelContainer.isHidden() is False
 

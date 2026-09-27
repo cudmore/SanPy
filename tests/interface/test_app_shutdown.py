@@ -320,14 +320,6 @@ def test_view_menu_contains_only_dark_theme(qtbot: Any) -> None:
     window.viewMenu = QtWidgets.QMenu(window)
     window.configDict = {
         "filePanels": {"File Panel": True},
-        "detectionPanels": {
-            "Detection Panel": True,
-            "Detection": True,
-            "Display": True,
-            "Set Spikes": False,
-            "Set Meta Data": False,
-            "Plot Options": False,
-        },
         "rawDataPanels": {
             "Full Recording": False,
             "Derivative": True,

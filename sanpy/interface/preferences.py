@@ -214,17 +214,6 @@ class preferences:
         configDict["filePanels"] = {}
         configDict["filePanels"]["File Panel"] = True
 
-        # panels withing detectionWidget -> myDetectionToolbar
-        configDict["detectionPanels"] = {}
-        configDict["detectionPanels"]["Detection Panel"] = True  # main panel
-        configDict["detectionPanels"]["Detection Parameters"] = False
-        configDict["detectionPanels"]["Set Meta Data Panel"] = False
-        configDict["detectionPanels"]["Detection"] = True
-        configDict["detectionPanels"]["Display"] = True
-        configDict["detectionPanels"]["Plot Options"] = False
-        configDict["detectionPanels"]["Set Spikes"] = False
-        configDict["detectionPanels"]["Set Meta Data"] = False
-
         # 20231229 removing when switching to multiple windows
         # used to keep track of open plugins
         # plugins to show at startup
