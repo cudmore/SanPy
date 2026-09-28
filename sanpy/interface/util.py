@@ -15,7 +15,7 @@ class sanpyCursors(QtCore.QObject):
     signalSetDetectionParam = QtCore.pyqtSignal(str, float)
 
     def __init__(
-        self, plotWidget: pg.PlotWidget, showInView: bool = True
+        self, plotWidget: pg.PlotWidget, showInView: bool = False
     ) -> None:
         """Add measurement cursors to a recording plot.
 

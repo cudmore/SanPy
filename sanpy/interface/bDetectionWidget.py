@@ -147,28 +147,32 @@ class _LeftToolbar(QtWidgets.QWidget):
         self._panel_buttons: dict[str, QtWidgets.QToolButton] = {}
         layout = QtWidgets.QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(2)
+        # layout.setSpacing(2)
 
         buttons = (
             (
                 "Detection Panel",
                 "Detection Panel",
-                "fa6s.chart-line",
+                # "fa6s.chart-line",
+                "ph.chart-line-thin",
             ),
             (
                 "Detection Parameters",
                 "Detection Parameters",
-                "fa6s.sliders",
+                # "fa6s.sliders",
+                "ph.sliders-light",
             ),
             (
                 "Set Meta Data Panel",
                 "Set Metadata",
-                "fa6s.tags",
+                # "fa6s.tags",
+                "mdi.tag-multiple-outline",
             ),
             (
                 "SanPy Info",
                 "SanPy Info",
-                "fa6s.circle-info",
+                # "fa6s.circle-info",
+                "ph.info",
             ),
         )
         for panel_name, tip, icon_name in buttons:
@@ -177,7 +181,8 @@ class _LeftToolbar(QtWidgets.QWidget):
             button.setChecked(False)
             button.setAutoRaise(True)
             button.setToolTip(tip)
-            button.setIconSize(QtCore.QSize(22, 22))
+            # button.setIconSize(QtCore.QSize(22, 22))
+            button.setIconSize(QtCore.QSize(26, 26))
             button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
             button.toggled.connect(partial(self._on_panel_toggled, panel_name))
             self._icon_buttons.append((button, icon_name))
@@ -2230,13 +2235,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.vmPlotGlobal_ = self.vmPlotGlobal.plot(name="vmPlotGlobal")
         self.vmPlotGlobal_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
         vBoxLayoutForPlot.addWidget(self.vmPlotGlobal)
-        self.vmPlotGlobal.enableAutoRange()
+        self.vmPlotGlobal.enableAutoRange(axis="y")
 
         self.derivPlot = pg.PlotWidget(name='derivPlot')
         self.derivPlot_ = self.derivPlot.plot(name="derivPlot")
         self.derivPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
         vBoxLayoutForPlot.addWidget(self.derivPlot)
-        self.derivPlot.enableAutoRange()
+        self.derivPlot.enableAutoRange(axis="y")
         self.derivPlot.setContextMenuPolicy(QtCore.Qt.CustomContextMenu)
         self.derivPlot.customContextMenuRequested.connect(partial(self.slot_contextMenu,'derivPlot', self.derivPlot))
 
@@ -2244,14 +2249,14 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.dacPlot_ = self.dacPlot.plot(name="dacPlot")
         self.dacPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
         vBoxLayoutForPlot.addWidget(self.dacPlot)
-        self.dacPlot.enableAutoRange()
+        self.dacPlot.enableAutoRange(axis="y")
 
         self.vmPlot = pg.PlotWidget(name='vmPlot')
         # vmPlot_ is pyqtgraph.graphicsItems.PlotDataItem.PlotDataItem
         self.vmPlot_ = self.vmPlot.plot(name="vmPlot")
         self.vmPlot_.setData(xPlotEmpty, yPlotEmpty, connect="finite")
         vBoxLayoutForPlot.addWidget(self.vmPlot)
-        self.vmPlot.enableAutoRange()
+        self.vmPlot.enableAutoRange(axis="y")
         # 202401
         #self.vmPlot.setAutoVisible(y=True)
         # see: https://wiki.python.org/moin/PyQt/Handling%20context%20menus
