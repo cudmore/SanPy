@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "acq_date",
+    "acq_time",
+    "acq_datetime",
+    "num_channels",
+    "num_sweeps",
+    "num_epochs",
+    "sweep_label_x",
+    "sweep_label_y",
+    "mode",
+    "recording_frequency_khz",
+    "user_list"
+  ],
+  "properties": {
+    "acq_date": {"type": "string"},
+    "acq_time": {"type": "string"},
+    "acq_datetime": {"type": "string"},
+    "num_channels": {"type": "integer", "minimum": 1},
+    "num_sweeps": {"type": "integer", "minimum": 1},
+    "num_epochs": {
+      "oneOf": [
+        {"type": "integer", "minimum": 0},
+        {"type": "null"}
+      ]
+    },
+    "sweep_label_x": {"type": "string"},
+    "sweep_label_y": {"type": "string"},
+    "mode": {"type": "string"},
+    "recording_frequency_khz": {"type": "number", "exclusiveMinimum": 0},
+    "user_list": {
+      "oneOf": [
+        {"type": "array", "items": {"type": "number"}},
+        {"type": "null"}
+      ]
+    }
+  }
+}

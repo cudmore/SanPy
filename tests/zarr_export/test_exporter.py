@@ -126,6 +126,71 @@ def test_export_is_zarr3_and_preserves_runtime_state(
     validate_collection(destination)
 
 
+def test_export_writes_valid_file_metadata(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Export immutable file metadata as an additive recording resource.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Multi-sweep, multi-channel ABF fixture.
+    """
+    analysis = _analysis(small_abf)
+    destination = tmp_path / "file-metadata.sanpy.zarr"
+
+    export_collection([analysis], destination, table_format="csv")
+
+    root = _recording_root(destination)
+    manifest = json.loads((root / "recording.json").read_text())
+    assert manifest["resources"]["file_metadata"] == "metadata/file_metadata.json"
+    exported = json.loads((root / "metadata" / "file_metadata.json").read_text())
+    assert exported == json_value(analysis.fileLoader.fileMetadata)
+    assert exported["num_channels"] == 2
+    assert exported["num_sweeps"] == 18
+    assert exported["num_epochs"] == 5
+    validate_collection(destination)
+
+
+def test_validator_accepts_legacy_manifest_without_file_metadata(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Keep the additive file-metadata resource optional for old exports.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Multi-sweep, multi-channel ABF fixture.
+    """
+    destination = tmp_path / "legacy.sanpy.zarr"
+    export_collection([_analysis(small_abf)], destination, table_format="csv")
+    root = _recording_root(destination)
+    manifest_path = root / "recording.json"
+    manifest = json.loads(manifest_path.read_text())
+    del manifest["resources"]["file_metadata"]
+    _write_json(manifest_path, manifest)
+
+    validate_collection(destination)
+
+
+def test_validator_rejects_inconsistent_file_metadata(
+    tmp_path: Path, small_abf: Path
+) -> None:
+    """Reject exported file metadata that disagrees with recording dimensions.
+
+    Args:
+        tmp_path: Pytest-managed output directory.
+        small_abf: Multi-sweep, multi-channel ABF fixture.
+    """
+    destination = tmp_path / "invalid-file-metadata.sanpy.zarr"
+    export_collection([_analysis(small_abf)], destination, table_format="csv")
+    path = _recording_root(destination) / "metadata" / "file_metadata.json"
+    metadata = json.loads(path.read_text())
+    metadata["num_sweeps"] += 1
+    _write_json(path, metadata)
+
+    with pytest.raises(SanPyZarrValidationError, match="sweep count mismatch"):
+        validate_collection(destination)
+
+
 def test_export_saved_sanpy_recording(tmp_path: Path, sanpy_data_folder: Path) -> None:
     """Export SanPy text signals, epochs, and HDF5-restored results.
 

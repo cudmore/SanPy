@@ -1686,14 +1686,16 @@ class analysisDir:
                 # logger.warning('randomly assigning sex to male, female, unknown')
                 # sexList = ['male', 'female', 'unknown']
                 # oneDf['Sex'] = random.choice(sexList)
-                oneDf_thresholdVal = oneDf['thresholdVal'].to_numpy()  # take off potential
-                oneDf_thresholdVal_mean = np.nanmean(oneDf_thresholdVal)
-                if oneDf_thresholdVal_mean > 0.5685522031727147:  # mean of all thresholdVal
-                    # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} male')
-                    oneDf['Sex'] ='male'  # pandas dataframe columns are Capitalized !!!!!
-                else:
-                    oneDf['Sex'] = 'female'
-                    # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} female')
+
+                # abb removed 202609
+                # oneDf_thresholdVal = oneDf['thresholdVal'].to_numpy()  # take off potential
+                # oneDf_thresholdVal_mean = np.nanmean(oneDf_thresholdVal)
+                # if oneDf_thresholdVal_mean > 0.5685522031727147:  # mean of all thresholdVal
+                #     # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} male')
+                #     oneDf['Sex'] ='male'  # pandas dataframe columns are Capitalized !!!!!
+                # else:
+                #     oneDf['Sex'] = 'female'
+                #     # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} female')
 
                 # print('FINAL SEX IS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
                 # print(oneDf['sex'])

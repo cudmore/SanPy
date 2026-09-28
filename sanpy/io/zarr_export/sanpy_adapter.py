@@ -34,6 +34,7 @@ def snapshot_banalysis(analysis: Any) -> SanPySnapshot:
     return SanPySnapshot(
         recording_id=str(getattr(analysis, "uuid", None) or uuid.uuid4()),
         metadata=copy.deepcopy(dict(analysis.metaData)),
+        file_metadata=copy.deepcopy(loader.fileMetadata),
         detection_parameters=copy.deepcopy(analysis.getDetectionDict() or {}),
         detection_definitions=copy.deepcopy(getDefaultDetection()),
         result_definitions=copy.deepcopy(analysisResultDict),

@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 
 from sanpy.trace_overlays import TraceOverlayDefinition
+from sanpy.fileloaders.fileMetadata import FileMetadata
 
 
 EPOCH_COLUMNS = (
@@ -74,6 +75,7 @@ class SanPySnapshot:
     Attributes:
         recording_id: Stable SanPy recording identifier.
         metadata: Experimental metadata values.
+        file_metadata: Immutable metadata derived from the source file.
         detection_parameters: Applied detection parameter values.
         detection_definitions: Runtime detection parameter schema.
         result_definitions: Runtime analysis-result schema.
@@ -88,6 +90,7 @@ class SanPySnapshot:
 
     recording_id: str
     metadata: dict[str, Any]
+    file_metadata: FileMetadata
     detection_parameters: dict[str, Any]
     detection_definitions: dict[str, dict[str, Any]]
     result_definitions: dict[str, dict[str, Any]]

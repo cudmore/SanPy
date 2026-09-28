@@ -41,6 +41,7 @@ from .plotScatter import getPlotMarkersAndColors
 
 from .plotFi import plotFi
 from .nicepool_plugin import NicePoolPlugin
+from .fileMetadataView import FileMetadataView
 
 # TODO: make this just one line, so user can drop a bplugin in and restart
 from . import *

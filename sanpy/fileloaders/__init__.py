@@ -10,6 +10,7 @@ if DO_KYMOGRAPH_ANALYSIS:
 
 from .fileLoader_base import fileLoader_base
 from .fileLoader_base import recordingModes
+from .fileMetadata import FileMetadata
 from .fileLoader_base import getFileLoaders
 
 # errors on building kym app, put back in for Sack lab

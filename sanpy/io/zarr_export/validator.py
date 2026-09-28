@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from importlib.resources import files
 from pathlib import Path
 from typing import Any
@@ -88,6 +89,12 @@ def _validate_recording(
         raise SanPyZarrValidationError("Analysis channel is out of bounds")
     for key in ("sanpy_metadata", "detection_parameters", "detection_parameter_definitions"):
         _json(_resource(recording_root, recording["resources"][key]))
+    if "file_metadata" in recording["resources"]:
+        file_metadata = _json(
+            _resource(recording_root, recording["resources"]["file_metadata"])
+        )
+        _schema(file_metadata, "file-metadata-v1.schema.json")
+        _validate_file_metadata(file_metadata, recording)
     result_definitions = _json(
         _resource(recording_root, recording["resources"]["analysis_result_definitions"])
     )
@@ -108,6 +115,43 @@ def _validate_recording(
     }
     if member["summary"] != expected_summary:
         raise SanPyZarrValidationError("Collection recording summary mismatch")
+
+
+def _validate_file_metadata(
+    file_metadata: dict[str, Any], recording: dict[str, Any]
+) -> None:
+    """Cross-check file metadata against authoritative recording dimensions.
+
+    Args:
+        file_metadata: Parsed file-metadata resource.
+        recording: Parsed recording manifest.
+
+    Raises:
+        SanPyZarrValidationError: If duplicated acquisition facts disagree.
+    """
+    dimensions = recording["dimensions"]
+    if file_metadata["num_sweeps"] != dimensions["sweeps"]:
+        raise SanPyZarrValidationError("File metadata sweep count mismatch")
+    if file_metadata["num_channels"] != dimensions["channels"]:
+        raise SanPyZarrValidationError("File metadata channel count mismatch")
+    expected_khz = recording["sampling_rate_hz"] / 1000.0
+    if not np.isclose(file_metadata["recording_frequency_khz"], expected_khz):
+        raise SanPyZarrValidationError("File metadata sampling frequency mismatch")
+    file_datetime = file_metadata["acq_datetime"]
+    recording_datetime = recording["acquisition_datetime"]
+    if file_datetime and recording_datetime:
+        try:
+            matches = datetime.fromisoformat(file_datetime) == datetime.fromisoformat(
+                recording_datetime
+            )
+        except ValueError as error:
+            raise SanPyZarrValidationError(
+                "File metadata acquisition datetime is invalid"
+            ) from error
+        if not matches:
+            raise SanPyZarrValidationError(
+                "File metadata acquisition datetime mismatch"
+            )
 
 
 def _validate_trace_overlays(

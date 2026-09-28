@@ -79,6 +79,7 @@
         "epochs": {"$ref": "#/$defs/table"},
         "analysis_results": {"$ref": "#/$defs/table"},
         "sanpy_metadata": {"const": "metadata/sanpy_metadata.json"},
+        "file_metadata": {"const": "metadata/file_metadata.json"},
         "detection_parameters": {"const": "metadata/detection_parameters.json"},
         "detection_parameter_definitions": {"const": "metadata/detection_parameter_definitions.json"},
         "analysis_result_definitions": {"const": "metadata/analysis_result_definitions.json"},

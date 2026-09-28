@@ -448,6 +448,8 @@ class bAnalysis:
 
                 for k,v in loadedMetaDataDict.items():
                     if not k in metaDataDict.keys():
+                        if k in {"Acq Date", "Acq Time"}:
+                            continue
                         logger.error(f'  did not find loaded meta data key "{k}" in meta data keys {metaDataDict.keys()}')
                         continue
                     metaDataDict[k] = v

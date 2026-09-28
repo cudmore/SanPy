@@ -130,6 +130,7 @@ class fileLoader_abf(fileLoader_base):
 
             self.setAcqDate(acqDate)
             self.setAcqTime(acqTime)
+            self.setAcqDateTime(abfDateTime.isoformat(sep=" "))
             
             self._numChannels = len(self._abf.adcUnits)
             if self._numChannels > 1:

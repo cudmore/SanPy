@@ -207,6 +207,7 @@ def _write_recording(
         table_format,
     )
     _write_json(metadata_root / "sanpy_metadata.json", sanpy_state.metadata)
+    _write_json(metadata_root / "file_metadata.json", sanpy_state.file_metadata)
     _write_json(metadata_root / "detection_parameters.json", sanpy_state.detection_parameters)
     _write_json(metadata_root / "detection_parameter_definitions.json", sanpy_state.detection_definitions)
     _write_json(metadata_root / "analysis_result_definitions.json", sanpy_state.result_definitions)
@@ -249,6 +250,7 @@ def _write_recording(
                 "epochs": epoch_resource,
                 "analysis_results": result_resource,
                 "sanpy_metadata": "metadata/sanpy_metadata.json",
+                "file_metadata": "metadata/file_metadata.json",
                 "detection_parameters": "metadata/detection_parameters.json",
                 "detection_parameter_definitions": "metadata/detection_parameter_definitions.json",
                 "analysis_result_definitions": "metadata/analysis_result_definitions.json",

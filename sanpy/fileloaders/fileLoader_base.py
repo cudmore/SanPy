@@ -13,6 +13,7 @@ import sanpy.fileloaders
 from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 
 import sanpy.metaData
+from sanpy.fileloaders.fileMetadata import FileMetadata
 from sanpy.sanpyPaths import SanPyPaths
 
 from sanpy.sanpyLogger import get_logger
@@ -30,7 +31,13 @@ def getFileLoaders(verbose: bool = False) -> dict:
     """
     retDict = {}
 
-    ignoreModuleList = ["fileLoader_base", "recordingModes", "epochTable", "hekaUtils"]
+    ignoreModuleList = [
+        "fileLoader_base",
+        "recordingModes",
+        "epochTable",
+        "FileMetadata",
+        "hekaUtils",
+    ]
 
     if not DO_KYMOGRAPH_ANALYSIS:
         ignoreModuleList.append('fileLoader_tif')
@@ -206,6 +213,11 @@ class fileLoader_base(ABC):
 
         self._metaData = sanpy.metaData.MetaData()  # per file metadata
 
+        self._fileMetadata: Optional[FileMetadata] = None
+        self._acqDate: str = ""
+        self._acqTime: str = ""
+        self._acqDateTime: str = ""
+
         self._filteredY : np.ndarray = None  # set in _getDerivative
         self._filteredDeriv : np.ndarray = None
         self._currentSweep: int = 0
@@ -215,17 +227,21 @@ class fileLoader_base(ABC):
         self._sweepX = None
         self._sweepY = None
         self._sweepC = None
-        self._numSweeps = None
+        self._numSweeps: Optional[int] = None
         self._sweepList = None
         self._sweepLengthSec = None
-        self._dataPointsPerMs = None
+        self._dataPointsPerMs: Optional[float] = None
         self._recordingMode = recordingModes.unknown
-        self._userList = None  # 20240123 owlanalysis
+        self._userList: Optional[List[float]] = None  # 20240123 owlanalysis
+        self._numChannels: int = 1
         self._sweepLabelX = None
         self._sweepLabelY = None
 
         # load file from inherited class
         self.loadFile()
+
+        if not self._loadError:
+            self._finalizeFileMetadata()
 
         # check our work
         self._checkLoadedData()
@@ -242,14 +258,47 @@ class fileLoader_base(ABC):
         return txt
 
     @property
-    def metadata(self):
+    def metadata(self) -> sanpy.metaData.MetaData:
+        """Return mutable experimental metadata for the recording."""
         return self._metaData
-    
-    def setAcqDate(self, value):
-        self.metadata.setMetaData('Acq Date', value, triggerDirty=False)
 
-    def setAcqTime(self, value):
-        self.metadata.setMetaData('Acq Time', value, triggerDirty=False)
+    @property
+    def fileMetadata(self) -> FileMetadata:
+        """Return immutable metadata read or derived from the source file.
+
+        Returns:
+            Finalized metadata for the loaded recording.
+
+        Raises:
+            RuntimeError: If the loader did not complete successfully.
+        """
+        if self._fileMetadata is None:
+            raise RuntimeError("File metadata is unavailable because loading did not complete")
+        return self._fileMetadata
+    
+    def setAcqDate(self, value: str) -> None:
+        """Stage a file-derived acquisition date.
+
+        Args:
+            value: Acquisition date formatted as ``YYYY-MM-DD``.
+        """
+        self._acqDate = value
+
+    def setAcqTime(self, value: str) -> None:
+        """Stage a file-derived acquisition time.
+
+        Args:
+            value: Acquisition time formatted as ``HH:MM:SS``.
+        """
+        self._acqTime = value
+
+    def setAcqDateTime(self, value: str) -> None:
+        """Stage a complete file-derived acquisition timestamp.
+
+        Args:
+            value: Complete acquisition timestamp.
+        """
+        self._acqDateTime = value
 
     def getLoadError(self) -> bool:
         return self._loadError
@@ -275,11 +324,10 @@ class fileLoader_base(ABC):
 
     @property
     def numChannels(self) -> int:
-        """Get the number of channels.
-
-        If more than one channel, must be defined in derived class.
-        """
-        return 1
+        """Return the number of recorded channels in the source file."""
+        if self._fileMetadata is not None:
+            return self._fileMetadata.num_channels
+        return self._numChannels
 
     @property
     def currentSweep(self) -> int:
@@ -294,16 +342,25 @@ class fileLoader_base(ABC):
         self._currentSweep = currentSweep
 
     @property
-    def recordingMode(self):
+    def recordingMode(self) -> recordingModes:
+        """Return the recording mode as the compatibility enum."""
+        if self._fileMetadata is not None:
+            return recordingModes(self._fileMetadata.mode)
         return self._recordingMode
 
     # feb 2023, uncommented
     @property
-    def sweepLabelX(self):
+    def sweepLabelX(self) -> Optional[str]:
+        """Return the sweep X-axis label."""
+        if self._fileMetadata is not None:
+            return self._fileMetadata.sweep_label_x
         return self._sweepLabelX
 
     @property
-    def sweepLabelY(self):
+    def sweepLabelY(self) -> Optional[str]:
+        """Return the sweep Y-axis label."""
+        if self._fileMetadata is not None:
+            return self._fileMetadata.sweep_label_y
         return self._sweepLabelY
 
     @property
@@ -311,7 +368,12 @@ class fileLoader_base(ABC):
         return self._sweepLengthSec
 
     @property
-    def numSweeps(self):
+    def numSweeps(self) -> int:
+        """Return the stored number of loaded sweeps."""
+        if self._fileMetadata is not None:
+            return self._fileMetadata.num_sweeps
+        if self._numSweeps is not None:
+            return self._numSweeps
         return len(self._sweepList)
 
     @property
@@ -319,15 +381,24 @@ class fileLoader_base(ABC):
         return self._sweepList
 
     @property
-    def dataPointsPerMs(self):
+    def dataPointsPerMs(self) -> Optional[float]:
+        """Return samples per millisecond, numerically equal to kilohertz."""
+        if self._fileMetadata is not None:
+            return self._fileMetadata.recording_frequency_khz
         return self._dataPointsPerMs
 
     @property
-    def acqDate(self):
+    def acqDate(self) -> str:
+        """Return the file-derived acquisition date."""
+        if self._fileMetadata is not None:
+            return self._fileMetadata.acq_date
         return self._acqDate
 
     @property
-    def acqTime(self):
+    def acqTime(self) -> str:
+        """Return the file-derived acquisition time."""
+        if self._fileMetadata is not None:
+            return self._fileMetadata.acq_time
         return self._acqTime
 
     @property
@@ -472,7 +543,7 @@ class fileLoader_base(ABC):
             return self._filteredY[:, self.currentSweep]
 
     @property
-    def recordingFrequency(self) -> int:
+    def recordingFrequency(self) -> float:
         """Convenience for dataPointsPerMs, recording frequency in kHz."""
         return self.dataPointsPerMs
 
@@ -540,12 +611,70 @@ class fileLoader_base(ABC):
 
     @property
     def numEpochs(self) -> Optional[int]:
-        """Get the number of epochs.
+        """Return the validated number of epochs per sweep when available."""
+        if self._fileMetadata is not None:
+            return self._fileMetadata.num_epochs
+        return self._validatedNumEpochs()
 
-        Epochs are mostly for pClamp abf files. We are assuming each sweep has the same namber of epochs.
+    def _validatedNumEpochs(self) -> Optional[int]:
+        """Return a common per-sweep epoch count when one can be represented.
+
+        Returns:
+            Common epoch count, or ``None`` when tables are absent or differ.
         """
-        if self._epochTableList is not None:
-            return self._epochTableList[0].numEpochs()
+        if self._epochTableList is None:
+            return None
+        counts = [
+            table.numEpochs()
+            for table in self._epochTableList
+            if table is not None
+        ]
+        if not counts:
+            return None
+        if len(counts) != len(self._epochTableList) or len(set(counts)) != 1:
+            logger.warning(
+                "Could not represent one epoch count per sweep for %s: %s",
+                self.filename,
+                counts,
+            )
+            return None
+        return counts[0]
+
+    def _finalizeFileMetadata(self) -> None:
+        """Construct the immutable file metadata after a loader completes.
+
+        Raises:
+            ValueError: If required loaded dimensions or sampling values are invalid.
+        """
+        if self._numSweeps is None:
+            if self._sweepList is None:
+                raise ValueError("Loaded recording has no sweep list")
+            self._numSweeps = len(self._sweepList)
+        if self._sweepList is None or len(self._sweepList) != self._numSweeps:
+            raise ValueError("Loaded sweep count does not match the sweep list")
+        if self._sweepY is not None and self._sweepY.shape[1] != self._numSweeps:
+            raise ValueError("Loaded sweep count does not match the recording array")
+        if self._dataPointsPerMs is None or self._dataPointsPerMs <= 0:
+            raise ValueError("Loaded recording frequency must be positive")
+
+        user_list = (
+            None
+            if self._userList is None
+            else tuple(float(value) for value in self._userList)
+        )
+        self._fileMetadata = FileMetadata(
+            acq_date=self._acqDate,
+            acq_time=self._acqTime,
+            acq_datetime=self._acqDateTime,
+            num_channels=self._numChannels,
+            num_sweeps=self._numSweeps,
+            num_epochs=self._validatedNumEpochs(),
+            sweep_label_x=self._sweepLabelX or "",
+            sweep_label_y=self._sweepLabelY or "",
+            mode=self._recordingMode.value,
+            recording_frequency_khz=float(self._dataPointsPerMs),
+            user_list=user_list,
+        )
 
     def _checkLoadedData(self):
         # TODO: check all the member vraiables are correct
@@ -558,34 +687,20 @@ class fileLoader_base(ABC):
         sweepY: np.ndarray,
         sweepC: Optional[np.ndarray] = None,
         recordingMode: recordingModes = recordingModes.iclamp,
-        userList = None,  # owl analysis
+        userList: Optional[List[float]] = None,  # owl analysis
         xLabel: str = "",
         yLabel: str = "",
-    ):
-        """Derived classes call this function once the data is loaded in loadFile().
+    ) -> None:
+        """Store arrays and derive common acquisition values for a loader.
 
-        Parameters
-        ----------
-        sweepX : np.ndarray
-            Time values
-        sweepY : np.ndarray
-            Recording values, mV or pA
-        sweepC : np.ndarray
-            (optional) DAC stimulus, pA or mV
-        recordingMode : recordingModes
-            (optional) Defaults to recordingModes.iclamp)
-        userList : [int]
-            (optional) List of times to increment an epoch (length is same as sweeps)
-        xLabel : str
-            (optional) str for x-axis label
-        yLabel : str
-            (optional) str for y-axis label
-
-        Notes
-        -----
-        - Number of sweeps: sweepY.shape[1]
-        - Sweep Length (sec): sweepX[-1,0]
-        - Data Points Per Millisecond: 1 / ((sweepX[1,0] - sweepX[0,0]) * 1000)
+        Args:
+            sweepX: Time values in seconds.
+            sweepY: Recorded values arranged as point by sweep.
+            sweepC: Optional DAC command arranged as point by sweep.
+            recordingMode: Recording mode for the loaded values.
+            userList: Optional ABF user-list values.
+            xLabel: X-axis label.
+            yLabel: Y-axis label.
         """
         self._sweepX = sweepX
         self._sweepY = sweepY
@@ -616,6 +731,9 @@ class fileLoader_base(ABC):
         self._recordingMode: recordingModes = recordingMode
         self._sweepLabelX: str = xLabel
         self._sweepLabelY: str = yLabel
+
+        if self._fileMetadata is not None:
+            self._finalizeFileMetadata()
 
 if __name__ == "__main__":
     d = getFileLoaders()

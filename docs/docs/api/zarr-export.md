@@ -33,6 +33,7 @@ experiment.sanpy.zarr/
       recording.json
       data.zarr/
       metadata/
+        file_metadata.json
         sanpy_metadata.json
         detection_parameters.json
         detection_parameter_definitions.json
@@ -46,6 +47,16 @@ experiment.sanpy.zarr/
 ```
 
 Only requested table representations are present.
+
+`file_metadata.json` stores immutable facts read or derived from the source
+recording, including acquisition timestamps, source channel and sweep counts,
+epochs per sweep, axis labels, recording mode, sampling frequency, and an
+optional ABF user list. `sanpy_metadata.json` remains the separate set of
+editable experimental annotations.
+
+New exports always advertise `file_metadata.json` in their recording manifest.
+The resource remains optional in the `1.0-draft` schema so collections written
+before file metadata was introduced continue to validate.
 
 ## Arrays
 
