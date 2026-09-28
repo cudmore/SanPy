@@ -443,6 +443,38 @@ def test_raw_plot_column_expands_with_central_widget(
     assert widget._rawPlotColumn.layout() is widget._rawPlotLayout
 
 
+def test_full_recording_and_derivative_scatter_overlays_start_off(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Leave Full Recording and Derivative scatter overlays off by default.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    qtbot.addWidget(window)
+    widget = window.myDetectionWidget
+
+    expected = {
+        "Global Threshold (mV)": "vmGlobal",
+        "Threshold (dV/dt)": "dvdt",
+    }
+    for name, plot_on in expected.items():
+        index = next(
+            index
+            for index, plot_def in enumerate(widget.myPlots)
+            if plot_def["humanName"] == name
+        )
+        assert widget.myPlots[index]["plotOn"] == plot_on
+        assert widget.myPlots[index]["plotIsOn"] is False
+        x_data, _y_data = widget.myPlotList[index].getData()
+        assert x_data is None or len(x_data) == 0
+
+
 def test_vm_plot_options_button_toggles_vm_overlays(
     monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
 ) -> None:

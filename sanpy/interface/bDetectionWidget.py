@@ -151,22 +151,22 @@ class _LeftToolbar(QtWidgets.QWidget):
         buttons = (
             (
                 "Detection Panel",
-                "Show or Hide Detection Panel",
+                "Detection Panel",
                 "fa6s.chart-line",
             ),
             (
                 "Detection Parameters",
-                "Show or Hide Detection Parameters",
+                "Detection Parameters",
                 "fa6s.sliders",
             ),
             (
                 "Set Meta Data Panel",
-                "Show or Hide Set Meta Data",
+                "Set Metadata",
                 "fa6s.tags",
             ),
             (
                 "SanPy Info",
-                "Show or Hide SanPy Info",
+                "SanPy Info",
                 "fa6s.circle-info",
             ),
         )
@@ -268,7 +268,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "styleColor": "color: red",
                 "symbol": "o",
                 "plotOn": "vmGlobal",  # which plot to overlay (vm, dvdt)
-                "plotIsOn": True,
+                "plotIsOn": False,
             },
 
             {
@@ -280,7 +280,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 "styleColor": "color: red",
                 "symbol": "o",
                 "plotOn": "dvdt",  # which plot to overlay (vm, dvdt)
-                "plotIsOn": True,
+                "plotIsOn": False,
             },
 
             {
@@ -1728,7 +1728,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         """Add a Vm-plot button that opens the Vm overlay checkboxes.
 
         The menu lists overlays drawn on ``vmPlot``. Global Threshold and
-        Threshold (dV/dt) stay on their own plots and are not listed here.
+        Threshold (dV/dt) stay on the Full Recording and Derivative plots,
+        start off, and are not listed here.
         """
         options = [
             (str(plot["humanName"]), bool(plot["plotIsOn"]))
