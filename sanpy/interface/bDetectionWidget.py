@@ -693,7 +693,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._displayHoverText.setColor(foreground)
         self._displayHoverText_deriv.setColor(foreground)
         self._leftToolbar.apply_icon_colors()
-        self._vmPlotOptionsButton.adjustSize()
+        self._apply_vm_plot_options_icon()
         self._position_vm_plot_options_button()
 
     def getMainWindowOptions(self):
@@ -1739,26 +1739,37 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._vmPlotOptions.optionToggled.connect(self._on_vm_plot_option_toggled)
 
         button = QtWidgets.QToolButton(self.vmPlot)
-        button.setText("Options")
         button.setToolTip("Plot Options")
+        button.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+        button.setIconSize(QtCore.QSize(16, 16))
+        button.setFixedSize(24, 24)
+        # InstantPopup still draws a menu arrow. Hide it so only the icon shows.
+        button.setStyleSheet("QToolButton::menu-indicator { image: none; }")
         button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
         menu = QtWidgets.QMenu(button)
         action = QtWidgets.QWidgetAction(menu)
         action.setDefaultWidget(self._vmPlotOptions)
         menu.addAction(action)
         button.setMenu(menu)
-        button.adjustSize()
 
         self._vmPlotOptionsButton = button
+        self._apply_vm_plot_options_icon()
         self.vmPlot.sigDeviceRangeChanged.connect(self._on_vm_plot_resized)
         self._position_vm_plot_options_button()
 
+    def _apply_vm_plot_options_icon(self) -> None:
+        """Color the Vm plot options icon with the current theme text color."""
+        application = QtWidgets.QApplication.instance()
+        palette = application.palette() if application is not None else self.palette()
+        icon_color = palette.color(QtGui.QPalette.Text).name()
+        self._vmPlotOptionsButton.setIcon(qta.icon("fa6s.bars", color=icon_color))
+
     def _position_vm_plot_options_button(self) -> None:
-        """Keep the Vm plot options button in the top-right corner."""
+        """Keep the Vm plot options button in the bottom-left corner."""
         button = self._vmPlotOptionsButton
         margin = 6
-        x = max(0, self.vmPlot.width() - button.width() - margin)
-        y = margin
+        x = margin
+        y = max(0, self.vmPlot.height() - button.height() - margin)
         button.move(x, y)
         button.raise_()
 

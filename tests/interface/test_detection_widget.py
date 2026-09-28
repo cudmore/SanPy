@@ -8,7 +8,7 @@ from unittest.mock import Mock
 import numpy as np
 import pyqtgraph as pg
 import pytest
-from qtpy import QtGui, QtWidgets
+from qtpy import QtCore, QtGui, QtWidgets
 
 from sanpy.interface.util import sanpyCursors
 
@@ -468,6 +468,10 @@ def test_vm_plot_options_button_toggles_vm_overlays(
     button = widget._vmPlotOptionsButton
     menu = button.menu()
     assert button.parentWidget() is widget.vmPlot
+    assert button.text() == ""
+    assert button.toolButtonStyle() == QtCore.Qt.ToolButtonIconOnly
+    assert button.icon().isNull() is False
+    assert button.iconSize() == QtCore.QSize(16, 16)
     assert button.popupMode() == QtWidgets.QToolButton.InstantPopup
     assert menu is not None
     assert menu.actions()[0].defaultWidget() is widget._vmPlotOptions
@@ -496,8 +500,8 @@ def test_vm_plot_options_button_toggles_vm_overlays(
     plot = widget.vmPlot
     plot.resize(480, 240)
     widget._on_vm_plot_resized(plot, None)
-    assert button.y() == 6
-    assert button.x() == max(0, plot.width() - button.width() - 6)
+    assert button.x() == 6
+    assert button.y() == max(0, plot.height() - button.height() - 6)
 
     peak_index = next(
         index
