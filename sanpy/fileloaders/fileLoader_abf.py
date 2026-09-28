@@ -128,12 +128,6 @@ class fileLoader_abf(fileLoader_base):
             acqDate = abfDateTime.strftime("%Y-%m-%d")
             acqTime = abfDateTime.strftime("%H:%M:%S")
 
-            # logger.info(f'acqDate:"{acqDate}')
-            # logger.info(f'acqTime:"{acqTime}')
-
-            # self._acqDate = abfDateTime.strftime("%Y-%m-%d")
-            # self._acqTime = abfDateTime.strftime("%H:%M:%S")
-
             self.setAcqDate(acqDate)
             self.setAcqTime(acqTime)
             
@@ -163,10 +157,10 @@ class fileLoader_abf(fileLoader_base):
             else:
                 logger.warning(f'did not understand adcUnit "{adcUnits}"')
 
-            # 20240125 ownanalysis
+            # 20240125 ownanalysis (see dropbox/sanpy-users/porter)
             self._userList = self._abf.userList
             if self._userList is not None:
-                logger.info(f'_userList:{self._userList}')
+                logger.info(f'owen/porter data _userList:{self._userList}')
                 
         #
         self.myFileType = "abf"

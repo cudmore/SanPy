@@ -8,16 +8,17 @@ class MetaData(dict):
     def getMetaDataDict():
         _metaData = {
             'Include': 'yes',
-            'Acq Date': '',
-            'Acq Time': '',
+            # 'Acq Date': '',  # abb todo move to base file header
+            # 'Acq Time': '',  # abb todo move to base file header
+            'Animal ID': '',
             'Species': '',
+            'Region': '',
             'Cell Type': '',
-            'ID': '',
             'Age': '',
             'Sex': 'unknown',
             'Genotype': '',
-            'Condition1': '',
-            'Condition2': '',
+            'Condition': '',
+            'Experiment': '',
             'Note': '',
         }
         return _metaData.copy()

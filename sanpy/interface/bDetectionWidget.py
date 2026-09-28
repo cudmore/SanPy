@@ -780,7 +780,7 @@ class bDetectionWidget(QtWidgets.QWidget):
     def _setAxis(self, start, stop, set_xyBoth="xAxis", whichPlot="vm"):
         """Shared by (setAxisFull, setAxis)."""
         # make sure start/stop are in correct order and swap if necc.
-        logger.info('')
+        # logger.info('')
         if start is not None and stop is not None:
             if stop < start:
                 tmp = start
@@ -795,7 +795,7 @@ class bDetectionWidget(QtWidgets.QWidget):
                 start = 0
                 stop = self.ba.fileLoader.recordingDur
 
-            logger.info('!!!! SETING X !!!')
+            # logger.info('!!!! SETING X !!!')
             # self.derivPlot.setXRange(start, stop, padding=padding) # linked to Vm
             self.vmPlot.setXRange(start, stop, padding=padding)  # linked to Vm
 
@@ -2928,7 +2928,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             viewBox: View box whose displayed range changed.
         """
         logger.info('')
-        print('   viewBox.viewRange():', viewBox.viewRange())
+        print('   NOOP: viewBox.viewRange():', viewBox.viewRange())
 
     def _slot_x_range_changed(self, viewBox: pg.ViewBox) -> None:
         """Propagate a change to the primary plot's horizontal range.
