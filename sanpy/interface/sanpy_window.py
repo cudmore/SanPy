@@ -47,6 +47,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
     signalUpdateAnalysis = QtCore.Signal(object)
     """Emit on detect."""
 
+    signalMetaDataChanged = QtCore.Signal(object)
+    """Emit after experimental metadata is stored on an analysis."""
+
     signalSelectSpike = QtCore.Signal(object)
     """Emit spike selection."""
 
@@ -970,6 +973,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
         self.signalSelectSpike.connect(self.myDetectionWidget.slot_selectSpike)
         self.signalSelectSpikeList.connect(self.myDetectionWidget.slot_selectSpikeList)
         self.signalUpdateAnalysis.connect(self.myDetectionWidget.slot_updateAnalysis)
+        self.signalMetaDataChanged.connect(self.slot_metaDataChanged)
 
         # self listens to myDetectionWidget
         self.myDetectionWidget.signalSelectSpike.connect(self.slot_selectSpike)
@@ -1122,9 +1126,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
             self.myModel = sanpy.interface.bFileTable.pandasModel(self.myAnalysisDir)
 
             self._fileListWidget.mySetModel(self.myModel)
-            self.myModel.signalMyDataChanged.connect(
-                self.myDetectionWidget.slot_dataChanged
-            )
+            self.myModel.signalMyDataChanged.connect(self.slot_fileTableDataChanged)
 
     def _old_slot_loadFile(self, filePath : str):
         """Load one file rather than a folder.
@@ -1355,6 +1357,60 @@ class SanPyWindow(QtWidgets.QMainWindow):
             ba.setSpikeStat(spikeList, colStr, value)
 
         self.signalUpdateAnalysis.emit(sDict)
+
+    def slot_setMetaData(self, ba: sanpy.bAnalysis, key: str, value: str) -> None:
+        """Store one experimental metadata value and notify open views.
+
+        Args:
+            ba: Analysis that owns the metadata.
+            key: Canonical experimental-metadata key.
+            value: New string value.
+        """
+        if ba is None or key not in sanpy.MetaData.getMetaDataDict():
+            return
+        if ba.metaData.getMetaData(key) == value:
+            return
+        ba.metaData.setMetaData(key, value)
+        self.signalMetaDataChanged.emit({"ba": ba, "key": key, "value": value})
+
+    def slot_fileTableDataChanged(
+        self, columnName: object, value: object, rowDict: object
+    ) -> None:
+        """Apply a file-table edit to detection controls and metadata.
+
+        Args:
+            columnName: Edited column, or None when a whole row changed.
+            value: New cell value.
+            rowDict: Edited row. Metadata edits include the ``_row`` index label.
+        """
+        self.myDetectionWidget.slot_dataChanged(columnName, value, rowDict)
+        if (
+            not isinstance(columnName, str)
+            or not isinstance(rowDict, dict)
+            or self.myAnalysisDir is None
+            or columnName not in sanpy.MetaData.getMetaDataDict()
+        ):
+            return
+        row = rowDict.get("_row")
+        if row is None:
+            return
+        ba = self.myAnalysisDir.getAnalysis(row)
+        if ba is None:
+            return
+        self.slot_setMetaData(ba, columnName, str(value))
+
+    def slot_metaDataChanged(self, event: dict[str, object]) -> None:
+        """Copy one metadata value into the file table for that analysis.
+
+        Args:
+            event: Payload with ``ba``, ``key``, and ``value``.
+        """
+        ba = event.get("ba")
+        key = event.get("key")
+        value = event.get("value")
+        if not isinstance(key, str) or not isinstance(value, str):
+            return
+        self.myModel.myApplyMetaData(ba, key, value)
 
     def slot_selectSpike(self, sDict):
         spikeNumber = sDict["spikeNumber"]

@@ -424,6 +424,7 @@ class sanpyPlugin(QtWidgets.QWidget):
             self.signalUpdateAnalysis.connect(app.slot_updateAnalysis)
 
             app.signalSwitchFile.connect(self.slot_switchFile)
+            app.signalMetaDataChanged.connect(self.slot_metaDataChanged)
 
             # recieve set sweep
             app.signalSelectSweep.connect(self.slot_setSweep)
@@ -464,6 +465,7 @@ class sanpyPlugin(QtWidgets.QWidget):
             app.signalUpdateAnalysis.disconnect(self.slot_updateAnalysis)
             self.signalUpdateAnalysis.disconnect(app.slot_updateAnalysis)
             app.signalSwitchFile.disconnect(self.slot_switchFile)
+            app.signalMetaDataChanged.disconnect(self.slot_metaDataChanged)
             app.signalSelectSweep.disconnect(self.slot_setSweep)
             app.signalSetXAxis.disconnect(self.slot_set_x_axis)
             self.signalDetect.disconnect(app.slot_detect)
@@ -903,6 +905,14 @@ class sanpyPlugin(QtWidgets.QWidget):
             return
 
         self.replot()
+
+    def slot_metaDataChanged(self, event: dict[str, object]) -> None:
+        """Refresh after experimental metadata changes.
+
+        Args:
+            event: Payload with ``ba``, ``key``, and ``value``.
+        """
+        return
 
     # 20240118, removing ba
     # def slot_setSweep(self, ba: sanpy.bAnalysis, sweepNumber: int):

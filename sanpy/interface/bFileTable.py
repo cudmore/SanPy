@@ -365,6 +365,7 @@ class pandasModel(QtCore.QAbstractTableModel):
 
                 # emit change
                 emitRowDict = self.myGetRowDict(realRow)
+                emitRowDict["_row"] = realRow
                 self.signalMyDataChanged.emit(columnName, value, emitRowDict)
 
                 self.isDirty = True
@@ -577,6 +578,27 @@ class pandasModel(QtCore.QAbstractTableModel):
             self._data = df
         #
         self.endInsertRows()
+
+    def myApplyMetaData(self, ba: object, key: str, value: str) -> None:
+        """Show one experimental metadata value on the matching file-table row.
+
+        Args:
+            ba: Analysis object stored in the row's ``_ba`` cell.
+            key: Canonical experimental-metadata column name.
+            value: Value stored on that analysis.
+        """
+        if not self.isAnalysisDir or key not in self._data.columns:
+            return
+        for row_label in list(self._data.index):
+            if self._data.loc[row_label, "_ba"] is not ba:
+                continue
+            self._data.loc[row_label, key] = value
+            location = self._data.index.get_loc(row_label)
+            if not isinstance(location, (int, np.integer)):
+                return
+            column = self._data.columns.index(key)
+            model_index = self.createIndex(int(location), column)
+            self.dataChanged.emit(model_index, model_index)
 
     def mySetRow(self, rowIdx, rowDict):
         """Only set keys already in self._data.columns"""

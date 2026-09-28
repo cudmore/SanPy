@@ -35,12 +35,38 @@ class SetMetaData(sanpyPlugin):
             return
         for key, value in self.ba.metaData.items():
             widget = self._widgetDict[key]
-            if isinstance(widget, QtWidgets.QComboBox):
-                index = widget.findData(value)
-                if index >= 0:
-                    widget.setCurrentIndex(index)
-            elif isinstance(widget, QtWidgets.QLineEdit):
-                widget.setText(value)
+            widget.blockSignals(True)
+            try:
+                if isinstance(widget, QtWidgets.QComboBox):
+                    index = widget.findData(value)
+                    if index >= 0:
+                        widget.setCurrentIndex(index)
+                elif isinstance(widget, QtWidgets.QLineEdit):
+                    widget.setText(value)
+            finally:
+                widget.blockSignals(False)
+
+    def slot_metaDataChanged(self, event: dict[str, Any]) -> None:
+        """Refill controls after metadata is stored for this analysis.
+
+        Args:
+            event: Payload with ``ba``, ``key``, and ``value``.
+        """
+        if self.ba is None or not self._widgetDict or event.get("ba") is not self.ba:
+            return
+        self.replot()
+
+    def _store_meta_data(self, key: str, value: str) -> None:
+        """Ask the window to store one experimental metadata value.
+
+        Args:
+            key: Canonical experimental-metadata key.
+            value: New string value.
+        """
+        window = self.getSanPyWindow()
+        if window is None or self.ba is None:
+            return
+        window.slot_setMetaData(self.ba, key, value)
 
     def _on_text_edit(self, widget: QtWidgets.QLineEdit, key: str) -> None:
         """Store one edited free-text value.
@@ -49,10 +75,7 @@ class SetMetaData(sanpyPlugin):
             widget: Line edit containing the new value.
             key: Canonical experimental-metadata key.
         """
-        if self.ba is None:
-            return
-        value = widget.text().replace(";", ",")
-        self.ba.metaData.setMetaData(key, value)
+        self._store_meta_data(key, widget.text().replace(";", ","))
 
     def _on_combo_box(self, key: str, value: str) -> None:
         """Store one selected choice value.
@@ -61,8 +84,7 @@ class SetMetaData(sanpyPlugin):
             key: Canonical experimental-metadata key.
             value: Canonical selected value.
         """
-        if self.ba is not None:
-            self.ba.metaData.setMetaData(key, value)
+        self._store_meta_data(key, value)
 
     def _setFontSize(self, widget: QtWidgets.QWidget) -> None:
         """Apply the plugin's compact control font.
