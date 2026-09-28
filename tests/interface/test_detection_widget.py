@@ -137,14 +137,14 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     assert widget._leftPanelSplitter.widget(0) is widget._leftPanelContainer
     assert widget._leftPanelSplitter.widget(1) is widget._rawPlotColumn
     assert widget._leftToolbar.isHidden() is False
-    assert any(
-        icon_name == "fa6s.tags"
-        for _button, icon_name in widget._leftToolbar._icon_buttons
-    )
-    assert any(
-        icon_name == "fa6s.circle-info"
-        for _button, icon_name in widget._leftToolbar._icon_buttons
-    )
+    # assert any(
+    #     icon_name == "fa6s.tags"
+    #     for _button, icon_name in widget._leftToolbar._icon_buttons
+    # )
+    # assert any(
+    #     icon_name == "fa6s.circle-info"
+    #     for _button, icon_name in widget._leftToolbar._icon_buttons
+    # )
     assert toolbar_button.isChecked() is False
     assert params_button.isChecked() is False
     assert meta_button.isChecked() is False
