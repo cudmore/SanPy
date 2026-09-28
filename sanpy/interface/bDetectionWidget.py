@@ -154,7 +154,8 @@ class _LeftToolbar(QtWidgets.QWidget):
                 "Detection Panel",
                 "Detection Panel",
                 # "fa6s.chart-line",
-                "ph.chart-line-thin",
+                # "ph.chart-line-thin",
+                "mdi6.menu",
             ),
             (
                 "Detection Parameters",
