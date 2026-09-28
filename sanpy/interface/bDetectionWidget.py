@@ -20,6 +20,7 @@ from sanpy.config import DO_KYMOGRAPH_ANALYSIS
 import sanpy.bDetection
 import sanpy.interface
 from sanpy.bExport import bExport
+from sanpy.interface.plot_options_widget import PlotOptionsWidget
 from sanpy.interface.sanpy_info_widget import SanPyInfoWidget
 
 from sanpy.sanpyLogger import get_logger
@@ -692,6 +693,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._displayHoverText.setColor(foreground)
         self._displayHoverText_deriv.setColor(foreground)
         self._leftToolbar.apply_icon_colors()
+        self._vmPlotOptionsButton.adjustSize()
+        self._position_vm_plot_options_button()
 
     def getMainWindowOptions(self):
         theRet = None
@@ -1722,6 +1725,66 @@ class bDetectionWidget(QtWidgets.QWidget):
             # Toggle overlay of stats like (TOP, spike peak, half-width, ...)
             self.togglePlot(item, on)  # assuming item is int !!!
 
+    def _build_vm_plot_options_button(self) -> None:
+        """Add a Vm-plot button that opens the Vm overlay checkboxes.
+
+        The menu lists overlays drawn on ``vmPlot``. Global Threshold and
+        Threshold (dV/dt) stay on their own plots and are not listed here.
+        """
+        options = [
+            (str(plot["humanName"]), bool(plot["plotIsOn"]))
+            for plot in self.myPlots
+            if plot["plotOn"] == "vm"
+        ]
+        self._vmPlotOptions = PlotOptionsWidget(options)
+        self._vmPlotOptions.optionToggled.connect(self._on_vm_plot_option_toggled)
+
+        button = QtWidgets.QToolButton(self.vmPlot)
+        button.setText("Options")
+        button.setToolTip("Plot Options")
+        button.setPopupMode(QtWidgets.QToolButton.InstantPopup)
+        menu = QtWidgets.QMenu(button)
+        action = QtWidgets.QWidgetAction(menu)
+        action.setDefaultWidget(self._vmPlotOptions)
+        menu.addAction(action)
+        button.setMenu(menu)
+        button.adjustSize()
+
+        self._vmPlotOptionsButton = button
+        self.vmPlot.sigDeviceRangeChanged.connect(self._on_vm_plot_resized)
+        self._position_vm_plot_options_button()
+
+    def _position_vm_plot_options_button(self) -> None:
+        """Keep the Vm plot options button in the top-right corner."""
+        button = self._vmPlotOptionsButton
+        margin = 6
+        x = max(0, self.vmPlot.width() - button.width() - margin)
+        y = margin
+        button.move(x, y)
+        button.raise_()
+
+    def _on_vm_plot_resized(self, _view: object, _range: object) -> None:
+        """Move the options button after the Vm plot changes size.
+
+        Args:
+            _view: Plot view that emitted the range change.
+            _range: New device range rectangle.
+        """
+        self._position_vm_plot_options_button()
+
+    def _on_vm_plot_option_toggled(self, name: str, checked: bool) -> None:
+        """Show or hide the Vm overlay selected in the plot options menu.
+
+        Args:
+            name: Overlay name from the plot options widget.
+            checked: Whether that overlay should be visible.
+        """
+        for idx, plot in enumerate(self.myPlots):
+            if plot["humanName"] == name:
+                self.togglePlot(idx, checked)
+                return
+        logger.error(f'Unknown Vm plot option "{name}".')
+
     def _build_view_toggle_bar(
         self, section: str, names: list[str]
     ) -> QtWidgets.QWidget:
@@ -2098,7 +2161,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.myHBoxLayout_detect.addWidget(self._leftPanelSplitter, 1)
 
         # detection widget toolbar
-        self.detectToolbarWidget = myDetectToolbarWidget2(self.myPlots, self)
+        self.detectToolbarWidget = myDetectToolbarWidget2(self)
         self.signalSelectSweep.connect(self.detectToolbarWidget.slot_selectSweep)
         self.signalSelectSpike.connect(self.detectToolbarWidget.slot_selectSpike)
         self.signalSelectSpikeList.connect(
@@ -2269,6 +2332,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.derivPlot.hideButtons()
         self.dacPlot.hideButtons()
         self.vmPlot.hideButtons()
+        self._build_vm_plot_options_button()
         # self.clipPlot.hideButtons()
 
         # turn off right-click menu
@@ -3398,20 +3462,17 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
     def __init__(
         self,
-        myPlots: list[dict[str, object]],
         detectionWidget: bDetectionWidget,
         parent: QtWidgets.QWidget | None = None,
     ) -> None:
         """Initialize detection controls.
 
         Args:
-            myPlots: Plot-overlay definitions displayed by the toolbar.
             detectionWidget: Detection widget controlled by this toolbar.
             parent: Optional owning Qt widget.
         """
         super(myDetectToolbarWidget2, self).__init__(parent)
 
-        self.myPlots = myPlots
         self.detectionWidget = detectionWidget  # parent detection widget
 
         self._startSec = None
@@ -3658,18 +3719,13 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         else:
             logger.warning(f'Did not understand button: "{name}"')
 
-    def on_check_click(self, checkbox, idx):
-        isChecked = checkbox.isChecked()
-        # print('on_check_click() text:', checkbox.text(), 'isChecked:', isChecked, 'idx:', idx)
-        self.detectionWidget.toggleInterface(idx, isChecked)
-
     def _old_on_crosshair_clicked(self, value):
         # print('on_crosshair_clicked() value:', value)
         onOff = value == 2
         self.detectionWidget.toggleCrosshair(onOff)
 
     def _buildUI(self) -> None:
-        """Build the grouped detection, display, and plot controls.
+        """Build the grouped detection and display controls.
 
         Notes:
             Width follows the left-panel splitter. The detection widget starts
@@ -3966,70 +4022,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         self.setSpikeGroupBox.setLayout(setSpikeLayout)
         self.mainLayout.addWidget(self.setSpikeGroupBox)
-
-        #
-        # plots  group
-        self.plotGroupBox = QtWidgets.QGroupBox("Plot Options")
-        # self.plotGroupBox.setContentsMargins(0,0,0,0)
-
-        plotGridLayout = QtWidgets.QGridLayout()
-        plotGridLayout.setContentsMargins(4,4,0,0)
-
-        row = 0
-
-        # add widgets
-        # a number of stats that will get overlaid on dv/dt and Vm
-        # row += 1
-        row += 1
-        col = 0
-        for idx, plot in enumerate(self.myPlots):
-            # print('humanName:', plot['humanName'])
-            humanName = plot["humanName"]
-            isChecked = plot["plotIsOn"]
-            styleColor = plot["styleColor"]
-            checkbox = QtWidgets.QCheckBox(humanName)
-            checkbox.setChecked(isChecked)
-            # checkbox.setStyleSheet(styleColor) # looks really ugly
-            # checkbox.stateChanged.connect(lambda:self.on_check_click(checkbox))
-            checkbox.stateChanged.connect(partial(self.on_check_click, checkbox, idx))
-            # append
-            plotGridLayout.addWidget(checkbox, row, col)
-            # increment
-            col += 1
-            if col == 2:  # we only have col 0/1, nx2 grid
-                col = 0
-                row += 1
-
-        """
-        row = 0
-        col += 1
-        checkbox = QtWidgets.QCheckBox('Clips')
-        checkbox.setChecked(showClips)
-        checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Clips'))
-        plotGridLayout.addWidget(checkbox, row, col)
-        """
-
-        """
-        row = 0
-        col += 1
-        checkbox = QtWidgets.QCheckBox('Scatter')
-        checkbox.setChecked(showScatter)
-        checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Scatter'))
-        plotGridLayout.addWidget(checkbox, row, col)
-        """
-
-        """
-        row = 0
-        col += 1
-        checkbox = QtWidgets.QCheckBox('Errors')
-        checkbox.setChecked(showErrors)
-        checkbox.stateChanged.connect(partial(self.on_check_click,checkbox,'Errors'))
-        plotGridLayout.addWidget(checkbox, row, col)
-        """
-
-        # finalize
-        self.plotGroupBox.setLayout(plotGridLayout)
-        self.mainLayout.addWidget(self.plotGroupBox)
 
         # finalize
         self.setLayout(self.mainLayout)

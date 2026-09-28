@@ -441,3 +441,73 @@ def test_raw_plot_column_expands_with_central_widget(
     assert widget.myHBoxLayout_detect.stretch(splitter_index) == 1
     assert widget._leftPanelSplitter.widget(1) is widget._rawPlotColumn
     assert widget._rawPlotColumn.layout() is widget._rawPlotLayout
+
+
+def test_vm_plot_options_button_toggles_vm_overlays(
+    monkeypatch: pytest.MonkeyPatch, qapp: Any, qtbot: Any
+) -> None:
+    """Open Vm overlay choices from the Vm plot and show or hide that overlay.
+
+    Args:
+        monkeypatch: Pytest fixture used to prevent preference-file writes.
+        qapp: Running SanPy Qt application supplied by pytest-qt.
+        qtbot: Pytest-Qt widget lifecycle helper.
+    """
+    data_path = Path(__file__).resolve().parents[2] / "data"
+    monkeypatch.setattr(qapp.getOptions(), "save", lambda: None)
+    window = qapp.openSanPyWindow(str(data_path))
+    qtbot.addWidget(window)
+    widget = window.myDetectionWidget
+
+    toolbar_titles = [
+        box.title()
+        for box in widget.detectToolbarWidget.findChildren(QtWidgets.QGroupBox)
+    ]
+    assert "Plot Options" not in toolbar_titles
+
+    button = widget._vmPlotOptionsButton
+    menu = button.menu()
+    assert button.parentWidget() is widget.vmPlot
+    assert button.popupMode() == QtWidgets.QToolButton.InstantPopup
+    assert menu is not None
+    assert menu.actions()[0].defaultWidget() is widget._vmPlotOptions
+
+    grid = widget._vmPlotOptions.findChild(QtWidgets.QGridLayout)
+    assert grid is not None
+    placed: list[tuple[int, int, str, bool]] = []
+    peak_box: QtWidgets.QCheckBox | None = None
+    for index in range(grid.count()):
+        child = grid.itemAt(index).widget()
+        assert isinstance(child, QtWidgets.QCheckBox)
+        row, column, _row_span, _column_span = grid.getItemPosition(index)
+        placed.append((row, column, child.text(), child.isChecked()))
+        if child.text() == "AP Peak (mV)":
+            peak_box = child
+    placed.sort()
+    assert placed == [
+        (0, 0, "Threshold (mV)", True),
+        (0, 1, "AP Peak (mV)", True),
+        (1, 0, "Fast AHP (mV)", True),
+        (1, 1, "Half-Widths", False),
+        (2, 0, "Epoch Lines", True),
+    ]
+    assert peak_box is not None
+
+    plot = widget.vmPlot
+    plot.resize(480, 240)
+    widget._on_vm_plot_resized(plot, None)
+    assert button.y() == 6
+    assert button.x() == max(0, plot.width() - button.width() - 6)
+
+    peak_index = next(
+        index
+        for index, plot_def in enumerate(widget.myPlots)
+        if plot_def["humanName"] == "AP Peak (mV)"
+    )
+    peak_box.click()
+    assert widget.myPlots[peak_index]["plotIsOn"] is False
+    assert widget.myPlotList[peak_index].isVisible() is False
+
+    peak_box.click()
+    assert widget.myPlots[peak_index]["plotIsOn"] is True
+    assert widget.myPlotList[peak_index].isVisible() is True
