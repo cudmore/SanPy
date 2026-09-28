@@ -879,10 +879,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         
         logger.info('!!!!! setting vmPlot_ auto range !!!!!')
         self.vmPlot.autoRange(items=[self.vmPlot_])  # 20221003
-
-        # these are linked to vmPlot
-        # self.derivPlot.autoRange()
-        # self.dacPlot.autoRange()
+        # Y is not linked, so fit each curve the same way as Vm.
+        self.derivPlot.autoRange(items=[self.derivPlot_])
+        self.dacPlot.autoRange(items=[self.dacPlot_])
 
         self.vmPlotGlobal.autoRange(items=[self.vmPlotGlobal_])  # we never zoom this
 
@@ -3001,6 +3000,8 @@ class bDetectionWidget(QtWidgets.QWidget):
             logger.error("filteredDeriv shapes do not match")
 
         self.derivPlot_.setData(sweepX, filteredDeriv, connect="finite")
+        # A new sweep can have a different derivative range. Fit y only.
+        self.derivPlot.enableAutoRange(axis="y")
         # self.dvdtLinesFiltered = MultiLine(
         #     sweepX,
         #     filteredDeriv,
@@ -3013,6 +3014,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         # self.derivPlot.addItem(self.dvdtLinesFiltered)
 
         self.dacPlot_.setData(sweepX, sweepC, connect="finite")
+        # A new sweep can have a different command range. Fit y only.
+        self.dacPlot.enableAutoRange(axis="y")
         # self.dacLines = MultiLine(
         #     sweepX, sweepC, self, forcePenColor=None, type="dac", columnOrder=True
         # )
