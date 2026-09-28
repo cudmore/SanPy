@@ -129,10 +129,20 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     qtbot.addWidget(window)
     widget = window.myDetectionWidget
     toolbar_button = widget._leftToolbar._panel_buttons["Detection Panel"]
-    params_button = widget._leftToolbar._panel_buttons["Detection Parameters"]
+    file_button = widget._leftToolbar._panel_buttons["File Metadata Panel"]
     meta_button = widget._leftToolbar._panel_buttons["Set Meta Data Panel"]
+    params_button = widget._leftToolbar._panel_buttons["Detection Parameters"]
     info_button = widget._leftToolbar._panel_buttons["SanPy Info"]
 
+    assert list(widget._leftToolbar._panel_buttons) == [
+        "Detection Panel",
+        "File Metadata Panel",
+        "Set Meta Data Panel",
+        "Detection Parameters",
+        "SanPy Info",
+    ]
+    assert file_button.toolTip() == "File Metadata"
+    assert meta_button.toolTip() == "Experimental Metadata"
     assert widget.myHBoxLayout_detect.itemAt(0).widget() is widget._leftToolbar
     assert widget._leftPanelSplitter.widget(0) is widget._leftPanelContainer
     assert widget._leftPanelSplitter.widget(1) is widget._rawPlotColumn
@@ -146,6 +156,7 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     #     for _button, icon_name in widget._leftToolbar._icon_buttons
     # )
     assert toolbar_button.isChecked() is False
+    assert file_button.isChecked() is False
     assert params_button.isChecked() is False
     assert meta_button.isChecked() is False
     assert info_button.isChecked() is False
@@ -161,6 +172,7 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
 
     assert params_button.isChecked() is True
     assert toolbar_button.isChecked() is False
+    assert file_button.isChecked() is False
     assert widget._detectionPanelWidget.isHidden() is True
     assert widget._leftPanelContainer.isHidden() is False
     assert widget._leftToolbar.isHidden() is False
@@ -169,15 +181,27 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     assert plugin.getHumanName() == "Detection Parameters"
     assert plugin.getWidget().isHidden() is False
 
+    file_button.click()
+
+    assert file_button.isChecked() is True
+    assert params_button.isChecked() is False
+    assert widget._leftPanelPlugin is not None
+    assert widget._leftPanelPlugin.getHumanName() == "File Metadata"
+    assert widget._detectionPanelWidget.isHidden() is True
+    with pytest.raises(TypeError):
+        window.signalSelectSpikeList.disconnect(plugin.slot_selectSpikeList)
+
+    file_plugin = widget._leftPanelPlugin
     meta_button.click()
 
     assert meta_button.isChecked() is True
+    assert file_button.isChecked() is False
     assert params_button.isChecked() is False
     assert widget._leftPanelPlugin is not None
     assert widget._leftPanelPlugin.getHumanName() == "Set Meta Data"
     assert widget._detectionPanelWidget.isHidden() is True
     with pytest.raises(TypeError):
-        window.signalSelectSpikeList.disconnect(plugin.slot_selectSpikeList)
+        window.signalSelectSpikeList.disconnect(file_plugin.slot_selectSpikeList)
 
     meta_plugin = widget._leftPanelPlugin
     meta_button.click()
@@ -193,6 +217,7 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
     toolbar_button.click()
 
     assert toolbar_button.isChecked() is True
+    assert file_button.isChecked() is False
     assert params_button.isChecked() is False
     assert meta_button.isChecked() is False
     assert info_button.isChecked() is False
@@ -204,6 +229,7 @@ def test_left_toolbar_opens_one_panel_and_closes_plugin(
 
     assert info_button.isChecked() is True
     assert toolbar_button.isChecked() is False
+    assert file_button.isChecked() is False
     assert params_button.isChecked() is False
     assert meta_button.isChecked() is False
     assert widget._leftPanelPlugin is None

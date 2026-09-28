@@ -122,8 +122,9 @@ class _SweepSelectionWidget(QtWidgets.QWidget):
 
 # Left-panel preference name -> plugin myHumanName. Only one is embedded.
 _LEFT_PANEL_PLUGINS: dict[str, str] = {
-    "Detection Parameters": "Detection Parameters",
+    "File Metadata Panel": "File Metadata",
     "Set Meta Data Panel": "Set Meta Data",
+    "Detection Parameters": "Detection Parameters",
 }
 
 
@@ -134,7 +135,7 @@ class _LeftToolbar(QtWidgets.QWidget):
     """
 
     def __init__(self, detection_widget: "bDetectionWidget") -> None:
-        """Build the detection, parameters, metadata, and SanPy Info buttons.
+        """Build the detection, file, experimental, parameters, and SanPy Info buttons.
 
         Args:
             detection_widget: Detection widget that shows and hides left panels.
@@ -158,16 +159,21 @@ class _LeftToolbar(QtWidgets.QWidget):
                 "mdi6.menu",
             ),
             (
+                "File Metadata Panel",
+                "File Metadata",
+                "ph.file",
+            ),
+            (
+                "Set Meta Data Panel",
+                "Experimental Metadata",
+                # "fa6s.tags",
+                "mdi.tag-multiple-outline",
+            ),
+            (
                 "Detection Parameters",
                 "Detection Parameters",
                 # "fa6s.sliders",
                 "ph.sliders-light",
-            ),
-            (
-                "Set Meta Data Panel",
-                "Set Metadata",
-                # "fa6s.tags",
-                "mdi.tag-multiple-outline",
             ),
             (
                 "SanPy Info",

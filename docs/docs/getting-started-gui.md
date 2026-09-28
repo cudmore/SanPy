@@ -47,12 +47,12 @@ Please note, this will not be the same exact data but the plots will be similar.
 1. Run SanPy
 2. Use `Load Folder ...` to load the provided sample data in the `data/` folder.
 3. Load and analyze two raw data files. Try with `19114001.abf` and `20191009_0005.abf`
-4. Use the `Set Meta Data` plugin to set the `Condition1` of one file to `Control`, and the other file to `Drug`
+4. Use the `Set Meta Data` plugin to set the `Condition` of one file to `Control`, and the other file to `Drug`
 3. Run the `Plot Tool (pool)` plugin
 4. Set the interface as follows
     - Plot Type: Violin Plot
-    - Hue: Condition1
-    - X-Stat: Condition1
+    - Hue: Condition
+    - X-Stat: Condition
     - Y-Stat: Spike Frequency (Hz)
 
 The plot in the plugin should look something like this

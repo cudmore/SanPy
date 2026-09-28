@@ -54,10 +54,9 @@ class bExport:
         df = df[(df["thresholdSec"] >= theMin) & (df["thresholdSec"] <= theMax)]
 
         # added when trying to make scatterwidget for one file
-        df["Condition"] = ""  # df['condition1']
-        df["File Number"] = ""  # df['condition2']
-        df["Sex"] = ""  # df['condition3']
-        df["Region"] = ""  # df['condition4']
+        df["Condition"] = ""
+        df["File Number"] = ""
+        df["Region"] = ""
 
         # make new column with sex/region encoded
         """
@@ -650,9 +649,6 @@ class bExport:
         # save header
         textFileHeader = OrderedDict()
         textFileHeader["file"] = self.ba.fileLoader.filename
-        # textFileHeader['condition1'] = self.ba.condition1
-        # textFileHeader['condition2'] = self.ba.condition2
-        # textFileHeader['condition3'] = self.ba.condition3
         textFileHeader["cellType"] = dDict["cellType"]
         textFileHeader["sex"] = dDict["sex"]
         textFileHeader["condition"] = dDict["condition"]
@@ -695,11 +691,6 @@ class bExport:
         logger.info(f"minStr:{minStr} maxStr:{maxStr} analysisName:{analysisName}")
         df["analysisname"] = analysisName
 
-        # should be filled in by self.ba.report
-        # df['Condition'] =     df['condition1']
-        # df['File Number'] =     df['condition2']
-        # df['Sex'] =     df['condition3']
-        # df['Region'] =     df['condition4']
         df["filename"] = [
             os.path.splitext(os.path.split(x)[1])[0] for x in df["file"].tolist()
         ]

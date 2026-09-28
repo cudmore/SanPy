@@ -1126,9 +1126,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 self.myDetectionWidget.slot_dataChanged
             )
 
-        # add to recent opened windows
-        self.getSanPyApp().getOptions().addPath(path)
-
     def _old_slot_loadFile(self, filePath : str):
         """Load one file rather than a folder.
         

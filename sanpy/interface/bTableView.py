@@ -322,7 +322,6 @@ class bTableView(QtWidgets.QTableView):
             # "Notes",
             "relPath",
             "uuid",
-            "badColumn",
         ]
         for hiddenColumn in hiddenColumns:
             try:

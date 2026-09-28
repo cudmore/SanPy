@@ -106,11 +106,11 @@ _sanpyColumns = {
     },
     "dvdtThreshold": {
         "type": float,
-        "isEditable": True,
+        "isEditable": False,
     },
     "mvThreshold": {
         "type": float,
-        "isEditable": True,
+        "isEditable": False,
     },
     "Cell Type": {
         "type": str,
@@ -126,34 +126,15 @@ _sanpyColumns = {
     #     "isEditable": True,
     # },
 
-    # # bAnalysis metadata
-    # metaDataDict = sanpy.bAnalysis.getMetaDataDict()
-    # for k,v in metaDataDict.items()
-        # _metaData = {
-        #     'include': 'yes',
-        #     'condition1': '',
-        #     'condition2': '',
-        #     'ID': '',
-        #     'age': '',
-        #     'sex': 'unknown',
-        #     'age': '',
-        #     'genotype': '',
-        #     'note': '',
-        # }
-
     "include": {
         "type": str,
         "isEditable": True,
     },
-    "Condition1": {
-        "type": str,
-        "isEditable": True,
-    },
-    "Condition2": {
-        "type": str,
-        "isEditable": True,
-    },
     "ID": {
+        "type": str,
+        "isEditable": True,
+    },
+    "Condition": {
         "type": str,
         "isEditable": True,
     },
