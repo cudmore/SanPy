@@ -872,23 +872,20 @@ class bDetectionWidget(QtWidgets.QWidget):
         else:
             logger.error(f'Did not understand thisAxis:"{thisAxis}"')
 
-    def setAxisFull(self):
-        """Set full axis for (deriv, daq, vm, clips).
-        """
+    def setAxisFull(self) -> None:
+        """Fit the time axis to the recording and the vertical axes to each trace."""
         if self.ba is None:
             return
 
-        # logger.info('')
-
-        # 20220115
-        # self.vmPlot.autoRange(items=[self.vmLinesFiltered])
-        # self.vmPlot.enableAutoRange()
-        
-        logger.info('!!!!! setting vmPlot_ auto range !!!!!')
-        self.vmPlot.autoRange(items=[self.vmPlot_])  # 20221003
-        # Y is not linked, so fit each curve the same way as Vm.
-        self.derivPlot.autoRange(items=[self.derivPlot_])
-        self.dacPlot.autoRange(items=[self.dacPlot_])
+        # Derivative and DAC share Vm's x axis. setXRange turns x auto-range off
+        # so later y fits cannot rewrite the time axis.
+        sweep_x = self.ba.fileLoader.sweepX
+        self.vmPlot.setXRange(
+            float(np.nanmin(sweep_x)), float(np.nanmax(sweep_x)), padding=0
+        )
+        self.vmPlot.enableAutoRange(axis="y")
+        self.derivPlot.enableAutoRange(axis="y")
+        self.dacPlot.enableAutoRange(axis="y")
 
         self.vmPlotGlobal.autoRange(items=[self.vmPlotGlobal_])  # we never zoom this
 
