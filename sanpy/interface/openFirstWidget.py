@@ -5,6 +5,7 @@ from functools import partial
 from typing import List
 
 from qtpy import QtCore, QtWidgets, QtGui
+import qtawesome as qta
 
 import sanpy
 
@@ -32,6 +33,8 @@ class openFirstWidget(QtWidgets.QMainWindow):
         super().__init__(parent)
 
         self._sanpyApp = sanpyApp
+        self._icon_labels: list[tuple[QtWidgets.QLabel, str]] = []
+        self._icon_buttons: list[tuple[QtWidgets.QPushButton, str]] = []
 
         self.recentFileList = self._sanpyApp.getConfigDict().getRecentFiles()
         self.recentFolderList = self._sanpyApp.getConfigDict().getRecentFolder()
@@ -205,6 +208,48 @@ class openFirstWidget(QtWidgets.QMainWindow):
 
         self.getSanPyApp().getWindowsMenu(self.windowsMenu)
 
+    def showEvent(self, event: QtGui.QShowEvent) -> None:
+        """Recolor launcher icons when the window is shown.
+
+        Args:
+            event: Qt show event.
+        """
+        super().showEvent(event)
+        self._apply_launcher_icons()
+
+    def _apply_launcher_icons(self) -> None:
+        """Color launcher icons with the current theme text color."""
+        application = QtWidgets.QApplication.instance()
+        palette = application.palette() if application is not None else self.palette()
+        icon_color = palette.color(QtGui.QPalette.Text).name()
+        icon_size = QtCore.QSize(16, 16)
+        for label, icon_name in self._icon_labels:
+            label.setPixmap(qta.icon(icon_name, color=icon_color).pixmap(icon_size))
+        for button, icon_name in self._icon_buttons:
+            button.setIcon(qta.icon(icon_name, color=icon_color))
+            button.setIconSize(icon_size)
+
+    def _add_section_heading(
+        self, layout: QtWidgets.QVBoxLayout, text: str, icon_name: str
+    ) -> None:
+        """Add an icon and text heading to a vertical layout.
+
+        Args:
+            layout: Layout that receives the heading row.
+            text: Heading text.
+            icon_name: QtAwesome icon name shown beside the text.
+        """
+        row = QtWidgets.QHBoxLayout()
+        row.setContentsMargins(0, 0, 0, 0)
+        row.setSpacing(4)
+        icon_label = QtWidgets.QLabel()
+        icon_label.setFixedSize(QtCore.QSize(16, 16))
+        row.addWidget(icon_label)
+        row.addWidget(QtWidgets.QLabel(text))
+        row.addStretch(1)
+        layout.addLayout(row)
+        self._icon_labels.append((icon_label, icon_name))
+
     def _buildUI(self) -> None:
         """Build the launcher controls and recent-path tables."""
         # typical wrapper for PyQt, we can't use setLayout(), we need to use setCentralWidget()
@@ -232,6 +277,7 @@ class openFirstWidget(QtWidgets.QMainWindow):
         aButton.setFixedSize(QtCore.QSize(200, 30))
         aButton.setToolTip('Open a file.')
         aButton.clicked.connect(partial(self._on_open_button_click, name))
+        self._icon_buttons.append((aButton, "ph.file-light"))
         hBoxLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
 
         name = 'Open Folder...'
@@ -239,13 +285,13 @@ class openFirstWidget(QtWidgets.QMainWindow):
         aButton.setFixedSize(QtCore.QSize(200, 30))
         aButton.setToolTip('Open a folder.')
         aButton.clicked.connect(partial(self._on_open_button_click, name))
+        self._icon_buttons.append((aButton, "ph.folder-notch-open-thin"))
         hBoxLayout.addWidget(aButton, alignment=QtCore.Qt.AlignLeft)
 
         # recent files and tables
         recent_vBoxLayout = QtWidgets.QVBoxLayout()
 
-        aLabel = QtWidgets.QLabel('Recent Files')
-        recent_vBoxLayout.addWidget(aLabel)
+        self._add_section_heading(recent_vBoxLayout, "Recent Files", "ph.files-thin")
 
         # headerStr='Recent Files (double-click to open)'
         headerStr = ''
@@ -255,8 +301,9 @@ class openFirstWidget(QtWidgets.QMainWindow):
         self.recentFileTable.cellDoubleClicked.connect(self._on_recent_file_click)
         recent_vBoxLayout.addWidget(self.recentFileTable)
 
-        aLabel = QtWidgets.QLabel('Recent Folders')
-        recent_vBoxLayout.addWidget(aLabel)
+        self._add_section_heading(
+            recent_vBoxLayout, "Recent Folders", "ph.folders-thin"
+        )
 
         # headerStr='Recent Files (double-click to open)'
         headerStr = ''
@@ -269,6 +316,7 @@ class openFirstWidget(QtWidgets.QMainWindow):
         recent_vBoxLayout.addWidget(self.recentFolderTable)
 
         _mainVLayout.addLayout(recent_vBoxLayout)
+        self._apply_launcher_icons()
 
 def test():
     import sys

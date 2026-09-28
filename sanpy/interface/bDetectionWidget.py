@@ -141,7 +141,8 @@ class _LeftToolbar(QtWidgets.QWidget):
         """
         super().__init__(detection_widget)
         self._detection_widget = detection_widget
-        self.setFixedWidth(36)
+        # self.setFixedWidth(36)  # abb
+        self.setFixedWidth(28)  # abb
         self._icon_buttons: list[tuple[QtWidgets.QToolButton, str]] = []
         self._panel_buttons: dict[str, QtWidgets.QToolButton] = {}
         layout = QtWidgets.QVBoxLayout(self)
@@ -694,6 +695,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         self._displayHoverText_deriv.setColor(foreground)
         self._leftToolbar.apply_icon_colors()
         self._apply_vm_plot_options_icon()
+        self._apply_reset_axis_icon()
         self._position_vm_plot_options_button()
 
     def getMainWindowOptions(self):
@@ -1847,10 +1849,12 @@ class bDetectionWidget(QtWidgets.QWidget):
             return bar
 
         self._resetAxisButton = QtWidgets.QToolButton(bar)
-        self._resetAxisButton.setText("[]")
         self._resetAxisButton.setToolTip("Display Full Recording")
+        self._resetAxisButton.setToolButtonStyle(QtCore.Qt.ToolButtonIconOnly)
+        self._resetAxisButton.setIconSize(QtCore.QSize(16, 16))
         self._resetAxisButton.setAutoRaise(True)
         self._resetAxisButton.clicked.connect(self.setAxisFull)
+        self._apply_reset_axis_icon()
         layout.insertWidget(layout.count() - 1, self._resetAxisButton)
 
         self._pluginMenuButton = QtWidgets.QToolButton(bar)
@@ -1867,6 +1871,13 @@ class bDetectionWidget(QtWidgets.QWidget):
         # The existing stretch keeps trace controls left and this menu right.
         layout.addWidget(self._pluginMenuButton)
         return bar
+
+    def _apply_reset_axis_icon(self) -> None:
+        """Color the full-recording reset icon with the current theme text color."""
+        application = QtWidgets.QApplication.instance()
+        palette = application.palette() if application is not None else self.palette()
+        icon_color = palette.color(QtGui.QPalette.Text).name()
+        self._resetAxisButton.setIcon(qta.icon("mdi.arrow-expand", color=icon_color))
 
     def _rebalance_raw_plot_stretches(self) -> None:
         """Give every visible pyqtgraph trace an equal share of vertical space."""
@@ -3694,10 +3705,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
                 stopSec,
             )
 
-        elif name == "[]":
-            # Reset Axes
-            self.detectionWidget.setAxisFull()
-
         elif name == "Export Spike Report":
             # self.detectionWidget.save(alsoSaveTxt=isShift)
             self.detectionWidget.save(saveCsv=True)
@@ -4001,7 +4008,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         #     self.mousePositionLabel, row, 1, tmpRowSpan, tmpColSpan
         # )
 
-        hBoxSpikeBrowser = self._buildSpikeBrowser()  # includes (Spike, Go, <<, >>, [])
+        hBoxSpikeBrowser = self._buildSpikeBrowser()
         row += 1
         rowSpan = 1
         columnSpan = 2
@@ -4093,12 +4100,6 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
         buttonName = ">>"
         button = QtWidgets.QPushButton(buttonName)
         button.setToolTip("Next Spike")
-        button.clicked.connect(partial(self._on_button_click, buttonName))
-        hBoxSpikeBrowser.addWidget(button)
-
-        buttonName = "[]"
-        button = QtWidgets.QPushButton(buttonName)
-        button.setToolTip("Display Full Recording")
         button.clicked.connect(partial(self._on_button_click, buttonName))
         hBoxSpikeBrowser.addWidget(button)
 
