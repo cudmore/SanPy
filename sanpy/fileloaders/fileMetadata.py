@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
+from typing import Any
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,3 +41,19 @@ class FileMetadata:
     user_list: tuple[float, ...] | None = field(
         metadata={"display_name": "ABF User List"}
     )
+
+
+def get_file_metadata_definitions() -> dict[str, dict[str, Any]]:
+    """Return portable presentation definitions for file metadata.
+
+    Returns:
+        Definitions keyed by canonical file-metadata field name.
+    """
+    return {
+        metadata_field.name: {
+            "display_name": str(
+                metadata_field.metadata.get("display_name", metadata_field.name)
+            )
+        }
+        for metadata_field in fields(FileMetadata)
+    }

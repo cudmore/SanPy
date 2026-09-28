@@ -581,7 +581,7 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 if selectingAgain:
                     pass
                 else:
-                    fileNote = ba.metaData.getMetaData('Note')
+                    fileNote = ba.metaData.getMetaData("note")
                     if fileNote:
                         fileNote = 'Note:' + fileNote
                     else:

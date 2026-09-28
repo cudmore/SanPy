@@ -1122,7 +1122,7 @@ class myMplCanvas(QtWidgets.QFrame):
         if includeNo:
             thisMasterDf = masterDf
         else:
-            thisMasterDf = masterDf[masterDf['Include']=='yes']
+            thisMasterDf = masterDf[masterDf["include"] == "yes"]
             thisMasterDf = thisMasterDf.reset_index()
 
         if dataType == 'All Spikes':
@@ -2559,11 +2559,11 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
                 for tmpSex in ["Male", "Female"]:
                     newEncoding = tmpRegion[0] + tmpSex[0]
                     regSex = self.masterDf[
-                        (self.masterDf["Region"] == tmpRegion)
-                        & (self.masterDf["Sex"] == tmpSex)
+                        (self.masterDf["region"] == tmpRegion)
+                        & (self.masterDf["sex"] == tmpSex)
                     ]
-                    regSex = (self.masterDf["Region"] == tmpRegion) & (
-                        self.masterDf["Sex"] == tmpSex
+                    regSex = (self.masterDf["region"] == tmpRegion) & (
+                        self.masterDf["sex"] == tmpSex
                     )
                     print("newEncoding:", newEncoding, "regSex:", regSex.shape)
                     self.masterDf.loc[regSex, tmpNewCol] = newEncoding
@@ -2842,7 +2842,7 @@ class bScatterPlotMainWindow(QtWidgets.QMainWindow):
         if includeNo:
             thisDf = self.masterDf
         else:
-            thisDf = self.masterDf[self.masterDf['Include']=='yes']
+            thisDf = self.masterDf[self.masterDf["include"] == "yes"]
 
         # xDf for table
         if xIsCategorical or groupByNone:

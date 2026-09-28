@@ -148,26 +148,38 @@ def test_export_writes_valid_file_metadata(
     assert exported["num_channels"] == 2
     assert exported["num_sweeps"] == 18
     assert exported["num_epochs"] == 5
+    definitions = json.loads(
+        (root / "metadata" / "file_metadata_definitions.json").read_text()
+    )
+    assert list(definitions) == list(exported)
+    assert definitions["acq_date"]["display_name"] == "Acquisition Date"
     validate_collection(destination)
 
 
-def test_validator_accepts_legacy_manifest_without_file_metadata(
+def test_export_writes_experimental_metadata_and_definitions(
     tmp_path: Path, small_abf: Path
 ) -> None:
-    """Keep the additive file-metadata resource optional for old exports.
+    """Export canonical experimental values separately from definitions.
 
     Args:
         tmp_path: Pytest-managed output directory.
         small_abf: Multi-sweep, multi-channel ABF fixture.
     """
-    destination = tmp_path / "legacy.sanpy.zarr"
-    export_collection([_analysis(small_abf)], destination, table_format="csv")
+    analysis = _analysis(small_abf)
+    analysis.metaData.setMetaData("animal_id", "mouse-1")
+    destination = tmp_path / "experimental-metadata.sanpy.zarr"
+    export_collection([analysis], destination, table_format="csv")
     root = _recording_root(destination)
-    manifest_path = root / "recording.json"
-    manifest = json.loads(manifest_path.read_text())
-    del manifest["resources"]["file_metadata"]
-    _write_json(manifest_path, manifest)
+    manifest = json.loads((root / "recording.json").read_text())
+    values = json.loads((root / "metadata" / "experimental_metadata.json").read_text())
+    definitions = json.loads(
+        (root / "metadata" / "experimental_metadata_definitions.json").read_text()
+    )
 
+    assert manifest["resources"]["experimental_metadata"] == "metadata/experimental_metadata.json"
+    assert values["animal_id"] == "mouse-1"
+    assert list(values) == list(definitions)
+    assert definitions["sex"]["choices"][-1] == "not_applicable"
     validate_collection(destination)
 
 

@@ -98,7 +98,7 @@ def test_plot_tool_scatter_switches_from_categorical_to_continuous_x(
     dataframe = pd.DataFrame(
         {
             "File Number": [1, 1, 2, 2],
-            "Include": ["yes", "yes", "yes", "yes"],
+            "include": ["yes", "yes", "yes", "yes"],
             "spike_condition": ["control", "drug", "control", "drug"],
             "thresholdSec": [1.0, 2.0, 3.0, 4.0],
             "spikeFreq_hz": [10.0, 20.0, 30.0, 40.0],

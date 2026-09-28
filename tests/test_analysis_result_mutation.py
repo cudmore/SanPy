@@ -98,7 +98,7 @@ def test_plot_summary_supports_categorical_then_continuous_x_axis(
     window.masterDf = pd.DataFrame(
         {
             "File Number": [1, 1, 1, 1],
-            "Include": ["yes", "yes", "yes", "yes"],
+            "include": ["yes", "yes", "yes", "yes"],
             "spike_condition": ["control", "control", "drug", "drug"],
             "thresholdSec": [1.0, 2.0, 3.0, 4.0],
             "spikeFreq_hz": [10.0, 20.0, 30.0, 40.0],

@@ -141,7 +141,7 @@ _sanpyColumns = {
         #     'note': '',
         # }
 
-    "Include": {
+    "include": {
         "type": str,
         "isEditable": True,
     },
@@ -157,22 +157,28 @@ _sanpyColumns = {
         "type": str,
         "isEditable": True,
     },
-    "Age": {
+    "age": {
         "type": str,
         "isEditable": True,
     },
-    "Sex": {
+    "sex": {
         "type": str,
         "isEditable": True,
     },
-    "Genotype": {
+    "genotype": {
         "type": str,
         "isEditable": True,
     },
-    "Note": {
+    "note": {
         "type": str,
         "isEditable": True,
     },
+    "animal_id": {"type": str, "isEditable": True},
+    "species": {"type": str, "isEditable": True},
+    "region": {"type": str, "isEditable": True},
+    "cell_type": {"type": str, "isEditable": True},
+    "condition": {"type": str, "isEditable": True},
+    "experiment": {"type": str, "isEditable": True},
 
     "parent1": {
         "type": str,
@@ -1652,7 +1658,7 @@ class analysisDir:
         
         # for row in range(self.numFiles):
         for rowIdx, rowDict in self._df.iterrows():
-            if (not includeNo) and (rowDict['Include'] == 'no'):
+            if (not includeNo) and (rowDict["include"] == "no"):
                 if verbose:
                     logger.info(f'  rowIdx:{rowIdx} Include is "no"')
                 continue

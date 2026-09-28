@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "include",
+    "animal_id",
+    "species",
+    "region",
+    "cell_type",
+    "age",
+    "sex",
+    "genotype",
+    "condition",
+    "experiment",
+    "note"
+  ],
+  "properties": {
+    "include": {"enum": ["yes", "no"]},
+    "animal_id": {"type": "string"},
+    "species": {"type": "string"},
+    "region": {"type": "string"},
+    "cell_type": {"type": "string"},
+    "age": {"type": "string"},
+    "sex": {
+      "enum": ["male", "female", "unclassified", "unknown", "not_applicable"]
+    },
+    "genotype": {"type": "string"},
+    "condition": {"type": "string"},
+    "experiment": {"type": "string"},
+    "note": {"type": "string"}
+  }
+}

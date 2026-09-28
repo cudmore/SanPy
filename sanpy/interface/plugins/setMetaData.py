@@ -1,193 +1,110 @@
-import math
-import os
+"""Plugin for editing experimental metadata."""
+
+from __future__ import annotations
+
 from functools import partial
-import json
-from typing import Union, Dict, List, Tuple, Optional, Optional
+from typing import Any
 
 from PyQt5 import QtCore, QtWidgets
 
 import sanpy
 from sanpy.interface.plugins import sanpyPlugin
 
-from sanpy.sanpyLogger import get_logger
-logger = get_logger(__name__)
 
 class SetMetaData(sanpyPlugin):
+    """Edit schema-defined experimental metadata for the current analysis."""
 
     myHumanName = "Set Meta Data"
     showInMenu = False
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, **kwargs: Any) -> None:
+        """Build the editor and display the current analysis.
 
+        Args:
+            **kwargs: Arguments forwarded to :class:`sanpyPlugin`.
+        """
+        super().__init__(**kwargs)
+        self._widgetDict: dict[str, QtWidgets.QWidget] = {}
         self._buildUI()
-    
         if self.ba is not None:
             self.replot()
 
-    def replot(self):
-        if self.ba is None:
-            # todo deactivate all controls
-            return
-        
-        # metaDataDict = self.ba.metaData
-
-        # logger.info(metaDataDict)
-
-        for k,v in self.ba.metaData.items():
-            if k not in self._widgetDict.keys():
-                k = k.capitalize()
-
-                if k not in self._widgetDict.keys():
-                    logger.error(f'key "{k}" is not in metadata keys {self._widgetDict.keys()}')
-                    continue
-
-            if k == 'Include':
-                # combo box
-                if v == 'yes':
-                    self._widgetDict[k].setCurrentIndex(0)  #
-                elif v == 'no':
-                    self._widgetDict[k].setCurrentIndex(1)  #
-                else:
-                    logger.error(f'did not understand control "{k}" value "{v}"')
-                
-            elif k == 'Sex':
-                # combo box
-                if v == 'unknown':
-                    self._widgetDict[k].setCurrentIndex(0)  #
-                elif v == 'female':
-                    self._widgetDict[k].setCurrentIndex(1)  #
-                elif v == 'male':
-                    self._widgetDict[k].setCurrentIndex(2)  #
-                else:
-                    logger.error(f'did not understand control "{k}" value "{v}"')
-
-            else:
-                # line edit
-                try:
-                    self._widgetDict[k].setText(v)
-                except (AttributeError) as e:
-                    logger.error(f'widget {k} is type {self._widgetDict[k]}')
-                except(KeyError) as e:
-                    logger.error(f'key "{k}" is not in metadata keys {self._widgetDict.keys()}')
-
-
-    def _on_text_edit(self, aWidget, paramName):
+    def replot(self) -> None:
+        """Refresh controls from the current analysis metadata."""
         if self.ba is None:
             return
-        logger.info(f'{aWidget} {paramName}')
-        value = aWidget.text()
+        for key, value in self.ba.metaData.items():
+            widget = self._widgetDict[key]
+            if isinstance(widget, QtWidgets.QComboBox):
+                index = widget.findData(value)
+                if index >= 0:
+                    widget.setCurrentIndex(index)
+            elif isinstance(widget, QtWidgets.QLineEdit):
+                widget.setText(value)
 
-        if ';' in value:
-            logger.warning(f'Semicolon (;) is not allowed -->> replacing with comma (,)')
-            value = value.replace(';', ',')
+    def _on_text_edit(self, widget: QtWidgets.QLineEdit, key: str) -> None:
+        """Store one edited free-text value.
+
+        Args:
+            widget: Line edit containing the new value.
+            key: Canonical experimental-metadata key.
         """
-        TODO:
-        # eventDict = setSpikeStatEvent
-        setSpikeStatEvent = {}
-        setSpikeStatEvent['ba'] = self.ba
-        #setSpikeStatEvent["spikeList"] = self.getSelectedSpikes()
-        setSpikeStatEvent["colStr"] = paramName
-        setSpikeStatEvent["value"] = value
-
-        logger.info(f"  -->> emit signalUpdateAnalysis:{setSpikeStatEvent}")
-        self.signalUpdateAnalysis.emit(setSpikeStatEvent)
-        """
-
-        self.ba.metaData.setMetaData(paramName, value)
-
-    def _on_combo_box(self, paramName : str, value : str):
         if self.ba is None:
             return
-        logger.info(f'paramName:{paramName} value:{value}')
-        if paramName == 'Include':
-            if value == 'yes':
-                self._widgetDict[paramName].setCurrentIndex(0)
-            elif value == 'no':
-                self._widgetDict[paramName].setCurrentIndex(1)
-            else:
-                logger.error(f'did not understand control "{paramName}" value "{value}"')
-                return
-            self.ba.metaData.setMetaData(paramName, value)
+        value = widget.text().replace(";", ",")
+        self.ba.metaData.setMetaData(key, value)
 
-        elif paramName == 'Sex':
-            if value == 'unknown':
-                self._widgetDict[paramName].setCurrentIndex(0)
-            elif value == 'female':
-                self._widgetDict[paramName].setCurrentIndex(1)
-            elif value == 'male':
-                self._widgetDict[paramName].setCurrentIndex(2)
-            else:
-                logger.error(f'did not understand control "{paramName}" value "{value}"')
-                return
-            self.ba.metaData.setMetaData(paramName, value)
+    def _on_combo_box(self, key: str, value: str) -> None:
+        """Store one selected choice value.
 
-        else:
-            logger.error(f'did not understand param name"{paramName}"')
+        Args:
+            key: Canonical experimental-metadata key.
+            value: Canonical selected value.
+        """
+        if self.ba is not None:
+            self.ba.metaData.setMetaData(key, value)
 
-    def _setFontSize(self, aWidget):
-        fontSize = 12
-        
-        _font = aWidget.font()
-        _font.setPointSize(fontSize)
-        aWidget.setFont(_font)
+    def _setFontSize(self, widget: QtWidgets.QWidget) -> None:
+        """Apply the plugin's compact control font.
 
-        # aWidget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum)
+        Args:
+            widget: Widget to resize.
+        """
+        font_size = 12
+        font = widget.font()
+        font.setPointSize(font_size)
+        widget.setFont(font)
+        widget.setMinimumSize(5, font_size + int(font_size / 2))
 
-        aWidget.setMinimumSize(5,fontSize + int(fontSize/2))
-
-    def _buildUI(self):
-
-        self._widgetDict = {}
-        
-        vBoxLayout = self.getVBoxLayout()
-        vBoxLayout.setAlignment(QtCore.Qt.AlignTop)
-
-        # current default of metadata, getMetaDataDict is static
-        _metaData = sanpy.MetaData.getMetaDataDict()
-        
-        for paramName, paramValue in _metaData.items():
-            # logger.info(f'paramName:{paramName}')
-
-            hBoxLayout = QtWidgets.QHBoxLayout()
-
-            aLabel = QtWidgets.QLabel(paramName)
-            self._setFontSize(aLabel)
-            hBoxLayout.addWidget(aLabel, alignment=QtCore.Qt.AlignLeft)
-
-            if paramName == 'Include':
-                aComboBox = QtWidgets.QComboBox()
-                aComboBox.addItem('yes')
-                aComboBox.addItem('no')
-                aComboBox.currentTextChanged.connect(
-                    partial(self._on_combo_box, paramName)
+    def _buildUI(self) -> None:
+        """Build one schema-driven editor row per metadata field."""
+        layout = self.getVBoxLayout()
+        layout.setAlignment(QtCore.Qt.AlignTop)
+        definitions = sanpy.MetaData.getMetaDataDefinitions()
+        for key, definition in definitions.items():
+            row = QtWidgets.QHBoxLayout()
+            label = QtWidgets.QLabel(str(definition["display_name"]))
+            self._setFontSize(label)
+            row.addWidget(label, alignment=QtCore.Qt.AlignLeft)
+            choices = definition.get("choices")
+            if isinstance(choices, list):
+                widget = QtWidgets.QComboBox()
+                for choice in choices:
+                    value = str(choice)
+                    widget.addItem(value.replace("_", " ").capitalize(), value)
+                widget.currentIndexChanged.connect(
+                    lambda _index, combo=widget, field=key: self._on_combo_box(
+                        field, str(combo.currentData())
+                    )
                 )
-                self._widgetDict[paramName] = aComboBox
-                hBoxLayout.addWidget(aComboBox, alignment=QtCore.Qt.AlignLeft)
-
-            elif paramName == 'Sex':
-                aComboBox = QtWidgets.QComboBox()
-                aComboBox.addItem('unknown')
-                aComboBox.addItem('female')
-                aComboBox.addItem('male')
-                aComboBox.currentTextChanged.connect(
-                    partial(self._on_combo_box, paramName)
-                )
-                self._widgetDict[paramName] = aComboBox
-                hBoxLayout.addWidget(aComboBox, alignment=QtCore.Qt.AlignLeft)
-
             else:
-                aLineEdit = QtWidgets.QLineEdit("")
-                aLineEdit.editingFinished.connect(
-                    partial(self._on_text_edit, aLineEdit, paramName)
+                widget = QtWidgets.QLineEdit("")
+                widget.editingFinished.connect(
+                    partial(self._on_text_edit, widget, key)
                 )
-                self._widgetDict[paramName] = aLineEdit
-                hBoxLayout.addWidget(aLineEdit, alignment=QtCore.Qt.AlignLeft)
-            
-            vBoxLayout.addLayout(hBoxLayout)  # , alignment=QtCore.Qt.AlignTop)
-
-        vBoxLayout.addStretch()
-        
-        # set all font sizes
-        for aKey, aWidget in self._widgetDict.items():
-            self._setFontSize(aWidget)
+            self._widgetDict[key] = widget
+            row.addWidget(widget, alignment=QtCore.Qt.AlignLeft)
+            layout.addLayout(row)
+        layout.addStretch()
+        for widget in self._widgetDict.values():
+            self._setFontSize(widget)

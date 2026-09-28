@@ -34,7 +34,9 @@ experiment.sanpy.zarr/
       data.zarr/
       metadata/
         file_metadata.json
-        sanpy_metadata.json
+        file_metadata_definitions.json
+        experimental_metadata.json
+        experimental_metadata_definitions.json
         detection_parameters.json
         detection_parameter_definitions.json
         analysis_result_definitions.json
@@ -51,12 +53,10 @@ Only requested table representations are present.
 `file_metadata.json` stores immutable facts read or derived from the source
 recording, including acquisition timestamps, source channel and sweep counts,
 epochs per sweep, axis labels, recording mode, sampling frequency, and an
-optional ABF user list. `sanpy_metadata.json` remains the separate set of
-editable experimental annotations.
-
-New exports always advertise `file_metadata.json` in their recording manifest.
-The resource remains optional in the `1.0-draft` schema so collections written
-before file metadata was introduced continue to validate.
+optional ABF user list. `experimental_metadata.json` stores the separate set of
+editable experimental annotations using canonical snake-case keys. Each values
+document has a sibling definitions document containing its human-readable
+`display_name` values and any controlled choices.
 
 ## Arrays
 
@@ -76,6 +76,11 @@ All arrays use Zarr format 3. Recorded and command values retain `float64` preci
 ## Definitions and values
 
 `detection_parameters.json` stores the actual values applied to the recording. `detection_parameter_definitions.json` separately explains the available parameters.
+
+`experimental_metadata.json` and `file_metadata.json` likewise store values
+separately from their `*_definitions.json` presentation metadata. SanPy's
+runtime definitions are authoritative; the exported documents let thin clients
+display labels without duplicating them.
 
 `analysis_results` stores the actual one-row-per-spike results. `analysis_result_definitions.json` separately explains result columns. SanPy's runtime definitions are the source of truth for both definition documents, including their presentation-only `category` values. The exporter preserves native SanPy schema keys and does not infer categories or rename fields. Nested result values are canonical JSON text in tabular files.
 

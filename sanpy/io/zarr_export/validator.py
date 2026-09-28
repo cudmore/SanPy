@@ -87,14 +87,28 @@ def _validate_recording(
         raise SanPyZarrValidationError("Command channel metadata count mismatch")
     if recording["analysis_channel"] >= dimensions["channels"]:
         raise SanPyZarrValidationError("Analysis channel is out of bounds")
-    for key in ("sanpy_metadata", "detection_parameters", "detection_parameter_definitions"):
+    for key in ("detection_parameters", "detection_parameter_definitions"):
         _json(_resource(recording_root, recording["resources"][key]))
-    if "file_metadata" in recording["resources"]:
-        file_metadata = _json(
-            _resource(recording_root, recording["resources"]["file_metadata"])
+    experimental_metadata = _json(
+        _resource(recording_root, recording["resources"]["experimental_metadata"])
+    )
+    _schema(experimental_metadata, "experimental-metadata-v1.schema.json")
+    experimental_definitions = _json(
+        _resource(
+            recording_root,
+            recording["resources"]["experimental_metadata_definitions"],
         )
-        _schema(file_metadata, "file-metadata-v1.schema.json")
-        _validate_file_metadata(file_metadata, recording)
+    )
+    _validate_metadata_definitions(experimental_metadata, experimental_definitions)
+    file_metadata = _json(
+        _resource(recording_root, recording["resources"]["file_metadata"])
+    )
+    _schema(file_metadata, "file-metadata-v1.schema.json")
+    _validate_file_metadata(file_metadata, recording)
+    file_definitions = _json(
+        _resource(recording_root, recording["resources"]["file_metadata_definitions"])
+    )
+    _validate_metadata_definitions(file_metadata, file_definitions)
     result_definitions = _json(
         _resource(recording_root, recording["resources"]["analysis_result_definitions"])
     )
@@ -152,6 +166,46 @@ def _validate_file_metadata(
             raise SanPyZarrValidationError(
                 "File metadata acquisition datetime mismatch"
             )
+
+
+def _validate_metadata_definitions(
+    values: dict[str, Any], definitions: dict[str, Any]
+) -> None:
+    """Validate a metadata definition document against its values.
+
+    Args:
+        values: Exported metadata values keyed by canonical field name.
+        definitions: Exported presentation definitions using the same keys.
+
+    Raises:
+        SanPyZarrValidationError: If keys or presentation fields are invalid.
+    """
+    if list(values) != list(definitions):
+        raise SanPyZarrValidationError(
+            "Metadata values and definitions must have identical ordered keys"
+        )
+    for key, definition in definitions.items():
+        if not isinstance(definition, dict):
+            raise SanPyZarrValidationError(
+                f"Metadata definition {key!r} must be an object"
+            )
+        display_name = definition.get("display_name")
+        if not isinstance(display_name, str) or not display_name:
+            raise SanPyZarrValidationError(
+                f"Metadata definition {key!r} requires display_name"
+            )
+        choices = definition.get("choices")
+        if choices is not None:
+            if not isinstance(choices, list) or not all(
+                isinstance(choice, str) for choice in choices
+            ):
+                raise SanPyZarrValidationError(
+                    f"Metadata definition {key!r} has invalid choices"
+                )
+            if values[key] not in choices:
+                raise SanPyZarrValidationError(
+                    f"Metadata value {key!r} is not one of its choices"
+                )
 
 
 def _validate_trace_overlays(

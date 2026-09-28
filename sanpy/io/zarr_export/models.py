@@ -74,8 +74,11 @@ class SanPySnapshot:
 
     Attributes:
         recording_id: Stable SanPy recording identifier.
-        metadata: Experimental metadata values.
+        experimental_metadata: Editable experimental metadata values.
+        experimental_metadata_definitions: Presentation definitions for
+            experimental metadata.
         file_metadata: Immutable metadata derived from the source file.
+        file_metadata_definitions: Presentation definitions for file metadata.
         detection_parameters: Applied detection parameter values.
         detection_definitions: Runtime detection parameter schema.
         result_definitions: Runtime analysis-result schema.
@@ -89,8 +92,10 @@ class SanPySnapshot:
     """
 
     recording_id: str
-    metadata: dict[str, Any]
+    experimental_metadata: dict[str, Any]
+    experimental_metadata_definitions: dict[str, dict[str, Any]]
     file_metadata: FileMetadata
+    file_metadata_definitions: dict[str, dict[str, Any]]
     detection_parameters: dict[str, Any]
     detection_definitions: dict[str, dict[str, Any]]
     result_definitions: dict[str, dict[str, Any]]

@@ -73,13 +73,15 @@
     "resources": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["data", "epochs", "analysis_results", "sanpy_metadata", "detection_parameters", "detection_parameter_definitions", "analysis_result_definitions", "trace_overlays"],
+      "required": ["data", "epochs", "analysis_results", "experimental_metadata", "experimental_metadata_definitions", "file_metadata", "file_metadata_definitions", "detection_parameters", "detection_parameter_definitions", "analysis_result_definitions", "trace_overlays"],
       "properties": {
         "data": {"const": "data.zarr"},
         "epochs": {"$ref": "#/$defs/table"},
         "analysis_results": {"$ref": "#/$defs/table"},
-        "sanpy_metadata": {"const": "metadata/sanpy_metadata.json"},
+        "experimental_metadata": {"const": "metadata/experimental_metadata.json"},
+        "experimental_metadata_definitions": {"const": "metadata/experimental_metadata_definitions.json"},
         "file_metadata": {"const": "metadata/file_metadata.json"},
+        "file_metadata_definitions": {"const": "metadata/file_metadata_definitions.json"},
         "detection_parameters": {"const": "metadata/detection_parameters.json"},
         "detection_parameter_definitions": {"const": "metadata/detection_parameter_definitions.json"},
         "analysis_result_definitions": {"const": "metadata/analysis_result_definitions.json"},

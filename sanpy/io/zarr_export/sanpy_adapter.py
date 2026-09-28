@@ -12,6 +12,7 @@ import pandas as pd
 import sanpy
 from sanpy.bAnalysisResults import analysisResultDict
 from sanpy.bDetection import getDefaultDetection
+from sanpy.fileloaders.fileMetadata import get_file_metadata_definitions
 from sanpy.trace_overlays import get_trace_overlay_definitions
 
 from .models import SanPySnapshot
@@ -33,8 +34,10 @@ def snapshot_banalysis(analysis: Any) -> SanPySnapshot:
         results = results.reindex(columns=analysisResultDict)
     return SanPySnapshot(
         recording_id=str(getattr(analysis, "uuid", None) or uuid.uuid4()),
-        metadata=copy.deepcopy(dict(analysis.metaData)),
+        experimental_metadata=copy.deepcopy(dict(analysis.metaData)),
+        experimental_metadata_definitions=analysis.metaData.getMetaDataDefinitions(),
         file_metadata=copy.deepcopy(loader.fileMetadata),
+        file_metadata_definitions=get_file_metadata_definitions(),
         detection_parameters=copy.deepcopy(analysis.getDetectionDict() or {}),
         detection_definitions=copy.deepcopy(getDefaultDetection()),
         result_definitions=copy.deepcopy(analysisResultDict),
