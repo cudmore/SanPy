@@ -1651,6 +1651,8 @@ class bAnalysis:
             spikeDict[i]["epoch"] = epoch
             spikeDict[i]["epochLevel"] = epochLevel
 
+            spikeDict[i]["sweepCondition"] = ""  # abb 20260929
+
             # keep track of per sweep spike and total spike
             spikeDict[i]["sweepSpikeNumber"] = i
             spikeDict[i]["spikeNumber"] = self.numSpikes + i

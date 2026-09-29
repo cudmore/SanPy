@@ -124,8 +124,12 @@ class spikeClips(sanpyPlugin):
 
         aLabel = QtWidgets.QLabel("Pre (ms)")
         hLayout3.addWidget(aLabel)
-        self.preClipWidthSpinBox = QtWidgets.QSpinBox()
+        # self.preClipWidthSpinBox = QtWidgets.QSpinBox()
+        self.preClipWidthSpinBox = QtWidgets.QDoubleSpinBox()
         self.preClipWidthSpinBox.setKeyboardTracking(False)
+        # abb 202609 not sure why we now need float (int was working)
+        self.preClipWidthSpinBox.setDecimals(0)  # abb
+        self.preClipWidthSpinBox.setSingleStep(1)  # abb
         self.preClipWidthSpinBox.setRange(1, 2**16)
         self.preClipWidthSpinBox.setValue(self.preClipWidth_ms)
         # self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
@@ -134,8 +138,12 @@ class spikeClips(sanpyPlugin):
 
         aLabel = QtWidgets.QLabel("Post (ms)")
         hLayout3.addWidget(aLabel)
-        self.postClipWidthSpinBox = QtWidgets.QSpinBox()
+        # self.postClipWidthSpinBox = QtWidgets.QSpinBox()
+        self.postClipWidthSpinBox = QtWidgets.QDoubleSpinBox()
         self.postClipWidthSpinBox.setKeyboardTracking(False)
+        # abb 202609 not sure why we now need float (int was working)
+        self.postClipWidthSpinBox.setDecimals(0)  # abb
+        self.postClipWidthSpinBox.setSingleStep(1)  # abb
         self.postClipWidthSpinBox.setRange(1, 2**16)
         self.postClipWidthSpinBox.setValue(self.postClipWidth_ms)
         # self.clipWidthSpinBox.editingFinished.connect(partial(self.on_spinbox, aLabel))
@@ -298,6 +306,8 @@ class spikeClips(sanpyPlugin):
         # this returns x-axis in ms
         # theseClips is a [list] of clips
         # theseClips_x is in ms
+        logger.warning(f'fetching clips with')
+        logger.warning(f'  startSec:{startSec} stopSec:{stopSec}')
         theseClips, theseClips_x, meanClip = self.ba.getSpikeClips(
             startSec,
             stopSec,

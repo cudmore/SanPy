@@ -310,6 +310,7 @@ analysisResultDict[key]["type"] = "bool"
 analysisResultDict[key]["default"] = True
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Included"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key][
     "description"
@@ -322,6 +323,8 @@ analysisResultDict[key]["type"] = "str"
 analysisResultDict[key]["default"] = ""
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Cell type"
+analysisResultDict[key]["show_in_plot_menu"] = True
+analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key]["description"] = "User specified cell type"
 
 key = "sex"
@@ -331,6 +334,8 @@ analysisResultDict[key]["type"] = "str"
 analysisResultDict[key]["default"] = ""
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Sex"
+analysisResultDict[key]["show_in_plot_menu"] = True
+analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key]["description"] = "User specified sex"
 
 key = "condition"
@@ -340,12 +345,29 @@ analysisResultDict[key]["type"] = "str"
 analysisResultDict[key]["default"] = ""
 analysisResultDict[key]["units"] = ""
 analysisResultDict[key]["axis_label"] = "Condition"
+analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key]["description"] = "User specified condition"
+
+# abb i think we need to add other experimental metadata
+# like genotype, etc
 
 ###############################################################################
 # SPIKE PROPERTIES
 ###############################################################################
+key = "sweepCondition"  # abb 20260929
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["category"] = AnalysisResultCategory.IDENTITY
+analysisResultDict[key]["type"] = "str"
+analysisResultDict[key]["default"] = ""
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key]["axis_label"] = "Sweep condition"
+analysisResultDict[key]["show_in_plot_menu"] = True
+analysisResultDict[key]["is_categorical"] = True
+analysisResultDict[key][
+    "description"
+] = "User-assigned sweep condition."
+
 key = "spikeNumber"
 analysisResultDict[key] = getDefaultDict()
 analysisResultDict[key]["category"] = AnalysisResultCategory.IDENTITY
