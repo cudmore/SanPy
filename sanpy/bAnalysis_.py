@@ -2353,7 +2353,10 @@ class bAnalysis:
         self.spikeClips = []
         self.spikeClips_x2 = []
 
-        sweepY = self.fileLoader.sweepY_filtered
+        # abb 20260929, _filteredY is the full (points, sweeps) array
+        # bug was that sweepY_filtered is using a global in *this bAnalysis
+        # sweepY = self.fileLoader.sweepY_filtered
+        sweepY = self.fileLoader._filteredY
 
         # when there are no spikes getStat() will not return anything
         # For 'All' sweeps, we need to know column
@@ -2376,13 +2379,15 @@ class bAnalysis:
                 # currentClip = sweepY[spikeTime-halfClipWidth_pnts:spikeTime+halfClipWidth_pnts, sweep]
                 try:
                     currentClip = sweepY[
-                        spikeTime - preClipWidth_pnts : spikeTime + preClipWidth_pnts,
+                        # abb 20260929
+                        # spikeTime - preClipWidth_pnts : spikeTime + preClipWidth_pnts,
+                        spikeTime - preClipWidth_pnts : spikeTime + postClipWidth_pnts,
                         sweep,
                     ]
                 except IndexError as e:
                     logger.error(e)
-                    print(f"sweep: {sweep}")
-                    print(f"sweepY.shape: {sweepY.shape}")
+                    logger.error(f"  sweep: {sweep}")
+                    logger.error(f"  sweepY.shape: {sweepY.shape}")
 
             if len(currentClip) == numPointsInClip:
                 self.spikeClips.append(currentClip)

@@ -486,7 +486,10 @@ class fileLoader_base(ABC):
                 mode="nearest",
             )
         else:
-            self._filteredY = self.sweepY
+            # abb 20260929
+            # self.sweepY is the property that returns _sweepY[:, currentSweep], one column
+            # self._filteredY = self.sweepY
+            self._filteredY = self._sweepY
 
         self._filteredDeriv = np.diff(self._filteredY, axis=0)
 
@@ -521,18 +524,7 @@ class fileLoader_base(ABC):
         # three options (concatenate, insert, vstack), could only get vstack working
         rowOfZeros = np.zeros(self.numSweeps)
 
-        # logger.info(f' dataPointsPerMs:{dataPointsPerMs}')
-        # logger.info(f' self.numSweeps:{self.numSweeps}')
-        # logger.info(f' rowOfZeros:{rowOfZeros.shape}')
-        # logger.info(f' 1 - _filteredDeriv:{self._filteredDeriv.shape}')
-
-        # rowZero = 0
         self._filteredDeriv = np.vstack([rowOfZeros, self._filteredDeriv])
-
-        # logger.info(f'  sweepX:{self.sweepX.shape}')
-        # logger.info(f'  sweepY:{self.sweepY.shape}')
-        # logger.info(f'  _filteredY:{self._filteredY.shape}')
-        # logger.info(f'  2- _filteredDeriv:{self._filteredDeriv.shape}')
 
         return self._filteredDeriv
     
