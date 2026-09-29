@@ -131,11 +131,17 @@ def prepare_nicepool_data(
 
     definitions = get_plot_result_definitions()
 
-    selected_names = [
-        name
-        for name in (*_IDENTITY_COLUMNS, *definitions)
-        if name in dataframe.columns
-    ]
+    # Build selected_names in NicePool column order: identity columns first,
+    # then plot-menu results present in this dataframe. Keep the first
+    # occurrence so a name such as "include", which is both an identity
+    # column and a plot-menu result, is projected once.
+    selected_names: list[str] = []
+    seen_names: set[str] = set()
+    for name in (*_IDENTITY_COLUMNS, *definitions):
+        if name not in dataframe.columns or name in seen_names:
+            continue
+        seen_names.add(name)
+        selected_names.append(name)
     projected = dataframe.loc[:, selected_names].copy()
 
     identity_definitions: dict[str, dict[str, Any]] = {
