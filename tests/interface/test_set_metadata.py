@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from qtpy import QtWidgets
+from qtpy import QtCore, QtWidgets
 
 from sanpy.interface.plugins.setMetaData import SetMetaData
 
@@ -77,4 +77,18 @@ def test_metadata_editors_update_the_same_analysis(
     plugin._on_combo_box("include", "no")
     assert analysis.metaData.getMetaData("include") == "no"
     assert include.currentData() == "no"
+    assert window.myAnalysisDir.columnIsEditable("include") is False
     assert _display_value(window.myModel, row_label, "include") == "no"
+    include_column = list(window.myModel._data.columns).index("include")
+    assert (
+        window.myModel.headerData(
+            include_column, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole
+        )
+        == "Include"
+    )
+    assert (
+        window.myModel.headerData(
+            note_column, QtCore.Qt.Horizontal, QtCore.Qt.DisplayRole
+        )
+        == "Note"
+    )

@@ -27,9 +27,29 @@ import io  # too load from the web
 
 import sanpy
 import sanpy.h5Util
+from sanpy.metaData import MetaData
 
 from sanpy.sanpyLogger import get_logger
 logger = get_logger(__name__)
+
+
+def _experimental_metadata_columns() -> dict[str, dict[str, object]]:
+    """Return file-table columns for canonical experimental metadata.
+
+    Returns:
+        Column definitions keyed by canonical experimental-metadata name, in
+        definition order. ``include`` is shown in the table and is not edited
+        there.
+    """
+    columns: dict[str, dict[str, object]] = {}
+    for key in MetaData.getMetaDataDefinitions():
+        isEditable = key not in {"include", "sex"}
+        columns[key] = {
+            "type": str,
+            "isEditable": isEditable,
+        }
+    return columns
+
 
 _sanpyColumns = {
     #'Idx': {
@@ -96,26 +116,26 @@ _sanpyColumns = {
         "type": str,
         "isEditable": False,
     },
-    "Start(s)": {
-        "type": float,
-        "isEditable": False,
-    },
-    "Stop(s)": {
-        "type": float,
-        "isEditable": False,
-    },
-    "dvdtThreshold": {
-        "type": float,
-        "isEditable": False,
-    },
-    "mvThreshold": {
-        "type": float,
-        "isEditable": False,
-    },
-    "Cell Type": {
-        "type": str,
-        "isEditable": True,
-    },
+    # "Start(s)": {
+    #     "type": float,
+    #     "isEditable": False,
+    # },
+    # "Stop(s)": {
+    #     "type": float,
+    #     "isEditable": False,
+    # },
+    # "dvdtThreshold": {
+    #     "type": float,
+    #     "isEditable": False,
+    # },
+    # "mvThreshold": {
+    #     "type": float,
+    #     "isEditable": False,
+    # },
+    # "Cell Type": {
+    #     "type": str,
+    #     "isEditable": True,
+    # },
     # "Sex": {
     #     "type": str,
     #     "isEditable": True,
@@ -126,40 +146,15 @@ _sanpyColumns = {
     #     "isEditable": True,
     # },
 
-    "include": {
-        "type": str,
-        "isEditable": True,
-    },
-    "ID": {
-        "type": str,
-        "isEditable": True,
-    },
-    "Condition": {
-        "type": str,
-        "isEditable": True,
-    },
-    "age": {
-        "type": str,
-        "isEditable": True,
-    },
-    "sex": {
-        "type": str,
-        "isEditable": True,
-    },
-    "genotype": {
-        "type": str,
-        "isEditable": True,
-    },
-    "note": {
-        "type": str,
-        "isEditable": True,
-    },
-    "animal_id": {"type": str, "isEditable": True},
-    "species": {"type": str, "isEditable": True},
-    "region": {"type": str, "isEditable": True},
-    "cell_type": {"type": str, "isEditable": True},
-    "condition": {"type": str, "isEditable": True},
-    "experiment": {"type": str, "isEditable": True},
+    # "ID": {
+    #     "type": str,
+    #     "isEditable": True,
+    # },
+    # "Condition": {
+    #     "type": str,
+    #     "isEditable": True,
+    # },
+    **_experimental_metadata_columns(),
 
     "parent1": {
         "type": str,
@@ -758,7 +753,7 @@ class analysisDir:
         #
         # save file database
         logger.info(f"    saving file db with {len(df)} rows")
-        print(df)
+        # print(df)
 
         dbKey = os.path.splitext(self.dbFile)[0]
         df = df.drop("_ba", axis=1)  # don't ever save _ba, use it for runtime
@@ -1062,15 +1057,16 @@ class analysisDir:
             # start(s) and stop(s) from ba detectionDict
             if self.isAnalyzed(rowIdx):
                 # set table to values we just detected with
-                startSec = ba.getDetectionDict()["startSeconds"]
-                stopSec = ba.getDetectionDict()["stopSeconds"]
-                self._df.loc[rowIdx, "Start(s)"] = startSec
-                self._df.loc[rowIdx, "Stop(s)"] = stopSec
 
-                dvdtThreshold = ba.getDetectionDict()["dvdtThreshold"]
-                mvThreshold = ba.getDetectionDict()["mvThreshold"]
-                self._df.loc[rowIdx, "dvdtThreshold"] = dvdtThreshold
-                self._df.loc[rowIdx, "mvThreshold"] = mvThreshold
+                # startSec = ba.getDetectionDict()["startSeconds"]
+                # stopSec = ba.getDetectionDict()["stopSeconds"]
+                # self._df.loc[rowIdx, "Start(s)"] = startSec
+                # self._df.loc[rowIdx, "Stop(s)"] = stopSec
+
+                # dvdtThreshold = ba.getDetectionDict()["dvdtThreshold"]
+                # mvThreshold = ba.getDetectionDict()["mvThreshold"]
+                # self._df.loc[rowIdx, "dvdtThreshold"] = dvdtThreshold
+                # self._df.loc[rowIdx, "mvThreshold"] = mvThreshold
 
                 #
                 # TODO: remove start of ba._path that corresponds to our current folder path
@@ -1339,15 +1335,13 @@ class analysisDir:
         rowDict["kHz"] = ba.fileLoader.recordingFrequency
         rowDict["Mode"] = ba.fileLoader.recordingMode.value
 
-        # rowDict['dvdtThreshold'] = 20
-        # rowDict['mvThreshold'] = -20
-        if ba.isAnalyzed():
-            dDict = ba.getDetectionDict()
-            # rowDict['I'] = dDict.getValue('include')
-            rowDict["dvdtThreshold"] = dDict.getValue("dvdtThreshold")
-            rowDict["mvThreshold"] = dDict.getValue("mvThreshold")
-            rowDict["Start(s)"] = dDict.getValue("startSeconds")
-            rowDict["Stop(s)"] = dDict.getValue("stopSeconds")
+        # if ba.isAnalyzed():
+        #     dDict = ba.getDetectionDict()
+        #     # rowDict['I'] = dDict.getValue('include')
+        #     rowDict["dvdtThreshold"] = dDict.getValue("dvdtThreshold")
+        #     rowDict["mvThreshold"] = dDict.getValue("mvThreshold")
+        #     rowDict["Start(s)"] = dDict.getValue("startSeconds")
+        #     rowDict["Stop(s)"] = dDict.getValue("stopSeconds")
 
         # add parent1, parent2, parent3
         _path, _file = os.path.split(path)

@@ -17,6 +17,7 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 - Added runtime-owned detection and analysis-result definitions, result axis labels, trace-overlay definitions, and collection-level recording summaries to SanPy Zarr exports.
 - Added a strict `.sanpy` text loader format using `seconds`, optional integer `epoch_index`, numbered recording columns, and matching command columns.
 - Added a stochastic Hodgkin-Huxley `.sanpy` example with saved analysis results for loader and Zarr integration testing.
+- Added validated file-metadata and experimental-metadata JSON documents for each recording, each with a definitions document for display names and controlled choices.
 
 #### Changed
 
@@ -24,6 +25,8 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 - Changed `.sanpy` loading to construct one epoch table per sweep while preserving sweep-specific command levels.
 - Changed SanPy Zarr source provenance from ABF-specific metadata to explicit source format and reader version fields.
 - Normalized exported epoch levels consistently across epoch and analysis-result tables.
+- Changed experimental metadata to canonical snake_case keys. Display names and choices stay in the definitions, and sex values distinguish unclassified, unknown, and not applicable.
+- Preserved JSON insertion order in SanPy Zarr exports.
 
 ### Desktop GUI
 
@@ -31,12 +34,15 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 
 - Compact analysis-window controls for detection tools, plots, and docked plugins; recent-file, user-files, and diagnostics commands.
 - Sweep/epoch selection in plugins and reports, plus categorical statistics in scatter plots.
+- Left toolbar for Detection, File Metadata, Experimental Metadata, Detection Parameters, and SanPy Info, plus a read-only File Metadata view of acquisition facts.
+- Named NicePool presets so FI Plot and Sweep Plot can be edited independently.
 
 #### Changed
 
 - View menu, docks, and plugin toolbars are more compact; Plot FI options live in the Options popup.
 - Plugin context menus are reduced; plot menus hide stats that are not computed or not numeric.
 - Plot Recording sweep-offset and recent-file refresh behavior.
+- File table columns follow the experimental-metadata definitions and share edits with Set Meta Data. Detection start, stop, and threshold columns were removed from that table.
 
 #### Fixed
 
@@ -49,6 +55,8 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 - Reject unsupported recording files instead of opening a broken window.
 - Keep plot cursors out of auto-range.
 - Size the compact plugin toolbar to its visible controls.
+- Fixed the analysis table remaining in place after a detection that found no spikes.
+- Fixed X-axis auto-range on the DAC, derivative, and Vm plots, and full-axis Y scaling.
 
 ### Added
 
@@ -63,6 +71,8 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 ### Changed
 
 - Spike results now record SanPy source identity via `sanpy/sanpy_version.py`. Removed `sanpy/version.py` and the old `analysisVersion` / `interfaceVersion` fields.
+- Recording loaders now provide immutable file metadata, including acquisition time, channel and sweep counts, epochs per sweep, axis labels, recording mode, sampling rate, and an optional ABF user list.
+- Retired the legacy Plot Tool plugins in favor of NicePool.
 - Analysis-result definitions were refactored toward a single schema.
 - Public SanPy import surface is explicit; tests enforce that the backend does not import the GUI.
 - External user-code imports are disabled; user-plugin load failures are isolated.

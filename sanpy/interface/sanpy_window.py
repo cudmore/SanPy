@@ -572,8 +572,8 @@ class SanPyWindow(QtWidgets.QMainWindow):
             self.slot_updateStatus(f'Loading file "{rowDict["File"]}" ... please wait')
 
         # TODO: try and remove this
-        self.startSec = rowDict["Start(s)"]
-        self.stopSec = rowDict["Stop(s)"]
+        # self.startSec = rowDict["Start(s)"]
+        # self.stopSec = rowDict["Stop(s)"]
 
         # This will load if necc, otherwise just fetch a pointer
         if self.myAnalysisDir is not None:

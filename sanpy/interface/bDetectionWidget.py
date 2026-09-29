@@ -955,7 +955,7 @@ class bDetectionWidget(QtWidgets.QWidget):
         # elif set_xyBoth == 'both':
         #    self.myMainWindow.mySignal('set y axis', data=[start,stop])
 
-    def fillInDetectionParameters(self, tableRowDict):
+    def _old_fillInDetectionParameters(self, tableRowDict):
         """ """
         # print('fillInDetectionParameters() tableRowDict:', tableRowDict)
         self.detectToolbarWidget.fillInDetectionParameters(tableRowDict)
@@ -2851,10 +2851,12 @@ class bDetectionWidget(QtWidgets.QWidget):
                 self.ba.fileLoader.numSweeps,
                 current_sweep=0,
             )
-            self.fillInDetectionParameters(tableRowDict)  # fills in controls
+
+            # self.fillInDetectionParameters(tableRowDict)  # fills in controls
+
             # self.updateStatusBar(f'Plotting file {path}')
-            startSec = tableRowDict["Start(s)"]
-            stopSec = tableRowDict["Stop(s)"]
+            # startSec = tableRowDict["Start(s)"]
+            # stopSec = tableRowDict["Stop(s)"]
 
         if startSec == "" or stopSec == "" or np.isnan(startSec) or np.isnan(stopSec):
             startSec = 0
@@ -2933,8 +2935,9 @@ class bDetectionWidget(QtWidgets.QWidget):
         Args:
             viewBox: View box whose displayed range changed.
         """
-        logger.info('')
-        print('   NOOP: viewBox.viewRange():', viewBox.viewRange())
+        return
+        # logger.info('')
+        # print('   NOOP: viewBox.viewRange():', viewBox.viewRange())
 
     def _slot_x_range_changed(self, viewBox: pg.ViewBox) -> None:
         """Propagate a change to the primary plot's horizontal range.
@@ -2947,8 +2950,8 @@ class bDetectionWidget(QtWidgets.QWidget):
         if self.ba is None or self.linearRegionItem2 is None:
             return
 
-        logger.info('')
-        print('   viewBox.viewRange():', viewBox.viewRange())
+        # logger.info('')
+        # print('   viewBox.viewRange():', viewBox.viewRange())
         
         viewRange = viewBox.viewRange()
         xMin = viewRange[0][0]
@@ -3519,7 +3522,7 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
 
         self._buildUI()
 
-    def fillInDetectionParameters(self, tableRowDict):
+    def _old_fillInDetectionParameters(self, tableRowDict):
         """Set detection widget interface (mostly QSpinBox) to match values from table
         """
 

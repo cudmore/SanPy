@@ -341,7 +341,7 @@ class SanPyApp(QtWidgets.QApplication):
     
         # get help menu as action so other windows can insert their menus before it
         # e.g. SanPyWindow inserts (View, Windows) menus
-        logger.info('mainMenu is now')
+        # logger.info('mainMenu is now')
         self._helpMenuAction = None
         for _action in mainMenu.actions():
             actionText = _action.text()
@@ -599,7 +599,6 @@ class SanPyApp(QtWidgets.QApplication):
             buildingInterface: Whether the application is still constructing
                 its initial interface.
         """
-        logger.info("")
         if doDark is None:
             # doDark = not self._useDarkStyle
             doDark = self.useDarkStyle

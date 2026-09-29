@@ -8,6 +8,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 import sanpy.analysisDir
 import sanpy.bDetection
+from sanpy.metaData import MetaData
 
 from sanpy.sanpyLogger import get_logger
 
@@ -418,16 +419,36 @@ class pandasModel(QtCore.QAbstractTableModel):
 
         # flags |= QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsUserCheckable | Qt.ItemIsEnabled
 
-    def headerData(self, col, orientation, role):
+    def headerData(
+        self, col: int, orientation: QtCore.Qt.Orientation, role: int
+    ) -> object:
+        """Return one header label.
+
+        Experimental-metadata columns show their schema display name. Other
+        columns show the canonical column key.
+
+        Args:
+            col: Column or row index for the requested header.
+            orientation: Horizontal for column headers, vertical for row headers.
+            role: Qt item-data role.
+
+        Returns:
+            The header text or row index for the display role, otherwise an
+            empty ``QVariant``.
+        """
         if role == QtCore.Qt.DisplayRole:
             if orientation == QtCore.Qt.Horizontal:
                 try:
-                    return self._data.columns[col]
-                except IndexError as e:
+                    column_name = str(self._data.columns[col])
+                except IndexError:
                     logger.warning(
                         f"IndexError for col:{col} len:{len(self._data.columns)}, shape:{self._data.shape}"
                     )
-                    # raise
+                    return QtCore.QVariant()
+                definition = MetaData.getMetaDataDefinitions().get(column_name)
+                if definition is not None:
+                    return str(definition["display_name"])
+                return column_name
             elif orientation == QtCore.Qt.Vertical:
                 # this is to show pandas 'index' column
                 return col

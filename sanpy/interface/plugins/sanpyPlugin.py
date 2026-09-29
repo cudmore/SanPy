@@ -858,13 +858,13 @@ class sanpyPlugin(QtWidgets.QWidget):
         # reset start/stop
         startSec = None
         stopSec = None
-        if rowDict is not None:
-            startSec = rowDict["Start(s)"]
-            stopSec = rowDict["Stop(s)"]
-            if math.isnan(startSec):
-                startSec = None
-            if math.isnan(stopSec):
-                stopSec = None
+        # if rowDict is not None:
+        #     startSec = rowDict["Start(s)"]
+        #     stopSec = rowDict["Stop(s)"]
+        #     if math.isnan(startSec):
+        #         startSec = None
+        #     if math.isnan(stopSec):
+        #         stopSec = None
         self._startSec = startSec
         self._stopSec = stopSec
 

@@ -39,7 +39,7 @@ class sanpyCursors(QtCore.QObject):
         self._plotWidget = plotWidget
 
         _rect = self._plotWidget.viewRect()  # get xaxis
-        logger.info(f'_rect:{_rect}')
+        # logger.info(f'_rect:{_rect}')
         _left = _rect.left()
         _top = _rect.top()
         _right = _rect.right()

@@ -52,7 +52,6 @@ class SetSpikeStat(sanpyPlugin):
     showInMenu = False
 
     def __init__(self, **kwargs):
-        logger.info("")
         super().__init__(**kwargs)
 
         self.trueFalseItems = ["True", "False"]
