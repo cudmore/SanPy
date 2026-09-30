@@ -274,8 +274,14 @@ class bAnalysis:
         txt = f"fileLoader: {fileLoadStr} spikes:{self.numSpikes}"
         return txt
 
-    def _saveHdf_pytables(self, hdfPath):
-        """Save detection parameters and analysis into an hdf5 file.
+    def _saveHdf_pytables(self, hdfPath: Union[str, os.PathLike]) -> bool:
+        """Save detection parameters, analysis, and sweep conditions to HDF5.
+
+        Args:
+            hdfPath: Destination HDF5 file path.
+
+        Returns:
+            True when data was saved, or False when no persisted state changed.
         """
 
         # save kym diameter analysis
@@ -284,13 +290,14 @@ class bAnalysis:
                 self._kymAnalysis.saveAnalysis()
 
 
-        if not self.detectionDirty:
-            # Do not save it detection has not changed
+        detection_dirty = self.detectionDirty
+        sweep_conditions_dirty = self.fileLoader.sweepConditionsDirty
+        if not detection_dirty and not sweep_conditions_dirty:
             logger.info(f"NOT SAVING, is not dirty {self}")
             return False
 
-        # always save as csv
-        self.saveAnalysis_tocsv()
+        if detection_dirty:
+            self.saveAnalysis_tocsv()
 
         # when making df from dict, need to pass it a list
         # o.w. key values that are lists get expanded into rows
@@ -298,6 +305,15 @@ class bAnalysis:
             dfDetection = pd.DataFrame([self._detectionDict])
 
         dfMetaData = pd.DataFrame([self.metaData])
+        dfSweepConditions = pd.DataFrame(
+            {
+                "sweep": self.fileLoader.sweepList,
+                "condition": [
+                    self.fileLoader.getSweepCondition(sweep)
+                    for sweep in self.fileLoader.sweepList
+                ],
+            }
+        )
 
         # convert spikeList (list of dict) to json
         # spikeList = self.spikeDict.asList()
@@ -313,23 +329,27 @@ class bAnalysis:
         )
 
         with pd.HDFStore(hdfPath) as hdfStore:
-            if self._detectionDict is not None:
+            if detection_dirty and self._detectionDict is not None:
                 key = uuid + "/" + "detectionDict"
                 dfDetection.to_hdf(hdfStore, key=key)  # default mode='a'
 
             # always save meta data
             key = uuid + "/" + "metaDataDict"
             dfMetaData.to_hdf(hdfStore, key=key)  # default mode='a'
+
+            key = uuid + "/" + "sweep_conditions"
+            dfSweepConditions.to_hdf(hdfStore, key=key)
             
             # logger.warning('=== saving dfMetaData')
             # print(dfMetaData)
 
-            if len(self.spikeDict) > 0:
+            if detection_dirty and len(self.spikeDict) > 0:
                 key = uuid + "/" + "analysisList"
                 dfAnalysis.to_hdf(hdfStore, key=key)
 
         # we saved, detection is not dirty
         self._detectionDirty = False
+        self.fileLoader.clearSweepConditionsDirty()
 
         return True
 
@@ -388,6 +408,7 @@ class bAnalysis:
         loadedDetection = False
         loadedMetaData = False
         loadedAnalysis = False
+        loadedSweepConditions = False
         try:
             detectionDictKey = uuid + "/" + "detectionDict"  # group
             dfDetection = pd.read_hdf(hdfPath, detectionDictKey)
@@ -411,6 +432,15 @@ class bAnalysis:
         except KeyError as e:
             logger.error(f'analysisList: {e}')
             # didLoad = False
+
+        try:
+            sweepConditionsKey = uuid + "/" + "sweep_conditions"
+            dfSweepConditions = pd.read_hdf(hdfPath, sweepConditionsKey)
+            loadedSweepConditions = True
+        except KeyError:
+            logger.info(
+                f'No saved sweep conditions for "{self.fileLoader.filename}"; using defaults'
+            )
 
         # if didLoad:
         if 1:
@@ -457,6 +487,36 @@ class bAnalysis:
 
                 # logger.warning(f'LOADED META DATA:')
                 # print('self.metaData:', self.metaData)
+
+            if loadedSweepConditions:
+                requiredColumns = {"sweep", "condition"}
+                if not requiredColumns.issubset(dfSweepConditions.columns):
+                    logger.warning(
+                        f'Ignoring malformed sweep conditions for "{self.fileLoader.filename}"'
+                    )
+                else:
+                    for row in dfSweepConditions.itertuples(index=False):
+                        sweep = row.sweep
+                        condition = row.condition
+                        if pd.isna(sweep):
+                            logger.warning("Ignoring sweep condition with no sweep index")
+                            continue
+                        try:
+                            sweep = int(sweep)
+                        except (TypeError, ValueError):
+                            logger.warning(
+                                f'Ignoring invalid saved sweep index "{sweep}"'
+                            )
+                            continue
+                        if pd.isna(condition):
+                            condition = ""
+                        if not isinstance(condition, str):
+                            logger.warning(
+                                f"Ignoring non-string saved condition for sweep {sweep}"
+                            )
+                            continue
+                        self.fileLoader.setSweepCondition(sweep, condition)
+                self.fileLoader.clearSweepConditionsDirty()
 
             # convert to a list of dict
             if loadedAnalysis:
@@ -540,7 +600,7 @@ class bAnalysis:
 
     def isDirty(self):
         """Return True if analysis has been modified but not save."""
-        return self._detectionDirty
+        return self._detectionDirty or self.fileLoader.sweepConditionsDirty
 
     def isAnalyzed(self):
         """Return True if this bAnalysis has been analyzed, False otherwise."""

@@ -213,7 +213,8 @@ class fileLoader_base(ABC):
 
         self._metaData = sanpy.metaData.MetaData()  # per file metadata
 
-        self._sweep_conditions = {}
+        self._sweep_conditions: Dict[int, str] = {}
+        self._sweep_conditions_dirty: bool = False
 
         self._fileMetadata: Optional[FileMetadata] = None
         self._acqDate: str = ""
@@ -745,7 +746,15 @@ class fileLoader_base(ABC):
                 f"Cannot set sweep condition; sweep {sweep} is not loaded in {self.filename}"
             )
             return
+        if not isinstance(condition, str):
+            logger.warning(
+                f"Cannot set sweep condition; condition for sweep {sweep} must be a string"
+            )
+            return
+        if self._sweep_conditions[sweep] == condition:
+            return
         self._sweep_conditions[sweep] = condition
+        self._sweep_conditions_dirty = True
 
     def getSweepCondition(self, sweep: int) -> str:
         """Return the condition string for a loaded sweep.
@@ -762,6 +771,15 @@ class fileLoader_base(ABC):
             )
             return ""
         return self._sweep_conditions[sweep]
+
+    @property
+    def sweepConditionsDirty(self) -> bool:
+        """Return whether sweep conditions have changed since loading or saving."""
+        return self._sweep_conditions_dirty
+
+    def clearSweepConditionsDirty(self) -> None:
+        """Mark the current sweep conditions as loaded or successfully saved."""
+        self._sweep_conditions_dirty = False
 
 if __name__ == "__main__":
     d = getFileLoaders()
