@@ -571,10 +571,6 @@ class SanPyWindow(QtWidgets.QMainWindow):
         else:
             self.slot_updateStatus(f'Loading file "{rowDict["File"]}" ... please wait')
 
-        # TODO: try and remove this
-        # self.startSec = rowDict["Start(s)"]
-        # self.stopSec = rowDict["Stop(s)"]
-
         # This will load if necc, otherwise just fetch a pointer
         if self.myAnalysisDir is not None:
             ba = self.myAnalysisDir.getAnalysis(row)  # if None then problem loading
@@ -584,14 +580,9 @@ class SanPyWindow(QtWidgets.QMainWindow):
                 if selectingAgain:
                     pass
                 else:
-                    fileNote = ba.metaData.getMetaData("note")
-                    if fileNote:
-                        fileNote = 'Note:' + fileNote
-                    else:
-                        fileNote = ''
                     self.slot_updateStatus(
-                        f'Loaded file {rowDict["parent1"]}/{ba.fileLoader.filename} {fileNote}'
-                    )  # this will load ba if necc
+                        f'Loaded file {rowDict["parent1"]}/{ba.fileLoader.filename}'
+                    )
             else:
                 self.slot_updateStatus(
                     f'Unable to load "{rowDict["File"]}"; see the SanPy log for details.'

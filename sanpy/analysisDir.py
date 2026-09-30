@@ -82,12 +82,6 @@ _sanpyColumns = {
         "type": int,
         "isEditable": False,
     },
-    # 'I': {
-    #     # include
-    #     # problems with isinstance(bool), just using string
-    #     'type': bool,
-    #     'isEditable': True,
-    # },
     "File": {
         "type": str,
         "isEditable": False,
@@ -116,44 +110,7 @@ _sanpyColumns = {
         "type": str,
         "isEditable": False,
     },
-    # "Start(s)": {
-    #     "type": float,
-    #     "isEditable": False,
-    # },
-    # "Stop(s)": {
-    #     "type": float,
-    #     "isEditable": False,
-    # },
-    # "dvdtThreshold": {
-    #     "type": float,
-    #     "isEditable": False,
-    # },
-    # "mvThreshold": {
-    #     "type": float,
-    #     "isEditable": False,
-    # },
-    # "Cell Type": {
-    #     "type": str,
-    #     "isEditable": True,
-    # },
-    # "Sex": {
-    #     "type": str,
-    #     "isEditable": True,
-    # },
 
-    # "Condition": {
-    #     "type": str,
-    #     "isEditable": True,
-    # },
-
-    # "ID": {
-    #     "type": str,
-    #     "isEditable": True,
-    # },
-    # "Condition": {
-    #     "type": str,
-    #     "isEditable": True,
-    # },
     **_experimental_metadata_columns(),
 
     "parent1": {
@@ -168,25 +125,6 @@ _sanpyColumns = {
         "type": str,
         "isEditable": False,
     },
-
-    # kymograph interface
-    # "kLeft": {
-    #     "type": int,
-    #     "isEditable": False,
-    # },
-    # "kTop": {
-    #     "type": int,
-    #     "isEditable": False,
-    # },
-    # "kRight": {
-    #     "type": int,
-    #     "isEditable": False,
-    # },
-    # "kBottom": {
-    #     "type": int,
-    #     "isEditable": False,
-    # },
-
     "relPath": {
         "type": str,
         "isEditable": False,
@@ -197,16 +135,8 @@ _sanpyColumns = {
     },
 }
 
-
-"""
-Columns to use in display in file table (pyqt, dash, vue).
-We require type so we can edit with QAbstractTableModel.
-Critical for qt interface to allow easy editing of values while preserving type
-"""
-
 def _fixRelPath(folderPath, dfTable: pd.DataFrame, fileList: List[str]):
-    """
-    Was not assigning relPath on initial load (no hd5 file).
+    """Was not assigning relPath on initial load (no hd5 file).
 
     We need a path relative to location of loaded folder.
     This allows a folder of files and analysis to be moved (to a different machine)
@@ -239,16 +169,8 @@ def _fixRelPath(folderPath, dfTable: pd.DataFrame, fileList: List[str]):
                 dfTable.loc[rowIdx, "relPath"] = filePath
 
 
-def old_h5_printKey(hdfPath):
-    logger.info(f"hdfPath: {hdfPath} has keys:")
-    with pd.HDFStore(hdfPath, mode="r") as store:
-        for key in store.keys():
-            logger.info(f"    {key}")
-
-
 class bAnalysisDirWeb:
-    """
-    Load a directory of .abf from the web (for now from GitHub).
+    """Load a directory of .abf from the web (for now from GitHub).
 
     Will etend this to Box, Dropbox, other?.
     """
@@ -312,66 +234,6 @@ class bAnalysisDirWeb:
         ba.spikeDetect()
         print(ba.numSpikes)
 
-def _old_santana_file_finder(files):
-    """
-    
-    Parameters
-    ----------
-    files: List[str]
-        List of full file path.
-    
-    cell 05_C001T001.tif
-    cell 05_C002T001.tif
-    cell 05.txt
-
-    cell 08_0002_C001T001.tif
-    cell 08_0002_C002T001.tif
-    cell 08_0002.txt
-
-    Text file name is prefix up to _C0
-    """
-    #path = '/Users/cudmore/Dropbox/data/cell-shortening/fig1'
-
-
-    retDict = {}
-    
-    # list of full path to tif files in all subfolders
-    # files = [y for x in os.walk(path) for y in glob(os.path.join(x[0], '*.tif'))]
-    #files = sanpy._util.getFileList(path)
-
-    for file in files:
-        if not file.endswith('.tif'):
-            continue
-        
-        # we only want to load channel 2 (Ca++)
-        if file.find('_C002') == -1:
-            continue
-        
-        filePath, fileName = os.path.split(file)
-
-        otherFileName = fileName.replace('_C002', '_C001')
-        otherFilePath = os.path.join(filePath, otherFileName)
-        if not os.path.isfile(otherFilePath):
-            print(f'Did not find other file "{otherFileName}" for {file}')
-            otherFilePath = ''
-
-        _idx = fileName.find('_C')
-        filePrefix = fileName[0:_idx]
-    
-        txtFileName = filePrefix + '.txt'
-        txtFilePath = os.path.join(filePath, txtFileName)
-        if not os.path.isfile(txtFilePath):
-            print(f'Did not find txt file for {file}')
-            txtFilePath = ''
-
-        retDict[file] = {
-            'otherFilePath': otherFilePath,
-            'txtFilePath': txtFilePath,
-        }
-
-    #print('n=', len(files))
-    return retDict
-
 def _listdir(path, theseFileTypes):
     """Recursively walk directory to specified depth
     
@@ -415,6 +277,7 @@ def _walk(path, theseFileTypes, depth=None):
                     yield os.path.join(dirpath, filename)
                     
 def getFileList(path, theseFileTypes, depth=1):
+    """Get a list of files from a path."""
     fileList = [filePath for filePath in _walk(path, theseFileTypes, depth)]
     return fileList
 
@@ -443,16 +306,12 @@ class analysisDir:
     sanpyColumns = _sanpyColumns
     # Dict of dict of column names and bookkeeping info.
 
-    # 20231230, get this from sanpyapp fileloader keys
-    # theseFileTypes = [".abf", ".atf", ".sanpy", ".tif"]  # .dat .czi
-    # File types to load.
-
     def __init__(
         self,
         path : str = None,
         sanPyWindow : "sanpy.interface.SanPyWindow" = None,
         fileLoaderDict : dict = None,
-        autoLoad: bool = False,
+        # autoLoad: bool = False,
         folderDepth: Optional[int] = None,
     ):
         """Load and manage a list of files in a folder path.
@@ -498,7 +357,7 @@ class analysisDir:
         self._fileLoaderDict = fileLoaderDict
         # dist with file extension keys
 
-        self.autoLoad = autoLoad
+        # self.autoLoad = autoLoad
         # not used
 
         self.folderDepth = folderDepth
@@ -509,14 +368,9 @@ class analysisDir:
         # self._poolDf = None
         """See pool_ functions"""
 
-        # keys are full path to file, if from cloud, key is 'cloud/<filename>'
-        # holds bAnalysisObjects
-        # needs to be a list so we can have files more than one
-        # self.fileList = [] #OrderedDict()
-
         # TODO: refactor, we are not using the csv parth of this, just the filename
         # name of database file created/loaded from folder path
-        self.dbFile = "sanpy_recording_db.csv"
+        self.dbFile = "sanpy_recording_db.csv"  # old but still critical to keep
 
         self._df = self.loadHdf()
         if self._df is None:
@@ -526,14 +380,6 @@ class analysisDir:
         elif self._fileLoaderDict is not None:
             logger.info(f'sync existing df with filePath: {self._filePath}')
             self.syncDfWithPath()
-
-        # if we have a filePath and not in df then add it
-        # if self._filePath is not None:
-
-        #     logger.info('self._df')
-        #     print(self._df)
-
-        # self._df = self.loadFolder(loadData=autoLoad)
 
         #
         self._checkColumns()
@@ -547,7 +393,14 @@ class analysisDir:
             return list(self._fileLoaderDict.keys())
 
     def findFileRow(self, filename):
-        # filename = os.path.split(filePath)[1]
+        """Find the row index of a file in the file table.
+        
+        Args:
+            filename: The name of the file to find.
+
+        Returns:
+            The row index of the file in the file table, or None if the file is not found.
+        """
         fileIndexList = self._df.index[self._df['File'] == filename].tolist()
         if fileIndexList:
             rowIdx = fileIndexList[0]
@@ -556,16 +409,12 @@ class analysisDir:
             logger.warning(f"Did not find file {filename} in {self._df['File'].tolist()}")
 
     def __iter__(self):
+        """Iterate over the bAnalysis objects in the file table."""
         self._iterIdx = -1
         return self
-        
-        # self._iterIdx = 0
-        # logger.info(f'making iter for bAnalysisDir')
-        # print(self._df)
-        # x = self._df.loc[self._iterIdx]["_ba"]
-        # return x
     
     def __next__(self):
+        """Get the next bAnalysis object in the file table."""
         self._iterIdx += 1
         if self._iterIdx >= self.numFiles:
             self._iterIdx = -1  # reset to initial value
@@ -573,27 +422,44 @@ class analysisDir:
         else:
             return self._df.loc[self._iterIdx]["_ba"]
 
-        # if self._iterIdx < self.numFiles:
-        #     x = self._df.loc[self._iterIdx]["_ba"]
-        #     self._iterIdx += 1
-        #     return x
-        # else:
-        #     raise StopIteration
-
     def __str__(self):
+        """Get a string representation of the analysisDir.
+        
+        Returns:
+            A string representation of the analysisDir.
+        """
         totalDurSec = self._df["Dur(s)"].sum()
         theStr = f"analysisDir Num Files: {len(self)} Total Dur(s): {totalDurSec}"
         return theStr
 
     @property
     def isDirty(self):
+        """Get the dirty state of the analysisDir.
+        
+        Returns:
+            True if the analysisDir is dirty, False otherwise.
+        """
         return self._isDirty
 
     def __len__(self):
+        """Get the number of files in the analysisDir.
+        
+        Same as numFiles().
+
+        Returns:
+            The number of files in the analysisDir.
+        """
         return len(self._df)
 
     @property
     def numFiles(self):
+        """Get the number of files in the analysisDir.
+        
+        Same as __len__().
+
+        Returns:
+            The number of files in the analysisDir.
+        """
         return len(self._df)
 
     @property
@@ -636,18 +502,6 @@ class analysisDir:
         self._df.at[rowIdx, colStr] = value
         self._isDirty = True
 
-    """
-    @property
-    def iat(self):
-        # mimic pandas df.iat[]
-        return self._df.iat
-
-    @iat.setter
-    def iat_setter(self, rowIdx, colStr, value):
-        self._df.iat[rowIdx, colStr] = value
-        self._isDirty = True
-    """
-
     @property
     def index(self):
         return self._df.index
@@ -687,11 +541,6 @@ class analysisDir:
         """Get the underlying pandas DataFrame."""
         return self._df
 
-    @property
-    def numFiles(self):
-        """Get the number of files. same as len()."""
-        return len(self._df)
-
     def copyToClipboard(self):
         """
         TODO: Is this used or is copy to clipboard in pandas model?
@@ -709,12 +558,6 @@ class analysisDir:
             relPath = relPath[1:]
 
         fullFilePath = os.path.join(self.path, relPath)
-
-        """
-        print('xxx', self.path)
-        print('xxx', relPath)
-        print('xxx', fullFilePath)
-        """
 
         return fullFilePath
 
@@ -768,11 +611,8 @@ class analysisDir:
         # self._rebuildHdf()
         sanpy.h5Util._repackHdf(hdfFilePath)
 
-        # list the keys in the file
-        # sanpy.h5Util.listKeys(hdfFilePath)
-
         stop = time.time()
-        logger.info(f"Saving took {round(stop-start,2)} seconds")
+        logger.info(f"    Saving took {round(stop-start,2)} seconds")
 
     def loadHdf(self, path=None, verbose=False):
         """Load the database key from an h5 file.
@@ -845,13 +685,6 @@ class analysisDir:
             logger.info(f'path:"{path}" uuid:"{uuid}" allowAutoLoad:"{allowAutoLoad}"')
 
         hdfPath = self._getHdfFile()
-
-        # grab the fileLoaderDict from our app
-        # if it is None then bAnalysis will load this (from disk)
-        # if self.mySanPyWindow is not None:
-        #     _fileLoaderDict = self.mySanPyWindow.getSanPyApp().getFileLoaderDict()
-        # else:
-        #     _fileLoaderDict = None
 
         ba = None
         if uuid is not None and uuid:
@@ -1058,21 +891,7 @@ class analysisDir:
             if self.isAnalyzed(rowIdx):
                 # set table to values we just detected with
 
-                # startSec = ba.getDetectionDict()["startSeconds"]
-                # stopSec = ba.getDetectionDict()["stopSeconds"]
-                # self._df.loc[rowIdx, "Start(s)"] = startSec
-                # self._df.loc[rowIdx, "Stop(s)"] = stopSec
-
-                # dvdtThreshold = ba.getDetectionDict()["dvdtThreshold"]
-                # mvThreshold = ba.getDetectionDict()["mvThreshold"]
-                # self._df.loc[rowIdx, "dvdtThreshold"] = dvdtThreshold
-                # self._df.loc[rowIdx, "mvThreshold"] = mvThreshold
-
-                #
-                # TODO: remove start of ba._path that corresponds to our current folder path
-                # will allow our save db to be modular
-
-                # relPth should usually be filled in ???
+                # relPath should usually be filled in ???
                 """
                 relPath = self.getPathFromRelPath(ba._path)
                 self._df.loc[rowIdx, 'relPath'] = relPath
@@ -1086,30 +905,9 @@ class analysisDir:
                 for k,v in ba.metaData.items():
                     self._df.loc[rowIdx, k] = v
 
-            # kymograph interface
-            # 20230602, don't show rect in interface
-            # if ba is not None and ba.fileLoader.isKymograph():
-            #     kRect = ba.fileLoader.getKymographRect()
-
-            #     # print(kRect)
-            #     # sys.exit(1)
-
-            #     if kRect is None:
-            #         logger.error(f"Got None kymograph rect")
-            #     else:
-            #         self._df.loc[rowIdx, "kLeft"] = kRect[0]
-            #         self._df.loc[rowIdx, "kTop"] = kRect[1]
-            #         self._df.loc[rowIdx, "kRight"] = kRect[2]
-            #         self._df.loc[rowIdx, "kBottom"] = kRect[3]
-            #
             # TODO: remove start of ba._path that corresponds to our current folder path
             # will allow our save db to be modular
             # self._df.loc[rowIdx, 'path'] = ba._path
-
-    """
-    def setCellValue(self, rowIdx, colStr, value):
-        self._df.loc[rowIdx, colStr] = value
-    """
 
     def isLoaded(self, rowIdx):
         isLoaded = self._df.loc[rowIdx, "_ba"] is not None
@@ -1118,11 +916,6 @@ class analysisDir:
     def isAnalyzed(self, rowIdx):
         isAnalyzed = False
         ba = self._df.loc[rowIdx, "_ba"]
-        # print('isAnalyzed()', rowIdx, ba)
-        # if ba is not None:
-        # print('qqq', rowIdx, ba, type(ba))
-        # sanpy.bAnalysis_.bAnalysis
-        # if isinstance(ba, sanpy.bAnalysis):
         if ba is not None:
             try:
                 isAnalyzed = ba.isAnalyzed()
@@ -1142,7 +935,8 @@ class analysisDir:
         return isDirty
 
     def hasDirty(self):
-        """Return true if any bAnalysis in list has been analyzed but not saved (e.g. is dirty)"""
+        """Return true if any bAnalysis in list has been analyzed but not saved (e.g. is dirty).
+        """
         haveDirty = False
         numRows = len(self._df)
         for rowIdx in range(numRows):
@@ -1167,14 +961,8 @@ class analysisDir:
         file = self._df.loc[rowIdx, "File"]
         ba = self._df.loc[rowIdx, "_ba"]
         uuid = self._df.loc[rowIdx, "uuid"]  # if we have a uuid bAnalysis is saved in h5f
-        # filePath = os.path.join(self.path, file)
-        # logger.info(f'Found _ba in file db with ba:"{ba}" {type(ba)}')
-        # logger.info(f'rowIdx: {rowIdx} ba:{ba}')
 
         if ba is None or ba == "":
-            # logger.info('did not find _ba ... loading from abf file ...')
-            # working on kymograph
-            #                 relPath = self.getPathFromRelPath(ba._path)
             relPath = self._df.loc[rowIdx, "relPath"]
             filePath = self.getPathFromRelPath(relPath)
 
@@ -1182,10 +970,6 @@ class analysisDir:
                 filePath, uuid, allowAutoLoad=allowAutoLoad, verbose=verbose
             )
             # load
-            """
-            logger.info(f'Loading bAnalysis from row {rowIdx} "{filePath}"')
-            ba = sanpy.bAnalysis(filePath)
-            """
             if ba is None:
                 logger.warning(
                     f'Did not load row {rowIdx} path: "{filePath}". Analysis was probably not saved'
@@ -1202,22 +986,6 @@ class analysisDir:
                         )
                         logger.error(f"  Loaded {ba.uuid}")
                         logger.error(f"  Existing {uuid}")
-
-                # kymograph, set ba rect from table
-                # if ba is not None and ba.fileLoader.isKymograph():
-                #     left = self._df.loc[rowIdx, "kLeft"]
-                #     top = self._df.loc[rowIdx, "kTop"]
-                #     right = self._df.loc[rowIdx, "kRight"]
-                #     bottom = self._df.loc[rowIdx, "kBottom"]
-
-                #     # on first load, these will be empty
-                #     # grab rect from ba (in _updateLoadedAnalyzed())
-                #     if left == "" or top == "" or right == "" or bottom == "":
-                #         pass
-                #     else:
-                #         theRect = [left, top, right, bottom]
-                #         logger.info(f"  theRect:{theRect}")
-                #         ba.fileLoader._updateTifRoi(theRect)
 
                 #
                 # update stats of table load/analyzed columns
@@ -1236,16 +1004,11 @@ class analysisDir:
                 # logger.warning(f'Column "{col}" is not in sanpyColumns -->> ignoring')
                 continue
             colType = self.sanpyColumns[col]["type"]
-            # print(f'  _setColumnType() for "{col}" is type "{colType}"')
-            # print(f'    df[col]:', 'len:', len(df[col]))
-            # print(df[col])
             if colType == str:
                 df[col] = df[col].replace(np.nan, "", regex=True)
                 df[col] = df[col].astype(str)
             elif colType == int:
                 pass
-                # print('!!! df[col]:', df[col])
-                # df[col] = df[col].astype(int)
             elif colType == float:
                 # error if ''
                 df[col] = df[col].astype(float)
@@ -1282,16 +1045,6 @@ class analysisDir:
             logger.warning(f'Did not load file type "{fileType}"')
             return None, None
 
-        # grab the fileLoaderDict from our app
-        # if it is None then bAnalysis will load this (from disk)
-        # if self.mySanPyWindow is not None:
-        #     _fileLoaderDict = self.mySanPyWindow.getSanPyApp().getFileLoaderDict()
-        # else:
-        #     _fileLoaderDict = None
-
-        # load bAnalysis
-        # logger.info(f'Loading bAnalysis "{path}"')
-        # loadData is false, load header
         ba = sanpy.bAnalysis(path,
                              loadData=loadData,
                              fileLoaderDict=self._fileLoaderDict)
@@ -1309,16 +1062,6 @@ class analysisDir:
             elif self.sanpyColumns[k]["type"] == float:
                 rowDict[k] = np.nan
 
-        # if rowIdx is not None:
-        #    rowDict['Idx'] = rowIdx
-
-        """
-        if ba.loadError:
-            rowDict['I'] = 0
-        else:
-            rowDict['I'] = 2 # need 2 because checkbox value is in (0,2)
-        """
-
         if ba.loadError:
             return None, None
         
@@ -1334,14 +1077,6 @@ class analysisDir:
 
         rowDict["kHz"] = ba.fileLoader.recordingFrequency
         rowDict["Mode"] = ba.fileLoader.recordingMode.value
-
-        # if ba.isAnalyzed():
-        #     dDict = ba.getDetectionDict()
-        #     # rowDict['I'] = dDict.getValue('include')
-        #     rowDict["dvdtThreshold"] = dDict.getValue("dvdtThreshold")
-        #     rowDict["mvThreshold"] = dDict.getValue("mvThreshold")
-        #     rowDict["Start(s)"] = dDict.getValue("startSeconds")
-        #     rowDict["Stop(s)"] = dDict.getValue("stopSeconds")
 
         # add parent1, parent2, parent3
         _path, _file = os.path.split(path)
@@ -1359,10 +1094,6 @@ class analysisDir:
         # remove the path to the folder we have loaded
         relPath = path.replace(self.path, "")
         
-        # logger.info(f'xxx self.path: "{self.path}"')
-        # logger.info(f'xxx path: "{path}"')
-        # logger.info(f'xxx relPath: "{relPath}"')
-        
         if relPath.startswith("/"):
             # so we can use os.path.join()
             relPath = relPath[1:]
@@ -1372,10 +1103,6 @@ class analysisDir:
             relPath = relPath[1:]
 
         rowDict["relPath"] = relPath
-
-        #logger.info(f'2) xxx relPath: "{relPath}"')
-        # logger.info('qqq')
-        # print(rowDict)
 
         return ba, rowDict
 
@@ -1389,11 +1116,6 @@ class analysisDir:
 
         """
         
-        # to open just one file
-        # if forceFolder:
-        #     # we are forcing reload of an entire folder
-        #     self._filePath = None
-
         if self._filePath is not None:
             logger.info(f'returning one file {self._filePath}')
             return [self._filePath]
@@ -1406,67 +1128,6 @@ class analysisDir:
             fileList = stripSantanaTif(fileList)
         return fileList
     
-        logger.warning("Remember: MODIFIED TO LOAD TIF FILES IN SUBFOLDERS")
-        count = 1
-        tmpFileList = []
-        folderDepth = self.folderDepth  # if none then all depths
-        excludeFolders = ["analysis", "hide"]
-        for root, subdirs, files in os.walk(path):
-            subdirs[:] = [d for d in subdirs if d not in excludeFolders]
-
-            print(f'count:{count} folderDepth:{folderDepth}')
-            print('  root:', root)
-            print('  subdirs:', subdirs)
-            print('  files:', files)
-
-            # strip out folders that start with __
-            # _parentFolder = os.path.split(root)[1]
-            # print('root:', root)
-            # print('  parentFolder:', _parentFolder)
-            # if _parentFolder.startswith('__'):
-            if "__" in root:
-                logger.info(f"SKIPPING based on path root:{root}")
-                continue
-
-            if os.path.split(root)[1] == "analysis":
-                # don't load from analysis/ folder, we save analysis there
-                continue
-
-            # if os.path.split(root)[1] == 'hide':
-            #     # special case/convention, don't load from 'hide' folders
-            #     continue
-
-            for file in files:
-                # TODO (cudmore) parse all our fileLoader(s) for a list
-                _, _ext = os.path.splitext(file)
-                if _ext in self.theseFileTypes:
-                    oneFile = os.path.join(root, file)
-                    tmpFileList.append(oneFile)
-
-            count += 1
-            if folderDepth is not None and count > folderDepth:
-                break
-
-        fileList = []
-        for file in sorted(tmpFileList):
-            if file.startswith("."):
-                continue
-            # ignore our database file
-            if file == self.dbFile:
-                continue
-
-            # tmpExt is like .abf, .csv, etc
-            tmpFileName, tmpExt = os.path.splitext(file)
-            if tmpExt in self.theseFileTypes:
-                # if getFullPath:
-                #     #file = os.path.join(path, file)
-                #     file = pathlib.Path(path) / file
-                #     file = str(file)  # return List[str] NOT List[PosixPath]
-                fileList.append(file)
-        #
-        logger.info(f"found {len(fileList)} files ...")
-        return fileList
-
     def getRowDict(self, rowIdx):
         """
         Return a dict with selected row as dict (includes detection parameters).
@@ -1488,10 +1149,6 @@ class analysisDir:
     def appendRow(self, rowDict=None, ba=None):
         """Append an empty row."""
 
-        # logger.info('')
-        # print('    rowDict:', rowDict)
-        # print('    ba:', ba)
-
         rowSeries = pd.Series()
         if rowDict is not None:
             # rowSeries = pd.Series(rowDict)
@@ -1503,14 +1160,6 @@ class analysisDir:
         newRowIdx = len(self._df)  # append this row
 
         df = self._df
-        # logger.warning(f"need to replace append with concat")
-        #df = df.append(rowSeries, ignore_index=True)
-
-        # logger.info('concat this rowSeries')
-        # print(rowSeries)
-        # print('to this df')
-        # print(df)
-
         df = pd.concat([df, rowSeries], axis=0, ignore_index=True)
 
         # df = pd.concat([df,rowSeries], ignore_index=True, axis=1)
@@ -1518,10 +1167,6 @@ class analysisDir:
 
         if ba is not None:
             df.loc[newRowIdx, "_ba"] = ba
-
-        # print('')
-        # logger.info('=== after concat')
-        # print(df)
                     
         #
         self._df = df
@@ -1683,132 +1328,3 @@ class analysisDir:
         #
         return headerList
 
-
-def _printDict(d):
-    for k, v in d.items():
-        print("  ", k, ":", v)
-
-def test3():
-    path = "/home/cudmore/Sites/SanPy/data"
-    bad = analysisDir(path)
-
-    # file = '19221014.abf'
-    rowIdx = 3
-    ba = bad.getAnalysis(rowIdx)
-    ba = bad.getAnalysis(rowIdx)
-
-    print(bad.getDataFrame())
-
-    print("bad.shape", bad.shape)
-    print("bad.columns:", bad.columns)
-
-    print("bad.iloc[rowIdx,5]:", bad.iloc[rowIdx, 5])
-    print("setting to xxxyyyzzz")
-
-    # setter
-    # bad.iloc[2,5] = 'xxxyyyzzz'
-
-    print("bad.iloc[2,5]:", bad.iloc[rowIdx, 5])
-    print('bad.loc[2,"File"]:', bad.loc[rowIdx, "File"])
-
-    print("bad.iloc[2]")
-    print(bad.iloc[rowIdx])
-    # bad.iloc[rowIdx] = ''
-    print("bad.loc[2]")
-    print(bad.loc[rowIdx])
-
-    # bad.saveDatabase()
-
-
-def test_hd5_2():
-    folderPath = "/home/cudmore/Sites/SanPy/data"
-    if 1:
-        # save analysisDir hdf
-        bad = analysisDir(folderPath)
-        print("bad._df:")
-        print(bad._df)
-        # bad.saveDatabase()  # save .csv
-        bad.saveHdf()  # save ALL bAnalysis in .h5
-
-    if 0:
-        # load h5 and reconstruct a bAnalysis object
-        start = time.time()
-        hdfPath = "/home/cudmore/Sites/SanPy/data/sanpy_recording_db.h5"
-        with pd.HDFStore(hdfPath, "r") as hdfStore:
-            for key in hdfStore.keys():
-                dfTmp = hdfStore[key]
-                # path = dfTmp.iloc[0]['path']
-
-                print("===", key)
-                # if not key.startswith('/r6'):
-                #    continue
-                # for col in dfTmp.columns:
-                #    print('  ', col, dfTmp[col])
-                # print(key, type(dfTmp), dfTmp.shape)
-                # print('dfTmp:')
-                # print(dfTmp)
-
-                # print(dfTmp.iloc[0]['_sweepX'])
-
-                # load bAnalysis from a pandas DataFrame
-                ba = sanpy.bAnalysis(fromDf=dfTmp)
-
-                print(ba)
-
-                ba.spikeDetect()  # this should reproduce exactly what was save ... It WORKS !!!
-
-        stop = time.time()
-        logger.info(f"h5 load took {round(stop-start,3)} seconds")
-
-
-def test_hd5():
-    import time
-
-    start = time.time()
-    hdfStore = pd.HDFStore("store.gzip")
-    if 1:
-        path = "/home/cudmore/Sites/SanPy/data"
-        bad = analysisDir(path)
-
-        # load all bAnalysis
-        for idx in range(len(bad)):
-            bad.getAnalysis(idx)
-
-        hdfStore["df"] = bad.getDataFrame()  # save it
-        bad.saveDatabase()
-
-    if 0:
-        df = hdfStore["df"]  # load it
-        print("loaded df:")
-        print(df)
-    stop = time.time()
-    print(f"took {stop-start}")
-
-
-
-def testCloud():
-    cloudDict = {"owner": "cudmore", "repo_name": "SanPy", "path": "data"}
-    bad = bAnalysisDirWeb(cloudDict)
-
-
-if __name__ == "__main__":
-    # test3()
-    # test_hd5()
-    
-    # was this
-    # test_hd5_2()
-    
-    # test_pool()
-    # testCloud()
-
-    # test_timing()
-    # plotTiming()
-
-    # july 2023 for kym, file structure is really complex
-    path = '/Users/cudmore/Dropbox/data/cell-shortening/fig1'
-    theseFileTypes = [".abf", ".atf", ".csv", ".dat", ".tif"]
-    fileList = _walk(path, theseFileTypes, depth=4)
-    fileList = stripSantanaTif(fileList)
-    for file in fileList:
-        print(file)
-    

@@ -2826,7 +2826,7 @@ class bDetectionWidget(QtWidgets.QWidget):
             tableRowDict: File-table values for the selected recording.
 
         Returns:
-            False when the analysis has a load error; otherwise None.
+            False when the analysis has a load error, otherwise None.
         """
         # logger.info(f"tableRowDict:{tableRowDict}")
         logger.info(f"ba:{ba}")
@@ -2852,12 +2852,6 @@ class bDetectionWidget(QtWidgets.QWidget):
                 current_sweep=0,
             )
 
-            # self.fillInDetectionParameters(tableRowDict)  # fills in controls
-
-            # self.updateStatusBar(f'Plotting file {path}')
-            # startSec = tableRowDict["Start(s)"]
-            # stopSec = tableRowDict["Stop(s)"]
-
         if startSec == "" or stopSec == "" or np.isnan(startSec) or np.isnan(stopSec):
             startSec = 0
             stopSec = self.ba.fileLoader.recordingDur
@@ -2868,15 +2862,11 @@ class bDetectionWidget(QtWidgets.QWidget):
         # set sweep to 0
         self.selectSweep(0, doEmit=False, doReplot=False)
 
-        # abb implement sweep, move to function()
-        # abb 20220615
         self._replot(startSec, stopSec)
-        # self._replot()
 
-        # 202401
         self.setAxisFull()
 
-        # 202401 update cursor position
+        # update cursor position
         self._sanpyCursors._showInView()
         self._sanpyCursors_dvdt._showInView()
 
@@ -2885,7 +2875,6 @@ class bDetectionWidget(QtWidgets.QWidget):
         self.dacPlot.getAxis("left").setLabel("DAC")
         self.derivPlot.getAxis("left").setLabel("Derivative")
         self.vmPlotGlobal.getAxis("left").setLabel(yLabel)
-        # self.vmPlotGlobal.getAxis('bottom').setLabel('Seconds')
         self.vmPlot.getAxis("left").setLabel(yLabel)
         self.vmPlot.getAxis("bottom").setLabel("Seconds")
 
@@ -2900,20 +2889,6 @@ class bDetectionWidget(QtWidgets.QWidget):
                 self.myKymWidget.setVisible(False)
                 # self.myKymWidget.kymographPlot.setXLink(None)  # row major is different
                 self.vmPlot.setXLink(None)
-
-        #self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different    
-
-        # set full axis
-        # abb 20220615
-        # self.setAxisFull()
-        
-        # 20221003 just link everything to vmPlot
-        # self.derivPlot.setXLink(self.vmPlot)
-        # self.dacPlot.setXLink(self.vmPlot)
-        
-        # self.myKymWidget.kymographPlot.setXLink(self.vmPlot)  # row major is different    
-        # self.myKymWidget.myImageItem.setXLink(self.vmPlot)
-        # self.myKymWidget.setXLink(self.vmPlot)
 
         return True
 
@@ -4271,28 +4246,3 @@ class myDetectToolbarWidget2(QtWidgets.QWidget):
             # stopSeconds = rowDict["Stop(s)"]
             # if not math.isnan(stopSeconds):
             #     self.stopSeconds.setValue(stopSeconds)
-
-
-if __name__ == "__main__":
-    # load a bAnalysis file
-
-    # abfFile = '/Users/cudmore/Sites/bAnalysis/data/19221021.abf'
-    # abfFile = '/Users/cudmore/Sites/bAnalysis/data/19114001.abf'
-    path = "/media/cudmore/data/Laura-data/manuscript-data/2020_06_23_0006.abf"
-    path = "../data/19114001.abf"
-    path = "/media/cudmore/data/rabbit-ca-transient/Control/220110n_0003.tif.frames/220110n_0003.tif"
-
-    ba = sanpy.bAnalysis(path)
-
-    app = QtWidgets.QApplication(sys.argv)
-    w = bDetectionWidget()
-    w.slot_switchFile(ba=ba)
-
-    detectionType = sanpy.bDetection.detectionTypes.mv
-    dvdtThreshold = 10
-    mvThreshold = 1000  # -20
-    # w.detect(detectionType, dvdtThreshold, mvThreshold)
-
-    w.show()
-
-    sys.exit(app.exec_())
