@@ -19,6 +19,7 @@ from sanpy.interface.plugins.nicepool_plugin import (
     prepare_nicepool_data,
     selection_to_spikes,
 )
+from sanpy.interface.plugins.nicepool_pool_plugin import NicePoolPoolPlugin
 
 
 def test_named_presets_are_dataset_aware_override_definitions() -> None:
@@ -103,6 +104,59 @@ def test_selection_to_spikes_puts_primary_first_and_deduplicates() -> None:
     spikes = selection_to_spikes(selection, {"2": 2, "3": 3})
 
     assert spikes == [3, 2]
+
+
+def test_nicepool_spike_results_are_the_current_file() -> None:
+    """Keep the single-file plugin on one analysis table."""
+    analysis = MagicMock()
+    analysis.isAnalyzed.return_value = True
+    frame = pd.DataFrame({"spikeNumber": [0]})
+    analysis.asDataFrame.return_value = frame
+    plugin = NicePoolPlugin.__new__(NicePoolPlugin)
+    plugin._current_file_number = 4
+    plugin._ba = analysis
+
+    result = plugin._spike_results()
+
+    assert result is frame
+    assert plugin._current_file_number is None
+    analysis.asDataFrame.assert_called_once_with(regenerateAnalysisDataFrame=True)
+
+
+def test_nicepool_pool_plugin_uses_the_folder_pool() -> None:
+    """Load every analyzed file and remember the open file's table row."""
+    assert NicePoolPoolPlugin.myHumanName == "NicePool (pool)"
+    assert issubclass(NicePoolPoolPlugin, NicePoolPlugin)
+
+    current = MagicMock()
+    other = MagicMock()
+    pooled = pd.DataFrame({"spikeNumber": [1], "row_id": ["1:1"]})
+    analysis_dir = MagicMock()
+    analysis_dir.getDataFrame.return_value = pd.DataFrame({"_ba": [other, current]})
+    analysis_dir.pool_spike_dataframe.return_value = pooled
+    window = MagicMock()
+    window.myAnalysisDir = analysis_dir
+    plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
+    plugin._current_file_number = None
+    plugin._ba = current
+    plugin.getSanPyWindow = lambda: window
+
+    result = plugin._spike_results()
+
+    assert result is pooled
+    assert plugin._current_file_number == 1
+    analysis_dir.pool_spike_dataframe.assert_called_once_with()
+
+
+def test_nicepool_pool_without_a_folder_has_no_results() -> None:
+    """Do not fall back to the current file when no folder is open."""
+    plugin = NicePoolPoolPlugin.__new__(NicePoolPoolPlugin)
+    plugin._current_file_number = 3
+    plugin._ba = MagicMock()
+    plugin.getSanPyWindow = lambda: None
+
+    assert plugin._spike_results() is None
+    assert plugin._current_file_number is None
 
 
 def test_selection_to_spikes_rejects_malformed_payload() -> None:

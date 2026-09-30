@@ -214,7 +214,7 @@ def selection_to_spikes(
 
 
 class NicePoolPlugin(sanpyPlugin):
-    """Display detected spikes from the open folder using NicePool."""
+    """Display all detected spikes in the current file using NicePool."""
 
     myHumanName = "NicePool"
 
@@ -295,28 +295,23 @@ class NicePoolPlugin(sanpyPlugin):
         finally:
             self._blockSlots = False
 
+    def _spike_results(self) -> pd.DataFrame | None:
+        """Return spike results for the current file.
+
+        Returns:
+            The current analysis table, or ``None`` when it has no spikes.
+        """
+        self._current_file_number = None
+        if self.ba is None or not self.ba.isAnalyzed():
+            return None
+        return self.ba.asDataFrame(regenerateAnalysisDataFrame=True)
+
     def replot(self) -> None:
         """Replace NicePool data after a file or analysis change."""
         if self._nicepool is None:
             return
 
-        # Test-only: with a SanPy window, plot every analyzed file. This
-        # reloads and regenerates each file on every replot and must not
-        # remain the refresh path. Without a window, plot the one analysis.
-        window = self.getSanPyWindow()
-        analysis_dir = None if window is None else window.myAnalysisDir
-        self._current_file_number = None
-        if analysis_dir is not None:
-            dataframe = analysis_dir.pool_spike_dataframe()
-            if self.ba is not None:
-                for row_index, loaded in analysis_dir.getDataFrame()["_ba"].items():
-                    if loaded is self.ba:
-                        self._current_file_number = int(row_index)
-                        break
-        elif self.ba is None or not self.ba.isAnalyzed():
-            dataframe = None
-        else:
-            dataframe = self.ba.asDataFrame(regenerateAnalysisDataFrame=True)
+        dataframe = self._spike_results()
 
         if dataframe is None or dataframe.empty:
             self._row_id_to_spike = {}

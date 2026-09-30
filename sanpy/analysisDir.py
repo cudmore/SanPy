@@ -1630,9 +1630,8 @@ class analysisDir:
             ValueError: If an analyzed file has no ``spikeNumber`` column.
 
         Notes:
-            Each call reloads and regenerates every analyzed file. Calling this
-            from a plugin replot is a temporary test and must not remain the
-            refresh path.
+            Each call reloads and regenerates every analyzed file. NicePool (pool)
+            calls this on each replot.
         """
         frames: list[pd.DataFrame] = []
         for row_idx in self._df.index:
