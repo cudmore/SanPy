@@ -1615,105 +1615,51 @@ class analysisDir:
 
         self._updateLoadedAnalyzed()
 
-    # def pool_build(self, uniqueColumn=None, allowAutoLoad=False, includeNo=True, verbose=False):
-    #     """Build one df with all analysis. Use this in plot tool plugin.
-        
-    #     Parameters
-    #     ----------
-    #     uniqueColumn : str
-    #         Name of column to prepend to File column to make a unique name.
-    #         Use 'parant2' for Kymograph tif files exported from Olympus.
-    #     includeNo : boolean
-    #         if True then include files with metadata 'Include' of no.
-    #     """
-    #     if verbose:
-    #         logger.info("")
-        
-    #     masterDf = None
-        
-    #     # for row in range(self.numFiles):
-    #     for rowIdx, rowDict in self._df.iterrows():
-    #         if (not includeNo) and (rowDict["include"] == "no"):
-    #             if verbose:
-    #                 logger.info(f'  rowIdx:{rowIdx} Include is "no"')
-    #             continue
+    def pool_spike_dataframe(self) -> pd.DataFrame | None:
+        """Concatenate spike results for every analyzed file.
 
-    #         ba = self.getAnalysis(rowIdx, allowAutoLoad=allowAutoLoad)
-    #         if ba is None:
-    #             continue
-            
-    #         if not ba.isAnalyzed():
-    #             if verbose:
-    #                 logger.info(f"  rowIdx:{rowIdx} not analyzed")
-    #             continue
-                
-    #         oneDf = ba.asDataFrame(regenerateAnalysisDataFrame=True)
-            
-    #         if oneDf is not None:
+        Loads a saved analysis when that file is not already in memory. Each
+        copied row receives ``file_number`` as its current file-table row and
+        ``row_id`` as ``"{file_number}:{spikeNumber}"``. The per-file analysis
+        keeps its stored ``file_number`` of 0.
 
-    #             self.signalWindow(f'Adding "{ba.fileLoader.filename}"', verbose=verbose)
-                
-    #             oneDf["File Number"] = int(rowIdx)
-                
-    #             # 20240114
-    #             oneDf['File Path'] = ba.fileLoader.filepath
+        Returns:
+            The concatenated spike table, or ``None`` when no file has spikes.
 
-    #             uniqueName = os.path.splitext(ba.fileLoader.filename)[0]
-    #             if uniqueColumn is not None:
-    #                 uniqueName = rowDict[uniqueColumn] + '-' + uniqueName
-    #             oneDf["Unique Name"] = uniqueName
+        Raises:
+            ValueError: If an analyzed file has no ``spikeNumber`` column.
 
-    #             # logger.warning('TEMPORARY WHILE WORKING ON KYM POOLING !!!!!!!!!!!!!!!!!!!!!!!!!')
-    #             # logger.warning('randomly assigning sex to male, female, unknown')
-    #             # sexList = ['male', 'female', 'unknown']
-    #             # oneDf['Sex'] = random.choice(sexList)
-
-    #             # abb removed 202609
-    #             # oneDf_thresholdVal = oneDf['thresholdVal'].to_numpy()  # take off potential
-    #             # oneDf_thresholdVal_mean = np.nanmean(oneDf_thresholdVal)
-    #             # if oneDf_thresholdVal_mean > 0.5685522031727147:  # mean of all thresholdVal
-    #             #     # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} male')
-    #             #     oneDf['Sex'] ='male'  # pandas dataframe columns are Capitalized !!!!!
-    #             # else:
-    #             #     oneDf['Sex'] = 'female'
-    #             #     # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} female')
-
-    #             # print('FINAL SEX IS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    #             # print(oneDf['sex'])
-    #             # drop some redundant analysis results (not in file metadata)
-                
-    #             if masterDf is None:
-    #                 masterDf = oneDf
-    #             else:
-    #                 masterDf = pd.concat([masterDf, oneDf], ignore_index=True)
-    #     #
-    #     if masterDf is None:
-    #         if verbose:
-    #             logger.error("Did not find any analysis.")
-    #     else:
-    #         # add an index column (for plotting)
-    #         masterDf['index'] = [x for x in range(len(masterDf))]
-    #         if verbose:
-    #             logger.info(f"final num spikes {len(masterDf)}")
-        
-    #         # # randomly assign sex based on mena +/- STD of take of potential
-    #         # _thresholdVal = masterDf['thresholdVal'].to_numpy()  # take off potential
-    #         # _thresholdVal_mean = np.nanmean(_thresholdVal)
-    #         # # _thresholdVal_mean: 0.5685522031727147
-    #         # logger.error(f'  remember, setting rows based on takeoff potential _thresholdVal_mean: {_thresholdVal_mean}')
-    #         # for _idx, _row in masterDf.iterrows():
-    #         #     logger.error(f' _idx:{_idx} thresholdVal:{_row["thresholdVal"]}')
-    #         #     if _row['thresholdVal'] > _thresholdVal_mean:
-    #         #         print('  -->> male')
-    #         #         masterDf.at[_idx, 'sex'] = 'male'
-    #         #     else:
-    #         #         masterDf.at[_idx, 'sex'] = 'female'
-    #         #         print('  -->> male')
-
-    #     # print(masterDf.head())
-    #     #self._poolDf = masterDf
-
-    #     return masterDf
+        Notes:
+            Each call reloads and regenerates every analyzed file. Calling this
+            from a plugin replot is a temporary test and must not remain the
+            refresh path.
+        """
+        frames: list[pd.DataFrame] = []
+        for row_idx in self._df.index:
+            ba = self.getAnalysis(row_idx, allowAutoLoad=True)
+            if ba is None or not ba.isAnalyzed():
+                continue
+            one_df = ba.asDataFrame(regenerateAnalysisDataFrame=True)
+            if one_df is None or one_df.empty:
+                continue
+            if "spikeNumber" not in one_df.columns:
+                raise ValueError(
+                    "SanPy spike results are missing the spikeNumber column"
+                )
+            # Copy so file_number and row_id stay on the pooled frame only.
+            one_df = one_df.copy()
+            one_df["file_number"] = int(row_idx)
+            self.signalWindow(f'Adding "{ba.fileLoader.filename}"')
+            frames.append(one_df)
+        if not frames:
+            return None
+        pooled = pd.concat(frames, ignore_index=True)
+        pooled["row_id"] = (
+            pooled["file_number"].astype(int).astype(str)
+            + ":"
+            + pooled["spikeNumber"].astype(int).astype(str)
+        )
+        return pooled
 
     def signalWindow(self, str, verbose=True):
         """Update status bar of SanPy window.
@@ -1839,14 +1785,6 @@ def test_hd5():
     stop = time.time()
     print(f"took {stop-start}")
 
-
-def test_pool():
-    path = "/home/cudmore/Sites/SanPy/data"
-    ad = analysisDir(path)
-    print("loaded df:")
-    print(ad._df)
-
-    ad.pool_build()
 
 
 def testCloud():

@@ -214,7 +214,7 @@ def selection_to_spikes(
 
 
 class NicePoolPlugin(sanpyPlugin):
-    """Display all detected spikes in the current file using NicePool."""
+    """Display detected spikes from the open folder using NicePool."""
 
     myHumanName = "NicePool"
 
@@ -231,6 +231,7 @@ class NicePoolPlugin(sanpyPlugin):
         self.toggleTopToobar(False, show_response_options=False)
 
         self._row_id_to_spike: dict[str, int] = {}
+        self._current_file_number: int | None = None
         self._nicepool: Any | None = None
         self._status_label = QtWidgets.QLabel(self)
         self._status_label.setWordWrap(True)
@@ -298,22 +299,55 @@ class NicePoolPlugin(sanpyPlugin):
         """Replace NicePool data after a file or analysis change."""
         if self._nicepool is None:
             return
-        if self.ba is None or not self.ba.isAnalyzed():
-            self._row_id_to_spike = {}
-            self._show_status("Detect spikes to populate NicePool.")
-            return
 
-        dataframe = self.ba.asDataFrame(regenerateAnalysisDataFrame=True)
+        # Test-only: with a SanPy window, plot every analyzed file. This
+        # reloads and regenerates each file on every replot and must not
+        # remain the refresh path. Without a window, plot the one analysis.
+        window = self.getSanPyWindow()
+        analysis_dir = None if window is None else window.myAnalysisDir
+        self._current_file_number = None
+        if analysis_dir is not None:
+            dataframe = analysis_dir.pool_spike_dataframe()
+            if self.ba is not None:
+                for row_index, loaded in analysis_dir.getDataFrame()["_ba"].items():
+                    if loaded is self.ba:
+                        self._current_file_number = int(row_index)
+                        break
+        elif self.ba is None or not self.ba.isAnalyzed():
+            dataframe = None
+        else:
+            dataframe = self.ba.asDataFrame(regenerateAnalysisDataFrame=True)
+
         if dataframe is None or dataframe.empty:
             self._row_id_to_spike = {}
+            self._current_file_number = None
             self._show_status("Detect spikes to populate NicePool.")
             return
 
         try:
             projected, schema, prefilters = prepare_nicepool_data(dataframe)
-            self._row_id_to_spike = {
-                str(spike): int(spike) for spike in projected["spikeNumber"]
-            }
+            if "row_id" in dataframe.columns:
+                projected["row_id"] = dataframe.loc[projected.index, "row_id"].astype(str)
+                schema.append(
+                    {
+                        "name": "row_id",
+                        "type": "string",
+                        "axis_label": "Row",
+                        "category": "identity",
+                    }
+                )
+                row_id_column = "row_id"
+                self._row_id_to_spike = {
+                    str(row_id): int(spike)
+                    for row_id, spike in zip(
+                        projected["row_id"], projected["spikeNumber"], strict=True
+                    )
+                }
+            else:
+                row_id_column = "spikeNumber"
+                self._row_id_to_spike = {
+                    str(spike): int(spike) for spike in projected["spikeNumber"]
+                }
             compatible_presets = [
                 preset
                 for preset in _NAMED_PRESETS
@@ -341,7 +375,7 @@ class NicePoolPlugin(sanpyPlugin):
             )
             self._nicepool.set_dataframe(
                 projected,
-                row_id_column="spikeNumber",
+                row_id_column=row_id_column,
                 schema=schema,
                 pre_filter_columns=prefilters,
                 preset_definitions=compatible_presets,
@@ -351,6 +385,7 @@ class NicePoolPlugin(sanpyPlugin):
         except (TypeError, ValueError) as error:
             logger.error("Unable to prepare SanPy results for NicePool: %s", error)
             self._row_id_to_spike = {}
+            self._current_file_number = None
             self._show_status(f"Unable to populate NicePool: {error}")
             return
 
@@ -361,10 +396,13 @@ class NicePoolPlugin(sanpyPlugin):
         """Apply SanPy's current spike selection to NicePool."""
         if self._nicepool is None:
             return
-        selected = [
-            str(spike)
-            for spike in self.getSelectedSpikes()
-            if str(spike) in self._row_id_to_spike
-        ]
+        selected: list[str] = []
+        for spike in self.getSelectedSpikes():
+            if self._current_file_number is None:
+                row_id = str(spike)
+            else:
+                row_id = f"{self._current_file_number}:{spike}"
+            if row_id in self._row_id_to_spike:
+                selected.append(row_id)
         primary = selected[0] if selected else None
         self._nicepool.set_selection(primary, selected)
