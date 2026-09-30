@@ -777,7 +777,7 @@ class analysisDir:
     def loadHdf(self, path=None, verbose=False):
         """Load the database key from an h5 file.
 
-        We do not load analy anlysis until user clicks on row, see loadOneAnalysis()
+        We do not load analysis until user clicks on row, see loadOneAnalysis()
         """
         if path is None:
             path = self.path
