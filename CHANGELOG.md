@@ -15,6 +15,8 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 #### Fixed
 
 - Spike clips are taken from the filtered recording of the file being analyzed.
+- Plot Recording reads the sweeps it shows without changing the detection view's current sweep.
+- Export Trace uses its selected sweep. All still follows the detection view.
 
 ### Added
 
