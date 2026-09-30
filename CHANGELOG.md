@@ -3,7 +3,7 @@
 
 SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://cudmore.github.io/SanPy/).
 
-## [0.2.9] - 2026-09-28
+## [0.3.0] - 2026-09-30
 
 ### Desktop GUI
 
@@ -25,6 +25,10 @@ SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://c
 ### Changed
 
 - Cell type and sex are categorical statistics in plot menus.
+
+## [0.2.9] - 2026-09-28
+
+- Internal development release for experimental-metadata and file-table work.
 
 ## [0.2.8] - 2026-09-10
 
