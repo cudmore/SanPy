@@ -3,6 +3,29 @@
 
 SanPy documentation is available at [https://cudmore.github.io/SanPy/](https://cudmore.github.io/SanPy/).
 
+## [0.2.9] - 2026-09-28
+
+### Desktop GUI
+
+#### Added
+
+- Plot Tool and Plot Tool (Pool). Plot Tool (Pool) shows spikes from every analyzed file in the open folder.
+- Set Meta Data edits a condition for each sweep.
+
+#### Fixed
+
+- Spike clips are taken from the filtered recording of the file being analyzed.
+
+### Added
+
+- Recordings store a condition for each sweep. Conditions are saved in the analysis HDF5 and copied onto each spike as `sweepCondition`.
+- Spike results include a categorical file number for pooled plots.
+- Added a stochastic Hodgkin-Huxley model with a settable sodium-activation shift and slow potassium adaptation.
+
+### Changed
+
+- Cell type and sex are categorical statistics in plot menus.
+
 ## [0.2.8] - 2026-09-10
 
 ### SanPy Zarr
