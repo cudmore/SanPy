@@ -1651,7 +1651,8 @@ class bAnalysis:
             spikeDict[i]["epoch"] = epoch
             spikeDict[i]["epochLevel"] = epochLevel
 
-            spikeDict[i]["sweepCondition"] = ""  # abb 20260929
+            # abb 202609
+            spikeDict[i]["sweepCondition"] = self.fileLoader.getSweepCondition(sweepNumber)
 
             # keep track of per sweep spike and total spike
             spikeDict[i]["sweepSpikeNumber"] = i
