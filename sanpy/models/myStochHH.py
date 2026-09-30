@@ -903,5 +903,6 @@ if __name__ == "__main__":
         df[_cmd_col_name] = inputCurrent
 
     # df.to_csv(saveFile, index=False, header=False, mode="a")
-    print(f'saving file: {saveFile}')
-    df.to_csv(saveFile, index=False)
+    if 0:
+        print(f'saving file: {saveFile}')
+        df.to_csv(saveFile, index=False)

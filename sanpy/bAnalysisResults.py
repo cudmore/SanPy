@@ -349,6 +349,17 @@ analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key]["description"] = "User specified condition"
 
+key = "file_number"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["category"] = AnalysisResultCategory.METADATA
+analysisResultDict[key]["type"] = "int"
+analysisResultDict[key]["default"] = 0
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key]["axis_label"] = "File Number"
+analysisResultDict[key]["show_in_plot_menu"] = True
+analysisResultDict[key]["is_categorical"] = True
+analysisResultDict[key]["description"] = "Number of the file - used in pooling"
+
 # abb i think we need to add other experimental metadata
 # like genotype, etc
 
@@ -399,18 +410,7 @@ analysisResultDict[key]["show_in_plot_menu"] = True
 analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key][
     "description"
-] = "Integer indication user type. Can be set by user/programmatically  after analysis."
-
-key = "errors"
-analysisResultDict[key] = getDefaultDict()
-analysisResultDict[key]["category"] = AnalysisResultCategory.IDENTITY
-analysisResultDict[key]["type"] = "list"
-analysisResultDict[key]["default"] = []
-analysisResultDict[key]["units"] = ""
-analysisResultDict[key]["axis_label"] = "Errors"
-analysisResultDict[key][
-    "description"
-] = "List of dictionary to hold detection errors for this spike"
+] = "User-assigned user type for an individual spike."
 
 key = "spike_condition"
 analysisResultDict[key] = getDefaultDict()
@@ -424,6 +424,17 @@ analysisResultDict[key]["is_categorical"] = True
 analysisResultDict[key][
     "description"
 ] = "User-assigned condition for an individual spike."
+
+key = "errors"
+analysisResultDict[key] = getDefaultDict()
+analysisResultDict[key]["category"] = AnalysisResultCategory.IDENTITY
+analysisResultDict[key]["type"] = "list"
+analysisResultDict[key]["default"] = []
+analysisResultDict[key]["units"] = ""
+analysisResultDict[key]["axis_label"] = "Errors"
+analysisResultDict[key][
+    "description"
+] = "List of dictionary to hold detection errors for this spike"
 
 #
 # actual value coming out of detection !!!!

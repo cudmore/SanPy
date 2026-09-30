@@ -8,6 +8,9 @@ Stochastic neural model. Adapted from
 
 https://senselab.med.yale.edu/modeldb/showModel.cshtml?model=144499&file=/StochasticHH/README.html
 
+update, 202609 link is now: https://modeldb.science/144499
+
+
 ### `myMyokit.py`
 
 Uses [Myokit][https://github.com/MichaelClerx/myokit] to generate noisy ventricular action potentials.

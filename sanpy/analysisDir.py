@@ -1615,105 +1615,105 @@ class analysisDir:
 
         self._updateLoadedAnalyzed()
 
-    def pool_build(self, uniqueColumn=None, allowAutoLoad=False, includeNo=True, verbose=False):
-        """Build one df with all analysis. Use this in plot tool plugin.
+    # def pool_build(self, uniqueColumn=None, allowAutoLoad=False, includeNo=True, verbose=False):
+    #     """Build one df with all analysis. Use this in plot tool plugin.
         
-        Parameters
-        ----------
-        uniqueColumn : str
-            Name of column to prepend to File column to make a unique name.
-            Use 'parant2' for Kymograph tif files exported from Olympus.
-        includeNo : boolean
-            if True then include files with metadata 'Include' of no.
-        """
-        if verbose:
-            logger.info("")
+    #     Parameters
+    #     ----------
+    #     uniqueColumn : str
+    #         Name of column to prepend to File column to make a unique name.
+    #         Use 'parant2' for Kymograph tif files exported from Olympus.
+    #     includeNo : boolean
+    #         if True then include files with metadata 'Include' of no.
+    #     """
+    #     if verbose:
+    #         logger.info("")
         
-        masterDf = None
+    #     masterDf = None
         
-        # for row in range(self.numFiles):
-        for rowIdx, rowDict in self._df.iterrows():
-            if (not includeNo) and (rowDict["include"] == "no"):
-                if verbose:
-                    logger.info(f'  rowIdx:{rowIdx} Include is "no"')
-                continue
+    #     # for row in range(self.numFiles):
+    #     for rowIdx, rowDict in self._df.iterrows():
+    #         if (not includeNo) and (rowDict["include"] == "no"):
+    #             if verbose:
+    #                 logger.info(f'  rowIdx:{rowIdx} Include is "no"')
+    #             continue
 
-            ba = self.getAnalysis(rowIdx, allowAutoLoad=allowAutoLoad)
-            if ba is None:
-                continue
+    #         ba = self.getAnalysis(rowIdx, allowAutoLoad=allowAutoLoad)
+    #         if ba is None:
+    #             continue
             
-            if not ba.isAnalyzed():
-                if verbose:
-                    logger.info(f"  rowIdx:{rowIdx} not analyzed")
-                continue
+    #         if not ba.isAnalyzed():
+    #             if verbose:
+    #                 logger.info(f"  rowIdx:{rowIdx} not analyzed")
+    #             continue
                 
-            oneDf = ba.asDataFrame(regenerateAnalysisDataFrame=True)
+    #         oneDf = ba.asDataFrame(regenerateAnalysisDataFrame=True)
             
-            if oneDf is not None:
+    #         if oneDf is not None:
 
-                self.signalWindow(f'Adding "{ba.fileLoader.filename}"', verbose=verbose)
+    #             self.signalWindow(f'Adding "{ba.fileLoader.filename}"', verbose=verbose)
                 
-                oneDf["File Number"] = int(rowIdx)
+    #             oneDf["File Number"] = int(rowIdx)
                 
-                # 20240114
-                oneDf['File Path'] = ba.fileLoader.filepath
+    #             # 20240114
+    #             oneDf['File Path'] = ba.fileLoader.filepath
 
-                uniqueName = os.path.splitext(ba.fileLoader.filename)[0]
-                if uniqueColumn is not None:
-                    uniqueName = rowDict[uniqueColumn] + '-' + uniqueName
-                oneDf["Unique Name"] = uniqueName
+    #             uniqueName = os.path.splitext(ba.fileLoader.filename)[0]
+    #             if uniqueColumn is not None:
+    #                 uniqueName = rowDict[uniqueColumn] + '-' + uniqueName
+    #             oneDf["Unique Name"] = uniqueName
 
-                # logger.warning('TEMPORARY WHILE WORKING ON KYM POOLING !!!!!!!!!!!!!!!!!!!!!!!!!')
-                # logger.warning('randomly assigning sex to male, female, unknown')
-                # sexList = ['male', 'female', 'unknown']
-                # oneDf['Sex'] = random.choice(sexList)
+    #             # logger.warning('TEMPORARY WHILE WORKING ON KYM POOLING !!!!!!!!!!!!!!!!!!!!!!!!!')
+    #             # logger.warning('randomly assigning sex to male, female, unknown')
+    #             # sexList = ['male', 'female', 'unknown']
+    #             # oneDf['Sex'] = random.choice(sexList)
 
-                # abb removed 202609
-                # oneDf_thresholdVal = oneDf['thresholdVal'].to_numpy()  # take off potential
-                # oneDf_thresholdVal_mean = np.nanmean(oneDf_thresholdVal)
-                # if oneDf_thresholdVal_mean > 0.5685522031727147:  # mean of all thresholdVal
-                #     # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} male')
-                #     oneDf['Sex'] ='male'  # pandas dataframe columns are Capitalized !!!!!
-                # else:
-                #     oneDf['Sex'] = 'female'
-                #     # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} female')
+    #             # abb removed 202609
+    #             # oneDf_thresholdVal = oneDf['thresholdVal'].to_numpy()  # take off potential
+    #             # oneDf_thresholdVal_mean = np.nanmean(oneDf_thresholdVal)
+    #             # if oneDf_thresholdVal_mean > 0.5685522031727147:  # mean of all thresholdVal
+    #             #     # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} male')
+    #             #     oneDf['Sex'] ='male'  # pandas dataframe columns are Capitalized !!!!!
+    #             # else:
+    #             #     oneDf['Sex'] = 'female'
+    #             #     # print(f'oneDf_thresholdVal_mean:{oneDf_thresholdVal_mean} female')
 
-                # print('FINAL SEX IS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-                # print(oneDf['sex'])
-                # drop some redundant analysis results (not in file metadata)
+    #             # print('FINAL SEX IS !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+    #             # print(oneDf['sex'])
+    #             # drop some redundant analysis results (not in file metadata)
                 
-                if masterDf is None:
-                    masterDf = oneDf
-                else:
-                    masterDf = pd.concat([masterDf, oneDf], ignore_index=True)
-        #
-        if masterDf is None:
-            if verbose:
-                logger.error("Did not find any analysis.")
-        else:
-            # add an index column (for plotting)
-            masterDf['index'] = [x for x in range(len(masterDf))]
-            if verbose:
-                logger.info(f"final num spikes {len(masterDf)}")
+    #             if masterDf is None:
+    #                 masterDf = oneDf
+    #             else:
+    #                 masterDf = pd.concat([masterDf, oneDf], ignore_index=True)
+    #     #
+    #     if masterDf is None:
+    #         if verbose:
+    #             logger.error("Did not find any analysis.")
+    #     else:
+    #         # add an index column (for plotting)
+    #         masterDf['index'] = [x for x in range(len(masterDf))]
+    #         if verbose:
+    #             logger.info(f"final num spikes {len(masterDf)}")
         
-            # # randomly assign sex based on mena +/- STD of take of potential
-            # _thresholdVal = masterDf['thresholdVal'].to_numpy()  # take off potential
-            # _thresholdVal_mean = np.nanmean(_thresholdVal)
-            # # _thresholdVal_mean: 0.5685522031727147
-            # logger.error(f'  remember, setting rows based on takeoff potential _thresholdVal_mean: {_thresholdVal_mean}')
-            # for _idx, _row in masterDf.iterrows():
-            #     logger.error(f' _idx:{_idx} thresholdVal:{_row["thresholdVal"]}')
-            #     if _row['thresholdVal'] > _thresholdVal_mean:
-            #         print('  -->> male')
-            #         masterDf.at[_idx, 'sex'] = 'male'
-            #     else:
-            #         masterDf.at[_idx, 'sex'] = 'female'
-            #         print('  -->> male')
+    #         # # randomly assign sex based on mena +/- STD of take of potential
+    #         # _thresholdVal = masterDf['thresholdVal'].to_numpy()  # take off potential
+    #         # _thresholdVal_mean = np.nanmean(_thresholdVal)
+    #         # # _thresholdVal_mean: 0.5685522031727147
+    #         # logger.error(f'  remember, setting rows based on takeoff potential _thresholdVal_mean: {_thresholdVal_mean}')
+    #         # for _idx, _row in masterDf.iterrows():
+    #         #     logger.error(f' _idx:{_idx} thresholdVal:{_row["thresholdVal"]}')
+    #         #     if _row['thresholdVal'] > _thresholdVal_mean:
+    #         #         print('  -->> male')
+    #         #         masterDf.at[_idx, 'sex'] = 'male'
+    #         #     else:
+    #         #         masterDf.at[_idx, 'sex'] = 'female'
+    #         #         print('  -->> male')
 
-        # print(masterDf.head())
-        #self._poolDf = masterDf
+    #     # print(masterDf.head())
+    #     #self._poolDf = masterDf
 
-        return masterDf
+    #     return masterDf
 
     def signalWindow(self, str, verbose=True):
         """Update status bar of SanPy window.
