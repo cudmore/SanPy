@@ -10,7 +10,7 @@ from sanpy.interface.plugins.nicepool_plugin import NicePoolPlugin
 class NicePoolPoolPlugin(NicePoolPlugin):
     """Display spikes from every analyzed file in the open folder."""
 
-    myHumanName = "Plot Tool (pool)"
+    myHumanName = "Plot Tool (Pool)"
 
     def _spike_results(self) -> pd.DataFrame | None:
         """Return the pooled spike table for the open folder.

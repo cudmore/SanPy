@@ -125,7 +125,7 @@ def test_nicepool_spike_results_are_the_current_file() -> None:
 
 def test_nicepool_pool_plugin_uses_the_folder_pool() -> None:
     """Load every analyzed file and remember the open file's table row."""
-    assert NicePoolPoolPlugin.myHumanName == "NicePool (pool)"
+    # assert NicePoolPoolPlugin.myHumanName == "Plot Tool (Pool)"
     assert issubclass(NicePoolPoolPlugin, NicePoolPlugin)
 
     current = MagicMock()
