@@ -102,7 +102,7 @@ def test_open_user_files_folder(
 
     assert sanpy_info_widget._openSanPyUserFilesFolder(sanpy_paths=sanpy_paths) is True
     assert len(opened_urls) == 1
-    assert opened_urls[0].toLocalFile() == str(sanpy_paths.user_files_dir)
+    assert Path(opened_urls[0].toLocalFile()) == sanpy_paths.user_files_dir
 
 
 def test_open_user_files_folder_warns_when_missing(
